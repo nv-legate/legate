@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,8 +16,8 @@
 
 namespace legate::mapping {
 
-inline Task::Task(detail::Task* impl) : impl_{impl} {}
+inline Task::Task(detail::Task* impl) : pimpl_{impl} {}
 
-inline detail::Task* Task::impl() const noexcept { return impl_; }
+inline detail::Task* Task::impl_() const noexcept { return pimpl_; }
 
 }  // namespace legate::mapping

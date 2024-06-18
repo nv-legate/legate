@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 namespace legate::detail {
@@ -30,7 +31,6 @@ class Runtime;
 void register_mapper_callback(const Legion::RegistrationCallbackArgs& args);
 
 class Library {
- private:
   class ResourceIdScope {
    public:
     ResourceIdScope() = default;
@@ -39,13 +39,12 @@ class Library {
     [[nodiscard]] std::int64_t translate(std::int64_t local_resource_id) const;
     [[nodiscard]] std::int64_t invert(std::int64_t resource_id) const;
     [[nodiscard]] std::int64_t generate_id();
-    [[nodiscard]] bool valid() const;
     [[nodiscard]] bool in_scope(std::int64_t resource_id) const;
     [[nodiscard]] std::int64_t size() const;
 
    private:
-    std::int64_t base_{-1};
-    std::int64_t size_{-1};
+    std::int64_t base_{};
+    std::int64_t size_{};
     std::int64_t next_{};
   };
 
@@ -56,7 +55,7 @@ class Library {
   Library(const Library&) = delete;
   Library(Library&&)      = delete;
 
-  [[nodiscard]] const std::string& get_library_name() const;
+  [[nodiscard]] std::string_view get_library_name() const;
 
   [[nodiscard]] Legion::TaskID get_task_id(std::int64_t local_task_id) const;
   [[nodiscard]] Legion::MapperID get_mapper_id() const;
@@ -76,7 +75,7 @@ class Library {
 
   [[nodiscard]] std::int64_t get_new_task_id();
 
-  [[nodiscard]] const std::string& get_task_name(std::int64_t local_task_id) const;
+  [[nodiscard]] std::string_view get_task_name(std::int64_t local_task_id) const;
   [[nodiscard]] std::unique_ptr<Scalar> get_tunable(std::int64_t tunable_id,
                                                     InternalSharedPtr<Type> type) const;
   void register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback);

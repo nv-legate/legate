@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -52,7 +52,7 @@ ListArrayAccessor<LEGION_WRITE_DISCARD, VAL>::~ListArrayAccessor() noexcept
     auto total_size = [&] {
       std::int64_t size = 0;
 
-      for (auto& value : values_) {
+      for (auto&& value : values_) {
         size += value.size();
       }
       return size;
@@ -63,7 +63,7 @@ ListArrayAccessor<LEGION_WRITE_DISCARD, VAL>::~ListArrayAccessor() noexcept
     std::int64_t vardata_pos = 0;
     std::int64_t desc_pos    = desc_shape_.lo[0];
 
-    for (auto& value : values_) {
+    for (auto&& value : values_) {
       const auto len = value.size();
 
       std::memcpy(p_buffer, value.data(), len * sizeof(VAL));

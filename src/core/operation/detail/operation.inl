@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -24,6 +24,6 @@ inline std::int32_t Operation::priority() const { return priority_; }
 
 inline const mapping::detail::Machine& Operation::machine() const { return machine_; }
 
-inline const std::string& Operation::provenance() const { return provenance_; }
+inline std::string_view Operation::provenance() const { return provenance_; }
 
 }  // namespace legate::detail

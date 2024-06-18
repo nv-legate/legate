@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -128,16 +128,6 @@ class Config:
         # feature configuration
         self.features = self._compute_features(args)
 
-        # test selection
-        self.examples = False if args.cov_bin else True
-        self.integration = True
-        self.unit = args.unit
-        self.files = args.files
-        self.last_failed = args.last_failed
-        self.gtest_file = args.gtest_file
-        self.gtest_tests = self._compute_gtest_tests(args)
-        self.test_root = args.test_root
-
         self.core = object_to_dataclass(args, Core)
         self.memory = object_to_dataclass(args, Memory)
         self.multi_node = object_to_dataclass(args, MultiNode)
@@ -145,6 +135,34 @@ class Config:
         self.info = object_to_dataclass(args, Info)
         self.other = object_to_dataclass(args, Other)
         self.other.legate_dir = self._compute_legate_dir(args)
+
+        # test selection
+        self.examples = False if args.cov_bin else True
+        self.integration = True
+        self.files = args.files
+        self.last_failed = args.last_failed
+        self.gtest_file = args.gtest_file
+        self.test_root = args.test_root
+        # NOTE: This reads the rest of the configuration, so do it last
+        self.gtest_tests = self._compute_gtest_tests(args)
+
+        if self.multi_node.nodes > 1 and self.multi_node.launcher == "none":
+            raise RuntimeError(
+                "Requested multi-node configuration with "
+                f"--nodes {self.multi_node.nodes} but did not specify a "
+                "launcher. Must use --launcher to specify a launcher."
+            )
+
+        if (
+            self.multi_node.ranks_per_node > 1
+            and self.multi_node.launcher == "none"
+        ):
+            raise RuntimeError(
+                "Requested multi-rank configuration with "
+                f"--ranks-per-node {self.multi_node.ranks_per_node} but did "
+                "not specify a launcher. Must use --launcher to specify a "
+                "launcher."
+            )
 
     @property
     def dry_run(self) -> bool:
@@ -182,7 +200,7 @@ class Config:
         if self.files and self.last_failed:
             raise RuntimeError("Cannot specify both --files and --last-failed")
 
-        if self.files:
+        if self.files is not None:
             return self.files
 
         if self.last_failed:
@@ -207,15 +225,6 @@ class Config:
                 )
             )
             files.extend(sorted(integration_tests))
-
-        if self.unit:
-            unit_tests = (
-                path.relative_to(self.root_dir)
-                for path in self.root_dir.joinpath("tests/unit").glob(
-                    "**/*.py"
-                )
-            )
-            files.extend(sorted(unit_tests))
 
         return tuple(files)
 
@@ -311,6 +320,15 @@ class Config:
             # Check if this is a test group
             if line[0] != " ":
                 test_group = line.split("#")[0].strip()
+                continue
+
+            # Skip death tests when running with multiple processes. It looks
+            # as if GTest catches the failure and declares the test successful,
+            # but for some reason the failure is not actually completely
+            # neutralized, and the exit code is non-zero.
+            if (
+                self.multi_node.ranks_per_node > 1 or self.multi_node.nodes > 1
+            ) and (test_group.endswith("DeathTest.")):
                 continue
 
             test_name = test_group + line.split("#")[0].strip()

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -26,9 +26,9 @@ void typed_malloc(T** ret, U num_elems) noexcept
 {
   static_assert(std::is_integral_v<U>);
   if constexpr (std::is_signed_v<U>) {
-    LegateCheck(num_elems >= 0);
+    LEGATE_CHECK(num_elems >= 0);
   }
-  LegateCheck(ret);
+  LEGATE_CHECK(ret);
   *ret = static_cast<T*>(std::malloc(sizeof(T) * static_cast<std::size_t>(num_elems)));
 }
 

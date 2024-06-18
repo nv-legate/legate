@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -170,6 +170,7 @@ bool InternalWeakPtr<T>::expired() const noexcept
   return use_count() == 0;
 }
 
+// NOLINTBEGIN(bugprone-exception-escape)
 template <typename T>
 InternalSharedPtr<T> InternalWeakPtr<T>::lock() const noexcept
 {
@@ -177,6 +178,7 @@ InternalSharedPtr<T> InternalWeakPtr<T>::lock() const noexcept
   // in this case know it is not, and hence this function is noexcept
   return expired() ? InternalSharedPtr<T>{} : InternalSharedPtr<T>{*this};
 }
+// NOLINTEND(bugprone-exception-escape)
 
 template <typename T>
 void InternalWeakPtr<T>::swap(InternalWeakPtr& other) noexcept
@@ -223,7 +225,7 @@ void InternalSharedPtr<T>::maybe_destroy_() noexcept
   if constexpr (detail::shared_from_this_enabled_v<element_type>) {
     ctrl_->strong_deref();
   }
-  LegateAssert(!use_count());
+  LEGATE_ASSERT(!use_count());
   // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
   // circumstances.
   //
@@ -242,8 +244,8 @@ template <typename T>
 void InternalSharedPtr<T>::strong_reference_() noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
-    LegateAssert(use_count());
+    LEGATE_ASSERT(get());
+    LEGATE_ASSERT(use_count());
     ctrl_->strong_ref();
   }
 }
@@ -252,7 +254,7 @@ template <typename T>
 void InternalSharedPtr<T>::strong_dereference_() noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
+    LEGATE_ASSERT(get());
     ctrl_->strong_deref();
     maybe_destroy_();
   }
@@ -262,8 +264,8 @@ template <typename T>
 void InternalSharedPtr<T>::weak_reference_() noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
-    LegateAssert(use_count());
+    LEGATE_ASSERT(get());
+    LEGATE_ASSERT(use_count());
     ctrl_->weak_ref();
   }
 }
@@ -272,31 +274,35 @@ template <typename T>
 void InternalSharedPtr<T>::weak_dereference_() noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
+    LEGATE_ASSERT(get());
     ctrl_->weak_deref();
     maybe_destroy_();
   }
 }
 
+// NOLINTBEGIN(readability-identifier-naming)
 template <typename T>
 void InternalSharedPtr<T>::user_reference_(SharedPtrAccessTag) noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
-    LegateAssert(use_count());
+    LEGATE_ASSERT(get());
+    LEGATE_ASSERT(use_count());
     ctrl_->user_ref();
   }
 }
+// NOLINTEND(readability-identifier-naming)
 
+// NOLINTBEGIN(readability-identifier-naming)
 template <typename T>
 void InternalSharedPtr<T>::user_dereference_(SharedPtrAccessTag) noexcept
 {
   if (ctrl_) {
-    LegateAssert(get());
+    LEGATE_ASSERT(get());
     ctrl_->user_deref();
     maybe_destroy_();
   }
 }
+// NOLINTEND(readability-identifier-naming)
 
 template <typename T>
 template <typename U, typename V>
@@ -323,26 +329,35 @@ InternalSharedPtr<T>::InternalSharedPtr(AllocatedControlBlockTag,
                                         U* ptr) noexcept
   : ctrl_{ctrl_impl}, ptr_{ptr}
 {
+  static_assert(!std::is_void_v<U>, "incomplete type");
   init_shared_from_this_(ptr, ptr);
+}
+
+template <typename T>
+template <typename U, typename D, typename A>
+InternalSharedPtr<T>::InternalSharedPtr(NoCatchAndDeleteTag, U* ptr, D&& deleter, A&& allocator)
+  : InternalSharedPtr{AllocatedControlBlockTag{},
+                      detail::construct_from_allocator_<
+                        detail::SeparateControlBlock<U, std::decay_t<D>, std::decay_t<A>>>(
+                        allocator, ptr, ptr, std::forward<D>(deleter), allocator),
+                      ptr}
+{
 }
 
 // ==========================================================================================
 
 template <typename T>
-InternalSharedPtr<T>::InternalSharedPtr(std::nullptr_t) noexcept
+constexpr InternalSharedPtr<T>::InternalSharedPtr(std::nullptr_t) noexcept
 {
 }
 
 // clang-format off
 template <typename T>
 template <typename U, typename D, typename A, typename SFINAE>
- InternalSharedPtr<T>::InternalSharedPtr(U* ptr, D deleter, A allocator) try :
-  InternalSharedPtr{
-    AllocatedControlBlockTag{},
-    detail::construct_from_allocator_<detail::SeparateControlBlock<U, D, A>>(allocator, ptr, ptr, deleter, allocator),
-    ptr
-  }
+InternalSharedPtr<T>::InternalSharedPtr(U* ptr, D deleter, A allocator)
+  try : InternalSharedPtr{NoCatchAndDeleteTag{}, ptr, deleter, std::move(allocator)}
 {
+  // Cannot move the deleter, since we may need to use it
 }
 catch (...)
 {
@@ -353,15 +368,15 @@ catch (...)
 
 template <typename T>
 InternalSharedPtr<T>::InternalSharedPtr(element_type* ptr)
-  : InternalSharedPtr{ptr, std::default_delete<element_type>{}}
+  : InternalSharedPtr{ptr, detail::SharedPtrDefaultDelete<T, element_type>{}}
 {
 }
 
 template <typename T>
 template <typename U, typename SFINAE>
-InternalSharedPtr<T>::InternalSharedPtr(U* ptr) : InternalSharedPtr{ptr, std::default_delete<U>{}}
+InternalSharedPtr<T>::InternalSharedPtr(U* ptr)
+  : InternalSharedPtr{ptr, detail::SharedPtrDefaultDelete<T, U>{}}
 {
-  static_assert(!std::is_void_v<U>, "incomplete type");
   // NOLINTNEXTLINE(bugprone-sizeof-expression)
   static_assert(sizeof(U) > 0, "incomplete type");
 }
@@ -435,9 +450,19 @@ InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(InternalSharedPtr<U>&& oth
 template <typename T>
 template <typename U, typename D, typename SFINAE>
 InternalSharedPtr<T>::InternalSharedPtr(std::unique_ptr<U, D>&& ptr)
-  : InternalSharedPtr{ptr.get(), std::move(ptr.get_deleter())}
+  : InternalSharedPtr{NoCatchAndDeleteTag{}, ptr.get(), std::move(ptr.get_deleter())}
 {
-  // Release only after we have fully constructed ourselves to preserve strong exception
+  // We don't want to catch a potentially thrown exception by the constructor above, since
+  // normally this would result in a double-delete:
+  //
+  // 1. We call InternalSharedPtr<T>::InternalSharedPtr(U* ptr, D deleter, A allocator).
+  // 2. An exception is thrown, in construct_from_allocator_() (or elsewhere).
+  // 3. Ctor in (1.) catches, then calls deleter(ptr) (where deleter is the
+  //    unique_ptr.get_deleter()) above, then re-raises.
+  // 4. Exception propagates.
+  // 5. unique_ptr eventually destructs, and calls get_deleter()(ptr) again.
+  //
+  // So we release only after we have fully constructed ourselves to preserve strong exception
   // guarantee. If the above constructor throws, this has no effect.
   static_cast<void>(ptr.release());
 }
@@ -546,7 +571,7 @@ void swap(InternalSharedPtr<T>& lhs, InternalSharedPtr<T>& rhs) noexcept
 template <typename T>
 void InternalSharedPtr<T>::reset() noexcept
 {
-  InternalSharedPtr<T>{}.swap(*this);
+  InternalSharedPtr{}.swap(*this);
 }
 
 template <typename T>
@@ -559,10 +584,26 @@ template <typename T>
 template <typename U, typename D, typename A, typename SFINAE>
 void InternalSharedPtr<T>::reset(U* ptr, D deleter, A allocator)
 {
-  InternalSharedPtr<T>{ptr, std::move(deleter), std::move(allocator)}.swap(*this);
+  InternalSharedPtr{ptr, std::move(deleter), std::move(allocator)}.swap(*this);
 }
 
 // ==========================================================================================
+
+template <typename T>
+typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator[](
+  std::ptrdiff_t idx) noexcept
+{
+  static_assert(std::is_array_v<T>);
+  return get()[idx];
+}
+
+template <typename T>
+const typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator[](
+  std::ptrdiff_t idx) const noexcept
+{
+  static_assert(std::is_array_v<T>);
+  return get()[idx];
+}
 
 template <typename T>
 typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::get() const noexcept
@@ -573,7 +614,7 @@ typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::get() const n
 template <typename T>
 typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator*() const noexcept
 {
-  return *ptr_;
+  return *get();
 }
 
 template <typename T>

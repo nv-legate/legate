@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -15,33 +15,23 @@
 #include "core/utilities/abort.h"
 #include "core/utilities/assert.h"
 #include "core/utilities/cpp_version.h"
-#include "core/utilities/defined.h"
+#include "core/utilities/macros.h"
 
 #include "legion.h"
-
-#ifdef __CUDACC__
-#define LEGATE_DEVICE_PREFIX __device__
-#else
-#define LEGATE_DEVICE_PREFIX
-#endif
 
 #ifndef LEGION_REDOP_HALF
 #error "Legate needs Legion to be compiled with -DLEGION_REDOP_HALF"
 #endif
 
-#if !LegateDefined(LEGATE_USE_CUDA)
-#ifdef LEGION_USE_CUDA
+#if !defined(LEGATE_USE_CUDA) && defined(LEGION_USE_CUDA)
 #define LEGATE_USE_CUDA 1
 #endif
-#endif
 
-#if !LegateDefined(LEGATE_USE_OPENMP)
-#ifdef REALM_USE_OPENMP
+#if !defined(LEGATE_USE_OPENMP) && defined(REALM_USE_OPENMP)
 #define LEGATE_USE_OPENMP 1
 #endif
-#endif
 
-#if !LegateDefined(LEGATE_USE_NETWORK)
+#ifndef LEGATE_USE_NETWORK
 #if defined(REALM_USE_GASNET1) || defined(REALM_USE_GASNETEX) || defined(REALM_USE_MPI) || \
   defined(REALM_USE_UCX)
 #define LEGATE_USE_NETWORK 1
@@ -55,7 +45,7 @@
 #define LEGATE_MAX_DIM LEGION_MAX_DIM
 
 // backwards compatibility
-#if defined(DEBUG_LEGATE) && !LegateDefined(LEGATE_USE_DEBUG)
+#if defined(DEBUG_LEGATE) && !LEGATE_DEFINED(LEGATE_USE_DEBUG)
 #define LEGATE_USE_DEBUG 1
 #endif
 

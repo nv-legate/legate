@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -15,11 +15,17 @@
 #include "core/data/detail/attachment.h"
 #include "core/data/detail/shape.h"
 #include "core/runtime/detail/consensus_match_result.h"
+#include "core/utilities/detail/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
 
-#include <deque>
-#include <map>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <queue>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace legate::detail {
@@ -31,11 +37,15 @@ class Runtime;
 class FreeFieldInfo {
  public:
   FreeFieldInfo() = default;
-  FreeFieldInfo(Legion::LogicalRegion region,
+  FreeFieldInfo(InternalSharedPtr<Shape> shape_,
+                std::uint32_t field_size_,
+                Legion::LogicalRegion region,
                 Legion::FieldID field_id,
                 Legion::Future can_dealloc,
                 std::unique_ptr<Attachment> attachment);
 
+  InternalSharedPtr<Shape> shape{};
+  std::uint32_t field_size{};
   Legion::LogicalRegion region{};
   Legion::FieldID field_id{};
   Legion::Future can_dealloc{};
@@ -44,22 +54,28 @@ class FreeFieldInfo {
 
 class FieldManager {
  public:
-  FieldManager(InternalSharedPtr<Shape> shape, std::uint32_t field_size);
   virtual ~FieldManager();
 
-  [[nodiscard]] virtual InternalSharedPtr<LogicalRegionField> allocate_field();
-  virtual void free_field(FreeFieldInfo free_field_info, bool unordered);
+  [[nodiscard]] virtual InternalSharedPtr<LogicalRegionField> allocate_field(
+    InternalSharedPtr<Shape> shape, std::uint32_t field_size);
+  [[nodiscard]] virtual InternalSharedPtr<LogicalRegionField> import_field(
+    InternalSharedPtr<Shape> shape,
+    std::uint32_t field_size,
+    Legion::LogicalRegion region,
+    Legion::FieldID field_id);
+  virtual void free_field(FreeFieldInfo info, bool unordered);
 
  protected:
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> try_reuse_field();
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_new_field();
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> try_reuse_field_(
+    const InternalSharedPtr<Shape>& shape, std::uint32_t field_size);
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_new_field_(
+    InternalSharedPtr<Shape> shape, std::uint32_t field_size);
 
-  InternalSharedPtr<Shape> shape_{};
-  std::uint32_t field_size_{};
-
+  using OrderedQueueKey = std::pair<Legion::IndexSpace, std::uint32_t>;
   // This is a sanitized list of (region,field_id) pairs that is guaranteed to be ordered across all
   // the shards even with control replication.
-  std::deque<FreeFieldInfo> ordered_free_fields_;
+  std::unordered_map<OrderedQueueKey, std::queue<FreeFieldInfo>, hasher<OrderedQueueKey>>
+    ordered_free_fields_{};
 };
 
 class MatchItem {
@@ -70,32 +86,36 @@ class MatchItem {
   Legion::RegionTreeID tid{};
   Legion::FieldID fid{};
 
-  friend bool operator<(const MatchItem& l, const MatchItem& r);
+  bool operator==(const MatchItem& rhs) const;
+  [[nodiscard]] std::size_t hash() const noexcept;
 };
 
 class ConsensusMatchingFieldManager final : public FieldManager {
  public:
-  ConsensusMatchingFieldManager(InternalSharedPtr<Shape> shape, std::uint32_t field_size);
   ~ConsensusMatchingFieldManager() final;
 
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field() override;
-  void free_field(FreeFieldInfo free_field_info, bool unordered) override;
-
-  void calculate_match_credit(const Shape* initiator);
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> allocate_field(
+    InternalSharedPtr<Shape> shape, std::uint32_t field_size) override;
+  [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_field(
+    InternalSharedPtr<Shape> shape,
+    std::uint32_t field_size,
+    Legion::LogicalRegion region,
+    Legion::FieldID field_id) override;
+  void free_field(FreeFieldInfo info, bool unordered) override;
 
  private:
-  void issue_field_match();
-  void process_next_field_match();
+  [[nodiscard]] std::uint32_t calculate_match_credit_(const InternalSharedPtr<Shape>& shape,
+                                                      std::uint32_t field_size) const;
+  void maybe_issue_field_match_(const InternalSharedPtr<Shape>& shape, std::uint32_t field_size);
+  void issue_field_match_();
+  void process_outstanding_match_();
 
   std::uint32_t field_match_counter_{};
-  std::uint32_t field_match_credit_{1};
-
   // This list contains the fields that we know have been freed on this shard, but may not have been
   // freed yet on other shards.
-  std::vector<FreeFieldInfo> unordered_free_fields_;
-
-  std::deque<ConsensusMatchResult<MatchItem>> matches_;
-  std::deque<std::map<MatchItem, FreeFieldInfo>> info_for_match_items_;
+  std::vector<FreeFieldInfo> unordered_free_fields_{};
+  std::optional<ConsensusMatchResult<MatchItem>> outstanding_match_{};
+  std::unordered_map<MatchItem, FreeFieldInfo, hasher<MatchItem>> info_for_match_items_{};
 };
 
 }  // namespace legate::detail

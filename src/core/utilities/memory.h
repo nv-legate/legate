@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -21,15 +21,15 @@ namespace legate {
 /// @code{.cpp}
 ///  // in header file:
 ///  struct Foo;
-///  extern template class legate::default_delete<Foo>; // Suppress instantiation
-///  std::unique_ptr<Foo, default_delete<Foo>> foo;     // OK
+///  extern template class legate::DefaultDelete<Foo>; // Suppress instantiation
+///  std::unique_ptr<Foo, DefaultDelete<Foo>> foo;     // OK
 ///
 ///  // in source file:
 ///  struct Foo { int x; };
-///  template class legate::default_delete<Foo>;        // Explicit instantiation
+///  template class legate::DefaultDelete<Foo>;        // Explicit instantiation
 /// @endcode
 template <typename T>
-class default_delete {
+class DefaultDelete {
  public:
   void operator()(T*) const noexcept;
 };

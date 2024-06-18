@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -12,8 +12,7 @@
 
 #include "core/task/task.h"
 
-#include "core/runtime/detail/runtime.h"
-#include "core/runtime/runtime.h"
+#include "core/runtime/detail/config.h"
 #include "core/task/detail/return.h"
 #include "core/task/detail/task_context.h"
 #include "core/task/exception.h"
@@ -24,7 +23,6 @@
 
 #include "realm/faults.h"
 
-#include <cxxabi.h>
 #include <optional>
 #include <string_view>
 
@@ -36,9 +34,17 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
     return;
   }
   const auto exec_proc     = runtime->get_executing_processor(ctx);
-  const auto proc_kind_str = (exec_proc.kind() == Processor::LOC_PROC)   ? "CPU"
-                             : (exec_proc.kind() == Processor::TOC_PROC) ? "GPU"
-                                                                         : "OpenMP";
+  const auto proc_kind_str = [&] {
+    switch (const auto kind = exec_proc.kind()) {
+      case Processor::LOC_PROC: return "CPU";
+      case Processor::TOC_PROC: return "GPU";
+      case Processor::OMP_PROC: return "OpenMP";
+      default:
+        LEGATE_ABORT("Unhandled processor kind: " << legate::traits::detail::to_underlying(kind));
+        break;
+    }
+    return "";
+  }();
 
   std::stringstream point_str;
   const auto& point = task->index_point;
@@ -47,23 +53,9 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
     point_str << "," << point[dim];
   }
 
-  log_legate().print("%s %s task [%s], pt = (%s), proc = " IDFMT,
-                     task->get_task_name(),
-                     proc_kind_str,
-                     task->get_provenance_string().c_str(),
-                     point_str.str().c_str(),
-                     exec_proc.id);
-}
-
-std::string generate_task_name(const std::type_info& ti)
-{
-  std::string result;
-  int status      = 0;
-  char* demangled = abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status);
-  result          = demangled;
-  std::free(demangled);
-  LegateCheck(!status);
-  return result;
+  log_legate().print() << task->get_task_name() << " " << proc_kind_str << " task ["
+                       << task->get_provenance_string() << "], pt = (" << point_str.str()
+                       << "), proc = " << exec_proc.id;
 }
 
 void task_wrapper(VariantImpl variant_impl,
@@ -85,14 +77,14 @@ void task_wrapper(VariantImpl variant_impl,
     return task_name.has_value() ? task_name.value() : task->get_task_name();
   };
 
-  // Cannot use if (LegateDefined(...)) here since nvtx::Range is a RAII class which begins and
+  // Cannot use if (LEGATE_DEFINED(...)) here since nvtx::Range is a RAII class which begins and
   // ends a timer on construction and destruction. It must be in the same lexical scope as the
   // task evaluation!
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   std::stringstream ss;
   ss << get_task_name();
   if (!task->get_provenance_string().empty()) {
-    ss << " : " + task->get_provenance_string();
+    ss << " : " << task->get_provenance_string();
   }
   const std::string msg = std::move(ss).str();
   const nvtx::Range auto_range{msg.c_str()};

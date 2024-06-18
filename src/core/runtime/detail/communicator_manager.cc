@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -21,7 +21,7 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
                                                       const Domain& launch_domain)
 {
   if (launch_domain.dim == 1) {
-    return find_or_create(target, range, launch_domain.get_volume());
+    return find_or_create_(target, range, launch_domain.get_volume());
   }
 
   AliasKey key{launch_domain, target, range};
@@ -30,24 +30,24 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
     return finder->second;
   }
 
-  auto communicator = find_or_create(target, range, launch_domain.get_volume());
-  communicator      = transform(communicator, launch_domain);
+  auto communicator = find_or_create_(target, range, launch_domain.get_volume());
+  communicator      = transform_(communicator, launch_domain);
   nd_aliases_.insert({std::move(key), communicator});
   return communicator;
 }
 
 void CommunicatorFactory::destroy()
 {
-  for (auto& [key, communicator] : communicators_) {
-    finalize(key.get_machine(), key.desc, communicator);
+  for (auto&& [key, communicator] : communicators_) {
+    finalize_(key.get_machine(), key.desc, communicator);
   }
   communicators_.clear();
   nd_aliases_.clear();
 }
 
-Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget& target,
-                                                      const mapping::ProcessorRange& range,
-                                                      std::uint32_t num_tasks)
+Legion::FutureMap CommunicatorFactory::find_or_create_(const mapping::TaskTarget& target,
+                                                       const mapping::ProcessorRange& range,
+                                                       std::uint32_t num_tasks)
 {
   CommKey key{num_tasks, target, range};
   auto finder = communicators_.find(key);
@@ -55,13 +55,13 @@ Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget&
     return finder->second;
   }
 
-  auto communicator = initialize(key.get_machine(), num_tasks);
+  auto communicator = initialize_(key.get_machine(), num_tasks);
   communicators_.insert({std::move(key), communicator});
   return communicator;
 }
 
-Legion::FutureMap CommunicatorFactory::transform(const Legion::FutureMap& communicator,
-                                                 const Domain& launch_domain)
+Legion::FutureMap CommunicatorFactory::transform_(const Legion::FutureMap& communicator,
+                                                  const Domain& launch_domain)
 {
   auto* runtime   = Runtime::get_runtime();
   auto new_domain = runtime->find_or_create_index_space(launch_domain);

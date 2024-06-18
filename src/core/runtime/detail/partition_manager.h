@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/shape.h"
+#include "core/partitioning/constraint.h"
 #include "core/partitioning/partition.h"
 #include "core/partitioning/restriction.h"
 #include "core/utilities/detail/hash.h"
@@ -56,7 +57,8 @@ class PartitionManager {
   [[nodiscard]] Legion::IndexPartition find_image_partition(
     const Legion::IndexSpace& index_space,
     const Legion::LogicalPartition& func_partition,
-    Legion::FieldID field_id) const;
+    Legion::FieldID field_id,
+    ImageComputationHint hint) const;
 
   void record_index_partition(const Legion::IndexSpace& index_space,
                               const Tiling& tiling,
@@ -67,11 +69,13 @@ class PartitionManager {
   void record_image_partition(const Legion::IndexSpace& index_space,
                               const Legion::LogicalPartition& func_partition,
                               Legion::FieldID field_id,
+                              ImageComputationHint hint,
                               const Legion::IndexPartition& index_partition);
 
   void invalidate_image_partition(const Legion::IndexSpace& index_space,
                                   const Legion::LogicalPartition& func_partition,
-                                  Legion::FieldID field_id);
+                                  Legion::FieldID field_id,
+                                  ImageComputationHint hint);
 
  private:
   std::int64_t min_shard_volume_{};
@@ -82,7 +86,8 @@ class PartitionManager {
     tiling_cache_{};
   using WeightedCacheKey = std::pair<Legion::IndexSpace, Weighted>;
   std::map<WeightedCacheKey, Legion::IndexPartition> weighted_cache_{};
-  using ImageCacheKey = std::tuple<Legion::IndexSpace, Legion::LogicalPartition, Legion::FieldID>;
+  using ImageCacheKey =
+    std::tuple<Legion::IndexSpace, Legion::LogicalPartition, Legion::FieldID, ImageComputationHint>;
   std::map<ImageCacheKey, Legion::IndexPartition> image_cache_{};
 };
 

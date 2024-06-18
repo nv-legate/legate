@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/data/shape.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/memory.h"
 #include "core/utilities/shared_ptr.h"
@@ -44,7 +45,8 @@ class Variable;
  */
 class Variable {
  public:
-  Variable() = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(Variable);
+
   explicit Variable(const detail::Variable* impl);
 
   [[nodiscard]] std::string to_string() const;
@@ -63,7 +65,8 @@ class Constraint {
  public:
   [[nodiscard]] std::string to_string() const;
 
-  Constraint() = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(Constraint);
+
   explicit Constraint(InternalSharedPtr<detail::Constraint>&& impl);
   Constraint(const Constraint&)                = default;
   Constraint(Constraint&&) noexcept            = default;
@@ -133,6 +136,17 @@ class Constraint {
 
 /**
  * @ingroup partitioning
+ * @brief Hints to the runtime for the image computation
+ */
+enum class ImageComputationHint : std::uint8_t {
+  NO_HINT,    /*!< A precise image of the function is needed */
+  MIN_MAX,    /*!< An approximate image of the function using bounding boxes is sufficient */
+  FIRST_LAST, /*!< Elements in the function store are sorted and thus bounding can be computed
+                     using only the first and the last elements */
+};
+
+/**
+ * @ingroup partitioning
  * @brief Creates an image constraint between partitions.
  *
  * The elements of \p var_function are treated as pointers to elements in \p var_range. Each
@@ -141,10 +155,27 @@ class Constraint {
  *
  * @param var_function Partition symbol for the function store
  * @param var_range Partition symbol of the store whose partition should be derived from the image
+ * @param hint Optional hint to the runtime describing how the image computation can be performed.
+ * If no hint is given (which is the default), the runtime falls back to the precise image
+ * computation. Otherwise, the runtime computes a potentially approximate image of the function.
  *
- * @return Broadcast constraint
+ * @return Image constraint
+ *
+ * @note An approximate image of a function potentially contains extra points not in the function's
+ * image. For example, if a function sub-store contains two 2-D points (0, 0) and (1, 1), the
+ * corresponding sub-store of the range would only contain the elements at points (0, 0) and (1, 1)
+ * if it was constructed from a precise image computation, whereas an approximate image computation
+ * would yield a sub-store with elements at point (0, 0), (0, 1), (1, 0), and (1, 1) (two extra
+ * elements).
+ *
+ * Currently, the precise image computation can be performed only by CPUs. As a result, the
+ * function store is copied to the system memory if the store was last updated by GPU tasks.
+ * The approximate image computation has no such issue and is fully GPU accelerated.
+ *
  */
-[[nodiscard]] Constraint image(Variable var_function, Variable var_range);
+[[nodiscard]] Constraint image(Variable var_function,
+                               Variable var_range,
+                               ImageComputationHint hint = ImageComputationHint::NO_HINT);
 
 /**
  * @ingroup partitioning

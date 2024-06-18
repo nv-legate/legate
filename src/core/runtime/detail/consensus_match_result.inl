@@ -51,22 +51,22 @@ void ConsensusMatchResult<T>::wait()
     return;
   }
   const auto num_matched = future_.get_result<std::size_t>();
-  LegateCheck(num_matched <= output_.size());
+  LEGATE_CHECK(num_matched <= output_.size());
   output_.resize(num_matched);
   complete_ = true;
-};
+}
 
 template <typename T>
 const std::vector<T>& ConsensusMatchResult<T>::input() const
 {
   return input_;
-};
+}
 
 template <typename T>
 const std::vector<T>& ConsensusMatchResult<T>::output() const
 {
-  LegateCheck(complete_);
+  LEGATE_CHECK(complete_);
   return output_;
-};
+}
 
 }  // namespace legate::detail

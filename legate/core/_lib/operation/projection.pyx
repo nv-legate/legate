@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -12,18 +12,15 @@
 from libc.stdint cimport int32_t
 from libcpp.utility cimport move as std_move
 
+from ..utilities.unconstructable cimport Unconstructable
 
-cdef class SymbolicExpr:
+
+cdef class SymbolicExpr(Unconstructable):
     @staticmethod
     cdef SymbolicExpr from_handle(_SymbolicExpr handle):
         cdef SymbolicExpr result = SymbolicExpr.__new__(SymbolicExpr)
         result._handle = std_move(handle)
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     @property
     def dim(self) -> int:

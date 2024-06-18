@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -128,6 +128,6 @@ inline void InstanceMappingPolicy::set_exact(bool _exact) { exact = _exact; }
 
 inline const detail::StoreMapping* StoreMapping::impl() const noexcept { return impl_.get(); }
 
-inline detail::StoreMapping* StoreMapping::release() noexcept { return impl_.release(); }
+inline detail::StoreMapping* StoreMapping::release_() noexcept { return impl_.release(); }
 
 }  // namespace legate::mapping

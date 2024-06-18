@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -11,8 +11,8 @@
  */
 
 #include "core/data/detail/scalar.h"
-#include "core/utilities/deserializer.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/deserializer.h"
 
 #include "utilities/utilities.h"
 
@@ -22,11 +22,13 @@ namespace aligned_unpack_test {
 
 using AlignedUnpack = DefaultFixture;
 
-class TestDeserializer : public legate::BaseDeserializer<TestDeserializer> {
+// NOLINTBEGIN(readability-magic-numbers)
+
+class TestDeserializer : public legate::detail::BaseDeserializer<TestDeserializer> {
  public:
   TestDeserializer(const void* args, std::size_t arglen) : BaseDeserializer(args, arglen) {}
 
-  using BaseDeserializer::_unpack;
+  using BaseDeserializer::unpack_impl;
 };
 
 TEST_F(AlignedUnpack, Bug1)
@@ -44,5 +46,7 @@ TEST_F(AlignedUnpack, Bug1)
 
   EXPECT_EQ(unpacked.value<complex<double>>(), to_pack.value<complex<double>>());
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace aligned_unpack_test

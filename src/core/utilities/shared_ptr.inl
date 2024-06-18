@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -64,7 +64,7 @@ SharedPtr<T>::SharedPtr(U* ptr, Deleter deleter, Alloc allocator)
 
 template <typename T>
 template <typename U, typename SFINAE>
-SharedPtr<T>::SharedPtr(U* ptr) : SharedPtr{ptr, std::default_delete<U>{}}
+SharedPtr<T>::SharedPtr(U* ptr) : SharedPtr{ptr, detail::SharedPtrDefaultDelete<T, U>{}}
 {
 }
 
@@ -236,6 +236,19 @@ void SharedPtr<T>::reset(U* ptr, D deleter, A allocator)
 }
 
 // ==========================================================================================
+
+template <typename T>
+typename SharedPtr<T>::element_type& SharedPtr<T>::operator[](std::ptrdiff_t idx) noexcept
+{
+  return internal_ptr({})[idx];
+}
+
+template <typename T>
+const typename SharedPtr<T>::element_type& SharedPtr<T>::operator[](
+  std::ptrdiff_t idx) const noexcept
+{
+  return internal_ptr({})[idx];
+}
 
 template <typename T>
 typename SharedPtr<T>::element_type* SharedPtr<T>::get() const noexcept

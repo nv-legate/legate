@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -55,8 +55,8 @@ class CPU(TestStage):
             "--sysmem",
             str(config.memory.sysmem),
         ]
-        args += self._handle_cpu_pin_args(config, shard)
-        args += self._handle_multi_node_args(config)
+        args += self.handle_cpu_pin_args(config, shard)
+        args += self.handle_multi_node_args(config)
         return args
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
@@ -75,16 +75,14 @@ class CPU(TestStage):
 
         mem_workers = system.memory // (sysmem * bloat_factor)
 
-        workers = min(cpu_workers, mem_workers)
-
-        if workers == 0:
+        if cpu_workers == 0:
             if config.execution.cpu_pin == "strict":
                 raise RuntimeError(
                     f"{len(cpus)} detected core(s) not enough for "
                     f"{ranks_per_node} rank(s) per node, each "
                     f"reserving {procs} core(s) with strict CPU pinning"
                 )
-            else:
+            elif mem_workers > 0:
                 warnings.warn(
                     f"{len(cpus)} detected core(s) not enough for "
                     f"{ranks_per_node} rank(s) per node, each "
@@ -93,7 +91,12 @@ class CPU(TestStage):
                 all_cpus = chain.from_iterable(cpu.ids for cpu in cpus)
                 return StageSpec(1, [Shard([tuple(sorted(all_cpus))])])
 
-        workers = adjust_workers(workers, config.execution.workers)
+        workers = min(cpu_workers, mem_workers)
+
+        detail = f"{cpu_workers=} {mem_workers=}"
+        workers = adjust_workers(
+            workers, config.execution.workers, detail=detail
+        )
 
         shards: list[Shard] = []
         for i in range(workers):

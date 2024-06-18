@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -24,7 +24,7 @@ inline Library::ResourceIdScope::ResourceIdScope(std::int64_t base,
                                                  std::int64_t dyn_size)
   : base_{base}, size_{size}, next_{size - dyn_size}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG) && (dyn_size > this->size())) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && (dyn_size > this->size())) {
     std::stringstream ss;
 
     ss << "Number of dynamic resource IDs " << dyn_size << " > total number of IDs "
@@ -35,12 +35,18 @@ inline Library::ResourceIdScope::ResourceIdScope(std::int64_t base,
 
 inline std::int64_t Library::ResourceIdScope::translate(std::int64_t local_resource_id) const
 {
+  if (local_resource_id >= size_) {
+    std::stringstream ss;
+
+    ss << "Maximum local ID is " << size_ - 1 << " but received a local ID " << local_resource_id;
+    throw std::out_of_range{std::move(ss).str()};
+  }
   return base_ + local_resource_id;
 }
 
 inline std::int64_t Library::ResourceIdScope::invert(std::int64_t resource_id) const
 {
-  LegateCheck(in_scope(resource_id));
+  LEGATE_CHECK(in_scope(resource_id));
   return resource_id - base_;
 }
 
@@ -52,8 +58,6 @@ inline std::int64_t Library::ResourceIdScope::generate_id()
   return next_++;
 }
 
-inline bool Library::ResourceIdScope::valid() const { return base_ != -1; }
-
 inline bool Library::ResourceIdScope::in_scope(std::int64_t resource_id) const
 {
   return base_ <= resource_id && resource_id < base_ + size_;
@@ -63,7 +67,7 @@ inline std::int64_t Library::ResourceIdScope::size() const { return size_; }
 
 // ==========================================================================================
 
-inline const std::string& Library::get_library_name() const { return library_name_; }
+inline std::string_view Library::get_library_name() const { return library_name_; }
 
 inline Legion::MapperID Library::get_mapper_id() const { return mapper_id_; }
 

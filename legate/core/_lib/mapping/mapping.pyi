@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -16,5 +16,12 @@ class TaskTarget(IntEnum):
     GPU: int
     OMP: int
     CPU: int
+
+@unique
+class StoreTarget(IntEnum):
+    SYSMEM: int
+    FBMEM: int
+    ZCMEM: int
+    SOCKETMEM: int
 
 TASK_TARGET_TO_VARIANT_KIND: dict[TaskTarget, int]

@@ -7,65 +7,62 @@ on:
       target-device:
         type: string
         required: true
-      cmake-preset:
+      build-mode:
         type: string
         required: true
       ucx-enabled:
         type: boolean
         required: true
+      build-type:
+        type: string
+        required: true
+      upload-enabled:
+        type: boolean
+        required: true
 jobs:
-  setup-build:
-    name: Setup build
-    runs-on: linux-amd64-cpu4
-    outputs:
-      runner_type: ${{ steps.set_runner.outputs.runner_type }}
-    steps:
-      - id: set_runner
-        run: |
-          if [ "${{ inputs.platform }}" = "linux" ]; then
-            echo "runner_type=linux-amd64-cpu32" >> $GITHUB_OUTPUT
-          elif [ "${{ inputs.platform }}" = "mac" ]; then
-            echo "runner_type=macos-latest"  >> $GITHUB_OUTPUT
-          fi
-
   build:
-    needs: setup-build
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v23.11.00
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.8
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
-      runs-on: ${{ needs.setup-build.outputs.runner_type }}
-      build-type: ci
-      use-container: ${{ inputs.platform == 'linux' }}
+      runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
+      build-type: ${{ inputs.build-type }}
+      use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v23.11.00"
-      cmake-preset: ${{ inputs.cmake-preset }}
+      dependencies-workflow: ""
+      legate-gh-ci-tag: "v1.8"
+      build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
+      upload-enabled: ${{ inputs.upload-enabled }}
     secrets: inherit
 
-  build-docs:
-    needs: setup-build
-    if: ${{ github.repository_owner == 'nv-legate' }}
+  upload:
+    needs: build
+    if: ${{ github.repository_owner == 'nv-legate' && contains(github.workflow, 'Nightly') && inputs.upload-enabled == true }}
+    name: Upload package to Server
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v23.11.00
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.8
     with:
       client-repo: ${{ github.event.repository.name }}
+      build-type: ${{ inputs.build-type }}
+      name: uploadToURM
       target-device: ${{ inputs.target-device }}
-      runs-on: ${{ needs.setup-build.outputs.runner_type }}
-      build-type: docs
-      use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
-      dependencies-file: ""
-      legate-gh-ci-tag: "v23.11.00"
-      cmake-preset: ${{ inputs.cmake-preset }}
+      legate-gh-ci-tag: "v1.8"
+      build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
+      upload-enabled: ${{ inputs.upload-enabled }}
+      upload-action: "upload-package"
+      pkgSubString: "legate-core"
+      repos-Root: "legate_core"
     secrets: inherit
 
   setup-test:
     name: Setup test
+    if: inputs.upload-enabled == false
     needs:
       - build
     runs-on: linux-amd64-cpu4
@@ -76,7 +73,7 @@ jobs:
         run: |
           set -xeuo pipefail
           MATRIX_JSON='{"include": ['
-          RUNNERS=('linux-amd64-gpu-v100-latest-1:gpu:linux' 'linux-amd64-2gpu:gpu:linux' 'linux-amd64-cpu8:cpu:linux' 'macos-latest:cpu:mac')
+          RUNNERS=('linux-amd64-gpu-v100-latest-1:gpu:linux' 'linux-amd64-2gpu:gpu:linux' 'linux-amd64-cpu8:cpu:linux' 'macos-latest:cpu:mac' 'linux-arm64-cpu16:cpu:linux-aarch64' 'linux-aarch64-2gpu:gpu:linux-aarch64')
           TEST_CONFIGS=('Python Unit Tests:python' 'C++ Unit Tests:cpp')
 
           for RUNNER in "${RUNNERS[@]}"; do
@@ -101,56 +98,79 @@ jobs:
           echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
 
   test-within-container:
-    if: github.repository_owner == 'nv-legate' && inputs.platform == 'linux'
+    if: github.repository_owner == 'nv-legate' && (inputs.platform == 'linux' || inputs.platform == 'linux-aarch64')
     needs:
       - setup-test
 
-    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, UCX=${{ inputs.ucx-enabled }})
+    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.build-mode }}, UCX=${{ inputs.ucx-enabled }})
 
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v23.11.00
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.8
     with:
       client-repo: ${{ github.event.repository.name }}
-      build-type: ci
+      build-type: ${{ inputs.build-type }}
       name: ${{ matrix.test-config.name }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ matrix.runner.name }}
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v23.11.00"
-      cmake-preset: ${{ inputs.cmake-preset }}
+      legate-gh-ci-tag: "v1.8"
+      build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
+      upload-enabled: ${{ inputs.upload-enabled }}
     secrets: inherit
 
 
   test-without-container:
-    if: github.repository_owner == 'nv-legate' && inputs.platform != 'linux'
+    if: github.repository_owner == 'nv-legate' && (inputs.platform != 'linux' && inputs.platform != 'linux-aarch64')
     needs:
       - setup-test
 
-    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.cmake-preset }}, UCX=${{ inputs.ucx-enabled }})
+    name: ${{ matrix.test-config.name }} (${{ inputs.platform }}, ${{ inputs.target-device }}, ${{ inputs.build-mode }}, UCX=${{ inputs.ucx-enabled }})
 
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v23.11.00
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.8
     with:
       client-repo: ${{ github.event.repository.name }}
-      build-type: ci
+      build-type: ${{ inputs.build-type }}
       name: ${{ matrix.test-config.name }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ matrix.runner.name }}
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v23.11.00"
-      cmake-preset: ${{ inputs.cmake-preset }}
+      legate-gh-ci-tag: "v1.8"
+      build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
+      upload-enabled: ${{ inputs.upload-enabled }}
+    secrets: inherit
+
+  updateTestStatus:
+    needs: test-within-container
+    name: Update Test status on Server
+    if: ${{ github.repository_owner == 'nv-legate' && contains(github.workflow, 'Nightly') }}
+    uses:
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.8
+    with:
+      client-repo: ${{ github.event.repository.name }}
+      build-type: ${{ inputs.build-type }}
+      name: UpdateTestStatus
+      target-device: ${{ inputs.target-device }}
+      platform: ${{ inputs.platform }}
+      legate-gh-ci-tag: "v1.8"
+      build-mode: ${{ inputs.build-mode }}
+      ucx-enabled: ${{ inputs.ucx-enabled }}
+      upload-enabled: true
+      upload-action: "update-test-status"
+      pkgSubString: "legate-core"
+      repos-Root: "legate_core"
     secrets: inherit

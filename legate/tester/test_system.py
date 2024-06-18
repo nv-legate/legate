@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -17,11 +17,10 @@ from __future__ import annotations
 
 import multiprocessing
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from pathlib import Path
 from subprocess import PIPE, STDOUT, TimeoutExpired, run as stdlib_run
-from typing import Sequence
 
 import psutil
 
@@ -42,8 +41,8 @@ class ProcessResult:
     #: The command invovation, including relevant environment vars
     invocation: str
 
-    #: User-friendly test file path to use in reported output
-    test_file: Path
+    #: User-friendly string to use in reported output
+    test_display: str
 
     #: The time the process started
     start: datetime | None = None
@@ -101,7 +100,7 @@ class TestSystem(System):
     def run(
         self,
         cmd: Sequence[str],
-        test_file: Path,
+        test_display: str,
         *,
         env: EnvDict | None = None,
         cwd: str | None = None,
@@ -115,8 +114,8 @@ class TestSystem(System):
             The command to run, split on whitespace into a sequence
             of strings
 
-        test_file : Path
-            User-friendly test file path to use in reported output
+        test_display : str
+            User-friendly string to use in reported output
 
         env : dict[str, str] or None, optional, default: None
             Environment variables to apply when running the command
@@ -136,7 +135,7 @@ class TestSystem(System):
         invocation = envstr + " ".join(cmd)
 
         if self.dry_run:
-            return ProcessResult(invocation, test_file, skipped=True)
+            return ProcessResult(invocation, test_display, skipped=True)
 
         full_env = dict(os.environ)
         full_env.update(env)
@@ -149,19 +148,24 @@ class TestSystem(System):
                 env=full_env,
                 stdout=PIPE,
                 stderr=STDOUT,
-                text=True,
                 timeout=timeout,
             )
-        except TimeoutExpired:
-            return ProcessResult(invocation, test_file, timeout=True)
+        except TimeoutExpired as te:
+            if te.stdout is None:
+                output = ""
+            else:
+                output = te.stdout.decode(errors="replace")
+            return ProcessResult(
+                invocation, test_display, timeout=True, output=output
+            )
 
         end = datetime.now()
 
         return ProcessResult(
             invocation,
-            test_file,
+            test_display,
             start=start,
             end=end,
             returncode=proc.returncode,
-            output=proc.stdout,
+            output=proc.stdout.decode(errors="replace"),
         )

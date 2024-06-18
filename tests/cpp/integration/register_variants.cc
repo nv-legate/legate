@@ -10,6 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/detail/zip.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
 
@@ -18,21 +20,13 @@
 
 namespace register_variants {
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 using RegisterVariants = DefaultFixture;
 
-static const char* library_name = "test_register_variants";
+namespace {
 
-struct Registry {
-  static legate::TaskRegistrar& get_registrar();
-};
-
-legate::TaskRegistrar& Registry::get_registrar()
-{
-  static legate::TaskRegistrar registrar;
-  return registrar;
-}
-
-enum TaskID {
+enum TaskID : std::uint8_t {
   HELLO  = 0,
   HELLO1 = 1,
   HELLO2 = 2,
@@ -40,7 +34,21 @@ enum TaskID {
   HELLO4 = 4,
   HELLO5 = 5,
 };
-static constexpr std::array<TaskID, 6> task_ids = {HELLO, HELLO1, HELLO2, HELLO3, HELLO4, HELLO5};
+
+constexpr std::array<TaskID, 6> TASK_IDS = {HELLO, HELLO1, HELLO2, HELLO3, HELLO4, HELLO5};
+
+}  // namespace
+
+struct Registry {
+  [[nodiscard]] static legate::TaskRegistrar& get_registrar();
+};
+
+legate::TaskRegistrar& Registry::get_registrar()
+{
+  static legate::TaskRegistrar registrar{};
+
+  return registrar;
+}
 
 void hello_cpu_variant(legate::TaskContext& context)
 {
@@ -59,8 +67,8 @@ void hello_cpu_variant(legate::TaskContext& context)
 
 template <std::int32_t TID>
 struct BaseTask : public legate::LegateTask<BaseTask<TID>> {
-  using Registrar                   = Registry;
-  static const std::int32_t TASK_ID = TID;
+  using Registrar                       = Registry;
+  static constexpr std::int32_t TASK_ID = TID;
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
 
@@ -133,32 +141,71 @@ void validate_store(const legate::LogicalStore& store)
 TEST_F(RegisterVariants, All)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
+  auto context = runtime->create_library("test_register_variants1");
 
-  for (auto task_id : task_ids) {
+  for (auto task_id : TASK_IDS) {
     EXPECT_THROW(static_cast<void>(context.get_task_name(task_id)), std::out_of_range);
   }
 
   test_register_tasks(context);
 
   // Sanity test that tasks are registered successfully
-  for (auto task_id : task_ids) {
+  for (auto task_id : TASK_IDS) {
     const std::string task_name =
       task_id >= HELLO4 ? "register_variants::BaseTask2"
                         : "register_variants::BaseTask<" + std::to_string(task_id) + ">";
-    EXPECT_STREQ(context.get_task_name(task_id).c_str(), task_name.c_str());
+    EXPECT_STREQ(context.get_task_name(task_id).data(), task_name.c_str());
   }
 
   auto store = runtime->create_store(legate::Shape{5, 5}, legate::int64());
-  for (auto task_id : task_ids) {
+  for (auto task_id : TASK_IDS) {
     test_auto_task(context, store, task_id);
     validate_store(store);
   }
 
-  for (auto task_id : task_ids) {
+  for (auto task_id : TASK_IDS) {
     test_manual_task(context, store, task_id);
     validate_store(store);
   }
 }
+
+class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
+ public:
+  static constexpr std::int32_t TASK_ID     = 0;
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+  static constexpr auto OMP_VARIANT_OPTIONS = legate::VariantOptions{}.with_leaf(false);
+  static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_return_size(1234);
+
+  static void cpu_variant(legate::TaskContext) {}
+  static void omp_variant(legate::TaskContext) {}
+  static void gpu_variant(legate::TaskContext) {}
+};
+
+TEST_F(RegisterVariants, DefaultVariantOptions)
+{
+  auto library = legate::Runtime::get_runtime()->create_library("test_register_variants2");
+
+  DefaultOptionsTask::register_variants(library);
+
+  const auto* task_info = library.find_task(DefaultOptionsTask::TASK_ID);
+  // This test checks that the defaults in <XXX>_VARIANT_OPTIONS override the "normal"
+  // defaults. Obviously, we cannot properly test that if the normal defaults match that of
+  // DefaultOptionsTask::<XXX>_VARIANT_OPTIONS.
+  static_assert(legate::VariantOptions::DEFAULT_OPTIONS != DefaultOptionsTask::CPU_VARIANT_OPTIONS);
+  static_assert(legate::VariantOptions::DEFAULT_OPTIONS != DefaultOptionsTask::OMP_VARIANT_OPTIONS);
+  static_assert(legate::VariantOptions::DEFAULT_OPTIONS != DefaultOptionsTask::GPU_VARIANT_OPTIONS);
+
+  constexpr std::array variant_kinds = {LEGATE_CPU_VARIANT, LEGATE_OMP_VARIANT, LEGATE_GPU_VARIANT};
+  constexpr std::array options       = {DefaultOptionsTask::CPU_VARIANT_OPTIONS,
+                                        DefaultOptionsTask::OMP_VARIANT_OPTIONS,
+                                        DefaultOptionsTask::GPU_VARIANT_OPTIONS};
+
+  for (auto&& [variant_kind, default_options] : legate::detail::zip(variant_kinds, options)) {
+    ASSERT_TRUE(task_info->has_variant(variant_kind));
+    ASSERT_EQ(task_info->find_variant(variant_kind).options, default_options);
+  }
+}
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace register_variants

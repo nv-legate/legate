@@ -135,3 +135,4 @@ UseTab: Never
 Macros:
 - LEGATE_SCOPE_GUARD(x)=do { x } while (0)
 - LEGATE_SCOPE_FAIL(x)=do { x } while (0)
+- LEGATE_STL_UNSPECIFIED(...)=__VA_ARGS__

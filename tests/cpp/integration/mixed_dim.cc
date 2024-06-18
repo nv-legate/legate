@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,16 +17,11 @@
 
 namespace mixed_dim {
 
-using Partitioner = DefaultFixture;
-
-static const char* library_name = "test_mixed_dim";
-
-enum TaskIDs {
-  TESTER = 0,
-};
+// NOLINTBEGIN(readability-magic-numbers)
 
 struct Tester : public legate::LegateTask<Tester> {
-  static const std::int32_t TASK_ID = TESTER;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE(context.is_single_task());
@@ -34,11 +29,18 @@ struct Tester : public legate::LegateTask<Tester> {
   }
 };
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_mixed_dim";
+  static void registration_callback(legate::Library library) { Tester::register_variants(library); }
+};
+
+class Partitioner : public RegisterOnceFixture<Config> {};
+
 TEST_F(Partitioner, MixedDim)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
-  Tester::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto test = [&runtime, &library](
                 std::int32_t unbound_ndim, const auto& extents1, const auto& extents2) {
@@ -46,7 +48,7 @@ TEST_F(Partitioner, MixedDim)
     auto normal1 = runtime->create_store(extents1, legate::int64());
     auto normal2 = runtime->create_store(extents2, legate::float64());
 
-    auto task = runtime->create_task(library, TESTER);
+    auto task = runtime->create_task(library, Tester::TASK_ID);
     task.add_output(unbound);
     task.add_output(normal1);
     task.add_output(normal2);
@@ -67,5 +69,7 @@ TEST_F(Partitioner, MixedDim)
   test(2, extents3d, extents3d);
   test(3, extents1d, extents1d);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace mixed_dim

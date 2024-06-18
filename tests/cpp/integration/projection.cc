@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,15 +17,17 @@
 
 namespace projection_test {
 
-using ProjectionTest = DefaultFixture;
-
 namespace {
-constexpr std::uint64_t BIG_EXTENT   = 100;
-constexpr std::uint64_t SMALL_EXTENT = 2;
+
+constexpr std::uint64_t BIGGER_EXTENT = 200;
+constexpr std::uint64_t BIG_EXTENT    = 100;
+constexpr std::uint64_t SMALL_EXTENT  = 2;
+
 }  // namespace
 
 struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> {
   static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     if (context.is_single_task()) {
@@ -76,11 +78,22 @@ struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
   }
 };
 
-void test_extra_projection(legate::LogicalArray arr1)
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "lib_projection_test";
+  static void registration_callback(legate::Library library)
+  {
+    ExtraProjectionTester::register_variants(library);
+    DelinearizeTester::register_variants(library);
+  }
+};
+
+class ProjectionTest : public RegisterOnceFixture<Config> {};
+
+void test_extra_projection(const legate::LogicalArray& arr1)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_or_create_library("lib_projection_test");
-  ExtraProjectionTester::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto arr2 =
     runtime->create_array(legate::Shape{BIG_EXTENT, SMALL_EXTENT, SMALL_EXTENT}, legate::int64());
@@ -90,11 +103,10 @@ void test_extra_projection(legate::LogicalArray arr1)
   runtime->submit(std::move(task));
 }
 
-void test_delinearization(legate::LogicalArray arr1)
+void test_delinearization(const legate::LogicalArray& arr1)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_or_create_library("lib_projection_test");
-  DelinearizeTester::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto arr2 =
     runtime->create_array(legate::Shape{BIG_EXTENT, BIG_EXTENT, SMALL_EXTENT}, legate::int64());
@@ -128,13 +140,13 @@ TEST_F(ProjectionTest, ExtraProjection3)
 TEST_F(ProjectionTest, Delinearization1)
 {
   test_delinearization(legate::Runtime::get_runtime()->create_array(
-    legate::Shape{BIG_EXTENT, SMALL_EXTENT, BIG_EXTENT}, legate::int64()));
+    legate::Shape{BIG_EXTENT, SMALL_EXTENT, BIGGER_EXTENT}, legate::int64()));
 }
 
 TEST_F(ProjectionTest, Delinearization2)
 {
   test_delinearization(legate::Runtime::get_runtime()
-                         ->create_array(legate::Shape{BIG_EXTENT, BIG_EXTENT}, legate::int64())
+                         ->create_array(legate::Shape{BIG_EXTENT, BIGGER_EXTENT}, legate::int64())
                          .promote(1, SMALL_EXTENT));
 }
 

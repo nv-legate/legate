@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,9 +16,7 @@
 
 #include "legate.h"
 
-namespace task {
-
-namespace simple {
+namespace task::simple {
 
 enum TaskOpCode {
   _OP_CODE_BASE = 0,
@@ -27,26 +25,25 @@ enum TaskOpCode {
   REDUCER       = 3,
 };
 
-static const char* library_name = "legate.simple";
+inline constexpr std::string_view LIBRARY_NAME = "legate.simple";
+
 extern Legion::Logger logger;
 
 void register_tasks();
 
 struct HelloTask : public legate::LegateTask<HelloTask> {
-  static const std::int32_t TASK_ID = HELLO;
+  static constexpr std::int32_t TASK_ID = HELLO;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct WriterTask : public legate::LegateTask<WriterTask> {
-  static const std::int32_t TASK_ID = WRITER;
+  static constexpr std::int32_t TASK_ID = WRITER;
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct ReducerTask : public legate::LegateTask<ReducerTask> {
-  static const std::int32_t TASK_ID = REDUCER;
+  static constexpr std::int32_t TASK_ID = REDUCER;
   static void cpu_variant(legate::TaskContext context);
 };
 
-}  // namespace simple
-
-}  // namespace task
+}  // namespace task::simple

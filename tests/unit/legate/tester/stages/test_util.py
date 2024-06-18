@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import pytest
 
@@ -27,7 +26,7 @@ from legate.util.ui import failed, passed, shell, skipped, timeout
 
 
 def test_StageResult() -> None:
-    procs = [ProcessResult(f"run{i}", Path(f"test{i}")) for i in range(10)]
+    procs = [ProcessResult(f"run{i}", f"test{i}") for i in range(10)]
     procs[2].returncode = 10
     procs[7].returncode = -2
 
@@ -47,19 +46,37 @@ class Test_adjust_workers:
         assert m.adjust_workers(10, n) == n
 
     def test_negative_requested(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match="requested workers must be non-negative"
+        ):
             assert m.adjust_workers(10, -1)
 
     def test_zero_requested(self) -> None:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(
+            RuntimeError, match="requested workers must not be zero"
+        ):
             assert m.adjust_workers(10, 0)
 
-    def test_zero_computed(self) -> None:
-        with pytest.raises(RuntimeError):
+    def test_zero_adjusted(self) -> None:
+        with pytest.raises(
+            RuntimeError, match="Current configuration results in zero workers"
+        ):
             assert m.adjust_workers(0, None)
 
+    def test_zero_adjusted_with_detail(self) -> None:
+        with pytest.raises(
+            RuntimeError,
+            match="Current configuration results in zero workers "
+            r"\[details: foo bar\]",
+        ):
+            assert m.adjust_workers(0, None, detail="foo bar")
+
     def test_requested_too_large(self) -> None:
-        with pytest.raises(RuntimeError):
+        with pytest.raises(
+            RuntimeError,
+            match=r"Requested workers \(11\) is greater than "
+            r"computed workers \(10\)",
+        ):
             assert m.adjust_workers(10, 11)
 
 
@@ -68,52 +85,52 @@ class Test_log_proc:
     def test_skipped(self, returncode: int) -> None:
         config = Config([])
         proc = ProcessResult(
-            "proc", Path("proc"), skipped=True, returncode=returncode
+            "proc", "proc_display", skipped=True, returncode=returncode
         )
 
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
-        assert LOG.lines == (skipped(f"(foo) {proc.test_file}"),)
+        assert LOG.lines == (skipped(f"(foo) {proc.test_display}"),)
 
     def test_passed(self) -> None:
         config = Config([])
-        proc = ProcessResult("proc", Path("proc"))
+        proc = ProcessResult("proc", "proc_display")
 
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
-        assert LOG.lines == (passed(f"(foo) {proc.test_file}"),)
+        assert LOG.lines == (passed(f"(foo) {proc.test_display}"),)
 
     def test_passed_verbose(self) -> None:
         config = Config([])
-        proc = ProcessResult("proc", Path("proc"), output="foo\nbar")
+        proc = ProcessResult("proc", "proc_display", output="foo\nbar")
         details = proc.output.split("\n")
 
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=True)
 
         assert LOG.lines == tuple(
-            passed(f"(foo) {proc.test_file}", details=details).split("\n")
+            passed(f"(foo) {proc.test_display}", details=details).split("\n")
         )
 
     @pytest.mark.parametrize("returncode", (-23, -1, 1, 17))
     def test_failed(self, returncode: int) -> None:
         config = Config([])
-        proc = ProcessResult("proc", Path("proc"), returncode=returncode)
+        proc = ProcessResult("proc", "proc_display", returncode=returncode)
 
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
         assert LOG.lines == (
-            failed(f"(foo) {proc.test_file}", exit_code=returncode),
+            failed(f"(foo) {proc.test_display}", exit_code=returncode),
         )
 
     @pytest.mark.parametrize("returncode", (-23, -1, 1, 17))
     def test_failed_verbose(self, returncode: int) -> None:
         config = Config([])
         proc = ProcessResult(
-            "proc", Path("proc"), returncode=returncode, output="foo\nbar"
+            "proc", "proc_display", returncode=returncode, output="foo\nbar"
         )
         details = proc.output.split("\n")
 
@@ -122,7 +139,7 @@ class Test_log_proc:
 
         assert LOG.lines == tuple(
             failed(
-                f"(foo) {proc.test_file}",
+                f"(foo) {proc.test_display}",
                 details=details,
                 exit_code=returncode,
             ).split("\n")
@@ -130,35 +147,35 @@ class Test_log_proc:
 
     def test_timeout(self) -> None:
         config = Config([])
-        proc = ProcessResult("proc", Path("proc"), timeout=True)
+        proc = ProcessResult("proc", "proc_display", timeout=True)
 
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
-        assert LOG.lines == (timeout(f"(foo) {proc.test_file}"),)
+        assert LOG.lines == (timeout(f"(foo) {proc.test_display}"),)
 
     def test_dry_run(self) -> None:
         config = Config(["test.py", "--dry-run"])
-        proc = ProcessResult("proc", Path("proc"))
+        proc = ProcessResult("proc", "proc_display")
 
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
         assert LOG.lines == (
             shell(proc.invocation),
-            passed(f"(foo) {proc.test_file}"),
+            passed(f"(foo) {proc.test_display}"),
         )
 
     def test_debug(self) -> None:
         config = Config(["test.py", "--debug"])
-        proc = ProcessResult("proc", Path("proc"))
+        proc = ProcessResult("proc", "proc_display")
 
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
         assert LOG.lines == (
             shell(proc.invocation),
-            passed(f"(foo) {proc.test_file}"),
+            passed(f"(foo) {proc.test_display}"),
         )
 
     def test_time(self) -> None:
@@ -166,11 +183,11 @@ class Test_log_proc:
         start = datetime.now()
         end = start + timedelta(seconds=2.41)
 
-        proc = ProcessResult("proc", Path("proc"), start=start, end=end)
+        proc = ProcessResult("proc", "proc_display", start=start, end=end)
 
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
         assert LOG.lines[0] == shell(proc.invocation)
         assert LOG.lines[1].startswith(passed("(foo) 2.41s {"))
-        assert LOG.lines[1].endswith(f"}} {proc.test_file}")
+        assert LOG.lines[1].endswith(f"}} {proc.test_display}")

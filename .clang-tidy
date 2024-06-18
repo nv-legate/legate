@@ -53,6 +53,27 @@ Checks:
   # Results in: error: for C++11-compatibility, use pair directly. But we don't care about
   # C++11, and so we don't care about this warning.
   - '-google-build-explicit-make-pair'
+  # This check is incredibly expensive for absolutely no reason, and since we a) use
+  # modern google-test and b) don't have clang-tidy enabled on our testing code, we don't
+  # need to enable it!
+  - '-google-upgrade-googletest-case'
+  # This warning will warn if you have redundant default-initializers for class
+  # members. For example:
+  #
+  # class Foo
+  # {
+  #   int x_{}; // WARNING: redundant initializer here
+  #
+  # public:
+  #   Foo(int x) : x_{x} { }
+  # };
+  #
+  # Since Foo can only ever be constructed with an explicit value for x_ via its constructor,
+  # the default initializer is technically redundant. However, if we change the definition
+  # of Foo to now allow a default ctor, then the initializer becomes non-redundant
+  # again. It is easier to just follow the rule of "always explicitly default initialize
+  # members" than to remember to change 2 places at once.
+  - '-readability-redundant-member-init'
 WarningsAsErrors: '*'
 HeaderFileExtensions:
   - ''
@@ -69,7 +90,6 @@ ImplementationFileExtensions:
   - cxx
   - cu
 HeaderFilterRegex: '.*/src/.*'
-AnalyzeTemporaryDtors: false
 SystemHeaders: false
 CheckOptions:
   cert-dcl16-c.NewSuffixes: 'L;LL;LU;LLU'
@@ -100,7 +120,46 @@ CheckOptions:
   # copies wholesale (which is OK because they are just pimpls, and thus, very cheap to
   # copy).
   performance-unnecessary-value-param.AllowedTypes: 'legate::TaskContext'
-  performance-inefficient-vector-operation.VectorLikeClasses: 'legate::tuple;legate::Shape'
+  performance-inefficient-vector-operation.VectorLikeClasses: '::std::vector;legate::tuple;legate::Shape'
+  performance-inefficient-string-concatenation.StrictMode: 'true'
   readability-simplify-boolean-expr.ChainedConditionalReturn: 'true'
   readability-simplify-boolean-expr.ChainedConditionalAssignment: 'true'
+  bugprone-dangling-handle.HandleClasses: 'legate::Span;::std::span'
+  bugprone-misplaced-widening-cast.CheckImplicitCasts: 'true'
+  bugprone-unused-return-value.AllowCastToVoid: 'true'
+  readability-enum-initial-value.AllowExplicitZeroFirstInitialValue: 'false'
+  readability-enum-initial-value.AllowExplicitSequentialInitialValues: 'false'
+  readability-redundant-access-specifiers.CheckFirstDeclaration: 'true'
+  bugprone-lambda-function-name.IgnoreMacros: 'true'
+  readability-identifier-naming.ClassCase: 'CamelCase'
+  readability-identifier-naming.UnionCase: 'CamelCase'
+  readability-identifier-naming.ClassConstantCase: 'UPPER_CASE'
+  readability-identifier-naming.ClassIgnoredRegexp: 'tuple|has_.*|is_.*|as_.*|.*_tag|tag|.*_of'
+  readability-identifier-naming.ConstantMemberCase: 'UPPER_CASE'
+  readability-identifier-naming.ConstantMemberIgnoredRegexp: 'value'
+  readability-identifier-naming.EnumCase: 'CamelCase'
+  readability-identifier-naming.EnumConstantCase: 'UPPER_CASE'
+  readability-identifier-naming.FunctionCase: 'lower_case'
+  # We want to allow legate::Shape SHAPE_4D()
+  readability-identifier-naming.FunctionIgnoredRegexp: '[A-Z_0-9]+'
+  readability-identifier-naming.GlobalConstantCase: 'UPPER_CASE'
+  readability-identifier-naming.GlobalConstantIgnoredRegexp: '.*_v'
+  readability-identifier-naming.LocalVariableCase: 'lower_case'
+  # We want to allow constexpr auto MY_VAL1
+  readability-identifier-naming.LocalVariableIgnoredRegexp: '[A-Z_0-9]+'
+  readability-identifier-naming.MacroDefinitionCase: 'UPPER_CASE'
+  # We want to allow MY_MACRO_PRIVATE_1_
+  readability-identifier-naming.MacroDefinitionIgnoredRegexp: '[A-Z_0-9]+'
+  readability-identifier-naming.NamespaceCase: 'lower_case'
+  readability-identifier-naming.PrivateMemberCase: 'lower_case'
+  readability-identifier-naming.PrivateMemberSuffix: '_'
+  readability-identifier-naming.PrivateMethodCase: 'lower_case'
+  readability-identifier-naming.PrivateMethodSuffix: '_'
+  readability-identifier-naming.ProtectedMemberCase: 'lower_case'
+  readability-identifier-naming.ProtectedMemberSuffix: '_'
+  readability-identifier-naming.ProtectedMethodCase: 'lower_case'
+  readability-identifier-naming.ProtectedMethodSuffix: '_'
+  readability-identifier-naming.PublicMethodCase: 'lower_case'
+  readability-identifier-naming.ScopedEnumCase: 'CamelCase'
+  readability-identifier-naming.ScopedEnumConstantCase: 'UPPER_CASE'
 ...

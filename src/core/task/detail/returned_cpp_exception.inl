@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -28,8 +28,10 @@ inline std::uint64_t ReturnedCppException::size() const
   return static_cast<std::uint64_t>(message_.size());
 }
 
+// NOLINTNEXTLINE(readability-redundant-inline-specifier)
 inline bool ReturnedCppException::raised() const { return !message_.empty(); }
 
+// NOLINTNEXTLINE(readability-redundant-inline-specifier)
 inline constexpr ExceptionKind ReturnedCppException::kind() { return ExceptionKind::CPP; }
 
 }  // namespace legate::detail

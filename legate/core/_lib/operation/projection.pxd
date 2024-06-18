@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -14,6 +14,7 @@ from libcpp cimport bool
 from libcpp.string cimport string as std_string
 
 from ..utilities.tuple cimport _tuple
+from ..utilities.unconstructable cimport Unconstructable
 
 
 cdef extern from "core/operation/projection.h" namespace "legate" nogil:
@@ -38,7 +39,7 @@ cdef extern from "core/operation/projection.h" namespace "legate" nogil:
 ctypedef _tuple[_SymbolicExpr] _SymbolicPoint
 
 
-cdef class SymbolicExpr:
+cdef class SymbolicExpr(Unconstructable):
     cdef _SymbolicExpr _handle
 
     @staticmethod

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -45,12 +45,12 @@ class CopyArg final : public Serializable {
   void populate_requirement(Legion::RegionRequirement& requirement);
 
  private:
-  std::uint32_t req_idx_;
-  LogicalStore* store_;
-  Legion::LogicalRegion region_;
-  Legion::FieldID field_id_;
-  Legion::PrivilegeMode privilege_;
-  std::unique_ptr<StoreProjection> store_proj_;
+  std::uint32_t req_idx_{};
+  LogicalStore* store_{};
+  Legion::LogicalRegion region_{};
+  Legion::FieldID field_id_{};
+  Legion::PrivilegeMode privilege_{};
+  std::unique_ptr<StoreProjection> store_proj_{};
 };
 
 class CopyLauncher {
@@ -72,7 +72,7 @@ class CopyLauncher {
   void add_target_indirect(const InternalSharedPtr<LogicalStore>& store,
                            std::unique_ptr<StoreProjection> store_proj);
 
-  void add_store(std::vector<std::unique_ptr<CopyArg>>& args,
+  void add_store(std::vector<CopyArg>& args,
                  const InternalSharedPtr<LogicalStore>& store,
                  std::unique_ptr<StoreProjection> store_proj,
                  Legion::PrivilegeMode privilege);
@@ -94,10 +94,10 @@ class CopyLauncher {
   std::int64_t tag_{};
   Legion::ProjectionID key_proj_id_{};
 
-  std::vector<std::unique_ptr<CopyArg>> inputs_{};
-  std::vector<std::unique_ptr<CopyArg>> outputs_{};
-  std::vector<std::unique_ptr<CopyArg>> source_indirect_{};
-  std::vector<std::unique_ptr<CopyArg>> target_indirect_{};
+  std::vector<CopyArg> inputs_{};
+  std::vector<CopyArg> outputs_{};
+  std::vector<CopyArg> source_indirect_{};
+  std::vector<CopyArg> target_indirect_{};
 
   bool source_indirect_out_of_range_{true};
   bool target_indirect_out_of_range_{true};

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -18,7 +18,6 @@
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <optional>
-#include <string>
 
 namespace legate::detail {
 
@@ -45,11 +44,11 @@ class Scatter final : public Operation {
 
  private:
   bool out_of_range_{true};
-  StoreArg target_;
-  StoreArg target_indirect_;
-  StoreArg source_;
-  InternalSharedPtr<Constraint> constraint_;
-  std::optional<std::int32_t> redop_;
+  StoreArg target_{};
+  StoreArg target_indirect_{};
+  StoreArg source_{};
+  InternalSharedPtr<Alignment> constraint_{};
+  std::optional<std::int32_t> redop_{};
 };
 
 }  // namespace legate::detail

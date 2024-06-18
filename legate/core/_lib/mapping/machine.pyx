@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -11,8 +11,9 @@
 
 from libc.stdint cimport uint32_t
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Union
 
 from libcpp.map cimport map as std_map
 from libcpp.utility cimport move as std_move
@@ -272,7 +273,7 @@ cdef class Machine:
         return self._handle.preferred_target()
 
     cpdef ProcessorRange get_processor_range(
-        self, target: Optional[PyTaskTarget] = None
+        self, target: PyTaskTarget | None = None
     ):
         """
         Returns the processor range of a given task target.
@@ -293,7 +294,7 @@ cdef class Machine:
             else self._handle.processor_range(<TaskTarget> target)
         )
 
-    cpdef tuple get_node_range(self, target: Optional[PyTaskTarget] = None):
+    cpdef tuple get_node_range(self, target: PyTaskTarget | None = None):
         """
         Returns the node range for processor of a given task target.
 
@@ -322,7 +323,7 @@ cdef class Machine:
         return tuple(self._handle.valid_targets())
 
     cpdef int count(
-        self, target: Optional[PyTaskTarget] = None
+        self, target: PyTaskTarget | None = None
     ):
         """
         Returns the number of processors of a given task target
@@ -384,7 +385,7 @@ cdef class Machine:
         return Machine.from_handle(self._handle.only(std_move(cpp_targets)))
 
     cpdef Machine slice(
-        self, slice sl, target: Optional[PyTaskTarget] = None
+        self, slice sl, target: PyTaskTarget | None = None
     ):
         """
         Slices the machine by a given slice and a task target

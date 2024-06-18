@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,7 +17,7 @@
 
 namespace legate {
 
-const std::string& Library::get_library_name() const { return impl()->get_library_name(); }
+std::string_view Library::get_library_name() const { return impl()->get_library_name(); }
 
 Legion::TaskID Library::get_task_id(std::int64_t local_task_id) const
 {
@@ -80,7 +80,7 @@ bool Library::valid_sharding_id(Legion::ShardingID shard_id) const
 
 std::int64_t Library::get_new_task_id() { return impl()->get_new_task_id(); }
 
-const std::string& Library::get_task_name(std::int64_t local_task_id) const
+std::string_view Library::get_task_name(std::int64_t local_task_id) const
 {
   return impl()->get_task_name(local_task_id);
 }
@@ -105,10 +105,10 @@ const TaskInfo* Library::find_task(std::int64_t local_task_id) const
   return impl()->find_task(local_task_id);
 }
 
-void Library::perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
-                               const Legion::UntypedBuffer& buffer)
+void Library::perform_callback_(Legion::RegistrationWithArgsCallbackFnptr callback,
+                                const Legion::UntypedBuffer& buffer)
 {
-  Legion::Runtime::perform_registration_callback(callback, buffer, true /*global*/);
+  Legion::Runtime::perform_registration_callback(callback, buffer, false /*global*/);
 }
 
 }  // namespace legate

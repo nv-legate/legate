@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,7 +16,7 @@
 
 namespace legate {
 
-inline LogicalStore::LogicalStore(InternalSharedPtr<detail::LogicalStore>&& impl)
+inline LogicalStore::LogicalStore(InternalSharedPtr<detail::LogicalStore> impl)
   : impl_{std::move(impl)}
 {
 }

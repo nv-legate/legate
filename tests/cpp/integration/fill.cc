@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -20,22 +20,58 @@
 
 namespace fill_test {
 
-constexpr const char* library_name = "test_fill";
+// NOLINTBEGIN(readability-magic-numbers)
+
+namespace {
 
 constexpr std::size_t SIZE = 10;
 
-enum TaskIDs {
+}  // namespace
+
+enum TaskIDs : std::uint8_t {
   CHECK_TASK         = 0,
   CHECK_SLICE_TASK   = 3,
   WRAP_FILL_VAL_TASK = 7,
 };
 
-using FillTests = DefaultFixture;
+template <std::int32_t DIM>
+struct CheckTask : public legate::LegateTask<CheckTask<DIM>> {
+  static constexpr std::int32_t TASK_ID = CHECK_TASK + DIM;
+  static void cpu_variant(legate::TaskContext context);
+};
 
-class Whole : public DefaultFixture,
+template <std::int32_t DIM>
+struct CheckSliceTask : public legate::LegateTask<CheckSliceTask<DIM>> {
+  static constexpr std::int32_t TASK_ID = CHECK_SLICE_TASK + DIM;
+  static void cpu_variant(legate::TaskContext context);
+};
+
+struct WrapFillValueTask : public legate::LegateTask<WrapFillValueTask> {
+  static constexpr std::int32_t TASK_ID = WRAP_FILL_VAL_TASK;
+  static void cpu_variant(legate::TaskContext context);
+};
+
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_fill";
+  static void registration_callback(legate::Library library)
+  {
+    CheckTask<1>::register_variants(library);
+    CheckTask<2>::register_variants(library);
+    CheckTask<3>::register_variants(library);
+    CheckSliceTask<1>::register_variants(library);
+    CheckSliceTask<2>::register_variants(library);
+    CheckSliceTask<3>::register_variants(library);
+    WrapFillValueTask::register_variants(library);
+  }
+};
+
+class FillTests : public RegisterOnceFixture<Config> {};
+
+class Whole : public RegisterOnceFixture<Config>,
               public ::testing::WithParamInterface<std::tuple<bool, std::int32_t, std::size_t>> {};
 
-class Slice : public DefaultFixture,
+class Slice : public RegisterOnceFixture<Config>,
               public ::testing::WithParamInterface<std::tuple<bool, bool, std::int32_t>> {};
 
 INSTANTIATE_TEST_SUITE_P(FillTests,
@@ -51,45 +87,11 @@ INSTANTIATE_TEST_SUITE_P(FillTests,
                                             ::testing::Values(1, 2, 3)));
 
 template <std::int32_t DIM>
-struct CheckTask : public legate::LegateTask<CheckTask<DIM>> {
-  static const std::int32_t TASK_ID = CHECK_TASK + DIM;
-  static void cpu_variant(legate::TaskContext context);
-};
-
-template <std::int32_t DIM>
-struct CheckSliceTask : public legate::LegateTask<CheckSliceTask<DIM>> {
-  static const std::int32_t TASK_ID = CHECK_SLICE_TASK + DIM;
-  static void cpu_variant(legate::TaskContext context);
-};
-
-struct WrapFillValueTask : public legate::LegateTask<WrapFillValueTask> {
-  static const std::int32_t TASK_ID = WRAP_FILL_VAL_TASK;
-  static void cpu_variant(legate::TaskContext context);
-};
-
-void register_tasks()
-{
-  bool created = false;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library =
-    runtime->find_or_create_library(library_name, legate::ResourceConfig{}, nullptr, &created);
-  if (created) {
-    CheckTask<1>::register_variants(library);
-    CheckTask<2>::register_variants(library);
-    CheckTask<3>::register_variants(library);
-    CheckSliceTask<1>::register_variants(library);
-    CheckSliceTask<2>::register_variants(library);
-    CheckSliceTask<3>::register_variants(library);
-    WrapFillValueTask::register_variants(library);
-  }
-}
-
-template <std::int32_t DIM>
 /*static*/ void CheckTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto input         = context.input(0);
-  auto shape         = input.shape<DIM>();
-  std::int64_t value = context.scalar(0).value<std::int64_t>();
+  auto input       = context.input(0);
+  auto shape       = input.shape<DIM>();
+  const auto value = context.scalar(0).value<std::int64_t>();
 
   if (shape.empty()) {
     return;
@@ -113,11 +115,11 @@ template <std::int32_t DIM>
 template <std::int32_t DIM>
 /*static*/ void CheckSliceTask<DIM>::cpu_variant(legate::TaskContext context)
 {
-  auto input               = context.input(0);
-  auto shape               = input.shape<DIM>();
-  auto value_in_slice      = context.scalar(0);
-  auto value_outside_slice = context.scalar(1);
-  auto offset              = context.scalar(2).value<std::int64_t>();
+  auto input                      = context.input(0);
+  auto shape                      = input.shape<DIM>();
+  const auto& value_in_slice      = context.scalar(0);
+  const auto& value_outside_slice = context.scalar(1);
+  auto offset                     = context.scalar(2).value<std::int64_t>();
 
   if (shape.empty()) {
     return;
@@ -157,36 +159,37 @@ template <std::int32_t DIM>
 
 /*static*/ void WrapFillValueTask::cpu_variant(legate::TaskContext context)
 {
-  auto output = context.output(0);
-  auto scalar = context.scalar(0);
+  auto output        = context.output(0);
+  const auto& scalar = context.scalar(0);
 
   auto acc = output.data().write_accessor<int8_t, 1, false>();
   std::memcpy(acc.ptr(0), scalar.ptr(), scalar.size());
 }
 
-void check_output(const legate::LogicalArray& array, legate::Scalar&& value)
+void check_output(const legate::LogicalArray& array, const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto task = runtime->create_task(context, CHECK_TASK + array.dim());
+  auto task = runtime->create_task(context, static_cast<std::int64_t>(CHECK_TASK) + array.dim());
   task.add_input(array);
-  task.add_scalar_arg(std::move(value));
+  task.add_scalar_arg(value);
   runtime->submit(std::move(task));
 }
 
 void check_output_slice(const legate::LogicalArray& array,
-                        legate::Scalar&& value_in_slice,
-                        legate::Scalar&& value_outside_slice,
+                        const legate::Scalar& value_in_slice,
+                        const legate::Scalar& value_outside_slice,
                         std::int64_t offset)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto task = runtime->create_task(context, CHECK_SLICE_TASK + array.dim());
+  auto task =
+    runtime->create_task(context, static_cast<std::int64_t>(CHECK_SLICE_TASK) + array.dim());
   task.add_input(array);
-  task.add_scalar_arg(std::move(value_in_slice));
-  task.add_scalar_arg(std::move(value_outside_slice));
+  task.add_scalar_arg(value_in_slice);
+  task.add_scalar_arg(value_outside_slice);
   task.add_scalar_arg(legate::Scalar{offset});
   runtime->submit(std::move(task));
 }
@@ -194,7 +197,7 @@ void check_output_slice(const legate::LogicalArray& array,
 legate::LogicalStore wrap_fill_value(const legate::Scalar& value)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto result  = runtime->create_store(legate::Shape{1}, value.type(), true);
 
   auto task = runtime->create_task(context, WRAP_FILL_VAL_TASK);
@@ -219,7 +222,7 @@ void test_fill_index(std::int32_t dim, std::uint64_t size, bool nullable)
   runtime->issue_fill(lhs, v);
 
   // check the result of fill
-  check_output(lhs, std::move(v));
+  check_output(lhs, v);
 }
 
 void test_fill_slice(std::int32_t dim, std::uint64_t size, bool null_init, bool task_init)
@@ -250,7 +253,7 @@ void test_fill_slice(std::int32_t dim, std::uint64_t size, bool null_init, bool 
   }
 
   // check if the slice is filled correctly
-  check_output_slice(lhs, std::move(value_in_slice), std::move(value_outside_slice), offset);
+  check_output_slice(lhs, value_in_slice, value_outside_slice, offset);
 }
 
 void test_invalid()
@@ -269,7 +272,6 @@ void test_invalid()
 
 TEST_P(Whole, Index)
 {
-  register_tasks();
   const auto& [nullable, dim, size] = GetParam();
   test_fill_index(dim, size, nullable);
 }
@@ -278,20 +280,20 @@ TEST_P(Whole, Single)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  legate::Scope scope{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
+  const legate::Scope scope{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
 
-  register_tasks();
   const auto& [nullable, dim, size] = GetParam();
   test_fill_index(dim, size, nullable);
 }
 
 TEST_P(Slice, Index)
 {
-  register_tasks();
   const auto& [null_init, task_init, dim] = GetParam();
   test_fill_slice(dim, SIZE, null_init, task_init);
 }
 
 TEST_F(FillTests, Invalid) { test_invalid(); }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace fill_test

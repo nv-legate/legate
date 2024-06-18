@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 # All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -9,19 +9,15 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libcpp.utility cimport move
-
-import cython
-
-
 cdef extern from "timing/timing.h" namespace "legate::timing" nogil:
     cdef cppclass Time:
         int value()
 
     cdef Time measure_microseconds()
-
     cdef Time measure_nanoseconds()
 
 
 cdef class PyTime:
     cdef Time _time
+
+cpdef PyTime time(str units = *)

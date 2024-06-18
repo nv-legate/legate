@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,6 +16,7 @@
 #include "core/data/shape.h"
 #include "core/data/slice.h"
 #include "core/type/type_info.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 
@@ -72,13 +73,12 @@ class Runtime;
  * the logical store.
  */
 class LogicalStore {
- private:
   friend class Runtime;
   friend class LogicalArray;
   friend class LogicalStorePartition;
 
  public:
-  explicit LogicalStore(InternalSharedPtr<detail::LogicalStore>&& impl);
+  explicit LogicalStore(InternalSharedPtr<detail::LogicalStore> impl);
 
   /**
    * @brief Returns the number of dimensions of the store.
@@ -391,7 +391,8 @@ class LogicalStore {
 
   [[nodiscard]] const SharedPtr<detail::LogicalStore>& impl() const;
 
-  LogicalStore()                                         = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(LogicalStore);
+
   LogicalStore(const LogicalStore& other)                = default;
   LogicalStore& operator=(const LogicalStore& other)     = default;
   LogicalStore(LogicalStore&& other) noexcept            = default;

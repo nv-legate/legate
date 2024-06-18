@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -205,6 +205,9 @@ class TestMultiRank:
                 "2",
                 "--sysmem",
                 "2000",
+                # any launcher will do
+                "--launcher",
+                "srun",
             ]
         )
         s = FakeSystem(cpus=12)
@@ -217,12 +220,24 @@ class TestMultiRank:
             str(c.memory.sysmem),
             "--cpu-bind",
             "0,1/2,3",
+            "--launcher",
+            "srun",
             "--ranks-per-node",
             "2",
         ]
 
     def test_spec_with_cpus_1(self) -> None:
-        c = Config(["test.py", "--cpus", "1", "--ranks-per-node", "2"])
+        c = Config(
+            [
+                "test.py",
+                "--cpus",
+                "1",
+                "--ranks-per-node",
+                "2",
+                "--launcher",
+                "srun",
+            ]
+        )
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
         assert stage.spec.workers == 3
@@ -233,7 +248,17 @@ class TestMultiRank:
         ]
 
     def test_spec_with_cpus_2(self) -> None:
-        c = Config(["test.py", "--cpus", "2", "--ranks-per-node", "2"])
+        c = Config(
+            [
+                "test.py",
+                "--cpus",
+                "2",
+                "--ranks-per-node",
+                "2",
+                "--launcher",
+                "srun",
+            ]
+        )
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
         assert stage.spec.workers == 2
@@ -252,6 +277,9 @@ class TestMultiRank:
                 "2",
                 "--ranks-per-node",
                 "2",
+                # any launcher will do
+                "--launcher",
+                "srun",
             ]
         )
         s = FakeSystem(cpus=12)
@@ -264,7 +292,17 @@ class TestMultiRank:
 
     def test_spec_with_requested_workers(self) -> None:
         c = Config(
-            ["test.py", "--cpus", "1", "-j", "1", "--ranks-per-node", "2"]
+            [
+                "test.py",
+                "--cpus",
+                "1",
+                "-j",
+                "1",
+                "--ranks-per-node",
+                "2",
+                "--launcher",
+                "srun",
+            ]
         )
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
@@ -275,7 +313,17 @@ class TestMultiRank:
 
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem(cpus=12)
-        c = Config(["test.py", "-j", "0", "--ranks-per-node", "2"])
+        c = Config(
+            [
+                "test.py",
+                "-j",
+                "0",
+                "--ranks-per-node",
+                "2",
+                "--launcher",
+                "srun",
+            ]
+        )
         assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.CPU(c, s)
@@ -283,7 +331,15 @@ class TestMultiRank:
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem(cpus=12)
         c = Config(
-            ["test.py", "-j", f"{len(s.cpus) + 1}", "--ranks-per-node", "2"]
+            [
+                "test.py",
+                "-j",
+                f"{len(s.cpus) + 1}",
+                "--ranks-per-node",
+                "2",
+                "--launcher",
+                "srun",
+            ]
         )
         requested_workers = c.execution.workers
         assert requested_workers is not None
@@ -301,6 +357,9 @@ class TestMultiRank:
             "2",
             "--cpu-pin",
             "strict",
+            # any launcher will do
+            "--launcher",
+            "srun",
         ]
         c = Config(args)
         s = FakeSystem(cpus=4)
@@ -318,6 +377,9 @@ class TestMultiRank:
             "2",
             "--cpu-pin",
             "none",
+            # any launcher will do
+            "--launcher",
+            "srun",
         ]
         c = Config(args)
         s = FakeSystem(cpus=4)

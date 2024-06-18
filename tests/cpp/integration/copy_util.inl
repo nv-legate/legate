@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -37,7 +37,7 @@ constexpr decltype(auto) type_dispatch_for_test(legate::Type::Code code,
     }
     default: break;
   }
-  LegateAssert(false);
+  LEGATE_ASSERT(false);
   return f.template operator()<legate::Type::Code::INT64>(std::forward<Fnargs>(args)...);
 }
 
@@ -52,7 +52,7 @@ struct FillTask : public legate::LegateTask<FillTask<DIM>> {
     template <legate::Type::Code CODE>
     void operator()(legate::PhysicalStore& output, legate::Rect<DIM>& shape, legate::Scalar& seed)
     {
-      using VAL     = legate::type_of<CODE>;
+      using VAL     = legate::type_of_t<CODE>;
       auto acc      = output.write_accessor<VAL, DIM>(shape);
       auto to_fill  = seed.value<VAL>();
       std::size_t i = 1;
@@ -157,7 +157,7 @@ void fill_indirect(legate::Library library,
       break;
     }
     default: {
-      LegateAssert(false);
+      LEGATE_ASSERT(false);
       break;
     }
   }

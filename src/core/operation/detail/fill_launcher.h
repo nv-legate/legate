@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -15,8 +15,6 @@
 #include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/store_projection.h"
-
-#include <tuple>
 
 namespace legate::detail {
 
@@ -41,7 +39,7 @@ class FillLauncher {
   void launch_single(LogicalStore* lhs, const StoreProjection& lhs_proj, const Scalar& value);
 
  private:
-  void pack_mapper_arg(BufferBuilder& buffer, Legion::ProjectionID proj_id);
+  void pack_mapper_arg_(BufferBuilder& buffer, Legion::ProjectionID proj_id);
 
   const mapping::detail::Machine& machine_;
   std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};

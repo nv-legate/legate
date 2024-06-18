@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -30,7 +30,7 @@ void write_header(std::ofstream& out,
                   const legate::Span<const std::int32_t>& shape,
                   const legate::Span<const std::int32_t>& tile_shape)
 {
-  LegateCheck(shape.size() == tile_shape.size());
+  LEGATE_CHECK(shape.size() == tile_shape.size());
   std::int32_t dim = shape.size();
   // Dump the type code, the array's shape and the tile shape to the header
   out.write(reinterpret_cast<const char*>(&type_code), sizeof(int32_t));

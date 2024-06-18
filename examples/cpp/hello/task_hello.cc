@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -60,9 +60,9 @@ void register_tasks()
   legate::PhysicalStore output = context.reduction(0);
   auto sum                     = output.reduce_accessor<Reduce, true, 1>();
   // Best-practice is to validate types
-  LegateCheck(output.code() == legate::Type::Code::FLOAT32);
-  LegateCheck(output.dim() == 1);
-  LegateCheck(output.shape<1>() == legate::Rect<1>(0, 0));
+  LEGATE_CHECK(output.code() == legate::Type::Code::FLOAT32);
+  LEGATE_CHECK(output.dim() == 1);
+  LEGATE_CHECK(output.shape<1>() == legate::Rect<1>(0, 0));
   sum.reduce(0, total);
 }
 
@@ -70,19 +70,19 @@ void register_tasks()
 {
   legate::PhysicalStore output = context.output(0);
   // Best-practice to validate the store types
-  LegateCheck(output.code() == legate::Type::Code::FLOAT32);
-  LegateCheck(output.dim() == 1);
+  LEGATE_CHECK(output.code() == legate::Type::Code::FLOAT32);
+  LEGATE_CHECK(output.dim() == 1);
   legate::Rect<1> output_shape = output.shape<1>();
   auto out                     = output.write_accessor<float, 1>();
 
   legate::PhysicalStore input = context.input(0);
   // Best-practice to validate the store types
-  LegateCheck(input.code() == legate::Type::Code::FLOAT32);
-  LegateCheck(input.dim() == 1);
+  LEGATE_CHECK(input.code() == legate::Type::Code::FLOAT32);
+  LEGATE_CHECK(input.dim() == 1);
   legate::Rect<1> input_shape = input.shape<1>();  // should be a 1-Dim array
   auto in                     = input.read_accessor<float, 1>();
 
-  LegateCheck(input_shape == output_shape);
+  LEGATE_CHECK(input_shape == output_shape);
 
   logger.info() << "Elementwise square [" << output_shape.lo << "," << output_shape.hi << "]";
 

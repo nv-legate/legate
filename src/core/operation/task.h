@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,10 +17,10 @@
 #include "core/data/scalar.h"
 #include "core/operation/projection.h"
 #include "core/partitioning/constraint.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 
-#include <string>
 #include <string_view>
 #include <type_traits>
 
@@ -146,14 +146,16 @@ class AutoTask {
    *
    * @param scalar The Scalar to add to the task
    */
-  void add_scalar_arg(Scalar scalar);
+  void add_scalar_arg(const Scalar& scalar);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
    * @tparam T The scalar value's type. Scalar must be constructible from a value of T
    * @param value The scalar value to convert to Scalar and add to the task
    */
-  template <typename T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
+  template <typename T,
+            typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, Scalar> &&
+                                        std::is_constructible_v<Scalar, T>>>
   void add_scalar_arg(T&& value);
 
   /**
@@ -182,7 +184,7 @@ class AutoTask {
    *
    * @return Provenance
    */
-  [[nodiscard]] const std::string& provenance() const;
+  [[nodiscard]] std::string_view provenance() const;
 
   /**
    * @brief Sets whether the task needs a concurrent task launch.
@@ -215,7 +217,8 @@ class AutoTask {
    */
   void add_communicator(std::string_view name);
 
-  AutoTask()                               = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(AutoTask);
+
   AutoTask(AutoTask&&) noexcept            = default;
   AutoTask& operator=(AutoTask&&) noexcept = default;
   AutoTask(const AutoTask&)                = default;
@@ -313,14 +316,16 @@ class ManualTask {
    *
    * @param scalar The Scalar to add to the task
    */
-  void add_scalar_arg(Scalar scalar);
+  void add_scalar_arg(const Scalar& scalar);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
    * @tparam T The scalar value's type. Scalar must be constructible from a value of T
    * @param value The scalar value to convert to Scalar and add to the task
    */
-  template <typename T, typename = std::enable_if_t<std::is_constructible_v<Scalar, T>>>
+  template <typename T,
+            typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, Scalar> &&
+                                        std::is_constructible_v<Scalar, T>>>
   void add_scalar_arg(T&& value);
 
   /**
@@ -328,7 +333,7 @@ class ManualTask {
    *
    * @return Provenance
    */
-  [[nodiscard]] const std::string& provenance() const;
+  [[nodiscard]] std::string_view provenance() const;
 
   /**
    * @brief Sets whether the task needs a concurrent task launch.
@@ -361,12 +366,13 @@ class ManualTask {
    */
   void add_communicator(std::string_view name);
 
-  ~ManualTask() noexcept;
-  ManualTask()                                 = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(ManualTask);
+
   ManualTask(ManualTask&&) noexcept            = default;
   ManualTask& operator=(ManualTask&&) noexcept = default;
   ManualTask(const ManualTask&)                = default;
   ManualTask& operator=(const ManualTask&)     = default;
+  ~ManualTask() noexcept;
 
  private:
   friend class Runtime;

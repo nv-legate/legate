@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -30,7 +30,7 @@ template <std::int32_t DIM>
 Rect<DIM> PhysicalArray::shape() const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
-  check_shape_dimension(DIM);
+  check_shape_dimension_(DIM);
   if (dim() > 0) {
     return domain().bounds<DIM, coord_t>();
   }

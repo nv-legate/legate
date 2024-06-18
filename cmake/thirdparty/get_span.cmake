@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,6 +13,8 @@
 include_guard(GLOBAL)
 
 function(find_or_configure_span)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "span")
+
   if(CMAKE_CXX_STANDARD GREATER_EQUAL 20)
     include(CheckIncludeFileCXX)
 
@@ -22,13 +24,14 @@ function(find_or_configure_span)
     endif()
   endif()
 
-  rapids_cpm_find(span 1.0 # this version is wrong, but then span has no "version"
-    BUILD_EXPORT_SET   legate-core-exports
-    INSTALL_EXPORT_SET legate-core-exports
-    CPM_ARGS
-      GIT_REPOSITORY  https://github.com/tcbrindle/span.git
-      GIT_SHALLOW     TRUE
-      SYSTEM          TRUE
-      GIT_TAG         master
-   )
+  legate_core_parse_versions_json(PACKAGE span VERSION version GIT_URL git_url
+                                  GIT_SHALLOW git_shallow GIT_TAG git_tag)
+
+  rapids_cpm_find(span "${version}"
+                  BUILD_EXPORT_SET legate-core-exports
+                  INSTALL_EXPORT_SET legate-core-exports
+                  CPM_ARGS
+                  GIT_REPOSITORY "${git_url}"
+                  GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
+                  GIT_TAG "${git_tag}")
 endfunction()

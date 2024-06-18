@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -66,7 +66,10 @@ class Eager(TestStage):
 
         workers = min(N, mem_workers, 60)  # LEGION_MAX_NUM_PROCS just in case
 
-        workers = adjust_workers(workers, config.execution.workers)
+        detail = f"{mem_workers=}"
+        workers = adjust_workers(
+            workers, config.execution.workers, detail=detail
+        )
 
         # Just put each worker on its own full CPU for eager tests
         shards = [Shard([cpu.ids]) for cpu in system.cpus]

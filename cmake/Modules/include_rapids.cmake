@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,13 +13,17 @@
 include_guard(GLOBAL)
 
 macro(legate_include_rapids)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "include_rapids")
+
   if(NOT rapids-cmake-version)
     # default
-    set(rapids-cmake-version 23.10)
+    set(rapids-cmake-version 24.06)
+    set(rapids-cmake-sha "365322aca32fd6ecd7027f5d7ec7be50b7f3cc2a")
   endif()
-  if (NOT _LEGATE_HAS_RAPIDS)
+  if(NOT _LEGATE_HAS_RAPIDS)
     if(NOT EXISTS ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-      file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake
+      file(DOWNLOAD
+           https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake
            ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
     endif()
     include(${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
@@ -30,4 +34,6 @@ macro(legate_include_rapids)
     include(rapids-find)
     set(_LEGATE_HAS_RAPIDS ON)
   endif()
+
+  list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endmacro()

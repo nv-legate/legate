@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -18,8 +18,10 @@
 
 namespace legate::detail {
 
+// NOLINTNEXTLINE(readability-redundant-inline-specifier)
 inline constexpr Enumerator::Enumerator(value_type start) noexcept : start_{start} {}
 
+// NOLINTNEXTLINE(readability-redundant-inline-specifier)
 inline constexpr typename Enumerator::value_type Enumerator::start() const noexcept
 {
   return start_;

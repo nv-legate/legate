@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -14,7 +14,7 @@
 """
 from __future__ import annotations
 
-from typing import Type, Union
+from typing import Type
 
 from . import CanonicalDriver, LegateDriver
 
@@ -23,8 +23,8 @@ __all__ = ("legate_main",)
 
 def prepare_driver(
     argv: list[str],
-    driver_type: Union[Type[CanonicalDriver], Type[LegateDriver]],
-) -> Union[CanonicalDriver, LegateDriver]:
+    driver_type: Type[CanonicalDriver] | Type[LegateDriver],
+) -> CanonicalDriver | LegateDriver:
     from ..util.system import System
     from ..util.ui import error
     from . import Config

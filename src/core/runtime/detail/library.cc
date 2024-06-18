@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,6 +14,7 @@
 
 #include "core/mapping/detail/base_mapper.h"
 #include "core/mapping/mapping.h"
+#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 #include "core/utilities/scope_guard.h"
@@ -45,13 +46,11 @@ Library::Library(std::string library_name, const ResourceConfig& config)
 
 Legion::TaskID Library::get_task_id(std::int64_t local_task_id) const
 {
-  LegateCheck(task_scope_.valid());
   return static_cast<Legion::TaskID>(task_scope_.translate(local_task_id));
 }
 
 Legion::ReductionOpID Library::get_reduction_op_id(std::int64_t local_redop_id) const
 {
-  LegateCheck(redop_scope_.valid());
   return static_cast<Legion::ReductionOpID>(redop_scope_.translate(local_redop_id));
 }
 
@@ -60,25 +59,21 @@ Legion::ProjectionID Library::get_projection_id(std::int64_t local_proj_id) cons
   if (local_proj_id == 0) {
     return 0;
   }
-  LegateCheck(proj_scope_.valid());
   return static_cast<Legion::ProjectionID>(proj_scope_.translate(local_proj_id));
 }
 
 Legion::ShardingID Library::get_sharding_id(std::int64_t local_shard_id) const
 {
-  LegateCheck(shard_scope_.valid());
   return static_cast<Legion::ShardingID>(shard_scope_.translate(local_shard_id));
 }
 
 std::int64_t Library::get_local_task_id(Legion::TaskID task_id) const
 {
-  LegateCheck(task_scope_.valid());
   return task_scope_.invert(task_id);
 }
 
 std::int64_t Library::get_local_reduction_op_id(Legion::ReductionOpID redop_id) const
 {
-  LegateCheck(redop_scope_.valid());
   return redop_scope_.invert(redop_id);
 }
 
@@ -87,13 +82,11 @@ std::int64_t Library::get_local_projection_id(Legion::ProjectionID proj_id) cons
   if (proj_id == 0) {
     return 0;
   }
-  LegateCheck(proj_scope_.valid());
   return proj_scope_.invert(proj_id);
 }
 
 std::int64_t Library::get_local_sharding_id(Legion::ShardingID shard_id) const
 {
-  LegateCheck(shard_scope_.valid());
   return shard_scope_.invert(shard_id);
 }
 
@@ -114,7 +107,7 @@ bool Library::valid_sharding_id(Legion::ShardingID shard_id) const
   return shard_scope_.in_scope(shard_id);
 }
 
-const std::string& Library::get_task_name(std::int64_t local_task_id) const
+std::string_view Library::get_task_name(std::int64_t local_task_id) const
 {
   return find_task(local_task_id)->name();
 }
@@ -125,7 +118,7 @@ std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
   if (type->variable_size()) {
     throw std::invalid_argument{"Tunable variables must have fixed-size types"};
   }
-  auto result         = Runtime::get_runtime()->get_tunable(mapper_id_, tunable_id, type->size());
+  auto result         = Runtime::get_runtime()->get_tunable(mapper_id_, tunable_id);
   std::size_t extents = 0;
   const void* buffer  = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
   if (extents != type->size()) {
@@ -144,7 +137,7 @@ void register_mapper_callback(const Legion::RegistrationCallbackArgs& args)
 
   auto* library = Runtime::get_runtime()->find_library(std::move(library_name), false /*can_fail*/);
   auto* legion_mapper = library->get_legion_mapper();
-  LegateAssert(legion_mapper != nullptr);
+  LEGATE_ASSERT(legion_mapper != nullptr);
   Legion::Runtime::get_runtime()->add_mapper(library->get_mapper_id(), legion_mapper);
 }
 
@@ -175,9 +168,11 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_c
 
 void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
-  auto task_id = get_task_id(local_task_id);
+  std::int64_t task_id{};
 
-  if (!task_scope_.in_scope(task_id)) {
+  try {
+    task_id = get_task_id(local_task_id);
+  } catch (const std::out_of_range&) {
     std::stringstream ss;
 
     ss << "Task " << local_task_id << " is invalid for library '" << library_name_
@@ -185,7 +180,7 @@ void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo
     throw std::out_of_range{std::move(ss).str()};
   }
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "[" << library_name_ << "] task " << local_task_id
                          << " (global id: " << task_id << "), " << *task_info;
   }
@@ -202,8 +197,10 @@ const TaskInfo* Library::find_task(std::int64_t local_task_id) const
   auto finder = tasks_.find(local_task_id);
 
   if (tasks_.end() == finder) {
-    throw std::out_of_range{"Library " + get_library_name() + " does not have task " +
-                            std::to_string(local_task_id)};
+    std::stringstream ss;
+
+    ss << "Library " << get_library_name() << " does not have task " << local_task_id;
+    throw std::out_of_range{std::move(ss).str()};
   }
   return finder->second.get();
 }

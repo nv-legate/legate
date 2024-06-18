@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 # All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -14,8 +14,10 @@ from libcpp cimport bool
 from libcpp.map cimport map as std_map
 from libcpp.string cimport string as std_string
 
+from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
 from ..legate_c cimport legate_core_variant_t
 from ..utilities.typedefs cimport RealmCallbackFn, VariantImpl
+from ..utilities.unconstructable cimport Unconstructable
 from .variant_options cimport _VariantOptions
 
 
@@ -23,7 +25,7 @@ cdef extern from "core/task/task_info.h" namespace "legate" nogil:
     cdef cppclass _TaskInfo "legate::TaskInfo":
         _TaskInfo(std_string)
         bool has_variant(legate_core_variant_t) const
-        const std_string& name() const
+        std_string_view  name() const
         # add_variant's final argument is defaulted in C++, this is the only
         # way I knew how to do the same in Cython. = {}, = (), or
         # = std_map[...]() all did not work...
@@ -39,11 +41,13 @@ cdef extern from "core/task/task_info.h" namespace "legate" nogil:
             const std_map[legate_core_variant_t, _VariantOptions]&
         ) except +
 
-cdef class TaskInfo:
+cdef class TaskInfo(Unconstructable):
     cdef:
         _TaskInfo *_handle
         int64_t _local_id
         dict _registered_variants
+
+    cdef void _assert_valid(self)
 
     @staticmethod
     cdef TaskInfo from_handle(_TaskInfo*, int64_t)

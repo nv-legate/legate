@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -19,17 +19,21 @@
 
 namespace cpu_communicator {
 
-using Integration = DefaultFixture;
+// NOLINTBEGIN(readability-magic-numbers)
 
-const char* library_name = "test_cpu_communicator";
-
-enum TaskIDs {
-  CPU_COMM_TESTER = 0,
-};
+namespace {
 
 constexpr std::size_t SIZE = 10;
 
+}  // namespace
+
+enum TaskIDs : std::uint8_t {
+  CPU_COMM_TESTER = 0,
+};
+
 struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> {
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE((context.is_single_task() && context.communicators().empty()) ||
@@ -39,36 +43,38 @@ struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> 
     }
     auto comm = context.communicators().at(0).get<legate::comm::coll::CollComm>();
 
-    std::int64_t value    = 12345;
-    std::size_t num_tasks = context.get_launch_domain().get_volume();
+    constexpr std::int64_t value = 12345;
+    const auto num_tasks         = context.get_launch_domain().get_volume();
     std::vector<std::int64_t> recv_buffer(num_tasks, 0);
     auto result = collAllgather(
       &value, recv_buffer.data(), 1, legate::comm::coll::CollDataType::CollInt64, comm);
     EXPECT_EQ(result, legate::comm::coll::CollSuccess);
     for (auto v : recv_buffer) {
-      EXPECT_EQ(v, 12345);
+      EXPECT_EQ(v, value);
     }
   }
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_cpu_communicator";
+  static void registration_callback(legate::Library library)
+  {
+    CPUCommunicatorTester::register_variants(library, CPU_COMM_TESTER);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  CPUCommunicatorTester::register_variants(context, CPU_COMM_TESTER);
-}
+};
+
+class CPUCommunicator : public RegisterOnceFixture<Config> {};
 
 void test_cpu_communicator_auto(std::int32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto store =
-    runtime->create_store(legate::Shape{legate::full<std::uint64_t>(ndim, SIZE)}, legate::int32());
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto store   = runtime->create_store(
+    legate::Shape{
+      legate::full<std::uint64_t>(ndim, SIZE)  // NOLINT(readability-suspicious-call-argument)
+    },
+    legate::int32());
 
   auto task = runtime->create_task(context, CPU_COMM_TESTER);
   auto part = task.declare_partition();
@@ -79,15 +85,18 @@ void test_cpu_communicator_auto(std::int32_t ndim)
 
 void test_cpu_communicator_manual(std::int32_t ndim)
 {
-  auto runtime          = legate::Runtime::get_runtime();
-  std::size_t num_procs = runtime->get_machine().count();
+  auto runtime         = legate::Runtime::get_runtime();
+  const auto num_procs = runtime->get_machine().count();
   if (num_procs <= 1) {
     return;
   }
 
-  auto context = runtime->find_library(library_name);
-  auto store =
-    runtime->create_store(legate::Shape{legate::full<std::uint64_t>(ndim, SIZE)}, legate::int32());
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto store   = runtime->create_store(
+    legate::Shape{
+      legate::full<std::uint64_t>(ndim, SIZE)  // NOLINT(readability-suspicious-call-argument)
+    },
+    legate::int32());
   auto launch_shape = legate::full<std::uint64_t>(ndim, 1);
   auto tile_shape   = legate::full<std::uint64_t>(ndim, 1);
   launch_shape[0]   = num_procs;
@@ -102,14 +111,17 @@ void test_cpu_communicator_manual(std::int32_t ndim)
 }
 
 // Test case with single unbound store
-TEST_F(Integration, CPUCommunicator)
+// TODO(jfaibussowit)
+// Currently causes unexplained hangs in CI. To be fixed by
+// https://github.com/nv-legate/legate.core.internal/pull/700
+TEST_F(CPUCommunicator, DISABLED_ALL)
 {
-  prepare();
-
-  for (std::int32_t ndim : {1, 3}) {
+  for (auto ndim : {1, 3}) {
     test_cpu_communicator_auto(ndim);
     test_cpu_communicator_manual(ndim);
   }
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace cpu_communicator

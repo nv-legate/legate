@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -140,10 +140,11 @@ std::string ImageConstraint::to_string() const
 InternalSharedPtr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
 {
   const auto* src = var_function();
-  auto src_part   = strategy[src];
+  auto&& src_part = strategy[src];
   if (src_part->has_launch_domain()) {
     auto* op = src->operation();
-    return create_image(op->find_store(src).as_user_ptr(), src_part.as_user_ptr(), op->machine());
+    return create_image(
+      op->find_store(src).as_user_ptr(), src_part.as_user_ptr(), op->machine(), hint_);
   }
   return create_no_partition();
 }
@@ -242,9 +243,11 @@ InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<std::uint
   return make_internal_shared<Broadcast>(variable, std::move(axes));
 }
 
-InternalSharedPtr<ImageConstraint> image(const Variable* var_function, const Variable* var_range)
+InternalSharedPtr<ImageConstraint> image(const Variable* var_function,
+                                         const Variable* var_range,
+                                         ImageComputationHint hint)
 {
-  return make_internal_shared<ImageConstraint>(var_function, var_range);
+  return make_internal_shared<ImageConstraint>(var_function, var_range, hint);
 }
 
 InternalSharedPtr<ScaleConstraint> scale(tuple<std::uint64_t> factors,

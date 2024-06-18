@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -27,13 +27,24 @@ TaskTarget to_target(Processor::Kind kind)
   return TaskTarget::CPU;
 }
 
+StoreTarget to_target(Memory::Kind kind)
+{
+  switch (kind) {
+    case Memory::Kind::SYSTEM_MEM: return StoreTarget::SYSMEM;
+    case Memory::Kind::GPU_FB_MEM: return StoreTarget::FBMEM;
+    case Memory::Kind::Z_COPY_MEM: return StoreTarget::ZCMEM;
+    case Memory::Kind::SOCKET_MEM: return StoreTarget::SOCKETMEM;
+    default: LEGATE_ABORT("Unhandled Processor::Kind " << static_cast<int>(kind));
+  }
+  return StoreTarget::SYSMEM;
+}
+
 Processor::Kind to_kind(TaskTarget target)
 {
   switch (target) {
     case TaskTarget::GPU: return Processor::Kind::TOC_PROC;
     case TaskTarget::OMP: return Processor::Kind::OMP_PROC;
     case TaskTarget::CPU: return Processor::Kind::LOC_PROC;
-    default: LEGATE_ABORT("Unhandled TaskTarget " << static_cast<int>(target));
   }
   return Processor::Kind::LOC_PROC;
 }
@@ -45,7 +56,6 @@ Memory::Kind to_kind(StoreTarget target)
     case StoreTarget::FBMEM: return Memory::Kind::GPU_FB_MEM;
     case StoreTarget::ZCMEM: return Memory::Kind::Z_COPY_MEM;
     case StoreTarget::SOCKETMEM: return Memory::Kind::SOCKET_MEM;
-    default: LEGATE_ABORT("Unhandled StoreTarget " << static_cast<int>(target));
   }
   return Memory::Kind::SYSTEM_MEM;
 }
@@ -56,7 +66,6 @@ LegateVariantCode to_variant_code(TaskTarget target)
     case TaskTarget::GPU: return LEGATE_GPU_VARIANT;
     case TaskTarget::OMP: return LEGATE_OMP_VARIANT;
     case TaskTarget::CPU: return LEGATE_CPU_VARIANT;
-    default: LEGATE_ABORT("Unhandled TaskTarget " << static_cast<int>(target));
   }
   return LEGATE_CPU_VARIANT;
 }
@@ -90,7 +99,7 @@ void DimOrdering::populate_dimension_ordering(std::uint32_t ndim,
 
 bool StoreMapping::for_future() const
 {
-  for (auto& store : stores) {
+  for (auto&& store : stores) {
     return store->is_future();
   }
   return false;
@@ -98,7 +107,7 @@ bool StoreMapping::for_future() const
 
 bool StoreMapping::for_unbound_store() const
 {
-  for (auto& store : stores) {
+  for (auto&& store : stores) {
     return store->unbound();
   }
   return false;
@@ -108,14 +117,14 @@ const Store* StoreMapping::store() const { return stores.front(); }
 
 std::uint32_t StoreMapping::requirement_index() const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     std::uint32_t result = -1U;
 
-    LegateAssert(!stores.empty());
-    for (auto& store : stores) {
+    LEGATE_ASSERT(!stores.empty());
+    for (auto&& store : stores) {
       auto idx = store->requirement_index();
 
-      LegateAssert(result == -1U || result == idx);
+      LEGATE_ASSERT(result == -1U || result == idx);
       result = idx;
     }
     return result;
@@ -132,7 +141,7 @@ std::set<std::uint32_t> StoreMapping::requirement_indices() const
 {
   std::set<std::uint32_t> indices;
 
-  for (auto& store : stores) {
+  for (auto&& store : stores) {
     if (store->is_future()) {
       continue;
     }
@@ -145,7 +154,7 @@ std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
 {
   std::set<const Legion::RegionRequirement*> reqs;
 
-  for (auto& store : stores) {
+  for (auto&& store : stores) {
     if (store->is_future()) {
       continue;
     }
@@ -181,7 +190,7 @@ void StoreMapping::populate_layout_constraints(
   if (stores.size() > 1) {
     std::unordered_set<Legion::FieldID> field_set{};
 
-    for (auto& store : stores) {
+    for (auto&& store : stores) {
       auto field_id = store->region_field().field_id();
       if (field_set.find(field_id) == field_set.end()) {
         fields.push_back(field_id);

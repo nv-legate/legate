@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 # All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -14,12 +14,13 @@ from libc.stdint cimport int64_t
 
 from ..data.physical_array cimport PhysicalArray
 from ..data.scalar cimport Scalar
+from ..utilities.unconstructable cimport Unconstructable
 from .detail.returned_python_exception cimport _ReturnedPythonException
 
 import pickle
 
 
-cdef class TaskContext:
+cdef class TaskContext(Unconstructable):
     # the defacto constructor
     @staticmethod
     cdef TaskContext from_handle(_TaskContext* ptr):
@@ -30,11 +31,6 @@ cdef class TaskContext:
         result._reductions = None
         result._scalars = None
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     cpdef int64_t get_task_id(self):
         return self._handle.task_id()

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -91,7 +91,7 @@ class RequirementAnalyzer {
 
  private:
   template <class Launcher>
-  void _populate_launcher(Launcher& task) const;
+  void populate_launcher_(Launcher& task) const;
 
   bool relax_interference_checks_{};
   // This must be an ordered map to avoid control divergence
@@ -126,12 +126,13 @@ class FutureAnalyzer {
   [[nodiscard]] std::int32_t get_future_index(const Legion::Future& future) const;
 
   void analyze_futures();
-  template <class Launcher>
-  void _populate_launcher(Launcher& task) const;
   void populate_launcher(Legion::IndexTaskLauncher& task) const;
   void populate_launcher(Legion::TaskLauncher& task) const;
 
  private:
+  template <typename Launcher>
+  void populate_launcher_(Launcher& task) const;
+
   // XXX: This could be a hash map, but Legion futures don't reveal IDs that we can hash
   std::map<Legion::Future, std::int32_t> future_indices_{};
   std::vector<Legion::Future> coalesced_{};

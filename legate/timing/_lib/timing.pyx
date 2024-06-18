@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 # All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -9,24 +9,20 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libcpp.utility cimport move
-
-from typing import Union
-
-from legate.core import get_legate_runtime
+from libcpp.utility cimport move as std_move
 
 
 cdef class PyTime:
     @staticmethod
     def measure_microseconds() -> PyTime:
         cdef PyTime result = PyTime.__new__(PyTime)
-        result._time = move(measure_microseconds())
+        result._time = std_move(measure_microseconds())
         return result
 
     @staticmethod
     def measure_nanoseconds() -> PyTime:
         cdef PyTime result = PyTime.__new__(PyTime)
-        result._time = move(measure_nanoseconds())
+        result._time = std_move(measure_nanoseconds())
         return result
 
     def value(self) -> int:
@@ -41,38 +37,34 @@ cdef class PyTime:
     def __float__(self) -> float:
         return float(self.value())
 
-    def __add__(self, rhs: Union[int, PyTime]) -> int:
+    def __add__(self, rhs: int | PyTime) -> int:
         return self.value() + int(rhs)
 
-    def __radd__(self, lhs: Union[int, PyTime]) -> int:
+    def __radd__(self, lhs: int | PyTime) -> int:
         return int(lhs) + self.value()
 
-    def __sub__(self, rhs: Union[int, PyTime]) -> int:
+    def __sub__(self, rhs: int | PyTime) -> int:
         return self.value() - int(rhs)
 
-    def __rsub__(self, lhs: Union[int, PyTime]) -> int:
+    def __rsub__(self, lhs: int | PyTime) -> int:
         return int(lhs) - self.value()
 
-    def __mul__(self, rhs: Union[int, PyTime]) -> int:
+    def __mul__(self, rhs: int | PyTime) -> int:
         return self.value() * int(rhs)
 
-    def __rmul__(self, lhs: Union[int, PyTime]) -> int:
+    def __rmul__(self, lhs: int | PyTime) -> int:
         return int(lhs) * self.value()
 
-    def __div__(self, rhs: Union[int, PyTime]) -> float:
+    def __div__(self, rhs: int | PyTime) -> float:
         return self.value() / int(rhs)
 
-    def __rdiv__(self, lhs: Union[int, PyTime]) -> float:
+    def __rdiv__(self, lhs: int | PyTime) -> float:
         return int(lhs) / self.value()
 
 
-def time(units: str = "us") -> PyTime:
-    # Issue a Legion execution fence and then perform a timing operation
-    # immediately after it
-    get_legate_runtime().issue_execution_fence()
+cpdef PyTime time(str units = "us"):
     if units == "us":
         return PyTime.measure_microseconds()
-    elif units == "ns":
+    if units == "ns":
         return PyTime.measure_nanoseconds()
-    else:
-        raise ValueError("time units must be 'us' or 'ns'")
+    raise ValueError("time units must be 'us' or 'ns'")

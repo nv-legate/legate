@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,27 +17,31 @@
 
 namespace scoped_allocator_test {
 
-using ScopedAllocatorUnit = DefaultFixture;
+// NOLINTBEGIN(readability-magic-numbers)
 
-static const char* library_name          = "legate.scopedallocator";
-constexpr std::int64_t ALLOCATOR_TASK_ID = 1;
+namespace {
+
+constexpr auto MAX_ALIGNMENT = 16;
+
+}  // namespace
+
+enum class BufferOpCode : std::uint8_t {
+  DEALLOCATE         = 0,
+  DOUBLE_DEALLOCATE  = 1,
+  INVALID_DEALLOCATE = 2,
+};
 
 struct AllocatorParams {
-  std::uint32_t op_code;
+  std::underlying_type_t<BufferOpCode> op_code;
   std::uint64_t kind;
   bool scoped;
   std::uint64_t alignment;
   std::uint64_t bytes;
 };
 
-enum class BufferOpCode : std::uint32_t {
-  DEALLOCATE         = 0,
-  DOUBLE_DEALLOCATE  = 1,
-  INVALID_DEALLOCATE = 2,
-};
-
 struct ScopedAllocatorTask : public legate::LegateTask<ScopedAllocatorTask> {
-  static const std::int32_t TASK_ID = ALLOCATOR_TASK_ID;
+  static constexpr std::int32_t TASK_ID = 1;
+
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -54,8 +58,7 @@ struct ScopedAllocatorTask : public legate::LegateTask<ScopedAllocatorTask> {
     EXPECT_NE(buffer, nullptr);
   }
 
-  BufferOpCode code = static_cast<BufferOpCode>(allocator_params.op_code);
-  switch (code) {
+  switch (static_cast<BufferOpCode>(allocator_params.op_code)) {
     case BufferOpCode::DEALLOCATE: {
       if (0 == allocator_params.bytes) {
         EXPECT_THROW(allocator.deallocate(buffer), std::runtime_error);
@@ -77,42 +80,41 @@ struct ScopedAllocatorTask : public legate::LegateTask<ScopedAllocatorTask> {
   }
 }
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "legate.scopedallocator";
+  static void registration_callback(legate::Library library)
+  {
+    ScopedAllocatorTask::register_variants(library);
+  }
+};
+
+class ScopedAllocatorUnit : public RegisterOnceFixture<Config> {};
+
 void test_allocator(BufferOpCode op_code,
                     legate::Memory::Kind kind,
                     bool scoped,
                     std::size_t bytes,
-                    std::size_t alignment = 16)
+                    std::size_t alignment = MAX_ALIGNMENT)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, ALLOCATOR_TASK_ID);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(context, ScopedAllocatorTask::TASK_ID);
   auto part    = task.declare_partition();
   static_cast<void>(part);
-  AllocatorParams struct_data = {static_cast<std::uint32_t>(op_code),
+  AllocatorParams struct_data = {legate::traits::detail::to_underlying(op_code),
                                  static_cast<std::uint64_t>(kind),
                                  scoped,
                                  alignment,
                                  bytes};
-  task.add_scalar_arg(legate::Scalar(struct_data,
+  task.add_scalar_arg(legate::Scalar{std::move(struct_data),
                                      legate::struct_type(true,
                                                          legate::uint32(),
                                                          legate::uint64(),
                                                          legate::bool_(),
                                                          legate::uint64(),
-                                                         legate::uint64())));
+                                                         legate::uint64())});
   runtime->submit(std::move(task));
-}
-
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
-  }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  ScopedAllocatorTask::register_variants(context);
 }
 
 TEST_F(ScopedAllocatorUnit, EmptyAllocate)
@@ -124,7 +126,6 @@ TEST_F(ScopedAllocatorUnit, EmptyAllocate)
 
 TEST_F(ScopedAllocatorUnit, Allocate)
 {
-  register_tasks();
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000, 16);
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::NO_MEMKIND, true, 1000, 16);
   test_allocator(BufferOpCode::DEALLOCATE, legate::Memory::SYSTEM_MEM, false, 0, 16);
@@ -138,7 +139,6 @@ TEST_F(ScopedAllocatorUnit, Allocate)
 
 TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
 {
-  register_tasks();
   test_allocator(BufferOpCode::DOUBLE_DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000);
 }
 
@@ -149,7 +149,9 @@ TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
   EXPECT_THROW(allocator.deallocate(data.data()), std::runtime_error);
 
   // invalid deallocate in task launch
-  register_tasks();
   test_allocator(BufferOpCode::INVALID_DEALLOCATE, legate::Memory::SYSTEM_MEM, true, 1000);
 }
+
+// NOLINTEND(readability-magic-numbers)
+
 }  // namespace scoped_allocator_test

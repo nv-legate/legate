@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -12,24 +12,11 @@
 
 legate_cpp_library_template(reduction TEMPLATE_SOURCES)
 
-add_library(
-  reduction
-  bincount.cc
-  categorize.cc
-  histogram.cc
-  matmul.cc
-  mul.cc
-  sum_over_axis.cc
-  unique.cc
-  ${TEMPLATE_SOURCES}
-)
+add_library(reduction bincount.cc categorize.cc histogram.cc matmul.cc mul.cc
+                      sum_over_axis.cc unique.cc ${TEMPLATE_SOURCES})
 
 target_include_directories(reduction
-  PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  INTERFACE
-    $<INSTALL_INTERFACE:include>
-)
+                           PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+                           INTERFACE $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(reduction PRIVATE legate::core)
-

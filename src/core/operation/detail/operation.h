@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -40,7 +41,7 @@ class Operation {
   Operation(std::uint64_t unique_id, std::int32_t priority, mapping::detail::Machine machine);
 
  public:
-  enum class Kind : std::uint32_t {
+  enum class Kind : std::uint8_t {
     AUTO_TASK,
     COPY,
     FILL,
@@ -68,12 +69,12 @@ class Operation {
 
   [[nodiscard]] std::int32_t priority() const;
   [[nodiscard]] const mapping::detail::Machine& machine() const;
-  [[nodiscard]] const std::string& provenance() const;
+  [[nodiscard]] std::string_view provenance() const;
 
  protected:
-  void record_partition(const Variable* variable, InternalSharedPtr<LogicalStore> store);
+  void record_partition_(const Variable* variable, InternalSharedPtr<LogicalStore> store);
   // Helper methods
-  [[nodiscard]] static std::unique_ptr<StoreProjection> create_store_projection(
+  [[nodiscard]] static std::unique_ptr<StoreProjection> create_store_projection_(
     const Strategy& strategy, const Domain& launch_domain, const StoreArg& arg);
 
   std::uint64_t unique_id_{};

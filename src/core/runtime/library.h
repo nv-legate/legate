@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,10 +14,11 @@
 
 #include "core/data/scalar.h"
 #include "core/task/task_info.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/typedefs.h"
 
 #include <memory>
-#include <string>
+#include <string_view>
 
 /**
  * @file
@@ -47,7 +48,7 @@ class Library {
    *
    * @return Library name
    */
-  [[nodiscard]] const std::string& get_library_name() const;
+  [[nodiscard]] std::string_view get_library_name() const;
 
   [[nodiscard]] Legion::TaskID get_task_id(std::int64_t local_task_id) const;
   [[nodiscard]] Legion::MapperID get_mapper_id() const;
@@ -73,7 +74,7 @@ class Library {
    * @param local_task_id Task id
    * @return Name of the task
    */
-  [[nodiscard]] const std::string& get_task_name(std::int64_t local_task_id) const;
+  [[nodiscard]] std::string_view get_task_name(std::int64_t local_task_id) const;
   /**
    * @brief Retrieves a tunable parameter
    *
@@ -97,12 +98,12 @@ class Library {
    *   static const RHS identity = ...; // Identity of the reduction operator
    *
    *   template <bool EXCLUSIVE>
-   *   __CUDA_HD__ inline static void apply(LHS& lhs, RHS rhs)
+   *   LEGATE_HOST_DEVICE inline static void apply(LHS& lhs, RHS rhs)
    *   {
    *     ...
    *   }
    *   template <bool EXCLUSIVE>
-   *   __CUDA_HD__ inline static void fold(RHS& rhs1, RHS rhs2)
+   *   LEGATE_HOST_DEVICE inline static void fold(RHS& rhs1, RHS rhs2)
    *   {
    *     ...
    *   }
@@ -145,7 +146,7 @@ class Library {
    * @return Global reduction operator ID
    */
   template <typename REDOP>
-  [[nodiscard]] std::int64_t register_reduction_operator(std::int32_t redop_id);
+  [[nodiscard]] std::int32_t register_reduction_operator(std::int32_t redop_id);
   /**
    * @brief Registers a library mapper. Replaces the existing mapper if there already is one.
    *
@@ -156,7 +157,8 @@ class Library {
   void register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
   [[nodiscard]] const TaskInfo* find_task(std::int64_t local_task_id) const;
 
-  Library() = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(Library);
+
   explicit Library(detail::Library* impl);
   Library(const Library&)            = default;
   Library& operator=(const Library&) = default;
@@ -170,8 +172,8 @@ class Library {
   [[nodiscard]] detail::Library* impl();
 
  private:
-  static void perform_callback(Legion::RegistrationWithArgsCallbackFnptr callback,
-                               const Legion::UntypedBuffer& buffer);
+  static void perform_callback_(Legion::RegistrationWithArgsCallbackFnptr callback,
+                                const Legion::UntypedBuffer& buffer);
 
   detail::Library* impl_{};
 };

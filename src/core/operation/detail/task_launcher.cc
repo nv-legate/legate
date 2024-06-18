@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -21,6 +21,7 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/enumerate.h"
 
 #include <cstdint>
 #include <optional>
@@ -66,7 +67,7 @@ namespace {
 
 void analyze(StoreAnalyzer& analyzer, const std::vector<std::unique_ptr<Analyzable>>& args)
 {
-  for (auto& arg : args) {
+  for (auto&& arg : args) {
     arg->analyze(analyzer);
   }
 }
@@ -76,7 +77,7 @@ void pack_args(BufferBuilder& buffer,
                const std::vector<std::unique_ptr<Analyzable>>& args)
 {
   buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
-  for (auto& arg : args) {
+  for (auto&& arg : args) {
     arg->pack(buffer, analyzer);
   }
 }
@@ -84,7 +85,7 @@ void pack_args(BufferBuilder& buffer,
 void pack_args(BufferBuilder& buffer, const std::vector<std::unique_ptr<ScalarArg>>& args)
 {
   buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
-  for (auto& arg : args) {
+  for (auto&& arg : args) {
     arg->pack(buffer);
   }
 }
@@ -101,9 +102,9 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
     analyze(analyzer, outputs_);
     analyze(analyzer, reductions_);
   } catch (const InterferingStoreError&) {
-    report_interfering_stores();
+    report_interfering_stores_();
   }
-  for (auto& future : futures_) {
+  for (auto&& future : futures_) {
     analyzer.insert(future);
   }
 
@@ -123,7 +124,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   BufferBuilder mapper_arg;
 
-  pack_mapper_arg(mapper_arg);
+  pack_mapper_arg_(mapper_arg);
 
   Legion::IndexTaskLauncher index_task{static_cast<Legion::TaskID>(legion_task_id()),
                                        launch_domain,
@@ -134,7 +135,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
                                        static_cast<Legion::MapperID>(legion_mapper_id()),
                                        static_cast<Legion::MappingTagID>(tag_),
                                        mapper_arg.to_legion_buffer(),
-                                       provenance_.c_str()};
+                                       provenance().data()};
 
   std::vector<Legion::OutputRequirement> output_requirements;
 
@@ -151,10 +152,10 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
     runtime->destroy_barrier(arrival_barrier);
     runtime->destroy_barrier(wait_barrier);
   }
-  for (auto& communicator : communicators_) {
+  for (auto&& communicator : communicators_) {
     index_task.point_futures.emplace_back(communicator);
   }
-  for (auto& future_map : future_maps_) {
+  for (auto&& future_map : future_maps_) {
     index_task.point_futures.emplace_back(future_map);
   }
 
@@ -162,8 +163,8 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   auto result = runtime->dispatch(index_task, output_requirements);
 
-  post_process_unbound_stores(result, launch_domain, output_requirements);
-  for (auto& arg : outputs_) {
+  post_process_unbound_stores_(result, launch_domain, output_requirements);
+  for (auto&& arg : outputs_) {
     arg->perform_invalidations();
   }
   return result;
@@ -178,7 +179,7 @@ Legion::Future TaskLauncher::execute_single()
   analyze(analyzer, inputs_);
   analyze(analyzer, outputs_);
   analyze(analyzer, reductions_);
-  for (auto& future : futures_) {
+  for (auto&& future : futures_) {
     analyzer.insert(future);
   }
 
@@ -200,7 +201,7 @@ Legion::Future TaskLauncher::execute_single()
 
   BufferBuilder mapper_arg;
 
-  pack_mapper_arg(mapper_arg);
+  pack_mapper_arg_(mapper_arg);
 
   Legion::TaskLauncher single_task{static_cast<Legion::TaskID>(legion_task_id()),
                                    task_arg.to_legion_buffer(),
@@ -208,7 +209,7 @@ Legion::Future TaskLauncher::execute_single()
                                    static_cast<Legion::MapperID>(legion_mapper_id()),
                                    static_cast<Legion::MappingTagID>(tag_),
                                    mapper_arg.to_legion_buffer(),
-                                   provenance_.c_str()};
+                                   provenance().data()};
 
   std::vector<Legion::OutputRequirement> output_requirements;
 
@@ -217,20 +218,20 @@ Legion::Future TaskLauncher::execute_single()
   single_task.local_function_task = !has_side_effect_ && analyzer.can_be_local_function_task();
 
   auto result = Runtime::get_runtime()->dispatch(single_task, output_requirements);
-  post_process_unbound_stores(output_requirements);
-  for (auto& arg : outputs_) {
+  post_process_unbound_stores_(output_requirements);
+  for (auto&& arg : outputs_) {
     arg->perform_invalidations();
   }
   return result;
 }
 
-void TaskLauncher::pack_mapper_arg(BufferBuilder& buffer)
+void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
 {
   machine_.pack(buffer);
 
   std::optional<Legion::ProjectionID> key_proj_id;
   auto find_key_proj_id = [&key_proj_id](auto& args) {
-    for (auto& arg : args) {
+    for (auto&& arg : args) {
       key_proj_id = arg->get_key_proj_id();
       if (key_proj_id) {
         break;
@@ -252,7 +253,7 @@ void TaskLauncher::pack_mapper_arg(BufferBuilder& buffer)
   buffer.pack(priority_);
 }
 
-void TaskLauncher::import_output_regions(
+void TaskLauncher::import_output_regions_(
   Runtime* runtime, const std::vector<Legion::OutputRequirement>& output_requirements)
 {
   for (const auto& req : output_requirements) {
@@ -262,7 +263,7 @@ void TaskLauncher::import_output_regions(
   };
 }
 
-void TaskLauncher::post_process_unbound_stores(
+void TaskLauncher::post_process_unbound_stores_(
   const std::vector<Legion::OutputRequirement>& output_requirements)
 {
   if (unbound_stores_.empty()) {
@@ -272,10 +273,10 @@ void TaskLauncher::post_process_unbound_stores(
   auto* runtime = Runtime::get_runtime();
   auto no_part  = create_no_partition();
 
-  import_output_regions(runtime, output_requirements);
+  import_output_regions_(runtime, output_requirements);
 
-  for (auto& arg : unbound_stores_) {
-    LegateAssert(arg->requirement_index() != -1U);
+  for (auto&& arg : unbound_stores_) {
+    LEGATE_ASSERT(arg->requirement_index() != -1U);
     auto* store = arg->store();
     auto& shape = store->shape();
     auto& req   = output_requirements[arg->requirement_index()];
@@ -293,7 +294,7 @@ void TaskLauncher::post_process_unbound_stores(
   }
 }
 
-void TaskLauncher::post_process_unbound_stores(
+void TaskLauncher::post_process_unbound_stores_(
   const Legion::FutureMap& result,
   const Legion::Domain& launch_domain,
   const std::vector<Legion::OutputRequirement>& output_requirements)
@@ -305,7 +306,7 @@ void TaskLauncher::post_process_unbound_stores(
   auto* runtime  = Runtime::get_runtime();
   auto* part_mgr = runtime->partition_manager();
 
-  import_output_regions(runtime, output_requirements);
+  import_output_regions_(runtime, output_requirements);
 
   auto post_process_unbound_store =
     [&runtime, &part_mgr, &launch_domain](
@@ -340,23 +341,23 @@ void TaskLauncher::post_process_unbound_stores(
 
     post_process_unbound_store(arg, req, result, machine_);
   } else {
-    std::uint32_t idx = 0;
-
-    for (auto& arg : unbound_stores_) {
+    for (auto&& [idx, arg] : legate::detail::enumerate(unbound_stores_)) {
       const auto& req = output_requirements[arg->requirement_index()];
 
       if (arg->store()->dim() == 1) {
         post_process_unbound_store(
-          arg, req, runtime->extract_scalar(result, idx, launch_domain), machine_);
+          arg,
+          req,
+          runtime->extract_scalar(result, static_cast<std::uint32_t>(idx), launch_domain),
+          machine_);
       } else {
         post_process_unbound_store(arg, req, result, machine_);
       }
-      ++idx;
     }
   }
 }
 
-void TaskLauncher::report_interfering_stores() const
+void TaskLauncher::report_interfering_stores_() const
 {
   LEGATE_ABORT(
     "Task "

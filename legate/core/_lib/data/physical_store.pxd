@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -12,14 +12,11 @@
 from libc.stdint cimport int32_t
 from libcpp.vector cimport vector as std_vector
 
+from ..mapping.mapping cimport StoreTarget
 from ..type.type_info cimport _Type
 from ..utilities.typedefs cimport _Domain
-
-
-cdef extern from "core/data/inline_allocation.h" namespace "legate" nogil:
-    cdef cppclass _InlineAllocation "legate::InlineAllocation":
-        void* ptr
-        std_vector[size_t] strides
+from ..utilities.unconstructable cimport Unconstructable
+from .inline_allocation cimport InlineAllocation, _InlineAllocation
 
 
 cdef extern from "core/data/physical_store.h" namespace "legate" nogil:
@@ -27,21 +24,14 @@ cdef extern from "core/data/physical_store.h" namespace "legate" nogil:
         int32_t dim()
         _Type type()
         _Domain domain()
-        _InlineAllocation get_inline_allocation()
+        _InlineAllocation get_inline_allocation() except+
+        StoreTarget target()
 
 
-cdef class PhysicalStore:
+cdef class PhysicalStore(Unconstructable):
     cdef _PhysicalStore _handle
 
     @staticmethod
     cdef PhysicalStore from_handle(_PhysicalStore)
 
     cpdef InlineAllocation get_inline_allocation(self)
-
-
-cdef class InlineAllocation:
-    cdef _InlineAllocation _handle
-    cdef PhysicalStore _store
-
-    @staticmethod
-    cdef InlineAllocation create(PhysicalStore store, _InlineAllocation handle)

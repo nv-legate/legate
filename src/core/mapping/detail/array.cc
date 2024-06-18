@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -18,33 +18,35 @@
 
 namespace legate::mapping::detail {
 
-InternalSharedPtr<Store> Array::data() const
+const InternalSharedPtr<Store>& Array::data() const
 {
-  throw std::invalid_argument("Data store of a nested array cannot be retrieved");
-  return {};
+  throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
+
+  static const InternalSharedPtr<Store> ptr;
+  return ptr;
 }
 
 bool BaseArray::unbound() const
 {
-  LegateAssert(!nullable() || data_->unbound() == null_mask_->unbound());
+  LEGATE_ASSERT(!nullable() || data_->unbound() == null_mask_->unbound());
   return data_->unbound();
 }
 
-InternalSharedPtr<Store> BaseArray::null_mask() const
+const InternalSharedPtr<Store>& BaseArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument("Invalid to retrieve the null mask of a non-nullable array");
+    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }
 
 InternalSharedPtr<Array> BaseArray::child(std::uint32_t /*index*/) const
 {
-  throw std::invalid_argument("Non-nested array has no child sub-array");
+  throw std::invalid_argument{"Non-nested array has no child sub-array"};
   return {};
 }
 
-void BaseArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
+void BaseArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
   result.push_back(data_);
   if (nullable()) {
@@ -64,17 +66,17 @@ InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
     case 0: return descriptor_;
     case 1: return vardata_;
     default: {
-      throw std::out_of_range("List array does not have child " + std::to_string(index));
+      throw std::out_of_range{"List array does not have child " + std::to_string(index)};
       break;
     }
   }
   return {};
 }
 
-void ListArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
+void ListArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
-  descriptor_->_stores(result);
-  vardata_->_stores(result);
+  descriptor_->populate_stores(result);
+  vardata_->populate_stores(result);
 }
 
 Domain ListArray::domain() const { return descriptor_->domain(); }
@@ -86,19 +88,20 @@ bool StructArray::unbound() const
   return std::any_of(fields_.begin(), fields_.end(), [](auto& field) { return field->unbound(); });
 }
 
-InternalSharedPtr<Store> StructArray::null_mask() const
+const InternalSharedPtr<Store>& StructArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument("Invalid to retrieve the null mask of a non-nullable array");
+    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }
 
 InternalSharedPtr<Array> StructArray::child(std::uint32_t index) const { return fields_.at(index); }
 
-void StructArray::_stores(std::vector<InternalSharedPtr<Store>>& result) const
+void StructArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
-  std::for_each(fields_.begin(), fields_.end(), [&result](auto& field) { field->_stores(result); });
+  std::for_each(
+    fields_.begin(), fields_.end(), [&result](auto& field) { field->populate_stores(result); });
 }
 
 Domain StructArray::domain() const { return fields_.front()->domain(); }

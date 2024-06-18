@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -35,7 +35,7 @@ namespace legate {
  */
 class ScopedAllocator {
  public:
-  static inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
+  static constexpr std::size_t DEFAULT_ALIGNMENT = 16;
 
   // Iff 'scoped', all allocations will be released upon destruction.
   // Otherwise this is up to the runtime after the task has finished.

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,6 +13,7 @@
 #include "core/operation/detail/req_analyzer.h"
 
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/enumerate.h"
 
 namespace legate::detail {
 
@@ -64,7 +65,7 @@ std::uint32_t FieldSet::get_requirement_index(Legion::PrivilegeMode privilege,
   if (req_indices_.end() == finder) {
     finder = req_indices_.find({{LEGION_READ_WRITE, store_proj}, field_id});
   }
-  LegateAssert(finder != req_indices_.end());
+  LEGATE_ASSERT(finder != req_indices_.end());
   return finder->second;
 }
 
@@ -100,10 +101,10 @@ constexpr bool is_single_v<Legion::IndexTaskLauncher> = false;
 template <class Launcher>
 void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& region) const
 {
-  for (auto& [key, entry] : coalesced_) {
+  for (auto&& [key, entry] : coalesced_) {
     auto& [fields, is_key]        = entry;
     auto& [privilege, store_proj] = key;
-    auto& requirement = task.region_requirements.emplace_back(Legion::RegionRequirement());
+    auto& requirement = task.region_requirements.emplace_back(Legion::RegionRequirement{});
 
     store_proj.template populate_requirement<is_single_v<Launcher>>(
       requirement, region, fields, privilege, is_key);
@@ -128,7 +129,7 @@ std::uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRe
                                                          Legion::FieldID field_id) const
 {
   auto finder = field_sets_.find(region);
-  LegateAssert(finder != field_sets_.end());
+  LEGATE_ASSERT(finder != field_sets_.end());
   auto& [field_set, req_offset] = finder->second;
   return req_offset + field_set.get_requirement_index(privilege, store_proj, field_id);
 }
@@ -136,7 +137,7 @@ std::uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRe
 void RequirementAnalyzer::analyze_requirements()
 {
   std::uint32_t num_reqs = 0;
-  for (auto& [_, entry] : field_sets_) {
+  for (auto&& [_, entry] : field_sets_) {
     auto& [field_set, req_offset] = entry;
     field_set.coalesce();
     req_offset = num_reqs;
@@ -146,18 +147,18 @@ void RequirementAnalyzer::analyze_requirements()
 
 void RequirementAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const
 {
-  _populate_launcher(task);
+  populate_launcher_(task);
 }
 
 void RequirementAnalyzer::populate_launcher(Legion::TaskLauncher& task) const
 {
-  _populate_launcher(task);
+  populate_launcher_(task);
 }
 
 template <class Launcher>
-void RequirementAnalyzer::_populate_launcher(Launcher& task) const
+void RequirementAnalyzer::populate_launcher_(Launcher& task) const
 {
-  for (auto& [region, entry] : field_sets_) {
+  for (auto&& [region, entry] : field_sets_) {
     entry.first.populate_launcher(task, region);
   }
 }
@@ -172,7 +173,7 @@ void OutputRequirementAnalyzer::insert(std::uint32_t dim,
 {
   auto& req_info = req_infos_[field_space];
   // TODO(wonchanl): This should be checked when alignment constraints are set on unbound stores
-  LegateAssert(ReqInfo::UNSET == req_info.dim || req_info.dim == dim);
+  LEGATE_ASSERT(ReqInfo::UNSET == req_info.dim || req_info.dim == dim);
   req_info.dim = dim;
   field_groups_[field_space].insert(field_id);
 }
@@ -181,22 +182,23 @@ std::uint32_t OutputRequirementAnalyzer::get_requirement_index(
   const Legion::FieldSpace& field_space, Legion::FieldID) const
 {
   auto finder = req_infos_.find(field_space);
-  LegateAssert(finder != req_infos_.end());
+  LEGATE_ASSERT(finder != req_infos_.end());
   return finder->second.req_idx;
 }
 
 void OutputRequirementAnalyzer::analyze_requirements()
 {
-  std::uint32_t idx = 0;
-  for (const auto& [field_space, _] : field_groups_) {
-    req_infos_[field_space].req_idx = idx++;
+  for (const auto& [idx, rest] : legate::detail::enumerate(field_groups_)) {
+    auto&& [field_space, _] = rest;
+
+    req_infos_[field_space].req_idx = idx;
   }
 }
 
 void OutputRequirementAnalyzer::populate_output_requirements(
   std::vector<Legion::OutputRequirement>& out_reqs) const
 {
-  for (auto& [field_space, fields] : field_groups_) {
+  for (auto&& [field_space, fields] : field_groups_) {
     auto& [dim, _] = req_infos_.at(field_space);
 
     out_reqs.emplace_back(field_space, fields, dim, true /*global_indexing*/);
@@ -226,22 +228,22 @@ void FutureAnalyzer::analyze_futures()
   }
 }
 
-template <class Launcher>
-void FutureAnalyzer::_populate_launcher(Launcher& task) const
+template <typename Launcher>
+void FutureAnalyzer::populate_launcher_(Launcher& task) const
 {
-  for (auto& future : coalesced_) {
+  for (auto&& future : coalesced_) {
     task.add_future(future);
   }
 }
 
 void FutureAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const
 {
-  _populate_launcher(task);
+  populate_launcher_(task);
 }
 
 void FutureAnalyzer::populate_launcher(Legion::TaskLauncher& task) const
 {
-  _populate_launcher(task);
+  populate_launcher_(task);
 }
 
 }  // namespace legate::detail

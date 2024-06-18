@@ -15,6 +15,14 @@
   {# We need to have a default value for the initial pass over the recipe #}
   {% set debug_build_bool = false %}
 {% endif %}
+{% if upload_enabled == "true" %}
+  {% set upload_enabled_bool = true %}
+{% elif upload_enabled == "false" %}
+  {% set upload_enabled_bool = false %}
+{% else %}
+  {# We need to have a default value for the initial pass over the recipe #}
+  {% set upload_enabled_bool = false %}
+{% endif %}
 {% if ucx_configured == "true" %}
   {% set ucx_configured_bool = true %}
 {% elif ucx_configured == "false" %}
@@ -56,9 +64,15 @@
 {% endif %}
 
 {% if debug_build_bool %}
-{% set debug_tag='_debug' %}
+{% set debug_tag='_'+ build_mode_str %}
 {% else %}
 {% set debug_tag='' %}
+{% endif %}
+
+{% if upload_enabled_bool %}
+{% set upload_tag='_nightly' %}
+{% else %}
+{% set upload_tag='' %}
 {% endif %}
 
 {% if ucx_configured_bool %}
@@ -86,8 +100,7 @@ build:
   missing_dso_whitelist:
     -  '*libcuda.so*'
 
-  string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ ucx_tag }}{{ cpu_tag }}{{ debug_tag }}"
-
+  string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ ucx_tag }}{{ cpu_tag }}{{ debug_tag }}{{ upload_tag }}"
   script_env:
     - SCCACHE_BUCKET
     - SCCACHE_REGION
@@ -96,10 +109,11 @@ build:
     - SCCACHE_S3_KEY_PREFIX
     - AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY
-    - CMAKE_C_COMPILER_LAUNCHER
-    - CMAKE_CXX_COMPILER_LAUNCHER
-    - CMAKE_CUDA_COMPILER_LAUNCHER
     - SED
+    - USE_OPENMP
+    - ARTIFACTS_DIR
+    - LEGATE_CI
+    - BUILD_MARCH
 {% if not gpu_enabled_bool %}
     - CPU_ONLY=1
   track_features:
@@ -108,9 +122,15 @@ build:
 {% if debug_build_bool %}
     - DEBUG_BUILD=1
 {% endif %}
+{% if upload_enabled_bool %}
+    - UPLOAD_ENABLED=1
+{% endif %}
+{% if ucx_configured_bool %}
+    - UCX_ENABLED=1
+{% endif %}
   run_exports:
 {% if not gpu_enabled_bool %}
-    - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }} =*_cpu
+    - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }} =*_cpu*
 {% else %}
     - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }}
 {% endif %}
@@ -146,24 +166,23 @@ requirements:
 {% if gpu_enabled_bool %}
     - cuda-nvcc ={{ cuda_version }}
 {% endif %}
+    - doxygen
 
   # Libraries and header files (C/C++).
   host:
     - zlib
     - python
-    - cython
+    - cython >=3.0.1
     - llvm-openmp
     - scikit-build
     - elfutils # [linux]
-    - libdwarf # [linux]
     - libhwloc =* =*default*
 {% if debug_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
 {% if gpu_enabled_bool %}
     - nccl
-    - cuda-nvtx ={{ cuda_version }}
-    - cuda-cccl ={{ cuda_version }}
+    - cuda-nvtx-dev ={{ cuda_version }}
     - cuda-cudart ={{ cuda_version }}
     - cuda-cudart-static ={{ cuda_version }}
     - cuda-nvml-dev ={{ cuda_version }}
@@ -175,7 +194,7 @@ requirements:
     - libcusolver-dev
 {% endif %}
 {% if ucx_configured_bool %}
-    - ucx >=1.14
+    - ucx >=1.16
     - openmpi <5
 {% endif %}
 
@@ -186,7 +205,6 @@ requirements:
     - numpy {{ numpy_version }}
     - typing_extensions
     - elfutils # [linux]
-    - libdwarf # [linux]
     - libhwloc =* =*default*
 {% if debug_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
@@ -197,7 +215,7 @@ requirements:
     - nccl
 {% endif %}
 {% if ucx_configured_bool %}
-    - ucx >=1.14
+    - ucx >=1.16
     - openmpi <5
 {% endif %}
 

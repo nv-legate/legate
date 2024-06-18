@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -12,7 +12,6 @@
 
 #include "core/data/detail/array_tasks.h"
 
-#include "core/legate_c.h"
 #include "core/task/task_context.h"
 
 namespace legate::detail {
@@ -50,7 +49,7 @@ namespace legate::detail {
   const auto ranges  = context.output(0).data();
 
   const auto shape = offsets.shape<1>();
-  LegateCheck(shape == ranges.shape<1>());
+  LEGATE_CHECK(shape == ranges.shape<1>());
 
   if (shape.empty()) {
     return;
@@ -75,7 +74,7 @@ namespace legate::detail {
   const auto offsets = context.output(0).data();
 
   const auto shape = ranges.shape<1>();
-  LegateCheck(shape == offsets.shape<1>());
+  LEGATE_CHECK(shape == offsets.shape<1>());
 
   if (shape.empty()) {
     return;
@@ -91,9 +90,9 @@ namespace legate::detail {
 
 void register_array_tasks(Library* core_lib)
 {
-  FixupRanges::register_variants(legate::Library(core_lib), LEGATE_CORE_FIXUP_RANGES);
-  OffsetsToRanges::register_variants(legate::Library(core_lib), LEGATE_CORE_OFFSETS_TO_RANGES);
-  RangesToOffsets::register_variants(legate::Library(core_lib), LEGATE_CORE_RANGES_TO_OFFSETS);
+  FixupRanges::register_variants(legate::Library{core_lib});
+  OffsetsToRanges::register_variants(legate::Library{core_lib});
+  RangesToOffsets::register_variants(legate::Library{core_lib});
 }
 
 }  // namespace legate::detail

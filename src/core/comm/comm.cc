@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,40 +10,44 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate_defines.h"
-//
 #include "core/comm/comm.h"
+
 #include "core/comm/comm_cal.h"
 #include "core/comm/comm_cpu.h"
 #include "core/comm/comm_nccl.h"
-#include "core/runtime/runtime.h"
+#include "core/utilities/env.h"
 
 #include "env_defaults.h"
+#include "legate_defines.h"
+
+namespace legate::detail {
+
+class Library;
+
+}  // namespace legate::detail
 
 namespace legate::comm {
 
 void register_tasks(const detail::Library* library)
 {
-  if (LegateDefined(LEGATE_USE_CUDA)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     nccl::register_tasks(library);
   }
-  if (LegateDefined(LEGATE_USE_CAL)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CAL)) {
     cal::register_tasks(library);
   }
-  const bool disable_mpi =
-    static_cast<bool>(extract_env("LEGATE_DISABLE_MPI", DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST));
-  if (!disable_mpi) {
+  if (!LEGATE_DISABLE_MPI.get(DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST)) {
     cpu::register_tasks(library);
   }
 }
 
 void register_builtin_communicator_factories(const detail::Library* library)
 {
-  if (LegateDefined(LEGATE_USE_CUDA)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     nccl::register_factory(library);
   }
   cpu::register_factory(library);
-  if (LegateDefined(LEGATE_USE_CAL)) {
+  if (LEGATE_DEFINED(LEGATE_USE_CAL)) {
     cal::register_factory(library);
   }
 }

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from legate.util.types import RunMode
@@ -84,7 +84,7 @@ class Config:
         self._user_run_mode = "python"
 
         # turn everything else off
-        self.user_program: Optional[str] = None
+        self.user_program: str | None = None
         self.user_opts: tuple[str, ...] = ()
         self.binding = Binding(None, None, None, None)
         self.profiling = Profiling(False, False, False, False, "", [])

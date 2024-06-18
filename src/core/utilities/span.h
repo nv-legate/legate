@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -32,6 +32,10 @@ template <typename T>
 class Span {
  public:
   Span() = default;
+
+  template <typename It>
+  Span(It begin, It end);
+
   /**
    * @brief Creates a span with an existing pointer and a size.
    *

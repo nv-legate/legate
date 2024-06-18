@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,7 +17,7 @@
 #include "core/mapping/detail/array.h"
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/store.h"
-#include "core/utilities/deserializer.h"
+#include "core/utilities/detail/deserializer.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <vector>

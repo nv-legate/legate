@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -46,7 +46,7 @@ bool RegionGroup::subsumes(const RegionGroup* other)
   if (finder != subsumption_cache.end()) {
     return finder->second;
   }
-  for (auto& region : other->regions) {
+  for (auto&& region : other->regions) {
     if (regions.find(region) == regions.end()) {
       subsumption_cache[other] = false;
       return false;
@@ -82,7 +82,7 @@ bool InstanceSet::find_instance(Region region,
   }
 
   auto ifinder = instances_.find(group.get());
-  LegateCheck(ifinder != instances_.end());
+  LEGATE_CHECK(ifinder != instances_.end());
 
   auto& spec = ifinder->second;
   if (spec.policy.subsumes(policy)) {
@@ -103,9 +103,7 @@ bool too_big(std::size_t union_volume,
   return (union_volume - (my_volume + group_volume - intersect_volume)) > intersect_volume;
 }
 
-}  // namespace
-
-class construct_overlapping_region_group_fn {
+class ConstructOverlappingRegionGroupFn {
  public:
   template <std::int32_t DIM>
   RegionGroupP operator()(
@@ -117,7 +115,7 @@ class construct_overlapping_region_group_fn {
     std::size_t bound_vol = bound.volume();
     std::set<InstanceSet::Region> regions{region};
 
-    if (LegateDefined(LEGATE_USE_DEBUG)) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       log_instmgr().debug() << "construct_overlapping_region_group( " << region << "," << domain
                             << ")";
     }
@@ -126,12 +124,12 @@ class construct_overlapping_region_group_fn {
       auto& group = pair.first;
 
       const Rect<DIM> group_bbox = group->bounding_box.bounds<DIM, coord_t>();
-      if (LegateDefined(LEGATE_USE_DEBUG)) {
+      if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
         log_instmgr().debug() << "  check intersection with " << group_bbox;
       }
       auto intersect = bound.intersection(group_bbox);
       if (intersect.empty()) {
-        if (LegateDefined(LEGATE_USE_DEBUG)) {
+        if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
           log_instmgr().debug() << "    no intersection";
         }
         continue;
@@ -143,7 +141,7 @@ class construct_overlapping_region_group_fn {
       const std::size_t group_vol     = group_bbox.volume();
       const std::size_t intersect_vol = intersect.volume();
       if (too_big(union_vol, bound_vol, group_vol, intersect_vol)) {
-        if (LegateDefined(LEGATE_USE_DEBUG)) {
+        if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
           log_instmgr().debug() << "    too big to merge (union:" << union_bbox
                                 << ",bound:" << bound_vol << ",group:" << group_vol
                                 << ",intersect:" << intersect_vol << ")";
@@ -156,7 +154,7 @@ class construct_overlapping_region_group_fn {
       // thus there's at least one shared_ptr remaining that points to it. Otherwise we run the risk
       // that a group pointer stored on the instances_ table points to a group that's been collected
       regions.insert(group->regions.begin(), group->regions.end());
-      if (LegateDefined(LEGATE_USE_DEBUG)) {
+      if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
         log_instmgr().debug() << "    bounds updated: " << bound << " ~> " << union_bbox;
       }
 
@@ -168,6 +166,8 @@ class construct_overlapping_region_group_fn {
   }
 };
 
+}  // namespace
+
 RegionGroupP InstanceSet::construct_overlapping_region_group(const Region& region,
                                                              const Domain& domain,
                                                              bool exact) const
@@ -175,7 +175,7 @@ RegionGroupP InstanceSet::construct_overlapping_region_group(const Region& regio
   auto finder = groups_.find(region);
   if (finder == groups_.end()) {
     return dim_dispatch(
-      domain.get_dim(), construct_overlapping_region_group_fn{}, region, domain, instances_);
+      domain.get_dim(), ConstructOverlappingRegionGroupFn{}, region, domain, instances_);
   }
 
   if (!exact || finder->second->regions.size() == 1) {
@@ -188,13 +188,13 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP&
                                                              const Instance& instance,
                                                              const InstanceMappingPolicy& policy)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
 #ifdef DEBUG_INSTANCE_MANAGER
     log_instmgr().debug() << "===== before adding an entry " << *group << " ~> " << instance
                           << " =====";
 #endif
   }
-  dump_and_sanity_check();
+  dump_and_sanity_check_();
 
   std::set<Instance> replaced;
   std::set<RegionGroupP> removed_groups;
@@ -207,7 +207,7 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP&
     instances_[group.get()] = InstanceSpec{instance, policy};
   }
 
-  for (auto& region : group->regions) {
+  for (auto&& region : group->regions) {
     auto it = groups_.find(region);
     if (it == groups_.end()) {
       groups_[region] = group;
@@ -217,7 +217,7 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP&
     }
   }
 
-  for (auto& removed_group : removed_groups) {
+  for (auto&& removed_group : removed_groups) {
     // Because of exact policies, we can't simply remove the groups where regions in the `group`
     // originally belonged, because one region can be included in multiple region groups. (Note that
     // the exact mapping bypasses the coalescing heuristic and always creates a fresh singleton
@@ -239,12 +239,12 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP&
 
   replaced.erase(instance);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
 #ifdef DEBUG_INSTANCE_MANAGER
     log_instmgr().debug() << "===== after adding an entry " << *group << " ~> " << instance
                           << " =====";
 #endif
-    dump_and_sanity_check();
+    dump_and_sanity_check_();
   }
   return replaced;
 }
@@ -252,12 +252,12 @@ std::set<InstanceSet::Instance> InstanceSet::record_instance(const RegionGroupP&
 bool InstanceSet::erase(const Instance& inst)
 {
   std::set<RegionGroup*> filtered_groups;
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
 #ifdef DEBUG_INSTANCE_MANAGER
     log_instmgr().debug() << "===== before erasing an instance " << inst << " =====";
 #endif
   }
-  dump_and_sanity_check();
+  dump_and_sanity_check_();
 
   for (auto it = instances_.begin(); it != instances_.end(); /*nothing*/) {
     if (it->second.instance == inst) {
@@ -283,12 +283,12 @@ bool InstanceSet::erase(const Instance& inst)
     groups_.erase(region);
   }
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
 #ifdef DEBUG_INSTANCE_MANAGER
     log_instmgr().debug() << "===== after erasing an instance " << inst << " =====";
 #endif
   }
-  dump_and_sanity_check();
+  dump_and_sanity_check_();
 
   return instances_.empty();
 }
@@ -296,30 +296,30 @@ bool InstanceSet::erase(const Instance& inst)
 std::size_t InstanceSet::get_instance_size() const
 {
   std::size_t sum = 0;
-  for (auto& pair : instances_) {
+  for (auto&& pair : instances_) {
     sum += pair.second.instance.get_instance_size();
   }
   return sum;
 }
 
-void InstanceSet::dump_and_sanity_check() const
+void InstanceSet::dump_and_sanity_check_() const
 {
 #ifdef DEBUG_INSTANCE_MANAGER
-  for (auto& entry : groups_) {
+  for (auto&& entry : groups_) {
     log_instmgr().debug() << "  " << entry.first << " ~> " << *entry.second;
   }
-  for (auto& entry : instances_) {
+  for (auto&& entry : instances_) {
     log_instmgr().debug() << "  " << *entry.first << " ~> " << entry.second.instance;
   }
 #endif
   std::unordered_set<RegionGroup*> found_groups;
-  for (auto& entry : groups_) {
+  for (auto&& entry : groups_) {
     found_groups.insert(entry.second.get());
-    LegateCheck(instances_.count(entry.second.get()) > 0);
-    LegateCheck(entry.second->regions.count(entry.first) > 0);
+    LEGATE_CHECK(instances_.count(entry.second.get()) > 0);
+    LEGATE_CHECK(entry.second->regions.count(entry.first) > 0);
   }
-  for (auto& entry : instances_) {
-    LegateCheck(found_groups.count(entry.first) > 0);
+  for (auto&& entry : instances_) {
+    LEGATE_CHECK(found_groups.count(entry.first) > 0);
   }
 }
 
@@ -394,7 +394,7 @@ RegionGroupP InstanceManager::find_region_group(const Region& region,
     result = finder->second.construct_overlapping_region_group(region, domain, exact);
   }
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_instmgr().debug() << "find_region_group(" << region << "," << domain << "," << field_id
                           << "," << memory << "," << exact << ") ~> " << *result;
   }
@@ -433,7 +433,7 @@ std::map<Memory, std::size_t> InstanceManager::aggregate_instance_sizes() const
 {
   std::map<Memory, std::size_t> result;
 
-  for (auto& pair : instance_sets_) {
+  for (auto&& pair : instance_sets_) {
     auto& memory = pair.first.memory;
     if (result.find(memory) == result.end()) {
       result[memory] = 0;

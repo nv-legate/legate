@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -20,7 +20,7 @@ inline bool Strategy::parallel(const Operation* op) const { return launch_domain
 
 // ==========================================================================================
 
-inline Partitioner::Partitioner(std::vector<Operation*>&& operations)
+inline Partitioner::Partitioner(Span<const InternalSharedPtr<Operation>> operations)
   : operations_{std::move(operations)}
 {
 }

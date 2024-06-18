@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -21,7 +21,7 @@ namespace tree_reduce {
   std::uint32_t expected = 1;
   for (auto& input : inputs) {
     auto shape = input.shape<1>();
-    LegateAssert(shape.volume() == expected);
+    LEGATE_ASSERT(shape.volume() == expected);
     ++expected;
   }
   output.data().create_output_buffer<int64_t, 1>(legate::Point<1>(0), true);

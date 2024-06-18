@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2020-2023, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2024, NVIDIA CORPORATION. All rights reserved.
 #
 # NVIDIA CORPORATION and its licensors retain all intellectual property
 # and proprietary rights in and to this software, related documentation
@@ -15,13 +15,16 @@ from __future__ import annotations
 from argparse import Action, ArgumentParser
 from dataclasses import dataclass
 from textwrap import indent
-from typing import Literal, Tuple, Union
+from typing import Literal
 
 # --- Types -------------------------------------------------------------------
 
 Req = str
-Reqs = Tuple[Req, ...]
+Reqs = tuple[Req, ...]
 OSType = Literal["linux", "osx"]
+
+MAX_SANITIZER_VERSION = (11, 4)
+MAX_SANITIZER_VERSION_STR = ".".join(map(str, MAX_SANITIZER_VERSION))
 
 
 def V(version: str) -> tuple[int, ...]:
@@ -31,6 +34,18 @@ def V(version: str) -> tuple[int, ...]:
 
 def drop_patch(version: str) -> str:
     return ".".join(version.split(".")[:2])
+
+
+def normalize_platform_arch() -> str:
+    import platform
+
+    match arch := platform.machine():
+        case "x86_64":
+            return "64"
+        case "aarch64":
+            return arch
+        case _:
+            raise RuntimeError(f"Unknown platform architecture: {arch}")
 
 
 class SectionConfig:
@@ -57,7 +72,7 @@ class SectionConfig:
 
 @dataclass(frozen=True)
 class CUDAConfig(SectionConfig):
-    ctk_version: Union[str, None]
+    ctk_version: str | None
     compilers: bool
     os: OSType
 
@@ -70,16 +85,9 @@ class CUDAConfig(SectionConfig):
 
         deps = (
             f"cuda-version={drop_patch(self.ctk_version)}",  # runtime
-            # cuTensor package notes:
-            # - We are pinning to 1.X major version.
-            #   See https://github.com/nv-legate/cunumeric/issues/1092.
-            # - The cuTensor packages on the nvidia channel are not well
-            #   structured. The multiple levels of packages are not connected
-            #   by strict dependencies, and the CTK compatibility is encoded
-            #   in the package name, rather than a constraint or label.
-            #   For now we pin to the conda-forge versions (which use build
-            #   numbers starting with h).
-            "cutensor=1.7*=h*",  # runtime
+            # We are pinning to cuTensor 1.X major version.
+            # See https://github.com/nv-legate/cunumeric/issues/1092.
+            "cutensor=1.7",  # runtime
             "nccl",  # runtime
             "pynvml",  # tests
         )
@@ -88,12 +96,12 @@ class CUDAConfig(SectionConfig):
             deps += (f"cudatoolkit={self.ctk_version}",)
         else:
             deps += (
-                "cuda-cccl",  # no cuda-cccl-dev package on the nvidia channel
+                "cuda-cccl",  # no cuda-cccl-dev package exists
                 "cuda-cudart-dev",
                 "cuda-cudart-static",
                 "cuda-driver-dev",
                 "cuda-nvml-dev",
-                "cuda-nvtx",  # no cuda-nvtx-dev package on the nvidia channel
+                "cuda-nvtx-dev",
                 "libcublas-dev",
                 "libcufft-dev",
                 "libcurand-dev",
@@ -105,20 +113,23 @@ class CUDAConfig(SectionConfig):
         if self.compilers:
             if self.os == "linux":
                 if V(self.ctk_version) < (12, 0, 0):
-                    deps += (f"nvcc_linux-64={drop_patch(self.ctk_version)}",)
+                    arch = normalize_platform_arch()
+                    deps += (
+                        f"nvcc_linux-{arch}={drop_patch(self.ctk_version)}",
+                    )
                 else:
                     deps += ("cuda-nvcc",)
 
                 # gcc 11.3 is incompatible with nvcc < 11.6.
                 if V(self.ctk_version) < (11, 6, 0):
                     deps += (
-                        "gcc_linux-64<=11.2",
-                        "gxx_linux-64<=11.2",
+                        "gcc<=11.2",
+                        "gxx<=11.2",
                     )
                 else:
                     deps += (
-                        "gcc_linux-64=11.*",
-                        "gxx_linux-64=11.*",
+                        "gcc=11.*",
+                        "gxx=11.*",
                     )
 
         return deps
@@ -135,6 +146,7 @@ class BuildConfig(SectionConfig):
     compilers: bool
     openmpi: bool
     ucx: bool
+    sanitizers: bool
     os: OSType
 
     header = "build"
@@ -144,7 +156,7 @@ class BuildConfig(SectionConfig):
         pkgs = (
             # 3.25.0 triggers gitlab.kitware.com/cmake/cmake/-/issues/24119
             "cmake>=3.24,!=3.25.0",
-            "cython>=3",
+            "cython>=3.0.1",
             "git",
             "make",
             "rust",
@@ -175,7 +187,9 @@ class BuildConfig(SectionConfig):
             # requires using the conda-forge compilers.
             pkgs += ("openmpi<5",)
         if self.ucx:
-            pkgs += ("ucx>=1.14",)
+            pkgs += ("ucx>=1.16",)
+        if self.sanitizers:
+            pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)
         if self.os == "linux":
             pkgs += ("elfutils",)
         return sorted(pkgs)
@@ -184,16 +198,21 @@ class BuildConfig(SectionConfig):
         val = "-compilers" if self.compilers else ""
         val += "-openmpi" if self.openmpi else ""
         val += "-ucx" if self.ucx else ""
+        if self.sanitizers:
+            val += "-sanitizer"
         return val
 
 
 @dataclass(frozen=True)
 class RuntimeConfig(SectionConfig):
+    sanitizers: bool
+    openmpi: bool
+
     header = "runtime"
 
     @property
     def conda(self) -> Reqs:
-        return (
+        pkgs = (
             "cffi",
             "llvm-openmp",
             "numpy>=1.22",
@@ -203,9 +222,14 @@ class RuntimeConfig(SectionConfig):
             "openblas<=0.3.21",
             "opt_einsum",
             "scipy",
-            "typing_extensions",
             "libhwloc=*=*default*",
         )
+        if self.sanitizers:
+            pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)
+        if self.openmpi:
+            # see https://github.com/spack/spack/issues/18084
+            pkgs += ("openssh",)
+        return pkgs
 
 
 @dataclass(frozen=True)
@@ -223,11 +247,8 @@ class TestsConfig(SectionConfig):
             "mypy>=0.961",
             "pre-commit",
             "pytest-cov",
-            "pytest-lazy-fixture",
             "pytest-mock",
-            # https://github.com/TvoroG/pytest-lazy-fixture/issues/65
-            # pytest-lazy-fixture 0.6.0 is incompatible with pytest 8.0.0
-            "pytest<8",
+            "pytest",
             "types-docutils",
             "pynvml",
             "tifffile",
@@ -251,12 +272,13 @@ class DocsConfig(SectionConfig):
             "doxygen",
             "ipython",
             "jinja2",
-            "markdown<3.4.0",
+            "markdown",
             "pydata-sphinx-theme>=0.13",
             "myst-parser",
             "nbsphinx",
             "sphinx-copybutton",
             "sphinx>=4.4.0",
+            "breathe>=4.35.0",
         )
 
     @property
@@ -267,23 +289,21 @@ class DocsConfig(SectionConfig):
 @dataclass(frozen=True)
 class EnvConfig:
     use: str
-    python: str
     os: OSType
-    ctk_version: Union[str, None]
+    ctk_version: str | None
     compilers: bool
     openmpi: bool
     ucx: bool
+    sanitizers: bool
 
     @property
     def channels(self) -> str:
         channels = []
-        if self.ctk_version and V(self.ctk_version) >= (12, 0, 0):
-            channels.append(f"nvidia/label/cuda-{self.ctk_version}")
         channels.append("conda-forge")
         return "- " + "\n- ".join(channels)
 
     @property
-    def sections(self) -> Tuple[SectionConfig, ...]:
+    def sections(self) -> tuple[SectionConfig, ...]:
         return (
             self.cuda,
             self.build,
@@ -298,11 +318,13 @@ class EnvConfig:
 
     @property
     def build(self) -> BuildConfig:
-        return BuildConfig(self.compilers, self.openmpi, self.ucx, self.os)
+        return BuildConfig(
+            self.compilers, self.openmpi, self.ucx, self.sanitizers, self.os
+        )
 
     @property
     def runtime(self) -> RuntimeConfig:
-        return RuntimeConfig()
+        return RuntimeConfig(self.sanitizers, self.openmpi)
 
     @property
     def tests(self) -> TestsConfig:
@@ -314,14 +336,26 @@ class EnvConfig:
 
     @property
     def filename(self) -> str:
-        return f"environment-{self.use}-{self.os}-py{self.python}{self.cuda}{self.build}"  # noqa
+        return (
+            f"environment-{self.use}-{self.os}{self.cuda}{self.build}"  # noqa
+        )
 
 
 # --- Setup -------------------------------------------------------------------
+def get_min_py() -> str:
+    from pathlib import Path
 
-PYTHON_VERSIONS = ("3.10", "3.11")
+    try:
+        import tomllib  # novermin
+    except ModuleNotFoundError:
+        from pip._vendor import tomli as tomllib
 
-OS_NAMES: Tuple[OSType, ...] = ("linux", "osx")
+    with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as f:
+        return tomllib.load(f)["build-system"]["python-requires"]
+
+
+MIN_PYTHON_VERSION = get_min_py()
+OS_NAMES: tuple[OSType, ...] = ("linux", "osx")
 
 
 ENV_TEMPLATE = """\
@@ -330,7 +364,7 @@ channels:
 {channels}
 dependencies:
 
-  - python={python}
+  - python>={min_python_version}
 
 {conda_sections}{pip}
 """
@@ -398,12 +432,6 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser.add_argument(
-        "--python",
-        choices=PYTHON_VERSIONS,
-        default=PYTHON_VERSIONS[0],
-        help="Python version to generate for",
-    )
-    parser.add_argument(
         "--ctk",
         dest="ctk_version",
         help="CTK version to generate for",
@@ -420,6 +448,13 @@ if __name__ == "__main__":
         dest="compilers",
         default=False,
         help="Whether to include conda compilers or not",
+    )
+    parser.add_argument(
+        "--sanitizers",
+        action=BooleanFlag,
+        dest="sanitizers",
+        default=False,
+        help="Whether to include libsanitizers or not",
     )
     parser.add_argument(
         "--openmpi",
@@ -445,14 +480,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args(sys.argv[1:])
 
-    if (
-        args.ctk_version
-        and V(args.ctk_version) >= (12, 0, 0)
-        and len(args.ctk_version.split(".")) != 3
-    ):
-        # This is necessary to match on the exact label on the nvidia channel
-        raise ValueError("CTK 12 versions must be in the form 12.X.Y")
-
     selected_sections = None
 
     if args.sections is not None:
@@ -469,12 +496,12 @@ if __name__ == "__main__":
 
     config = EnvConfig(
         "test",
-        args.python,
         args.os,
         args.ctk_version,
         args.compilers,
         args.openmpi,
         args.ucx,
+        args.sanitizers,
     )
 
     conda_sections = indent(
@@ -503,7 +530,7 @@ if __name__ == "__main__":
     out = ENV_TEMPLATE.format(
         use=config.use,
         channels=config.channels,
-        python=config.python,
+        min_python_version=MIN_PYTHON_VERSION,
         conda_sections=conda_sections,
         pip=(
             PIP_TEMPLATE.format(pip_sections=pip_sections)

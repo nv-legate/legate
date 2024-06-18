@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/utilities/detail/type_traits.h"
 #include "core/utilities/hash.h"
 
 #include "legate_defines.h"
@@ -52,7 +53,11 @@ class tuple {
 
   bool operator==(const tuple& other) const;
   bool operator!=(const tuple& other) const;
-  bool operator<(const tuple& other) const;
+  // These functions do ELEMENTWISE comparisons, not lexicographic ones.
+  [[nodiscard]] bool less(const tuple& other) const;
+  [[nodiscard]] bool less_equal(const tuple& other) const;
+  [[nodiscard]] bool greater(const tuple& other) const;
+  [[nodiscard]] bool greater_equal(const tuple& other) const;
   tuple operator+(const tuple& other) const;
   tuple operator+(const T& other) const;
   tuple operator-(const tuple& other) const;
@@ -93,6 +98,7 @@ class tuple {
   template <typename PRED>
   [[nodiscard]] bool any(PRED&& pred) const;
   [[nodiscard]] tuple map(const std::vector<std::int32_t>& mapping) const;
+  void map_inplace(std::vector<std::int32_t>& mapping);
 
   [[nodiscard]] std::string to_string() const;
   template <typename U>
@@ -121,29 +127,21 @@ template <typename T>
 template <typename T>
 [[nodiscard]] tuple<T> from_range(T start, T stop);
 
-namespace detail {
-
 template <typename T>
-struct type_identity {
-  using type = T;
-};
-
-template <typename T>
-using type_identity_t = typename type_identity<T>::type;
-
-}  // namespace detail
-
-template <typename T>
-[[nodiscard]] tuple<T> full(detail::type_identity_t<typename tuple<T>::size_type> size, T init);
+[[nodiscard]] tuple<T> full(traits::detail::type_identity_t<typename tuple<T>::size_type> size,
+                            T init);
 
 template <typename FUNC, typename T>
-[[nodiscard]] auto apply(FUNC func, const tuple<T>& rhs);
+[[nodiscard]] auto apply(FUNC&& func, const tuple<T>& rhs);
 
 template <typename FUNC, typename T1, typename T2>
-[[nodiscard]] auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2);
+[[nodiscard]] auto apply(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2);
 
 template <typename FUNC, typename T1, typename T2>
-[[nodiscard]] auto apply(FUNC func, const tuple<T1>& rhs1, const T2& rhs2);
+[[nodiscard]] auto apply(FUNC&& func, const tuple<T1>& rhs1, const T2& rhs2);
+
+template <typename FUNC, typename T1, typename T2>
+[[nodiscard]] bool apply_reduce_all(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2);
 
 }  // namespace legate
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,15 +13,28 @@
 #pragma once
 
 #include "core/task/variant_options.h"
+#include "core/utilities/detail/type_traits.h"
 #include "core/utilities/typedefs.h"
 
+#include <iosfwd>
 #include <map>
 #include <memory>
+#include <string>
+#include <string_view>
 
 namespace legate {
 
 class VariantInfo {
  public:
+  VariantInfo() = default;
+
+  static_assert(!traits::detail::is_pure_move_constructible_v<Legion::CodeDescriptor>,
+                "Use by value and std::move for Legion::CodeDescriptor");
+  VariantInfo(VariantImpl body_, const Legion::CodeDescriptor& code_desc_, VariantOptions options_)
+    : body{body_}, code_desc{code_desc_}, options{options_}
+  {
+  }
+
   VariantImpl body{};
   Legion::CodeDescriptor code_desc{};
   VariantOptions options{};
@@ -32,7 +45,7 @@ class TaskInfo {
   explicit TaskInfo(std::string task_name);
   ~TaskInfo();
 
-  [[nodiscard]] const std::string& name() const;
+  [[nodiscard]] std::string_view name() const;
 
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,
@@ -41,6 +54,11 @@ class TaskInfo {
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,
                    RealmCallbackFn entry,
+                   const std::map<LegateVariantCode, VariantOptions>& all_options = {});
+  void add_variant(LegateVariantCode vid,
+                   VariantImpl body,
+                   RealmCallbackFn entry,
+                   const VariantOptions& default_options,
                    const std::map<LegateVariantCode, VariantOptions>& all_options = {});
   [[nodiscard]] const VariantInfo& find_variant(LegateVariantCode vid) const;
   [[nodiscard]] bool has_variant(LegateVariantCode vid) const;

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -44,7 +44,7 @@ struct read_fn {
 
     // Since the shape is already fixed on the Python side, the sub-store's extents should be the
     // same as what's stored in the file
-    LegateCheck(shape.hi - shape.lo + legate::Point<DIM>::ONES() == extents);
+    LEGATE_CHECK(shape.hi - shape.lo + legate::Point<DIM>::ONES() == extents);
 
     logger.print() << "Read a sub-array of rect " << shape << " from " << path;
 

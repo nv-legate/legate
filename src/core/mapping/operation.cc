@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,7 +17,7 @@
 
 namespace legate::mapping {
 
-std::int64_t Task::task_id() const { return impl()->task_id(); }
+std::int64_t Task::task_id() const { return impl_()->task_id(); }
 
 namespace {
 
@@ -35,27 +35,27 @@ std::vector<Array> convert_arrays(const Arrays& arrays)
 
 }  // namespace
 
-std::vector<Array> Task::inputs() const { return convert_arrays(impl()->inputs()); }
+std::vector<Array> Task::inputs() const { return convert_arrays(impl_()->inputs()); }
 
-std::vector<Array> Task::outputs() const { return convert_arrays(impl()->outputs()); }
+std::vector<Array> Task::outputs() const { return convert_arrays(impl_()->outputs()); }
 
-std::vector<Array> Task::reductions() const { return convert_arrays(impl()->reductions()); }
+std::vector<Array> Task::reductions() const { return convert_arrays(impl_()->reductions()); }
 
-const std::vector<Scalar>& Task::scalars() const { return impl()->scalars(); }
+const std::vector<Scalar>& Task::scalars() const { return impl_()->scalars(); }
 
-Array Task::input(std::uint32_t index) const { return Array{impl()->inputs().at(index).get()}; }
+Array Task::input(std::uint32_t index) const { return Array{impl_()->inputs().at(index).get()}; }
 
-Array Task::output(std::uint32_t index) const { return Array{impl()->outputs().at(index).get()}; }
+Array Task::output(std::uint32_t index) const { return Array{impl_()->outputs().at(index).get()}; }
 
 Array Task::reduction(std::uint32_t index) const
 {
-  return Array{impl()->reductions().at(index).get()};
+  return Array{impl_()->reductions().at(index).get()};
 }
 
-std::size_t Task::num_inputs() const { return impl()->inputs().size(); }
+std::size_t Task::num_inputs() const { return impl_()->inputs().size(); }
 
-std::size_t Task::num_outputs() const { return impl()->outputs().size(); }
+std::size_t Task::num_outputs() const { return impl_()->outputs().size(); }
 
-std::size_t Task::num_reductions() const { return impl()->reductions().size(); }
+std::size_t Task::num_reductions() const { return impl_()->reductions().size(); }
 
 }  // namespace legate::mapping

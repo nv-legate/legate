@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,15 +17,17 @@
 
 namespace broadcast_constraints {
 
-using Broadcast = DefaultFixture;
+// NOLINTBEGIN(readability-magic-numbers)
 
-static const char* library_name = "test_broadcast_constraints";
+namespace {
 
 constexpr std::size_t EXT_SMALL = 10;
 constexpr std::size_t EXT_LARGE = 100;
 
 constexpr std::int32_t TESTER      = 0;
 constexpr std::int32_t INITIALIZER = 1;
+
+}  // namespace
 
 struct TesterTask : public legate::LegateTask<TesterTask> {
   static void cpu_variant(legate::TaskContext context)
@@ -46,18 +48,22 @@ struct Initializer : public legate::LegateTask<Initializer> {
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
-void prepare()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  TesterTask::register_variants(context, TESTER);
-  Initializer::register_variants(context, INITIALIZER);
-}
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_broadcast_constraints";
+  static void registration_callback(legate::Library library)
+  {
+    TesterTask::register_variants(library, TESTER);
+    Initializer::register_variants(library, INITIALIZER);
+  }
+};
+
+class Broadcast : public RegisterOnceFixture<Config> {};
 
 void test_normal_store()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto launch_tester = [&](const std::vector<std::uint32_t>& dims, bool omit_dims_in_broadcast) {
     std::vector<std::uint64_t> extents(3, EXT_SMALL);
@@ -92,7 +98,7 @@ void test_normal_store()
 void test_promoted_store()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto initialize = [&](auto store) {
     auto task = runtime->create_task(context, INITIALIZER);
@@ -123,7 +129,7 @@ void test_promoted_store()
 void test_invalid_broadcast()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto task  = runtime->create_task(context, INITIALIZER);
   auto store = runtime->create_store(legate::Shape{10}, legate::int64());
@@ -133,22 +139,12 @@ void test_invalid_broadcast()
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
 
-TEST_F(Broadcast, Basic)
-{
-  prepare();
-  test_normal_store();
-}
+TEST_F(Broadcast, Basic) { test_normal_store(); }
 
-TEST_F(Broadcast, WithPromotion)
-{
-  prepare();
-  test_promoted_store();
-}
+TEST_F(Broadcast, WithPromotion) { test_promoted_store(); }
 
-TEST_F(Broadcast, Invalid)
-{
-  prepare();
-  test_invalid_broadcast();
-}
+TEST_F(Broadcast, Invalid) { test_invalid_broadcast(); }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace broadcast_constraints

@@ -1,4 +1,4 @@
-/* Copyright 2023 NVIDIA Corporation
+/* Copyright 2024 NVIDIA Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,8 +47,8 @@ Reduce::Reduce(const Library* library,
     input_part_{find_or_declare_partition(input_)},
     output_part_{declare_partition()}
 {
-  record_partition(input_part_, input_);
-  record_partition(output_part_, output_);
+  record_partition_(input_part_, input_);
+  record_partition_(output_part_, output_);
 }
 
 void Reduce::launch(Strategy* p_strategy)
@@ -57,7 +57,7 @@ void Reduce::launch(Strategy* p_strategy)
   auto launch_domain = strategy.launch_domain(this);
   auto n_tasks       = launch_domain.is_valid() ? launch_domain.get_volume() : 1;
 
-  LegateAssert(!launch_domain.is_valid() || launch_domain.dim == 1);
+  LEGATE_ASSERT(!launch_domain.is_valid() || launch_domain.dim == 1);
 
   auto input_part      = strategy[input_part_];
   auto input_partition = create_store_partition(input_, input_part);
@@ -89,7 +89,7 @@ void Reduce::launch(Strategy* p_strategy)
     if (n_tasks > 1) {
       // if there are more than 1 sub-task, we add several slices of the input
       // for each sub-task
-      for (auto& projection : projections) {
+      for (auto&& projection : projections) {
         auto store_proj = input_partition->create_store_projection(launch_domain, projection);
 
         launcher.add_input(to_array_arg(

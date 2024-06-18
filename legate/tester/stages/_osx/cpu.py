@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -71,7 +71,10 @@ class CPU(TestStage):
 
         workers = min(cpu_workers, mem_workers)
 
-        workers = adjust_workers(workers, config.execution.workers)
+        detail = f"{cpu_workers=} {mem_workers=}"
+        workers = adjust_workers(
+            workers, config.execution.workers, detail=detail
+        )
 
         # return a dummy set of shards just for the runner to iterate over
         shards = [Shard([(i,)]) for i in range(workers)]

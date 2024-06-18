@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -18,7 +18,7 @@ namespace legate {
 
 namespace {
 
-class linearize_fn {
+class LinearizeFn {
  public:
   template <std::int32_t DIM>
   [[nodiscard]] std::size_t operator()(const DomainPoint& lo_dp,
@@ -42,12 +42,12 @@ class linearize_fn {
 
 std::size_t linearize(const DomainPoint& lo, const DomainPoint& hi, const DomainPoint& point)
 {
-  return dim_dispatch(point.dim, linearize_fn{}, lo, hi, point);
+  return dim_dispatch(point.dim, LinearizeFn{}, lo, hi, point);
 }
 
 namespace {
 
-class delinearize_fn {
+class DelinearizeFn {
  public:
   template <std::int32_t DIM>
   [[nodiscard]] DomainPoint operator()(const DomainPoint& lo_dp,
@@ -71,7 +71,7 @@ class delinearize_fn {
 
 DomainPoint delinearize(const DomainPoint& lo, const DomainPoint& hi, std::size_t idx)
 {
-  return dim_dispatch(lo.dim, delinearize_fn{}, lo, hi, idx);
+  return dim_dispatch(lo.dim, DelinearizeFn{}, lo, hi, idx);
 }
 
 }  // namespace legate

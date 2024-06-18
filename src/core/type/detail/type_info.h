@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -23,9 +23,6 @@
 namespace legate::detail {
 
 class BufferBuilder;
-class FixedArrayType;
-class ListType;
-class StructType;
 
 class Type {
  public:
@@ -35,15 +32,12 @@ class Type {
 
   virtual ~Type() = default;
   [[nodiscard]] virtual std::uint32_t size() const;
-  [[nodiscard]] virtual std::uint32_t alignment() const = 0;
-  [[nodiscard]] virtual std::uint32_t uid() const       = 0;
-  [[nodiscard]] virtual bool variable_size() const      = 0;
-  [[nodiscard]] virtual std::string to_string() const   = 0;
-  [[nodiscard]] virtual bool is_primitive() const       = 0;
-  virtual void pack(BufferBuilder& buffer) const        = 0;
-  [[nodiscard]] virtual const FixedArrayType& as_fixed_array_type() const;
-  [[nodiscard]] virtual const StructType& as_struct_type() const;
-  [[nodiscard]] virtual const ListType& as_list_type() const;
+  [[nodiscard]] virtual std::uint32_t alignment() const     = 0;
+  [[nodiscard]] virtual std::uint32_t uid() const           = 0;
+  [[nodiscard]] virtual bool variable_size() const          = 0;
+  [[nodiscard]] virtual std::string to_string() const       = 0;
+  [[nodiscard]] virtual bool is_primitive() const           = 0;
+  virtual void pack(BufferBuilder& buffer) const            = 0;
   [[nodiscard]] virtual bool equal(const Type& other) const = 0;
 
   void record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const;
@@ -124,7 +118,6 @@ class FixedArrayType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
-  [[nodiscard]] const FixedArrayType& as_fixed_array_type() const override;
 
   [[nodiscard]] std::uint32_t num_elements() const;
   [[nodiscard]] const InternalSharedPtr<Type>& element_type() const;
@@ -133,7 +126,8 @@ class FixedArrayType final : public ExtensionType {
   [[nodiscard]] bool equal(const Type& other) const override;
 
   InternalSharedPtr<Type> element_type_{};
-  std::uint32_t N_{};
+  // clang-tidy wants us to lower-case this, but that would make it less readable.
+  std::uint32_t N_{};  // NOLINT(readability-identifier-naming)
   std::uint32_t size_{};
 };
 
@@ -148,10 +142,9 @@ class StructType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
-  [[nodiscard]] const StructType& as_struct_type() const override;
 
   [[nodiscard]] std::uint32_t num_fields() const;
-  [[nodiscard]] InternalSharedPtr<Type> field_type(std::uint32_t field_idx) const;
+  [[nodiscard]] const InternalSharedPtr<Type>& field_type(std::uint32_t field_idx) const;
   [[nodiscard]] const std::vector<InternalSharedPtr<Type>>& field_types() const;
   [[nodiscard]] bool aligned() const;
   [[nodiscard]] const std::vector<std::uint32_t>& offsets() const;
@@ -174,7 +167,6 @@ class ListType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
-  [[nodiscard]] const ListType& as_list_type() const override;
 
   [[nodiscard]] const InternalSharedPtr<Type>& element_type() const;
 
@@ -198,7 +190,7 @@ class ListType final : public ExtensionType {
 
 [[nodiscard]] InternalSharedPtr<Type> list_type(InternalSharedPtr<Type> element_type);
 
-[[nodiscard]] InternalSharedPtr<Type> bool_();
+[[nodiscard]] InternalSharedPtr<Type> bool_();  // NOLINT(readability-identifier-naming)
 [[nodiscard]] InternalSharedPtr<Type> int8();
 [[nodiscard]] InternalSharedPtr<Type> int16();
 [[nodiscard]] InternalSharedPtr<Type> int32();
@@ -214,10 +206,14 @@ class ListType final : public ExtensionType {
 [[nodiscard]] InternalSharedPtr<Type> complex128();
 [[nodiscard]] InternalSharedPtr<Type> point_type(std::uint32_t ndim);
 [[nodiscard]] InternalSharedPtr<Type> rect_type(std::uint32_t ndim);
+[[nodiscard]] InternalSharedPtr<Type> domain_type();
 [[nodiscard]] InternalSharedPtr<Type> null_type();
+[[nodiscard]] bool is_point_type(const InternalSharedPtr<Type>& type);
 [[nodiscard]] bool is_point_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim);
+[[nodiscard]] std::int32_t ndim_point_type(const InternalSharedPtr<Type>& type);
 [[nodiscard]] bool is_rect_type(const InternalSharedPtr<Type>& type);
 [[nodiscard]] bool is_rect_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim);
+[[nodiscard]] std::int32_t ndim_rect_type(const InternalSharedPtr<Type>& type);
 
 }  // namespace legate::detail
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -42,7 +42,7 @@ class LogicalArray {
   virtual ~LogicalArray()                                             = default;
   [[nodiscard]] virtual std::uint32_t dim() const                     = 0;
   [[nodiscard]] virtual ArrayKind kind() const                        = 0;
-  [[nodiscard]] virtual InternalSharedPtr<Type> type() const          = 0;
+  [[nodiscard]] virtual const InternalSharedPtr<Type>& type() const   = 0;
   [[nodiscard]] virtual const InternalSharedPtr<Shape>& shape() const = 0;
   [[nodiscard]] virtual std::size_t volume() const                    = 0;
   [[nodiscard]] virtual bool unbound() const                          = 0;
@@ -60,11 +60,11 @@ class LogicalArray {
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> delinearize(
     std::int32_t dim, const std::vector<std::uint64_t>& sizes) const = 0;
 
-  [[nodiscard]] virtual InternalSharedPtr<LogicalStore> data() const;
-  [[nodiscard]] virtual InternalSharedPtr<LogicalStore> null_mask() const                = 0;
+  [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& data() const;
+  [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& null_mask() const         = 0;
   [[nodiscard]] virtual InternalSharedPtr<PhysicalArray> get_physical_array() const      = 0;
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> child(std::uint32_t index) const = 0;
-  [[nodiscard]] virtual InternalSharedPtr<LogicalStore> primary_store() const            = 0;
+  [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& primary_store() const     = 0;
 
   virtual void record_scalar_or_unbound_outputs(AutoTask* task) const                      = 0;
   virtual void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const = 0;
@@ -95,7 +95,7 @@ class BaseLogicalArray final : public LogicalArray {
 
   [[nodiscard]] std::uint32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
-  [[nodiscard]] InternalSharedPtr<Type> type() const override;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const override;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const override;
   [[nodiscard]] std::size_t volume() const override;
   [[nodiscard]] bool unbound() const override;
@@ -113,12 +113,12 @@ class BaseLogicalArray final : public LogicalArray {
   [[nodiscard]] InternalSharedPtr<LogicalArray> delinearize(
     std::int32_t dim, const std::vector<std::uint64_t>& sizes) const override;
 
-  [[nodiscard]] InternalSharedPtr<LogicalStore> data() const override;
-  [[nodiscard]] InternalSharedPtr<LogicalStore> null_mask() const override;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& data() const override;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array() const override;
-  [[nodiscard]] InternalSharedPtr<BasePhysicalArray> _get_physical_array() const;
+  [[nodiscard]] InternalSharedPtr<BasePhysicalArray> get_base_physical_array() const;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
-  [[nodiscard]] InternalSharedPtr<LogicalStore> primary_store() const override;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
 
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
@@ -151,7 +151,7 @@ class ListLogicalArray final : public LogicalArray {
 
   [[nodiscard]] std::uint32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
-  [[nodiscard]] InternalSharedPtr<Type> type() const override;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const override;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const override;
   [[nodiscard]] std::size_t volume() const override;
   [[nodiscard]] bool unbound() const override;
@@ -169,10 +169,10 @@ class ListLogicalArray final : public LogicalArray {
   [[nodiscard]] InternalSharedPtr<LogicalArray> delinearize(
     std::int32_t dim, const std::vector<std::uint64_t>& sizes) const override;
 
-  [[nodiscard]] InternalSharedPtr<LogicalStore> null_mask() const override;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array() const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
-  [[nodiscard]] InternalSharedPtr<LogicalStore> primary_store() const override;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
   [[nodiscard]] InternalSharedPtr<BaseLogicalArray> descriptor() const;
   [[nodiscard]] InternalSharedPtr<LogicalArray> vardata() const;
 
@@ -208,7 +208,7 @@ class StructLogicalArray final : public LogicalArray {
 
   [[nodiscard]] std::uint32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
-  [[nodiscard]] InternalSharedPtr<Type> type() const override;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const override;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const override;
   [[nodiscard]] std::size_t volume() const override;
   [[nodiscard]] bool unbound() const override;
@@ -226,10 +226,10 @@ class StructLogicalArray final : public LogicalArray {
   [[nodiscard]] InternalSharedPtr<LogicalArray> delinearize(
     std::int32_t dim, const std::vector<std::uint64_t>& sizes) const override;
 
-  [[nodiscard]] InternalSharedPtr<LogicalStore> null_mask() const override;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array() const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
-  [[nodiscard]] InternalSharedPtr<LogicalStore> primary_store() const override;
+  [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
 
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;

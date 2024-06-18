@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -22,7 +22,7 @@
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <optional>
-#include <string>
+#include <string_view>
 #include <vector>
 
 namespace legate::detail {
@@ -36,21 +36,21 @@ class TaskContext {
   [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& inputs();
   [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& outputs();
   [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& reductions();
-  [[nodiscard]] const std::vector<legate::Scalar>& scalars();
-  [[nodiscard]] std::vector<comm::Communicator>& communicators();
+  [[nodiscard]] const std::vector<legate::Scalar>& scalars() const noexcept;
+  [[nodiscard]] const std::vector<comm::Communicator>& communicators() const noexcept;
 
   [[nodiscard]] std::int64_t task_id() const noexcept;
   [[nodiscard]] LegateVariantCode variant_kind() const noexcept;
   [[nodiscard]] bool is_single_task() const;
   [[nodiscard]] bool can_raise_exception() const;
-  [[nodiscard]] DomainPoint get_task_index() const;
-  [[nodiscard]] Domain get_launch_domain() const;
+  [[nodiscard]] const DomainPoint& get_task_index() const;
+  [[nodiscard]] const Domain& get_launch_domain() const;
 
   void set_exception(ReturnedException what);
   [[nodiscard]] std::optional<ReturnedException>& get_exception() noexcept;
 
   [[nodiscard]] const mapping::detail::Machine& machine() const;
-  [[nodiscard]] const std::string& get_provenance() const;
+  [[nodiscard]] std::string_view get_provenance() const;
 
   /**
    * @brief Makes all of unbound output stores of this task empty
@@ -60,7 +60,7 @@ class TaskContext {
   [[nodiscard]] ReturnValues pack_return_values_with_exception(const ReturnedException& exn) const;
 
  private:
-  [[nodiscard]] std::vector<ReturnValue> get_return_values() const;
+  [[nodiscard]] std::vector<ReturnValue> get_return_values_() const;
 
   const Legion::Task* task_{};
   LegateVariantCode variant_kind_{};

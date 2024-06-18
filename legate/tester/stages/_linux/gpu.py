@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -62,7 +62,7 @@ class GPU(TestStage):
             "--sysmem",
             str(SMALL_SYSMEM),
         ]
-        args += self._handle_multi_node_args(config)
+        args += self.handle_multi_node_args(config)
         return args
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
@@ -79,8 +79,11 @@ class GPU(TestStage):
 
         mem_workers = system.memory // (SMALL_SYSMEM * bloat_factor)
 
+        workers = min(gpu_workers, mem_workers)
+
+        detail = f"{fbsize=} {oversub_factor=} {gpu_workers=} {mem_workers=}"
         workers = adjust_workers(
-            min(gpu_workers, mem_workers), config.execution.workers
+            workers, config.execution.workers, detail=detail
         )
 
         shards: list[Shard] = []

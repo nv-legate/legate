@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -9,13 +9,13 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from typing import TYPE_CHECKING, Iterable
+from collections.abc import Iterable
+from typing import Any
 
-if TYPE_CHECKING:
-    from ...data_interface import Field, LegateDataInterfaceItem
-    from ..type.type_info import Type
-    from .physical_store import PhysicalStore
-    from .shape import Shape
+from ...data_interface import Field, LegateDataInterfaceItem
+from ..type.type_info import Type
+from .physical_store import PhysicalStore
+from .shape import Shape
 
 class LogicalStore:
     @property
@@ -40,11 +40,15 @@ class LogicalStore:
     @property
     def __legate_data_interface__(self) -> LegateDataInterfaceItem: ...
     def __str__(self) -> str: ...
+    def __getitem__(
+        self, indices: int | slice | tuple[int | slice, ...]
+    ) -> LogicalStore: ...
     def promote(self, extra_dim: int, dim_size: int) -> LogicalStore: ...
     def project(self, dim: int, index: int) -> LogicalStore: ...
     def slice(self, dim: int, sl: slice) -> LogicalStore: ...
     def transpose(self, axes: Iterable[int]) -> LogicalStore: ...
     def delinearize(self, dim: int, shape: Iterable[int]) -> LogicalStore: ...
+    def fill(self, value: Any) -> None: ...
     def partition_by_tiling(
         self, shape: Iterable[int]
     ) -> LogicalStorePartition: ...

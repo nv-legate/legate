@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -31,7 +31,7 @@ namespace legate {
  */
 class Slice {
  public:
-  static inline constexpr std::nullopt_t OPEN = std::nullopt;
+  static constexpr std::nullopt_t OPEN = std::nullopt;
 
   // NOLINTNEXTLINE(google-explicit-constructor)
   Slice(std::optional<std::int64_t> _start = OPEN, std::optional<std::int64_t> _stop = OPEN);

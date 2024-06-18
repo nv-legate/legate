@@ -15,16 +15,21 @@ supercomputer without any code modifications.
   :maxdepth: 2
   :caption: Contents:
 
-  Overview <README.md>
-  Build instructions <BUILD.md>
-  Python API Reference <api/index.rst>
-  C++ API Reference <https://silver-winner-7voy5mm.pages.github.io/cpp-interface>
+  Overview <overview.rst>
+  User Guide <user.rst>
+  Frequently Asked Questions <faq.rst>
+  API Reference <api/index.rst>
 
 .. toctree::
   :maxdepth: 1
 
   Versions <versions.rst>
 
+.. toctree::
+  :maxdepth: 2
+  :caption: Experimental Features:
+
+  Legate.STL <legate.stl/source/legate-stl.rst>
 
 Indices and tables
 ------------------

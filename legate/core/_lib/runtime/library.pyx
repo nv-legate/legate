@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -14,19 +14,15 @@ from libc.stdint cimport int64_t, uint32_t
 from ..data.scalar cimport Scalar
 from ..task.task_info cimport _TaskInfo
 from ..type.type_info cimport Type
+from ..utilities.unconstructable cimport Unconstructable
 
 
-cdef class Library:
+cdef class Library(Unconstructable):
     @staticmethod
     cdef Library from_handle(_Library handle):
         cdef Library result = Library.__new__(Library)
         result._handle = handle
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     cpdef int64_t get_new_task_id(self):
         return self._handle.get_new_task_id()

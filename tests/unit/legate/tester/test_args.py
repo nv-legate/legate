@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -28,9 +28,6 @@ class TestParserDefaults:
 
     def test_files(self) -> None:
         assert m.parser.get_default("files") is None
-
-    def test_unit(self) -> None:
-        assert m.parser.get_default("unit") is False
 
     def test_last_failed(self) -> None:
         assert m.parser.get_default("last_failed") is False
@@ -80,7 +77,9 @@ class TestParserDefaults:
         assert m.parser.get_default("launcher_extra") == []
 
     def test_mpi_output_filename(self) -> None:
-        assert m.parser.get_default("mpi_output_filename") is None
+        filename = m.parser.get_default("mpi_output_filename")
+        # best we can do with dynamically computed default
+        assert filename is None or str(filename).endswith("mpi_result")
 
     # -- execution
 
@@ -141,4 +140,4 @@ class TestParserConfig:
         )
 
     def test_parser_description(self) -> None:
-        assert m.parser.description == "Run the Cunumeric test suite"
+        assert m.parser.description == "Run the Legate test suite"

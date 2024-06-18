@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from libc.stddef cimport size_t
 from libc.stdint cimport int32_t, int64_t
+from libcpp cimport bool
 
 from ..task.task_context cimport _TaskContext
 
@@ -19,6 +20,7 @@ cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
         _DomainPoint()
         int32_t get_dim()
         int64_t& operator[](int32_t)
+        bool operator==(const _DomainPoint&)
 
     cdef cppclass _Domain "legate::Domain":
         _Domain()
@@ -26,6 +28,7 @@ cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
         int32_t get_dim()
         _DomainPoint lo()
         _DomainPoint hi()
+        bool operator==(const _Domain&)
 
     cdef cppclass _Processor "legate::Processor":
         pass

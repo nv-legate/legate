@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,6 +16,8 @@
 // must also be updated.
 
 #pragma once
+
+#include "core/utilities/macros.h"
 
 #include "legate_defines.h"
 
@@ -34,7 +36,7 @@
 #define WINDOW_SIZE_DEFAULT 1
 #define WINDOW_SIZE_TEST 1
 
-#if LegateDefined(LEGATE_USE_DEBUG)
+#if LEGATE_DEFINED(LEGATE_USE_DEBUG)
 // In debug mode, the default is always block on tasks that can throw exceptions
 #define MAX_PENDING_EXCEPTIONS_DEFAULT 1
 #else

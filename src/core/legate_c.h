@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,10 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-// NOLINTBEGIN(bugprone-reserved-identifier)
-#ifndef __LEGATE_C_H__
-#define __LEGATE_C_H__
-// NOLINTEND(bugprone-reserved-identifier)
+#pragma once
 
 #ifndef LEGATE_USE_PYTHON_CFFI
 #include "legion/legion_config.h"
@@ -21,7 +18,8 @@
 #include <cstdint>
 #endif
 
-// NOLINTBEGIN(modernize-use-using)
+// We cannot specify enum types here since these declarations are supposed to be c-compatible
+// NOLINTBEGIN(modernize-use-using, performance-enum-size, readability-identifier-naming)
 typedef enum legate_core_task_id_t {
   LEGATE_CORE_TOPLEVEL_TASK_ID,
   LEGATE_CORE_EXTRACT_SCALAR_TASK_ID,
@@ -36,6 +34,8 @@ typedef enum legate_core_task_id_t {
   LEGATE_CORE_FIXUP_RANGES,
   LEGATE_CORE_OFFSETS_TO_RANGES,
   LEGATE_CORE_RANGES_TO_OFFSETS,
+  LEGATE_CORE_FIND_BOUNDING_BOX,
+  LEGATE_CORE_FIND_BOUNDING_BOX_SORTED,
   LEGATE_CORE_FIRST_DYNAMIC_TASK_ID,
   // Legate core runtime allocates LEGATE_CORE_MAX_TASK_ID tasks from Legion upfront. All ID's
   // prior to LEGATE_CORE_FIRST_DYNAMIC_TASK_ID are for specific, bespoke
@@ -144,7 +144,7 @@ typedef enum legate_core_task_priority_t {
   LEGATE_CORE_DEFAULT_TASK_PRIORITY = 0,
 } legate_core_task_priority_t;
 
-// NOLINTEND(modernize-use-using)
+// NOLINTEND(modernize-use-using, performance-enum-size, readability-identifier-naming)
 
 #ifdef __cplusplus
 extern "C" {
@@ -157,5 +157,3 @@ bool legate_has_cal();
 #ifdef __cplusplus
 }
 #endif
-
-#endif  // __LEGATE_C_H__

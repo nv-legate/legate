@@ -44,12 +44,55 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Set LEGATE_CORE_DIR
+        run: |
+          echo "LEGATE_CORE_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+
       - name: run pre-commit
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
         continue-on-error: ${{ matrix.config.canFail }}
 
+  test-configure:
+    env:
+      LEGATE_CORE_ARCH: arch-ci-test-lint
+    runs-on: 'ubuntu-latest'
+    strategy:
+      fail-fast: true
+    if: ${{ github.repository_owner == 'nv-legate' }}
+    permissions:
+      contents: read  # This is required for actions/checkout
+
+    steps:
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Generate requirements.txt
+        run: |
+          rm -f requirements.txt
+          echo pytest >> requirements.txt
+          echo pytest-mock >> requirements.txt
+          echo typing_extensions >> requirements.txt
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.config.version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest ./config/aedifix/tests
+
   tidy:
-    runs-on: 'linux-amd64-cpu32'
+    env:
+      LEGATE_CORE_ARCH: arch-ci-lint
+    runs-on: 'linux-amd64-cpu16'
     strategy:
       fail-fast: true
     if: ${{ github.repository_owner == 'nv-legate' }}
@@ -80,7 +123,7 @@ jobs:
         run: |
           echo "today=$(/bin/date -u '+%Y%m%d')" >> ${GITHUB_OUTPUT}
         shell: bash
-      
+
       - name: Cache Conda env
         uses: actions/cache@v4
         with:
@@ -118,11 +161,9 @@ jobs:
         # CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build
         # tool.
         run: |
-          cmake \
-            --preset debug-clang \
-            -G "Unix Makefiles"
+          ./configure --with-tests
+          echo "LEGATE_CORE_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
       - name: Run clang-tidy
-        shell: bash -el {0}
         run: |
-          cmake --build --preset debug-clang --target tidy
+          make tidy

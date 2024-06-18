@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,8 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-# We abuse find package for testing purposes here to
-# 'find' the current build tree to test package builds
+# We abuse find package for testing purposes here to 'find' the current build tree to test
+# package builds
 
 add_subdirectory(hello)
 add_subdirectory(io)

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,30 +17,32 @@
 
 namespace tree_reduce_unique {
 
-using TreeReduce = DefaultFixture;
+namespace {
 
-static const char* library_name = "test_tree_reduce_unique";
+constexpr std::size_t TILE_SIZE = 10;
 
-static const std::size_t TILE_SIZE = 10;
+}  // namespace
 
-enum TaskIDs { TASK_FILL = 1, TASK_UNIQUE, TASK_UNIQUE_REDUCE, TASK_CHECK };
+enum TaskIDs : std::uint8_t { TASK_FILL = 1, TASK_UNIQUE, TASK_UNIQUE_REDUCE, TASK_CHECK };
 
 struct FillTask : public legate::LegateTask<FillTask> {
-  static const std::int32_t TASK_ID = TASK_FILL;
+  static constexpr std::int32_t TASK_ID = TASK_FILL;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
     auto rect   = output.shape<1>();
     auto volume = rect.volume();
-    auto out    = output.write_accessor<int64_t, 1>(rect);
+    auto out    = output.write_accessor<std::int64_t, 1>(rect);
     for (std::size_t idx = 0; idx < volume; ++idx) {
-      out[idx] = idx / 2;
+      out[idx] = static_cast<std::int64_t>(idx / 2);
     }
   }
 };
 
 struct UniqueTask : public legate::LegateTask<UniqueTask> {
-  static const std::int32_t TASK_ID = TASK_UNIQUE;
+  static constexpr std::int32_t TASK_ID = TASK_UNIQUE;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto input  = context.input(0).data();
@@ -62,7 +64,8 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
 };
 
 struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
-  static const std::int32_t TASK_ID = TASK_UNIQUE_REDUCE;
+  static constexpr std::int32_t TASK_ID = TASK_UNIQUE_REDUCE;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
@@ -70,7 +73,7 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
     for (auto& input_arr : context.inputs()) {
       auto shape = input_arr.shape<1>();
       auto acc   = input_arr.data().read_accessor<int64_t, 1>(shape);
-      inputs.push_back(std::make_pair(acc, shape));
+      inputs.emplace_back(acc, shape);
     }
     std::set<std::int64_t> dedup_set;
     for (auto& pair : inputs) {
@@ -81,9 +84,9 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
       }
     }
 
-    std::size_t size = dedup_set.size();
-    std::size_t pos  = 0;
-    auto result      = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true);
+    const std::size_t size = dedup_set.size();
+    std::size_t pos        = 0;
+    auto result            = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true);
     for (auto e : dedup_set) {
       result[pos++] = e;
     }
@@ -91,7 +94,8 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
 };
 
 struct CheckTask : public legate::LegateTask<CheckTask> {
-  static const std::int32_t TASK_ID = TASK_CHECK;
+  static constexpr std::int32_t TASK_ID = TASK_CHECK;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto input  = context.input(0).data();
@@ -105,44 +109,46 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
   }
 };
 
-void register_tasks()
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_tree_reduce_unique";
+  static void registration_callback(legate::Library library)
+  {
+    FillTask::register_variants(library);
+    UniqueTask::register_variants(library);
+    UniqueReduceTask::register_variants(library);
+    CheckTask::register_variants(library);
+  }
+};
+
+class TreeReduceUnique : public RegisterOnceFixture<Config> {};
+
+TEST_F(TreeReduceUnique, All)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  FillTask::register_variants(context);
-  UniqueTask::register_variants(context);
-  UniqueReduceTask::register_variants(context);
-  CheckTask::register_variants(context);
-}
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-TEST_F(TreeReduce, Unique)
-{
-  register_tasks();
-
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-
-  std::size_t num_tasks = 6;
-  std::size_t tile_size = TILE_SIZE;
+  const std::size_t num_tasks = 6;
+  const std::size_t tile_size = TILE_SIZE;
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task_fill = runtime->create_task(context, TASK_FILL, {num_tasks});
+  auto task_fill = runtime->create_task(context, FillTask::TASK_ID, {num_tasks});
   auto part      = store.partition_by_tiling({tile_size});
   task_fill.add_output(part);
   runtime->submit(std::move(task_fill));
 
-  auto task_unique         = runtime->create_task(context, TASK_UNIQUE, {num_tasks});
+  auto task_unique         = runtime->create_task(context, UniqueTask::TASK_ID, {num_tasks});
   auto intermediate_result = runtime->create_store(legate::int64(), 1);
   task_unique.add_input(part);
   task_unique.add_output(intermediate_result);
   runtime->submit(std::move(task_unique));
 
-  auto result = runtime->tree_reduce(context, TASK_UNIQUE_REDUCE, intermediate_result, 4);
+  auto result = runtime->tree_reduce(context, UniqueReduceTask::TASK_ID, intermediate_result, 4);
 
   EXPECT_FALSE(result.unbound());
 
-  auto task_check = runtime->create_task(context, TASK_CHECK, {1});
+  auto task_check = runtime->create_task(context, CheckTask::TASK_ID, {1});
   task_check.add_input(result);
   runtime->submit(std::move(task_check));
 }

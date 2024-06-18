@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -127,7 +127,7 @@ class ZiperatorBase {
   void minuseq_(std::index_sequence<Idx...>, difference_type n);
 
   template <size_t... Idx>
-  bool lessthan_(std::index_sequence<Idx...>, const ZiperatorBase& other) const;
+  [[nodiscard]] bool lessthan_(std::index_sequence<Idx...>, const ZiperatorBase& other) const;
 
   template <size_t... Idx>
   [[nodiscard]] bool eq_(std::index_sequence<Idx...>, const ZiperatorBase& other) const;

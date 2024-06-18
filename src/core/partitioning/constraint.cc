@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -34,9 +34,9 @@ Constraint broadcast(Variable variable, tuple<std::uint32_t> axes)
   return Constraint{detail::broadcast(variable.impl(), std::move(axes))};
 }
 
-Constraint image(Variable var_function, Variable var_range)
+Constraint image(Variable var_function, Variable var_range, ImageComputationHint hint)
 {
-  return Constraint{detail::image(var_function.impl(), var_range.impl())};
+  return Constraint{detail::image(var_function.impl(), var_range.impl(), hint)};
 }
 
 Constraint scale(tuple<std::uint64_t> factors, Variable var_smaller, Variable var_bigger)

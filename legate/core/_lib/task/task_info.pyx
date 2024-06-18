@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 # All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -15,8 +15,10 @@ from libc.stdlib cimport abort as std_abort
 from libcpp.string cimport string as std_string
 from libcpp.unordered_map cimport unordered_map as std_unordered_map
 
+from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..legate_c cimport legate_core_variant_t
 from ..utilities.typedefs cimport RealmCallbackFn
+from ..utilities.unconstructable cimport Unconstructable
 from .task_context cimport TaskContext, _TaskContext
 from .variant_helper cimport task_wrapper_dyn_name
 
@@ -67,9 +69,15 @@ cdef extern void _py_variant "_py_variant"(_TaskContext ctx) with gil:
         # function returns directly back into C++ land, so if this function
         # doesn't do it, nobody will.
         variant_callbacks = _gid_to_variant_callbacks.get(global_task_id)
-        assert variant_callbacks is not None
+        assert variant_callbacks is not None, (
+            f"Task (global task id {global_task_id}) did not have any variant "
+            "callbacks registered"
+        )
         py_callback = variant_callbacks.get(variant_kind)
-        assert py_callback is not None
+        assert py_callback is not None, (
+            f"Task (global task id {global_task_id}) did not have a variant "
+            f"registered for variant kind: {variant_kind}"
+        )
         py_callback(py_ctx)
     except Exception as excn:
         # Cython does not know how to throw C++ exceptions, so we have to tell
@@ -115,7 +123,10 @@ cdef std_unordered_map[legate_core_variant_t, RealmCallbackFn] _init_vmap():
 cdef std_unordered_map[legate_core_variant_t, RealmCallbackFn] \
     _variant_to_callback = _init_vmap()
 
-cdef class TaskInfo:
+cdef class TaskInfo(Unconstructable):
+    cdef void _assert_valid(self):
+        assert self.valid, "TaskInfo object is in an invalid state"
+
     @staticmethod
     cdef TaskInfo from_handle(
         _TaskInfo* p_handle, int64_t local_task_id
@@ -125,11 +136,6 @@ cdef class TaskInfo:
         result._local_id = local_task_id
         result._registered_variants = {}
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     cdef _TaskInfo *release(self) except NULL:
         if not self.valid:
@@ -209,18 +215,22 @@ cdef class TaskInfo:
 
     @property
     def name(self) -> str:
-        assert self.valid
-        return self._handle.name().decode()
+        self._assert_valid()
+        return str_from_string_view(self._handle.name())
 
     cpdef bool has_variant(self, int variant_id):
-        assert self.valid
+        self._assert_valid()
         return self._handle.has_variant(<legate_core_variant_t>variant_id)
 
     cpdef void add_variant(
         self, legate_core_variant_t variant_kind, object fn
     ):
-        assert self.valid
-        assert callable(fn)
+        self._assert_valid()
+        if not callable(fn):
+            raise TypeError(
+                f"Variant function ({fn}) for variant kind {variant_kind} is "
+                "not callable"
+            )
 
         # do this check before we call into C++ since we cannot undo the
         # registration

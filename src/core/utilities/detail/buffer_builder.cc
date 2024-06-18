@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -35,7 +35,7 @@ void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t a
     return;
   }
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     constexpr auto is_power_of_2 = [](std::size_t v) { return v && !(v & (v - 1)); };
 
     if (!align) {
@@ -63,7 +63,7 @@ void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t a
     aligned_ptr    = buffer_.data() + orig_buf_size;
     const auto ptr = std::align(align, size, aligned_ptr, new_size_and_padding);
     // this should never fail, but hey you never know
-    if (LegateDefined(LEGATE_USE_DEBUG) && !ptr) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && !ptr) {
       std::stringstream ss;
 
       ss << "Failed to align pointer of size " << size << " to alignment " << align

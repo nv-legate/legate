@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -37,7 +37,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <queue>
 #include <set>
 #include <string>
 #include <string_view>
@@ -54,17 +53,6 @@ class LogicalArray;
 class LogicalRegionField;
 class ManualTask;
 class StructLogicalArray;
-
-struct Config {
-  static bool show_progress_requested;
-  static bool use_empty_task;
-  static bool synchronize_stream_view;
-  static bool log_mapping_decisions;
-  static bool log_partitioning_decisions;
-  static bool has_socket_mem;
-  static std::uint64_t max_field_reuse_size;
-  static bool warmup_nccl;
-};
 
 class Runtime {
  public:
@@ -137,13 +125,13 @@ class Runtime {
     InternalSharedPtr<LogicalArray> vardata);
 
  private:
-  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array(
+  [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array_(
     const InternalSharedPtr<Shape>& shape,
     InternalSharedPtr<Type> type,
     bool nullable,
     bool optimize_scalar);
 
-  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array(
+  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> create_base_array_(
     InternalSharedPtr<Shape> shape,
     InternalSharedPtr<Type> type,
     bool nullable,
@@ -151,7 +139,8 @@ class Runtime {
 
  public:
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Type> type,
-                                                             std::uint32_t dim);
+                                                             std::uint32_t dim,
+                                                             bool optimize_scalar = false);
   [[nodiscard]] InternalSharedPtr<LogicalStore> create_store(InternalSharedPtr<Shape> shape,
                                                              InternalSharedPtr<Type> type,
                                                              bool optimize_scalar);
@@ -172,12 +161,12 @@ class Runtime {
     const mapping::detail::DimOrdering* ordering);
 
  private:
-  static void check_dimensionality(std::uint32_t dim);
-  [[nodiscard]] std::uint64_t current_op_id() const;
-  void increment_op_id();
+  static void check_dimensionality_(std::uint32_t dim);
+  [[nodiscard]] std::uint64_t current_op_id_() const;
+  void increment_op_id_();
 
  public:
-  void raise_pending_task_exception();
+  void raise_pending_exception();
   [[nodiscard]] std::optional<ReturnedException> check_pending_task_exception();
   void record_pending_exception(Legion::Future pending_exception);
 
@@ -185,9 +174,9 @@ class Runtime {
   [[nodiscard]] std::uint64_t get_unique_storage_id();
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_region_field(
-    const InternalSharedPtr<Shape>& shape, std::uint32_t field_size);
+    InternalSharedPtr<Shape> shape, std::uint32_t field_size);
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> import_region_field(
-    const InternalSharedPtr<Shape>& shape,
+    InternalSharedPtr<Shape> shape,
     Legion::LogicalRegion region,
     Legion::FieldID field_id,
     std::uint32_t field_size);
@@ -206,8 +195,7 @@ class Runtime {
   void progress_unordered_operations() const;
 
   [[nodiscard]] RegionManager* find_or_create_region_manager(const Legion::IndexSpace& index_space);
-  [[nodiscard]] FieldManager* find_or_create_field_manager(InternalSharedPtr<Shape> shape,
-                                                           std::uint32_t field_size);
+  [[nodiscard]] FieldManager* field_manager();
   [[nodiscard]] CommunicatorManager* communicator_manager() const;
   [[nodiscard]] PartitionManager* partition_manager() const;
   [[nodiscard]] Scope& scope();
@@ -234,6 +222,11 @@ class Runtime {
     Legion::FieldID func_field_id,
     bool is_range,
     const mapping::detail::Machine& machine);
+  [[nodiscard]] Legion::IndexPartition create_approximate_image_partition(
+    const InternalSharedPtr<LogicalStore>& store,
+    const InternalSharedPtr<Partition>& partition,
+    const Legion::IndexSpace& index_space,
+    bool sorted);
   [[nodiscard]] Legion::FieldSpace create_field_space();
   [[nodiscard]] Legion::LogicalRegion create_region(const Legion::IndexSpace& index_space,
                                                     const Legion::FieldSpace& field_space);
@@ -256,9 +249,7 @@ class Runtime {
     std::size_t num_tasks);
   void destroy_barrier(Legion::PhaseBarrier barrier);
 
-  [[nodiscard]] Legion::Future get_tunable(Legion::MapperID mapper_id,
-                                           std::int64_t tunable_id,
-                                           std::size_t size);
+  [[nodiscard]] Legion::Future get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id);
 
   template <class T>
   [[nodiscard]] T get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id);
@@ -271,10 +262,10 @@ class Runtime {
     Legion::IndexTaskLauncher& launcher,
     std::vector<Legion::OutputRequirement>& output_requirements);
 
-  void dispatch(Legion::CopyLauncher& launcher);
-  void dispatch(Legion::IndexCopyLauncher& launcher);
-  void dispatch(Legion::FillLauncher& launcher);
-  void dispatch(Legion::IndexFillLauncher& launcher);
+  void dispatch(const Legion::CopyLauncher& launcher);
+  void dispatch(const Legion::IndexCopyLauncher& launcher);
+  void dispatch(const Legion::FillLauncher& launcher);
+  void dispatch(const Legion::IndexFillLauncher& launcher);
 
   [[nodiscard]] Legion::Future extract_scalar(const Legion::Future& result,
                                               std::uint32_t idx) const;
@@ -306,8 +297,10 @@ class Runtime {
 
   InternalSharedPtr<mapping::detail::Machine> create_toplevel_machine();
   [[nodiscard]] const mapping::detail::Machine& get_machine() const;
-  [[nodiscard]] const std::string& get_provenance() const;
+  [[nodiscard]] std::string_view get_provenance() const;
   [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;
+  [[nodiscard]] std::uint32_t node_count() const;
+  [[nodiscard]] std::uint32_t node_id() const;
 
   [[nodiscard]] Legion::ProjectionID get_affine_projection(std::uint32_t src_ndim,
                                                            const proj::SymbolicPoint& point);
@@ -318,8 +311,10 @@ class Runtime {
   [[nodiscard]] Legion::ShardingID get_sharding(const mapping::detail::Machine& machine,
                                                 Legion::ProjectionID proj_id);
 
+  [[nodiscard]] Processor get_executing_processor() const;
+
  private:
-  static void schedule(const std::vector<InternalSharedPtr<Operation>>& operations);
+  static void schedule_(std::vector<InternalSharedPtr<Operation>>&& operations);
 
  public:
   [[nodiscard]] static Runtime* get_runtime();
@@ -338,9 +333,7 @@ class Runtime {
   std::list<ShutdownCallback> callbacks_{};
   legate::mapping::detail::LocalMachine local_machine_{};
 
-  using FieldManagerKey = std::pair<Legion::IndexSpace, std::uint32_t>;
-  std::unordered_map<FieldManagerKey, std::unique_ptr<FieldManager>, hasher<FieldManagerKey>>
-    field_managers_{};
+  std::unique_ptr<FieldManager> field_manager_{};
   using RegionManagerKey = Legion::IndexSpace;
   std::unordered_map<RegionManagerKey, std::unique_ptr<RegionManager>> region_managers_{};
   std::unique_ptr<CommunicatorManager> communicator_manager_{};
@@ -366,7 +359,7 @@ class Runtime {
 
   std::vector<InternalSharedPtr<Operation>> operations_;
   std::size_t window_size_{1};
-  std::uint64_t current_op_id_{};
+  std::uint64_t cur_op_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
   std::uint64_t next_store_id_{1};
@@ -381,12 +374,8 @@ class Runtime {
   using ReductionOpTableKey = std::pair<uint32_t, std::int32_t>;
   std::unordered_map<ReductionOpTableKey, int32_t, hasher<ReductionOpTableKey>> reduction_ops_{};
 
-  // TODO(wonchanl): We keep some of the deferred exception code as we will put it back later
   std::vector<Legion::Future> pending_exceptions_{};
-  std::queue<ReturnedException> outstanding_exceptions_{};
 };
-
-void initialize_core_library();
 
 void initialize_core_library_callback(Legion::Machine,
                                       Legion::Runtime*,

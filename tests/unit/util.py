@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -12,10 +12,9 @@
 from __future__ import annotations
 
 from itertools import chain, combinations
-from typing import Any, Iterable, Iterator
+from typing import Any, Iterable, Iterator, TypeAlias
 
 import pytest
-from typing_extensions import TypeAlias
 
 Capsys: TypeAlias = pytest.CaptureFixture[str]
 

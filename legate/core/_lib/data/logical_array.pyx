@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -14,24 +14,23 @@ from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t, uintptr_t
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
+from ...data_interface import Field, LegateDataInterfaceItem
+
+from ..runtime.runtime cimport get_legate_runtime
 from ..type.type_info cimport Type
+from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport is_iterable
 from .logical_store cimport LogicalStore
 from .shape cimport Shape
 from .slice cimport from_python_slice
 
 
-cdef class LogicalArray:
+cdef class LogicalArray(Unconstructable):
     @staticmethod
     cdef LogicalArray from_handle(_LogicalArray handle):
         cdef LogicalArray result = LogicalArray.__new__(LogicalArray)
         result._handle = handle
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     @staticmethod
     def from_store(LogicalStore store) -> LogicalArray:
@@ -83,6 +82,24 @@ cdef class LogicalArray:
     def num_children(self) -> uint32_t:
         return self._handle.num_children()
 
+    @property
+    def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+        result: LegateDataInterfaceItem = {
+            "version": 1,
+            "data": {Field("store", self.type): self},
+        }
+        return result
+
+    def __getitem__(
+        self, indices: int64_t | slice | tuple[int64_t | slice, ...],
+    ) -> LogicalArray:
+        if self.nested or self.nullable:
+            raise NotImplementedError(
+                "Indexing is not implemented for nested or nullable arrays"
+            )
+
+        return LogicalArray.from_store(self.data[indices])
+
     cpdef LogicalArray promote(self, int32_t extra_dim, size_t dim_size):
         return LogicalArray.from_handle(
             self._handle.promote(extra_dim, dim_size)
@@ -120,6 +137,9 @@ cdef class LogicalArray:
             self._handle.delinearize(dim, std_move(sizes))
         )
 
+    cpdef void fill(self, object value):
+        get_legate_runtime().issue_fill(self, value)
+
     @property
     def data(self) -> LogicalStore:
         return LogicalStore.from_handle(self._handle.data())
@@ -130,6 +150,13 @@ cdef class LogicalArray:
 
     cpdef LogicalArray child(self, uint32_t index):
         return LogicalArray.from_handle(self._handle.child(index))
+
+    cpdef PhysicalArray get_physical_array(self):
+        cdef _PhysicalArray array
+        with nogil:
+            array = self._handle.get_physical_array()
+
+        return PhysicalArray.from_handle(array)
 
     @property
     def raw_handle(self) -> uintptr_t:

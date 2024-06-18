@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -18,23 +18,23 @@ from util.re_replacement import RegexReplacement, Replacement
 
 def main() -> int:
     repl = [
-        Replacement(r"(\s+)assert\(", r"\1LegateCheck("),
+        Replacement(r"(\s+)assert\(", r"\1LEGATE_CHECK("),
         Replacement(
-            r"if\s+\(LegateDefined\(LEGATE_USE_DEBUG\)\)\s+{"
-            r"\s+LegateAssert\(([^;]*)\);\s+"
+            r"if\s+\(LEGATE_DEFINED\(LEGATE_USE_DEBUG\)\)\s+{"
+            r"\s+LEGATE_ASSERT\(([^;]*)\);\s+"
             r"}",
-            r"LegateAssert(\1);",
+            r"LEGATE_ASSERT(\1);",
         ),
         Replacement(
-            r"if\s+\(LegateDefined\(LEGATE_USE_DEBUG\)\)\s+{"
-            r"\s+LegateCheck\(([^;]*)\);\s+"
+            r"if\s+\(LEGATE_DEFINED\(LEGATE_USE_DEBUG\)\)\s+{"
+            r"\s+LEGATE_CHECK\(([^;]*)\);\s+"
             r"}",
-            r"LegateCheck(\1);",
+            r"LEGATE_CHECK(\1);",
         ),
     ]
     return RegexReplacement(
         description=(
-            "Find and fix occurrences of LegateAssert() guarded by "
+            "Find and fix occurrences of LEGATE_ASSERT() guarded by "
             "LEGATE_USE_DEBUG in the provided file(s)."
         ),
         replacements=repl,

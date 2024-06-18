@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -12,14 +12,16 @@
 
 #pragma once
 
-#include "core/data/buffer.h"
+#include "core/data/detail/future_wrapper.h"
+#include "core/data/detail/region_field.h"
 #include "core/data/detail/transform.h"
 #include "core/data/inline_allocation.h"
-#include "core/task/detail/return.h"
+#include "core/mapping/mapping.h"
+#include "core/task/detail/return_value.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/internal_shared_ptr.h"
 
-#include <memory>
+#include <cstdint>
 
 namespace legate {
 class PhysicalStore;
@@ -28,47 +30,6 @@ class PhysicalStore;
 namespace legate::detail {
 
 class BasePhysicalArray;
-
-class RegionField {
- public:
-  RegionField() = default;
-  RegionField(std::int32_t dim, const Legion::PhysicalRegion& pr, Legion::FieldID fid);
-
-  RegionField(RegionField&& other) noexcept            = default;
-  RegionField& operator=(RegionField&& other) noexcept = default;
-
-  RegionField(const RegionField& other)            = delete;
-  RegionField& operator=(const RegionField& other) = delete;
-
-  [[nodiscard]] bool valid() const;
-
-  [[nodiscard]] std::int32_t dim() const;
-
-  [[nodiscard]] Domain domain() const;
-  void set_logical_region(const Legion::LogicalRegion& lr);
-  [[nodiscard]] InlineAllocation get_inline_allocation(std::uint32_t field_size) const;
-  [[nodiscard]] InlineAllocation get_inline_allocation(
-    std::uint32_t field_size,
-    const Domain& domain,
-    const Legion::DomainAffineTransform& transform) const;
-
-  [[nodiscard]] bool is_readable() const;
-  [[nodiscard]] bool is_writable() const;
-  [[nodiscard]] bool is_reducible() const;
-
-  [[nodiscard]] Legion::PhysicalRegion get_physical_region() const;
-  [[nodiscard]] Legion::FieldID get_field_id() const;
-
- private:
-  std::int32_t dim_{-1};
-  std::unique_ptr<Legion::PhysicalRegion> pr_{};
-  Legion::LogicalRegion lr_{};
-  Legion::FieldID fid_{-1U};
-
-  bool readable_{};
-  bool writable_{};
-  bool reducible_{};
-};
 
 class UnboundRegionField {
  public:
@@ -100,64 +61,22 @@ class UnboundRegionField {
   Legion::FieldID fid_{-1U};
 };
 
-class FutureWrapper {
- public:
-  FutureWrapper() = default;
-  FutureWrapper(bool read_only,
-                std::uint32_t field_size,
-                const Domain& domain,
-                Legion::Future future,
-                bool initialize = false);
-
-  [[nodiscard]] std::int32_t dim() const;
-  [[nodiscard]] Domain domain() const;
-  [[nodiscard]] bool valid() const;
-
-  [[nodiscard]] InlineAllocation get_inline_allocation(const Domain& domain) const;
-  [[nodiscard]] InlineAllocation get_inline_allocation() const;
-
-  void initialize_with_identity(std::int32_t redop_id);
-
-  [[nodiscard]] ReturnValue pack() const;
-
-  [[nodiscard]] bool is_read_only() const;
-  [[nodiscard]] Legion::Future get_future() const;
-  [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
-
- private:
-  bool read_only_{true};
-  std::uint32_t field_size_{};
-  Domain domain_{};
-  std::unique_ptr<Legion::Future> future_{};
-  Legion::UntypedDeferredValue buffer_{};
-};
-
 class PhysicalStore {
  public:
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
                 std::int32_t redop_id,
                 FutureWrapper future,
-                InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
+                InternalSharedPtr<detail::TransformStack> transform = nullptr);
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
                 std::int32_t redop_id,
                 RegionField&& region_field,
-                InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
+                InternalSharedPtr<detail::TransformStack> transform = nullptr);
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
                 UnboundRegionField&& unbound_field,
-                InternalSharedPtr<detail::TransformStack>&& transform = nullptr);
-  PhysicalStore(std::int32_t dim,
-                InternalSharedPtr<Type> type,
-                std::int32_t redop_id,
-                FutureWrapper future,
-                const InternalSharedPtr<detail::TransformStack>& transform);
-  PhysicalStore(std::int32_t dim,
-                InternalSharedPtr<Type> type,
-                std::int32_t redop_id,
-                RegionField&& region_field,
-                const InternalSharedPtr<detail::TransformStack>& transform);
+                InternalSharedPtr<detail::TransformStack> transform = nullptr);
 
   PhysicalStore(PhysicalStore&& other) noexcept            = default;
   PhysicalStore& operator=(PhysicalStore&& other) noexcept = default;
@@ -173,6 +92,9 @@ class PhysicalStore {
 
   [[nodiscard]] Domain domain() const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
+  [[nodiscard]] mapping::StoreTarget target() const;
+  [[nodiscard]] const Legion::Future& get_future() const;
+  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer() const;
 
   [[nodiscard]] bool is_readable() const;
   [[nodiscard]] bool is_writable() const;
@@ -188,24 +110,22 @@ class PhysicalStore {
  private:
   friend class legate::PhysicalStore;
   friend class legate::detail::BasePhysicalArray;
-  void check_accessor_dimension(std::int32_t dim) const;
-  void check_buffer_dimension(std::int32_t dim) const;
-  void check_shape_dimension(std::int32_t dim) const;
-  void check_valid_binding(bool bind_buffer) const;
-  void check_write_access() const;
-  void check_reduction_access() const;
+  void check_accessor_dimension_(std::int32_t dim) const;
+  void check_buffer_dimension_(std::int32_t dim) const;
+  void check_shape_dimension_(std::int32_t dim) const;
+  void check_valid_binding_(bool bind_buffer) const;
+  void check_write_access_() const;
+  void check_reduction_access_() const;
 
-  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
+  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
-  void get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
-  [[nodiscard]] std::int32_t get_redop_id() const;
+  void get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
+  [[nodiscard]] std::int32_t get_redop_id_() const;
 
-  [[nodiscard]] bool is_read_only_future() const;
-  [[nodiscard]] Legion::Future get_future() const;
-  [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
+  [[nodiscard]] bool is_read_only_future_() const;
 
-  void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid);
-  void update_num_elements(std::size_t num_elements);
+  void get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid);
+  void update_num_elements_(std::size_t num_elements);
 
   bool is_future_{};
   bool is_unbound_store_{};

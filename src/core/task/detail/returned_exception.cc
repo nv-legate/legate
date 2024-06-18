@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -76,10 +76,10 @@ std::string ReturnedException::to_string() const
 void ReturnedException::throw_exception()
 {
   visit([&](auto&& rexn) {
-    LegateAssert(rexn.raised());
+    LEGATE_ASSERT(rexn.raised());
     rexn.throw_exception();
   });
-  LegateUnreachable();
+  LEGATE_UNREACHABLE();
 }
 
 /*static*/ ReturnedException ReturnedException::construct_from_buffer(const void* buf)
@@ -95,7 +95,7 @@ void ReturnedException::throw_exception()
       return construct_specific_from_buffer_<ReturnedPythonException>(buf);
   }
   LEGATE_ABORT("Unhandled exception kind: " << static_cast<int>(kind));
-  LegateUnreachable();
+  LEGATE_UNREACHABLE();
 }
 
 // ==========================================================================================
@@ -105,25 +105,26 @@ class JoinReturnedException {
   using LHS = ReturnedException;
   using RHS = LHS;
 
-  static const ReturnedException identity;
+  // Realm looks for a member of exactly this name
+  static const ReturnedException identity;  // NOLINT(readability-identifier-naming)
 
   template <bool EXCLUSIVE>
   static void apply(LHS& lhs, RHS rhs)
   {
-    do_op<EXCLUSIVE>(lhs, std::move(rhs));
+    do_op_<EXCLUSIVE>(lhs, std::move(rhs));
   }
 
   template <bool EXCLUSIVE>
   static void fold(RHS& rhs1, RHS rhs2)
   {
-    do_op<EXCLUSIVE>(rhs1, std::move(rhs2));
+    do_op_<EXCLUSIVE>(rhs1, std::move(rhs2));
   }
 
  private:
   template <bool EXCLUSIVE>
-  static void do_op(LHS& lhs, RHS rhs)
+  static void do_op_(LHS& lhs, RHS rhs)
   {
-    LegateCheck(EXCLUSIVE);
+    LEGATE_CHECK(EXCLUSIVE);
     if (lhs.raised() || !rhs.raised()) {
       return;
     }
@@ -140,7 +141,7 @@ void pack_returned_exception(const ReturnedException& value, void** ptr, std::si
   if (const auto new_size = value.legion_buffer_size(); new_size > *size) {
     const auto new_ptr = std::realloc(*ptr, new_size);
     // realloc returns nullptr on failure, so check before clobbering ptr
-    LegateCheck(new_ptr);
+    LEGATE_CHECK(new_ptr);
     *size = new_size;
     *ptr  = new_ptr;
   }

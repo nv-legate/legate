@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -51,7 +51,7 @@ class UnionFindEntry {
   }
   void restrict_all()
   {
-    for (auto& restriction : restrictions.data()) {
+    for (auto&& restriction : restrictions.data()) {
       restriction = Restriction::FORBID;
     }
   }
@@ -113,7 +113,7 @@ void ConstraintSolver::solve_constraints()
   const auto& all_symbols = partition_symbols();
 
   entries.reserve(all_symbols.size());
-  for (auto& symb : all_symbols) {
+  for (auto&& symb : all_symbols) {
     // TODO(wonchanl): partition symbols can be independent of any stores of the operation
     // (e.g., when a symbol subsumes a union of two other symbols)
     auto store  = symb->operation()->find_store(symb);
@@ -134,12 +134,12 @@ void ConstraintSolver::solve_constraints()
     std::vector<const Variable*> part_symbs_to_unify;
 
     alignment->find_partition_symbols(part_symbs_to_unify);
-    LegateAssert(!part_symbs_to_unify.empty());
+    LEGATE_ASSERT(!part_symbs_to_unify.empty());
 
     auto it           = part_symbs_to_unify.begin();
     auto* equiv_class = table[**it++];
 
-    LegateAssert(equiv_class != nullptr);
+    LEGATE_ASSERT(equiv_class != nullptr);
     for (; it != part_symbs_to_unify.end(); ++it) {
       auto* to_unify = table[**it];
       auto* result   = equiv_class->unify(to_unify);
@@ -168,7 +168,7 @@ void ConstraintSolver::solve_constraints()
       // if it is out of bounds
       static_assert(std::is_unsigned_v<decltype(axis)>,
                     "If axis becomes signed, extend check below to include axis >= 0");
-      LegateAssert(axis < equiv_class->restrictions.size());
+      LEGATE_ASSERT(axis < equiv_class->restrictions.size());
       equiv_class->restrictions[axis] = Restriction::FORBID;
     }
   };
@@ -185,29 +185,29 @@ void ConstraintSolver::solve_constraints()
   };
 
   // Reflect each constraint to the solver state
-  for (auto& constraint : constraints_) {
+  for (auto&& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::ALIGNMENT: {
-        auto* alignment = constraint->as_alignment();
-        if (!alignment->is_trivial()) {
+        if (auto* alignment = static_cast<const Alignment*>(constraint.get());
+            !alignment->is_trivial()) {
           handle_alignment(alignment);
         }
         break;
       }
       case Constraint::Kind::BROADCAST: {
-        handle_broadcast(constraint->as_broadcast());
+        handle_broadcast(static_cast<const Broadcast*>(constraint.get()));
         break;
       }
       case Constraint::Kind::IMAGE: {
-        handle_image_constraint(constraint->as_image_constraint());
+        handle_image_constraint(static_cast<const ImageConstraint*>(constraint.get()));
         break;
       }
       case Constraint::Kind::SCALE: {
-        handle_scale_constraint(constraint->as_scale_constraint());
+        handle_scale_constraint(static_cast<const ScaleConstraint*>(constraint.get()));
         break;
       }
       case Constraint::Kind::BLOAT: {
-        handle_bloat_constraint(constraint->as_bloat_constraint());
+        handle_bloat_constraint(static_cast<const BloatConstraint*>(constraint.get()));
         break;
       }
     }
@@ -220,7 +220,7 @@ void ConstraintSolver::solve_constraints()
   // values are already unique? Why do we need to create another set, especially since we just
   // use this set to loop over below, why can't we just reuse the map?
   distinct_entries.reserve(table.size());
-  for (auto& [_, entry] : table) {
+  for (auto&& [_, entry] : table) {
     distinct_entries.insert(entry);
   }
 
@@ -250,18 +250,18 @@ void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
     strategy.insert(bloat_constraint->var_bloat(), std::move(bloated));
   };
 
-  for (auto& constraint : constraints_) {
+  for (auto&& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::IMAGE: {
-        solve_image_constraint(constraint->as_image_constraint());
+        solve_image_constraint(static_cast<const ImageConstraint*>(constraint.get()));
         break;
       }
       case Constraint::Kind::SCALE: {
-        solve_scale_constraint(constraint->as_scale_constraint());
+        solve_scale_constraint(static_cast<const ScaleConstraint*>(constraint.get()));
         break;
       }
       case Constraint::Kind::BLOAT: {
-        solve_bloat_constraint(constraint->as_bloat_constraint());
+        solve_bloat_constraint(static_cast<const BloatConstraint*>(constraint.get()));
         break;
       }
       default: {
@@ -286,16 +286,16 @@ void ConstraintSolver::dump()
 {
   log_legate().debug("===== Constraint Graph =====");
   log_legate().debug() << "Stores:";
-  for (auto& symbol : partition_symbols_.elements()) {
+  for (auto&& symbol : partition_symbols_.elements()) {
     auto store = symbol->operation()->find_store(symbol);
     log_legate().debug() << "  " << symbol->to_string() << " ~> " << store->to_string();
   }
   log_legate().debug() << "Variables:";
-  for (auto& symbol : partition_symbols_.elements()) {
+  for (auto&& symbol : partition_symbols_.elements()) {
     log_legate().debug() << "  " << symbol->to_string();
   }
   log_legate().debug() << "Constraints:";
-  for (auto& constraint : constraints_) {
+  for (auto&& constraint : constraints_) {
     log_legate().debug() << "  " << constraint->to_string();
   }
   log_legate().debug("============================");

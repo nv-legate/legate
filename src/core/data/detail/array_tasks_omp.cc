@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -23,7 +23,7 @@ namespace legate::detail {
 
   auto outputs = context.outputs();
   // TODO(wonchanl): We need to extend this to nested cases
-  for (auto& output : outputs) {
+  for (auto&& output : outputs) {
     auto list_arr = output.as_list_array();
 
     auto list_desc  = list_arr.descriptor();
@@ -51,7 +51,7 @@ namespace legate::detail {
   auto ranges  = context.output(0).data();
 
   auto shape = offsets.shape<1>();
-  LegateCheck(shape == ranges.shape<1>());
+  LEGATE_CHECK(shape == ranges.shape<1>());
 
   if (shape.empty()) {
     return;
@@ -77,7 +77,7 @@ namespace legate::detail {
   auto offsets = context.output(0).data();
 
   auto shape = ranges.shape<1>();
-  LegateCheck(shape == offsets.shape<1>());
+  LEGATE_CHECK(shape == offsets.shape<1>());
 
   if (shape.empty()) {
     return;

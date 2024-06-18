@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -212,11 +212,11 @@ using PointInDomainIterator = Legion::PointInDomainIterator<DIM, T>;
 /**
  * @brief Logical processor handle
  *
- * Legate libraries rarely use processor handles directly and there are no Legate APIs that take
- * a processor handle. However, the libraries may want to query the processor that runs the
- * current task to perform some processor- or processor kind-specific operations. In that case,
- * `legate::Processor::get_executing_processor` can be used. Other useful memobers of
- * `legate::Processor` are the `kind` method, which returns the processor kind, and
+ * Legate libraries rarely use processor handles directly and there are no Legate APIs that
+ * take a processor handle. However, the libraries may want to query the processor that runs
+ * the current task to perform some processor- or processor kind-specific operations. In that
+ * case, `legate::Runtime::get_runtime()->get_executing_processor()` can be used. Other useful
+ * memobers of `legate::Processor` are the `kind` method, which returns the processor kind, and
  * `legate::Processor::Kind`, an enum for all processor types.
  *
  * See
@@ -348,3 +348,17 @@ namespace detail {
 }  // namespace detail
 
 }  // namespace legate
+
+// Until Realm does this for us, we declare this here
+namespace std {
+
+template <>
+struct hash<legate::Memory> {
+  [[nodiscard]] std::size_t operator()(const legate::Memory& mem) const noexcept
+  {
+    using id_type = decltype(mem.id);
+    return std::hash<id_type>{}(mem.id);
+  }
+};
+
+}  // namespace std

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -80,10 +80,6 @@ std::int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 bool Type::operator==(const Type& other) const { return impl()->equal(*other.impl_); }
 
 bool Type::operator!=(const Type& other) const { return !operator==(other); }
-
-Type::Type() = default;
-
-Type::~Type() = default;
 
 std::uint32_t FixedArrayType::num_elements() const
 {
@@ -190,14 +186,22 @@ Type rect_type(std::uint32_t ndim) { return Type{detail::rect_type(ndim)}; }
 
 Type null_type() { return Type{detail::null_type()}; }
 
+bool is_point_type(const Type& type) { return detail::is_point_type(type.impl()); }
+
 bool is_point_type(const Type& type, std::uint32_t ndim)
 {
   return detail::is_point_type(type.impl(), ndim);
 }
 
+std::int32_t ndim_point_type(const Type& type) { return detail::ndim_point_type(type.impl()); }
+
+bool is_rect_type(const Type& type) { return detail::is_rect_type(type.impl()); }
+
 bool is_rect_type(const Type& type, std::uint32_t ndim)
 {
   return detail::is_rect_type(type.impl(), ndim);
 }
+
+std::int32_t ndim_rect_type(const Type& type) { return detail::ndim_rect_type(type.impl()); }
 
 }  // namespace legate

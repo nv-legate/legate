@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,6 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/legate_c.h"
 #include "core/task/task.h"
 
 namespace legate::detail {
@@ -18,33 +19,39 @@ class Library;
 
 class FixupRanges : public LegateTask<FixupRanges> {
  public:
+  static constexpr std::int32_t TASK_ID = LEGATE_CORE_FIXUP_RANGES;
+
   static void cpu_variant(legate::TaskContext context);
-#if LegateDefined(LEGATE_USE_OPENMP)
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
 #endif
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context);
 #endif
 };
 
 class OffsetsToRanges : public LegateTask<OffsetsToRanges> {
  public:
+  static constexpr std::int32_t TASK_ID = LEGATE_CORE_OFFSETS_TO_RANGES;
+
   static void cpu_variant(legate::TaskContext context);
-#if LegateDefined(LEGATE_USE_OPENMP)
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
 #endif
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context);
 #endif
 };
 
 class RangesToOffsets : public LegateTask<RangesToOffsets> {
  public:
+  static constexpr std::int32_t TASK_ID = LEGATE_CORE_RANGES_TO_OFFSETS;
+
   static void cpu_variant(legate::TaskContext context);
-#if LegateDefined(LEGATE_USE_OPENMP)
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
 #endif
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context);
 #endif
 };

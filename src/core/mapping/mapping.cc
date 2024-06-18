@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -92,6 +92,8 @@ DimOrdering::Kind DimOrdering::kind() const { return impl_->kind; }
 std::vector<std::int32_t> DimOrdering::dimensions() const { return impl_->dims; }
 
 bool DimOrdering::operator==(const DimOrdering& other) const { return *impl_ == *other.impl_; }
+
+bool DimOrdering::operator!=(const DimOrdering& other) const { return !(*this == other); }
 
 DimOrdering::~DimOrdering() noexcept = default;
 

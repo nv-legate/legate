@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -18,6 +18,8 @@
 namespace logical_array_test {
 
 using LogicalArrayUnit = DefaultFixture;
+
+// NOLINTBEGIN(readability-magic-numbers)
 
 void test_primitive_array(bool nullable)
 {
@@ -907,5 +909,7 @@ TEST_F(LogicalArrayUnit, Delinearize)
   test_delinearize(true);
   test_delinearize(false);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace logical_array_test

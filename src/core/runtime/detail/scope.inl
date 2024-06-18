@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -20,13 +20,20 @@ namespace legate::detail {
 
 inline std::int32_t Scope::priority() const { return priority_; }
 
-inline const std::string& Scope::provenance() const { return provenance_; }
+inline ExceptionMode Scope::exception_mode() const { return exception_mode_; }
+
+inline std::string_view Scope::provenance() const { return provenance_; }
 
 inline const InternalSharedPtr<Scope::Machine>& Scope::machine() const { return machine_; }
 
 inline std::int32_t Scope::exchange_priority(std::int32_t priority)
 {
   return std::exchange(priority_, priority);
+}
+
+inline ExceptionMode Scope::exchange_exception_mode(ExceptionMode exception_mode)
+{
+  return std::exchange(exception_mode_, exception_mode);
 }
 
 inline std::string Scope::exchange_provenance(std::string provenance)

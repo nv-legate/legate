@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -36,8 +36,9 @@ namespace legate::detail {
 
 class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionField> {
  public:
-  LogicalRegionField(FieldManager* manager,
-                     const Legion::LogicalRegion& lr,
+  LogicalRegionField(InternalSharedPtr<Shape> shape,
+                     std::uint32_t field_size,
+                     Legion::LogicalRegion lr,
                      Legion::FieldID fid,
                      InternalSharedPtr<LogicalRegionField> parent = nullptr);
 
@@ -76,11 +77,12 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
  private:
   void add_invalidation_callback_(std::function<void()> callback);
 
-  FieldManager* manager_{};
+  InternalSharedPtr<Shape> shape_{};
+  std::uint32_t field_size_{};
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{};
   InternalSharedPtr<LogicalRegionField> parent_{};
-  std::unique_ptr<Legion::PhysicalRegion> pr_{};
+  Legion::PhysicalRegion pr_{};
   std::unique_ptr<Attachment> attachment_{};
   bool destroyed_out_of_order_{};
   std::vector<std::function<void()>> callbacks_{};

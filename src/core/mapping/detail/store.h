@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -101,7 +101,7 @@ class Store {
   [[nodiscard]] bool is_future() const;
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] std::int32_t dim() const;
-  [[nodiscard]] InternalSharedPtr<legate::detail::Type> type() const;
+  [[nodiscard]] const InternalSharedPtr<legate::detail::Type>& type() const;
 
   [[nodiscard]] bool is_reduction() const;
   [[nodiscard]] std::int32_t redop() const;

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -12,11 +12,17 @@
 
 #pragma once
 
+#include "core/utilities/compiler.h"
 #include "core/utilities/cpp_version.h"
 #include "core/utilities/detail/zip.h"
 
 #include <cstddef>
+
+// As of 3/14/2024, this include causes shadow warnings in GPU debug mode compilation
+LEGATE_PRAGMA_PUSH()
+LEGATE_PRAGMA_GNU_IGNORE("-Wshadow")
 #include <thrust/iterator/counting_iterator.h>
+LEGATE_PRAGMA_POP()
 
 static_assert(LEGATE_CPP_MIN_VERSION <
                 23,  // NOLINT(readability-magic-numbers) std::enumerate since C++23

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -56,6 +56,6 @@ void register_compound_projection_functor(const tuple<std::uint64_t>& color_shap
                                           const proj::SymbolicPoint& point,
                                           Legion::ProjectionID proj_id);
 
-[[nodiscard]] ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id) noexcept;
+[[nodiscard]] ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id);
 
 }  // namespace legate::detail

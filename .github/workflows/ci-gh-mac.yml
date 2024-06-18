@@ -5,19 +5,22 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  schedule:
-    # Runs at 08:00 UTC every day
-    - cron: '0 8 * * *'
+  # Disabled until the CI scripts are in working order again.
+  # schedule:
+  #   # Runs at 08:00 UTC every day
+  #   - cron: '0 8 * * *'
   workflow_dispatch:
 
 jobs:
   build-and-test:
-    name: Build and test (mac, cpu, release-gcc, no_ucx)
+    name: Build and test (mac, cpu, release, no_ucx)
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: mac
       target-device: cpu
-      cmake-preset: release-gcc
+      cmake-preset: release
       ucx-enabled: false
+      build-type: ci
+      upload-enabled: false
     secrets: inherit

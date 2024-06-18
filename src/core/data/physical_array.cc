@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -27,7 +27,7 @@ bool PhysicalArray::nullable() const noexcept { return impl_->nullable(); }
 
 std::int32_t PhysicalArray::dim() const noexcept { return impl_->dim(); }
 
-Type PhysicalArray::type() const { return Type{impl_->type()}; }
+Type PhysicalArray::type() const noexcept { return Type{impl_->type()}; }
 
 bool PhysicalArray::nested() const noexcept { return impl_->nested(); }
 
@@ -42,7 +42,7 @@ PhysicalArray PhysicalArray::child(std::uint32_t index) const
 
 Domain PhysicalArray::domain() const { return impl_->domain(); }
 
-void PhysicalArray::check_shape_dimension(std::int32_t dim) const
+void PhysicalArray::check_shape_dimension_(std::int32_t dim) const
 {
   impl_->check_shape_dimension(dim);
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -45,22 +45,22 @@ class CommunicatorFactory {
   void destroy();
 
  protected:
-  [[nodiscard]] Legion::FutureMap find_or_create(const mapping::TaskTarget& target,
-                                                 const mapping::ProcessorRange& range,
-                                                 std::uint32_t num_tasks);
-  [[nodiscard]] Legion::FutureMap transform(const Legion::FutureMap& communicator,
-                                            const Domain& launch_domain);
+  [[nodiscard]] Legion::FutureMap find_or_create_(const mapping::TaskTarget& target,
+                                                  const mapping::ProcessorRange& range,
+                                                  std::uint32_t num_tasks);
+  [[nodiscard]] Legion::FutureMap transform_(const Legion::FutureMap& communicator,
+                                             const Domain& launch_domain);
 
  public:
   [[nodiscard]] virtual bool needs_barrier() const                                 = 0;
   [[nodiscard]] virtual bool is_supported_target(mapping::TaskTarget target) const = 0;
 
  protected:
-  [[nodiscard]] virtual Legion::FutureMap initialize(const mapping::detail::Machine& machine,
-                                                     std::uint32_t num_tasks) = 0;
-  virtual void finalize(const mapping::detail::Machine& machine,
-                        std::uint32_t num_tasks,
-                        const Legion::FutureMap& communicator)                = 0;
+  [[nodiscard]] virtual Legion::FutureMap initialize_(const mapping::detail::Machine& machine,
+                                                      std::uint32_t num_tasks) = 0;
+  virtual void finalize_(const mapping::detail::Machine& machine,
+                         std::uint32_t num_tasks,
+                         const Legion::FutureMap& communicator)                = 0;
 
  private:
   template <class Desc>

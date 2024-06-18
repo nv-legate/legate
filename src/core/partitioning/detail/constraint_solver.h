@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -25,7 +25,7 @@ namespace legate::detail {
 
 class Strategy;
 
-enum class AccessMode : std::uint32_t {
+enum class AccessMode : std::uint8_t {
   READ   = 0,
   REDUCE = 1,
   WRITE  = 2,

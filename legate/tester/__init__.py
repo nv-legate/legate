@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -14,16 +14,15 @@
 """
 from __future__ import annotations
 
+import os
+
 from dataclasses import dataclass
-from typing import Union
-from typing_extensions import Literal, TypeAlias
+from typing import Literal, TypeAlias
 
 from ..util.types import ArgList
 
 #: Define the available feature types for tests
-FeatureType: TypeAlias = Union[
-    Literal["cpus"], Literal["cuda"], Literal["eager"], Literal["openmp"]
-]
+FeatureType: TypeAlias = Literal["cpus", "cuda", "eager", "openmp"]
 
 #: Feature values that are accepted for --use, in the relative order
 #: that the corresponding test stages should always execute in
@@ -62,7 +61,22 @@ class CustomTest:
 #: Client test scripts can update this list with their own customizations.
 CUSTOM_FILES: list[CustomTest] = []
 
+
+def _compute_last_failed_filename() -> str:
+    base_name = ".legate-test-last-failed"
+    if (legate_core_dir := os.environ.get("LEGATE_CORE_DIR", "")) and (
+        legate_core_arch := os.environ.get("LEGATE_CORE_ARCH", "")
+    ):
+        arch_dir = os.path.join(legate_core_dir, legate_core_arch)
+        if os.path.exists(arch_dir):
+            return os.path.join(arch_dir, base_name)
+
+    return base_name
+
+
 #: Location to store a list of last-failed tests
 #:
 #: Client test scripts can update this value with their own customizations.
-LAST_FAILED_FILENAME: str = ".legate-test-last-failed"
+LAST_FAILED_FILENAME: str = _compute_last_failed_filename()
+
+del _compute_last_failed_filename

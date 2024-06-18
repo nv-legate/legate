@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -33,24 +33,24 @@ ScatterGather::ScatterGather(InternalSharedPtr<LogicalStore> target,
     target_indirect_{target_indirect, declare_partition()},
     source_{source, declare_partition()},
     source_indirect_{source_indirect, declare_partition()},
-    constraint_(align(source_indirect_.variable, target_indirect_.variable)),
+    constraint_{align(source_indirect_.variable, target_indirect_.variable)},
     redop_{redop}
 {
-  record_partition(target_.variable, std::move(target));
-  record_partition(target_indirect_.variable, std::move(target_indirect));
-  record_partition(source_.variable, std::move(source));
-  record_partition(source_indirect_.variable, std::move(source_indirect));
+  record_partition_(target_.variable, std::move(target));
+  record_partition_(target_indirect_.variable, std::move(target_indirect));
+  record_partition_(source_.variable, std::move(source));
+  record_partition_(source_indirect_.variable, std::move(source_indirect));
 }
 
 void ScatterGather::validate()
 {
   if (*source_.store->type() != *target_.store->type()) {
-    throw std::invalid_argument("Source and targets must have the same type");
+    throw std::invalid_argument{"Source and targets must have the same type"};
   }
-  auto validate_store = [](const auto& store) {
+  constexpr auto validate_store = [](const auto& store) {
     if (store->unbound() || store->has_scalar_storage() || store->transformed()) {
-      throw std::invalid_argument(
-        "ScatterGather accepts only normal, untransformed, region-backed stores");
+      throw std::invalid_argument{
+        "ScatterGather accepts only normal, untransformed, region-backed stores"};
     }
   };
   validate_store(target_.store);
@@ -59,12 +59,16 @@ void ScatterGather::validate()
   validate_store(source_indirect_.store);
 
   if (!is_point_type(source_indirect_.store->type(), source_.store->dim())) {
-    throw std::invalid_argument("Source indirection store should contain " +
-                                std::to_string(source_.store->dim()) + "-D points");
+    std::stringstream ss;
+
+    ss << "Source indirection store should contain " << source_.store->dim() << "-D points";
+    throw std::invalid_argument{std::move(ss).str()};
   }
   if (!is_point_type(target_indirect_.store->type(), target_.store->dim())) {
-    throw std::invalid_argument("Target indirection store should contain " +
-                                std::to_string(target_.store->dim()) + "-D points");
+    std::stringstream ss;
+
+    ss << "Target indirection store should contain " << target_.store->dim() << "-D points";
+    throw std::invalid_argument{std::move(ss).str()};
   }
 
   constraint_->validate();
@@ -76,12 +80,12 @@ void ScatterGather::launch(Strategy* p_strategy)
   auto launcher      = CopyLauncher{machine_, priority()};
   auto launch_domain = strategy.launch_domain(this);
 
-  launcher.add_input(source_.store, create_store_projection(strategy, launch_domain, source_));
+  launcher.add_input(source_.store, create_store_projection_(strategy, launch_domain, source_));
   launcher.add_source_indirect(source_indirect_.store,
-                               create_store_projection(strategy, launch_domain, source_indirect_));
+                               create_store_projection_(strategy, launch_domain, source_indirect_));
 
   if (!redop_) {
-    launcher.add_inout(target_.store, create_store_projection(strategy, launch_domain, target_));
+    launcher.add_inout(target_.store, create_store_projection_(strategy, launch_domain, target_));
   } else {
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
     auto proj            = store_partition->create_store_projection(launch_domain);
@@ -91,20 +95,21 @@ void ScatterGather::launch(Strategy* p_strategy)
   }
 
   launcher.add_target_indirect(target_indirect_.store,
-                               create_store_projection(strategy, launch_domain, target_indirect_));
+                               create_store_projection_(strategy, launch_domain, target_indirect_));
   launcher.set_target_indirect_out_of_range(target_indirect_out_of_range_);
   launcher.set_source_indirect_out_of_range(source_indirect_out_of_range_);
 
   if (launch_domain.is_valid()) {
-    return launcher.execute(launch_domain);
+    launcher.execute(launch_domain);
+  } else {
+    launcher.execute_single();
   }
-  return launcher.execute_single();
 }
 
 void ScatterGather::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));
-  solver.add_partition_symbol(target_.variable, !redop_ ? AccessMode::WRITE : AccessMode::REDUCE);
+  solver.add_partition_symbol(target_.variable, redop_ ? AccessMode::REDUCE : AccessMode::WRITE);
   solver.add_partition_symbol(target_indirect_.variable, AccessMode::READ);
   solver.add_partition_symbol(source_.variable, AccessMode::READ);
   solver.add_partition_symbol(source_indirect_.variable, AccessMode::READ);

@@ -26,7 +26,7 @@ ConsensusMatchResult<T> Runtime::issue_consensus_match(std::vector<T>&& input)
 template <typename T>
 T Runtime::get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id)
 {
-  return get_tunable(mapper_id, tunable_id, sizeof(T)).get_result<T>();
+  return get_tunable(mapper_id, tunable_id).get_result<T>();
 }
 
 template <typename T>
@@ -44,15 +44,17 @@ inline void Runtime::register_shutdown_callback(ShutdownCallback callback)
 
 inline const Library* Runtime::core_library() const { return core_library_; }
 
-inline std::uint64_t Runtime::current_op_id() const { return current_op_id_; }
+inline std::uint64_t Runtime::current_op_id_() const { return cur_op_id_; }
 
-inline void Runtime::increment_op_id() { ++current_op_id_; }
+inline void Runtime::increment_op_id_() { ++cur_op_id_; }
 
 inline std::uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 
 inline std::uint64_t Runtime::get_unique_storage_id() { return next_storage_id_++; }
 
 inline std::uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq_; }
+
+inline FieldManager* Runtime::field_manager() { return field_manager_.get(); }
 
 inline PartitionManager* Runtime::partition_manager() const { return partition_manager_.get(); }
 
@@ -68,6 +70,17 @@ inline const Scope& Runtime::scope() const { return scope_; }
 inline const mapping::detail::LocalMachine& Runtime::local_machine() const
 {
   return local_machine_;
+}
+
+inline std::uint32_t Runtime::node_count() const { return local_machine().total_nodes; }
+
+inline std::uint32_t Runtime::node_id() const { return local_machine().node_id; }
+
+inline Processor Runtime::get_executing_processor() const
+{
+  // Cannot use member legion_context_ here since we may be calling this function from within a
+  // task, where the context will have changed.
+  return legion_runtime_->get_executing_processor(Legion::Runtime::get_context());
 }
 
 }  // namespace legate::detail

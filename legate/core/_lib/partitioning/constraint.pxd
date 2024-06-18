@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -13,6 +13,7 @@ from libc.stdint cimport uint32_t, uint64_t
 from libcpp.string cimport string as std_string
 
 from ..utilities.tuple cimport _tuple
+from ..utilities.unconstructable cimport Unconstructable
 
 from collections.abc import Iterable
 
@@ -36,7 +37,14 @@ cdef extern from "core/partitioning/constraint.h" namespace "legate" nogil:
         _Variable, _tuple[uint32_t]
     ) except+
 
-    cdef _Constraint _image "image" (_Variable, _Variable)
+    cpdef enum class ImageComputationHint:
+        NO_HINT
+        MIN_MAX
+        FIRST_LAST
+
+    cdef _Constraint _image "image" (
+        _Variable, _Variable, ImageComputationHint
+    )
 
     cdef _Constraint _scale "scale" (
         _tuple[uint64_t], _Variable, _Variable
@@ -47,14 +55,14 @@ cdef extern from "core/partitioning/constraint.h" namespace "legate" nogil:
     )
 
 
-cdef class Variable:
+cdef class Variable(Unconstructable):
     cdef _Variable _handle
 
     @staticmethod
     cdef Variable from_handle(_Variable)
 
 
-cdef class Constraint:
+cdef class Constraint(Unconstructable):
     cdef _Constraint _handle
 
     @staticmethod
@@ -73,7 +81,9 @@ ctypedef fused VariableOrStr:
 cpdef object align(VariableOrStr lhs, VariableOrStr rhs)
 cpdef object broadcast(VariableOrStr variable, axes: Iterable[int] =*)
 cpdef object image(
-    VariableOrStr var_function, VariableOrStr var_range
+    VariableOrStr var_function,
+    VariableOrStr var_range,
+    ImageComputationHint hint =*
 )
 cpdef object scale(
     tuple factors,

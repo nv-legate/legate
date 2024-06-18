@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,12 +14,14 @@
 
 #include "legate_defines.h"
 
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
 #include <nvtx3/nvToolsExt.h>
 #else
 using nvtxRangeId_t = char;
+// NOLINTBEGIN(readability-redundant-inline-specifier,readability-identifier-naming)
 inline constexpr nvtxRangeId_t nvtxRangeStartA(const char*) noexcept { return 0; }
 inline constexpr void nvtxRangeEnd(nvtxRangeId_t) noexcept {}
+// NOLINTEND(readability-redundant-inline-specifier,readability-identifier-naming)
 #endif
 
 namespace legate::nvtx {

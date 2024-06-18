@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -70,7 +70,7 @@ Variable AutoTask::add_reduction(const LogicalArray& array,
   return partition_symbol;
 }
 
-void AutoTask::add_scalar_arg(Scalar scalar) { impl_->add_scalar_arg(std::move(*scalar.impl())); }
+void AutoTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(scalar.impl()); }
 
 void AutoTask::add_constraint(const Constraint& constraint)
 {
@@ -84,7 +84,7 @@ Variable AutoTask::find_or_declare_partition(const LogicalArray& array)
 
 Variable AutoTask::declare_partition() { return Variable{impl_->declare_partition()}; }
 
-const std::string& AutoTask::provenance() const { return impl_->provenance(); }
+std::string_view AutoTask::provenance() const { return impl_->provenance(); }
 
 void AutoTask::set_concurrent(bool concurrent) { impl_->set_concurrent(concurrent); }
 
@@ -146,9 +146,9 @@ void ManualTask::add_reduction(const LogicalStorePartition& store_partition,
   impl_->add_reduction(store_partition.impl(), redop, std::move(projection));
 }
 
-void ManualTask::add_scalar_arg(Scalar scalar) { impl_->add_scalar_arg(std::move(*scalar.impl())); }
+void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_->add_scalar_arg(scalar.impl()); }
 
-const std::string& ManualTask::provenance() const { return impl_->provenance(); }
+std::string_view ManualTask::provenance() const { return impl_->provenance(); }
 
 void ManualTask::set_concurrent(bool concurrent) { impl_->set_concurrent(concurrent); }
 

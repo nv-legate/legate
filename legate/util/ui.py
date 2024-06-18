@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -18,10 +18,9 @@ text output (i.e. without ANSI color codes) will be generated.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import timedelta
-from typing import Any, Iterable
-
-from typing_extensions import TypeAlias
+from typing import Any, TypeAlias
 
 from .colors import bright, cyan, dim, green, magenta, red, white, yellow
 
@@ -48,9 +47,7 @@ __all__ = (
 UI_WIDTH = 80
 
 
-def _format_details(
-    details: Iterable[str] | None = None, pre: str = "   "
-) -> str:
+def _format_details(details: Details | None = None, pre: str = "   ") -> str:
     if details:
         return f"{pre}" + f"\n{pre}".join(f"{line}" for line in details)
     return ""
@@ -123,7 +120,7 @@ def skipped(msg: str) -> str:
     return f"{cyan('[SKIP]')} {msg}"
 
 
-def timeout(msg: str) -> str:
+def timeout(msg: str, *, details: Details | None = None) -> str:
     """Report a timed-out test with a yellow [TIME]
 
     Parameters
@@ -131,8 +128,14 @@ def timeout(msg: str) -> str:
     msg : str
         Text to display after [TIME]
 
+    details : Details, optional
+        A sequenece of text lines to diplay below the ``msg`` line
+
     """
-    return f"{yellow('[TIME]')} {msg}"
+    ret = f"{yellow('[TIME]')} {msg}"
+    if details:
+        ret += f"\n{_format_details(details)}"
+    return ret
 
 
 def failed(

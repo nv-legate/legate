@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -171,7 +171,20 @@ class TestImage:
         assert callable(constraint.func)
         assert constraint.func == lc.image
         assert hasattr(constraint, "args")
-        assert constraint.args == ("x", "y")
+        assert constraint.args == ("x", "y", lc.ImageComputationHint.NO_HINT)
+
+    def test_create_from_str_with_hint(self) -> None:
+        constraint = lc.image("x", "y", lc.ImageComputationHint.FIRST_LAST)
+        assert isinstance(constraint, ConstraintProxy)
+        assert hasattr(constraint, "func")
+        assert callable(constraint.func)
+        assert constraint.func == lc.image
+        assert hasattr(constraint, "args")
+        assert constraint.args == (
+            "x",
+            "y",
+            lc.ImageComputationHint.FIRST_LAST,
+        )
 
     def test_create_from_variable(
         self, variable_x: Variable, variable_y: Variable

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -27,7 +27,7 @@ class SquareTask : public Task<SquareTask, SQUARE> {
     legate::Rect<1> input_shape = input.shape<1>();  // should be a 1-Dim array
     auto in                     = input.read_accessor<float, 1>();
 
-    LegateCheck(input_shape == output_shape);
+    LEGATE_CHECK(input_shape == output_shape);
 
     logger.info() << "Elementwise square [" << output_shape.lo << "," << output_shape.hi << "]";
 

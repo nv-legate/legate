@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -29,76 +29,112 @@ namespace legate::detail {
 
 namespace {
 
-// To pacify "cert-err58-cpp: initialization of 'SIZEOF'|'ALIGNOF'|'TYPE_NAMES' with static
-// storage duration may throw an exception that cannot be caught" we place them in functions.
-//
-// We mark this function as noexcept because if this map fails to initialize, then we are so
-// well and truly beansed that the program must abort.
-[[nodiscard]] const std::unordered_map<Type::Code, std::uint32_t>& SIZEOF() noexcept
+class StaticDeterminationError : public std::invalid_argument {
+ public:
+  using std::invalid_argument::invalid_argument;
+};
+
+[[nodiscard]] std::string_view TYPE_NAME(Type::Code code)
 {
-  static const std::unordered_map<Type::Code, std::uint32_t> map = {
-    {Type::Code::BOOL, sizeof(type_of<Type::Code::BOOL>)},
-    {Type::Code::INT8, sizeof(type_of<Type::Code::INT8>)},
-    {Type::Code::INT16, sizeof(type_of<Type::Code::INT16>)},
-    {Type::Code::INT32, sizeof(type_of<Type::Code::INT32>)},
-    {Type::Code::INT64, sizeof(type_of<Type::Code::INT64>)},
-    {Type::Code::UINT8, sizeof(type_of<Type::Code::UINT8>)},
-    {Type::Code::UINT16, sizeof(type_of<Type::Code::UINT16>)},
-    {Type::Code::UINT32, sizeof(type_of<Type::Code::UINT32>)},
-    {Type::Code::UINT64, sizeof(type_of<Type::Code::UINT64>)},
-    {Type::Code::FLOAT16, sizeof(type_of<Type::Code::FLOAT16>)},
-    {Type::Code::FLOAT32, sizeof(type_of<Type::Code::FLOAT32>)},
-    {Type::Code::FLOAT64, sizeof(type_of<Type::Code::FLOAT64>)},
-    {Type::Code::COMPLEX64, sizeof(type_of<Type::Code::COMPLEX64>)},
-    {Type::Code::COMPLEX128, sizeof(type_of<Type::Code::COMPLEX128>)},
-    {Type::Code::NIL, 0},
-  };
-  return map;
+  switch (code) {
+    case Type::Code::BOOL: return "bool";
+    case Type::Code::INT8: return "int8";
+    case Type::Code::INT16: return "int16";
+    case Type::Code::INT32: return "int32";
+    case Type::Code::INT64: return "int64";
+    case Type::Code::UINT8: return "uint8";
+    case Type::Code::UINT16: return "uint16";
+    case Type::Code::UINT32: return "uint32";
+    case Type::Code::UINT64: return "uint64";
+    case Type::Code::FLOAT16: return "float16";
+    case Type::Code::FLOAT32: return "float32";
+    case Type::Code::FLOAT64: return "float64";
+    case Type::Code::COMPLEX64: return "complex64";
+    case Type::Code::COMPLEX128: return "complex128";
+    case Type::Code::STRING: return "string";
+    case Type::Code::NIL: return "null_type";
+    case Type::Code::BINARY: return "binary";
+    case Type::Code::STRUCT: return "struct";
+    case Type::Code::FIXED_ARRAY: return "fixed_array";
+    case Type::Code::LIST: return "list";
+  }
+  throw std::invalid_argument{"invalid type code"};
 }
 
-[[nodiscard]] const std::unordered_map<Type::Code, std::uint32_t>& ALIGNOF() noexcept
+[[nodiscard]] std::uint32_t SIZEOF(Type::Code code)
 {
-  static const std::unordered_map<Type::Code, std::uint32_t> map = {
-    {Type::Code::BOOL, alignof(type_of<Type::Code::BOOL>)},
-    {Type::Code::INT8, alignof(type_of<Type::Code::INT8>)},
-    {Type::Code::INT16, alignof(type_of<Type::Code::INT16>)},
-    {Type::Code::INT32, alignof(type_of<Type::Code::INT32>)},
-    {Type::Code::INT64, alignof(type_of<Type::Code::INT64>)},
-    {Type::Code::UINT8, alignof(type_of<Type::Code::UINT8>)},
-    {Type::Code::UINT16, alignof(type_of<Type::Code::UINT16>)},
-    {Type::Code::UINT32, alignof(type_of<Type::Code::UINT32>)},
-    {Type::Code::UINT64, alignof(type_of<Type::Code::UINT64>)},
-    {Type::Code::FLOAT16, alignof(type_of<Type::Code::FLOAT16>)},
-    {Type::Code::FLOAT32, alignof(type_of<Type::Code::FLOAT32>)},
-    {Type::Code::FLOAT64, alignof(type_of<Type::Code::FLOAT64>)},
-    {Type::Code::COMPLEX64, alignof(type_of<Type::Code::COMPLEX64>)},
-    {Type::Code::COMPLEX128, alignof(type_of<Type::Code::COMPLEX128>)},
-    {Type::Code::NIL, 0},
+  switch (code) {
+#define SIZEOF_TYPE_CODE(x) \
+  case x: return sizeof(type_of_t<x>)
+
+    SIZEOF_TYPE_CODE(Type::Code::BOOL);
+    SIZEOF_TYPE_CODE(Type::Code::INT8);
+    SIZEOF_TYPE_CODE(Type::Code::INT16);
+    SIZEOF_TYPE_CODE(Type::Code::INT32);
+    SIZEOF_TYPE_CODE(Type::Code::INT64);
+    SIZEOF_TYPE_CODE(Type::Code::UINT8);
+    SIZEOF_TYPE_CODE(Type::Code::UINT16);
+    SIZEOF_TYPE_CODE(Type::Code::UINT32);
+    SIZEOF_TYPE_CODE(Type::Code::UINT64);
+    SIZEOF_TYPE_CODE(Type::Code::FLOAT16);
+    SIZEOF_TYPE_CODE(Type::Code::FLOAT32);
+    SIZEOF_TYPE_CODE(Type::Code::FLOAT64);
+    SIZEOF_TYPE_CODE(Type::Code::COMPLEX64);
+    SIZEOF_TYPE_CODE(Type::Code::COMPLEX128);
+
+#undef SIZEOF_TYPE_CODE
+
+    case Type::Code::NIL: return 0;
+    case Type::Code::BINARY: [[fallthrough]];
+    case Type::Code::STRUCT: [[fallthrough]];
+    case Type::Code::FIXED_ARRAY: [[fallthrough]];
+    case Type::Code::LIST: [[fallthrough]];
+    case Type::Code::STRING: {
+      std::stringstream ss;
+
+      ss << "Cannot statically determine size of non-integral type: " << TYPE_NAME(code);
+      throw StaticDeterminationError{std::move(ss).str()};
+    }
   };
-  return map;
+  throw std::invalid_argument{"invalid type code"};
 }
 
-[[nodiscard]] const std::unordered_map<Type::Code, std::string_view>& TYPE_NAMES() noexcept
+[[nodiscard]] std::uint32_t ALIGNOF(Type::Code code)
 {
-  static const std::unordered_map<Type::Code, std::string_view> map = {
-    {Type::Code::BOOL, "bool"},
-    {Type::Code::INT8, "int8"},
-    {Type::Code::INT16, "int16"},
-    {Type::Code::INT32, "int32"},
-    {Type::Code::INT64, "int64"},
-    {Type::Code::UINT8, "uint8"},
-    {Type::Code::UINT16, "uint16"},
-    {Type::Code::UINT32, "uint32"},
-    {Type::Code::UINT64, "uint64"},
-    {Type::Code::FLOAT16, "float16"},
-    {Type::Code::FLOAT32, "float32"},
-    {Type::Code::FLOAT64, "float64"},
-    {Type::Code::COMPLEX64, "complex64"},
-    {Type::Code::COMPLEX128, "complex128"},
-    {Type::Code::STRING, "string"},
-    {Type::Code::NIL, "null_type"},
+  switch (code) {
+#define ALIGNOF_TYPE_CODE(x) \
+  case x: return alignof(type_of_t<x>)
+
+    ALIGNOF_TYPE_CODE(Type::Code::BOOL);
+    ALIGNOF_TYPE_CODE(Type::Code::INT8);
+    ALIGNOF_TYPE_CODE(Type::Code::INT16);
+    ALIGNOF_TYPE_CODE(Type::Code::INT32);
+    ALIGNOF_TYPE_CODE(Type::Code::INT64);
+    ALIGNOF_TYPE_CODE(Type::Code::UINT8);
+    ALIGNOF_TYPE_CODE(Type::Code::UINT16);
+    ALIGNOF_TYPE_CODE(Type::Code::UINT32);
+    ALIGNOF_TYPE_CODE(Type::Code::UINT64);
+    ALIGNOF_TYPE_CODE(Type::Code::FLOAT16);
+    ALIGNOF_TYPE_CODE(Type::Code::FLOAT32);
+    ALIGNOF_TYPE_CODE(Type::Code::FLOAT64);
+    ALIGNOF_TYPE_CODE(Type::Code::COMPLEX64);
+    ALIGNOF_TYPE_CODE(Type::Code::COMPLEX128);
+
+#undef ALIGNOF_TYPE_CODE
+
+    case Type::Code::NIL: return 0;
+    case Type::Code::BINARY: [[fallthrough]];
+    case Type::Code::STRUCT: [[fallthrough]];
+    case Type::Code::FIXED_ARRAY: [[fallthrough]];
+    case Type::Code::LIST: [[fallthrough]];
+    case Type::Code::STRING: {
+      std::stringstream ss;
+
+      ss << "Cannot statically determine alingment of non-integral type: " << TYPE_NAME(code);
+      throw StaticDeterminationError{std::move(ss).str()};
+    }
   };
-  return map;
+  throw std::invalid_argument{"invalid type code"};
 }
 
 constexpr const char* const VARIABLE_SIZE_ERROR_MESSAGE =
@@ -139,24 +175,6 @@ std::uint32_t Type::size() const
   return {};
 }
 
-const FixedArrayType& Type::as_fixed_array_type() const
-{
-  throw std::invalid_argument{"Type is not a fixed array type"};
-  return *reinterpret_cast<const FixedArrayType*>(this);
-}
-
-const StructType& Type::as_struct_type() const
-{
-  throw std::invalid_argument{"Type is not a struct type"};
-  return *reinterpret_cast<const StructType*>(this);
-}
-
-const ListType& Type::as_list_type() const
-{
-  throw std::invalid_argument{"Type is not a list type"};
-  return *reinterpret_cast<const ListType*>(this);
-}
-
 void Type::record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const
 {
   detail::Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);
@@ -175,11 +193,11 @@ std::int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
 bool Type::operator==(const Type& other) const { return equal(other); }
 
 PrimitiveType::PrimitiveType(Code type_code)
-  : Type{type_code}, size_{SIZEOF().at(type_code)}, alignment_{ALIGNOF().at(type_code)}
+  : Type{type_code}, size_{SIZEOF(type_code)}, alignment_{ALIGNOF(type_code)}
 {
 }
 
-std::string PrimitiveType::to_string() const { return std::string{TYPE_NAMES().at(code)}; }
+std::string PrimitiveType::to_string() const { return std::string{TYPE_NAME(code)}; }
 
 void PrimitiveType::pack(BufferBuilder& buffer) const
 {
@@ -230,7 +248,7 @@ bool FixedArrayType::equal(const Type& other) const
   }
   auto& casted = static_cast<const FixedArrayType&>(other);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
     return uid_ == casted.uid_ && N_ == casted.N_ && element_type_ == casted.element_type_;
   }
@@ -260,20 +278,20 @@ StructType::StructType(std::uint32_t uid,
       return (offset + (alignment - 1)) & -alignment;
     };
 
-    for (auto& field_type : field_types_) {
+    for (auto&& field_type : field_types_) {
       if (field_type->variable_size()) {
         throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
       }
-      const auto _my_align = field_type->alignment();
-      alignment_           = std::max(_my_align, alignment_);
+      const auto my_align = field_type->alignment();
+      alignment_          = std::max(my_align, alignment_);
 
-      const auto offset = align_offset(size_, _my_align);
+      const auto offset = align_offset(size_, my_align);
       offsets_.push_back(offset);
       size_ = offset + field_type->size();
     }
     size_ = align_offset(size_, alignment_);
   } else {
-    for (auto& field_type : field_types_) {
+    for (auto&& field_type : field_types_) {
       if (field_type->variable_size()) {
         throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
       }
@@ -303,7 +321,7 @@ void StructType::pack(BufferBuilder& buffer) const
   buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
   buffer.pack<std::uint32_t>(uid_);
   buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(field_types_.size()));
-  for (auto& field_type : field_types_) {
+  for (auto&& field_type : field_types_) {
     field_type->pack(buffer);
   }
   buffer.pack<bool>(aligned_);
@@ -316,7 +334,7 @@ bool StructType::equal(const Type& other) const
   }
   auto& casted = static_cast<const StructType&>(other);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
     if (uid_ != casted.uid_) {
       return false;
@@ -336,7 +354,7 @@ bool StructType::equal(const Type& other) const
   return uid_ == casted.uid_;
 }
 
-InternalSharedPtr<Type> StructType::field_type(std::uint32_t field_idx) const
+const InternalSharedPtr<Type>& StructType::field_type(std::uint32_t field_idx) const
 {
   return field_types_.at(field_idx);
 }
@@ -349,17 +367,26 @@ void StringType::pack(BufferBuilder& buffer) const
 InternalSharedPtr<Type> primitive_type(Type::Code code)
 {
   static std::unordered_map<Type::Code, InternalSharedPtr<Type>> cache{};
-  if (SIZEOF().find(code) == SIZEOF().end()) {
-    throw std::invalid_argument{std::to_string(static_cast<std::int32_t>(code)) +
-                                " is not a valid type code for a primitive type"};
+
+  try {
+    static_cast<void>(SIZEOF(code));
+  } catch (const StaticDeterminationError&) {
+    std::stringstream ss;
+
+    try {
+      ss << TYPE_NAME(code);
+    } catch (const std::invalid_argument&) {
+      ss << "<unknown type code: " << traits::detail::to_underlying(code) << ">";
+    }
+    ss << " is not a valid type code for a primitive type";
+    throw std::invalid_argument{std::move(ss).str()};
   }
+
   auto finder = cache.find(code);
   if (finder != cache.end()) {
     return finder->second;
   }
-  auto result = make_internal_shared<PrimitiveType>(code);
-  cache[code] = result;
-  return result;
+  return cache[code] = make_internal_shared<PrimitiveType>(code);
 }
 
 ListType::ListType(std::uint32_t uid, InternalSharedPtr<Type> element_type)
@@ -392,7 +419,7 @@ bool ListType::equal(const Type& other) const
   }
   auto& casted = static_cast<const ListType&>(other);
 
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
     return uid_ == casted.uid_ && element_type_ == casted.element_type_;
   }
@@ -402,7 +429,7 @@ bool ListType::equal(const Type& other) const
 
 InternalSharedPtr<Type> string_type()
 {
-  static auto type = make_internal_shared<StringType>();
+  static const auto type = make_internal_shared<StringType>();
   return type;
 }
 
@@ -452,85 +479,85 @@ InternalSharedPtr<Type> list_type(InternalSharedPtr<Type> element_type)
 
 InternalSharedPtr<Type> bool_()
 {
-  static auto result = detail::primitive_type(Type::Code::BOOL);
+  static const auto result = detail::primitive_type(Type::Code::BOOL);
   return result;
 }
 
 InternalSharedPtr<Type> int8()
 {
-  static auto result = detail::primitive_type(Type::Code::INT8);
+  static const auto result = detail::primitive_type(Type::Code::INT8);
   return result;
 }
 
 InternalSharedPtr<Type> int16()
 {
-  static auto result = detail::primitive_type(Type::Code::INT16);
+  static const auto result = detail::primitive_type(Type::Code::INT16);
   return result;
 }
 
 InternalSharedPtr<Type> int32()
 {
-  static auto result = detail::primitive_type(Type::Code::INT32);
+  static const auto result = detail::primitive_type(Type::Code::INT32);
   return result;
 }
 
 InternalSharedPtr<Type> int64()
 {
-  static auto result = detail::primitive_type(Type::Code::INT64);
+  static const auto result = detail::primitive_type(Type::Code::INT64);
   return result;
 }
 
 InternalSharedPtr<Type> uint8()
 {
-  static auto result = detail::primitive_type(Type::Code::UINT8);
+  static const auto result = detail::primitive_type(Type::Code::UINT8);
   return result;
 }
 
 InternalSharedPtr<Type> uint16()
 {
-  static auto result = detail::primitive_type(Type::Code::UINT16);
+  static const auto result = detail::primitive_type(Type::Code::UINT16);
   return result;
 }
 
 InternalSharedPtr<Type> uint32()
 {
-  static auto result = detail::primitive_type(Type::Code::UINT32);
+  static const auto result = detail::primitive_type(Type::Code::UINT32);
   return result;
 }
 
 InternalSharedPtr<Type> uint64()
 {
-  static auto result = detail::primitive_type(Type::Code::UINT64);
+  static const auto result = detail::primitive_type(Type::Code::UINT64);
   return result;
 }
 
 InternalSharedPtr<Type> float16()
 {
-  static auto result = detail::primitive_type(Type::Code::FLOAT16);
+  static const auto result = detail::primitive_type(Type::Code::FLOAT16);
   return result;
 }
 
 InternalSharedPtr<Type> float32()
 {
-  static auto result = detail::primitive_type(Type::Code::FLOAT32);
+  static const auto result = detail::primitive_type(Type::Code::FLOAT32);
   return result;
 }
 
 InternalSharedPtr<Type> float64()
 {
-  static auto result = detail::primitive_type(Type::Code::FLOAT64);
+  static const auto result = detail::primitive_type(Type::Code::FLOAT64);
   return result;
 }
 
 InternalSharedPtr<Type> complex64()
 {
-  static auto result = detail::primitive_type(Type::Code::COMPLEX64);
+  static const auto result = detail::primitive_type(Type::Code::COMPLEX64);
   return result;
 }
 
 InternalSharedPtr<Type> complex128()
 {
-  static auto result = detail::primitive_type(Type::Code::COMPLEX128);
+  static const auto result = detail::primitive_type(Type::Code::COMPLEX128);
   return result;
 }
 
@@ -568,13 +595,37 @@ InternalSharedPtr<Type> rect_type(std::uint32_t ndim)
 
 InternalSharedPtr<Type> null_type()
 {
-  static auto result = detail::primitive_type(Type::Code::NIL);
+  static const auto result = detail::primitive_type(Type::Code::NIL);
   return result;
+}
+
+InternalSharedPtr<Type> domain_type()
+{
+  static auto result = detail::binary_type(sizeof(Domain));
+  return result;
+}
+
+bool is_point_type(const InternalSharedPtr<Type>& type)
+{
+  const auto uid = type->uid();
+  return type->code == Type::Code::INT64 ||
+         (uid > BASE_POINT_TYPE_UID && uid <= BASE_POINT_TYPE_UID + LEGATE_MAX_DIM);
 }
 
 bool is_point_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 {
-  return type->code == Type::Code::INT64 || type->uid() == BASE_POINT_TYPE_UID + ndim;
+  return (ndim == 1 && type->code == Type::Code::INT64) ||
+         type->uid() == BASE_POINT_TYPE_UID + ndim;
+}
+
+std::int32_t ndim_point_type(const InternalSharedPtr<Type>& type)
+{
+  if (!is_point_type(type)) {
+    throw std::invalid_argument{"Expected a point type but got " + type->to_string()};
+  }
+  return type->code == Type::Code::INT64
+           ? 1
+           : static_cast<std::int32_t>(type->uid() - BASE_POINT_TYPE_UID);
 }
 
 bool is_rect_type(const InternalSharedPtr<Type>& type)
@@ -586,6 +637,14 @@ bool is_rect_type(const InternalSharedPtr<Type>& type)
 bool is_rect_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 {
   return type->uid() == BASE_RECT_TYPE_UID + ndim;
+}
+
+std::int32_t ndim_rect_type(const InternalSharedPtr<Type>& type)
+{
+  if (!is_rect_type(type)) {
+    throw std::invalid_argument{"Expected a rect type but got " + type->to_string()};
+  }
+  return static_cast<std::int32_t>(type->uid() - BASE_RECT_TYPE_UID);
 }
 
 }  // namespace legate::detail

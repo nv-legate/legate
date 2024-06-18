@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -11,6 +11,7 @@
  */
 
 #include "core/mapping/machine.h"
+#include "core/runtime/exception_mode.h"
 #include "core/utilities/memory.h"
 
 #include <cstdint>
@@ -73,6 +74,18 @@ class Scope {
    */
   explicit Scope(std::int32_t priority);
   /**
+   * @brief Constructs a Scope with a given exception mode
+   *
+   * Equivalent to
+   * @code{.cpp}
+   * auto scope = Scope();
+   * scope.set_exception_mode(exception_mode);
+   * @endcode
+   *
+   * @param exception_mode Exception mode to set to the scope
+   */
+  explicit Scope(ExceptionMode exception_mode);
+  /**
    * @brief Constructs a Scope with a given provenance string
    *
    * Equivalent to
@@ -111,6 +124,14 @@ class Scope {
    */
   Scope&& with_priority(std::int32_t priority) &&;
   /**
+   * @brief Sets a given exception mode to the scope
+   *
+   * @param exception_mode Exception mode to set to the scope
+   *
+   * @throw std::invalid_argument If an exception mode has already been set via this Scope object
+   */
+  Scope&& with_exception_mode(ExceptionMode exception_mode) &&;
+  /**
    * @brief Sets a given provenance string to the scope
    *
    * @param provenance Provenance string to set to the scope
@@ -139,6 +160,14 @@ class Scope {
    * @throw std::invalid_argument If a task priority has already been set via this Scope object
    */
   void set_priority(std::int32_t priority);
+  /**
+   * @brief Sets a given exception mode to the scope
+   *
+   * @param exception_mode Exception mode to set to the scope
+   *
+   * @throw std::invalid_argument If an exception mode has already been set via this Scope object
+   */
+  void set_exception_mode(ExceptionMode exception_mode);
   /**
    * @brief Sets a given provenance string to the scope
    *
@@ -171,11 +200,17 @@ class Scope {
    */
   [[nodiscard]] static std::int32_t priority();
   /**
+   * @brief Returns the exception mode of the current scope
+   *
+   * return Current exception mode
+   */
+  [[nodiscard]] static legate::ExceptionMode exception_mode();
+  /**
    * @brief Returns the provenance string of the current scope
    *
    * @return Current provenance string
    */
-  [[nodiscard]] static const std::string& provenance();
+  [[nodiscard]] static std::string_view provenance();
   /**
    * @brief Returns the machine of the current scope
    *
@@ -193,9 +228,9 @@ class Scope {
   class Impl;
 
  private:
-  std::unique_ptr<Impl, default_delete<Impl>> impl_{};
+  std::unique_ptr<Impl, DefaultDelete<Impl>> impl_{};
 };
 
-extern template class default_delete<Scope::Impl>;
+extern template class DefaultDelete<Scope::Impl>;
 
 }  // namespace legate

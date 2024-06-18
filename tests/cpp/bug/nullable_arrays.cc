@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,10 +16,6 @@
 #include <gtest/gtest.h>
 
 namespace unbound_nullable_array_test {
-
-using UnboundNullableArray = DefaultFixture;
-
-constexpr const char* library_name = "test_unbound_nullable_array_test";
 
 struct Initialize : public legate::LegateTask<Initialize> {
   static const std::int32_t TASK_ID = 0;
@@ -41,11 +37,21 @@ struct Initialize : public legate::LegateTask<Initialize> {
   }
 };
 
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_unbound_nullable_array_test";
+  static void registration_callback(legate::Library library)
+  {
+    Initialize::register_variants(library);
+  }
+};
+
+class UnboundNullableArray : public RegisterOnceFixture<Config> {};
+
 TEST_F(UnboundNullableArray, Bug1)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
-  Initialize::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto task = runtime->create_task(library, Initialize::TASK_ID);
   task.add_output(runtime->create_array(legate::int64(), 1, true /*nullable*/));
@@ -58,8 +64,7 @@ TEST_F(UnboundNullableArray, Bug1)
 TEST_F(UnboundNullableArray, Bug2)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
-  Initialize::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto task = runtime->create_task(library, Initialize::TASK_ID);
   task.add_output(runtime->create_array(legate::int64(), 1, true /*nullable*/));

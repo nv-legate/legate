@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -51,7 +51,7 @@ inline void ManualTask::validate() {}
 
 inline void ManualTask::launch(Strategy* /*strategy*/) { launch(); }
 
-inline void ManualTask::launch() { launch_task(strategy_.get()); }
+inline void ManualTask::launch() { launch_task_(strategy_.get()); }
 
 inline void ManualTask::add_to_solver(ConstraintSolver& /*solver*/) {}
 

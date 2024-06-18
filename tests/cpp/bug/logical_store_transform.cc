@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -19,6 +19,8 @@ namespace logical_store_transform {
 
 using LogicalStoreTransform = DefaultFixture;
 
+// NOLINTBEGIN(readability-magic-numbers)
+
 TEST_F(LogicalStoreTransform, SliceBug1)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -31,9 +33,9 @@ TEST_F(LogicalStoreTransform, SliceBug1)
     EXPECT_FALSE(slice.overlaps(store));
     EXPECT_EQ(slice.dim(), store.dim());
   };
-  test_slice(store.slice(1, legate::Slice(-9, -8)));
-  test_slice(store.slice(1, legate::Slice(-8, -10)));
-  test_slice(store.slice(1, legate::Slice(1, 1)));
+  test_slice(store.slice(1, legate::Slice{-9, -8}));
+  test_slice(store.slice(1, legate::Slice{-8, -10}));
+  test_slice(store.slice(1, legate::Slice{1, 1}));
 }
 
 TEST_F(LogicalStoreTransform, SliceBug2)
@@ -49,9 +51,11 @@ TEST_F(LogicalStoreTransform, SliceBug2)
     EXPECT_EQ(slice.dim(), store.dim());
   };
 
-  test_slice(store.slice(1, legate::Slice(-1, 0)));
-  test_slice(store.slice(1, legate::Slice(-1, 1)));
-  test_slice(store.slice(1, legate::Slice(10, 8)));
+  test_slice(store.slice(1, legate::Slice{-1, 0}));
+  test_slice(store.slice(1, legate::Slice{-1, 1}));
+  test_slice(store.slice(1, legate::Slice{10, 8}));
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace logical_store_transform

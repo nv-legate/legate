@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -14,19 +14,16 @@
 """
 from __future__ import annotations
 
+import sys
 from argparse import ArgumentParser
-from typing import Literal, Union
-
-from typing_extensions import TypeAlias
+from pathlib import Path
+from typing import Literal, TypeAlias
 
 from ..util.args import ExtendAction, MultipleChoices
+from ..util.colors import HAVE_COLOR
 from . import FEATURES, defaults
 
-PinOptionsType: TypeAlias = Union[
-    Literal["partial"],
-    Literal["none"],
-    Literal["strict"],
-]
+PinOptionsType: TypeAlias = Literal["partial", "none", "strict"]
 
 PIN_OPTIONS: tuple[PinOptionsType, ...] = (
     "partial",
@@ -34,10 +31,11 @@ PIN_OPTIONS: tuple[PinOptionsType, ...] = (
     "strict",
 )
 
-
 #: The argument parser for test.py
 parser = ArgumentParser(
-    description="Run the Cunumeric test suite",
+    description=(
+        f"Run the {Path(__file__).parent.parent.name.title()} test suite"
+    ),
     epilog="Any extra arguments will be forwarded to the Legate script",
 )
 
@@ -59,14 +57,6 @@ selection.add_argument(
     nargs="+",
     default=None,
     help="Explicit list of test files to run",
-)
-
-selection.add_argument(
-    "--unit",
-    dest="unit",
-    action="store_true",
-    default=False,
-    help="Include unit tests",
 )
 
 selection.add_argument(
@@ -364,6 +354,7 @@ other.add_argument(
     "--color",
     dest="color",
     action="store_true",
+    default=HAVE_COLOR and sys.stdout.isatty(),
     required=False,
     help="Whether to use color terminal output (if colorama is installed)",
 )

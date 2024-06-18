@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -12,13 +12,12 @@
 
 #include "core/task/detail/return.h"
 
+#include "core/cuda/cuda.h"
+#include "core/cuda/stream_pool.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/task/detail/returned_exception_common.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/typedefs.h"
-#if LegateDefined(LEGATE_USE_CUDA)
-#include "core/cuda/cuda_help.h"
-#include "core/cuda/stream_pool.h"
-#endif
 
 #include <cstddef>
 #include <cstdint>
@@ -37,7 +36,7 @@ ReturnValues::ReturnValues(std::vector<ReturnValue>&& return_values)
     default:
       // total number of values
       buffer_size_ += max_aligned_size_for_type<std::uint32_t>();
-      for (auto& ret : return_values_) {
+      for (auto&& ret : return_values_) {
         // offset to scalar i, note we do not align here because these are packed immediately
         // after the total number (which is also a std::uint32_t), and therefore will never
         // need to be aligned up or down.
@@ -68,15 +67,13 @@ void ReturnValues::legion_serialize(void* buffer) const
     auto& ret = return_values_.front();
 
     if (ret.is_device_value()) {
-      LegateAssert(Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC);
-      // TODO (jfaibussowit): expose cudaMemcpyAsync() as a stub instead
-#if LegateDefined(LEGATE_USE_CUDA)
-      CHECK_CUDA(cudaMemcpyAsync(buffer,
-                                 ret.ptr(),
-                                 ret.size(),
-                                 cudaMemcpyDeviceToHost,
-                                 cuda::StreamPool::get_stream_pool().get_stream()));
-#endif
+      LEGATE_ASSERT(detail::Runtime::get_runtime()->get_executing_processor().kind() ==
+                    Processor::Kind::TOC_PROC);
+      LEGATE_CHECK_CUDA(cudaMemcpyAsync(buffer,
+                                        ret.ptr(),
+                                        ret.size(),
+                                        cudaMemcpyDeviceToHost,
+                                        cuda::StreamPool::get_stream_pool().get_stream()));
     } else {
       std::tie(buffer, rem_cap) =
         pack_buffer(buffer, rem_cap, ret.size(), static_cast<const char*>(ret.ptr()));
@@ -94,15 +91,15 @@ void ReturnValues::legion_serialize(void* buffer) const
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, offset);
   }
 
-#if LegateDefined(LEGATE_USE_CUDA)
-  if (Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
+  if (detail::Runtime::get_runtime()->get_executing_processor().kind() ==
+      Processor::Kind::TOC_PROC) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
 
     for (auto&& ret : return_values_) {
       const auto size = ret.size();
 
       if (ret.is_device_value()) {
-        CHECK_CUDA(cudaMemcpyAsync(buffer, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
+        LEGATE_CHECK_CUDA(cudaMemcpyAsync(buffer, ret.ptr(), size, cudaMemcpyDeviceToHost, stream));
         buffer = static_cast<char*>(buffer) + size;
         rem_cap -= size;
       } else {
@@ -110,9 +107,7 @@ void ReturnValues::legion_serialize(void* buffer) const
           pack_buffer(buffer, rem_cap, size, static_cast<const char*>(ret.ptr()));
       }
     }
-  } else
-#endif
-  {
+  } else {
     for (auto&& ret : return_values_) {
       std::tie(buffer, rem_cap) =
         pack_buffer(buffer, rem_cap, ret.size(), static_cast<const char*>(ret.ptr()));
@@ -174,16 +169,14 @@ void ReturnValues::finalize(Legion::Context legion_context) const
     return;
   }
 
-#if LegateDefined(LEGATE_USE_CUDA)
-  auto kind = Processor::get_executing_processor().kind();
+  auto kind = detail::Runtime::get_runtime()->get_executing_processor().kind();
   // FIXME: We don't currently have a good way to defer the return value packing on GPUs,
   //        as doing so would require the packing to be chained up with all preceding kernels,
   //        potentially launched with different streams, within the task. Until we find
   //        the right approach, we simply synchronize the device before proceeding.
   if (kind == Processor::TOC_PROC) {
-    CHECK_CUDA(cudaDeviceSynchronize());
+    LEGATE_CHECK_CUDA(cudaDeviceSynchronize());
   }
-#endif
 
   const std::size_t return_size = legion_buffer_size();
   auto return_buffer =

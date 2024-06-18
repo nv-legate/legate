@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -20,6 +20,24 @@
 #include <type_traits>
 
 namespace legate {
+
+namespace detail {
+
+// T is always the same T given as the shared pointer type. So we use U here because we want to
+// delete the most derived type (which might not be T).
+template <typename /* T */, typename U>
+struct SharedPtrDefaultDelete : std::default_delete<U> {};
+
+// Unless it is an array type, in which case we fall back to using T to deduce the deleter. U
+// is always given as a pointer-type, not an array, and so we want to preserve the fact that
+// the pointer is deleted via delete[].
+template <typename T, typename U, std::size_t N>
+struct SharedPtrDefaultDelete<T[N], U> : std::default_delete<T[]> {};
+
+template <typename T, typename U>
+struct SharedPtrDefaultDelete<T[], U> : std::default_delete<T[]> {};
+
+}  // namespace detail
 
 template <typename T>
 class EnableSharedFromThis;
@@ -56,36 +74,36 @@ class InternalWeakPtr {
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
   InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimick std::weak_ptr ctor
     const InternalWeakPtr<U>& other) noexcept;
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
   InternalWeakPtr& operator=(const InternalWeakPtr<U>& other) noexcept;
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
   InternalWeakPtr& operator=(InternalWeakPtr<U>&& other) noexcept;
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
   InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimick std::weak_ptr ctor
     InternalWeakPtr<U>&& other) noexcept;
 
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimick std::weak_ptr ctor
     const InternalSharedPtr<U>& other) noexcept;
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   InternalWeakPtr& operator=(const InternalSharedPtr<U>& other) noexcept;
 
   ~InternalWeakPtr() noexcept;
@@ -95,7 +113,8 @@ class InternalWeakPtr {
   [[nodiscard]] bool expired() const noexcept;
 
   // Getters
-  [[nodiscard]] InternalSharedPtr<T> lock() const noexcept;
+  // See definition of lock() for why we are silencing this
+  [[nodiscard]] InternalSharedPtr<T> lock() const noexcept;  // NOLINT(bugprone-exception-escape)
 
   // Modifiers
   void swap(InternalWeakPtr& other) noexcept;
@@ -136,14 +155,14 @@ class InternalSharedPtr {
   constexpr InternalSharedPtr() noexcept = default;
 
   // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::shared_ptr ctor
-  InternalSharedPtr(std::nullptr_t) noexcept;
+  constexpr InternalSharedPtr(std::nullptr_t) noexcept;
 
   template <typename U,
             typename D,
             typename A = std::allocator<U>,
-            typename   = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
+            typename   = std::enable_if_t<traits::detail::is_ptr_compat_v<U, element_type>>>
   InternalSharedPtr(U* ptr, D deleter, A allocator = A{});
-  template <typename U, typename = std::enable_if_t<traits::detail::ptr_compat_v<U, T>>>
+  template <typename U, typename = std::enable_if_t<traits::detail::is_ptr_compat_v<U, T>>>
   explicit InternalSharedPtr(U* ptr);
   explicit InternalSharedPtr(element_type* ptr);
 
@@ -157,63 +176,63 @@ class InternalSharedPtr {
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
     const InternalSharedPtr<U>& other) noexcept;
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   InternalSharedPtr& operator=(const InternalSharedPtr<U>& other) noexcept;
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
     InternalSharedPtr<U>&& other) noexcept;
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   InternalSharedPtr& operator=(InternalSharedPtr<U>&& other) noexcept;
 
   template <
     typename U,
     typename D,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
   InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
     std::unique_ptr<U, D>&& ptr);
   template <
     typename U,
     typename D,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
   InternalSharedPtr& operator=(std::unique_ptr<U, D>&& ptr);
 
   template <typename U,
             typename = std::enable_if_t<
-              traits::detail::ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
+              traits::detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
   InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
     const SharedPtr<U>& other) noexcept;
   template <typename U,
             typename = std::enable_if_t<
-              traits::detail::ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
+              traits::detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
   InternalSharedPtr& operator=(const SharedPtr<U>& other) noexcept;
   template <typename U,
             typename = std::enable_if_t<
-              traits::detail::ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
+              traits::detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
   InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
     SharedPtr<U>&& other) noexcept;
   template <typename U,
             typename = std::enable_if_t<
-              traits::detail::ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
+              traits::detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
   InternalSharedPtr& operator=(SharedPtr<U>&& other) noexcept;
 
   template <
     typename U,
     typename = std::enable_if_t<
-      traits::detail::ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
+      traits::detail::is_ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
   explicit InternalSharedPtr(const InternalWeakPtr<U>& other);
 
   // No SFINAE here, otherwise static_pointer_cast() and friends don't work!
@@ -230,12 +249,14 @@ class InternalSharedPtr {
   void reset() noexcept;
   void reset(std::nullptr_t) noexcept;
   template <typename U,
-            typename D = std::default_delete<U>,
+            typename D = detail::SharedPtrDefaultDelete<T, U>,
             typename A = std::allocator<U>,
-            typename   = std::enable_if_t<traits::detail::ptr_compat_v<U, element_type>>>
+            typename   = std::enable_if_t<traits::detail::is_ptr_compat_v<U, element_type>>>
   void reset(U* ptr, D deleter = D{}, A allocator = A{});
 
   // Observers
+  [[nodiscard]] element_type& operator[](std::ptrdiff_t idx) noexcept;
+  [[nodiscard]] const element_type& operator[](std::ptrdiff_t idx) const noexcept;
   [[nodiscard]] element_type* get() const noexcept;
   [[nodiscard]] element_type& operator*() const noexcept;
   [[nodiscard]] element_type* operator->() const noexcept;
@@ -255,8 +276,11 @@ class InternalSharedPtr {
     friend class InternalSharedPtr<T>;
   };
 
+  // These are "public" but since the key object is private, they are effectively private.
+  // NOLINTBEGIN(readability-identifier-naming)
   void user_reference_(SharedPtrAccessTag) noexcept;
   void user_dereference_(SharedPtrAccessTag) noexcept;
+  // NOLINTEND(readability-identifier-naming)
 
  private:
   // Unfortunately we cannot just friend the make_internal_shared() for U = T, since that would
@@ -282,9 +306,17 @@ class InternalSharedPtr {
   void weak_dereference_() noexcept;
 
   struct AllocatedControlBlockTag {};
+  struct NoCatchAndDeleteTag {};
 
   template <typename U>
   InternalSharedPtr(AllocatedControlBlockTag, control_block_type* ctrl_impl, U* ptr) noexcept;
+
+  template <typename U, typename D, typename A = std::allocator<U>>
+  InternalSharedPtr(NoCatchAndDeleteTag, U* ptr, D&& deleter, A&& allocator = A{});
+
+#if LEGATE_DEFINED(LEGATE_INTERNAL_SHARED_PTR_TESTS)
+  FRIEND_TEST(InternalSharedPtrUnitFriend, UniqThrow);
+#endif
 
   control_block_type* ctrl_{};
   element_type* ptr_{};
@@ -395,40 +427,11 @@ class EnableSharedFromThis {
 namespace detail {
 
 template <typename T>
-class shared_from_this_enabled {
-  template <typename U>
-  static constexpr auto test(U* u)
-    -> decltype(static_cast<void>(u->shared_from_this()), std::true_type{});
-
-  template <typename U>
-  static constexpr std::false_type test(...);
-
- public:
-  static inline constexpr bool value = decltype(test<T>(nullptr))::value;
-};
+using has_shared_from_this = decltype(std::declval<T*>()->shared_from_this());
 
 template <typename T>
-inline constexpr bool shared_from_this_enabled_v = shared_from_this_enabled<T>::value;
-
-namespace shared_from_this_enabled_test {
-
-struct NotEnabled {};
-
-struct Enabled : EnableSharedFromThis<Enabled> {};
-
-struct PrivateEnabled : private EnableSharedFromThis<PrivateEnabled> {};
-
-struct DerivedEnabled : Enabled {};
-
-struct DerivedPrivateEnabled : private Enabled {};
-
-static_assert(!shared_from_this_enabled_v<NotEnabled>);
-static_assert(shared_from_this_enabled_v<Enabled>);
-static_assert(!shared_from_this_enabled_v<PrivateEnabled>);
-static_assert(shared_from_this_enabled_v<DerivedEnabled>);
-static_assert(!shared_from_this_enabled_v<DerivedPrivateEnabled>);
-
-}  // namespace shared_from_this_enabled_test
+inline constexpr bool shared_from_this_enabled_v =
+  traits::detail::is_detected_v<has_shared_from_this, T>;
 
 }  // namespace detail
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -19,6 +19,8 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
+#include <variant>
 #include <vector>
 
 namespace legate::detail {
@@ -30,7 +32,7 @@ class TaskLauncher {
  public:
   TaskLauncher(const Library* library,
                const mapping::detail::Machine& machine,
-               std::string provenance,
+               std::variant<std::string_view, std::string> provenance,
                std::int64_t task_id,
                std::int64_t tag = 0);
 
@@ -60,25 +62,26 @@ class TaskLauncher {
 
   Legion::FutureMap execute(const Legion::Domain& launch_domain);
   Legion::Future execute_single();
+  [[nodiscard]] std::string_view provenance() const;
 
  private:
-  void pack_mapper_arg(BufferBuilder& buffer);
-  void import_output_regions(Runtime* runtime,
-                             const std::vector<Legion::OutputRequirement>& output_requirements);
-  void post_process_unbound_stores(
+  void pack_mapper_arg_(BufferBuilder& buffer);
+  void import_output_regions_(Runtime* runtime,
+                              const std::vector<Legion::OutputRequirement>& output_requirements);
+  void post_process_unbound_stores_(
     const std::vector<Legion::OutputRequirement>& output_requirements);
-  void post_process_unbound_stores(
+  void post_process_unbound_stores_(
     const Legion::FutureMap& result,
     const Legion::Domain& launch_domain,
     const std::vector<Legion::OutputRequirement>& output_requirements);
 
-  void report_interfering_stores() const;
+  void report_interfering_stores_() const;
 
   const Library* library_{};
   std::int64_t task_id_{};
   std::int64_t tag_{};
   const mapping::detail::Machine& machine_;
-  std::string provenance_{};
+  std::variant<std::string_view, std::string> provenance_{};
   std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
 
   bool has_side_effect_{true};

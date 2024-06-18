@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,16 +17,11 @@
 
 namespace req_analyzer {
 
-using ReqAnalyzer = DefaultFixture;
-
-static const char* library_name = "test_req_analyzer";
-
-enum TaskIDs {
-  TESTER = 0,
-};
+// NOLINTBEGIN(readability-magic-numbers)
 
 struct Tester : public legate::LegateTask<Tester> {
-  static const std::int32_t TASK_ID = TESTER;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto inputs  = context.inputs();
@@ -41,29 +36,25 @@ struct Tester : public legate::LegateTask<Tester> {
   }
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
-  }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  Tester::register_variants(context);
-}
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_req_analyzer";
+  static void registration_callback(legate::Library library) { Tester::register_variants(library); }
+};
+
+class ReqAnalyzer : public RegisterOnceFixture<Config> {};
 
 void test_inout_store()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto store1 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
   auto store2 = runtime->create_store(legate::Shape{10, 5}, legate::int64());
-  runtime->issue_fill(store1, legate::Scalar(int64_t{0}));
-  runtime->issue_fill(store2, legate::Scalar(int64_t{0}));
+  runtime->issue_fill(store1, legate::Scalar{std::int64_t{0}});
+  runtime->issue_fill(store2, legate::Scalar{std::int64_t{0}});
 
-  auto task  = runtime->create_task(context, TESTER);
+  auto task  = runtime->create_task(context, Tester::TASK_ID);
   auto part1 = task.add_input(store1);
   auto part2 = task.add_input(store2);
   task.add_output(store1);
@@ -74,30 +65,24 @@ void test_inout_store()
 void test_isomorphic_transformed_stores()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto store = runtime->create_store(legate::Shape{10}, legate::int64());
-  runtime->issue_fill(store, legate::Scalar(int64_t{0}));
+  runtime->issue_fill(store, legate::Scalar{std::int64_t{0}});
 
   // Create aliased stores that are semantically equivalent
   auto promoted1 = store.promote(1, 5);
   auto promoted2 = store.promote(1, 5);
-  auto task      = runtime->create_task(context, TESTER);
+  auto task      = runtime->create_task(context, Tester::TASK_ID);
   task.add_input(promoted1);
   task.add_output(promoted2);
   runtime->submit(std::move(task));
 }
 
-TEST_F(ReqAnalyzer, InoutStore)
-{
-  prepare();
-  test_inout_store();
-}
+TEST_F(ReqAnalyzer, InoutStore) { test_inout_store(); }
 
-TEST_F(ReqAnalyzer, IsomorphicTransformedStores)
-{
-  prepare();
-  test_isomorphic_transformed_stores();
-}
+TEST_F(ReqAnalyzer, IsomorphicTransformedStores) { test_isomorphic_transformed_stores(); }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace req_analyzer

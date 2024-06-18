@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,14 +14,13 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
 project(cpp_tests VERSION 0.1 LANGUAGES C CXX)
 
-if (NOT CMAKE_CXX_STANDARD)
+if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
 endif()
 
 include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.13.0.zip
+FetchContent_Declare(googletest
+                     URL https://github.com/google/googletest/archive/refs/tags/v1.13.0.zip
 )
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -38,7 +37,7 @@ file(GLOB io_SRC ${PROJECT_SOURCE_DIR}/io/*.cc)
 
 add_executable(cpp_tests ${main_SRC} ${hello_SRC} ${io_SRC})
 
-target_link_libraries(cpp_tests PRIVATE legate::core PRIVATE cunumeric::cunumeric PRIVATE GTest::gtest)
+target_link_libraries(cpp_tests PRIVATE legate::core cunumeric::cunumeric GTest::gtest)
 
 include(GoogleTest)
 gtest_discover_tests(cpp_tests)

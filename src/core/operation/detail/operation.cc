@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,49 +17,27 @@
 #include "core/runtime/detail/runtime.h"
 
 #include <sstream>
-#include <unordered_map>
+#include <stdexcept>
+#include <string_view>
 
 namespace legate::detail {
 
 namespace {
 
-const std::unordered_map<Operation::Kind, std::string>& OP_NAMES() noexcept
+[[nodiscard]] std::string_view OP_NAME(Operation::Kind kind)
 {
-  static const std::unordered_map<Operation::Kind, std::string> table = {
-    {
-      Operation::Kind::AUTO_TASK,
-      "AutoTask",
-    },
-    {
-      Operation::Kind::COPY,
-      "Copy",
-    },
-    {
-      Operation::Kind::FILL,
-      "Fill",
-    },
-    {
-      Operation::Kind::GATHER,
-      "Gather",
-    },
-    {
-      Operation::Kind::MANUAL_TASK,
-      "ManualTask",
-    },
-    {
-      Operation::Kind::REDUCE,
-      "Reduce",
-    },
-    {
-      Operation::Kind::SCATTER,
-      "Scatter",
-    },
-    {
-      Operation::Kind::SCATTER_GATHER,
-      "ScatterGather",
-    },
-  };
-  return table;
+  switch (kind) {
+    case Operation::Kind::AUTO_TASK: return "AutoTask";
+    case Operation::Kind::COPY: return "Copy";
+    case Operation::Kind::FILL: return "Fill";
+    case Operation::Kind::GATHER: return "Gather";
+    case Operation::Kind::MANUAL_TASK: return "ManualTask";
+    case Operation::Kind::REDUCE: return "Reduce";
+    case Operation::Kind::SCATTER: return "Scatter";
+    case Operation::Kind::SCATTER_GATHER: return "ScatterGather";
+  }
+
+  throw std::invalid_argument{"invalid operation kind"};
 }
 
 }  // namespace
@@ -77,7 +55,7 @@ Operation::Operation(std::uint64_t unique_id,
 std::string Operation::to_string() const
 {
   std::stringstream ss;
-  ss << OP_NAMES().at(kind()) << ":" << std::to_string(unique_id_);
+  ss << OP_NAME(kind()) << ":" << unique_id_;
   if (!provenance_.empty()) {
     ss << "[" << provenance_ << "]";
   }
@@ -107,13 +85,13 @@ const InternalSharedPtr<LogicalStore>& Operation::find_store(const Variable* var
   return store_mappings_.at(*variable);
 }
 
-void Operation::record_partition(const Variable* variable, InternalSharedPtr<LogicalStore> store)
+void Operation::record_partition_(const Variable* variable, InternalSharedPtr<LogicalStore> store)
 {
   auto finder = store_mappings_.find(*variable);
   if (finder != store_mappings_.end()) {
     if (finder->second->id() != store->id()) {
-      throw std::invalid_argument("Variable " + variable->to_string() +
-                                  " is already assigned to another store");
+      throw std::invalid_argument{"Variable " + variable->to_string() +
+                                  " is already assigned to another store"};
     }
     return;
   }
@@ -123,9 +101,9 @@ void Operation::record_partition(const Variable* variable, InternalSharedPtr<Log
   store_mappings_[*variable] = std::move(store);
 }
 
-std::unique_ptr<StoreProjection> Operation::create_store_projection(const Strategy& strategy,
-                                                                    const Domain& launch_domain,
-                                                                    const StoreArg& arg)
+std::unique_ptr<StoreProjection> Operation::create_store_projection_(const Strategy& strategy,
+                                                                     const Domain& launch_domain,
+                                                                     const StoreArg& arg)
 {
   auto store_partition = create_store_partition(arg.store, strategy[arg.variable]);
   auto store_proj      = store_partition->create_store_projection(launch_domain);

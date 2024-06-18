@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -138,6 +138,8 @@ cdef class Type:
 
 
 cdef class FixedArrayType(Type):
+    # Cannot use Unconstructable here because Cython only allows 1 extension
+    # type base-class
     def __init__(self) -> None:
         raise ValueError(
             f"{type(self).__name__} objects must not be constructed directly"
@@ -160,6 +162,8 @@ cdef class FixedArrayType(Type):
 
 
 cdef class StructType(Type):
+    # Cannot use Unconstructable here because Cython only allows 1 extension
+    # type base-class
     def __init__(self) -> None:
         raise ValueError(
             f"{type(self).__name__} objects must not be constructed directly"

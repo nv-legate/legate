@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -16,7 +16,6 @@ from collections.abc import Callable
 from typing import (
     Any,
     Generic,
-    Optional,
     ParamSpec,
     Protocol,
     TypeVar,
@@ -72,7 +71,7 @@ class ArgDescr:
         inputs: tuple[LogicalStore | LogicalArray, ...] = tuple(),
         outputs: tuple[LogicalStore | LogicalArray, ...] = tuple(),
         scalars: tuple[Any, ...] = tuple(),
-        arg_order: Optional[tuple[int, ...]] = None,
+        arg_order: tuple[int, ...] | None = None,
     ) -> None:
         self.inputs = inputs
         self.outputs = outputs

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -48,7 +48,7 @@ ScopedAllocator::Impl::Impl(Memory::Kind kind, bool scoped, std::size_t alignmen
 ScopedAllocator::Impl::~Impl() noexcept
 {
   if (scoped_) {
-    for (auto& pair : buffers_) {
+    for (auto&& pair : buffers_) {
       pair.second.destroy();
     }
     buffers_.clear();

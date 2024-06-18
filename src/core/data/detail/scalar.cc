@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -23,7 +23,7 @@
 
 namespace legate::detail {
 
-void Scalar::clear_data()
+void Scalar::clear_data_()
 {
   if (own_) {
     // We know we own this buffer
@@ -35,7 +35,7 @@ Scalar::Scalar(InternalSharedPtr<Type> type, const void* data, bool copy)
   : own_{copy}, type_{std::move(type)}, data_{data}
 {
   if (own_) {
-    data_ = copy_data(data, size());
+    data_ = copy_data_(data, size());
   }
 }
 
@@ -58,9 +58,9 @@ Scalar& Scalar::operator=(const Scalar& other)
   if (this != &other) {
     own_  = other.own_;
     type_ = other.type_;
-    clear_data();
+    clear_data_();
     if (other.own_) {
-      data_ = copy_data(other.data_, other.size());
+      data_ = copy_data_(other.data_, other.size());
     } else {
       data_ = other.data_;
     }
@@ -73,13 +73,13 @@ Scalar& Scalar::operator=(Scalar&& other) noexcept
   if (this != &other) {
     own_  = std::exchange(other.own_, false);
     type_ = std::move(other.type_);
-    clear_data();
+    clear_data_();
     data_ = std::exchange(other.data_, nullptr);
   }
   return *this;
 }
 
-const void* Scalar::copy_data(const void* data, std::size_t size)
+const void* Scalar::copy_data_(const void* data, std::size_t size)
 {
   void* buffer = nullptr;
 

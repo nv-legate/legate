@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,6 +14,7 @@
 
 #include "core/data/physical_store.h"
 #include "core/type/type_info.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 #include "core/utilities/typedefs.h"
@@ -63,7 +64,7 @@ class PhysicalArray {
    *
    * @return Type
    */
-  [[nodiscard]] Type type() const /* noexcept? */;
+  [[nodiscard]] Type type() const noexcept;
   /**
    * @brief Indicates if the array has child arrays
    *
@@ -135,7 +136,8 @@ class PhysicalArray {
 
   [[nodiscard]] const SharedPtr<detail::PhysicalArray>& impl() const;
 
-  PhysicalArray()                                    = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(PhysicalArray);
+
   virtual ~PhysicalArray() noexcept                  = default;
   PhysicalArray(const PhysicalArray&) noexcept       = default;
   PhysicalArray& operator=(const PhysicalArray&)     = default;
@@ -143,7 +145,7 @@ class PhysicalArray {
   PhysicalArray& operator=(PhysicalArray&&) noexcept = default;
 
  private:
-  void check_shape_dimension(std::int32_t dim) const;
+  void check_shape_dimension_(std::int32_t dim) const;
 
  protected:
   SharedPtr<detail::PhysicalArray> impl_{};

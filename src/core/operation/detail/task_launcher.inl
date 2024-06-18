@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -18,14 +18,29 @@ namespace legate::detail {
 
 inline TaskLauncher::TaskLauncher(const Library* library,
                                   const mapping::detail::Machine& machine,
-                                  std::string provenance,
+                                  std::variant<std::string_view, std::string> provenance,
                                   std::int64_t task_id,
                                   std::int64_t tag)
   : library_{library},
     task_id_{task_id},
     tag_{tag},
     machine_{machine},
-    provenance_{std::move(provenance)}
+    provenance_{[](std::variant<std::string_view, std::string> p)
+                  -> std::variant<std::string_view, std::string> {
+      if (const auto* sv_ptr = std::get_if<std::string_view>(&p)) {
+        // If the string_view is empty, we convert to std::string. We do this because
+        // std::string.c_str() for an empty string still returns a valid, (null terminated!) c
+        // string (""). Notably, this is still maximally performant since the empty string will
+        // not allocate.
+        //
+        // If the string_view isn't null-terminated then we also want to convert to std::string
+        // since -- once again -- std::string.c_str() will then do the right thing for us.
+        if (sv_ptr->empty() || sv_ptr->back()) {
+          return std::string{*sv_ptr};
+        }
+      }
+      return p;
+    }(std::move(provenance))}
 {
 }
 
@@ -59,6 +74,11 @@ inline void TaskLauncher::throws_exception(bool can_throw_exception)
 inline void TaskLauncher::relax_interference_checks(bool relax)
 {
   relax_interference_checks_ = relax;
+}
+
+inline std::string_view TaskLauncher::provenance() const
+{
+  return std::visit([](const auto& p) -> std::string_view { return p; }, provenance_);
 }
 
 }  // namespace legate::detail

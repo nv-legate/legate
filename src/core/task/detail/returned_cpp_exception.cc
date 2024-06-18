@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -69,7 +69,7 @@ void ReturnedCppException::legion_deserialize(const void* buffer)
   auto rem_cap = std::numeric_limits<std::size_t>::max();
 
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &kind);
-  LegateAssert(kind == ExceptionKind::CPP);
+  LEGATE_ASSERT(kind == ExceptionKind::CPP);
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &raised);
   if (raised) {
     std::uint64_t mess_size;

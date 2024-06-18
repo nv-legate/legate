@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -11,6 +11,8 @@
  */
 
 #include "core/runtime/detail/library.h"
+
+#include "core/utilities/detail/strtoll.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"
@@ -44,20 +46,27 @@ class LibraryMapper : public legate::mapping::Mapper {
 };
 
 using Library = DefaultFixture;
-TEST_F(Library, Create)
 
+TEST_F(Library, Create)
 {
-  const char* LIBNAME = "test_library.libA";
-  auto* runtime       = legate::Runtime::get_runtime();
-  auto lib            = runtime->create_library(LIBNAME);
+  static constexpr const char LIBNAME[] = "test_library.libA";
+
+  auto* runtime = legate::Runtime::get_runtime();
+  auto lib      = runtime->create_library(LIBNAME);
+
   EXPECT_EQ(lib, runtime->find_library(LIBNAME));
-  EXPECT_EQ(lib, runtime->maybe_find_library(LIBNAME).value());
-  EXPECT_STREQ(lib.get_library_name().c_str(), LIBNAME);
+
+  const auto found_lib = runtime->maybe_find_library(LIBNAME);
+
+  ASSERT_TRUE(found_lib.has_value());
+  // We check the optional above ^^^
+  EXPECT_EQ(lib, found_lib.value());  // NOLINT(bugprone-unchecked-optional-access)
+  EXPECT_STREQ(lib.get_library_name().data(), LIBNAME);
 }
 
 TEST_F(Library, FindOrCreate)
 {
-  const char* LIBNAME = "test_library.libB";
+  static constexpr const char LIBNAME[] = "test_library.libB";
 
   auto* runtime = legate::Runtime::get_runtime();
 
@@ -73,16 +82,16 @@ TEST_F(Library, FindOrCreate)
   EXPECT_FALSE(created);
   EXPECT_EQ(p_lib1, p_lib2);
   EXPECT_TRUE(p_lib2.valid_task_id(p_lib2.get_task_id(0)));
-  EXPECT_FALSE(p_lib2.valid_task_id(p_lib2.get_task_id(1)));
+  EXPECT_THROW(static_cast<void>(p_lib2.get_task_id(1)), std::out_of_range);
 }
 
 TEST_F(Library, FindNonExistent)
 {
-  const char* LIBNAME = "test_library.libC";
+  static constexpr const char LIBNAME[] = "test_library.libC";
 
   auto* runtime = legate::Runtime::get_runtime();
 
-  EXPECT_THROW((void)runtime->find_library(LIBNAME), std::out_of_range);
+  EXPECT_THROW(static_cast<void>(runtime->find_library(LIBNAME)), std::out_of_range);
 
   EXPECT_EQ(runtime->maybe_find_library(LIBNAME), std::nullopt);
 }
@@ -93,18 +102,11 @@ TEST_F(Library, InvalidReductionOPID)
 
   static constexpr const char* LIBNAME = "test_library.libD";
 
-  auto* runtime        = legate::Runtime::get_runtime();
-  auto lib             = runtime->create_library(LIBNAME);
-  auto local_id        = 0;
-  auto value           = std::getenv("REALM_BACKTRACE");
-  bool realm_backtrace = value != nullptr && atoi(value) != 0;
-  if (realm_backtrace) {
-    EXPECT_DEATH((void)lib.register_reduction_operator<SumReduction_Int32>(local_id), "");
-  } else {
-    EXPECT_EXIT((void)lib.register_reduction_operator<SumReduction_Int32>(local_id),
-                ::testing::KilledBySignal(SIGABRT),
-                "");
-  }
+  auto* runtime = legate::Runtime::get_runtime();
+  auto lib      = runtime->create_library(LIBNAME);
+  auto local_id = 0;
+  EXPECT_THROW(static_cast<void>(lib.register_reduction_operator<SumReduction_Int32>(local_id)),
+               std::out_of_range);
 }
 
 TEST_F(Library, RegisterReductionOP)
@@ -119,6 +121,7 @@ TEST_F(Library, RegisterReductionOP)
   auto lib      = runtime->create_library(LIBNAME, config);
   auto local_id = 0;
   auto id       = lib.register_reduction_operator<SumReduction_Int32>(local_id);
+
   EXPECT_TRUE(lib.valid_reduction_op_id(static_cast<Legion::ReductionOpID>(id)));
   EXPECT_EQ(lib.get_local_reduction_op_id(static_cast<Legion::ReductionOpID>(id)), local_id);
 }

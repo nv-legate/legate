@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -83,7 +83,12 @@ void FutureStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack<bool>(read_only_);
   buffer.pack<std::int32_t>(has_storage_ ? analyzer.get_index(store_->get_future()) : -1);
   buffer.pack<std::uint32_t>(store_->type()->size());
-  buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
+  if (store_->get_storage()->kind() == Storage::Kind::FUTURE) {
+    buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
+  } else {
+    LEGATE_ASSERT(store_->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
+    buffer.pack<std::uint64_t>(std::vector<std::uint64_t>{1});
+  }
 }
 
 void FutureStoreArg::analyze(StoreAnalyzer& analyzer)
@@ -95,7 +100,7 @@ void FutureStoreArg::analyze(StoreAnalyzer& analyzer)
 
 void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack<std::int32_t>(static_cast<std::int32_t>(ArrayKind::BASE));
+  buffer.pack(legate::traits::detail::to_underlying(ArrayKind::BASE));
   data_->pack(buffer, analyzer);
 
   const bool nullable = null_mask_ != nullptr;
@@ -134,7 +139,7 @@ void BaseArrayArg::perform_invalidations() const
 
 void ListArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack<std::int32_t>(static_cast<std::int32_t>(ArrayKind::LIST));
+  buffer.pack(legate::traits::detail::to_underlying(ArrayKind::LIST));
   type_->pack(buffer);
   descriptor_->pack(buffer, analyzer);
   vardata_->pack(buffer, analyzer);
@@ -165,7 +170,7 @@ void ListArrayArg::perform_invalidations() const
 
 void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack<std::int32_t>(static_cast<std::int32_t>(ArrayKind::STRUCT));
+  buffer.pack(legate::traits::detail::to_underlying(ArrayKind::STRUCT));
   type_->pack(buffer);
 
   const bool nullable = null_mask_ != nullptr;
@@ -174,7 +179,7 @@ void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
     null_mask_->pack(buffer, analyzer);
   }
 
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->pack(buffer, analyzer);
   }
 }
@@ -184,14 +189,14 @@ void StructArrayArg::analyze(StoreAnalyzer& analyzer)
   if (null_mask_) {
     null_mask_->analyze(analyzer);
   }
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->analyze(analyzer);
   }
 }
 
 std::optional<Legion::ProjectionID> StructArrayArg::get_key_proj_id() const
 {
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     auto proj_id = field->get_key_proj_id();
     if (proj_id.has_value()) {
       return proj_id;
@@ -205,7 +210,7 @@ void StructArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& 
   if (null_mask_) {
     null_mask_->record_unbound_stores(args);
   }
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->record_unbound_stores(args);
   }
 }
@@ -215,7 +220,7 @@ void StructArrayArg::perform_invalidations() const
   if (null_mask_) {
     null_mask_->perform_invalidations();
   }
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->perform_invalidations();
   }
 }

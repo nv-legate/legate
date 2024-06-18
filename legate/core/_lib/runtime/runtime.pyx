@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 
 from libc.stdint cimport int32_t, int64_t, uint32_t
-from libc.stdlib cimport malloc as std_malloc
+from libc.stdlib cimport free as std_free, malloc as std_malloc
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
 
@@ -22,7 +22,8 @@ import gc
 import inspect
 import pickle
 import sys
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 cimport cython
 
@@ -41,6 +42,7 @@ from ..mapping.machine cimport Machine
 from ..operation.task cimport AutoTask, ManualTask
 from ..runtime.scope cimport Scope
 from ..type.type_info cimport Type
+from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport (
     domain_from_iterables,
     is_iterable,
@@ -61,9 +63,13 @@ cdef class ShutdownCallbackManager:
         self._shutdown_callbacks.append(callback)
 
     cdef void perform_callbacks(self):
-        for callback in self._shutdown_callbacks:
+        # This while form (instead of the usual for x in list) is
+        # deliberate. We want to iterate in LIFO order, while also allowing
+        # each shutdown callback to potentially register other shutdown
+        # callbacks.
+        while self._shutdown_callbacks:
+            callback = self._shutdown_callbacks.pop()
             callback()
-
 
 cdef ShutdownCallbackManager _shutdown_manager = ShutdownCallbackManager()
 
@@ -74,7 +80,7 @@ LegatePyTaskException = <object> _LegatePyTaskException
 
 
 cdef void _maybe_reraise_legate_exception(
-    tuple[type] exception_types, Exception e
+    Exception e, exception_types : tuple[type] | None = None,
 ) except *:
     cdef str message
     cdef bytes pkl_bytes
@@ -88,7 +94,11 @@ cdef void _maybe_reraise_legate_exception(
     if isinstance(e, LegateTaskException):
         (message, index) = e.args
         try:
-            exn_type = exception_types[index]
+            exn_type = (
+                RuntimeError
+                if exception_types is None
+                else exception_types[index]
+            )
         except IndexError:
             raise RuntimeError(
                 f"Invalid exception index ({index}) while mapping task "
@@ -97,17 +107,12 @@ cdef void _maybe_reraise_legate_exception(
         raise exn_type(message)
     raise
 
-cdef class Runtime:
+cdef class Runtime(Unconstructable):
     @staticmethod
     cdef Runtime from_handle(_Runtime* handle):
         cdef Runtime result = Runtime.__new__(Runtime)
         result._handle = handle
         return result
-
-    def __init__(self) -> None:
-        raise ValueError(
-            f"{type(self).__name__} objects must not be constructed directly"
-        )
 
     cpdef Library find_library(self, str library_name):
         return Library.from_handle(
@@ -302,17 +307,19 @@ cdef class Runtime:
             or the ``array_or_store`` is unbound
         """
         cdef _LogicalArray arr = to_cpp_logical_array(array_or_store)
+        cdef Scalar fill_value
         if isinstance(value, LogicalStore):
             self._handle.issue_fill(
                 arr, (<LogicalStore> value)._handle
             )
         elif isinstance(value, Scalar):
             self._handle.issue_fill(arr, (<Scalar> value)._handle)
+        elif value is None:
+            fill_value = Scalar.null()
+            self._handle.issue_fill(arr, fill_value._handle)
         else:
-            raise ValueError(
-                "Fill value must be a logical store or a scalar but "
-                f"got {type(value)}"
-            )
+            fill_value = Scalar(value, Type.from_handle(arr.type()))
+            self._handle.issue_fill(arr, fill_value._handle)
 
     cpdef LogicalStore tree_reduce(
         self,
@@ -361,14 +368,14 @@ cdef class Runtime:
                     self._handle.submit((<AutoTask> op)._handle)
                 return
             except Exception as e:
-                _maybe_reraise_legate_exception(op.exception_types, e)
+                _maybe_reraise_legate_exception(e, op.exception_types)
         elif isinstance(op, ManualTask):
             try:
                 with nogil:
                     self._handle.submit((<ManualTask> op)._handle)
                 return
             except Exception as e:
-                _maybe_reraise_legate_exception(op.exception_types, e)
+                _maybe_reraise_legate_exception(e, op.exception_types)
 
         raise RuntimeError(f"Unknown type of operation: {type(op)}")
 
@@ -506,6 +513,14 @@ cdef class Runtime:
             # since those can't run if we are stuck here holding the bag.
             self._handle.issue_execution_fence(block)
 
+    @property
+    def node_count(self) -> uint32_t:
+        return self._handle.node_count()
+
+    @property
+    def node_id(self) -> uint32_t:
+        return self._handle.node_id()
+
     cpdef Machine get_machine(self):
         return Machine.from_handle(self._handle.get_machine())
 
@@ -525,7 +540,6 @@ cdef class Runtime:
 
 cdef Runtime initialize():
     cdef int32_t argc = len(sys.argv)
-    # TODO(wonchanl): Allocations we create here are leaked
     cdef char** argv = <char**> std_malloc(argc * cython.sizeof(cython.p_char))
     cdef int i, j
     cdef str val
@@ -535,13 +549,22 @@ cdef Runtime initialize():
         argv[i] = <char*> std_malloc(len(arg) + 1)
         for j, v in enumerate(arg):
             argv[i][j] = <char> v
-        argv[i][len(val)] = 0
+        argv[i][len(arg)] = 0
     start(argc, argv)
+    for i in range(argc):
+        std_free(argv[i])
+    std_free(argv)
     return Runtime.from_handle(_Runtime.get_runtime())
 
 
 cdef Runtime _runtime = initialize()
 
+cdef void raise_pending_exception():
+    try:
+        with nogil:
+            _Runtime.get_runtime().raise_pending_exception()
+    except Exception as e:
+        _maybe_reraise_legate_exception(e)
 
 cpdef Runtime get_legate_runtime():
     """
@@ -563,7 +586,7 @@ cpdef Machine get_machine():
     -------
         Machine object
     """
-    return _runtime.get_machine()
+    return get_legate_runtime().get_machine()
 
 
 cdef str caller_frameinfo():
@@ -613,6 +636,10 @@ def track_provenance(
         return wrapper
 
     return decorator
+
+
+cpdef bool is_running_in_task():
+    return _is_running_in_task()
 
 
 cdef void _cleanup_legate_runtime():

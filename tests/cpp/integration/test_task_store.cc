@@ -18,35 +18,63 @@
 
 namespace test_task_store {
 
-using Runtime = DefaultFixture;
+// We really should NOT be silencing this warning in this file, since it uses an enormous
+// amount of truly magic numbers (e.g. what is "index"), but I didn't write this and so I have
+// no clue what to call the values.
+//
+// NOLINTBEGIN(readability-magic-numbers)
 
-constexpr const char* library_name = "test_task_store";
-
-static constexpr std::int32_t INT_VALUE1 = 123;
-static constexpr std::int32_t INT_VALUE2 = 20;
-
-enum class StoreType {
+enum class StoreType : std::uint8_t {
   NORMAL_STORE  = 0,
   UNBOUND_STORE = 1,
   SCALAR_STORE  = 2,
 };
 
-enum class TaskDataMode {
+enum class TaskDataMode : std::uint8_t {
   INPUT     = 0,
   OUTPUT    = 1,
   REDUCTION = 2,
 };
 
-static constexpr std::int32_t SIMPLE_TASK = 0;
+namespace {
 
-static const std::map<TaskDataMode, std::int32_t> auto_task_method_count = {
-  {TaskDataMode::INPUT, 2}, {TaskDataMode::OUTPUT, 2}, {TaskDataMode::REDUCTION, 4}};
-static const std::map<TaskDataMode, std::int32_t> manual_task_method_count = {
-  {TaskDataMode::INPUT, 2}, {TaskDataMode::OUTPUT, 2}, {TaskDataMode::REDUCTION, 4}};
-static const std::map<StoreType, std::int32_t> create_array_count = {{StoreType::NORMAL_STORE, 8},
-                                                                     {StoreType::UNBOUND_STORE, 4}};
-static const std::map<StoreType, std::int32_t> create_store_count = {
-  {StoreType::NORMAL_STORE, 2}, {StoreType::UNBOUND_STORE, 1}, {StoreType::SCALAR_STORE, 1}};
+constexpr std::int32_t INT_VALUE1  = 123;
+constexpr std::int32_t INT_VALUE2  = 20;
+constexpr std::int32_t SIMPLE_TASK = 0;
+
+[[nodiscard]] const std::map<TaskDataMode, std::int32_t>& auto_task_method_count()
+{
+  static const std::map<TaskDataMode, std::int32_t> map = {
+    {TaskDataMode::INPUT, 2}, {TaskDataMode::OUTPUT, 2}, {TaskDataMode::REDUCTION, 4}};
+
+  return map;
+}
+
+[[nodiscard]] const std::map<TaskDataMode, std::int32_t>& manual_task_method_count()
+{
+  static const std::map<TaskDataMode, std::int32_t> map = {
+    {TaskDataMode::INPUT, 2}, {TaskDataMode::OUTPUT, 2}, {TaskDataMode::REDUCTION, 4}};
+
+  return map;
+}
+
+[[nodiscard]] const std::map<StoreType, std::int32_t>& create_array_count()
+{
+  static const std::map<StoreType, std::int32_t> map = {{StoreType::NORMAL_STORE, 8},
+                                                        {StoreType::UNBOUND_STORE, 4}};
+
+  return map;
+}
+
+[[nodiscard]] const std::map<StoreType, std::int32_t>& create_store_count()
+{
+  static const std::map<StoreType, std::int32_t> map = {
+    {StoreType::NORMAL_STORE, 2}, {StoreType::UNBOUND_STORE, 1}, {StoreType::SCALAR_STORE, 1}};
+
+  return map;
+}
+
+}  // namespace
 
 template <std::int32_t DIM>
 class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
@@ -55,20 +83,23 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    auto dataMode  = static_cast<TaskDataMode>(context.scalar(0).value<std::uint32_t>());
-    auto storeType = static_cast<StoreType>(context.scalar(1).value<std::uint32_t>());
-    auto value     = context.scalar(2).value<std::int32_t>();
+    auto data_mode  = static_cast<TaskDataMode>(context.scalar(0).value<std::uint32_t>());
+    auto store_type = static_cast<StoreType>(context.scalar(1).value<std::uint32_t>());
+    auto value      = context.scalar(2).value<std::int32_t>();
 
-    legate::PhysicalStore store;
-    switch (dataMode) {
-      case TaskDataMode::INPUT: store = context.input(0).data(); break;
-      case TaskDataMode::OUTPUT: store = context.output(0).data(); break;
-      case TaskDataMode::REDUCTION: store = context.reduction(0).data(); break;
-      default: break;
-    }
-    if (storeType == StoreType::UNBOUND_STORE) {
+    const legate::PhysicalStore store = [&] {
+      switch (data_mode) {
+        case TaskDataMode::INPUT: return context.input(0).data(); break;
+        case TaskDataMode::OUTPUT: return context.output(0).data(); break;
+        case TaskDataMode::REDUCTION: return context.reduction(0).data(); break;
+        default: break;
+      }
+      LEGATE_ABORT("Invalid data mode");
+    }();
+
+    if (store_type == StoreType::UNBOUND_STORE) {
       store.bind_empty_data();
-      if (dataMode == TaskDataMode::OUTPUT && context.output(0).nullable()) {
+      if (data_mode == TaskDataMode::OUTPUT && context.output(0).nullable()) {
         context.output(0).null_mask().bind_empty_data();
       }
       return;
@@ -79,7 +110,7 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
       return;
     }
 
-    switch (dataMode) {
+    switch (data_mode) {
       case TaskDataMode::INPUT: {
         auto acc = store.read_accessor<int32_t, DIM>();
         for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
@@ -102,6 +133,19 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
     }
   }
 };
+
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_task_store";
+  static void registration_callback(legate::Library library)
+  {
+    SimpleTask<1>::register_variants(library);
+    SimpleTask<2>::register_variants(library);
+    SimpleTask<3>::register_variants(library);
+  }
+};
+
+class TaskStoreTests : public RegisterOnceFixture<Config> {};
 
 struct VerifyOutputBody {
   template <std::int32_t DIM>
@@ -172,11 +216,8 @@ legate::LogicalArray create_unbound_array(std::uint32_t index, std::uint32_t ndi
 legate::LogicalStore create_normal_store(std::uint32_t index, const legate::Shape& shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(
-    {
-      1,
-    },
-    legate::int32());  // dummy creation
+  auto store   = runtime->create_store({1},
+                                     legate::int32());  // dummy creation
 
   switch (index) {
     case 0: store = runtime->create_store(shape, legate::int32()); break;
@@ -196,71 +237,74 @@ legate::LogicalStore create_unbound_store(std::uint32_t ndim)
 legate::LogicalStore create_scalar_store()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Scalar(int32_t(INT_VALUE1)));
+  auto store   = runtime->create_store(legate::Scalar{INT_VALUE1});
   return store;
 }
 
-void auto_task_normal_input(legate::LogicalArray array, std::uint32_t index)
+void auto_task_normal_input(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + array.dim());
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
-  auto mode              = TaskDataMode::INPUT;
-  auto store_type        = StoreType::NORMAL_STORE;
-  std::int32_t in_value1 = INT_VALUE1 + index;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::INPUT);
+  constexpr auto store_type = static_cast<std::int32_t>(StoreType::NORMAL_STORE);
+  const auto in_value1      = static_cast<std::int32_t>(INT_VALUE1 + index);
 
-  runtime->issue_fill(array, legate::Scalar(int32_t(in_value1)));
+  runtime->issue_fill(array, legate::Scalar{std::int32_t{in_value1}});
   switch (index) {
     case 0: task.add_input(array); break;
     case 1: task.add_input(array, task.find_or_declare_partition(array)); break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value1)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value1});
 
   runtime->submit(std::move(task));
 }
 
-void auto_task_normal_output(legate::LogicalArray array, std::uint32_t index)
+void auto_task_normal_output(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + array.dim());
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
-  auto mode              = TaskDataMode::OUTPUT;
-  auto store_type        = StoreType::NORMAL_STORE;
-  std::int32_t in_value1 = INT_VALUE1 + index;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::OUTPUT);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::NORMAL_STORE);
+  const auto in_value1      = static_cast<std::int32_t>(INT_VALUE1 + index);
 
   switch (index) {
     case 0: task.add_output(array); break;
     case 1: task.add_output(array, task.find_or_declare_partition(array)); break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value1)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value1});
 
   runtime->submit(std::move(task));
 
   auto expected_value = in_value1;
-  dim_dispatch(array.dim(), VerifyOutputBody{}, array.data().get_physical_store(), expected_value);
+  dim_dispatch(static_cast<int>(array.dim()),
+               VerifyOutputBody{},
+               array.data().get_physical_store(),
+               expected_value);
 }
 
-void auto_task_normal_reduction(legate::LogicalArray array, std::uint32_t index)
+void auto_task_normal_reduction(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + array.dim());
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
-  auto mode                      = TaskDataMode::REDUCTION;
-  auto store_type                = StoreType::NORMAL_STORE;
-  std::int32_t in_value1         = INT_VALUE1 + index;
-  std::int32_t in_value2         = INT_VALUE2 + index;
-  legate::ReductionOpKind red_op = legate::ReductionOpKind::ADD;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::REDUCTION);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::NORMAL_STORE);
+  const auto in_value1      = static_cast<std::int32_t>(INT_VALUE1 + index);
+  const auto in_value2      = static_cast<std::int32_t>(INT_VALUE2 + index);
+  constexpr auto red_op     = legate::ReductionOpKind::ADD;
 
-  runtime->issue_fill(array, legate::Scalar(int32_t(in_value1)));
+  runtime->issue_fill(array, legate::Scalar{std::int32_t{in_value1}});
   switch (index) {
     case 0: task.add_reduction(array, red_op); break;
     case 1: task.add_reduction(array, static_cast<std::int32_t>(red_op)); break;
@@ -271,21 +315,24 @@ void auto_task_normal_reduction(legate::LogicalArray array, std::uint32_t index)
       break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value2)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value2});
 
   runtime->submit(std::move(task));
 
   auto expected_value = in_value1 + in_value2;
-  dim_dispatch(array.dim(), VerifyOutputBody{}, array.data().get_physical_store(), expected_value);
+  dim_dispatch(static_cast<int>(array.dim()),
+               VerifyOutputBody{},
+               array.data().get_physical_store(),
+               expected_value);
 }
 
-void auto_task_unbound_input(legate::LogicalArray array, std::uint32_t index)
+void auto_task_unbound_input(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + array.dim());
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
   switch (index) {
     case 0: EXPECT_THROW(task.add_input(array), std::invalid_argument); break;
@@ -297,37 +344,37 @@ void auto_task_unbound_input(legate::LogicalArray array, std::uint32_t index)
   }
 }
 
-void auto_task_unbound_output(legate::LogicalArray array, std::uint32_t index)
+void auto_task_unbound_output(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + array.dim());
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
-  auto mode              = TaskDataMode::OUTPUT;
-  auto store_type        = StoreType::UNBOUND_STORE;
-  std::int32_t in_value1 = INT_VALUE1 + index;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::OUTPUT);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::UNBOUND_STORE);
+  const auto in_value1      = static_cast<std::int32_t>(INT_VALUE1 + index);
 
   switch (index) {
     case 0: task.add_output(array); break;
     case 1: task.add_output(array, task.find_or_declare_partition(array)); break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value1)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value1});
 
   runtime->submit(std::move(task));
 
   EXPECT_FALSE(array.unbound());
 }
 
-void auto_task_unbound_reduction(legate::LogicalArray array, std::uint32_t index)
+void auto_task_unbound_reduction(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + array.dim());
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task = runtime->create_task(context, static_cast<std::int64_t>(SIMPLE_TASK) + array.dim());
 
-  legate::ReductionOpKind red_op = legate::ReductionOpKind::ADD;
+  constexpr auto red_op = legate::ReductionOpKind::ADD;
 
   switch (index) {
     case 0: EXPECT_THROW(task.add_reduction(array, red_op), std::invalid_argument); break;
@@ -349,20 +396,21 @@ void auto_task_unbound_reduction(legate::LogicalArray array, std::uint32_t index
   }
 }
 
-void manual_task_normal_input(legate::LogicalStore store,
+void manual_task_normal_input(const legate::LogicalStore& store,
                               std::uint32_t index,
                               const legate::tuple<std::uint64_t>& launch_shape,
                               const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + store.dim(), launch_shape);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(
+    context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
-  auto mode              = TaskDataMode::INPUT;
-  auto store_type        = StoreType::NORMAL_STORE;
-  std::int32_t in_value1 = INT_VALUE1 + index;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::INPUT);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::NORMAL_STORE);
+  const auto in_value1      = static_cast<std::int32_t>(INT_VALUE1 + index);
 
-  runtime->issue_fill(store, legate::Scalar(int32_t(in_value1)));
+  runtime->issue_fill(store, legate::Scalar{std::int32_t{in_value1}});
   switch (index) {
     case 0: task.add_input(store); break;
     case 1: {
@@ -371,25 +419,26 @@ void manual_task_normal_input(legate::LogicalStore store,
     } break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value1)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value1});
 
   runtime->submit(std::move(task));
 }
 
-void manual_task_normal_output(legate::LogicalStore store,
+void manual_task_normal_output(const legate::LogicalStore& store,
                                std::uint32_t index,
                                const legate::tuple<std::uint64_t>& launch_shape,
                                const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + store.dim(), launch_shape);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(
+    context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
-  auto mode              = TaskDataMode::OUTPUT;
-  auto store_type        = StoreType::NORMAL_STORE;
-  std::int32_t in_value1 = INT_VALUE1 + index;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::OUTPUT);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::NORMAL_STORE);
+  const auto in_value1      = static_cast<std::int32_t>(INT_VALUE1 + index);
 
   switch (index) {
     case 0: task.add_output(store); break;
@@ -399,33 +448,35 @@ void manual_task_normal_output(legate::LogicalStore store,
     } break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value1)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value1});
 
   runtime->submit(std::move(task));
 
   auto expected_value = in_value1;
-  dim_dispatch(store.dim(), VerifyOutputBody{}, store.get_physical_store(), expected_value);
+  dim_dispatch(
+    static_cast<int>(store.dim()), VerifyOutputBody{}, store.get_physical_store(), expected_value);
 }
 
-void manual_task_normal_reduction(legate::LogicalStore store,
+void manual_task_normal_reduction(const legate::LogicalStore& store,
                                   std::uint32_t index,
                                   const legate::tuple<std::uint64_t>& launch_shape,
                                   const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + store.dim(), launch_shape);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(
+    context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
-  auto mode                      = TaskDataMode::REDUCTION;
-  auto store_type                = StoreType::NORMAL_STORE;
-  std::int32_t in_value1         = INT_VALUE1 + index;
-  std::int32_t in_value2         = INT_VALUE2 + index;
-  legate::ReductionOpKind red_op = legate::ReductionOpKind::ADD;
-  auto red_part_flag             = false;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::REDUCTION);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::NORMAL_STORE);
+  const auto in_value1      = static_cast<std::int32_t>(INT_VALUE1 + index);
+  const auto in_value2      = static_cast<std::int32_t>(INT_VALUE2 + index);
+  constexpr auto red_op     = legate::ReductionOpKind::ADD;
+  auto red_part_flag        = false;
 
-  runtime->issue_fill(store, legate::Scalar(int32_t(in_value1)));
+  runtime->issue_fill(store, legate::Scalar{std::int32_t{in_value1}});
   switch (index) {
     case 0: task.add_reduction(store, red_op); break;
     case 1: task.add_reduction(store, static_cast<std::int32_t>(red_op)); break;
@@ -441,24 +492,26 @@ void manual_task_normal_reduction(legate::LogicalStore store,
     } break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value2)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value2});
 
   runtime->submit(std::move(task));
 
   auto multiple       = red_part_flag ? 1 : launch_shape.volume();
   auto expected_value = in_value1 + in_value2 * multiple;
-  dim_dispatch(store.dim(), VerifyOutputBody{}, store.get_physical_store(), expected_value);
+  dim_dispatch(
+    static_cast<int>(store.dim()), VerifyOutputBody{}, store.get_physical_store(), expected_value);
 }
 
-void manual_task_unbound_input(legate::LogicalStore store,
+void manual_task_unbound_input(const legate::LogicalStore& store,
                                std::uint32_t index,
                                const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + store.dim(), launch_shape);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(
+    context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
   switch (index) {
     case 0: EXPECT_THROW(task.add_input(store), std::invalid_argument); break;
@@ -466,41 +519,43 @@ void manual_task_unbound_input(legate::LogicalStore store,
   }
 }
 
-void manual_task_unbound_output(legate::LogicalStore store,
+void manual_task_unbound_output(const legate::LogicalStore& store,
                                 std::uint32_t index,
                                 const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + store.dim(), launch_shape);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(
+    context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
-  auto mode              = TaskDataMode::OUTPUT;
-  auto store_type        = StoreType::UNBOUND_STORE;
-  std::int32_t in_value1 = INT_VALUE1 + index;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::OUTPUT);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::UNBOUND_STORE);
+  const auto in_value1      = static_cast<std::int32_t>(INT_VALUE1 + index);
 
   switch (index) {
     case 0: task.add_output(store); break;
     default: break;
   }
 
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value1)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value1});
 
   runtime->submit(std::move(task));
 
   EXPECT_FALSE(store.unbound());
 }
 
-void manual_task_unbound_reduction(legate::LogicalStore store,
+void manual_task_unbound_reduction(const legate::LogicalStore& store,
                                    std::uint32_t index,
                                    const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + store.dim(), launch_shape);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(
+    context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
-  legate::ReductionOpKind red_op = legate::ReductionOpKind::ADD;
+  constexpr auto red_op = legate::ReductionOpKind::ADD;
 
   switch (index) {
     case 0: EXPECT_THROW(task.add_reduction(store, red_op), std::invalid_argument); break;
@@ -512,18 +567,19 @@ void manual_task_unbound_reduction(legate::LogicalStore store,
   }
 }
 
-void manual_task_scalar_input(legate::LogicalStore store,
+void manual_task_scalar_input(const legate::LogicalStore& store,
                               std::uint32_t index,
                               const legate::tuple<std::uint64_t>& launch_shape,
                               const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + store.dim(), launch_shape);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(
+    context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
-  auto mode              = TaskDataMode::INPUT;
-  auto store_type        = StoreType::SCALAR_STORE;
-  std::int32_t in_value1 = INT_VALUE1;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::INPUT);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::SCALAR_STORE);
+  constexpr auto in_value1  = static_cast<std::int32_t>(INT_VALUE1);
 
   switch (index) {
     case 0: task.add_input(store); break;
@@ -533,25 +589,26 @@ void manual_task_scalar_input(legate::LogicalStore store,
     } break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value1)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value1});
 
   runtime->submit(std::move(task));
 }
 
-void manual_task_scalar_output(legate::LogicalStore store,
+void manual_task_scalar_output(const legate::LogicalStore& store,
                                std::uint32_t index,
                                const legate::tuple<std::uint64_t>& launch_shape,
                                const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + store.dim(), launch_shape);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(
+    context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
-  auto mode              = TaskDataMode::OUTPUT;
-  auto store_type        = StoreType::SCALAR_STORE;
-  std::int32_t in_value1 = INT_VALUE1;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::OUTPUT);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::SCALAR_STORE);
+  constexpr auto in_value1  = static_cast<std::int32_t>(INT_VALUE1);
 
   switch (index) {
     case 0: task.add_output(store); break;
@@ -561,30 +618,32 @@ void manual_task_scalar_output(legate::LogicalStore store,
     } break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value1)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value1});
 
   runtime->submit(std::move(task));
 
   auto expected_value = in_value1;
-  dim_dispatch(store.dim(), VerifyOutputBody{}, store.get_physical_store(), expected_value);
+  dim_dispatch(
+    static_cast<int>(store.dim()), VerifyOutputBody{}, store.get_physical_store(), expected_value);
 }
 
-void manual_task_scalar_reduction(legate::LogicalStore store,
+void manual_task_scalar_reduction(const legate::LogicalStore& store,
                                   std::uint32_t index,
                                   const legate::tuple<std::uint64_t>& launch_shape,
                                   const std::vector<std::uint64_t>& tile_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
-  auto task    = runtime->create_task(context, SIMPLE_TASK + store.dim(), launch_shape);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(
+    context, static_cast<std::int64_t>(SIMPLE_TASK) + store.dim(), launch_shape);
 
-  auto mode                      = TaskDataMode::REDUCTION;
-  auto store_type                = StoreType::SCALAR_STORE;
-  std::int32_t in_value1         = INT_VALUE1;
-  std::int32_t in_value2         = INT_VALUE2 + index;
-  legate::ReductionOpKind red_op = legate::ReductionOpKind::ADD;
+  constexpr auto mode       = static_cast<std::uint32_t>(TaskDataMode::REDUCTION);
+  constexpr auto store_type = static_cast<std::uint32_t>(StoreType::SCALAR_STORE);
+  const auto in_value1      = static_cast<std::int32_t>(INT_VALUE1);
+  const auto in_value2      = static_cast<std::int32_t>(INT_VALUE2 + index);
+  constexpr auto red_op     = legate::ReductionOpKind::ADD;
 
   switch (index) {
     case 0: task.add_reduction(store, red_op); break;
@@ -599,48 +658,33 @@ void manual_task_scalar_reduction(legate::LogicalStore store,
     } break;
     default: break;
   }
-  task.add_scalar_arg(legate::Scalar(uint32_t(mode)));
-  task.add_scalar_arg(legate::Scalar(uint32_t(store_type)));
-  task.add_scalar_arg(legate::Scalar(int32_t(in_value2)));
+  task.add_scalar_arg(legate::Scalar{mode});
+  task.add_scalar_arg(legate::Scalar{store_type});
+  task.add_scalar_arg(legate::Scalar{in_value2});
 
   runtime->submit(std::move(task));
 
   auto expected_value = in_value1 + in_value2 * launch_shape.volume();
-  dim_dispatch(store.dim(), VerifyOutputBody{}, store.get_physical_store(), expected_value);
-}
-
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
-  }
-  prepared = true;
-
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-
-  SimpleTask<1>::register_variants(context);
-  SimpleTask<2>::register_variants(context);
-  SimpleTask<3>::register_variants(context);
+  dim_dispatch(
+    static_cast<int>(store.dim()), VerifyOutputBody{}, store.get_physical_store(), expected_value);
 }
 
 class AutoTaskNormal
-  : public DefaultFixture,
+  : public TaskStoreTests,
     public ::testing::WithParamInterface<std::tuple<std::int32_t, std::int32_t, legate::Shape>> {};
 class AutoTaskNormalInput : public AutoTaskNormal {};
 class AutoTaskNormalOutput : public AutoTaskNormal {};
 class AutoTaskNormalReduction : public AutoTaskNormal {};
 
 class AutoTaskUnbound
-  : public DefaultFixture,
+  : public TaskStoreTests,
     public ::testing::WithParamInterface<std::tuple<std::int32_t, std::int32_t, std::uint32_t>> {};
 class AutoTaskUnboundInput : public AutoTaskUnbound {};
 class AutoTaskUnboundOutput : public AutoTaskUnbound {};
 class AutoTaskUnboundReduction : public AutoTaskUnbound {};
 
 class ManualTaskNormal
-  : public DefaultFixture,
+  : public TaskStoreTests,
     public ::testing::WithParamInterface<
       std::tuple<std::int32_t,
                  std::int32_t,
@@ -649,7 +693,7 @@ class ManualTaskNormalInput : public ManualTaskNormal {};
 class ManualTaskNormalOutput : public ManualTaskNormal {};
 class ManualTaskNormalReduction : public ManualTaskNormal {};
 
-class ManualTaskUnbound : public DefaultFixture,
+class ManualTaskUnbound : public TaskStoreTests,
                           public ::testing::WithParamInterface<
                             std::tuple<std::int32_t, std::tuple<std::uint32_t, legate::Shape>>> {};
 class ManualTaskUnboundInput : public ManualTaskUnbound {};
@@ -657,7 +701,7 @@ class ManualTaskUnboundOutput : public ManualTaskUnbound {};
 class ManualTaskUnboundReduction : public ManualTaskUnbound {};
 
 class ManualTaskScalar
-  : public DefaultFixture,
+  : public TaskStoreTests,
     public ::testing::WithParamInterface<
       std::tuple<std::int32_t, std::tuple<legate::Shape, std::vector<std::uint64_t>>>> {};
 class ManualTaskScalarInput : public ManualTaskScalar {};
@@ -667,50 +711,50 @@ class ManualTaskScalarReduction : public ManualTaskScalar {};
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   AutoTaskNormalInput,
-  ::testing::Combine(::testing::Range(0, create_array_count.at(StoreType::NORMAL_STORE)),
-                     ::testing::Range(0, auto_task_method_count.at(TaskDataMode::INPUT)),
+  ::testing::Combine(::testing::Range(0, create_array_count().at(StoreType::NORMAL_STORE)),
+                     ::testing::Range(0, auto_task_method_count().at(TaskDataMode::INPUT)),
                      ::testing::Values(legate::Shape({3, 3, 2}))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   AutoTaskNormalOutput,
-  ::testing::Combine(::testing::Range(0, create_array_count.at(StoreType::NORMAL_STORE)),
-                     ::testing::Range(0, auto_task_method_count.at(TaskDataMode::OUTPUT)),
+  ::testing::Combine(::testing::Range(0, create_array_count().at(StoreType::NORMAL_STORE)),
+                     ::testing::Range(0, auto_task_method_count().at(TaskDataMode::OUTPUT)),
                      ::testing::Values(legate::Shape({3, 3, 2}))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   AutoTaskNormalReduction,
-  ::testing::Combine(::testing::Range(0, create_array_count.at(StoreType::NORMAL_STORE)),
-                     ::testing::Range(0, auto_task_method_count.at(TaskDataMode::REDUCTION)),
+  ::testing::Combine(::testing::Range(0, create_array_count().at(StoreType::NORMAL_STORE)),
+                     ::testing::Range(0, auto_task_method_count().at(TaskDataMode::REDUCTION)),
                      ::testing::Values(legate::Shape({3, 3, 2}))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   AutoTaskUnboundInput,
-  ::testing::Combine(::testing::Range(0, create_array_count.at(StoreType::UNBOUND_STORE)),
-                     ::testing::Range(0, auto_task_method_count.at(TaskDataMode::INPUT)),
+  ::testing::Combine(::testing::Range(0, create_array_count().at(StoreType::UNBOUND_STORE)),
+                     ::testing::Range(0, auto_task_method_count().at(TaskDataMode::INPUT)),
                      ::testing::Values(3, 1)));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   AutoTaskUnboundOutput,
-  ::testing::Combine(::testing::Range(0, create_array_count.at(StoreType::UNBOUND_STORE)),
-                     ::testing::Range(0, auto_task_method_count.at(TaskDataMode::OUTPUT)),
+  ::testing::Combine(::testing::Range(0, create_array_count().at(StoreType::UNBOUND_STORE)),
+                     ::testing::Range(0, auto_task_method_count().at(TaskDataMode::OUTPUT)),
                      ::testing::Values(3, 1)));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   AutoTaskUnboundReduction,
-  ::testing::Combine(::testing::Range(0, create_array_count.at(StoreType::UNBOUND_STORE)),
-                     ::testing::Range(0, auto_task_method_count.at(TaskDataMode::REDUCTION)),
+  ::testing::Combine(::testing::Range(0, create_array_count().at(StoreType::UNBOUND_STORE)),
+                     ::testing::Range(0, auto_task_method_count().at(TaskDataMode::REDUCTION)),
                      ::testing::Values(3, 1)));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskNormalInput,
-  ::testing::Combine(::testing::Range(0, create_store_count.at(StoreType::NORMAL_STORE)),
-                     ::testing::Range(0, manual_task_method_count.at(TaskDataMode::INPUT)),
+  ::testing::Combine(::testing::Range(0, create_store_count().at(StoreType::NORMAL_STORE)),
+                     ::testing::Range(0, manual_task_method_count().at(TaskDataMode::INPUT)),
                      ::testing::Values(std::make_tuple(legate::Shape({5, 5}),
                                                        legate::Shape({3, 3}),
                                                        std::vector<std::uint64_t>({2, 2})),
@@ -731,8 +775,8 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskNormalOutput,
-  ::testing::Combine(::testing::Range(0, create_store_count.at(StoreType::NORMAL_STORE)),
-                     ::testing::Range(0, manual_task_method_count.at(TaskDataMode::OUTPUT)),
+  ::testing::Combine(::testing::Range(0, create_store_count().at(StoreType::NORMAL_STORE)),
+                     ::testing::Range(0, manual_task_method_count().at(TaskDataMode::OUTPUT)),
                      ::testing::Values(std::make_tuple(legate::Shape({5, 5}),
                                                        legate::Shape({3, 3}),
                                                        std::vector<std::uint64_t>({2, 2})),
@@ -751,8 +795,8 @@ INSTANTIATE_TEST_SUITE_P(
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskNormalReduction,
-  ::testing::Combine(::testing::Range(0, create_store_count.at(StoreType::NORMAL_STORE)),
-                     ::testing::Range(0, manual_task_method_count.at(TaskDataMode::REDUCTION)),
+  ::testing::Combine(::testing::Range(0, create_store_count().at(StoreType::NORMAL_STORE)),
+                     ::testing::Range(0, manual_task_method_count().at(TaskDataMode::REDUCTION)),
                      ::testing::Values(std::make_tuple(legate::Shape({5, 5}),
                                                        legate::Shape({3, 3}),
                                                        std::vector<std::uint64_t>({2, 2})),
@@ -793,25 +837,25 @@ INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskScalarInput,
   ::testing::Combine(
-    ::testing::Range(0, manual_task_method_count.at(TaskDataMode::INPUT)),
-    ::testing::Values(std::make_tuple(legate::Shape({3, 5}), std::vector<std::uint64_t>({2})),
-                      std::make_tuple(legate::Shape({2}), std::vector<std::uint64_t>({2})))));
+    ::testing::Range(0, manual_task_method_count().at(TaskDataMode::INPUT)),
+    ::testing::Values(std::make_tuple(legate::Shape{{3, 5}}, std::vector<std::uint64_t>({2})),
+                      std::make_tuple(legate::Shape{2}, std::vector<std::uint64_t>({2})))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskScalarOutput,
   ::testing::Combine(
-    ::testing::Range(0, manual_task_method_count.at(TaskDataMode::OUTPUT)),
-    ::testing::Values(std::make_tuple(legate::Shape({3, 5}), std::vector<std::uint64_t>({2})),
-                      std::make_tuple(legate::Shape({2}), std::vector<std::uint64_t>({2})))));
+    ::testing::Range(0, manual_task_method_count().at(TaskDataMode::OUTPUT)),
+    ::testing::Values(std::make_tuple(legate::Shape{{3, 5}}, std::vector<std::uint64_t>({2})),
+                      std::make_tuple(legate::Shape{2}, std::vector<std::uint64_t>({2})))));
 
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   ManualTaskScalarReduction,
   ::testing::Combine(
-    ::testing::Range(0, manual_task_method_count.at(TaskDataMode::REDUCTION)),
-    ::testing::Values(std::make_tuple(legate::Shape({3, 5}), std::vector<std::uint64_t>({2})),
-                      std::make_tuple(legate::Shape({2}), std::vector<std::uint64_t>({2})))
+    ::testing::Range(0, manual_task_method_count().at(TaskDataMode::REDUCTION)),
+    ::testing::Values(std::make_tuple(legate::Shape{{3, 5}}, std::vector<std::uint64_t>({2})),
+                      std::make_tuple(legate::Shape{2}, std::vector<std::uint64_t>({2})))
     // [failed-case-5],
     // Fill(in_value_1), Reduce(in_value_2)
     // if launch shape = {1}, result is in_value_2. Unexpected.
@@ -822,48 +866,42 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AutoTaskNormalInput, Basic)
 {
   auto [index1, index2, shape] = GetParam();
-  prepare();
-  auto array = create_normal_array(index1, shape);
+  auto array                   = create_normal_array(index1, shape);
   auto_task_normal_input(array, index2);
 }
 
 TEST_P(AutoTaskNormalOutput, Basic)
 {
   auto [index1, index2, shape] = GetParam();
-  prepare();
-  auto array = create_normal_array(index1, shape);
+  auto array                   = create_normal_array(index1, shape);
   auto_task_normal_output(array, index2);
 }
 
 TEST_P(AutoTaskNormalReduction, Basic)
 {
   auto [index1, index2, shape] = GetParam();
-  prepare();
-  auto array = create_normal_array(index1, shape);
+  auto array                   = create_normal_array(index1, shape);
   auto_task_normal_reduction(array, index2);
 }
 
 TEST_P(AutoTaskUnboundInput, Basic)
 {
   auto [index1, index2, ndim] = GetParam();
-  prepare();
-  auto array = create_unbound_array(index1, ndim);
+  auto array                  = create_unbound_array(index1, ndim);
   auto_task_unbound_input(array, index2);
 }
 
 TEST_P(AutoTaskUnboundOutput, Basic)
 {
   auto [index1, index2, ndim] = GetParam();
-  prepare();
-  auto array = create_unbound_array(index1, ndim);
+  auto array                  = create_unbound_array(index1, ndim);
   auto_task_unbound_output(array, index2);
 }
 
 TEST_P(AutoTaskUnboundReduction, Basic)
 {
   auto [index1, index2, ndim] = GetParam();
-  prepare();
-  auto array = create_unbound_array(index1, ndim);
+  auto array                  = create_unbound_array(index1, ndim);
   auto_task_unbound_reduction(array, index2);
 }
 
@@ -871,8 +909,7 @@ TEST_P(ManualTaskNormalInput, Basic)
 {
   auto [index1, index2, shapes]                = GetParam();
   auto [store_shape, launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_normal_store(index1, store_shape);
+  auto store                                   = create_normal_store(index1, store_shape);
   manual_task_normal_input(store, index2, launch_shape.extents(), tile_shape);
 }
 
@@ -880,8 +917,7 @@ TEST_P(ManualTaskNormalOutput, Basic)
 {
   auto [index1, index2, shapes]                = GetParam();
   auto [store_shape, launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_normal_store(index1, store_shape);
+  auto store                                   = create_normal_store(index1, store_shape);
   manual_task_normal_output(store, index2, launch_shape.extents(), tile_shape);
 }
 
@@ -889,8 +925,7 @@ TEST_P(ManualTaskNormalReduction, Basic)
 {
   auto [index1, index2, shapes]                = GetParam();
   auto [store_shape, launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_normal_store(index1, store_shape);
+  auto store                                   = create_normal_store(index1, store_shape);
   manual_task_normal_reduction(store, index2, launch_shape.extents(), tile_shape);
 }
 
@@ -898,8 +933,7 @@ TEST_P(ManualTaskUnboundInput, Basic)
 {
   auto [index, ndim_lanuch_shape] = GetParam();
   auto [ndim, launch_shape]       = ndim_lanuch_shape;
-  prepare();
-  auto store = create_unbound_store(ndim);
+  auto store                      = create_unbound_store(ndim);
   manual_task_unbound_input(store, index, launch_shape.extents());
 }
 
@@ -907,8 +941,7 @@ TEST_P(ManualTaskUnboundOutput, Basic)
 {
   auto [index, ndim_lanuch_shape] = GetParam();
   auto [ndim, launch_shape]       = ndim_lanuch_shape;
-  prepare();
-  auto store = create_unbound_store(ndim);
+  auto store                      = create_unbound_store(ndim);
   manual_task_unbound_output(store, index, launch_shape.extents());
 }
 
@@ -916,8 +949,7 @@ TEST_P(ManualTaskUnboundReduction, Basic)
 {
   auto [index, ndim_lanuch_shape] = GetParam();
   auto [ndim, launch_shape]       = ndim_lanuch_shape;
-  prepare();
-  auto store = create_unbound_store(ndim);
+  auto store                      = create_unbound_store(ndim);
   manual_task_unbound_reduction(store, index, launch_shape.extents());
 }
 
@@ -925,8 +957,7 @@ TEST_P(ManualTaskScalarInput, Basic)
 {
   auto [index, shapes]            = GetParam();
   auto [launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_scalar_store();
+  auto store                      = create_scalar_store();
   manual_task_scalar_input(store, index, launch_shape.extents(), tile_shape);
 }
 
@@ -934,8 +965,7 @@ TEST_P(ManualTaskScalarOutput, Basic)
 {
   auto [index, shapes]            = GetParam();
   auto [launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_scalar_store();
+  auto store                      = create_scalar_store();
   manual_task_scalar_output(store, index, launch_shape.extents(), tile_shape);
 }
 
@@ -943,17 +973,14 @@ TEST_P(ManualTaskScalarReduction, Basic)
 {
   const auto& [index, shapes]            = GetParam();
   const auto& [launch_shape, tile_shape] = shapes;
-  prepare();
-  auto store = create_scalar_store();
+  auto store                             = create_scalar_store();
   manual_task_scalar_reduction(store, index, launch_shape.extents(), tile_shape);
 }
 
-TEST_F(Runtime, CreateTaskInvalid)
+TEST_F(TaskStoreTests, CreateTaskInvalid)
 {
-  prepare();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   EXPECT_THROW(static_cast<void>(runtime->create_task(context, -100)), std::out_of_range);
   EXPECT_THROW(
@@ -964,7 +991,7 @@ TEST_F(Runtime, CreateTaskInvalid)
                std::out_of_range);
 
   EXPECT_THROW(static_cast<void>(runtime->create_task(context,
-                                                      SIMPLE_TASK + 1,
+                                                      static_cast<std::int64_t>(SIMPLE_TASK) + 1,
                                                       legate::tuple<std::uint64_t>{
                                                         0,
                                                       })),
@@ -974,5 +1001,7 @@ TEST_F(Runtime, CreateTaskInvalid)
     static_cast<void>(runtime->create_task(context, SIMPLE_TASK, legate::tuple<std::uint64_t>{})),
     std::out_of_range);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace test_task_store

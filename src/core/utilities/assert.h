@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,7 +14,7 @@
 
 #include "core/utilities/abort.h"
 #include "core/utilities/cpp_version.h"
-#include "core/utilities/defined.h"
+#include "core/utilities/macros.h"
 
 #ifndef __has_builtin
 #define __has_builtin(x) 0
@@ -23,21 +23,21 @@
 #if LEGATE_CPP_VERSION >= 23
 #include <utility>
 
-#define LegateUnreachable() ::std::unreachable()
+#define LEGATE_UNREACHABLE() ::std::unreachable()
 #elif __has_builtin(__builtin_unreachable) || defined(__GNUC__)  // clang, gcc
-#define LegateUnreachable() __builtin_unreachable()
+#define LEGATE_UNREACHABLE() __builtin_unreachable()
 #elif defined(_MSC_VER) && !defined(__clang__)  // MSVC
-#define LegateUnreachable() __assume(false)
+#define LEGATE_UNREACHABLE() __assume(false)
 #else
-#define LegateUnreachable() LEGATE_ABORT("Unreachable code path executed!")
+#define LEGATE_UNREACHABLE() LEGATE_ABORT("Unreachable code path executed!")
 #endif
 
 #if LEGATE_CPP_VERSION >= 23
-#define LegateAssume(...) [[assume(__VA_ARGS__)]]
+#define LEGATE_ASSUME(...) [[assume(__VA_ARGS__)]]
 #elif defined(_MSC_VER) && !defined(__clang__)  // MSVC
-#define LegateAssume(...) __assume(__VA_ARGS__)
+#define LEGATE_ASSUME(...) __assume(__VA_ARGS__)
 #elif defined(__clang__) && __has_builtin(__builtin_assume)  // clang
-#define LegateAssume(...)                                   \
+#define LEGATE_ASSUME(...)                                  \
   do {                                                      \
     _Pragma("clang diagnostic push");                       \
     _Pragma("clang diagnostic ignored \"-Wassume\"");       \
@@ -46,7 +46,7 @@
     _Pragma("clang diagnostic pop");                        \
   } while (0)
 #elif defined(__GNUC__) && (__GNUC__ >= 13)
-#define LegateAssume(...) __attribute__((__assume__(__VA_ARGS__)))
+#define LEGATE_ASSUME(...) __attribute__((__assume__(__VA_ARGS__)))
 #else  // gcc (and really old clang)
 // gcc does not have its own __builtin_assume() intrinsic. One could fake it via
 //
@@ -60,7 +60,7 @@
 // extern int bar(int);
 //
 // int foo(int x) {
-//   LegateAssume(bar(x) == 2);
+//   LEGATE_ASSUME(bar(x) == 2);
 //   if (bar(x) == 2) {
 //     return 1;
 //   } else {
@@ -71,32 +71,32 @@
 // Here gcc would (if just using the plain 'if' version) emit 2 calls to bar(). But since we
 // elide the branch at compile-time, our version doesn't have this problem. Note we still have
 // cond "tested" in the condition, but this is done to silence unused-but-set variable warnings
-#define LegateAssume(...)                \
+#define LEGATE_ASSUME(...)               \
   do {                                   \
     if constexpr (0 && !(__VA_ARGS__)) { \
-      LegateUnreachable();               \
+      LEGATE_UNREACHABLE();              \
     }                                    \
   } while (0)
 #endif
 
 #if __has_builtin(__builtin_expect) || defined(__GNUC__)
-#define LegateLikely(...) __builtin_expect(!!(__VA_ARGS__), 1)
-#define LegateUnlikely(...) __builtin_expect(!!(__VA_ARGS__), 0)
+#define LEGATE_LIKELY(...) __builtin_expect(!!(__VA_ARGS__), 1)
+#define LEGATE_UNLIKELY(...) __builtin_expect(!!(__VA_ARGS__), 0)
 #else
-#define LegateLikely(...) __VA_ARGS__
-#define LegateUnlikely(...) __VA_ARGS__
+#define LEGATE_LIKELY(...) __VA_ARGS__
+#define LEGATE_UNLIKELY(...) __VA_ARGS__
 #endif
 
-#define LegateCheck(...)                                    \
+#define LEGATE_CHECK(...)                                   \
   do {                                                      \
     /* NOLINTNEXTLINE(readability-simplify-boolean-expr) */ \
-    if (LegateUnlikely(!(__VA_ARGS__))) {                   \
+    if (LEGATE_UNLIKELY(!(__VA_ARGS__))) {                  \
       LEGATE_ABORT("assertion failed: " #__VA_ARGS__);      \
     }                                                       \
   } while (0)
 
-#if LegateDefined(LEGATE_USE_DEBUG)
-#define LegateAssert(...) LegateCheck(__VA_ARGS__)
+#if LEGATE_DEFINED(LEGATE_USE_DEBUG)
+#define LEGATE_ASSERT(...) LEGATE_CHECK(__VA_ARGS__)
 #else
-#define LegateAssert(...) LegateAssume(__VA_ARGS__)
+#define LEGATE_ASSERT(...) LEGATE_ASSUME(__VA_ARGS__)
 #endif

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -18,5 +18,12 @@ cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
         GPU
         OMP
         CPU
+
+cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
+    cpdef enum class StoreTarget:
+        SYSMEM
+        FBMEM
+        ZCMEM
+        SOCKETMEM
 
 cdef dict[TaskTarget, legate_core_variant_t] TASK_TARGET_TO_VARIANT_KIND

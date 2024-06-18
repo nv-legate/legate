@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -152,7 +152,18 @@ class TestMultiRank:
         ]
 
     def test_spec_with_gpus_1(self) -> None:
-        c = Config(["test.py", "--gpus", "1", "--ranks-per-node", "2"])
+        # use any valid launcher
+        c = Config(
+            [
+                "test.py",
+                "--gpus",
+                "1",
+                "--ranks-per-node",
+                "2",
+                "--launcher",
+                "srun",
+            ]
+        )
         s = FakeSystem(gpus=4)
         stage = m.GPU(c, s)
         assert stage.spec.workers == 8
@@ -166,7 +177,18 @@ class TestMultiRank:
         )
 
     def test_spec_with_gpus_2(self) -> None:
-        c = Config(["test.py", "--gpus", "2", "--ranks-per-node", "2"])
+        # use any valid launcher
+        c = Config(
+            [
+                "test.py",
+                "--gpus",
+                "2",
+                "--ranks-per-node",
+                "2",
+                "--launcher",
+                "srun",
+            ]
+        )
         s = FakeSystem(gpus=4)
         stage = m.GPU(c, s)
         assert stage.spec.workers == 4

@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -39,8 +39,8 @@ if(POLICY CMP0096)
 endif()
 
 if(POLICY CMP0126)
-  # make set(CACHE) command not remove normal variable of the same name from the current scope
-  # https://cmake.org/cmake/help/latest/policy/CMP0126.html
+  # make set(CACHE) command not remove normal variable of the same name from the current
+  # scope https://cmake.org/cmake/help/latest/policy/CMP0126.html
   cmake_policy(SET CMP0126 NEW)
   set(CMAKE_POLICY_DEFAULT_CMP0126 NEW)
 endif()

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -19,7 +19,7 @@ namespace legate {
 /**
  * @brief Enum to describe partitioning preference on dimensions of a store
  */
-enum class Restriction : std::int32_t {
+enum class Restriction : std::uint8_t {
   ALLOW  = 0, /*!< The dimension can be partitioned */
   AVOID  = 1, /*!< The dimension can be partitioned, but other dimensions are preferred */
   FORBID = 2, /*!< The dimension must not be partitioned */

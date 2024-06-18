@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -33,7 +33,7 @@ ReturnValue::ReturnValue(Legion::UntypedDeferredValue value, std::size_t size)
   // NOLINTNEXTLINE(misc-const-correctness)
   ReturnValue result{Legion::UntypedDeferredValue{size, memory_kind}, size};
 
-  LegateAssert(!result.is_device_value());
+  LEGATE_ASSERT(!result.is_device_value());
 
   const AccessorWO<std::int8_t, 1> acc{result.value_, result.size_, false};
 

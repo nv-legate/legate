@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -23,19 +23,19 @@ namespace legate::detail {
 
 class PhysicalArray {
  public:
-  virtual ~PhysicalArray()                                   = default;
-  [[nodiscard]] virtual std::int32_t dim() const             = 0;
-  [[nodiscard]] virtual ArrayKind kind() const               = 0;
-  [[nodiscard]] virtual InternalSharedPtr<Type> type() const = 0;
-  [[nodiscard]] virtual bool unbound() const                 = 0;
-  [[nodiscard]] virtual bool nullable() const                = 0;
-  [[nodiscard]] virtual bool nested() const                  = 0;
-  [[nodiscard]] virtual bool valid() const                   = 0;
+  virtual ~PhysicalArray()                                          = default;
+  [[nodiscard]] virtual std::int32_t dim() const                    = 0;
+  [[nodiscard]] virtual ArrayKind kind() const                      = 0;
+  [[nodiscard]] virtual const InternalSharedPtr<Type>& type() const = 0;
+  [[nodiscard]] virtual bool unbound() const                        = 0;
+  [[nodiscard]] virtual bool nullable() const                       = 0;
+  [[nodiscard]] virtual bool nested() const                         = 0;
+  [[nodiscard]] virtual bool valid() const                          = 0;
 
-  [[nodiscard]] virtual InternalSharedPtr<PhysicalStore> data() const;
-  [[nodiscard]] virtual InternalSharedPtr<PhysicalStore> null_mask() const                = 0;
-  [[nodiscard]] virtual InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const = 0;
-  virtual void _stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const       = 0;
+  [[nodiscard]] virtual const InternalSharedPtr<PhysicalStore>& data() const;
+  [[nodiscard]] virtual const InternalSharedPtr<PhysicalStore>& null_mask() const           = 0;
+  [[nodiscard]] virtual InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const   = 0;
+  virtual void populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const = 0;
 
   [[nodiscard]] std::vector<InternalSharedPtr<PhysicalStore>> stores() const;
 
@@ -50,16 +50,16 @@ class BasePhysicalArray final : public PhysicalArray {
 
   [[nodiscard]] std::int32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
-  [[nodiscard]] InternalSharedPtr<Type> type() const override;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] bool valid() const override;
 
-  [[nodiscard]] InternalSharedPtr<PhysicalStore> data() const override;
-  [[nodiscard]] InternalSharedPtr<PhysicalStore> null_mask() const override;
+  [[nodiscard]] const InternalSharedPtr<PhysicalStore>& data() const override;
+  [[nodiscard]] const InternalSharedPtr<PhysicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const override;
-  void _stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const override;
+  void populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
   void check_shape_dimension(std::int32_t dim) const override;
@@ -77,17 +77,17 @@ class ListPhysicalArray final : public PhysicalArray {
 
   [[nodiscard]] std::int32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
-  [[nodiscard]] InternalSharedPtr<Type> type() const override;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] bool valid() const override;
 
-  [[nodiscard]] InternalSharedPtr<PhysicalStore> null_mask() const override;
+  [[nodiscard]] const InternalSharedPtr<PhysicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const override;
-  void _stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const override;
-  [[nodiscard]] InternalSharedPtr<PhysicalArray> descriptor() const;
-  [[nodiscard]] InternalSharedPtr<PhysicalArray> vardata() const;
+  void populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const override;
+  [[nodiscard]] const InternalSharedPtr<BasePhysicalArray>& descriptor() const;
+  [[nodiscard]] const InternalSharedPtr<PhysicalArray>& vardata() const;
 
   [[nodiscard]] Domain domain() const override;
   void check_shape_dimension(std::int32_t dim) const override;
@@ -106,15 +106,15 @@ class StructPhysicalArray final : public PhysicalArray {
 
   [[nodiscard]] std::int32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
-  [[nodiscard]] InternalSharedPtr<Type> type() const override;
+  [[nodiscard]] const InternalSharedPtr<Type>& type() const override;
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] bool valid() const override;
 
-  [[nodiscard]] InternalSharedPtr<PhysicalStore> null_mask() const override;
+  [[nodiscard]] const InternalSharedPtr<PhysicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const override;
-  void _stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const override;
+  void populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
   void check_shape_dimension(std::int32_t dim) const override;

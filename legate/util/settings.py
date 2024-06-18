@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -68,9 +68,7 @@ RuntimeError will be raised.
 from __future__ import annotations
 
 import os
-from typing import Any, Generic, Type, TypeVar, Union
-
-from typing_extensions import TypeAlias
+from typing import Any, Generic, TypeAlias, TypeVar
 
 __all__ = (
     "convert_str",
@@ -88,7 +86,7 @@ class _Unset:
 T = TypeVar("T")
 
 
-Unset: TypeAlias = Union[T, Type[_Unset]]
+Unset: TypeAlias = T | type[_Unset]
 
 
 def convert_str(value: str) -> str:

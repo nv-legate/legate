@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -23,6 +23,7 @@
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/type/detail/type_info.h"
+#include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/tuple.h"
 
 #include "legate_defines.h"
@@ -46,25 +47,29 @@ Storage::Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, b
     offsets_{legate::full(dim(), uint64_t{0})}
 {
   // We should not blindly check the shape volume as it would flush the scheduling window
-  if (optimize_scalar && shape_->ready() && volume() == 1) {
-    kind_ = Kind::FUTURE;
+  if (optimize_scalar) {
+    if (shape_->unbound()) {
+      kind_ = Kind::FUTURE_MAP;
+    } else if (shape_->ready() && volume() == 1) {
+      kind_ = Kind::FUTURE;
+    }
   }
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
 }
 
 Storage::Storage(InternalSharedPtr<Shape> shape,
                  InternalSharedPtr<Type> type,
-                 const Legion::Future& future)
+                 Legion::Future future)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     shape_{std::move(shape)},
     type_{std::move(type)},
     kind_{Kind::FUTURE},
-    future_{std::make_unique<Legion::Future>(future)},
+    future_{std::move(future)},
     offsets_{legate::full(dim(), uint64_t{0})}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
 }
@@ -82,23 +87,30 @@ Storage::Storage(tuple<std::uint64_t> extents,
     color_{std::move(color)},
     offsets_{std::move(offsets)}
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
 }
 
+// NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
 Storage::~Storage()
 {
   if (!Runtime::get_runtime()->initialized()) {
-    // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
-    // this would be collected by the Legion runtime
-    static_cast<void>(future_.release());
+    if (future_.has_value() && future_->exists()) {
+      // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
+      // this would be collected by the Legion runtime
+      static_cast<void>(std::make_unique<Legion::Future>(*std::move(future_)).release());
+    }
+    if (future_map_.has_value()) {
+      static_cast<void>(std::make_unique<Legion::FutureMap>(*std::move(future_map_)).release());
+    }
   }
 }
+// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 const tuple<std::uint64_t>& Storage::offsets() const
 {
-  LegateAssert(!unbound_);
+  LEGATE_ASSERT(!unbound_);
   return offsets_;
 }
 
@@ -143,9 +155,8 @@ InternalSharedPtr<Storage> Storage::slice(tuple<std::uint64_t> tile_shape,
     return shared_from_this();
   }
 
-  const auto root  = get_root();
-  const auto shape = root->extents();
-
+  const auto root   = get_root();
+  const auto& shape = root->extents();
   const auto can_tile_completely =
     (shape % tile_shape).sum() == 0 && (offsets % tile_shape).sum() == 0 &&
     Runtime::get_runtime()->partition_manager()->use_complete_tiling(shape, tile_shape);
@@ -159,7 +170,7 @@ InternalSharedPtr<Storage> Storage::slice(tuple<std::uint64_t> tile_shape,
   } else {
     color_shape    = legate::full<std::uint64_t>(shape.size(), 1);
     color          = legate::full<std::uint64_t>(shape.size(), 0);
-    signed_offsets = apply([](std::size_t v) { return static_cast<std::int64_t>(v); }, offsets);
+    signed_offsets = apply([](auto&& v) { return static_cast<std::int64_t>(v); }, offsets);
   }
 
   auto tiling =
@@ -180,7 +191,7 @@ InternalSharedPtr<Storage> Storage::get_root()
 
 const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field()
 {
-  LegateCheck(kind_ == Kind::REGION_FIELD);
+  LEGATE_CHECK(kind_ == Kind::REGION_FIELD);
   if (region_field_) {
     return region_field_;
   }
@@ -198,14 +209,20 @@ const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field()
 
 Legion::Future Storage::get_future() const
 {
-  LegateCheck(kind_ == Kind::FUTURE);
-  return future_ != nullptr ? *future_ : Legion::Future{};
+  LEGATE_CHECK(kind_ == Kind::FUTURE);
+  return future_.value_or(Legion::Future{});
+}
+
+Legion::FutureMap Storage::get_future_map() const
+{
+  LEGATE_CHECK(kind_ == Kind::FUTURE_MAP);
+  return future_map_.value_or(Legion::FutureMap{});
 }
 
 void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
 {
-  LegateCheck(unbound_ && region_field_ == nullptr);
-  LegateCheck(parent_ == nullptr);
+  LEGATE_CHECK(unbound_ && region_field_ == nullptr);
+  LEGATE_CHECK(parent_ == nullptr);
 
   unbound_      = false;
   region_field_ = std::move(region_field);
@@ -214,14 +231,13 @@ void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_fi
   }
 }
 
-void Storage::set_future(Legion::Future future)
-{
-  future_ = std::make_unique<Legion::Future>(std::move(future));
-}
+void Storage::set_future(Legion::Future future) { future_ = std::move(future); }
+
+void Storage::set_future_map(Legion::FutureMap future_map) { future_map_ = std::move(future_map); }
 
 RegionField Storage::map()
 {
-  LegateAssert(Kind::REGION_FIELD == kind_);
+  LEGATE_ASSERT(Kind::REGION_FIELD == kind_);
   auto region_field = get_region_field();
   auto mapped       = region_field->map();
   // Set the right subregion so the physical store can see the right domain
@@ -287,10 +303,18 @@ InternalSharedPtr<StoragePartition> Storage::create_partition(
 
 std::string Storage::to_string() const
 {
+  auto kind_str = [&] {
+    switch (kind_) {
+      case Kind::REGION_FIELD: return "Region";
+      case Kind::FUTURE: return "Future";
+      case Kind::FUTURE_MAP: return "Future map";
+    }
+    LEGATE_UNREACHABLE();
+  }();
+
   std::stringstream ss;
 
-  ss << "Storage(" << storage_id_ << ") {" << shape_->to_string()
-     << ", kind: " << (kind_ == Kind::REGION_FIELD ? "Region" : "Future")
+  ss << "Storage(" << storage_id_ << ") {" << shape_->to_string() << ", kind: " << kind_str
      << ", type: " << type_->to_string() << ", level: " << level_ << "}";
 
   return std::move(ss).str();
@@ -376,8 +400,8 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage)
     transform_{make_internal_shared<TransformStack>()}
 {
   assert_fixed_storage_size(storage_);
-  LegateAssert(transform_ != nullptr);
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  LEGATE_ASSERT(transform_ != nullptr);
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
 }
@@ -391,25 +415,31 @@ LogicalStore::LogicalStore(tuple<std::uint64_t> extents,
     transform_{std::move(transform)}
 {
   assert_fixed_storage_size(storage_);
-  LegateAssert(transform_ != nullptr);
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  LEGATE_ASSERT(transform_ != nullptr);
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
 }
 
 void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField> region_field)
 {
-  LegateAssert(!has_scalar_storage());
+  LEGATE_ASSERT(!has_scalar_storage());
   // The shape object of this store must be an alias to that of the storage
-  LegateAssert(storage_->shape() == shape());
+  LEGATE_ASSERT(storage_->shape() == shape());
   // this call updates the shape for both the storage and the store
   storage_->set_region_field(std::move(region_field));
 }
 
 void LogicalStore::set_future(Legion::Future future)
 {
-  LegateAssert(has_scalar_storage());
+  LEGATE_ASSERT(has_scalar_storage());
   storage_->set_future(std::move(future));
+}
+
+void LogicalStore::set_future_map(Legion::FutureMap future_map)
+{
+  LEGATE_ASSERT(has_scalar_storage());
+  storage_->set_future_map(std::move(future_map));
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, std::size_t dim_size)
@@ -426,7 +456,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, st
 
 InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64_t index)
 {
-  auto old_extents = extents();
+  auto&& old_extents = extents();
 
   if (d < 0 || d >= static_cast<std::int32_t>(dim())) {
     throw std::invalid_argument{"Invalid projection on dimension " + std::to_string(d) + " for a " +
@@ -449,17 +479,17 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
     std::move(new_extents), std::move(substorage), std::move(transform));
 }
 
-InternalSharedPtr<LogicalStore> LogicalStore::slice(const InternalSharedPtr<LogicalStore>& self,
-                                                    std::int32_t dim,
-                                                    Slice slice)
+InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<LogicalStore>& self,
+                                                     std::int32_t dim,
+                                                     Slice slice)
 {
-  LegateAssert(self.get() == this);
+  LEGATE_ASSERT(self.get() == this);
   if (dim < 0 || dim >= static_cast<std::int32_t>(this->dim())) {
     throw std::invalid_argument{"Invalid slicing of dimension " + std::to_string(dim) + " for a " +
                                 std::to_string(this->dim()) + "-D store"};
   }
 
-  auto sanitize_slice = [](const Slice& san_slice, std::int64_t extent) {
+  constexpr auto sanitize_slice = [](const Slice& san_slice, std::int64_t extent) {
     std::int64_t start = san_slice.start.value_or(0);
     std::int64_t stop  = san_slice.stop.value_or(extent);
 
@@ -523,15 +553,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t
     }
   }
 
-  auto old_extents = extents();
-  auto new_extents = tuple<std::uint64_t>{};
-
-  new_extents.reserve(axes.size());
-  for (auto&& ax_i : axes) {
-    new_extents.append_inplace(old_extents[ax_i]);
-  }
-
-  auto transform = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
+  auto new_extents = extents().map(axes);
+  auto transform   = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
   return make_internal_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
@@ -543,7 +566,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
                                 " for a " + std::to_string(this->dim()) + "-D store"};
   }
 
-  auto old_extents = extents();
+  auto&& old_extents = extents();
 
   auto delinearizable = [](auto&& to_match, const auto& new_dim_extents) {
     auto begin = new_dim_extents.begin();
@@ -561,7 +584,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
 
   auto new_extents = tuple<std::uint64_t>{};
 
-  new_extents.reserve(dim);
+  new_extents.reserve(old_extents.size() + sizes.size() - 1);
   for (int i = 0; i < dim; i++) {
     new_extents.append_inplace(old_extents[i]);
   }
@@ -576,10 +599,10 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
   return make_internal_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
 }
 
-InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling(
+InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape)
 {
-  LegateAssert(self.get() == this);
+  LEGATE_ASSERT(self.get() == this);
   if (tile_shape.size() != dim()) {
     throw std::invalid_argument{"Incompatible tile shape: expected a " +
                                 std::to_string(extents().size()) + "-tuple, got a " +
@@ -590,7 +613,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling(
   }
   auto color_shape = apply([](auto c, auto t) { return (c + t - 1) / t; }, extents(), tile_shape);
   auto partition   = create_tiling(std::move(tile_shape), std::move(color_shape));
-  return create_partition(self, std::move(partition), true);
+  return create_partition_(self, std::move(partition), true);
 }
 
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
@@ -610,7 +633,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
     return make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(future), transform_);
   }
 
-  LegateAssert(storage_->kind() == Storage::Kind::REGION_FIELD);
+  LEGATE_ASSERT(storage_->kind() == Storage::Kind::REGION_FIELD);
   auto region_field = storage_->map();
   mapped_ =
     make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(region_field), transform_);
@@ -674,7 +697,7 @@ Legion::ProjectionID LogicalStore::compute_projection(
   }
 
   // If we're here, it means the launch domain has to be 1D due to mixed store dimensionalities
-  LegateAssert(launch_ndim == 1);
+  LEGATE_ASSERT(launch_ndim == 1);
 
   // Check if the color shape has only one dimension of a non-unit extent, in which case
   // delinearization would simply be projections
@@ -687,7 +710,8 @@ Legion::ProjectionID LogicalStore::compute_projection(
       embed_1d_to_nd.append_inplace(ext != 1 ? dimension(0) : constant(0));
     }
 
-    return runtime->get_affine_projection(launch_ndim, transform_->invert(embed_1d_to_nd));
+    return runtime->get_affine_projection(launch_ndim,
+                                          transform_->invert(std::move(embed_1d_to_nd)));
   }
 
   // When the store wasn't transformed, we could simply return the top-level delinearizing functor
@@ -719,7 +743,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
 
   std::unique_ptr<Partition> store_part{};
   if (nullptr == storage_part || (!transform_->identity() && !storage_part->is_convertible())) {
-    auto& exts        = extents();
+    auto&& exts       = extents();
     auto part_mgr     = Runtime::get_runtime()->partition_manager();
     auto launch_shape = part_mgr->compute_launch_shape(machine, restrictions, exts);
 
@@ -732,7 +756,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
     }
   } else {
     store_part = transform_->convert(storage_part);
-    LegateAssert(store_part);
+    LEGATE_ASSERT(store_part);
   }
   return store_part;
 }
@@ -766,12 +790,12 @@ void LogicalStore::reset_key_partition()
   storage_->reset_key_partition();
 }
 
-InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition(
+InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
   const InternalSharedPtr<LogicalStore>& self,
   InternalSharedPtr<Partition> partition,
   std::optional<bool> complete)
 {
-  LegateAssert(self.get() == this);
+  LEGATE_ASSERT(self.get() == this);
   if (unbound()) {
     throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
   }
@@ -790,7 +814,7 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   transform_->pack(buffer);
 }
 
-std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
+std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_(
   const InternalSharedPtr<LogicalStore>& self,
   const Variable* variable,
   const Strategy& strategy,
@@ -799,8 +823,8 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
   Legion::PrivilegeMode privilege,
   std::int64_t redop)
 {
-  LegateAssert(self.get() == this);
-  if (has_scalar_storage()) {
+  LEGATE_ASSERT(self.get() == this);
+  if (get_storage()->kind() == Storage::Kind::FUTURE) {
     if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
       privilege = LEGION_READ_WRITE;
     }
@@ -809,14 +833,17 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
 
     return std::make_unique<FutureStoreArg>(this, read_only, has_storage, redop);
   }
+  if (get_storage()->kind() == Storage::Kind::FUTURE_MAP) {
+    return std::make_unique<FutureStoreArg>(this, false, false, -1);
+  }
 
   if (unbound()) {
     auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(variable);
     return std::make_unique<OutputRegionArg>(this, field_space, field_id);
   }
 
-  auto partition       = strategy[variable];
-  auto store_partition = create_partition(self, partition);
+  auto&& partition     = strategy[variable];
+  auto store_partition = create_partition_(self, partition);
   auto store_proj      = store_partition->create_store_projection(launch_domain, projection);
   store_proj->is_key   = strategy.is_key_partition(variable);
   store_proj->redop    = static_cast<Legion::ReductionOpID>(redop);
@@ -832,14 +859,14 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg(
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));
 }
 
-std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup(
+std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup_(
   const InternalSharedPtr<LogicalStore>& self,
   const Domain& launch_domain,
   Legion::PrivilegeMode privilege)
 {
-  LegateAssert(self.get() == this);
-  LegateAssert(self->key_partition_ != nullptr);
-  auto store_partition = create_partition(self, self->key_partition_);
+  LEGATE_ASSERT(self.get() == this);
+  LEGATE_ASSERT(self->key_partition_ != nullptr);
+  auto store_partition = create_partition_(self, self->key_partition_);
   auto store_proj      = store_partition->create_store_projection(launch_domain);
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));
 }
@@ -881,11 +908,12 @@ bool LogicalStore::equal_storage(const LogicalStore& other) const
       return rf->field_id() == other_rf->field_id() && rf->region() == other_rf->region();
     }
     case Storage::Kind::FUTURE: return get_future() == other.get_future();
+    case Storage::Kind::FUTURE_MAP: return get_future_map() == other.get_future_map();
   }
   // Because sometimes, GCC is really stupid:
   //
   // error: control reaches end of non-void function [-Werror=return-type]
-  LegateUnreachable();
+  LEGATE_UNREACHABLE();
   return false;
 }
 
@@ -907,19 +935,20 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
                             color_shape().to_string()};
   }
 
-  auto transform      = store_->transform();
+  auto transform = store_->transform();
+  // TODO(jfaibussowit)
+  // Can move color here
   auto inverted_color = transform->invert_color(color);
   auto child_storage  = storage_partition_->get_child_storage(inverted_color);
 
   auto child_extents = tiling->get_child_extents(store_->extents(), inverted_color);
   auto child_offsets = tiling->get_child_offsets(inverted_color);
 
-  for (std::uint32_t dim = 0; dim < child_offsets.size(); ++dim) {
-    if (child_offsets[dim] == 0) {
-      continue;
+  for (auto&& [dim, coff] : legate::detail::enumerate(child_offsets)) {
+    if (coff != 0) {
+      transform = make_internal_shared<TransformStack>(std::make_unique<Shift>(dim, -coff),
+                                                       std::move(transform));
     }
-    transform = make_internal_shared<TransformStack>(
-      std::make_unique<Shift>(dim, -child_offsets[dim]), std::move(transform));
   }
 
   return make_internal_shared<LogicalStore>(

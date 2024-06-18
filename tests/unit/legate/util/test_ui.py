@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -12,11 +12,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, TypeAlias
 
 import pytest
 from pytest_mock import MockerFixture
-from typing_extensions import TypeAlias
 
 from legate.util import colors, ui as m
 

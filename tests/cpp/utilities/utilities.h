@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,51 +13,24 @@
 #pragma once
 
 #include "legate.h"
-#include "stl/detail/registrar.hpp"
 
 #include <gtest/gtest.h>
 
-class DefaultFixture : public ::testing::Test {
+using DefaultFixture = ::testing::Test;
+
+template <typename Config>
+class RegisterOnceFixture : public ::testing::Test {
  public:
-  static void init(int argc, char** argv)
+  void SetUp() override
   {
-    DefaultFixture::argc_ = argc;
-    DefaultFixture::argv_ = argv;
+    DefaultFixture::SetUp();
+    auto runtime = legate::Runtime::get_runtime();
+    auto created = false;
+    auto library = runtime->find_or_create_library(
+      Config::LIBRARY_NAME, legate::ResourceConfig{}, nullptr, &created);
+    if (!created) {
+      return;
+    }
+    Config::registration_callback(library);
   }
-
-  void SetUp() override { EXPECT_EQ(legate::start(argc_, argv_), 0); }
-  void TearDown() override { EXPECT_EQ(legate::finish(), 0); }
-
- private:
-  inline static int argc_;
-  inline static char** argv_;
-};
-
-class DeathTestFixture : public ::testing::Test {
- public:
-  static void init(int argc, char** argv)
-  {
-    argc_ = argc;
-    argv_ = argv;
-  }
-
-  inline static int argc_;
-  inline static char** argv_;
-};
-
-class LegateSTLFixture : public ::testing::Test {
- public:
-  static void init(int argc, char** argv)
-  {
-    LegateSTLFixture::argc_ = argc;
-    LegateSTLFixture::argv_ = argv;
-  }
-
-  void SetUp() override { init_.emplace(argc_, argv_); }
-  void TearDown() override { init_.reset(); }
-
- private:
-  inline static std::optional<legate::stl::initialize_library> init_;
-  inline static int argc_;
-  inline static char** argv_;
 };

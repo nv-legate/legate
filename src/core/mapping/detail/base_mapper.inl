@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,15 +16,15 @@
 
 namespace legate::mapping::detail {
 
-inline const std::vector<Processor>& BaseMapper::cpus() const { return local_machine.cpus(); }
+inline const std::vector<Processor>& BaseMapper::cpus() const { return local_machine_.cpus(); }
 
-inline const std::vector<Processor>& BaseMapper::gpus() const { return local_machine.gpus(); }
+inline const std::vector<Processor>& BaseMapper::gpus() const { return local_machine_.gpus(); }
 
-inline const std::vector<Processor>& BaseMapper::omps() const { return local_machine.omps(); }
+inline const std::vector<Processor>& BaseMapper::omps() const { return local_machine_.omps(); }
 
-inline std::uint32_t BaseMapper::total_nodes() const { return local_machine.total_nodes; }
+inline std::uint32_t BaseMapper::total_nodes() const { return local_machine_.total_nodes; }
 
-inline const char* BaseMapper::get_mapper_name() const { return mapper_name.c_str(); }
+inline const char* BaseMapper::get_mapper_name() const { return mapper_name_.c_str(); }
 
 inline Legion::Mapping::Mapper::MapperSyncModel BaseMapper::get_mapper_sync_model() const
 {

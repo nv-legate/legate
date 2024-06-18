@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -57,7 +57,7 @@ class Task : public Operation {
        mapping::detail::Machine machine);
 
  public:
-  void add_scalar_arg(Scalar&& scalar);
+  void add_scalar_arg(InternalSharedPtr<Scalar> scalar);
   void set_concurrent(bool concurrent);
   void set_side_effect(bool has_side_effect);
   void throws_exception(bool can_throw_exception);
@@ -69,11 +69,11 @@ class Task : public Operation {
                                Legion::ReductionOpID legion_redop_id);
 
  protected:
-  void launch_task(Strategy* strategy);
+  void launch_task_(Strategy* strategy);
 
  private:
-  void demux_scalar_stores(const Legion::Future& result);
-  void demux_scalar_stores(const Legion::FutureMap& result, const Domain& launch_domain);
+  void demux_scalar_stores_(const Legion::Future& result);
+  void demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain);
 
  public:
   [[nodiscard]] std::string to_string() const override;
@@ -86,7 +86,7 @@ class Task : public Operation {
   bool concurrent_{};
   bool has_side_effect_{};
   bool can_throw_exception_{};
-  std::vector<Scalar> scalars_{};
+  std::vector<InternalSharedPtr<Scalar>> scalars_{};
   std::vector<ArrayArg> inputs_{};
   std::vector<ArrayArg> outputs_{};
   std::vector<ArrayArg> reductions_{};
@@ -129,7 +129,7 @@ class AutoTask final : public Task {
   [[nodiscard]] Kind kind() const override;
 
  private:
-  void fixup_ranges(Strategy& strategy);
+  void fixup_ranges_(Strategy& strategy);
 
   std::vector<InternalSharedPtr<Constraint>> constraints_{};
   std::vector<LogicalArray*> arrays_to_fixup_{};
@@ -156,10 +156,10 @@ class ManualTask final : public Task {
                      std::optional<SymbolicPoint> projection);
 
  private:
-  void add_store(std::vector<ArrayArg>& store_args,
-                 const InternalSharedPtr<LogicalStore>& store,
-                 InternalSharedPtr<Partition> partition,
-                 std::optional<SymbolicPoint> projection = {});
+  void add_store_(std::vector<ArrayArg>& store_args,
+                  const InternalSharedPtr<LogicalStore>& store,
+                  InternalSharedPtr<Partition> partition,
+                  std::optional<SymbolicPoint> projection = {});
 
  public:
   void validate() override;

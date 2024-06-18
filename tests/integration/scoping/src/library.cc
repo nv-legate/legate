@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -61,10 +61,10 @@ void map_check(legate::TaskContext& context)
 class MultiVariantTask : public Task<MultiVariantTask, MULTI_VARIANT> {
  public:
   static void cpu_variant(legate::TaskContext context) { validate(context); }
-#if LegateDefined(USE_OPENMP)
+#if LEGATE_DEFINED(USE_OPENMP)
   static void omp_variant(legate::TaskContext context) { validate(context); }
 #endif
-#if LegateDefined(USE_CUDA)
+#if LEGATE_DEFINED(USE_CUDA)
   static void gpu_variant(legate::TaskContext context) { validate(context); }
 #endif
 };
@@ -77,10 +77,10 @@ class CpuVariantOnlyTask : public Task<CpuVariantOnlyTask, CPU_VARIANT_ONLY> {
 class MapCheckTask : public Task<MapCheckTask, MAP_CHECK> {
  public:
   static void cpu_variant(legate::TaskContext context) { map_check(context); }
-#if LegateDefined(USE_OPENMP)
+#if LEGATE_DEFINED(USE_OPENMP)
   static void omp_variant(legate::TaskContext context) { map_check(context); }
 #endif
-#if LegateDefined(USE_CUDA)
+#if LEGATE_DEFINED(USE_CUDA)
   static void gpu_variant(legate::TaskContext context) { map_check(context); }
 #endif
 };

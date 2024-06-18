@@ -1,12 +1,10 @@
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
 API Reference
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. currentmodule:: legate.core
+=============
 
 .. toctree::
-   :maxdepth: 2
+  :maxdepth: 2
+  :caption: Contents:
 
-   routines
-   classes
-   settings
+  Python API Reference <python/index.rst>
+  C++ API Reference <cpp/index.rst>
+  Changelog <changes/index.rst>

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -24,10 +24,12 @@
 
 namespace legate::detail {
 
-InternalSharedPtr<LogicalStore> LogicalArray::data() const
+const InternalSharedPtr<LogicalStore>& LogicalArray::data() const
 {
   throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
-  return {};
+
+  static const InternalSharedPtr<LogicalStore> ptr;
+  return ptr;
 }
 
 /*static*/ InternalSharedPtr<LogicalArray> LogicalArray::from_store(
@@ -38,7 +40,7 @@ InternalSharedPtr<LogicalStore> LogicalArray::data() const
 
 bool BaseLogicalArray::unbound() const
 {
-  LegateAssert(!nullable() || data_->unbound() == null_mask_->unbound());
+  LEGATE_ASSERT(!nullable() || data_->unbound() == null_mask_->unbound());
   return data_->unbound();
 }
 
@@ -81,7 +83,7 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::delinearize(
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
-InternalSharedPtr<LogicalStore> BaseLogicalArray::null_mask() const
+const InternalSharedPtr<LogicalStore>& BaseLogicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -91,10 +93,10 @@ InternalSharedPtr<LogicalStore> BaseLogicalArray::null_mask() const
 
 InternalSharedPtr<PhysicalArray> BaseLogicalArray::get_physical_array() const
 {
-  return _get_physical_array();
+  return get_base_physical_array();
 }
 
-InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::_get_physical_array() const
+InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array() const
 {
   auto data_store = data_->get_physical_store();
   InternalSharedPtr<PhysicalStore> null_mask_store{};
@@ -112,20 +114,19 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::child(std::uint32_t /*index*/)
 
 void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 {
-  if (data_->unbound()) {
-    task->record_unbound_output(data_);
-  } else if (data_->has_scalar_storage()) {
+  if (data_->has_scalar_storage()) {
     task->record_scalar_output(data_);
+  } else if (data_->unbound()) {
+    task->record_unbound_output(data_);
   }
-
   if (!nullable()) {
     return;
   }
 
-  if (null_mask_->unbound()) {
-    task->record_unbound_output(null_mask_);
-  } else if (null_mask_->has_scalar_storage()) {
+  if (null_mask_->has_scalar_storage()) {
     task->record_scalar_output(null_mask_);
+  } else if (null_mask_->unbound()) {
+    task->record_unbound_output(null_mask_);
   }
 }
 
@@ -224,7 +225,7 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
 
 InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array() const
 {
-  auto desc_arr    = descriptor_->_get_physical_array();
+  auto desc_arr    = descriptor_->get_base_physical_array();
   auto vardata_arr = vardata_->get_physical_array();
   return make_internal_shared<ListPhysicalArray>(
     type_, std::move(desc_arr), std::move(vardata_arr));
@@ -282,7 +283,7 @@ void ListLogicalArray::generate_constraints(
   auto part_vardata = task->declare_partition();
   vardata_->generate_constraints(task, mapping, part_vardata);
   if (!unbound()) {
-    task->add_constraint(image(partition_symbol, part_vardata));
+    task->add_constraint(image(partition_symbol, part_vardata, ImageComputationHint::FIRST_LAST));
   }
 }
 
@@ -395,7 +396,7 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::delinearize(
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
-InternalSharedPtr<LogicalStore> StructLogicalArray::null_mask() const
+const InternalSharedPtr<LogicalStore>& StructLogicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -425,14 +426,14 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::child(std::uint32_t index) c
   return fields_.at(index);
 }
 
-InternalSharedPtr<LogicalStore> StructLogicalArray::primary_store() const
+const InternalSharedPtr<LogicalStore>& StructLogicalArray::primary_store() const
 {
   return fields_.front()->primary_store();
 }
 
 void StructLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 {
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->record_scalar_or_unbound_outputs(task);
   }
 
@@ -449,7 +450,7 @@ void StructLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 
 void StructLogicalArray::record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const
 {
-  for (auto& field : fields_) {
+  for (auto&& field : fields_) {
     field->record_scalar_reductions(task, redop);
   }
   if (nullable() && null_mask_->has_scalar_storage()) {
@@ -468,7 +469,7 @@ void StructLogicalArray::generate_constraints(
   for (; it != fields_.end(); ++it) {
     auto part_field = task->declare_partition();
     (*it)->generate_constraints(task, mapping, part_field);
-    task->add_constraint(image(partition_symbol, part_field));
+    task->add_constraint(align(partition_symbol, part_field));
   }
 
   if (!nullable()) {

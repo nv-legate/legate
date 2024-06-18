@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -26,6 +26,7 @@ from ..task.exception cimport _TaskException
 from ..type.type_info cimport Type, _Type
 from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain
+from ..utilities.unconstructable cimport Unconstructable
 from .detail.runtime cimport _RuntimeImpl
 from .library cimport Library, _Library
 from .resource cimport _ResourceConfig
@@ -148,10 +149,12 @@ cdef extern from *:
 
 cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
     cdef cppclass _Runtime "legate::Runtime":
-        _Library find_library(std_string_view)
-        _AutoTask create_task(_Library, int64_t)
-        _ManualTask create_task(_Library, int64_t, const _tuple[uint64_t]&)
-        _ManualTask create_task(_Library, int64_t, const _Domain&)
+        _Library find_library(std_string_view) except+
+        _AutoTask create_task(_Library, int64_t) except+
+        _ManualTask create_task(
+            _Library, int64_t, const _tuple[uint64_t]&
+        ) except+
+        _ManualTask create_task(_Library, int64_t, const _Domain&) except+
         void issue_copy(_LogicalStore, _LogicalStore) except+
         void issue_copy(_LogicalStore, _LogicalStore, int32_t) except+
         void issue_gather(_LogicalStore, _LogicalStore, _LogicalStore) except+
@@ -192,6 +195,9 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
             const _Shape&, const _Type&, const _ExternalAllocation&
         ) except+
         void issue_execution_fence(bool)
+        void raise_pending_exception() except +handle_legate_exception
+        uint32_t node_count()
+        uint32_t node_id()
         _Machine get_machine() const
         _RuntimeImpl* impl() const
 
@@ -204,8 +210,10 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
 
     cdef void destroy()
 
+    cdef bool _is_running_in_task "legate::is_running_in_task"()
 
-cdef class Runtime:
+
+cdef class Runtime(Unconstructable):
     cdef _Runtime* _handle
 
     @staticmethod
@@ -284,5 +292,7 @@ cdef class Runtime:
     cpdef void destroy(self)
     cpdef void add_shutdown_callback(self, object callback)
 
+cdef void raise_pending_exception()
 cpdef Runtime get_legate_runtime()
 cpdef Machine get_machine()
+cpdef bool is_running_in_task()

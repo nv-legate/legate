@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -13,23 +13,9 @@ from __future__ import annotations
 
 import sys
 from argparse import SUPPRESS, Action, ArgumentParser, Namespace
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, fields
-from typing import (
-    Any,
-    Generic,
-    Iterable,
-    Iterator,
-    Literal,
-    NoReturn,
-    Sequence,
-    Type,
-    TypeVar,
-    Union,
-)
-
-from typing_extensions import TypeAlias
-
-from . import info
+from typing import Any, Generic, Literal, NoReturn, TypeAlias, TypeVar
 
 
 class _UnsetType:
@@ -41,21 +27,24 @@ Unset = _UnsetType()
 
 T = TypeVar("T")
 
-NotRequired = Union[_UnsetType, T]
+NotRequired: TypeAlias = _UnsetType | T
 
 
 # https://docs.python.org/3/library/argparse.html#action
-ActionType: TypeAlias = Literal[
-    "store",
-    "store_const",
-    "store_true",
-    "append",
-    "append_const",
-    "count",
-    "help",
-    "version",
-    "extend",
-]
+ActionType: TypeAlias = (
+    Literal[
+        "store",
+        "store_const",
+        "store_true",
+        "append",
+        "append_const",
+        "count",
+        "help",
+        "version",
+        "extend",
+    ]
+    | type[Action]
+)
 
 # https://docs.python.org/3/library/argparse.html#nargs
 NargsType: TypeAlias = Literal["?", "*", "+", "..."]
@@ -65,10 +54,10 @@ NargsType: TypeAlias = Literal["?", "*", "+", "..."]
 class ArgSpec:
     dest: str
     action: NotRequired[ActionType] = Unset
-    nargs: NotRequired[Union[int, NargsType]] = Unset
+    nargs: NotRequired[int | NargsType] = Unset
     const: NotRequired[Any] = Unset
     default: NotRequired[Any] = Unset
-    type: NotRequired[Type[Any]] = Unset
+    type: NotRequired[type[Any]] = Unset
     choices: NotRequired[Sequence[Any]] = Unset
     help: NotRequired[str] = Unset
     metavar: NotRequired[str] = Unset
@@ -116,7 +105,7 @@ class MultipleChoices(Generic[T]):
     def __init__(self, choices: Iterable[T]) -> None:
         self._choices = set(choices)
 
-    def __contains__(self, x: Union[T, Sequence[T]]) -> bool:
+    def __contains__(self, x: T | Sequence[T]) -> bool:
         if isinstance(x, (list, tuple)):
             return set(x).issubset(self._choices)
         return x in self._choices
@@ -132,8 +121,8 @@ class ExtendAction(Action, Generic[T]):
         self,
         parser: ArgumentParser,
         namespace: Namespace,
-        values: Union[str, Sequence[T], None],
-        option_string: Union[str, None] = None,
+        values: str | Sequence[T] | None,
+        option_string: str | None = None,
     ) -> None:
         items = getattr(namespace, self.dest) or []
         if isinstance(values, (list, tuple)):
@@ -155,8 +144,10 @@ class InfoAction(Action):
         self,
         parser: ArgumentParser,
         namespace: Namespace,
-        values: Union[str, Sequence[T], None],
-        option_string: Union[str, None] = None,
+        values: str | Sequence[T] | None,
+        option_string: str | None = None,
     ) -> NoReturn:
-        info.print_build_info()
+        from .info import print_build_info
+
+        print_build_info()
         sys.exit()

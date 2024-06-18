@@ -1,0 +1,56 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
+ */
+
+#pragma once
+
+#include "core/utilities/detail/unravel.h"
+
+namespace legate::detail {
+
+// This helper class converts indices to multi-dimensional points
+template <std::int32_t NDIM>
+__CUDA_HD__ Unravel<NDIM>::Unravel(const Rect<NDIM>& rect) : low_{rect.lo}
+{
+  std::uint64_t stride = 1;
+  for (std::int32_t dim = NDIM - 1; dim >= 0; --dim) {
+    strides_[dim] = stride;
+    stride *=
+      static_cast<std::uint64_t>(std::max<std::int64_t>(rect.hi[dim] - rect.lo[dim] + 1, 0));
+  }
+  strides_[NDIM - 1] = stride;
+}
+
+template <std::int32_t NDIM>
+__CUDA_HD__ std::uint64_t Unravel<NDIM>::volume() const
+{
+  return strides_[NDIM - 1];
+}
+
+template <std::int32_t NDIM>
+__CUDA_HD__ bool Unravel<NDIM>::empty() const
+{
+  return volume() == 0;
+}
+
+template <std::int32_t NDIM>
+__CUDA_HD__ Point<NDIM> Unravel<NDIM>::operator()(std::uint64_t index) const
+{
+  auto point = low_;
+  for (std::int32_t dim = 0; dim < NDIM - 1; dim++) {
+    point[dim] += index / strides_[dim];
+    index = index % strides_[dim];
+  }
+  point[NDIM - 1] += index;
+  return point;
+}
+
+}  // namespace legate::detail

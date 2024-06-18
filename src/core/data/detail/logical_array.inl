@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -20,14 +20,14 @@ inline BaseLogicalArray::BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
                                           InternalSharedPtr<LogicalStore> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
 {
-  LegateCheck(data_ != nullptr);
+  LEGATE_CHECK(data_ != nullptr);
 }
 
 inline std::uint32_t BaseLogicalArray::dim() const { return data_->dim(); }
 
 inline ArrayKind BaseLogicalArray::kind() const { return ArrayKind::BASE; }
 
-inline InternalSharedPtr<Type> BaseLogicalArray::type() const { return data_->type(); }
+inline const InternalSharedPtr<Type>& BaseLogicalArray::type() const { return data_->type(); }
 
 inline const InternalSharedPtr<Shape>& BaseLogicalArray::shape() const { return data_->shape(); }
 
@@ -39,9 +39,12 @@ inline bool BaseLogicalArray::nested() const { return false; }
 
 inline std::uint32_t BaseLogicalArray::num_children() const { return 0; }
 
-inline InternalSharedPtr<LogicalStore> BaseLogicalArray::data() const { return data_; }
+inline const InternalSharedPtr<LogicalStore>& BaseLogicalArray::data() const { return data_; }
 
-inline InternalSharedPtr<LogicalStore> BaseLogicalArray::primary_store() const { return data(); }
+inline const InternalSharedPtr<LogicalStore>& BaseLogicalArray::primary_store() const
+{
+  return data();
+}
 
 // ==========================================================================================
 
@@ -56,7 +59,7 @@ inline std::uint32_t ListLogicalArray::dim() const { return descriptor_->dim(); 
 
 inline ArrayKind ListLogicalArray::kind() const { return ArrayKind::LIST; }
 
-inline InternalSharedPtr<Type> ListLogicalArray::type() const { return type_; }
+inline const InternalSharedPtr<Type>& ListLogicalArray::type() const { return type_; }
 
 inline const InternalSharedPtr<Shape>& ListLogicalArray::shape() const
 {
@@ -71,12 +74,12 @@ inline bool ListLogicalArray::nested() const { return true; }
 
 inline std::uint32_t ListLogicalArray::num_children() const { return 2; }
 
-inline InternalSharedPtr<LogicalStore> ListLogicalArray::null_mask() const
+inline const InternalSharedPtr<LogicalStore>& ListLogicalArray::null_mask() const
 {
   return descriptor_->null_mask();
 }
 
-inline InternalSharedPtr<LogicalStore> ListLogicalArray::primary_store() const
+inline const InternalSharedPtr<LogicalStore>& ListLogicalArray::primary_store() const
 {
   return descriptor_->primary_store();
 }
@@ -92,7 +95,7 @@ inline StructLogicalArray::StructLogicalArray(InternalSharedPtr<Type> type,
 
 inline ArrayKind StructLogicalArray::kind() const { return ArrayKind::STRUCT; }
 
-inline InternalSharedPtr<Type> StructLogicalArray::type() const { return type_; }
+inline const InternalSharedPtr<Type>& StructLogicalArray::type() const { return type_; }
 
 inline bool StructLogicalArray::nullable() const { return null_mask_ != nullptr; }
 

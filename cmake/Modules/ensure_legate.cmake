@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,10 +13,11 @@
 include_guard(GLOBAL)
 
 macro(legate_ensure_legate)
-  if (legate_core_CMAKE_PRESET_NAME AND NOT legate_core_ROOT)
+  if(legate_core_CMAKE_PRESET_NAME AND NOT legate_core_ROOT)
     # If we are using a preset (and the user is not overriding the path anyways), then we
     # know exactly where the root is
-    cmake_path(SET legate_core_ROOT NORMALIZE "${LEGATE_CORE_DIR}/build/${legate_core_CMAKE_PRESET_NAME}")
+    cmake_path(SET legate_core_ROOT NORMALIZE
+               "${LEGATE_CORE_DIR}/build/${legate_core_CMAKE_PRESET_NAME}")
   endif()
 
   if(NOT (CMAKE_PROJECT_NAME STREQUAL "legate_core"))

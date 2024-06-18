@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -19,6 +19,8 @@
 #include "core/partitioning/partition.h"
 #include "core/type/detail/type_info.h"
 
+#include <utility>
+
 namespace legate::detail {
 
 Copy::Copy(InternalSharedPtr<LogicalStore> target,
@@ -28,23 +30,23 @@ Copy::Copy(InternalSharedPtr<LogicalStore> target,
            mapping::detail::Machine machine,
            std::optional<std::int32_t> redop)
   : Operation{unique_id, priority, std::move(machine)},
-    target_{target, declare_partition()},
-    source_{source, declare_partition()},
+    target_{std::move(target), declare_partition()},
+    source_{std::move(source), declare_partition()},
     constraint_{align(target_.variable, source_.variable)},
     redop_{redop}
 {
-  record_partition(target_.variable, std::move(target));
-  record_partition(source_.variable, std::move(source));
+  record_partition_(target_.variable, target_.store);
+  record_partition_(source_.variable, source_.store);
 }
 
 void Copy::validate()
 {
   if (*source_.store->type() != *target_.store->type()) {
-    throw std::invalid_argument("Source and target must have the same type");
+    throw std::invalid_argument{"Source and target must have the same type"};
   }
-  auto validate_store = [](const auto& store) {
+  constexpr auto validate_store = [](const auto& store) {
     if (store->unbound() || store->transformed()) {
-      throw std::invalid_argument("Copy accepts only normal and untransformed stores");
+      throw std::invalid_argument{"Copy accepts only normal and untransformed stores"};
     }
   };
   validate_store(target_.store);
@@ -52,17 +54,17 @@ void Copy::validate()
   constraint_->validate();
 
   if (target_.store->has_scalar_storage() != source_.store->has_scalar_storage()) {
-    throw std::runtime_error("Copies are supported only between the same kind of stores");
+    throw std::runtime_error{"Copies are supported only between the same kind of stores"};
   }
   if (redop_ && target_.store->has_scalar_storage()) {
-    throw std::runtime_error("Reduction copies don't support future-backed target stores");
+    throw std::runtime_error{"Reduction copies don't support future-backed target stores"};
   }
 }
 
 void Copy::launch(Strategy* p_strategy)
 {
   if (target_.store->has_scalar_storage()) {
-    LegateCheck(source_.store->has_scalar_storage());
+    LEGATE_CHECK(source_.store->has_scalar_storage());
     target_.store->set_future(source_.store->get_future());
     return;
   }
@@ -70,10 +72,10 @@ void Copy::launch(Strategy* p_strategy)
   auto launcher      = CopyLauncher{machine_, priority()};
   auto launch_domain = strategy.launch_domain(this);
 
-  launcher.add_input(source_.store, create_store_projection(strategy, launch_domain, source_));
+  launcher.add_input(source_.store, create_store_projection_(strategy, launch_domain, source_));
 
   if (!redop_) {
-    launcher.add_output(target_.store, create_store_projection(strategy, launch_domain, target_));
+    launcher.add_output(target_.store, create_store_projection_(strategy, launch_domain, target_));
   } else {
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
     auto proj            = store_partition->create_store_projection(launch_domain);
@@ -84,9 +86,10 @@ void Copy::launch(Strategy* p_strategy)
   }
 
   if (launch_domain.is_valid()) {
-    return launcher.execute(launch_domain);
+    launcher.execute(launch_domain);
+    return;
   }
-  return launcher.execute_single();
+  launcher.execute_single();
 }
 
 void Copy::add_to_solver(ConstraintSolver& solver)

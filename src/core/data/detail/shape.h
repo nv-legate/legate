@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -22,8 +22,7 @@
 namespace legate::detail {
 
 class Shape {
- private:
-  enum class State : std::uint64_t {
+  enum class State : std::uint8_t {
     UNBOUND,
     BOUND,
     READY,
@@ -49,7 +48,7 @@ class Shape {
   bool operator!=(Shape& other);
 
  private:
-  void ensure_binding();
+  void ensure_binding_();
 
   State state_{State::UNBOUND};
   std::uint32_t dim_{};

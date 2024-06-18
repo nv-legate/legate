@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,19 +16,31 @@
 
 namespace legate::detail {
 
-InternalSharedPtr<PhysicalStore> PhysicalArray::data() const
+const InternalSharedPtr<PhysicalStore>& PhysicalArray::data() const
 {
+  static const InternalSharedPtr<PhysicalStore> ret{};
+
   throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
-  return {};
+  return ret;
 }
+
+std::vector<InternalSharedPtr<PhysicalStore>> PhysicalArray::stores() const
+{
+  std::vector<InternalSharedPtr<PhysicalStore>> result;
+
+  populate_stores(result);
+  return result;
+}
+
+// ==========================================================================================
 
 bool BasePhysicalArray::unbound() const
 {
-  LegateAssert(!nullable() || data_->is_unbound_store() == null_mask_->is_unbound_store());
-  return data_->is_unbound_store();
+  LEGATE_ASSERT(!nullable() || data()->is_unbound_store() == null_mask()->is_unbound_store());
+  return data()->is_unbound_store();
 }
 
-InternalSharedPtr<PhysicalStore> BasePhysicalArray::null_mask() const
+const InternalSharedPtr<PhysicalStore>& BasePhysicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -42,30 +54,30 @@ InternalSharedPtr<PhysicalArray> BasePhysicalArray::child(std::uint32_t /*index*
   return {};
 }
 
-void BasePhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
+void BasePhysicalArray::populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
 {
-  result.push_back(data_);
+  result.push_back(data());
   if (nullable()) {
-    result.push_back(null_mask_);
+    result.push_back(null_mask());
   }
 }
 
 void BasePhysicalArray::check_shape_dimension(std::int32_t dim) const
 {
-  return data_->check_shape_dimension(dim);
+  data()->check_shape_dimension_(dim);
 }
 
 bool ListPhysicalArray::valid() const
 {
-  LegateAssert(descriptor_->valid() == vardata_->valid());
-  return descriptor_->valid();
+  LEGATE_ASSERT(descriptor()->valid() == vardata()->valid());
+  return descriptor()->valid();
 }
 
 InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(std::uint32_t index) const
 {
   switch (index) {
-    case 0: return descriptor_;
-    case 1: return vardata_;
+    case 0: return descriptor();
+    case 1: return vardata();
     default: {
       throw std::out_of_range{"List array does not have child " + std::to_string(index)};
       break;
@@ -74,15 +86,15 @@ InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(std::uint32_t index) c
   return {};
 }
 
-void ListPhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
+void ListPhysicalArray::populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
 {
-  descriptor_->_stores(result);
-  vardata_->_stores(result);
+  descriptor()->populate_stores(result);
+  vardata()->populate_stores(result);
 }
 
 void ListPhysicalArray::check_shape_dimension(std::int32_t dim) const
 {
-  descriptor_->check_shape_dimension(dim);
+  descriptor()->check_shape_dimension(dim);
 }
 
 bool StructPhysicalArray::unbound() const
@@ -94,11 +106,11 @@ bool StructPhysicalArray::valid() const
 {
   auto result =
     std::all_of(fields_.begin(), fields_.end(), [](auto& field) { return field->valid(); });
-  LegateAssert(null_mask_->valid() == result);
+  LEGATE_ASSERT(null_mask()->valid() == result);
   return result;
 }
 
-InternalSharedPtr<PhysicalStore> StructPhysicalArray::null_mask() const
+const InternalSharedPtr<PhysicalStore>& StructPhysicalArray::null_mask() const
 {
   if (!nullable()) {
     throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
@@ -111,11 +123,14 @@ InternalSharedPtr<PhysicalArray> StructPhysicalArray::child(std::uint32_t index)
   return fields_.at(index);
 }
 
-void StructPhysicalArray::_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
+void StructPhysicalArray::populate_stores(
+  std::vector<InternalSharedPtr<PhysicalStore>>& result) const
 {
-  std::for_each(fields_.begin(), fields_.end(), [&result](auto& field) { field->_stores(result); });
+  for (auto&& field : fields_) {
+    field->populate_stores(result);
+  }
   if (nullable()) {
-    result.push_back(null_mask_);
+    result.push_back(null_mask());
   }
 }
 

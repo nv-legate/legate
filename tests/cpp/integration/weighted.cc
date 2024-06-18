@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,31 +17,37 @@
 
 namespace weighted {
 
-using Integration = DefaultFixture;
+// NOLINTBEGIN(readability-magic-numbers)
 
-const char* library_name = "test_weighted";
+namespace {
 
-enum TaskIDs {
+constexpr std::uint32_t NUM_TASKS = 4;
+
+}  // namespace
+
+enum TaskIDs : std::uint8_t {
   INIT  = 0,
   CHECK = 3,
 };
 
-constexpr std::uint32_t NUM_TASKS = 4;
-
 struct Initializer : public legate::LegateTask<Initializer> {
+  static constexpr std::int32_t TASK_ID = INIT;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto task_idx = context.get_task_index()[0];
     auto outputs  = context.outputs();
     for (std::uint32_t idx = 0; idx < outputs.size(); ++idx) {
       auto output = outputs.at(idx).data();
-      (void)output.create_output_buffer<int32_t, 1>(legate::Point<1>(task_idx + 10 * (idx + 1)),
-                                                    true);
+      static_cast<void>(
+        output.create_output_buffer<int32_t, 1>(legate::Point<1>{task_idx + 10 * (idx + 1)}, true));
     }
   }
 };
 
 struct Tester : public legate::LegateTask<Tester> {
+  static constexpr std::int32_t TASK_ID = CHECK;
+
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_FALSE(context.is_single_task());
@@ -55,26 +61,24 @@ struct Tester : public legate::LegateTask<Tester> {
   }
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_weighted";
+  static void registration_callback(legate::Library library)
+  {
+    Initializer::register_variants(library);
+    Tester::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
-  Initializer::register_variants(library, INIT);
-  Tester::register_variants(library, CHECK);
-}
+};
+
+class Weighted : public RegisterOnceFixture<Config> {};
 
 void initialize(legate::Runtime* runtime,
                 legate::Library library,
                 const std::vector<legate::LogicalStore>& outputs)
 {
-  auto task = runtime->create_task(library, INIT, {NUM_TASKS});
+  auto task = runtime->create_task(library, Initializer::TASK_ID, {NUM_TASKS});
 
-  std::vector<const legate::Variable*> parts;
   for (auto& output : outputs) {
     task.add_output(output);
   }
@@ -86,7 +90,7 @@ void check(legate::Runtime* runtime,
            legate::Library library,
            const std::vector<legate::LogicalStore>& inputs)
 {
-  auto task = runtime->create_task(library, CHECK);
+  auto task = runtime->create_task(library, Tester::TASK_ID);
 
   for (auto& input : inputs) {
     auto part_in  = task.add_input(input);
@@ -101,7 +105,7 @@ void check(legate::Runtime* runtime,
 void test_weighted(std::uint32_t num_stores)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   std::vector<legate::LogicalStore> stores;
   for (std::uint32_t idx = 0; idx < num_stores; ++idx) {
@@ -112,19 +116,11 @@ void test_weighted(std::uint32_t num_stores)
 }
 
 // Test case with single unbound store
-TEST_F(Integration, WeightedSingle)
-{
-  prepare();
-
-  test_weighted(1);
-}
+TEST_F(Weighted, Single) { test_weighted(1); }
 
 // Test case with multiple unbound stores
-TEST_F(Integration, WeightedMultiple)
-{
-  prepare();
+TEST_F(Weighted, Multiple) { test_weighted(3); }
 
-  test_weighted(3);
-}
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace weighted

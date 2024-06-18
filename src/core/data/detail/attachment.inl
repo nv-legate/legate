@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -27,10 +27,9 @@ inline SingleAttachment::~SingleAttachment() { maybe_deallocate(); }
 // ==========================================================================================
 
 inline IndexAttachment::IndexAttachment(
-  const Legion::ExternalResources& external_resources,
+  Legion::ExternalResources external_resources,
   std::vector<InternalSharedPtr<ExternalAllocation>> allocations)
-  : external_resources_{std::make_unique<Legion::ExternalResources>(external_resources)},
-    allocations_{std::move(allocations)}
+  : external_resources_{std::move(external_resources)}, allocations_{std::move(allocations)}
 {
 }
 

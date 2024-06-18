@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/legate_c.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/shared_ptr.h"
 
 #include <iosfwd>
@@ -38,6 +39,9 @@ class FixedArrayType;
 class ListType;
 class StructType;
 
+// Silence warnings here since the range is determined by whatever Legion sets, so we do not
+// want to inadvertently muck that up.
+// NOLINTBEGIN(performance-enum-size)
 /**
  * @ingroup types
  * @brief Enum for reduction operator kinds
@@ -53,6 +57,7 @@ enum class ReductionOpKind : std::int32_t {
   AND = AND_LT, /*!< Bitwse AND */
   XOR = XOR_LT, /*!< Bitwas XOR */
 };
+// NOLINTEND(performance-enum-size)
 
 /**
  * @ingroup types
@@ -60,6 +65,8 @@ enum class ReductionOpKind : std::int32_t {
  */
 class Type {
  public:
+  // We silence this warning for the same reason we silence it for ReductionOpKind.
+  // NOLINTBEGIN(performance-enum-size)
   /**
    * @ingroup types
    * @brief Enum for type codes
@@ -86,6 +93,7 @@ class Type {
     STRING      = STRING_LT,      /*!< String type */
     LIST        = LIST_LT,        /*!< List type */
   };
+  // NOLINTEND(performance-enum-size)
 
   /**
    * @brief Code of the type
@@ -209,13 +217,13 @@ class Type {
   bool operator==(const Type& other) const;
   bool operator!=(const Type& other) const;
 
-  Type();
+  LEGATE_CYTHON_DEFAULT_CTOR(Type);
+
   Type(const Type&)                = default;
   Type(Type&&) noexcept            = default;
   Type& operator=(const Type&)     = default;
   Type& operator=(Type&&) noexcept = default;
-
-  virtual ~Type();
+  virtual ~Type()                  = default;
 
   explicit Type(InternalSharedPtr<detail::Type> impl);
 
@@ -389,7 +397,7 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @return Type object
  */
-[[nodiscard]] Type bool_();
+[[nodiscard]] Type bool_();  // NOLINT(readability-identifier-naming)
 
 /**
  * @ingroup types
@@ -525,6 +533,17 @@ std::ostream& operator<<(std::ostream&, const Type&);
 
 /**
  * @ingroup types
+ * @brief Checks if the type is a point type
+ *
+ * @param type Type to check
+ *
+ * @return true If the `type` is a point type
+ * @return false Otherwise
+ */
+[[nodiscard]] bool is_point_type(const Type& type);
+
+/**
+ * @ingroup types
  * @brief Checks if the type is a point type of the given dimensionality
  *
  * @param type Type to check
@@ -537,6 +556,29 @@ std::ostream& operator<<(std::ostream&, const Type&);
 
 /**
  * @ingroup types
+ * @brief Returns the number of dimensions of a given point type
+ *
+ * @param type Point type
+ *
+ * @return Number of dimensions
+ *
+ * @throw std::invalid_argument IF the type is not a point type
+ */
+[[nodiscard]] std::int32_t ndim_point_type(const Type& type);
+
+/**
+ * @ingroup types
+ * @brief Checks if the type is a rect type
+ *
+ * @param type Type to check
+ *
+ * @return true If the `type` is a rect type
+ * @return false Otherwise
+ */
+[[nodiscard]] bool is_rect_type(const Type& type);
+
+/**
+ * @ingroup types
  * @brief Checks if the type is a rect type of the given dimensionality
  *
  * @param type Type to check
@@ -546,6 +588,18 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @return false Otherwise
  */
 [[nodiscard]] bool is_rect_type(const Type& type, std::uint32_t ndim);
+
+/**
+ * @ingroup types
+ * @brief Returns the number of dimensions of a given rect type
+ *
+ * @param type Rect type
+ *
+ * @return Number of dimensions
+ *
+ * @throw std::invalid_argument IF the type is not a rect type
+ */
+[[nodiscard]] std::int32_t ndim_rect_type(const Type& type);
 
 }  // namespace legate
 

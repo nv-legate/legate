@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -18,6 +18,8 @@
 #include "core/runtime/scope.h"
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/internal_shared_ptr.h"
+
+#include <optional>
 
 namespace legate {
 
@@ -271,6 +273,12 @@ std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
 
 void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execution_fence(block); }
 
+void Runtime::raise_pending_exception() { impl_->raise_pending_exception(); }
+
+std::uint32_t Runtime::node_count() const { return impl_->node_count(); }
+
+std::uint32_t Runtime::node_id() const { return impl_->node_id(); }
+
 void Runtime::register_shutdown_callback_(ShutdownCallback callback)
 {
   detail::Runtime::get_runtime()->register_shutdown_callback(std::move(callback));
@@ -278,12 +286,17 @@ void Runtime::register_shutdown_callback_(ShutdownCallback callback)
 
 mapping::Machine Runtime::get_machine() const { return Scope::machine(); }
 
+Processor Runtime::get_executing_processor() const { return impl()->get_executing_processor(); }
+
+namespace {
+
+std::optional<Runtime> the_public_runtime{};
+
+}  // namespace
+
 /*static*/ Runtime* Runtime::get_runtime()
 {
-  // Initializing the public runtime with the lambda ensures that the private runtime is
-  // guaranteed to be constructed before it, and therefore ensuring the inverse destruction
-  // order.
-  static const std::unique_ptr<Runtime> the_runtime = [] {
+  if (LEGATE_UNLIKELY(!the_public_runtime.has_value())) {
     auto* impl = detail::Runtime::get_runtime();
 
     if (!impl->initialized()) {
@@ -291,19 +304,36 @@ mapping::Machine Runtime::get_machine() const { return Scope::machine(); }
         "Legate runtime has not been initialized. Please invoke legate::start to use the "
         "runtime"};
     }
-    return std::unique_ptr<Runtime>{new Runtime{impl}};
-  }();
-
-  return the_runtime.get();
+    the_public_runtime.emplace(Runtime{impl});
+  }
+  return &*the_public_runtime;
 }
 
 std::int32_t start(std::int32_t argc, char** argv) { return detail::Runtime::start(argc, argv); }
 
-std::int32_t finish() { return Runtime::get_runtime()->impl()->finish(); }
+bool has_started() { return detail::Runtime::get_runtime()->initialized(); }
+
+std::int32_t finish()
+{
+  const auto ret = Runtime::get_runtime()->impl()->finish();
+
+  the_public_runtime.reset();
+  return ret;
+}
 
 void destroy() { detail::Runtime::get_runtime()->destroy(); }
 
 mapping::Machine get_machine() { return Runtime::get_runtime()->get_machine(); }
+
+bool is_running_in_task()
+{
+  // Make sure Legion runtime has been started and that we are not running in an user-thread
+  // without a Legion context
+  if (Legion::Runtime::has_runtime() && Legion::Runtime::has_context()) {
+    return Legion::Runtime::get_context_task(Legion::Runtime::get_context())->has_parent_task();
+  }
+  return false;
+}
 
 }  // namespace legate
 

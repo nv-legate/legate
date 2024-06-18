@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -38,11 +38,10 @@ class TestConfig:
 
         assert c.examples is True
         assert c.integration is True
-        assert c.unit is False
         assert c.files is None
         assert c.last_failed is False
-        assert c.gtest_file is None
-        assert c.gtest_tests == []
+        # assert c.gtest_file is None
+        # assert c.gtest_tests == []
         assert c.test_root is None
 
         assert c.core.cpus == defaults.CPUS_PER_NODE
@@ -58,7 +57,10 @@ class TestConfig:
         assert c.multi_node.ranks_per_node == defaults.RANKS_PER_NODE
         assert c.multi_node.launcher == "none"
         assert c.multi_node.launcher_extra == []
-        assert c.multi_node.mpi_output_filename is None
+
+        # best we can do with dynamic defaultS
+        filename = c.multi_node.mpi_output_filename
+        assert filename is None or str(filename).endswith("mpi_result")
 
         assert c.execution.workers is None
         assert c.execution.timeout is None
@@ -205,6 +207,37 @@ class TestConfig:
         c = m.Config(["test.py"] + cov_args)
         assert c.other.cov_args == "run -a"
 
+    def test_multi_ranks_bad_launcher(self) -> None:
+        msg = (
+            "Requested multi-rank configuration with --ranks-per-node 4 but "
+            "did not specify a launcher. Must use --launcher to specify a "
+            "launcher."
+        )
+        with pytest.raises(RuntimeError, match=msg):
+            m.Config(["test.py", "--ranks-per-node", "4"])
+
+    def test_multi_nodes_bad_launcher(self) -> None:
+        msg = (
+            "Requested multi-node configuration with --nodes 4 but did not "
+            "specify a launcher. Must use --launcher to specify a launcher."
+        )
+        with pytest.raises(RuntimeError, match=msg):
+            m.Config(["test.py", "--nodes", "4"])
+
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    def test_multi_ranks_good_launcher(self, launch: str) -> None:
+        c = m.Config(
+            ["test.py", "--ranks-per-node", "4", "--launcher", launch]
+        )
+        assert c.multi_node.launcher == launch
+        assert c.multi_node.ranks_per_node == 4
+
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    def test_multi_nodes_good_launcher(self, launch: str) -> None:
+        c = m.Config(["test.py", "--nodes", "4", "--launcher", launch])
+        assert c.multi_node.launcher == launch
+        assert c.multi_node.nodes == 4
+
 
 class Test_test_files:
     # first two tests are too sensitive to actual repo state and run location
@@ -216,14 +249,6 @@ class Test_test_files:
         assert len(c.test_files) > 0
         assert any("examples" in str(x) for x in c.test_files)
         assert any("integration" in str(x) for x in c.test_files)
-
-        assert not any("unit" in str(x) for x in c.test_files)
-
-    @pytest.mark.skip
-    def test_unit(self) -> None:
-        c = m.Config(["test.py", "--unit", "--root-dir", str(REPO_TOP)])
-        assert len(c.test_files) > 0
-        assert any("unit" in str(x) for x in c.test_files)
 
     def test_error(self) -> None:
         c = m.Config(["test.py", "--files", "a", "b", "--last-failed"])

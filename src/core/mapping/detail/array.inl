@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -19,7 +19,7 @@ namespace legate::mapping::detail {
 inline std::vector<InternalSharedPtr<Store>> Array::stores() const
 {
   std::vector<InternalSharedPtr<Store>> result;
-  _stores(result);
+  populate_stores(result);
   return result;
 }
 
@@ -34,13 +34,16 @@ inline std::int32_t BaseArray::dim() const { return data_->dim(); }
 
 inline legate::detail::ArrayKind BaseArray::kind() const { return legate::detail::ArrayKind::BASE; }
 
-inline InternalSharedPtr<legate::detail::Type> BaseArray::type() const { return data_->type(); }
+inline const InternalSharedPtr<legate::detail::Type>& BaseArray::type() const
+{
+  return data_->type();
+}
 
 inline bool BaseArray::nullable() const { return null_mask_ != nullptr; }
 
 inline bool BaseArray::nested() const { return false; }
 
-inline InternalSharedPtr<Store> BaseArray::data() const { return data_; }
+inline const InternalSharedPtr<Store>& BaseArray::data() const { return data_; }
 
 // ==========================================================================================
 
@@ -53,13 +56,16 @@ inline ListArray::ListArray(InternalSharedPtr<legate::detail::Type> type,
 
 inline legate::detail::ArrayKind ListArray::kind() const { return legate::detail::ArrayKind::LIST; }
 
-inline InternalSharedPtr<legate::detail::Type> ListArray::type() const { return type_; }
+inline const InternalSharedPtr<legate::detail::Type>& ListArray::type() const { return type_; }
 
 inline bool ListArray::nullable() const { return descriptor_->nullable(); }
 
 inline bool ListArray::nested() const { return true; }
 
-inline InternalSharedPtr<Store> ListArray::null_mask() const { return descriptor_->null_mask(); }
+inline const InternalSharedPtr<Store>& ListArray::null_mask() const
+{
+  return descriptor_->null_mask();
+}
 
 inline InternalSharedPtr<Array> ListArray::descriptor() const { return descriptor_; }
 
@@ -79,7 +85,7 @@ inline legate::detail::ArrayKind StructArray::kind() const
   return legate::detail::ArrayKind::STRUCT;
 }
 
-inline InternalSharedPtr<legate::detail::Type> StructArray::type() const { return type_; }
+inline const InternalSharedPtr<legate::detail::Type>& StructArray::type() const { return type_; }
 
 inline bool StructArray::nullable() const { return null_mask_ != nullptr; }
 

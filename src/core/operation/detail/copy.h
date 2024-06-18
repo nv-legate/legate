@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,7 +14,7 @@
 
 #include "core/data/detail/logical_store.h"
 #include "core/operation/detail/operation.h"
-#include "core/partitioning/constraint.h"
+#include "core/partitioning/detail/constraint.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <optional>
@@ -42,7 +42,7 @@ class Copy final : public Operation {
  private:
   StoreArg target_{};
   StoreArg source_{};
-  InternalSharedPtr<Constraint> constraint_{};
+  InternalSharedPtr<Alignment> constraint_{};
   std::optional<std::int32_t> redop_{};
 };
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -27,21 +27,21 @@ inline Scalar::Scalar(InternalSharedPtr<Type> type)
 template <typename T>
 inline Scalar::Scalar(T value)
   : own_{true},
-    type_{detail::primitive_type(type_code_of<T>)},
-    data_{copy_data(std::addressof(value), sizeof(T))}
+    type_{detail::primitive_type(type_code_of_v<T>)},
+    data_{copy_data_(std::addressof(value), sizeof(T))}
 {
-  static_assert(type_code_of<T> != Type::Code::FIXED_ARRAY);
-  static_assert(type_code_of<T> != Type::Code::STRUCT);
-  static_assert(type_code_of<T> != Type::Code::STRING);
-  static_assert(type_code_of<T> != Type::Code::NIL);
+  static_assert(type_code_of_v<T> != Type::Code::FIXED_ARRAY);
+  static_assert(type_code_of_v<T> != Type::Code::STRUCT);
+  static_assert(type_code_of_v<T> != Type::Code::STRING);
+  static_assert(type_code_of_v<T> != Type::Code::NIL);
 }
 
-inline Scalar::~Scalar() { clear_data(); }
+inline Scalar::~Scalar() { clear_data_(); }
 
 inline Scalar::Scalar(const Scalar& other)
   : own_{other.own_},
     type_{other.type_},
-    data_{other.own_ ? copy_data(other.data_, other.size()) : other.data_}
+    data_{other.own_ ? copy_data_(other.data_, other.size()) : other.data_}
 {
 }
 

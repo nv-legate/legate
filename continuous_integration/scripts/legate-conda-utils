@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+. conda-utils
+
+make_conda_env_from_yaml() {
+    mamba env create -q -n "${CONDA_ENV}" -f "${yaml_file}";
+}
+
+generate_yaml_file() {
+    UCX_PKG=ucx
+    [[ "${UCX_ENABLED}" = "OFF" ]] && UCX_PKG=no-ucx
+
+    if [[ "$USE_CUDA" == "OFF" ]]; then
+        yaml_file=$(\
+            "$REPO_DIR"/scripts/generate-conda-envs.py \
+                --os "$OS_SHORT_NAME" \
+                --compilers                         \
+                --openmpi                           \
+                --${UCX_PKG}                        \
+            | head -n1 | cut -d' ' -f3              \
+        )
+    else
+        yaml_file=$(         \
+            "$REPO_DIR"/scripts/generate-conda-envs.py \
+                --os "$OS_SHORT_NAME"               \
+                --compilers                         \
+                --ctk "${CUDA_VERSION}"             \
+                --openmpi                           \
+                --${UCX_PKG}                        \
+            | head -n1 | cut -d' ' -f3              \
+        )
+    fi
+
+    echo Dumping: "${yaml_file}"
+    cat "${yaml_file}";
+
+    $SED -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
+    echo "  - boa" >> "${yaml_file}";
+
+    if [[ $LEGATE_CORE_BUILD_MODE == *sanitizer* ]]; then
+        echo "  - libsanitizer <=${MAX_LIBSANITIZER_VERSION}" >> "${yaml_file}";
+    fi
+
+    mkdir -p /tmp/out/
+    cp "${yaml_file}" /tmp/out/
+    mkdir -p /tmp/env_yaml
+    cp "${yaml_file}" /tmp/env_yaml
+}
+
+find_yaml_file() {
+    pattern="/tmp/env_yaml/*.yaml";
+    files=( "${pattern}" );
+    yaml_file="${files[0]}";
+
+    if [[ -z "${yaml_file:-}" ]] || [[ ! -f "${yaml_file}" ]]; then
+        return 1;
+    fi
+
+    return 0;
+}
+
+get_yaml_and_make_conda_env() {
+    set -xe;
+
+    local yaml_file="";
+
+    generate_yaml_file;
+
+    echo YAML file: "${yaml_file}"
+    cat "${yaml_file}";
+
+    make_conda_env_from_yaml;
+}
+
+install_legate_core_with_war() {
+    set -x;
+    # WAR: legate-core depends on a different version of numpy than what is already installed.
+    # The correct version will be installed when legate-core is installed below.
+    # See github issue: https://github.com/nv-legate/legate.core/issues/812
+    mamba uninstall -q -y -n "${CONDA_ENV}" numpy;
+
+    # Remove the URM channel when real UCX 1.17 is released
+    mamba install -y -n "${CONDA_ENV}" -c conda-forge -c https://raw.githubusercontent.com/nv-legate/ucx-package/main -c "$ARTIFACTS_DIR/conda-build/legate_core" legate-core;
+}
+
+make_release_env() {
+    mamba create -q -y -n "${CONDA_ENV}" -c conda-forge boa
+}

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -301,14 +301,45 @@ class TestTask(BaseTest):
         self.check_valid_registered_task(bar)
         bar()
 
-    def test_raised_exception(self) -> None:
+    @pytest.mark.parametrize(
+        "ExnType",
+        (CustomException, ValueError, TypeError, RuntimeError, IndexError),
+    )
+    def test_raised_exception(self, ExnType: type) -> None:
         @lct.task(throws_exception=True)
         def raises_exception() -> None:
-            raise CustomException("There is no peace but the Pax Romana")
+            raise ExnType("There is no peace but the Pax Romana")
 
         with pytest.raises(
-            CustomException, match=r"There is no peace but the Pax Romana"
+            ExnType, match=r"There is no peace but the Pax Romana"
         ):
+            raises_exception()
+
+    @pytest.mark.parametrize(
+        "ExnType",
+        (CustomException, ValueError, TypeError, RuntimeError, IndexError),
+    )
+    def test_deferred_exception(self, ExnType: type) -> None:
+        @lct.task(throws_exception=True)
+        def raises_exception() -> None:
+            raise ExnType("There is no peace but the Pax Romana")
+
+        with pytest.raises(
+            ExnType, match=r"There is no peace but the Pax Romana"
+        ):
+            with lg.Scope(exception_mode=lg.ExceptionMode.DEFERRED):
+                raises_exception()
+
+    @pytest.mark.parametrize(
+        "ExnType",
+        (CustomException, ValueError, TypeError, RuntimeError, IndexError),
+    )
+    def test_ignored_exception(self, ExnType: type) -> None:
+        @lct.task(throws_exception=True)
+        def raises_exception() -> None:
+            raise ExnType("There is no peace but the Pax Romana")
+
+        with lg.Scope(exception_mode=lg.ExceptionMode.IGNORED):
             raises_exception()
 
     def test_align_constraint(self) -> None:

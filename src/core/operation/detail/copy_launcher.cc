@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -44,20 +44,18 @@ void CopyArg::pack(BufferBuilder& buffer) const
   buffer.pack<std::uint32_t>(field_id_);
 }
 
-void CopyLauncher::add_store(std::vector<std::unique_ptr<CopyArg>>& args,
+void CopyLauncher::add_store(std::vector<CopyArg>& args,
                              const InternalSharedPtr<LogicalStore>& store,
                              std::unique_ptr<StoreProjection> store_proj,
                              Legion::PrivilegeMode privilege)
 {
-  auto req_idx      = static_cast<std::uint32_t>(args.size());
-  auto region_field = store->get_region_field();
-  auto field_id     = region_field->field_id();
+  const auto req_idx  = static_cast<std::uint32_t>(args.size());
+  const auto field_id = store->get_region_field()->field_id();
 
   if (store_proj->is_key) {
     key_proj_id_ = store_proj->proj_id;
   }
-  args.emplace_back(
-    std::make_unique<CopyArg>(req_idx, store.get(), field_id, privilege, std::move(store_proj)));
+  args.emplace_back(req_idx, store.get(), field_id, privilege, std::move(store_proj));
 }
 
 void CopyLauncher::add_input(const InternalSharedPtr<LogicalStore>& store,
@@ -108,7 +106,7 @@ void CopyLauncher::execute(const Legion::Domain& launch_domain)
                                               runtime->core_library()->get_mapper_id(),
                                               static_cast<Legion::MappingTagID>(tag_),
                                               mapper_arg.to_legion_buffer(),
-                                              provenance.c_str()};
+                                              provenance.data()};
   populate_copy(index_copy);
   runtime->dispatch(index_copy);
 }
@@ -125,7 +123,7 @@ void CopyLauncher::execute_single()
                                           runtime->core_library()->get_mapper_id(),
                                           static_cast<Legion::MappingTagID>(tag_),
                                           mapper_arg.to_legion_buffer(),
-                                          provenance.c_str()};
+                                          provenance.data()};
   populate_copy(single_copy);
   runtime->dispatch(single_copy);
 }
@@ -141,10 +139,10 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
   pack_sharding_functor_id(buffer);
   buffer.pack(priority_);
 
-  auto pack_args = [&buffer](const std::vector<std::unique_ptr<CopyArg>>& args) {
+  auto pack_args = [&buffer](const std::vector<CopyArg>& args) {
     buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
-    for (auto& arg : args) {
-      arg->pack(buffer);
+    for (auto&& arg : args) {
+      arg.pack(buffer);
     }
   };
   pack_args(inputs_);
@@ -172,7 +170,7 @@ void CopyLauncher::populate_copy(Launcher& launcher)
     for (std::uint32_t idx = 0; idx < args.size(); ++idx) {
       auto& req = requirements[idx];
       auto& arg = args[idx];
-      arg->template populate_requirement<is_single_v<Launcher>>(req);
+      arg.template populate_requirement<is_single_v<Launcher>>(req);
     }
   };
 

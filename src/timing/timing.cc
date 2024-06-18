@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -32,7 +32,7 @@ class Time::Impl {
     if (!detail::Runtime::get_runtime()->initialized()) {
       // Leak the Future handle if the runtime has already shut down, as there's no hope that
       // this would be collected by the Legion runtime
-      static_cast<void>(future_.release());
+      static_cast<void>(future_.release());  // NOLINT(bugprone-unused-return-value)
     }
   }
 
@@ -53,22 +53,16 @@ std::int64_t Time::value() const { return impl_->value(); }
 
 Time measure_microseconds()
 {
-  auto runtime = Legion::Runtime::get_runtime();
-  auto context = Legion::Runtime::get_context();
-
-  auto future = runtime->get_current_time_in_microseconds(context);
-
-  return Time{std::make_shared<Time::Impl>(std::move(future))};
+  return Time{
+    std::make_shared<Time::Impl>(Legion::Runtime::get_runtime()->get_current_time_in_microseconds(
+      Legion::Runtime::get_context()))};
 }
 
 Time measure_nanoseconds()
 {
-  auto runtime = Legion::Runtime::get_runtime();
-  auto context = Legion::Runtime::get_context();
-
-  auto future = runtime->get_current_time_in_nanoseconds(context);
-
-  return Time{std::make_shared<Time::Impl>(std::move(future))};
+  return Time{
+    std::make_shared<Time::Impl>(Legion::Runtime::get_runtime()->get_current_time_in_nanoseconds(
+      Legion::Runtime::get_context()))};
 }
 
 }  // namespace legate::timing

@@ -1,0 +1,6 @@
+~~~~~~~
+Mapping
+~~~~~~~
+
+.. doxygengroup:: mapping
+    :members:

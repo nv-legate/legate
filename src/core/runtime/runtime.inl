@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -26,6 +26,8 @@ void Runtime::register_shutdown_callback(T&& callback)
 inline Runtime::Runtime(detail::Runtime* runtime) : impl_{runtime} {}
 
 inline detail::Runtime* Runtime::impl() { return impl_; }
+
+inline const detail::Runtime* Runtime::impl() const { return impl_; }
 
 template <typename T>
 void register_shutdown_callback(T&& callback)

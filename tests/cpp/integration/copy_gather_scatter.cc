@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -18,12 +18,13 @@
 
 namespace copy_gather_scatter {
 
-using Copy = DefaultFixture;
+// NOLINTBEGIN(readability-magic-numbers)
 
-static const char* library_name = "test_copy_gather_scatter";
-static legate::Logger logger(library_name);
+namespace {
 
 constexpr std::int32_t CHECK_GATHER_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
+
+}  // namespace
 
 template <std::int32_t SRC_DIM, std::int32_t IND_DIM, std::int32_t TGT_DIM>
 struct CheckGatherScatterTask
@@ -32,7 +33,7 @@ struct CheckGatherScatterTask
     template <legate::Type::Code CODE>
     void operator()(legate::TaskContext context)
     {
-      using VAL = legate::type_of<CODE>;
+      using VAL = legate::type_of_t<CODE>;
 
       auto src_store     = context.input(0).data();
       auto tgt_store     = context.input(1).data();
@@ -45,8 +46,8 @@ struct CheckGatherScatterTask
       auto tgt_shape = tgt_store.shape<TGT_DIM>();
       auto ind_shape = src_ind_store.shape<IND_DIM>();
 
-      legate::Buffer<bool, TGT_DIM> mask(tgt_shape, legate::Memory::Kind::SYSTEM_MEM);
-      for (legate::PointInRectIterator<TGT_DIM> it(tgt_shape); it.valid(); ++it) {
+      const legate::Buffer<bool, TGT_DIM> mask{tgt_shape, legate::Memory::Kind::SYSTEM_MEM};
+      for (legate::PointInRectIterator<TGT_DIM> it{tgt_shape}; it.valid(); ++it) {
         mask[*it] = false;
       }
 
@@ -55,7 +56,7 @@ struct CheckGatherScatterTask
       auto src_ind_acc = src_ind_store.read_accessor<legate::Point<SRC_DIM>, IND_DIM>();
       auto tgt_ind_acc = tgt_ind_store.read_accessor<legate::Point<TGT_DIM>, IND_DIM>();
 
-      for (legate::PointInRectIterator<IND_DIM> it(ind_shape); it.valid(); ++it) {
+      for (legate::PointInRectIterator<IND_DIM> it{ind_shape}; it.valid(); ++it) {
         auto src_point = src_ind_acc[*it];
         auto tgt_point = tgt_ind_acc[*it];
         auto source    = src_acc[src_point];
@@ -64,7 +65,7 @@ struct CheckGatherScatterTask
         mask[tgt_point] = true;
       }
 
-      for (legate::PointInRectIterator<TGT_DIM> it(tgt_shape); it.valid(); ++it) {
+      for (legate::PointInRectIterator<TGT_DIM> it{tgt_shape}; it.valid(); ++it) {
         auto p = *it;
         if (mask[p]) {
           continue;
@@ -74,9 +75,10 @@ struct CheckGatherScatterTask
     }
   };
 
-  static const std::int32_t TASK_ID = CHECK_GATHER_SCATTER_TASK +
-                                      SRC_DIM * TEST_MAX_DIM * TEST_MAX_DIM +
-                                      IND_DIM * TEST_MAX_DIM + TGT_DIM;
+  static constexpr std::int32_t TASK_ID = CHECK_GATHER_SCATTER_TASK +
+                                          SRC_DIM * TEST_MAX_DIM * TEST_MAX_DIM +
+                                          IND_DIM * TEST_MAX_DIM + TGT_DIM;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto type_code = context.input(0).type().code();
@@ -91,7 +93,7 @@ struct GatherScatterSpec {
   legate::Scalar seed;
   legate::Scalar init;
 
-  std::string to_string() const
+  [[nodiscard]] std::string to_string() const
   {
     std::stringstream ss;
     ss << "source shape: " << ::to_string(src_shape)
@@ -102,35 +104,34 @@ struct GatherScatterSpec {
   }
 };
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_copy_gather_scatter";
+  static void registration_callback(legate::Library library)
+  {
+    FillTask<1>::register_variants(library);
+    FillTask<2>::register_variants(library);
+    FillTask<3>::register_variants(library);
+
+    FillIndirectTask<1, 1>::register_variants(library);
+    FillIndirectTask<1, 2>::register_variants(library);
+    FillIndirectTask<1, 3>::register_variants(library);
+    FillIndirectTask<2, 1>::register_variants(library);
+    FillIndirectTask<2, 2>::register_variants(library);
+    FillIndirectTask<2, 3>::register_variants(library);
+    FillIndirectTask<3, 1>::register_variants(library);
+    FillIndirectTask<3, 2>::register_variants(library);
+    FillIndirectTask<3, 3>::register_variants(library);
+
+    CheckGatherScatterTask<1, 2, 3>::register_variants(library);
+    CheckGatherScatterTask<2, 3, 1>::register_variants(library);
+    CheckGatherScatterTask<3, 1, 2>::register_variants(library);
+    CheckGatherScatterTask<3, 3, 3>::register_variants(library);
+    CheckGatherScatterTask<2, 2, 3>::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
-  FillTask<1>::register_variants(library);
-  FillTask<2>::register_variants(library);
-  FillTask<3>::register_variants(library);
+};
 
-  FillIndirectTask<1, 1>::register_variants(library);
-  FillIndirectTask<1, 2>::register_variants(library);
-  FillIndirectTask<1, 3>::register_variants(library);
-  FillIndirectTask<2, 1>::register_variants(library);
-  FillIndirectTask<2, 2>::register_variants(library);
-  FillIndirectTask<2, 3>::register_variants(library);
-  FillIndirectTask<3, 1>::register_variants(library);
-  FillIndirectTask<3, 2>::register_variants(library);
-  FillIndirectTask<3, 3>::register_variants(library);
-
-  CheckGatherScatterTask<1, 2, 3>::register_variants(library);
-  CheckGatherScatterTask<2, 3, 1>::register_variants(library);
-  CheckGatherScatterTask<3, 1, 2>::register_variants(library);
-  CheckGatherScatterTask<3, 3, 3>::register_variants(library);
-  CheckGatherScatterTask<2, 2, 3>::register_variants(library);
-}
+class ScatterGatherCopy : public RegisterOnceFixture<Config> {};
 
 void check_gather_scatter_output(legate::Library library,
                                  const legate::LogicalStore& src,
@@ -142,8 +143,9 @@ void check_gather_scatter_output(legate::Library library,
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
 
-  std::int32_t task_id = CHECK_GATHER_SCATTER_TASK + src.dim() * TEST_MAX_DIM * TEST_MAX_DIM +
-                         src_ind.dim() * TEST_MAX_DIM + tgt.dim();
+  const auto task_id =
+    static_cast<std::int32_t>(CHECK_GATHER_SCATTER_TASK + src.dim() * TEST_MAX_DIM * TEST_MAX_DIM +
+                              src_ind.dim() * TEST_MAX_DIM + tgt.dim());
 
   auto task = runtime->create_task(library, task_id);
 
@@ -167,11 +169,10 @@ void check_gather_scatter_output(legate::Library library,
 
 void test_gather_scatter(const GatherScatterSpec& spec)
 {
-  LegateAssert(spec.seed.type() == spec.init.type());
-  logger.print() << "Gather-scatter Copy: " << spec.to_string();
+  LEGATE_ASSERT(spec.seed.type() == spec.init.type());
 
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto type = spec.seed.type();
   auto src  = runtime->create_store(legate::Shape{spec.src_shape}, type);
@@ -190,45 +191,54 @@ void test_gather_scatter(const GatherScatterSpec& spec)
   check_gather_scatter_output(library, src, tgt, src_ind, tgt_ind, spec.init);
 }
 
-TEST_F(Copy, GatherScatter1Dto3Dvia2D)
+TEST_F(ScatterGatherCopy, 1Dto3Dvia2D)
 {
-  register_tasks();
-  std::vector<std::uint64_t> shape1d{5};
-  test_gather_scatter(GatherScatterSpec{
-    shape1d, {7, 11}, {10, 10, 10}, legate::Scalar(int64_t(123)), legate::Scalar(int64_t(42))});
+  const std::vector<std::uint64_t> shape1d{5};
+  test_gather_scatter(GatherScatterSpec{shape1d,
+                                        {7, 11},
+                                        {10, 10, 10},
+                                        legate::Scalar{std::int64_t{123}},
+                                        legate::Scalar{std::int64_t{42}}});
 }
 
-TEST_F(Copy, GatherScatter2Dto1Dvia3D)
+TEST_F(ScatterGatherCopy, 2Dto1Dvia3D)
 {
-  register_tasks();
-  std::vector<std::uint64_t> shape1d{1000};
-  test_gather_scatter(GatherScatterSpec{
-    {3, 7}, {3, 6, 5}, shape1d, legate::Scalar(uint32_t(456)), legate::Scalar(uint32_t(42))});
+  const std::vector<std::uint64_t> shape1d{1000};
+  test_gather_scatter(GatherScatterSpec{{3, 7},
+                                        {3, 6, 5},
+                                        shape1d,
+                                        legate::Scalar{std::uint32_t{456}},
+                                        legate::Scalar{std::uint32_t{42}}});
 }
 
-TEST_F(Copy, GatherScatter3Dto2Dvia1D)
+TEST_F(ScatterGatherCopy, 3Dto2Dvia1D)
 {
-  register_tasks();
-  std::vector<std::uint64_t> shape1d{100};
-  test_gather_scatter(GatherScatterSpec{
-    {4, 5, 2}, shape1d, {50, 50}, legate::Scalar(int64_t(12)), legate::Scalar(int64_t(42))});
+  const std::vector<std::uint64_t> shape1d{100};
+  test_gather_scatter(GatherScatterSpec{{4, 5, 2},
+                                        shape1d,
+                                        {50, 50},
+                                        legate::Scalar{std::int64_t{12}},
+                                        legate::Scalar{std::int64_t{42}}});
 }
 
-TEST_F(Copy, GatherScatter3Dto3Dvia3D)
+TEST_F(ScatterGatherCopy, 3Dto3Dvia3D)
 {
-  register_tasks();
   test_gather_scatter(GatherScatterSpec{{10, 10, 10},
                                         {5, 4, 2},
                                         {10, 10, 10},
-                                        legate::Scalar(int64_t(1)),
-                                        legate::Scalar(int64_t(42))});
+                                        legate::Scalar{std::int64_t{1}},
+                                        legate::Scalar{std::int64_t{42}}});
 }
 
-TEST_F(Copy, GatherScatter2Dto3Dvia2D)
+TEST_F(ScatterGatherCopy, 2Dto3Dvia2D)
 {
-  register_tasks();
-  test_gather_scatter(GatherScatterSpec{
-    {27, 33}, {11, 7}, {132, 121, 3}, legate::Scalar(int64_t(2)), legate::Scalar(int64_t(84))});
+  test_gather_scatter(GatherScatterSpec{{27, 33},
+                                        {11, 7},
+                                        {132, 121, 3},
+                                        legate::Scalar{std::int64_t{2}},
+                                        legate::Scalar{std::int64_t{84}}});
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace copy_gather_scatter

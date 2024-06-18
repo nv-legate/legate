@@ -2,7 +2,7 @@
 
 set -x
 
-. conda-utils;
+. legate-conda-utils;
 
 make_conda_env() {
     set -xeuo pipefail

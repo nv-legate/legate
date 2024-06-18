@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -34,7 +34,7 @@ if is_legion_python == False:
     atexit.register(legion_canonical_python_cleanup)
 
 from .data_interface import LegateDataInterface, Field, Table
-from ._lib.mapping.mapping import TaskTarget
+from ._lib.mapping.mapping import StoreTarget, TaskTarget
 from ._lib.mapping.machine import (
     EmptyMachineError,
     Machine,
@@ -46,14 +46,14 @@ from ._lib.runtime.runtime import (
     get_legate_runtime,
     get_machine,
     track_provenance,
+    is_running_in_task,
 )
 from ._lib.runtime.scope import Scope
 
 get_legate_runtime()
-from .utils import (
-    Annotation,
-)
+from .utils import Annotation
 from ._lib.legate_c import LEGATE_MAX_DIM
+from ._lib.data.inline_allocation import InlineAllocation
 from ._lib.data.logical_array import LogicalArray
 from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
 from ._lib.data.scalar import Scalar
@@ -62,7 +62,15 @@ from ._lib.data.physical_store import PhysicalStore
 from ._lib.data.physical_array import PhysicalArray
 from ._lib.operation.projection import dimension, constant
 from ._lib.operation.task import AutoTask, ManualTask
-from ._lib.partitioning.constraint import align, image, bloat, broadcast, scale
+from ._lib.partitioning.constraint import (
+    ImageComputationHint,
+    align,
+    image,
+    bloat,
+    broadcast,
+    scale,
+)
+from ._lib.runtime.exception_mode import ExceptionMode
 from ._lib.runtime.library import Library
 from ._lib.task.task_context import TaskContext
 from ._lib.task.task_info import TaskInfo
@@ -107,7 +115,7 @@ def _warn_seed(func: AnyCallable) -> AnyCallable:
         Seeding the random number generator with a non-constant value
         inside Legate can lead to undefined behavior and/or errors when
         the program is executed with multiple ranks."""
-        warnings.warn(msg, Warning)
+        warnings.warn(msg, Warning, stacklevel=2)
         return func(*args, **kw)
 
     return wrapper

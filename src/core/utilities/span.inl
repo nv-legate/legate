@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -15,7 +15,18 @@
 #include "core/utilities/assert.h"
 #include "core/utilities/span.h"
 
+#include <iterator>
+#include <type_traits>
+
 namespace legate {
+
+template <typename T>
+template <typename It>
+Span<T>::Span(It begin, It end) : Span{&*begin, static_cast<std::size_t>(std::distance(begin, end))}
+{
+  using category = typename std::iterator_traits<It>::iterator_category;
+  static_assert(std::is_convertible_v<category, std::random_access_iterator_tag>);
+}
 
 template <typename T>
 Span<T>::Span(T* data, std::size_t size) : data_{data}, size_{size}
@@ -31,7 +42,7 @@ std::size_t Span<T>::size() const
 template <typename T>
 decltype(auto) Span<T>::operator[](std::size_t pos) const
 {
-  LegateAssert(pos < size_);
+  LEGATE_ASSERT(pos < size_);
   return data_[pos];
 }
 
@@ -50,7 +61,7 @@ const T* Span<T>::end() const
 template <typename T>
 Span<T> Span<T>::subspan(std::size_t off)
 {
-  LegateCheck(off <= size_);
+  LEGATE_CHECK(off <= size_);
   return {data_ + off, size_ - off};
 }
 

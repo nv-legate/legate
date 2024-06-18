@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,17 +16,18 @@
 
 /**
  * @file
- * @brief Class definition fo legate::VariantOptions
+ * @brief Class definition of legate::VariantOptions
  */
 namespace legate {
 
 // Each scalar output store can take up to 12 bytes, so in the worst case there can be only up to
 // 341 scalar output stores.
-constexpr std::size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
+inline constexpr std::size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
 
 /**
- * @ingroup task
  * @brief A helper class for specifying variant options
+ *
+ * @ingroup task
  */
 class VariantOptions {
  public:
@@ -50,25 +51,51 @@ class VariantOptions {
    *
    * @param `leaf` A new value for the `leaf` flag
    */
-  VariantOptions& with_leaf(bool leaf);
-  VariantOptions& with_inner(bool inner);
-  VariantOptions& with_idempotent(bool idempotent);
+  constexpr VariantOptions& with_leaf(bool leaf);
+  constexpr VariantOptions& with_inner(bool inner);
+  constexpr VariantOptions& with_idempotent(bool idempotent);
   /**
    * @brief Changes the value of the `concurrent` flag
    *
    * @param `concurrent` A new value for the `concurrent` flag
    */
-  VariantOptions& with_concurrent(bool concurrent);
+  constexpr VariantOptions& with_concurrent(bool concurrent);
   /**
    * @brief Sets a maximum aggregate size for scalar output values
    *
    * @param `return_size` A new maximum aggregate size for scalar output values
    */
-  VariantOptions& with_return_size(std::size_t return_size);
+  constexpr VariantOptions& with_return_size(std::size_t return_size);
 
+  /**
+   * @brief Populate a Legion::TaskVariantRegistrar using the options contained.
+   *
+   * @param registrar The registrar to fill out.
+   */
   void populate_registrar(Legion::TaskVariantRegistrar& registrar) const;
+
+  [[nodiscard]] constexpr bool operator==(const VariantOptions& other) const;
+  [[nodiscard]] constexpr bool operator!=(const VariantOptions& other) const;
+
+  /**
+   * @brief The default variant options used during task creation if no user-supplied options
+   * are given.
+   */
+  static const VariantOptions DEFAULT_OPTIONS;
 };
+
+// This trick is needed because you cannot declare a constexpr variable of the same class
+// inside the class definition, because at that point the class is still considered an
+// incomplete type.
+//
+// Do not be fooled, DEFAULT_VARIANT_OPTIONS is still constexpr; for variables, constexpr can
+// explicitly only be on a definition, not on any declarations
+// (eel.is/c++draft/dcl.constexpr#1.sentence-1). The static const is the declaration, the line
+// below is the definition.
+inline constexpr VariantOptions VariantOptions::DEFAULT_OPTIONS{};
 
 std::ostream& operator<<(std::ostream& os, const VariantOptions& options);
 
 }  // namespace legate
+
+#include "core/task/variant_options.inl"

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,6 +14,7 @@
 
 #include "core/data/shape.h"
 #include "core/mapping/detail/machine.h"
+#include "core/partitioning/constraint.h"
 #include "core/partitioning/restriction.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
@@ -32,7 +33,7 @@ namespace legate {
 
 class Partition {
  public:
-  enum class Kind : std::int32_t {
+  enum class Kind : std::uint8_t {
     NO_PARTITION,
     TILING,
     WEIGHTED,
@@ -199,10 +200,10 @@ class Image : public Partition {
  public:
   Image(InternalSharedPtr<detail::LogicalStore> func,
         InternalSharedPtr<Partition> func_partition,
-        mapping::detail::Machine machine);
+        mapping::detail::Machine machine,
+        ImageComputationHint hint);
 
   bool operator==(const Image& other) const;
-  bool operator<(const Image& other) const;
 
   [[nodiscard]] Kind kind() const override;
 
@@ -233,6 +234,7 @@ class Image : public Partition {
   InternalSharedPtr<detail::LogicalStore> func_;
   InternalSharedPtr<Partition> func_partition_{};
   mapping::detail::Machine machine_{};
+  ImageComputationHint hint_{};
 };
 
 [[nodiscard]] std::unique_ptr<NoPartition> create_no_partition();
@@ -251,7 +253,8 @@ class Image : public Partition {
 
 [[nodiscard]] std::unique_ptr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,
                                                   InternalSharedPtr<Partition> func_partition,
-                                                  mapping::detail::Machine machine);
+                                                  mapping::detail::Machine machine,
+                                                  ImageComputationHint hint);
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);
 

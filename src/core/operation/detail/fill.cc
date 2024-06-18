@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -58,10 +58,10 @@ void Fill::validate()
 void Fill::launch(Strategy* strategy)
 {
   if (lhs_->has_scalar_storage()) {
-    if (value_.index() == 0) {
-      lhs_->set_future(std::get<0>(value_)->get_future());
+    if (const auto* logical_store = std::get_if<InternalSharedPtr<LogicalStore>>(&value_)) {
+      lhs_->set_future((*logical_store)->get_future());
     } else {
-      auto& value = std::get<1>(value_);
+      const auto& value = std::get<Scalar>(value_);
       lhs_->set_future(Legion::Future::from_untyped_pointer(value.data(), value.size()));
     }
     return;
@@ -69,22 +69,22 @@ void Fill::launch(Strategy* strategy)
 
   auto launcher      = FillLauncher{machine_, priority()};
   auto launch_domain = strategy->launch_domain(this);
-  auto part          = (*strategy)[lhs_var_];
+  auto&& part        = (*strategy)[lhs_var_];
   auto lhs_proj      = create_store_partition(lhs_, part)->create_store_projection(launch_domain);
 
-  if (value_.index() == 0) {
+  if (const auto* logical_store = std::get_if<InternalSharedPtr<LogicalStore>>(&value_)) {
     if (launch_domain.is_valid()) {
-      launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::get<0>(value_).get());
+      launcher.launch(launch_domain, lhs_.get(), *lhs_proj, logical_store->get());
       lhs_->set_key_partition(machine(), part.get());
     } else {
-      launcher.launch_single(lhs_.get(), *lhs_proj, std::get<0>(value_).get());
+      launcher.launch_single(lhs_.get(), *lhs_proj, logical_store->get());
     }
   } else {
     if (launch_domain.is_valid()) {
-      launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::get<1>(value_));
+      launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::get<Scalar>(value_));
       lhs_->set_key_partition(machine(), part.get());
     } else {
-      launcher.launch_single(lhs_.get(), *lhs_proj, std::get<1>(value_));
+      launcher.launch_single(lhs_.get(), *lhs_proj, std::get<Scalar>(value_));
     }
   }
 }

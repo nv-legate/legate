@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -52,7 +52,7 @@ class ScatterGather final : public Operation {
   StoreArg target_indirect_{};
   StoreArg source_{};
   StoreArg source_indirect_{};
-  InternalSharedPtr<Constraint> constraint_{};
+  InternalSharedPtr<Alignment> constraint_{};
   std::optional<std::int32_t> redop_{};
 };
 

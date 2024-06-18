@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -20,7 +20,7 @@
 
 #include <map>
 #include <memory>
-#include <string>
+#include <string_view>
 
 /** @defgroup task Task
  */
@@ -50,6 +50,25 @@ namespace legate {
  *
  * Each task class must also have a type alias `Registrar` that points to a library specific
  * registrar class. (See legate::TaskRegistrar for details.)
+ *
+ * Each task can also declare the following static members which are used as defaults in
+ * variious circumstances:
+ *
+ * - `static constexpr std::int32_t TASK_ID`: Specifies the default local task ID used when
+ *   registering a task with a library, and subsequent creation. If not present, then the user
+ *   must pass the required task ID whenever creating or registering the task.
+ * - `static constexpr VariantOptions CPU_VARIANT_OPTIONS`: Specifies the default variant
+ *   options used when registering the CPU variant of the task.
+ * - `static constexpr VariantOptions OMP_VARIANT_OPTIONS`: Specifies the default variant
+ *   options used when registering the OMP variant of the task.
+ * - `static constexpr VariantOptions GPU_VARIANT_OPTIONS`: Specifies the default variant
+ *   options used when registering the GPU variant of the task.
+ *
+ * If the default variant options are not present, the variant options for a given variant `v`
+ * are selected in the following order:
+ * 1. The variant options (if any) supplied at the call-site of `register_variants()`.
+ * 2. The default variant options (if any) found in `XXX_VARIANT_OPTIONS`.
+ * 3. The global default variant options found in `VariantOptions::DEFAULT_OPTIONS`.
  */
 template <typename T>
 class LegateTask {
@@ -65,7 +84,7 @@ class LegateTask {
    * can optionally specify variant options.
    *
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
-   * use the default set of options
+   * use the default set of options as discussed in the class description.
    */
   static void register_variants(
     const std::map<LegateVariantCode, VariantOptions>& all_options = {});
@@ -78,7 +97,7 @@ class LegateTask {
    *
    * @param library Library to which the task should be registered
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
-   * use the default set of options
+   * use the default set of options as discussed in the class description.
    */
   static void register_variants(
     Library library, const std::map<LegateVariantCode, VariantOptions>& all_options = {});
@@ -91,7 +110,7 @@ class LegateTask {
    * @param library Library to which the task should be registered
    * @param task_id Task id
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
-   * use the default set of options
+   * use the default set of options as discussed in the class description.
    */
   static void register_variants(
     Library library,
@@ -103,10 +122,10 @@ class LegateTask {
   friend class detail::VariantHelper;
 
   // A helper to find and register all variants of a task
-  [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info(
+  [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info_(
     const std::map<LegateVariantCode, VariantOptions>& all_options);
 
-  [[nodiscard]] static const std::string& task_name();
+  [[nodiscard]] static std::string_view task_name_();
 
   template <VariantImpl variant_fn, LegateVariantCode variant_kind>
   static void task_wrapper_(const void* args,

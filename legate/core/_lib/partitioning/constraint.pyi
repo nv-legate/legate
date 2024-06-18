@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 
 from collections.abc import Callable, Collection
+from enum import IntEnum, unique
 from typing import Any, TypeAlias, overload
 
 class Variable:
@@ -29,6 +30,12 @@ class ConstraintProxy:
     @property
     def args(self) -> tuple[Any, ...]: ...
 
+@unique
+class ImageComputationHint(IntEnum):
+    NO_HINT: int
+    MIN_MAX: int
+    FIRST_LAST: int
+
 @overload
 def align(lhs: Variable, rhs: Variable) -> Constraint: ...
 @overload
@@ -42,9 +49,17 @@ def broadcast(
     variable: str, axes: Collection[int] = tuple()
 ) -> ConstraintProxy: ...
 @overload
-def image(var_function: Variable, var_range: Variable) -> Constraint: ...
+def image(
+    var_function: Variable,
+    var_range: Variable,
+    hint: ImageComputationHint = ImageComputationHint.NO_HINT,
+) -> Constraint: ...
 @overload
-def image(var_function: str, var_range: str) -> ConstraintProxy: ...
+def image(
+    var_function: str,
+    var_range: str,
+    hint: ImageComputationHint = ImageComputationHint.NO_HINT,
+) -> ConstraintProxy: ...
 @overload
 def scale(
     factors: tuple[int, ...], var_smaller: Variable, var_bigger: Variable

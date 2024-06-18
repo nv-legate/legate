@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -29,8 +29,7 @@ namespace legate::mapping::detail {
 class Machine {
  public:
   Machine() = default;
-  explicit Machine(const std::map<TaskTarget, ProcessorRange>& processor_ranges);
-  explicit Machine(std::map<TaskTarget, ProcessorRange>&& processor_ranges);
+  explicit Machine(std::map<TaskTarget, ProcessorRange> processor_ranges);
 
   [[nodiscard]] const ProcessorRange& processor_range() const;
   [[nodiscard]] const ProcessorRange& processor_range(TaskTarget target) const;
@@ -64,14 +63,9 @@ class Machine {
 
   TaskTarget preferred_target{TaskTarget::CPU};
   std::map<TaskTarget, ProcessorRange> processor_ranges{};
-
- private:
-  struct private_tag {};
-
-  explicit Machine(private_tag, std::map<TaskTarget, ProcessorRange> processor_ranges);
 };
 
-std::ostream& operator<<(std::ostream& stream, const Machine& machine);
+std::ostream& operator<<(std::ostream& os, const Machine& machine);
 
 class LocalProcessorRange {
  public:
@@ -90,13 +84,13 @@ class LocalProcessorRange {
   [[nodiscard]] std::string to_string() const;
   [[nodiscard]] std::uint32_t total_proc_count() const;
 
+  friend std::ostream& operator<<(std::ostream& os, const LocalProcessorRange& range);
+
  private:
   std::uint32_t offset_{};
   std::uint32_t total_proc_count_{};
   Span<const Processor> procs_{};
 };
-
-std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& range);
 
 // A machine object holding handles to local processors and memories
 class LocalMachine {

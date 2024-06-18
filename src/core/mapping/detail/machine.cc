@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -27,8 +27,7 @@ namespace legate::mapping::detail {
 // legate::mapping::detail::Machine
 //////////////////////////////////////////
 
-Machine::Machine(private_tag, std::map<TaskTarget, ProcessorRange> ranges)
-  : processor_ranges{std::move(ranges)}
+Machine::Machine(std::map<TaskTarget, ProcessorRange> ranges) : processor_ranges{std::move(ranges)}
 {
   for (auto&& [target, processor_range] : processor_ranges) {
     if (!processor_range.empty()) {
@@ -38,28 +37,14 @@ Machine::Machine(private_tag, std::map<TaskTarget, ProcessorRange> ranges)
   }
 }
 
-Machine::Machine(const std::map<TaskTarget, ProcessorRange>& ranges)
-  : Machine{private_tag{}, ranges}
-{
-}
-
-Machine::Machine(std::map<TaskTarget, ProcessorRange>&& ranges)
-  : Machine{private_tag{}, std::move(ranges)}
-{
-}
-
 const ProcessorRange& Machine::processor_range() const { return processor_range(preferred_target); }
-
-namespace {
-
-constexpr ProcessorRange EMPTY_RANGE{};
-// clang-format likes to gobble this space unless we put something here...
-}  // namespace
 
 const ProcessorRange& Machine::processor_range(TaskTarget target) const
 {
   auto finder = processor_ranges.find(target);
   if (finder == processor_ranges.end()) {
+    static constexpr ProcessorRange EMPTY_RANGE{};
+
     return EMPTY_RANGE;
   }
   return finder->second;
@@ -70,7 +55,7 @@ std::vector<TaskTarget> Machine::valid_targets() const
   std::vector<TaskTarget> result;
 
   result.reserve(processor_ranges.size());
-  for (auto& [target, range] : processor_ranges) {
+  for (auto&& [target, range] : processor_ranges) {
     if (range.empty()) {
       continue;
     }
@@ -82,7 +67,8 @@ std::vector<TaskTarget> Machine::valid_targets() const
 std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
 {
   std::vector<TaskTarget> result;
-  for (auto& [target, _] : processor_ranges) {
+
+  for (auto&& [target, _] : processor_ranges) {
     if (to_exclude.find(target) == to_exclude.end()) {
       result.push_back(target);
     }
@@ -97,20 +83,17 @@ std::uint32_t Machine::count(TaskTarget target) const { return processor_range(t
 std::string Machine::to_string() const
 {
   std::stringstream ss;
-  ss << "Machine(preferred_target: " << preferred_target;
-  for (auto& [kind, range] : processor_ranges) {
-    ss << ", " << kind << ": " << range.to_string();
-  }
-  ss << ")";
+
+  ss << *this;
   return std::move(ss).str();
 }
 
 void Machine::pack(legate::detail::BufferBuilder& buffer) const
 {
-  buffer.pack<std::int32_t>(static_cast<std::int32_t>(preferred_target));
-  buffer.pack<std::uint32_t>(processor_ranges.size());
-  for (auto& [target, processor_range] : processor_ranges) {
-    buffer.pack<std::int32_t>(static_cast<std::int32_t>(target));
+  buffer.pack(legate::traits::detail::to_underlying(preferred_target));
+  buffer.pack(static_cast<std::uint32_t>(processor_ranges.size()));
+  for (auto&& [target, processor_range] : processor_ranges) {
+    buffer.pack(legate::traits::detail::to_underlying(target));
     buffer.pack<std::uint32_t>(processor_range.low);
     buffer.pack<std::uint32_t>(processor_range.high);
     buffer.pack<std::uint32_t>(processor_range.per_node_count);
@@ -186,10 +169,14 @@ bool Machine::empty() const
     processor_ranges.begin(), processor_ranges.end(), [](auto& rng) { return rng.second.empty(); });
 }
 
-std::ostream& operator<<(std::ostream& stream, const Machine& machine)
+std::ostream& operator<<(std::ostream& os, const Machine& machine)
 {
-  stream << machine.to_string();
-  return stream;
+  os << "Machine(preferred_target: " << machine.preferred_target;
+  for (auto&& [kind, range] : machine.processor_ranges) {
+    os << ", " << kind << ": " << range;
+  }
+  os << ")";
+  return os;
 }
 
 ///////////////////////////////////////////
@@ -201,26 +188,27 @@ const Processor& LocalProcessorRange::operator[](std::uint32_t idx) const
   auto local_idx = idx - offset_;
   static_assert(std::is_unsigned_v<decltype(local_idx)>,
                 "if local_idx becomes signed, also check local_idx >= 0 below!");
-  LegateAssert(local_idx < procs_.size());
+  LEGATE_ASSERT(local_idx < procs_.size());
   return procs_[local_idx];
 }
 
 std::string LocalProcessorRange::to_string() const
 {
   std::stringstream ss;
-  ss << "{offset: " << offset_ << ", total processor count: " << total_proc_count_
-     << ", processors: ";
-  for (auto&& proc : procs_) {
-    ss << proc << ",";
-  }
-  ss << "}";
+
+  ss << *this;
   return std::move(ss).str();
 }
 
-std::ostream& operator<<(std::ostream& stream, const LocalProcessorRange& range)
+std::ostream& operator<<(std::ostream& os, const LocalProcessorRange& range)
 {
-  stream << range.to_string();
-  return stream;
+  os << "{offset: " << range.offset_ << ", total processor count: " << range.total_proc_count_
+     << ", processors: ";
+  for (auto&& proc : range.procs_) {
+    os << proc << ",";
+  }
+  os << "}";
+  return os;
 }
 
 ///////////////////////////////////////////
@@ -258,26 +246,26 @@ LocalMachine::LocalMachine()
   // Now do queries to find all our local memories
   Legion::Machine::MemoryQuery sysmem{legion_machine};
   sysmem.local_address_space().only_kind(Legion::Memory::SYSTEM_MEM);
-  LegateCheck(sysmem.count() > 0);
+  LEGATE_CHECK(sysmem.count() > 0);
   system_memory_ = sysmem.first();
 
   if (!gpus_.empty()) {
     Legion::Machine::MemoryQuery zcmem{legion_machine};
 
     zcmem.local_address_space().only_kind(Legion::Memory::Z_COPY_MEM);
-    LegateCheck(zcmem.count() > 0);
+    LEGATE_CHECK(zcmem.count() > 0);
     zerocopy_memory_ = zcmem.first();
   }
 
-  for (auto& gpu : gpus_) {
+  for (auto&& gpu : gpus_) {
     Legion::Machine::MemoryQuery framebuffer{legion_machine};
 
     framebuffer.local_address_space().only_kind(Legion::Memory::GPU_FB_MEM).best_affinity_to(gpu);
-    LegateCheck(framebuffer.count() > 0);
+    LEGATE_CHECK(framebuffer.count() > 0);
     frame_buffers_[gpu] = framebuffer.first();
   }
 
-  for (auto& omp : omps_) {
+  for (auto&& omp : omps_) {
     Legion::Machine::MemoryQuery sockmem{legion_machine};
 
     sockmem.local_address_space().only_kind(Legion::Memory::SOCKET_MEM).best_affinity_to(omp);
@@ -365,7 +353,7 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
     case StoreTarget::FBMEM: return frame_buffers_.at(proc);
     case StoreTarget::ZCMEM: return zerocopy_memory_;
     case StoreTarget::SOCKETMEM: return socket_memories_.at(proc);
-    default: LEGATE_ABORT("invalid StoreTarget: " << static_cast<int>(target));
+    default: LEGATE_ABORT("invalid StoreTarget: " << legate::traits::detail::to_underlying(target));
   }
   return Legion::Memory::NO_MEMORY;
 }

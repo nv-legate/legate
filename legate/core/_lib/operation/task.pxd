@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -25,6 +25,7 @@ from ..partitioning.constraint cimport (
     _Variable,
 )
 from ..utilities.tuple cimport _tuple
+from ..utilities.unconstructable cimport Unconstructable
 from .projection cimport _SymbolicPoint
 
 
@@ -42,7 +43,7 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
         void add_constraint(_Constraint)
         _Variable find_or_declare_partition(_LogicalArray)
         _Variable declare_partition()
-        const std_string provenance() const
+        std_string_view provenance() const
         void set_concurrent(bool)
         void set_side_effect(bool)
         void throws_exception(bool)
@@ -64,14 +65,14 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
             _LogicalStorePartition, int32_t, std_optional[_SymbolicPoint]
         ) except+
         void add_scalar_arg(const _Scalar& scalar)
-        const std_string provenance() const
+        std_string_view provenance() const
         void set_concurrent(bool)
         void set_side_effect(bool)
         void throws_exception(bool)
         void add_communicator(std_string_view)
 
 
-cdef class AutoTask:
+cdef class AutoTask(Unconstructable):
     cdef _AutoTask _handle
     cdef list[type] _exception_types
     cdef bool _locked
@@ -107,7 +108,7 @@ cdef class AutoTask:
     cpdef void add_cpu_communicator(self)
     cpdef void add_cal_communicator(self)
 
-cdef class ManualTask:
+cdef class ManualTask(Unconstructable):
     cdef _ManualTask _handle
     cdef list[type] _exception_types
 

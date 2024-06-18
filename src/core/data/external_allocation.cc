@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -18,7 +18,7 @@
 #include "legate_defines.h"
 #include "realm/instance.h"
 
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
 #include "realm/cuda/cuda_access.h"
 #endif
 
@@ -60,7 +60,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   bool read_only,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
 {
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   auto realm_resource = std::make_unique<Realm::ExternalCudaPinnedHostResource>(
     reinterpret_cast<std::uintptr_t>(ptr), size, read_only);
   return ExternalAllocation{
@@ -87,7 +87,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   bool read_only,
   std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
 {
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   auto& local_gpus = detail::Runtime::get_runtime()->local_machine().gpus();
   if (local_device_id >= local_gpus.size()) {
     throw std::out_of_range{"Device ID " + std::to_string(local_device_id) +

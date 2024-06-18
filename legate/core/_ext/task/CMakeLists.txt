@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,13 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-set(
-  cython_sources
-  decorator.pyx
-  invoker.pyx
-  py_task.pyx
-  type.pyx
-  util.pyx
-)
+list(APPEND CMAKE_MESSAGE_CONTEXT "task")
+
+set(cython_sources decorator.pyx invoker.pyx py_task.pyx type.pyx util.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,19 +17,18 @@
 
 namespace bloat_constraints {
 
-using BloatConstraint = DefaultFixture;
+// NOLINTBEGIN(readability-magic-numbers)
 
-static const char* library_name = "test_bloat_constraints";
+namespace {
 
-static legate::Logger logger(library_name);
+constexpr std::int64_t BLOAT_TESTER = 0;
 
-enum TaskIDs {
-  BLOAT_TESTER = 0,
-};
+}  // namespace
 
 template <std::int32_t DIM>
 struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
-  static const std::int32_t TASK_ID = BLOAT_TESTER + DIM;
+  static constexpr std::int32_t TASK_ID = BLOAT_TESTER + DIM;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto source  = context.input(0);
@@ -58,19 +57,18 @@ struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
   }
 };
 
-void prepare()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_bloat_constraints";
+  static void registration_callback(legate::Library library)
+  {
+    BloatTester<1>::register_variants(library);
+    BloatTester<2>::register_variants(library);
+    BloatTester<3>::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  BloatTester<1>::register_variants(context);
-  BloatTester<2>::register_variants(context);
-  BloatTester<3>::register_variants(context);
-}
+};
+
+class BloatConstraint : public RegisterOnceFixture<Config> {};
 
 struct BloatTestSpec {
   legate::tuple<std::uint64_t> extents;
@@ -81,7 +79,7 @@ struct BloatTestSpec {
 void test_bloat(const BloatTestSpec& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto source  = runtime->create_store(spec.extents, legate::int64());
   auto bloated = runtime->create_store(spec.extents, legate::int64());
@@ -103,7 +101,7 @@ void test_bloat(const BloatTestSpec& spec)
 void test_invalid()
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(library_name);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   {
     auto source  = runtime->create_store(legate::Shape{1, 2}, legate::float16());
@@ -153,7 +151,6 @@ void test_invalid()
 
 TEST_F(BloatConstraint, 1D)
 {
-  prepare();
   test_bloat({legate::tuple<std::uint64_t>{10},
               legate::tuple<std::uint64_t>{2},
               legate::tuple<std::uint64_t>{4}});
@@ -161,7 +158,6 @@ TEST_F(BloatConstraint, 1D)
 
 TEST_F(BloatConstraint, 2D)
 {
-  prepare();
   test_bloat({legate::tuple<std::uint64_t>{9, 9},
               legate::tuple<std::uint64_t>{2, 3},
               legate::tuple<std::uint64_t>{3, 4}});
@@ -169,16 +165,13 @@ TEST_F(BloatConstraint, 2D)
 
 TEST_F(BloatConstraint, 3D)
 {
-  prepare();
   test_bloat({legate::tuple<std::uint64_t>{10, 10, 10},
               legate::tuple<std::uint64_t>{2, 3, 4},
               legate::tuple<std::uint64_t>{4, 3, 2}});
 }
 
-TEST_F(BloatConstraint, Invalid)
-{
-  prepare();
-  test_invalid();
-}
+TEST_F(BloatConstraint, Invalid) { test_invalid(); }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace bloat_constraints

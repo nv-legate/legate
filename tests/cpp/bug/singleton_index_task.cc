@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -19,7 +19,13 @@ namespace singleton_index_task_test {
 
 using SingletonIndexTask = DefaultFixture;
 
-constexpr const char* library_name = "test_singleton_index_task";
+// NOLINTBEGIN(readability-magic-numbers)
+
+namespace {
+
+constexpr std::string_view LIBRARY_NAME = "test_singleton_index_task";
+
+}  // namespace
 
 struct Checker : public legate::LegateTask<Checker> {
   static const std::int32_t TASK_ID = 0;
@@ -33,7 +39,7 @@ struct Checker : public legate::LegateTask<Checker> {
 TEST_F(SingletonIndexTask, Bug1)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
+  auto library = runtime->create_library(LIBRARY_NAME);
   Checker::register_variants(library);
 
   auto store = runtime->create_store(legate::Shape{10, 1}, legate::int64());
@@ -46,5 +52,7 @@ TEST_F(SingletonIndexTask, Bug1)
   task.add_communicator("cpu");
   runtime->submit(std::move(task));
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace singleton_index_task_test

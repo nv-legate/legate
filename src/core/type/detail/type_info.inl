@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -84,8 +84,6 @@ inline std::uint32_t FixedArrayType::alignment() const { return element_type_->a
 
 inline bool FixedArrayType::variable_size() const { return false; }
 
-inline const FixedArrayType& FixedArrayType::as_fixed_array_type() const { return *this; }
-
 inline std::uint32_t FixedArrayType::num_elements() const { return N_; }
 
 inline const InternalSharedPtr<Type>& FixedArrayType::element_type() const { return element_type_; }
@@ -97,8 +95,6 @@ inline std::uint32_t StructType::size() const { return size_; }
 inline std::uint32_t StructType::alignment() const { return alignment_; }
 
 inline bool StructType::variable_size() const { return false; }
-
-inline const StructType& StructType::as_struct_type() const { return *this; }
 
 inline std::uint32_t StructType::num_fields() const { return field_types().size(); }
 
@@ -116,8 +112,6 @@ inline const std::vector<std::uint32_t>& StructType::offsets() const { return of
 inline std::uint32_t ListType::alignment() const { return 0; }
 
 inline bool ListType::variable_size() const { return true; }
-
-inline const ListType& ListType::as_list_type() const { return *this; }
 
 inline const InternalSharedPtr<Type>& ListType::element_type() const { return element_type_; }
 

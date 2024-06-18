@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -13,6 +13,7 @@
 #pragma once
 
 // Useful for IDEs
+#include "core/utilities/detail/zip.h"
 #include "core/utilities/tuple.h"
 
 #include <algorithm>
@@ -52,7 +53,7 @@ T& tuple<T>::at(std::uint32_t idx)
 template <typename T>
 const T& tuple<T>::operator[](std::uint32_t idx) const
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     return at(idx);
   }
   return data()[idx];
@@ -61,7 +62,7 @@ const T& tuple<T>::operator[](std::uint32_t idx) const
 template <typename T>
 T& tuple<T>::operator[](std::uint32_t idx)
 {
-  if (LegateDefined(LEGATE_USE_DEBUG)) {
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     return at(idx);
   }
   return data()[idx];
@@ -80,9 +81,27 @@ bool tuple<T>::operator!=(const tuple<T>& other) const
 }
 
 template <typename T>
-bool tuple<T>::operator<(const tuple<T>& other) const
+bool tuple<T>::less(const tuple<T>& other) const
 {
-  return data() < other.data();
+  return apply_reduce_all(std::less<>{}, *this, other);
+}
+
+template <typename T>
+bool tuple<T>::less_equal(const tuple<T>& other) const
+{
+  return apply_reduce_all(std::less_equal<>{}, *this, other);
+}
+
+template <typename T>
+bool tuple<T>::greater(const tuple<T>& other) const
+{
+  return apply_reduce_all(std::greater<>{}, *this, other);
+}
+
+template <typename T>
+bool tuple<T>::greater_equal(const tuple<T>& other) const
+{
+  return apply_reduce_all(std::greater_equal<>{}, *this, other);
 }
 
 template <typename T>
@@ -170,7 +189,7 @@ tuple<T> tuple<T>::insert(std::int32_t pos, U&& value) const
   const auto len = static_cast<std::int32_t>(size());
   tuple new_values;
 
-  new_values.reserve(len + 1);
+  new_values.reserve(static_cast<std::size_t>(len) + 1);
   for (std::int32_t idx = 0; idx < pos; ++idx) {
     new_values.append_inplace(data()[idx]);
   }
@@ -301,6 +320,26 @@ tuple<T> tuple<T>::map(const std::vector<std::int32_t>& mapping) const
 }
 
 template <typename T>
+void tuple<T>::map_inplace(std::vector<std::int32_t>& mapping)
+{
+  LegateCheck(mapping.size() == size());
+  // https://devblogs.microsoft.com/oldnewthing/20170102-00/?p=95095
+  for (std::size_t i = 0; i < mapping.size(); ++i) {
+    auto current = i;
+
+    while (i != mapping[current]) {
+      auto next = mapping[current];
+      using std::swap;
+
+      swap(data()[current], data()[next]);
+      mapping[current] = static_cast<std::int32_t>(current);
+      current          = static_cast<std::size_t>(next);
+    }
+    mapping[current] = static_cast<std::int32_t>(current);
+  }
+}
+
+template <typename T>
 std::string tuple<T>::to_string() const
 {
   // clang-tidy says we can make this const, but that's wrong?
@@ -404,7 +443,7 @@ tuple<T> from_range(T start, T stop)
 }
 
 template <typename T>
-tuple<T> full(detail::type_identity_t<typename tuple<T>::size_type> size, T init)
+tuple<T> full(traits::detail::type_identity_t<typename tuple<T>::size_type> size, T init)
 {
   // Note the use of smooth brackets for initializer! container_type may be an STL container,
   // in which case it suffers from the same 2-argument size-init ctor silently becoming an
@@ -415,7 +454,7 @@ tuple<T> full(detail::type_identity_t<typename tuple<T>::size_type> size, T init
 }
 
 template <typename FUNC, typename T>
-auto apply(FUNC func, const tuple<T>& rhs)
+auto apply(FUNC&& func, const tuple<T>& rhs)
 {
   using VAL = std::invoke_result_t<FUNC, T>;
   tuple<VAL> result;
@@ -428,7 +467,7 @@ auto apply(FUNC func, const tuple<T>& rhs)
 }
 
 template <typename FUNC, typename T1, typename T2>
-auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
+auto apply(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
 {
   using VAL = std::invoke_result_t<FUNC, T1, T2>;
   tuple<VAL> result;
@@ -437,14 +476,15 @@ auto apply(FUNC func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
     throw std::invalid_argument{"Operands should have the same size"};
   }
   result.reserve(rhs1.size());
-  for (std::uint32_t idx = 0; idx < rhs1.size(); ++idx) {
-    result.append_inplace(func(rhs1[idx], rhs2[idx]));
+
+  for (auto&& [rh1, rh2] : legate::detail::zip(rhs1.data(), rhs2.data())) {
+    result.append_inplace(func(rh1, rh2));
   }
   return result;
 }
 
 template <typename FUNC, typename T1, typename T2>
-auto apply(FUNC func, const tuple<T1>& rhs1, const T2& rhs2)
+auto apply(FUNC&& func, const tuple<T1>& rhs1, const T2& rhs2)
 {
   using VAL = std::invoke_result_t<FUNC, T1, T2>;
   tuple<VAL> result;
@@ -454,6 +494,16 @@ auto apply(FUNC func, const tuple<T1>& rhs1, const T2& rhs2)
     result.append_inplace(func(rhs1_v, rhs2));
   }
   return result;
+}
+
+template <typename FUNC, typename T1, typename T2>
+bool apply_reduce_all(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
+{
+  const auto zipper = legate::detail::zip(rhs1.data(), rhs2.data());
+  return std::all_of(zipper.begin(), zipper.end(), [&func](auto&& pair) {
+    auto&& [rh1, rh2] = pair;
+    return func(rh1, rh2);
+  });
 }
 
 }  // namespace legate

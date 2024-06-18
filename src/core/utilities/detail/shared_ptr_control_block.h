@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -51,7 +51,7 @@ class ControlBlockBase {
 
  protected:
   template <typename T>
-  static void destroy_control_block_impl_(T* cb_impl);
+  static void destroy_control_block_impl_(T* cb_impl) noexcept;
 
  private:
   [[nodiscard]] static ref_count_type load_refcount_(
@@ -97,7 +97,7 @@ class SeparateControlBlock final : public ControlBlockBase {
   [[nodiscard]] const deleter_type& deleter_() const noexcept;
 
   value_type* ptr_;
-  compressed_pair<deleter_type, allocator_type> pair_;
+  CompressedPair<deleter_type, allocator_type> pair_;
 };
 
 // ==========================================================================================
@@ -109,12 +109,12 @@ class InplaceControlBlock final : public ControlBlockBase {
   using allocator_type = Allocator;
 
  private:
-  class aligned_storage {
+  class AlignedStorage {
    public:
-    constexpr aligned_storage() noexcept = default;
+    constexpr AlignedStorage() noexcept = default;
     // use this ctor to avoid zero-initializing the array
     // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::pair constructor
-    constexpr aligned_storage(std::nullptr_t) noexcept {}
+    constexpr AlignedStorage(std::nullptr_t) noexcept {}
 
     [[nodiscard]] void* addr() noexcept { return static_cast<void*>(&mem); }
     [[nodiscard]] const void* addr() const noexcept { return static_cast<const void*>(&mem); }
@@ -142,16 +142,19 @@ class InplaceControlBlock final : public ControlBlockBase {
   [[nodiscard]] allocator_type& alloc_() noexcept;
   [[nodiscard]] const allocator_type& alloc_() const noexcept;
 
-  [[nodiscard]] aligned_storage& store_() noexcept;
-  [[nodiscard]] const aligned_storage& store_() const noexcept;
+  [[nodiscard]] AlignedStorage& store_() noexcept;
+  [[nodiscard]] const AlignedStorage& store_() const noexcept;
 
-  compressed_pair<allocator_type, aligned_storage> pair_;
+  CompressedPair<allocator_type, AlignedStorage> pair_;
 };
 
 // ==========================================================================================
 
 template <typename U, typename Alloc, typename P, typename... Args>
-[[nodiscard]] U* construct_from_allocator_(Alloc& allocator, P* hint, Args&&... args);
+[[nodiscard]] U* construct_from_allocator_(  // NOLINT(readability-identifier-naming)
+  Alloc& allocator,
+  P* hint,
+  Args&&... args);
 
 }  // namespace legate::detail
 

@@ -3,7 +3,7 @@
 run_test_or_analysis() {
     set -x
 
-    . conda-utils
+    . legate-conda-utils
     . setup-utils;
 
     set_base_defs;
@@ -19,14 +19,25 @@ run_test_or_analysis() {
 
     set -xeuo pipefail
 
-    cd "$REPO_DIR"
+    # rename
+    export LEGATE_CORE_DIR="${REPO_DIR}"
+
+    # HACK: this should be done much better, and in a much more transparent manner... but
+    # alas, we no longer have any control of the setup phases in github ci, so we must do
+    # it here.
+    if [[ -z "${LEGATE_CORE_ARCH:-}" ]]; then
+        local locase_uname="$(uname | tr '[:upper:]' '[:lower:]')"
+        LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_CORE_BUILD_MODE%-gcc}"
+
+        export LEGATE_CORE_ARCH
+    fi
+
+    cd "$LEGATE_CORE_DIR"
 
     case "$1" in
         "python")
-            ucx_libs=
-            [ "${UCX_ENABLED}" = "ON" ] && ucx_libs=ucx\ openmpi
             echo "Executing python tests..."
-            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
+            if [[ ${LEGATE_CORE_ARCH} == *sanitizer* ]]; then
               echo "============================================================================"
               echo "x ------------------------------------------------------------------------ x"
               echo "Cannot yet handle running Python tests using Address Sanitizer, bailing!"
@@ -35,16 +46,20 @@ run_test_or_analysis() {
               return 0
             fi
 
+            ucx_libs=
+            [ "${UCX_ENABLED}" = "ON" ] && ucx_libs=ucx\ openmpi\ openssh
+
             set +eou pipefail
-            mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
+            # Remove the URM channel when the real UCX 1.17 is released
+            mamba install -y -n "${CONDA_ENV}" -c conda-forge -c https://raw.githubusercontent.com/nv-legate/ucx-package/main psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
             set -eou pipefail
 
-            cd $REPO_DIR/tests/unit
+            cd $LEGATE_CORE_DIR
             # Leaving this here in case we ever decide to enable this. If we don't do
             # this, we get
             # ImportError: could not load libasan.6.so
             # when loading the Cython extension libs.
-            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-gcc ]]; then
+            if [[ ${LEGATE_CORE_ARCH} == *gcc-*-sanitizer* ]]; then
               # Trying to reproduce this on macOS? See
               # https://stackoverflow.com/questions/47619097/address-sanitizing-boost-python-modules
               #
@@ -58,17 +73,13 @@ run_test_or_analysis() {
               # /opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python
               # /path/to/your/file.py
               GCC_ASAN_PRELOAD=$(gcc -print-file-name=libasan.so)
-              for test_file in $(find . -name 'test_*.py'); do
-                LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest ${test_file}
-              done
-            elif [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-clang ]]; then
+              LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest tests/unit
+            elif [[ ${LEGATE_CORE_ARCH} == *clang-*-sanitizer* ]]; then
               echo "Must properly implement Address sanitizer lib injection for Clang-based presets!"
               echo "See impls for GCC above"
               return 1
             else
-              for test_file in $(find . -name 'test_*.py'); do
-                pytest ${test_file}
-              done
+              pytest tests/unit
             fi
 
             ;;
@@ -76,38 +87,72 @@ run_test_or_analysis() {
             echo "Running C++ unit tests..."
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil
 
+            WORKERS=""
             if [[ "${UCX_ENABLED}" == "ON" ]]; then
               set +eou pipefail
-              mamba install -y -n "${CONDA_ENV}" ucx openmpi
+              mamba install -y -n "${CONDA_ENV}" ucx openmpi openssh
               set -eou pipefail
+              WORKERS="-j 1"
             fi
 
-            cd "${REPO_DIR}"
-            mkdir -p ctest_install
-            sh "${ARTIFACTS_DIR}"/out/legate_core-*-$(uname).sh \
-               --prefix="${REPO_DIR}/ctest_install" \
-               --exclude-subdir \
-               --skip-license
+            cd "${LEGATE_CORE_DIR}"
 
-            EXTRA_ARGS=
+            EXTRA_ARGS=""
             # TODO (wonchanl, jfaibussowit) Sanitizers can raise false alarms if the code does
             # user-level threading, so we turn it off for sanitizer-enabled tests
-            if [[ ${LEGATE_CORE_CMAKE_PRESET} == *-sanitizer-* ]]; then
+            if [[ ${LEGATE_CORE_ARCH} == *sanitizer* ]]; then
               EXTRA_ARGS="-ll:force_kthreads"
+              sysctl vm.mmap_rnd_bits=28
             fi
-            python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
+            export EXTRA_ARGS
+            export WORKERS
 
+            function run_legate_tests()
+            {
+              local gtest_file="${1}"
+              local proc_type="${2}"
+              local proc_count="${3}"
+              python3 "${LEGATE_CORE_DIR}/test.py" \
+                      --gtest-file "${gtest_file}" \
+                      --verbose \
+                      --debug \
+                      --timeout 90 \
+                      --"${proc_type}" "${proc_count}" \
+                      --sysmem 100 \
+                      ${WORKERS} \
+                      ${EXTRA_ARGS}
+            }
+
+            function run_sequential_tests()
+            {
+              run_legate_tests "${CONDA_PREFIX}/bin/tests_wo_runtime" cpus 1
+              run_legate_tests "${CONDA_PREFIX}/bin/death_tests" cpus 1
+            }
+
+            function run_cpp_tests()
+            {
+              run_legate_tests "${CONDA_PREFIX}/bin/tests_with_runtime" "$@"
+            }
+
+            function run_gpu_tests()
+            {
+              run_legate_tests "${CONDA_PREFIX}/bin/tests_with_gpus" "$@"
+            }
+
+            run_sequential_tests
+            run_cpp_tests cpus 1
             # Also do some multi-CPU testing
             if [[ "$(uname)" == "Darwin" ]]; then
-                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 2 "${EXTRA_ARGS}"
+              run_cpp_tests cpus 2
             else
-                python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/cpp_tests --verbose --debug --cpus 4 "${EXTRA_ARGS}"
+              run_cpp_tests cpus 4
             fi
 
-            [[ -f ./ctest_install/bin/gpu_tests ]] && {
-              python3 "${REPO_DIR}"/test.py --gtest-file ./ctest_install/bin/gpu_tests --verbose --debug --cpus 1 "${EXTRA_ARGS}"
+            [[ -f ${CONDA_PREFIX}/bin/tests_with_gpus ]] && {
+              run_gpu_tests gpus 1
             }
             ;;
+
         *)
             echo "Invalid command: $1"
             return 1

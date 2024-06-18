@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -15,6 +15,7 @@ from libcpp.memory cimport unique_ptr as std_unique_ptr
 from ..data.scalar cimport Scalar, _Scalar
 from ..task.task_info cimport TaskInfo, _TaskInfo
 from ..type.type_info cimport Type, _Type
+from ..utilities.unconstructable cimport Unconstructable
 
 
 cdef extern from "core/runtime/library.h" namespace "legate" nogil:
@@ -29,7 +30,7 @@ cdef extern from "core/runtime/library.h" namespace "legate" nogil:
         void register_task(int64_t, std_unique_ptr[_TaskInfo])
 
 
-cdef class Library:
+cdef class Library(Unconstructable):
     cdef _Library _handle
 
     @staticmethod

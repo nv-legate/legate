@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -19,9 +19,7 @@
 
 namespace legate::detail {
 
-class ConsensusMatchingFieldManager;
 class Runtime;
-class Shape;
 
 class RegionManager {
  public:
@@ -31,7 +29,7 @@ class RegionManager {
  private:
   class ManagerEntry {
    public:
-    explicit ManagerEntry(const Legion::LogicalRegion& _region) : region{_region} {}
+    explicit ManagerEntry(Legion::LogicalRegion _region) : region{std::move(_region)} {}
     ManagerEntry(const Legion::LogicalRegion& _region, std::uint32_t num_fields)
       : region{_region}, next_field_id{FIELD_ID_BASE + num_fields}
     {
@@ -49,13 +47,11 @@ class RegionManager {
  public:
   explicit RegionManager(Legion::IndexSpace index_space);
   void destroy(bool unordered = false);
-  void record_pending_match_credit_update(ConsensusMatchingFieldManager* field_mgr);
-  void update_field_manager_match_credits(const Shape* initiator);
 
  private:
-  [[nodiscard]] const ManagerEntry& active_entry() const { return entries_.back(); }
-  [[nodiscard]] ManagerEntry& active_entry() { return entries_.back(); }
-  void push_entry();
+  [[nodiscard]] const ManagerEntry& active_entry_() const { return entries_.back(); }
+  [[nodiscard]] ManagerEntry& active_entry_() { return entries_.back(); }
+  void push_entry_();
 
  public:
   [[nodiscard]] bool has_space() const;
@@ -66,7 +62,6 @@ class RegionManager {
  private:
   Legion::IndexSpace index_space_{};
   std::vector<ManagerEntry> entries_{};
-  std::vector<ConsensusMatchingFieldManager*> pending_match_credit_updates_{};
 };
 
 }  // namespace legate::detail

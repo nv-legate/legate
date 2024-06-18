@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -9,6 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 #=============================================================================
+
+list(APPEND CMAKE_MESSAGE_CONTEXT "options")
 
 option(legate_core_BUILD_TESTS "Whether to build the C++ tests")
 option(legate_core_BUILD_INTEGRATION "Whether to build the C++ integration tests")
@@ -24,7 +26,8 @@ function(set_or_default var_name var_env)
     message(VERBOSE "legate.core: ${var_name}=${${var_name}}")
   elseif(DEFINED ENV{${var_env}})
     set(${var_name} $ENV{${var_env}} PARENT_SCOPE)
-    message(VERBOSE "legate.core: ${var_name}=$ENV{${var_env}} (from envvar '${var_env}')")
+    message(VERBOSE
+            "legate.core: ${var_name}=$ENV{${var_env}} (from envvar '${var_env}')")
   elseif(DEFINED var_default)
     set(${var_name} ${var_default} PARENT_SCOPE)
     message(VERBOSE "legate.core: ${var_name}=${var_default} (from default value)")
@@ -41,6 +44,11 @@ set_or_default(Legion_USE_HDF5 USE_HDF OFF)
 set_or_default(Legion_NETWORKS NETWORKS "")
 set_or_default(Legion_USE_OpenMP USE_OPENMP OFF)
 set_or_default(Legion_BOUNDS_CHECKS CHECK_BOUNDS OFF)
+set_or_default(legate_core_SKIP_NVCC_PEDANTIC_CHECK legate_core_SKIP_NVCC_PEDANTIC_CHECK
+               OFF)
+set_or_default(legate_core_ENABLE_SANITIZERS legate_core_ENABLE_SANITIZERS OFF)
+set_or_default(legate_core_IGNORE_INSTALLED_PACKAGES
+               legate_core_IGNORE_INSTALLED_PACKAGES OFF)
 
 option(Legion_SPY "Enable detailed logging for Legion Spy" OFF)
 option(Legion_USE_LLVM "Use LLVM JIT operations" OFF)
@@ -50,6 +58,12 @@ option(Legion_NETWORKS "Networking backends to use (semicolon-separated)" "")
 option(Legion_USE_OpenMP "Use OpenMP" OFF)
 option(Legion_USE_Python "Use Python" OFF)
 option(Legion_BOUNDS_CHECKS "Enable bounds checking in Legion accessors" OFF)
+option(legate_core_SKIP_NVCC_PEDANTIC_CHECK
+       "Skip checking for -pedantic or -Wpedantic compiler flags for NVCC" OFF)
+option(legate_core_ENABLE_SANITIZERS "Enable sanitizer support for legate.core" OFF)
+option(legate_core_IGNORE_INSTALLED_PACKAGES
+       "When deciding to search for or download third-party packages, never search and always download"
+       OFF)
 
 if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
   set_or_default(GASNet_ROOT_DIR GASNET)
@@ -64,35 +78,37 @@ set_or_default(Legion_MAX_DIM LEGION_MAX_DIM 4)
 
 # Check the max dimensions
 if((Legion_MAX_DIM LESS 1) OR (Legion_MAX_DIM GREATER 9))
-  message(FATAL_ERROR "The maximum number of Legate dimensions must be between 1 and 9 inclusive")
+  message(FATAL_ERROR "The maximum number of Legate dimensions must be between 1 and 9 inclusive"
+  )
 endif()
 
 set_or_default(Legion_MAX_FIELDS LEGION_MAX_FIELDS 256)
 
 # Check that max fields is between 32 and 4096 and is a power of 2
 if(NOT Legion_MAX_FIELDS MATCHES "^(32|64|128|256|512|1024|2048|4096)$")
-  message(FATAL_ERROR "The maximum number of Legate fields must be a power of 2 between 32 and 4096 inclusive")
+  message(FATAL_ERROR "The maximum number of Legate fields must be a power of 2 between 32 and 4096 inclusive"
+  )
 endif()
 
 # We never want local fields
 set(Legion_DEFAULT_LOCAL_FIELDS 0)
 
 option(legate_core_STATIC_CUDA_RUNTIME "Statically link the cuda runtime library" OFF)
-option(legate_core_EXCLUDE_LEGION_FROM_ALL "Exclude Legion targets from legate.core's 'all' target" OFF)
+option(legate_core_EXCLUDE_LEGION_FROM_ALL
+       "Exclude Legion targets from legate.core's 'all' target" OFF)
 option(legate_core_BUILD_DOCS "Build doxygen docs" OFF)
 
 set_or_default(NCCL_DIR NCCL_PATH)
-set_or_default(Thrust_DIR THRUST_PATH)
 set_or_default(CUDA_TOOLKIT_ROOT_DIR CUDA)
 set_or_default(Legion_CUDA_ARCH GPU_ARCH all-major)
 set_or_default(Legion_HIJACK_CUDART USE_CUDART_HIJACK OFF)
 
 include(CMakeDependentOption)
 cmake_dependent_option(Legion_HIJACK_CUDART
-  "Allow Legion to hijack and rewrite application calls into the CUDA runtime"
-  ON
-  "Legion_USE_CUDA;Legion_HIJACK_CUDART"
-  OFF)
+                       "Allow Legion to hijack and rewrite application calls into the CUDA runtime"
+                       ON
+                       "Legion_USE_CUDA;Legion_HIJACK_CUDART"
+                       OFF)
 # This needs to be added as an option to force values to be visible in Legion build
 option(Legion_HIJACK_CUDART "Replace default CUDA runtime with the Realm version" OFF)
 
@@ -112,7 +128,8 @@ if(BUILD_SHARED_LIBS)
     set(Legion_CUDA_DYNAMIC_LOAD OFF)
     set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
   elseif(NOT DEFINED Legion_CUDA_DYNAMIC_LOAD)
-    # If HIJACK_CUDART isn't set and BUILD_SHARED_LIBS is true, default Legion_CUDA_DYNAMIC_LOAD to true
+    # If HIJACK_CUDART isn't set and BUILD_SHARED_LIBS is true, default
+    # Legion_CUDA_DYNAMIC_LOAD to true
     set(Legion_CUDA_DYNAMIC_LOAD ON)
     set(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
   endif()
@@ -124,9 +141,11 @@ endif()
 
 set(legate_core_CXX_FLAGS "" CACHE STRING "C++ flags for legate core")
 set(legate_core_CUDA_FLAGS "" CACHE STRING "CUDA flags for legate core")
-set(legate_core_LINKER_FLAGS "" CACHE STRING "CUDA flags for legate core")
+set(legate_core_LINKER_FLAGS "" CACHE STRING "Linker flags for legate core")
 
 # there must be some way to automate creating these for all dependent packages...
 set(Legion_CXX_FLAGS "" CACHE STRING "C++ flags for Legion")
 set(Legion_CUDA_FLAGS "" CACHE STRING "CUDA flags for Legion")
-set(Legion_LINKER_FLAGS "" CACHE STRING "CUDA flags for Legion")
+set(Legion_LINKER_FLAGS "" CACHE STRING "Linker flags for Legion")
+
+list(POP_BACK CMAKE_MESSAGE_CONTEXT)

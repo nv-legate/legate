@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -13,9 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Tuple, Union
-
-from typing_extensions import TypeAlias
+from typing import TypeAlias
 
 from ...util.ui import dim, failed, passed, shell, skipped, timeout, yellow
 from ..config import Config
@@ -33,7 +31,7 @@ EAGER_ENV = {
 }
 
 
-RankShard: TypeAlias = Tuple[int, ...]
+RankShard: TypeAlias = tuple[int, ...]
 
 
 @dataclass(frozen=True)
@@ -79,7 +77,9 @@ class StageResult:
         return sum(p.returncode == 0 for p in self.procs)
 
 
-def adjust_workers(workers: int, requested_workers: Union[int, None]) -> int:
+def adjust_workers(
+    workers: int, requested_workers: int | None, *, detail: str | None = None
+) -> int:
     """Adjust computed workers according to command line requested workers.
 
     The final number of workers will only be adjusted down by this function.
@@ -92,6 +92,10 @@ def adjust_workers(workers: int, requested_workers: Union[int, None]) -> int:
     requested_workers: int | None, optional
         Requested number of workers from the user, if supplied (default: None)
 
+    detail: str | None, optional
+        Additional information to provide in case the adjusted number of
+        workers is zero (default: None)
+
     Returns
     -------
     int
@@ -101,15 +105,22 @@ def adjust_workers(workers: int, requested_workers: Union[int, None]) -> int:
     if requested_workers is not None and requested_workers < 0:
         raise ValueError("requested workers must be non-negative")
 
+    if requested_workers == 0:
+        raise RuntimeError("requested workers must not be zero")
+
     if requested_workers is not None:
         if requested_workers > workers:
             raise RuntimeError(
-                "Requested workers greater than assignable workers"
+                f"Requested workers ({requested_workers}) is greater than "
+                f"computed workers ({workers})"
             )
         workers = requested_workers
 
     if workers == 0:
-        raise RuntimeError("Current configuration results in zero workers")
+        msg = "Current configuration results in zero workers"
+        if detail:
+            msg += f" [details: {detail}]"
+        raise RuntimeError(msg)
 
     return workers
 
@@ -129,12 +140,12 @@ def log_proc(
         end = proc.end.strftime("%H:%M:%S.%f")[:-4]
         duration = f" {yellow(time)} " + dim(f"{{{start}, {end}}}")
 
-    msg = f"({name}){duration} {proc.test_file}"
+    msg = f"({name}){duration} {proc.test_display}"
     details = proc.output.split("\n") if verbose else None
     if proc.skipped:
         LOG(skipped(msg))
     elif proc.timeout:
-        LOG(timeout(msg))
+        LOG(timeout(msg, details=details))
     elif proc.returncode == 0:
         LOG(passed(msg, details=details))
     else:

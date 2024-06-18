@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -17,6 +17,7 @@ from libcpp.vector cimport vector as std_vector
 from ..type.type_info cimport _Type
 from ..utilities.shared_ptr cimport _SharedPtr
 from ..utilities.tuple cimport _tuple
+from ..utilities.unconstructable cimport Unconstructable
 from .detail.logical_store cimport _LogicalStoreImpl
 from .physical_store cimport PhysicalStore, _PhysicalStore
 from .shape cimport _Shape
@@ -43,7 +44,7 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStore delinearize(int32_t, std_vector[uint64_t]) except+
         _LogicalStorePartition partition_by_tiling(
             std_vector[uint64_t] tile_shape
-        )
+        ) except+
         _PhysicalStore get_physical_store() except+
         void detach()
         std_string to_string()
@@ -55,10 +56,10 @@ cdef extern from "core/data/logical_store.h" namespace "legate" nogil:
         _LogicalStorePartition(const _LogicalStorePartition&)
         _LogicalStore store()
         const _tuple[uint64_t]& color_shape() except+
-        _LogicalStore get_child_store(const _tuple[uint64_t]&)
+        _LogicalStore get_child_store(const _tuple[uint64_t]&) except+
 
 
-cdef class LogicalStore:
+cdef class LogicalStore(Unconstructable):
     cdef _LogicalStore _handle
 
     @staticmethod
@@ -71,6 +72,7 @@ cdef class LogicalStore:
     cpdef LogicalStore slice(self, int32_t dim, slice sl)
     cpdef LogicalStore transpose(self, object axes)
     cpdef LogicalStore delinearize(self, int32_t dim, tuple shape)
+    cpdef void fill(self, object value)
     cpdef LogicalStorePartition partition_by_tiling(self, object shape)
     cpdef PhysicalStore get_physical_store(self)
     cpdef void detach(self)

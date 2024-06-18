@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -14,47 +14,15 @@ from typing import Any
 
 import numpy as np
 import pytest
+from utils.data import ARRAY_TYPES, SCALAR_VALS
 
 from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
-
-ARRAY_TYPES = (
-    ty.bool_,
-    ty.complex128,
-    ty.complex64,
-    ty.float16,
-    ty.float32,
-    ty.float64,
-    ty.int16,
-    ty.int32,
-    ty.int64,
-    ty.int8,
-    ty.uint16,
-    ty.uint32,
-    ty.uint64,
-    ty.uint8,
-)
-
-VALS = (
-    True,
-    complex(1, 5),
-    complex(5, 1),
-    12.5,
-    3.1415,
-    0.7777777,
-    10,
-    1024,
-    4096,
-    -1,
-    65535,
-    4294967295,
-    101010,
-)
 
 
 class TestStoreCreation:
     @pytest.mark.parametrize(
         "val, dtype",
-        zip(VALS, ARRAY_TYPES),
+        zip(SCALAR_VALS, ARRAY_TYPES),
         ids=str,
     )
     def test_create_from_numpy_scalar(self, val: Any, dtype: ty.Type) -> None:
@@ -115,9 +83,10 @@ class TestStoreCreation:
         assert arr_np.shape == arr_store.shape
         assert np.allclose(arr_np, arr_store)
 
-    def test_create_from_numpy_array(self) -> None:
+    @pytest.mark.parametrize("shape", [(0,), (4, 2, 3), (1, 0, 1)], ids=str)
+    def test_create_from_numpy_array(self, shape: tuple[int]) -> None:
         runtime = get_legate_runtime()
-        arr_np = np.random.random((4, 2, 3))
+        arr_np = np.random.random(shape)
         store = runtime.create_store_from_buffer(
             ty.float64, arr_np.shape, arr_np, False
         )
@@ -131,7 +100,7 @@ class TestStoreCreation:
 class TestStoreCreationErrors:
     def test_invalid_shape_value(self) -> None:
         runtime = get_legate_runtime()
-        msg = "shape must be a Shape object or an iterable"
+        msg = "Expected an iterable but got.*"
         with pytest.raises(ValueError, match=msg):
             runtime.create_store(ty.int32, shape=1)
 
@@ -143,16 +112,18 @@ class TestStoreCreationErrors:
 
     def test_exceed_max_dim(self) -> None:
         runtime = get_legate_runtime()
-        msg = (
-            "The maximum number of dimensions is 4, "
-            "but a 5-D store is requested"
-        )
-        with pytest.raises(IndexError, match=msg):
+        with pytest.raises(IndexError, match="maximum number of dimensions"):
             runtime.create_store(ty.int32, shape=(1,) * (LEGATE_MAX_DIM + 1))
+
+    def test_buffer_exceed_max_dim(self) -> None:
+        runtime = get_legate_runtime()
+        arr = np.ndarray(range(1, LEGATE_MAX_DIM + 2))
+        with pytest.raises(IndexError, match="maximum number of dimensions"):
+            runtime.create_store_from_buffer(ty.int32, arr.shape, arr, False)
 
     def test_string_scalar(self) -> None:
         runtime = get_legate_runtime()
-        msg = "Store cannot be created with variable size type string"
+        msg = "Store must have a fixed-size type"
         scalar = Scalar("abcd", ty.string_type)
         with pytest.raises(ValueError, match=msg):
             runtime.create_store_from_scalar(scalar)

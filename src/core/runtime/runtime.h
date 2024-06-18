@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -44,10 +44,6 @@ namespace legate {
 
 class Scalar;
 class Type;
-
-extern std::uint32_t extract_env(const char* env_name,
-                                 std::uint32_t default_value,
-                                 std::uint32_t test_value);
 
 namespace detail {
 class Runtime;
@@ -529,8 +525,36 @@ class Runtime {
    */
   void issue_execution_fence(bool block = false);
 
+  /**
+   * @brief Raises a pending exception
+   *
+   * When the exception mode of a scope is "deferred" (i.e., Scope::exception_mode() ==
+   * ExceptionMode::DEFERRED), the exceptions from tasks in the scope are not immediately handled,
+   * but are pushed to the pending exception queue. Accumulated pending exceptions are not flushed
+   * until raise_pending_exception is invoked. The function throws the first exception in the
+   * pending exception queue and clears the queue. If there is no pending exception to be raised,
+   * the function does nothing.
+   *
+   * @throw legate::TaskException When there is a pending exception to raise
+   */
+  void raise_pending_exception();
+
   template <typename T>
   void register_shutdown_callback(T&& callback);
+
+  /**
+   * @brief Returns the total number of nodes
+   *
+   * @return Total number of nodes
+   */
+  [[nodiscard]] std::uint32_t node_count() const;
+
+  /**
+   * @brief Returns the current rank
+   *
+   * @return Rank ID
+   */
+  [[nodiscard]] std::uint32_t node_id() const;
 
   /**
    * @brief Returns the machine of the current scope
@@ -540,6 +564,13 @@ class Runtime {
   [[nodiscard]] mapping::Machine get_machine() const;
 
   /**
+   * @brief Returns the current Processor on which the caller is executing.
+   *
+   * @return The current Processor.
+   */
+  [[nodiscard]] Processor get_executing_processor() const;
+
+  /**
    * @brief Returns a singleton runtime object
    *
    * @return The runtime object
@@ -547,6 +578,8 @@ class Runtime {
   [[nodiscard]] static Runtime* get_runtime();
 
   [[nodiscard]] detail::Runtime* impl();
+
+  [[nodiscard]] const detail::Runtime* impl() const;
 
  private:
   explicit Runtime(detail::Runtime* runtime);
@@ -568,6 +601,16 @@ class Runtime {
  * @return Non-zero value when the runtime start-up failed, 0 otherwise
  */
 [[nodiscard]] std::int32_t start(std::int32_t argc, char** argv);
+
+/**
+ * @ingroup runtime
+ *
+ * @brief Checks if the runtime has started.
+ *
+ * @return true If the runtime has started
+ * @return false Either if the runtime has not started yet or after legate::finish is called
+ */
+[[nodiscard]] bool has_started();
 
 /**
  * @ingroup runtime
@@ -608,6 +651,16 @@ void register_shutdown_callback(T&& callback);
  * @return Machine object
  */
 [[nodiscard]] mapping::Machine get_machine();
+
+/**
+ * @ingroup runtime
+ *
+ * @brief Checks if the code is running in a task
+ *
+ * @return true If the code is running in a task
+ * @return false If the code is not running in a task
+ */
+[[nodiscard]] bool is_running_in_task();
 
 }  // namespace legate
 

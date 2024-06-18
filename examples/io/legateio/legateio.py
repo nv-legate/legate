@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -13,7 +13,7 @@
 import os
 import struct
 from enum import IntEnum
-from typing import Any, Optional
+from typing import Any
 
 import legate.core.types as ty
 from legate.core import (
@@ -228,7 +228,7 @@ def read_file(filename: str, dtype: ty.Type) -> IOArray:
 
 
 def read_file_parallel(
-    filename: str, dtype: ty.Type, parallelism: Optional[int] = None
+    filename: str, dtype: ty.Type, parallelism: int | None = None
 ) -> IOArray:
     """
     Reads a file into an IOArray using multiple tasks.

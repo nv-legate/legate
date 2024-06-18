@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -16,9 +16,9 @@
 #include "core/data/physical_array.h"
 #include "core/data/scalar.h"
 #include "core/mapping/machine.h"
+#include "core/mapping/mapping.h"
 
-#include <optional>
-#include <string>
+#include <string_view>
 #include <vector>
 
 /**
@@ -117,7 +117,7 @@ class TaskContext {
    *
    * @return Communicator
    */
-  [[nodiscard]] comm::Communicator communicator(std::uint32_t index) const;
+  [[nodiscard]] const comm::Communicator& communicator(std::uint32_t index) const;
   /**
    * @brief Returns communicators of the task
    *
@@ -127,7 +127,7 @@ class TaskContext {
    *
    * @return Vector of communicators
    */
-  [[nodiscard]] std::vector<comm::Communicator> communicators() const;
+  [[nodiscard]] const std::vector<comm::Communicator>& communicators() const;
 
   /**
    * @brief Returns the number of task's inputs
@@ -173,17 +173,23 @@ class TaskContext {
    *
    * @return The point of the task
    */
-  [[nodiscard]] DomainPoint get_task_index() const;
+  [[nodiscard]] const DomainPoint& get_task_index() const;
   /**
    * @brief Returns the task group's launch domain. A single task returns an empty domain
    *
    * @return The task group's launch domain
    */
-  [[nodiscard]] Domain get_launch_domain() const;
+  [[nodiscard]] const Domain& get_launch_domain() const;
+  /**
+   * @brief Returns the kind of processor executing this task
+   *
+   * @return The processor kind
+   */
+  [[nodiscard]] mapping::TaskTarget target() const;
 
   [[nodiscard]] mapping::Machine machine() const;
 
-  [[nodiscard]] const std::string& get_provenance() const;
+  [[nodiscard]] std::string_view get_provenance() const;
 
   [[nodiscard]] detail::TaskContext* impl() const;
 

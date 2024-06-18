@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -28,7 +28,7 @@ struct histogram_fn {
     auto in_shape  = input.shape<1>();
     auto bin_shape = bins.shape<1>();
 
-    LegateCheck(!bin_shape.empty());
+    LEGATE_CHECK(!bin_shape.empty());
     if (in_shape.empty()) {
       return;
     }
@@ -54,7 +54,7 @@ struct histogram_fn {
   template <legate::Type::Code CODE, std::enable_if_t<legate::is_complex<CODE>::value>* = nullptr>
   void operator()(legate::Store& result, legate::Store& input, legate::Store& bins)
   {
-    LegateCheck(false);
+    LEGATE_CHECK(false);
   }
 };
 

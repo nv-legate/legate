@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -17,11 +17,8 @@
 
 namespace manual_task_test {
 
-using ManualTask = DefaultFixture;
-
 namespace {
 
-constexpr const char* library_name          = "test_manual_task_proj";
 constexpr const std::size_t DIM_EXTENT      = 32;
 constexpr const std::size_t N_TILES_PER_DIM = 2;
 
@@ -47,11 +44,21 @@ struct ProjTesterTask : public legate::LegateTask<ProjTesterTask> {
   }
 };
 
-TEST_F(ManualTask, Proj)
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_manual_task_proj";
+  static void registration_callback(legate::Library library)
+  {
+    ProjTesterTask::register_variants(library);
+  }
+};
+
+class ManualTaskWithProj : public RegisterOnceFixture<Config> {};
+
+TEST_F(ManualTaskWithProj, All)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
-  ProjTesterTask::register_variants(library);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   auto store = runtime->create_store(legate::Shape{DIM_EXTENT, DIM_EXTENT}, legate::int64());
   runtime->issue_fill(store, legate::Scalar{int64_t{1}});
@@ -71,8 +78,8 @@ TEST_F(ManualTask, Proj)
   }
   // With a launch domain
   {
-    legate::Domain launch_domain{legate::Point<2>{1, 1},
-                                 legate::Point<2>{N_TILES_PER_DIM - 1, N_TILES_PER_DIM - 1}};
+    const legate::Domain launch_domain{legate::Point<2>{1, 1},
+                                       legate::Point<2>{N_TILES_PER_DIM - 1, N_TILES_PER_DIM - 1}};
     auto task = runtime->create_task(library, ProjTesterTask::TASK_ID, launch_domain);
     task.add_input(row_wise, legate::SymbolicPoint{legate::dimension(0), legate::constant(0)});
     task.add_input(col_wise, legate::SymbolicPoint{legate::constant(0), legate::dimension(1)});

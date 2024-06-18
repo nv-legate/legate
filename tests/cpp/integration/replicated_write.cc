@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,8 +14,8 @@
 #include "utilities/utilities.h"
 
 #include <gtest/gtest.h>
-#if LegateDefined(LEGATE_USE_CUDA)
-#include "core/cuda/cuda_help.h"
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
+#include "core/cuda/cuda.h"
 #include "core/cuda/stream_pool.h"
 
 #include <cuda_runtime.h>
@@ -23,12 +23,11 @@
 
 namespace replicated_write_test {
 
-using ReplicatedWrite = DefaultFixture;
-
-static const char* library_name = "test_replicated_write";
+// NOLINTBEGIN(readability-magic-numbers)
 
 struct WriterTask : public legate::LegateTask<WriterTask> {
-  static const std::int32_t TASK_ID = 0;
+  static constexpr std::int32_t TASK_ID = 0;
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();
@@ -40,7 +39,7 @@ struct WriterTask : public legate::LegateTask<WriterTask> {
       }
     }
   }
-#if LegateDefined(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();
@@ -49,29 +48,28 @@ struct WriterTask : public legate::LegateTask<WriterTask> {
       auto acc    = output.data().write_accessor<int64_t, 2>();
       auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
       auto vals   = std::vector<std::int64_t>(shape.volume(), 42);
-      CHECK_CUDA(cudaMemcpyAsync(acc.ptr(shape),
-                                 vals.data(),
-                                 sizeof(int64_t) * shape.volume(),
-                                 cudaMemcpyHostToDevice,
-                                 stream));
+      LEGATE_CHECK_CUDA(cudaMemcpyAsync(acc.ptr(shape),
+                                        vals.data(),
+                                        sizeof(int64_t) * shape.volume(),
+                                        cudaMemcpyHostToDevice,
+                                        stream));
     }
   }
 #endif
 };
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_replicated_write";
+  static void registration_callback(legate::Library library)
+  {
+    WriterTask::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->create_library(library_name);
-  WriterTask::register_variants(library);
-}
+};
 
-void validate_output(legate::LogicalStore store)
+class ReplicatedWrite : public RegisterOnceFixture<Config> {};
+
+void validate_output(const legate::LogicalStore& store)
 {
   auto p_store = store.get_physical_store();
   auto shape   = p_store.shape<2>();
@@ -82,7 +80,7 @@ void validate_output(legate::LogicalStore store)
 }
 
 void test_auto_task(legate::Library library,
-                    legate::tuple<std::uint64_t> extents,
+                    const legate::tuple<std::uint64_t>& extents,
                     std::uint32_t num_out_stores)
 {
   auto runtime  = legate::Runtime::get_runtime();
@@ -104,12 +102,12 @@ void test_auto_task(legate::Library library,
   runtime->submit(std::move(task));
 
   for (auto&& out_store : out_stores) {
-    validate_output(std::move(out_store));
+    validate_output(out_store);
   }
 }
 
 void test_manual_task(legate::Library library,
-                      legate::tuple<std::uint64_t> extents,
+                      const legate::tuple<std::uint64_t>& extents,
                       std::uint32_t num_out_stores)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -125,48 +123,42 @@ void test_manual_task(legate::Library library,
   runtime->submit(std::move(task));
 
   for (auto&& out_store : out_stores) {
-    validate_output(std::move(out_store));
+    validate_output(out_store);
   }
 }
 
 TEST_F(ReplicatedWrite, AutoNonScalar)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   test_auto_task(library, {2, 2}, 1);
   test_auto_task(library, {3, 3}, 2);
 }
 
 TEST_F(ReplicatedWrite, ManualNonScalar)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   test_manual_task(library, {2, 2}, 1);
   test_manual_task(library, {3, 3}, 2);
 }
 
 TEST_F(ReplicatedWrite, AutoScalar)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   test_auto_task(library, {1, 1}, 1);
   test_auto_task(library, {1, 1}, 2);
 }
 
 TEST_F(ReplicatedWrite, ManualScalar)
 {
-  register_tasks();
-
   auto runtime = legate::Runtime::get_runtime();
-  auto library = runtime->find_library(library_name);
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
   test_manual_task(library, {1, 1}, 1);
   test_manual_task(library, {1, 1}, 2);
 }
+
+// NOLINTEND(readability-magic-numbers)
 
 }  // namespace replicated_write_test

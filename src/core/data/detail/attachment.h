@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -48,7 +48,7 @@ class SingleAttachment final : public Attachment {
 
 class IndexAttachment final : public Attachment {
  public:
-  IndexAttachment(const Legion::ExternalResources& external_resources,
+  IndexAttachment(Legion::ExternalResources external_resources,
                   std::vector<InternalSharedPtr<ExternalAllocation>> allocations);
   ~IndexAttachment() final;
   [[nodiscard]] Legion::Future detach(bool unordered) const override;
@@ -56,7 +56,7 @@ class IndexAttachment final : public Attachment {
 
  private:
   // Unlike the single attachment, the index attachment owns this ExternalResources object
-  std::unique_ptr<Legion::ExternalResources> external_resources_{};
+  Legion::ExternalResources external_resources_{};
   std::vector<InternalSharedPtr<ExternalAllocation>> allocations_{};
 };
 

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -9,13 +9,17 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-def get_libpath() -> str: ...
+def get_libpath(lib_base_name: str, full_lib_name: str) -> str: ...
 
 libpath: str
 
 header: str
 
 networks: list[str]
+
+max_dim: int
+
+max_fields: int
 
 conduit: str
 

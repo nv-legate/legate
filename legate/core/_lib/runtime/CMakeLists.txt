@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,12 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-set(
-  cython_sources
-  library.pyx
-  resource.pyx
-  runtime.pyx
-  scope.pyx
-)
+list(APPEND CMAKE_MESSAGE_CONTEXT "runtime")
+
+set(cython_sources exception_mode.pyx library.pyx resource.pyx runtime.pyx scope.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -19,33 +19,23 @@
 
 namespace attach {
 
-using Attach          = DefaultFixture;
-using AttachDeathTest = DeathTestFixture;
+namespace {
 
-class Positive : public DefaultFixture,
-                 public ::testing::WithParamInterface<
-                   std::tuple<std::pair<int32_t, bool>, bool, bool, bool, bool>> {};
+[[nodiscard]] const legate::tuple<std::uint64_t>& SHAPE_1D()
+{
+  static const legate::tuple<std::uint64_t> shape{5};
 
-INSTANTIATE_TEST_SUITE_P(Attach,
-                         Positive,
-                         ::testing::Combine(::testing::Values(std::make_pair(1, false),
-                                                              std::make_pair(2, false),
-                                                              std::make_pair(2, true)),
-                                            ::testing::Bool(),
-                                            ::testing::Bool(),
-                                            ::testing::Bool(),
-                                            ::testing::Bool()));
+  return shape;
+}
 
-static const char* library_name = "test_attach";
+[[nodiscard]] const legate::tuple<std::uint64_t>& SHAPE_2D()
+{
+  static const legate::tuple<std::uint64_t> shape{3, 4};
 
-enum TaskOpCode {
-  ADDER   = 0,
-  CHECKER = 1,
-};
+  return shape;
+}
 
-static legate::tuple<std::uint64_t> SHAPE_1D{5};
-
-static legate::tuple<std::uint64_t> SHAPE_2D{3, 4};
+}  // namespace
 
 void increment_physical_store(const legate::PhysicalStore& store, std::int32_t dim)
 {
@@ -71,72 +61,93 @@ void check_physical_store(const legate::PhysicalStore& store,
   if (dim == 1) {
     auto shape = store.shape<1>();
     auto acc   = store.read_accessor<int64_t, 1, true>(shape);
-    for (std::size_t i = 0; i < SHAPE_1D[0]; ++i) {
+    for (std::size_t i = 0; i < SHAPE_1D()[0]; ++i) {
       EXPECT_EQ(acc[i], counter++);
     }
   } else {
     auto shape = store.shape<2>();
     auto acc   = store.read_accessor<int64_t, 2, true>(shape);
     // Legate should always see elements in the expected order
-    for (std::size_t i = 0; i < SHAPE_2D[0]; ++i) {
-      for (std::size_t j = 0; j < SHAPE_2D[1]; ++j) {
-        EXPECT_EQ(acc[legate::Point<2>(i, j)], counter++);
+    for (std::uint64_t i = 0; i < SHAPE_2D()[0]; ++i) {
+      for (std::uint64_t j = 0; j < SHAPE_2D()[1]; ++j) {
+        const auto p =
+          legate::Point<2>{static_cast<legate::coord_t>(i), static_cast<legate::coord_t>(j)};
+
+        EXPECT_EQ(acc[p], counter);
+        ++counter;
       }
     }
   }
 }
 
+enum TaskOpCode : std::uint8_t { ADDER = 0, CHECKER = 1 };
+
 struct AdderTask : public legate::LegateTask<AdderTask> {
-  static const std::int32_t TASK_ID = ADDER;
+  static constexpr std::int32_t TASK_ID = ADDER;
+
   static void cpu_variant(legate::TaskContext context)
   {
-    auto output      = context.output(0).data();
-    std::int32_t dim = context.scalar(0).value<std::int32_t>();
+    auto output    = context.output(0).data();
+    const auto dim = context.scalar(0).value<std::int32_t>();
     increment_physical_store(output, dim);
   }
 };
 
 struct CheckerTask : public legate::LegateTask<CheckerTask> {
-  static const std::int32_t TASK_ID = CHECKER;
+  static constexpr std::int32_t TASK_ID = CHECKER;
+
   static void cpu_variant(legate::TaskContext context)
   {
-    auto input           = context.input(0).data();
-    std::int32_t dim     = context.scalar(0).value<std::int32_t>();
-    std::int64_t counter = context.scalar(1).value<std::int64_t>();
+    auto input         = context.input(0).data();
+    const auto dim     = context.scalar(0).value<std::int32_t>();
+    const auto counter = context.scalar(1).value<std::int64_t>();
     check_physical_store(input, dim, counter);
   }
 };
 
-void register_tasks()
-{
-  static bool prepared = false;
-  if (prepared) {
-    return;
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_attach";
+  static void registration_callback(legate::Library library)
+  {
+    AdderTask::register_variants(library);
+    CheckerTask::register_variants(library);
   }
-  prepared     = true;
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(library_name);
-  AdderTask::register_variants(context);
-  CheckerTask::register_variants(context);
-}
+};
+
+class Attach : public RegisterOnceFixture<Config> {};
+
+class Positive : public RegisterOnceFixture<Config>,
+                 public ::testing::WithParamInterface<
+                   std::tuple<std::pair<int32_t, bool>, bool, bool, bool, bool>> {};
+
+INSTANTIATE_TEST_SUITE_P(Attach,
+                         Positive,
+                         ::testing::Combine(::testing::Values(std::make_pair(1, false),
+                                                              std::make_pair(2, false),
+                                                              std::make_pair(2, true)),
+                                            ::testing::Bool(),
+                                            ::testing::Bool(),
+                                            ::testing::Bool(),
+                                            ::testing::Bool()));
 
 int64_t* make_buffer(std::int32_t dim, bool fortran)
 {
   int64_t* buffer;
   std::int64_t counter = 0;
   if (dim == 1) {
-    buffer = new int64_t[SHAPE_1D.volume()];
-    for (std::size_t i = 0; i < SHAPE_1D[0]; ++i) {
+    buffer = new int64_t[SHAPE_1D().volume()];
+    for (std::size_t i = 0; i < SHAPE_1D()[0]; ++i) {
       buffer[i] = counter++;
     }
   } else {
-    buffer = new int64_t[SHAPE_2D.volume()];
-    for (std::size_t i = 0; i < SHAPE_2D[0]; ++i) {
-      for (std::size_t j = 0; j < SHAPE_2D[1]; ++j) {
+    buffer = new int64_t[SHAPE_2D().volume()];
+    for (std::size_t i = 0; i < SHAPE_2D()[0]; ++i) {
+      for (std::size_t j = 0; j < SHAPE_2D()[1]; ++j) {
         if (fortran) {
-          buffer[j * SHAPE_2D[0] + i] = counter++;
+          buffer[j * SHAPE_2D()[0] + i] = counter++;
         } else {
-          buffer[i * SHAPE_2D[1] + j] = counter++;
+          buffer[i * SHAPE_2D()[1] + j] = counter++;
         }
       }
     }
@@ -147,17 +158,18 @@ int64_t* make_buffer(std::int32_t dim, bool fortran)
 void check_buffer(int64_t* buffer, std::int32_t dim, bool fortran, std::int64_t counter)
 {
   if (dim == 1) {
-    for (std::size_t i = 0; i < SHAPE_1D[0]; ++i) {
+    for (std::size_t i = 0; i < SHAPE_1D()[0]; ++i) {
       EXPECT_EQ(buffer[i], counter++);
     }
   } else {
-    for (std::size_t i = 0; i < SHAPE_2D[0]; ++i) {
-      for (std::size_t j = 0; j < SHAPE_2D[1]; ++j) {
+    for (std::size_t i = 0; i < SHAPE_2D()[0]; ++i) {
+      for (std::size_t j = 0; j < SHAPE_2D()[1]; ++j) {
         if (fortran) {
-          EXPECT_EQ(buffer[j * SHAPE_2D[0] + i], counter++);
+          EXPECT_EQ(buffer[j * SHAPE_2D()[0] + i], counter);
         } else {
-          EXPECT_EQ(buffer[i * SHAPE_2D[1] + j], counter++);
+          EXPECT_EQ(buffer[i * SHAPE_2D()[1] + j], counter);
         }
+        ++counter;
       }
     }
   }
@@ -167,10 +179,10 @@ void test_body(
   std::int32_t dim, bool fortran, bool unordered, bool read_only, bool use_tasks, bool use_inline)
 {
   auto runtime         = legate::Runtime::get_runtime();
-  auto context         = runtime->find_library(library_name);
+  auto context         = runtime->find_library(Config::LIBRARY_NAME);
   std::int64_t counter = 0;
   auto buffer          = make_buffer(dim, fortran);
-  auto l_store         = runtime->create_store(dim == 1 ? SHAPE_1D : SHAPE_2D,
+  auto l_store         = runtime->create_store(dim == 1 ? SHAPE_1D() : SHAPE_2D(),
                                        legate::int64(),
                                        buffer,
                                        read_only,
@@ -184,7 +196,7 @@ void test_body(
   }
   for (auto iter = 0; iter < 2; ++iter) {
     if (use_tasks) {
-      auto task = runtime->create_task(context, ADDER, {1});
+      auto task = runtime->create_task(context, AdderTask::TASK_ID, {1});
       task.add_input(l_store);
       task.add_output(l_store);
       task.add_scalar_arg(legate::Scalar{dim});
@@ -198,7 +210,7 @@ void test_body(
     }
   }
   if (use_tasks) {
-    auto task = runtime->create_task(context, CHECKER, {1});
+    auto task = runtime->create_task(context, CheckerTask::TASK_ID, {1});
     task.add_input(l_store);
     task.add_scalar_arg(legate::Scalar{dim});
     task.add_scalar_arg(legate::Scalar{counter});
@@ -219,10 +231,9 @@ void test_body(
 
 TEST_P(Positive, Test)
 {
-  register_tasks();
   // It's helpful to combine multiple calls of this function together, with stores collected
   // in-between, in hopes of triggering consensus match.
-  // TODO: Also try keeping multiple stores alive at one time.
+  // TODO(wonchanl): Also try keeping multiple stores alive at one time.
   const auto& [layout, unordered, read_only, use_tasks, use_inline] = GetParam();
   const auto& [dim, fortran]                                        = layout;
   test_body(dim, fortran, unordered, read_only, use_tasks, use_inline);
@@ -230,22 +241,21 @@ TEST_P(Positive, Test)
 
 TEST_F(Attach, Negative)
 {
-  register_tasks();
   auto runtime = legate::Runtime::get_runtime();
 
   // Trying to detach a store without an attachment
   EXPECT_THROW(runtime->create_store(legate::Scalar(42)).detach(), std::invalid_argument);
-  EXPECT_THROW(runtime->create_store(SHAPE_2D, legate::int64()).detach(), std::invalid_argument);
+  EXPECT_THROW(runtime->create_store(SHAPE_2D(), legate::int64()).detach(), std::invalid_argument);
   EXPECT_THROW(runtime->create_store(legate::int64()).detach(), std::invalid_argument);
 
   // Trying to attach to a NULL buffer
-  EXPECT_THROW((void)runtime->create_store(SHAPE_2D, legate::int64(), nullptr, true),
+  EXPECT_THROW((void)runtime->create_store(SHAPE_2D(), legate::int64(), nullptr, true),
                std::invalid_argument);
 
   {
     // Trying to detach a sub-store
-    auto mem     = new int64_t[SHAPE_1D.volume()];
-    auto l_store = runtime->create_store(SHAPE_1D, legate::int64(), mem, true /*share*/);
+    auto mem     = new int64_t[SHAPE_1D().volume()];
+    auto l_store = runtime->create_store(SHAPE_1D(), legate::int64(), mem, true /*share*/);
     EXPECT_THROW(l_store.project(0, 1).detach(), std::invalid_argument);
     // We have to properly detach this
     l_store.detach();
@@ -256,7 +266,7 @@ TEST_F(Attach, Negative)
   {
     std::vector<std::int64_t> test(3, 0);
     EXPECT_THROW(
-      (void)runtime->create_store(SHAPE_1D,
+      (void)runtime->create_store(SHAPE_1D(),
                                   legate::int64(),
                                   legate::ExternalAllocation::create_sysmem(
                                     test.data(), test.size() * sizeof(decltype(test)::value_type))),

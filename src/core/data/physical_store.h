@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -14,7 +14,9 @@
 
 #include "core/data/buffer.h"
 #include "core/data/inline_allocation.h"
+#include "core/mapping/mapping.h"
 #include "core/type/type_traits.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
@@ -35,7 +37,7 @@ namespace legate {
 
 class PhysicalArray;
 
-#define LEGATE_CORE_TRUE_WHEN_DEBUG LegateDefined(LEGATE_USE_DEBUG)
+#define LEGATE_CORE_TRUE_WHEN_DEBUG LEGATE_DEFINED(LEGATE_USE_DEBUG)
 
 /**
  * @ingroup data
@@ -293,6 +295,14 @@ class PhysicalStore {
    * @return An `InlineAllocation` object holding a raw pointer and strides
    */
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
+  /**
+   * @brief Returns the kind of memory where this physical store resides
+   *
+   * @return The memory kind
+   *
+   * @throw std::invalid_argument If this function is called on an unbound store
+   */
+  [[nodiscard]] mapping::StoreTarget target() const;
 
   /**
    * @brief Indicates whether the store can have a read accessor
@@ -360,38 +370,37 @@ class PhysicalStore {
   // NOLINTNEXTLINE(google-explicit-constructor) very common pattern in cuNumeric
   PhysicalStore(const PhysicalArray& array);
 
- private:
-  void check_accessor_dimension(std::int32_t dim) const;
-  void check_buffer_dimension(std::int32_t dim) const;
-  void check_shape_dimension(std::int32_t dim) const;
-  void check_valid_binding(bool bind_buffer) const;
-  void check_write_access() const;
-  void check_reduction_access() const;
-  template <typename T>
-  void check_accessor_type() const;
-  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform() const;
-
-  void get_region_field(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
-  [[nodiscard]] std::int32_t get_redop_id() const;
-  template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_field_accessor(const Rect<DIM>& bounds) const;
-  template <typename ACC, typename T, std::int32_t DIM>
-  [[nodiscard]] ACC create_reduction_accessor(const Rect<DIM>& bounds) const;
-
-  [[nodiscard]] bool is_read_only_future() const;
-  [[nodiscard]] Legion::Future get_future() const;
-  [[nodiscard]] Legion::UntypedDeferredValue get_buffer() const;
-
-  void get_output_field(Legion::OutputRegion& out, Legion::FieldID& fid) const;
-  void update_num_elements(std::size_t num_elements) const;
-
- public:
-  PhysicalStore() noexcept;
+  LEGATE_CYTHON_DEFAULT_CTOR(PhysicalStore);
 
   explicit PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl);
+
   [[nodiscard]] const SharedPtr<detail::PhysicalStore>& impl() const;
 
  private:
+  void check_accessor_dimension_(std::int32_t dim) const;
+  void check_buffer_dimension_(std::int32_t dim) const;
+  void check_shape_dimension_(std::int32_t dim) const;
+  void check_valid_binding_(bool bind_buffer) const;
+  void check_write_access_() const;
+  void check_reduction_access_() const;
+  template <typename T>
+  void check_accessor_type_() const;
+  [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
+
+  void get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
+  [[nodiscard]] std::int32_t get_redop_id_() const;
+  template <typename ACC, typename T, std::int32_t DIM>
+  [[nodiscard]] ACC create_field_accessor_(const Rect<DIM>& bounds) const;
+  template <typename ACC, typename T, std::int32_t DIM>
+  [[nodiscard]] ACC create_reduction_accessor_(const Rect<DIM>& bounds) const;
+
+  [[nodiscard]] bool is_read_only_future_() const;
+  [[nodiscard]] const Legion::Future& get_future_() const;
+  [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer_() const;
+
+  void get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid) const;
+  void update_num_elements_(std::size_t num_elements) const;
+
   SharedPtr<detail::PhysicalStore> impl_{};
 };
 
