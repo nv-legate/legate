@@ -65,7 +65,7 @@ using coord_t = Legion::coord_t;
  * Point objects also support usual arithmetic operators and a dot opreator.
  *
  * For a complete definition, see
- * [`Realm::Point`](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/point.h#L46-L124).
+ * [Realm::Point](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/point.h#L46-L124).
  */
 template <int DIM, typename T = coord_t>
 using Point = Legion::Point<DIM, T>;
@@ -77,7 +77,7 @@ using Point = Legion::Point<DIM, T>;
  * bounds (`.lo`) and one for the upper bounds (`.hi`).
  *
  * For a complete definition, see
- * [`Realm::Rect`](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/point.h#L126-L212).
+ * [Realm::Rect](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/point.h#L126-L212).
  */
 template <int DIM, typename T = coord_t>
 using Rect = Legion::Rect<DIM, T>;
@@ -86,7 +86,7 @@ using Rect = Legion::Rect<DIM, T>;
  * @brief Dimension-erased type for multi-dimensional points.
  *
  * For a complete definition, see
- * [`Legion::DomainPoint`](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_domain.h#L127-L253).
+ * [Legion::DomainPoint](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_domain.h#L127-L253).
  */
 using DomainPoint = Legion::DomainPoint;
 
@@ -94,7 +94,7 @@ using DomainPoint = Legion::DomainPoint;
  * @brief Dimension-erased type for multi-dimensional rectangles.
  *
  * For a complete definition, see
- * [`Legion::Domain`](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_domain.h#L255-L543).
+ * [Legion::Domain](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_domain.h#L255-L543).
  */
 using Domain = Legion::Domain;
 
@@ -220,7 +220,7 @@ using PointInDomainIterator = Legion::PointInDomainIterator<DIM, T>;
  * `legate::Processor::Kind`, an enum for all processor types.
  *
  * See
- * [`Realm::Processor`](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/processor.h#L35-L141)
+ * [Realm::Processor](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/processor.h#L35-L141)
  * for a complete definition. The list of processor types can be found
  * [here](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/realm_c.h#L45-L54).
  *
@@ -235,7 +235,7 @@ using Processor = Legion::Processor;
  * is an enum for all memory types.
  *
  * See
- * [`Realm::Memory`](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/memory.h#L30-L65)
+ * [Realm::Memory](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/memory.h#L30-L65)
  * for a complete definition. The list of memory types can be found
  * [here](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/realm_c.h#L63-L78).
  */
@@ -260,7 +260,7 @@ using Memory = Legion::Memory;
  * @brief Reduction with addition
  *
  * See
- * [`Legion::SumReduction`](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L46-L285).
+ * [Legion::SumReduction](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L46-L285).
  */
 template <typename T>
 using SumReduction = Legion::SumReduction<T>;
@@ -269,7 +269,7 @@ using SumReduction = Legion::SumReduction<T>;
  * @brief Reduction with subtraction
  *
  * See
- * [`Legion::DiffReduction`](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L287-L492).
+ * [Legion::DiffReduction](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L287-L492).
  */
 template <typename T>
 using DiffReduction = Legion::DiffReduction<T>;
@@ -278,7 +278,7 @@ using DiffReduction = Legion::DiffReduction<T>;
  * @brief Reduction with multiplication
  *
  * See
- * [`Legion::ProdReduction`](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L494-L714).
+ * [Legion::ProdReduction](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L494-L714).
  */
 template <typename T>
 using ProdReduction = Legion::ProdReduction<T>;
@@ -287,7 +287,7 @@ using ProdReduction = Legion::ProdReduction<T>;
  * @brief Reduction with division
  *
  * See
- * [`Legion::DivReduction`](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L716-L921).
+ * [Legion::DivReduction](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L716-L921).
  */
 template <typename T>
 using DivReduction = Legion::DivReduction<T>;
@@ -296,7 +296,7 @@ using DivReduction = Legion::DivReduction<T>;
  * @brief Reduction with the binary max operator
  *
  * See
- * [`Legion::MaxReduction`](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L923-L1109).
+ * [Legion::MaxReduction](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L923-L1109).
  */
 template <typename T>
 using MaxReduction = Legion::MaxReduction<T>;
@@ -305,7 +305,7 @@ using MaxReduction = Legion::MaxReduction<T>;
  * @brief Reduction with the binary min operator
  *
  * See
- * [`Legion::MinReduction`](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L1111-L1297).
+ * [Legion::MinReduction](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L1111-L1297).
  */
 template <typename T>
 using MinReduction = Legion::MinReduction<T>;
@@ -314,7 +314,7 @@ using MinReduction = Legion::MinReduction<T>;
  * @brief Reduction with bitwise or
  *
  * See
- * [`Legion::OrReduction`](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L1299-L1423).
+ * [Legion::OrReduction](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L1299-L1423).
  */
 template <typename T>
 using OrReduction = Legion::OrReduction<T>;
@@ -323,7 +323,7 @@ using OrReduction = Legion::OrReduction<T>;
  * @brief Reduction with bitwise and
  *
  * See
- * [`Legion::AndReduction`](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L1425-L1549).
+ * [Legion::AndReduction](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L1425-L1549).
  */
 template <typename T>
 using AndReduction = Legion::AndReduction<T>;
@@ -332,7 +332,7 @@ using AndReduction = Legion::AndReduction<T>;
  * @brief Reduction with bitwise xor
  *
  * See
- * [`Legion::XorReduction`](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L1551-L1690).
+ * [Legion::XorReduction](http://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_redop.h#L1551-L1690).
  */
 template <typename T>
 using XorReduction = Legion::XorReduction<T>;

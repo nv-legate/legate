@@ -157,7 +157,7 @@
  * 1. The only exception is if the argument is defined but expands to 0, in which case
  * `LEGATE_DEFINED()` will also expand to 0:
  *
- * @snippet unit/macros.cc LEGATE_DEFINED
+ * @snippet noinit/macros.cc LEGATE_DEFINED
  *
  * Conceptually, `LEGATE_DEFINED()` is equivalent to
  *

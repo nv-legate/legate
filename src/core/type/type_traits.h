@@ -96,7 +96,7 @@ struct type_code_of<std::complex<double>>
 }  // namespace type_code_of_detail
 
 /**
- * @addtogroup util
+ * @ingroup util
  * @brief A template constexpr that converts types to type codes
  */
 template <typename T>
@@ -180,7 +180,7 @@ struct type_of<Type::Code::STRING> {
 }  // namespace type_of_detail
 
 /**
- * @addtogroup util
+ * @ingroup util
  * @brief A template that converts type codes to types
  */
 template <Type::Code CODE>
@@ -190,14 +190,14 @@ template <Type::Code CODE>
 using type_of [[deprecated("use legate::type_of_t instead")]] = type_of_t<CODE>;
 
 /**
- * @addtogroup util
+ * @ingroup util
  * @brief A predicate that holds if the type code is of an integral type
  */
 template <Type::Code CODE>
 struct is_integral : std::is_integral<type_of_t<CODE>> {};
 
 /**
- * @addtogroup util
+ * @ingroup util
  * @brief A predicate that holds if the type code is of a signed integral type
  */
 template <Type::Code CODE>
@@ -207,14 +207,14 @@ template <>
 struct is_signed<Type::Code::FLOAT16> : std::true_type {};
 
 /**
- * @addtogroup util
+ * @ingroup util
  * @brief A predicate that holds if the type code is of an unsigned integral type
  */
 template <Type::Code CODE>
 struct is_unsigned : std::is_unsigned<type_of_t<CODE>> {};
 
 /**
- * @addtogroup util
+ * @ingroup util
  * @brief A predicate that holds if the type code is of a floating point type
  */
 template <Type::Code CODE>
@@ -224,7 +224,7 @@ template <>
 struct is_floating_point<Type::Code::FLOAT16> : std::true_type {};
 
 /**
- * @addtogroup util
+ * @ingroup util
  * @brief A predicate that holds if the type code is of a complex type
  */
 template <Type::Code CODE>
@@ -237,7 +237,7 @@ template <>
 struct is_complex<Type::Code::COMPLEX128> : std::true_type {};
 
 /**
- * @addtogroup util
+ * @ingroup util
  * @brief A predicate that holds if the type is one of the supported complex types
  */
 template <typename T>

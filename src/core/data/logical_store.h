@@ -55,8 +55,8 @@ class Runtime;
  * Each logical store object is a logical handle to the data and is not immediately associated
  * with a physical allocation. To access the data, a client must `map` the store to a physical
  * store (`PhysicalStore`). A client can map a store by passing it to a task, in which case the task
- * body can see the allocation, or calling `get_physical_store`, which gives the client a handle
- * to the physical allocation (see `PhysicalStore` for details about physical stores).
+ * body can see the allocation, or calling LogicalStore::get_physical_store, which gives the client
+ * a handle to the physical allocation (see `PhysicalStore` for details about physical stores).
  *
  * Normally, a logical store gets a fixed shape upon creation. However, there is a special type of
  * logical stores called `unbound` stores whose shapes are unknown at creation time. (see `Runtime`

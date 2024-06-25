@@ -212,7 +212,7 @@ class Zipper {
  * iterators support `std::random_access_iterator_tag`, then the returned iterator will as
  * well.
  *
- * @snippet unit/zip_iterator.cc Constructing a zipper
+ * @snippet noinit/zip_iterator.cc Constructing a zipper
  */
 template <typename... T>
 [[nodiscard]] zip_detail::Zipper<zip_detail::ZiperatorShortest, T...> zip(T&&... args);

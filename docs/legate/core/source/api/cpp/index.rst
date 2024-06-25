@@ -7,6 +7,7 @@ C++ API Reference
 
    data
    partitioning
+   runtime
    mapping
    types
    typedefs

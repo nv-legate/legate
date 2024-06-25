@@ -70,8 +70,6 @@ BinaryTransform(BinaryOperation) -> BinaryTransform<BinaryOperation>;
  * @pre @li The input and output ranges must have the same shape.
  *      @li The unary operation must be trivially relocatable.
  *
- * @return void
- *
  * @par Example:
  * @snippet{trimleft} experimental/stl/transform.cc stl-unary-transform-2d
  *
@@ -107,8 +105,6 @@ void transform(InputRange&& input, OutputRange&& output, UnaryOperation op)
  *
  * @pre @li The input and output ranges must all have the same shape.
  *      @li The binary operation must be trivially relocatable.
- *
- * @return void
  *
  * @par Example:
  * @snippet{trimleft} experimental/stl/transform.cc stl-binary-transform-2d

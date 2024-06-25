@@ -60,6 +60,7 @@ class StreamView {
 };
 
 /**
+ * @ingroup task
  * @brief A stream pool
  */
 class StreamPool {

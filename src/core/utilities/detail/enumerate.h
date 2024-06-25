@@ -70,7 +70,7 @@ class Enumerator {
  * bidirectional iteration, then the returned enumerator will assume the iterator category of
  * \p iterable.
  *
- * @snippet unit/enumerator.cc Constructing an enumerator
+ * @snippet noinit/enumerator.cc Constructing an enumerator
  */
 template <typename T>
 [[nodiscard]] zip_detail::Zipper<zip_detail::ZiperatorShortest, Enumerator, T> enumerate(
