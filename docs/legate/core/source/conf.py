@@ -16,11 +16,13 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import os
+
 # -- Project information -----------------------------------------------------
 
-project = "legate.core"
+project = "NVIDIA legate.core"
 copyright = "2021-2024, NVIDIA"
-author = "NVIDIA"
+author = "NVIDIA Corporation"
 
 
 # -- General configuration ---------------------------------------------------
@@ -45,25 +47,30 @@ source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
 html_static_path = ["_static"]
 
-html_theme = "pydata_sphinx_theme"
+# This is pretty kludgy but the nv theme is not publicly available to
+# install on CI, etc. We will use the pydata theme in those situations
+if os.environ.get("NV_THEME") == "1":
+    html_theme = "nvidia_sphinx_theme"
 
-html_theme_options = {
-    "footer_start": ["copyright"],
-    "github_url": "https://github.com/nv-legate/legate.core",
-    # https://github.com/pydata/pydata-sphinx-theme/issues/1220
-    "icon_links": [],
-    "logo": {
-        "text": project,
-        "link": "https://nv-legate.github.io/legate.core/",
-    },
-    "navbar_align": "left",
-    "navbar_end": ["navbar-icon-links", "theme-switcher"],
-    "primary_sidebar_end": ["indices.html"],
-    "secondary_sidebar_items": ["page-toc"],
-    "show_nav_level": 2,
-    "show_toc_level": 2,
-    "navigation_with_keys": False,
-}
+else:
+    html_theme = "pydata_sphinx_theme"
+    html_theme_options = {
+        "footer_start": ["copyright"],
+        "github_url": "https://github.com/nv-legate/legate.core",
+        # https://github.com/pydata/pydata-sphinx-theme/issues/1220
+        "icon_links": [],
+        "logo": {
+            "text": project,
+            "link": "https://nv-legate.github.io/legate.core/",
+        },
+        "navbar_align": "left",
+        "navbar_end": ["navbar-icon-links", "theme-switcher"],
+        "primary_sidebar_end": ["indices.html"],
+        "secondary_sidebar_items": ["page-toc"],
+        "show_nav_level": 2,
+        "show_toc_level": 2,
+        "navigation_with_keys": False,
+    }
 
 # -- Options for extensions --------------------------------------------------
 

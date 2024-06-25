@@ -1,7 +1,7 @@
 :html_theme.sidebar_secondary.remove:
 
-Welcome to Legate Core's documentation!
-=======================================
+NVIDIA Legate Core
+==================
 
 The Legate project endeavors to democratize computing by making it possible
 for all programmers to leverage the power of large clusters of CPUs and GPUs
