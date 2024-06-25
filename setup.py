@@ -776,9 +776,15 @@ def do_setup_impl() -> None:
     # This is set by the configuration, we don't want e.g. Conda overriding
     # this.
     if env_cmake_args:
-        verbose_print("Removing CMAKE_BUILD_TYPE from environment cmake args!")
+        verbose_print("Removing CMAKE_BUILD_TYPE from environment cmake args")
         env_cmake_args = re.sub(
             r"\-DCMAKE_BUILD_TYPE([:\w]*)=\w+", "", env_cmake_args
+        )
+        verbose_print(
+            "Removing CMAKE_INSTALL_PREFIX from environment cmake args"
+        )
+        env_cmake_args = re.sub(
+            r"\-DCMAKE_INSTALL_PREFIX([:\w]*)=\w+", "", env_cmake_args
         )
         os.environ["CMAKE_ARGS"] = env_cmake_args
 
@@ -789,7 +795,9 @@ def do_setup_impl() -> None:
     with cmd_spec_path.open() as fd:
         spec_cmake_cmds = json.load(fd)["CMAKE_COMMANDS"]
     verbose_print(f"Adding line to cmake args: {spec_cmake_cmds}")
-    cmake_args.extend(spec_cmake_cmds)
+    cmake_args.extend(
+        arg for arg in spec_cmake_cmds if "CMAKE_INSTALL_PREFIX" not in arg
+    )
 
     MINI_BANNER = len(BANNER) * "-"
     print(BANNER)
