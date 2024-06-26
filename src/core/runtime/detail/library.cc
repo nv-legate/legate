@@ -21,6 +21,7 @@
 
 #include "mappers/logging_wrapper.h"
 
+#include <exception>
 #include <sstream>
 
 namespace legate::detail {
@@ -177,7 +178,7 @@ void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo
 
     ss << "Task " << local_task_id << " is invalid for library '" << library_name_
        << "' (max local task id: " << (task_scope_.size() - 1) << ")";
-    throw std::out_of_range{std::move(ss).str()};
+    std::throw_with_nested(std::out_of_range{std::move(ss).str()});
   }
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {

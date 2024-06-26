@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <exception>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -379,7 +380,7 @@ InternalSharedPtr<Type> primitive_type(Type::Code code)
       ss << "<unknown type code: " << traits::detail::to_underlying(code) << ">";
     }
     ss << " is not a valid type code for a primitive type";
-    throw std::invalid_argument{std::move(ss).str()};
+    std::throw_with_nested(std::invalid_argument{std::move(ss).str()});
   }
 
   auto finder = cache.find(code);
