@@ -1,3 +1,5 @@
+.. _installation:
+
 Installation
 ============
 
@@ -33,8 +35,6 @@ package by requesting it as follows:
 .. code-block:: sh
 
     conda ... legate-core=*=*_cpu
-
-See `BUILD.md <BUILD.md>`_ for instructions on building Legate Core from source.
 
 Installation of the Legate IPython Kernel
 -----------------------------------------

@@ -111,29 +111,6 @@ Compiling with networking support requires MPI.
 
 ## Advanced build topics
 
-### Support matrix
-
-The following table lists Legate's minimum supported versions of major dependencies.
-
-"Full support" means that the corresponding versions (and all later ones) are
-being tested with some regularity, and are expected to work. Please report any
-incompatibility you find against a fully-supported version by opening a bug.
-
-"Best-effort support" means that the corresponding versions are not actively
-tested, but Legate should be compatible with them. We will not actively work to
-fix any incompatibilities discovered under these versions, but we accept
-contributions that fix such incompatibilities.
-
-| Dependency       | Full support (min version)      | Best-effort support (min version)    |
-| ---------------- | ------------------------------- | ------------------------------------ |
-| CPU architecture | x86-64 (Haswell), aarch64       | ppc64le, older x86-64, Apple Silicon |
-| OS               | RHEL 8, Ubuntu 20.04, MacOS 12  | other Linux                          |
-| C++ compiler     | gcc 8, clang 7, nvc++ 19.1      | any compiler with C++17 support      |
-| GPU architecture | Volta                           | Pascal                               |
-| CUDA toolkit     | 11.4                            | 10.0                                 |
-| Python           | 3.10                            |                                      |
-| NumPy            | 1.22                            |                                      |
-
 ### Dependency listing
 
 In this section we comment further on our major dependencies. Please consult an

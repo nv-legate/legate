@@ -66,7 +66,7 @@ of our primary requirements for Legate:
    achieve significantly higher performance when computations are performed
    asynchronously with respect to other components of the system. When data is
    passed between libraries today, accelerators must be pessimistically
-   synchronized to ensure that data dependences are satisfied across abstraction
+   synchronized to ensure that data dependencies are satisfied across abstraction
    boundaries. This might result in tolerable overheads for single GPU systems,
    but can result in catastrophically poor performance when hundreds of GPUs are involved.
 
@@ -86,7 +86,7 @@ the Arrow Array interface (we'll continue to add methods to improve
 compatibility). The main difference is that instead of obtaining
 `Buffer <https://arrow.apache.org/docs/cpp/api/memory.html#buffers>`_
 objects from arrays to describe allocations of data that back the array, the
-Legate Core API introduces a new primitive called a `LegateStore` which
+Legate Core API introduces a new primitive called a ``LegateStore`` which
 provides a new interface for reasoning about partitioned and distributed
 data in asynchronous execution environments.
 
@@ -206,12 +206,12 @@ to this:
 
     import cunumeric as np
 
-After this, you can use the ``legate`` driver script in the ```bin``` directory
+After this, you can use the ``legate`` driver script in the ``bin`` directory
 of your installation to run any Python program.
 
 You can also use the standard Python interpreter, but in that case configuration
 options can only be passed through the environment (see below), and some options
-are not available (check the output of legate --help for more details).
+are not available (check the output of ``legate --help`` for more details).
 
 For example, to run your script in the default configuration (4 CPUs cores and
 4 GB of memory) just run:
@@ -250,7 +250,7 @@ resources. You can see a list of them by running:
     $ legate --help
 
 In addition to running Legate programs, you can also use Legate in an interactive
-mode by simply not passing any ``*py`` files on the command line. You can still
+mode by simply not passing any ``*.py`` files on the command line. You can still
 request resources just as you would though with a normal file. Legate will
 still use all the resources available to it, including doing multi-node execution.
 
@@ -284,8 +284,7 @@ CLI Option                   Env. Variable                    Default Value
 Distributed Launch
 ~~~~~~~~~~~~~~~~~~
 
-If Legate is compiled with networking support (see `installation <installation.rst>`_) then
-it can be run in parallel by using the ``--nodes`` option followed by the
+Legate can be run in parallel by using the ``--nodes`` option followed by the
 number of nodes to be used.  Whenever the ``--nodes`` option is used, Legate
 will be launched using ``mpirun``, even with ``--nodes 1``.  Without the
 ``--nodes`` option, no launcher will be used. Legate currently supports
@@ -300,7 +299,7 @@ Legate also comes with several tools that you can use to better understand
 your program both from a correctness and a performance standpoint. For
 correctness, Legate has facilities for constructing both dataflow
 and event graphs for the actual run of an application. These graphs require
-that you have an installation of `GraphViz <https://www.graphviz.org/>`_.
+that you have an installation of `GraphViz <https://www.graphviz.org/>`_
 available on your machine. To generate a dataflow graph for your Legate
 program simply pass the ``--dataflow`` flag to the ``legate.py`` script and after
 your run is complete we will generate a ``dataflow_legate.pdf`` file containing

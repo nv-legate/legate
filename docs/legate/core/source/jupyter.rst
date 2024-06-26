@@ -25,7 +25,7 @@ Configuring the Jupyter Notebook
 
 The Legate Jupyter kernel is configured according to the command line
 arguments provided at install time.  Standard ``legate`` options for Core,
-Memory, and Muli-node configuration may be provided, as well as a name for
+Memory, and Multi-node configuration may be provided, as well as a name for
 the kernel:
 
 .. code-block:: sh
