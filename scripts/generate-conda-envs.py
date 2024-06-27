@@ -350,8 +350,15 @@ def get_min_py() -> str:
     except ModuleNotFoundError:
         from pip._vendor import tomli as tomllib
 
-    with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as f:
-        return tomllib.load(f)["build-system"]["python-requires"]
+    with (Path(__file__).parent.parent / "pyproject.toml").open(
+        mode="rb"
+    ) as f:
+        py_ver = tomllib.load(f)["build-system"]["python-requires"]
+
+    for char in (">", "=", "<"):
+        py_ver = py_ver.replace(char, "")
+
+    return py_ver
 
 
 MIN_PYTHON_VERSION = get_min_py()

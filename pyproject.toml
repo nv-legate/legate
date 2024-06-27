@@ -22,7 +22,7 @@ requires = [
     "pip",
 ]
 build-backend = "setuptools.build_meta:__legacy__"
-python-requires = "3.10"
+python-requires = ">=3.10"
 
 [project]
 name = "legate-core"
