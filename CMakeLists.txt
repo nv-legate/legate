@@ -107,7 +107,7 @@ set_ifndef(CMAKE_CUDA_FLAGS_RELWITHDEBINFO
 set_ifndef(BUILD_MARCH OFF)
 set_ifndef(BUILD_MCPU OFF)
 
-set(legate_core_version 24.05.00)
+set(legate_core_version 24.06.00)
 
 if(SKBUILD)
   project(legate_core_python
