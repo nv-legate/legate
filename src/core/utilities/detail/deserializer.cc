@@ -128,11 +128,12 @@ void TaskDeserializer::unpack_impl(FutureWrapper& value)
   auto read_only    = unpack<bool>();
   auto future_index = unpack<std::int32_t>();
   auto field_size   = unpack<std::uint32_t>();
+  auto field_offset = unpack<std::uint64_t>();
   auto domain       = unpack<Domain>();
 
   const auto has_storage = future_index >= 0;
   Legion::Future future  = has_storage ? futures_[future_index] : Legion::Future{};
-  value                  = FutureWrapper{read_only, field_size, domain, std::move(future)};
+  value = FutureWrapper{read_only, field_size, field_offset, domain, std::move(future)};
 }
 
 void TaskDeserializer::unpack_impl(RegionField& value)
@@ -274,6 +275,7 @@ void TaskDeserializer::unpack_impl(FutureWrapper& value)
   static_cast<void>(unpack<bool>());
   auto future_index = unpack<std::int32_t>();
   static_cast<void>(unpack<std::uint32_t>());
+  static_cast<void>(unpack<std::uint64_t>());
   auto domain = unpack<Domain>();
   value       = FutureWrapper{static_cast<std::uint32_t>(future_index), domain};
 }

@@ -83,6 +83,7 @@ void ScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack<bool>(read_only_);
   buffer.pack<std::int32_t>(analyzer.get_index(future_));
   buffer.pack<std::uint32_t>(store_->type()->size());
+  buffer.pack<std::uint64_t>(scalar_offset_);
   buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
 }
 
@@ -96,6 +97,7 @@ void ReplicatedScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& 
   buffer.pack<bool>(read_only_);
   buffer.pack<std::int32_t>(analyzer.get_index(future_map_));
   buffer.pack<std::uint32_t>(store_->type()->size());
+  buffer.pack<std::uint64_t>(scalar_offset_);
   buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
 }
 
@@ -112,6 +114,8 @@ void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /
   // future index
   buffer.pack<std::int32_t>(-1);
   buffer.pack<std::uint32_t>(store_->type()->size());
+  // field offset
+  buffer.pack<std::uint64_t>(0);
   // TODO(wonchanl): the extents of an unbound scalar store are derived from the launch domain, but
   // this logic hasn't been implemented yet, as unbound scalar stores are not exposed to the API.
   // The code below works for the only use case in the runtime (approximate image computation)

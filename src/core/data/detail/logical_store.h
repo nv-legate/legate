@@ -75,6 +75,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   [[nodiscard]] const InternalSharedPtr<Type>& type() const;
   [[nodiscard]] Kind kind() const;
   [[nodiscard]] std::int32_t level() const;
+  [[nodiscard]] std::size_t scalar_offset() const;
 
   [[nodiscard]] InternalSharedPtr<Storage> slice(tuple<std::uint64_t> tile_shape,
                                                  const tuple<std::uint64_t>& offsets);
@@ -88,8 +89,8 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
     const Domain& launch_domain) const;
 
   void set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field);
-  void set_future(Legion::Future future);
-  void set_future_map(Legion::FutureMap future_map);
+  void set_future(Legion::Future future, std::size_t scalar_offset);
+  void set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset);
 
   [[nodiscard]] RegionField map();
   void allow_out_of_order_destruction();
@@ -115,6 +116,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   InternalSharedPtr<Type> type_{};
   Kind kind_{Kind::REGION_FIELD};
 
+  std::size_t scalar_offset_{};
   InternalSharedPtr<LogicalRegionField> region_field_{};
   std::optional<Legion::Future> future_{};
   std::optional<Legion::FutureMap> future_map_{};
@@ -184,13 +186,14 @@ class LogicalStore {
   [[nodiscard]] bool transformed() const;
   [[nodiscard]] std::uint64_t id() const;
 
+  [[nodiscard]] Storage* get_storage();
   [[nodiscard]] const Storage* get_storage() const;
   [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const;
   [[nodiscard]] Legion::Future get_future() const;
   [[nodiscard]] Legion::FutureMap get_future_map() const;
   void set_region_field(InternalSharedPtr<LogicalRegionField> region_field);
-  void set_future(Legion::Future future);
-  void set_future_map(Legion::FutureMap future_map);
+  void set_future(Legion::Future future, std::size_t scalar_offset = 0);
+  void set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset = 0);
 
   [[nodiscard]] InternalSharedPtr<LogicalStore> promote(std::int32_t extra_dim,
                                                         std::size_t dim_size);

@@ -123,6 +123,8 @@ class PhysicalStore {
   [[nodiscard]] std::int32_t get_redop_id_() const;
 
   [[nodiscard]] bool is_read_only_future_() const;
+  [[nodiscard]] std::size_t get_field_offset_() const;
+  [[nodiscard]] const void* get_untyped_pointer_from_future_() const;
 
   void get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid);
   void update_num_elements_(std::size_t num_elements);

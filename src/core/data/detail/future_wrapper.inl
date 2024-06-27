@@ -24,6 +24,8 @@ inline bool FutureWrapper::valid() const { return get_future().valid(); }
 
 inline std::uint32_t FutureWrapper::field_size() const { return field_size_; }
 
+inline std::size_t FutureWrapper::field_offset() const { return field_offset_; }
+
 inline bool FutureWrapper::is_read_only() const { return read_only_; }
 
 inline const Legion::Future& FutureWrapper::get_future() const { return future_; }

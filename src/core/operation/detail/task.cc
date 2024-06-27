@@ -185,17 +185,15 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
     auto* runtime      = detail::Runtime::get_runtime();
     auto return_layout = TaskReturnLayoutForUnpack{num_unbound_outs * sizeof(std::size_t)};
 
-    auto extract_future = [&](auto&& future, auto&& store) {
-      auto size   = store->type()->size();
-      auto offset = return_layout.next(size, store->type()->alignment());
-      return runtime->extract_scalar(future, offset, size);
+    const auto compute_offset = [&](auto&& store) {
+      return return_layout.next(store->type()->size(), store->type()->alignment());
     };
 
     for (auto&& store : scalar_outputs_) {
-      store->set_future(extract_future(result, store));
+      store->set_future(result, compute_offset(store));
     }
     for (auto&& [store, _] : scalar_reductions_) {
-      store->set_future(extract_future(result, store));
+      store->set_future(result, compute_offset(store));
     }
     if (can_throw_exception_) {
       runtime->record_pending_exception(runtime->extract_scalar(
@@ -238,8 +236,12 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
       return runtime->extract_scalar(future_map, offset, size, launch_domain);
     };
 
+    const auto compute_offset = [&](auto&& store) {
+      return return_layout.next(store->type()->size(), store->type()->alignment());
+    };
+
     for (auto&& store : scalar_outputs_) {
-      store->set_future_map(extract_future_map(result, store));
+      store->set_future_map(result, compute_offset(store));
     }
     for (auto&& [store, redop] : scalar_reductions_) {
       auto values = extract_future_map(result, store);

@@ -28,7 +28,7 @@ namespace legate::detail {
 namespace {
 
 [[nodiscard]] Legion::UntypedDeferredValue untyped_deferred_value_from_future(
-  const Legion::Future& fut, std::size_t field_size)
+  const Legion::Future& fut, std::size_t field_size, std::size_t field_offset)
 {
   const auto mem_kind =
     find_memory_kind_for_executing_processor(LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB));
@@ -37,9 +37,9 @@ namespace {
     return Legion::UntypedDeferredValue{field_size, mem_kind};
   }
 
-  LEGATE_ASSERT(fut.get_untyped_size() == field_size);
+  LEGATE_ASSERT(field_offset + field_size <= fut.get_untyped_size());
 
-  const auto* init_value = fut.get_buffer(mem_kind);
+  const auto* init_value = static_cast<const std::int8_t*>(fut.get_buffer(mem_kind)) + field_offset;
 
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) && (mem_kind == Memory::Kind::GPU_FB_MEM)) {
     // TODO(wonchanl): This should be done by Legion
@@ -61,14 +61,17 @@ namespace {
 // static_assert).
 FutureWrapper::FutureWrapper(bool read_only,
                              std::uint32_t field_size,
+                             std::size_t field_offset,
                              const Domain& domain,  // NOLINT(modernize-pass-by-value)
                              Legion::Future future)
   : read_only_{read_only},
     field_size_{field_size},
+    field_offset_{field_offset},
     domain_{domain},
     future_{std::move(future)},
     buffer_{read_only ? Legion::UntypedDeferredValue{}
-                      : untyped_deferred_value_from_future(get_future(), this->field_size())}
+                      : untyped_deferred_value_from_future(
+                          get_future(), this->field_size(), this->field_offset())}
 {
 }
 
@@ -164,6 +167,15 @@ void FutureWrapper::initialize_with_identity(std::int32_t redop_id)
 ReturnValue FutureWrapper::pack(const InternalSharedPtr<Type>& type) const
 {
   return {get_buffer(), field_size(), type->alignment()};
+}
+
+const void* FutureWrapper::get_untyped_pointer_from_future() const
+{
+  LEGATE_ASSERT(get_future().valid());
+  LEGATE_ASSERT(field_offset() + field_size() <= get_future().get_untyped_size());
+  return static_cast<const std::int8_t*>(
+           get_future().get_buffer(find_memory_kind_for_executing_processor())) +
+         field_offset();
 }
 
 }  // namespace legate::detail

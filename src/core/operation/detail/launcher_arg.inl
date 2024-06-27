@@ -61,9 +61,14 @@ inline std::uint32_t OutputRegionArg::requirement_index() const { return require
 
 inline ScalarStoreArg::ScalarStoreArg(LogicalStore* store,
                                       Legion::Future future,
+                                      std::size_t scalar_offset,
                                       bool read_only,
                                       Legion::ReductionOpID redop)
-  : store_{store}, future_{std::move(future)}, read_only_{read_only}, redop_{redop}
+  : store_{store},
+    future_{std::move(future)},
+    scalar_offset_{scalar_offset},
+    read_only_{read_only},
+    redop_{redop}
 {
 }
 
@@ -71,8 +76,12 @@ inline ScalarStoreArg::ScalarStoreArg(LogicalStore* store,
 
 inline ReplicatedScalarStoreArg::ReplicatedScalarStoreArg(LogicalStore* store,
                                                           Legion::FutureMap future_map,
+                                                          std::size_t scalar_offset,
                                                           bool read_only)
-  : store_{store}, future_map_{std::move(future_map)}, read_only_{read_only}
+  : store_{store},
+    future_map_{std::move(future_map)},
+    scalar_offset_{scalar_offset},
+    read_only_{read_only}
 {
 }
 

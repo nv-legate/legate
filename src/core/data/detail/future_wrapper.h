@@ -26,6 +26,7 @@ class FutureWrapper {
   FutureWrapper() = default;
   FutureWrapper(bool read_only,
                 std::uint32_t field_size,
+                std::size_t field_offset,
                 const Domain& domain,
                 Legion::Future future);
 
@@ -33,6 +34,7 @@ class FutureWrapper {
   [[nodiscard]] const Domain& domain() const;
   [[nodiscard]] bool valid() const;
   [[nodiscard]] std::uint32_t field_size() const;
+  [[nodiscard]] std::size_t field_offset() const;
 
   [[nodiscard]] InlineAllocation get_inline_allocation(const Domain& domain) const;
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
@@ -45,10 +47,12 @@ class FutureWrapper {
   [[nodiscard]] bool is_read_only() const;
   [[nodiscard]] const Legion::Future& get_future() const;
   [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer() const;
+  [[nodiscard]] const void* get_untyped_pointer_from_future() const;
 
  private:
   bool read_only_{true};
   std::uint32_t field_size_{};
+  std::size_t field_offset_{};
   Domain domain_{};
   Legion::Future future_{};
   Legion::UntypedDeferredValue buffer_{};

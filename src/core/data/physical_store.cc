@@ -33,34 +33,34 @@ void PhysicalStore::bind_untyped_data(Buffer<int8_t, 1>& buffer, const Point<1>&
   update_num_elements_(extents[0]);
 }
 
-void PhysicalStore::bind_empty_data() const { impl_->bind_empty_data(); }
+void PhysicalStore::bind_empty_data() const { impl()->bind_empty_data(); }
 
-std::int32_t PhysicalStore::dim() const { return impl_->dim(); }
+std::int32_t PhysicalStore::dim() const { return impl()->dim(); }
 
-Type PhysicalStore::type() const { return Type{impl_->type()}; }
+Type PhysicalStore::type() const { return Type{impl()->type()}; }
 
-Domain PhysicalStore::domain() const { return impl_->domain(); }
+Domain PhysicalStore::domain() const { return impl()->domain(); }
 
 InlineAllocation PhysicalStore::get_inline_allocation() const
 {
-  return impl_->get_inline_allocation();
+  return impl()->get_inline_allocation();
 }
 
-bool PhysicalStore::is_readable() const { return impl_->is_readable(); }
+bool PhysicalStore::is_readable() const { return impl()->is_readable(); }
 
-bool PhysicalStore::is_writable() const { return impl_->is_writable(); }
+bool PhysicalStore::is_writable() const { return impl()->is_writable(); }
 
-bool PhysicalStore::is_reducible() const { return impl_->is_reducible(); }
+bool PhysicalStore::is_reducible() const { return impl()->is_reducible(); }
 
-bool PhysicalStore::valid() const { return impl_ != nullptr && impl_->valid(); }
+bool PhysicalStore::valid() const { return impl() != nullptr && impl()->valid(); }
 
-bool PhysicalStore::transformed() const { return impl_->transformed(); }
+bool PhysicalStore::transformed() const { return impl()->transformed(); }
 
-bool PhysicalStore::is_future() const { return impl_->is_future(); }
+bool PhysicalStore::is_future() const { return impl()->is_future(); }
 
-bool PhysicalStore::is_unbound_store() const { return impl_->is_unbound_store(); }
+bool PhysicalStore::is_unbound_store() const { return impl()->is_unbound_store(); }
 
-mapping::StoreTarget PhysicalStore::target() const { return impl_->target(); }
+mapping::StoreTarget PhysicalStore::target() const { return impl()->target(); }
 
 PhysicalStore::PhysicalStore(const PhysicalArray& array)
   : impl_{array.nullable()
@@ -71,57 +71,64 @@ PhysicalStore::PhysicalStore(const PhysicalArray& array)
 
 void PhysicalStore::check_accessor_dimension_(std::int32_t dim) const
 {
-  impl_->check_accessor_dimension_(dim);
+  impl()->check_accessor_dimension_(dim);
 }
 
 void PhysicalStore::check_buffer_dimension_(std::int32_t dim) const
 {
-  impl_->check_buffer_dimension_(dim);
+  impl()->check_buffer_dimension_(dim);
 }
 
 void PhysicalStore::check_shape_dimension_(std::int32_t dim) const
 {
-  impl_->check_shape_dimension_(dim);
+  impl()->check_shape_dimension_(dim);
 }
 
 void PhysicalStore::check_valid_binding_(bool bind_buffer) const
 {
-  impl_->check_valid_binding_(bind_buffer);
+  impl()->check_valid_binding_(bind_buffer);
 }
 
-void PhysicalStore::check_write_access_() const { impl_->check_write_access_(); }
+void PhysicalStore::check_write_access_() const { impl()->check_write_access_(); }
 
-void PhysicalStore::check_reduction_access_() const { impl_->check_reduction_access_(); }
+void PhysicalStore::check_reduction_access_() const { impl()->check_reduction_access_(); }
 
 Legion::DomainAffineTransform PhysicalStore::get_inverse_transform_() const
 {
-  return impl_->get_inverse_transform_();
+  return impl()->get_inverse_transform_();
 }
 
-bool PhysicalStore::is_read_only_future_() const { return impl_->is_read_only_future_(); }
+bool PhysicalStore::is_read_only_future_() const { return impl()->is_read_only_future_(); }
+
+std::size_t PhysicalStore::get_field_offset_() const { return impl()->get_field_offset_(); }
+
+const void* PhysicalStore::get_untyped_pointer_from_future_() const
+{
+  return impl()->get_untyped_pointer_from_future_();
+}
 
 void PhysicalStore::get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const
 {
-  impl_->get_region_field_(pr, fid);
+  impl()->get_region_field_(pr, fid);
 }
 
-std::int32_t PhysicalStore::get_redop_id_() const { return impl_->get_redop_id_(); }
+std::int32_t PhysicalStore::get_redop_id_() const { return impl()->get_redop_id_(); }
 
-const Legion::Future& PhysicalStore::get_future_() const { return impl_->get_future(); }
+const Legion::Future& PhysicalStore::get_future_() const { return impl()->get_future(); }
 
 const Legion::UntypedDeferredValue& PhysicalStore::get_buffer_() const
 {
-  return impl_->get_buffer();
+  return impl()->get_buffer();
 }
 
 void PhysicalStore::get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid) const
 {
-  impl_->get_output_field_(out, fid);
+  impl()->get_output_field_(out, fid);
 }
 
 void PhysicalStore::update_num_elements_(std::size_t num_elements) const
 {
-  impl_->update_num_elements_(num_elements);
+  impl()->update_num_elements_(num_elements);
 }
 
 }  // namespace legate

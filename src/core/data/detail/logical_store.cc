@@ -271,9 +271,10 @@ void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_fi
   }
 }
 
-void Storage::set_future(Legion::Future future)
+void Storage::set_future(Legion::Future future, std::size_t scalar_offset)
 {
-  future_ = std::move(future);
+  scalar_offset_ = scalar_offset;
+  future_        = std::move(future);
   // If we're here, that means that this was a replicated future that gets updated via reductions,
   // so we reset the stale future map and update the kind
   if (kind() == Storage::Kind::FUTURE_MAP) {
@@ -286,9 +287,10 @@ void Storage::set_future(Legion::Future future)
   }
 }
 
-void Storage::set_future_map(Legion::FutureMap future_map)
+void Storage::set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset)
 {
-  future_map_ = std::move(future_map);
+  scalar_offset_ = scalar_offset;
+  future_map_    = std::move(future_map);
   // If this was originally a future-backed storage, it means this storage is now backed by a future
   // map with futures having the same value
   if (kind() == Storage::Kind::FUTURE) {
@@ -440,7 +442,7 @@ bool StoragePartition::is_disjoint_for(const Domain& launch_domain) const
 
 namespace {
 
-void assert_fixed_storage_size(const InternalSharedPtr<Storage>& storage)
+void assert_fixed_storage_size(const Storage* storage)
 {
   if (storage->type()->variable_size()) {
     throw std::invalid_argument{"Store cannot be created with variable size type " +
@@ -462,7 +464,7 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage)
     storage_{std::move(storage)},
     transform_{make_internal_shared<TransformStack>()}
 {
-  assert_fixed_storage_size(storage_);
+  assert_fixed_storage_size(get_storage());
   LEGATE_ASSERT(transform_ != nullptr);
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -477,7 +479,7 @@ LogicalStore::LogicalStore(tuple<std::uint64_t> extents,
     storage_{std::move(storage)},
     transform_{std::move(transform)}
 {
-  assert_fixed_storage_size(storage_);
+  assert_fixed_storage_size(get_storage());
   LEGATE_ASSERT(transform_ != nullptr);
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -488,21 +490,21 @@ void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField> region
 {
   LEGATE_ASSERT(!has_scalar_storage());
   // The shape object of this store must be an alias to that of the storage
-  LEGATE_ASSERT(storage_->shape() == shape());
+  LEGATE_ASSERT(get_storage()->shape() == shape());
   // this call updates the shape for both the storage and the store
-  storage_->set_region_field(std::move(region_field));
+  get_storage()->set_region_field(std::move(region_field));
 }
 
-void LogicalStore::set_future(Legion::Future future)
+void LogicalStore::set_future(Legion::Future future, std::size_t scalar_offset)
 {
   LEGATE_ASSERT(has_scalar_storage());
-  storage_->set_future(std::move(future));
+  get_storage()->set_future(std::move(future), scalar_offset);
 }
 
-void LogicalStore::set_future_map(Legion::FutureMap future_map)
+void LogicalStore::set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset)
 {
   LEGATE_ASSERT(has_scalar_storage());
-  storage_->set_future_map(std::move(future_map));
+  get_storage()->set_future_map(std::move(future_map), scalar_offset);
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, std::size_t dim_size)
@@ -687,18 +689,20 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
   if (mapped_) {
     return mapped_;
   }
-  if (storage_->kind() == Storage::Kind::FUTURE ||
-      (storage_->kind() == Storage::Kind::FUTURE_MAP && storage_->replicated())) {
+  auto* storage = get_storage();
+  if (storage->kind() == Storage::Kind::FUTURE ||
+      (storage->kind() == Storage::Kind::FUTURE_MAP && storage->replicated())) {
     // TODO(wonchanl): future wrappers from inline mappings are read-only for now
-    auto domain = to_domain(storage_->shape()->extents());
-    auto future = FutureWrapper{true, type()->size(), domain, storage_->get_future()};
+    auto domain = to_domain(storage->shape()->extents());
+    auto future =
+      FutureWrapper{true, type()->size(), storage->scalar_offset(), domain, storage->get_future()};
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
     return make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(future), transform_);
   }
 
-  LEGATE_ASSERT(storage_->kind() == Storage::Kind::REGION_FIELD);
-  auto region_field = storage_->map();
+  LEGATE_ASSERT(storage->kind() == Storage::Kind::REGION_FIELD);
+  auto region_field = storage->map();
   mapped_ =
     make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(region_field), transform_);
   return mapped_;
@@ -721,13 +725,13 @@ void LogicalStore::detach()
 void LogicalStore::allow_out_of_order_destruction()
 {
   if (Runtime::get_runtime()->consensus_match_required()) {
-    storage_->allow_out_of_order_destruction();
+    get_storage()->allow_out_of_order_destruction();
   }
 }
 
 Restrictions LogicalStore::compute_restrictions(bool is_output) const
 {
-  return transform_->convert(storage_->compute_restrictions(), is_output);
+  return transform_->convert(get_storage()->compute_restrictions(), is_output);
 }
 
 Legion::ProjectionID LogicalStore::compute_projection(
@@ -802,7 +806,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
   Partition* storage_part{};
 
   if (transform_->is_convertible()) {
-    storage_part = storage_->find_key_partition(machine, transform_->invert(restrictions));
+    storage_part = get_storage()->find_key_partition(machine, transform_->invert(restrictions));
   }
 
   std::unique_ptr<Partition> store_part{};
@@ -835,7 +839,7 @@ bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
     return true;
   }
   return transform_->is_convertible() &&
-         storage_->find_key_partition(machine, transform_->invert(restrictions)) != nullptr;
+         get_storage()->find_key_partition(machine, transform_->invert(restrictions)) != nullptr;
 }
 
 void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
@@ -843,7 +847,7 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
 {
   num_pieces_ = machine.count();
   key_partition_.reset(partition->clone().release());
-  storage_->set_key_partition(machine, transform_->invert(partition));
+  get_storage()->set_key_partition(machine, transform_->invert(partition));
 }
 
 void LogicalStore::reset_key_partition()
@@ -851,7 +855,7 @@ void LogicalStore::reset_key_partition()
   // Need to flush scheduling window to make this effective
   Runtime::get_runtime()->flush_scheduling_window();
   key_partition_.reset();
-  storage_->reset_key_partition();
+  get_storage()->reset_key_partition();
 }
 
 InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
@@ -864,7 +868,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
     throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
   }
   auto storage_partition =
-    storage_->create_partition(transform_->invert(partition.get()), std::move(complete));
+    get_storage()->create_partition(transform_->invert(partition.get()), std::move(complete));
   return make_internal_shared<LogicalStorePartition>(
     std::move(partition), std::move(storage_partition), self);
 }
@@ -937,7 +941,7 @@ std::unique_ptr<Analyzable> LogicalStore::future_to_launcher_arg_(Legion::Future
   // also passed as an input store. For the time being, we just pass the future when it exists even
   // when the store is not actually read by the task.
   return std::make_unique<ScalarStoreArg>(
-    this, std::move(future), privilege == LEGION_READ_ONLY, redop);
+    this, std::move(future), get_storage()->scalar_offset(), privilege == LEGION_READ_ONLY, redop);
 }
 
 std::unique_ptr<Analyzable> LogicalStore::future_map_to_launcher_arg_(
@@ -970,8 +974,10 @@ std::unique_ptr<Analyzable> LogicalStore::future_map_to_launcher_arg_(
         // So, the privilege of this store alone doesn't tell us whether it's truly a write-only
         // store or this is also passed as an input store. For the time being, we just pass the
         // future when it exists even when the store is not actually read by the task.
-        return std::make_unique<ReplicatedScalarStoreArg>(
-          this, std::forward<T>(val), privilege == LEGION_READ_ONLY);
+        return std::make_unique<ReplicatedScalarStoreArg>(this,
+                                                          std::forward<T>(val),
+                                                          get_storage()->scalar_offset(),
+                                                          privilege == LEGION_READ_ONLY);
       }
       LEGATE_UNREACHABLE();
       return nullptr;
@@ -1036,7 +1042,7 @@ std::string LogicalStore::to_string() const
   if (!transform_->identity()) {
     ss << ", transform: " << *transform_;
   }
-  ss << ", storage: " << storage_->id() << "}";
+  ss << ", storage: " << get_storage()->id() << "}";
   return std::move(ss).str();
 }
 

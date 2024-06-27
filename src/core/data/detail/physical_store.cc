@@ -181,6 +181,13 @@ Legion::DomainAffineTransform PhysicalStore::get_inverse_transform_() const
 
 bool PhysicalStore::is_read_only_future_() const { return future_.is_read_only(); }
 
+std::size_t PhysicalStore::get_field_offset_() const { return future_.field_offset(); }
+
+const void* PhysicalStore::get_untyped_pointer_from_future_() const
+{
+  return future_.get_untyped_pointer_from_future();
+}
+
 void PhysicalStore::get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const
 {
   LEGATE_ASSERT(!(is_future() || is_unbound_store()));

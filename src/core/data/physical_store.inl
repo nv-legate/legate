@@ -55,7 +55,14 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor() const
 
   if (is_future()) {
     if (is_read_only_future_()) {
-      return {get_future_(), shape<DIM>(), Memory::Kind::NO_MEMKIND, sizeof(T), false};
+      return {get_future_(),
+              shape<DIM>(),
+              Memory::Kind::NO_MEMKIND,
+              sizeof(T),
+              false,
+              false,
+              nullptr,
+              get_field_offset_()};
     }
     return {get_buffer_(), shape<DIM>(), sizeof(T), false};
   }
@@ -129,7 +136,14 @@ AccessorRO<T, DIM> PhysicalStore::read_accessor(const Rect<DIM>& bounds) const
 
   if (is_future()) {
     if (is_read_only_future_()) {
-      return {get_future_(), bounds, Memory::Kind::NO_MEMKIND, sizeof(T), false};
+      return {get_future_(),
+              bounds,
+              Memory::Kind::NO_MEMKIND,
+              sizeof(T),
+              false,
+              false,
+              nullptr,
+              get_field_offset_()};
     }
     return {get_buffer_(), bounds, sizeof(T), false};
   }
@@ -239,7 +253,9 @@ VAL PhysicalStore::scalar() const
     throw std::invalid_argument{"Scalars can be retrieved only from scalar stores"};
   }
   if (is_read_only_future_()) {
-    return get_future_().get_result<VAL>();
+    // get_untyped_pointer_from_future_ is guaranteed to return an aligned pointer when T is the
+    // right value type
+    return *static_cast<const VAL*>(get_untyped_pointer_from_future_());
   }
 
   return get_buffer_().operator Legion::DeferredValue<VAL>().read();

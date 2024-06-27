@@ -36,6 +36,8 @@ inline Storage::Kind Storage::kind() const { return kind_; }
 
 inline std::int32_t Storage::level() const { return level_; }
 
+inline std::size_t Storage::scalar_offset() const { return scalar_offset_; }
+
 // ==========================================================================================
 
 inline StoragePartition::StoragePartition(InternalSharedPtr<Storage> parent,
@@ -92,6 +94,8 @@ inline const InternalSharedPtr<Type>& LogicalStore::type() const { return get_st
 inline bool LogicalStore::transformed() const { return !transform_->identity(); }
 
 inline std::uint64_t LogicalStore::id() const { return store_id_; }
+
+inline Storage* LogicalStore::get_storage() { return storage_.get(); }
 
 inline const Storage* LogicalStore::get_storage() const { return storage_.get(); }
 
