@@ -104,11 +104,11 @@ class OutputRegionArg final : public Analyzable {
   mutable std::uint32_t requirement_index_{-1U};
 };
 
-class FutureStoreArg final : public Analyzable {
+class ScalarStoreArg final : public Analyzable {
  public:
-  FutureStoreArg(LogicalStore* store,
+  ScalarStoreArg(LogicalStore* store,
+                 Legion::Future future,
                  bool read_only,
-                 bool has_storage,
                  Legion::ReductionOpID redop);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
@@ -116,8 +116,33 @@ class FutureStoreArg final : public Analyzable {
 
  private:
   LogicalStore* store_{};
+  Legion::Future future_{};
   bool read_only_{};
-  bool has_storage_{};
+  Legion::ReductionOpID redop_{};
+};
+
+class ReplicatedScalarStoreArg final : public Analyzable {
+ public:
+  ReplicatedScalarStoreArg(LogicalStore* store, Legion::FutureMap future_map, bool read_only);
+
+  void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
+  void analyze(StoreAnalyzer& analyzer) override;
+
+ private:
+  LogicalStore* store_{};
+  Legion::FutureMap future_map_{};
+  bool read_only_{};
+};
+
+class WriteOnlyScalarStoreArg final : public Analyzable {
+ public:
+  WriteOnlyScalarStoreArg(LogicalStore* store, Legion::ReductionOpID redop);
+
+  void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
+  void analyze(StoreAnalyzer& analyzer) override;
+
+ private:
+  LogicalStore* store_{};
   Legion::ReductionOpID redop_{};
 };
 

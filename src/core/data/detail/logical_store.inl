@@ -18,6 +18,8 @@ namespace legate::detail {
 
 inline std::uint64_t Storage::id() const { return storage_id_; }
 
+inline bool Storage::replicated() const { return replicated_; }
+
 inline bool Storage::unbound() const { return unbound_; }
 
 inline const InternalSharedPtr<Shape>& Storage::shape() const { return shape_; }

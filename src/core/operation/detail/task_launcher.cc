@@ -107,6 +107,9 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   for (auto&& future : futures_) {
     analyzer.insert(future);
   }
+  for (auto&& future_map : future_maps_) {
+    analyzer.insert(future_map);
+  }
 
   // Coalesce region requirements before packing task arguments
   // as the latter requires requirement indices to be finalized
@@ -154,9 +157,6 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   }
   for (auto&& communicator : communicators_) {
     index_task.point_futures.emplace_back(communicator);
-  }
-  for (auto&& future_map : future_maps_) {
-    index_task.point_futures.emplace_back(future_map);
   }
 
   index_task.concurrent = concurrent_ || !communicators_.empty();

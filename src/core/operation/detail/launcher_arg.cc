@@ -75,26 +75,50 @@ void OutputRegionArg::record_unbound_stores(std::vector<const OutputRegionArg*>&
   args.push_back(this);
 }
 
-void FutureStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
+void ScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
   store_->pack(buffer);
 
   buffer.pack<std::int32_t>(redop_);
   buffer.pack<bool>(read_only_);
-  buffer.pack<std::int32_t>(has_storage_ ? analyzer.get_index(store_->get_future()) : -1);
+  buffer.pack<std::int32_t>(analyzer.get_index(future_));
   buffer.pack<std::uint32_t>(store_->type()->size());
-  if (store_->get_storage()->kind() == Storage::Kind::FUTURE) {
-    buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
-  } else {
-    LEGATE_ASSERT(store_->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
-    buffer.pack<std::uint64_t>(std::vector<std::uint64_t>{1});
-  }
+  buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
 }
 
-void FutureStoreArg::analyze(StoreAnalyzer& analyzer)
+void ScalarStoreArg::analyze(StoreAnalyzer& analyzer) { analyzer.insert(future_); }
+
+void ReplicatedScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  if (has_storage_) {
-    analyzer.insert(store_->get_future());
+  store_->pack(buffer);
+
+  buffer.pack<std::int32_t>(-1);
+  buffer.pack<bool>(read_only_);
+  buffer.pack<std::int32_t>(analyzer.get_index(future_map_));
+  buffer.pack<std::uint32_t>(store_->type()->size());
+  buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
+}
+
+void ReplicatedScalarStoreArg::analyze(StoreAnalyzer& analyzer) { analyzer.insert(future_map_); }
+
+void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /*analyzer*/) const
+{
+  store_->pack(buffer);
+
+  // redop
+  buffer.pack<std::int32_t>(redop_);
+  // read-only
+  buffer.pack<bool>(false);
+  // future index
+  buffer.pack<std::int32_t>(-1);
+  buffer.pack<std::uint32_t>(store_->type()->size());
+  // TODO(wonchanl): the extents of an unbound scalar store are derived from the launch domain, but
+  // this logic hasn't been implemented yet, as unbound scalar stores are not exposed to the API.
+  // The code below works for the only use case in the runtime (approximate image computation)
+  if (store_->unbound()) {
+    buffer.pack<std::uint64_t>(std::vector<std::uint64_t>{1});
+  } else {
+    buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
   }
 }
 

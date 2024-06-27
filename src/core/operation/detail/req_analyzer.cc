@@ -209,13 +209,6 @@ void OutputRequirementAnalyzer::populate_output_requirements(
 // FutureAnalyzer
 /////////////////
 
-void FutureAnalyzer::insert(const Legion::Future& future) { futures_.push_back(future); }
-
-std::int32_t FutureAnalyzer::get_future_index(const Legion::Future& future) const
-{
-  return future_indices_.at(future);
-}
-
 void FutureAnalyzer::analyze_futures()
 {
   std::int32_t index = 0;
@@ -224,26 +217,32 @@ void FutureAnalyzer::analyze_futures()
       continue;
     }
     future_indices_[future] = index++;
-    coalesced_.push_back(future);
+    coalesced_futures_.emplace_back(future);
   }
-}
-
-template <typename Launcher>
-void FutureAnalyzer::populate_launcher_(Launcher& task) const
-{
-  for (auto&& future : coalesced_) {
-    task.add_future(future);
+  for (auto&& future_map : future_maps_) {
+    if (future_map_indices_.find(future_map) != future_map_indices_.end()) {
+      continue;
+    }
+    future_map_indices_[future_map] = index++;
+    coalesced_future_maps_.emplace_back(future_map);
   }
 }
 
 void FutureAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const
 {
-  populate_launcher_(task);
+  for (auto&& future : coalesced_futures_) {
+    task.add_future(future);
+  }
+  task.point_futures.insert(
+    task.point_futures.end(), coalesced_future_maps_.begin(), coalesced_future_maps_.end());
 }
 
 void FutureAnalyzer::populate_launcher(Legion::TaskLauncher& task) const
 {
-  populate_launcher_(task);
+  LEGATE_ASSERT(coalesced_future_maps_.empty());
+  for (auto&& future : coalesced_futures_) {
+    task.add_future(future);
+  }
 }
 
 }  // namespace legate::detail

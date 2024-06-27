@@ -29,6 +29,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace legate::detail {
@@ -63,6 +64,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   Storage& operator=(Storage&&) noexcept = default;
 
   [[nodiscard]] std::uint64_t id() const;
+  [[nodiscard]] bool replicated() const;
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
   [[nodiscard]] const tuple<std::uint64_t>& extents() const;
@@ -82,6 +84,8 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field();
   [[nodiscard]] Legion::Future get_future() const;
   [[nodiscard]] Legion::FutureMap get_future_map() const;
+  [[nodiscard]] std::variant<Legion::Future, Legion::FutureMap> get_future_or_future_map(
+    const Domain& launch_domain) const;
 
   void set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field);
   void set_future(Legion::Future future);
@@ -104,6 +108,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
 
  private:
   std::uint64_t storage_id_{};
+  bool replicated_{};
   bool unbound_{};
   bool destroyed_out_of_order_{};
   InternalSharedPtr<Shape> shape_{};
@@ -282,6 +287,21 @@ class LogicalStore {
     const InternalSharedPtr<LogicalStore>& self,
     const Domain& launch_domain,
     Legion::PrivilegeMode privilege);
+
+  [[nodiscard]] std::unique_ptr<Analyzable> future_to_launcher_arg_(Legion::Future future,
+                                                                    const Domain& launch_domain,
+                                                                    Legion::PrivilegeMode privilege,
+                                                                    std::int64_t redop);
+  [[nodiscard]] std::unique_ptr<Analyzable> future_map_to_launcher_arg_(
+    const Domain& launch_domain, Legion::PrivilegeMode privilege, std::int64_t redop);
+  [[nodiscard]] std::unique_ptr<Analyzable> region_field_to_launcher_arg_(
+    const InternalSharedPtr<LogicalStore>& self,
+    const Variable* variable,
+    const Strategy& strategy,
+    const Domain& launch_domain,
+    const std::optional<SymbolicPoint>& projection,
+    Legion::PrivilegeMode privilege,
+    std::int64_t redop);
 
  public:
   [[nodiscard]] std::string to_string() const;

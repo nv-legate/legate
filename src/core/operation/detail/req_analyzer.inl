@@ -29,6 +29,25 @@ inline bool OutputRequirementAnalyzer::empty() const { return field_groups_.empt
 
 // ==========================================================================================
 
+inline void FutureAnalyzer::insert(Legion::Future future) { futures_.push_back(std::move(future)); }
+
+inline void FutureAnalyzer::insert(Legion::FutureMap future_map)
+{
+  future_maps_.push_back(std::move(future_map));
+}
+
+inline std::int32_t FutureAnalyzer::get_index(const Legion::Future& future) const
+{
+  return future_indices_.at(future);
+}
+
+inline std::int32_t FutureAnalyzer::get_index(const Legion::FutureMap& future_map) const
+{
+  return future_map_indices_.at(future_map);
+}
+
+// ==========================================================================================
+
 inline void StoreAnalyzer::insert(const InternalSharedPtr<LogicalRegionField>& region_field,
                                   Legion::PrivilegeMode privilege,
                                   const StoreProjection& store_proj)
@@ -43,7 +62,15 @@ inline void StoreAnalyzer::insert(std::uint32_t dim,
   out_analyzer_.insert(dim, field_space, field_id);
 }
 
-inline void StoreAnalyzer::insert(const Legion::Future& future) { fut_analyzer_.insert(future); }
+inline void StoreAnalyzer::insert(Legion::Future future)
+{
+  fut_analyzer_.insert(std::move(future));
+}
+
+inline void StoreAnalyzer::insert(Legion::FutureMap future_map)
+{
+  fut_analyzer_.insert(std::move(future_map));
+}
 
 inline void StoreAnalyzer::analyze()
 {
@@ -68,7 +95,12 @@ inline std::uint32_t StoreAnalyzer::get_index(const Legion::FieldSpace& field_sp
 
 inline std::int32_t StoreAnalyzer::get_index(const Legion::Future& future) const
 {
-  return fut_analyzer_.get_future_index(future);
+  return fut_analyzer_.get_index(future);
+}
+
+inline std::int32_t StoreAnalyzer::get_index(const Legion::FutureMap& future_map) const
+{
+  return fut_analyzer_.get_index(future_map);
 }
 
 template <typename Launcher>

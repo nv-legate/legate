@@ -242,8 +242,10 @@ class Runtime {
                                                Legion::FieldID field_id,
                                                std::size_t field_size);
   [[nodiscard]] Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
-  [[nodiscard]] Legion::FutureMap delinearize_future_map(
-    const Legion::FutureMap& future_map, const Legion::IndexSpace& new_domain) const;
+  [[nodiscard]] Legion::FutureMap delinearize_future_map(const Legion::FutureMap& future_map,
+                                                         const Domain& new_domain);
+  [[nodiscard]] Legion::FutureMap reshape_future_map(const Legion::FutureMap& future_map,
+                                                     const Domain& new_domain);
 
   [[nodiscard]] std::pair<Legion::PhaseBarrier, Legion::PhaseBarrier> create_barriers(
     std::size_t num_tasks);

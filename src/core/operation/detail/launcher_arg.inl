@@ -59,13 +59,32 @@ inline std::uint32_t OutputRegionArg::requirement_index() const { return require
 
 // ==========================================================================================
 
-inline FutureStoreArg::FutureStoreArg(LogicalStore* store,
+inline ScalarStoreArg::ScalarStoreArg(LogicalStore* store,
+                                      Legion::Future future,
                                       bool read_only,
-                                      bool has_storage,
                                       Legion::ReductionOpID redop)
-  : store_{store}, read_only_{read_only}, has_storage_{has_storage}, redop_{redop}
+  : store_{store}, future_{std::move(future)}, read_only_{read_only}, redop_{redop}
 {
 }
+
+// ==========================================================================================
+
+inline ReplicatedScalarStoreArg::ReplicatedScalarStoreArg(LogicalStore* store,
+                                                          Legion::FutureMap future_map,
+                                                          bool read_only)
+  : store_{store}, future_map_{std::move(future_map)}, read_only_{read_only}
+{
+}
+
+// ==========================================================================================
+
+inline WriteOnlyScalarStoreArg::WriteOnlyScalarStoreArg(LogicalStore* store,
+                                                        Legion::ReductionOpID redop)
+  : store_{store}, redop_{redop}
+{
+}
+
+inline void WriteOnlyScalarStoreArg::analyze(StoreAnalyzer& /*analyzer*/) {}
 
 // ==========================================================================================
 

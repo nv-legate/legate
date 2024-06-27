@@ -43,6 +43,7 @@
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/env.h"
+#include "core/utilities/linearize.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/scope_guard.h"
 
@@ -1069,24 +1070,37 @@ namespace {
   LEGATE_CHECK(range.dim == 1);
   DomainPoint result;
   result.dim = 1;
-
-  const std::int32_t ndim = domain.dim;
-  std::int64_t idx        = point[0];
-  for (std::int32_t dim = 1; dim < ndim; ++dim) {
-    const std::int64_t extent = domain.rect_data[dim + ndim] - domain.rect_data[dim] + 1;
-    idx                       = idx * extent + point[dim];
-  }
-  result[0] = idx;
+  result[0]  = static_cast<coord_t>(linearize(domain.lo(), domain.hi(), point));
   return result;
 }
+
+[[nodiscard]] Legion::DomainPoint reshape_future_map_impl(const DomainPoint& point,
+                                                          const Domain& domain,
+                                                          const Domain& range)
+{
+  // TODO(wonchanl): This reshaping preserves the mapping of tasks if both the producer and consumer
+  // point tasks are linearized in the same way in the mapper, which is the case now.
+  // If in the future we make the mapping from points in the launch domain to GPUs customizable,
+  // we need to take that into account here as well.
+  return delinearize(range.lo(), range.hi(), linearize(domain.lo(), domain.hi(), point));
+}  // namespace
 
 }  // namespace
 
 Legion::FutureMap Runtime::delinearize_future_map(const Legion::FutureMap& future_map,
-                                                  const Legion::IndexSpace& new_domain) const
+                                                  const Domain& new_domain)
+{
+  return legion_runtime_->transform_future_map(legion_context_,
+                                               future_map,
+                                               find_or_create_index_space(new_domain),
+                                               delinearize_future_map_impl);
+}
+
+Legion::FutureMap Runtime::reshape_future_map(const Legion::FutureMap& future_map,
+                                              const Legion::Domain& new_domain)
 {
   return legion_runtime_->transform_future_map(
-    legion_context_, future_map, new_domain, delinearize_future_map_impl);
+    legion_context_, future_map, find_or_create_index_space(new_domain), reshape_future_map_impl);
 }
 
 std::pair<Legion::PhaseBarrier, Legion::PhaseBarrier> Runtime::create_barriers(

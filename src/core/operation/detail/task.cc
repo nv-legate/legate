@@ -219,16 +219,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
   const auto runtime = detail::Runtime::get_runtime();
   if (1 == total) {
     if (1 == num_scalar_outs) {
-      auto& store = scalar_outputs_.front();
-      if (store->get_storage()->kind() == Storage::Kind::FUTURE) {
-        // TODO(wonchanl): We should eventually support future map-backed stores, but for now we
-        // extract the first one to get the code running (the current implementation of future
-        // map-backed stores is not meant to be user-facing yet).
-        store->set_future(result[launch_domain.lo()]);
-      } else {
-        LEGATE_ASSERT(store->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
-        store->set_future_map(result);
-      }
+      scalar_outputs_.front()->set_future_map(result);
     } else if (1 == num_scalar_reds) {
       auto& [store, redop] = scalar_reductions_.front();
 
@@ -241,30 +232,14 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
   } else {
     auto return_layout = TaskReturnLayoutForUnpack{num_unbound_outs * sizeof(std::size_t)};
 
-    auto extract_future = [&](auto&& future, auto&& store) {
-      auto size   = store->type()->size();
-      auto offset = return_layout.next(size, store->type()->alignment());
-      return runtime->extract_scalar(future, offset, size);
-    };
-
     auto extract_future_map = [&](auto&& future_map, auto&& store) {
       auto size   = store->type()->size();
       auto offset = return_layout.next(size, store->type()->alignment());
       return runtime->extract_scalar(future_map, offset, size, launch_domain);
     };
 
-    if (!scalar_outputs_.empty()) {
-      // TODO(wonchanl): We should eventually support future map-backed stores, but for now we
-      // extract the first one to get the code running
-      auto first_future = result[launch_domain.lo()];
-      for (auto&& store : scalar_outputs_) {
-        if (store->get_storage()->kind() == Storage::Kind::FUTURE) {
-          store->set_future(extract_future(first_future, store));
-        } else {
-          LEGATE_ASSERT(store->get_storage()->kind() == Storage::Kind::FUTURE_MAP);
-          store->set_future_map(extract_future_map(result, store));
-        }
-      }
+    for (auto&& store : scalar_outputs_) {
+      store->set_future_map(extract_future_map(result, store));
     }
     for (auto&& [store, redop] : scalar_reductions_) {
       auto values = extract_future_map(result, store);

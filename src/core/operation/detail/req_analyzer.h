@@ -122,21 +122,23 @@ class OutputRequirementAnalyzer {
 
 class FutureAnalyzer {
  public:
-  void insert(const Legion::Future& future);
-  [[nodiscard]] std::int32_t get_future_index(const Legion::Future& future) const;
+  void insert(Legion::Future future);
+  void insert(Legion::FutureMap future_map);
+  [[nodiscard]] std::int32_t get_index(const Legion::Future& future) const;
+  [[nodiscard]] std::int32_t get_index(const Legion::FutureMap& future_map) const;
 
   void analyze_futures();
   void populate_launcher(Legion::IndexTaskLauncher& task) const;
   void populate_launcher(Legion::TaskLauncher& task) const;
 
  private:
-  template <typename Launcher>
-  void populate_launcher_(Launcher& task) const;
-
   // XXX: This could be a hash map, but Legion futures don't reveal IDs that we can hash
   std::map<Legion::Future, std::int32_t> future_indices_{};
-  std::vector<Legion::Future> coalesced_{};
+  std::map<Legion::FutureMap, std::int32_t> future_map_indices_{};
+  std::vector<Legion::Future> coalesced_futures_{};
+  std::vector<Legion::FutureMap> coalesced_future_maps_{};
   std::vector<Legion::Future> futures_{};
+  std::vector<Legion::FutureMap> future_maps_{};
 };
 
 class StoreAnalyzer {
@@ -145,7 +147,8 @@ class StoreAnalyzer {
               Legion::PrivilegeMode privilege,
               const StoreProjection& store_proj);
   void insert(std::uint32_t dim, const Legion::FieldSpace& field_space, Legion::FieldID field_id);
-  void insert(const Legion::Future& future);
+  void insert(Legion::Future future);
+  void insert(Legion::FutureMap future_map);
 
   void analyze();
 
@@ -156,6 +159,7 @@ class StoreAnalyzer {
   [[nodiscard]] std::uint32_t get_index(const Legion::FieldSpace& field_space,
                                         Legion::FieldID field_id) const;
   [[nodiscard]] std::int32_t get_index(const Legion::Future& future) const;
+  [[nodiscard]] std::int32_t get_index(const Legion::FutureMap& future_map) const;
 
   template <typename Launcher>
   void populate(Launcher& launcher, std::vector<Legion::OutputRequirement>& out_reqs);

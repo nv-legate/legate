@@ -63,9 +63,7 @@ Legion::FutureMap CommunicatorFactory::find_or_create_(const mapping::TaskTarget
 Legion::FutureMap CommunicatorFactory::transform_(const Legion::FutureMap& communicator,
                                                   const Domain& launch_domain)
 {
-  auto* runtime   = Runtime::get_runtime();
-  auto new_domain = runtime->find_or_create_index_space(launch_domain);
-  return runtime->delinearize_future_map(communicator, new_domain);
+  return Runtime::get_runtime()->delinearize_future_map(communicator, launch_domain);
 }
 
 CommunicatorFactory* CommunicatorManager::find_factory(std::string_view name)

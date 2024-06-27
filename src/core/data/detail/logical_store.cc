@@ -209,14 +209,54 @@ const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field()
 
 Legion::Future Storage::get_future() const
 {
-  LEGATE_CHECK(kind_ == Kind::FUTURE);
-  return future_.value_or(Legion::Future{});
+  if (kind_ == Kind::FUTURE) {
+    return future_.value_or(Legion::Future{});
+  }
+
+  LEGATE_ASSERT(kind_ == Kind::FUTURE_MAP);
+
+  // this future map must always exist, otherwise something bad has happened
+  auto future_map = get_future_map();
+  return future_map.get_future(future_map.get_future_map_domain().lo());
 }
 
 Legion::FutureMap Storage::get_future_map() const
 {
   LEGATE_CHECK(kind_ == Kind::FUTURE_MAP);
-  return future_map_.value_or(Legion::FutureMap{});
+
+  auto&& future_map = [&] {
+    // this future map must always exist, otherwise something bad has happened
+    try {
+      return future_map_.value();
+    } catch (const std::bad_optional_access&) {
+      LEGATE_ABORT("Future map must have existed");
+    }
+    LEGATE_UNREACHABLE();
+    return Legion::FutureMap{};
+  }();
+
+  return future_map;
+}
+
+std::variant<Legion::Future, Legion::FutureMap> Storage::get_future_or_future_map(
+  const Domain& launch_domain) const
+{
+  LEGATE_ASSERT(kind_ == Kind::FUTURE_MAP);
+
+  // this future map must always exist, otherwise something bad has happened
+  auto future_map        = get_future_map();
+  auto future_map_domain = future_map.get_future_map_domain();
+
+  if (!launch_domain.is_valid()) {
+    return future_map.get_future(future_map_domain.lo());
+  }
+  if (launch_domain == future_map_domain) {
+    return future_map;
+  }
+  if (launch_domain.get_volume() != future_map_domain.get_volume()) {
+    return future_map.get_future(future_map_domain.lo());
+  }
+  return Runtime::get_runtime()->reshape_future_map(future_map, launch_domain);
 }
 
 void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
@@ -231,9 +271,32 @@ void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_fi
   }
 }
 
-void Storage::set_future(Legion::Future future) { future_ = std::move(future); }
+void Storage::set_future(Legion::Future future)
+{
+  future_ = std::move(future);
+  // If we're here, that means that this was a replicated future that gets updated via reductions,
+  // so we reset the stale future map and update the kind
+  if (kind() == Storage::Kind::FUTURE_MAP) {
+    // TODO(wonchanl): true future map-backed stores aren't exposed to the user yet
+    // so if it wasn't replicated, something bad must have happened
+    LEGATE_CHECK(replicated_);
+    kind_       = Storage::Kind::FUTURE;
+    replicated_ = false;
+    future_map_.reset();
+  }
+}
 
-void Storage::set_future_map(Legion::FutureMap future_map) { future_map_ = std::move(future_map); }
+void Storage::set_future_map(Legion::FutureMap future_map)
+{
+  future_map_ = std::move(future_map);
+  // If this was originally a future-backed storage, it means this storage is now backed by a future
+  // map with futures having the same value
+  if (kind() == Storage::Kind::FUTURE) {
+    kind_       = Storage::Kind::FUTURE_MAP;
+    replicated_ = true;
+    future_.reset();
+  }
+}
 
 RegionField Storage::map()
 {
@@ -624,7 +687,8 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
   if (mapped_) {
     return mapped_;
   }
-  if (storage_->kind() == Storage::Kind::FUTURE) {
+  if (storage_->kind() == Storage::Kind::FUTURE ||
+      (storage_->kind() == Storage::Kind::FUTURE_MAP && storage_->replicated())) {
     // TODO(wonchanl): future wrappers from inline mappings are read-only for now
     auto domain = to_domain(storage_->shape()->extents());
     auto future = FutureWrapper{true, type()->size(), domain, storage_->get_future()};
@@ -824,19 +888,106 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_(
   std::int64_t redop)
 {
   LEGATE_ASSERT(self.get() == this);
-  if (get_storage()->kind() == Storage::Kind::FUTURE) {
-    if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
-      privilege = LEGION_READ_WRITE;
+
+  switch (get_storage()->kind()) {
+    case Storage::Kind::FUTURE: {
+      return future_to_launcher_arg_(get_storage()->get_future(), launch_domain, privilege, redop);
     }
-    auto read_only   = privilege == LEGION_READ_ONLY;
-    auto has_storage = get_future().valid() && privilege != LEGION_REDUCE;
-
-    return std::make_unique<FutureStoreArg>(this, read_only, has_storage, redop);
+    case Storage::Kind::FUTURE_MAP: {
+      return future_map_to_launcher_arg_(launch_domain, privilege, redop);
+    }
+    case Storage::Kind::REGION_FIELD: {
+      return region_field_to_launcher_arg_(
+        self, variable, strategy, launch_domain, projection, privilege, redop);
+    }
   }
-  if (get_storage()->kind() == Storage::Kind::FUTURE_MAP) {
-    return std::make_unique<FutureStoreArg>(this, false, false, -1);
+
+  LEGATE_UNREACHABLE();
+  return nullptr;
+}
+
+std::unique_ptr<Analyzable> LogicalStore::future_to_launcher_arg_(Legion::Future future,
+                                                                  const Domain& launch_domain,
+                                                                  Legion::PrivilegeMode privilege,
+                                                                  std::int64_t redop)
+{
+  if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
+    privilege = LEGION_READ_WRITE;
   }
 
+  if (!future.exists()) {
+    if (privilege != LEGION_WRITE_ONLY) {
+      throw std::invalid_argument{
+        "Read access or reduction to an uninitialized scalar store is prohibited"};
+    }
+    return std::make_unique<WriteOnlyScalarStoreArg>(this, redop);
+  }
+
+  // Scalar reductions don't need to pass the future or future map holding the current value to the
+  // task, as the physical stores will be initialized with the reduction identity. They are later
+  // passed to a future map reduction as an initial value in the task launch postamble.
+  if (privilege == LEGION_REDUCE) {
+    return std::make_unique<WriteOnlyScalarStoreArg>(this, redop);
+  }
+
+  // TODO(wonchanl): technically, we can create a WriteOnlyScalarStoreArg when privilege is
+  // LEGION_WRITE_ONLY. Unfortunately, we don't currently track scalar stores passed as both inputs
+  // and outputs, which are currently mapped to separate physical stores in the task. So, the
+  // privilege of this store alone doesn't tell us whether it's truly a write-only store or this is
+  // also passed as an input store. For the time being, we just pass the future when it exists even
+  // when the store is not actually read by the task.
+  return std::make_unique<ScalarStoreArg>(
+    this, std::move(future), privilege == LEGION_READ_ONLY, redop);
+}
+
+std::unique_ptr<Analyzable> LogicalStore::future_map_to_launcher_arg_(
+  const Domain& launch_domain, Legion::PrivilegeMode privilege, std::int64_t redop)
+{
+  if (unbound()) {
+    return std::make_unique<WriteOnlyScalarStoreArg>(this, -1 /*redop*/);
+  }
+  LEGATE_ASSERT(get_storage()->replicated());
+
+  auto future_or_future_map = get_storage()->get_future_or_future_map(launch_domain);
+
+  return std::visit(
+    [&](auto&& val) -> std::unique_ptr<Analyzable> {
+      using T = std::decay_t<decltype(val)>;
+      if constexpr (std::is_same_v<T, Legion::Future>) {
+        return future_to_launcher_arg_(std::forward<T>(val), launch_domain, privilege, redop);
+      }
+      if constexpr (std::is_same_v<T, Legion::FutureMap>) {
+        // Scalar reductions don't need to pass the future or future map holding the current value
+        // to the task, as the physical stores will be initialized with the reduction identity. They
+        // are later passed to a future map reduction as an initial value in the task launch
+        // postamble.
+        if (privilege == LEGION_REDUCE) {
+          return std::make_unique<WriteOnlyScalarStoreArg>(this, redop);
+        }
+        // TODO(wonchanl): technically, we can create a WriteOnlyScalarStoreArg when privilege is
+        // LEGION_WRITE_ONLY. Unfortunately, we don't currently track scalar stores passed as both
+        // inputs and outputs, which are currently mapped to separate physical stores in the task.
+        // So, the privilege of this store alone doesn't tell us whether it's truly a write-only
+        // store or this is also passed as an input store. For the time being, we just pass the
+        // future when it exists even when the store is not actually read by the task.
+        return std::make_unique<ReplicatedScalarStoreArg>(
+          this, std::forward<T>(val), privilege == LEGION_READ_ONLY);
+      }
+      LEGATE_UNREACHABLE();
+      return nullptr;
+    },
+    future_or_future_map);
+}
+
+std::unique_ptr<Analyzable> LogicalStore::region_field_to_launcher_arg_(
+  const InternalSharedPtr<LogicalStore>& self,
+  const Variable* variable,
+  const Strategy& strategy,
+  const Domain& launch_domain,
+  const std::optional<SymbolicPoint>& projection,
+  Legion::PrivilegeMode privilege,
+  std::int64_t redop)
+{
   if (unbound()) {
     auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(variable);
     return std::make_unique<OutputRegionArg>(this, field_space, field_id);
@@ -866,6 +1017,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup_(
 {
   LEGATE_ASSERT(self.get() == this);
   LEGATE_ASSERT(self->key_partition_ != nullptr);
+  LEGATE_ASSERT(get_storage()->kind() == Storage::Kind::REGION_FIELD);
   auto store_partition = create_partition_(self, self->key_partition_);
   auto store_proj      = store_partition->create_store_projection(launch_domain);
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));
