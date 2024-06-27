@@ -17,8 +17,8 @@
 #include "core/utilities/dispatch.h"
 
 #include <cstring>  // std::memcpy
+#include <fmt/format.h>
 #include <stdexcept>
-#include <string>
 
 namespace legate::detail {
 
@@ -129,24 +129,24 @@ void PhysicalStore::bind_empty_data()
 void PhysicalStore::check_accessor_dimension_(std::int32_t dim) const
 {
   if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
-    throw std::invalid_argument{"Dimension mismatch: invalid to create a " + std::to_string(dim) +
-                                "-D accessor to a " + std::to_string(this->dim()) + "-D store"};
+    throw std::invalid_argument{fmt::format(
+      "Dimension mismatch: invalid to create a {}-D accessor to a {}-D store", dim, this->dim())};
   }
 }
 
 void PhysicalStore::check_buffer_dimension_(std::int32_t dim) const
 {
   if (dim != this->dim()) {
-    throw std::invalid_argument{"Dimension mismatch: invalid to bind a " + std::to_string(dim) +
-                                "-D buffer to a " + std::to_string(this->dim()) + "-D store"};
+    throw std::invalid_argument{fmt::format(
+      "Dimension mismatch: invalid to bind a {}-D buffer to a {}-D store", dim, this->dim())};
   }
 }
 
 void PhysicalStore::check_shape_dimension_(std::int32_t dim) const
 {
   if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
-    throw std::invalid_argument{"Dimension mismatch: invalid to retrieve a " + std::to_string(dim) +
-                                "-D rect from a " + std::to_string(this->dim()) + "-D store"};
+    throw std::invalid_argument{fmt::format(
+      "Dimension mismatch: invalid to retrieve a {}-D rect from a {}-D store", dim, this->dim())};
   }
 }
 

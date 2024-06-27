@@ -19,6 +19,7 @@
 #include "core/partitioning/detail/constraint_solver.h"
 
 #include <algorithm>
+#include <fmt/format.h>
 #include <iterator>
 #include <stdexcept>
 
@@ -240,7 +241,7 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::child(std::uint32_t index) con
     case 0: return descriptor_;
     case 1: return vardata_;
     default: {
-      throw std::out_of_range{"List array does not have child " + std::to_string(index)};
+      throw std::out_of_range{fmt::format("List array does not have child {}", index)};
       break;
     }
   }

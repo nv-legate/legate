@@ -143,10 +143,10 @@ class TestBroadcast:
         if axes is None or not len(axes):
             expected_re = r"Broadcast\(X0{dummy_task\.<locals>\.foo:\d+}\)"
         else:
-            ax_str = ",".join(map(str, axes))
+            ax_str = ", ".join(map(str, axes))
             expected_re = (
                 r"Broadcast\(X0{dummy_task\.<locals>\.foo:\d+}, "
-                rf"\({ax_str}\)\)"
+                rf"\[{ax_str}\]\)"
             )
         assert re.match(expected_re, str(constraint)) is not None
 
@@ -242,9 +242,9 @@ class TestScale:
         constraint = lc.scale(factors, variable_x, variable_y)
         assert isinstance(constraint, Constraint)
         # Currently the only exposed python methods to check...
-        factor_str = ",".join(map(str, factors))
+        factor_str = ", ".join(map(str, factors))
         expected_re = re.compile(
-            rf"ScaleConstraint\(\({factor_str}\), "
+            rf"ScaleConstraint\(\[{factor_str}\], "
             r"X0{dummy_task\.<locals>\.foo:\d+}, "
             r"X1{dummy_task\.<locals>\.foo:\d+}\)"
         )
@@ -306,13 +306,13 @@ class TestBloat:
         constraint = lc.bloat(variable_x, variable_y, lo_offsets, hi_offsets)
         assert isinstance(constraint, Constraint)
         # Currently the only exposed python methods to check...
-        lo_str = ",".join(map(str, lo_offsets))
-        hi_str = ",".join(map(str, hi_offsets))
+        lo_str = ", ".join(map(str, lo_offsets))
+        hi_str = ", ".join(map(str, hi_offsets))
         expected_re = re.compile(
             r"BloatConstraint\(X0{dummy_task\.<locals>\.foo:\d+}, "
             r"X1{dummy_task\.<locals>\.foo:\d+}, "
-            rf"low: \({lo_str}\), "
-            rf"high: \({hi_str}\)\)"
+            rf"low: \[{lo_str}\], "
+            rf"high: \[{hi_str}\]\)"
         )
         assert expected_re.match(str(constraint)) is not None
 

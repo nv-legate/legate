@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/type/type_info.h"
+#include "core/utilities/detail/formatters.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <cstddef>
@@ -218,3 +219,12 @@ class ListType final : public ExtensionType {
 }  // namespace legate::detail
 
 #include "core/type/detail/type_info.inl"
+
+namespace fmt {
+
+template <>
+struct formatter<legate::detail::Type::Code> : formatter<string_view> {
+  format_context::iterator format(legate::detail::Type::Code a, format_context& ctx) const;
+};
+
+}  // namespace fmt

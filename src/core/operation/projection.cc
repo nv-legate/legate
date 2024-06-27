@@ -14,26 +14,24 @@
 
 #include "core/utilities/hash.h"
 
+#include <fmt/format.h>
+
 namespace legate {
 
 std::string SymbolicExpr::to_string() const
 {
-  std::stringstream ss;
+  std::string result;
 
   if (weight_ != 0) {
     if (weight_ != 1) {
-      ss << weight_ << "*";
+      fmt::format_to(std::back_inserter(result), "{}*", weight_);
     }
-    ss << "COORD" << dim_;
+    fmt::format_to(std::back_inserter(result), "COORD{}", dim_);
   }
   if (offset_ != 0) {
-    if (offset_ > 0) {
-      ss << "+" << offset_;
-    } else {
-      ss << "-" << -offset_;
-    }
+    fmt::format_to(std::back_inserter(result), "{}{}", offset_ > 0 ? "+" : "-", offset_);
   }
-  return std::move(ss).str();
+  return result;
 }
 
 std::size_t SymbolicExpr::hash() const { return hash_all(dim_, weight_, offset_); }

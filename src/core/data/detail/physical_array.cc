@@ -12,6 +12,7 @@
 
 #include "core/data/detail/physical_array.h"
 
+#include <fmt/format.h>
 #include <stdexcept>
 
 namespace legate::detail {
@@ -79,7 +80,7 @@ InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(std::uint32_t index) c
     case 0: return descriptor();
     case 1: return vardata();
     default: {
-      throw std::out_of_range{"List array does not have child " + std::to_string(index)};
+      throw std::out_of_range{fmt::format("List array does not have child {}", index)};
       break;
     }
   }

@@ -15,6 +15,9 @@
 #include "core/runtime/detail/library.h"
 #include "core/utilities/detail/deserializer.h"
 
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+
 namespace legate::mapping::detail {
 
 Mappable::Mappable(private_tag, MapperDataDeserializer dez)
@@ -45,7 +48,8 @@ TaskTarget Task::target() const
     case Processor::LOC_PROC: return TaskTarget::CPU;
     case Processor::TOC_PROC: return TaskTarget::GPU;
     case Processor::OMP_PROC: return TaskTarget::OMP;
-    default: throw std::invalid_argument{"Invalid task target: " + std::to_string(kind)};
+    default:
+      throw std::invalid_argument{fmt::format("Invalid task target: {}", fmt::streamed(kind))};
   }
 }
 

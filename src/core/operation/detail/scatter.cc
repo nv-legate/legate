@@ -18,6 +18,8 @@
 #include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
 
+#include <fmt/format.h>
+
 namespace legate::detail {
 
 Scatter::Scatter(InternalSharedPtr<LogicalStore> target,
@@ -55,10 +57,8 @@ void Scatter::validate()
   validate_store(source_.store);
 
   if (!is_point_type(target_indirect_.store->type(), target_.store->dim())) {
-    std::stringstream ss;
-
-    ss << "Indirection store should contain " << target_.store->dim() << "-D points";
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{
+      fmt::format("Indirection store should contain {}-D points", target_.store->dim())};
   }
 
   constraint_->validate();

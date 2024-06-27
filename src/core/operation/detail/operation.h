@@ -17,9 +17,11 @@
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/store_projection.h"
 #include "core/partitioning/detail/constraint.h"
+#include "core/utilities/detail/formatters.h"
 #include "core/utilities/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
 
+#include <fmt/format.h>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -90,3 +92,12 @@ class Operation {
 }  // namespace legate::detail
 
 #include "core/operation/detail/operation.inl"
+
+namespace fmt {
+
+template <>
+struct formatter<legate::detail::Operation::Kind> : formatter<string_view> {
+  format_context::iterator format(legate::detail::Operation::Kind kind, format_context& ctx) const;
+};
+
+}  // namespace fmt

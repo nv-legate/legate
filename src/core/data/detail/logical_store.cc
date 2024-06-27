@@ -29,6 +29,9 @@
 #include "legate_defines.h"
 
 #include <algorithm>
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+#include <fmt/ranges.h>
 #include <numeric>
 #include <stdexcept>
 #include <utility>
@@ -368,7 +371,7 @@ InternalSharedPtr<StoragePartition> Storage::create_partition(
 
 std::string Storage::to_string() const
 {
-  auto kind_str = [&] {
+  const auto kind_str = [&] {
     switch (kind_) {
       case Kind::REGION_FIELD: return "Region";
       case Kind::FUTURE: return "Future";
@@ -377,12 +380,12 @@ std::string Storage::to_string() const
     LEGATE_UNREACHABLE();
   }();
 
-  std::stringstream ss;
-
-  ss << "Storage(" << storage_id_ << ") {" << shape_->to_string() << ", kind: " << kind_str
-     << ", type: " << type_->to_string() << ", level: " << level_ << "}";
-
-  return std::move(ss).str();
+  return fmt::format("Storage({}) {{{}, kind: {}, type: {}, level: {}}}",
+                     storage_id_,
+                     *shape_,
+                     kind_str,
+                     *type_,
+                     level_);
 }
 
 ////////////////////////////////////////////////////
@@ -445,8 +448,8 @@ namespace {
 void assert_fixed_storage_size(const Storage* storage)
 {
   if (storage->type()->variable_size()) {
-    throw std::invalid_argument{"Store cannot be created with variable size type " +
-                                storage->type()->to_string()};
+    throw std::invalid_argument{
+      fmt::format("Store cannot be created with variable size type {}", *(storage->type()))};
   }
 }
 
@@ -510,8 +513,8 @@ void LogicalStore::set_future_map(Legion::FutureMap future_map, std::size_t scal
 InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, std::size_t dim_size)
 {
   if (extra_dim < 0 || extra_dim > static_cast<std::int32_t>(dim())) {
-    throw std::invalid_argument{"Invalid promotion on dimension " + std::to_string(extra_dim) +
-                                " for a " + std::to_string(dim()) + "-D store"};
+    throw std::invalid_argument{
+      fmt::format("Invalid promotion on dimension {} for a {}-D store", extra_dim, dim())};
   }
 
   auto new_extents = extents().insert(extra_dim, dim_size);
@@ -524,13 +527,13 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
   auto&& old_extents = extents();
 
   if (d < 0 || d >= static_cast<std::int32_t>(dim())) {
-    throw std::invalid_argument{"Invalid projection on dimension " + std::to_string(d) + " for a " +
-                                std::to_string(dim()) + "-D store"};
+    throw std::invalid_argument{
+      fmt::format("Invalid projection on dimension {} for a {}-D store", d, dim())};
   }
 
   if (index < 0 || index >= static_cast<std::int64_t>(old_extents[d])) {
-    throw std::invalid_argument{"Projection index " + std::to_string(index) +
-                                " is out of bounds [0, " + std::to_string(old_extents[d]) + ")"};
+    throw std::invalid_argument{
+      fmt::format("Projection index {} is out of bounds [0, {})", index, old_extents[d])};
   }
 
   auto new_extents = old_extents.remove(d);
@@ -550,8 +553,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
 {
   LEGATE_ASSERT(self.get() == this);
   if (dim < 0 || dim >= static_cast<std::int32_t>(this->dim())) {
-    throw std::invalid_argument{"Invalid slicing of dimension " + std::to_string(dim) + " for a " +
-                                std::to_string(this->dim()) + "-D store"};
+    throw std::invalid_argument{
+      fmt::format("Invalid slicing of dimension {} for a {}-D store", dim, this->dim())};
   }
 
   constexpr auto sanitize_slice = [](const Slice& san_slice, std::int64_t extent) {
@@ -573,9 +576,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
   auto [start, stop] = sanitize_slice(slice, static_cast<std::int64_t>(exts[dim]));
 
   if (start < stop && (start >= exts[dim] || stop > exts[dim])) {
-    throw std::invalid_argument{"Out-of-bounds slicing on dimension " +
-                                std::to_string(this->dim()) + " for a store of shape " +
-                                extents().to_string()};
+    throw std::invalid_argument{fmt::format(
+      "Out-of-bounds slicing on dimension {} for a store of shape {}", this->dim(), extents())};
   }
 
   exts[dim] = (start < stop) ? (stop - start) : 0;
@@ -603,8 +605,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
 InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t> axes)
 {
   if (axes.size() != dim()) {
-    throw std::invalid_argument{"Dimension Mismatch: expected " + std::to_string(dim()) +
-                                " axes, but got " + std::to_string(axes.size())};
+    throw std::invalid_argument{
+      fmt::format("Dimension Mismatch: expected {} axes, but got {}", dim(), axes.size())};
   }
 
   if (axes.size() != std::set<std::int32_t>{axes.begin(), axes.end()}.size()) {
@@ -613,8 +615,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t
 
   for (auto&& ax_i : axes) {
     if (ax_i < 0 || ax_i >= static_cast<std::int32_t>(dim())) {
-      throw std::invalid_argument{"Invalid axis " + std::to_string(ax_i) + " for a " +
-                                  std::to_string(dim()) + "-D store"};
+      throw std::invalid_argument{fmt::format("Invalid axis {} for a {}-D store", ax_i, dim())};
     }
   }
 
@@ -627,8 +628,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
                                                           std::vector<std::uint64_t> sizes)
 {
   if (dim < 0 || dim >= static_cast<std::int32_t>(this->dim())) {
-    throw std::invalid_argument{"Invalid delinearization on dimension " + std::to_string(dim) +
-                                " for a " + std::to_string(this->dim()) + "-D store"};
+    throw std::invalid_argument{
+      fmt::format("Invalid delinearization on dimension {} for a {}-D store", dim, this->dim())};
   }
 
   auto&& old_extents = extents();
@@ -642,9 +643,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
   };
 
   if (!delinearizable(old_extents[dim], sizes)) {
-    throw std::invalid_argument{"Dimension of size " + std::to_string(old_extents[dim]) +
-                                " cannot be delinearized into " +
-                                tuple<std::uint64_t>{sizes}.to_string()};
+    throw std::invalid_argument{
+      fmt::format("Dimension of size {} cannot be delinearized into {}", old_extents[dim], sizes)};
   }
 
   auto new_extents = tuple<std::uint64_t>{};
@@ -669,9 +669,10 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
 {
   LEGATE_ASSERT(self.get() == this);
   if (tile_shape.size() != dim()) {
-    throw std::invalid_argument{"Incompatible tile shape: expected a " +
-                                std::to_string(extents().size()) + "-tuple, got a " +
-                                std::to_string(tile_shape.size()) + "-tuple"};
+    throw std::invalid_argument{
+      fmt::format("Incompatible tile shape: expected a {}-tuple, got a {}-tuple",
+                  extents().size(),
+                  tile_shape.size())};
   }
   if (tile_shape.volume() == 0) {
     throw std::invalid_argument{"Tile shape must have a volume greater than 0"};
@@ -1031,19 +1032,18 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup_(
 
 std::string LogicalStore::to_string() const
 {
-  std::stringstream ss;
+  auto result = fmt::format("Store({}) {{shape: ", store_id_);
 
-  ss << "Store(" << store_id_ << ") {shape: ";
   if (unbound()) {
-    ss << "(unbound)";
+    fmt::format_to(std::back_inserter(result), "(unbound)");
   } else {
-    ss << extents();
+    fmt::format_to(std::back_inserter(result), "{}", extents());
   }
   if (!transform_->identity()) {
-    ss << ", transform: " << *transform_;
+    fmt::format_to(std::back_inserter(result), ", transform: {}", fmt::streamed(*transform_));
   }
-  ss << ", storage: " << get_storage()->id() << "}";
-  return std::move(ss).str();
+  fmt::format_to(std::back_inserter(result), ", storage: {}}}", get_storage()->id());
+  return result;
 }
 
 bool LogicalStore::equal_storage(const LogicalStore& other) const
@@ -1088,9 +1088,8 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
   const auto* tiling = static_cast<const Tiling*>(partition_.get());
 
   if (!tiling->has_color(color)) {
-    throw std::out_of_range{"Color " + color.to_string() +
-                            " is invalid for partition of color shape " +
-                            color_shape().to_string()};
+    throw std::out_of_range{
+      fmt::format("Color {} is invalid for partition of color shape {}", color, color_shape())};
   }
 
   auto transform = store_->transform();

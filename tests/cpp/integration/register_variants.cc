@@ -16,6 +16,7 @@
 #include "utilities/utilities.h"
 
 #include <array>
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
 namespace register_variants {
@@ -153,7 +154,7 @@ TEST_F(RegisterVariants, All)
   for (auto task_id : TASK_IDS) {
     const std::string task_name =
       task_id >= HELLO4 ? "register_variants::BaseTask2"
-                        : "register_variants::BaseTask<" + std::to_string(task_id) + ">";
+                        : fmt::format("register_variants::BaseTask<{}>", fmt::underlying(task_id));
     EXPECT_STREQ(context.get_task_name(task_id).data(), task_name.c_str());
   }
 

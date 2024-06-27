@@ -17,13 +17,14 @@
 #include "core/partitioning/partition.h"
 #include "core/utilities/memory.h"
 
-#include <sstream>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace legate::detail {
 
 Literal::Literal(InternalSharedPtr<Partition> partition) : partition_{std::move(partition)} {}
 
-std::string Literal::to_string() const { return partition_->to_string(); }
+std::string Literal::to_string() const { return partition()->to_string(); }
 
 void Literal::find_partition_symbols(std::vector<const Variable*>& /*partition_symbols*/) const {}
 
@@ -32,13 +33,7 @@ void Variable::find_partition_symbols(std::vector<const Variable*>& partition_sy
   partition_symbols.push_back(this);
 }
 
-std::string Variable::to_string() const
-{
-  std::stringstream ss;
-
-  ss << "X" << id_ << "{" << op_->to_string() << "}";
-  return std::move(ss).str();
-}
+std::string Variable::to_string() const { return fmt::format("X{}{{{}}}", id(), *operation()); }
 
 const InternalSharedPtr<LogicalStore>& Variable::store() const { return op_->find_store(this); }
 
@@ -55,8 +50,8 @@ void Alignment::validate() const
     return;
   }
 
-  auto lhs_store = lhs_->operation()->find_store(lhs_);
-  auto rhs_store = rhs_->operation()->find_store(rhs_);
+  auto&& lhs_store = lhs_->operation()->find_store(lhs_);
+  auto&& rhs_store = rhs_->operation()->find_store(rhs_);
   if (lhs_store->unbound() != rhs_store->unbound()) {
     throw std::invalid_argument{"Alignment requires the stores to be all normal or all unbound"};
   }
@@ -64,19 +59,14 @@ void Alignment::validate() const
     return;
   }
   if (*lhs_store->shape() != *rhs_store->shape()) {
-    throw std::invalid_argument{"Alignment requires the stores to have the same shape, but found " +
-                                lhs_store->extents().to_string() + " and " +
-                                rhs_store->extents().to_string()};
+    throw std::invalid_argument{
+      fmt::format("Alignment requires the stores to have the same shape, but found {} and {}",
+                  lhs_store->extents(),
+                  rhs_store->extents())};
   }
 }
 
-std::string Alignment::to_string() const
-{
-  std::stringstream ss;
-
-  ss << "Align(" << lhs_->to_string() << ", " << rhs_->to_string() << ")";
-  return std::move(ss).str();
-}
+std::string Alignment::to_string() const { return fmt::format("Align({}, {})", *lhs(), *rhs()); }
 
 void Broadcast::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
 {
@@ -88,25 +78,21 @@ void Broadcast::validate() const
   if (axes_.empty()) {
     return;
   }
-  auto store = variable_->operation()->find_store(variable_);
+  auto&& store = variable_->operation()->find_store(variable_);
   for (auto axis : axes_.data()) {
     if (axis >= store->dim()) {
-      throw std::invalid_argument{"Invalid broadcasting dimension " + std::to_string(axis) +
-                                  " for a " + std::to_string(store->dim()) + "-D store"};
+      throw std::invalid_argument{
+        fmt::format("Invalid broadcasting dimension {} for a {}-D store", axis, store->dim())};
     }
   }
 }
 
 std::string Broadcast::to_string() const
 {
-  std::stringstream ss;
-
   if (axes_.empty()) {
-    ss << "Broadcast(" << variable_->to_string() << ")";
-  } else {
-    ss << "Broadcast(" << variable_->to_string() << ", " << axes_.to_string() << ")";
+    return fmt::format("Broadcast({})", *variable());
   }
-  return std::move(ss).str();
+  return fmt::format("Broadcast({}, {})", *variable(), axes());
 }
 
 void ImageConstraint::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
@@ -117,12 +103,13 @@ void ImageConstraint::find_partition_symbols(std::vector<const Variable*>& parti
 
 void ImageConstraint::validate() const
 {
-  auto func  = var_function_->operation()->find_store(var_function_);
-  auto range = var_range_->operation()->find_store(var_range_);
+  auto&& func  = var_function_->operation()->find_store(var_function_);
+  auto&& range = var_range_->operation()->find_store(var_range_);
 
   if (!(is_point_type(func->type(), range->dim()) || is_rect_type(func->type(), range->dim()))) {
-    throw std::invalid_argument{"Store from which the image partition is derived should have " +
-                                std::to_string(range->dim()) + "-D points or rects"};
+    throw std::invalid_argument{fmt::format(
+      "Store from which the image partition is derived should have {}-D points or rects",
+      range->dim())};
   }
   if (range->transformed()) {
     throw std::runtime_error{"Image constraints on transformed stores are not supported yet"};
@@ -131,10 +118,7 @@ void ImageConstraint::validate() const
 
 std::string ImageConstraint::to_string() const
 {
-  std::stringstream ss;
-
-  ss << "ImageConstraint(" << var_function_->to_string() << ", " << var_range_->to_string() << ")";
-  return std::move(ss).str();
+  return fmt::format("ImageConstraint({}, {})", *var_function(), *var_range());
 }
 
 InternalSharedPtr<Partition> ImageConstraint::resolve(const detail::Strategy& strategy) const
@@ -157,13 +141,12 @@ void ScaleConstraint::find_partition_symbols(std::vector<const Variable*>& parti
 
 void ScaleConstraint::validate() const
 {
-  auto smaller    = var_smaller_->operation()->find_store(var_smaller_);
-  auto bigger     = var_bigger_->operation()->find_store(var_bigger_);
+  auto&& smaller  = var_smaller_->operation()->find_store(var_smaller_);
+  auto&& bigger   = var_bigger_->operation()->find_store(var_bigger_);
   const auto sdim = smaller->dim();
 
   if (sdim != bigger->dim()) {
     throw std::invalid_argument{
-
       "Scaling constraint requires the stores to have the same number of dimensions"};
   }
 
@@ -175,11 +158,7 @@ void ScaleConstraint::validate() const
 
 std::string ScaleConstraint::to_string() const
 {
-  std::stringstream ss;
-
-  ss << "ScaleConstraint(" << factors_ << ", " << var_smaller_->to_string() << ", "
-     << var_bigger_->to_string() << ")";
-  return std::move(ss).str();
+  return fmt::format("ScaleConstraint({}, {}, {})", factors(), *var_smaller(), *var_bigger());
 }
 
 InternalSharedPtr<Partition> ScaleConstraint::resolve(const detail::Strategy& strategy) const
@@ -195,8 +174,8 @@ void BloatConstraint::find_partition_symbols(std::vector<const Variable*>& parti
 
 void BloatConstraint::validate() const
 {
-  auto source     = var_source_->operation()->find_store(var_source_);
-  auto bloat      = var_bloat_->operation()->find_store(var_bloat_);
+  auto&& source   = var_source_->operation()->find_store(var_source_);
+  auto&& bloat    = var_bloat_->operation()->find_store(var_bloat_);
   const auto sdim = source->dim();
 
   if (sdim != bloat->dim()) {
@@ -213,11 +192,11 @@ void BloatConstraint::validate() const
 
 std::string BloatConstraint::to_string() const
 {
-  std::stringstream ss;
-
-  ss << "BloatConstraint(" << var_source_->to_string() << ", " << var_bloat_->to_string()
-     << ", low: " << low_offsets_ << ", high: " << high_offsets_ << ")";
-  return std::move(ss).str();
+  return fmt::format("BloatConstraint({}, {}, low: {}, high: {})",
+                     *var_source(),
+                     *var_bloat(),
+                     low_offsets(),
+                     high_offsets());
 }
 
 InternalSharedPtr<Partition> BloatConstraint::resolve(const detail::Strategy& strategy) const

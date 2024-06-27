@@ -15,6 +15,7 @@
 #include "legate.h"
 #include "utilities/utilities.h"
 
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
 namespace provenance {
@@ -48,7 +49,7 @@ class ProvenanceTest : public RegisterOnceFixture<Config> {};
 
 void test_provenance(legate::Library library)
 {
-  const auto provenance = std::string(__FILE__) + ":" + std::to_string(__LINE__);
+  const auto provenance = fmt::format("{}:{}", __FILE__, __LINE__);
   const legate::Scope scope{provenance};
   auto runtime = legate::Runtime::get_runtime();
   // auto task
@@ -59,7 +60,7 @@ void test_provenance(legate::Library library)
 
 void test_nested_provenance(legate::Library library)
 {
-  const auto provenance = std::string(__FILE__) + ":" + std::to_string(__LINE__);
+  const auto provenance = fmt::format("{}:{}", __FILE__, __LINE__);
   const legate::Scope scope{provenance};
   test_provenance(library);
   // The provenance string used by test_provenance should be popped out at this point

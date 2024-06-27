@@ -17,7 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <sstream>
+#include <fmt/format.h>
 #include <stdexcept>
 
 namespace legate::detail {
@@ -32,13 +32,14 @@ std::pair<void*, std::size_t> align_for_unpack(void* ptr,
   auto avail_space            = orig_avail_space;
 
   if (!std::align(align, bytes, ptr, avail_space)) {
-    std::stringstream ss;
-
     // If we get here, it means that someone did not pack the value correctly, likely without
     // first aligning the pointer!
-    ss << "Failed to align buffer " << ptr << " (of size: " << bytes << ") to " << align
-       << "-byte alignment (remaining capacity: " << capacity << ')';
-    throw std::runtime_error{std::move(ss).str()};
+    throw std::runtime_error{fmt::format(
+      "Failed to align buffer {} (of size: {}) to {}-byte alignment (remaining capacity: {))",
+      ptr,
+      bytes,
+      align,
+      capacity)};
   }
   return {ptr, orig_avail_space - avail_space};
 }

@@ -14,6 +14,7 @@
 
 #include "core/data/scalar.h"
 
+#include <fmt/format.h>
 #include <stdexcept>
 #include <utility>
 
@@ -90,6 +91,12 @@ const void* Scalar::ptr() const { return impl_->data(); }
 {
   LEGATE_CHECK(data || !copy);
   return new detail::Scalar{type.impl(), data, copy};
+}
+
+/*static*/ void Scalar::throw_invalid_size_exception_(std::size_t type_size, std::size_t size_of_T)
+{
+  throw std::invalid_argument{fmt::format(
+    "Size of the scalar is {}, but the requested type has size {}", type_size, size_of_T)};
 }
 
 Scalar::Scalar(detail::Scalar* impl, private_tag) : impl_{impl} {}

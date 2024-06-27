@@ -18,8 +18,8 @@
 #include <charconv>
 #include <cstdlib>
 #include <cstring>
+#include <fmt/format.h>
 #include <mutex>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -75,11 +75,10 @@ template <>
   }();
 
   if (parsed_val.has_value() && (parsed_val < 0)) {
-    std::stringstream ss;
-
-    ss << "Invalid value for config value \"" << variable << "\": " << *parsed_val
-       << ". Value must not be negative.";
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{
+      fmt::format("Invalid value for config value \"{}\": {}. Value must not be negative.",
+                  variable,
+                  *parsed_val)};
   }
   return parsed_val;
 }
@@ -134,13 +133,11 @@ void EnvironmentVariableBase::set(std::string_view value, bool overwrite) const
     return setenv(data(), value.data(), overwrite ? 1 : 0);
   }();
   if (LEGATE_UNLIKELY(ret)) {
-    // In case stringstream writes to errno before we have the chance to strerror() it.
-    const auto errno_save = errno;
-    std::stringstream ss;
-
-    ss << "setenv(" << static_cast<std::string_view>(*this) << ", " << value
-       << ") failed with exit code: " << ret << ": " << std::strerror(errno_save);
-    throw std::runtime_error{std::move(ss).str()};
+    throw std::runtime_error{fmt::format("setenv({}, {}) failed with exit code: {}: {}",
+                                         static_cast<std::string_view>(*this),
+                                         value,
+                                         ret,
+                                         std::strerror(errno))};
   }
 }
 

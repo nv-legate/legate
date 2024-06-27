@@ -16,6 +16,8 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/tuple.h"
 
+#include <fmt/ranges.h>
+
 namespace legate::detail {
 
 Shape::Shape(tuple<std::uint64_t>&& extents)
@@ -76,13 +78,13 @@ std::string Shape::to_string() const
 {
   switch (state_) {
     case State::UNBOUND: {
-      return "Shape(unbound " + std::to_string(dim_) + "D)";
+      return fmt::format("Shape(unbound {}D)", dim_);
     }
     case State::BOUND: {
-      return "Shape(bound " + std::to_string(dim_) + "D)";
+      return fmt::format("Shape(bound {}D)", dim_);
     }
     case State::READY: {
-      return "Shape" + extents_.to_string();
+      return fmt::format("Shape {}", extents_);
     }
   }
   return "";

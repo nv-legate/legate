@@ -15,10 +15,9 @@
 #include "legate_defines.h"
 
 #include <cstring>
+#include <fmt/format.h>
 #include <memory>
-#include <sstream>
 #include <stdexcept>
-#include <string>
 
 namespace legate::detail {
 
@@ -42,7 +41,7 @@ void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t a
       throw std::invalid_argument{"alignment cannot be 0"};
     }
     if (!is_power_of_2(align)) {
-      throw std::invalid_argument{"alignment is not a power of 2: " + std::to_string(align)};
+      throw std::invalid_argument{fmt::format("alignment is not a power of 2: {}", align)};
     }
   }
 
@@ -64,11 +63,10 @@ void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t a
     const auto ptr = std::align(align, size, aligned_ptr, new_size_and_padding);
     // this should never fail, but hey you never know
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && !ptr) {
-      std::stringstream ss;
-
-      ss << "Failed to align pointer of size " << size << " to alignment " << align
-         << ", this should never happen!";
-      throw std::runtime_error{std::move(ss).str()};
+      throw std::runtime_error{
+        fmt::format("Failed to align pointer of size {} to alignment {}, this should never happen!",
+                    size,
+                    align)};
     }
     static_cast<void>(ptr);
     // size + align - 1 is a potential overallocation. We must chop off the unneeded space at

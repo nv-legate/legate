@@ -21,6 +21,10 @@ endif()
 # the day it will be an arms race we cannot win.
 add_compile_options(-w)
 
+include(../cmake/Modules/find_or_configure.cmake)
+
+legate_core_find_or_configure(PACKAGE fmt)
+
 function(legate_core_create_cython_modules)
   list(APPEND CMAKE_MESSAGE_CONTEXT "create_cython_modules")
 
@@ -36,7 +40,17 @@ function(legate_core_create_cython_modules)
 
   rapids_cython_create_modules(CXX ASSOCIATED_TARGETS legate::core
                                SOURCE_FILES "${_LEGATE_CORE_CYTHON_SOURCES}"
-                               LINKED_LIBRARIES legate::core Python3::Module)
+                               LINKED_LIBRARIES legate::core
+                                                Python3::Module
+                                                # Some Cython modules require delving into
+                                                # the private headers of legate.core,
+                                                # which may contain fmt headers. As a
+                                                # result, we also need to add the fmt
+                                                # include paths etc. This is not done
+                                                # automatically for us, since fmt is a
+                                                # PRIVATE dependency of legate.core (as it
+                                                # is not found in any public includes).
+                                                fmt::fmt)
 
   foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
     target_compile_features(${target} PRIVATE cxx_std_${CMAKE_CXX_STANDARD})

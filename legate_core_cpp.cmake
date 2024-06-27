@@ -158,6 +158,11 @@ legate_core_find_or_configure(PACKAGE span)
 legate_core_find_or_configure(PACKAGE mdspan)
 
 # ########################################################################################
+# * fmt::fmt --------------------------------------------------------------
+
+legate_core_find_or_configure(PACKAGE fmt)
+
+# ########################################################################################
 # * legate.core --------------------------------------------------------------
 
 list(APPEND
@@ -263,6 +268,7 @@ list(APPEND
      src/core/utilities/detail/buffer_builder.cc
      src/core/utilities/detail/tuple.cc
      src/core/utilities/detail/deserializer.cc
+     src/core/utilities/detail/formatters.cc
      src/timing/timing.cc
      # stl
      src/core/experimental/stl/detail/clang_tidy_dummy.cpp)
@@ -395,7 +401,7 @@ target_link_libraries(legate_core
                              $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
                              $<TARGET_NAME_IF_EXISTS:std::mdspan>
                              $<TARGET_NAME_IF_EXISTS:std::span>
-                      PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
+                      PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL> fmt::fmt
                               $<TARGET_NAME_IF_EXISTS:conda_env>)
 
 if(Legion_USE_CUDA)

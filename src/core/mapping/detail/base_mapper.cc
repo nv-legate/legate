@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <fmt/format.h>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
@@ -72,9 +73,7 @@ std::string log_mappable(const Legion::Mappable& mappable, bool prefix_only = fa
     return finder->second;
   }
 
-  std::stringstream ss;
-  ss << finder->second << mappable.get_unique_id();
-  return std::move(ss).str();
+  return fmt::format("{}{}", finder->second, mappable.get_unique_id());
 }
 
 }  // namespace
@@ -89,12 +88,9 @@ BaseMapper::BaseMapper(mapping::Mapper* legate_mapper,
     library{_library},
     logger{create_logger_name_()},
     local_instances_{InstanceManager::get_instance_manager()},
-    reduction_instances_{ReductionInstanceManager::get_instance_manager()}
+    reduction_instances_{ReductionInstanceManager::get_instance_manager()},
+    mapper_name_{fmt::format("{} on Node {}", library->get_library_name(), local_machine_.node_id)}
 {
-  std::stringstream ss;
-  ss << library->get_library_name() << " on Node " << local_machine_.node_id;
-  mapper_name_ = std::move(ss).str();
-
   legate_mapper_->set_machine(this);
 }
 
@@ -126,9 +122,7 @@ BaseMapper::~BaseMapper()
 
 std::string BaseMapper::create_logger_name_() const
 {
-  std::stringstream ss;
-  ss << library->get_library_name() << ".mapper";
-  return std::move(ss).str();
+  return fmt::format("{}.mapper", library->get_library_name());
 }
 
 void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
@@ -885,19 +879,19 @@ void BaseMapper::report_failed_mapping_(const Legion::Mappable& mappable,
     provenance = "unknown provenance";
   }
 
-  std::stringstream req_ss;
-  if (redop > 0) {
-    req_ss << "reduction (" << redop << ") requirement " << index;
-  } else {
-    req_ss << "region requirement " << index;
-  }
+  const auto req_ss = [&] {
+    if (redop > 0) {
+      return fmt::format("reduction ({}) requirement {}", redop, index);
+    }
+    return fmt::format("region requirement {}", index);
+  }();
 
   LEGATE_ABORT(
     "Mapper "
     << get_mapper_name() << " failed to allocate " << footprint << " bytes on memory "
     << target_memory.id << " (of kind "
     << Legion::Mapping::Utilities::to_string(target_memory.kind()) << ": "
-    << memory_kinds[target_memory.kind()] << ") for " << req_ss.str() << " of "
+    << memory_kinds[target_memory.kind()] << ") for " << req_ss << " of "
     << log_mappable(mappable, true /*prefix_only*/) << opname << "[" << provenance << "] (UID "
     << mappable.get_unique_id()
     << ").\n"

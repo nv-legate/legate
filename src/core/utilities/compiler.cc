@@ -25,15 +25,15 @@ namespace legate::detail {
 namespace {
 
 template <typename... T>
-[[nodiscard]] std::stringstream make_error(std::string_view mangled_name,
-                                           std::string_view mess,
-                                           T&&... rest)
+[[nodiscard]] std::string make_error(std::string_view mangled_name,
+                                     std::string_view mess,
+                                     T&&... rest)
 {
   std::stringstream ss;
 
   ss << "error demangling " << std::quoted(mangled_name) << ": " << mess;
   ((ss << ' ' << std::forward<T>(rest)), ...);
-  return ss;
+  return std::move(ss).str();
 }
 
 }  // namespace
@@ -50,17 +50,18 @@ std::string demangle_type(const std::type_info& ti)
     case 0: break;  // no error
     case -1: throw std::bad_alloc{};
     case -2: {
-      auto ss = make_error(mangled_name, "it is not a valid name under the C++ ABI mangling rules");
-      throw std::domain_error{std::move(ss).str()};
+      const auto ss =
+        make_error(mangled_name, "it is not a valid name under the C++ ABI mangling rules");
+      throw std::domain_error{ss};
     }
     case -3: {
-      auto ss = make_error(mangled_name, "invalid arguments passed to abi::__cxa_demangle()");
-      throw std::invalid_argument{std::move(ss).str()};
+      const auto ss = make_error(mangled_name, "invalid arguments passed to abi::__cxa_demangle()");
+      throw std::invalid_argument{ss};
     }
     default: {
-      auto ss = make_error(
+      const auto ss = make_error(
         mangled_name, "unknown failure calling abi::__cxa_demangle(), error code:", status);
-      throw std::runtime_error{std::move(ss).str()};
+      throw std::runtime_error{ss};
     }
   }
   return demangled.get();

@@ -15,8 +15,8 @@
 #include "core/mapping/detail/machine.h"
 #include "core/utilities/hash.h"
 
+#include <fmt/format.h>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <utility>
 
@@ -43,9 +43,7 @@ NodeRange ProcessorRange::get_node_range() const
 
 std::string ProcessorRange::to_string() const
 {
-  std::stringstream ss;
-  ss << "Proc([" << low << "," << high << "], " << per_node_count << " per node)";
-  return std::move(ss).str();
+  return fmt::format("Proc([{},{}], {} per node)", low, high, per_node_count);
 }
 
 ProcessorRange ProcessorRange::operator&(const ProcessorRange& other) const

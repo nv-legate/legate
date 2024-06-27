@@ -18,8 +18,10 @@
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/tuple.h"
 
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+#include <fmt/ranges.h>
 #include <functional>
-#include <sstream>
 
 namespace legate {
 
@@ -73,7 +75,7 @@ Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
     strides_{std::move(strides)}
 {
   if (!overlapped_) {
-    throw std::invalid_argument("This constructor must be called only for overlapped tiling");
+    throw std::invalid_argument{"This constructor must be called only for overlapped tiling"};
   }
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
@@ -193,11 +195,11 @@ std::unique_ptr<Partition> Tiling::clone() const { return std::make_unique<Tilin
 
 std::string Tiling::to_string() const
 {
-  std::stringstream ss;
-
-  ss << "Tiling(tile:" << tile_shape_ << ",colors:" << color_shape_ << ",offset:" << offsets_
-     << ",strides:" << strides_ << ")";
-  return std::move(ss).str();
+  return fmt::format("Tiling(tile:{},colors:{},offset:{},strides:{})",
+                     tile_shape_,
+                     color_shape_,
+                     offsets_,
+                     strides_);
 }
 
 tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& extents,
@@ -312,15 +314,16 @@ std::unique_ptr<Partition> Weighted::clone() const
 
 std::string Weighted::to_string() const
 {
-  std::stringstream ss;
+  std::string result = "Weighted({";
 
-  ss << "Weighted({";
   for (Domain::DomainPointIterator it{color_domain_}; it; ++it) {
     auto& p = *it;
-    ss << p << ":" << weights_->get_result<std::size_t>(p) << ",";
+
+    fmt::format_to(
+      std::back_inserter(result), "{}:{},", fmt::streamed(p), weights_->get_result<std::size_t>(p));
   }
-  ss << "})";
-  return std::move(ss).str();
+  result += "})";
+  return result;
 }
 
 Image::Image(InternalSharedPtr<detail::LogicalStore> func,
@@ -429,11 +432,8 @@ std::unique_ptr<Partition> Image::clone() const { return std::make_unique<Image>
 
 std::string Image::to_string() const
 {
-  std::stringstream ss;
-
-  ss << "Image(func: " << func_->to_string() << ", partition: " << func_partition_->to_string()
-     << ")";
-  return std::move(ss).str();
+  return fmt::format(
+    "Image(func: {}, partition: {})", func_->to_string(), func_partition_->to_string());
 }
 
 const tuple<std::uint64_t>& Image::color_shape() const { return func_partition_->color_shape(); }

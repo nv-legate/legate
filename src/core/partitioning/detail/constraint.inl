@@ -38,7 +38,9 @@ inline Variable::Kind Variable::kind() const { return Kind::VARIABLE; }
 
 inline const Operation* Variable::operation() const { return op_; }
 
-inline std::size_t Variable::hash() const noexcept { return hash_all(id_); }
+inline std::int32_t Variable::id() const { return id_; }
+
+inline std::size_t Variable::hash() const noexcept { return static_cast<std::size_t>(id()); }
 
 // ==========================================================================================
 
@@ -95,6 +97,8 @@ inline ScaleConstraint::ScaleConstraint(tuple<std::uint64_t> factors,
 
 inline ScaleConstraint::Kind ScaleConstraint::kind() const { return Kind::SCALE; }
 
+inline const tuple<std::uint64_t>& ScaleConstraint::factors() const { return factors_; }
+
 inline const Variable* ScaleConstraint::var_smaller() const { return var_smaller_; }
 
 inline const Variable* ScaleConstraint::var_bigger() const { return var_bigger_; }
@@ -117,6 +121,10 @@ inline BloatConstraint::Kind BloatConstraint::kind() const { return Kind::BLOAT;
 inline const Variable* BloatConstraint::var_source() const { return var_source_; }
 
 inline const Variable* BloatConstraint::var_bloat() const { return var_bloat_; }
+
+inline const tuple<std::uint64_t>& BloatConstraint::low_offsets() const { return low_offsets_; }
+
+inline const tuple<std::uint64_t>& BloatConstraint::high_offsets() const { return high_offsets_; }
 
 }  // namespace legate::detail
 

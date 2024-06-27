@@ -14,6 +14,8 @@
 
 #include "core/runtime/detail/runtime.h"
 
+#include <fmt/format.h>
+
 namespace legate::detail {
 
 Legion::FutureMap CommunicatorFactory::find_or_create(const mapping::TaskTarget& target,
@@ -75,10 +77,7 @@ CommunicatorFactory* CommunicatorManager::find_factory(std::string_view name)
                    return e.first == name;
                  });
   if (it == factories_.end()) {
-    std::stringstream ss;
-
-    ss << "No factory available for communicator '" << name << "'";
-    throw std::runtime_error{std::move(ss).str()};
+    throw std::runtime_error{fmt::format("No factory available for communicator '{}'", name)};
   }
   return it->second.get();
 }

@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/utilities/detail/formatters.h"
 #include "core/utilities/tuple.h"
 
 #include "legion.h"

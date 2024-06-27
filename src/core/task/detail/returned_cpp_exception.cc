@@ -17,8 +17,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <fmt/format.h>
 #include <limits>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -77,12 +77,11 @@ void ReturnedCppException::legion_deserialize(const void* buffer)
     std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &index_);
     std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &mess_size);
     if (rem_cap < mess_size) {
-      std::stringstream ss;
-
-      ss << "Remaining capacity of serdez buffer: " << rem_cap
-         << " < length of stored string: " << mess_size
-         << ". This indicates a bug in the packing routine!";
-      throw std::range_error{std::move(ss).str()};
+      throw std::range_error{
+        fmt::format("Remaining capacity of serdez buffer: {} < length of stored string: {}. This "
+                    "indicates a bug in the packing routine",
+                    rem_cap,
+                    mess_size)};
     }
     message_ = std::string{static_cast<const char*>(buffer), mess_size};
   }
@@ -102,10 +101,7 @@ ReturnValue ReturnedCppException::pack() const
 
 std::string ReturnedCppException::to_string() const
 {
-  std::stringstream ss;
-
-  ss << "ReturnedCppException(index = " << index_ << "message = " << message_ << ')';
-  return std::move(ss).str();
+  return fmt::format("ReturnedCppException(index = {}, message = {})", index_, message_);
 }
 
 }  // namespace legate::detail

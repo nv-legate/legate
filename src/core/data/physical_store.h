@@ -385,6 +385,7 @@ class PhysicalStore {
   void check_reduction_access_() const;
   template <typename T>
   void check_accessor_type_() const;
+  void check_accessor_type_(Type::Code code, std::size_t size_of_T) const;
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
   void get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;

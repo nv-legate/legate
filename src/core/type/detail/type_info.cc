@@ -14,12 +14,13 @@
 
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/enumerate.h"
 
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <exception>
-#include <sstream>
+#include <fmt/format.h>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -91,10 +92,8 @@ class StaticDeterminationError : public std::invalid_argument {
     case Type::Code::FIXED_ARRAY: [[fallthrough]];
     case Type::Code::LIST: [[fallthrough]];
     case Type::Code::STRING: {
-      std::stringstream ss;
-
-      ss << "Cannot statically determine size of non-integral type: " << TYPE_NAME(code);
-      throw StaticDeterminationError{std::move(ss).str()};
+      throw StaticDeterminationError{
+        fmt::format("Cannot statically determine size of non-integral type: {}", code)};
     }
   };
   throw std::invalid_argument{"invalid type code"};
@@ -129,10 +128,8 @@ class StaticDeterminationError : public std::invalid_argument {
     case Type::Code::FIXED_ARRAY: [[fallthrough]];
     case Type::Code::LIST: [[fallthrough]];
     case Type::Code::STRING: {
-      std::stringstream ss;
-
-      ss << "Cannot statically determine alingment of non-integral type: " << TYPE_NAME(code);
-      throw StaticDeterminationError{std::move(ss).str()};
+      throw StaticDeterminationError{
+        fmt::format("Cannot statically determine alignment of non-integral type: {}", code)};
     }
   };
   throw std::invalid_argument{"invalid type code"};
@@ -205,7 +202,7 @@ void PrimitiveType::pack(BufferBuilder& buffer) const
   buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
 }
 
-std::string BinaryType::to_string() const { return "binary(" + std::to_string(size_) + ")"; }
+std::string BinaryType::to_string() const { return fmt::format("binary({})", size_); }
 
 void BinaryType::pack(BufferBuilder& buffer) const
 {
@@ -226,13 +223,7 @@ FixedArrayType::FixedArrayType(std::uint32_t uid,
   }
 }
 
-std::string FixedArrayType::to_string() const
-{
-  std::stringstream ss;
-
-  ss << element_type_->to_string() << "[" << N_ << "]";
-  return std::move(ss).str();
-}
+std::string FixedArrayType::to_string() const { return fmt::format("{}[{}]", *element_type_, N_); }
 
 void FixedArrayType::pack(BufferBuilder& buffer) const
 {
@@ -304,17 +295,20 @@ StructType::StructType(std::uint32_t uid,
 
 std::string StructType::to_string() const
 {
-  std::stringstream ss;
+  std::string result = "{";
 
-  ss << "{";
-  for (std::uint32_t idx = 0; idx < field_types_.size(); ++idx) {
+  LEGATE_ASSERT(field_types_.size() == offsets_.size());
+  for (auto&& [idx, rest] :
+       legate::detail::enumerate(legate::detail::zip(field_types(), offsets()))) {
+    auto&& [field_type, offset] = rest;
+
     if (idx > 0) {
-      ss << ",";
+      result += ",";
     }
-    ss << field_types_.at(idx)->to_string() << ":" << offsets_.at(idx);
+    fmt::format_to(std::back_inserter(result), "{}:{}", *field_type, offset);
   }
-  ss << "}";
-  return std::move(ss).str();
+  result += "}";
+  return result;
 }
 
 void StructType::pack(BufferBuilder& buffer) const
@@ -372,15 +366,16 @@ InternalSharedPtr<Type> primitive_type(Type::Code code)
   try {
     static_cast<void>(SIZEOF(code));
   } catch (const StaticDeterminationError&) {
-    std::stringstream ss;
+    std::string result;
 
     try {
-      ss << TYPE_NAME(code);
+      fmt::format_to(std::back_inserter(result), "{}", code);
     } catch (const std::invalid_argument&) {
-      ss << "<unknown type code: " << traits::detail::to_underlying(code) << ">";
+      fmt::format_to(
+        std::back_inserter(result), "<unknown type code: {}>", traits::detail::to_underlying(code));
     }
-    ss << " is not a valid type code for a primitive type";
-    std::throw_with_nested(std::invalid_argument{std::move(ss).str()});
+    fmt::format_to(std::back_inserter(result), " is not a valid type code for a primitive type");
+    std::throw_with_nested(std::invalid_argument{result});
   }
 
   auto finder = cache.find(code);
@@ -398,13 +393,7 @@ ListType::ListType(std::uint32_t uid, InternalSharedPtr<Type> element_type)
   }
 }
 
-std::string ListType::to_string() const
-{
-  std::stringstream ss;
-
-  ss << "list(" << element_type_->to_string() << ")";
-  return std::move(ss).str();
-}
+std::string ListType::to_string() const { return fmt::format("list({})", *element_type_); }
 
 void ListType::pack(BufferBuilder& buffer) const
 {
@@ -440,8 +429,8 @@ InternalSharedPtr<Type> binary_type(std::uint32_t size)
     throw std::out_of_range{"Size for an opaque binary type must be greater than 0"};
   }
   if (size > MAX_BINARY_TYPE_SIZE) {
-    throw std::out_of_range{"Maximum size for opaque binary types is " +
-                            std::to_string(MAX_BINARY_TYPE_SIZE)};
+    throw std::out_of_range{
+      fmt::format("Maximum size for opaque binary types is {}", MAX_BINARY_TYPE_SIZE)};
   }
   auto uid = static_cast<std::int32_t>(Type::Code::BINARY) | (size << TYPE_CODE_OFFSET);
   return make_internal_shared<BinaryType>(uid, size);
@@ -567,7 +556,7 @@ InternalSharedPtr<Type> point_type(std::uint32_t ndim)
   static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
 
   if (0 == ndim || ndim > LEGATE_MAX_DIM) {
-    throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
+    throw std::out_of_range{fmt::format("{} is not a supported number of dimensions", ndim)};
   }
   if (nullptr == cache[ndim]) {
     cache[ndim] =
@@ -581,7 +570,7 @@ InternalSharedPtr<Type> rect_type(std::uint32_t ndim)
   static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
 
   if (0 == ndim || ndim > LEGATE_MAX_DIM) {
-    throw std::out_of_range{std::to_string(ndim) + " is not a supported number of dimensions"};
+    throw std::out_of_range{fmt::format("{} is not a supported number of dimensions", ndim)};
   }
 
   if (nullptr == cache[ndim]) {
@@ -622,7 +611,7 @@ bool is_point_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 std::int32_t ndim_point_type(const InternalSharedPtr<Type>& type)
 {
   if (!is_point_type(type)) {
-    throw std::invalid_argument{"Expected a point type but got " + type->to_string()};
+    throw std::invalid_argument{fmt::format("Expected a point type but got {}", *type)};
   }
   return type->code == Type::Code::INT64
            ? 1
@@ -643,9 +632,19 @@ bool is_rect_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 std::int32_t ndim_rect_type(const InternalSharedPtr<Type>& type)
 {
   if (!is_rect_type(type)) {
-    throw std::invalid_argument{"Expected a rect type but got " + type->to_string()};
+    throw std::invalid_argument{fmt::format("Expected a rect type but got {}", *type)};
   }
   return static_cast<std::int32_t>(type->uid() - BASE_RECT_TYPE_UID);
 }
 
 }  // namespace legate::detail
+
+namespace fmt {
+
+format_context::iterator formatter<legate::detail::Type::Code>::format(legate::detail::Type::Code a,
+                                                                       format_context& ctx) const
+{
+  return formatter<string_view>::format(legate::detail::TYPE_NAME(a), ctx);
+}
+
+}  // namespace fmt

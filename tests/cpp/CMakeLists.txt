@@ -69,7 +69,16 @@ function(legate_core_configure_test CMAKE_TEST_NAME)
 
   target_include_directories(${CMAKE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
 
-  target_link_libraries(${CMAKE_TEST_NAME} PRIVATE legate::core GTest::gtest)
+  target_link_libraries(${CMAKE_TEST_NAME}
+                        PRIVATE legate::core
+                                GTest::gtest
+                                # Some test modules require delving into the private
+                                # headers of legate.core, which may contain fmt headers.
+                                # As a result, we also need to add the fmt include paths
+                                # etc. This is not done automatically for us, since fmt is
+                                # a PRIVATE dependency of legate.core (as it is not found
+                                # in any public includes).
+                                fmt::fmt)
 
   if(Legion_USE_CUDA)
     set_target_properties(${CMAKE_TEST_NAME}

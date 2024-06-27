@@ -18,6 +18,8 @@
 #include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/partition.h"
 
+#include <fmt/format.h>
+
 namespace legate::detail {
 
 ScatterGather::ScatterGather(InternalSharedPtr<LogicalStore> target,
@@ -59,16 +61,12 @@ void ScatterGather::validate()
   validate_store(source_indirect_.store);
 
   if (!is_point_type(source_indirect_.store->type(), source_.store->dim())) {
-    std::stringstream ss;
-
-    ss << "Source indirection store should contain " << source_.store->dim() << "-D points";
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{
+      fmt::format("Source indirection store should contain {}-D points", source_.store->dim())};
   }
   if (!is_point_type(target_indirect_.store->type(), target_.store->dim())) {
-    std::stringstream ss;
-
-    ss << "Target indirection store should contain " << target_.store->dim() << "-D points";
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{
+      fmt::format("Target indirection store should contain {}-D points", target_.store->dim())};
   }
 
   constraint_->validate();

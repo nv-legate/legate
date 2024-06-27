@@ -114,8 +114,7 @@ VAL Scalar::value() const
     throw std::invalid_argument{"String cannot be casted to other types"};
   }
   if (sizeof(VAL) != ty.size()) {
-    throw std::invalid_argument{"Size of the scalar is " + std::to_string(ty.size()) +
-                                ", but the requested type has size " + std::to_string(sizeof(VAL))};
+    throw_invalid_size_exception_(ty.size(), sizeof(VAL));
   }
   return *static_cast<const VAL*>(ptr());
 }
@@ -138,9 +137,7 @@ Span<const VAL> Scalar::values() const
     auto arr_type  = ty.as_fixed_array_type();
     auto elem_type = arr_type.element_type();
     if (sizeof(VAL) != elem_type.size()) {
-      throw std::invalid_argument{
-        "The scalar's element type has size " + std::to_string(elem_type.size()) +
-        ", but the requested element type has size " + std::to_string(sizeof(VAL))};
+      throw_invalid_size_exception_(elem_type.size(), sizeof(VAL));
     }
     auto size = arr_type.num_elements();
     return {reinterpret_cast<const VAL*>(ptr()), size};
@@ -160,9 +157,7 @@ Span<const VAL> Scalar::values() const
     return {nullptr, 0};
   }
   if (sizeof(VAL) != ty.size()) {
-    throw std::invalid_argument{"Size of the scalar is " + std::to_string(ty.size()) +
-                                ", but the requested element type has size " +
-                                std::to_string(sizeof(VAL))};
+    throw_invalid_size_exception_(ty.size(), sizeof(VAL));
   }
   return {static_cast<const VAL*>(ptr()), 1};
 }

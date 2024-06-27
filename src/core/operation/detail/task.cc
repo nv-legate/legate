@@ -24,7 +24,7 @@
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/zip.h"
 
-#include <sstream>
+#include <fmt/format.h>
 
 namespace legate::detail {
 
@@ -261,12 +261,12 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
 
 std::string Task::to_string() const
 {
-  std::stringstream ss;
-  ss << library_->get_task_name(task_id_) << ":" << unique_id_;
-  if (!provenance_.empty()) {
-    ss << "[" << provenance_ << "]";
+  auto result = fmt::format("{}:{}", library_->get_task_name(task_id_), unique_id_);
+
+  if (!provenance().empty()) {
+    fmt::format_to(std::back_inserter(result), "[{}]", provenance());
   }
-  return std::move(ss).str();
+  return result;
 }
 
 ////////////////////////////////////////////////////

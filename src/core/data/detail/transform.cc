@@ -16,10 +16,21 @@
 #include "core/utilities/detail/buffer_builder.h"
 
 #include <algorithm>
+#include <fmt/format.h>
 #include <iostream>
 #include <iterator>
 
 namespace legate::detail {
+
+namespace {
+
+[[noreturn]] void throw_invalid_partition_kind(Partition::Kind kind)
+{
+  throw std::invalid_argument{
+    fmt::format("Invalid partition kind: {}", legate::traits::detail::to_underlying(kind))};
+}
+
+}  // namespace
 
 std::unique_ptr<Partition> TransformStack::convert(const Partition* partition) const
 {
@@ -253,9 +264,7 @@ std::unique_ptr<Partition> Shift::convert(const Partition* partition) const
                            tuple<std::uint64_t>{tiling->color_shape()},
                            tiling->offsets().update(dim_, offset_));
     }
-    default:
-      throw std::invalid_argument{"Invalid partition kind: " +
-                                  std::to_string(legate::traits::detail::to_underlying(kind))};
+    default: throw_invalid_partition_kind(kind);
   }
   return {};
 }
@@ -273,9 +282,7 @@ std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
                            tuple<std::uint64_t>{tiling->color_shape()},
                            tiling->offsets().update(dim_, new_offset));
     }
-    default:
-      throw std::invalid_argument{"Invalid partition kind: " +
-                                  std::to_string(legate::traits::detail::to_underlying(kind))};
+    default: throw_invalid_partition_kind(kind);
   }
   return {};
 }
@@ -359,9 +366,7 @@ std::unique_ptr<Partition> Promote::convert(const Partition* partition) const
                            tiling->color_shape().insert(extra_dim_, 1),
                            tiling->offsets().insert(extra_dim_, 0));
     }
-    default:
-      throw std::invalid_argument{"Invalid partition kind: " +
-                                  std::to_string(legate::traits::detail::to_underlying(kind))};
+    default: throw_invalid_partition_kind(kind);
   }
   return {};
 }
@@ -378,9 +383,7 @@ std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
                            tiling->color_shape().remove(extra_dim_),
                            tiling->offsets().remove(extra_dim_));
     }
-    default:
-      throw std::invalid_argument{"Invalid partition kind: " +
-                                  std::to_string(legate::traits::detail::to_underlying(kind))};
+    default: throw_invalid_partition_kind(kind);
   }
   return {};
 }
@@ -500,9 +503,7 @@ std::unique_ptr<Partition> Project::convert(const Partition* partition) const
                            tiling->color_shape().remove(dim_),
                            tiling->offsets().remove(dim_));
     }
-    default:
-      throw std::invalid_argument{"Invalid partition kind: " +
-                                  std::to_string(legate::traits::detail::to_underlying(kind))};
+    default: throw_invalid_partition_kind(kind);
   }
   return {};
 }
@@ -519,9 +520,7 @@ std::unique_ptr<Partition> Project::invert(const Partition* partition) const
                            tiling->color_shape().insert(dim_, 1),
                            tiling->offsets().insert(dim_, coord_));
     }
-    default:
-      throw std::invalid_argument{"Invalid partition kind: " +
-                                  std::to_string(legate::traits::detail::to_underlying(kind))};
+    default: throw_invalid_partition_kind(kind);
   }
   return {};
 }
@@ -654,9 +653,7 @@ std::unique_ptr<Partition> Transpose::convert(const Partition* partition) const
                            tiling->color_shape().map(axes_),
                            tiling->offsets().map(axes_));
     }
-    default:
-      throw std::invalid_argument{"Invalid partition kind: " +
-                                  std::to_string(legate::traits::detail::to_underlying(kind))};
+    default: throw_invalid_partition_kind(kind);
   }
   return {};
 }
@@ -673,9 +670,7 @@ std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
                            tiling->color_shape().map(inverse_),
                            tiling->offsets().map(inverse_));
     }
-    default:
-      throw std::invalid_argument{"Invalid partition kind: " +
-                                  std::to_string(legate::traits::detail::to_underlying(kind))};
+    default: throw_invalid_partition_kind(kind);
   }
   return {};
 }
@@ -840,7 +835,9 @@ std::unique_ptr<Partition> Delinearize::convert(const Partition* /*partition*/) 
 
 std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
 {
-  switch (const auto kind = partition->kind()) {
+  const auto kind = partition->kind();
+
+  switch (kind) {
     case Partition::Kind::NO_PARTITION: {
       return create_no_partition();
     }
@@ -861,8 +858,8 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
       };
 
       if (!invertible()) {
-        throw NonInvertibleTransformation{"Delinearize transform cannot invert this partition: " +
-                                          tiling->to_string()};
+        throw NonInvertibleTransformation{fmt::format(
+          "Delinearize transform cannot invert this partition: {}", tiling->to_string())};
       }
 
       auto new_tile_shape  = tile_shape;
@@ -881,10 +878,10 @@ std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
       return create_tiling(
         std::move(new_tile_shape), std::move(new_color_shape), std::move(new_offsets));
     }
-    default:
-      throw std::invalid_argument{"Invalid partition kind: " +
-                                  std::to_string(legate::traits::detail::to_underlying(kind))};
+    case Partition::Kind::WEIGHTED: [[fallthrough]];
+    case Partition::Kind::IMAGE: break;
   }
+  throw_invalid_partition_kind(kind);
   return {};
 }
 

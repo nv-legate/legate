@@ -12,7 +12,10 @@
 
 #include "core/task/task_info.h"
 
+#include "core/utilities/detail/formatters.h"
+
 #include <array>
+#include <fmt/format.h>
 #include <sstream>
 
 namespace legate {
@@ -63,10 +66,7 @@ void TaskInfo::Impl::add_variant(LegateVariantCode vid,
                   std::forward_as_tuple(vid),
                   std::forward_as_tuple(body, code_desc, options))
          .second) {
-    std::stringstream ss;
-
-    ss << "Task " << name() << " already has variant " << vid;
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{fmt::format("Task {} already has variant {}", name(), vid)};
   }
 }
 

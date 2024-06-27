@@ -52,6 +52,8 @@
 #include "realm/network.h"
 
 #include <cstdlib>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
@@ -91,10 +93,7 @@ Library* Runtime::create_library(std::string_view library_name,
                                  bool in_callback)
 {
   if (libraries_.find(library_name) != libraries_.end()) {
-    std::stringstream ss;
-
-    ss << "Library " << library_name << " already exists";
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{fmt::format("Library {} already exists", library_name)};
   }
 
   log_legate().debug("Library %s is created", library_name.data());
@@ -117,10 +116,7 @@ Library* Runtime::find_library(std::string_view library_name, bool can_fail /*=f
 
   if (libraries_.end() == finder) {
     if (!can_fail) {
-      std::stringstream ss;
-
-      ss << "Library " << library_name << " does not exist";
-      throw std::out_of_range{std::move(ss).str()};
+      throw std::out_of_range{fmt::format("Library {} does not exist", library_name)};
     }
     return {};
   }
@@ -161,10 +157,8 @@ void Runtime::record_reduction_operator(std::uint32_t type_uid,
   auto key    = std::make_pair(type_uid, op_kind);
   auto finder = reduction_ops_.find(key);
   if (finder != reduction_ops_.end()) {
-    std::stringstream ss;
-
-    ss << "Reduction op " << op_kind << " already exists for type " << type_uid;
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{
+      fmt::format("Reduction op {} already exists for type {}", op_kind, type_uid)};
   }
   reduction_ops_[key] = legion_op_id;
 }
@@ -176,10 +170,8 @@ std::int32_t Runtime::find_reduction_operator(std::uint32_t type_uid, std::int32
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       log_legate().debug("Can't find reduction op (type_uid: %d, op_kind: %d)", type_uid, op_kind);
     }
-    std::stringstream ss;
-
-    ss << "Reduction op " << op_kind << " does not exist for type " << type_uid;
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{
+      fmt::format("Reduction op {} does not exist for type {}", op_kind, type_uid)};
   }
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug(
@@ -241,12 +233,12 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
   auto sliced = machine.only(task_targets);
 
   if (sliced.empty()) {
-    std::stringstream ss;
-
-    ss << "Task " << task_id << " (" << task_info->name() << ") of library "
-       << library->get_library_name() << " does not have any valid variant for "
-       << "the current machine configuration.";
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{
+      fmt::format("Task {} ({}) of library {} does not have any valid variant for the current "
+                  "machine configuration",
+                  task_id,
+                  task_info->name(),
+                  library->get_library_name())};
   }
   return sliced;
 }
@@ -512,7 +504,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
   InternalSharedPtr<LogicalArray> vardata)
 {
   if (Type::Code::STRING != type->code && Type::Code::LIST != type->code) {
-    throw std::invalid_argument{"Expected a list type but got " + type->to_string()};
+    throw std::invalid_argument{fmt::format("Expected a list type but got {}", *type)};
   }
   if (descriptor->unbound() || vardata->unbound()) {
     throw std::invalid_argument("Sub-arrays should not be unbound");
@@ -533,8 +525,8 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
                      ? int8()
                      : dynamic_cast<const detail::ListType&>(*type).element_type();
   if (*vardata->type() != *elem_type) {
-    throw std::invalid_argument{"Expected a vardata array of type " + elem_type->to_string() +
-                                " but got " + vardata->type()->to_string()};
+    throw std::invalid_argument{fmt::format(
+      "Expected a vardata array of type {} but got {}", *elem_type, *(vardata->type()))};
   }
 
   return make_internal_shared<ListLogicalArray>(
@@ -641,11 +633,11 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
   validate_store_shape(shape, type);
   LEGATE_CHECK(allocation->ptr());
   if (allocation->size() < shape->volume() * type->size()) {
-    throw std::invalid_argument{"External allocation of size " +
-                                std::to_string(allocation->size()) +
-                                " is not big enough "
-                                "for a store of shape " +
-                                shape->extents().to_string() + " and type " + type->to_string()};
+    throw std::invalid_argument{fmt::format(
+      "External allocation of size {} is not big enough for a store of shape {} and type {}",
+      allocation->size(),
+      shape->extents(),
+      *type)};
   }
 
   InternalSharedPtr<LogicalStore> store =
@@ -706,8 +698,8 @@ Runtime::IndexAttachResult Runtime::create_store(
       // If we're here, this color might have been seen in one of the previous iterations
       for (std::int64_t k = 0; k < idx; ++k) {
         if (allocations[k].second == color) {
-          throw std::invalid_argument{"Mulitple external allocations are found for color " +
-                                      color.to_string()};
+          throw std::invalid_argument{
+            fmt::format("Mulitple external allocations are found for color {}", color)};
         }
       }
       // If we're here, then we've just seen a fairly rare hash collision
@@ -724,13 +716,12 @@ Runtime::IndexAttachResult Runtime::create_store(
     }
 
     if (required_size > alloc->size()) {
-      throw std::invalid_argument{"Sub-store for color " + color.to_string() +
-                                  " requires the allocation "
-                                  "to be at least " +
-                                  std::to_string(required_size) +
-                                  " bytes, but the allocation "
-                                  "is only " +
-                                  std::to_string(alloc->size()) + " bytes"};
+      throw std::invalid_argument{
+        fmt::format("Sub-store for color {}  requires the allocation to be at least {} bytes, but "
+                    "the allocation is only {} bytes",
+                    color,
+                    required_size,
+                    alloc->size())};
     }
 
     launcher.add_external_resource(substore->get_region_field()->region(), alloc->resource());
@@ -753,9 +744,10 @@ Runtime::IndexAttachResult Runtime::create_store(
 void Runtime::check_dimensionality_(std::uint32_t dim)
 {
   if (dim > LEGATE_MAX_DIM) {
-    throw std::out_of_range{"The maximum number of dimensions is " +
-                            std::to_string(LEGION_MAX_DIM) + ", but a " + std::to_string(dim) +
-                            "-D store is requested"};
+    throw std::out_of_range{
+      fmt::format("The maximum number of dimensions is {}, but a {}-D store is requested",
+                  LEGION_MAX_DIM,
+                  dim)};
   }
 }
 
@@ -884,9 +876,10 @@ RegionManager* Runtime::find_or_create_region_manager(const Legion::IndexSpace& 
 const Legion::IndexSpace& Runtime::find_or_create_index_space(const tuple<std::uint64_t>& extents)
 {
   if (extents.size() > LEGATE_MAX_DIM) {
-    throw std::out_of_range("Legate is configured with the maximum number of dimensions set to " +
-                            std::to_string(LEGATE_MAX_DIM) + ", but got a " +
-                            std::to_string(extents.size()) + "-D shape");
+    throw std::out_of_range{fmt::format(
+      "Legate is configured with the maximum number of dimensions set to {}, but got a {}-D shape",
+      LEGATE_MAX_DIM,
+      extents.size())};
   }
 
   return find_or_create_index_space(to_domain(extents));
@@ -1730,10 +1723,8 @@ void try_set_property(Runtime& runtime,
       return;
     }
 
-    std::stringstream ss;
-
-    ss << error_msg << " (the " << module_name << " module is not available)";
-    throw std::runtime_error{std::move(ss).str()};
+    throw std::runtime_error{
+      fmt::format("{} (the {} module is not available)", error_msg, module_name)};
   }
   auto success = config->set_property(property_name, value);
   if (!success) {
@@ -1796,10 +1787,7 @@ void handle_legate_args(std::int32_t argc, char** argv)
 
   // ensure sensible utility
   if (const auto nutil = util.value(); nutil < 1) {
-    std::stringstream ss;
-
-    ss << "--utility must be at least 1 (have " << nutil << ")";
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{fmt::format("--utility must be at least 1 (have {})", nutil)};
   }
 
   // Set core configuration properties
@@ -1830,14 +1818,13 @@ void handle_legate_args(std::int32_t argc, char** argv)
   // Set NUMA configuration properties
   try_set_property(rt, "numa", "numamem", numamem, "unable to set --numamem");
 
-  std::stringstream ss;
-
   // eager alloc has to be passed via env var
-  ss << "-lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0 ";
+  auto result =
+    fmt::format("-lg:eager_alloc_percentage {} -lg:local 0 ", eager_alloc_percent.value());
   if (const char* existing_default_args = std::getenv(LEGION_DEFAULT_ARGS.data())) {
-    ss << existing_default_args;
+    fmt::format_to(std::back_inserter(result), "{}", existing_default_args);
   }
-  setenv(LEGION_DEFAULT_ARGS.data(), ss.str().c_str(), /* overwrite */ 1);
+  setenv(LEGION_DEFAULT_ARGS.data(), result.c_str(), /* overwrite */ 1);
 }
 
 }  // namespace legate::detail

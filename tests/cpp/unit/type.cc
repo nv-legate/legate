@@ -13,6 +13,7 @@
 #include "legate.h"
 #include "utilities/utilities.h"
 
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
 namespace type_test {
@@ -87,7 +88,7 @@ void test_binary_type(const legate::Type& type, std::uint32_t size)
   EXPECT_EQ(type.alignment(), alignof(std::max_align_t));
   EXPECT_FALSE(type.variable_size());
   EXPECT_FALSE(type.is_primitive());
-  EXPECT_EQ(type.to_string(), "binary(" + std::to_string(size) + ")");
+  EXPECT_EQ(type.to_string(), fmt::format("binary({})", size));
 
   const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
 
@@ -338,7 +339,7 @@ TEST_F(TypeUnit, PointType)
   for (std::uint32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
     auto type = legate::point_type(idx);
 
-    test_fixed_array_type(type, legate::int64(), idx, "int64[" + std::to_string(idx) + "]");
+    test_fixed_array_type(type, legate::int64(), idx, fmt::format("int64[{}]", idx));
     EXPECT_TRUE(legate::is_point_type(type, idx));
   }
 
@@ -368,8 +369,8 @@ TEST_F(TypeUnit, RectType)
     const std::vector<std::uint32_t> offsets    = {0,
                                                    static_cast<std::uint32_t>(sizeof(uint64_t)) * idx};
     const auto full_size                        = (field_types.size() * sizeof(uint64_t)) * idx;
-    const auto to_string = "{int64[" + std::to_string(idx) + "]:0,int64[" + std::to_string(idx) +
-                           "]:" + std::to_string(idx * sizeof(int64_t)) + "}";
+    const auto to_string =
+      fmt::format("{{int64[{}]:0,int64[{}]:{}}}", idx, idx, idx * sizeof(std::int64_t));
 
     test_struct_type(type, true, full_size, sizeof(uint64_t), to_string, field_types, offsets);
     EXPECT_TRUE(legate::is_rect_type(type, idx));

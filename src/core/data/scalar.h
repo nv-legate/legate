@@ -196,6 +196,9 @@ class Scalar {
                                                             std::size_t size);
   [[nodiscard]] static detail::Scalar* create_impl_(const Type& type, const void* data, bool copy);
 
+  [[noreturn]] static void throw_invalid_size_exception_(std::size_t type_size,
+                                                         std::size_t size_of_T);
+
   struct private_tag {};
 
   Scalar(detail::Scalar* impl, private_tag);

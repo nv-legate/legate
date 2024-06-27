@@ -13,8 +13,8 @@
 #include "core/mapping/detail/array.h"
 
 #include <algorithm>
+#include <fmt/format.h>
 #include <stdexcept>
-#include <string>
 
 namespace legate::mapping::detail {
 
@@ -66,7 +66,7 @@ InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
     case 0: return descriptor_;
     case 1: return vardata_;
     default: {
-      throw std::out_of_range{"List array does not have child " + std::to_string(index)};
+      throw std::out_of_range{fmt::format("List array does not have child {}", index)};
       break;
     }
   }

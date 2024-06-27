@@ -22,7 +22,7 @@
 #include "mappers/logging_wrapper.h"
 
 #include <exception>
-#include <sstream>
+#include <fmt/format.h>
 
 namespace legate::detail {
 
@@ -123,8 +123,8 @@ std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
   std::size_t extents = 0;
   const void* buffer  = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
   if (extents != type->size()) {
-    throw std::invalid_argument{"Size mismatch: expected " + std::to_string(type->size()) +
-                                " bytes but got " + std::to_string(extents) + " bytes"};
+    throw std::invalid_argument{
+      fmt::format("Size mismatch: expected {} bytes but got {} bytes", type->size(), extents)};
   }
   return std::make_unique<Scalar>(std::move(type), buffer, true);
 }
@@ -169,25 +169,25 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_c
 
 void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
-  std::int64_t task_id{};
-
-  try {
-    task_id = get_task_id(local_task_id);
-  } catch (const std::out_of_range&) {
-    std::stringstream ss;
-
-    ss << "Task " << local_task_id << " is invalid for library '" << library_name_
-       << "' (max local task id: " << (task_scope_.size() - 1) << ")";
-    std::throw_with_nested(std::out_of_range{std::move(ss).str()});
-  }
+  const auto task_id = [&] {
+    try {
+      return get_task_id(local_task_id);
+    } catch (const std::out_of_range&) {
+      std::throw_with_nested(
+        std::out_of_range{fmt::format("Task {} is invalid for library '{}' (max local task id: {})",
+                                      local_task_id,
+                                      library_name_,
+                                      task_scope_.size() - 1)});
+    }
+  }();
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "[" << library_name_ << "] task " << local_task_id
                          << " (global id: " << task_id << "), " << *task_info;
   }
   if (tasks_.find(local_task_id) != tasks_.end()) {
-    throw std::invalid_argument{"Task " + std::to_string(local_task_id) +
-                                " already exists in library " + library_name_};
+    throw std::invalid_argument{
+      fmt::format("Task {} already exists in library {}", local_task_id, library_name_)};
   }
   task_info->register_task(task_id);
   tasks_.emplace(local_task_id, std::move(task_info));
@@ -198,10 +198,8 @@ const TaskInfo* Library::find_task(std::int64_t local_task_id) const
   auto finder = tasks_.find(local_task_id);
 
   if (tasks_.end() == finder) {
-    std::stringstream ss;
-
-    ss << "Library " << get_library_name() << " does not have task " << local_task_id;
-    throw std::out_of_range{std::move(ss).str()};
+    throw std::out_of_range{
+      fmt::format("Library {} does not have task {}", get_library_name(), local_task_id)};
   }
   return finder->second.get();
 }

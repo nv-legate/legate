@@ -14,11 +14,11 @@
 
 #include "core/data/shape.h"
 #include "core/partitioning/constraint.h"
+#include "core/utilities/detail/formatters.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/tuple.h"
 
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace legate {
@@ -83,6 +83,7 @@ class Variable final : public Expr {
   [[nodiscard]] Kind kind() const override;
 
   [[nodiscard]] const Operation* operation() const;
+  [[nodiscard]] std::int32_t id() const;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& store() const;
 
   [[nodiscard]] std::size_t hash() const noexcept;
@@ -193,6 +194,7 @@ class ScaleConstraint final : public Constraint {
 
   [[nodiscard]] std::string to_string() const override;
 
+  [[nodiscard]] const tuple<std::uint64_t>& factors() const;
   [[nodiscard]] const Variable* var_smaller() const;
   [[nodiscard]] const Variable* var_bigger() const;
 
@@ -221,6 +223,8 @@ class BloatConstraint final : public Constraint {
 
   [[nodiscard]] const Variable* var_source() const;
   [[nodiscard]] const Variable* var_bloat() const;
+  [[nodiscard]] const tuple<std::uint64_t>& low_offsets() const;
+  [[nodiscard]] const tuple<std::uint64_t>& high_offsets() const;
 
   [[nodiscard]] InternalSharedPtr<Partition> resolve(const Strategy& strategy) const;
 

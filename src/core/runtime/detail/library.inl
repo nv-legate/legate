@@ -14,7 +14,7 @@
 
 #include "core/runtime/detail/library.h"
 
-#include <sstream>
+#include <fmt/format.h>
 #include <stdexcept>
 
 namespace legate::detail {
@@ -25,21 +25,16 @@ inline Library::ResourceIdScope::ResourceIdScope(std::int64_t base,
   : base_{base}, size_{size}, next_{size - dyn_size}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && (dyn_size > this->size())) {
-    std::stringstream ss;
-
-    ss << "Number of dynamic resource IDs " << dyn_size << " > total number of IDs "
-       << this->size();
-    throw std::out_of_range{std::move(ss).str()};
+    throw std::out_of_range{fmt::format(
+      "Number of dynamic resource IDs {} > total number of IDs {}", dyn_size, this->size())};
   }
 }
 
 inline std::int64_t Library::ResourceIdScope::translate(std::int64_t local_resource_id) const
 {
   if (local_resource_id >= size_) {
-    std::stringstream ss;
-
-    ss << "Maximum local ID is " << size_ - 1 << " but received a local ID " << local_resource_id;
-    throw std::out_of_range{std::move(ss).str()};
+    throw std::out_of_range{fmt::format(
+      "Maximum local ID is {} but received a local ID {}", size_ - 1, local_resource_id)};
   }
   return base_ + local_resource_id;
 }

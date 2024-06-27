@@ -16,9 +16,8 @@
 #include "core/utilities/dispatch.h"
 #include "core/utilities/typedefs.h"
 
-#include <iostream>
+#include <fmt/format.h>
 #include <mutex>
-#include <sstream>
 #include <unordered_map>
 #include <vector>
 
@@ -273,10 +272,7 @@ ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id)
   auto finder = functor_table.find(proj_id);
 
   if (finder == functor_table.end()) {
-    std::stringstream ss;
-
-    ss << "Failed to find projection functor of id " << proj_id;
-    throw std::invalid_argument{std::move(ss).str()};
+    throw std::invalid_argument{fmt::format("Failed to find projection functor of id {}", proj_id)};
   }
 
   return finder->second.get();

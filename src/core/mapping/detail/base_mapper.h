@@ -297,9 +297,6 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   const legate::detail::Library* library{};
   Legion::Logger logger;
 
- private:
-  std::string mapper_name_{};
-
  protected:
   using VariantCacheKey = std::pair<Legion::TaskID, Processor::Kind>;
   std::unordered_map<VariantCacheKey, std::optional<Legion::VariantID>, hasher<VariantCacheKey>>
@@ -308,6 +305,9 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   InstanceManager* local_instances_{};
   ReductionInstanceManager* reduction_instances_{};
   LocalMachine local_machine_{};
+
+ private:
+  std::string mapper_name_{};
 };
 
 }  // namespace legate::mapping::detail

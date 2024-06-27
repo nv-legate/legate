@@ -16,7 +16,7 @@
 #include "core/partitioning/detail/partitioner.h"
 #include "core/runtime/detail/runtime.h"
 
-#include <sstream>
+#include <fmt/format.h>
 #include <stdexcept>
 #include <string_view>
 
@@ -54,12 +54,12 @@ Operation::Operation(std::uint64_t unique_id,
 
 std::string Operation::to_string() const
 {
-  std::stringstream ss;
-  ss << OP_NAME(kind()) << ":" << unique_id_;
-  if (!provenance_.empty()) {
-    ss << "[" << provenance_ << "]";
+  auto result = fmt::format("{}:{}", kind(), unique_id_);
+
+  if (!provenance().empty()) {
+    fmt::format_to(std::back_inserter(result), "[{}]", provenance());
   }
-  return std::move(ss).str();
+  return result;
 }
 
 const Variable* Operation::find_or_declare_partition(InternalSharedPtr<LogicalStore> store)
@@ -90,8 +90,8 @@ void Operation::record_partition_(const Variable* variable, InternalSharedPtr<Lo
   auto finder = store_mappings_.find(*variable);
   if (finder != store_mappings_.end()) {
     if (finder->second->id() != store->id()) {
-      throw std::invalid_argument{"Variable " + variable->to_string() +
-                                  " is already assigned to another store"};
+      throw std::invalid_argument{
+        fmt::format("Variable {} is already assigned to another store", *variable)};
     }
     return;
   }
@@ -112,3 +112,13 @@ std::unique_ptr<StoreProjection> Operation::create_store_projection_(const Strat
 }
 
 }  // namespace legate::detail
+
+namespace fmt {
+
+format_context::iterator formatter<legate::detail::Operation::Kind>::format(
+  legate::detail::Operation::Kind kind, format_context& ctx) const
+{
+  return formatter<string_view>::format(legate::detail::OP_NAME(kind), ctx);
+}
+
+}  // namespace fmt

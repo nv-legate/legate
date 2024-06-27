@@ -17,6 +17,8 @@
 #include "realm/network.h"
 
 #include <algorithm>
+#include <fmt/format.h>
+#include <fmt/ostream.h>
 #include <sstream>
 #include <type_traits>
 #include <utility>
@@ -80,13 +82,7 @@ std::uint32_t Machine::count() const { return count(preferred_target); }
 
 std::uint32_t Machine::count(TaskTarget target) const { return processor_range(target).count(); }
 
-std::string Machine::to_string() const
-{
-  std::stringstream ss;
-
-  ss << *this;
-  return std::move(ss).str();
-}
+std::string Machine::to_string() const { return fmt::format("{}", fmt::streamed(*this)); }
 
 void Machine::pack(legate::detail::BufferBuilder& buffer) const
 {
@@ -194,10 +190,7 @@ const Processor& LocalProcessorRange::operator[](std::uint32_t idx) const
 
 std::string LocalProcessorRange::to_string() const
 {
-  std::stringstream ss;
-
-  ss << *this;
-  return std::move(ss).str();
+  return fmt::format("{}", fmt::streamed(*this));
 }
 
 std::ostream& operator<<(std::ostream& os, const LocalProcessorRange& range)
