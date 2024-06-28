@@ -15,12 +15,16 @@
 #include "core/task/task.h"
 #include "core/utilities/typedefs.h"
 
+#include <cstdint>
+
 namespace legate::detail {
 
 class Library;
 
 class FindBoundingBox : public LegateTask<FindBoundingBox> {
  public:
+  static constexpr std::int32_t TASK_ID = LEGATE_CORE_FIND_BOUNDING_BOX;
+
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);
@@ -32,6 +36,8 @@ class FindBoundingBox : public LegateTask<FindBoundingBox> {
 
 class FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
  public:
+  static constexpr std::int32_t TASK_ID = LEGATE_CORE_FIND_BOUNDING_BOX_SORTED;
+
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
   static void omp_variant(legate::TaskContext context);

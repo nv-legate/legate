@@ -184,9 +184,8 @@ struct FindBoundingBoxSortedFn {
 
 void register_partitioning_tasks(Library* core_lib)
 {
-  FindBoundingBox::register_variants(legate::Library{core_lib}, LEGATE_CORE_FIND_BOUNDING_BOX);
-  FindBoundingBoxSorted::register_variants(legate::Library{core_lib},
-                                           LEGATE_CORE_FIND_BOUNDING_BOX_SORTED);
+  FindBoundingBox::register_variants(legate::Library{core_lib});
+  FindBoundingBoxSorted::register_variants(legate::Library{core_lib});
 }
 
 }  // namespace legate::detail
