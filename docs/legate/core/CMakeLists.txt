@@ -70,3 +70,8 @@ add_custom_target(Sphinx
                           "${SPHINX_SOURCE}" "${SPHINX_BUILD}"
                   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
                   COMMENT "Generating documentation with Sphinx")
+
+add_custom_target(EULA COMMENT "Copying EULA into built docs")
+add_custom_command(TARGET EULA COMMAND ${CMAKE_COMMAND} -E copy
+                                       "${LEGATE_CORE_DIR}/eula.pdf" "${SPHINX_BUILD}"
+                   COMMENT "Copying EULA into built docs")

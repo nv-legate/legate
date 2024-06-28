@@ -138,3 +138,4 @@ doxygen:
 .PHONY: docs
 docs: doxygen
 	@$(LEGATE_CORE_BUILD_COMMAND) --target Sphinx $(LEGATE_CORE_CMAKE_ARGS)
+	@$(LEGATE_CORE_BUILD_COMMAND) --target EULA $(LEGATE_CORE_CMAKE_ARGS)
