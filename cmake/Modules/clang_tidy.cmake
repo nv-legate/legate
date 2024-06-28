@@ -39,26 +39,38 @@ function(legate_core_add_tidy_target)
   endif()
   list(REMOVE_DUPLICATES _TIDY_SOURCES)
 
-  macro(search_for_program VARIABLE_NAME PROGRAM_NAME)
+  function(search_for_program VARIABLE_NAME PROGRAM_NAME)
+    message(CHECK_START "Searching for ${PROGRAM_NAME}")
+
     if(${VARIABLE_NAME})
-      message(STATUS "Using ${PROGRAM_NAME}: ${${VARIABLE_NAME}}")
-    else()
-      find_program(${VARIABLE_NAME} ${PROGRAM_NAME})
-      if(${VARIABLE_NAME})
-        message(STATUS "Found ${PROGRAM_NAME}: ${${VARIABLE_NAME}}")
-      endif()
+      message(CHECK_PASS "using pre-found: ${${VARIABLE_NAME}}")
+      return()
     endif()
-  endmacro()
+
+    find_program(${VARIABLE_NAME} ${PROGRAM_NAME} ${ARGN})
+    if(${VARIABLE_NAME})
+      message(CHECK_PASS "found: ${${VARIABLE_NAME}}")
+    else()
+      message(CHECK_FAIL "not found")
+    endif()
+  endfunction()
 
   search_for_program(LEGATE_CORE_RUN_CLANG_TIDY run-clang-tidy)
   search_for_program(LEGATE_CORE_CLANG_TIDY clang-tidy)
   search_for_program(LEGATE_CORE_CLANG_TIDY_DIFF clang-tidy-diff.py)
+  if(NOT LEGATE_CORE_CLANG_TIDY_DIFF)
+    # Sometimes this is not installed under the usual [s]bin directories, but instead
+    # under share/clang, so try that as well
+    search_for_program(LEGATE_CORE_CLANG_TIDY_DIFF clang-tidy-diff.py PATH_SUFFIXES
+                       "share/clang")
+  endif()
   search_for_program(LEGATE_CORE_SED sed)
   find_package(Git)
 
-  include(ProcessorCount)
-  ProcessorCount(PROC_COUNT)
   if(NOT N EQUAL 0)
+    include(ProcessorCount)
+
+    ProcessorCount(PROC_COUNT)
     set(TIDY_PARALLEL_FLAGS -j${PROC_COUNT})
   else()
     set(TIDY_PARALLEL_FLAGS)
