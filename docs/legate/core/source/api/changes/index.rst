@@ -5,4 +5,4 @@ API Reference
   :maxdepth: 1
   :caption: Contents:
 
-  24.05 <2405.rst>
+  24.06 <2406.rst>
