@@ -779,7 +779,7 @@ list(APPEND legate_core_TIDY_SOURCES ${legate_core_SOURCES})
 if(legate_core_BUILD_TESTS)
   include(CTest)
 
-  add_subdirectory(${LEGATE_CORE_DIR}/tests/cpp)
+  add_subdirectory(tests/cpp)
 endif()
 
 if(legate_core_BUILD_INTEGRATION)
@@ -792,11 +792,11 @@ if(legate_core_BUILD_INTEGRATION)
   # (most recent call first): cmake/legate_helper_functions.cmake:265
   # (legate_default_cpp_install) tests/integration/collective/CMakeLists.txt:32
   # (legate_add_cpp_subdirectory)
-  add_subdirectory(${LEGATE_CORE_DIR}/tests/integration)
+  add_subdirectory(tests/integration)
 endif()
 
 if(legate_core_BUILD_EXAMPLES)
-  add_subdirectory(${LEGATE_CORE_DIR}/examples)
+  add_subdirectory(examples)
 endif()
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/clang_tidy.cmake)
