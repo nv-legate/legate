@@ -161,11 +161,6 @@ installed system-wide. To avoid versioning conflicts it is safest to match the
 version of CUDA installed system-wide, by specifying it to
 `generate-conda-envs.py` through the `--ctk` flag.
 
-Legate is tested and guaranteed to be compatible with Volta and later GPU
-architectures. You can use Legate with Pascal GPUs as well, but there could
-be issues due to lack of independent thread scheduling. Please report any such
-issues on GitHub.
-
 #### CUDA libraries (optional)
 
 Only necessary if you wish to run with Nvidia GPUs.

@@ -65,3 +65,12 @@ What platform and library versions does Legate support?
     Python           3.10
     NumPy            1.22
     ================ =============================== ====================================
+
+    Legate is tested and guaranteed to be compatible with Volta and later GPU
+    architectures. You can use Legate with Pascal GPUs as well, but there could
+    be issues due to lack of independent thread scheduling. Please report any such
+    issues on GitHub.
+
+    Legate has been tested on Linux and MacOS, although only a few flavors of Linux
+    such as Ubuntu have been thoroughly tested. There is currently no support for
+    Windows.
