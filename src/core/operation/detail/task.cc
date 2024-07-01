@@ -95,7 +95,7 @@ void Task::launch_task_(Strategy* p_strategy)
       arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, -1));
   }
 
-  for (auto&& [redop, rest] : legate::detail::zip(reduction_ops_, reductions_)) {
+  for (auto&& [redop, rest] : legate::detail::zip_equal(reduction_ops_, reductions_)) {
     auto&& [arr, mapping, projection] = rest;
 
     launcher.add_reduction(

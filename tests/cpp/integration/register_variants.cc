@@ -201,7 +201,7 @@ TEST_F(RegisterVariants, DefaultVariantOptions)
                                         DefaultOptionsTask::OMP_VARIANT_OPTIONS,
                                         DefaultOptionsTask::GPU_VARIANT_OPTIONS};
 
-  for (auto&& [variant_kind, default_options] : legate::detail::zip(variant_kinds, options)) {
+  for (auto&& [variant_kind, default_options] : legate::detail::zip_equal(variant_kinds, options)) {
     ASSERT_TRUE(task_info->has_variant(variant_kind));
     ASSERT_EQ(task_info->find_variant(variant_kind).options, default_options);
   }

@@ -70,7 +70,7 @@ class WriterTask : public legate::LegateTask<WriterTask> {
     auto&& outputs = context.outputs();
     auto&& scalars = context.scalars();
 
-    for (auto&& [output, scalar] : legate::detail::zip(outputs, scalars)) {
+    for (auto&& [output, scalar] : legate::detail::zip_equal(outputs, scalars)) {
       double_dispatch(output.dim(), output.type().code(), WriteFn{}, output.data(), scalar);
     }
   }
@@ -85,7 +85,7 @@ class ReducerTask : public legate::LegateTask<ReducerTask> {
     auto&& scalars    = context.scalars();
     auto&& in_shape   = context.input(0).shape<1>();
 
-    for (auto&& [reduction, scalar] : legate::detail::zip(reductions, scalars)) {
+    for (auto&& [reduction, scalar] : legate::detail::zip_equal(reductions, scalars)) {
       double_dispatch(
         reduction.dim(), reduction.type().code(), ReduceFn{}, reduction.data(), scalar, in_shape);
     }
@@ -327,7 +327,7 @@ TEST_F(MultiScalarOut, WriteAuto)
   auto stores          = create_stores(values_to_write);
 
   test_writer_auto(library, stores, values_to_write);
-  for (auto&& [store, to_match] : legate::detail::zip(stores, values_to_write)) {
+  for (auto&& [store, to_match] : legate::detail::zip_equal(stores, values_to_write)) {
     validate_store(library, store, to_match);
   }
 }
@@ -345,7 +345,7 @@ TEST_F(MultiScalarOut, ReduceAuto)
   auto reduction_results = generate_reduction_results();
 
   test_reducer_auto(library, input, reductions, values_to_write);
-  for (auto&& [reduction, to_match] : legate::detail::zip(reductions, reduction_results)) {
+  for (auto&& [reduction, to_match] : legate::detail::zip_equal(reductions, reduction_results)) {
     validate_store(library, reduction, to_match);
   }
 }
@@ -363,7 +363,7 @@ TEST_F(MultiScalarOut, ReduceManual)
   auto reduction_results = generate_reduction_results();
 
   test_reducer_manual(library, input, reductions, values_to_write);
-  for (auto&& [reduction, to_match] : legate::detail::zip(reductions, reduction_results)) {
+  for (auto&& [reduction, to_match] : legate::detail::zip_equal(reductions, reduction_results)) {
     validate_store(library, reduction, to_match);
   }
 }

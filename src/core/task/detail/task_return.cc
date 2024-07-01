@@ -45,7 +45,7 @@ void TaskReturn::pack(void* buffer) const
       Processor::Kind::TOC_PROC) {
     auto stream = cuda::StreamPool::get_stream_pool().get_stream();
 
-    for (auto&& [ret, offset] : zip(return_values_, layout_)) {
+    for (auto&& [ret, offset] : zip_equal(return_values_, layout_)) {
       if (ret.is_device_value()) {
         LEGATE_CHECK_CUDA(
           cudaMemcpyAsync(out_ptr + offset, ret.ptr(), ret.size(), cudaMemcpyDeviceToHost, stream));
@@ -54,7 +54,7 @@ void TaskReturn::pack(void* buffer) const
       }
     }
   } else {
-    for (auto&& [ret, offset] : zip(return_values_, layout_)) {
+    for (auto&& [ret, offset] : zip_equal(return_values_, layout_)) {
       std::memcpy(out_ptr + offset, ret.ptr(), ret.size());
     }
   }

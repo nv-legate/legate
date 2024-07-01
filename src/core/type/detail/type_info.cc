@@ -299,7 +299,7 @@ std::string StructType::to_string() const
 
   LEGATE_ASSERT(field_types_.size() == offsets_.size());
   for (auto&& [idx, rest] :
-       legate::detail::enumerate(legate::detail::zip(field_types(), offsets()))) {
+       legate::detail::enumerate(legate::detail::zip_equal(field_types(), offsets()))) {
     auto&& [field_type, offset] = rest;
 
     if (idx > 0) {

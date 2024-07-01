@@ -12,7 +12,11 @@
 
 #pragma once
 
+#include "core/utilities/detail/type_traits.h"
 #include "core/utilities/detail/zip.h"
+#include "core/utilities/macros.h"
+
+#include "legate_defines.h"
 
 namespace legate::detail {
 
@@ -191,7 +195,7 @@ const typename ZiperatorBase<D, T...>::iter_tuple_type& ZiperatorBase<D, T...>::
 }
 
 template <typename D, typename... T>
-template <size_t... Idx>
+template <std::size_t... Idx>
 typename ZiperatorBase<D, T...>::value_type ZiperatorBase<D, T...>::dereference_(
   std::index_sequence<Idx...>) const
 {
@@ -199,35 +203,35 @@ typename ZiperatorBase<D, T...>::value_type ZiperatorBase<D, T...>::dereference_
 }
 
 template <typename D, typename... T>
-template <size_t... Idx>
+template <std::size_t... Idx>
 void ZiperatorBase<D, T...>::increment_(std::index_sequence<Idx...>)
 {
   (++std::get<Idx>(derived_().iters_()), ...);
 }
 
 template <typename D, typename... T>
-template <size_t... Idx>
+template <std::size_t... Idx>
 void ZiperatorBase<D, T...>::pluseq_(std::index_sequence<Idx...>, difference_type n)
 {
   ((std::get<Idx>(derived_().iters_()) += n), ...);
 }
 
 template <typename D, typename... T>
-template <size_t... Idx>
+template <std::size_t... Idx>
 void ZiperatorBase<D, T...>::decrement_(std::index_sequence<Idx...>)
 {
   (--std::get<Idx>(derived_().iters_()), ...);
 }
 
 template <typename D, typename... T>
-template <size_t... Idx>
+template <std::size_t... Idx>
 void ZiperatorBase<D, T...>::minuseq_(std::index_sequence<Idx...>, difference_type n)
 {
   ((std::get<Idx>(derived_().iters_()) -= n), ...);
 }
 
 template <typename D, typename... T>
-template <size_t... Idx>
+template <std::size_t... Idx>
 bool ZiperatorBase<D, T...>::lessthan_(std::index_sequence<Idx...>,
                                        const ZiperatorBase& other) const
 {
@@ -235,7 +239,7 @@ bool ZiperatorBase<D, T...>::lessthan_(std::index_sequence<Idx...>,
 }
 
 template <typename D, typename... T>
-template <size_t... Idx>
+template <std::size_t... Idx>
 bool ZiperatorBase<D, T...>::eq_(std::index_sequence<Idx...>, const ZiperatorBase& other) const
 {
   return ((std::get<Idx>(derived_().iters_()) == std::get<Idx>(other.derived_().iters_())) && ...);
@@ -244,7 +248,7 @@ bool ZiperatorBase<D, T...>::eq_(std::index_sequence<Idx...>, const ZiperatorBas
 // ==========================================================================================
 
 template <typename... T>
-template <size_t... Idx>
+template <std::size_t... Idx>
 bool ZiperatorShortest<T...>::eq_(std::index_sequence<Idx...>, const ZiperatorShortest& other) const
 {
   // This is safe to use (and results in "shortest zip" semantics) when only comparing
@@ -255,6 +259,21 @@ bool ZiperatorShortest<T...>::eq_(std::index_sequence<Idx...>, const ZiperatorSh
   //   compares equal to end()
   return ((std::get<Idx>(this->derived_().iters_()) == std::get<Idx>(other.derived_().iters_())) ||
           ...);
+}
+
+// ==========================================================================================
+
+template <typename... T>
+template <std::size_t... Idx>
+bool ZiperatorEqual<T...>::eq_(std::index_sequence<Idx...>, const ZiperatorEqual& other) const
+{
+  // This is safe to use (and results in "equal zip" semantics) when only comparing
+  // ZipIterators that satisfy one of these invariants:
+  // * it was derived by advancing the begin() ZipIterator, and thus has all its sub-iterators on
+  //   the same index
+  // * it is the end() ZipIterator, and the user guarantees never to advance a ZipIterator once it
+  //   compares equal to end()
+  return std::get<0>(this->derived_().iters_()) == std::get<0>(other.derived_().iters_());
 }
 
 // ==========================================================================================
@@ -303,14 +322,14 @@ typename Zipper<ZIT, T...>::const_iterator Zipper<ZIT, T...>::end() const
 // ==========================================================================================
 
 template <template <typename...> class ZIT, typename... T>
-template <size_t... Ns>
+template <std::size_t... Ns>
 typename Zipper<ZIT, T...>::iterator Zipper<ZIT, T...>::begin_(std::index_sequence<Ns...>)
 {
   return iterator{std::begin(std::get<Ns>(objs_))...};
 }
 
 template <template <typename...> class ZIT, typename... T>
-template <size_t... Ns>
+template <std::size_t... Ns>
 typename Zipper<ZIT, T...>::const_iterator Zipper<ZIT, T...>::begin_(
   std::index_sequence<Ns...>) const
 {
@@ -318,14 +337,14 @@ typename Zipper<ZIT, T...>::const_iterator Zipper<ZIT, T...>::begin_(
 }
 
 template <template <typename...> class ZIT, typename... T>
-template <size_t... Ns>
+template <std::size_t... Ns>
 typename Zipper<ZIT, T...>::iterator Zipper<ZIT, T...>::end_(std::index_sequence<Ns...>)
 {
   return iterator{std::end(std::get<Ns>(objs_))...};
 }
 
 template <template <typename...> class ZIT, typename... T>
-template <size_t... Ns>
+template <std::size_t... Ns>
 typename Zipper<ZIT, T...>::const_iterator Zipper<ZIT, T...>::end_(std::index_sequence<Ns...>) const
 {
   return const_iterator{std::cend(std::get<Ns>(objs_))...};
@@ -334,8 +353,31 @@ typename Zipper<ZIT, T...>::const_iterator Zipper<ZIT, T...>::end_(std::index_se
 }  // namespace zip_detail
 
 template <typename... T>
-zip_detail::Zipper<zip_detail::ZiperatorShortest, T...> zip(T&&... args)
+zip_detail::Zipper<zip_detail::ZiperatorShortest, T...> zip_shortest(T&&... args)
 {
+  return {std::forward<T>(args)...};
+}
+
+namespace zip_detail {
+
+template <typename T>
+using has_size = decltype(std::size(std::declval<T>()));
+
+}  // namespace zip_detail
+
+template <typename... T>
+zip_detail::Zipper<zip_detail::ZiperatorEqual, T...> zip_equal(T&&... args)
+{
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG) && (sizeof...(args) > 1) &&
+                traits::detail::is_detected_v<zip_detail::has_size, T...>) {
+    const auto all_same_size = [](const auto& a0, const auto&... rest) {
+      return ((std::size(a0) == std::size(rest)) && ...);
+    }(args...);
+
+    if (!all_same_size) {
+      throw std::invalid_argument{"Arguments to zip_equal() are not all equal"};
+    }
+  }
   return {std::forward<T>(args)...};
 }
 

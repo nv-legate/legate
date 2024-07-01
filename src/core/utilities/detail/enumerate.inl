@@ -57,7 +57,7 @@ template <typename T>
 zip_detail::Zipper<zip_detail::ZiperatorShortest, Enumerator, T> enumerate(
   T&& iterable, typename Enumerator::value_type start)
 {
-  return zip(Enumerator{start}, std::forward<T>(iterable));
+  return zip_shortest(Enumerator{start}, std::forward<T>(iterable));
 }
 
 }  // namespace legate::detail

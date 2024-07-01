@@ -186,7 +186,7 @@ void register_tasks(const detail::Library* core_library)
   // Register the task variants
   const auto proc_kinds = {Processor::LOC_PROC, Processor::TOC_PROC, Processor::OMP_PROC};
   const auto variants   = {LEGATE_CPU_VARIANT, LEGATE_GPU_VARIANT, LEGATE_OMP_VARIANT};
-  for (auto&& [proc_kind, variant] : legate::detail::zip(proc_kinds, variants)) {
+  for (auto&& [proc_kind, variant] : legate::detail::zip_equal(proc_kinds, variants)) {
     runtime->register_task_variant<int, init_cpucoll_mapping>(
       detail::make_registrar(core_library,
                              LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID,

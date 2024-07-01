@@ -477,7 +477,7 @@ auto apply(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
   }
   result.reserve(rhs1.size());
 
-  for (auto&& [rh1, rh2] : legate::detail::zip(rhs1.data(), rhs2.data())) {
+  for (auto&& [rh1, rh2] : legate::detail::zip_equal(rhs1.data(), rhs2.data())) {
     result.append_inplace(func(rh1, rh2));
   }
   return result;
@@ -499,7 +499,7 @@ auto apply(FUNC&& func, const tuple<T1>& rhs1, const T2& rhs2)
 template <typename FUNC, typename T1, typename T2>
 bool apply_reduce_all(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
 {
-  const auto zipper = legate::detail::zip(rhs1.data(), rhs2.data());
+  const auto zipper = legate::detail::zip_equal(rhs1.data(), rhs2.data());
   return std::all_of(zipper.begin(), zipper.end(), [&func](auto&& pair) {
     auto&& [rh1, rh2] = pair;
     return func(rh1, rh2);

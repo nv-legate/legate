@@ -55,13 +55,13 @@ template <template <typename...> class It,
 struct ZiperatorSelector;
 
 // overload for normal iterators
-template <template <typename...> class It, typename ObjTupleT, size_t... Idx>
+template <template <typename...> class It, typename ObjTupleT, std::size_t... Idx>
 struct ZiperatorSelector<It, ObjTupleT, std::index_sequence<Idx...>, false> {
   using type = It<decltype(std::begin(std::get<Idx>(std::declval<ObjTupleT&>())))...>;
 };
 
 // overload for const-iterators
-template <template <typename...> class It, typename ObjTupleT, size_t... Idx>
+template <template <typename...> class It, typename ObjTupleT, std::size_t... Idx>
 struct ZiperatorSelector<It, ObjTupleT, std::index_sequence<Idx...>, true> {
   using type = It<decltype(std::cbegin(std::get<Idx>(std::declval<const ObjTupleT&>())))...>;
 };
@@ -111,25 +111,25 @@ class ZiperatorBase {
   [[nodiscard]] std::tuple<T...>& iters_() noexcept;
   [[nodiscard]] const std::tuple<T...>& iters_() const noexcept;
 
-  template <size_t... Idx>
+  template <std::size_t... Idx>
   [[nodiscard]] value_type dereference_(std::index_sequence<Idx...>) const;
 
-  template <size_t... Idx>
+  template <std::size_t... Idx>
   void increment_(std::index_sequence<Idx...>);
 
-  template <size_t... Idx>
+  template <std::size_t... Idx>
   void pluseq_(std::index_sequence<Idx...>, difference_type n);
 
-  template <size_t... Idx>
+  template <std::size_t... Idx>
   void decrement_(std::index_sequence<Idx...>);
 
-  template <size_t... Idx>
+  template <std::size_t... Idx>
   void minuseq_(std::index_sequence<Idx...>, difference_type n);
 
-  template <size_t... Idx>
+  template <std::size_t... Idx>
   [[nodiscard]] bool lessthan_(std::index_sequence<Idx...>, const ZiperatorBase& other) const;
 
-  template <size_t... Idx>
+  template <std::size_t... Idx>
   [[nodiscard]] bool eq_(std::index_sequence<Idx...>, const ZiperatorBase& other) const;
 
  private:
@@ -142,8 +142,21 @@ class ZiperatorShortest : public ZiperatorBase<ZiperatorShortest<T...>, T...> {
   using base_type = ZiperatorBase<ZiperatorShortest<T...>, T...>;
   friend base_type;
 
-  template <size_t... Idx>
+  template <std::size_t... Idx>
   [[nodiscard]] bool eq_(std::index_sequence<Idx...>, const ZiperatorShortest& other) const;
+
+ public:
+  using base_type::base_type;
+};
+
+// zip-equal zipper implementatation
+template <typename... T>
+class ZiperatorEqual : public ZiperatorBase<ZiperatorEqual<T...>, T...> {
+  using base_type = ZiperatorBase<ZiperatorEqual<T...>, T...>;
+  friend base_type;
+
+  template <std::size_t... Idx>
+  [[nodiscard]] bool eq_(std::index_sequence<Idx...>, const ZiperatorEqual& other) const;
 
  public:
   using base_type::base_type;
@@ -180,16 +193,16 @@ class Zipper {
   [[nodiscard]] const_iterator end() const;
 
  private:
-  template <size_t... Ns>
+  template <std::size_t... Ns>
   [[nodiscard]] iterator begin_(std::index_sequence<Ns...>);
 
-  template <size_t... Ns>
+  template <std::size_t... Ns>
   [[nodiscard]] const_iterator begin_(std::index_sequence<Ns...>) const;
 
-  template <size_t... Ns>
+  template <std::size_t... Ns>
   [[nodiscard]] iterator end_(std::index_sequence<Ns...>);
 
-  template <size_t... Ns>
+  template <std::size_t... Ns>
   [[nodiscard]] const_iterator end_(std::index_sequence<Ns...>) const;
 };
 
@@ -212,10 +225,33 @@ class Zipper {
  * iterators support `std::random_access_iterator_tag`, then the returned iterator will as
  * well.
  *
+ * @snippet noinit/zip_shortest.cc Constructing a zipper
+ */
+template <typename... T>
+[[nodiscard]] zip_detail::Zipper<zip_detail::ZiperatorShortest, T...> zip_shortest(T&&... args);
+
+/**
+ * @brief Zip a set of containers of equal length together.
+ *
+ * @param args The set of containers to zip.
+ *
+ * @return A zipper constructed from the set of containers of equal size. Calling `begin()` or
+ * `end()` on the zipper returns the corresponding iterators.
+ *
+ * @details The adaptor returned by this routine implements a "zip equal" zip operation. That
+ * is, the returned zipper assumes all inputs are of equal size. Debug builds will attempt to
+ * verify this invariant upfront, by calling (if applicable) std::size() on the
+ * inputs. Iterating past the end results in undefined behavior.
+ *
+ * The iterators returned by the adaptor support the lowest common demoninator of all
+ * containers when it comes to iterator functionality. For example, if all containers'
+ * iterators support `std::random_access_iterator_tag`, then the returned iterator will as
+ * well.
+ *
  * @snippet noinit/zip_iterator.cc Constructing a zipper
  */
 template <typename... T>
-[[nodiscard]] zip_detail::Zipper<zip_detail::ZiperatorShortest, T...> zip(T&&... args);
+[[nodiscard]] zip_detail::Zipper<zip_detail::ZiperatorEqual, T...> zip_equal(T&&... args);
 
 }  // namespace legate::detail
 

@@ -72,7 +72,8 @@ std::tuple<std::vector<std::size_t>, std::vector<std::uint32_t>, std::int64_t> p
 
   temp_dims.reserve(shape.size());
   temp_shape.reserve(shape.size());
-  for (auto&& [dim, rest] : legate::detail::enumerate(legate::detail::zip(restrictions, shape))) {
+  for (auto&& [dim, rest] :
+       legate::detail::enumerate(legate::detail::zip_equal(restrictions, shape))) {
     auto&& [restr, extent] = rest;
 
     if (1 == extent || restr == Restriction::FORBID) {
@@ -276,7 +277,7 @@ tuple<std::uint64_t> PartitionManager::compute_tile_shape(const tuple<std::uint6
   tuple<std::uint64_t> tile_shape;
 
   tile_shape.reserve(extents.size());
-  for (auto&& [x, y] : legate::detail::zip(extents, launch_shape)) {
+  for (auto&& [x, y] : legate::detail::zip_equal(extents, launch_shape)) {
     tile_shape.append_inplace((x + y - 1) / y);
   }
   return tile_shape;

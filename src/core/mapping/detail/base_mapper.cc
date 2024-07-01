@@ -1188,7 +1188,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     [&output_map](const std::vector<Legion::RegionRequirement>& reqs,
                   std::vector<std::vector<Legion::Mapping::PhysicalInstance>>& instances) {
       instances.resize(reqs.size());
-      for (auto&& [req, inst] : legate::detail::zip(reqs, instances)) {
+      for (auto&& [req, inst] : legate::detail::zip_equal(reqs, instances)) {
         output_map[&req] = &inst;
       }
     };
