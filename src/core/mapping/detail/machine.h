@@ -121,6 +121,8 @@ class LocalMachine {
   [[nodiscard]] const std::map<Processor, Memory>& frame_buffers() const;
   [[nodiscard]] const std::map<Processor, Memory>& socket_memories() const;
 
+  [[nodiscard]] std::uint32_t g2c_multi_hop_bandwidth(Memory gpu_mem, Memory cpu_mem) const;
+
   [[nodiscard]] LocalProcessorRange slice(TaskTarget target,
                                           const Machine& machine,
                                           bool fallback_to_global = false) const;
@@ -129,6 +131,8 @@ class LocalMachine {
   std::uint32_t total_nodes{};
 
  private:
+  void init_g2c_multi_hop_bandwidth_();
+
   std::vector<Processor> cpus_{};
   std::vector<Processor> gpus_{};
   std::vector<Processor> omps_{};
@@ -136,6 +140,7 @@ class LocalMachine {
   Memory system_memory_, zerocopy_memory_;
   std::map<Processor, Memory> frame_buffers_{};
   std::map<Processor, Memory> socket_memories_{};
+  std::unordered_map<Memory, std::unordered_map<Memory, std::uint32_t>> g2c_multi_hop_bandwidth_{};
 };
 
 }  // namespace legate::mapping::detail

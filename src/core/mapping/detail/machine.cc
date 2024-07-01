@@ -271,6 +271,53 @@ LocalMachine::LocalMachine()
       socket_memories_[omp] = system_memory_;
     }
   }
+
+  init_g2c_multi_hop_bandwidth_();
+}
+
+void LocalMachine::init_g2c_multi_hop_bandwidth_()
+{
+  // Estimate local-node CPU<->GPU multi-hop memory copy bandwidth. If the CPU memory is not pinned,
+  // then Realm cannot do this in one hop, and therefore get_mem_mem_affinity won't cover this case.
+  // We know Realm will use a GPU-pinned intermediate memory as a bounce buffer, so use the
+  // affinities to zerocopy memory as a stand-in for that.
+  // TODO(mpapadakis): Will no longer need to do this once Realm provides an API to estimate
+  // multi-hop copy bandwidth, see https://github.com/StanfordLegion/legion/issues/1704.
+  auto legion_machine = Legion::Machine::get_machine();
+  if (zerocopy_memory_.exists()) {
+    Legion::Machine::MemoryQuery gpu_mems{legion_machine};
+
+    gpu_mems.local_address_space().only_kind(Legion::Memory::GPU_FB_MEM);
+    for (auto gpu_mem : gpu_mems) {
+      std::vector<Legion::MemoryMemoryAffinity> g2z_affinities;
+      legion_machine.get_mem_mem_affinity(
+        g2z_affinities, gpu_mem, zerocopy_memory_, false /*not just local affinities*/);
+      if (g2z_affinities.empty()) {
+        continue;
+      }
+      LEGATE_ASSERT(g2z_affinities.size() == 1);
+      auto g2z_bandwidth  = g2z_affinities.front().bandwidth;
+      auto& cache_for_gpu = g2c_multi_hop_bandwidth_[gpu_mem];
+
+      Legion::Machine::MemoryQuery cpu_mems{legion_machine};
+      cpu_mems.local_address_space();
+      for (auto cpu_mem : cpu_mems) {
+        if (cpu_mem.kind() != Legion::Memory::SYSTEM_MEM &&
+            cpu_mem.kind() != Legion::Memory::SOCKET_MEM) {
+          continue;
+        }
+        std::vector<Legion::MemoryMemoryAffinity> c2z_affinities;
+        legion_machine.get_mem_mem_affinity(
+          c2z_affinities, cpu_mem, zerocopy_memory_, false /*not just local affinities*/);
+        if (c2z_affinities.empty()) {
+          continue;
+        }
+        LEGATE_ASSERT(c2z_affinities.size() == 1);
+        auto c2z_bandwidth     = c2z_affinities.front().bandwidth;
+        cache_for_gpu[cpu_mem] = std::min(g2z_bandwidth, c2z_bandwidth);
+      }
+    }
+  }
 }
 
 const std::vector<Processor>& LocalMachine::procs(TaskTarget target) const
@@ -349,6 +396,22 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
     default: LEGATE_ABORT("invalid StoreTarget: " << legate::traits::detail::to_underlying(target));
   }
   return Legion::Memory::NO_MEMORY;
+}
+
+std::uint32_t LocalMachine::g2c_multi_hop_bandwidth(Memory gpu_mem, Memory cpu_mem) const
+{
+  const auto gpu_finder = g2c_multi_hop_bandwidth_.find(gpu_mem);
+
+  if (gpu_finder == g2c_multi_hop_bandwidth_.end()) {
+    return 0;
+  }
+
+  const auto cpu_finder = gpu_finder->second.find(cpu_mem);
+
+  if (cpu_finder == gpu_finder->second.end()) {
+    return 0;
+  }
+  return cpu_finder->second;
 }
 
 }  // namespace legate::mapping::detail

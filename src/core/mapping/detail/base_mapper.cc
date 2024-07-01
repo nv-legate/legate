@@ -19,6 +19,7 @@
 #include "core/mapping/operation.h"
 #include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/shard.h"
+#include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/type_traits.h"
 #include "core/utilities/detail/zip.h"
 #include "core/utilities/env.h"
@@ -959,41 +960,46 @@ class AnnotatedSourceInstance {
   Bandwidth bandwidth{};
 };
 
-void find_source_instance_bandwidth(
-  std::vector<AnnotatedSourceInstance>& all_sources,               /* output */
-  std::unordered_map<Memory, Bandwidth>& source_memory_bandwidths, /* inout */
-  const Legion::Mapping::PhysicalInstance& source_instance,
-  const Memory& target_memory,
-  const Legion::Machine& legion_machine)
+void find_source_instance_bandwidth(std::vector<AnnotatedSourceInstance>* all_sources,
+                                    std::unordered_map<Memory, Bandwidth>* source_memory_bandwidths,
+                                    const Legion::Mapping::PhysicalInstance& source_instance,
+                                    const Memory& target_memory,
+                                    const Legion::Machine& legion_machine,
+                                    const LocalMachine& local_machine)
 {
-  const Memory source_memory = source_instance.get_location();
-  auto finder                = source_memory_bandwidths.find(source_memory);
+  auto source_memory = source_instance.get_location();
+  auto finder        = source_memory_bandwidths->find(source_memory);
 
   std::uint32_t bandwidth{0};
-  if (source_memory_bandwidths.end() == finder) {
+  if (source_memory_bandwidths->end() == finder) {
     std::vector<Legion::MemoryMemoryAffinity> affinities;
-
     legion_machine.get_mem_mem_affinity(
       affinities, source_memory, target_memory, false /*not just local affinities*/);
-    // affinities being empty means that there's no direct channel between the source
-    // and target memories, in which case we assign the smallest bandwidth
+    // affinities being empty means that there's no direct channel between the source and target
+    // memories, in which case we assign the smallest bandwidth
     // TODO(wonchanl): Not all multi-hop copies are equal
     if (!affinities.empty()) {
       LEGATE_ASSERT(affinities.size() == 1);
       bandwidth = affinities.front().bandwidth;
+    } else if (source_memory.kind() == Realm::Memory::GPU_FB_MEM) {
+      // Last resort: check if this is a special case of a local-node multi-hop CPU<->GPU copy.
+      bandwidth = local_machine.g2c_multi_hop_bandwidth(source_memory, target_memory);
+    } else if (target_memory.kind() == Realm::Memory::GPU_FB_MEM) {
+      // Symmetric case to the above
+      bandwidth = local_machine.g2c_multi_hop_bandwidth(target_memory, source_memory);
     }
-    source_memory_bandwidths[source_memory] = bandwidth;
+    (*source_memory_bandwidths)[source_memory] = bandwidth;
   } else {
     bandwidth = finder->second;
   }
 
-  all_sources.emplace_back(source_instance, bandwidth);
+  all_sources->emplace_back(source_instance, bandwidth);
 }
 
 }  // namespace
 
 void BaseMapper::legate_select_sources_(
-  Legion::Mapping::MapperContext /*ctx*/,
+  Legion::Mapping::MapperContext ctx,
   const Legion::Mapping::PhysicalInstance& target,
   const std::vector<Legion::Mapping::PhysicalInstance>& sources,
   const std::vector<Legion::Mapping::CollectiveView>& collective_sources,
@@ -1003,14 +1009,18 @@ void BaseMapper::legate_select_sources_(
   // For right now we'll rank instances by the bandwidth of the memory
   // they are in to the destination.
   // TODO(wonchanl): consider layouts when ranking source to help out the DMA system
-  const Memory target_memory = target.get_location();
+  auto target_memory = target.get_location();
   // fill in a vector of the sources with their bandwidths
   std::vector<AnnotatedSourceInstance> all_sources;
 
   all_sources.reserve(sources.size() + collective_sources.size());
   for (auto&& source : sources) {
-    find_source_instance_bandwidth(
-      all_sources, source_memory_bandwidths, source, target_memory, legion_machine);
+    find_source_instance_bandwidth(&all_sources,
+                                   &source_memory_bandwidths,
+                                   source,
+                                   target_memory,
+                                   legion_machine,
+                                   local_machine_);
   }
 
   for (auto&& collective_source : collective_sources) {
@@ -1020,13 +1030,26 @@ void BaseMapper::legate_select_sources_(
     // there must exist at least one instance in the collective view
     LEGATE_ASSERT(!source_instances.empty());
     // we need only first instance if there are several
-    find_source_instance_bandwidth(all_sources,
-                                   source_memory_bandwidths,
+    find_source_instance_bandwidth(&all_sources,
+                                   &source_memory_bandwidths,
                                    source_instances.front(),
                                    target_memory,
-                                   legion_machine);
+                                   legion_machine,
+                                   local_machine_);
   }
   LEGATE_ASSERT(!all_sources.empty());
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    logger.debug() << "Selecting sources for "
+                   << Legion::Mapping::Utilities::to_string(runtime, ctx, target);
+    for (auto&& [i, src] : legate::detail::enumerate(all_sources)) {
+      logger.debug() << ((i < static_cast<std::int64_t>(sources.size())) ? "Standalone"
+                                                                         : "Collective")
+                     << " source "
+                     << Legion::Mapping::Utilities::to_string(runtime, ctx, src.instance)
+                     << " bandwidth " << src.bandwidth;
+    }
+  }
+
   // Sort source instances by their bandwidths
   std::sort(all_sources.begin(), all_sources.end(), [](const auto& lhs, const auto& rhs) {
     return lhs.bandwidth > rhs.bandwidth;
