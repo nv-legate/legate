@@ -18,6 +18,7 @@
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/tuple.h"
 
+#include <algorithm>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
@@ -95,18 +96,23 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
   LEGATE_ASSERT(storage_exts.size() == storage_offs.size());
   LEGATE_ASSERT(storage_offs.size() == offsets_.size());
 
-  const auto ndim = static_cast<std::uint32_t>(storage_exts.size());
+  const auto zip =
+    legate::detail::zip_equal(offsets_, strides_, color_shape_, storage_offs, storage_exts);
+  using zipper_type = std::tuple<const std::int64_t&,
+                                 const std::uint64_t&,
+                                 const std::uint64_t&,
+                                 const std::uint64_t&,
+                                 const std::uint64_t&>;
+  static_assert(std::is_same_v<zipper_type, decltype(*zip.begin())>);
 
-  for (std::uint32_t dim = 0; dim < ndim; ++dim) {
-    const std::int64_t my_lo = offsets_[dim];
-    const std::int64_t my_hi = my_lo + static_cast<std::int64_t>(strides_[dim] * color_shape_[dim]);
-    const auto soff          = static_cast<std::int64_t>(storage_offs[dim]);
+  return std::all_of(zip.begin(), zip.end(), [](const zipper_type& zip_tuple) {
+    auto&& [offset, stride, color_shape, storage_off, storage_ext] = zip_tuple;
+    const auto my_lo                                               = offset;
+    const auto my_hi = my_lo + static_cast<std::int64_t>(stride * color_shape);
+    const auto soff  = static_cast<std::int64_t>(storage_off);
 
-    if (soff < my_lo && my_hi < (soff + static_cast<std::int64_t>(storage_exts[dim]))) {
-      return false;
-    }
-  }
-  return true;
+    return soff >= my_lo || my_hi >= (soff + static_cast<std::int64_t>(storage_ext));
+  });
 }
 
 bool Tiling::is_disjoint_for(const Domain& launch_domain) const
@@ -119,7 +125,7 @@ bool Tiling::is_disjoint_for(const Domain& launch_domain) const
 
 bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
 {
-  static auto satisfies_restriction = [](Restriction r, std::size_t ext) {
+  constexpr auto satisfies_restriction = [](Restriction r, std::size_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
   return apply(satisfies_restriction, restrictions, color_shape_).all();
@@ -152,18 +158,18 @@ std::unique_ptr<Partition> Tiling::bloat(const tuple<std::uint64_t>& low_offsets
 
 Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool complete) const
 {
-  auto index_space     = region.get_index_space();
+  auto&& index_space   = region.get_index_space();
   auto runtime         = detail::Runtime::get_runtime();
-  auto part_mgr        = runtime->partition_manager();
+  auto* part_mgr       = runtime->partition_manager();
   auto index_partition = part_mgr->find_index_partition(index_space, *this);
 
   if (index_partition != Legion::IndexPartition::NO_PART) {
     return runtime->create_logical_partition(region, index_partition);
   }
 
-  auto ndim = static_cast<std::int32_t>(tile_shape_.size());
-
+  const auto ndim = static_cast<std::int32_t>(tile_shape_.size());
   Legion::DomainTransform transform;
+
   transform.m = ndim;
   transform.n = ndim;
   for (std::int32_t idx = 0; idx < ndim * ndim; ++idx) {
@@ -179,9 +185,8 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool co
     extent.rect_data[idx + ndim] += offsets_[idx];
   }
 
-  auto color_space = runtime->find_or_create_index_space(color_shape_);
-
-  auto kind = complete ? LEGION_DISJOINT_COMPLETE_KIND : LEGION_DISJOINT_KIND;
+  auto&& color_space = runtime->find_or_create_index_space(color_shape_);
+  const auto kind    = complete ? LEGION_DISJOINT_COMPLETE_KIND : LEGION_DISJOINT_KIND;
 
   index_partition =
     runtime->create_restricted_partition(index_space, color_space, kind, transform, extent);
@@ -269,7 +274,7 @@ bool Weighted::is_disjoint_for(const Domain& launch_domain) const
 
 bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
 {
-  static auto satisfies_restriction = [](Restriction r, std::size_t ext) {
+  constexpr auto satisfies_restriction = [](Restriction r, std::size_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
   return apply(satisfies_restriction, restrictions, color_shape_).all();
@@ -290,9 +295,8 @@ std::unique_ptr<Partition> Weighted::bloat(const tuple<std::uint64_t>& /*low_off
 
 Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool) const
 {
-  auto runtime  = detail::Runtime::get_runtime();
-  auto part_mgr = runtime->partition_manager();
-
+  auto runtime            = detail::Runtime::get_runtime();
+  auto* part_mgr          = runtime->partition_manager();
   const auto& index_space = region.get_index_space();
   auto index_partition    = part_mgr->find_index_partition(index_space, *this);
 
@@ -300,7 +304,7 @@ Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool)
     return runtime->create_logical_partition(region, index_partition);
   }
 
-  auto color_space = runtime->find_or_create_index_space(color_shape_);
+  auto&& color_space = runtime->find_or_create_index_space(color_shape_);
 
   index_partition = runtime->create_weighted_partition(index_space, color_space, *weights_);
   part_mgr->record_index_partition(index_space, *this, index_partition);
@@ -357,7 +361,7 @@ bool Image::is_disjoint_for(const Domain& launch_domain) const
 
 bool Image::satisfies_restrictions(const Restrictions& restrictions) const
 {
-  static auto satisfies_restriction = [](Restriction r, std::size_t ext) {
+  constexpr auto satisfies_restriction = [](Restriction r, std::size_t ext) {
     return r != Restriction::FORBID || ext == 1;
   };
   return apply(satisfies_restriction, restrictions, color_shape()).all();
@@ -382,37 +386,37 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*c
     return Legion::LogicalPartition::NO_PART;
   }
 
-  auto func_rf     = func_->get_region_field();
-  auto func_region = func_rf->region();
+  auto&& func_rf     = func_->get_region_field();
+  auto&& func_region = func_rf->region();
   auto func_partition =
     func_partition_->construct(func_region, func_partition_->is_complete_for(func_->get_storage()));
 
-  auto runtime  = detail::Runtime::get_runtime();
-  auto part_mgr = runtime->partition_manager();
+  auto runtime   = detail::Runtime::get_runtime();
+  auto* part_mgr = runtime->partition_manager();
 
   auto target          = region.get_index_space();
-  auto field_id        = func_rf->field_id();
+  const auto field_id  = func_rf->field_id();
   auto index_partition = part_mgr->find_image_partition(target, func_partition, field_id, hint_);
 
-  auto construct_image_partition = [&] {
-    switch (hint_) {
-      case ImageComputationHint::NO_HINT: {
-        const bool is_range = func_->type()->code == Type::Code::STRUCT;
-        auto color_space    = runtime->find_or_create_index_space(color_shape());
-        return runtime->create_image_partition(
-          target, color_space, func_region, func_partition, field_id, is_range, machine_);
-      }
-      case ImageComputationHint::MIN_MAX: {
-        return runtime->create_approximate_image_partition(func_, func_partition_, target, false);
-      }
-      case ImageComputationHint::FIRST_LAST: {
-        return runtime->create_approximate_image_partition(func_, func_partition_, target, true);
-      }
-    }
-    LEGATE_UNREACHABLE();
-  };
-
   if (Legion::IndexPartition::NO_PART == index_partition) {
+    auto construct_image_partition = [&] {
+      switch (hint_) {
+        case ImageComputationHint::NO_HINT: {
+          const bool is_range = func_->type()->code == Type::Code::STRUCT;
+          auto color_space    = runtime->find_or_create_index_space(color_shape());
+          return runtime->create_image_partition(
+            target, color_space, func_region, func_partition, field_id, is_range, machine_);
+        }
+        case ImageComputationHint::MIN_MAX: {
+          return runtime->create_approximate_image_partition(func_, func_partition_, target, false);
+        }
+        case ImageComputationHint::FIRST_LAST: {
+          return runtime->create_approximate_image_partition(func_, func_partition_, target, true);
+        }
+      }
+      LEGATE_UNREACHABLE();
+    };
+
     index_partition = construct_image_partition();
     part_mgr->record_image_partition(target, func_partition, field_id, hint_, index_partition);
     func_rf->add_invalidation_callback([target, func_partition, field_id, hint = hint_]() noexcept {

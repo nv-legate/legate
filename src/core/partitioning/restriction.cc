@@ -12,13 +12,16 @@
 
 #include "core/partitioning/restriction.h"
 
+#include "core/utilities/detail/zip.h"
+
 #include <algorithm>
+#include <stdexcept>
 
 namespace legate {
 
 Restriction join(Restriction lhs, Restriction rhs) { return std::max(lhs, rhs); }
 
-tuple<Restriction> join(const tuple<Restriction>& lhs, const tuple<Restriction>& rhs)
+Restrictions join(const Restrictions& lhs, const Restrictions& rhs)
 {
   auto result = lhs;
 
@@ -28,6 +31,9 @@ tuple<Restriction> join(const tuple<Restriction>& lhs, const tuple<Restriction>&
 
 void join_inplace(Restrictions& lhs, const Restrictions& rhs)
 {
+  if (lhs.size() != rhs.size()) {
+    throw std::invalid_argument{"Restrictions must have the same size"};
+  }
   if (rhs.empty()) {
     return;
   }
@@ -35,11 +41,8 @@ void join_inplace(Restrictions& lhs, const Restrictions& rhs)
     lhs = rhs;
     return;
   }
-  if (lhs.size() != rhs.size()) {
-    throw std::invalid_argument("Restrictions must have the same size");
-  }
-  for (std::uint32_t idx = 0; idx < lhs.size(); ++idx) {
-    lhs[idx] = join(lhs[idx], rhs[idx]);
+  for (auto&& [lhsv, rhsv] : detail::zip_equal(lhs, rhs)) {
+    lhsv = join(lhsv, rhsv);
   }
 }
 

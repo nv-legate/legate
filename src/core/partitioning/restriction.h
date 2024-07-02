@@ -29,7 +29,7 @@ using Restrictions = tuple<Restriction>;
 
 [[nodiscard]] Restriction join(Restriction lhs, Restriction rhs);
 
-[[nodiscard]] tuple<Restriction> join(const Restrictions& lhs, const Restrictions& rhs);
+[[nodiscard]] Restrictions join(const Restrictions& lhs, const Restrictions& rhs);
 
 void join_inplace(Restrictions& lhs, const Restrictions& rhs);
 
