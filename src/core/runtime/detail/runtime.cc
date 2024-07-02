@@ -180,7 +180,7 @@ std::int32_t Runtime::find_reduction_operator(std::uint32_t type_uid, std::int32
   return finder->second;
 }
 
-void Runtime::initialize(Legion::Context legion_context)
+void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char** argv)
 {
   if (initialized()) {
     if (legion_context_ == legion_context) {
@@ -200,8 +200,10 @@ void Runtime::initialize(Legion::Context legion_context)
     communicator_manager_.reset();
     field_manager_.reset();
     core_library_ = nullptr;
-    initialized_  = false;);
-  initialized_    = true;
+    comm::coll::collFinalize();
+    initialized_ = false;);
+  initialized_ = true;
+  comm::coll::collInit(argc, argv);
   legion_context_ = std::move(legion_context);
   core_library_   = find_library(CORE_LIBRARY_NAME, false /*can_fail*/);
 
@@ -1444,7 +1446,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
 
   // We can now initialize the Legate runtime with the Legion context
   try {
-    Runtime::get_runtime()->initialize(legion_context);
+    Runtime::get_runtime()->initialize(legion_context, argc, argv);
   } catch (const std::exception& e) {
     log_legate().error() << e.what();
     return 1;
@@ -1548,7 +1550,8 @@ void Runtime::destroy()
   partition_manager_.reset();
   scope_        = Scope{};
   core_library_ = nullptr;
-  initialized_  = false;
+  comm::coll::collFinalize();
+  initialized_ = false;
 }
 
 namespace {

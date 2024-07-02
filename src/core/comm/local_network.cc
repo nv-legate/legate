@@ -43,9 +43,7 @@ LocalNetwork::~LocalNetwork()
 
 int LocalNetwork::init_comm()
 {
-  int id   = 0;
-  auto ret = get_unique_id_(&id);
-  LEGATE_CHECK(ret == CollSuccess);
+  auto id = get_unique_id_();
   LEGATE_CHECK(id >= 0 && thread_comms_.size() == static_cast<std::size_t>(id));
   // create thread comm
   thread_comms_.emplace_back(std::make_unique<ThreadComm>());
@@ -53,7 +51,7 @@ int LocalNetwork::init_comm()
   return id;
 }
 
-CollStatus LocalNetwork::comm_create(
+void LocalNetwork::comm_create(
   CollComm global_comm, int global_comm_size, int global_rank, int unique_id, const int*)
 {
   global_comm->global_comm_size     = global_comm_size;
@@ -71,10 +69,9 @@ CollStatus LocalNetwork::comm_create(
   barrier_local_(global_comm);
   LEGATE_CHECK(global_comm->local_comm->ready());
   global_comm->nb_threads = global_comm->global_comm_size;
-  return CollSuccess;
 }
 
-CollStatus LocalNetwork::comm_destroy(CollComm global_comm)
+void LocalNetwork::comm_destroy(CollComm global_comm)
 {
   const auto id = global_comm->unique_id;
 
@@ -83,17 +80,16 @@ CollStatus LocalNetwork::comm_destroy(CollComm global_comm)
   thread_comms_[static_cast<std::size_t>(id)]->finalize(global_comm->global_comm_size,
                                                         global_comm->global_rank == 0);
   global_comm->status = false;
-  return CollSuccess;
 }
 
-CollStatus LocalNetwork::all_to_all_v(const void* sendbuf,
-                                      const int /*sendcounts*/[],
-                                      const int sdispls[],
-                                      void* recvbuf,
-                                      const int recvcounts[],
-                                      const int rdispls[],
-                                      CollDataType type,
-                                      CollComm global_comm)
+void LocalNetwork::all_to_all_v(const void* sendbuf,
+                                const int /*sendcounts*/[],
+                                const int sdispls[],
+                                void* recvbuf,
+                                const int recvcounts[],
+                                const int rdispls[],
+                                CollDataType type,
+                                CollComm global_comm)
 {
   const auto total_size      = global_comm->global_comm_size;
   const auto global_rank     = global_comm->global_rank;
@@ -135,10 +131,9 @@ CollStatus LocalNetwork::all_to_all_v(const void* sendbuf,
   __sync_synchronize();
   reset_local_buffer_(global_comm);
   barrier_local_(global_comm);
-  return CollSuccess;
 }
 
-CollStatus LocalNetwork::all_to_all(
+void LocalNetwork::all_to_all(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
   LEGATE_CHECK(count >= 0);
@@ -174,11 +169,9 @@ CollStatus LocalNetwork::all_to_all(
   __sync_synchronize();
   reset_local_buffer_(global_comm);
   barrier_local_(global_comm);
-
-  return CollSuccess;
 }
 
-CollStatus LocalNetwork::all_gather(
+void LocalNetwork::all_gather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
   LEGATE_CHECK(count >= 0);
@@ -217,8 +210,6 @@ CollStatus LocalNetwork::all_gather(
   __sync_synchronize();
   reset_local_buffer_(global_comm);
   barrier_local_(global_comm);
-
-  return CollSuccess;
 }
 
 // protected functions start from here

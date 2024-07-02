@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/comm/coll.h"
 #include "core/data/detail/scalar.h"
 #include "core/data/detail/shape.h"
 #include "core/data/external_allocation.h"
@@ -75,7 +76,7 @@ class Runtime {
   [[nodiscard]] std::int32_t find_reduction_operator(std::uint32_t type_uid,
                                                      std::int32_t op_kind) const;
 
-  void initialize(Legion::Context legion_context);
+  void initialize(Legion::Context legion_context, std::int32_t argc, char** argv);
 
   [[nodiscard]] mapping::detail::Machine slice_machine_for_task(const Library* library,
                                                                 std::int64_t task_id) const;

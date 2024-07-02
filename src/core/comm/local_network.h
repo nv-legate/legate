@@ -27,34 +27,34 @@ class LocalNetwork : public BackendNetwork {
 
   [[nodiscard]] int init_comm() override;
 
-  [[nodiscard]] CollStatus comm_create(CollComm global_comm,
-                                       int global_comm_size,
-                                       int global_rank,
-                                       int unique_id,
-                                       const int* mapping_table) override;
+  void comm_create(CollComm global_comm,
+                   int global_comm_size,
+                   int global_rank,
+                   int unique_id,
+                   const int* mapping_table) override;
 
-  [[nodiscard]] CollStatus comm_destroy(CollComm global_comm) override;
+  void comm_destroy(CollComm global_comm) override;
 
-  [[nodiscard]] CollStatus all_to_all_v(const void* sendbuf,
-                                        const int sendcounts[],
-                                        const int sdispls[],
-                                        void* recvbuf,
-                                        const int recvcounts[],
-                                        const int rdispls[],
-                                        CollDataType type,
-                                        CollComm global_comm) override;
+  void all_to_all_v(const void* sendbuf,
+                    const int sendcounts[],
+                    const int sdispls[],
+                    void* recvbuf,
+                    const int recvcounts[],
+                    const int rdispls[],
+                    CollDataType type,
+                    CollComm global_comm) override;
 
-  [[nodiscard]] CollStatus all_to_all(const void* sendbuf,
-                                      void* recvbuf,
-                                      int count,
-                                      CollDataType type,
-                                      CollComm global_comm) override;
+  void all_to_all(const void* sendbuf,
+                  void* recvbuf,
+                  int count,
+                  CollDataType type,
+                  CollComm global_comm) override;
 
-  [[nodiscard]] CollStatus all_gather(const void* sendbuf,
-                                      void* recvbuf,
-                                      int count,
-                                      CollDataType type,
-                                      CollComm global_comm) override;
+  void all_gather(const void* sendbuf,
+                  void* recvbuf,
+                  int count,
+                  CollDataType type,
+                  CollComm global_comm) override;
 
  protected:
   [[nodiscard]] static std::size_t get_dtype_size_(CollDataType dtype);

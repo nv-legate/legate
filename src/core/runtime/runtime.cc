@@ -336,15 +336,3 @@ bool is_running_in_task()
 }
 
 }  // namespace legate
-
-extern "C" {
-
-void legate_core_perform_registration()
-{
-  // Tell the runtime about our registration callback so we can register ourselves
-  // Make sure it is global so this shared object always gets loaded on all nodes
-  Legion::Runtime::perform_registration_callback(legate::detail::initialize_core_library_callback,
-                                                 true /*global*/);
-  legate::detail::Runtime::get_runtime()->initialize(Legion::Runtime::get_context());
-}
-}

@@ -28,31 +28,31 @@ class BackendNetwork {
 
   virtual void abort();
 
-  [[nodiscard]] virtual CollStatus comm_create(CollComm global_comm,
-                                               int global_comm_size,
-                                               int global_rank,
-                                               int unique_id,
-                                               const int* mapping_table) = 0;
+  virtual void comm_create(CollComm global_comm,
+                           int global_comm_size,
+                           int global_rank,
+                           int unique_id,
+                           const int* mapping_table) = 0;
 
-  [[nodiscard]] virtual CollStatus comm_destroy(CollComm global_comm) = 0;
+  virtual void comm_destroy(CollComm global_comm) = 0;
 
-  [[nodiscard]] virtual CollStatus all_to_all_v(const void* sendbuf,
-                                                const int sendcounts[],
-                                                const int sdispls[],
-                                                void* recvbuf,
-                                                const int recvcounts[],
-                                                const int rdispls[],
-                                                CollDataType type,
-                                                CollComm global_comm) = 0;
+  virtual void all_to_all_v(const void* sendbuf,
+                            const int sendcounts[],
+                            const int sdispls[],
+                            void* recvbuf,
+                            const int recvcounts[],
+                            const int rdispls[],
+                            CollDataType type,
+                            CollComm global_comm) = 0;
 
-  [[nodiscard]] virtual CollStatus all_to_all(
+  virtual void all_to_all(
     const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm) = 0;
 
-  [[nodiscard]] virtual CollStatus all_gather(
+  virtual void all_gather(
     const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm) = 0;
 
  protected:
-  [[nodiscard]] CollStatus get_unique_id_(int* id);
+  std::int32_t get_unique_id_();
 
   [[nodiscard]] static void* allocate_inplace_buffer_(const void* recvbuf, std::size_t size);
   void delete_inplace_buffer_(void* buf, std::size_t size);

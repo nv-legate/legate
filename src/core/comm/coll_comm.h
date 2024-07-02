@@ -38,11 +38,6 @@ enum class CollDataType : std::uint8_t {
   CollDouble,
 };
 
-enum CollStatus : std::uint8_t {
-  CollSuccess,
-  CollError,
-};
-
 enum CollCommType : std::uint8_t {
   CollMPI,
   CollLocal,
@@ -79,11 +74,5 @@ class Coll_Comm {
 // NOLINTEND(readability-identifier-naming)
 
 using CollComm = Coll_Comm*;
-
-#define LEGATE_CHECK_COLL(...)                                                           \
-  do {                                                                                   \
-    const auto ret = __VA_ARGS__;                                                        \
-    if (LEGATE_UNLIKELY(ret != legate::comm::coll::CollStatus::CollSuccess)) return ret; \
-  } while (0)
 
 }  // namespace legate::comm::coll

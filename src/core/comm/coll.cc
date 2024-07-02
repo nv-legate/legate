@@ -34,29 +34,26 @@ Logger& log_coll()
 
 }  // namespace detail
 
-CollStatus collCommCreate(CollComm global_comm,
-                          int global_comm_size,
-                          int global_rank,
-                          int unique_id,
-                          const int* mapping_table)
+void collCommCreate(CollComm global_comm,
+                    int global_comm_size,
+                    int global_rank,
+                    int unique_id,
+                    const int* mapping_table)
 {
-  return backend_network->comm_create(
+  backend_network->comm_create(
     global_comm, global_comm_size, global_rank, unique_id, mapping_table);
 }
 
-CollStatus collCommDestroy(CollComm global_comm)
-{
-  return backend_network->comm_destroy(global_comm);
-}
+void collCommDestroy(CollComm global_comm) { backend_network->comm_destroy(global_comm); }
 
-CollStatus collAlltoallv(const void* sendbuf,
-                         const int sendcounts[],
-                         const int sdispls[],
-                         void* recvbuf,
-                         const int recvcounts[],
-                         const int rdispls[],
-                         CollDataType type,
-                         CollComm global_comm)
+void collAlltoallv(const void* sendbuf,
+                   const int sendcounts[],
+                   const int sdispls[],
+                   void* recvbuf,
+                   const int recvcounts[],
+                   const int rdispls[],
+                   CollDataType type,
+                   CollComm global_comm)
 {
   // IN_PLACE
   if (sendbuf == recvbuf) {
@@ -70,11 +67,11 @@ CollStatus collAlltoallv(const void* sendbuf,
                              << global_comm->mpi_comm_size_actual << ", nb_threads "
                              << global_comm->nb_threads;
 
-  return backend_network->all_to_all_v(
+  backend_network->all_to_all_v(
     sendbuf, sendcounts, sdispls, recvbuf, recvcounts, rdispls, type, global_comm);
 }
 
-CollStatus collAlltoall(
+void collAlltoall(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
   // IN_PLACE
@@ -89,10 +86,10 @@ CollStatus collAlltoall(
                              << global_comm->mpi_comm_size_actual << ", nb_threads "
                              << global_comm->nb_threads;
 
-  return backend_network->all_to_all(sendbuf, recvbuf, count, type, global_comm);
+  backend_network->all_to_all(sendbuf, recvbuf, count, type, global_comm);
 }
 
-CollStatus collAllgather(
+void collAllgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
   detail::log_coll().debug() << "Allgather: global_rank " << global_comm->global_rank
@@ -103,11 +100,11 @@ CollStatus collAllgather(
                              << global_comm->mpi_comm_size_actual << ", nb_threads "
                              << global_comm->nb_threads;
 
-  return backend_network->all_gather(sendbuf, recvbuf, count, type, global_comm);
+  backend_network->all_gather(sendbuf, recvbuf, count, type, global_comm);
 }
 
 // called from main thread
-CollStatus collInit(int argc, char* argv[])
+void collInit(int argc, char* argv[])
 {
   if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get().value_or(false)) {
 #if LEGATE_DEFINED(LEGATE_USE_NETWORK)
@@ -116,13 +113,15 @@ CollStatus collInit(int argc, char* argv[])
   } else {
     backend_network = std::make_unique<LocalNetwork>(argc, argv);
   }
-  return CollSuccess;
 }
 
-CollStatus collFinalize()
+void collFinalize()
 {
-  backend_network.reset();
-  return CollSuccess;
+  // Fully reset the backend_network pointer before letting the BackendNetwork object get destroyed,
+  // so that any calls to LEGATE_ABORT within the destructor won't end up triggering an abort while
+  // we're finalizing (MPI in particular doesn't like calls to MPI_Abort after MPI has been
+  // finalized).
+  auto local_pointer = std::exchange(backend_network, nullptr);
 }
 
 void collAbort() noexcept
@@ -139,11 +138,7 @@ void BackendNetwork::abort()
   // does nothing by default
 }
 
-CollStatus BackendNetwork::get_unique_id_(int* id)
-{
-  *id = current_unique_id_++;
-  return CollSuccess;
-}
+std::int32_t BackendNetwork::get_unique_id_() { return current_unique_id_++; }
 
 void* BackendNetwork::allocate_inplace_buffer_(const void* recvbuf, std::size_t size)
 {
@@ -157,13 +152,3 @@ void* BackendNetwork::allocate_inplace_buffer_(const void* recvbuf, std::size_t 
 void BackendNetwork::delete_inplace_buffer_(void* recvbuf, std::size_t) { std::free(recvbuf); }
 
 }  // namespace legate::comm::coll
-
-extern "C" {
-
-int legate_cpucoll_finalize() { return legate::comm::coll::collFinalize(); }
-
-int legate_cpucoll_initcomm() { return legate::comm::coll::collInitComm(); }
-
-bool legate_has_cal() { return LEGATE_DEFINED(LEGATE_USE_CAL); }
-
-}  //

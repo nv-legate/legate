@@ -145,13 +145,11 @@ coll::CollComm init_cpucoll(const Legion::Task* task,
     LEGATE_CHECK(mapping_table[point] == comm->mpi_rank);
   }
 
-  auto ret = coll::collCommCreate(comm.get(),
-                                  static_cast<int>(num_ranks),
-                                  static_cast<int>(point),
-                                  unique_id,
-                                  mapping_table.data());
-
-  LEGATE_CHECK(ret == coll::CollSuccess);
+  coll::collCommCreate(comm.get(),
+                       static_cast<int>(num_ranks),
+                       static_cast<int>(point),
+                       unique_id,
+                       mapping_table.data());
   return comm.release();
 }
 
@@ -166,18 +164,14 @@ void finalize_cpucoll(const Legion::Task* task,
   std::unique_ptr<coll::Coll_Comm> comm{task->futures[0].get_result<coll::CollComm>()};
 
   LEGATE_CHECK(comm->global_rank == static_cast<int>(task->index_point[0]));
-  auto ret = coll::collCommDestroy(comm.get());
-  LEGATE_CHECK(ret == coll::CollSuccess);
+  coll::collCommDestroy(comm.get());
 }
 
 }  // namespace
 
 void register_tasks(const detail::Library* core_library)
 {
-  const auto runtime       = Legion::Runtime::get_runtime();
-  const auto& command_args = Legion::Runtime::get_input_args();
-  auto ret                 = coll::collInit(command_args.argc, command_args.argv);
-  LEGATE_CHECK(ret == coll::CollSuccess);
+  const auto runtime = Legion::Runtime::get_runtime();
 
   // TODO(wonchanl): The following should use the Legate API to register task variants, instead of
   // the Legion API. We can't quite do that today because the tasks have return values, which Legate

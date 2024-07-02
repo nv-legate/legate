@@ -46,9 +46,7 @@ struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> 
     constexpr std::int64_t value = 12345;
     const auto num_tasks         = context.get_launch_domain().get_volume();
     std::vector<std::int64_t> recv_buffer(num_tasks, 0);
-    auto result = collAllgather(
-      &value, recv_buffer.data(), 1, legate::comm::coll::CollDataType::CollInt64, comm);
-    EXPECT_EQ(result, legate::comm::coll::CollSuccess);
+    collAllgather(&value, recv_buffer.data(), 1, legate::comm::coll::CollDataType::CollInt64, comm);
     for (auto v : recv_buffer) {
       EXPECT_EQ(v, value);
     }

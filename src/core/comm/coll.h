@@ -24,32 +24,32 @@ namespace detail {
 }  // namespace detail
 
 // NOLINTBEGIN(readability-identifier-naming)
-[[nodiscard]] CollStatus collCommCreate(CollComm global_comm,
-                                        int global_comm_size,
-                                        int global_rank,
-                                        int unique_id,
-                                        const int* mapping_table);
+void collCommCreate(CollComm global_comm,
+                    int global_comm_size,
+                    int global_rank,
+                    int unique_id,
+                    const int* mapping_table);
 
-[[nodiscard]] CollStatus collCommDestroy(CollComm global_comm);
+void collCommDestroy(CollComm global_comm);
 
-[[nodiscard]] CollStatus collAlltoallv(const void* sendbuf,
-                                       const int sendcounts[],
-                                       const int sdispls[],
-                                       void* recvbuf,
-                                       const int recvcounts[],
-                                       const int rdispls[],
-                                       CollDataType type,
-                                       CollComm global_comm);
+void collAlltoallv(const void* sendbuf,
+                   const int sendcounts[],
+                   const int sdispls[],
+                   void* recvbuf,
+                   const int recvcounts[],
+                   const int rdispls[],
+                   CollDataType type,
+                   CollComm global_comm);
 
-[[nodiscard]] CollStatus collAlltoall(
+void collAlltoall(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm);
 
-[[nodiscard]] CollStatus collAllgather(
+void collAllgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm);
 
-[[nodiscard]] CollStatus collInit(int argc, char* argv[]);
+void collInit(int argc, char* argv[]);
 
-[[nodiscard]] CollStatus collFinalize();
+void collFinalize();
 
 // this is forward declared in src/core/utilities/abort.h (for LEGATE_ABORT()), because we don't
 // want to include this entire header

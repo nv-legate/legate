@@ -145,15 +145,3 @@ typedef enum legate_core_task_priority_t {
 } legate_core_task_priority_t;
 
 // NOLINTEND(modernize-use-using, performance-enum-size, readability-identifier-naming)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void legate_core_perform_registration(void);
-
-bool legate_has_cal();
-
-#ifdef __cplusplus
-}
-#endif

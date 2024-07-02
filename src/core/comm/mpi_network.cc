@@ -111,9 +111,7 @@ void MPINetwork::abort()
 
 int MPINetwork::init_comm()
 {
-  int id = 0;
-
-  LEGATE_CHECK(get_unique_id_(&id) == CollSuccess);
+  auto id = get_unique_id_();
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     int send_id = id;
     // check if all ranks get the same unique id
@@ -148,11 +146,11 @@ namespace {
 
 }  // namespace
 
-CollStatus MPINetwork::comm_create(CollComm global_comm,
-                                   int global_comm_size,
-                                   int global_rank,
-                                   int unique_id,
-                                   const int* mapping_table)
+void MPINetwork::comm_create(CollComm global_comm,
+                             int global_comm_size,
+                             int global_rank,
+                             int unique_id,
+                             const int* mapping_table)
 {
   LEGATE_ASSERT(global_comm_size >= 0);
   LEGATE_CHECK(mapping_table != nullptr);
@@ -181,25 +179,23 @@ CollStatus MPINetwork::comm_create(CollComm global_comm,
 
   global_comm->mapping_table.global_rank = global_ranks.release();
   global_comm->mapping_table.mpi_rank    = mpi_ranks.release();
-  return CollSuccess;
 }
 
-CollStatus MPINetwork::comm_destroy(CollComm global_comm)
+void MPINetwork::comm_destroy(CollComm global_comm)
 {
   delete[] std::exchange(global_comm->mapping_table.global_rank, nullptr);
   delete[] std::exchange(global_comm->mapping_table.mpi_rank, nullptr);
   global_comm->status = false;
-  return CollSuccess;
 }
 
-CollStatus MPINetwork::all_to_all_v(const void* sendbuf,
-                                    const int sendcounts[],
-                                    const int sdispls[],
-                                    void* recvbuf,
-                                    const int recvcounts[],
-                                    const int rdispls[],
-                                    CollDataType type,
-                                    CollComm global_comm)
+void MPINetwork::all_to_all_v(const void* sendbuf,
+                              const int sendcounts[],
+                              const int sdispls[],
+                              void* recvbuf,
+                              const int recvcounts[],
+                              const int rdispls[],
+                              CollDataType type,
+                              CollComm global_comm)
 {
   const int total_size  = global_comm->global_comm_size;
   const int global_rank = global_comm->global_rank;
@@ -256,10 +252,9 @@ CollStatus MPINetwork::all_to_all_v(const void* sendbuf,
                                   global_comm->mpi_comm,
                                   &status));
   }
-  return CollSuccess;
 }
 
-CollStatus MPINetwork::all_to_all(
+void MPINetwork::all_to_all(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
   const auto total_size  = global_comm->global_comm_size;
@@ -310,10 +305,9 @@ CollStatus MPINetwork::all_to_all(
                                   global_comm->mpi_comm,
                                   &status));
   }
-  return CollSuccess;
 }
 
-CollStatus MPINetwork::all_gather(
+void MPINetwork::all_gather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
 {
   const int total_size = global_comm->global_comm_size;
@@ -337,12 +331,11 @@ CollStatus MPINetwork::all_gather(
   );
   // clang-format on
 
-  LEGATE_CHECK_COLL(gather_(sendbuf_tmp, recvbuf, count, type, 0, global_comm));
-  LEGATE_CHECK_COLL(bcast_(recvbuf, count * total_size, type, 0, global_comm));
-  return CollSuccess;
+  gather_(sendbuf_tmp, recvbuf, count, type, 0, global_comm);
+  bcast_(recvbuf, count * total_size, type, 0, global_comm);
 }
 
-CollStatus MPINetwork::gather_(
+void MPINetwork::gather_(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, int root, CollComm global_comm)
 {
   MPI_Status status;
@@ -368,7 +361,6 @@ CollStatus MPINetwork::gather_(
                                  << " (" << root_mpi_rank << "), tag " << tag;
     }
     LEGATE_CHECK_MPI(MPI_Send(sendbuf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm));
-    return CollSuccess;
   }
 
   // root
@@ -397,12 +389,9 @@ CollStatus MPINetwork::gather_(
     }
     dst += incr;
   }
-
-  return CollSuccess;
 }
 
-CollStatus MPINetwork::bcast_(
-  void* buf, int count, CollDataType type, int root, CollComm global_comm)
+void MPINetwork::bcast_(void* buf, int count, CollDataType type, int root, CollComm global_comm)
 {
   const int total_size    = global_comm->global_comm_size;
   const int global_rank   = global_comm->global_rank;
@@ -427,7 +416,6 @@ CollStatus MPINetwork::bcast_(
 
     LEGATE_CHECK_MPI(
       MPI_Recv(buf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm, &status));
-    return CollSuccess;
   }
 
   // root
@@ -445,8 +433,6 @@ CollStatus MPINetwork::bcast_(
       LEGATE_CHECK_MPI(MPI_Send(buf, count, mpi_type, sendto_mpi_rank, tag, global_comm->mpi_comm));
     }
   }
-
-  return CollSuccess;
 }
 
 // protected functions start from here
