@@ -53,3 +53,13 @@ If installation is successful, you will see some output like the following:
     Jupyter kernel spec Legate_SM_GPU (Legate_SM_GPU) has been installed
 
 ``Legate_SM_GPU`` is the default kernel name.
+
+Licenses
+--------
+
+This project will download and install additional third-party open source
+software projects at install time. Review the license terms of these open
+source projects before use.
+
+For license information regarding projects bundled directly, see
+:ref:`thirdparty`.
