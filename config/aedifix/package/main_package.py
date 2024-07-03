@@ -14,6 +14,7 @@ import enum
 import multiprocessing as mp
 import os
 import platform
+import shlex
 import shutil
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
@@ -53,15 +54,18 @@ _CMAKE_BUILD_TYPE_MAP: Final = {
 
 
 def _make_default_flags() -> dict[str, dict[str, list[str]]]:
+    def to_cuda_flags(flags: list[str]) -> list[str]:
+        return [f"--compiler-options={f}" for f in map(shlex.quote, flags)]
+
     def make_subdict(
         c_flags: list[str],
         cxx_flags: list[str] | None = None,
         cuda_flags: list[str] | None = None,
     ) -> dict[str, list[str]]:
         if cxx_flags is None:
-            cxx_flags = [f for f in c_flags]
+            cxx_flags = c_flags[:]
         if cuda_flags is None:
-            cuda_flags = [f"--compiler-options='{f}'" for f in cxx_flags]
+            cuda_flags = to_cuda_flags(cxx_flags)
 
         return {
             "CFLAGS": c_flags,
@@ -70,14 +74,12 @@ def _make_default_flags() -> dict[str, dict[str, list[str]]]:
         }
 
     debug_c_flags = ["-O0", "-g", "-g3"]
-    debug_cuda_flags = ["-g"] + [
-        f"--compiler-options='{f}'" for f in debug_c_flags
-    ]
+    debug_cuda_flags = ["-g"] + to_cuda_flags(debug_c_flags)
+
     release_c_flags = ["-O3"]
+
     reldeb_c_flags = debug_c_flags + release_c_flags
-    reldeb_cuda_flags = ["-g"] + [
-        f"--compiler-options='{f}'" for f in reldeb_c_flags
-    ]
+    reldeb_cuda_flags = ["-g"] + to_cuda_flags(reldeb_c_flags)
 
     return {
         "Debug": make_subdict(
