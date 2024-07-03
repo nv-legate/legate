@@ -50,18 +50,21 @@ class LogicalArray {
    * @return The number of dimensions
    */
   [[nodiscard]] std::uint32_t dim() const;
+
   /**
    * @brief Returns the element type of the array.
    *
-   * @return Type of elements in the store
+   * @return `Type` of elements in the store
    */
   [[nodiscard]] Type type() const;
+
   /**
-   * @brief Returns the shape of the array.
+   * @brief Returns the `Shape` of the array.
    *
-   * @return The store's shape
+   * @return The store's `Shape`
    */
   [[nodiscard]] Shape shape() const;
+
   /**
    * @brief Returns the extents of the array.
    *
@@ -70,6 +73,7 @@ class LogicalArray {
    * @return The store's extents
    */
   [[nodiscard]] const tuple<std::uint64_t>& extents() const;
+
   /**
    * @brief Returns the number of elements in the array.
    *
@@ -78,27 +82,28 @@ class LogicalArray {
    * @return The number of elements in the store
    */
   [[nodiscard]] std::size_t volume() const;
+
   /**
    * @brief Indicates whether the array is unbound
    *
-   * @return true The array is unbound
-   * @return false The array is normal
+   * @return `true` if the array is unbound, `false` if it is normal
    */
   [[nodiscard]] bool unbound() const;
+
   /**
    * @brief Indicates whether the array is nullable
    *
-   * @return true The array is nullable
-   * @return false The array is non-nullable
+   * @return `true` if the array is nullable, `false` otherwise
    */
   [[nodiscard]] bool nullable() const;
+
   /**
    * @brief Indicates whether the array has child arrays
    *
-   * @return true The array has child arrays
-   * @return false Otherwise
+   * @return `true` if the array has child arrays, `false` otherwise
    */
   [[nodiscard]] bool nested() const;
+
   /**
    * @brief Returns the number of child sub-arrays
    *
@@ -120,6 +125,7 @@ class LogicalArray {
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
   [[nodiscard]] LogicalArray promote(std::int32_t extra_dim, std::size_t dim_size) const;
+
   /**
    * @brief Projects out a dimension of the array.
    *
@@ -134,6 +140,7 @@ class LogicalArray {
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
   [[nodiscard]] LogicalArray project(std::int32_t dim, std::int64_t index) const;
+
   /**
    * @brief Slices a contiguous sub-section of the array.
    *
@@ -148,6 +155,7 @@ class LogicalArray {
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
   [[nodiscard]] LogicalArray slice(std::int32_t dim, Slice sl) const;
+
   /**
    * @brief Reorders dimensions of the array.
    *
@@ -163,6 +171,7 @@ class LogicalArray {
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
   [[nodiscard]] LogicalArray transpose(const std::vector<std::int32_t>& axes) const;
+
   /**
    * @brief Delinearizes a dimension into multiple dimensions.
    *
@@ -183,21 +192,23 @@ class LogicalArray {
   /**
    * @brief Returns the store of this array
    *
-   * @return Logical store
+   * @return `LogicalStore`
    */
   [[nodiscard]] LogicalStore data() const;
+
   /**
-   * @brief Returns the store of this array
+   * @brief Returns the null mask of this array
    *
-   * @return Logical store
+   * @return `LogicalStore`
    */
   [[nodiscard]] LogicalStore null_mask() const;
+
   /**
    * @brief Returns the sub-array of a given index
    *
    * @param index Sub-array index
    *
-   * @return Logical array
+   * @return `LogicalArray`
    *
    * @throw std::invalid_argument If the array has no child arrays, or the array is an unbound
    * struct array
@@ -206,27 +217,28 @@ class LogicalArray {
   [[nodiscard]] LogicalArray child(std::uint32_t index) const;
 
   /**
-   * @brief Creates a physical array for this logical array
+   * @brief Creates a `PhysicalArray` for this `LogicalArray`
    *
    * This call blocks the client's control flow and fetches the data for the whole array to the
    * current node
    *
-   * @return A physical array of the logical array
+   * @return A `PhysicalArray` of the `LogicalArray`
    */
   [[nodiscard]] PhysicalArray get_physical_array() const;
 
   /**
-   * @brief Casts this array as a list array
+   * @brief Casts this array as a `ListLogicalArray`
    *
-   * @return List array
+   * @return The array as a `ListLogicalArray`
    *
    * @throw std::invalid_argument If the array is not a list array
    */
   [[nodiscard]] ListLogicalArray as_list_array() const;
+
   /**
-   * @brief Casts this array as a string array
+   * @brief Casts this array as a `StringLogicalArray`
    *
-   * @return String array
+   * @return The array as a `StringLogicalArray`
    *
    * @throw std::invalid_argument If the array is not a string array
    */
@@ -252,18 +264,24 @@ class LogicalArray {
   SharedPtr<detail::LogicalArray> impl_{nullptr};
 };
 
+/**
+ * @ingroup data
+ *
+ * @brief A multi-dimensional array representing a list of values
+ */
 class ListLogicalArray : public LogicalArray {
  public:
   /**
    * @brief Returns the sub-array for descriptors
    *
-   * @return Array
+   * @return Sub-array's for descriptors
    */
   [[nodiscard]] LogicalArray descriptor() const;
+
   /**
    * @brief Returns the sub-array for variable size data
    *
-   * @return Array
+   * @return `LogicalArray` of variable sized data
    */
   [[nodiscard]] LogicalArray vardata() const;
 
@@ -273,18 +291,24 @@ class ListLogicalArray : public LogicalArray {
   explicit ListLogicalArray(InternalSharedPtr<detail::LogicalArray> impl);
 };
 
+/**
+ * @ingroup data
+ *
+ * @brief A multi-dimensional array representing a string
+ */
 class StringLogicalArray : public LogicalArray {
  public:
   /**
    * @brief Returns the sub-array for offsets
    *
-   * @return Array
+   * @return `LogicalArray` of offsets into this array
    */
   [[nodiscard]] LogicalArray offsets() const;
+
   /**
    * @brief Returns the sub-array for characters
    *
-   * @return Array
+   * @return `LogicalArray` representing the characters of the string
    */
   [[nodiscard]] LogicalArray chars() const;
 

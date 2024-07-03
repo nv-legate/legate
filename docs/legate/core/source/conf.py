@@ -51,7 +51,6 @@ html_static_path = ["_static"]
 # install on CI, etc. We will use the pydata theme in those situations
 if os.environ.get("NV_THEME") == "1":
     html_theme = "nvidia_sphinx_theme"
-
 else:
     html_theme = "pydata_sphinx_theme"
     html_theme_options = {

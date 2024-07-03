@@ -42,7 +42,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   void* ptr,
   std::size_t size,
   bool read_only /*=true*/,
-  std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
+  std::optional<Deleter> deleter /*=std::nullopt*/)
 {
   auto realm_resource = std::make_unique<Realm::ExternalMemoryResource>(
     reinterpret_cast<std::uintptr_t>(ptr), size, read_only);
@@ -56,10 +56,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
 }
 
 /*static*/ ExternalAllocation ExternalAllocation::create_zcmem(
-  void* ptr,
-  std::size_t size,
-  bool read_only,
-  std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
+  void* ptr, std::size_t size, bool read_only, std::optional<Deleter> deleter /*=std::nullopt*/)
 {
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
   auto realm_resource = std::make_unique<Realm::ExternalCudaPinnedHostResource>(
@@ -86,7 +83,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   void* ptr,
   std::size_t size,
   bool read_only,
-  std::optional<ExternalAllocation::Deleter> deleter /*=std::nullopt*/)
+  std::optional<Deleter> deleter /*=std::nullopt*/)
 {
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
   auto& local_gpus = detail::Runtime::get_runtime()->local_machine().gpus();
@@ -115,6 +112,27 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   throw std::runtime_error{"CUDA support is unavailable"};
   return {};
 #endif
+}
+
+/*static*/ ExternalAllocation ExternalAllocation::create_sysmem(
+  const void* ptr, std::size_t size, std::optional<Deleter> deleter /*=std::nullopt*/)
+{
+  return create_sysmem(const_cast<void*>(ptr), size, true, std::move(deleter));
+}
+
+/*static*/ ExternalAllocation ExternalAllocation::create_zcmem(
+  const void* ptr, std::size_t size, std::optional<Deleter> deleter /*=std::nullopt*/)
+{
+  return create_zcmem(const_cast<void*>(ptr), size, true, std::move(deleter));
+}
+
+/*static*/ ExternalAllocation ExternalAllocation::create_fbmem(
+  std::uint32_t local_device_id,
+  const void* ptr,
+  std::size_t size,
+  std::optional<Deleter> deleter /*=std::nullopt*/)
+{
+  return create_fbmem(local_device_id, const_cast<void*>(ptr), size, true, std::move(deleter));
 }
 
 }  // namespace legate

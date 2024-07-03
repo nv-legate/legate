@@ -12,11 +12,12 @@
 
 #pragma once
 
+#include "core/utilities/compiler.h"
 #include "core/utilities/macros.h"
 
 #include "legate_defines.h"
 
-#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
+#if LEGATE_DEFINED(LEGATE_USE_NETWORK) || LEGATE_DEFINED(LEGATE_DOXYGEN)
 #include "core/comm/backend_network.h"
 #include "core/comm/coll_comm.h"
 

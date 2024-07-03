@@ -36,12 +36,12 @@ namespace legate {
  *
  * @brief Descriptor for external allocations
  *
- * An ExternalAllocation is a handle to a memory allocation outside Legate's memory management.
- * ExternalAllocation objects are used when users want to create Legate stores from the existing
- * allocations external to Legate. (See two overloads of Runtime::create_store that take
- * `ExternalAllocation`s.)
+ * An `ExternalAllocation` is a handle to a memory allocation outside Legate's memory management.
+ * `ExternalAllocation` objects are used when users want to create Legate stores from the existing
+ * allocations external to Legate. (See two overloads of `Runtime::create_store()` that
+ * take `ExternalAllocation`s.)
  *
- * External allocations can be tagged either read-only or mutable. In case of the latter, Legate
+ * `ExternalAllocation`s can be tagged either read-only or mutable. In case of the latter, Legate
  * guarantees that any updates to the store to which the allocation is attached are also visible via
  * the allocation, wherever the updates are made, at the expense of block-waiting on tasks updating
  * the store. No such propagation of changes happens for read-only external allocations.
@@ -52,20 +52,23 @@ namespace legate {
  * allocation while the tasks are still running. An external allocation attached to a store can be
  * safely deallocated in two ways:
  *
- * 1) the client code calls the `detach` method on the store before it dellocate the allocation. The
- * `detach` call makes sure that all outstanding operations on the store complete. (See
- * LogicalStore::detach.)
- * 2) the client code can optionally pass in a deleter for the allocation, which will be invoked
- * once the store is destroyed and the allocation is no longer in use.
+ * 1) The client code calls the `detach()` method on the store before it dellocate the
+ *    allocation. The `detach()` call makes sure that all outstanding operations on the store
+ *    complete (see `LogicalStore::detach()`).
+ * 2) The client code can optionally pass in a deleter for the allocation, which will be
+ *    invoked once the store is destroyed and the allocation is no longer in use.
  *
- * Deleters don't need to be idempotent; Legate makes sure that they will be invoked only once on
- * the allocations. Deleters must not throw exceptions (throwable deleters are disallowed by the
- * type system). Deleters need not handle null pointers correctly, as external allocations are not
- * allowed to be created on null pointers. Each deleter is responsible for deallocating only the
- * allocation it is associated with and no other allocations.
+ * Deleters don't need to be idempotent; Legate makes sure that they will be invoked only once
+ * on the allocations. Deleters must not throw exceptions (throwable deleters are disallowed by
+ * the type system). Deleters need not handle null pointers correctly, as external allocations
+ * are not allowed to be created on null pointers. Each deleter is responsible for deallocating
+ * only the allocation it is associated with and no other allocations.
  */
 class ExternalAllocation {
  public:
+  /**
+   * @brief Signature for user-supplied deletion function.
+   */
   using Deleter = void (*)(void*) noexcept;
 
   explicit ExternalAllocation(InternalSharedPtr<detail::ExternalAllocation>&& impl);
@@ -77,18 +80,21 @@ class ExternalAllocation {
    * @return false Otherwise
    */
   [[nodiscard]] bool read_only() const;
+
   /**
    * @brief Returns the kind of memory to which the allocation belongs
    *
-   * @return Memory kind in a StoreTarget
+   * @return Memory kind in a `mapping::StoreTarget`
    */
   [[nodiscard]] mapping::StoreTarget target() const;
+
   /**
    * @brief Returns the beginning address of the allocation
    *
    * @return Address to the allocation
    */
   [[nodiscard]] void* ptr() const;
+
   /**
    * @brief Returns the allocation size in bytes
    *

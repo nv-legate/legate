@@ -42,7 +42,7 @@ class Runtime;
  * @ingroup data
  * @brief A type-erased container for scalars
  *
- * A Scalar can be owned or shared, depending on whether it owns the backing allocation:
+ * A `Scalar` can be owned or shared, depending on whether it owns the backing allocation:
  * If a `Scalar` is shared, it does not own the allocation and any of its copies are also
  * shared. If a `Scalar` is owned, it owns the backing allocation and releases it upon
  * destruction. Any copy of an owned `Scalar` is owned as well.
@@ -59,19 +59,23 @@ class Scalar {
 
   /**
    * @brief Creates a null scalar
+   *
+   * @see `null()`
    */
   Scalar();
+
   /**
    * @brief Creates a shared `Scalar` with an existing allocation. The caller is responsible
    * for passing in a sufficiently big allocation.
    *
-   * @param type Type of the scalar
+   * @param type `Type` of the scalar
    * @param data Allocation containing the data.
-   * @param copy If true, the scalar copies the data stored in the allocation and becomes owned.
+   * @param copy If `true`, the scalar copies the data stored in the allocation and becomes owned.
    */
   Scalar(const Type& type, const void* data, bool copy = false);
+
   /**
-   * @brief Creates an owned scalar from a scalar value
+   * @brief Creates an owned `Scalar` from a scalar value
    *
    * @tparam T The scalar type to wrap
    *
@@ -83,66 +87,71 @@ class Scalar {
             typename = std::enable_if_t<!std::is_convertible_v<T, std::string> &&
                                         !std::is_same_v<std::decay_t<T>, Scalar>>>
   explicit Scalar(T value);
+
   /**
-   * @brief Creates an owned scalar of a specified type from a scalar value
+   * @brief Creates an owned `Scalar` of a specified type from a scalar value
    *
    * @tparam T The scalar type to wrap
    *
-   * @param type The type of the scalar
+   * @param type The `Type` of the scalar
    * @param value A scalar value to create a `Scalar` with
    */
   template <typename T>
   Scalar(T value, const Type& type);
+
   /**
-   * @brief Creates an owned scalar from a string. The value from the
+   * @brief Creates an owned `Scalar` from a `std::string_view`. The value from the
    * original string will be copied.
    *
-   * @param string A string to create a `Scalar` with
+   * @param string The `std::string_view` to create a `Scalar` with
    */
   explicit Scalar(std::string_view string);
 
   /**
-   * @brief Creates an owned scalar from a vector of scalars. The values in the input vector
-   * will be copied.
+   * @brief Creates an owned `Scalar` from a `std::vector` of scalars. The values in the input
+   * vector will be copied.
    *
-   * @param values Values to create a scalar with in a vector
+   * @param values Values to create a `Scalar` with in a vector
    */
   template <typename T>
   explicit Scalar(const std::vector<T>& values);
+
   /**
-   * @brief Creates an owned scalar from a tuple of scalars. The values in the input tuple
+   * @brief Creates an owned `Scalar` from a `tuple` of scalars. The values in the input `tuple`
    * will be copied.
    *
-   * @param values Values to create a scalar with in a tuple
+   * @param values Values to create a `Scalar` with in a `tuple`
    */
   template <typename T>
   explicit Scalar(const tuple<T>& values);
 
   /**
-   * @brief Creates a point scalar
+   * @brief Creates a point `Scalar`
    *
-   * @param point A point from which the scalar should be constructed
+   * @param point A \ref Point from which the `Scalar` should be constructed
    */
   template <std::int32_t DIM>
   explicit Scalar(const Point<DIM>& point);
+
   /**
-   * @brief Creates a rect scalar
+   * @brief Creates a \ref Rect `Scalar`
    *
-   * @param rect A rect from which the scalar should be constructed
+   * @param rect A \ref Rect from which the `Scalar` should be constructed
    */
   template <std::int32_t DIM>
   explicit Scalar(const Rect<DIM>& rect);
 
   /**
-   * @brief Returns the data type of the scalar
+   * @brief Returns the data type of the `Scalar`
    *
-   * @return Data type
+   * @return Data `Type`
    */
   [[nodiscard]] Type type() const;
+
   /**
    * @brief Returns the size of allocation for the `Scalar`.
    *
-   * @return The size of allocation
+   * @return The size of allocation in bytes
    */
   [[nodiscard]] std::size_t size() const;
 
@@ -162,6 +171,7 @@ class Scalar {
    */
   template <typename VAL>
   [[nodiscard]] VAL value() const;
+
   /**
    * @brief Returns values stored in the `Scalar`. If the `Scalar` does not have a fixed array type,
    * a unit span will be returned.
@@ -176,6 +186,7 @@ class Scalar {
    */
   template <typename VAL>
   [[nodiscard]] Span<const VAL> values() const;
+
   /**
    * @brief Returns a raw pointer to the backing allocation
    *
@@ -212,6 +223,16 @@ class Scalar {
   SharedPtr<detail::Scalar> impl_{};
 };
 
+/**
+ * @brief Creates a null `Scalar`
+ *
+ * @return A null `Scalar`
+ *
+ * Null scalars hold a copy of the singleton "Null" `Type` but hold no physical data or
+ * allocation. Their `Type` may be queried, but they have zero size, and return `nullptr` when
+ * `Scalar::ptr()` is called on them. They are useful as tombstone values, or to represent
+ * invalid data.
+ */
 [[nodiscard]] Scalar null();
 
 }  // namespace legate

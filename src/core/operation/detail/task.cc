@@ -471,7 +471,8 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
     outputs_, store_partition->store(), store_partition->partition(), std::move(projection));
 }
 
-void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store, std::int32_t redop)
+void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
+                               Legion::ReductionOpID redop)
 {
   if (store->unbound()) {
     throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
@@ -486,7 +487,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store, std
 }
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
-                               std::int32_t redop,
+                               Legion::ReductionOpID redop,
                                std::optional<SymbolicPoint> projection)
 {
   auto legion_redop_id =

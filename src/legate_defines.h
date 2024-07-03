@@ -44,7 +44,7 @@
 
 #define LEGATE_MAX_DIM LEGION_MAX_DIM
 
-// backwards compatibility
+// backwards compatibility, but disable for doxygen builds
 #if defined(DEBUG_LEGATE) && !LEGATE_DEFINED(LEGATE_USE_DEBUG)
 #define LEGATE_USE_DEBUG 1
 #endif

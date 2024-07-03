@@ -52,25 +52,26 @@ class Runtime;
  * task by attaching partitioning constraints to the task (see the constraint module for
  * partitioning constraint APIs).
  *
- * Each logical store object is a logical handle to the data and is not immediately associated
- * with a physical allocation. To access the data, a client must `map` the store to a physical
- * store (`PhysicalStore`). A client can map a store by passing it to a task, in which case the task
- * body can see the allocation, or calling LogicalStore::get_physical_store, which gives the client
- * a handle to the physical allocation (see `PhysicalStore` for details about physical stores).
+ * Each `LogicalStore` object is a logical handle to the data and is not immediately associated
+ * with a physical allocation. To access the data, a client must "map" the store to a physical
+ * store (`PhysicalStore`). A client can map a store by passing it to a task, in which case the
+ * task body can see the allocation, or calling `LogicalStore::get_physical_store()`, which
+ * gives the client a handle to the physical allocation (see `PhysicalStore` for details about
+ * physical stores).
  *
- * Normally, a logical store gets a fixed shape upon creation. However, there is a special type of
- * logical stores called `unbound` stores whose shapes are unknown at creation time. (see `Runtime`
- * for the logical store creation API.) The shape of an unbound store is determined by a task that
- * first updates the store; upon the submission of the task, the logical store becomes a normal
- * store. Passing an unbound store as a read-only argument or requesting a physical store of an
- * unbound store are invalid.
+ * Normally, a `LogicalStore` gets a fixed `Shape` upon creation. However, there is a special
+ * type of logical stores called "unbound" stores whose shapes are unknown at creation
+ * time. (see `Runtime` for the logical store creation API.) The shape of an unbound store is
+ * determined by a task that first updates the store; upon the submission of the task, the
+ * `LogicalStore` becomes a normal store. Passing an unbound store as a read-only argument or
+ * requesting a `PhysicalStore` of an unbound store are invalid.
  *
  * One consequence due to the nature of unbound stores is that querying the shape of a previously
  * unbound store can block the client's control flow for an obvious reason; to know the shape of
- * the logical store whose shape was unknown at creation time, the client must wait until the
+ * the `LogicalStore` whose `Shape` was unknown at creation time, the client must wait until the
  * updater task to finish. However, passing a previously unbound store to a downstream operation can
  * be non-blocking, as long as the operation requires no changes in the partitioning and mapping for
- * the logical store.
+ * the `LogicalStore`.
  */
 class LogicalStore {
   friend class Runtime;
@@ -86,6 +87,7 @@ class LogicalStore {
    * @return The number of dimensions
    */
   [[nodiscard]] std::uint32_t dim() const;
+
   /**
    * @brief Indicates whether the store's storage is optimized for scalars
    *
@@ -93,6 +95,7 @@ class LogicalStore {
    * @return false The store is a backed by a normal region storage
    */
   [[nodiscard]] bool has_scalar_storage() const;
+
   /**
    * @brief Indicates whether this store overlaps with a given store
    *
@@ -100,18 +103,21 @@ class LogicalStore {
    * @return false The stores are disjoint
    */
   [[nodiscard]] bool overlaps(const LogicalStore& other) const;
+
   /**
    * @brief Returns the element type of the store.
    *
-   * @return Type of elements in the store
+   * @return `Type` of elements in the store
    */
   [[nodiscard]] Type type() const;
+
   /**
    * @brief Returns the shape of the array.
    *
-   * @return The store's shape
+   * @return The store's `Shape`
    */
   [[nodiscard]] Shape shape() const;
+
   /**
    * @brief Returns the extents of the store.
    *
@@ -120,6 +126,7 @@ class LogicalStore {
    * @return The store's extents
    */
   [[nodiscard]] const tuple<std::uint64_t>& extents() const;
+
   /**
    * @brief Returns the number of elements in the store.
    *
@@ -128,18 +135,18 @@ class LogicalStore {
    * @return The number of elements in the store
    */
   [[nodiscard]] std::size_t volume() const;
+
   /**
    * @brief Indicates whether the store is unbound
    *
-   * @return true The store is unbound
-   * @return false The store is normal
+   * @return `true` if the store is unbound, `false` otherwise
    */
   [[nodiscard]] bool unbound() const;
+
   /**
    * @brief Indicates whether the store is transformed
    *
-   * @return true The store is transformed
-   * @return false The store is not transformed
+   * @return `true` if the store is transformed, false otherwise
    */
   [[nodiscard]] bool transformed() const;
 
@@ -177,6 +184,7 @@ class LogicalStore {
    * @throw std::invalid_argument When `extra_dim` is not a valid dimension name
    */
   [[nodiscard]] LogicalStore promote(std::int32_t extra_dim, std::size_t dim_size) const;
+
   /**
    * @brief Projects out a dimension of the store.
    *
@@ -197,6 +205,7 @@ class LogicalStore {
    * @throw std::invalid_argument If `dim` is not a valid dimension name or `index` is out of bounds
    */
   [[nodiscard]] LogicalStore project(std::int32_t dim, std::int64_t index) const;
+
   /**
    * @brief Slices a contiguous sub-section of the store.
    *
@@ -208,7 +217,7 @@ class LogicalStore {
    *  [7, 8, 9]]
    * @endcode
    *
-   * A slicing `A.slice(0, legate::Slice(1))` yields
+   * A slicing `A.slice(0, legate::Slice{1})` yields
    *
    * @code{.unparsed}
    * [[4, 5, 6],
@@ -216,7 +225,7 @@ class LogicalStore {
    * @endcode
    *
    * The result store will look like this on a different slicing call
-   * `A.slice(1, legate::Slice(legate::Slice::OPEN, 2))`:
+   * `A.slice(1, legate::Slice{legate::Slice::OPEN, 2})`:
    *
    * @code{.unparsed}
    * [[1, 2],
@@ -227,7 +236,8 @@ class LogicalStore {
    * Finally, chained slicing calls
    *
    * @code{.cpp}
-   * A.slice(0, legate::Slice(1)).slice(1, legate::Slice(legate::Slice::OPEN, 2))
+   * A.slice(0, legate::Slice{1})
+   *  .slice(1, legate::Slice{legate::Slice::OPEN, 2})
    * @endcode
    *
    * results in:
@@ -240,17 +250,18 @@ class LogicalStore {
    * The call can block if the store is unbound
    *
    * @param dim Dimension to slice
-   * @param sl Slice descriptor
+   * @param sl `Slice` descriptor
    *
    * @return A new store that corresponds to the sliced section
    *
    * @throw std::invalid_argument If `dim` is not a valid dimension name
    */
   [[nodiscard]] LogicalStore slice(std::int32_t dim, Slice sl) const;
+
   /**
    * @brief Reorders dimensions of the store.
    *
-   * Dimension `i` of the resulting store is mapped to dimension `axes[i]` of the input store.
+   * Dimension @f$i@f$i of the resulting store is mapped to dimension `axes[i]` of the input store.
    *
    * For example, for a 3D store `A`
    *
@@ -290,10 +301,11 @@ class LogicalStore {
    * axis name.
    */
   [[nodiscard]] LogicalStore transpose(std::vector<std::int32_t>&& axes) const;
+
   /**
    * @brief Delinearizes a dimension into multiple dimensions.
    *
-   * Each dimension @f$i@f$ of the store, where @f$i > @f$`dim`, will be mapped to dimension
+   * Each dimension @f$i@f$ of the store, where @f$i >@f$ `dim`, will be mapped to dimension
    * @f$i+N@f$ of the resulting store, where @f$N@f$ is the length of `sizes`. A delinearization
    * that does not preserve the size of the store is invalid.
    *
@@ -335,7 +347,7 @@ class LogicalStore {
    *
    * The call can block if the store is unbound
    *
-   * @param tile_shape Shape of tiles
+   * @param tile_shape %Shape of tiles
    *
    * @return A store partition
    */
@@ -343,12 +355,12 @@ class LogicalStore {
     std::vector<std::uint64_t> tile_shape) const;
 
   /**
-   * @brief Creates a physical store for this logical store
+   * @brief Creates a `PhysicalStore` for this `LogicalStore`
    *
    * This call blocks the client's control flow and fetches the data for the whole store to the
    * current node
    *
-   * @return A physical store of the logical store
+   * @return A `PhysicalStore` of the `LogicalStore`
    */
   [[nodiscard]] PhysicalStore get_physical_store() const;
 
@@ -366,13 +378,13 @@ class LogicalStore {
   /**
    * @brief Determine whether two stores refer to the same memory.
    *
-   * @param other The LogicalStore to compare with.
+   * @param other The `LogicalStore` to compare with.
    *
-   * @return true if two stores cover the same underlying memory region, false otherwise.
+   * @return `true` if two stores cover the same underlying memory region, `false` otherwise.
    *
    * This routine can be used to determine whether two seemingly unrelated stores refer to the
    * same logical memory region, including through possible transformations in either `this` or
-   * \p other.
+   * `other`.
    *
    * The user should note that some transformations *do* modify the underlying storage. For
    * example, the store produced by slicing will *not* share the same storage as its parent,

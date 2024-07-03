@@ -231,7 +231,7 @@ using Processor = Legion::Processor;
  * @brief Logical memory handle
  *
  * In Legate, libraries will never have to use memory handles directly. However, some Legate
- * APIs (e.g., legate::create_buffer) take a memory kind as an argument; `legate::Memory::Kind`
+ * APIs (e.g., \ref create_buffer()) take a memory kind as an argument; `legate::Memory::Kind`
  * is an enum for all memory types.
  *
  * See

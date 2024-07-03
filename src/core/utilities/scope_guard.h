@@ -162,15 +162,15 @@ template <typename F>
 // Hide the initializer for this, the user doesn't care how the sausage is made...
 /**
  * \hideinitializer
- * @brief Construct an unnamed ScopeGuard from the contents of the macro arguments.
+ * @brief Construct an unnamed \ref legate::ScopeGuard from the contents of the macro arguments.
  *
- * @param ... The body of the constructed ScopeGuard.
+ * @param ... The body of the constructed \ref legate::ScopeGuard.
  *
- * It is impossible to enable or disable the ScopeGuard constructed by this macro.
+ * It is impossible to enable or disable the \ref legate::ScopeGuard constructed by this macro.
  *
  * This macro is useful if the user need only define some action to be executed on scope exit,
- * but doesn't care to name the ScopeGuard and/or has no need to enable/disable it after
- * construction.
+ * but doesn't care to name the \ref legate::ScopeGuard and/or has no need to enable/disable it
+ * after construction.
  *
  * For example:
  *
@@ -196,7 +196,7 @@ template <typename F>
  * // scope exits, and mem is free'd depending on return value of frobnicate()
  * @endcode
  *
- * If the body of the guard should only be executed on failure, use LEGATE_SCOPE_FAIL instead.
+ * If the body of the guard should only be executed on failure, use \ref #LEGATE_SCOPE_FAIL instead.
  *
  * @see ScopeGuard
  * @see LEGATE_SCOPE_FAIL
@@ -285,12 +285,13 @@ template <typename F>
 // Hide the initializer for this, the user doesn't care how the sausage is made...
 /**
  * \hideinitializer
- * @brief Construct an unnamed ScopeFail from the contents of the macro arguments.
+ * @brief Construct an unnamed \ref legate::ScopeFail from the contents of the macro arguments.
  *
- * @param ... The body of the constructed ScopeGuard.
+ * @param ... The body of the constructed \ref legate::ScopeFail.
  *
- * This macro behaves identically to \ref LEGATE_SCOPE_GUARD, except that it creates a
- * ScopeFail instead of a \ref ScopeGuard. Please refer to its documentation for further discussion.
+ * This macro behaves identically to `LEGATE_SCOPE_GUARD`, except that it creates a \ref
+ * legate::ScopeFail instead of a \ref legate::ScopeGuard. Please refer to its documentation for
+ * further discussion.
  *
  * @see ScopeFail
  * @see LEGATE_SCOPE_GUARD

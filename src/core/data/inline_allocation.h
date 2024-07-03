@@ -12,14 +12,20 @@
 
 #pragma once
 
+#include <cstddef>
 #include <vector>
 
 namespace legate {
 
+/**
+ * @ingroup data
+ *
+ * @brief An object representing the raw memory and strides held by a `PhysicalStore`
+ */
 class InlineAllocation {
  public:
-  void* ptr{};
-  std::vector<std::size_t> strides{};
+  void* ptr{};                        /**< pointer to the start of the allocation */
+  std::vector<std::size_t> strides{}; /**< vector of offsets into the buffer */
 };
 
 }  // namespace legate

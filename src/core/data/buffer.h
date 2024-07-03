@@ -18,6 +18,8 @@
 #include "legion.h"
 
 #include <cstddef>
+#include <cstdint>
+#include <utility>
 
 /**
  * @file
@@ -32,48 +34,49 @@ inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
  * @ingroup data
  * @brief A typed buffer class for intra-task temporary allocations
  *
- * Values in a buffer can be accessed by index expressions with legate::Point objects,
- * or via a raw pointer to the underlying allocation, which can be queried with the `ptr` method.
+ * Values in a buffer can be accessed by index expressions with \ref Point objects, or via a raw
+ * pointer to the underlying allocation, which can be queried with the `Buffer::ptr()` method.
  *
- * `legate::Buffer` is an alias to
+ * \ref Buffer is an alias to
  * [Legion::DeferredBuffer](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion.h#L3509-L3609).
  *
  * Note on using temporary buffers in CUDA tasks:
  *
- * We use Legion `DeferredBuffer`, whose lifetime is not connected with the CUDA stream(s) used to
- * launch kernels. The buffer is allocated immediately at the point when `create_buffer` is called,
- * whereas the kernel that uses it is placed on a stream, and may run at a later point. Normally
- * a `DeferredBuffer` is deallocated automatically by Legion once all the kernels launched in the
- * task are complete. However, a `DeferredBuffer` can also be deallocated immediately using
- * `destroy()`, which is useful for operations that want to deallocate intermediate memory as soon
- * as possible. This deallocation is not synchronized with the task stream, i.e. it may happen
- * before a kernel which uses the buffer has actually completed. This is safe as long as we use the
- * same stream on all GPU tasks running on the same device (which is guaranteed by the current
- * implementation of legate::cuda::StreamPool::get_stream), because then all the actual uses of the
- * buffer are done in order on the one stream. It is important that all library CUDA code uses
- * legate::cuda::StreamPool::get_stream, and all CUDA operations (including library calls) are
- * enqueued on that stream exclusively. This analysis additionally assumes that no code outside of
- * Legate is concurrently allocating from the eager pool, and that it's OK for kernels to access a
- * buffer even after it's technically been deallocated.
+ * We use `Legion::DeferredBuffer`, whose lifetime is not connected with the CUDA stream(s)
+ * used to launch kernels. The buffer is allocated immediately at the point when
+ * create_buffer() is called, whereas the kernel that uses it is placed on a stream, and may
+ * run at a later point. Normally a `Legion::DeferredBuffer` is deallocated automatically by
+ * Legion once all the kernels launched in the task are complete. However, a
+ * `Legion::DeferredBuffer` can also be deallocated immediately using
+ * `Legion::DeferredBuffer::destroy()`, which is useful for operations that want to deallocate
+ * intermediate memory as soon as possible. This deallocation is not synchronized with the task
+ * stream, i.e. it may happen before a kernel which uses the buffer has actually completed. This is
+ * safe as long as we use the same stream on all GPU tasks running on the same device (which is
+ * guaranteed by the current implementation of legate::cuda::StreamPool::get_stream()), because then
+ * all the actual uses of the buffer are done in order on the one stream. It is important that all
+ * library CUDA code uses legate::cuda::StreamPool::get_stream(), and all CUDA operations (including
+ * library calls) are enqueued on that stream exclusively. This analysis additionally assumes that
+ * no code outside of Legate is concurrently allocating from the eager pool, and that it's OK for
+ * kernels to access a buffer even after it's technically been deallocated.
  */
 template <typename VAL, std::int32_t DIM = 1>
 using Buffer = Legion::DeferredBuffer<VAL, DIM>;
 
 /**
  * @ingroup data
- * @brief Creates a legate::Buffer of specific extents
+ * @brief Creates a \ref Buffer of specific extents
  *
  * @param extents Extents of the buffer
  * @param kind Kind of the target memory (optional). If not given, the runtime will pick
  * automatically based on the executing processor
  * @param alignment Alignment for the memory allocation (optional)
  *
- * @return A legate::Buffer object
+ * @return A \ref Buffer object
  */
 template <typename VAL, std::int32_t DIM>
-Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
-                               Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
-                               std::size_t alignment = DEFAULT_ALIGNMENT)
+[[nodiscard]] Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
+                                             Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
+                                             std::size_t alignment = DEFAULT_ALIGNMENT)
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
 
@@ -90,21 +93,21 @@ Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
 
 /**
  * @ingroup data
- * @brief Creates a legate::Buffer of a specific size. Always returns a 1D buffer.
+ * @brief Creates a \ref Buffer of a specific size. Always returns a 1D \ref Buffer.
  *
- * @param size Size of the buffdr
- * @param kind Kind of the target memory (optional). If not given, the runtime will pick
- * automatically based on the executing processor
+ * @param size Size of the \ref Buffer
+ * @param kind `Memory::Kind` of the target memory (optional). If not given, the runtime will
+ * pick automatically based on the executing processor
  * @param alignment Alignment for the memory allocation (optional)
  *
- * @return A 1D legate::Buffer object
+ * @return A 1D \ref Buffer object
  */
 template <typename VAL>
-Buffer<VAL> create_buffer(std::size_t size,
-                          Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
-                          std::size_t alignment = DEFAULT_ALIGNMENT)
+[[nodiscard]] Buffer<VAL> create_buffer(std::size_t size,
+                                        Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
+                                        std::size_t alignment = DEFAULT_ALIGNMENT)
 {
-  return create_buffer<VAL, 1>(Point<1>(size), kind, alignment);
+  return create_buffer<VAL, 1>(Point<1>{size}, kind, alignment);
 }
 
 }  // namespace legate

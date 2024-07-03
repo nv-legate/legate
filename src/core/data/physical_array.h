@@ -42,59 +42,62 @@ class StringPhysicalArray;
  *
  * @brief A multi-dimensional array abstraction for fixed- or variable-size elements
  *
- * Physical arrays can be backed by one or more physical stores, depending on their types.
+ * `PhysicalArray`s can be backed by one or more `PhysicalStore`s, depending on their types.
  */
 class PhysicalArray {
  public:
   /**
    * @brief Indicates if the array is nullable
    *
-   * @return true If the array is nullable
-   * @return false Otherwise
+   * @return `true` if the array is nullable, `false` otherwise
    */
   [[nodiscard]] bool nullable() const noexcept;
+
   /**
    * @brief Returns the dimension of the array
    *
    * @return Array's dimension
    */
   [[nodiscard]] std::int32_t dim() const noexcept;
+
   /**
-   * @brief Returns the array's type
+   * @brief Returns the array's `Type`
    *
-   * @return Type
+   * @return `Type`
    */
   [[nodiscard]] Type type() const noexcept;
+
   /**
    * @brief Indicates if the array has child arrays
    *
-   * @return true If the array has child arrays
-   * @return false Otherwise
+   * @return `true` if the array has child arrays, `false` otherwise
    */
   [[nodiscard]] bool nested() const noexcept;
 
   /**
    * @brief Returns the store containing the array's data
    *
-   * @return Physical store
+   * @return `PhysicalStore`
    *
    * @throw std::invalid_argument If the array is not a base array
    */
   [[nodiscard]] PhysicalStore data() const;
+
   /**
    * @brief Returns the store containing the array's null mask
    *
-   * @return Physical store
+   * @return `PhysicalStore`
    *
    * @throw std::invalid_argument If the array is not nullable
    */
   [[nodiscard]] PhysicalStore null_mask() const;
+
   /**
    * @brief Returns the sub-array of a given index
    *
    * @param index Sub-array index
    *
-   * @return Array
+   * @return Sub-`PhysicalArray` at the given index
    *
    * @throw std::invalid_argument If the array has no child arrays
    * @throw std::out_of_range If the index is out of range
@@ -102,31 +105,33 @@ class PhysicalArray {
   [[nodiscard]] PhysicalArray child(std::uint32_t index) const;
 
   /**
-   * @brief Returns the array's domain
+   * @brief Returns the array's shape
    *
-   * @return Array's domain
+   * @return Array's shape
    */
   template <std::int32_t DIM>
   [[nodiscard]] Rect<DIM> shape() const;
+
   /**
-   * @brief Returns the array's domain in a dimension-erased domain type
+   * @brief Returns the array's \ref Domain
    *
-   * @return Array's domain in a dimension-erased domain type
+   * @return Array's \ref Domain
    */
   [[nodiscard]] Domain domain() const;
 
   /**
-   * @brief Casts this array as a list array
+   * @brief Casts this array as a `ListPhysicalArray`
    *
-   * @return List array
+   * @return This array as a `ListPhysicalArray`
    *
    * @throw std::invalid_argument If the array is not a list array
    */
   [[nodiscard]] ListPhysicalArray as_list_array() const;
+
   /**
-   * @brief Casts this array as a string array
+   * @brief Casts this array as a `StringPhysicalArray`
    *
-   * @return String array
+   * @return This array as a `StringPhysicalArray`
    *
    * @throw std::invalid_argument If the array is not a string array
    */
@@ -151,18 +156,24 @@ class PhysicalArray {
   SharedPtr<detail::PhysicalArray> impl_{};
 };
 
+/**
+ * @ingroup data
+ *
+ * @brief A multi-dimensional array abstraction for variable-size list of elements.
+ */
 class ListPhysicalArray : public PhysicalArray {
  public:
   /**
    * @brief Returns the sub-array for descriptors
    *
-   * @return Array
+   * @return `PhysicalArray` of descriptors
    */
   [[nodiscard]] PhysicalArray descriptor() const;
+
   /**
    * @brief Returns the sub-array for variable size data
    *
-   * @return Array
+   * @return `PhysicalArray` of variable sized data
    */
   [[nodiscard]] PhysicalArray vardata() const;
 
@@ -172,18 +183,24 @@ class ListPhysicalArray : public PhysicalArray {
   explicit ListPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl);
 };
 
+/**
+ * @ingroup data
+ *
+ * @brief A multi-dimensional array abstraction representing a string.
+ */
 class StringPhysicalArray : public PhysicalArray {
  public:
   /**
    * @brief Returns the sub-array for ranges
    *
-   * @return Array
+   * @return `PhysicalArray` of ranges
    */
   [[nodiscard]] PhysicalArray ranges() const;
+
   /**
    * @brief Returns the sub-array for characters
    *
-   * @return Array
+   * @return `PhysicalArray` of the characters in the string.
    */
   [[nodiscard]] PhysicalArray chars() const;
 
