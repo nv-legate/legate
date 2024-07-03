@@ -61,7 +61,7 @@ What platform and library versions does Legate support?
     OS               RHEL 8, Ubuntu 20.04, MacOS 12  other Linux
     C++ compiler     gcc 8, clang 7, nvc++ 19.1      any compiler with C++17 support
     GPU architecture Volta                           Pascal
-    CUDA toolkit     11.4                            10.0
+    CUDA toolkit     12.0                            10.0
     Python           3.10
     NumPy            1.22
     ================ =============================== ====================================

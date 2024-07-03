@@ -14,8 +14,6 @@ Changes: Latest Development Version
 
 .. rubric:: General
 
-.. rubric:: Configuration/Build
-
 .. rubric:: Data
 
 .. rubric:: Mapping

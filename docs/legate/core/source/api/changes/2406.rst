@@ -1,4 +1,4 @@
-Changes: 24.05
+Changes: 24.06
 ==============
 ..
    STYLE:
@@ -11,10 +11,8 @@ Changes: 24.05
      those changes in detail, and provide examples of the changes required.
 
 
-.. rubric:: General:
+.. rubric:: General
 
-- Legate ``tester`` now also shows the ``stdout`` and ``stderr`` produced by timed-out
-  tests. Previously it silently gobbled these.
 - Deprecate ``LegateCheckCUDA()`` and ``LegateCheckCUDAStream()`` in favor of
   ``LEGATE_CHECK_CUDA()`` and ``LEGATE_CHECK_CUDA_STREAM()``. However, unlike most
   deprecations, users are **not** encouraged to use the replacements. Rather, users should
@@ -22,26 +20,6 @@ Changes: 24.05
   ``LEGATE_CHECK_CUDA_STREAM()`` are temporary and will be removed in a future release. As
   they are temporary, their removal will be immediate, and will **not** be precipitated by
   a deprecation period.
-
-.. rubric:: Configuration/Build:
-
-- Enforce minimum CUDA version of 11.8. The build system will now emit a fatal error at
-  configure-time if the CUDA toolkit version is below this threshold.
-- ``configure`` now allows passing through arbitrary CMake arguments to the underlying
-  CMake configuration. Any arguments following a bare ``--`` are forwarded verbatim to
-  CMake:
-
-  .. code-block:: console
-
-     $ ./configure --some --configure --arguments -- -DCMAKE_FOO=OFF -DCMAKE_BAR=ON
-     # -DCMAKE_FOO=OFF and -DCMAKE_BAR=ON are forwarded as-is to CMake. configure
-     # does not process them in any way.
-
-- Add ``--build-type=debug-sanitizer``. This build configuration enables a full debug
-  build as well as `AddressSanitizer <https://github.com/google/sanitizers/wiki/AddressSanitizer>`_,
-  `UndefinedBehaviorSanitizer
-  <https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html>`_, and, if supported,
-  `LeakSanitizer <https://clang.llvm.org/docs/LeakSanitizer.html>`_.
 
 .. rubric:: Data
 
