@@ -36,7 +36,7 @@ cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
 # note missing nogil!
 cdef extern from "core/utilities/typedefs.h" namespace "legate":
     ctypedef void (*VariantImpl)(_TaskContext) except +
-    ctypedef void (*RealmCallbackFn)(
+    ctypedef void (*TaskFuncPtr "legate::Processor::TaskFuncPtr")(
         const void *, size_t, const void *, size_t, _Processor
     ) except +
 

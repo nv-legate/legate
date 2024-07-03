@@ -17,7 +17,7 @@ from libcpp.unordered_map cimport unordered_map as std_unordered_map
 
 from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..legate_c cimport legate_core_variant_t
-from ..utilities.typedefs cimport RealmCallbackFn
+from ..utilities.typedefs cimport TaskFuncPtr
 from ..utilities.unconstructable cimport Unconstructable
 from .task_context cimport TaskContext, _TaskContext
 from .variant_helper cimport task_wrapper_dyn_name
@@ -106,8 +106,8 @@ cdef extern void _py_variant "_py_variant"(_TaskContext ctx) with gil:
 
 # Need an initializer function since I could not figure out how to initialize a
 # std::unordered_map from a = {a : b, c : d} expression...
-cdef std_unordered_map[legate_core_variant_t, RealmCallbackFn] _init_vmap():
-    cdef std_unordered_map[legate_core_variant_t, RealmCallbackFn] result
+cdef std_unordered_map[legate_core_variant_t, TaskFuncPtr] _init_vmap():
+    cdef std_unordered_map[legate_core_variant_t, TaskFuncPtr] result
 
     result[
         legate_core_variant_t._LEGATE_CPU_VARIANT
@@ -120,7 +120,7 @@ cdef std_unordered_map[legate_core_variant_t, RealmCallbackFn] _init_vmap():
     ] = task_wrapper_dyn_name[py_variant_t, LEGATE_OMP_VARIANT_T]
     return result
 
-cdef std_unordered_map[legate_core_variant_t, RealmCallbackFn] \
+cdef std_unordered_map[legate_core_variant_t, TaskFuncPtr] \
     _variant_to_callback = _init_vmap()
 
 cdef class TaskInfo(Unconstructable):
@@ -234,7 +234,7 @@ cdef class TaskInfo(Unconstructable):
 
         # do this check before we call into C++ since we cannot undo the
         # registration
-        cdef RealmCallbackFn callback
+        cdef TaskFuncPtr callback
         try:
             callback = _variant_to_callback[variant_kind]
         except KeyError as ke:

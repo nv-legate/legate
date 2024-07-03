@@ -339,8 +339,6 @@ using XorReduction = Legion::XorReduction<T>;
 
 /** @} */  // end of reduction
 
-using RealmCallbackFn = void (*)(const void*, size_t, const void*, size_t, Processor);
-
 namespace detail {
 
 [[nodiscard]] Logger& log_legate();

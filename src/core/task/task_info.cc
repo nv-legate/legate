@@ -123,7 +123,7 @@ void TaskInfo::add_variant(LegateVariantCode vid,
 
 void TaskInfo::add_variant(LegateVariantCode vid,
                            VariantImpl body,
-                           RealmCallbackFn entry,
+                           Processor::TaskFuncPtr entry,
                            const VariantOptions& default_options,
                            const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
@@ -137,7 +137,7 @@ void TaskInfo::add_variant(LegateVariantCode vid,
 
 void TaskInfo::add_variant(LegateVariantCode vid,
                            VariantImpl body,
-                           RealmCallbackFn entry,
+                           Processor::TaskFuncPtr entry,
                            const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
   add_variant(vid, body, entry, VariantOptions::DEFAULT_OPTIONS, all_options);

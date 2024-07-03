@@ -53,11 +53,11 @@ class TaskInfo {
                    const VariantOptions& options);
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,
-                   RealmCallbackFn entry,
+                   Processor::TaskFuncPtr entry,
                    const std::map<LegateVariantCode, VariantOptions>& all_options = {});
   void add_variant(LegateVariantCode vid,
                    VariantImpl body,
-                   RealmCallbackFn entry,
+                   Processor::TaskFuncPtr entry,
                    const VariantOptions& default_options,
                    const std::map<LegateVariantCode, VariantOptions>& all_options = {});
   [[nodiscard]] const VariantInfo& find_variant(LegateVariantCode vid) const;

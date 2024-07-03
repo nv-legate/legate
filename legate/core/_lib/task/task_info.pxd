@@ -16,7 +16,7 @@ from libcpp.string cimport string as std_string
 
 from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
 from ..legate_c cimport legate_core_variant_t
-from ..utilities.typedefs cimport RealmCallbackFn, VariantImpl
+from ..utilities.typedefs cimport TaskFuncPtr, VariantImpl
 from ..utilities.unconstructable cimport Unconstructable
 from .variant_options cimport _VariantOptions
 
@@ -32,12 +32,12 @@ cdef extern from "core/task/task_info.h" namespace "legate" nogil:
         void add_variant(
             legate_core_variant_t,
             VariantImpl,
-            RealmCallbackFn,
+            TaskFuncPtr,
         ) except +
         void add_variant(
             legate_core_variant_t,
             VariantImpl,
-            RealmCallbackFn,
+            TaskFuncPtr,
             const std_map[legate_core_variant_t, _VariantOptions]&
         ) except +
 
