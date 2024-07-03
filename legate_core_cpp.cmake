@@ -142,7 +142,7 @@ if(Legion_USE_CUDA)
                       BUILD_EXPORT_SET legate-core-exports
                       INSTALL_EXPORT_SET legate-core-exports)
   # Find NCCL
-  legate_core_find_or_configure(PACKAGE nccl)
+  legate_core_find_or_configure(PACKAGE NCCL)
 endif()
 
 # ########################################################################################
