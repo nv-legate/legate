@@ -19,11 +19,14 @@ on:
       upload-enabled:
         type: boolean
         required: true
+      python-version:
+        type: string
+        required: false
 jobs:
   build:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.8
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.9
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
@@ -33,10 +36,11 @@ jobs:
       platform: ${{ inputs.platform }}
       dependencies-file: ""
       dependencies-workflow: ""
-      legate-gh-ci-tag: "v1.8"
+      legate-gh-ci-tag: "v1.9"
       build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: ${{ inputs.upload-enabled }}
+      python-version: ${{ inputs.python-version }}
     secrets: inherit
 
   upload:
@@ -44,14 +48,14 @@ jobs:
     if: ${{ github.repository_owner == 'nv-legate' && contains(github.workflow, 'Nightly') && inputs.upload-enabled == true }}
     name: Upload package to Server
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.8
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.9
     with:
       client-repo: ${{ github.event.repository.name }}
       build-type: ${{ inputs.build-type }}
       name: uploadToURM
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.8"
+      legate-gh-ci-tag: "v1.9"
       build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: ${{ inputs.upload-enabled }}
@@ -109,7 +113,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.8
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.9
     with:
       client-repo: ${{ github.event.repository.name }}
       build-type: ${{ inputs.build-type }}
@@ -119,7 +123,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.8"
+      legate-gh-ci-tag: "v1.9"
       build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: ${{ inputs.upload-enabled }}
@@ -138,7 +142,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.8
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.9
     with:
       client-repo: ${{ github.event.repository.name }}
       build-type: ${{ inputs.build-type }}
@@ -148,7 +152,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.8"
+      legate-gh-ci-tag: "v1.9"
       build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: ${{ inputs.upload-enabled }}
@@ -159,14 +163,14 @@ jobs:
     name: Update Test status on Server
     if: ${{ github.repository_owner == 'nv-legate' && contains(github.workflow, 'Nightly') }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.8
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.9
     with:
       client-repo: ${{ github.event.repository.name }}
       build-type: ${{ inputs.build-type }}
       name: UpdateTestStatus
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.8"
+      legate-gh-ci-tag: "v1.9"
       build-mode: ${{ inputs.build-mode }}
       ucx-enabled: ${{ inputs.ucx-enabled }}
       upload-enabled: true

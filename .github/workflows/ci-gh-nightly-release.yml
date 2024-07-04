@@ -27,6 +27,10 @@ jobs:
         upload-enabled:
           - true
           - false
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
         exclude:
           - build-mode: debug
             ucx-enabled: true
@@ -41,4 +45,5 @@ jobs:
       ucx-enabled: ${{ matrix.ucx-enabled }}
       build-type: release
       upload-enabled: ${{ matrix.upload-enabled }}
+      python-version: ${{ matrix.python-version }}
     secrets: inherit
