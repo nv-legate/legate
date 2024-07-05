@@ -228,7 +228,10 @@ class AutoTask {
  private:
   friend class Runtime;
   explicit AutoTask(InternalSharedPtr<detail::AutoTask> impl);
-  SharedPtr<detail::AutoTask> impl_{};
+
+  [[nodiscard]] const SharedPtr<detail::AutoTask>& impl_() const;
+
+  SharedPtr<detail::AutoTask> pimpl_{};
 };
 
 /**
@@ -376,8 +379,12 @@ class ManualTask {
 
  private:
   friend class Runtime;
+
   explicit ManualTask(InternalSharedPtr<detail::ManualTask> impl);
-  SharedPtr<detail::ManualTask> impl_{};
+
+  [[nodiscard]] const SharedPtr<detail::ManualTask>& impl_() const;
+
+  SharedPtr<detail::ManualTask> pimpl_{};
 };
 
 }  // namespace legate

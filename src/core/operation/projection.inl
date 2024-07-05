@@ -43,7 +43,8 @@ inline bool SymbolicExpr::operator==(const SymbolicExpr& other) const
 
 inline bool SymbolicExpr::operator<(const SymbolicExpr& other) const
 {
-  return std::tie(dim_, weight_, offset_) < std::tie(other.dim_, other.weight_, other.offset_);
+  return std::make_tuple(dim(), weight(), offset()) <
+         std::make_tuple(other.dim(), other.weight(), other.offset());
 }
 
 inline SymbolicExpr SymbolicExpr::operator*(std::int32_t other) const
@@ -58,9 +59,6 @@ inline SymbolicExpr SymbolicExpr::operator+(std::int32_t other) const
 
 inline SymbolicExpr dimension(std::uint32_t dim) { return SymbolicExpr{dim}; }
 
-inline SymbolicExpr constant(std::int32_t value)
-{
-  return SymbolicExpr{SymbolicExpr::UNSET, 0, value};
-}
+inline SymbolicExpr constant(std::int32_t value) { return {SymbolicExpr::UNSET, 0, value}; }
 
 }  // namespace legate

@@ -161,9 +161,9 @@ LogicalStore Runtime::tree_reduce(Library library,
   return out_store;
 }
 
-void Runtime::submit(AutoTask task) { impl_->submit(std::move(task.impl_)); }
+void Runtime::submit(AutoTask task) { impl_->submit(std::move(task.pimpl_)); }
 
-void Runtime::submit(ManualTask task) { impl_->submit(std::move(task.impl_)); }
+void Runtime::submit(ManualTask task) { impl_->submit(std::move(task.pimpl_)); }
 
 LogicalArray Runtime::create_array(const Type& type, std::uint32_t dim, bool nullable)
 {

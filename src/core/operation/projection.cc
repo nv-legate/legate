@@ -22,19 +22,19 @@ std::string SymbolicExpr::to_string() const
 {
   std::string result;
 
-  if (weight_ != 0) {
-    if (weight_ != 1) {
-      fmt::format_to(std::back_inserter(result), "{}*", weight_);
+  if (weight() != 0) {
+    if (weight() != 1) {
+      fmt::format_to(std::back_inserter(result), "{}*", weight());
     }
-    fmt::format_to(std::back_inserter(result), "COORD{}", dim_);
+    fmt::format_to(std::back_inserter(result), "COORD{}", dim());
   }
-  if (offset_ != 0) {
-    fmt::format_to(std::back_inserter(result), "{}{}", offset_ > 0 ? "+" : "-", offset_);
+  if (offset() != 0) {
+    fmt::format_to(std::back_inserter(result), "{}{}", offset() > 0 ? "+" : "-", offset());
   }
   return result;
 }
 
-std::size_t SymbolicExpr::hash() const { return hash_all(dim_, weight_, offset_); }
+std::size_t SymbolicExpr::hash() const { return hash_all(dim(), weight(), offset()); }
 
 std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr)
 {
