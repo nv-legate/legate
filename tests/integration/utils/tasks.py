@@ -48,6 +48,12 @@ def basic_task() -> None:
 
 
 @task(variants=tuple(KNOWN_VARIANTS))
+def zeros_task(out: OutputStore) -> None:
+    out_arr = asarray(out.get_inline_allocation())
+    out_arr[:] = np.zeros(out_arr.shape)
+
+
+@task(variants=tuple(KNOWN_VARIANTS))
 def copy_store_task(in_store: InputStore, out_store: OutputStore) -> None:
     in_arr_np = asarray(in_store.get_inline_allocation())
     out_arr_np = asarray(out_store.get_inline_allocation())

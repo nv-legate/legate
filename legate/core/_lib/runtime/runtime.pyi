@@ -62,7 +62,9 @@ class Runtime:
         source_indirect: LogicalStore,
         redop: int | None = None,
     ) -> None: ...
-    def issue_fill(self, lhs: LogicalStore, value: Any) -> None: ...
+    def issue_fill(
+        self, lhs: LogicalStore | LogicalArray, value: Any
+    ) -> None: ...
     def tree_reduce(
         self,
         library: Library,

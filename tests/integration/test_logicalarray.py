@@ -12,12 +12,30 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from utils.data import ARRAY_TYPES
+from utils import utils
+from utils.data import ARRAY_TYPES, EMPTY_SHAPES, SHAPES
 
 import legate.core.types as ty
 from legate.core import LEGATE_MAX_DIM, LogicalArray, get_legate_runtime
 
-ARRAY_SHAPES = [(1,), (1, 2, 3), (2, 4, 6, 8)]
+
+class TestArrayCreation:
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
+    @pytest.mark.parametrize("dtype", ARRAY_TYPES, ids=str)
+    def test_create_array_like(
+        self, shape: tuple[int, ...], dtype: ty.Type
+    ) -> None:
+        runtime = get_legate_runtime()
+        np_arr0, store = utils.random_array_and_store(shape)
+        lg_arr1 = LogicalArray.from_store(store)
+        np_arr1 = np.asarray(lg_arr1.get_physical_array())
+        lg_arr2 = runtime.create_array_like(lg_arr1, dtype)
+        np_arr2 = np.asarray(lg_arr2.get_physical_array())
+        # no sure what else to assert on
+        assert np_arr2.shape == np_arr1.shape
+        assert lg_arr2.type == dtype
+        assert not lg_arr2.data.equal_storage(lg_arr1.data)
+        np.testing.assert_allclose(np_arr1, np_arr0)
 
 
 class TestPromote:
@@ -49,7 +67,7 @@ class TestPromote:
         reason="issue 498, "
         "promoted.data.get_physical_store().get_inline_allocation() crashed"
     )
-    @pytest.mark.parametrize("shape", ARRAY_SHAPES)
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES)
     @pytest.mark.parametrize("nullable", [True, False])
     def test_shape(self, shape: tuple[int, ...], nullable: bool) -> None:
         runtime = get_legate_runtime()
@@ -111,6 +129,18 @@ class TestTranspose:
         )
         arr_t_data = np.asarray(arr_t)
         assert np.array_equal(arr_t_data, logical_t_data, equal_nan=True)
+
+
+class TestArrayCreationErrors:
+    @pytest.mark.parametrize(
+        "dtype", [ty.string_type, ty.struct_type([ty.int8])]
+    )
+    def test_create_array_like_invalid_dtype(self, dtype):
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(dtype, (1,))
+        msg = "doesn't support variable size types or struct types"
+        with pytest.raises(RuntimeError, match=msg):
+            runtime.create_array_like(arr, arr.type)
 
 
 if __name__ == "__main__":
