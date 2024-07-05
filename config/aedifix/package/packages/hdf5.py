@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 class HDF5(Package):
-    With_GASNET: Final = ConfigArgument(
+    With_HDF5: Final = ConfigArgument(
         name="--with-hdf5",
         spec=ArgSpec(
             dest="with_hdf5", type=bool, help="Build with HDF5 support."
