@@ -57,6 +57,14 @@ rapids_cpm_init(OVERRIDE ${legate_core_VERSIONS_JSON})
 include(${LEGATE_CORE_DIR}/cmake/Modules/find_or_configure.cmake)
 
 # ########################################################################################
+# * Default Flags -------------------------------------------------------------
+
+include(${LEGATE_CORE_DIR}/cmake/Modules/default_flags.cmake)
+
+legate_core_configure_default_compiler_flags()
+legate_core_configure_default_linker_flags()
+
+# ########################################################################################
 # * CCCL ---------------------------------------------------------------------
 
 # Pull this in before Legion, so that Legion will use the same libcu++ as Legate (the one
@@ -482,11 +490,6 @@ function(check_nvcc_pedantic_flags)
   endif()
 endfunction()
 check_nvcc_pedantic_flags()
-
-include(${LEGATE_CORE_DIR}/cmake/Modules/default_flags.cmake)
-
-legate_core_configure_default_compiler_flags()
-legate_core_configure_default_linker_flags()
 
 legate_core_add_target_compile_option(legate_core CXX PRIVATE
                                       legate_core_CXX_PRIVATE_OPTIONS)

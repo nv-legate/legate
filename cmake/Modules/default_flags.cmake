@@ -101,26 +101,34 @@ function(legate_core_configure_default_compiler_flags)
   set(default_cxx_flags_relwithdebinfo ${default_cxx_flags_debug}
                                        ${default_cxx_flags_release})
 
-  macro(set_cxx_flags cxx_flags_var flags_var)
-    list(APPEND ${cxx_flags_var} "${${flags_var}}")
-    if(legate_core_ENABLE_SANITIZERS)
-      list(APPEND ${cxx_flags_var} ${default_cxx_flags_sanitizer})
-    endif()
-  endmacro()
-
   set(default_cxx_flags)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set_cxx_flags(default_cxx_flags default_cxx_flags_debug)
+    list(APPEND default_cxx_flags "${default_cxx_flags_debug}")
   elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set_cxx_flags(default_cxx_flags default_cxx_flags_release)
+    list(APPEND default_cxx_flags "${default_cxx_flags_release}")
   elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    set_cxx_flags(default_cxx_flags default_cxx_flags_relwithdebinfo)
+    list(APPEND default_cxx_flags "${default_cxx_flags_relwithdebinfo}")
+  endif()
+
+  if(legate_core_ENABLE_SANITIZERS)
+    list(APPEND default_cxx_flags "${default_cxx_flags_sanitizer}")
   endif()
 
   if(NOT legate_core_CXX_FLAGS)
     legate_core_set_default_flags_impl(SET_CACHE LANG CXX DEST_VAR legate_core_CXX_FLAGS
                                        FLAGS ${default_cxx_flags})
     set(legate_core_CXX_FLAGS "${legate_core_CXX_FLAGS}" PARENT_SCOPE)
+  endif()
+
+  if(legate_core_ENABLE_SANITIZERS)
+    set(cmake_cxx_flags_tmp)
+    # Don't set cache because we still need to de-listify the result first
+    legate_core_set_default_flags_impl(LANG CXX DEST_VAR cmake_cxx_flags_tmp FLAGS
+                                       ${default_cxx_flags_sanitizer})
+    list(JOIN cmake_cxx_flags_tmp " " cmake_cxx_flags_tmp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${cmake_cxx_flags_tmp}" PARENT_SCOPE)
+    # OK, now we can set cache
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
   endif()
 
   if(NOT legate_core_CUDA_FLAGS)
