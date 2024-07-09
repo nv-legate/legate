@@ -23,6 +23,7 @@ from pytest import CaptureFixture, MonkeyPatch
 from ..logger import Logger
 from ..main import basic_configure
 from ..manager import ConfigurationManager
+from ..package.main_package import _detect_num_cpus
 from ..util.constants import Constants
 from .fixtures.dummy_main_module import DummyMainModule
 
@@ -249,6 +250,7 @@ class TestMain:
         test_info = TestInfo(AEDIFIX_PYTEST_DIR, AEDIFIX_PYTEST_ARCH)
         test_info.pre_test()
 
+        num_cpus = _detect_num_cpus()
         argv: Argv = []
         expected_spec: CMakeSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
@@ -261,6 +263,7 @@ class TestMain:
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
+                f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Release",
                 "-DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON",
                 "-DCMAKE_COLOR_MAKEFILE:BOOL=ON",
@@ -280,6 +283,7 @@ class TestMain:
         test_info = TestInfo(AEDIFIX_PYTEST_DIR, AEDIFIX_PYTEST_ARCH)
         test_info.pre_test()
 
+        num_cpus = _detect_num_cpus()
         argv: Argv = ["--build-type=release"]
         expected_spec: CMakeSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
@@ -292,6 +296,7 @@ class TestMain:
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
+                f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Release",
                 "-DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON",
                 "-DCMAKE_COLOR_MAKEFILE:BOOL=ON",
@@ -311,6 +316,7 @@ class TestMain:
         test_info = TestInfo(AEDIFIX_PYTEST_DIR, AEDIFIX_PYTEST_ARCH)
         test_info.pre_test()
 
+        num_cpus = _detect_num_cpus()
         argv: Argv = ["--build-type=relwithdebinfo"]
         expected_spec: CMakeSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
@@ -323,6 +329,7 @@ class TestMain:
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
+                f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo",
                 "-DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON",
                 "-DCMAKE_COLOR_MAKEFILE:BOOL=ON",
@@ -362,6 +369,7 @@ class TestMain:
 
         cc = Path(shutil_which("clang"))
         cxx = Path(shutil_which("clang++"))
+        num_cpus = _detect_num_cpus()
         argv: Argv = [
             f"--with-cc={cc}",
             f"--with-cxx={cxx}",
@@ -382,6 +390,7 @@ class TestMain:
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 "-DBUILD_SHARED_LIBS:BOOL=OFF",
+                f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Debug",
                 "-DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON",
                 "-DCMAKE_COLOR_MAKEFILE:BOOL=ON",

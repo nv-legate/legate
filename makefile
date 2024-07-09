@@ -9,8 +9,34 @@ endif
 
 .SUFFIXES:
 .DELETE_ON_ERROR:
+.NOTPARALLEL: # parallelism is handled otherwise
 
 .DEFAULT_GOAL := all
+
+JOBS =
+ifeq (4.2,$(firstword $(sort $(MAKE_VERSION) 4.2)))
+  # Since make 4.2:
+  #
+  # * The amount of parallelism can be determined by querying MAKEFLAGS, even when
+  # the job server is enabled (previously MAKEFLAGS would always contain only
+  # "-j", with no number, when job server was enabled).
+  #
+  # https://lists.gnu.org/archive/html/info-gnu/2016-05/msg00013.html
+  JOBS = $(patsubst -j%,%,$(filter -j%,$(MAKEFLAGS)))
+endif
+
+ifeq ($(strip $(JOBS)),)
+  # Parse the number of jobs from inspecting process list
+  MAKE_PID = $(shell echo $$PPID)
+  ifeq ($(strip $(MAKE_PID)),)
+    JOBS =
+  else
+    SED ?= sed
+    PS ?= ps
+    JOBS = $(strip $(shell $(PS) T | $(SED) -n 's%.*$(MAKE_PID).*$(MAKE).* \(-j\|--jobs\) *\([0-9][0-9]*\).*%\2%p'))
+  endif
+endif
+export CMAKE_BUILD_PARALLEL_LEVEL ?= $(JOBS)
 
 include $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/gmakevariables
 

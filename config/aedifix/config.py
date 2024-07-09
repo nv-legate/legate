@@ -479,6 +479,7 @@ class ConfigFile(Configurable):
             r"# Any modifications may be lost when configure is next invoked!",
             r"",
             r"MAKEFLAGS += --no-builtin-rules",
+            r".NOTPARALLEL:",
         ]
         project_variables = self.log_execute_func(
             self._finalize_project_variables

@@ -647,15 +647,21 @@ class ConfigurationManager:
 
     @copy_method_signature(ConfigFile.add_variable)
     def add_gmake_variable(  # type: ignore[no-untyped-def] # copied signature
-        self, *args, **kwargs
+        self, name: str | ConfigArgument, *args, **kwargs
     ) -> None:
-        self._config.add_variable(*args, **kwargs)
+        self._config.add_variable(self._sanitize_name(name), *args, **kwargs)
 
-    @copy_method_signature(ConfigFile.add_search_variable)
-    def add_gmake_search_variable(  # type: ignore[no-untyped-def] # copied sig
-        self, *args, **kwargs
+    def add_gmake_search_variable(
+        self,
+        name: str | ConfigArgument,
+        project_var_name: str | None = None,
+        exist_ok: bool = False,
     ) -> None:
-        self._config.add_search_variable(*args, **kwargs)
+        self._config.add_search_variable(
+            cmake_name=self._sanitize_name(name),
+            project_var_name=project_var_name,
+            exist_ok=exist_ok,
+        )
 
     # Logging
     def log(

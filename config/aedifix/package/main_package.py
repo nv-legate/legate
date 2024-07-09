@@ -26,6 +26,7 @@ from ..cmake.cmake_flags import (
     CMAKE_VARIABLE,
     CMakeBool,
     CMakeExecutable,
+    CMakeInt,
     CMakeList,
     CMakePath,
     CMakeString,
@@ -127,6 +128,12 @@ ON_ERROR_DEBUGGER_FLAG: Final = "--on-error-debugger"
 DEBUG_CONFIGURE_FLAG: Final = "--debug-configure"
 
 
+def _detect_num_cpus() -> int:
+    if env_val := os.environ.get("CMAKE_BUILD_PARALLEL_LEVEL", ""):
+        return int(env_val)
+    return max(mp.cpu_count() - 1, 1)
+
+
 class MainPackage(Package, ABC):
     DEBUG_CONFIGURE: Final = ConfigArgument(
         name=DEBUG_CONFIGURE_FLAG,
@@ -163,15 +170,16 @@ class MainPackage(Package, ABC):
         ),
         ephemeral=True,
     )
-    THREADS: Final = ConfigArgument(
+    CMAKE_BUILD_PARALLEL_LEVEL: Final = ConfigArgument(
         name="--num-threads",
         spec=ArgSpec(
             dest="num_threads",
             type=int,
             nargs="?",
-            default=max(mp.cpu_count() - 1, 1),
+            default=_detect_num_cpus(),
             help="Number of threads with which to compile",
         ),
+        cmake_var=CMAKE_VARIABLE("CMAKE_BUILD_PARALLEL_LEVEL", CMakeInt),
     )
     CMAKE_BUILD_TYPE: Final = ConfigArgument(
         name="--build-type",
@@ -248,7 +256,7 @@ class MainPackage(Package, ABC):
         "DEBUG_CONFIGURE",
         "ON_ERROR_DEBUGGER",
         "WITH_CLEAN",
-        "THREADS",
+        "CMAKE_BUILD_PARALLEL_LEVEL",
         "CMAKE_BUILD_TYPE",
         "BUILD_SHARED_LIBS",
         "CMAKE_C_COMPILER",
@@ -527,6 +535,9 @@ class MainPackage(Package, ABC):
         )
         self.manager.set_cmake_variable(self.CMAKE_COLOR_DIAGNOSTICS, True)
         self.manager.set_cmake_variable(self.CMAKE_COLOR_MAKEFILE, True)
+        self.manager.set_cmake_variable(
+            self.CMAKE_BUILD_PARALLEL_LEVEL, self.cl_args.num_threads.value
+        )
         match self.cl_args.library_linkage.value:
             case LibraryLinkage.SHARED:
                 self.manager.set_cmake_variable(self.BUILD_SHARED_LIBS, True)
@@ -556,6 +567,7 @@ class MainPackage(Package, ABC):
             self.CMAKE_BUILD_TYPE,
             _CMAKE_BUILD_TYPE_MAP[self.cl_args.build_type.value],
         )
+        super().setup()
 
     def configure(self) -> None:
         r"""Configure the Main Package."""
@@ -563,6 +575,11 @@ class MainPackage(Package, ABC):
         self.log_execute_func(self.configure_core_package_variables)
         self.log_execute_func(self.configure_c)
         self.log_execute_func(self.configure_cxx)
+
+    def finalize(self) -> None:
+        r"""Finalize the Main package."""
+        super().finalize()
+        self.manager.add_gmake_search_variable(self.CMAKE_BUILD_PARALLEL_LEVEL)
 
     def summarize_main(self) -> str:
         r"""Provide the main summary for the Main Package.
@@ -589,8 +606,18 @@ class MainPackage(Package, ABC):
                         self.manager.project_arch,
                     ),
                     (
+                        "Build Generator",
+                        self.manager.read_cmake_variable("CMAKE_MAKE_PROGRAM"),
+                    ),
+                    (
                         "Build type",
                         self.manager.get_cmake_variable(self.CMAKE_BUILD_TYPE),
+                    ),
+                    (
+                        "Num Build Threads",
+                        self.manager.read_cmake_variable(
+                            self.CMAKE_BUILD_PARALLEL_LEVEL
+                        ),
                     ),
                     (
                         "Install prefix",

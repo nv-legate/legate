@@ -352,6 +352,7 @@ class LegateCore(MainPackage):
 
     def finalize(self) -> None:
         r"""Finalize Legate.Core."""
+        super().finalize()
         self.manager.add_gmake_variable(
             "LEGATE_CORE_USE_PYTHON",
             "1" if self.python.state.value else "0",
