@@ -55,6 +55,16 @@ class MPI(Package):
         ),
         cmake_var=CMAKE_VARIABLE("MPIEXEC_EXECUTABLE", CMakeExecutable),
     )
+    MPI_CXX_COMPILER: Final = CMAKE_VARIABLE(
+        "MPI_CXX_COMPILER", CMakeExecutable
+    )
+    MPI_CXX_COMPILER_INCLUDE_DIRS: Final = CMAKE_VARIABLE(
+        "MPI_CXX_COMPILER_INCLUDE_DIRS", CMakePath
+    )
+    MPI_C_COMPILER: Final = CMAKE_VARIABLE("MPI_C_COMPILER", CMakeExecutable)
+    MPI_C_COMPILER_INCLUDE_DIRS: Final = CMAKE_VARIABLE(
+        "MPI_C_COMPILER_INCLUDE_DIRS", CMakePath
+    )
 
     def __init__(self, manager: ConfigurationManager) -> None:
         r"""Construct a MPI Package.
@@ -97,14 +107,32 @@ class MPI(Package):
         summary : str
             A summary of configured MPI.
         """
+        if not self.state.enabled():
+            return ""
+
         lines = []
-        if self.state.enabled():
-            if mpi_dir := self.manager.get_cmake_variable(self.MPI_HOME):
-                lines.append(("Root dir", mpi_dir))
-            if mpiexec := self.manager.get_cmake_variable(
-                self.MPIEXEC_EXECUTABLE
-            ):
-                lines.append(("mpiexec", mpiexec))
+        if mpi_dir := self.manager.read_or_get_cmake_variable(self.MPI_HOME):
+            lines.append(("Root dir", mpi_dir))
+        if mpicc := self.manager.read_or_get_cmake_variable(
+            self.MPI_C_COMPILER
+        ):
+            lines.append(("mpicc", mpicc))
+        if mpicc_inc := self.manager.read_or_get_cmake_variable(
+            self.MPI_C_COMPILER_INCLUDE_DIRS
+        ):
+            lines.append(("C Include Dirs", mpicc_inc))
+        if mpicxx := self.manager.read_or_get_cmake_variable(
+            self.MPI_CXX_COMPILER
+        ):
+            lines.append(("mpicxx", mpicxx))
+        if mpicxx_inc := self.manager.read_or_get_cmake_variable(
+            self.MPI_CXX_COMPILER_INCLUDE_DIRS
+        ):
+            lines.append(("C++ Include Dirs", mpicxx_inc))
+        if mpiexec := self.manager.read_or_get_cmake_variable(
+            self.MPIEXEC_EXECUTABLE
+        ):
+            lines.append(("mpiexec", mpiexec))
         return self.create_package_summary(lines)
 
 

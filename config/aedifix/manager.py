@@ -331,6 +331,19 @@ class ConfigurationManager:
                     self.log("User is reconfiguring, so no need to error out")
                     return
 
+                cmake_cache = self.project_cmake_dir / "CMakeCache.txt"
+                if not cmake_cache.exists():
+                    # The cmake cache file doesn't exist, this would indicate
+                    # that this is a new configuration. There is no need to
+                    # error out because there are no prior effects that cmake
+                    # could see.
+                    self.log(
+                        "CMake cache does not exist, so no need to error out "
+                        "because for all intents and purposes, this is a "
+                        "brand new configuration for CMake"
+                    )
+                    return
+
                 raise UnsatisfiableConfigurationError(
                     f"{proj_name} arch directory {arch_dir} already exists and"
                     " would be overwritten by this configure command. If you:"
@@ -603,6 +616,27 @@ class ConfigurationManager:
                 return line.split("=", maxsplit=1)[1].strip()
 
         raise ValueError(f"Did not find {name} in {cmake_cache_txt}")
+
+    def read_or_get_cmake_variable(
+        self, name: str | ConfigArgument
+    ) -> str | None:
+        r"""Attempt to read a CMake variable from the CMake cache, or,
+        failing that, get the cmake variable from the internal cache
+
+        Parameters
+        ----------
+        name : str | ConfigArgument
+            The name of the CMake variable, or ConfigArgument representing it.
+
+        Returns
+        -------
+        value : str | None
+            If the value was found, the string representation, None otherwise.
+        """
+        try:
+            return self.read_cmake_variable(name)
+        except ValueError:
+            return self.get_cmake_variable(name)
 
     # Rules
     @copy_method_signature(ConfigFile.add_rule)
