@@ -46,6 +46,12 @@ constexpr VariantOptions& VariantOptions::with_return_size(std::size_t _return_s
   return *this;
 }
 
+constexpr VariantOptions& VariantOptions::with_elide_device_ctx_sync(bool elide_sync)
+{
+  elide_device_ctx_sync = elide_sync;
+  return *this;
+}
+
 constexpr bool VariantOptions::operator==(const VariantOptions& other) const
 {
   return leaf == other.leaf && inner == other.inner && idempotent == other.idempotent &&

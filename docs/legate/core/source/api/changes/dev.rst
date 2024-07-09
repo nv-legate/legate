@@ -22,6 +22,10 @@ Changes: Latest Development Version
 
 .. rubric:: Tasks
 
+- Add ``VariantOptions::elide_device_ctx_sync`` and
+  ``VariantOptions::with_elide_device_ctx_sync()`` to allow specifying that a particular
+  task variant need not perform device context synchronization after task completion.
+
 .. rubric:: Types
 
 .. rubric:: Runtime

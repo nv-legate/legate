@@ -47,6 +47,21 @@ class VariantOptions {
   std::size_t return_size{LEGATE_MAX_SIZE_SCALAR_RETURN};
 
   /**
+   * @brief Whether this variant can skip device context synchronization after completion.
+   *
+   * Normally, for device-enabled task variants, Legate will emit a device-wide barrier to
+   * ensure that all outstanding (potentially asynchronous) work performed by the variant has
+   * completed. However, if the task launches no such work, or if that work is launched using
+   * the task-specific device streams, then such a context synchronization is not necessary.
+   *
+   * Setting this value to `true` ensures that no context synchronization is performed. Setting
+   * it to `false` guarantees that a context synchronization is done.
+   *
+   * Has no effect on non-device variants (for example CPU variants).
+   */
+  bool elide_device_ctx_sync{};
+
+  /**
    * @brief Changes the value of the `leaf` flag
    *
    * @param `leaf` A new value for the `leaf` flag
@@ -66,6 +81,19 @@ class VariantOptions {
    * @param `return_size` A new maximum aggregate size for scalar output values
    */
   constexpr VariantOptions& with_return_size(std::size_t return_size);
+
+  /**
+   * @brief Sets whether the variant can elide device context synchronization after task
+   * completion.
+   *
+   * @param `elide_sync` `true` if this variant can skip synchronizing the device context after
+   * task completion, `false` otherwise.
+   *
+   * @return reference to `this`.
+   *
+   * @seealso elide_device_ctx_sync
+   */
+  constexpr VariantOptions& with_elide_device_ctx_sync(bool elide_sync);
 
   /**
    * @brief Populate a Legion::TaskVariantRegistrar using the options contained.
