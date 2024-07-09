@@ -126,7 +126,8 @@ function(legate_core_configure_default_compiler_flags)
     legate_core_set_default_flags_impl(LANG CXX DEST_VAR cmake_cxx_flags_tmp FLAGS
                                        ${default_cxx_flags_sanitizer})
     list(JOIN cmake_cxx_flags_tmp " " cmake_cxx_flags_tmp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${cmake_cxx_flags_tmp}" PARENT_SCOPE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${cmake_cxx_flags_tmp}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
     # OK, now we can set cache
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
   endif()
