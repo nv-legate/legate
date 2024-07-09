@@ -16,14 +16,19 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os
+from os import getenv
+
+import legate
+
+SWITCHER_PROD = "https://docs.nvidia.com/legate/switcher.json"
+SWITCHER_DEV = "http://localhost:8000/legate/switcher.json"
+JSON_URL = SWITCHER_DEV if getenv("SWITCHER_DEV") == "1" else SWITCHER_PROD
 
 # -- Project information -----------------------------------------------------
 
 project = "NVIDIA legate.core"
 copyright = "2021-2024, NVIDIA"
 author = "NVIDIA Corporation"
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -49,8 +54,15 @@ html_static_path = ["_static"]
 
 # This is pretty kludgy but the nv theme is not publicly available to
 # install on CI, etc. We will use the pydata theme in those situations
-if os.environ.get("NV_THEME") == "1":
+if getenv("NV_THEME") == "1":
     html_theme = "nvidia_sphinx_theme"
+    html_theme_options = {
+        "switcher": {
+            "json_url": JSON_URL,
+            "navbar_start": ["navbar-logo", "version-switcher"],
+            "version_match": ".".join(legate.__version__.split(".", 2)[:2]),
+        }
+    }
 else:
     html_theme = "pydata_sphinx_theme"
     html_theme_options = {

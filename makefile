@@ -138,4 +138,12 @@ doxygen:
 .PHONY: docs
 docs: doxygen
 	@$(LEGATE_CORE_BUILD_COMMAND) --target Sphinx $(LEGATE_CORE_CMAKE_ARGS)
-	@$(LEGATE_CORE_BUILD_COMMAND) --target EULA $(LEGATE_CORE_CMAKE_ARGS)
+
+## Serve combined Sphinx documentation.
+##
+## Options:
+## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+##
+.PHONY: docserve
+docserve:
+	@(PYTHON) -m http.server -d $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/cmake_build/docs/legate/core/sphinx

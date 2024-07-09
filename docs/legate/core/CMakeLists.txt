@@ -69,14 +69,14 @@ add_custom_target(Doxygen DEPENDS "${DOXYGEN_INDEX_FILE}" COMMENT "Running doxyg
 set(SPHINX_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/source")
 set(SPHINX_BUILD "${CMAKE_CURRENT_BINARY_DIR}/sphinx")
 
+file(COPY "${LEGATE_CORE_DIR}/eula.pdf" DESTINATION "${SPHINX_BUILD}/legate")
+file(COPY "${LEGATE_CORE_DIR}/eula.pdf" DESTINATION "${SPHINX_BUILD}/legate/latest")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/switcher.json"
+     DESTINATION "${SPHINX_BUILD}/legate")
+
 add_custom_target(Sphinx
                   COMMAND "${SPHINX_EXECUTABLE}" -b html
                           -Dbreathe_projects.legate_core="${DOXYGEN_OUTPUT_DIR}/xml"
-                          "${SPHINX_SOURCE}" "${SPHINX_BUILD}"
+                          "${SPHINX_SOURCE}" "${SPHINX_BUILD}/legate/latest"
                   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
                   COMMENT "Generating documentation with Sphinx")
-
-add_custom_target(EULA COMMENT "Copying EULA into built docs")
-add_custom_command(TARGET EULA COMMAND ${CMAKE_COMMAND} -E copy
-                                       "${LEGATE_CORE_DIR}/eula.pdf" "${SPHINX_BUILD}"
-                   COMMENT "Copying EULA into built docs")
