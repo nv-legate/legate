@@ -40,8 +40,8 @@ class TaskInfo::Impl {
                    VariantImpl body,
                    const Legion::CodeDescriptor& code_desc,
                    const VariantOptions& options);
-  [[nodiscard]] const VariantInfo& find_variant(LegateVariantCode vid) const;
-  [[nodiscard]] bool has_variant(LegateVariantCode vid) const;
+  [[nodiscard]] std::optional<std::reference_wrapper<const VariantInfo>> find_variant(
+    LegateVariantCode vid) const;
 
   void register_task(Legion::TaskID task_id) const;
 
@@ -71,14 +71,15 @@ void TaskInfo::Impl::add_variant(LegateVariantCode vid,
   }
 }
 
-const VariantInfo& TaskInfo::Impl::find_variant(LegateVariantCode vid) const
+std::optional<std::reference_wrapper<const VariantInfo>> TaskInfo::Impl::find_variant(
+  LegateVariantCode vid) const
 {
-  return variants().at(vid);
-}
+  const auto it = variants().find(vid);
 
-bool TaskInfo::Impl::has_variant(LegateVariantCode vid) const
-{
-  return variants().find(vid) != variants().end();
+  if (it == variants().end()) {
+    return std::nullopt;
+  }
+  return it->second;
 }
 
 void TaskInfo::Impl::register_task(Legion::TaskID task_id) const
@@ -154,12 +155,13 @@ TaskInfo::~TaskInfo() = default;
 
 std::string_view TaskInfo::name() const { return impl_->name(); }
 
-const VariantInfo& TaskInfo::find_variant(LegateVariantCode vid) const
+std::optional<std::reference_wrapper<const VariantInfo>> TaskInfo::find_variant(
+  LegateVariantCode vid) const
 {
   return impl_->find_variant(vid);
 }
 
-bool TaskInfo::has_variant(LegateVariantCode vid) const { return impl_->has_variant(vid); }
+bool TaskInfo::has_variant(LegateVariantCode vid) const { return find_variant(vid).has_value(); }
 
 void TaskInfo::register_task(Legion::TaskID task_id) { impl_->register_task(task_id); }
 
@@ -209,6 +211,7 @@ void TaskInfo::add_variant(LegateVariantCode vid,
     VariantOptions::DEFAULT_OPTIONS,
     all_options);
 }
+
 void TaskInfo::add_variant(LegateVariantCode vid,
                            VariantImpl body,
                            Processor::TaskFuncPtr entry,

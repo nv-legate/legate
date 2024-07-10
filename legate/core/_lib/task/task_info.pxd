@@ -11,7 +11,9 @@
 
 from libc.stdint cimport int64_t, uint32_t
 from libcpp cimport bool
+from libcpp.functional cimport reference_wrapper as std_reference_wrapper
 from libcpp.map cimport map as std_map
+from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
 from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
@@ -22,9 +24,13 @@ from .variant_options cimport _VariantOptions
 
 
 cdef extern from "core/task/task_info.h" namespace "legate" nogil:
+    cdef cppclass _VariantInfo "legate::VariantInfo":
+        pass
+
     cdef cppclass _TaskInfo "legate::TaskInfo":
         _TaskInfo(std_string)
-        bool has_variant(legate_core_variant_t) const
+        std_optional[std_reference_wrapper[const _VariantInfo]] \
+            find_variant(legate_core_variant_t) const
         std_string_view  name() const
         # add_variant's final argument is defaulted in C++, this is the only
         # way I knew how to do the same in Cython. = {}, = (), or

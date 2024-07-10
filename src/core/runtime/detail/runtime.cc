@@ -234,7 +234,7 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
   std::vector<mapping::TaskTarget> task_targets;
 
   for (const auto& t : machine.valid_targets()) {
-    if (task_info->has_variant(mapping::detail::to_variant_code(t))) {
+    if (task_info->find_variant(mapping::detail::to_variant_code(t)).has_value()) {
       task_targets.push_back(t);
     }
   }

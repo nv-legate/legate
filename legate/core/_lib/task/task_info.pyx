@@ -269,7 +269,9 @@ cdef class TaskInfo(Unconstructable):
 
     cpdef bool has_variant(self, int variant_id):
         self._assert_valid()
-        return self._handle.has_variant(<legate_core_variant_t>variant_id)
+        return self._handle.find_variant(
+            <legate_core_variant_t>variant_id
+        ).has_value()
 
     cpdef void add_variant(
         self, legate_core_variant_t variant_kind, object fn

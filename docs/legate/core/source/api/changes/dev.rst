@@ -34,6 +34,11 @@ Changes: Latest Development Version
   instead.
 - Change ``TaskRegistrar::register_all_tasks()`` to take a mutable reference to the
   ``library`` argument instead of by value.
+- Deprecate ``TaskInfo::has_variant()``. Users should use ``TaskInfo::find_variant()``
+  directly instead.
+- Change ``TaskInfo::find_variant()`` to return a ``std::optional``. If the optional has a
+  value, the find succeeded and the contained value is the ``VariantInfo``. Otherwise the
+  optional does not contain a value.
 
 .. rubric:: Types
 

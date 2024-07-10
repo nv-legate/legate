@@ -202,8 +202,12 @@ TEST_F(RegisterVariants, DefaultVariantOptions)
                                         DefaultOptionsTask::GPU_VARIANT_OPTIONS};
 
   for (auto&& [variant_kind, default_options] : legate::detail::zip_equal(variant_kinds, options)) {
-    ASSERT_TRUE(task_info->has_variant(variant_kind));
-    ASSERT_EQ(task_info->find_variant(variant_kind).options, default_options);
+    const auto variant = task_info->find_variant(variant_kind);
+
+    ASSERT_TRUE(variant.has_value());
+    // We do check it, immediately above! But for some reason clang-tidy doesn't clock that...
+    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+    ASSERT_EQ(variant->get().options, default_options);
   }
 }
 

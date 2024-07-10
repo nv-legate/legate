@@ -16,9 +16,11 @@
 #include "core/utilities/detail/type_traits.h"
 #include "core/utilities/typedefs.h"
 
+#include <functional>
 #include <iosfwd>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -67,8 +69,11 @@ class TaskInfo {
   ~TaskInfo();
 
   [[nodiscard]] std::string_view name() const;
-  [[nodiscard]] const VariantInfo& find_variant(LegateVariantCode vid) const;
-  [[nodiscard]] bool has_variant(LegateVariantCode vid) const;
+
+  [[nodiscard]] std::optional<std::reference_wrapper<const VariantInfo>> find_variant(
+    LegateVariantCode vid) const;
+  [[deprecated("since 24.09: use find_variant() directly")]] [[nodiscard]] bool has_variant(
+    LegateVariantCode vid) const;
 
   void register_task(Legion::TaskID task_id);
 
