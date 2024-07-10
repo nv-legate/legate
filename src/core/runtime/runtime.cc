@@ -38,19 +38,29 @@ std::optional<Library> Runtime::maybe_find_library(std::string_view library_name
 
 Library Runtime::create_library(std::string_view library_name,
                                 const ResourceConfig& config,
-                                std::unique_ptr<mapping::Mapper> mapper)
+                                std::unique_ptr<mapping::Mapper> mapper,
+                                std::map<LegateVariantCode, VariantOptions> default_options)
 {
-  return Library{impl_->create_library(
-    std::move(library_name), config, std::move(mapper), false /*in_callback*/)};
+  return Library{impl_->create_library(std::move(library_name),
+                                       config,
+                                       std::move(mapper),
+                                       std::move(default_options),
+                                       false /*in_callback*/)};
 }
 
-Library Runtime::find_or_create_library(std::string_view library_name,
-                                        const ResourceConfig& config,
-                                        std::unique_ptr<mapping::Mapper> mapper,
-                                        bool* created)
+Library Runtime::find_or_create_library(
+  std::string_view library_name,
+  const ResourceConfig& config,
+  std::unique_ptr<mapping::Mapper> mapper,
+  const std::map<LegateVariantCode, VariantOptions>& default_options,
+  bool* created)
 {
-  return Library{impl_->find_or_create_library(
-    std::move(library_name), config, std::move(mapper), created, false /*in_callback*/)};
+  return Library{impl_->find_or_create_library(std::move(library_name),
+                                               config,
+                                               std::move(mapper),
+                                               default_options,
+                                               created,
+                                               false /*in_callback*/)};
 }
 
 AutoTask Runtime::create_task(Library library, std::int64_t task_id)

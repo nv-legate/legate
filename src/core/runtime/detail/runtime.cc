@@ -38,6 +38,7 @@
 #include "core/runtime/detail/shard.h"
 #include "core/runtime/runtime.h"
 #include "core/task/detail/task_context.h"
+#include "core/task/variant_options.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/hash.h"
@@ -76,8 +77,8 @@ namespace {
 
 // This is the unique string name for our library which can be used from both C++ and Python to
 // generate IDs
-constexpr const char* const CORE_LIBRARY_NAME = "legate.core";
-constexpr const char* const TOPLEVEL_NAME     = "Legate Core Toplevel Task";
+constexpr std::string_view CORE_LIBRARY_NAME = "legate.core";
+constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
 
 }  // namespace
 
@@ -91,6 +92,7 @@ Runtime::Runtime()
 Library* Runtime::create_library(std::string_view library_name,
                                  const ResourceConfig& config,
                                  std::unique_ptr<mapping::Mapper> mapper,
+                                 std::map<LegateVariantCode, VariantOptions> default_options,
                                  bool in_callback)
 {
   if (libraries_.find(library_name) != libraries_.end()) {
@@ -103,9 +105,9 @@ Library* Runtime::create_library(std::string_view library_name,
   }
   auto ptr =
     libraries_
-      .emplace(
-        library_name,
-        std::unique_ptr<Library>{new Library{static_cast<std::string>(library_name), config}})
+      .emplace(library_name,
+               std::unique_ptr<Library>{new Library{
+                 static_cast<std::string>(library_name), config, std::move(default_options)}})
       .first->second.get();
   ptr->register_mapper(std::move(mapper), in_callback);
   return ptr;
@@ -124,11 +126,13 @@ Library* Runtime::find_library(std::string_view library_name, bool can_fail /*=f
   return finder->second.get();
 }
 
-Library* Runtime::find_or_create_library(std::string_view library_name,
-                                         const ResourceConfig& config,
-                                         std::unique_ptr<mapping::Mapper> mapper,
-                                         bool* created,
-                                         bool in_callback)
+Library* Runtime::find_or_create_library(
+  std::string_view library_name,
+  const ResourceConfig& config,
+  std::unique_ptr<mapping::Mapper> mapper,
+  const std::map<LegateVariantCode, VariantOptions>& default_options,
+  bool* created,
+  bool in_callback)
 {
   auto result = find_library(library_name, true /*can_fail*/);
 
@@ -138,7 +142,8 @@ Library* Runtime::find_or_create_library(std::string_view library_name,
     }
     return result;
   }
-  result = create_library(std::move(library_name), config, std::move(mapper), in_callback);
+  result = create_library(
+    std::move(library_name), config, std::move(mapper), default_options, in_callback);
   if (created != nullptr) {
     *created = true;
   }
@@ -1592,12 +1597,14 @@ void extract_scalar_task(const void* args,
 }
 
 template <LegateVariantCode variant_id>
-void register_extract_scalar_variant(const std::unique_ptr<TaskInfo>& task_info)
+void register_extract_scalar_variant(Library* core_lib, const std::unique_ptr<TaskInfo>& task_info)
 {
   // TODO(wonchanl): We could support Legion & Realm calling convensions so we don't pass nullptr
-  // here
-  task_info->add_variant(
-    variant_id, nullptr, Legion::CodeDescriptor{extract_scalar_task<variant_id>}, VariantOptions{});
+  // here. Should also remove the corresponding workaround function in TaskInfo!
+  task_info->add_variant_(TaskInfo::RuntimeAddVariantKey{},
+                          legate::Library{core_lib},
+                          variant_id,
+                          Legion::CodeDescriptor{extract_scalar_task<variant_id>});
 }
 
 }  // namespace
@@ -1605,13 +1612,14 @@ void register_extract_scalar_variant(const std::unique_ptr<TaskInfo>& task_info)
 void register_legate_core_tasks(Library* core_lib)
 {
   auto task_info = std::make_unique<TaskInfo>("core::extract_scalar");
-  register_extract_scalar_variant<LEGATE_CPU_VARIANT>(task_info);
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  register_extract_scalar_variant<LEGATE_GPU_VARIANT>(task_info);
-#endif
-#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
-  register_extract_scalar_variant<LEGATE_OMP_VARIANT>(task_info);
-#endif
+
+  register_extract_scalar_variant<LEGATE_CPU_VARIANT>(core_lib, task_info);
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+    register_extract_scalar_variant<LEGATE_GPU_VARIANT>(core_lib, task_info);
+  }
+  if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
+    register_extract_scalar_variant<LEGATE_OMP_VARIANT>(core_lib, task_info);
+  }
   core_lib->register_task(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, std::move(task_info));
 
   register_array_tasks(core_lib);
@@ -1685,7 +1693,7 @@ void initialize_core_library_callback(
   config.max_reduction_ops = LEGATE_CORE_MAX_REDUCTION_OP_ID;
 
   auto core_lib = Runtime::get_runtime()->create_library(
-    CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), true /*in_callback*/);
+    CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), {}, true /*in_callback*/);
 
   register_legate_core_tasks(core_lib);
 

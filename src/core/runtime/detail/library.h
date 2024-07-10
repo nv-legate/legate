@@ -49,7 +49,9 @@ class Library {
   };
 
   friend class Runtime;
-  Library(std::string library_name, const ResourceConfig& config);
+  Library(std::string library_name,
+          const ResourceConfig& config,
+          std::map<LegateVariantCode, VariantOptions> default_options);
 
  public:
   Library(const Library&) = delete;
@@ -84,6 +86,9 @@ class Library {
   void register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
   [[nodiscard]] const TaskInfo* find_task(std::int64_t local_task_id) const;
 
+  [[nodiscard]] const std::map<LegateVariantCode, VariantOptions>& get_default_variant_options()
+    const;
+
  private:
   Legion::Runtime* runtime_{};
   std::string library_name_{};
@@ -96,6 +101,7 @@ class Library {
   std::unique_ptr<mapping::Mapper> mapper_{};
   Legion::Mapping::Mapper* legion_mapper_{};
   std::unordered_map<int64_t, std::unique_ptr<TaskInfo>> tasks_{};
+  std::map<LegateVariantCode, VariantOptions> default_options_{};
 };
 
 }  // namespace legate::detail

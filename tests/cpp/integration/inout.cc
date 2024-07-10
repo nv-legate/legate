@@ -89,7 +89,7 @@ class InOut : public ::testing::Test {
     auto runtime = legate::Runtime::get_runtime();
     auto created = false;
     auto library = runtime->find_or_create_library(
-      LIBRARY_NAME, legate::ResourceConfig{}, std::make_unique<TesterMapper>(), &created);
+      LIBRARY_NAME, legate::ResourceConfig{}, std::make_unique<TesterMapper>(), {}, &created);
     if (created) {
       InoutTask::register_variants(library);
     }

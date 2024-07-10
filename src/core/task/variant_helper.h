@@ -25,6 +25,7 @@
 namespace legate {
 
 class TaskContext;
+class Library;
 
 }  // namespace legate
 
@@ -57,19 +58,18 @@ inline void task_wrapper_dyn_name(const void* args,
   class NAME##Variant<T, std::void_t<decltype(T::name##_variant)>> : public std::true_type { \
     /* Do not be fooled, U = T in all cases, but we need this to be a */                     \
     /* template for traits::is_detected. */                                                  \
-    template <typename U = T>                                                                \
+    template <typename U>                                                                    \
     using has_default_variant_options = decltype(U::NAME##_VARIANT_OPTIONS);                 \
                                                                                              \
-    template <typename U = T>                                                                \
     [[nodiscard]] static constexpr const VariantOptions& get_default_options_() noexcept     \
     {                                                                                        \
-      if constexpr (traits::detail::is_detected_v<has_default_variant_options, U>) {         \
+      if constexpr (traits::detail::is_detected_v<has_default_variant_options, T>) {         \
         static_assert(                                                                       \
-          std::is_same_v<std::decay_t<decltype(U::NAME##_VARIANT_OPTIONS)>, VariantOptions>, \
+          std::is_same_v<std::decay_t<decltype(T::NAME##_VARIANT_OPTIONS)>, VariantOptions>, \
           "Default variant options for " #NAME                                               \
           " variant has incompatible type. Expected static constexpr VariantOptions " #NAME  \
           "_VARIANT_OPTIONS = ...");                                                         \
-        return U::NAME##_VARIANT_OPTIONS;                                                    \
+        return T::NAME##_VARIANT_OPTIONS;                                                    \
       } else {                                                                               \
         return VariantOptions::DEFAULT_OPTIONS;                                              \
       }                                                                                      \
@@ -95,7 +95,8 @@ LEGATE_SELECTOR_SPECIALIZATION(GPU, gpu);
 template <typename T, template <typename...> typename SELECTOR, bool VALID = SELECTOR<T>::value>
 class VariantHelper {
  public:
-  static void record(TaskInfo* /*task_info*/,
+  static void record(const legate::Library& /*lib*/,
+                     TaskInfo* /*task_info*/,
                      const std::map<LegateVariantCode, VariantOptions>& /*all_options*/)
   {
   }
@@ -104,7 +105,8 @@ class VariantHelper {
 template <typename T, template <typename...> typename SELECTOR>
 class VariantHelper<T, SELECTOR, true> {
  public:
-  static void record(TaskInfo* task_info,
+  static void record(const legate::Library& lib,
+                     TaskInfo* task_info,
                      const std::map<LegateVariantCode, VariantOptions>& all_options)
   {
     // Construct the code descriptor for this task so that the library
@@ -114,7 +116,8 @@ class VariantHelper<T, SELECTOR, true> {
     constexpr auto& options     = SELECTOR<T>::options;
     constexpr auto entry        = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
 
-    task_info->add_variant(variant_kind, variant_impl, entry, options, all_options);
+    task_info->add_variant_(
+      TaskInfo::AddVariantKey{}, lib, variant_kind, variant_impl, entry, options, all_options);
   }
 };
 

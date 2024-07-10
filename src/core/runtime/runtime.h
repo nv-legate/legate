@@ -21,8 +21,10 @@
 #include "core/runtime/library.h"
 #include "core/runtime/resource.h"
 #include "core/task/exception.h"
+#include "core/task/variant_options.h"
 #include "core/type/type_info.h"
 
+#include <map>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -72,14 +74,17 @@ class Runtime {
    * @param library_name Library name. Must be unique to this library
    * @param config Optional configuration object
    * @param mapper Optional mapper object
+   * @param default_options Optional default task variant options
    *
    * @return Library object
    *
    * @throw std::invalid_argument If a library already exists for a given name
    */
-  [[nodiscard]] Library create_library(std::string_view library_name,
-                                       const ResourceConfig& config            = ResourceConfig{},
-                                       std::unique_ptr<mapping::Mapper> mapper = nullptr);
+  [[nodiscard]] Library create_library(
+    std::string_view library_name,
+    const ResourceConfig& config                                = ResourceConfig{},
+    std::unique_ptr<mapping::Mapper> mapper                     = nullptr,
+    std::map<LegateVariantCode, VariantOptions> default_options = {});
   /**
    * @brief Finds a library
    *
@@ -109,15 +114,18 @@ class Runtime {
    * @param library_name Library name. Must be unique to this library
    * @param config Optional configuration object
    * @param mapper Optional mapper object
+   * @param default_options Optional default task variant options
    * @param created Optional pointer to a boolean flag indicating whether the library has been
    * created because of this call
    *
    * @return Context object for the library
    */
-  [[nodiscard]] Library find_or_create_library(std::string_view library_name,
-                                               const ResourceConfig& config = ResourceConfig{},
-                                               std::unique_ptr<mapping::Mapper> mapper = nullptr,
-                                               bool* created                           = nullptr);
+  [[nodiscard]] Library find_or_create_library(
+    std::string_view library_name,
+    const ResourceConfig& config                                       = ResourceConfig{},
+    std::unique_ptr<mapping::Mapper> mapper                            = nullptr,
+    const std::map<LegateVariantCode, VariantOptions>& default_options = {},
+    bool* created                                                      = nullptr);
 
   /**
    * @brief Creates an AutoTask

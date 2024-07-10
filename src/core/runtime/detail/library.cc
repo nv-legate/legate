@@ -26,7 +26,9 @@
 
 namespace legate::detail {
 
-Library::Library(std::string library_name, const ResourceConfig& config)
+Library::Library(std::string library_name,
+                 const ResourceConfig& config,
+                 std::map<LegateVariantCode, VariantOptions> default_options)
   : runtime_{Legion::Runtime::get_runtime()},
     library_name_{std::move(library_name)},
     task_scope_{runtime_->generate_library_task_ids(library_name_.c_str(), config.max_tasks),
@@ -41,7 +43,8 @@ Library::Library(std::string library_name, const ResourceConfig& config)
     shard_scope_{
       runtime_->generate_library_sharding_ids(library_name_.c_str(), config.max_shardings),
       config.max_shardings},
-    mapper_id_{runtime_->generate_library_mapper_ids(library_name_.c_str(), 1)}
+    mapper_id_{runtime_->generate_library_mapper_ids(library_name_.c_str(), 1)},
+    default_options_{std::move(default_options)}
 {
 }
 

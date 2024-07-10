@@ -74,11 +74,11 @@ TEST_F(Library, FindOrCreate)
   config.max_tasks = 1;
 
   bool created = false;
-  auto p_lib1  = runtime->find_or_create_library(LIBNAME, config, nullptr, &created);
+  auto p_lib1  = runtime->find_or_create_library(LIBNAME, config, nullptr, {}, &created);
   EXPECT_TRUE(created);
 
   config.max_tasks = 2;
-  auto p_lib2      = runtime->find_or_create_library(LIBNAME, config, nullptr, &created);
+  auto p_lib2      = runtime->find_or_create_library(LIBNAME, config, nullptr, {}, &created);
   EXPECT_FALSE(created);
   EXPECT_EQ(p_lib1, p_lib2);
   EXPECT_TRUE(p_lib2.valid_task_id(p_lib2.get_task_id(0)));
@@ -137,6 +137,34 @@ TEST_F(Library, RegisterMapper)
   lib.register_mapper(std::move(mapper));
   auto* mapper_new = lib.impl()->get_legion_mapper();
   EXPECT_NE(mapper_old, mapper_new);
+}
+
+TEST_F(Library, VariantOptions)
+{
+  const auto runtime = legate::Runtime::get_runtime();
+
+  const std::map<legate::LegateVariantCode, legate::VariantOptions> default_options1 = {};
+  const auto lib1 = runtime->create_library("test_library.foo", {}, nullptr, default_options1);
+
+  ASSERT_EQ(lib1.get_default_variant_options(), default_options1);
+  // Repeated calls should get the same thing
+  ASSERT_EQ(lib1.get_default_variant_options(), default_options1);
+
+  const std::map<legate::LegateVariantCode, legate::VariantOptions> default_options2 = {
+    {LEGATE_CPU_VARIANT, legate::VariantOptions{}.with_return_size(1234)},
+    {LEGATE_GPU_VARIANT,
+     legate::VariantOptions{}.with_idempotent(true).with_concurrent(true).with_return_size(
+       7355608)}};
+  const auto lib2 = runtime->create_library("test_library.bar", {}, nullptr, default_options2);
+
+  // Creation of lib2 should not affect lib1
+  ASSERT_EQ(lib1.get_default_variant_options(), default_options1);
+
+  ASSERT_EQ(lib2.get_default_variant_options(), default_options2);
+  // Repeated calls should get the same thing
+  ASSERT_EQ(lib2.get_default_variant_options(), default_options2);
+  // Creation of lib2 should not affect lib1
+  ASSERT_EQ(lib1.get_default_variant_options(), default_options1);
 }
 
 }  // namespace test_library

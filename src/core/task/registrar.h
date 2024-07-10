@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "core/runtime/library.h"
-
+#include <cstdint>
+#include <functional>
 #include <memory>
 
 /**
@@ -24,6 +24,7 @@
 namespace legate {
 
 class TaskInfo;
+class Library;
 
 /**
  * @ingroup task
@@ -80,9 +81,22 @@ class TaskRegistrar {
    *
    * @param library Library that owns this registrar
    */
-  void register_all_tasks(Library library);
+  void register_all_tasks(Library& library);
 
-  void record_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
+  [[deprecated("since 24.09: Use register_all_tasks() instead")]] void record_task(
+    std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
+
+  class RecordTaskKey {
+    RecordTaskKey() = default;
+
+    friend TaskRegistrar;
+    template <typename T>
+    friend class LegateTask;
+  };
+
+  void record_task(RecordTaskKey,
+                   std::int64_t local_task_id,
+                   std::function<std::unique_ptr<TaskInfo>(const Library&)> deferred_task_info);
 
  private:
   class Impl;

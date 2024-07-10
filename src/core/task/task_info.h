@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/task/variant_options.h"
+#include "core/runtime/library.h"
 #include "core/utilities/detail/type_traits.h"
 #include "core/utilities/typedefs.h"
 
@@ -23,6 +23,27 @@
 #include <string_view>
 
 namespace legate {
+
+class TaskInfo;
+
+namespace detail {
+
+template <typename T, template <typename...> typename SELECTOR, bool valid>
+class VariantHelper;
+
+class Runtime;
+
+namespace cython {
+
+void cytaskinfo_add_variant(legate::TaskInfo* handle,
+                            legate::Library* core_lib,
+                            legate::LegateVariantCode variant_kind,
+                            legate::VariantImpl cy_entry,
+                            legate::Processor::TaskFuncPtr py_entry);
+
+}  // namespace cython
+
+}  // namespace detail
 
 class VariantInfo {
  public:
@@ -46,20 +67,6 @@ class TaskInfo {
   ~TaskInfo();
 
   [[nodiscard]] std::string_view name() const;
-
-  void add_variant(LegateVariantCode vid,
-                   VariantImpl body,
-                   const Legion::CodeDescriptor& code_desc,
-                   const VariantOptions& options);
-  void add_variant(LegateVariantCode vid,
-                   VariantImpl body,
-                   Processor::TaskFuncPtr entry,
-                   const std::map<LegateVariantCode, VariantOptions>& all_options = {});
-  void add_variant(LegateVariantCode vid,
-                   VariantImpl body,
-                   Processor::TaskFuncPtr entry,
-                   const VariantOptions& default_options,
-                   const std::map<LegateVariantCode, VariantOptions>& all_options = {});
   [[nodiscard]] const VariantInfo& find_variant(LegateVariantCode vid) const;
   [[nodiscard]] bool has_variant(LegateVariantCode vid) const;
 
@@ -69,6 +76,59 @@ class TaskInfo {
   TaskInfo& operator=(const TaskInfo&) = delete;
   TaskInfo(TaskInfo&&)                 = delete;
   TaskInfo& operator=(TaskInfo&&)      = delete;
+
+  class AddVariantKey {
+    AddVariantKey() = default;
+
+    friend TaskInfo;
+    friend void legate::detail::cython::cytaskinfo_add_variant(legate::TaskInfo*,
+                                                               legate::Library*,
+                                                               legate::LegateVariantCode,
+                                                               legate::VariantImpl,
+                                                               legate::Processor::TaskFuncPtr);
+    template <typename T, template <typename...> typename SELECTOR, bool valid>
+    friend class detail::VariantHelper;
+  };
+
+  // These are "private" insofar that the access key is private
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  void add_variant_(AddVariantKey,
+                    Library library,
+                    LegateVariantCode vid,
+                    VariantImpl body,
+                    Processor::TaskFuncPtr entry,
+                    const VariantOptions& default_options,
+                    const std::map<LegateVariantCode, VariantOptions>& registration_options = {});
+
+  // TODO(wonchanl): remove once scalar extraction workaround is removed
+  class RuntimeAddVariantKey {
+    RuntimeAddVariantKey() = default;
+
+    friend class detail::Runtime;
+  };
+
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  void add_variant_(RuntimeAddVariantKey,
+                    Library core_lib,
+                    LegateVariantCode vid,
+                    Legion::CodeDescriptor&& descr);
+
+  [[deprecated("since 24.09: Use LegateTask and LegateTask::register_variants() instead")]] void
+  add_variant(LegateVariantCode vid,
+              VariantImpl body,
+              const Legion::CodeDescriptor& code_desc,
+              const VariantOptions& options);
+  [[deprecated("since 24.09: Use LegateTask and LegateTask::register_variants() instead")]] void
+  add_variant(LegateVariantCode vid,
+              VariantImpl body,
+              Processor::TaskFuncPtr entry,
+              const std::map<LegateVariantCode, VariantOptions>& all_options = {});
+  [[deprecated("since 24.09: Use LegateTask and LegateTask::register_variants() instead")]] void
+  add_variant(LegateVariantCode vid,
+              VariantImpl body,
+              Processor::TaskFuncPtr entry,
+              const VariantOptions& default_options,
+              const std::map<LegateVariantCode, VariantOptions>& all_options = {});
 
  private:
   friend std::ostream& operator<<(std::ostream& os, const TaskInfo& info);

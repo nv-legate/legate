@@ -64,13 +64,16 @@ class Runtime {
   [[nodiscard]] Library* create_library(std::string_view library_name,
                                         const ResourceConfig& config,
                                         std::unique_ptr<mapping::Mapper> mapper,
+                                        std::map<LegateVariantCode, VariantOptions> default_options,
                                         bool in_callback);
   [[nodiscard]] Library* find_library(std::string_view library_name, bool can_fail) const;
-  [[nodiscard]] Library* find_or_create_library(std::string_view library_name,
-                                                const ResourceConfig& config,
-                                                std::unique_ptr<mapping::Mapper> mapper,
-                                                bool* created,
-                                                bool in_callback);
+  [[nodiscard]] Library* find_or_create_library(
+    std::string_view library_name,
+    const ResourceConfig& config,
+    std::unique_ptr<mapping::Mapper> mapper,
+    const std::map<LegateVariantCode, VariantOptions>& default_options,
+    bool* created,
+    bool in_callback);
 
   void record_reduction_operator(std::uint32_t type_uid,
                                  std::int32_t op_kind,

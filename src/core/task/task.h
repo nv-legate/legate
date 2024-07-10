@@ -86,8 +86,7 @@ class LegateTask {
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
    * use the default set of options as discussed in the class description.
    */
-  static void register_variants(
-    const std::map<LegateVariantCode, VariantOptions>& all_options = {});
+  static void register_variants(std::map<LegateVariantCode, VariantOptions> all_options = {});
 
   /**
    * @brief Registers all variants of this task immediately.
@@ -123,7 +122,7 @@ class LegateTask {
 
   // A helper to find and register all variants of a task
   [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info_(
-    const std::map<LegateVariantCode, VariantOptions>& all_options);
+    const Library& lib, const std::map<LegateVariantCode, VariantOptions>& all_options);
 
   [[nodiscard]] static std::string_view task_name_();
 

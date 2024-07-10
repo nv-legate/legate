@@ -13,10 +13,11 @@
 #pragma once
 
 #include "core/data/scalar.h"
-#include "core/task/task_info.h"
+#include "core/task/variant_options.h"
 #include "core/utilities/compiler.h"
 #include "core/utilities/typedefs.h"
 
+#include <map>
 #include <memory>
 #include <string_view>
 
@@ -35,6 +36,7 @@ class Mapper;
 
 namespace legate {
 
+class TaskInfo;
 class Runtime;
 
 /**
@@ -156,6 +158,9 @@ class Library {
 
   void register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
   [[nodiscard]] const TaskInfo* find_task(std::int64_t local_task_id) const;
+
+  [[nodiscard]] const std::map<LegateVariantCode, VariantOptions>& get_default_variant_options()
+    const;
 
   LEGATE_CYTHON_DEFAULT_CTOR(Library);
 

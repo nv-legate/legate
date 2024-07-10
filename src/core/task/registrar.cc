@@ -22,19 +22,36 @@ namespace legate {
 
 class TaskRegistrar::Impl {
  public:
-  std::vector<std::pair<int64_t, std::unique_ptr<TaskInfo>>> pending_task_infos{};
+  std::vector<std::pair<std::int64_t, std::function<std::unique_ptr<TaskInfo>(const Library&)>>>
+    pending_task_infos{};
 };
 
 void TaskRegistrar::record_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
-  impl_->pending_task_infos.emplace_back(local_task_id, std::move(task_info));
+  record_task(RecordTaskKey{},
+              local_task_id,
+              // This workaround is needed because std::function requires the callable to be
+              // copy-assignable. Any object which holds a unique_ptr, is by definition not
+              // copy-assignable, so we work around this by putting our unique_ptr in a
+              // shared_ptr.  But make no mistake, this callable is only callable once
+              [tinfo = std::make_shared<std::unique_ptr<TaskInfo>>(std::move(task_info))](
+                const Library&) { return std::move(*tinfo); });
 }
 
-void TaskRegistrar::register_all_tasks(Library library)
+void TaskRegistrar::record_task(
+  RecordTaskKey,
+  std::int64_t local_task_id,
+  std::function<std::unique_ptr<TaskInfo>(const Library&)> deferred_task_info)
+{
+  impl_->pending_task_infos.emplace_back(local_task_id, std::move(deferred_task_info));
+}
+
+void TaskRegistrar::register_all_tasks(Library& library)
 {
   auto* lib_impl = library.impl();
-  for (auto&& [local_task_id, task_info] : impl_->pending_task_infos) {
-    lib_impl->register_task(local_task_id, std::move(task_info));
+
+  for (auto&& [local_task_id, task_info_fn] : impl_->pending_task_infos) {
+    lib_impl->register_task(local_task_id, task_info_fn(library));
   }
   impl_->pending_task_infos.clear();
 }

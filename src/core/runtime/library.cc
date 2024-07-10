@@ -100,6 +100,11 @@ void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo
   impl()->register_task(local_task_id, std::move(task_info));
 }
 
+const std::map<LegateVariantCode, VariantOptions>& Library::get_default_variant_options() const
+{
+  return impl()->get_default_variant_options();
+}
+
 const TaskInfo* Library::find_task(std::int64_t local_task_id) const
 {
   return impl()->find_task(local_task_id);

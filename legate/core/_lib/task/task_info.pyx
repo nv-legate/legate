@@ -17,6 +17,8 @@ from libcpp.unordered_map cimport unordered_map as std_unordered_map
 
 from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..legate_c cimport legate_core_variant_t
+from ..runtime.library cimport Library, _Library
+from ..runtime.runtime cimport get_legate_runtime
 from ..utilities.typedefs cimport TaskFuncPtr
 from ..utilities.unconstructable cimport Unconstructable
 from .task_context cimport TaskContext, _TaskContext
@@ -122,6 +124,53 @@ cdef std_unordered_map[legate_core_variant_t, TaskFuncPtr] _init_vmap():
 
 cdef std_unordered_map[legate_core_variant_t, TaskFuncPtr] \
     _variant_to_callback = _init_vmap()
+
+
+# Need to put this in a separate function because:
+#
+# 1. We need access to TaskInfo::AddVariantKey, and declaring nested C++
+#    classes in Cython is a huge PITA. So it's easier to just write it out in
+#    raw C++.
+# 2. We need to control the name of the function. If we were to use a raw
+#    Cython function, cython would mangle it. So we define the body in C++, and
+#    tell Cython exactly what the name should be. Also, we want it in a
+#    specific namespace because it makes the resulting friend decl in C++ more
+#    obviously "Cython".
+cdef extern from *:
+    """
+    #include "core/task/task_info.h"
+    #include "core/utilities/typedefs.h"
+    #include "core/runtime/library.h"
+
+    namespace legate::detail::cython {
+
+    void cytaskinfo_add_variant(
+      legate::TaskInfo *handle,
+      legate::Library *core_lib,
+      legate::LegateVariantCode variant_kind,
+      legate::VariantImpl cy_entry,
+      legate::Processor::TaskFuncPtr py_entry)
+    {
+      handle->add_variant_(
+        TaskInfo::AddVariantKey{},
+        *core_lib,
+        variant_kind,
+        cy_entry,
+        py_entry,
+        VariantOptions::DEFAULT_OPTIONS
+      );
+    }
+
+    } // namespace legate::detail::cython
+    """
+    void cytaskinfo_add_variant \
+        "legate::detail::cython::cytaskinfo_add_variant" (
+            _TaskInfo *,
+            _Library *,
+            legate_core_variant_t,
+            VariantImpl,
+            TaskFuncPtr
+        )
 
 cdef class TaskInfo(Unconstructable):
     cdef void _assert_valid(self):
@@ -248,7 +297,18 @@ cdef class TaskInfo(Unconstructable):
                 f"(local id: {self.get_local_id()})"
             )
 
-        self._handle.add_variant(variant_kind, _py_variant, callback)
+        # We could just call this inline below, but since core_library is a
+        # property (and, therefore, a fulyl fledged Python function), Cython is
+        # not able to deduce the return type. So we need to spell it out here
+        cdef Library core_lib = get_legate_runtime().core_library
+
+        cytaskinfo_add_variant(
+            self._handle,
+            &core_lib._handle,
+            variant_kind,
+            _py_variant,
+            callback
+        )
         # do this last to preserve strong exception guarantee
         self._registered_variants[variant_kind] = fn
         return

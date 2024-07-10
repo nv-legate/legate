@@ -13,6 +13,8 @@
 #pragma once
 
 // Useful for IDEs
+#include "core/runtime/runtime.h"
+#include "core/task/registrar.h"
 #include "core/task/task.h"
 #include "core/utilities/compiler.h"
 
@@ -20,17 +22,21 @@ namespace legate {
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
-  const std::map<LegateVariantCode, VariantOptions>& all_options)
+  std::map<LegateVariantCode, VariantOptions> all_options)
 {
-  auto task_info = create_task_info_(all_options);
-  T::Registrar::get_registrar().record_task(T::TASK_ID, std::move(task_info));
+  T::Registrar::get_registrar().record_task(
+    TaskRegistrar::RecordTaskKey{},
+    T::TASK_ID,
+    [callsite_options = std::move(all_options)](const Library& lib) {
+      return create_task_info_(lib, callsite_options);
+    });
 }
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
   Library library, const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
-  register_variants(library, T::TASK_ID, all_options);
+  register_variants(std::move(library), T::TASK_ID, all_options);
 }
 
 template <typename T>
@@ -39,18 +45,18 @@ template <typename T>
   std::int64_t task_id,
   const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
-  auto task_info = create_task_info_(all_options);
+  auto task_info = create_task_info_(library, all_options);
   library.register_task(task_id, std::move(task_info));
 }
 
 template <typename T>
 /*static*/ std::unique_ptr<TaskInfo> LegateTask<T>::create_task_info_(
-  const std::map<LegateVariantCode, VariantOptions>& all_options)
+  const Library& lib, const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
   auto task_info = std::make_unique<TaskInfo>(std::string{task_name_()});
-  detail::VariantHelper<T, detail::CPUVariant>::record(task_info.get(), all_options);
-  detail::VariantHelper<T, detail::OMPVariant>::record(task_info.get(), all_options);
-  detail::VariantHelper<T, detail::GPUVariant>::record(task_info.get(), all_options);
+  detail::VariantHelper<T, detail::CPUVariant>::record(lib, task_info.get(), all_options);
+  detail::VariantHelper<T, detail::OMPVariant>::record(lib, task_info.get(), all_options);
+  detail::VariantHelper<T, detail::GPUVariant>::record(lib, task_info.get(), all_options);
   return task_info;
 }
 

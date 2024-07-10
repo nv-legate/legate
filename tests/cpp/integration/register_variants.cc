@@ -77,7 +77,7 @@ struct BaseTask2 : public legate::LegateTask<BaseTask2> {
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
 
-void test_register_tasks(const legate::Library& context)
+void test_register_tasks(legate::Library& context)
 {
   using HelloTask  = BaseTask<HELLO>;
   using HelloTask1 = BaseTask<HELLO1>;
