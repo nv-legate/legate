@@ -11,7 +11,6 @@
  */
 
 #include "core/cuda/cuda.h"
-#include "core/cuda/stream_pool.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"
@@ -59,7 +58,7 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     }
     *p_send = 12345;
 
-    auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
+    auto stream = context.get_task_stream();
     auto result = ncclAllGather(p_send, p_recv, 1, ncclUint64, *comm, stream);
     EXPECT_EQ(result, ncclSuccess);
     LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream));

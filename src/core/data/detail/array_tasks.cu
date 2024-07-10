@@ -11,7 +11,6 @@
  */
 
 #include "core/cuda/cuda.h"
-#include "core/cuda/stream_pool.h"
 #include "core/data/detail/array_tasks.h"
 #include "core/task/task_context.h"
 
@@ -48,7 +47,7 @@ LEGATE_KERNEL void fixup_ranges(std::size_t desc_volume,
   }
 
   auto outputs = context.outputs();
-  auto stream  = legate::cuda::StreamPool::get_stream_pool().get_stream();
+  auto stream  = context.get_task_stream();
 
   // TODO(wonchanl): We need to extend this to nested cases
   for (auto&& output : outputs) {
@@ -110,7 +109,7 @@ LEGATE_KERNEL void offsets_to_ranges(std::size_t offsets_volume,
   auto offsets_acc = offsets.read_accessor<int32_t, 1>();
   auto ranges_acc  = ranges.write_accessor<Rect<1>, 1>();
 
-  auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
+  auto stream = context.get_task_stream();
 
   std::size_t offsets_volume = offsets_shape.volume();
   std::size_t vardata_volume = vardata_shape.volume();
@@ -153,7 +152,7 @@ LEGATE_KERNEL void ranges_to_offsets(std::size_t ranges_volume,
   auto ranges_acc  = ranges.read_accessor<Rect<1>, 1>();
   auto offsets_acc = offsets.write_accessor<int32_t, 1>();
 
-  auto stream = legate::cuda::StreamPool::get_stream_pool().get_stream();
+  auto stream = context.get_task_stream();
 
   auto ranges_volume = ranges_shape.volume();
   auto num_blocks    = (ranges_volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;

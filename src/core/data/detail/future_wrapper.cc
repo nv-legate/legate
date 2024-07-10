@@ -13,8 +13,8 @@
 #include "core/data/detail/future_wrapper.h"
 
 #include "core/cuda/cuda.h"
-#include "core/cuda/stream_pool.h"
 #include "core/mapping/detail/mapping.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/macros.h"
@@ -45,7 +45,7 @@ namespace {
     // TODO(wonchanl): This should be done by Legion
     auto ret       = Legion::UntypedDeferredValue{field_size, mem_kind};
     const auto acc = AccessorWO<std::int8_t, 1>{ret, field_size, false};
-    auto stream    = cuda::StreamPool::get_stream_pool().get_stream();
+    auto stream    = Runtime::get_runtime()->get_cuda_stream();
 
     LEGATE_CHECK_CUDA(
       cudaMemcpyAsync(acc.ptr(0), init_value, field_size, cudaMemcpyDeviceToDevice, stream));
@@ -156,7 +156,7 @@ void FutureWrapper::initialize_with_identity(std::int32_t redop_id)
   LEGATE_ASSERT(redop->sizeof_lhs == field_size());
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) &&
       (get_buffer().get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM)) {
-    auto stream = cuda::StreamPool::get_stream_pool().get_stream();
+    auto stream = Runtime::get_runtime()->get_cuda_stream();
 
     LEGATE_CHECK_CUDA(cudaMemcpyAsync(ptr, identity, field_size(), cudaMemcpyHostToDevice, stream));
   } else {

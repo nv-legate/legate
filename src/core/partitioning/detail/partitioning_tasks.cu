@@ -11,7 +11,6 @@
  */
 
 #include "core/cuda/cuda.h"
-#include "core/cuda/stream_pool.h"
 #include "core/partitioning/detail/partitioning_tasks.h"
 #include "core/task/task_context.h"
 #include "core/utilities/detail/unravel.h"
@@ -154,12 +153,14 @@ __global__ void __launch_bounds__(1, 1)
 template <bool RECT>
 struct FindBoundingBoxFn {
   template <std::int32_t POINT_NDIM, std::int32_t STORE_NDIM>
-  void operator()(const legate::PhysicalStore& input, const legate::PhysicalStore& output)
+  void operator()(const legate::TaskContext& context,
+                  const legate::PhysicalStore& input,
+                  const legate::PhysicalStore& output)
   {
     auto shape   = input.shape<STORE_NDIM>();
     auto out_acc = output.write_accessor<Domain, 1>();
 
-    auto stream = cuda::StreamPool::get_stream_pool().get_stream();
+    auto stream = context.get_task_stream();
 
     const auto unravel = Unravel<STORE_NDIM>{shape};
 
@@ -205,12 +206,14 @@ struct FindBoundingBoxFn {
 template <bool RECT>
 struct FindBoundingBoxSortedFn {
   template <std::int32_t POINT_NDIM, std::int32_t STORE_NDIM>
-  void operator()(const legate::PhysicalStore& input, const legate::PhysicalStore& output)
+  void operator()(const legate::TaskContext& context,
+                  const legate::PhysicalStore& input,
+                  const legate::PhysicalStore& output)
   {
     auto shape   = input.shape<STORE_NDIM>();
     auto out_acc = output.write_accessor<Domain, 1>();
 
-    auto stream = cuda::StreamPool::get_stream_pool().get_stream();
+    auto stream = context.get_task_stream();
 
     const auto unravel = Unravel<STORE_NDIM>{shape};
 
@@ -246,10 +249,14 @@ struct FindBoundingBoxSortedFn {
 
   if (legate::is_rect_type(type)) {
     legate::double_dispatch(
-      legate::ndim_rect_type(type), input.dim(), FindBoundingBoxFn<true>{}, input, output);
+      legate::ndim_rect_type(type), input.dim(), FindBoundingBoxFn<true>{}, context, input, output);
   } else {
-    legate::double_dispatch(
-      legate::ndim_point_type(type), input.dim(), FindBoundingBoxFn<false>{}, input, output);
+    legate::double_dispatch(legate::ndim_point_type(type),
+                            input.dim(),
+                            FindBoundingBoxFn<false>{},
+                            context,
+                            input,
+                            output);
   }
 }
 
@@ -261,11 +268,19 @@ struct FindBoundingBoxSortedFn {
   auto type = input.type();
 
   if (legate::is_rect_type(type)) {
-    legate::double_dispatch(
-      legate::ndim_rect_type(type), input.dim(), FindBoundingBoxSortedFn<true>{}, input, output);
+    legate::double_dispatch(legate::ndim_rect_type(type),
+                            input.dim(),
+                            FindBoundingBoxSortedFn<true>{},
+                            context,
+                            input,
+                            output);
   } else {
-    legate::double_dispatch(
-      legate::ndim_point_type(type), input.dim(), FindBoundingBoxSortedFn<false>{}, input, output);
+    legate::double_dispatch(legate::ndim_point_type(type),
+                            input.dim(),
+                            FindBoundingBoxSortedFn<false>{},
+                            context,
+                            input,
+                            output);
   }
 }
 

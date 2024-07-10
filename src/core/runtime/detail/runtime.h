@@ -45,6 +45,8 @@
 #include <utility>
 #include <vector>
 
+struct CUstream_st;
+
 namespace legate::detail {
 
 class AutoTask;
@@ -329,6 +331,8 @@ class Runtime {
   void destroy();
   [[nodiscard]] std::int32_t finish();
   [[nodiscard]] const Library* core_library() const;
+
+  [[nodiscard]] CUstream_st* get_cuda_stream() const;
 
  private:
   bool initialized_{};

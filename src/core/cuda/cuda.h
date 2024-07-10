@@ -43,7 +43,9 @@ enum cudaMemoryType : std::int8_t { cudaMemoryTypeDevice, cudaMemoryTypeUnregist
 
 enum cudaError_t : std::int8_t { cudaSuccess };
 
-using cudaStream_t = struct cudaStream_st*;
+struct CUstream_st;
+
+using cudaStream_t = struct CUstream_st*;
 
 struct cudaPointerAttributes {
   cudaMemoryType type{};

@@ -130,4 +130,6 @@ mapping::Machine TaskContext::machine() const { return mapping::Machine{impl()->
 
 std::string_view TaskContext::get_provenance() const { return impl()->get_provenance(); }
 
+CUstream_st* TaskContext::get_task_stream() const { return impl()->get_task_stream(); }
+
 }  // namespace legate

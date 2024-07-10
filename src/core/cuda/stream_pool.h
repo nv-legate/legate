@@ -23,6 +23,13 @@
 
 namespace legate::cuda {
 
+#if LEGATE_DEFINED(LEGATE_CORE_SILENCE_STREAM_POOL_DEPRECATION_PRIVATE)
+#define LEGATE_CORE_STREAM_VIEW_DEPRECATED
+#else
+#define LEGATE_CORE_STREAM_VIEW_DEPRECATED \
+  [[deprecated("since 24.09: provide your own implementation of this class")]]
+#endif
+
 /**
  * @ingroup task
  * @brief A simple wrapper around CUDA streams to inject auxiliary features
@@ -30,7 +37,7 @@ namespace legate::cuda {
  * When `LEGATE_SYNC_STREAM_VIEW` is set to 1, every `StreamView` synchronizes the CUDA stream
  * that it wraps when it is destroyed.
  */
-class StreamView {
+class LEGATE_CORE_STREAM_VIEW_DEPRECATED StreamView {
  public:
   /**
    * @brief Creates a `StreamView` with a raw CUDA stream
@@ -59,11 +66,21 @@ class StreamView {
   cudaStream_t stream_{};
 };
 
+// We need this because in order to implement the deprecated functionality, we need to
+// use... the deprecated functionality. And the compiler -- in their infinite wisdom -- just
+// emit the same warnings for it anyways!
+#if LEGATE_DEFINED(LEGATE_CORE_SILENCE_STREAM_POOL_DEPRECATION_PRIVATE)
+#define LEGATE_CORE_STREAM_POOL_DEPRECATED
+#else
+#define LEGATE_CORE_STREAM_POOL_DEPRECATED \
+  [[deprecated("since 24.09: use legate::TaskContext::get_task_stream() instead")]]
+#endif
+
 /**
  * @ingroup task
  * @brief A stream pool
  */
-class StreamPool {
+class LEGATE_CORE_STREAM_POOL_DEPRECATED StreamPool {
  public:
   ~StreamPool();
 
@@ -90,6 +107,10 @@ class StreamPool {
   // in `core/data/buffer.h` will no longer be safe.
   std::optional<cudaStream_t> cached_stream_{};
 };
+
+#undef LEGATE_CORE_SILENCE_STREAM_POOL_DEPRECATION_PRIVATE
+#undef LEGATE_CORE_STREAM_POOL_DEPRECATED
+#undef LEGATE_CORE_STREAM_VIEW_DEPRECATED
 
 }  // namespace legate::cuda
 

@@ -13,7 +13,6 @@
 #include "core/task/detail/task_return.h"
 
 #include "core/cuda/cuda.h"
-#include "core/cuda/stream_pool.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/task/detail/returned_exception_common.h"
 #include "core/utilities/detail/zip.h"
@@ -43,7 +42,7 @@ void TaskReturn::pack(void* buffer) const
 
   if (detail::Runtime::get_runtime()->get_executing_processor().kind() ==
       Processor::Kind::TOC_PROC) {
-    auto stream = cuda::StreamPool::get_stream_pool().get_stream();
+    auto stream = Runtime::get_runtime()->get_cuda_stream();
 
     for (auto&& [ret, offset] : zip_equal(return_values_, layout_)) {
       if (ret.is_device_value()) {

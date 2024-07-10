@@ -13,7 +13,6 @@
 #include "core/comm/comm_nccl.h"
 #include "core/comm/comm_util.h"
 #include "core/cuda/cuda.h"
-#include "core/cuda/stream_pool.h"
 #include "core/data/buffer.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/runtime/detail/communicator_manager.h"
@@ -187,7 +186,7 @@ namespace {
     return comm.release();
   }
 
-  auto stream = cuda::StreamPool::get_stream_pool().get_stream();
+  auto stream = detail::Runtime::get_runtime()->get_cuda_stream();
 
   // Perform a warm-up all-to-all
 

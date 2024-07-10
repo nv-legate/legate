@@ -25,9 +25,15 @@ Changes: Latest Development Version
 - Add ``VariantOptions::elide_device_ctx_sync`` and
   ``VariantOptions::with_elide_device_ctx_sync()`` to allow specifying that a particular
   task variant need not perform device context synchronization after task completion.
+- Add ``TaskContext::get_task_stream()`` to retrieve the current tasks' active CUDA stream.
 
 .. rubric:: Types
 
 .. rubric:: Runtime
 
 .. rubric:: Utilities
+
+- Deprecate ``legate::cuda::StreamPool``. Users should use
+  ``TaskContext::get_task_stream()`` instead within tasks.
+- Deprecate ``legate::cuda::StreamView``. Users should implement their own version of this
+  class.

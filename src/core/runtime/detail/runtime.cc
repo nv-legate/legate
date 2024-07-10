@@ -55,6 +55,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <limits>
+#include <realm/cuda/cuda_module.h>
 #include <sstream>
 #include <stdexcept>
 #include <unordered_set>
@@ -1828,6 +1829,16 @@ void handle_legate_args(std::int32_t argc, char** argv)
     fmt::format_to(std::back_inserter(result), "{}", existing_default_args);
   }
   setenv(LEGION_DEFAULT_ARGS.data(), result.c_str(), /* overwrite */ 1);
+}
+
+CUstream_st* Runtime::get_cuda_stream() const
+{
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+    // The header-file is includable without CUDA, but the actual symbols are not compiled
+    // (leading to link errors down the line) if Realm was not compiled with CUDA support.
+    return Realm::Cuda::get_task_cuda_stream();
+  }
+  return nullptr;
 }
 
 }  // namespace legate::detail

@@ -10,6 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#define LEGATE_CORE_SILENCE_STREAM_POOL_DEPRECATION_PRIVATE 1
+
 #include "core/cuda/stream_pool.h"
 
 #include "core/runtime/detail/config.h"

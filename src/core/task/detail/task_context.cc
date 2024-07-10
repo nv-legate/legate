@@ -14,6 +14,7 @@
 
 #include "core/cuda/cuda.h"
 #include "core/data/detail/physical_store.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/deserializer.h"
 
 namespace legate::detail {
@@ -150,6 +151,11 @@ std::vector<ReturnValue> TaskContext::get_return_values_() const
   }
 
   return return_values;
+}
+
+CUstream_st* TaskContext::get_task_stream() const
+{
+  return Runtime::get_runtime()->get_cuda_stream();
 }
 
 }  // namespace legate::detail

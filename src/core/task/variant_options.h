@@ -58,6 +58,8 @@ class VariantOptions {
    * it to `false` guarantees that a context synchronization is done.
    *
    * Has no effect on non-device variants (for example CPU variants).
+   *
+   * @see with_elide_device_ctx_sync()
    */
   bool elide_device_ctx_sync{};
 
@@ -91,7 +93,7 @@ class VariantOptions {
    *
    * @return reference to `this`.
    *
-   * @seealso elide_device_ctx_sync
+   * @see elide_device_ctx_sync
    */
   constexpr VariantOptions& with_elide_device_ctx_sync(bool elide_sync);
 

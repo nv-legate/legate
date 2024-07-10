@@ -25,6 +25,8 @@
 #include <string_view>
 #include <vector>
 
+struct CUstream_st;
+
 namespace legate::detail {
 
 class TaskContext {
@@ -58,6 +60,8 @@ class TaskContext {
   void make_all_unbound_stores_empty();
   [[nodiscard]] TaskReturn pack_return_values() const;
   [[nodiscard]] TaskReturn pack_return_values_with_exception(const ReturnedException& exn) const;
+
+  [[nodiscard]] CUstream_st* get_task_stream() const;
 
  private:
   [[nodiscard]] std::vector<ReturnValue> get_return_values_() const;

@@ -15,13 +15,8 @@
 #include "core/utilities/assert.h"
 #include "core/utilities/macros.h"
 
-#include "legate.h"
-
-#if LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_DEFINED(LEGATE_NVCC)
-#include "core/cuda/stream_pool.h"
-#endif
-
 #include "functional.hpp"
+#include "legate.h"
 #include "meta.hpp"
 #include "registrar.hpp"
 #include "slice.hpp"
@@ -710,13 +705,14 @@ class iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
   static void impl(std::index_sequence<IIs...>,
                    std::index_sequence<OIs...>,
                    std::index_sequence<SIs...>,
+                   const legate::TaskContext& context,
                    const std::vector<PhysicalArray>& inputs,
                    std::vector<PhysicalArray>& outputs,
                    const std::vector<Scalar>& scalars)
   {
-    const cuda::StreamView stream = cuda::StreamPool::get_stream_pool().get_stream();
-    const std::size_t volume      = meta::front<Is...>::policy::size(inputs[0]);
-    const std::size_t num_blocks  = (volume + THREAD_BLOCK_SIZE - 1) / THREAD_BLOCK_SIZE;
+    const auto stream            = context.get_task_stream();
+    const std::size_t volume     = meta::front<Is...>::policy::size(inputs[0]);
+    const std::size_t num_blocks = (volume + THREAD_BLOCK_SIZE - 1) / THREAD_BLOCK_SIZE;
 
     _gpu_for_each<<<num_blocks, THREAD_BLOCK_SIZE, 0, stream>>>(
       stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
@@ -728,7 +724,8 @@ class iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
   }
 
   template <std::int32_t ActualDim>
-  void operator()(const std::vector<PhysicalArray>& inputs,
+  void operator()(const legate::TaskContext& context,
+                  const std::vector<PhysicalArray>& inputs,
                   std::vector<PhysicalArray>& outputs,
                   const std::vector<Scalar>& scalars)
   {
@@ -741,6 +738,7 @@ class iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
         impl(std::index_sequence_for<Is...>{},
              std::index_sequence_for<Os...>{},
              std::index_sequence_for<Ss...>{},
+             context,
              inputs,
              outputs,
              scalars);
@@ -786,7 +784,7 @@ struct IterationOperation  //
     const auto dim = inputs.at(0).dim();
 
     dim_dispatch(
-      dim, iteration_gpu<Function, Inputs, Outputs, Scalars>{}, inputs, outputs, scalars);
+      dim, iteration_gpu<Function, Inputs, Outputs, Scalars>{}, context, inputs, outputs, scalars);
   }
 #endif
 };
@@ -918,14 +916,15 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
   static void impl(std::index_sequence<IIs...>,
                    std::index_sequence<OIs...>,
                    std::index_sequence<SIs...>,
+                   const legate::TaskContext& context,
                    PhysicalArray& reduction,
                    const std::vector<PhysicalArray>& inputs,
                    std::vector<PhysicalArray>& outputs,
                    const std::vector<Scalar>& scalars)
   {
-    const cuda::StreamView stream = cuda::StreamPool::get_stream_pool().get_stream();
-    const std::size_t volume      = Red::policy::size(reduction);
-    const std::size_t num_blocks  = (volume + THREAD_BLOCK_SIZE - 1) / THREAD_BLOCK_SIZE;
+    const auto stream            = context.get_task_stream();
+    const std::size_t volume     = Red::policy::size(reduction);
+    const std::size_t num_blocks = (volume + THREAD_BLOCK_SIZE - 1) / THREAD_BLOCK_SIZE;
 
     constexpr std::int32_t Dim = dim_of_v<Red>;
     Rect<Dim> working_set      = reduction.shape<Dim>();
@@ -943,7 +942,8 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
   }
 
   template <std::int32_t ActualDim>
-  void operator()(std::vector<PhysicalArray>& reductions,
+  void operator()(const legate::TaskContext& context,
+                  std::vector<PhysicalArray>& reductions,
                   const std::vector<PhysicalArray>& inputs,
                   std::vector<PhysicalArray>& outputs,
                   const std::vector<Scalar>& scalars)
@@ -957,6 +957,7 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
         impl(std::index_sequence_for<Is...>{},
              std::index_sequence_for<Os...>{},
              std::index_sequence_for<Ss...>{},
+             context,
              reductions.at(0),
              inputs,
              outputs,
@@ -1010,7 +1011,8 @@ struct ReductionOperation
     const auto dim    = reductions.at(0).dim();
 
     dim_dispatch(dim,
-                 reduction_gpu<Reduction, Inputs, Outputs, Scalars>(),
+                 reduction_gpu<Reduction, Inputs, Outputs, Scalars>{},
+                 context,
                  reductions,
                  inputs,
                  outputs,

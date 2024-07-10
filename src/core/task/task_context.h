@@ -21,6 +21,8 @@
 #include <string_view>
 #include <vector>
 
+struct CUstream_st;
+
 /**
  * @file
  * @brief Class definition for legate::TaskContext
@@ -192,6 +194,21 @@ class TaskContext {
   [[nodiscard]] std::string_view get_provenance() const;
 
   [[nodiscard]] detail::TaskContext* impl() const;
+
+  /**
+   * @brief Get the current task CUDA stream.
+   *
+   * @return The current tasks CUDA stream.
+   *
+   * All asynchronous stream work performed by a GPU variant must be performed on, or
+   * synchronized with the stream returned by this method. Doing asynchronous work on other
+   * streams and failing to encode those dependencies (or otherwise synchronizing them) on this
+   * stream will result in undefined behavior.
+   *
+   * If the current task is not a GPU task, or does not have GPU support enabled, this method
+   * returns `nullptr`.
+   */
+  [[nodiscard]] CUstream_st* get_task_stream() const;
 
   explicit TaskContext(detail::TaskContext* impl);
 
