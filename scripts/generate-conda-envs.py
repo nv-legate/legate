@@ -350,13 +350,15 @@ def get_min_py() -> str:
     except ModuleNotFoundError:
         from pip._vendor import tomli as tomllib
 
-    with (Path(__file__).parent.parent / "pyproject.toml").open(
-        mode="rb"
-    ) as f:
-        py_ver = tomllib.load(f)["build-system"]["python-requires"]
+    with (Path(__file__).parent.parent / "pyproject.toml").open(mode="r") as f:
+        py_ver = tomllib.loads(f.read())["build-system"]["python-requires"]
 
     for char in (">", "=", "<"):
         py_ver = py_ver.replace(char, "")
+
+    # PR-936: adding this as a reminder to remove the workaround after 3.11
+    if int(py_ver.split(".")[1]) >= 11:
+        raise RuntimeError("remove tomllib workaround above")
 
     return py_ver
 
