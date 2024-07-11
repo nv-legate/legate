@@ -88,7 +88,7 @@ void test_columns_of_2D_store()
   const legate::PhysicalStore col_pstore = stl::detail::get_logical_store(col).get_physical_store();
 
   EXPECT_EQ(col_pstore.dim(), 1);
-  EXPECT_EQ(col_pstore.shape<1>(), (legate::Rect<1>{{0}, {3}}));
+  EXPECT_EQ(col_pstore.shape<1>(), (legate::Rect<1>{Realm::make_point(0), Realm::make_point(3)}));
   auto col_acc = col_pstore.read_accessor<std::int64_t, 1>();
 
   // write through the col
@@ -98,10 +98,10 @@ void test_columns_of_2D_store()
   col_span[2]   = 3;
   col_span[3]   = 4;
 
-  EXPECT_EQ(col_acc.read({0}), 1);
-  EXPECT_EQ(col_acc.read({1}), 2);
-  EXPECT_EQ(col_acc.read({2}), 3);
-  EXPECT_EQ(col_acc.read({3}), 4);
+  EXPECT_EQ(col_acc.read(Realm::make_point(0)), 1);
+  EXPECT_EQ(col_acc.read(Realm::make_point(1)), 2);
+  EXPECT_EQ(col_acc.read(Realm::make_point(2)), 3);
+  EXPECT_EQ(col_acc.read(Realm::make_point(3)), 4);
 
   EXPECT_EQ(acc.read({0, 0}), 1);
   EXPECT_EQ(acc.read({1, 0}), 2);

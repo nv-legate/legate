@@ -43,10 +43,10 @@ TEST_F(STL, Test1DStore)
   store_span(2)   = 3;
   store_span(3)   = 4;
 
-  EXPECT_EQ(1, read.read({0}));
-  EXPECT_EQ(2, read.read({1}));
-  EXPECT_EQ(3, read.read({2}));
-  EXPECT_EQ(4, read.read({3}));
+  EXPECT_EQ(1, read.read(Realm::make_point(0)));
+  EXPECT_EQ(2, read.read(Realm::make_point(1)));
+  EXPECT_EQ(3, read.read(Realm::make_point(2)));
+  EXPECT_EQ(4, read.read(Realm::make_point(3)));
 }
 
 TEST_F(STL, Test2DStore)

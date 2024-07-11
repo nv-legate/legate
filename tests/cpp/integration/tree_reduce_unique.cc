@@ -32,10 +32,10 @@ struct FillTask : public legate::LegateTask<FillTask> {
   {
     auto output = context.output(0).data();
     auto rect   = output.shape<1>();
-    auto volume = rect.volume();
+    auto volume = static_cast<std::int64_t>(rect.volume());
     auto out    = output.write_accessor<std::int64_t, 1>(rect);
-    for (std::size_t idx = 0; idx < volume; ++idx) {
-      out[idx] = static_cast<std::int64_t>(idx / 2);
+    for (std::int64_t idx = 0; idx < volume; ++idx) {
+      out[idx] = idx / 2;
     }
   }
 };
@@ -48,15 +48,16 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
     auto input  = context.input(0).data();
     auto output = context.output(0).data();
     auto rect   = input.shape<1>();
-    auto volume = rect.volume();
+    auto volume = static_cast<std::int64_t>(rect.volume());
     auto in     = input.read_accessor<int64_t, 1>(rect);
-    std::set<std::int64_t> dedup_set;
-    for (std::size_t idx = 0; idx < volume; ++idx) {
+    std::unordered_set<std::int64_t> dedup_set;
+    for (std::int64_t idx = 0; idx < volume; ++idx) {
       dedup_set.insert(in[idx]);
     }
 
-    auto result     = output.create_output_buffer<int64_t, 1>(dedup_set.size(), true);
-    std::size_t pos = 0;
+    auto result =
+      output.create_output_buffer<int64_t, 1>(static_cast<legate::coord_t>(dedup_set.size()), true);
+    std::int64_t pos = 0;
     for (auto e : dedup_set) {
       result[pos++] = e;
     }
@@ -85,7 +86,7 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
     }
 
     const std::size_t size = dedup_set.size();
-    std::size_t pos        = 0;
+    std::int64_t pos       = 0;
     auto result            = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true);
     for (auto e : dedup_set) {
       result[pos++] = e;
