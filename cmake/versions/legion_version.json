@@ -1,10 +1,10 @@
 {
-    "packages" : {
-        "Legion" : {
-            "version" : "24.1.0",
-            "git_url" : "https://gitlab.com/StanfordLegion/legion.git",
-            "git_tag" : "6a8c16b8860cc6a65c2f98bddfa3077e2dd46645",
-            "git_shallow" : false
+    "packages": {
+        "Legion": {
+            "git_shallow": false,
+            "git_tag": "6a8c16b8860cc6a65c2f98bddfa3077e2dd46645",
+            "git_url": "https://gitlab.com/StanfordLegion/legion.git",
+            "version": "24.1.0"
         }
     }
 }

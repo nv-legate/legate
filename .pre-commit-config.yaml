@@ -1,4 +1,17 @@
 repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.6.0
+      hooks:
+        - id: check-json # checks that all json files have proper syntax
+        - id: check-toml # checks that all toml files have proper syntax
+        - id: debug-statements # check for debug statements
+          exclude: '^config/aedifix/main.py$' # intentional
+        - id: end-of-file-fixer # check all files end in a newline
+        - id: pretty-format-json
+          args: ['--autofix', '--indent=4']
+        - id: trailing-whitespace # remove trailing whitespace
+          # part of the diff
+          exclude: '^cmake/patches/span_proper_cmake_project.diff$'
     - repo: https://github.com/PyCQA/isort
       rev: 5.13.2
       hooks:

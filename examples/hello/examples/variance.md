@@ -76,4 +76,3 @@ Legate provides a common interface for data structures
 to provide a schema and access to its underlying stores.
 This is shown in the `_get_legate_store` function via
 the `__legate_data_interface__`.
-

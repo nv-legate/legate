@@ -1,40 +1,40 @@
 {
-  "packages" : {
-    "mdspan": {
-      "version"     : "0.6",
-      "git_url"     : "https://github.com/kokkos/mdspan.git",
-      "git_tag"     : "b885a2c60ad42f9e1aaa0d317a38105b950cbed0",
-      "git_shallow" : false,
-      "patches" : [
-        {
-          "file" : "${current_json_dir}/../patches/mdspan_cpp_lib_span_dynamic_extent.diff",
-          "issue" : "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead",
-          "fixed_in" : ""
+    "packages": {
+        "mdspan": {
+            "git_shallow": false,
+            "git_tag": "b885a2c60ad42f9e1aaa0d317a38105b950cbed0",
+            "git_url": "https://github.com/kokkos/mdspan.git",
+            "patches": [
+                {
+                    "file": "${current_json_dir}/../patches/mdspan_cpp_lib_span_dynamic_extent.diff",
+                    "fixed_in": "",
+                    "issue": "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead"
+                },
+                {
+                    "file": "${current_json_dir}/../patches/mdspan_cpp_lib_span_extents.diff",
+                    "fixed_in": "",
+                    "issue": "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead"
+                },
+                {
+                    "file": "${current_json_dir}/../patches/mdspan_cpp_lib_span_layout_stride.diff",
+                    "fixed_in": "",
+                    "issue": "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead"
+                }
+            ],
+            "version": "0.6"
         },
-        {
-          "file" : "${current_json_dir}/../patches/mdspan_cpp_lib_span_extents.diff",
-          "issue" : "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead",
-          "fixed_in" : ""
-        },
-        {
-          "file" : "${current_json_dir}/../patches/mdspan_cpp_lib_span_layout_stride.diff",
-          "issue" : "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead",
-          "fixed_in" : ""
+        "span": {
+            "git_shallow": true,
+            "git_tag": "master",
+            "git_url": "https://github.com/tcbrindle/span.git",
+            "patches": [
+                {
+                    "file": "${current_json_dir}/../patches/span_proper_cmake_project.diff",
+                    "fixed_in": "",
+                    "issue": "span does not properly export itself as a cmake project, rectify this"
+                }
+            ],
+            "version": "1.0"
         }
-      ]
-    },
-    "span": {
-      "version"     : "1.0",
-      "git_url"     : "https://github.com/tcbrindle/span.git",
-      "git_tag"     : "master",
-      "git_shallow" : true,
-      "patches" : [
-        {
-          "file" : "${current_json_dir}/../patches/span_proper_cmake_project.diff",
-          "issue" : "span does not properly export itself as a cmake project, rectify this",
-          "fixed_in" : ""
-        }
-      ]
     }
-  }
 }

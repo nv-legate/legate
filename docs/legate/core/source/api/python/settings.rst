@@ -7,4 +7,3 @@ environment variables.
 
 .. settings:: settings
     :module: legate.settings
-

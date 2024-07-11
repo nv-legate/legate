@@ -224,6 +224,3 @@ The tutorial contains a few examples that illustate key Legate concepts:
 1. [Hello World](examples/hello-world.md): Shows the basics of creating tasks and adding task arguments.
 1. [Variance](examples/variance.md): Shows how to create input arrays and tasks operating on partitioned data.
 Also shows how to perform reduction tasks like summation.
-
-
-

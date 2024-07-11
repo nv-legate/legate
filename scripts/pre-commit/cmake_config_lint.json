@@ -1,18 +1,18 @@
 {
     "lint": {
+        "argument_var_pattern": "[A-z][A-z0-9_]+",
         "disabled_codes": [
             "C0301",
             "C0112",
             "C0111"
         ],
         "function_pattern": "[0-9A-z_]+",
-        "macro_pattern": "[0-9A-z_]+",
         "global_var_pattern": "[A-z][0-9A-z_]+",
         "internal_var_pattern": "legate[_-][A-z][0-9A-z_]+",
+        "keyword_pattern": "[A-z][0-9A-z_]+",
         "local_var_pattern": "[A-z][A-z0-9_]+",
+        "macro_pattern": "[0-9A-z_]+",
         "private_var_pattern": "legate[_-][0-9A-z_]+",
-        "public_var_pattern": "[A-z][0-9A-z_]+",
-        "argument_var_pattern": "[A-z][A-z0-9_]+",
-        "keyword_pattern": "[A-z][0-9A-z_]+"
+        "public_var_pattern": "[A-z][0-9A-z_]+"
     }
 }

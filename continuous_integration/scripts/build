@@ -66,7 +66,7 @@ build_legate_release() {
     else
       debug_enabled=false
     fi
-   
+
     # convert '-' to '_' for meta.yaml to accept.
     build_mode_str=$(echo ${LEGATE_CORE_BUILD_MODE} | sed -r 's/-/_/g')
 

@@ -8,10 +8,10 @@
             },
             "rapids_cmake_install_lib_dir": {
                 "pargs": {
-                    "nargs": 1,
                     "flags": [
                         "MODIFY_INSTALL_LIBDIR"
-                    ]
+                    ],
+                    "nargs": 1
                 }
             },
             "rapids_cmake_make_global": {
@@ -25,75 +25,157 @@
                 }
             },
             "rapids_cmake_policy": {
-                "pargs": {
-                    "nargs": 0
-                },
                 "kwargs": {
                     "DEPRECATED_IN": 1,
-                    "REMOVED_IN": 1,
-                    "MESSAGE": 1
+                    "MESSAGE": 1,
+                    "REMOVED_IN": 1
+                },
+                "pargs": {
+                    "nargs": 0
                 }
             },
             "rapids_cmake_support_conda_env": {
                 "pargs": {
-                    "nargs": 1,
                     "flags": [
                         "MODIFY_PREFIX_PATH"
-                    ]
+                    ],
+                    "nargs": 1
                 }
             },
             "rapids_cmake_write_git_revision_file": {
-                "pargs": {
-                    "nargs": 2
-                },
                 "kwargs": {
                     "PREFIX": 1
+                },
+                "pargs": {
+                    "nargs": 2
                 }
             },
             "rapids_cmake_write_version_file": {
-                "pargs": {
-                    "nargs": 1
-                },
                 "kwargs": {
                     "PREFIX": 1
+                },
+                "pargs": {
+                    "nargs": 1
+                }
+            },
+            "rapids_cpm_cccl": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "rapids_cpm_cuco": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "nargs": 0
                 }
             },
             "rapids_cpm_find": {
-                "pargs": {
-                    "nargs": "2+"
-                },
                 "kwargs": {
                     "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1,
-                    "GLOBAL_TARGETS": "+",
                     "CPM_ARGS": "+",
                     "DOWNLOAD_ONLY": "1",
                     "EXCLUDE_FROM_ALL": "1",
                     "GIT_REPOSITORY": "1",
-                    "GIT_TAG": "1",
                     "GIT_SHALLOW": "1",
+                    "GIT_TAG": "1",
+                    "GLOBAL_TARGETS": "+",
+                    "INSTALL_EXPORT_SET": 1,
                     "OPTIONS": "+",
                     "PATCH_COMMAND": "1"
+                },
+                "pargs": {
+                    "nargs": "2+"
+                }
+            },
+            "rapids_cpm_fmt": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "rapids_cpm_gbench": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "BUILD_STATIC"
+                    ],
+                    "nargs": 0
                 }
             },
             "rapids_cpm_generate_pinned_versions": {
-                "pargs": {
-                    "nargs": 0
-                },
                 "kwargs": {
                     "OUTPUT": 1
+                },
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "rapids_cpm_gtest": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "BUILD_STATIC"
+                    ],
+                    "nargs": 0
                 }
             },
             "rapids_cpm_init": {
-                "pargs": {
-                    "nargs": 0,
-                    "flags": [
-                        "GENERATE_PINNED_VERSIONS"
-                    ]
-                },
                 "kwargs": {
                     "CUSTOM_DEFAULT_VERSION_FILE": 1,
                     "OVERRIDE": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "GENERATE_PINNED_VERSIONS"
+                    ],
+                    "nargs": 0
+                }
+            },
+            "rapids_cpm_libcudacxx": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "rapids_cpm_nvbench": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "BUILD_STATIC"
+                    ],
+                    "nargs": 0
+                }
+            },
+            "rapids_cpm_nvcomp": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "INSTALL_EXPORT_SET": 1,
+                    "USE_PROPRIETARY_BINARY": 1
+                },
+                "pargs": {
+                    "nargs": 0
                 }
             },
             "rapids_cpm_package_override": {
@@ -101,114 +183,32 @@
                     "nargs": 1
                 }
             },
-            "rapids_cpm_cccl": {
-                "pargs": {
-                    "nargs": 0
-                },
-                "kwargs": {
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1
-                }
-            },
-            "rapids_cpm_cuco": {
-                "pargs": {
-                    "nargs": 0
-                },
-                "kwargs": {
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1
-                }
-            },
-            "rapids_cpm_fmt": {
-                "pargs": {
-                    "nargs": 0
-                },
-                "kwargs": {
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1
-                }
-            },
-            "rapids_cpm_gbench": {
-                "pargs": {
-                    "nargs": 0,
-                    "flags": [
-                        "BUILD_STATIC"
-                    ]
-                },
-                "kwargs": {
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1
-                }
-            },
-            "rapids_cpm_gtest": {
-                "pargs": {
-                    "nargs": 0,
-                    "flags": [
-                        "BUILD_STATIC"
-                    ]
-                },
-                "kwargs": {
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1
-                }
-            },
-            "rapids_cpm_libcudacxx": {
-                "pargs": {
-                    "nargs": 0
-                },
-                "kwargs": {
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1
-                }
-            },
-            "rapids_cpm_nvbench": {
-                "pargs": {
-                    "nargs": 0,
-                    "flags": [
-                        "BUILD_STATIC"
-                    ]
-                },
-                "kwargs": {
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1
-                }
-            },
-            "rapids_cpm_nvcomp": {
-                "pargs": {
-                    "nargs": 0
-                },
-                "kwargs": {
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1,
-                    "USE_PROPRIETARY_BINARY": 1
-                }
-            },
             "rapids_cpm_rmm": {
-                "pargs": {
-                    "nargs": 0
-                },
                 "kwargs": {
                     "BUILD_EXPORT_SET": 1,
                     "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "nargs": 0
                 }
             },
             "rapids_cpm_spdlog": {
-                "pargs": {
-                    "nargs": 0
-                },
                 "kwargs": {
                     "BUILD_EXPORT_SET": 1,
                     "FMT_OPTION": 1,
                     "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "nargs": 0
                 }
             },
             "rapids_cpm_thrust": {
-                "pargs": {
-                    "nargs": 2
-                },
                 "kwargs": {
                     "BUILD_EXPORT_SET": 1,
                     "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "nargs": 2
                 }
             },
             "rapids_cuda_init_architectures": {
@@ -231,122 +231,24 @@
                     "nargs": 3
                 }
             },
-            "rapids_export_cpm": {
-                "pargs": {
-                    "nargs": "3+",
-                    "flags": [
-                        "INSTALL",
-                        "BUILD"
-                    ]
-                },
+            "rapids_cython_add_rpath_entries": {
                 "kwargs": {
-                    "GLOBAL_TARGETS": "+",
-                    "CPM_ARGS": "+"
-                }
-            },
-            "rapids_export": {
-                "pargs": {
-                    "nargs": "2+",
-                    "flags": [
-                        "INSTALL",
-                        "BUILD"
-                    ]
+                    "PATHS": "+",
+                    "ROOT_DIRECTORY": "1",
+                    "TARGET": "1"
                 },
-                "kwargs": {
-                    "EXPORT_SET": 1,
-                    "NAMESPACE": 1,
-                    "DOCUMENTATION": 1,
-                    "FINAL_CODE_BLOCK": 1,
-                    "VERSION": 1,
-                    "GLOBAL_TARGETS": "+",
-                    "COMPONENTS": "+",
-                    "COMPONENTS_EXPORT_SET": "+",
-                    "LANGUAGES": "+"
+                "pargs": {
+                    "nargs": "0"
                 }
             },
-            "rapids_export_find_package_file": {
-                "pargs": {
-                    "nargs": "3+",
-                    "flags": [
-                        "INSTALL",
-                        "BUILD"
-                    ]
+            "rapids_cython_create_modules": {
+                "kwargs": {
+                    "INSTALL_DIR": "1",
+                    "LINKED_LIBRARIES": "*",
+                    "SOURCE_FILES": "*"
                 },
-                "kwargs": {
-                    "EXPORT_SET": 1,
-                    "CONDITION": 1
-                }
-            },
-            "rapids_export_find_package_root": {
                 "pargs": {
-                    "nargs": "3+",
-                    "flags": [
-                        "INSTALL",
-                        "BUILD"
-                    ]
-                },
-                "kwargs": {
-                    "EXPORT_SET": 1,
-                    "CONDITION": 1
-                }
-            },
-            "rapids_export_package": {
-                "pargs": {
-                    "nargs": "1+"
-                },
-                "kwargs": {
-                    "GLOBAL_TARGETS": "+",
-                    "INSTALL": 2,
-                    "BUILD": 2
-                }
-            },
-            "rapids_export_write_dependencies": {
-                "pargs": {
-                    "nargs": 3,
-                    "flags": [
-                        "INSTALL",
-                        "BUILD"
-                    ]
-                }
-            },
-            "rapids_export_write_language": {
-                "pargs": {
-                    "nargs": 3,
-                    "flags": [
-                        "INSTALL",
-                        "BUILD"
-                    ]
-                }
-            },
-            "rapids_find_generate_module": {
-                "pargs": {
-                    "nargs": "1+",
-                    "flags": [
-                        "NO_CONFIG"
-                    ]
-                },
-                "kwargs": {
-                    "VERSION": 1,
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1,
-                    "HEADER_NAMES": "+",
-                    "LIBRARY_NAMES": "+",
-                    "INCLUDE_SUFFIXES": "+"
-                }
-            },
-            "rapids_find_package": {
-                "pargs": {
-                    "nargs": "1+",
-                    "flags": [
-                        "REQUIRED"
-                    ]
-                },
-                "kwargs": {
-                    "BUILD_EXPORT_SET": 1,
-                    "INSTALL_EXPORT_SET": 1,
-                    "GLOBAL_TARGETS": "+",
-                    "COMPONENTS": "*",
-                    "FIND_ARGS": "+"
+                    "nargs": "0"
                 }
             },
             "rapids_cython_init": {
@@ -354,51 +256,135 @@
                     "nargs": "0"
                 }
             },
-            "rapids_cython_create_modules": {
-                "pargs": {
-                    "nargs": "0"
-                },
+            "rapids_export": {
                 "kwargs": {
-                    "SOURCE_FILES": "*",
-                    "LINKED_LIBRARIES": "*",
-                    "INSTALL_DIR": "1"
+                    "COMPONENTS": "+",
+                    "COMPONENTS_EXPORT_SET": "+",
+                    "DOCUMENTATION": 1,
+                    "EXPORT_SET": 1,
+                    "FINAL_CODE_BLOCK": 1,
+                    "GLOBAL_TARGETS": "+",
+                    "LANGUAGES": "+",
+                    "NAMESPACE": 1,
+                    "VERSION": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "INSTALL",
+                        "BUILD"
+                    ],
+                    "nargs": "2+"
                 }
             },
-            "rapids_cython_add_rpath_entries": {
-                "pargs": {
-                    "nargs": "0"
-                },
+            "rapids_export_cpm": {
                 "kwargs": {
-                    "PATHS": "+",
-                    "TARGET": "1",
-                    "ROOT_DIRECTORY": "1"
+                    "CPM_ARGS": "+",
+                    "GLOBAL_TARGETS": "+"
+                },
+                "pargs": {
+                    "flags": [
+                        "INSTALL",
+                        "BUILD"
+                    ],
+                    "nargs": "3+"
                 }
             },
-            "rapids_test_init": {
+            "rapids_export_find_package_file": {
+                "kwargs": {
+                    "CONDITION": 1,
+                    "EXPORT_SET": 1
+                },
                 "pargs": {
-                    "nargs": "0"
+                    "flags": [
+                        "INSTALL",
+                        "BUILD"
+                    ],
+                    "nargs": "3+"
+                }
+            },
+            "rapids_export_find_package_root": {
+                "kwargs": {
+                    "CONDITION": 1,
+                    "EXPORT_SET": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "INSTALL",
+                        "BUILD"
+                    ],
+                    "nargs": "3+"
+                }
+            },
+            "rapids_export_package": {
+                "kwargs": {
+                    "BUILD": 2,
+                    "GLOBAL_TARGETS": "+",
+                    "INSTALL": 2
+                },
+                "pargs": {
+                    "nargs": "1+"
+                }
+            },
+            "rapids_export_write_dependencies": {
+                "pargs": {
+                    "flags": [
+                        "INSTALL",
+                        "BUILD"
+                    ],
+                    "nargs": 3
+                }
+            },
+            "rapids_export_write_language": {
+                "pargs": {
+                    "flags": [
+                        "INSTALL",
+                        "BUILD"
+                    ],
+                    "nargs": 3
+                }
+            },
+            "rapids_find_generate_module": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "HEADER_NAMES": "+",
+                    "INCLUDE_SUFFIXES": "+",
+                    "INSTALL_EXPORT_SET": 1,
+                    "LIBRARY_NAMES": "+",
+                    "VERSION": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "NO_CONFIG"
+                    ],
+                    "nargs": "1+"
+                }
+            },
+            "rapids_find_package": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "COMPONENTS": "*",
+                    "FIND_ARGS": "+",
+                    "GLOBAL_TARGETS": "+",
+                    "INSTALL_EXPORT_SET": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "REQUIRED"
+                    ],
+                    "nargs": "1+"
                 }
             },
             "rapids_test_add": {
-                "pargs": {
-                    "nargs": "0"
-                },
                 "kwargs": {
-                    "NAME": "1",
                     "COMMAND": "*",
-                    "INSTALL_COMPONENT_SET": "1",
                     "GPUS": "1",
+                    "INSTALL_COMPONENT_SET": "1",
+                    "NAME": "1",
                     "PERCENT": "1",
                     "WORKING_DIRECTORY": "1"
-                }
-            },
-            "rapids_test_gpu_requirements": {
-                "pargs": {
-                    "nargs": "1"
                 },
-                "kwargs": {
-                    "GPUS": "1",
-                    "PERCENT": "1"
+                "pargs": {
+                    "nargs": "0"
                 }
             },
             "rapids_test_generate_resource_spec": {
@@ -406,16 +392,30 @@
                     "nargs": "2"
                 }
             },
-            "rapids_test_install_relocatable": {
+            "rapids_test_gpu_requirements": {
+                "kwargs": {
+                    "GPUS": "1",
+                    "PERCENT": "1"
+                },
                 "pargs": {
-                    "nargs": "0",
+                    "nargs": "1"
+                }
+            },
+            "rapids_test_init": {
+                "pargs": {
+                    "nargs": "0"
+                }
+            },
+            "rapids_test_install_relocatable": {
+                "kwargs": {
+                    "DESTINATION": "1",
+                    "INSTALL_COMPONENT_SET": "1"
+                },
+                "pargs": {
                     "flags": [
                         "INCLUDE_IN_ALL"
-                    ]
-                },
-                "kwargs": {
-                    "INSTALL_COMPONENT_SET": "1",
-                    "DESTINATION": "1"
+                    ],
+                    "nargs": "0"
                 }
             }
         }

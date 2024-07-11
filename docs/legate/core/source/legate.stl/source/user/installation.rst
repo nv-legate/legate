@@ -26,4 +26,3 @@ entities reside in the ``legate::experimental::stl`` namespace.
 
 All examples in this documentation assume an initial
 ``namespace stl = legate::experimental::stl;`` directive.
-
