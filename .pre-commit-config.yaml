@@ -7,11 +7,15 @@ repos:
         - id: debug-statements # check for debug statements
           exclude: '^config/aedifix/main.py$' # intentional
         - id: end-of-file-fixer # check all files end in a newline
+          # handled by clang-format
+          exclude_types: [c, c++, cuda]
         - id: pretty-format-json
           args: ['--autofix', '--indent=4']
         - id: trailing-whitespace # remove trailing whitespace
           # part of the diff
           exclude: '^cmake/patches/span_proper_cmake_project.diff$'
+          # handled by clang-format
+          exclude_types: [c, c++, cuda]
     - repo: https://github.com/PyCQA/isort
       rev: 5.13.2
       hooks:
