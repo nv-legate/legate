@@ -149,6 +149,14 @@ class TaskContext {
    * @return Number of arrays
    */
   [[nodiscard]] std::size_t num_reductions() const;
+
+  /**
+   * @brief Returns the number of `Scalar`s
+   *
+   * @return Number of `Scalar`s
+   */
+  [[nodiscard]] std::size_t num_scalars() const;
+
   /**
    * @brief Returns the number of communicators
    *

@@ -39,6 +39,8 @@ Changes: Latest Development Version
 - Change ``TaskInfo::find_variant()`` to return a ``std::optional``. If the optional has a
   value, the find succeeded and the contained value is the ``VariantInfo``. Otherwise the
   optional does not contain a value.
+- Add ``TaskContext::num_scalars()`` to query the number of ``Scalar`` arguments for a
+  task.
 
 .. rubric:: Types
 

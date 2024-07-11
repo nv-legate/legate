@@ -83,6 +83,8 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
 
   static void cpu_variant(legate::TaskContext context)
   {
+    ASSERT_EQ(context.num_scalars(), 3);
+
     auto data_mode  = static_cast<TaskDataMode>(context.scalar(0).value<std::uint32_t>());
     auto store_type = static_cast<StoreType>(context.scalar(1).value<std::uint32_t>());
     auto value      = context.scalar(2).value<std::int32_t>();

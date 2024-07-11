@@ -106,6 +106,12 @@ std::size_t TaskContext::num_reductions() const
   return impl()->reductions().size();
 }
 
+std::size_t TaskContext::num_scalars() const
+{
+  static_assert(std::is_lvalue_reference_v<decltype(scalars())>);
+  return scalars().size();
+}
+
 std::size_t TaskContext::num_communicators() const
 {
   static_assert(std::is_lvalue_reference_v<decltype(communicators())>);
