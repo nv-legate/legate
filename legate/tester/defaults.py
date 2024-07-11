@@ -60,6 +60,10 @@ GPU_DELAY = 2000
 PROCESS_ENV = {
     "LEGATE_TEST": "1",
     "LEGATE_CONSENSUS": "1",
+    # TODO(mpapadakis): We do this so that gtest can capture the output on
+    # death tests. We will no longer need to do this once
+    # https://github.com/StanfordLegion/legion/issues/1711 is fixed.
+    "LEGION_DEFAULT_ARGS": "-logfile stderr",
 }
 
 # sysmem value to use for non-CPU stages

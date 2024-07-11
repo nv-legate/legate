@@ -72,6 +72,7 @@ function(legate_core_configure_test CMAKE_TEST_NAME)
   target_link_libraries(${CMAKE_TEST_NAME}
                         PRIVATE legate::core
                                 GTest::gtest
+                                GTest::gmock
                                 # Some test modules require delving into the private
                                 # headers of legate.core, which may contain fmt headers.
                                 # As a result, we also need to add the fmt include paths
@@ -154,7 +155,7 @@ legate_core_configure_test(tests_with_runtime SOURCES ${main_with_runtime_init_S
                            ${experimental_SRC} ${stl_SRC})
 legate_core_configure_test(tests_wo_runtime SOURCES ${main_wo_runtime_init_SRC}
                            ${noinit_SRC})
-legate_core_configure_test(death_tests SOURCES ${main_wo_runtime_init_SRC} ${death_SRC})
+legate_core_configure_test(death_tests SOURCES ${main_with_runtime_init_SRC} ${death_SRC})
 
 if(integration_GPU_SRC)
   legate_core_configure_test(tests_with_gpus SOURCES ${main_with_runtime_init_SRC}

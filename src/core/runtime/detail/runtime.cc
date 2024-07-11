@@ -586,6 +586,8 @@ void validate_store_shape(const InternalSharedPtr<Shape>& shape,
 
 }  // namespace
 
+// Reserving the right to make this non-const in the future
+// NOLINTNEXTLINE(readability-make-member-function-const)
 InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> type,
                                                       std::uint32_t dim,
                                                       bool optimize_scalar)
@@ -595,12 +597,14 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
   }
   check_dimensionality_(dim);
   auto storage = make_internal_shared<detail::Storage>(
-    make_internal_shared<Shape>(dim), std::move(type), optimize_scalar);
+    make_internal_shared<Shape>(dim), std::move(type), optimize_scalar, get_provenance());
   return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
 // shape can be unbound in this function, so we shouldn't use the same validation as the other
 // variants
+// Reserving the right to make this non-const in the future
+// NOLINTNEXTLINE(readability-make-member-function-const)
 InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> shape,
                                                       InternalSharedPtr<Type> type,
                                                       bool optimize_scalar /*=false*/)
@@ -612,11 +616,13 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> s
     throw std::invalid_argument{"Store must have a fixed-size type"};
   }
   check_dimensionality_(shape->ndim());
-  auto storage =
-    make_internal_shared<detail::Storage>(std::move(shape), std::move(type), optimize_scalar);
+  auto storage = make_internal_shared<detail::Storage>(
+    std::move(shape), std::move(type), optimize_scalar, get_provenance());
   return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
+// Reserving the right to make this non-const in the future
+// NOLINTNEXTLINE(readability-make-member-function-const)
 InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
                                                       InternalSharedPtr<Shape> shape)
 {
@@ -628,7 +634,8 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
     throw std::invalid_argument{"Scalar stores must have a shape of volume 1"};
   }
   auto future  = Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
-  auto storage = make_internal_shared<detail::Storage>(std::move(shape), scalar.type(), future);
+  auto storage = make_internal_shared<detail::Storage>(
+    std::move(shape), scalar.type(), future, get_provenance());
   return make_internal_shared<detail::LogicalStore>(std::move(storage));
 }
 
@@ -808,6 +815,22 @@ InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(InternalShare
                                                                    std::uint32_t field_size)
 {
   return field_manager()->import_field(std::move(shape), field_size, std::move(region), field_id);
+}
+
+void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
+                                std::string_view provenance)
+{
+  // It's safe to just attach the info to the FieldSpace+FieldID, since FieldSpaces are not shared
+  // across RegionFields.
+  if (provenance.empty()) {
+    return;
+  }
+  legion_runtime_->attach_semantic_information(rf->region().get_field_space(),
+                                               rf->field_id(),
+                                               LEGATE_CORE_ALLOC_INFO_TAG,
+                                               static_cast<const void*>(provenance.data()),
+                                               provenance.size(),
+                                               /*is_mutable=*/true);
 }
 
 Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
@@ -1037,14 +1060,6 @@ Legion::LogicalRegion Runtime::find_parent_region(const Legion::LogicalRegion& r
     result         = legion_runtime_->get_parent_logical_region(legion_context_, partition);
   }
   return result;
-}
-
-Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space,
-                                        std::size_t field_size)
-{
-  LEGATE_CHECK(nullptr != legion_context_);
-  auto allocator = legion_runtime_->create_field_allocator(legion_context_, field_space);
-  return allocator.allocate_field(field_size);
 }
 
 Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space,

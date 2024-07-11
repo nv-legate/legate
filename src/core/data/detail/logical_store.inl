@@ -38,6 +38,8 @@ inline std::int32_t Storage::level() const { return level_; }
 
 inline std::size_t Storage::scalar_offset() const { return scalar_offset_; }
 
+inline std::string_view Storage::provenance() const { return provenance_; }
+
 // ==========================================================================================
 
 inline StoragePartition::StoragePartition(InternalSharedPtr<Storage> parent,

@@ -74,6 +74,7 @@ def test_PROCESS_ENV() -> None:
     assert PROCESS_ENV == {
         "LEGATE_TEST": "1",
         "LEGATE_CONSENSUS": "1",
+        "LEGION_DEFAULT_ARGS": "-logfile stderr",
     }
 
 

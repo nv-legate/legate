@@ -264,11 +264,12 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                          Legion::Mapping::PhysicalInstance& result,
                          bool can_fail,
                          bool must_alloc_collective_writes);
-  void report_failed_mapping_(const Legion::Mappable& mappable,
-                              unsigned index,
+  void report_failed_mapping_(Legion::Mapping::MapperContext ctx,
+                              const Legion::Mappable& mappable,
+                              const StoreMapping& mapping,
                               Memory target_memory,
                               Legion::ReductionOpID redop,
-                              std::size_t footprint) const;
+                              std::size_t footprint);
   void legate_select_sources_(
     Legion::Mapping::MapperContext ctx,
     const Legion::Mapping::PhysicalInstance& target,
@@ -289,6 +290,10 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
     const std::vector<Legion::RegionRequirement>& requirements);
 
  private:
+  [[nodiscard]] std::string_view retrieve_alloc_info_(Legion::Mapping::MapperContext ctx,
+                                                      Legion::FieldSpace fs,
+                                                      Legion::FieldID fid);
+
   mapping::Mapper* legate_mapper_{};
 
  public:
@@ -304,6 +309,8 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
 
   InstanceManager* local_instances_{};
   ReductionInstanceManager* reduction_instances_{};
+  // TODO(mpapadakis): Cannot use unordered_map because PhysicalInstance doesn't define a hasher
+  std::map<Legion::Mapping::PhysicalInstance, std::string> creating_operation_{};
   LocalMachine local_machine_{};
 
  private:

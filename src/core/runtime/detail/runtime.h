@@ -186,6 +186,8 @@ class Runtime {
     Legion::LogicalRegion region,
     Legion::FieldID field_id,
     std::uint32_t field_size);
+  void attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
+                         std::string_view provenance);
   [[nodiscard]] Legion::PhysicalRegion map_region_field(Legion::LogicalRegion region,
                                                         Legion::FieldID field_id);
   void remap_physical_region(Legion::PhysicalRegion pr);
@@ -242,8 +244,6 @@ class Runtime {
   [[nodiscard]] Legion::LogicalRegion get_subregion(const Legion::LogicalPartition& partition,
                                                     const Legion::DomainPoint& color);
   [[nodiscard]] Legion::LogicalRegion find_parent_region(const Legion::LogicalRegion& region);
-  [[nodiscard]] Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
-                                               std::size_t field_size);
   [[nodiscard]] Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
                                                Legion::FieldID field_id,
                                                std::size_t field_size);

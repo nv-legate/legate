@@ -31,6 +31,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
@@ -734,13 +735,16 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
         }
       }
       runtime->enable_reentrant(ctx);
+      // Record the operation that created this instance
+      if (const auto provenance = mappable.get_provenance_string(); !provenance.empty()) {
+        creating_operation_[result] = std::string{provenance};
+      }
       // We already did the acquire
       return false;
     }
     runtime->enable_reentrant(ctx);
     if (!can_fail) {
-      report_failed_mapping_(
-        mappable, mapping.requirement_index(), target_memory, redop, footprint);
+      report_failed_mapping_(ctx, mappable, mapping, target_memory, redop, footprint);
     }
     return true;
   }
@@ -789,7 +793,7 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
     regions = group->get_regions();
   }
 
-  bool created          = false;
+  bool created          = true;
   bool success          = false;
   std::size_t footprint = 0;
 
@@ -842,6 +846,10 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
       local_instances_->record_instance(group, fid, result, policy);
     }
     runtime->enable_reentrant(ctx);
+    // Record the operation that created this instance
+    if (const auto provenance = mappable.get_provenance_string(); !provenance.empty()) {
+      creating_operation_[result] = std::string{provenance};
+    }
     // We made it so no need for an acquire
     return false;
   }
@@ -850,26 +858,18 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
 
   // If we make it here then we failed entirely
   if (!can_fail) {
-    auto req_indices = mapping.requirement_indices();
-    for (auto req_idx : req_indices) {
-      report_failed_mapping_(mappable, req_idx, target_memory, redop, footprint);
-    }
+    report_failed_mapping_(ctx, mappable, mapping, target_memory, redop, footprint);
   }
   return true;
 }
 
-void BaseMapper::report_failed_mapping_(const Legion::Mappable& mappable,
-                                        std::uint32_t index,
+void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
+                                        const Legion::Mappable& mappable,
+                                        const StoreMapping& mapping,
                                         Memory target_memory,
                                         Legion::ReductionOpID redop,
-                                        std::size_t footprint) const
+                                        std::size_t footprint)
 {
-  static constexpr const char* const memory_kinds[] = {
-#define MEM_NAMES(name, desc) desc,
-    REALM_MEMORY_KINDS(MEM_NAMES)
-#undef MEM_NAMES
-  };
-
   std::string_view opname;
   if (mappable.get_mappable_type() == Legion::Mappable::TASK_MAPPABLE) {
     opname = mappable.as_task()->get_task_name();
@@ -880,36 +880,76 @@ void BaseMapper::report_failed_mapping_(const Legion::Mappable& mappable,
     provenance = "unknown provenance";
   }
 
-  const auto req_ss = [&] {
-    if (redop > 0) {
-      return fmt::format("reduction ({}) requirement {}", redop, index);
-    }
-    return fmt::format("region requirement {}", index);
-  }();
+  std::stringstream req_ss;
 
-  LEGATE_ABORT(
-    "Mapper "
-    << get_mapper_name() << " failed to allocate " << footprint << " bytes on memory "
-    << target_memory.id << " (of kind "
-    << Legion::Mapping::Utilities::to_string(target_memory.kind()) << ": "
-    << memory_kinds[target_memory.kind()] << ") for " << req_ss << " of "
-    << log_mappable(mappable, true /*prefix_only*/) << opname << "[" << provenance << "] (UID "
-    << mappable.get_unique_id()
-    << ").\n"
-       "This means Legate was unable to reserve ouf of its memory pool the full amount "
-       "required for the above operation. Here are some things to try:\n"
-       "* Make sure your code is not impeding the garbage collection of Legate-backed "
-       "objects, e.g. by storing references in caches, or creating reference cycles.\n"
-       "* Ask Legate to reserve more space on the above memory, using the appropriate "
-       "--*mem legate flag.\n"
-       "* Assign less memory to the eager pool, by reducing --eager-alloc-percentage.\n"
-       "* If running on multiple nodes, increase how often distributed garbage collection "
-       "runs, by reducing LEGATE_FIELD_REUSE_FREQ (default: 32, warning: may "
-       "incur overhead).\n"
-       "* Adapt your code to reduce temporary storage requirements, e.g. by breaking up "
-       "larger operations into batches.\n"
-       "* If the previous steps don't help, and you are confident Legate should be able to "
-       "handle your code's working set, please open an issue on Legate's bug tracker.");
+  if (redop > 0) {
+    req_ss << "reduction (" << redop << ") requirement(s) ";
+  } else {
+    req_ss << "region requirement(s) ";
+  }
+  req_ss << fmt::format("{}", mapping.requirement_indices());
+
+  logger.error() << "Failed to allocate " << footprint << " bytes on memory " << std::hex
+                 << target_memory.id << std::dec << " (of kind "
+                 << Legion::Mapping::Utilities::to_string(target_memory.kind()) << ") for "
+                 << req_ss.str() << " of " << log_mappable(mappable, true /*prefix_only*/) << opname
+                 << "[" << provenance << "] (UID " << mappable.get_unique_id() << ")";
+  for (const Legion::RegionRequirement* req : mapping.requirements()) {
+    for (const Legion::FieldID fid : req->instance_fields) {
+      logger.error() << "  corresponding to a LogicalStore allocated at "
+                     << retrieve_alloc_info_(ctx, req->region.get_field_space(), fid);
+    }
+  }
+
+  std::vector<Legion::Mapping::PhysicalInstance> existing;
+
+  runtime->find_physical_instances(ctx,
+                                   target_memory,
+                                   Legion::LayoutConstraintSet{},
+                                   std::vector<Legion::LogicalRegion>{},
+                                   existing);
+
+  using StoreKey = std::pair<Legion::FieldSpace, Legion::FieldID>;
+  std::unordered_map<StoreKey, std::vector<Legion::Mapping::PhysicalInstance>, hasher<StoreKey>>
+    insts_for_store{};
+  std::size_t total_size = 0;
+
+  for (const Legion::Mapping::PhysicalInstance& inst : existing) {
+    std::set<Legion::FieldID> fields;
+
+    total_size += inst.get_instance_size();
+    inst.get_fields(fields);
+    for (const Legion::FieldID fid : fields) {
+      insts_for_store[{inst.get_field_space(), fid}].push_back(inst);
+    }
+  }
+
+  // TODO(mpapadakis): Once the one-pool solution is merged, we will no longer need to mention eager
+  // allocations here, but will have to properly report the case where a task reserving an eager
+  // instance (of known size) has not finished yet, so its reserved eager memory has not yet been
+  // returned to the deferred pool.
+  logger.error() << "There is not enough space because Legate is reserving " << total_size
+                 << " of the available " << target_memory.capacity() << " bytes (minus the eager"
+                 << " pool allocation) for the following LogicalStores:";
+  for (auto&& [store_key, insts] : insts_for_store) {
+    auto&& [fs, fid] = store_key;
+
+    logger.error() << "LogicalStore allocated at " << retrieve_alloc_info_(ctx, fs, fid) << ":";
+    for (const Legion::Mapping::PhysicalInstance& inst : insts) {
+      std::set<Legion::FieldID> fields;
+      inst.get_fields(fields);
+      logger.error() << "  Instance " << std::hex << inst.get_instance_id() << std::dec
+                     << " of size " << inst.get_instance_size() << " covering elements "
+                     << Legion::Mapping::Utilities::to_string(
+                          runtime, ctx, inst.get_instance_domain())
+                     << (fields.size() > 1 ? " of multiple stores" : " ");
+      if (const auto it = creating_operation_.find(inst); it != creating_operation_.end()) {
+        logger.error() << "    created for an operation launched at " << it->second;
+      }
+    }
+  }
+
+  LEGATE_ABORT("Out of memory");
 }
 
 void BaseMapper::select_task_variant(Legion::Mapping::MapperContext ctx,
@@ -1198,12 +1238,12 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
   LEGATE_ASSERT(copy.src_indirect_requirements.size() <= 1);
   LEGATE_ASSERT(copy.dst_indirect_requirements.size() <= 1);
   if (!copy.src_indirect_requirements.empty()) {
-    // This is to make the push_back call later add the isntance to the right place
+    // This is to make the push_back call later add the instance to the right place
     output.src_indirect_instances.clear();
     output_map[&copy.src_indirect_requirements.front()] = &output.src_indirect_instances;
   }
   if (!copy.dst_indirect_requirements.empty()) {
-    // This is to make the push_back call later add the isntance to the right place
+    // This is to make the push_back call later add the instance to the right place
     output.dst_indirect_instances.clear();
     output_map[&copy.dst_indirect_requirements.front()] = &output.dst_indirect_instances;
   }
@@ -1537,6 +1577,24 @@ void BaseMapper::handle_task_result(Legion::Mapping::MapperContext /*ctx*/,
                                     const MapperTaskResult& /*result*/)
 {
   LEGATE_ABORT("Nothing to do since we should never get one of these");
+}
+
+std::string_view BaseMapper::retrieve_alloc_info_(Legion::Mapping::MapperContext ctx,
+                                                  Legion::FieldSpace fs,
+                                                  Legion::FieldID fid)
+{
+  const void* orig_info;
+  std::size_t size;
+
+  if (runtime->retrieve_semantic_information(
+        ctx, fs, fid, LEGATE_CORE_ALLOC_INFO_TAG, orig_info, size, /*can_fail=*/true)) {
+    const char* alloc_info = static_cast<const char*>(orig_info);
+
+    if (size > 0 && alloc_info[0] != '\0') {
+      return alloc_info;
+    }
+  }
+  return "(unknown provenance)";
 }
 
 }  // namespace legate::mapping::detail

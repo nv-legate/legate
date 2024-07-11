@@ -49,9 +49,15 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   };
 
   // Create a RegionField-backed or a Future-backed storage. Initialized lazily.
-  Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, bool optimize_scalar);
+  Storage(InternalSharedPtr<Shape> shape,
+          InternalSharedPtr<Type> type,
+          bool optimize_scalar,
+          std::string_view provenance);
   // Create a Future-backed storage. Initialized eagerly.
-  Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, Legion::Future future);
+  Storage(InternalSharedPtr<Shape> shape,
+          InternalSharedPtr<Type> type,
+          Legion::Future future,
+          std::string_view provenance);
   // Create a RegionField-backed sub-storage. Initialized lazily.
   Storage(tuple<std::uint64_t> extents,
           InternalSharedPtr<Type> type,
@@ -76,6 +82,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   [[nodiscard]] Kind kind() const;
   [[nodiscard]] std::int32_t level() const;
   [[nodiscard]] std::size_t scalar_offset() const;
+  [[nodiscard]] std::string_view provenance() const;
 
   [[nodiscard]] InternalSharedPtr<Storage> slice(tuple<std::uint64_t> tile_shape,
                                                  const tuple<std::uint64_t>& offsets);
@@ -111,7 +118,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   std::uint64_t storage_id_{};
   bool replicated_{};
   bool unbound_{};
-  bool destroyed_out_of_order_{};
+  bool destroyed_out_of_order_{};  // only relevant on the root Storage
   InternalSharedPtr<Shape> shape_{};
   InternalSharedPtr<Type> type_{};
   Kind kind_{Kind::REGION_FIELD};
@@ -127,6 +134,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   // Unlike offsets in a tiling, these offsets can never be negative, as a slicing always selects a
   // sub-rectangle of its parent
   tuple<std::uint64_t> offsets_{};
+  std::string_view provenance_{};  // only relevant on the root Storage
 
   std::uint32_t num_pieces_{};
   std::unique_ptr<Partition> key_partition_{};

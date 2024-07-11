@@ -42,12 +42,16 @@ namespace legate::detail {
 // legate::detail::Storage
 ////////////////////////////////////////////////////
 
-Storage::Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, bool optimize_scalar)
+Storage::Storage(InternalSharedPtr<Shape> shape,
+                 InternalSharedPtr<Type> type,
+                 bool optimize_scalar,
+                 std::string_view provenance)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     unbound_{shape->unbound()},
     shape_{std::move(shape)},
     type_{std::move(type)},
-    offsets_{legate::full(dim(), uint64_t{0})}
+    offsets_{legate::full(dim(), uint64_t{0})},
+    provenance_{std::move(provenance)}
 {
   // We should not blindly check the shape volume as it would flush the scheduling window
   if (optimize_scalar) {
@@ -64,13 +68,15 @@ Storage::Storage(InternalSharedPtr<Shape> shape, InternalSharedPtr<Type> type, b
 
 Storage::Storage(InternalSharedPtr<Shape> shape,
                  InternalSharedPtr<Type> type,
-                 Legion::Future future)
+                 Legion::Future future,
+                 std::string_view provenance)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     shape_{std::move(shape)},
     type_{std::move(type)},
     kind_{Kind::FUTURE},
     future_{std::move(future)},
-    offsets_{legate::full(dim(), uint64_t{0})}
+    offsets_{legate::full(dim(), uint64_t{0})},
+    provenance_{std::move(provenance)}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -204,6 +210,7 @@ const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field()
     if (destroyed_out_of_order_) {
       region_field_->allow_out_of_order_destruction();
     }
+    Runtime::get_runtime()->attach_alloc_info(region_field_, provenance());
   } else {
     region_field_ = parent_->get_child_data(color_);
   }
@@ -272,6 +279,7 @@ void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_fi
   if (destroyed_out_of_order_) {
     region_field_->allow_out_of_order_destruction();
   }
+  Runtime::get_runtime()->attach_alloc_info(region_field_, provenance());
 }
 
 void Storage::set_future(Legion::Future future, std::size_t scalar_offset)
