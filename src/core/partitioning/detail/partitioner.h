@@ -78,7 +78,7 @@ class Partitioner {
   // symbols
   [[nodiscard]] static std::vector<const Variable*> handle_unbound_stores_(
     Strategy* strategy,
-    const std::vector<const Variable*>& partition_symbols,
+    std::vector<const Variable*> partition_symbols,
     const ConstraintSolver& solver);
 
   Span<const InternalSharedPtr<Operation>> operations_{};

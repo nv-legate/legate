@@ -20,9 +20,7 @@
 
 namespace legate::detail {
 
-namespace {
-
-class UnionFindEntry {
+class ConstraintSolver::UnionFindEntry {
  public:
   UnionFindEntry(const Variable* symb, Restrictions rs)
     : partition_symbol{symb}, restrictions{std::move(rs)}
@@ -49,12 +47,7 @@ class UnionFindEntry {
     end->size += other->size;
     return self;
   }
-  void restrict_all()
-  {
-    for (auto&& restriction : restrictions.data()) {
-      restriction = Restriction::FORBID;
-    }
-  }
+  void restrict_all() { std::fill(restrictions.begin(), restrictions.end(), Restriction::FORBID); }
 
   const Variable* partition_symbol{};
   Restrictions restrictions{};
@@ -62,35 +55,22 @@ class UnionFindEntry {
   std::size_t size{1};
 };
 
-}  // namespace
-
-class ConstraintSolver::EquivClass {
- public:
-  explicit EquivClass(const UnionFindEntry* entry)
-  {
-    partition_symbols.reserve(entry->size);
-    partition_symbols.emplace_back(entry->partition_symbol);
-    restrictions = entry->restrictions;
-
-    auto* next = entry->next;
-
-    while (next) {
-      partition_symbols.emplace_back(next->partition_symbol);
-      join_inplace(restrictions, next->restrictions);
-      next = next->next;
-    }
-  }
-
-  std::vector<const Variable*> partition_symbols{};
-  Restrictions restrictions{};
-};
-
-ConstraintSolver::~ConstraintSolver()
+ConstraintSolver::EquivClass::EquivClass(const UnionFindEntry* entry)
 {
-  for (auto equiv_class : equiv_classes_) {
-    delete equiv_class;
+  partition_symbols.reserve(entry->size);
+  partition_symbols.emplace_back(entry->partition_symbol);
+  restrictions = entry->restrictions;
+
+  auto* next = entry->next;
+
+  while (next) {
+    partition_symbols.emplace_back(next->partition_symbol);
+    join_inplace(restrictions, next->restrictions);
+    next = next->next;
   }
 }
+
+ConstraintSolver::~ConstraintSolver() = default;
 
 void ConstraintSolver::add_partition_symbol(const Variable* partition_symbol,
                                             AccessMode access_mode)
@@ -226,9 +206,9 @@ void ConstraintSolver::solve_constraints()
 
   equiv_classes_.reserve(distinct_entries.size());
   for (auto* entry : distinct_entries) {
-    auto equiv_class = equiv_classes_.emplace_back(new EquivClass{entry});
+    auto& equiv_class = equiv_classes_.emplace_back(std::make_unique<EquivClass>(entry));
     for (auto* symb : equiv_class->partition_symbols) {
-      equiv_class_map_.insert({*symb, equiv_class});
+      equiv_class_map_.insert({*symb, equiv_class.get()});
     }
   }
 }

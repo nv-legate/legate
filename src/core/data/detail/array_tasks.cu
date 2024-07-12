@@ -46,15 +46,14 @@ LEGATE_KERNEL void fixup_ranges(std::size_t desc_volume,
     return;
   }
 
-  auto outputs = context.outputs();
-  auto stream  = context.get_task_stream();
-
   // TODO(wonchanl): We need to extend this to nested cases
-  for (auto&& output : outputs) {
-    auto list_arr = output.as_list_array();
+  const auto num_outputs = context.num_outputs();
+  auto stream            = context.get_task_stream();
 
-    auto desc       = list_arr.descriptor();
-    auto desc_shape = desc.shape<1>();
+  for (std::uint32_t i = 0; i < num_outputs; ++i) {
+    const auto list_arr   = context.output(i).as_list_array();
+    const auto desc       = list_arr.descriptor();
+    const auto desc_shape = desc.shape<1>();
     if (desc_shape.empty()) {
       continue;
     }

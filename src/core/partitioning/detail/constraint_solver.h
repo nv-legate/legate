@@ -18,6 +18,8 @@
 #include "core/utilities/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
 
+#include <deque>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -56,9 +58,18 @@ class ConstraintSolver {
   std::unordered_map<Variable, AccessMode> access_modes_{};
   std::vector<InternalSharedPtr<Constraint>> constraints_{};
 
-  class EquivClass;
+  class UnionFindEntry;
+
+  class EquivClass {
+   public:
+    explicit EquivClass(const UnionFindEntry* entry);
+
+    std::vector<const Variable*> partition_symbols{};
+    Restrictions restrictions{};
+  };
+
   std::unordered_map<Variable, EquivClass*> equiv_class_map_{};
-  std::vector<EquivClass*> equiv_classes_{};
+  std::vector<std::unique_ptr<EquivClass>> equiv_classes_{};
 
   std::unordered_map<Variable, bool> is_dependent_{};
 };

@@ -226,9 +226,8 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
   auto strategy = std::make_unique<Strategy>();
 
   // Copy the list of partition symbols as we will sort them inplace
-  auto partition_symbols = solver.partition_symbols();
-
-  auto remaining_symbols = handle_unbound_stores_(strategy.get(), partition_symbols, solver);
+  auto remaining_symbols =
+    handle_unbound_stores_(strategy.get(), solver.partition_symbols(), solver);
 
   auto comparison_key = [&solver](const auto& part_symb) {
     auto* op   = part_symb->operation();
@@ -279,22 +278,17 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
 std::vector<const Variable*> Partitioner::handle_unbound_stores_(
   Strategy* strategy,
-  const std::vector<const Variable*>& partition_symbols,
+  std::vector<const Variable*> partition_symbols,
   const ConstraintSolver& solver)
 {
-  auto runtime = Runtime::get_runtime();
-
-  std::vector<const Variable*> filtered;
-
-  filtered.reserve(partition_symbols.size());
-  for (auto* part_symb : partition_symbols) {
+  const auto runtime    = Runtime::get_runtime();
+  auto is_unbound_store = [&](const Variable* part_symb) {
     if (strategy->has_assignment(part_symb)) {
-      continue;
+      return true;
     }
 
     if (!part_symb->operation()->find_store(part_symb)->unbound()) {
-      filtered.emplace_back(part_symb);
-      continue;
+      return false;
     }
 
     auto&& equiv_class = solver.find_equivalence_class(part_symb);
@@ -302,7 +296,7 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores_(
     auto field_space   = runtime->create_field_space();
     auto next_field_id = RegionManager::FIELD_ID_BASE;
 
-    for (auto symb : equiv_class) {
+    for (auto* symb : equiv_class) {
       if (next_field_id - RegionManager::FIELD_ID_BASE >= RegionManager::MAX_NUM_FIELDS) {
         field_space   = runtime->create_field_space();
         next_field_id = RegionManager::FIELD_ID_BASE;
@@ -311,9 +305,13 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores_(
         runtime->allocate_field(field_space, next_field_id++, symb->store()->type()->size());
       strategy->insert(symb, partition, field_space, field_id);
     }
-  }
+    return true;
+  };
 
-  return filtered;
+  partition_symbols.erase(
+    std::remove_if(partition_symbols.begin(), partition_symbols.end(), std::move(is_unbound_store)),
+    partition_symbols.end());
+  return partition_symbols;
 }
 
 }  // namespace legate::detail

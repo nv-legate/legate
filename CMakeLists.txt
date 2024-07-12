@@ -150,7 +150,7 @@ if(CMAKE_GENERATOR STREQUAL "Ninja")
                               "${CMAKE_CURRENT_BINARY_DIR}/build.ninja"
                       COMMENT "touch build.ninja so ninja doesn't re-run CMake on rebuild"
                       VERBATIM)
-    foreach(_dep IN ITEMS legion_core legion_core_python Legion LegionRuntime Realm
+    foreach(_dep IN ITEMS legate_core legate_core_python Legion LegionRuntime Realm
                           RealmRuntime Regent)
       if(TARGET ${_dep})
         add_dependencies("touch_legate_core${_suf}_ninja_build" ${_dep})

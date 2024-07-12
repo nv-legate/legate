@@ -22,20 +22,23 @@ namespace legate::detail {
     return;
   }
   // TODO(wonchanl): We need to extend this to nested cases
-  for (auto&& output : context.outputs()) {
-    auto list_arr = output.as_list_array();
+  const auto num_outputs = context.num_outputs();
 
-    auto list_desc  = list_arr.descriptor();
-    auto desc_shape = list_desc.shape<1>();
+  for (std::uint32_t i = 0; i < num_outputs; ++i) {
+    const auto list_arr   = context.output(i).as_list_array();
+    const auto list_desc  = list_arr.descriptor();
+    const auto desc_shape = list_desc.shape<1>();
+
     if (desc_shape.empty()) {
       continue;
     }
 
     const auto vardata_lo = list_arr.vardata().shape<1>().lo;
-    auto desc_acc         = list_desc.data().read_write_accessor<Rect<1>, 1>();
+    const auto desc_acc   = list_desc.data().read_write_accessor<Rect<1>, 1>();
 
     for (auto idx = desc_shape.lo[0]; idx <= desc_shape.hi[0]; ++idx) {
       auto& desc = desc_acc[idx];
+
       desc.lo += vardata_lo;
       desc.hi += vardata_lo;
     }
