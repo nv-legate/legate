@@ -41,6 +41,7 @@
 #include "core/task/variant_options.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/env.h"
@@ -48,7 +49,6 @@
 #include "core/utilities/machine.h"
 #include "core/utilities/scope_guard.h"
 
-#include "env_defaults.h"
 #include "realm/cmdline.h"
 #include "realm/network.h"
 
@@ -57,7 +57,6 @@
 #include <fmt/ranges.h>
 #include <limits>
 #include <realm/cuda/cuda_module.h>
-#include <sstream>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -84,8 +83,9 @@ constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
 
 Runtime::Runtime()
   : legion_runtime_{Legion::Runtime::get_runtime()},
-    field_reuse_freq_{LEGATE_FIELD_REUSE_FREQ.get(FIELD_REUSE_FREQ_DEFAULT, FIELD_REUSE_FREQ_TEST)},
-    force_consensus_match_{LEGATE_CONSENSUS.get(CONSENSUS_DEFAULT, CONSENSUS_TEST)}
+    field_reuse_freq_{
+      LEGATE_FIELD_REUSE_FREQ.get(LEGATE_FIELD_REUSE_FREQ_DEFAULT, LEGATE_FIELD_REUSE_FREQ_TEST)},
+    force_consensus_match_{LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST)}
 {
 }
 

@@ -15,9 +15,9 @@
 #include "core/comm/comm_cal.h"
 #include "core/comm/comm_cpu.h"
 #include "core/comm/comm_nccl.h"
+#include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/env.h"
 
-#include "env_defaults.h"
 #include "legate_defines.h"
 
 namespace legate::detail {
@@ -36,7 +36,7 @@ void register_tasks(const detail::Library* library)
   if (LEGATE_DEFINED(LEGATE_USE_CAL)) {
     cal::register_tasks(library);
   }
-  if (!LEGATE_DISABLE_MPI.get(DISABLE_MPI_DEFAULT, DISABLE_MPI_TEST)) {
+  if (!LEGATE_DISABLE_MPI.get(LEGATE_DISABLE_MPI_DEFAULT, LEGATE_DISABLE_MPI_TEST)) {
     cpu::register_tasks(library);
   }
 }

@@ -36,7 +36,14 @@ _expected_settings = (
     "disable_mpi",
 )
 
-ENV_HEADER = Path(__file__).parents[3] / "src" / "env_defaults.h"
+ENV_HEADER = (
+    Path(__file__).parents[3]
+    / "src"
+    / "core"
+    / "utilities"
+    / "detail"
+    / "env_defaults.h"
+).resolve()
 
 
 class TestSettings:
@@ -90,13 +97,13 @@ class TestDefaults:
     @pytest.mark.parametrize("name", _settings_with_test_defaults)
     def test_default(self, name: str) -> None:
         setting = getattr(m.settings, name)
-        define = setting.env_var.removeprefix("LEGATE_") + "_DEFAULT"
+        define = setting.env_var + "_DEFAULT"
         expected = setting._convert(read_c_define(ENV_HEADER, define))
         assert setting.default == expected
 
     @pytest.mark.parametrize("name", _settings_with_test_defaults)
     def test_test_default(self, name: str) -> None:
         setting = getattr(m.settings, name)
-        define = setting.env_var.removeprefix("LEGATE_") + "_TEST"
+        define = setting.env_var + "_TEST"
         expected = setting._convert(read_c_define(ENV_HEADER, define))
         assert setting.test_default == expected

@@ -15,9 +15,8 @@
 #include "core/comm/comm_cal.h"
 #include "core/comm/comm_nccl.h"
 #include "core/mapping/detail/machine.h"
+#include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/env.h"
-
-#include "env_defaults.h"
 
 #include <cstdlib>
 #include <vector>
@@ -42,16 +41,17 @@ class CoreMapper final : public Mapper {
   const LocalMachine MACHINE{};
   // TODO(wonchanl): Some of these should be moved to legate::detail::Config
   const std::int64_t MIN_GPU_CHUNK{
-    LEGATE_MIN_GPU_CHUNK.get(MIN_GPU_CHUNK_DEFAULT, MIN_GPU_CHUNK_TEST)};
+    LEGATE_MIN_GPU_CHUNK.get(LEGATE_MIN_GPU_CHUNK_DEFAULT, LEGATE_MIN_GPU_CHUNK_TEST)};
   const std::int64_t MIN_CPU_CHUNK{
-    LEGATE_MIN_CPU_CHUNK.get(MIN_CPU_CHUNK_DEFAULT, MIN_CPU_CHUNK_TEST)};
+    LEGATE_MIN_CPU_CHUNK.get(LEGATE_MIN_CPU_CHUNK_DEFAULT, LEGATE_MIN_CPU_CHUNK_TEST)};
   const std::int64_t MIN_OMP_CHUNK{
-    LEGATE_MIN_OMP_CHUNK.get(MIN_OMP_CHUNK_DEFAULT, MIN_OMP_CHUNK_TEST)};
-  const std::uint32_t WINDOW_SIZE{LEGATE_WINDOW_SIZE.get(WINDOW_SIZE_DEFAULT, WINDOW_SIZE_TEST)};
+    LEGATE_MIN_OMP_CHUNK.get(LEGATE_MIN_OMP_CHUNK_DEFAULT, LEGATE_MIN_OMP_CHUNK_TEST)};
+  const std::uint32_t WINDOW_SIZE{
+    LEGATE_WINDOW_SIZE.get(LEGATE_WINDOW_SIZE_DEFAULT, LEGATE_WINDOW_SIZE_TEST)};
   const std::uint32_t FIELD_REUSE_FRAC{
-    LEGATE_FIELD_REUSE_FRAC.get(FIELD_REUSE_FRAC_DEFAULT, FIELD_REUSE_FRAC_TEST)};
+    LEGATE_FIELD_REUSE_FRAC.get(LEGATE_FIELD_REUSE_FRAC_DEFAULT, LEGATE_FIELD_REUSE_FRAC_TEST)};
   const std::uint32_t MAX_LRU_LENGTH{
-    LEGATE_MAX_LRU_LENGTH.get(MAX_LRU_LENGTH_DEFAULT, MAX_LRU_LENGTH_TEST)};
+    LEGATE_MAX_LRU_LENGTH.get(LEGATE_MAX_LRU_LENGTH_DEFAULT, LEGATE_MAX_LRU_LENGTH_TEST)};
 };
 
 void CoreMapper::set_machine(const legate::mapping::MachineQueryInterface* /*m*/) {}
