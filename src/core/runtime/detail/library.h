@@ -49,11 +49,20 @@ class Library {
   };
 
   friend class Runtime;
-  Library(std::string library_name,
+
+ public:
+  class ConstructKey {
+    ConstructKey() = default;
+
+    friend class Runtime;
+    friend class Library;
+  };
+
+  Library(ConstructKey,
+          std::string library_name,
           const ResourceConfig& config,
           std::map<LegateVariantCode, VariantOptions> default_options);
 
- public:
   Library(const Library&) = delete;
   Library(Library&&)      = delete;
 

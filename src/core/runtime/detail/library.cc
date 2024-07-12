@@ -26,7 +26,8 @@
 
 namespace legate::detail {
 
-Library::Library(std::string library_name,
+Library::Library(ConstructKey,
+                 std::string library_name,
                  const ResourceConfig& config,
                  std::map<LegateVariantCode, VariantOptions> default_options)
   : runtime_{Legion::Runtime::get_runtime()},

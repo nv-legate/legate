@@ -89,11 +89,23 @@ Runtime::Runtime()
 {
 }
 
-Library* Runtime::create_library(std::string_view library_name,
-                                 const ResourceConfig& config,
-                                 std::unique_ptr<mapping::Mapper> mapper,
-                                 std::map<LegateVariantCode, VariantOptions> default_options,
-                                 bool in_callback)
+Library* Runtime::create_library(
+  std::string_view library_name,
+  const ResourceConfig& config,
+  std::unique_ptr<mapping::Mapper> mapper,
+  // clang-tidy complains that this is not moved (but clearly, it is). I suspect this is due to
+  // a tiny little footnote in try_emplace():
+  //
+  // ...unlike [unordered_map::]insert() or [unordered_map::]emplace(), these functions do not
+  // move from rvalue arguments if the insertion does not happen...
+  //
+  // So probably there is a branch that clang-tidy sees down in try_emplace() that does
+  // this. But clang-tidy seemingly does not realize that the emplacement always happens,
+  // because we first check that the key does not yet exist.
+  //
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
+  std::map<LegateVariantCode, VariantOptions> default_options,
+  bool in_callback)
 {
   if (libraries_.find(library_name) != libraries_.end()) {
     throw std::invalid_argument{fmt::format("Library {} already exists", library_name)};
@@ -103,27 +115,48 @@ Library* Runtime::create_library(std::string_view library_name,
   if (nullptr == mapper) {
     mapper = std::make_unique<mapping::detail::DefaultMapper>();
   }
-  auto ptr =
-    libraries_
-      .emplace(library_name,
-               std::unique_ptr<Library>{new Library{
-                 static_cast<std::string>(library_name), config, std::move(default_options)}})
-      .first->second.get();
+
+  auto* ptr = &libraries_
+                 .try_emplace(std::string{library_name},
+                              Library::ConstructKey{},
+                              std::string{library_name},
+                              config,
+                              std::move(default_options))
+                 .first->second;
+
   ptr->register_mapper(std::move(mapper), in_callback);
   return ptr;
 }
 
-Library* Runtime::find_library(std::string_view library_name, bool can_fail /*=false*/) const
-{
-  const auto finder = libraries_.find(library_name);
+namespace {
 
-  if (libraries_.end() == finder) {
+template <typename LibraryMapT>
+[[nodiscard]] auto find_library_impl(LibraryMapT& libraries,
+                                     std::string_view library_name,
+                                     bool can_fail)
+  -> std::conditional_t<std::is_const_v<LibraryMapT>, const Library*, Library*>
+{
+  const auto finder = libraries.find(library_name);
+
+  if (libraries.end() == finder) {
     if (!can_fail) {
       throw std::out_of_range{fmt::format("Library {} does not exist", library_name)};
     }
     return {};
   }
-  return finder->second.get();
+  return &finder->second;
+}
+
+}  // namespace
+
+const Library* Runtime::find_library(std::string_view library_name, bool can_fail /*=false*/) const
+{
+  return find_library_impl(libraries_, library_name, can_fail);
+}
+
+Library* Runtime::find_library(std::string_view library_name, bool can_fail /*=false*/)
+{
+  return find_library_impl(libraries_, library_name, can_fail);
 }
 
 Library* Runtime::find_or_create_library(
@@ -215,8 +248,8 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
 
   field_manager_ = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
                                               : std::make_unique<FieldManager>();
-  communicator_manager_ = std::make_unique<CommunicatorManager>();
-  partition_manager_    = std::make_unique<PartitionManager>(this);
+  communicator_manager_.emplace();
+  partition_manager_.emplace(this);
   static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
 
   Config::has_socket_mem =
@@ -887,15 +920,7 @@ void Runtime::progress_unordered_operations() const
 
 RegionManager* Runtime::find_or_create_region_manager(const Legion::IndexSpace& index_space)
 {
-  auto finder = region_managers_.find(index_space);
-  if (finder != region_managers_.end()) {
-    return finder->second.get();
-  }
-
-  auto rgn_mgr                  = std::make_unique<RegionManager>(index_space);
-  auto ptr                      = rgn_mgr.get();
-  region_managers_[index_space] = std::move(rgn_mgr);
-  return ptr;
+  return &region_managers_.try_emplace(index_space, index_space).first->second;
 }
 
 const Legion::IndexSpace& Runtime::find_or_create_index_space(const tuple<std::uint64_t>& extents)
@@ -1529,11 +1554,11 @@ void Runtime::destroy()
   issue_execution_fence();
 
   // Destroy all communicators. This will likely launch some tasks for the clean-up.
-  communicator_manager_->destroy();
+  communicator_manager()->destroy();
 
   // Destroy all Legion handles used by Legate
   for (auto&& [_, region_manager] : region_managers_) {
-    region_manager->destroy(true /*unordered*/);
+    region_manager.destroy(true /*unordered*/);
   }
   for (auto&& [_, index_space] : cached_index_spaces_) {
     legion_runtime_->destroy_index_space(legion_context_, index_space, true /*unordered*/);
@@ -1551,13 +1576,7 @@ void Runtime::destroy()
   pending_exceptions_.clear();
 
   // We finally deallocate managers
-  for (auto&& [_, library] : libraries_) {
-    library.reset();
-  }
   libraries_.clear();
-  for (auto&& [_, region_manager] : region_managers_) {
-    region_manager.reset();
-  }
   region_managers_.clear();
   field_manager_.reset();
 

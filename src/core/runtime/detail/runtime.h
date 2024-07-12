@@ -66,7 +66,8 @@ class Runtime {
                                         std::unique_ptr<mapping::Mapper> mapper,
                                         std::map<LegateVariantCode, VariantOptions> default_options,
                                         bool in_callback);
-  [[nodiscard]] Library* find_library(std::string_view library_name, bool can_fail) const;
+  [[nodiscard]] const Library* find_library(std::string_view library_name, bool can_fail) const;
+  [[nodiscard]] Library* find_library(std::string_view library_name, bool can_fail);
   [[nodiscard]] Library* find_or_create_library(
     std::string_view library_name,
     const ResourceConfig& config,
@@ -204,8 +205,10 @@ class Runtime {
 
   [[nodiscard]] RegionManager* find_or_create_region_manager(const Legion::IndexSpace& index_space);
   [[nodiscard]] FieldManager* field_manager();
-  [[nodiscard]] CommunicatorManager* communicator_manager() const;
-  [[nodiscard]] PartitionManager* partition_manager() const;
+  [[nodiscard]] CommunicatorManager* communicator_manager();
+  [[nodiscard]] const CommunicatorManager* communicator_manager() const;
+  [[nodiscard]] PartitionManager* partition_manager();
+  [[nodiscard]] const PartitionManager* partition_manager() const;
   [[nodiscard]] Scope& scope();
   [[nodiscard]] const Scope& scope() const;
 
@@ -347,9 +350,9 @@ class Runtime {
 
   std::unique_ptr<FieldManager> field_manager_{};
   using RegionManagerKey = Legion::IndexSpace;
-  std::unordered_map<RegionManagerKey, std::unique_ptr<RegionManager>> region_managers_{};
-  std::unique_ptr<CommunicatorManager> communicator_manager_{};
-  std::unique_ptr<PartitionManager> partition_manager_{};
+  std::unordered_map<RegionManagerKey, RegionManager> region_managers_{};
+  std::optional<CommunicatorManager> communicator_manager_{};
+  std::optional<PartitionManager> partition_manager_{};
   Scope scope_{};
 
   std::unordered_map<Domain, Legion::IndexSpace> cached_index_spaces_{};
@@ -381,7 +384,7 @@ class Runtime {
 
   // This could be a hash map, but kept as an ordered map just in case we may later support
   // library-specific shutdown callbacks that can launch tasks.
-  std::map<std::string, std::unique_ptr<Library>, std::less<>> libraries_{};
+  std::map<std::string, Library, std::less<>> libraries_{};
 
   using ReductionOpTableKey = std::pair<uint32_t, std::int32_t>;
   std::unordered_map<ReductionOpTableKey, int32_t, hasher<ReductionOpTableKey>> reduction_ops_{};
