@@ -87,7 +87,7 @@ class TestParserDefaults:
         assert m.parser.get_default("workers") is None
 
     def test_timeout(self) -> None:
-        assert m.parser.get_default("timeout") is None
+        assert m.parser.get_default("timeout") == 5 * 60
 
     def test_cpu_pin(self) -> None:
         assert m.parser.get_default("cpu_pin") == "partial"

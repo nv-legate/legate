@@ -249,7 +249,7 @@ execution.add_argument(
     dest="timeout",
     type=int,
     action="store",
-    default=None,
+    default=60 * 5,  # 5 mins
     required=False,
     help="Timeout in seconds for individual tests",
 )

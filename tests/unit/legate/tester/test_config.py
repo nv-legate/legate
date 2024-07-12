@@ -63,7 +63,7 @@ class TestConfig:
         assert filename is None or str(filename).endswith("mpi_result")
 
         assert c.execution.workers is None
-        assert c.execution.timeout is None
+        assert c.execution.timeout == 5 * 60
         assert c.execution.gpu_delay == defaults.GPU_DELAY
         assert c.execution.bloat_factor == defaults.GPU_BLOAT_FACTOR
         assert c.execution.cpu_pin == "partial"
