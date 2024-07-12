@@ -116,7 +116,7 @@ void Task::launch_task_(Strategy* p_strategy)
   // Add communicators
   if (launch_domain.is_valid() && launch_domain.get_volume() > 1) {
     for (auto* factory : communicator_factories_) {
-      auto target = machine_.preferred_target;
+      auto target = machine_.preferred_target();
 
       if (!factory->is_supported_target(target)) {
         continue;

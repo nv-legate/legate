@@ -84,7 +84,7 @@ std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range)
 // legate::mapping::Machine
 //////////////////////////////////////////
 
-TaskTarget Machine::preferred_target() const { return impl()->preferred_target; }
+TaskTarget Machine::preferred_target() const { return impl()->preferred_target(); }
 
 ProcessorRange Machine::processor_range() const { return processor_range(preferred_target()); }
 
@@ -93,7 +93,7 @@ ProcessorRange Machine::processor_range(TaskTarget target) const
   return impl()->processor_range(target);
 }
 
-std::vector<TaskTarget> Machine::valid_targets() const { return impl()->valid_targets(); }
+const std::vector<TaskTarget>& Machine::valid_targets() const { return impl()->valid_targets(); }
 
 std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
 {

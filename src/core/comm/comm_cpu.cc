@@ -15,6 +15,7 @@
 #include "core/comm/backend_network.h"
 #include "core/comm/coll.h"
 #include "core/comm/comm_util.h"
+#include "core/mapping/detail/mapping.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/library.h"
@@ -63,8 +64,7 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
 {
   const Domain launch_domain{
     Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
-  auto tag =
-    machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
+  const auto tag = mapping::detail::to_variant_code(machine.preferred_target());
 
   // Generate a unique ID
   auto comm_id = Legion::Future::from_value<std::int32_t>(coll::collInitComm());
@@ -92,10 +92,9 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
                         std::uint32_t num_tasks,
                         const Legion::FutureMap& communicator)
 {
-  const auto tag =
-    machine.preferred_target == mapping::TaskTarget::OMP ? LEGATE_OMP_VARIANT : LEGATE_CPU_VARIANT;
   const Domain launch_domain{
     Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
+  const auto tag = mapping::detail::to_variant_code(machine.preferred_target());
   detail::TaskLauncher launcher{core_library_, machine, LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID, tag};
 
   launcher.set_concurrent(true);

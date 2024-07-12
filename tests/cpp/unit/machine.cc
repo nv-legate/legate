@@ -159,7 +159,7 @@ TEST_F(Machine, MachineDesc)
   {
     const legate::mapping::detail::Machine machine;
 
-    EXPECT_EQ(machine.preferred_target, legate::mapping::TaskTarget::CPU);
+    EXPECT_EQ(machine.preferred_target(), legate::mapping::TaskTarget::CPU);
     EXPECT_EQ(machine.count(), 0);
     EXPECT_EQ(machine.count(legate::mapping::TaskTarget::GPU), 0);
     EXPECT_EQ(machine.processor_range(), legate::mapping::ProcessorRange(0, 0, 1));
@@ -176,7 +176,7 @@ TEST_F(Machine, MachineDesc)
 
     const std::map<legate::mapping::TaskTarget, legate::mapping::ProcessorRange> processor_ranges{};
 
-    EXPECT_EQ(machine.processor_ranges, processor_ranges);
+    EXPECT_EQ(machine.processor_ranges(), processor_ranges);
   }
 
   legate::mapping::ProcessorRange cpu_range{1, 3, 4};
@@ -204,20 +204,20 @@ TEST_F(Machine, MachineDesc)
     const legate::mapping::detail::Machine machine1{
       {{legate::mapping::TaskTarget::CPU, cpu_range}}};
 
-    EXPECT_EQ(machine1.preferred_target, legate::mapping::TaskTarget::CPU);
+    EXPECT_EQ(machine1.preferred_target(), legate::mapping::TaskTarget::CPU);
 
     const legate::mapping::detail::Machine machine2{
       {{legate::mapping::TaskTarget::CPU, cpu_range},
        {legate::mapping::TaskTarget::OMP, omp_range}}};
 
-    EXPECT_EQ(machine2.preferred_target, legate::mapping::TaskTarget::OMP);
+    EXPECT_EQ(machine2.preferred_target(), legate::mapping::TaskTarget::OMP);
 
     const legate::mapping::detail::Machine machine3{
       {{legate::mapping::TaskTarget::CPU, cpu_range},
        {legate::mapping::TaskTarget::OMP, omp_range},
        {legate::mapping::TaskTarget::GPU, gpu_range}}};
 
-    EXPECT_EQ(machine3.preferred_target, legate::mapping::TaskTarget::GPU);
+    EXPECT_EQ(machine3.preferred_target(), legate::mapping::TaskTarget::GPU);
   }
 
   // test processor_range
@@ -248,14 +248,14 @@ TEST_F(Machine, MachineDesc)
       {{legate::mapping::TaskTarget::CPU, cpu_range},
        {legate::mapping::TaskTarget::OMP, omp_range},
        {legate::mapping::TaskTarget::GPU, gpu_range}}};
-    const auto valid_targets1 = machine1.valid_targets();
+    const auto& valid_targets1 = machine1.valid_targets();
 
     EXPECT_EQ(valid_targets1.size(), 3);
 
     const legate::mapping::detail::Machine machine2{
       {{legate::mapping::TaskTarget::CPU, cpu_range},
        {legate::mapping::TaskTarget::OMP, omp_range}}};
-    const auto valid_targets2 = machine2.valid_targets();
+    const auto& valid_targets2 = machine2.valid_targets();
 
     EXPECT_EQ(valid_targets2.size(), 2);
   }
@@ -313,12 +313,12 @@ TEST_F(Machine, MachineDesc)
   {
     const legate::mapping::detail::Machine machine{{{legate::mapping::TaskTarget::CPU, cpu_range},
                                                     {legate::mapping::TaskTarget::GPU, gpu_range}}};
-    const auto machine1       = machine.only(legate::mapping::TaskTarget::CPU);
-    const auto valid_targets1 = machine1.valid_targets();
+    const auto machine1        = machine.only(legate::mapping::TaskTarget::CPU);
+    const auto& valid_targets1 = machine1.valid_targets();
 
     EXPECT_EQ(valid_targets1.size(), 1);
     EXPECT_EQ(machine1.count(), 2);
-    EXPECT_EQ(machine1.preferred_target, legate::mapping::TaskTarget::CPU);
+    EXPECT_EQ(machine1.preferred_target(), legate::mapping::TaskTarget::CPU);
     EXPECT_EQ(machine1.processor_range().per_node_count, 4);
 
     const legate::mapping::detail::Machine machine2{
@@ -343,14 +343,14 @@ TEST_F(Machine, MachineDesc)
 
     const auto new_machine1 = machine1.slice(0, 2, legate::mapping::TaskTarget::GPU);
 
-    EXPECT_EQ(new_machine1.preferred_target, legate::mapping::TaskTarget::GPU);
+    EXPECT_EQ(new_machine1.preferred_target(), legate::mapping::TaskTarget::GPU);
     EXPECT_EQ(new_machine1.processor_range().count(), 2);
 
     const legate::mapping::detail::Machine machine2{
       {{legate::mapping::TaskTarget::GPU, gpu_range}}};
     const auto new_machine2 = machine2.slice(0, 2);
 
-    EXPECT_EQ(new_machine2.preferred_target, legate::mapping::TaskTarget::GPU);
+    EXPECT_EQ(new_machine2.preferred_target(), legate::mapping::TaskTarget::GPU);
     EXPECT_EQ(new_machine2.processor_range().count(), 2);
 
     const legate::mapping::detail::Machine machine3{
@@ -377,20 +377,20 @@ TEST_F(Machine, MachineDesc)
     const legate::mapping::detail::Machine machine{{{legate::mapping::TaskTarget::CPU, cpu_range},
                                                     {legate::mapping::TaskTarget::OMP, omp_range},
                                                     {legate::mapping::TaskTarget::GPU, gpu_range}}};
-    const auto machine1       = machine[legate::mapping::TaskTarget::GPU];
-    const auto valid_targets1 = machine1.valid_targets();
+    const auto machine1        = machine[legate::mapping::TaskTarget::GPU];
+    const auto& valid_targets1 = machine1.valid_targets();
 
     EXPECT_EQ(valid_targets1.size(), 1);
     EXPECT_EQ(machine1.count(), 3);
-    EXPECT_EQ(machine1.preferred_target, legate::mapping::TaskTarget::GPU);
+    EXPECT_EQ(machine1.preferred_target(), legate::mapping::TaskTarget::GPU);
     EXPECT_EQ(machine1.processor_range().per_node_count, 3);
 
     const auto machine2 =
       machine[{legate::mapping::TaskTarget::CPU, legate::mapping::TaskTarget::OMP}];
-    const auto valid_targets2 = machine2.valid_targets();
+    const auto& valid_targets2 = machine2.valid_targets();
 
     EXPECT_EQ(valid_targets2.size(), 2);
-    EXPECT_EQ(machine2.preferred_target, legate::mapping::TaskTarget::OMP);
+    EXPECT_EQ(machine2.preferred_target(), legate::mapping::TaskTarget::OMP);
     EXPECT_EQ(machine2.processor_range().per_node_count, 2);
   }
 

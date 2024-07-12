@@ -29,22 +29,30 @@ namespace legate::mapping::detail {
 // legate::mapping::detail::Machine
 //////////////////////////////////////////
 
-Machine::Machine(std::map<TaskTarget, ProcessorRange> ranges) : processor_ranges{std::move(ranges)}
+Machine::Machine(std::map<TaskTarget, ProcessorRange> ranges) : processor_ranges_{std::move(ranges)}
 {
-  for (auto&& [target, processor_range] : processor_ranges) {
+  for (auto&& [target, processor_range] : processor_ranges()) {
     if (!processor_range.empty()) {
-      preferred_target = target;
+      preferred_target_ = target;
       return;
     }
   }
 }
 
-const ProcessorRange& Machine::processor_range() const { return processor_range(preferred_target); }
+Machine::Machine(TaskTarget preferred_target, std::map<TaskTarget, ProcessorRange> ranges)
+  : preferred_target_{preferred_target}, processor_ranges_{std::move(ranges)}
+{
+}
+
+const ProcessorRange& Machine::processor_range() const
+{
+  return processor_range(preferred_target());
+}
 
 const ProcessorRange& Machine::processor_range(TaskTarget target) const
 {
-  auto finder = processor_ranges.find(target);
-  if (finder == processor_ranges.end()) {
+  auto finder = processor_ranges().find(target);
+  if (finder == processor_ranges().end()) {
     static constexpr ProcessorRange EMPTY_RANGE{};
 
     return EMPTY_RANGE;
@@ -52,25 +60,26 @@ const ProcessorRange& Machine::processor_range(TaskTarget target) const
   return finder->second;
 }
 
-std::vector<TaskTarget> Machine::valid_targets() const
+const std::vector<TaskTarget>& Machine::valid_targets() const
 {
-  std::vector<TaskTarget> result;
+  if (!valid_targets_.has_value()) {
+    auto& vec = valid_targets_.emplace();
 
-  result.reserve(processor_ranges.size());
-  for (auto&& [target, range] : processor_ranges) {
-    if (range.empty()) {
-      continue;
+    vec.reserve(processor_ranges().size());
+    for (auto&& [target, range] : processor_ranges()) {
+      if (!range.empty()) {
+        vec.push_back(target);
+      }
     }
-    result.push_back(target);
   }
-  return result;
+  return *valid_targets_;
 }
 
 std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>& to_exclude) const
 {
   std::vector<TaskTarget> result;
 
-  for (auto&& [target, _] : processor_ranges) {
+  for (auto&& [target, _] : processor_ranges()) {
     if (to_exclude.find(target) == to_exclude.end()) {
       result.push_back(target);
     }
@@ -78,7 +87,7 @@ std::vector<TaskTarget> Machine::valid_targets_except(const std::set<TaskTarget>
   return result;
 }
 
-std::uint32_t Machine::count() const { return count(preferred_target); }
+std::uint32_t Machine::count() const { return count(preferred_target()); }
 
 std::uint32_t Machine::count(TaskTarget target) const { return processor_range(target).count(); }
 
@@ -86,9 +95,9 @@ std::string Machine::to_string() const { return fmt::format("{}", fmt::streamed(
 
 void Machine::pack(legate::detail::BufferBuilder& buffer) const
 {
-  buffer.pack(legate::traits::detail::to_underlying(preferred_target));
-  buffer.pack(static_cast<std::uint32_t>(processor_ranges.size()));
-  for (auto&& [target, processor_range] : processor_ranges) {
+  buffer.pack(legate::traits::detail::to_underlying(preferred_target()));
+  buffer.pack(static_cast<std::uint32_t>(processor_ranges().size()));
+  for (auto&& [target, processor_range] : processor_ranges()) {
     buffer.pack(legate::traits::detail::to_underlying(target));
     buffer.pack<std::uint32_t>(processor_range.low);
     buffer.pack<std::uint32_t>(processor_range.high);
@@ -114,7 +123,7 @@ Machine Machine::slice(std::uint32_t from,
                        bool keep_others) const
 {
   if (keep_others) {
-    std::map<TaskTarget, ProcessorRange> new_ranges{processor_ranges};
+    std::map<TaskTarget, ProcessorRange> new_ranges{processor_ranges()};
 
     new_ranges[target] = processor_range(target).slice(from, to);
     return Machine{std::move(new_ranges)};
@@ -124,12 +133,12 @@ Machine Machine::slice(std::uint32_t from,
 
 Machine Machine::slice(std::uint32_t from, std::uint32_t to, bool keep_others) const
 {
-  return slice(from, to, preferred_target, keep_others);
+  return slice(from, to, preferred_target(), keep_others);
 }
 
 bool Machine::operator==(const Machine& other) const
 {
-  if (processor_ranges.size() < other.processor_ranges.size()) {
+  if (processor_ranges().size() < other.processor_ranges().size()) {
     return other.operator==(*this);
   }
   auto equal_ranges = [&](const auto& proc_range) {
@@ -138,11 +147,11 @@ bool Machine::operator==(const Machine& other) const
     if (range.empty()) {
       return true;
     }
-    auto finder = other.processor_ranges.find(target);
-    return !(finder == other.processor_ranges.end() || range != finder->second);
+    auto finder = other.processor_ranges().find(target);
+    return !(finder == other.processor_ranges().end() || range != finder->second);
   };
 
-  return std::all_of(processor_ranges.begin(), processor_ranges.end(), std::move(equal_ranges));
+  return std::all_of(processor_ranges().begin(), processor_ranges().end(), std::move(equal_ranges));
 }
 
 bool Machine::operator!=(const Machine& other) const { return !(*this == other); }
@@ -150,9 +159,9 @@ bool Machine::operator!=(const Machine& other) const { return !(*this == other);
 Machine Machine::operator&(const Machine& other) const
 {
   std::map<TaskTarget, ProcessorRange> new_processor_ranges;
-  for (const auto& [target, range] : processor_ranges) {
-    auto finder = other.processor_ranges.find(target);
-    if (finder != other.processor_ranges.end()) {
+  for (const auto& [target, range] : processor_ranges()) {
+    auto finder = other.processor_ranges().find(target);
+    if (finder != other.processor_ranges().end()) {
       new_processor_ranges[target] = finder->second & range;
     }
   }
@@ -161,14 +170,15 @@ Machine Machine::operator&(const Machine& other) const
 
 bool Machine::empty() const
 {
-  return std::all_of(
-    processor_ranges.begin(), processor_ranges.end(), [](auto& rng) { return rng.second.empty(); });
+  return std::all_of(processor_ranges().begin(), processor_ranges().end(), [](auto& rng) {
+    return rng.second.empty();
+  });
 }
 
 std::ostream& operator<<(std::ostream& os, const Machine& machine)
 {
-  os << "Machine(preferred_target: " << machine.preferred_target;
-  for (auto&& [kind, range] : machine.processor_ranges) {
+  os << "Machine(preferred_target: " << machine.preferred_target();
+  for (auto&& [kind, range] : machine.processor_ranges()) {
     os << ", " << kind << ": " << range;
   }
   os << ")";
@@ -358,8 +368,8 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
 {
   const auto& local_procs = procs(target);
 
-  auto finder = machine.processor_ranges.find(target);
-  if (machine.processor_ranges.end() == finder) {
+  auto finder = machine.processor_ranges().find(target);
+  if (machine.processor_ranges().end() == finder) {
     if (fallback_to_global) {
       return LocalProcessorRange{local_procs};
     }

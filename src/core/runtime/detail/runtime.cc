@@ -229,16 +229,10 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
 mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
                                                          std::int64_t task_id) const
 {
-  auto* task_info     = library->find_task(task_id);
-  const auto& machine = get_machine();
-  std::vector<mapping::TaskTarget> task_targets;
-
-  for (const auto& t : machine.valid_targets()) {
-    if (task_info->find_variant(mapping::detail::to_variant_code(t)).has_value()) {
-      task_targets.push_back(t);
-    }
-  }
-  auto sliced = machine.only(task_targets);
+  const auto* task_info = library->find_task(task_id);
+  auto sliced           = get_machine().only_if([&](mapping::TaskTarget t) {
+    return task_info->find_variant(mapping::detail::to_variant_code(t)).has_value();
+  });
 
   if (sliced.empty()) {
     throw std::invalid_argument{
@@ -1182,7 +1176,7 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result,
 {
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
-  auto variant        = mapping::detail::to_variant_code(machine.preferred_target);
+  auto variant        = mapping::detail::to_variant_code(machine.preferred_target());
   auto launcher =
     TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
 
@@ -1199,7 +1193,7 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
 {
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
-  auto variant        = mapping::detail::to_variant_code(machine.preferred_target);
+  auto variant        = mapping::detail::to_variant_code(machine.preferred_target());
   auto launcher =
     TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
 
@@ -1386,7 +1380,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Query sharding {proj_id: " << proj_id
                          << ", processor range: " << proc_range
-                         << ", processor type: " << machine.preferred_target << "}";
+                         << ", processor type: " << machine.preferred_target() << "}";
   }
 
   auto finder = registered_shardings_.find(key);

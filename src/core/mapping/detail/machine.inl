@@ -23,6 +23,28 @@ inline Machine Machine::operator[](const std::vector<TaskTarget>& targets) const
   return only(targets);
 }
 
+inline TaskTarget Machine::preferred_target() const { return preferred_target_; }
+
+inline const std::map<TaskTarget, ProcessorRange>& Machine::processor_ranges() const
+{
+  return processor_ranges_;
+}
+
+template <typename F>
+Machine Machine::only_if(F&& pred) const
+{
+  std::map<TaskTarget, ProcessorRange> new_processor_ranges;
+
+  static_assert(std::is_invocable_r_v<bool, F, TaskTarget>);
+  for (auto&& t : valid_targets()) {
+    if (pred(t)) {
+      new_processor_ranges.insert({t, processor_range(t)});
+    }
+  }
+
+  return Machine{std::move(new_processor_ranges)};
+}
+
 // ==========================================================================================
 
 inline LocalProcessorRange::LocalProcessorRange(std::uint32_t offset,

@@ -198,17 +198,19 @@ void BaseDeserializer<Deserializer>::unpack_impl(mapping::ProcessorRange& value)
 template <typename Deserializer>
 void BaseDeserializer<Deserializer>::unpack_impl(mapping::detail::Machine& value)
 {
-  value.preferred_target =
-    static_cast<mapping::TaskTarget>(unpack<std::underlying_type_t<mapping::TaskTarget>>());
-  auto num_ranges = unpack<std::uint32_t>();
+  const auto preferred_target = unpack<mapping::TaskTarget>();
+  const auto num_ranges       = unpack<std::uint32_t>();
+  auto proc_ranges            = std::map<mapping::TaskTarget, mapping::ProcessorRange>{};
+
   for (std::uint32_t idx = 0; idx < num_ranges; ++idx) {
-    auto kind =
-      static_cast<mapping::TaskTarget>(unpack<std::underlying_type_t<mapping::TaskTarget>>());
-    auto range = unpack<mapping::ProcessorRange>();
+    const auto kind = unpack<mapping::TaskTarget>();
+    auto range      = unpack<mapping::ProcessorRange>();
+
     if (!range.empty()) {
-      value.processor_ranges.insert({kind, range});
+      proc_ranges.insert({kind, std::move(range)});
     }
   }
+  value = mapping::detail::Machine{preferred_target, std::move(proc_ranges)};
 }
 
 template <typename Deserializer>

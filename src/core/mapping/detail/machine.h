@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <iosfwd>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -30,11 +31,12 @@ class Machine {
  public:
   Machine() = default;
   explicit Machine(std::map<TaskTarget, ProcessorRange> processor_ranges);
+  Machine(TaskTarget preferred_target, std::map<TaskTarget, ProcessorRange> processor_ranges);
 
   [[nodiscard]] const ProcessorRange& processor_range() const;
   [[nodiscard]] const ProcessorRange& processor_range(TaskTarget target) const;
 
-  [[nodiscard]] std::vector<TaskTarget> valid_targets() const;
+  [[nodiscard]] const std::vector<TaskTarget>& valid_targets() const;
   [[nodiscard]] std::vector<TaskTarget> valid_targets_except(
     const std::set<TaskTarget>& to_exclude) const;
 
@@ -44,6 +46,9 @@ class Machine {
   [[nodiscard]] std::string to_string() const;
 
   void pack(legate::detail::BufferBuilder& buffer) const;
+
+  template <typename F>
+  [[nodiscard]] Machine only_if(F&& pred) const;
 
   [[nodiscard]] Machine only(TaskTarget target) const;
   [[nodiscard]] Machine only(const std::vector<TaskTarget>& targets) const;
@@ -61,8 +66,13 @@ class Machine {
 
   [[nodiscard]] bool empty() const;
 
-  TaskTarget preferred_target{TaskTarget::CPU};
-  std::map<TaskTarget, ProcessorRange> processor_ranges{};
+  [[nodiscard]] TaskTarget preferred_target() const;
+  [[nodiscard]] const std::map<TaskTarget, ProcessorRange>& processor_ranges() const;
+
+ private:
+  TaskTarget preferred_target_{TaskTarget::CPU};
+  std::map<TaskTarget, ProcessorRange> processor_ranges_{};
+  mutable std::optional<std::vector<TaskTarget>> valid_targets_{};
 };
 
 std::ostream& operator<<(std::ostream& os, const Machine& machine);

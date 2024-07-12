@@ -166,7 +166,7 @@ class Machine {
    *
    * @return Task targets
    */
-  [[nodiscard]] std::vector<TaskTarget> valid_targets() const;
+  [[nodiscard]] const std::vector<TaskTarget>& valid_targets() const;
   /**
    * @brief Returns the valid task targets excluding a given set of targets
    *

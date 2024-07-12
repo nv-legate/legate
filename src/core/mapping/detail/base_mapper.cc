@@ -172,7 +172,7 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
   }
 
   auto& machine_desc = legate_task.machine();
-  auto all_targets   = machine_desc.valid_targets();
+  auto&& all_targets = machine_desc.valid_targets();
 
   std::vector<TaskTarget> options;
   options.reserve(all_targets.size());
@@ -1185,13 +1185,13 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     // extremely slow.
     auto indirect =
       !copy.src_indirect_requirements.empty() || !copy.dst_indirect_requirements.empty();
-    auto valid_targets = indirect ? machine_desc.valid_targets_except({TaskTarget::GPU})
-                                    : machine_desc.valid_targets();
+    auto&& valid_targets = indirect ? machine_desc.valid_targets_except({TaskTarget::GPU})
+                                      : machine_desc.valid_targets();
     // However, if the machine in the scope doesn't have any CPU or OMP as a fallback for
     // indirect copies, we have no choice but using GPUs
     if (valid_targets.empty()) {
       LEGATE_ASSERT(indirect);
-      valid_targets = machine_desc.valid_targets();
+      return machine_desc.valid_targets().front();
     }
     return valid_targets.front();
   }();
