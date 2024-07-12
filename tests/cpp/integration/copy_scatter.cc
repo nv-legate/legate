@@ -142,6 +142,11 @@ struct ScatterSpec {
   }
 };
 
+template <typename T>
+struct ScatterReductionSpec : ScatterSpec {
+  T redop;
+};
+
 void check_scatter_output(legate::Library library,
                           const legate::LogicalStore& src,
                           const legate::LogicalStore& tgt,
@@ -171,7 +176,8 @@ void check_scatter_output(legate::Library library,
   runtime->submit(std::move(task));
 }
 
-void test_scatter(const ScatterSpec& spec)
+template <typename T>
+void test_scatter_impl(const ScatterSpec& spec, std::optional<T> redop = std::nullopt)
 {
   LEGATE_ASSERT(spec.seed.type() == spec.init.type());
   logger().print() << "Scatter Copy: " << spec.to_string();
@@ -188,9 +194,25 @@ void test_scatter(const ScatterSpec& spec)
   fill_input(library, src, spec.seed);
   fill_indirect(library, ind, tgt);
   runtime->issue_fill(tgt, spec.init);
-  runtime->issue_scatter(tgt, ind, src);
+  if (redop == std::nullopt) {
+    runtime->issue_scatter(tgt, ind, src);
+  } else {
+    runtime->issue_scatter(tgt, ind, src, redop);
+  }
 
   check_scatter_output(library, src, tgt, ind, spec.init);
+}
+
+void test_scatter(const ScatterSpec& spec) { test_scatter_impl<std::int32_t>(spec); }
+
+void test_gather_reduction(const ScatterReductionSpec<legate::ReductionOpKind>& spec)
+{
+  test_scatter_impl<legate::ReductionOpKind>(spec, spec.redop);
+}
+
+void test_gather_reduction_int32(const ScatterReductionSpec<std::int32_t>& spec)
+{
+  test_scatter_impl<std::int32_t>(spec, spec.redop);
 }
 
 // Note that the volume of indirection field should be smaller than that of the target to avoid
@@ -218,6 +240,36 @@ TEST_F(ScatterCopy, 3Dto2D)
 {
   test_scatter(
     ScatterSpec{{10, 10, 10}, {200, 200}, legate::Scalar{int64_t{1}}, legate::Scalar{int64_t{42}}});
+}
+
+TEST_F(ScatterCopy, ReductionEnum2Dto2D)
+{
+  const std::vector<std::uint64_t> shape{10, 11};
+  const std::vector<std::uint64_t> ind_shape{0, 0};
+  const legate::Scalar seed{std::int64_t{12}};
+  const legate::Scalar init{std::int64_t{42}};
+  const legate::ReductionOpKind redop{legate::ReductionOpKind::MAX};
+
+  // Test with redop as ReductionOpKind
+  test_gather_reduction(
+    ScatterReductionSpec<legate::ReductionOpKind>{{ind_shape, shape, seed, init}, redop});
+}
+
+TEST_F(ScatterCopy, ReductionInt322Dto2D)
+{
+  const std::vector<std::uint64_t> shape{10, 11};
+  const std::vector<std::uint64_t> ind_shape{0, 0};
+  const legate::Scalar seed{std::int64_t{12}};
+  const legate::Scalar init{std::int64_t{42}};
+  // ReductionOpKind::MAX
+  const std::int32_t redop{4};
+
+  static_assert(redop == static_cast<std::int32_t>(legate::ReductionOpKind::MAX));
+  static_assert(std::is_same_v<std::int32_t, std::underlying_type_t<legate::ReductionOpKind>>);
+
+  // Test with redop as int32
+  test_gather_reduction_int32(
+    ScatterReductionSpec<std::int32_t>{{ind_shape, shape, seed, init}, redop});
 }
 
 // NOLINTEND(readability-magic-numbers)

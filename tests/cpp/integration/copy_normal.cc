@@ -177,11 +177,12 @@ struct NormalCopySpec {
   legate::Scalar seed;
 };
 
+template <typename T>
 struct NormalCopyReductionSpec {
   std::vector<std::uint64_t> shape;
   legate::Type type;
   legate::Scalar seed;
-  legate::ReductionOpKind redop;
+  T redop;
 };
 
 void test_normal_copy(const NormalCopySpec& spec)
@@ -201,7 +202,8 @@ void test_normal_copy(const NormalCopySpec& spec)
   check_copy_output(library, input, output);
 }
 
-void test_normal_copy_reduction(const NormalCopyReductionSpec& spec)
+template <typename T>
+void test_normal_copy_reduction(const NormalCopyReductionSpec<T>& spec)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
@@ -228,12 +230,40 @@ TEST_F(NormalCopy, Single)
 
 TEST_F(NormalCopy, SingleReduction)
 {
-  test_normal_copy_reduction(
-    {{4, 7}, legate::int64(), legate::Scalar{std::int64_t{12}}, legate::ReductionOpKind::ADD});
-  test_normal_copy_reduction({{1000, 100},
-                              legate::uint32(),
-                              legate::Scalar{std::uint32_t{3}},
-                              legate::ReductionOpKind::ADD});
+  const std::vector<std::uint64_t> shape1{4, 7};
+  const legate::Type type1{legate::int64()};
+  const legate::Scalar seed1{std::int64_t{12}};
+  const std::vector<std::uint64_t> shape2{1000, 100};
+  const legate::Type type2{legate::uint32()};
+  const legate::Scalar seed2{std::uint32_t{3}};
+  const legate::ReductionOpKind redop{legate::ReductionOpKind::ADD};
+
+  // Test with redop as ReductionOpKind
+  test_normal_copy_reduction<legate::ReductionOpKind>(
+    NormalCopyReductionSpec<legate::ReductionOpKind>{shape1, type1, seed1, redop});
+  test_normal_copy_reduction<legate::ReductionOpKind>(
+    NormalCopyReductionSpec<legate::ReductionOpKind>{shape2, type2, seed2, redop});
+}
+
+TEST_F(NormalCopy, SingleReductionInt32)
+{
+  const std::vector<std::uint64_t> shape1{4, 7};
+  const legate::Type type1{legate::int64()};
+  const legate::Scalar seed1{std::int64_t{12}};
+  const std::vector<std::uint64_t> shape2{1000, 100};
+  const legate::Type type2{legate::uint32()};
+  const legate::Scalar seed2{std::uint32_t{3}};
+  // ReductionOpKind::ADD
+  const std::int32_t redop{0};
+
+  static_assert(redop == static_cast<std::int32_t>(legate::ReductionOpKind::ADD));
+  static_assert(std::is_same_v<std::int32_t, std::underlying_type_t<legate::ReductionOpKind>>);
+
+  // Test with redop as int32
+  test_normal_copy_reduction<std::int32_t>(
+    NormalCopyReductionSpec<std::int32_t>{shape1, type1, seed1, redop});
+  test_normal_copy_reduction<std::int32_t>(
+    NormalCopyReductionSpec<std::int32_t>{shape2, type2, seed2, redop});
 }
 
 // NOLINTEND(readability-magic-numbers)

@@ -136,7 +136,13 @@ struct GatherSpec {
   }
 };
 
-void test_gather(const GatherSpec& spec)
+template <typename T>
+struct GatherReductionSpec : GatherSpec {
+  T redop;
+};
+
+template <typename T>
+void test_gather_impl(const GatherSpec& spec, std::optional<T> redop = std::nullopt)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
@@ -150,9 +156,25 @@ void test_gather(const GatherSpec& spec)
   fill_input(library, src, spec.seed);
   fill_indirect(library, ind, src);
 
-  runtime->issue_gather(tgt, src, ind);
+  if (redop == std::nullopt) {
+    runtime->issue_gather(tgt, src, ind);
+  } else {
+    runtime->issue_gather(tgt, src, ind, redop);
+  }
 
   check_gather_output(library, src, tgt, ind);
+}
+
+void test_gather(const GatherSpec& spec) { test_gather_impl<std::int32_t>(spec); }
+
+void test_gather_reduction(const GatherReductionSpec<legate::ReductionOpKind>& spec)
+{
+  test_gather_impl<legate::ReductionOpKind>(spec, spec.redop);
+}
+
+void test_gather_reduction_int32(const GatherReductionSpec<std::int32_t>& spec)
+{
+  test_gather_impl<std::int32_t>(spec, spec.redop);
 }
 
 TEST_F(GatherCopy, 2Dto1D)
@@ -180,6 +202,34 @@ TEST_F(GatherCopy, 2Dto2D)
 TEST_F(GatherCopy, 2Dto3D)
 {
   test_gather(GatherSpec{{100, 100, 100}, {10, 10}, legate::Scalar{7.0}});
+}
+
+TEST_F(GatherCopy, ReductionEnum2Dto2D)
+{
+  const std::vector<std::uint64_t> src_shape{0, 0};
+  const std::vector<std::uint64_t> ind_shape{7, 10};
+  const legate::Scalar seed{2.0};
+  const legate::ReductionOpKind redop{legate::ReductionOpKind::ADD};
+
+  // Test with redop as ReductionOpKind
+  test_gather_reduction(
+    GatherReductionSpec<legate::ReductionOpKind>{{src_shape, ind_shape, seed}, redop});
+}
+
+TEST_F(GatherCopy, ReductionInt322Dto2D)
+{
+  const std::vector<std::uint64_t> src_shape{0, 0};
+  const std::vector<std::uint64_t> ind_shape{7, 10};
+  const legate::Scalar seed{2.0};
+  // ReductionOpKind::ADD
+  const std::int32_t redop{0};
+
+  static_assert(redop == static_cast<std::int32_t>(legate::ReductionOpKind::ADD));
+  static_assert(std::is_same_v<std::int32_t, std::underlying_type_t<legate::ReductionOpKind>>);
+
+  // Test with redop as int32
+  test_gather_reduction_int32(
+    GatherReductionSpec<std::int32_t>{{src_shape, ind_shape, seed}, redop});
 }
 
 // NOLINTEND(readability-magic-numbers)

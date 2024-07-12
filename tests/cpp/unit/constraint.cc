@@ -53,6 +53,7 @@ TEST_F(Constraint, Variable)
   ASSERT_EQ(dynamic_cast<const legate::detail::Literal*>(part_imp), nullptr);
   ASSERT_EQ(dynamic_cast<const legate::detail::Variable*>(part_imp), part_imp);
   ASSERT_TRUE(part_imp->operation() != nullptr);
+  ASSERT_FALSE(part.to_string().empty());
 
   // Test equal
   auto part1(part);
