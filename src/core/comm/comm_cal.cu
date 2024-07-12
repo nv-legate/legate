@@ -20,6 +20,7 @@
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
+#include "core/utilities/assert.h"
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
 

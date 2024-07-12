@@ -302,8 +302,6 @@ endif()
 add_library(legate_core ${legate_core_SOURCES})
 add_library(legate::core ALIAS legate_core)
 
-set(legate_core_CXX_DEFS "")
-set(legate_core_CUDA_DEFS "")
 set(legate_core_CXX_PRIVATE_OPTIONS "")
 set(legate_core_CUDA_PRIVATE_OPTIONS "")
 set(legate_core_CXX_PUBLIC_OPTIONS "")
@@ -314,26 +312,13 @@ include(${LEGATE_CORE_DIR}/cmake/Modules/set_cpu_arch_flags.cmake)
 
 set_cpu_arch_flags(legate_core_CXX_PRIVATE_OPTIONS)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_DEBUG)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_DEBUG)
-endif()
-
 if(Legion_USE_CUDA)
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_CUDA)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_CUDA)
-
-  add_cuda_architecture_defines(legate_core_CUDA_DEFS ARCHS ${Legion_CUDA_ARCH})
+  add_cuda_architecture_defines(legate_core_CUDA_PUBLIC_OPTIONS ARCHS ${Legion_CUDA_ARCH})
 
   list(APPEND legate_core_CUDA_PRIVATE_OPTIONS -Xfatbin=-compress-all)
   list(APPEND legate_core_CUDA_PRIVATE_OPTIONS --expt-extended-lambda)
   list(APPEND legate_core_CUDA_PRIVATE_OPTIONS --expt-relaxed-constexpr)
   list(APPEND legate_core_CUDA_PRIVATE_OPTIONS -Wno-deprecated-gpu-targets)
-endif()
-
-if(Legion_NETWORKS)
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_NETWORK)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_NETWORK)
 endif()
 
 # Change THRUST_DEVICE_SYSTEM for `.cpp` files If we include Thrust in "CUDA mode" in .cc
@@ -348,9 +333,6 @@ if(Legion_USE_OpenMP)
                       COMPONENTS CXX
                       FIND_ARGS
                       REQUIRED)
-
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_OPENMP)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_OPENMP)
 
   list(APPEND legate_core_CXX_PUBLIC_OPTIONS -UTHRUST_DEVICE_SYSTEM)
   list(APPEND legate_core_CXX_PUBLIC_OPTIONS
@@ -426,15 +408,9 @@ endif()
 
 if(Legion_USE_CUDA AND CAL_DIR)
   message(VERBOSE "legate.core: CAL_DIR ${CAL_DIR}")
-  list(APPEND legate_core_CXX_DEFS LEGATE_USE_CAL=1)
-  list(APPEND legate_core_CUDA_DEFS LEGATE_USE_CAL=1)
   target_include_directories(legate_core PRIVATE ${CAL_DIR}/include)
   target_link_libraries(legate_core PRIVATE ${CAL_DIR}/lib/libcal.so)
 endif()
-
-target_compile_definitions(legate_core
-                           PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${legate_core_CXX_DEFS}>"
-                                  "$<$<COMPILE_LANGUAGE:CUDA>:${legate_core_CUDA_DEFS}>")
 
 # ########################################################################################
 # * Custom User Flags --------------------------------------------------------
@@ -506,10 +482,15 @@ legate_core_add_target_compile_option(legate_core CUDA PRIVATE legate_core_CUDA_
 
 legate_core_add_target_link_option(legate_core PUBLIC legate_core_LINKER_FLAGS)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/generate_legate_defines.cmake)
+
+legate_core_generate_legate_defines()
+
 set(legate_core_LOCAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_include_directories(legate_core
                            PUBLIC $<BUILD_INTERFACE:${legate_core_LOCAL_INCLUDE_DIR}>
+                                  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/legate>
                            INTERFACE $<INSTALL_INTERFACE:include/legate>)
 
 if(legate_core_BUILD_DOCS)
@@ -526,8 +507,9 @@ rapids_cmake_install_lib_dir(lib_dir)
 
 install(TARGETS legate_core DESTINATION ${lib_dir} EXPORT legate-core-exports)
 
-install(FILES src/legate.h src/legate_defines.h src/legate_preamble.h
+install(FILES src/legate.h src/legate_preamble.h
               ${CMAKE_CURRENT_BINARY_DIR}/include/legate/version_config.hpp
+              ${CMAKE_CURRENT_BINARY_DIR}/include/legate/legate_defines.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate)
 
 install(FILES src/core/legate_c.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core)

@@ -16,6 +16,8 @@
 #include "core/utilities/cpp_version.h"
 #include "core/utilities/macros.h"
 
+#include "legate_defines.h"  // LEGATE_USE_DEBUG
+
 #ifndef __has_builtin
 #define __has_builtin(x) 0
 #endif

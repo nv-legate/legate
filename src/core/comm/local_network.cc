@@ -13,6 +13,10 @@
 #include "core/comm/local_network.h"
 
 #include "core/comm/coll.h"
+#include "core/utilities/assert.h"
+#include "core/utilities/macros.h"
+
+#include "legate_defines.h"
 
 #include <cstdio>
 #include <cstdlib>

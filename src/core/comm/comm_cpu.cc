@@ -21,6 +21,9 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 #include "core/utilities/detail/zip.h"
+#include "core/utilities/macros.h"
+
+#include "legate_defines.h"
 
 #include <memory>
 #include <vector>

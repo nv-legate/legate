@@ -15,6 +15,8 @@
 #include "core/comm/thread_comm.h"
 #include "core/utilities/macros.h"
 
+#include "legate_defines.h"
+
 #include <cstdint>
 
 // TODO(jfaibussowit)

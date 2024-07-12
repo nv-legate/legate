@@ -14,6 +14,7 @@
 
 #include "core/utilities/detail/shared_ptr_control_block.h"
 #include "core/utilities/detail/type_traits.h"
+#include "core/utilities/macros.h"
 
 #include <memory>
 #include <string>

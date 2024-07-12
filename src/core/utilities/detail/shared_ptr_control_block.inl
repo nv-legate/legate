@@ -12,9 +12,8 @@
 
 #pragma once
 
+#include "core/utilities/assert.h"
 #include "core/utilities/detail/shared_ptr_control_block.h"
-
-#include "legate_defines.h"
 
 #include <memory>
 #include <type_traits>

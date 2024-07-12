@@ -17,6 +17,7 @@
 #include "core/comm/comm_nccl.h"
 #include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/env.h"
+#include "core/utilities/macros.h"
 
 #include "legate_defines.h"
 

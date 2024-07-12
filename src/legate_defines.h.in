@@ -1,3 +1,4 @@
+// -*- mode: fundamental-mode  -*-
 /*
  * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -12,16 +13,21 @@
 
 #pragma once
 
-#include "core/utilities/abort.h"
-#include "core/utilities/assert.h"
-#include "core/utilities/cpp_version.h"
-#include "core/utilities/macros.h"
-
-#include "legion.h"
+#include <legion.h>
 
 #ifndef LEGION_REDOP_HALF
 #error "Legate needs Legion to be compiled with -DLEGION_REDOP_HALF"
 #endif
+
+#cmakedefine LEGATE_USE_DEBUG @LEGATE_USE_DEBUG@
+
+#cmakedefine LEGATE_USE_CUDA @LEGATE_USE_CUDA@
+
+#cmakedefine LEGATE_USE_NETWORK @LEGATE_USE_NETWORK@
+
+#cmakedefine LEGATE_USE_OPENMP @LEGATE_USE_OPENMP@
+
+#cmakedefine LEGATE_USE_CAL @LEGATE_USE_CAL@
 
 #if !defined(LEGATE_USE_CUDA) && defined(LEGION_USE_CUDA)
 #define LEGATE_USE_CUDA 1
@@ -43,11 +49,6 @@
 #endif
 
 #define LEGATE_MAX_DIM LEGION_MAX_DIM
-
-// backwards compatibility, but disable for doxygen builds
-#if defined(DEBUG_LEGATE) && !LEGATE_DEFINED(LEGATE_USE_DEBUG)
-#define LEGATE_USE_DEBUG 1
-#endif
 
 // TODO(wonchanl): 2022-10-04: Work around a Legion bug, by not instantiating futures on
 // framebuffer.

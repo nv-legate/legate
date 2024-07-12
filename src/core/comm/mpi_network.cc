@@ -13,9 +13,12 @@
 #include "core/comm/mpi_network.h"
 
 #include "core/comm/coll.h"
+#include "core/utilities/macros.h"
 #include "core/utilities/scope_guard.h"
 #include "core/utilities/span.h"
 #include "core/utilities/typedefs.h"
+
+#include "legate_defines.h"
 
 #include <algorithm>
 #include <cstddef>
