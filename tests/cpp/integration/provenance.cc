@@ -47,26 +47,44 @@ class ProvenanceTest : public RegisterOnceFixture<Config> {};
   EXPECT_TRUE(provenance.find(scalar) != std::string::npos);
 }
 
-void test_provenance(legate::Library library)
+void test_provenance_auto(legate::Library library)
 {
   const auto provenance = fmt::format("{}:{}", __FILE__, __LINE__);
   const legate::Scope scope{provenance};
   auto runtime = legate::Runtime::get_runtime();
   // auto task
   auto task = runtime->create_task(library, ProvenanceTask::TASK_ID);
-  task.add_scalar_arg(legate::Scalar(provenance));
+  task.add_scalar_arg(legate::Scalar{provenance});
+  ASSERT_STREQ(task.provenance().data(), provenance.data());
+
   runtime->submit(std::move(task));
 }
 
-void test_nested_provenance(legate::Library library)
+void test_provenance_manual(legate::Library library)
 {
   const auto provenance = fmt::format("{}:{}", __FILE__, __LINE__);
   const legate::Scope scope{provenance};
-  test_provenance(library);
+  auto runtime = legate::Runtime::get_runtime();
+  // manual task
+  auto task =
+    runtime->create_task(library, ProvenanceTask::TASK_ID, legate::tuple<std::uint64_t>{4, 2});
+  task.add_scalar_arg(legate::Scalar{provenance});
+  ASSERT_STREQ(task.provenance().data(), provenance.data());
+
+  runtime->submit(std::move(task));
+}
+
+void test_nested_provenance_auto(legate::Library library)
+{
+  const auto provenance = fmt::format("{}:{}", __FILE__, __LINE__);
+  const legate::Scope scope{provenance};
+  test_provenance_auto(library);
   // The provenance string used by test_provenance should be popped out at this point
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(library, ProvenanceTask::TASK_ID);
-  task.add_scalar_arg(legate::Scalar(provenance));
+  task.add_scalar_arg(legate::Scalar{provenance});
+  ASSERT_STREQ(task.provenance().data(), provenance.data());
+
   runtime->submit(std::move(task));
 }
 
@@ -75,8 +93,9 @@ TEST_F(ProvenanceTest, All)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  test_provenance(library);
-  test_nested_provenance(library);
+  test_provenance_auto(library);
+  test_provenance_manual(library);
+  test_nested_provenance_auto(library);
 }
 
 // NOLINTEND(readability-magic-numbers)
