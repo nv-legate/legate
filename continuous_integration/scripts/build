@@ -37,9 +37,6 @@ build_legate_release() {
     conda_build_args+=(--quiet);
     conda_build_args+=(--override-channels);
 
-    # Until real UCX 1.17 is not released
-    # must come before conda-forge
-    conda_build_args+=(-c https://raw.githubusercontent.com/nv-legate/ucx-package/main)
     conda_build_args+=(-c conda-forge);
 
     conda_build_args+=(--croot /tmp/conda-croot/legate_core);

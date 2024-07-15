@@ -79,8 +79,7 @@ install_legate_core_with_war() {
     # See github issue: https://github.com/nv-legate/legate.core/issues/812
     mamba uninstall -q -y -n "${CONDA_ENV}" numpy;
 
-    # Remove the URM channel when real UCX 1.17 is released
-    mamba install -y -n "${CONDA_ENV}" -c conda-forge -c https://raw.githubusercontent.com/nv-legate/ucx-package/main -c "$ARTIFACTS_DIR/conda-build/legate_core" legate-core;
+    mamba install -y -n "${CONDA_ENV}" -c conda-forge -c "$ARTIFACTS_DIR/conda-build/legate_core" legate-core;
 }
 
 make_release_env() {
