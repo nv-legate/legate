@@ -1260,6 +1260,12 @@ void Runtime::discard_field(const Legion::LogicalRegion& region, Legion::FieldID
   legion_runtime_->discard_fields(legion_context_, launcher);
 }
 
+void Runtime::issue_mapping_fence()
+{
+  flush_scheduling_window();
+  legion_runtime_->issue_mapping_fence(legion_context_);
+}
+
 void Runtime::issue_execution_fence(bool block /*=false*/)
 {
   flush_scheduling_window();

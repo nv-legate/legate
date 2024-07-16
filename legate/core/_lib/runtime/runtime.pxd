@@ -194,6 +194,7 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
         _LogicalStore create_store(
             const _Shape&, const _Type&, const _ExternalAllocation&
         ) except+
+        void issue_mapping_fence()
         void issue_execution_fence(bool)
         void raise_pending_exception() except +handle_legate_exception
         uint32_t node_count()
@@ -287,6 +288,7 @@ cdef class Runtime(Unconstructable):
     cpdef LogicalStore create_store_from_buffer(
         self, Type dtype, object shape, object data, bool read_only
     )
+    cpdef void issue_mapping_fence(self)
     cpdef void issue_execution_fence(self, bool block = *)
     cpdef Machine get_machine(self)
     cpdef void destroy(self)

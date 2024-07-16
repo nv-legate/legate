@@ -523,10 +523,35 @@ class Runtime {
     const mapping::DimOrdering& ordering = mapping::DimOrdering::c_order());
 
   /**
+   * @brief Issues a mapping fence
+   *
+   * A mapping fence, when issued, blocks mapping of all downstream operations before those
+   * preceding the fence get mapped. An `issue_mapping_fence` call returns immediately after the
+   * request is submitted to the runtime, and the fence asynchronously goes through the runtime
+   * analysis pipeline just like any other Legate operations. The call also flushes the scheduling
+   * window for batched execution.
+   *
+   * Mapping fences only affect how the operations are mapped and do not change their execution
+   * order, so they are semantically no-op. Nevertheless, they are sometimes useful when the user
+   * wants to control how the resource is consumed by independent tasks. Consider a program with two
+   * independent tasks A and B, both of which discard their stores right after their execution.  If
+   * the stores are too big to be allocated all at once, mapping A and B in parallel (which can
+   * happen because A and B are independent and thus nothing stops them from getting mapped
+   * concurrently) can lead to a failure. If a mapping fence exists between the two, the runtime
+   * serializes their mapping and can reclaim the memory space from stores that would be discarded
+   * after A's execution to create allocations for B.
+   */
+  void issue_mapping_fence();
+
+  /**
    * @brief Issues an execution fence
    *
    * An execution fence is a join point in the task graph. All operations prior to a fence must
    * finish before any of the subsequent operations start.
+   *
+   * All execution fences are mapping fences by definition; i.e., an execution fence not only
+   * prevents the downstream operations from being mapped ahead of itself but also precedes their
+   * execution.
    *
    * @param block When `true`, the control code blocks on the fence and all operations that have
    * been submitted prior to this fence.

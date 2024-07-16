@@ -52,6 +52,8 @@ Changes: Latest Development Version
   specify the library-default task variant options.
 - Add ``Library::get_default_variant_options()`` to retrieve the library-default task
   variant options.
+- Add ``Runtime::issue_mapping_fence()`` to issue a mapping fence that prevents
+  all the downstream tasks from being mapped ahead of the fence.
 
 .. rubric:: Utilities
 

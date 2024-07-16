@@ -507,6 +507,9 @@ cdef class Runtime(Unconstructable):
             )
         )
 
+    cpdef void issue_mapping_fence(self):
+        self._handle.issue_mapping_fence()
+
     cpdef void issue_execution_fence(self, bool block = False):
         with cython.nogil:
             # Must release the GIL in case we have in-flight python tasks,

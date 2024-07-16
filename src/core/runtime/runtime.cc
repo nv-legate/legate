@@ -281,6 +281,8 @@ std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
   return {LogicalStore{std::move(store)}, LogicalStorePartition{std::move(partition)}};
 }
 
+void Runtime::issue_mapping_fence() { impl_->issue_mapping_fence(); }
+
 void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execution_fence(block); }
 
 void Runtime::raise_pending_exception() { impl_->raise_pending_exception(); }
