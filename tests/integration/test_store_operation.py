@@ -59,21 +59,12 @@ class TestLogicalStoreOperation:
             (2, 4, 6, 8),
             (7, 4, 3, 9),
             (500, 2, 2, 2),
-            pytest.param(
-                range(4),
-                # issue-524:
-                # crashes with LEGION ERROR: Invalid color space color for
-                # child 2 of logical partition (1,1,1)
-                marks=pytest.mark.xfail(
-                    reason="crashes application", run=False
-                ),
-            ),
         ],
         ids=str,
     )
     def test_partition_by_tiling(self, shape: tuple[int]) -> None:
         runtime = get_legate_runtime()
-        arr = np.random.random(shape)
+        arr = np.random.rand(*shape)
         store = runtime.create_store_from_buffer(
             ty.float64, arr.shape, arr, False
         )
@@ -124,12 +115,14 @@ class TestLogicalStoreOperation:
     @pytest.mark.parametrize(
         "shape, dim",
         [
-            # issue-498: crashes application when inline allocation is accessed
-            # legion_python: /legion-src/runtime/legion/legion_domain.inl:954:
-            # Legion::Domain::operator Legion::Rect<DIM, T>() const
-            # [with int DIM = 1; T = long long int; Legion::Rect<DIM, T> =
-            # Realm::Rect<1, long long int>]: Assertion `DIM == dim' failed.
-            pytest.param(tuple(), 0, marks=pytest.mark.xfail(run=False)),
+            pytest.param(
+                tuple(),
+                0,
+                marks=pytest.mark.xfail(
+                    reason="issue-932: "
+                    "mismatching shape in store and InlineAllocation"
+                ),
+            ),
             ((1,), 0),
             ((1, 2, 3), 2),
             ((1024, 1, 1), 2),
@@ -146,18 +139,27 @@ class TestLogicalStoreOperation:
         )
         expanded_arr = np.expand_dims(arr, dim)
         promoted = store.promote(dim, size)
+
+        # issue-932: when size > 0 np.asarray raises ValueError:
+        # ValueError: mismatch in length of strides and shape
         promoted_arr = np.asarray(
             promoted.get_physical_store().get_inline_allocation()
         )
         assert promoted.equal_storage(store)
         assert np.allclose(expanded_arr, promoted_arr)
+
+        # issue-932: when size == 0 this fails due to the mismatching ndims:
+        # E       assert 1 == 2
+        # E        +  where 1 = array([257], dtype=int16).ndim
+        # E        +  and   2 = array([], shape=(0, 1), dtype=int16).ndim
         assert expanded_arr.ndim == promoted_arr.ndim
+
         assert promoted_arr.shape[dim] == size
 
     def test_numpy_ops(self) -> None:
         arr_shape = (1, 1, 2, 4)
         runtime = get_legate_runtime()
-        arr = np.random.random(arr_shape)
+        arr = np.random.rand(*arr_shape)
         store = runtime.create_store_from_buffer(
             ty.float64, arr.shape, arr, False
         )
@@ -196,7 +198,7 @@ class TestLogicalStoreOperation:
     )
     def test_transpose(self, arr_shape: tuple[int], axes: tuple[int]) -> None:
         runtime = get_legate_runtime()
-        arr = np.random.random(arr_shape)
+        arr = np.random.rand(*arr_shape)
         store = runtime.create_store_from_buffer(
             ty.float64, arr.shape, arr, False
         )
@@ -239,7 +241,7 @@ class TestLogicalStoreOperation:
         self, arr_shape: tuple[int], dim: int, start: int, stop: int
     ) -> None:
         runtime = get_legate_runtime()
-        arr = np.random.random(arr_shape)
+        arr = np.random.rand(*arr_shape)
         arr_slice = f"arr[{':,' * dim}{start}:{stop}]"
 
         store = runtime.create_store_from_buffer(
@@ -362,3 +364,16 @@ class TestLogicalStoreOperationErrors:
         msg = "invalid for partition of color shape"
         with pytest.raises(IndexError, match=msg):
             partition.get_child_store(3, 4, 5)
+
+    def test_partition_invalid_color(self) -> None:
+        runtime = get_legate_runtime()
+        arr = np.random.rand(*range(4))
+        store = runtime.create_store_from_buffer(
+            ty.float64, arr.shape, arr, False
+        )
+        partition = store.partition_by_tiling((2, 2, 2, 2))
+        msg = "Color .* is invalid for partition of color shape"
+        with pytest.raises(IndexError, match=msg):
+            partition.get_child_store(
+                *[idx - 1 if idx > 0 else 0 for idx in partition.color_shape]
+            )

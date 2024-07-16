@@ -37,21 +37,6 @@ class TestStoreCreation:
         )
         assert np.allclose(arr_np, arr_store)
 
-    @pytest.mark.xfail(run=False, reason="accessing inline allocation crashes")
-    def test_create_from_null_scalar(self) -> None:
-        runtime = get_legate_runtime()
-        scalar = Scalar.null()
-        store = runtime.create_store_from_scalar(scalar)
-        assert store.has_scalar_storage
-        assert store.ndim == 1
-        assert not store.unbound
-
-        # crashes the application
-        # [error 87] LEGION ERROR: Future size mismatch!
-        # Expected non-empty future for making an accessor but future has a
-        # payload of 0 bytes. (UID 0)
-        store.get_physical_store().get_inline_allocation()
-
     @pytest.mark.parametrize("dtype", ARRAY_TYPES, ids=str)
     def test_store_dtype(self, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
@@ -123,17 +108,23 @@ class TestStoreCreationErrors:
 
     def test_string_scalar(self) -> None:
         runtime = get_legate_runtime()
-        msg = "Store must have a fixed-size type"
+        msg = "Size of a variable size type is undefined"
         scalar = Scalar("abcd", ty.string_type)
         with pytest.raises(ValueError, match=msg):
             runtime.create_store_from_scalar(scalar)
 
-    def test_null_type_store_array_interface(self) -> None:
+    def test_create_null_type_store(self) -> None:
         runtime = get_legate_runtime()
-        msg = "Invalid type code: 15"
-        store = runtime.create_store(dtype=ty.null_type, shape=(1,))
+        msg = "Null type or zero-size types cannot be used for stores"
         with pytest.raises(ValueError, match=msg):
-            np.asarray(store.get_physical_store().get_inline_allocation())
+            runtime.create_store(dtype=ty.null_type, shape=(1,))
+
+    def test_create_from_null_scalar(self) -> None:
+        runtime = get_legate_runtime()
+        scalar = Scalar.null()
+        msg = "Null type or zero-size types cannot be used for stores"
+        with pytest.raises(ValueError, match=msg):
+            runtime.create_store_from_scalar(scalar)
 
     def test_get_unbound_physical_store(self) -> None:
         runtime = get_legate_runtime()
