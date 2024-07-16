@@ -134,6 +134,11 @@ void Task::launch_task_(Strategy* p_strategy)
   launcher.set_side_effect(has_side_effect_);
   launcher.set_concurrent(concurrent_);
   launcher.throws_exception(can_throw_exception_);
+  launcher.can_elide_device_ctx_sync([&] {
+    const auto variant = library()->find_task(local_task_id())->find_variant(LEGATE_GPU_VARIANT);
+
+    return variant.has_value() && variant->get().options.elide_device_ctx_sync;
+  }());
 
   // TODO(wonchanl): Once we implement a precise interference checker, this workaround can be
   // removed

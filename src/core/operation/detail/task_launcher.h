@@ -58,6 +58,7 @@ class TaskLauncher {
   void set_concurrent(bool is_concurrent);
   void set_insert_barrier(bool insert_barrier);
   void throws_exception(bool can_throw_exception);
+  void can_elide_device_ctx_sync(bool can_elide_sync);
   void relax_interference_checks(bool relax);
 
   Legion::FutureMap execute(const Legion::Domain& launch_domain);
@@ -88,6 +89,7 @@ class TaskLauncher {
   bool concurrent_{};
   bool insert_barrier_{};
   bool can_throw_exception_{};
+  bool can_elide_device_ctx_sync_{};
   bool relax_interference_checks_{};
 
   std::vector<std::unique_ptr<Analyzable>> inputs_{};

@@ -122,6 +122,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   pack_args(task_arg, analyzer, reductions_);
   pack_args(task_arg, scalars_);
   task_arg.pack<bool>(can_throw_exception_);
+  task_arg.pack<bool>(can_elide_device_ctx_sync_);
   task_arg.pack<bool>(insert_barrier_);
   task_arg.pack<std::uint32_t>(static_cast<std::uint32_t>(communicators_.size()));
 
@@ -194,6 +195,7 @@ Legion::Future TaskLauncher::execute_single()
   pack_args(task_arg, analyzer, reductions_);
   pack_args(task_arg, scalars_);
   task_arg.pack<bool>(can_throw_exception_);
+  task_arg.pack<bool>(can_elide_device_ctx_sync_);
   // insert_barrier
   task_arg.pack<bool>(false);
   // # communicators

@@ -45,6 +45,7 @@ class TaskContext {
   [[nodiscard]] LegateVariantCode variant_kind() const noexcept;
   [[nodiscard]] bool is_single_task() const;
   [[nodiscard]] bool can_raise_exception() const;
+  [[nodiscard]] bool can_elide_device_ctx_sync() const;
   [[nodiscard]] const DomainPoint& get_task_index() const;
   [[nodiscard]] const Domain& get_launch_domain() const;
 
@@ -76,6 +77,7 @@ class TaskContext {
   std::vector<legate::Scalar> scalars_{};
   std::vector<comm::Communicator> comms_{};
   bool can_raise_exception_{};
+  bool can_elide_device_ctx_sync_{};
   mapping::detail::Machine machine_{};
   std::optional<ReturnedException> excn_{std::nullopt};
 };

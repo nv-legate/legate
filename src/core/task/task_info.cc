@@ -135,9 +135,14 @@ void TaskInfo::add_variant_(AddVariantKey,
 void TaskInfo::add_variant_(RuntimeAddVariantKey,
                             Library core_lib,
                             LegateVariantCode vid,
+                            const VariantOptions* callsite_options,
                             Legion::CodeDescriptor&& descr)
 {
   auto&& options = [&]() -> const VariantOptions& {
+    if (callsite_options) {
+      return *callsite_options;
+    }
+
     auto&& lib_defaults = core_lib.get_default_variant_options();
     const auto it       = lib_defaults.find(vid);
 

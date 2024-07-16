@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/task/task.h"
+#include "core/task/variant_options.h"
 #include "core/utilities/typedefs.h"
 
 #include <cstdint>
@@ -24,6 +25,8 @@ class Library;
 class FindBoundingBox : public LegateTask<FindBoundingBox> {
  public:
   static constexpr std::int32_t TASK_ID = LEGATE_CORE_FIND_BOUNDING_BOX;
+  static constexpr VariantOptions GPU_VARIANT_OPTIONS =
+    VariantOptions{}.with_elide_device_ctx_sync(true);
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
@@ -37,6 +40,8 @@ class FindBoundingBox : public LegateTask<FindBoundingBox> {
 class FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
  public:
   static constexpr std::int32_t TASK_ID = LEGATE_CORE_FIND_BOUNDING_BOX_SORTED;
+  static constexpr VariantOptions GPU_VARIANT_OPTIONS =
+    VariantOptions{}.with_elide_device_ctx_sync(true);
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)

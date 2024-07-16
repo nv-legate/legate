@@ -42,6 +42,8 @@ inline bool TaskContext::is_single_task() const { return !task_->is_index_space;
 
 inline bool TaskContext::can_raise_exception() const { return can_raise_exception_; }
 
+inline bool TaskContext::can_elide_device_ctx_sync() const { return can_elide_device_ctx_sync_; }
+
 inline const DomainPoint& TaskContext::get_task_index() const { return task_->index_point; }
 
 inline const Domain& TaskContext::get_launch_domain() const { return task_->index_domain; }

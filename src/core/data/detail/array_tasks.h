@@ -12,6 +12,7 @@
 
 #include "core/legate_c.h"
 #include "core/task/task.h"
+#include "core/task/variant_options.h"
 
 namespace legate::detail {
 
@@ -20,6 +21,8 @@ class Library;
 class FixupRanges : public LegateTask<FixupRanges> {
  public:
   static constexpr std::int32_t TASK_ID = LEGATE_CORE_FIXUP_RANGES;
+  static constexpr VariantOptions GPU_VARIANT_OPTIONS =
+    VariantOptions{}.with_elide_device_ctx_sync(true);
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
@@ -33,6 +36,8 @@ class FixupRanges : public LegateTask<FixupRanges> {
 class OffsetsToRanges : public LegateTask<OffsetsToRanges> {
  public:
   static constexpr std::int32_t TASK_ID = LEGATE_CORE_OFFSETS_TO_RANGES;
+  static constexpr VariantOptions GPU_VARIANT_OPTIONS =
+    VariantOptions{}.with_elide_device_ctx_sync(true);
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
@@ -46,6 +51,8 @@ class OffsetsToRanges : public LegateTask<OffsetsToRanges> {
 class RangesToOffsets : public LegateTask<RangesToOffsets> {
  public:
   static constexpr std::int32_t TASK_ID = LEGATE_CORE_RANGES_TO_OFFSETS;
+  static constexpr VariantOptions GPU_VARIANT_OPTIONS =
+    VariantOptions{}.with_elide_device_ctx_sync(true);
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)

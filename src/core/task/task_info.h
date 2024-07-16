@@ -116,6 +116,7 @@ class TaskInfo {
   void add_variant_(RuntimeAddVariantKey,
                     Library core_lib,
                     LegateVariantCode vid,
+                    const VariantOptions* callsite_options,
                     Legion::CodeDescriptor&& descr);
 
   [[deprecated("since 24.09: Use LegateTask and LegateTask::register_variants() instead")]] void

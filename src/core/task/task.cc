@@ -21,6 +21,7 @@
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
 
+#include "realm/cuda/cuda_module.h"
 #include "realm/faults.h"
 
 #include <ios>
@@ -94,6 +95,10 @@ void task_wrapper(VariantImpl variant_impl,
   show_progress(task, legion_context, runtime);
 
   detail::TaskContext context{task, variant_kind, *regions};
+
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+    Realm::Cuda::set_task_ctxsync_required(!context.can_elide_device_ctx_sync());
+  }
 
   TaskReturn return_values{};
 

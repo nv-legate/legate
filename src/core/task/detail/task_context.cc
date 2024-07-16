@@ -53,7 +53,8 @@ TaskContext::TaskContext(const Legion::Task* task,
     }
   }
 
-  can_raise_exception_ = dez.unpack<bool>();
+  can_raise_exception_       = dez.unpack<bool>();
+  can_elide_device_ctx_sync_ = dez.unpack<bool>();
 
   bool insert_barrier = false;
   Legion::PhaseBarrier arrival, wait;

@@ -50,14 +50,15 @@ inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
  * `Legion::DeferredBuffer` can also be deallocated immediately using
  * `Legion::DeferredBuffer::destroy()`, which is useful for operations that want to deallocate
  * intermediate memory as soon as possible. This deallocation is not synchronized with the task
- * stream, i.e. it may happen before a kernel which uses the buffer has actually completed. This is
- * safe as long as we use the same stream on all GPU tasks running on the same device (which is
- * guaranteed by the current implementation of legate::cuda::StreamPool::get_stream()), because then
- * all the actual uses of the buffer are done in order on the one stream. It is important that all
- * library CUDA code uses legate::cuda::StreamPool::get_stream(), and all CUDA operations (including
- * library calls) are enqueued on that stream exclusively. This analysis additionally assumes that
- * no code outside of Legate is concurrently allocating from the eager pool, and that it's OK for
- * kernels to access a buffer even after it's technically been deallocated.
+ * stream, i.e. it may happen before a kernel which uses the buffer has actually
+ * completed. This is safe as long as we use the same stream on all GPU tasks running on the
+ * same device (which is guaranteed by the current implementation of @ref
+ * TaskContext::get_task_stream()), because then all the actual uses of the buffer are done in
+ * order on the one stream. It is important that all library CUDA code uses @ref
+ * TaskContext::get_task_stream(), and all CUDA operations (including library calls) are
+ * enqueued on that stream exclusively. This analysis additionally assumes that no code outside
+ * of Legate is concurrently allocating from the eager pool, and that it's OK for kernels to
+ * access a buffer even after it's technically been deallocated.
  */
 template <typename VAL, std::int32_t DIM = 1>
 using Buffer = Legion::DeferredBuffer<VAL, DIM>;

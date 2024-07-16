@@ -71,6 +71,11 @@ inline void TaskLauncher::throws_exception(bool can_throw_exception)
   can_throw_exception_ = can_throw_exception;
 }
 
+inline void TaskLauncher::can_elide_device_ctx_sync(bool can_elide_sync)
+{
+  can_elide_device_ctx_sync_ = can_elide_sync;
+}
+
 inline void TaskLauncher::relax_interference_checks(bool relax)
 {
   relax_interference_checks_ = relax;
