@@ -318,16 +318,15 @@ class MainPackage(Package, ABC):
         assert arch_name.isupper()
         assert arch_name.endswith("ARCH")
         self._arch_name = arch_name
-        (
-            self._arch_value,
-            self._arch_value_provenance,
-        ) = self.preparse_arch_value(argv)
+        self._arch_value, self._arch_value_provenance = (
+            self.preparse_arch_value(argv)
+        )
         if not self.arch_value:
             raise ValueError(
                 f"WARNING: {self.arch_name} is set, but empty (set via "
                 f"{self.arch_value_provenance})! This is extremely dangerous, "
-                "and WILL cause many options (e.g. --with-clean) to "
-                "misbehave! Please set this to a non-empty value before"
+                f"and WILL cause many options (e.g. {self.WITH_CLEAN.name}) "
+                "to misbehave! Please set this to a non-empty value before"
                 "continuing."
             )
         self._proj_dir_name = project_dir_name
@@ -424,7 +423,7 @@ class MainPackage(Package, ABC):
         assert opt_name.startswith(
             "-"
         ), f"Option name '{opt_name}' must start with '-'"
-        dest_name = opt_name.lstrip("-").replace("-", "_").casefold()
+        dest_name = flag_to_dest(opt_name)
         parser = ArgumentParser(add_help=False)
         if bool_opt:
             parser.add_argument(
@@ -477,8 +476,13 @@ class MainPackage(Package, ABC):
         have_py, _ = self._preparse_value(argv, "--with-python", bool_opt=True)
         if have_py:
             gen_arch.append("py")
+        have_cuda, _ = self._preparse_value(argv, "--with-cuda", bool_opt=True)
+        if have_cuda:
+            gen_arch.append("cuda")
         build_type, _ = self._preparse_value(
-            argv, "--build-type", environ_name="CMAKE_BUILD_TYPE"
+            argv,
+            self.CMAKE_BUILD_TYPE.name,
+            environ_name=str(self.CMAKE_BUILD_TYPE.cmake_var),
         )
         if build_type is None:
             build_type = _DEFAULT_BUILD_TYPE

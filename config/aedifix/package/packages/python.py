@@ -52,7 +52,7 @@ class Python(Package):
                 # that's a hard error
                 raise UnsatisfiableConfigurationError(
                     f"{excn}. You have explicitly requested Python via "
-                    f"--with-python {self.cl_args.with_python.value}"
+                    f"{self.With_Python.name} {self.cl_args.with_python.value}"
                 ) from excn
             # Some other piece of code has set the cl_args to true
             raise RuntimeError(

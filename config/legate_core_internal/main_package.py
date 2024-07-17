@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
@@ -222,6 +223,70 @@ class LegateCore(MainPackage):
         self.python: Python = self.require(  # type: ignore[assignment]
             "python"
         )
+
+    def maybe_uninstall_legate_core(self) -> None:
+        r"""Uninstall Legate.Core if --with-clean is given on command line
+        arguments.
+        """
+        # Returns all the packages in the format:
+        #
+        # Package Version
+        # ------- -------
+        # foo     0.7.16
+        # bar     2.4.1
+        # baz     2.15.0
+        # ...
+        installed_packages = self.log_execute_command(
+            [sys.executable, "-m", "pip", "list"]
+        ).stdout.splitlines()
+        # skip the "Package Version" header and divider lines
+        installed_packages = installed_packages[2:]
+        found_legate = any(
+            name.startswith("legate-core") or (name == "legate")
+            for name, _ in map(str.split, installed_packages)
+        )
+        self.log(f"Have pre-existing legate installation: {found_legate}")
+
+        if self.cl_args.with_clean.value:
+            # Run the uninstall command whether it is installed or not, it does
+            # nothing (and returns 0) if the package isn't installed
+            self.log_execute_command(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "uninstall",
+                    "--yes",
+                    "legate-core",
+                ]
+            )
+            return
+
+        if found_legate:
+            self.log_warning(
+                "You appear to have previously installed Legate.Core, which "
+                "may interfere with the current and/or future "
+                "(re-)configurations of Legate.Core. Issues stemming from "
+                "this are likely to manifest at build-time, not "
+                "configure-time, and so if you encounter confusing build "
+                "errors the culprit is likely this.\n"
+                "\n"
+                "The user is strongly encouranged to run either:\n"
+                "\n"
+                f"$ {sys.executable} -m pip uninstall --yes legate-core\n"
+                "\n"
+                "(then retry configuration), or, re-run configuration "
+                f"with the {self.WITH_CLEAN.name} flag."
+            )
+        self.log(
+            "No clean requested, leaving potentially installed legate "
+            "core in place"
+        )
+
+    def setup(self) -> None:
+        r"""Setup Legate.Core"""
+        self.log_execute_func(self.maybe_uninstall_legate_core)
+        super().setup()
 
     def check_min_cmake_version(self) -> None:
         r"""Assert the minimum cmake version is met."""

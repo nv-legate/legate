@@ -312,7 +312,8 @@ class ConfigurationManager:
         proj_name = self.project_name
         if clean_first:
             self.log_warning(
-                f"--with-clean specified, deleting contents of {arch_dir}!"
+                f"{self._main_package.WITH_CLEAN.name} specified, deleting "
+                f"contents of {arch_dir}!"
             )
         if arch_dir.exists():
             self.log(f"{proj_name} arch exists: {arch_dir}")
@@ -357,7 +358,8 @@ class ConfigurationManager:
                     f"--{self.project_arch_name}='some-other-name'."
                     "\n"
                     f"  3. Meant to redo the current arch ({arch_dir.name!r}) "
-                    "from scratch, re-run configure with --with-clean option"
+                    "from scratch, re-run configure with "
+                    f"{self._main_package.WITH_CLEAN.name} option"
                     "\n\n"
                 )
 
