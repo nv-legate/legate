@@ -29,7 +29,7 @@ inline std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::reductions()
 
 inline const std::vector<legate::Scalar>& TaskContext::scalars() const noexcept { return scalars_; }
 
-inline const std::vector<comm::Communicator>& TaskContext::communicators() const noexcept
+inline const std::vector<legate::comm::Communicator>& TaskContext::communicators() const noexcept
 {
   return comms_;
 }

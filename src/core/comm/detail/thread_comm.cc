@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/comm/thread_comm.h"
+#include "core/comm/detail/thread_comm.h"
 
-namespace legate::comm::coll {
+namespace legate::detail::comm::coll {
 
 void ThreadComm::init(std::int32_t global_comm_size)
 {
@@ -58,4 +58,4 @@ void ThreadComm::barrier_local()
   }
 }
 
-}  // namespace legate::comm::coll
+}  // namespace legate::detail::comm::coll

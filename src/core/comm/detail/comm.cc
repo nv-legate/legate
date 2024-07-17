@@ -10,31 +10,25 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/comm/comm.h"
+#include "core/comm/detail/comm.h"
 
-#include "core/comm/comm_cal.h"
-#include "core/comm/comm_cpu.h"
-#include "core/comm/comm_nccl.h"
+#include "core/comm/detail/comm_cal.h"
+#include "core/comm/detail/comm_cpu.h"
+#include "core/comm/detail/comm_nccl.h"
 #include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/env.h"
 #include "core/utilities/macros.h"
 
 #include "legate_defines.h"
 
-namespace legate::detail {
+namespace legate::detail::comm {
 
-class Library;
-
-}  // namespace legate::detail
-
-namespace legate::comm {
-
-void register_tasks(const detail::Library* library)
+void register_tasks(Library* library)
 {
-  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     nccl::register_tasks(library);
   }
-  if (LEGATE_DEFINED(LEGATE_USE_CAL)) {
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_CAL)) {
     cal::register_tasks(library);
   }
   if (!LEGATE_DISABLE_MPI.get(LEGATE_DISABLE_MPI_DEFAULT, LEGATE_DISABLE_MPI_TEST)) {
@@ -42,7 +36,7 @@ void register_tasks(const detail::Library* library)
   }
 }
 
-void register_builtin_communicator_factories(const detail::Library* library)
+void register_builtin_communicator_factories(const Library* library)
 {
   if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     nccl::register_factory(library);
@@ -53,4 +47,4 @@ void register_builtin_communicator_factories(const detail::Library* library)
   }
 }
 
-}  // namespace legate::comm
+}  // namespace legate::detail::comm

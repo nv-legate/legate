@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -10,10 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/comm/backend_network.h"
+#include "core/comm/detail/logger.h"
 
-namespace legate::comm::coll {
+namespace legate::detail::comm::coll {
 
-std::unique_ptr<BackendNetwork> backend_network{};
+Logger& logger()
+{
+  static Logger log{"coll"};
 
-}  // namespace legate::comm::coll
+  return log;
+}
+
+}  // namespace legate::detail::comm::coll

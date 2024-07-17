@@ -12,8 +12,6 @@
 
 #include "core/mapping/detail/core_mapper.h"
 
-#include "core/comm/comm_cal.h"
-#include "core/comm/comm_nccl.h"
 #include "core/mapping/detail/machine.h"
 #include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/env.h"

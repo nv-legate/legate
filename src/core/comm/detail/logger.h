@@ -12,14 +12,10 @@
 
 #pragma once
 
-namespace legate::detail {
-class Library;
-}  // namespace legate::detail
+#include "core/utilities/typedefs.h"
 
-namespace legate::comm {
+namespace legate::detail::comm::coll {
 
-void register_tasks(const detail::Library* library);
+[[nodiscard]] Logger& logger();
 
-void register_builtin_communicator_factories(const detail::Library* library);
-
-}  // namespace legate::comm
+}  // namespace legate::detail::comm::coll

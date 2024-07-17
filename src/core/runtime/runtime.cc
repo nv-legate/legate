@@ -327,10 +327,13 @@ bool has_started() { return detail::Runtime::get_runtime()->initialized(); }
 
 std::int32_t finish()
 {
-  const auto ret = Runtime::get_runtime()->impl()->finish();
+  if (the_public_runtime.has_value()) {
+    const auto ret = Runtime::get_runtime()->impl()->finish();
 
-  the_public_runtime.reset();
-  return ret;
+    the_public_runtime.reset();
+    return ret;
+  }
+  return 0;
 }
 
 void destroy() { detail::Runtime::get_runtime()->destroy(); }

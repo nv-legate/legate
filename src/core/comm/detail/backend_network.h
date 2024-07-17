@@ -17,7 +17,7 @@
 #include <cstddef>
 #include <memory>
 
-namespace legate::comm::coll {
+namespace legate::detail::comm::coll {
 
 class BackendNetwork {
  public:
@@ -28,13 +28,13 @@ class BackendNetwork {
 
   virtual void abort();
 
-  virtual void comm_create(CollComm global_comm,
+  virtual void comm_create(legate::comm::coll::CollComm global_comm,
                            int global_comm_size,
                            int global_rank,
                            int unique_id,
                            const int* mapping_table) = 0;
 
-  virtual void comm_destroy(CollComm global_comm) = 0;
+  virtual void comm_destroy(legate::comm::coll::CollComm global_comm) = 0;
 
   virtual void all_to_all_v(const void* sendbuf,
                             const int sendcounts[],
@@ -42,14 +42,20 @@ class BackendNetwork {
                             void* recvbuf,
                             const int recvcounts[],
                             const int rdispls[],
-                            CollDataType type,
-                            CollComm global_comm) = 0;
+                            legate::comm::coll::CollDataType type,
+                            legate::comm::coll::CollComm global_comm) = 0;
 
-  virtual void all_to_all(
-    const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm) = 0;
+  virtual void all_to_all(const void* sendbuf,
+                          void* recvbuf,
+                          int count,
+                          legate::comm::coll::CollDataType type,
+                          legate::comm::coll::CollComm global_comm) = 0;
 
-  virtual void all_gather(
-    const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm) = 0;
+  virtual void all_gather(const void* sendbuf,
+                          void* recvbuf,
+                          int count,
+                          legate::comm::coll::CollDataType type,
+                          legate::comm::coll::CollComm global_comm) = 0;
 
  protected:
   std::int32_t get_unique_id_();
@@ -58,7 +64,7 @@ class BackendNetwork {
   void delete_inplace_buffer_(void* buf, std::size_t size);
 
  public:
-  CollCommType comm_type;
+  legate::comm::coll::CollCommType comm_type;
 
  protected:
   bool coll_inited_{};
@@ -67,4 +73,4 @@ class BackendNetwork {
 
 extern std::unique_ptr<BackendNetwork> backend_network;
 
-}  // namespace legate::comm::coll
+}  // namespace legate::detail::comm::coll

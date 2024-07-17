@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include "core/comm/thread_comm.h"
 #include "core/utilities/macros.h"
 
 #include "legate_defines.h"
@@ -24,6 +23,10 @@
 #if LEGATE_DEFINED(LEGATE_USE_NETWORK)
 #include <mpi.h>
 #endif
+
+namespace legate::detail::comm::coll {
+class ThreadComm;
+}  // namespace legate::detail::comm::coll
 
 namespace legate::comm::coll {
 
@@ -63,7 +66,7 @@ class Coll_Comm {
   MPI_Comm mpi_comm{};
   RankMappingTable mapping_table{};
 #endif
-  ThreadComm* local_comm{};
+  detail::comm::coll::ThreadComm* local_comm{};
   int mpi_rank{};
   int mpi_comm_size{};
   int mpi_comm_size_actual{};

@@ -14,6 +14,7 @@
 
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/formatters.h"
+#include "core/utilities/typedefs.h"
 
 #include <array>
 #include <fmt/format.h>

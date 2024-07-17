@@ -132,7 +132,7 @@ file(GLOB stl_SRC ${PROJECT_SOURCE_DIR}/experimental/stl/*.cc)
 file(GLOB experimental_SRC ${PROJECT_SOURCE_DIR}/experimental/*.cc)
 
 file(GLOB noinit_SRC ${PROJECT_SOURCE_DIR}/noinit/*.cc)
-file(GLOB death_SRC ${PROJECT_SOURCE_DIR}/death/*.cc)
+file(GLOB non_reentrant_SRC ${PROJECT_SOURCE_DIR}/non_reentrant/*.cc)
 
 include(GNUInstallDirs)
 
@@ -155,7 +155,8 @@ legate_core_configure_test(tests_with_runtime SOURCES ${main_with_runtime_init_S
                            ${experimental_SRC} ${stl_SRC})
 legate_core_configure_test(tests_wo_runtime SOURCES ${main_wo_runtime_init_SRC}
                            ${noinit_SRC})
-legate_core_configure_test(death_tests SOURCES ${main_with_runtime_init_SRC} ${death_SRC})
+legate_core_configure_test(tests_non_reentrant SOURCES ${main_with_runtime_init_SRC}
+                           ${non_reentrant_SRC})
 
 if(integration_GPU_SRC)
   legate_core_configure_test(tests_with_gpus SOURCES ${main_with_runtime_init_SRC}

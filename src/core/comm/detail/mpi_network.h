@@ -18,13 +18,13 @@
 #include "legate_defines.h"
 
 #if LEGATE_DEFINED(LEGATE_USE_NETWORK) || LEGATE_DEFINED(LEGATE_DOXYGEN)
-#include "core/comm/backend_network.h"
 #include "core/comm/coll_comm.h"
+#include "core/comm/detail/backend_network.h"
 
 #include <mpi.h>
 #include <vector>
 
-namespace legate::comm::coll {
+namespace legate::detail::comm::coll {
 
 class MPINetwork : public BackendNetwork {
  public:
@@ -36,13 +36,13 @@ class MPINetwork : public BackendNetwork {
 
   void abort() override;
 
-  void comm_create(CollComm global_comm,
+  void comm_create(legate::comm::coll::CollComm global_comm,
                    int global_comm_size,
                    int global_rank,
                    int unique_id,
                    const int* mapping_table) override;
 
-  void comm_destroy(CollComm global_comm) override;
+  void comm_destroy(legate::comm::coll::CollComm global_comm) override;
 
   void all_to_all_v(const void* sendbuf,
                     const int sendcounts[],
@@ -50,40 +50,48 @@ class MPINetwork : public BackendNetwork {
                     void* recvbuf,
                     const int recvcounts[],
                     const int rdispls[],
-                    CollDataType type,
-                    CollComm global_comm) override;
+                    legate::comm::coll::CollDataType type,
+                    legate::comm::coll::CollComm global_comm) override;
 
   void all_to_all(const void* sendbuf,
                   void* recvbuf,
                   int count,
-                  CollDataType type,
-                  CollComm global_comm) override;
+                  legate::comm::coll::CollDataType type,
+                  legate::comm::coll::CollComm global_comm) override;
 
   void all_gather(const void* sendbuf,
                   void* recvbuf,
                   int count,
-                  CollDataType type,
-                  CollComm global_comm) override;
+                  legate::comm::coll::CollDataType type,
+                  legate::comm::coll::CollComm global_comm) override;
 
  protected:
   void gather_(const void* sendbuf,
                void* recvbuf,
                int count,
-               CollDataType type,
+               legate::comm::coll::CollDataType type,
                int root,
-               CollComm global_comm);
+               legate::comm::coll::CollComm global_comm);
 
-  void bcast_(void* buf, int count, CollDataType type, int root, CollComm global_comm);
+  void bcast_(void* buf,
+              int count,
+              legate::comm::coll::CollDataType type,
+              int root,
+              legate::comm::coll::CollComm global_comm);
 
-  [[nodiscard]] static MPI_Datatype dtype_to_mpi_dtype_(CollDataType dtype);
+  [[nodiscard]] static MPI_Datatype dtype_to_mpi_dtype_(legate::comm::coll::CollDataType dtype);
 
-  [[nodiscard]] int generate_alltoall_tag_(int rank1, int rank2, CollComm global_comm) const;
+  [[nodiscard]] int generate_alltoall_tag_(int rank1,
+                                           int rank2,
+                                           legate::comm::coll::CollComm global_comm) const;
 
-  [[nodiscard]] int generate_alltoallv_tag_(int rank1, int rank2, CollComm global_comm) const;
+  [[nodiscard]] int generate_alltoallv_tag_(int rank1,
+                                            int rank2,
+                                            legate::comm::coll::CollComm global_comm) const;
 
-  [[nodiscard]] int generate_bcast_tag_(int rank, CollComm global_comm) const;
+  [[nodiscard]] int generate_bcast_tag_(int rank, legate::comm::coll::CollComm global_comm) const;
 
-  [[nodiscard]] int generate_gather_tag_(int rank, CollComm global_comm) const;
+  [[nodiscard]] int generate_gather_tag_(int rank, legate::comm::coll::CollComm global_comm) const;
 
  private:
   int mpi_tag_ub_{};
@@ -91,6 +99,6 @@ class MPINetwork : public BackendNetwork {
   std::vector<MPI_Comm> mpi_comms_{};
 };
 
-}  // namespace legate::comm::coll
+}  // namespace legate::detail::comm::coll
 
 #endif

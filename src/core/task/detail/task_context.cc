@@ -64,7 +64,7 @@ TaskContext::TaskContext(const Legion::Task* task,
       arrival = dez.unpack<Legion::PhaseBarrier>();
       wait    = dez.unpack<Legion::PhaseBarrier>();
     }
-    comms_ = dez.unpack<std::vector<comm::Communicator>>();
+    comms_ = dez.unpack<std::vector<legate::comm::Communicator>>();
   }
 
   // For reduction tree cases, some input stores may be mapped to NO_REGION

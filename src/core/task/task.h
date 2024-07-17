@@ -116,6 +116,9 @@ class LegateTask {
     std::int64_t task_id,
     const std::map<LegateVariantCode, VariantOptions>& all_options = {});
 
+ protected:
+  [[nodiscard]] static std::string_view task_name_();
+
  private:
   template <typename, template <typename...> typename, bool>
   friend class detail::VariantHelper;
@@ -123,8 +126,6 @@ class LegateTask {
   // A helper to find and register all variants of a task
   [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info_(
     const Library& lib, const std::map<LegateVariantCode, VariantOptions>& all_options);
-
-  [[nodiscard]] static std::string_view task_name_();
 
   template <VariantImpl variant_fn, LegateVariantCode variant_kind>
   static void task_wrapper_(const void* args,

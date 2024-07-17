@@ -12,7 +12,7 @@
 
 #include "core/runtime/detail/runtime.h"
 
-#include "core/comm/comm.h"
+#include "core/comm/detail/comm.h"
 #include "core/data/detail/array_tasks.h"
 #include "core/data/detail/external_allocation.h"
 #include "core/data/detail/logical_array.h"
@@ -239,10 +239,10 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
     communicator_manager_.reset();
     field_manager_.reset();
     core_library_ = nullptr;
-    comm::coll::collFinalize();
+    legate::comm::coll::collFinalize();
     initialized_ = false;);
   initialized_ = true;
-  comm::coll::collInit(argc, argv);
+  legate::comm::coll::collInit(argc, argv);
   legion_context_ = std::move(legion_context);
   core_library_   = find_library(CORE_LIBRARY_NAME, false /*can_fail*/);
 
@@ -1590,7 +1590,7 @@ void Runtime::destroy()
   partition_manager_.reset();
   scope_        = Scope{};
   core_library_ = nullptr;
-  comm::coll::collFinalize();
+  legate::comm::coll::collFinalize();
   initialized_ = false;
 }
 

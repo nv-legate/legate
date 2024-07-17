@@ -39,7 +39,7 @@ class TaskContext {
   [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& outputs();
   [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& reductions();
   [[nodiscard]] const std::vector<legate::Scalar>& scalars() const noexcept;
-  [[nodiscard]] const std::vector<comm::Communicator>& communicators() const noexcept;
+  [[nodiscard]] const std::vector<legate::comm::Communicator>& communicators() const noexcept;
 
   [[nodiscard]] std::int64_t task_id() const noexcept;
   [[nodiscard]] LegateVariantCode variant_kind() const noexcept;
@@ -75,7 +75,7 @@ class TaskContext {
   std::vector<InternalSharedPtr<PhysicalStore>> unbound_stores_{};
   std::vector<InternalSharedPtr<PhysicalStore>> scalar_stores_{};
   std::vector<legate::Scalar> scalars_{};
-  std::vector<comm::Communicator> comms_{};
+  std::vector<legate::comm::Communicator> comms_{};
   bool can_raise_exception_{};
   bool can_elide_device_ctx_sync_{};
   mapping::detail::Machine machine_{};

@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "core/comm/pthread_barrier.h"
+#include "core/comm/detail/pthread_barrier.h"
 
 #include <atomic>
 #include <cstdint>
 #include <memory>
 
-namespace legate::comm::coll {
+namespace legate::detail::comm::coll {
 
 class ThreadComm {
  public:
@@ -44,6 +44,6 @@ class ThreadComm {
   pthread_barrier_t barrier_{};
 };
 
-}  // namespace legate::comm::coll
+}  // namespace legate::detail::comm::coll
 
-#include "core/comm/thread_comm.inl"
+#include "core/comm/detail/thread_comm.inl"

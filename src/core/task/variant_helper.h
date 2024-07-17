@@ -31,6 +31,9 @@ class Library;
 
 namespace legate::detail {
 
+template <typename T>
+class LegionTask;
+
 void task_wrapper(VariantImpl,
                   LegateVariantCode,
                   std::optional<std::string_view>,
@@ -80,7 +83,8 @@ inline void task_wrapper_dyn_name(const void* args,
     static constexpr auto id       = LEGATE_##NAME##_VARIANT;                                \
     static constexpr auto& options = get_default_options_();                                 \
                                                                                              \
-    static_assert(std::is_convertible_v<decltype(variant), void (*)(legate::TaskContext)>,   \
+    static_assert(std::is_convertible_v<decltype(variant), VariantImpl> ||                   \
+                    std::is_same_v<typename T::BASE, LegionTask<T>>,                         \
                   "Malformed " #NAME                                                         \
                   " variant function. Variant function must have the following signature: "  \
                   "static void " #name "_variant(legate::TaskContext)");                     \
@@ -114,10 +118,23 @@ class VariantHelper<T, SELECTOR, true> {
     constexpr auto variant_impl = SELECTOR<T>::variant;
     constexpr auto variant_kind = SELECTOR<T>::id;
     constexpr auto& options     = SELECTOR<T>::options;
-    constexpr auto entry        = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
 
-    task_info->add_variant_(
-      TaskInfo::AddVariantKey{}, lib, variant_kind, variant_impl, entry, options, all_options);
+    if constexpr (std::is_convertible_v<decltype(variant_impl), VariantImpl>) {
+      constexpr auto entry = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
+
+      task_info->add_variant_(
+        TaskInfo::AddVariantKey{}, lib, variant_kind, variant_impl, entry, options, all_options);
+    } else {
+      using RET            = std::invoke_result_t<decltype(variant_impl),
+                                       const Legion::Task*,
+                                       const std::vector<Legion::PhysicalRegion>&,
+                                       Legion::Context,
+                                       Legion::Runtime*>;
+      constexpr auto entry = T::BASE::template task_wrapper_<RET, variant_impl, variant_kind>;
+
+      task_info->add_variant_(
+        TaskInfo::AddVariantKey{}, lib, variant_kind, variant_impl, entry, options, all_options);
+    }
   }
 };
 

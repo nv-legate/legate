@@ -41,6 +41,12 @@ Changes: Latest Development Version
   optional does not contain a value.
 - Add ``TaskContext::num_scalars()`` to query the number of ``Scalar`` arguments for a
   task.
+- Move the implementation detail of the CPU communicator (i.e.,
+  ``legate::comm::coll::BackenedNetwork``,
+  ``legate::comm::coll::LocalNetwork``, and ``legate::comm::coll::MPINetwork``)
+  to the detail namespace. As a consequence, the following headers are removed
+  from the public interface:``backend_network.h``, ``thread_comm.h``,
+  ``local_network.h``, and ``mpi_network.h``.
 
 .. rubric:: Types
 

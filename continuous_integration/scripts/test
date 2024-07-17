@@ -125,7 +125,7 @@ run_test_or_analysis() {
             function run_sequential_tests()
             {
               run_legate_tests "${CONDA_PREFIX}/bin/tests_wo_runtime" cpus 1
-              run_legate_tests "${CONDA_PREFIX}/bin/death_tests" cpus 1
+              run_legate_tests "${CONDA_PREFIX}/bin/tests_non_reentrant" cpus 1
             }
 
             function run_cpp_tests()

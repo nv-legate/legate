@@ -10,20 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/runtime/detail/library.h"
-#include "core/utilities/typedefs.h"
-
-#include "legion.h"
-
-#include <cstdint>
-#include <string_view>
+#pragma once
 
 namespace legate::detail {
 
-[[nodiscard]] Legion::TaskVariantRegistrar make_registrar(const detail::Library* library,
-                                                          std::int64_t local_task_id,
-                                                          std::string_view task_name,
-                                                          Processor::Kind proc_kind,
-                                                          bool concurrent);
+class Library;
+
+namespace comm {
+
+void register_tasks(Library* library);
+
+void register_builtin_communicator_factories(const Library* library);
+
+}  // namespace comm
 
 }  // namespace legate::detail

@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/comm/local_network.h"
+#include "core/comm/detail/local_network.h"
 
 #include "core/comm/coll.h"
+#include "core/comm/detail/logger.h"
 #include "core/utilities/assert.h"
 #include "core/utilities/macros.h"
 
@@ -22,22 +23,22 @@
 #include <cstdlib>
 #include <cstring>
 
-namespace legate::comm::coll {
+namespace legate::detail::comm::coll {
 
 // public functions start from here
 
 LocalNetwork::LocalNetwork(int /*argc*/, char* /*argv*/[])
 {
-  detail::log_coll().debug() << "Enable LocalNetwork";
+  logger().debug() << "Enable LocalNetwork";
   LEGATE_CHECK(current_unique_id_ == 0);
   LEGATE_CHECK(thread_comms_.empty());
   BackendNetwork::coll_inited_ = true;
-  BackendNetwork::comm_type    = CollCommType::CollLocal;
+  BackendNetwork::comm_type    = legate::comm::coll::CollCommType::CollLocal;
 }
 
 LocalNetwork::~LocalNetwork()
 {
-  detail::log_coll().debug() << "Finalize LocalNetwork";
+  logger().debug() << "Finalize LocalNetwork";
   LEGATE_CHECK(BackendNetwork::coll_inited_ == true);
   for (auto&& thread_comm : thread_comms_) {
     LEGATE_CHECK(!thread_comm->ready());
@@ -51,12 +52,15 @@ int LocalNetwork::init_comm()
   LEGATE_CHECK(id >= 0 && thread_comms_.size() == static_cast<std::size_t>(id));
   // create thread comm
   thread_comms_.emplace_back(std::make_unique<ThreadComm>());
-  detail::log_coll().debug() << "Init comm id " << id;
+  logger().debug() << "Init comm id " << id;
   return id;
 }
 
-void LocalNetwork::comm_create(
-  CollComm global_comm, int global_comm_size, int global_rank, int unique_id, const int*)
+void LocalNetwork::comm_create(legate::comm::coll::CollComm global_comm,
+                               int global_comm_size,
+                               int global_rank,
+                               int unique_id,
+                               const int*)
 {
   global_comm->global_comm_size     = global_comm_size;
   global_comm->global_rank          = global_rank;
@@ -75,7 +79,7 @@ void LocalNetwork::comm_create(
   global_comm->nb_threads = global_comm->global_comm_size;
 }
 
-void LocalNetwork::comm_destroy(CollComm global_comm)
+void LocalNetwork::comm_destroy(legate::comm::coll::CollComm global_comm)
 {
   const auto id = global_comm->unique_id;
 
@@ -92,8 +96,8 @@ void LocalNetwork::all_to_all_v(const void* sendbuf,
                                 void* recvbuf,
                                 const int recvcounts[],
                                 const int rdispls[],
-                                CollDataType type,
-                                CollComm global_comm)
+                                legate::comm::coll::CollDataType type,
+                                legate::comm::coll::CollComm global_comm)
 {
   const auto total_size      = global_comm->global_comm_size;
   const auto global_rank     = global_comm->global_rank;
@@ -120,13 +124,12 @@ void LocalNetwork::all_to_all_v(const void* sendbuf,
     auto* dst = static_cast<char*>(recvbuf) +
                 static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      detail::log_coll().debug() << "AlltoallvLocal i: " << i << " === global_rank " << global_rank
-                                 << ", dtype " << type_extent << ", copy rank "
-                                 << recvfrom_global_rank << " (seg " << recvfrom_seg_id
-                                 << ", sdispls " << sdispls[recvfrom_seg_id] << ", " << src
-                                 << ") to rank " << global_rank << " (seg " << recvfrom_global_rank
-                                 << ", rdispls " << rdispls[recvfrom_global_rank] << ", " << dst
-                                 << ')';
+      logger().debug() << "AlltoallvLocal i: " << i << " === global_rank " << global_rank
+                       << ", dtype " << type_extent << ", copy rank " << recvfrom_global_rank
+                       << " (seg " << recvfrom_seg_id << ", sdispls " << sdispls[recvfrom_seg_id]
+                       << ", " << src << ") to rank " << global_rank << " (seg "
+                       << recvfrom_global_rank << ", rdispls " << rdispls[recvfrom_global_rank]
+                       << ", " << dst << ')';
     }
     std::memcpy(dst, src, recvcounts[recvfrom_global_rank] * type_extent);
   }
@@ -137,8 +140,11 @@ void LocalNetwork::all_to_all_v(const void* sendbuf,
   barrier_local_(global_comm);
 }
 
-void LocalNetwork::all_to_all(
-  const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
+void LocalNetwork::all_to_all(const void* sendbuf,
+                              void* recvbuf,
+                              int count,
+                              legate::comm::coll::CollDataType type,
+                              legate::comm::coll::CollComm global_comm)
 {
   LEGATE_CHECK(count >= 0);
   const auto total_size      = global_comm->global_comm_size;
@@ -161,11 +167,10 @@ void LocalNetwork::all_to_all(
     auto* dst =
       static_cast<char*>(recvbuf) + static_cast<std::ptrdiff_t>(recvfrom_global_rank) * num_bytes;
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      detail::log_coll().debug() << "AlltoallLocal i: " << i << " === global_rank " << global_rank
-                                 << ", dtype " << type_extent << ", copy rank "
-                                 << recvfrom_global_rank << " (seg " << recvfrom_seg_id << ", "
-                                 << src << ") to rank " << global_rank << "(seg "
-                                 << recvfrom_global_rank << ", " << dst << ')';
+      logger().debug() << "AlltoallLocal i: " << i << " === global_rank " << global_rank
+                       << ", dtype " << type_extent << ", copy rank " << recvfrom_global_rank
+                       << " (seg " << recvfrom_seg_id << ", " << src << ") to rank " << global_rank
+                       << "(seg " << recvfrom_global_rank << ", " << dst << ')';
     }
     std::memcpy(dst, src, num_bytes);
   }
@@ -175,8 +180,11 @@ void LocalNetwork::all_to_all(
   barrier_local_(global_comm);
 }
 
-void LocalNetwork::all_gather(
-  const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm)
+void LocalNetwork::all_gather(const void* sendbuf,
+                              void* recvbuf,
+                              int count,
+                              legate::comm::coll::CollDataType type,
+                              legate::comm::coll::CollComm global_comm)
 {
   LEGATE_CHECK(count >= 0);
   const auto total_size   = global_comm->global_comm_size;
@@ -199,10 +207,10 @@ void LocalNetwork::all_gather(
     char* dst =
       static_cast<char*>(recvbuf) + static_cast<std::ptrdiff_t>(recvfrom_global_rank) * num_bytes;
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      detail::log_coll().debug() << "AllgatherLocal i: " << recvfrom_global_rank
-                                 << " === global_rank " << global_rank << ", dtype " << type_extent
-                                 << ", copy rank " << recvfrom_global_rank << " (" << src
-                                 << ") to rank " << global_rank << " (" << dst << ')';
+      logger().debug() << "AllgatherLocal i: " << recvfrom_global_rank << " === global_rank "
+                       << global_rank << ", dtype " << type_extent << ", copy rank "
+                       << recvfrom_global_rank << " (" << src << ") to rank " << global_rank << " ("
+                       << dst << ')';
     }
     std::memcpy(dst, src, num_bytes);
   }
@@ -218,32 +226,32 @@ void LocalNetwork::all_gather(
 
 // protected functions start from here
 
-std::size_t LocalNetwork::get_dtype_size_(CollDataType dtype)
+std::size_t LocalNetwork::get_dtype_size_(legate::comm::coll::CollDataType dtype)
 {
   switch (dtype) {
-    case CollDataType::CollInt8:
-    case CollDataType::CollChar: {
+    case legate::comm::coll::CollDataType::CollInt8:
+    case legate::comm::coll::CollDataType::CollChar: {
       return sizeof(char);
     }
-    case CollDataType::CollUint8: {
+    case legate::comm::coll::CollDataType::CollUint8: {
       return sizeof(std::uint8_t);
     }
-    case CollDataType::CollInt: {
+    case legate::comm::coll::CollDataType::CollInt: {
       return sizeof(int);
     }
-    case CollDataType::CollUint32: {
+    case legate::comm::coll::CollDataType::CollUint32: {
       return sizeof(std::uint32_t);
     }
-    case CollDataType::CollInt64: {
+    case legate::comm::coll::CollDataType::CollInt64: {
       return sizeof(std::int64_t);
     }
-    case CollDataType::CollUint64: {
+    case legate::comm::coll::CollDataType::CollUint64: {
       return sizeof(std::uint64_t);
     }
-    case CollDataType::CollFloat: {
+    case legate::comm::coll::CollDataType::CollFloat: {
       return sizeof(float);
     }
-    case CollDataType::CollDouble: {
+    case legate::comm::coll::CollDataType::CollDouble: {
       return sizeof(double);
     }
     default: {
@@ -253,17 +261,17 @@ std::size_t LocalNetwork::get_dtype_size_(CollDataType dtype)
   }
 }
 
-void LocalNetwork::reset_local_buffer_(CollComm global_comm)
+void LocalNetwork::reset_local_buffer_(legate::comm::coll::CollComm global_comm)
 {
   const auto global_rank                          = global_comm->global_rank;
   global_comm->local_comm->buffers()[global_rank] = nullptr;
   global_comm->local_comm->displs()[global_rank]  = nullptr;
 }
 
-void LocalNetwork::barrier_local_(CollComm global_comm)
+void LocalNetwork::barrier_local_(legate::comm::coll::CollComm global_comm)
 {
   LEGATE_CHECK(BackendNetwork::coll_inited_ == true);
   global_comm->local_comm->barrier_local();
 }
 
-}  // namespace legate::comm::coll
+}  // namespace legate::detail::comm::coll

@@ -105,6 +105,18 @@ class TaskInfo {
                     const VariantOptions& default_options,
                     const std::map<LegateVariantCode, VariantOptions>& registration_options = {});
 
+  // These are "private" insofar that the access key is private
+  // NOLINTBEGIN(readability-identifier-naming)
+  template <typename T>
+  void add_variant_(AddVariantKey,
+                    Library library,
+                    LegateVariantCode vid,
+                    LegionVariantImpl<T> body,
+                    Processor::TaskFuncPtr entry,
+                    const VariantOptions& default_options,
+                    const std::map<LegateVariantCode, VariantOptions>& registration_options = {});
+  // NOLINTEND(readability-identifier-naming)
+
   // TODO(wonchanl): remove once scalar extraction workaround is removed
   class RuntimeAddVariantKey {
     RuntimeAddVariantKey() = default;
@@ -145,3 +157,5 @@ class TaskInfo {
 };
 
 }  // namespace legate
+
+#include "core/task/task_info.inl"

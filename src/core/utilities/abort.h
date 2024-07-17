@@ -23,7 +23,8 @@
 namespace legate::comm::coll {
 
 // This is part of the public API, so we cannot change it (even though we probably should)
-void collAbort() noexcept;  // NOLINT(readability-identifier-naming)
+// NOLINTNEXTLINE(readability-identifier-naming,readability-redundant-declaration)
+void collAbort() noexcept;
 
 }  // namespace legate::comm::coll
 

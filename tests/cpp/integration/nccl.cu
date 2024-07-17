@@ -18,23 +18,17 @@
 #include <gtest/gtest.h>
 #include <nccl.h>
 
-namespace nccl {
-
-using Integration = DefaultFixture;
-
-namespace {
-
-constexpr std::string_view LIBRARY_NAME = "test_nccl";
-
-}  // namespace
+namespace test_nccl {
 
 enum TaskIDs {
   NCCL_TESTER = 0,
 };
 
-constexpr std::size_t SIZE = 10;
+constexpr std::size_t SIZE = 100;
 
 struct NCCLTester : public legate::LegateTask<NCCLTester> {
+  static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+
   static void gpu_variant(legate::TaskContext context)
   {
     EXPECT_TRUE((context.is_single_task() && context.communicators().empty()) ||
@@ -68,23 +62,26 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
   }
 };
 
-void prepare()
-{
-  auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library(LIBRARY_NAME);
-  NCCLTester::register_variants(context, NCCL_TESTER);
-}
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_nccl";
+  static void registration_callback(legate::Library library)
+  {
+    NCCLTester::register_variants(library, NCCL_TESTER);
+  }
+};
+
+class NCCL : public RegisterOnceFixture<Config> {};
 
 void test_nccl_auto(std::int32_t ndim)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->find_library(LIBRARY_NAME);
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto store   = runtime->create_store(legate::full(ndim, SIZE), legate::int32());
 
   auto task = runtime->create_task(context, NCCL_TESTER);
   auto part = task.declare_partition();
   task.add_output(store, part);
-  task.add_communicator("cpu");  // This requested will be ignored
   task.add_communicator("nccl");
   runtime->submit(std::move(task));
 }
@@ -97,7 +94,7 @@ void test_nccl_manual(std::int32_t ndim)
     return;
   }
 
-  auto context      = runtime->find_library(LIBRARY_NAME);
+  auto context      = runtime->find_library(Config::LIBRARY_NAME);
   auto store        = runtime->create_store(legate::full(ndim, SIZE), legate::int32());
   auto launch_shape = legate::full<std::uint64_t>(ndim, 1);
   auto tile_shape   = legate::full<std::uint64_t>(ndim, 1);
@@ -108,16 +105,13 @@ void test_nccl_manual(std::int32_t ndim)
 
   auto task = runtime->create_task(context, NCCL_TESTER, launch_shape);
   task.add_output(part);
-  task.add_communicator("cpu");  // This requested will be ignored
   task.add_communicator("nccl");
   runtime->submit(std::move(task));
 }
 
 // Test case with single unbound store
-TEST_F(Integration, NCCL)
+TEST_F(NCCL, Auto)
 {
-  prepare();
-
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
   if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
@@ -127,8 +121,21 @@ TEST_F(Integration, NCCL)
 
   for (std::int32_t ndim : {1, 3}) {
     test_nccl_auto(ndim);
+  }
+}
+
+TEST_F(NCCL, Manual)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto machine = runtime->get_machine();
+  if (machine.count(legate::mapping::TaskTarget::GPU) == 0) {
+    return;
+  }
+  legate::Scope scope{machine.only(legate::mapping::TaskTarget::GPU)};
+
+  for (std::int32_t ndim : {1, 3}) {
     test_nccl_manual(ndim);
   }
 }
 
-}  // namespace nccl
+}  // namespace test_nccl

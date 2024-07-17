@@ -17,12 +17,6 @@
 
 namespace legate::comm::coll {
 
-namespace detail {
-
-[[nodiscard]] Logger& log_coll();
-
-}  // namespace detail
-
 // NOLINTBEGIN(readability-identifier-naming)
 void collCommCreate(CollComm global_comm,
                     int global_comm_size,

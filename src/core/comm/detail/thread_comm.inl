@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "core/comm/thread_comm.h"
+#include "core/comm/detail/thread_comm.h"
 
-namespace legate::comm::coll {
+namespace legate::detail::comm::coll {
 
 inline bool ThreadComm::ready() const { return ready_flag_; }
 
@@ -26,4 +26,4 @@ inline const ThreadComm::atomic_displ_type* ThreadComm::displs() const { return 
 
 inline ThreadComm::atomic_displ_type* ThreadComm::displs() { return displs_.get(); }
 
-}  // namespace legate::comm::coll
+}  // namespace legate::detail::comm::coll

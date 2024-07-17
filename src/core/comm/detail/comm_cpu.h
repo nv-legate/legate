@@ -13,13 +13,15 @@
 #pragma once
 
 namespace legate::detail {
+
 class Library;
+
+namespace comm::cpu {
+
+void register_tasks(Library* library);
+
+void register_factory(const Library* library);
+
+}  // namespace comm::cpu
+
 }  // namespace legate::detail
-
-namespace legate::comm::nccl {
-
-void register_tasks(const detail::Library* core_library);
-
-void register_factory(const detail::Library* core_library);
-
-}  // namespace legate::comm::nccl
