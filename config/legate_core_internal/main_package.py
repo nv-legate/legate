@@ -230,20 +230,23 @@ class LegateCore(MainPackage):
         """
         # Returns all the packages in the format:
         #
-        # Package Version
-        # ------- -------
+        # Package Version Editable project location
+        # ------- ------- -------------------------
         # foo     0.7.16
         # bar     2.4.1
-        # baz     2.15.0
+        # baz     2.15.0  /path/to/baz
         # ...
         installed_packages = self.log_execute_command(
             [sys.executable, "-m", "pip", "list"]
         ).stdout.splitlines()
         # skip the "Package Version" header and divider lines
         installed_packages = installed_packages[2:]
+        package_names = (
+            line.split(maxsplit=1)[0] for line in installed_packages
+        )
         found_legate = any(
             name.startswith("legate-core") or (name == "legate")
-            for name, _ in map(str.split, installed_packages)
+            for name in package_names
         )
         self.log(f"Have pre-existing legate installation: {found_legate}")
 
