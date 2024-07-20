@@ -1870,12 +1870,11 @@ void handle_legate_args(std::int32_t argc, char** argv)
   try_set_property(rt, "numa", "numamem", numamem, "unable to set --numamem");
 
   // eager alloc has to be passed via env var
-  auto result =
-    fmt::format("-lg:eager_alloc_percentage {} -lg:local 0 ", eager_alloc_percent.value());
-  if (const char* existing_default_args = std::getenv(LEGION_DEFAULT_ARGS.data())) {
-    fmt::format_to(std::back_inserter(result), "{}", existing_default_args);
-  }
-  setenv(LEGION_DEFAULT_ARGS.data(), result.c_str(), /* overwrite */ 1);
+  const auto result = fmt::format("-lg:eager_alloc_percentage {} -lg:local 0 {} ",
+                                  eager_alloc_percent.value(),
+                                  LEGION_DEFAULT_ARGS.get().value_or(""));
+
+  LEGION_DEFAULT_ARGS.set(result);
 }
 
 CUstream_st* Runtime::get_cuda_stream() const

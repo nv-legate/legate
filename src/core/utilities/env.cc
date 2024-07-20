@@ -24,13 +24,11 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <type_traits>
 
 namespace legate::detail {
 
 namespace {
-
-template <typename T>
-using ImplFunctionType = std::optional<T> (*)(std::string_view);
 
 [[nodiscard]] std::lock_guard<std::mutex> ENVIRONMENT_LOCK()
 {
@@ -40,41 +38,56 @@ using ImplFunctionType = std::optional<T> (*)(std::string_view);
 }
 
 template <typename T>
-[[nodiscard]] std::optional<T> read_env(std::string_view) = delete;
-
-template <>
-[[nodiscard]] std::optional<std::int64_t> read_env(std::string_view variable)
+[[nodiscard]] std::optional<T> read_env_common(std::string_view variable)
 {
   if (variable.empty()) {
     throw std::invalid_argument{"Environment variable name is empty"};
   }
 
-  auto parsed_val = [&]() -> std::optional<std::int64_t> {
-    const auto _      = ENVIRONMENT_LOCK();
-    const char* value = [&] {
-      if (LEGATE_LIKELY(variable.back())) {
-        return std::getenv(variable.data());
-      }
-      // std::string will null-terminate a non-null-terminated string_view for us
-      return std::getenv(std::string{variable}.c_str());
-    }();
-
-    if (!value) {
-      return std::nullopt;
+  const auto _      = ENVIRONMENT_LOCK();
+  const char* value = [&] {
+    if (LEGATE_LIKELY(variable.back())) {
+      return std::getenv(variable.data());
     }
+    // std::string will null-terminate a non-null-terminated string_view for us
+    return std::getenv(std::string{variable}.c_str());
+  }();
 
-    std::int64_t ret    = 0;
+  if (!value) {
+    return std::nullopt;
+  }
+
+  if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
     const auto value_sv = std::string_view{value};
-    if (auto [ptr, ec] = std::from_chars(value_sv.begin(), value_sv.end(), ret);
+    T ret{};
+
+    if (const auto [_2, ec] = std::from_chars(value_sv.begin(), value_sv.end(), ret);
         ec != std::errc{}) {
       throw std::runtime_error{std::make_error_code(ec).message()};
     }
     // We need to hold the environment lock until here since we are still reading from it in
     // from_chars().
     return ret;
-  }();
+  } else {
+    return value;
+  }
+}
 
-  if (parsed_val.has_value() && (parsed_val < 0)) {
+template <typename T>
+[[nodiscard]] std::optional<T> read_env(std::string_view) = delete;
+
+template <>
+[[nodiscard]] std::optional<std::string> read_env(std::string_view variable)
+{
+  return read_env_common<std::string>(variable);
+}
+
+template <>
+[[nodiscard]] std::optional<std::int64_t> read_env(std::string_view variable)
+{
+  auto parsed_val = read_env_common<std::int64_t>(variable);
+
+  if (parsed_val.has_value() && (*parsed_val < 0)) {
     throw std::invalid_argument{
       fmt::format("Invalid value for config value \"{}\": {}. Value must not be negative.",
                   variable,
@@ -101,36 +114,46 @@ template <>
   return std::nullopt;
 }
 
-template <typename T>
-[[nodiscard]] auto read_env_with_defaults(ImplFunctionType<T> read_env_impl_fn,
-                                          std::string_view variable,
-                                          T default_value,
-                                          std::optional<T> test_value) -> T
+template <typename T, typename U = T>
+[[nodiscard]] T read_env_with_defaults(std::optional<T> (*read_env_impl_fn)(std::string_view),
+                                       std::string_view variable,
+                                       U default_value,
+                                       std::optional<U> test_value)
 {
   if (auto&& value = read_env_impl_fn(std::move(variable)); value.has_value()) {
     return *std::move(value);
   }
   // Can save another env access if we are only given a default value
   if (!test_value.has_value()) {
-    return default_value;
+    if constexpr (std::is_same_v<T, U>) {
+      return default_value;
+    } else {
+      return T{std::move(default_value)};
+    }
   }
   // Don't use the "default values" getter here, since that would lead to infinite recursive
-  // loop.
-  return LEGATE_TEST.get().value_or(false) ? *test_value : default_value;
+  // loop
+  auto&& ret = LEGATE_TEST.get().value_or(false) ? *std::move(test_value) : default_value;
+
+  if constexpr (std::is_same_v<T, U>) {
+    return ret;
+  } else {
+    return T{std::move(ret)};
+  }
 }
 
 }  // namespace
 
 // ==========================================================================================
 
-void EnvironmentVariableBase::set(std::string_view value, bool overwrite) const
+void EnvironmentVariableBase::set_(std::string_view value, bool overwrite) const
 {
   const auto ret = [&]() {
     const auto _ = ENVIRONMENT_LOCK();
 
     // Reset this here so that we make sure any modification originates from setenv()
     errno = 0;
-    return setenv(data(), value.data(), overwrite ? 1 : 0);
+    return ::setenv(data(), value.data(), overwrite ? 1 : 0);
   }();
   if (LEGATE_UNLIKELY(ret)) {
     throw std::runtime_error{fmt::format("setenv({}, {}) failed with exit code: {}: {}",
@@ -147,12 +170,12 @@ std::optional<bool> EnvironmentVariable<bool>::get() const { return read_env<boo
 
 bool EnvironmentVariable<bool>::get(bool default_value, std::optional<bool> test_value) const
 {
-  return read_env_with_defaults(read_env<>, *this, default_value, std::move(test_value));
+  return read_env_with_defaults(read_env<bool>, *this, default_value, std::move(test_value));
 }
 
 void EnvironmentVariable<bool>::set(bool value, bool overwrite) const
 {
-  EnvironmentVariableBase::set(value ? "1" : "0", overwrite);
+  EnvironmentVariableBase::set_(value ? "1" : "0", overwrite);
 }
 
 // ==========================================================================================
@@ -165,12 +188,13 @@ std::optional<std::int64_t> EnvironmentVariable<std::int64_t>::get() const
 std::int64_t EnvironmentVariable<std::int64_t>::get(std::int64_t default_value,
                                                     std::optional<std::int64_t> test_value) const
 {
-  return read_env_with_defaults(read_env<>, *this, default_value, std::move(test_value));
+  return read_env_with_defaults(
+    read_env<std::int64_t>, *this, default_value, std::move(test_value));
 }
 
 void EnvironmentVariable<std::int64_t>::set(std::int64_t value, bool overwrite) const
 {
-  EnvironmentVariableBase::set(std::to_string(value), overwrite);
+  EnvironmentVariableBase::set_(std::to_string(value), overwrite);
 }
 
 // ==========================================================================================
@@ -183,12 +207,31 @@ std::optional<std::uint32_t> EnvironmentVariable<std::uint32_t>::get() const
 std::uint32_t EnvironmentVariable<std::uint32_t>::get(std::uint32_t default_value,
                                                       std::optional<std::uint32_t> test_value) const
 {
-  return read_env_with_defaults(read_env<>, *this, default_value, std::move(test_value));
+  return read_env_with_defaults(
+    read_env<std::uint32_t>, *this, default_value, std::move(test_value));
 }
 
 void EnvironmentVariable<std::uint32_t>::set(std::uint32_t value, bool overwrite) const
 {
-  EnvironmentVariableBase::set(std::to_string(value), overwrite);
+  EnvironmentVariableBase::set_(std::to_string(value), overwrite);
+}
+
+// ==========================================================================================
+
+std::optional<std::string> EnvironmentVariable<std::string>::get() const
+{
+  return read_env<std::string>(*this);
+}
+
+std::string EnvironmentVariable<std::string>::get(std::string_view default_value,
+                                                  std::optional<std::string_view> test_value) const
+{
+  return read_env_with_defaults(read_env<std::string>, *this, default_value, std::move(test_value));
+}
+
+void EnvironmentVariable<std::string>::set(std::string_view value, bool overwrite) const
+{
+  EnvironmentVariableBase::set_(std::move(value), overwrite);
 }
 
 }  // namespace legate::detail

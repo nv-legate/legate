@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "core/utilities/macros.h"
-
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <string_view>
+#include <utility>
 
 /**
  * @file
@@ -36,7 +36,9 @@ class EnvironmentVariableBase {
   // NOLINTNEXTLINE(google-explicit-constructor)
   [[nodiscard]] constexpr operator std::string_view() const noexcept;
   [[nodiscard]] constexpr const char* data() const noexcept;
-  void set(std::string_view value, bool overwrite) const;
+
+ protected:
+  void set_(std::string_view value, bool overwrite) const;
 
  private:
   std::string_view name_{};
@@ -91,6 +93,17 @@ class EnvironmentVariable<std::uint32_t> : public EnvironmentVariableBase {
   [[nodiscard]] std::uint32_t get(std::uint32_t default_value,
                                   std::optional<std::uint32_t> test_value = std::nullopt) const;
   void set(std::uint32_t value, bool overwrite = true) const;
+};
+
+template <>
+class EnvironmentVariable<std::string> : public EnvironmentVariableBase {
+ public:
+  using EnvironmentVariableBase::EnvironmentVariableBase;
+
+  [[nodiscard]] std::optional<std::string> get() const;
+  [[nodiscard]] std::string get(std::string_view default_value,
+                                std::optional<std::string_view> test_value = std::nullopt) const;
+  void set(std::string_view value, bool overwrite = true) const;
 };
 
 }  // namespace detail
@@ -234,7 +247,8 @@ inline constexpr detail::EnvironmentVariable<bool> LEGATE_WARMUP_NCCL{"LEGATE_WA
  *
  * @ingroup util
  */
-inline constexpr std::string_view LEGION_DEFAULT_ARGS = "LEGION_DEFAULT_ARGS";
+inline constexpr detail::EnvironmentVariable<std::string> LEGION_DEFAULT_ARGS{
+  "LEGION_DEFAULT_ARGS"};
 
 inline constexpr detail::EnvironmentVariable<std::int64_t> LEGATE_MIN_CPU_CHUNK{
   "LEGATE_MIN_CPU_CHUNK"};
