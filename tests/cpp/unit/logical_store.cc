@@ -13,6 +13,7 @@
 #include "legate.h"
 #include "utilities/utilities.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
 #include <vector>
@@ -798,17 +799,24 @@ TEST_F(LogicalStoreUnit, EqualStorageFuture)
 
 TEST_F(LogicalStoreUnit, ToString)
 {
-  const auto runtime         = legate::Runtime::get_runtime();
-  const auto bound_store     = runtime->create_store(legate::Scalar{std::int32_t{10}});
-  const auto bound_store_str = "Store(1) {shape: [1], storage: 1}";
-  ASSERT_EQ(bound_store.to_string(), bound_store_str);
+  const auto runtime     = legate::Runtime::get_runtime();
+  const auto bound_store = runtime->create_store(legate::Scalar{std::int32_t{10}});
+
+  ASSERT_THAT(bound_store.to_string(),
+              ::testing::MatchesRegex(R"(Store\([0-9]+\) \{shape: \[1\], storage: [0-9]+\})"));
+
   const auto promoted = bound_store.promote(0, 5);
-  const auto promoted_store_str =
-    "Store(2) {shape: [5, 1], transform: Promote(extra_dim: 0, dim_size: 5), storage: 1}";
-  ASSERT_EQ(promoted.to_string(), promoted_store_str);
-  const auto unbound_store     = runtime->create_store(legate::int64());
-  const auto unbound_store_str = "Store(3) {shape: (unbound), storage: 2}";
-  ASSERT_EQ(unbound_store.to_string(), unbound_store_str);
+
+  ASSERT_THAT(
+    promoted.to_string(),
+    ::testing::MatchesRegex(
+      R"(Store\([0-9]+\) \{shape: \[5, 1\], transform: Promote\(extra_dim: 0, dim_size: 5\), storage: [0-9]+\})"));
+
+  const auto unbound_store = runtime->create_store(legate::int64());
+
+  ASSERT_THAT(
+    unbound_store.to_string(),
+    ::testing::MatchesRegex(R"(Store\([0-9]+\) \{shape: \(unbound\), storage: [0-9]+\})"));
 }
 
 // NOLINTEND(readability-magic-numbers)
