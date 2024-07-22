@@ -151,10 +151,6 @@ jobs:
         shell: bash -el {0}
         run: |
           clang-tidy --version
-          # run-clang-tidy has no --version, so just print its location and help to make
-          # sure it's there
-          which run-clang-tidy
-          run-clang-tidy --help
 
       - name: Configure legate.core
         shell: bash -el {0}
@@ -167,4 +163,7 @@ jobs:
 
       - name: Run clang-tidy
         run: |
-          make tidy
+          # "-- -k" tells the underlying build tool to not stop on first error. We want
+          # CI to unearth all clang-tidy errors in one go, otherwise the dev needs to play
+          # whack-a-mole with each additional error.
+          LEGATE_CORE_CMAKE_ARGS="-- --keep-going" make tidy -j 14

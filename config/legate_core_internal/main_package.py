@@ -100,18 +100,6 @@ class LegateCore(MainPackage):
         ),
         cmake_var=CMAKE_VARIABLE("LEGATE_CORE_CLANG_TIDY", CMakeExecutable),
     )
-    LEGATE_CORE_RUN_CLANG_TIDY: Final = ConfigArgument(
-        name="--run-clang-tidy-executable",
-        spec=ArgSpec(
-            dest="run_clang_tidy_executable",
-            type=Path,
-            default=shutil.which("run-clang-tidy"),
-            help="run-clang-tidy executable",
-        ),
-        cmake_var=CMAKE_VARIABLE(
-            "LEGATE_CORE_RUN_CLANG_TIDY", CMakeExecutable
-        ),
-    )
     legate_core_LEGION_REPOSITORY: Final = CMAKE_VARIABLE(
         "legate_core_LEGION_REPOSITORY", CMakeString
     )
@@ -404,10 +392,6 @@ class LegateCore(MainPackage):
         r"""Configure clang-tidy variables."""
         self.set_flag_if_user_set(
             self.LEGATE_CORE_CLANG_TIDY, self.cl_args.clang_tidy_executable
-        )
-        self.set_flag_if_user_set(
-            self.LEGATE_CORE_RUN_CLANG_TIDY,
-            self.cl_args.run_clang_tidy_executable,
         )
 
     def configure(self) -> None:

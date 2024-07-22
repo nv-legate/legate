@@ -12,159 +12,145 @@
 
 include_guard(GLOBAL)
 
-function(_legate_core_add_tidy_target_impl)
-  set(options)
-  set(oneValueArgs TARGET_NAME TARGET_COMMENT)
-  set(multiValueArgs COMMANDS)
-  cmake_parse_arguments(_TIDY_TARGET "${options}" "${oneValueArgs}" "${multiValueArgs}"
-                        ${ARGN})
+function(legate_core_search_for_program VARIABLE_NAME PROGRAM_NAME)
+  message(CHECK_START "Searching for ${PROGRAM_NAME}")
 
-  add_custom_target("${_TIDY_TARGET_TARGET_NAME}"
-                    COMMAND ${_TIDY_TARGET_COMMANDS}
-                    COMMENT "${_TIDY_TARGET_TARGET_COMMENT}"
-                    COMMAND_EXPAND_LISTS
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  if(${VARIABLE_NAME})
+    message(CHECK_PASS "using pre-found: ${${VARIABLE_NAME}}")
+    return()
+  endif()
+
+  find_program(${VARIABLE_NAME} ${PROGRAM_NAME} ${ARGN})
+  if(${VARIABLE_NAME})
+    message(CHECK_PASS "found: ${${VARIABLE_NAME}}")
+  else()
+    message(CHECK_FAIL "not found")
+  endif()
+endfunction()
+
+function(_legate_core_add_tidy_target_impl CLANG_TIDY SOURCES_VAR)
+  if(CLANG_TIDY)
+    list(REMOVE_DUPLICATES ${SOURCES_VAR})
+    foreach(src IN LISTS ${SOURCES_VAR})
+      string(MAKE_C_IDENTIFIER "${src}_tidy" src_tidy)
+      add_custom_target("${src_tidy}"
+                        COMMAND "${CLANG_TIDY}"
+                                --config-file="${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy" -p
+                                "${CMAKE_BINARY_DIR}" --use-color --quiet
+                                --extra-arg=-Wno-error=unused-command-line-argument
+                                "${src}"
+                        COMMENT "clang-tidy ${src}"
+                        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+      list(APPEND tidy_targets "${src_tidy}")
+    endforeach()
+    add_custom_target(tidy COMMENT "running clang-tidy")
+    if(tidy_targets) # in case it's empty
+      add_dependencies(tidy ${tidy_targets})
+    endif()
+  else()
+    # cmake-format: off
+    add_custom_target(
+      tidy
+      COMMENT "Running clang-tidy"
+      VERBATIM
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Could not locate 'run-clang-tidy' and/or 'clang-tidy'"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Must provide location of both to run clang-tidy target"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Note:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: run-clang-tidy is provided by LLVM, so you must have a copy installed locally"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Once installed, ensure that path/to/llvm/bin/run-clang-tidy is findable"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Either put path/to/llvm/bin into your PATH (not recommended)"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Or symlink path/to/llvm/bin/run-clang-tidy somewhere that is on your PATH (recommended)"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Alternatively, re-run configure with -DLEGATE_CORE_RUN_CLANG_TIDY=/path/to/your/run-clang-tidy"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: and (if needed) -DLEGATE_CORE_CLANG_TIDY=/path/to/your/clang-tidy"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E false # to signal the error
+    )
+    # cmake-format: on
+  endif()
+endfunction()
+
+function(_legate_core_add_tidy_diff_target_impl CLANG_TIDY)
+  legate_core_search_for_program(LEGATE_CORE_SED sed)
+  legate_core_search_for_program(LEGATE_CORE_CLANG_TIDY_DIFF clang-tidy-diff.py)
+  if(NOT LEGATE_CORE_CLANG_TIDY_DIFF)
+    # Sometimes this is not installed under the usual [s]bin directories, but instead
+    # under share/clang, so try that as well
+    legate_core_search_for_program(LEGATE_CORE_CLANG_TIDY_DIFF clang-tidy-diff.py
+                                   PATH_SUFFIXES "share/clang")
+  endif()
+  find_package(Git)
+
+  if(LEGATE_CORE_CLANG_TIDY_DIFF AND CLANG_TIDY AND LEGATE_CORE_SED AND Git_FOUND)
+    include(ProcessorCount)
+
+    ProcessorCount(PROC_COUNT)
+    set(TIDY_PARALLEL_FLAGS "-j${PROC_COUNT}")
+
+    # cmake-format: off
+    add_custom_target(
+      tidy-diff
+      COMMENT "Running clang-tidy-diff"
+      COMMAND
+        "${GIT_EXECUTABLE}" diff
+        -U0 `${GIT_EXECUTABLE} remote show origin \| ${LEGATE_CORE_SED} -n "/HEAD branch/s/.*: //p" ` HEAD
+        \|
+        "${LEGATE_CORE_CLANG_TIDY_DIFF}"
+        -p 1
+        -clang-tidy-binary "${CLANG_TIDY}"
+        -path "${CMAKE_BINARY_DIR}"
+        -use-color
+        -quiet
+        -extra-arg=-Wno-error=unused-command-line-argument
+        ${TIDY_PARALLEL_FLAGS}
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    )
+    # cmake-format: on
+  else()
+    # cmake-format: off
+    add_custom_target(
+      tidy-diff
+      COMMENT "Running clang-tidy-diff"
+      VERBATIM
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Could not locate 'clang-tidy-diff.py' and/or 'clang-tidy', 'git', or 'sed'"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Must provide location of all to run clang-tidy-diff target"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Note:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: clang-tidy-diff.py is provided by LLVM, so you must have a copy installed locally"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Once installed, ensure that path/to/llvm/bin/clang-tidy-diff.py is findable"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Either put path/to/llvm/<bin or share/clang> into your PATH (not recommended)"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Or symlink path/to/llvm/<bin or share/clang>/clang-tidy-diff.py somewhere that is on your PATH (recommended)"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: Alternatively, re-run configure with -DLEGATE_CORE_CLANG_TIDY_DIFF=/path/to/your/clang-tidy-diff.py"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: and (if needed) -DLEGATE_CORE_CLANG_TIDY=/path/to/your/clang-tidy"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR: and (if needed) -DLEGATE_CORE_SED=/path/to/your/sed"
+      COMMAND ${CMAKE_COMMAND} -E echo "-- ERROR:"
+      COMMAND ${CMAKE_COMMAND} -E false # to signal the error
+    )
+    # cmake-format: on
+  endif()
 endfunction()
 
 function(legate_core_add_tidy_target)
   list(APPEND CMAKE_MESSAGE_CONTEXT "add_tidy_target")
 
   set(options)
-  set(oneValueArgs)
-  set(multiValueArgs SOURCES)
-  cmake_parse_arguments(_TIDY "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  set(one_value_args)
+  set(multi_value_args SOURCES)
+  cmake_parse_arguments(_TIDY "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
 
   if(NOT _TIDY_SOURCES)
     message(FATAL_ERROR "Must provide SOURCES option")
   endif()
-  list(REMOVE_DUPLICATES _TIDY_SOURCES)
 
-  function(search_for_program VARIABLE_NAME PROGRAM_NAME)
-    message(CHECK_START "Searching for ${PROGRAM_NAME}")
+  legate_core_search_for_program(LEGATE_CORE_CLANG_TIDY clang-tidy)
 
-    if(${VARIABLE_NAME})
-      message(CHECK_PASS "using pre-found: ${${VARIABLE_NAME}}")
-      return()
-    endif()
-
-    find_program(${VARIABLE_NAME} ${PROGRAM_NAME} ${ARGN})
-    if(${VARIABLE_NAME})
-      message(CHECK_PASS "found: ${${VARIABLE_NAME}}")
-    else()
-      message(CHECK_FAIL "not found")
-    endif()
-  endfunction()
-
-  search_for_program(LEGATE_CORE_RUN_CLANG_TIDY run-clang-tidy)
-  search_for_program(LEGATE_CORE_CLANG_TIDY clang-tidy)
-  search_for_program(LEGATE_CORE_CLANG_TIDY_DIFF clang-tidy-diff.py)
-  if(NOT LEGATE_CORE_CLANG_TIDY_DIFF)
-    # Sometimes this is not installed under the usual [s]bin directories, but instead
-    # under share/clang, so try that as well
-    search_for_program(LEGATE_CORE_CLANG_TIDY_DIFF clang-tidy-diff.py PATH_SUFFIXES
-                       "share/clang")
-  endif()
-  search_for_program(LEGATE_CORE_SED sed)
-  find_package(Git)
-
-  if(NOT N EQUAL 0)
-    include(ProcessorCount)
-
-    ProcessorCount(PROC_COUNT)
-    set(TIDY_PARALLEL_FLAGS -j${PROC_COUNT})
-  else()
-    set(TIDY_PARALLEL_FLAGS)
-  endif()
-
-  if(LEGATE_CORE_RUN_CLANG_TIDY AND LEGATE_CORE_CLANG_TIDY)
-    _legate_core_add_tidy_target_impl(
-      TARGET_NAME
-      tidy
-      TARGET_COMMENT
-      "Running clang-tidy"
-      COMMANDS
-      ${LEGATE_CORE_RUN_CLANG_TIDY}
-      -config-file
-      ${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy
-      -clang-tidy-binary
-      ${LEGATE_CORE_CLANG_TIDY}
-      -p
-      ${CMAKE_BINARY_DIR}
-      -use-color
-      -quiet
-      -extra-arg=-Wno-error=unused-command-line-argument
-      ${TIDY_PARALLEL_FLAGS}
-      ${_TIDY_SOURCES})
-  else()
-    # cmake-format: off
-    _legate_core_add_tidy_target_impl(
-      TARGET_NAME tidy
-      TARGET_COMMENT "Running clang-tidy"
-      COMMANDS
-              ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Could not locate 'run-clang-tidy' and/or 'clang-tidy']]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Must provide location of both to run clang-tidy target]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Note:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: run-clang-tidy is provided by LLVM, so you must have a copy installed locally]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Once installed, ensure that path/to/llvm/bin/run-clang-tidy is findable]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Either put path/to/llvm/bin into your PATH (not recommended)]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Or symlink path/to/llvm/bin/run-clang-tidy somewhere that is on your PATH (recommended)]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Alternatively, re-run configure with -DLEGATE_CORE_RUN_CLANG_TIDY=/path/to/your/run-clang-tidy]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: and (if needed) -DLEGATE_CORE_CLANG_TIDY=/path/to/your/clang-tidy"]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E false # to signal the error
-    )
-    # cmake-format: on
-  endif()
-
-  if(LEGATE_CORE_CLANG_TIDY_DIFF AND LEGATE_CORE_CLANG_TIDY AND LEGATE_CORE_SED
-     AND Git_FOUND)
-    # cmake-format: off
-    _legate_core_add_tidy_target_impl(
-      TARGET_NAME tidy-diff
-      TARGET_COMMENT "Running clang-tidy-diff"
-      COMMANDS
-        ${GIT_EXECUTABLE} diff
-        -U0
-        `${GIT_EXECUTABLE} remote show origin \| sed -n "/HEAD branch/s/.*: //p" `
-        HEAD
-        \|
-        ${LEGATE_CORE_CLANG_TIDY_DIFF}
-        -p 1
-        -clang-tidy-binary ${LEGATE_CORE_CLANG_TIDY}
-        -path ${CMAKE_BINARY_DIR}
-        -use-color
-        -quiet
-        -extra-arg=-Wno-error=unused-command-line-argument
-        ${TIDY_PARALLEL_FLAGS}
-    )
-    # cmake-format: on
-  else()
-    # cmake-format: off
-    _legate_core_add_tidy_target_impl(
-      TARGET_NAME tidy-diff
-      TARGET_COMMENT "Running clang-tidy-diff"
-      COMMANDS
-              ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Could not locate 'clang-tidy-diff.py' and/or 'clang-tidy', 'git', or 'sed']]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Must provide location of all to run clang-tidy-diff target]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Note:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: clang-tidy-diff.py is provided by LLVM, so you must have a copy installed locally]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Once installed, ensure that path/to/llvm/bin/clang-tidy-diff.py is findable]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Either put path/to/llvm/<bin or share/clang> into your PATH (not recommended)]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Or symlink path/to/llvm/<bin or share/clang>/clang-tidy-diff.py somewhere that is on your PATH (recommended)]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: Alternatively, re-run configure with -DLEGATE_CORE_CLANG_TIDY_DIFF=/path/to/your/clang-tidy-diff.py]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: and (if needed) -DLEGATE_CORE_CLANG_TIDY=/path/to/your/clang-tidy]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR: and (if needed) -DLEGATE_CORE_SED=/path/to/your/sed]]
-      COMMAND ${CMAKE_COMMAND} -E echo [[-- ERROR:]]
-      COMMAND ${CMAKE_COMMAND} -E false # to signal the error
-    )
-    # cmake-format: on
-  endif()
+  _legate_core_add_tidy_target_impl(${LEGATE_CORE_CLANG_TIDY} _TIDY_SOURCES)
+  _legate_core_add_tidy_diff_target_impl(${LEGATE_CORE_CLANG_TIDY})
 endfunction()

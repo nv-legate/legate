@@ -1,6 +1,16 @@
 {
     "parse": {
         "additional_commands": {
+            "legate_core_add_tidy_target": {
+                "kwargs": {
+                    "SOURCES": "+"
+                }
+            },
+            "legate_core_find_or_configure": {
+                "kwargs": {
+                    "PACKAGE": "1"
+                }
+            },
             "rapids_cmake_build_type": {
                 "pargs": {
                     "nargs": 1
