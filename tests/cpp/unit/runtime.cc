@@ -10,8 +10,6 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/runtime/detail/runtime.h"
-
 #include "core/data/detail/shape.h"
 
 #include "legate.h"

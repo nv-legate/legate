@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+
+from __future__ import annotations
+
+import shlex
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..util.types import EnvPart
+    from .config import ConfigProtocol
+
+__all__ = ("ENV_PARTS_LEGATE",)
+
+
+def env_cpus(config: ConfigProtocol) -> EnvPart:
+    return ("--cpus", str(config.core.cpus))
+
+
+def env_gpus(config: ConfigProtocol) -> EnvPart:
+    return ("--gpus", str(config.core.gpus))
+
+
+def env_omps(config: ConfigProtocol) -> EnvPart:
+    return ("--omps", str(config.core.openmp))
+
+
+def env_ompthreads(config: ConfigProtocol) -> EnvPart:
+    return ("--ompthreads", str(config.core.ompthreads))
+
+
+def env_utility(config: ConfigProtocol) -> EnvPart:
+    return ("--utility", str(config.core.utility))
+
+
+def env_sysmem(config: ConfigProtocol) -> EnvPart:
+    return ("--sysmem", str(config.memory.sysmem))
+
+
+def env_numamem(config: ConfigProtocol) -> EnvPart:
+    return ("--numamem", str(config.memory.numamem))
+
+
+def env_zcmem(config: ConfigProtocol) -> EnvPart:
+    return ("--zcmem", str(config.memory.zcmem))
+
+
+def env_fbmem(config: ConfigProtocol) -> EnvPart:
+    return ("--fbmem", str(config.memory.fbmem))
+
+
+def env_regmem(config: ConfigProtocol) -> EnvPart:
+    return ("--regmem", str(config.memory.regmem))
+
+
+def env_log_levels(config: ConfigProtocol) -> EnvPart:
+    levels = config.logging.user_logging_levels
+    return ("--logging", str(levels)) if levels is not None else ()
+
+
+def env_logdir(config: ConfigProtocol) -> EnvPart:
+    return ("--logdir", shlex.quote(str(config.logging.logdir)))
+
+
+def env_log_file(config: ConfigProtocol) -> EnvPart:
+    return ("--log-to-file",) if config.logging.log_to_file else ()
+
+
+def env_eager_alloc(config: ConfigProtocol) -> EnvPart:
+    return ("-lg:eager_alloc_percentage", str(config.memory.eager_alloc))
+
+
+ENV_PARTS_LEGATE = (
+    env_cpus,
+    env_gpus,
+    env_omps,
+    env_ompthreads,
+    env_utility,
+    env_sysmem,
+    env_numamem,
+    env_fbmem,
+    env_regmem,
+    env_log_levels,
+    env_logdir,
+    env_log_file,
+)

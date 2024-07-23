@@ -18,7 +18,7 @@ from pytest_mock import MockerFixture
 
 import legate.driver.driver as m
 from legate import install_info
-from legate.driver.command import CMD_PARTS_LEGION
+from legate.driver.command import CMD_PARTS_PYTHON
 from legate.driver.config import Config
 from legate.driver.launcher import RANK_ENV_VARS, Launcher
 from legate.util.colors import scrub
@@ -50,7 +50,7 @@ class TestDriver:
         driver = m.LegateDriver(config, SYSTEM)
 
         parts = (
-            part(config, SYSTEM, driver.launcher) for part in CMD_PARTS_LEGION
+            part(config, SYSTEM, driver.launcher) for part in CMD_PARTS_PYTHON
         )
         expected_cmd = driver.launcher.cmd + sum(parts, ())
 
@@ -61,8 +61,12 @@ class TestDriver:
         config = genconfig(["--launcher", launch])
 
         driver = m.LegateDriver(config, SYSTEM)
+        env = driver.env
 
-        assert driver.env == driver.launcher.env
+        assert "LEGATE_CONFIG" in env
+        del env["LEGATE_CONFIG"]
+
+        assert env == driver.launcher.env
 
     @pytest.mark.parametrize("launch", LAUNCHERS)
     def test_custom_env_vars(
@@ -72,7 +76,10 @@ class TestDriver:
 
         driver = m.LegateDriver(config, SYSTEM)
 
-        assert driver.custom_env_vars == driver.launcher.custom_env_vars
+        assert driver.custom_env_vars == {
+            "LEGATE_CONFIG",
+            *driver.launcher.custom_env_vars,
+        }
 
     @pytest.mark.parametrize("launch", LAUNCHERS)
     def test_dry_run(
@@ -99,6 +106,21 @@ class TestDriver:
         driver.run()
 
         mock_run.assert_called_once_with(driver.cmd, env=driver.env)
+
+    # skip simple launcher for this test
+    @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
+    def test_run_bad(
+        self, genconfig: GenConfig, mocker: MockerFixture, launch: LauncherType
+    ) -> None:
+        config = genconfig(
+            ["--launcher", launch, "--nodes", "2"], fake_module=None
+        )
+        driver = m.LegateDriver(config, SYSTEM)
+
+        with pytest.raises(
+            RuntimeError, match="Cannot start console with more than one node."
+        ):
+            driver.run()
 
     @pytest.mark.parametrize("launch", LAUNCHERS)
     def test_format_verbose(
@@ -164,7 +186,7 @@ class Test_format_verbose:
             assert line in out
 
     def test_system_and_driver(self, capsys: Capsys) -> None:
-        config = Config(["legate", "--no-replicate"])
+        config = Config(["legate"])
         system = System()
         driver = m.LegateDriver(config, system)
 

@@ -29,7 +29,6 @@ from ..util.shared_args import (
     GPUS,
     LAUNCHER,
     LAUNCHER_EXTRA,
-    NOCR,
     NODES,
     NUMAMEM,
     OMPS,
@@ -221,7 +220,7 @@ parser.add_argument(
     "--run-mode",
     default=None,
     choices=RUN_MODE_OPTIONS,
-    help="Whether to run the command as python code with legion_python, or "
+    help="Whether to run the command using the python interpreter, or "
     "as a bare executable. By default, commands that end in .py will be run "
     "as a python script, and those that don't will be run as an executable. "
     "If --module is specified, python mode will also be assumed by default. "
@@ -234,7 +233,6 @@ nodes_kw, ranks_per_node_kw = detect_multi_node_defaults()
 multi_node = parser.add_argument_group("Multi-node configuration")
 multi_node.add_argument(NODES.name, **nodes_kw)
 multi_node.add_argument(RANKS_PER_NODE.name, **ranks_per_node_kw)
-multi_node.add_argument(NOCR.name, **NOCR.kwargs)
 multi_node.add_argument(LAUNCHER.name, **LAUNCHER.kwargs)
 multi_node.add_argument(LAUNCHER_EXTRA.name, **LAUNCHER_EXTRA.kwargs)
 
@@ -475,24 +473,6 @@ info = parser.add_argument_group("Informational")
 
 
 info.add_argument(
-    "--progress",
-    dest="progress",
-    action="store_true",
-    required=False,
-    help="show progress of operations when running the program",
-)
-
-
-info.add_argument(
-    "--mem-usage",
-    dest="mem_usage",
-    action="store_true",
-    required=False,
-    help="report the memory usage by Legate in every memory",
-)
-
-
-info.add_argument(
     "--verbose",
     dest="verbose",
     action="store_true",
@@ -575,14 +555,6 @@ other.add_argument(
     "executed, without executing it",
 )
 
-other.add_argument(
-    "--rlwrap",
-    dest="rlwrap",
-    action="store_true",
-    required=False,
-    help="Whether to run with rlwrap to improve readline ability "
-    "[legate-only, not supported with standard Python invocation]",
-)
 
 other.add_argument(
     "--color",

@@ -12,7 +12,7 @@
 
 #include "timing/timing.h"
 
-#include "core/runtime/detail/runtime.h"
+#include "core/runtime/runtime.h"
 
 #include "legion.h"
 
@@ -29,7 +29,7 @@ class Time::Impl {
 
   ~Impl()
   {
-    if (!detail::Runtime::get_runtime()->initialized()) {
+    if (!has_started()) {
       // Leak the Future handle if the runtime has already shut down, as there's no hope that
       // this would be collected by the Legion runtime
       static_cast<void>(future_.release());  // NOLINT(bugprone-unused-return-value)

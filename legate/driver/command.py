@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from .config import ConfigProtocol
     from .launcher import Launcher
 
-__all__ = ("CMD_PARTS_EXEC", "CMD_PARTS_LEGION", "CMD_PARTS_CANONICAL")
+__all__ = ("CMD_PARTS_EXEC", "CMD_PARTS_PYTHON")
 
 
 # this will be replaced by bind.sh with the actual computed rank at runtime
@@ -165,14 +165,6 @@ def cmd_memcheck(
     return () if not memcheck else ("compute-sanitizer",)
 
 
-def cmd_nocr(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    control_replicable = not config.multi_node.not_control_replicable
-
-    return () if control_replicable else ("--nocr",)
-
-
 def cmd_module(
     config: ConfigProtocol, system: System, launcher: Launcher
 ) -> CommandPart:
@@ -193,12 +185,6 @@ def cmd_module(
         return ("-m", "cProfile", "-o", log_path)
 
     return ()
-
-
-def cmd_rlwrap(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    return ("rlwrap",) if config.other.rlwrap else ()
 
 
 def cmd_wrapper(
@@ -229,213 +215,6 @@ def cmd_wrapper_inner(
     return tuple(parts)
 
 
-def cmd_legion(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    return (str(system.legion_paths.legion_python),)
-
-
-def cmd_python_processor(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    # We always need one python processor per rank
-    return ("-ll:py", "1")
-
-
-def cmd_kthreads(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    freeze_on_error = config.debugging.freeze_on_error
-    gdb = config.debugging.gdb
-    cuda_gdb = config.debugging.cuda_gdb
-
-    if freeze_on_error or gdb or cuda_gdb:
-        # Running with userspace threads would not allow us to inspect the
-        # stacktraces of suspended threads.
-        return ("-ll:force_kthreads",)
-
-    return ()
-
-
-def cmd_cpus(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    cpus = config.core.cpus
-
-    return () if cpus == 1 else ("-ll:cpu", str(cpus))
-
-
-def cmd_gpus(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    gpus = config.core.gpus
-
-    if gpus > 0 and not install_info.use_cuda:
-        raise RuntimeError(
-            "--gpus was requested, but this build does not have CUDA "
-            "support enabled"
-        )
-
-    # Make sure that we skip busy GPUs
-    return () if gpus == 0 else ("-ll:gpu", str(gpus), "-cuda:skipbusy")
-
-
-def cmd_openmp(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    openmp = config.core.openmp
-    ompthreads = config.core.ompthreads
-    numamem = config.memory.numamem
-
-    if openmp > 0 and not install_info.use_openmp:
-        raise RuntimeError(
-            "--omps was requested, but this build does not have OpenMP "
-            "support enabled"
-        )
-
-    if openmp == 0:
-        return ()
-
-    if ompthreads == 0:
-        print(
-            warn(
-                f"Legate is ignoring request for {openmp} "
-                "OpenMP processors with 0 threads"
-            )
-        )
-        return ()
-
-    return (
-        "-ll:ocpu",
-        str(openmp),
-        "-ll:othr",
-        str(ompthreads),
-        # If we have support for numa memories then add the extra flag
-        "-ll:onuma",
-        f"{int(numamem > 0)}",
-    )
-
-
-def cmd_bgwork(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    ranks = config.multi_node.ranks
-    utility = config.core.utility
-
-    opts: CommandPart = ()
-
-    # If we are running multi-rank then make the number of active
-    # message handler threads equal to our number of utility
-    # processors in order to prevent head-of-line blocking
-    if ranks > 1:
-        opts += ("-ll:bgwork", str(max(utility, 2)))
-
-    if ranks > 1 and "ucx" in install_info.networks:
-        opts += ("-ll:bgworkpin", "1")
-
-    return opts
-
-
-def cmd_utility(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    utility = config.core.utility
-
-    if utility == 1:
-        return ()
-
-    return ("-ll:util", str(utility))
-
-
-def cmd_mem(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    # Always specify the csize
-    return ("-ll:csize", str(config.memory.sysmem))
-
-
-def cmd_numamem(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    numamem = config.memory.numamem
-    return () if numamem == 0 else ("-ll:nsize", str(numamem))
-
-
-def cmd_fbmem(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    if config.core.gpus == 0:
-        return ()
-
-    fbmem, zcmem = config.memory.fbmem, config.memory.zcmem
-    return ("-ll:fsize", str(fbmem), "-ll:zsize", str(zcmem))
-
-
-def cmd_regmem(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    regmem = config.memory.regmem
-    return () if regmem == 0 else ("-ll:rsize", str(regmem))
-
-
-def cmd_network(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    # Don't initialize a Realm network module if running on a single rank
-    return () if config.multi_node.ranks > 1 else ("-ll:networks", "none")
-
-
-def cmd_log_levels(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    log_dir = config.logging.logdir
-
-    levels: CommandPart = ("openmp=5",)
-    opts: CommandPart = ()
-
-    if config.profiling.profile:
-        ranks = config.multi_node.ranks
-        opts += ("-lg:prof", str(ranks))
-        opts += ("-lg:prof_logfile", str(log_dir / "legate_%.prof"))
-        levels += ("legion_prof=2",)
-
-    # The gpu log supression may not be needed in the future.
-    # Currently, the cuda hijack layer generates some spurious warnings.
-    if config.core.gpus > 0:
-        levels += ("gpu=5",)
-
-    if config.debugging.spy:
-        opts += ("-lg:spy",)
-        levels += ("legion_spy=2",)
-
-    if config.logging.user_logging_levels is not None:
-        levels += (config.logging.user_logging_levels,)
-
-    opts += ("-level", ",".join(levels))
-
-    return opts
-
-
-def cmd_log_file(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    log_dir = config.logging.logdir
-    log_to_file = config.logging.log_to_file
-
-    if log_to_file:
-        return ("-logfile", str(log_dir / "legate_%.log"), "-errlevel", "4")
-
-    return ()
-
-
-def cmd_eager_alloc(
-    config: ConfigProtocol, system: System, launcher: Launcher
-) -> CommandPart:
-    eager_alloc = config.memory.eager_alloc
-
-    return ("-lg:eager_alloc_percentage", str(eager_alloc))
-
-
 def cmd_user_program(
     config: ConfigProtocol, system: System, launcher: Launcher
 ) -> CommandPart:
@@ -458,7 +237,6 @@ _CMD_PARTS_PRE = (
     cmd_bind,
     # Add any user supplied (outer) wrappers
     cmd_wrapper,
-    cmd_rlwrap,
     cmd_gdb,
     cmd_cuda_gdb,
     cmd_nvprof,
@@ -471,67 +249,18 @@ _CMD_PARTS_PRE = (
     cmd_wrapper_inner,
 )
 
-_CMD_PARTS_POST = (
-    # This has to go before script name
-    cmd_nocr,
-    cmd_kthreads,
-    # Translate the requests to Realm command line parameters
-    cmd_cpus,
-    cmd_gpus,
-    cmd_openmp,
-    cmd_utility,
-    cmd_bgwork,
-    cmd_mem,
-    cmd_numamem,
-    cmd_fbmem,
-    cmd_regmem,
-    cmd_network,
-    cmd_log_levels,
-    cmd_log_file,
-    cmd_eager_alloc,
+CMD_PARTS_PYTHON = _CMD_PARTS_PRE + (
+    # Executable name that will get stripped by the runtime
+    cmd_python,
+    # User script
+    cmd_user_program,
+    # Append user flags so they can override whatever we provided
+    cmd_user_opts,
 )
 
-CMD_PARTS_LEGION = (
-    _CMD_PARTS_PRE
-    + (
-        # Now we're ready to build the actual command to run
-        cmd_legion,
-        # This has to go before script name
-        cmd_python_processor,
-        cmd_module,
-    )
-    + _CMD_PARTS_POST
-    + (
-        # User script
-        cmd_user_program,
-        # Append user flags so they can override whatever we provided
-        cmd_user_opts,
-    )
-)
-
-CMD_PARTS_CANONICAL = (
-    (
-        # Executable name that will get stripped by the runtime
-        cmd_python,
-        # User script
-        cmd_user_program,
-    )
-    + _CMD_PARTS_POST
-    + (
-        # Append user flags so they can override whatever we provided
-        cmd_user_opts,
-    )
-)
-
-CMD_PARTS_EXEC = (
-    _CMD_PARTS_PRE
-    + (
-        # Now we're ready to build the actual command to run
-        cmd_user_program,
-    )
-    + _CMD_PARTS_POST
-    + (
-        # Append user flags so they can override whatever we provided
-        cmd_user_opts,
-    )
+CMD_PARTS_EXEC = _CMD_PARTS_PRE + (
+    # Now we're ready to build the actual command to run
+    cmd_user_program,
+    # Append user flags so they can override whatever we provided
+    cmd_user_opts,
 )

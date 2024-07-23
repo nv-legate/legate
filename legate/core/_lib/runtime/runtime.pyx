@@ -14,6 +14,9 @@ from libc.stdlib cimport free as std_free, malloc as std_malloc
 from libcpp cimport bool
 from libcpp.utility cimport move as std_move
 
+
+import atexit
+
 from ..._ext.cython_libcpp.string_view cimport (
     string_view_from_py as std_string_view_from_py,
 )
@@ -26,8 +29,6 @@ from collections.abc import Iterable
 from typing import Any
 
 cimport cython
-
-from legion_top import add_cleanup_item
 
 from ..data.external_allocation cimport _ExternalAllocation, create_from_buffer
 from ..data.logical_array cimport (
@@ -531,10 +532,10 @@ cdef class Runtime(Unconstructable):
     def machine(self) -> Machine:
         return get_machine()
 
-    cpdef void destroy(self):
+    cpdef void finish(self):
         global _shutdown_manager
         _shutdown_manager.perform_callbacks()
-        destroy()
+        finish()
 
     cpdef void add_shutdown_callback(self, callback: ShutdownCallback):
         global _shutdown_manager
@@ -646,8 +647,8 @@ cpdef bool is_running_in_task():
 
 
 cdef void _cleanup_legate_runtime():
-    get_legate_runtime().destroy()
+    get_legate_runtime().finish()
     gc.collect()
 
 
-add_cleanup_item(_cleanup_legate_runtime)
+atexit.register(_cleanup_legate_runtime)

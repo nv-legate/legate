@@ -14,6 +14,8 @@
 
 #include "core/runtime/runtime.h"
 
+#include <type_traits>
+
 namespace legate {
 
 template <typename T>

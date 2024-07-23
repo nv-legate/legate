@@ -14,17 +14,12 @@
 """
 from __future__ import annotations
 
-from typing import Type
-
-from . import CanonicalDriver, LegateDriver
+from . import LegateDriver
 
 __all__ = ("legate_main",)
 
 
-def prepare_driver(
-    argv: list[str],
-    driver_type: Type[CanonicalDriver] | Type[LegateDriver],
-) -> CanonicalDriver | LegateDriver:
+def prepare_driver(argv: list[str]) -> LegateDriver:
     from ..util.system import System
     from ..util.ui import error
     from . import Config
@@ -43,7 +38,7 @@ def prepare_driver(
         raise e
 
     try:
-        driver = driver_type(config, system)
+        driver = LegateDriver(config, system)
     except Exception as e:
         msg = "Could not initialize driver, path config and exception follow:"  # noqa
         print(error(msg))
@@ -67,5 +62,5 @@ def legate_main(argv: list[str]) -> int:
         int, a process return code
 
     """
-    driver = prepare_driver(argv, LegateDriver)
+    driver = prepare_driver(argv)
     return driver.run()

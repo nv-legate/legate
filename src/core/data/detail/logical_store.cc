@@ -104,7 +104,7 @@ Storage::Storage(tuple<std::uint64_t> extents,
 // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
 Storage::~Storage()
 {
-  if (!Runtime::get_runtime()->initialized()) {
+  if (!has_started()) {
     if (future_.has_value() && future_->exists()) {
       // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
       // this would be collected by the Legion runtime

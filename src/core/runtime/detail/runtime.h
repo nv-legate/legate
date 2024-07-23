@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include "core/comm/coll.h"
 #include "core/data/detail/scalar.h"
 #include "core/data/detail/shape.h"
 #include "core/data/external_allocation.h"
@@ -38,7 +37,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -335,7 +333,6 @@ class Runtime {
   [[nodiscard]] static std::int32_t start(std::int32_t argc, char** argv);
   [[nodiscard]] bool initialized() const;
   void register_shutdown_callback(ShutdownCallback callback);
-  void destroy();
   [[nodiscard]] std::int32_t finish();
   [[nodiscard]] const Library* core_library() const;
 
@@ -393,11 +390,8 @@ class Runtime {
   std::vector<Legion::Future> pending_exceptions_{};
 };
 
-void initialize_core_library_callback(Legion::Machine,
-                                      Legion::Runtime*,
-                                      const std::set<Processor>&);
-
-void handle_legate_args(std::int32_t argc, char** argv);
+[[nodiscard]] bool has_started();
+[[nodiscard]] bool has_finished();
 
 }  // namespace legate::detail
 

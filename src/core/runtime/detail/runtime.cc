@@ -12,6 +12,7 @@
 
 #include "core/runtime/detail/runtime.h"
 
+#include "core/comm/coll.h"
 #include "core/comm/detail/comm.h"
 #include "core/data/detail/array_tasks.h"
 #include "core/data/detail/external_allocation.h"
@@ -42,9 +43,9 @@
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/env_defaults.h"
-#include "core/utilities/detail/hash.h"
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/env.h"
+#include "core/utilities/hash.h"
 #include "core/utilities/linearize.h"
 #include "core/utilities/machine.h"
 #include "core/utilities/scope_guard.h"
@@ -57,6 +58,8 @@
 #include <fmt/ranges.h>
 #include <limits>
 #include <realm/cuda/cuda_module.h>
+#include <regex>
+#include <set>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -462,6 +465,7 @@ void Runtime::flush_scheduling_window()
   }
 
   schedule_(std::move(operations_));
+  operations_.clear();
 }
 
 void Runtime::submit(InternalSharedPtr<Operation> op)
@@ -1434,15 +1438,268 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
   return sharding_id;
 }
 
+namespace {
+
+[[nodiscard]] std::vector<std::string> split_in_args(std::string_view command)
+{
+  const auto len = command.length();
+  std::vector<std::string> qargs;
+  std::size_t i;
+  std::size_t start;
+  std::size_t arglen;
+  const auto handle_quoted = [&](char quote) {
+    ++i;
+    ++start;
+    while (i < len && command[i] != quote) {
+      ++i;
+    }
+    return i++ - start;
+  };
+
+  for (i = 0; i < len; i++) {
+    start = i;
+    switch (command[i]) {
+      case '\"': [[fallthrough]];
+      case '\'': arglen = handle_quoted(command[i]); break;
+      default:
+        while (i < len && command[i] != ' ') {
+          ++i;
+        }
+        arglen = i - start;
+        break;
+    }  // namespace
+    qargs.emplace_back(command.substr(start, arglen));
+  }
+  return qargs;
+}
+
+// Simple wrapper for variables with default values
+template <auto DEFAULT, auto SCALE = decltype(DEFAULT){1}, typename VAL = decltype(DEFAULT)>
+class VarWithDefault {
+ public:
+  [[nodiscard]] VAL value() const { return (has_value() ? value_ : DEFAULT) * SCALE; }
+  [[nodiscard]] bool has_value() const { return value_ != UNSET; }
+  [[nodiscard]] VAL& ref() { return value_; }
+
+ private:
+  static constexpr VAL UNSET{std::numeric_limits<VAL>::max()};
+  VAL value_{UNSET};
+};
+
+template <typename Runtime, typename Value, Value DEFAULT, Value SCALE>
+void try_set_property(Runtime& runtime,
+                      const std::string& module_name,
+                      const std::string& property_name,
+                      const VarWithDefault<DEFAULT, SCALE, Value>& var,
+                      std::string_view error_msg)
+{
+  auto value = var.value();
+  if (value < 0) {
+    throw std::invalid_argument{error_msg.data()};
+  }
+  auto config = runtime.get_module_config(module_name);
+  if (nullptr == config) {
+    // If the variable doesn't have a value, we don't care if the module is nonexistent
+    if (!var.has_value()) {
+      return;
+    }
+
+    throw std::runtime_error{
+      fmt::format("{} (the {} module is not available)", error_msg, module_name)};
+  }
+  auto success = config->set_property(property_name, value);
+  if (!success) {
+    throw std::runtime_error{error_msg.data()};
+  }
+}
+
+void handle_legate_args(std::string_view legate_config)
+{
+  constexpr int DEFAULT_CPUS                         = 1;
+  constexpr int DEFAULT_GPUS                         = 0;
+  constexpr int DEFAULT_OMPS                         = 0;
+  constexpr std::int64_t DEFAULT_OMPTHREADS          = 2;
+  constexpr int DEFAULT_UTILITY                      = 1;
+  constexpr std::int64_t DEFAULT_SYSMEM              = 4000;  // MB
+  constexpr std::int64_t DEFAULT_NUMAMEM             = 0;     // MB
+  constexpr std::int64_t DEFAULT_FBMEM               = 4000;  // MB
+  constexpr std::int64_t DEFAULT_ZCMEM               = 32;    // MB
+  constexpr std::int64_t DEFAULT_REGMEM              = 0;     // MB
+  constexpr std::int64_t DEFAULT_EAGER_ALLOC_PERCENT = 50;
+  constexpr std::int64_t MB                          = 1024 * 1024;
+
+  // Realm uses ints rather than unsigned ints
+  VarWithDefault<DEFAULT_CPUS> cpus;
+  VarWithDefault<DEFAULT_GPUS> gpus;
+  VarWithDefault<DEFAULT_OMPS> omps;
+  VarWithDefault<DEFAULT_OMPTHREADS> ompthreads;
+  VarWithDefault<DEFAULT_UTILITY> util;
+  VarWithDefault<DEFAULT_SYSMEM, MB> sysmem;
+  VarWithDefault<DEFAULT_NUMAMEM, MB> numamem;
+  VarWithDefault<DEFAULT_FBMEM, MB> fbmem;
+  VarWithDefault<DEFAULT_ZCMEM, MB> zcmem;
+  VarWithDefault<DEFAULT_REGMEM, MB> regmem;
+  VarWithDefault<DEFAULT_EAGER_ALLOC_PERCENT> eager_alloc_percent;
+
+  std::string log_levels{};
+  std::string log_dir{};
+  bool log_to_file = false;
+
+  Realm::CommandLineParser cp;
+  auto args          = split_in_args(legate_config);
+  const bool success = cp.add_option_int("--cpus", cpus.ref())
+                         .add_option_int("--gpus", gpus.ref())
+                         .add_option_int("--omps", omps.ref())
+                         .add_option_int("--ompthreads", ompthreads.ref())
+                         .add_option_int("--utility", util.ref())
+                         .add_option_int("--sysmem", sysmem.ref())
+                         .add_option_int("--numamem", numamem.ref())
+                         .add_option_int("--fbmem", fbmem.ref())
+                         .add_option_int("--zcmem", zcmem.ref())
+                         .add_option_int("--regmem", regmem.ref())
+                         .add_option_int("--eager-alloc-percentage", eager_alloc_percent.ref())
+                         .add_option_string("--logging", log_levels)
+                         .add_option_string("--logdir", log_dir)
+                         .add_option_bool("--log-to-file", log_to_file)
+                         .parse_command_line(args);
+
+  if (!success) {
+    LEGATE_ABORT("error parsing arguments from LEGATE_CONFIG");
+  }
+
+  auto rt = Realm::Runtime::get_runtime();
+
+  // ensure core module
+  if (!rt.get_module_config("core")) {
+    throw std::runtime_error{"core module config is missing"};
+  }
+
+  // ensure sensible utility
+  if (const auto nutil = util.value(); nutil < 1) {
+    throw std::invalid_argument{fmt::format("--utility must be at least 1 (have {})", nutil)};
+  }
+
+  // Set core configuration properties
+  try_set_property(rt, "core", "cpu", cpus, "unable to set --cpus");
+  try_set_property(rt, "core", "util", util, "unable to set --utility");
+  try_set_property(rt, "core", "sysmem", sysmem, "unable to set --sysmem");
+  try_set_property(rt, "core", "regmem", regmem, "unable to set --regmem");
+
+  // Set CUDA configuration properties
+  try {
+    try_set_property(rt, "cuda", "gpu", gpus, "unable to set --gpus");
+    try_set_property(rt, "cuda", "fbmem", fbmem, "unable to set --fbmem");
+    try_set_property(rt, "cuda", "zcmem", zcmem, "unable to set --zcmem");
+  } catch (...) {
+    if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+      throw;
+    }
+  }
+
+  if (gpus.value() > 0) {
+    LEGATE_NEED_CUDA.set(true);
+  }
+
+  // Set OpenMP configuration properties
+  if (omps.value() > 0) {
+    if (ompthreads.value() <= 0) {
+      throw std::invalid_argument{"--omps configured with zero threads"};
+    }
+    LEGATE_NEED_OPENMP.set(true);
+  }
+  try {
+    try_set_property(rt, "openmp", "ocpu", omps, "unable to set --omps");
+    try_set_property(rt, "openmp", "othr", ompthreads, "unable to set --ompthreads");
+  } catch (...) {
+    // If we have OpenMP, but failed above, then rethrow, otherwise silently gobble the error
+    if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
+      throw;
+    }
+  }
+
+  // Set NUMA configuration properties
+  try_set_property(rt, "numa", "numamem", numamem, "unable to set --numamem");
+
+  std::stringstream args_ss;
+
+  // some values have to be passed via env var
+  args_ss << "-lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0 ";
+  if (!log_levels.empty()) {
+    args_ss << "-level " << log_levels << " ";
+  }
+  if (log_to_file) {
+    args_ss << "-logfile ";
+
+    if (log_dir.empty()) {
+      args_ss << "./";
+    } else {
+      args_ss << log_dir << "/";
+    }
+    args_ss << "legate_%.log -errlevel 4 ";
+  }
+  if (const auto existing_default_args = LEGION_DEFAULT_ARGS.get();
+      existing_default_args.has_value()) {
+    args_ss << *existing_default_args;
+  }
+
+  LEGION_DEFAULT_ARGS.set(args_ss.str());
+}
+
+void handle_realm_default_args()
+{
+  constexpr detail::EnvironmentVariable<std::uint32_t> OMPI_COMM_WORLD_SIZE{"OMPI_COMM_WORLD_SIZE"};
+  constexpr detail::EnvironmentVariable<std::uint32_t> MV2_COMM_WORLD_SIZE{"MV2_COMM_WORLD_SIZE"};
+  constexpr detail::EnvironmentVariable<std::uint32_t> SLURM_NTASKS{"SLURM_NTASKS"};
+
+  if (OMPI_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
+      MV2_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
+      SLURM_NTASKS.get(/* default_vaule */ 1) == 1) {
+    constexpr detail::EnvironmentVariable<std::string> REALM_DEFAULT_ARGS{"REALM_DEFAULT_ARGS"};
+    std::stringstream ss;
+
+    if (const auto existing_default_args = REALM_DEFAULT_ARGS.get()) {
+      static const auto networks_re = std::regex{R"(\-ll:networks\s+\w+)", std::regex::optimize};
+
+      // If Realm sees multiple networks arguments, with one of them being "none", (e.g.
+      // "-ll:networks foo -ll:networks none", or even "-ll:networks none -ll:networks none"),
+      // it balks with:
+      //
+      // "Cannot specify both 'none' and another value in -ll:networks"
+      //
+      // So we must strip away any existing -ll:networks arguments before we append our
+      // -ll:networks argument.
+      ss << std::regex_replace(existing_default_args->c_str(), networks_re, "");
+    }
+    ss << " -ll:networks none ";
+    REALM_DEFAULT_ARGS.set(ss.str());
+  }
+}
+
+}  // namespace
+
+void initialize_core_library_callback(
+  Legion::Machine,  // NOLINT(performance-unnecessary-value-param)
+  Legion::Runtime*,
+  const std::set<Processor>&);
+
 /*static*/ std::int32_t Runtime::start(std::int32_t argc, char** argv)
 {
   if (!Legion::Runtime::has_runtime()) {
-    Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
     try {
-      handle_legate_args(argc, argv);
+      handle_realm_default_args();
     } catch (const std::exception& e) {
-      log_legate().error() << e.what();
+      log_legate().error() << "failed to handle realm arguments: " << e.what();
       return 1;
+    }
+
+    Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
+    if (const auto legate_config_env = LEGATE_CONFIG.get(); legate_config_env.has_value()) {
+      try {
+        handle_legate_args(*legate_config_env);
+      } catch (const std::exception& e) {
+        log_legate().error() << "failed to handle legate arguments: " << e.what();
+        return 1;
+      }
     }
   }
 
@@ -1502,46 +1759,53 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
 
 namespace {
 
-std::optional<Runtime> the_runtime{};
+class RuntimeManager {
+ public:
+  enum class State : std::uint8_t { UNINITIALIZED, INITIALIZED, FINALIZED };
+
+  [[nodiscard]] Runtime* get();
+  [[nodiscard]] State state() const noexcept;
+  void reset() noexcept;
+
+ private:
+  State state_{State::UNINITIALIZED};
+  std::optional<Runtime> rt_{};
+};
+
+Runtime* RuntimeManager::get()
+{
+  if (LEGATE_UNLIKELY(!rt_.has_value())) {
+    if (state() == State::FINALIZED) {
+      // Legion currently does not allow re-initialization after shutdown, so we need to track
+      // this ourselves...
+      throw std::runtime_error{
+        "Legate runtime has been finalized, and cannot be re-initialized without restarting the "
+        "program."};
+    }
+    rt_.emplace();
+    state_ = State::INITIALIZED;
+  }
+  return &*rt_;
+}  // namespace
+
+RuntimeManager::State RuntimeManager::state() const noexcept { return state_; }
+
+void RuntimeManager::reset() noexcept
+{
+  rt_.reset();
+  state_ = State::FINALIZED;
+}
+
+RuntimeManager the_runtime{};
 
 }  // namespace
 
+/*static*/ Runtime* Runtime::get_runtime() { return the_runtime.get(); }
+
 std::int32_t Runtime::finish()
 {
-  if (!initialized()) {
+  if (!has_started()) {
     return 0;
-  }
-  destroy();
-  // Mark that we are done excecuting the top-level task
-  // After this call the context is no longer valid
-  Legion::Runtime::get_runtime()->finish_implicit_task(std::exchange(legion_context_, nullptr));
-
-  auto ret = Legion::Runtime::wait_for_shutdown();
-  // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
-  // circumstances.
-  //
-  // They must stay exactly as they are. the_runtime.reset() calls "delete this", and hence any
-  // modification of the runtime object, or any of its derivatives hereafter is strictly
-  // undefined behavior.
-  //
-  // BEGIN DO NOT MODIFY
-  the_runtime.reset();
-  return ret;
-  // END DO NOT MODIFY
-}
-
-/*static*/ Runtime* Runtime::get_runtime()
-{
-  if (LEGATE_UNLIKELY(!the_runtime.has_value())) {
-    the_runtime.emplace();
-  }
-  return &*the_runtime;
-}
-
-void Runtime::destroy()
-{
-  if (!initialized()) {
-    return;
   }
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -1592,7 +1856,26 @@ void Runtime::destroy()
   core_library_ = nullptr;
   legate::comm::coll::collFinalize();
   initialized_ = false;
-}
+
+  // Mark that we are done excecuting the top-level task
+  // After this call the context is no longer valid
+  Legion::Runtime::get_runtime()->finish_implicit_task(std::exchange(legion_context_, nullptr));
+
+  // The previous call is asynchronous so we still need to
+  // wait for the shutdown of the runtime to complete
+  auto ret = Legion::Runtime::wait_for_shutdown();
+  // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
+  // circumstances.
+  //
+  // They must stay exactly as they are. the_runtime.reset() calls "delete this", and hence any
+  // modification of the runtime object, or any of its derivatives hereafter is strictly
+  // undefined behavior.
+  //
+  // BEGIN DO NOT MODIFY
+  the_runtime.reset();
+  return ret;
+  // END DO NOT MODIFY
+}  // namespace
 
 namespace {
 
@@ -1743,140 +2026,6 @@ void initialize_core_library_callback(
   register_legate_core_sharding_functors(core_lib);
 }
 
-// Simple wrapper for variables with default values
-template <auto DEFAULT, auto SCALE = decltype(DEFAULT){1}, typename VAL = decltype(DEFAULT)>
-class VarWithDefault {
- public:
-  [[nodiscard]] VAL value() const { return (has_value() ? value_ : DEFAULT) * SCALE; }
-  [[nodiscard]] bool has_value() const { return value_ != UNSET; }
-  [[nodiscard]] VAL& ref() { return value_; }
-
- private:
-  static constexpr VAL UNSET{std::numeric_limits<VAL>::max()};
-  VAL value_{UNSET};
-};
-
-template <typename Runtime, typename Value, Value DEFAULT, Value SCALE>
-void try_set_property(Runtime& runtime,
-                      const std::string& module_name,
-                      const std::string& property_name,
-                      const VarWithDefault<DEFAULT, SCALE, Value>& var,
-                      std::string_view error_msg)
-{
-  auto value = var.value();
-  if (value < 0) {
-    throw std::invalid_argument{error_msg.data()};
-  }
-  auto config = runtime.get_module_config(module_name);
-  if (nullptr == config) {
-    // If the variable doesn't have a value, we don't care if the module is nonexistent
-    if (!var.has_value()) {
-      return;
-    }
-
-    throw std::runtime_error{
-      fmt::format("{} (the {} module is not available)", error_msg, module_name)};
-  }
-  auto success = config->set_property(property_name, value);
-  if (!success) {
-    throw std::runtime_error{error_msg.data()};
-  }
-}
-
-namespace {
-
-constexpr int DEFAULT_CPUS                         = 1;
-constexpr int DEFAULT_GPUS                         = 0;
-constexpr int DEFAULT_OMPS                         = 0;
-constexpr std::int64_t DEFAULT_OMPTHREADS          = 2;
-constexpr int DEFAULT_UTILITY                      = 1;
-constexpr std::int64_t DEFAULT_SYSMEM              = 4000;  // MB
-constexpr std::int64_t DEFAULT_NUMAMEM             = 0;     // MB
-constexpr std::int64_t DEFAULT_FBMEM               = 4000;  // MB
-constexpr std::int64_t DEFAULT_ZCMEM               = 32;    // MB
-constexpr std::int64_t DEFAULT_REGMEM              = 0;     // MB
-constexpr std::int64_t DEFAULT_EAGER_ALLOC_PERCENT = 50;
-constexpr std::int64_t MB                          = 1024 * 1024;
-
-}  // namespace
-
-void handle_legate_args(std::int32_t argc, char** argv)
-{
-  // Realm uses ints rather than unsigned ints
-  VarWithDefault<DEFAULT_CPUS> cpus;
-  VarWithDefault<DEFAULT_GPUS> gpus;
-  VarWithDefault<DEFAULT_OMPS> omps;
-  VarWithDefault<DEFAULT_OMPTHREADS> ompthreads;
-  VarWithDefault<DEFAULT_UTILITY> util;
-  VarWithDefault<DEFAULT_SYSMEM, MB> sysmem;
-  VarWithDefault<DEFAULT_NUMAMEM, MB> numamem;
-  VarWithDefault<DEFAULT_FBMEM, MB> fbmem;
-  VarWithDefault<DEFAULT_ZCMEM, MB> zcmem;
-  VarWithDefault<DEFAULT_REGMEM, MB> regmem;
-  VarWithDefault<DEFAULT_EAGER_ALLOC_PERCENT> eager_alloc_percent;
-
-  Realm::CommandLineParser cp;
-  cp.add_option_int("--cpus", cpus.ref())
-    .add_option_int("--gpus", gpus.ref())
-    .add_option_int("--omps", omps.ref())
-    .add_option_int("--ompthreads", ompthreads.ref())
-    .add_option_int("--utility", util.ref())
-    .add_option_int("--sysmem", sysmem.ref())
-    .add_option_int("--numamem", numamem.ref())
-    .add_option_int("--fbmem", fbmem.ref())
-    .add_option_int("--zcmem", zcmem.ref())
-    .add_option_int("--regmem", regmem.ref())
-    .add_option_int("--eager-alloc-percentage", eager_alloc_percent.ref())
-    .parse_command_line(argc, argv);
-
-  auto rt = Realm::Runtime::get_runtime();
-
-  // ensure core module
-  if (!rt.get_module_config("core")) {
-    throw std::runtime_error{"core module config is missing"};
-  }
-
-  // ensure sensible utility
-  if (const auto nutil = util.value(); nutil < 1) {
-    throw std::invalid_argument{fmt::format("--utility must be at least 1 (have {})", nutil)};
-  }
-
-  // Set core configuration properties
-  try_set_property(rt, "core", "cpu", cpus, "unable to set --cpus");
-  try_set_property(rt, "core", "util", util, "unable to set --utility");
-  try_set_property(rt, "core", "sysmem", sysmem, "unable to set --sysmem");
-  try_set_property(rt, "core", "regmem", regmem, "unable to set --regmem");
-
-  // Set CUDA configuration properties
-  try_set_property(rt, "cuda", "gpu", gpus, "unable to set --gpus");
-  try_set_property(rt, "cuda", "fbmem", fbmem, "unable to set --fbmem");
-  try_set_property(rt, "cuda", "zcmem", zcmem, "unable to set --zcmem");
-
-  if (gpus.value() > 0) {
-    LEGATE_NEED_CUDA.set(true);
-  }
-
-  // Set OpenMP configuration properties
-  if (omps.value() > 0) {
-    if (ompthreads.value() <= 0) {
-      throw std::invalid_argument{"--omps configured with zero threads"};
-    }
-    LEGATE_NEED_OPENMP.set(true);
-  }
-  try_set_property(rt, "openmp", "ocpu", omps, "unable to set --omps");
-  try_set_property(rt, "openmp", "othr", ompthreads, "unable to set --ompthreads");
-
-  // Set NUMA configuration properties
-  try_set_property(rt, "numa", "numamem", numamem, "unable to set --numamem");
-
-  // eager alloc has to be passed via env var
-  const auto result = fmt::format("-lg:eager_alloc_percentage {} -lg:local 0 {} ",
-                                  eager_alloc_percent.value(),
-                                  LEGION_DEFAULT_ARGS.get().value_or(""));
-
-  LEGION_DEFAULT_ARGS.set(result);
-}
-
 CUstream_st* Runtime::get_cuda_stream() const
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
@@ -1886,5 +2035,9 @@ CUstream_st* Runtime::get_cuda_stream() const
   }
   return nullptr;
 }
+
+bool has_started() { return the_runtime.state() == RuntimeManager::State::INITIALIZED; }
+
+bool has_finished() { return the_runtime.state() == RuntimeManager::State::FINALIZED; }
 
 }  // namespace legate::detail

@@ -34,9 +34,6 @@ class TestParserDefaults:
             == defaults.LEGATE_RANKS_PER_NODE
         )
 
-    def test_no_replicate(self) -> None:
-        assert m.parser.get_default("not_control_replicable") is False
-
     def test_launcher(self) -> None:
         assert m.parser.get_default("launcher") == "none"
 
@@ -152,12 +149,6 @@ class TestParserDefaults:
 
     # info
 
-    def test_progress(self) -> None:
-        assert m.parser.get_default("progress") is False
-
-    def test_mem_usage(self) -> None:
-        assert m.parser.get_default("mem_usage") is False
-
     def test_verbose(self) -> None:
         assert m.parser.get_default("verbose") is False
 
@@ -180,9 +171,6 @@ class TestParserDefaults:
 
     def test_dry_run(self) -> None:
         assert m.parser.get_default("dry_run") is False
-
-    def test_rlwrap(self) -> None:
-        assert m.parser.get_default("rlwrap") is False
 
     def test_info(self) -> None:
         assert m.parser.get_default("info") == SUPPRESS

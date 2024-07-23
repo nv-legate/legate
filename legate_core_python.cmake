@@ -76,46 +76,11 @@ target_link_libraries(legate_core_python INTERFACE legate::core)
 
 add_subdirectory(legate)
 
-if(legate_core_SETUP_PY_MODE STREQUAL "develop")
-  # If we are doing an editable install, then the cython rpaths need to point back to the
-  # original (uninstalled) legate libs, since otherwise it cannot find them.
-  #
-  # Use of legate_core vs legate::core is deliberate! The former may or may not be defined
-  # depending on whether we built legate.core while legate::core is always defined if
-  # imported.
-  if(TARGET legate_core)
-    get_target_property(cython_lib_dir legate_core LIBRARY_OUTPUT_DIRECTORY)
-    get_target_property(legate_cpp_dir legate_core BINARY_DIR)
-    if(legate_cpp_dir)
-      set(cython_lib_dir "${legate_cpp_dir}/${cython_lib_dir}")
-    endif()
-  else()
-    get_target_property(cython_lib_dir legate::core LOCATION)
-    cmake_path(GET cython_lib_dir PARENT_PATH cython_lib_dir)
-  endif()
-else()
-  # This somehow sets the rpath correctly for regular installs.
-  # rapids_cython_add_rpath_entries() mentions that:
-  #
-  # PATHS may either be absolute or relative to the ROOT_DIRECTORY. The paths are always
-  # converted to be relative to the current directory i.e relative to $ORIGIN in the
-  # RPATH.
-  #
-  # where
-  #
-  # ROOT_DIRECTORY "Defaults to ${PROJECT_SOURCE_DIR}".
-  #
-  # Since there is nothing interesting 2 directories up from PROJECT_SOURCE_DIR, my best
-  # guess is that the 2 directories up refers to 2 directories up from the python
-  # site-packages dir, which is always found as
-  # /path/to/lib/python3.VERSION/site-packages/. The combined rpaths would make this point
-  # to /path/to/lib which seems right. But who knows.
-  set(cython_lib_dir "../../")
-endif()
+include(cmake/Modules/cython_rpaths.cmake)
 
-message(STATUS "legate_core_python: cython_lib_dir='${cython_lib_dir}'")
+legate_core_populate_cython_dependency_rpaths(RESULT_VAR legate_cython_rpaths)
 
-rapids_cython_add_rpath_entries(TARGET legate::core PATHS "${cython_lib_dir}")
+rapids_cython_add_rpath_entries(TARGET legate::core PATHS ${legate_cython_rpaths})
 
 # ########################################################################################
 # * install targets-----------------------------------------------------------

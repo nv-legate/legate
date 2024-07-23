@@ -1591,7 +1591,7 @@ std::string_view BaseMapper::retrieve_alloc_info_(Legion::Mapping::MapperContext
     const char* alloc_info = static_cast<const char*>(orig_info);
 
     if (size > 0 && alloc_info[0] != '\0') {
-      return alloc_info;
+      return {alloc_info, size};
     }
   }
   return "(unknown provenance)";

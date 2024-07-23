@@ -23,8 +23,8 @@ using RuntimeNoInit = ::testing::Test;
 
 TEST_F(RuntimeNoInit, GetRuntime)
 {
-  static_cast<void>(legate::start(0, nullptr));
-  legate::destroy();
+  ASSERT_EQ(legate::start(0, nullptr), 0);
+  ASSERT_EQ(legate::finish(), 0);
   EXPECT_THROW(static_cast<void>(legate::Runtime::get_runtime()), std::runtime_error);
 }
 

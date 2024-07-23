@@ -14,6 +14,9 @@ Changes: Latest Development Version
 
 .. rubric:: General
 
+- Deprecate ``legate::destroy()``. Users should call ``legate::finish()`` instead.
+- Add ``legate::has_finished()``.
+
 .. rubric:: Data
 
 .. rubric:: Mapping

@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 from .config import Config
-from .driver import LegateDriver, CanonicalDriver
+from .driver import LegateDriver
 from .launcher import Launcher
 
 

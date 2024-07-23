@@ -233,42 +233,6 @@ class TestLauncherEnv:
 
         assert env["LEGATE_NEED_NETWORK"] == "1"
 
-    def test_show_progress_false(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch, "--omps", "0"])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert "LEGATE_SHOW_PROGRESS" not in env
-
-    def test_show_progress_true(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch, "--progress"])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert env["LEGATE_SHOW_PROGRESS"] == "1"
-
-    def test_show_usage_false(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch, "--omps", "0"])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert "LEGATE_SHOW_USAGE" not in env
-
-    def test_show_usage_true(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch, "--mem-usage"])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert env["LEGATE_SHOW_USAGE"] == "1"
-
     @pytest.mark.parametrize("name", ("LEGATE_MAX_DIM", "LEGATE_MAX_FIELDS"))
     def test_legate_values(
         self, genconfig: GenConfig, name: str, launch: LauncherType

@@ -43,7 +43,7 @@ IndexAttachment::~IndexAttachment()
   maybe_deallocate();
   // FIXME: Leak the ExternalResources handle if the runtime has already shut down, as
   // there's no hope that this would be collected by the Legion runtime
-  if (!Runtime::get_runtime()->initialized() && external_resources_.exists()) {
+  if (!has_started() && external_resources_.exists()) {
     static_cast<void>(std::make_unique<Legion::ExternalResources>(std::move(external_resources_))
                         .release());  // NOLINT(bugprone-unused-return-value)
   }

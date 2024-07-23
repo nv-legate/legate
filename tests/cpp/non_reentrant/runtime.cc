@@ -35,7 +35,7 @@ TEST_F(Runtime, RegisterShutdownCallback)
   legate::register_shutdown_callback(std::move(callback_2));
 
   // Shutdown and verify that the callback is called
-  legate::destroy();
+  ASSERT_EQ(legate::finish(), 0);
   ASSERT_TRUE(callback_called_1);
   ASSERT_TRUE(callback_called_2);
 }
@@ -51,7 +51,7 @@ TEST_F(Runtime, RegisterShutdownCallbackInsideCallback)
   legate::register_shutdown_callback(std::move(callback));
 
   // Shutdown and verify that the callback is called
-  legate::destroy();
+  ASSERT_EQ(legate::finish(), 0);
   ASSERT_TRUE(callback_called);
 }
 

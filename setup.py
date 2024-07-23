@@ -13,7 +13,6 @@
 from __future__ import annotations
 
 import contextlib
-import hashlib
 import json
 import os
 import platform
@@ -31,11 +30,11 @@ from skbuild import constants as sk_constants, setup
 try:
     # Currently skbuild does not have a develop wrapper, but try them first in
     # case they ever make one
-    from skbuild.command.develop import develop as orig_develop
+    from skbuild.command.develop import develop
 except ModuleNotFoundError:
-    from setuptools.command.develop import develop as orig_develop
+    from setuptools.command.develop import develop
 
-from skbuild.command.bdist_wheel import bdist_wheel as orig_bdist_wheel
+from skbuild.command.bdist_wheel import bdist_wheel
 
 from versioneer import (
     get_cmdclass as versioneer_get_cmdclass,
@@ -43,7 +42,7 @@ from versioneer import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterator
+    from collections.abc import Generator
     from typing import Any
 
 
@@ -185,14 +184,6 @@ def read_cmake_cache_value(pattern: str, cache_dir: Path | None = None) -> str:
     raise RuntimeError(f"ERROR: Did not find {pattern} in {file_path}")
 
 
-try:
-    CMAKE_EXE = read_cmake_cache_value(
-        "CMAKE_COMMAND", cache_dir=LEGATE_CORE_CMAKE_DIR
-    )
-except RuntimeError:
-    CMAKE_EXE = "cmake"
-
-
 def inject_sys_argv() -> None:
     r"""Inject various useful things into sys.argv
 
@@ -203,7 +194,15 @@ def inject_sys_argv() -> None:
     function serves to inject these arguments into sys.argv before we reach
     the setup() call.
     """
+    try:
+        CMAKE_EXE = read_cmake_cache_value(
+            "CMAKE_COMMAND", cache_dir=LEGATE_CORE_CMAKE_DIR
+        )
+    except RuntimeError:
+        CMAKE_EXE = "cmake"
+
     extra_args = ["--cmake-executable", CMAKE_EXE]
+
     try:
         # not sure how this could fail, but I suppose it could?
         CMAKE_GENERATOR = read_cmake_cache_value(
@@ -224,245 +223,6 @@ def inject_sys_argv() -> None:
     # default at runtime, so we cannot just append to sys.argv. Hence, we must
     # put it exactly here.
     sys.argv[2:2] = extra_args
-
-
-def get_install_dir() -> Path:
-    def try_env_var(
-        varname: str, extra: Callable[[], bool] | None = None
-    ) -> Path | None:
-        if extra is None:
-
-            def default_extra() -> bool:
-                return True
-
-            extra = default_extra
-
-        verbose_print(f"Trying {varname} for install dir")
-        try:
-            if (install_dir := os.environ[varname]) and extra():
-                verbose_print(f"Success: {varname} = {install_dir}")
-                return Path(install_dir)
-        except KeyError:
-            verbose_print(f"Rejected {varname}, not defined in environment")
-            return
-
-        if install_dir:
-            verbose_print(
-                f"Rejected {varname}, extra requirements not satisfied"
-            )
-        else:
-            verbose_print(
-                f"Rejected {varname}, defined in environment, but empty!"
-            )
-
-    if install_dir := try_env_var(
-        "PREFIX", extra=lambda: os.environ.get("CONDA_BUILD", "") == "1"
-    ):
-        return install_dir
-    if install_dir := try_env_var("CONDA_PREFIX"):
-        return install_dir
-    if install_dir := try_env_var("VIRTUAL_ENV"):
-        return install_dir
-    # This will happen if we try to install to system python prefix without
-    # a virtual env or the like. I have no idea how to reliably get the
-    # path to the system install, because neither pip nor setuptools
-    # exposes it to us.
-    raise RuntimeError("Could not identify install directory!")
-
-
-def get_legion_py_bindings_path() -> Path | None:
-    def get_py_bindings_path(cache_dir: Path | None = None) -> Path | None:
-        try:
-            # If this variable exists, then legate built Legion, and
-            # therefore the bindings dir will be pointed to by this variable
-            return Path(
-                read_cmake_cache_value(
-                    "LegionBindings_python_BINARY_DIR", cache_dir=cache_dir
-                )
-            )
-        except RuntimeError:
-            verbose_print(
-                f"Did not find LegionBindings_python_BINARY_DIR in {cache_dir}"
-                " (None means skbuild cmake dir)"
-            )
-
-        # not found, maybe the user built Legion themselves
-        root_dir = Path(read_cmake_cache_value("Legion_ROOT"))
-        # If we got here (and read_cmake_cache_value() hasn't thrown) then user
-        # might have passed a pre-built Legion. If that is the case, then the
-        # bindings dir will *NOT* exist.
-        verbose_print(
-            f"Found potentially pre-existing Legion_ROOT: {root_dir}"
-        )
-        bindings_dir = root_dir / "bindings" / "python"
-        if (bindings_dir / "cmake_install.cmake").exists():
-            # Bindings dir exists, so we should install those python bindings
-            verbose_print(f"Bindings appear to exist at: {bindings_dir}")
-            return bindings_dir
-        # pre-built Legion
-        verbose_print(
-            f"Bindings dir {bindings_dir} did not have a cmake_install.cmake "
-            "present, assuming this is a pre-installed Legion"
-        )
-        return None
-
-    verbose_print("Attempting to install Legion python bindings")
-    found_method = read_cmake_cache_value("_legate_core_FOUND_METHOD")
-    verbose_print(f"Found legate core method: {found_method}")
-
-    match found_method:
-        case "PRE_BUILT":
-            # The legate.core bindings were already built by a previous call to
-            # "make" by the user and were imported by cmake. They live in
-            # LEGATE_CORE_ARCH/cmake_build, and legate_core_DIR points
-            # there. They will tell us where to find the Legion python
-            # bindings.
-            orig_build_dir = Path(read_cmake_cache_value("legate_core_DIR"))
-            verbose_print(f"Found original legate build dir: {orig_build_dir}")
-            return get_py_bindings_path(cache_dir=orig_build_dir)
-
-        case "SELF_BUILT":
-            # We built the legate.core bindings ourselves as part of the
-            # bdist_wheel step, so the cache file to use is in the skbuild dir.
-            return get_py_bindings_path()
-
-        case "INSTALLED":
-            return
-
-    raise RuntimeError(
-        "Unhandled find-method for legate.core encountered:" f" {found_method}"
-    )
-
-
-def install_legion_python_bindings() -> None:
-    r"""Install the Legion python bindings if needed."""
-
-    try:
-        bdir = get_legion_py_bindings_path()
-    except RuntimeError as rte:
-        # If this fails then I am pretty sure this means that while we did
-        # build legate.core, we didn't build Legion. Conceivably this means
-        # that Legion is already installed, but I guess it could also occur if
-        # we passed a source directory?
-        raise RuntimeError(
-            f"{rte}\n\nThis would seem to indicate that "
-            "legate.core did not build Legion. Please report this "
-            "to legate.core developers immediately, and be sure "
-            "to include the appriopriate log file!"
-        ) from rte
-    if bdir is None:
-        # Pre-installed legate.core. Not sure how well the following assumption
-        # holds.
-        verbose_print(
-            "Legate core appears to have been pre-installed. Assuming that "
-            "legion python bindings are as well and bailing!"
-        )
-        return
-
-    install_dir = get_install_dir()
-    cmake_cmd = [CMAKE_EXE, "--install", bdir, "--prefix", install_dir]
-    verbose_print(f"Running: {cmake_cmd}")
-    if BUILD_MODE == "develop":
-        # This is needed when we are in editable mode, because we will not
-        # actually be installing liblegion.so, only
-        # liblegion_canonical_python.so (but cmake doesn't know that).
-        #
-        # So we should install the libs as symlinks, so that the rpaths from
-        # liblegion_canonical_python.so.1 still point to the right Legion.
-        env = os.environ | {"CMAKE_INSTALL_MODE": "ABS_SYMLINK"}
-    else:
-        env = None
-    subprocess_check_call(cmake_cmd, env=env)
-
-    # pip is able to uninstall most installed packages. Known exceptions
-    # are:
-    #
-    # - Pure distutils packages installed with python setup.py install,
-    #   which leave behind no metadata to determine what files were
-    #   installed.
-    # - Script wrappers installed by python setup.py develop.
-    #
-    # We are potentially both of these! Pip internally uses a "dist-info"
-    # directory in the site-packages directory to track which files a
-    # particular package has installed. In particular it uses
-    # <PACKAGE>-<VERSION>-dist-info/RECORD, which is essentially a list of
-    # "path,file_hash,file_size":
-    #
-    # https://packaging.python.org/en/latest/specifications/recording-installed-packages/#the-record-file
-    #
-    # Our goal is therefore to append all of the crud installed by the
-    # above cmake install command to this record file, so that pip
-    # uninstall legate/legion just works as expected.
-    def gen_uninstall_paths() -> Iterator[Path]:
-        yield from (install_dir / "lib").glob("liblegion_canonical_python*")
-        yield install_dir / "share" / "Legion" / "python"
-        yield install_dir / "bin" / "legion_python"
-
-    def sha256sum(filename: str | Path, buffer_size: int = 128 * 1024) -> str:
-        hasher = hashlib.sha256()
-        mv = memoryview(bytearray(buffer_size))
-        with open(filename, "rb", buffering=0) as fd:
-            while n := fd.readinto(mv):
-                hasher.update(mv[:n])
-        return hasher.hexdigest()
-
-    records = []
-    for file_path in gen_uninstall_paths():
-        verbose_print(f"Adding uninstall path: {file_path}")
-        file_hash = (
-            "" if file_path.is_dir() else f"sha256={sha256sum(file_path)}"
-        )
-        records.append(f"{file_path},{file_hash},{file_path.stat().st_size}")
-
-    site_package_dir = (
-        install_dir
-        / "lib"
-        / f"python{sys.version_info.major}.{sys.version_info.minor}"
-        / "site-packages"
-    )
-    assert site_package_dir.exists(), f"{site_package_dir} does not exist"
-    lg_distinfo_re = re.compile(r"legion.*dist-info$")
-    verbose_print(
-        f"Searching site package dir: {site_package_dir} for legion "
-        "dist-info"
-    )
-    for dist_info in site_package_dir.iterdir():
-        if dist_info.is_dir() and lg_distinfo_re.match(dist_info.name):
-            verbose_print(f"Found legion dist-info dir: {dist_info}")
-            break
-    else:
-        raise RuntimeError(
-            f"Failed to find legion dist-info file in {site_package_dir}"
-        )
-
-    record_file = dist_info / "RECORD"
-    if not record_file.exists():
-        raise RuntimeError(
-            f"RECORD file: {record_file} does not exist post legion "
-            "python bindings install?"
-        )
-    verbose_print(f"Appending new records to RECORD file ({record_file}):")
-    verbose_print("\n".join(records))
-    record_file.write_text(
-        "\n".join(filter(None, record_file.read_text().splitlines() + records))
-    )
-    verbose_print("Finished adding records")
-
-
-class Develop(orig_develop):
-    def run(self, *args: Any, **kwargs: Any) -> Any:
-        verbose_print(f"Running {orig_develop} develop command")
-        ret = super().run(*args, **kwargs)
-        install_legion_python_bindings()
-        return ret
-
-
-class BdistWheel(orig_bdist_wheel):
-    def run(self, *args: Any, **kwargs: Any) -> Any:
-        verbose_print(f"Running {orig_bdist_wheel} develop command")
-        ret = super().run(*args, **kwargs)
-        install_legion_python_bindings()
-        return ret
 
 
 def create_log_file() -> Path:
@@ -711,7 +471,6 @@ def clean_skbuild_dir() -> None:
         "uninstall",
         "-y",
         "legate-core",
-        "legion",
         "--verbose",
     ]
     verbose_print(
@@ -735,11 +494,10 @@ def clean_skbuild_dir() -> None:
 def do_setup_impl() -> None:
     cmake_args = []
     if BUILD_MODE == "bdist_wheel" and was_built_with_build_isolation():
-        # Explicitly uninstall legate.core and Legion if doing a clean/isolated
-        # build.
+        # Explicitly uninstall legate.core if doing a clean/isolated build.
         #
         # A prior installation may have built and installed legate.core C++
-        # dependencies (like Legion).
+        # dependencies.
         #
         # CMake will find and use them for the current build, which would
         # normally be correct, but pip uninstalls files from any existing
@@ -812,7 +570,7 @@ def do_setup_impl() -> None:
         print(f"{pack} = {data}")
     print("Using command class:")
     cmd_class = versioneer_get_cmdclass(
-        {"develop": Develop, "bdist_wheel": BdistWheel}
+        {"develop": develop, "bdist_wheel": bdist_wheel}
     )
     print("\n".join(f"{key} = {value}" for key, value in cmd_class.items()))
     print(f"Using cmake args: {cmake_args}")
@@ -821,17 +579,6 @@ def do_setup_impl() -> None:
     print(f"Using languages: {languages}")
     print(MINI_BANNER)
     print(BANNER, flush=True)
-
-    if (
-        read_cmake_cache_value(
-            "Legion_USE_Python", cache_dir=LEGATE_CORE_CMAKE_DIR
-        )
-        != "ON"
-    ):
-        raise RuntimeError(
-            "Invalid configuration, must rerun configure with "
-            '"--with-python" flag enabled!'
-        )
 
     setup(
         version=version,

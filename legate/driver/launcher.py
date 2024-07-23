@@ -193,24 +193,18 @@ class Launcher:
             )
 
         if config.core.gpus > 0:
-            assert "LEGATE_NEED_CUDA" not in system.env
+            # TODO(bryevdv)
+            # assert "LEGATE_NEED_CUDA" not in system.env
             env["LEGATE_NEED_CUDA"] = "1"
 
         if config.core.openmp > 0:
-            assert "LEGATE_NEED_OPENMP" not in system.env
+            # TODO(bryevdv)
+            # assert "LEGATE_NEED_OPENMP" not in system.env
             env["LEGATE_NEED_OPENMP"] = "1"
 
         if config.multi_node.ranks > 1:
             assert "LEGATE_NEED_NETWORK" not in system.env
             env["LEGATE_NEED_NETWORK"] = "1"
-
-        if config.info.progress:
-            assert "LEGATE_SHOW_PROGRESS" not in system.env
-            env["LEGATE_SHOW_PROGRESS"] = "1"
-
-        if config.info.mem_usage:
-            assert "LEGATE_SHOW_USAGE" not in system.env
-            env["LEGATE_SHOW_USAGE"] = "1"
 
         # Configure certain limits
         LEGATE_MAX_DIM = system.env.get(

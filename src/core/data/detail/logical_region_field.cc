@@ -37,9 +37,8 @@ LogicalRegionField::~LogicalRegionField()
 {
   // Only free associated resources when the top-level region is deleted.
   if (parent_ == nullptr) {
-    auto* runtime = Runtime::get_runtime();
     // If the runtime is already destroyed, no need to clean up the resource
-    if (!runtime->initialized()) {
+    if (!has_started()) {
       intentionally_leak_physical_region(std::move(pr_));
       return;
     }
@@ -56,6 +55,8 @@ LogicalRegionField::~LogicalRegionField()
     // RegionField, there should be no Stores remaining that use it (or any of its sub-regions).
     // Moreover, the field will only start to get reused once all shards have agreed that it's
     // been collected.
+    auto* runtime = Runtime::get_runtime();
+
     if (pr_.is_mapped()) {
       runtime->unmap_physical_region(pr_);
     }

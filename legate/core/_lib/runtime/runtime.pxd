@@ -209,8 +209,6 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
 
     cdef int32_t finish()
 
-    cdef void destroy()
-
     cdef bool _is_running_in_task "legate::is_running_in_task"()
 
 
@@ -291,7 +289,7 @@ cdef class Runtime(Unconstructable):
     cpdef void issue_mapping_fence(self)
     cpdef void issue_execution_fence(self, bool block = *)
     cpdef Machine get_machine(self)
-    cpdef void destroy(self)
+    cpdef void finish(self)
     cpdef void add_shutdown_callback(self, object callback)
 
 cdef void raise_pending_exception()

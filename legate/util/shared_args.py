@@ -22,7 +22,6 @@ __all__ = (
     "LAUNCHER_EXTRA",
     "LAUNCHER",
     "LAUNCHERS",
-    "NOCR",
     "NODES",
     "NUMAMEM",
     "OMPS",
@@ -59,19 +58,6 @@ RANKS_PER_NODE = Argument(
     ),
 )
 
-
-NOCR = Argument(
-    "--no-replicate",
-    ArgSpec(
-        dest="not_control_replicable",
-        action="store_true",
-        required=False,
-        help="Execute this program without control replication.  Most of the "
-        "time, this is not recommended.  This option should be used for "
-        "debugging.  The -lg:safe_ctrlrepl Legion option may be helpful "
-        "with discovering issues with replicated control.",
-    ),
-)
 
 LAUNCHER = Argument(
     "--launcher",

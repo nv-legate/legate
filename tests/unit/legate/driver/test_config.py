@@ -44,7 +44,6 @@ class TestMultiNode:
         assert set(m.MultiNode.__dataclass_fields__) == {
             "nodes",
             "ranks_per_node",
-            "not_control_replicable",
             "launcher",
             "launcher_extra",
         }
@@ -60,7 +59,6 @@ class TestMultiNode:
         mn = m.MultiNode(
             nodes=1,
             ranks_per_node=1,
-            not_control_replicable=False,
             launcher="mpirun",
             launcher_extra=extra,
         )
@@ -70,7 +68,6 @@ class TestMultiNode:
         mn = m.MultiNode(
             nodes=1,
             ranks_per_node=1,
-            not_control_replicable=False,
             launcher="mpirun",
             launcher_extra=[
                 "-H g0002,g0002 -X SOMEENV --fork",
@@ -91,7 +88,6 @@ class TestMultiNode:
         mn = m.MultiNode(
             nodes=1,
             ranks_per_node=1,
-            not_control_replicable=False,
             launcher="mpirun",
             launcher_extra=[
                 "-f 'some path with spaces/foo.txt'",
@@ -244,8 +240,6 @@ class TestDebugging:
 class TestInfo:
     def test_fields(self) -> None:
         assert set(m.Info.__dataclass_fields__) == {
-            "progress",
-            "mem_usage",
             "verbose",
             "bind_detail",
         }
@@ -262,7 +256,6 @@ class TestOther:
             "wrapper_inner",
             "module",
             "dry_run",
-            "rlwrap",
         }
 
     def test_mixin(self) -> None:
@@ -282,7 +275,6 @@ class TestConfig:
         assert c.multi_node == m.MultiNode(
             nodes=defaults.LEGATE_NODES,
             ranks_per_node=defaults.LEGATE_RANKS_PER_NODE,
-            not_control_replicable=False,
             launcher="none",
             launcher_extra=[],
         )
@@ -334,9 +326,7 @@ class TestConfig:
             spy=False,
         )
 
-        assert c.info == m.Info(
-            progress=False, mem_usage=False, verbose=False, bind_detail=False
-        )
+        assert c.info == m.Info(verbose=False, bind_detail=False)
 
         assert c.other == m.Other(
             timing=False,
@@ -344,7 +334,6 @@ class TestConfig:
             wrapper_inner=[],
             module=None,
             dry_run=False,
-            rlwrap=False,
         )
 
     def test_color_arg(self) -> None:
@@ -376,42 +365,8 @@ class TestConfig:
             ]
         )
 
-    def test_nocr_fixup_default_single_node(self, capsys: Capsys) -> None:
-        c = m.Config(["legate"])
-
-        assert c.console
-        assert not c.multi_node.not_control_replicable
-
-        out, _ = capsys.readouterr()
-        assert scrub(out).strip() == ""
-
-    def test_nocr_fixup_multi_node(self, capsys: Capsys) -> None:
-        c = m.Config(["legate", "--nodes", "2"])
-
-        assert c.console
-        assert c.multi_node.not_control_replicable
-
-        out, _ = capsys.readouterr()
-        assert (
-            scrub(out).strip()
-            == "WARNING: Disabling control replication for interactive run"
-        )
-
-    def test_nocr_fixup_multi_rank(self, capsys: Capsys) -> None:
-        c = m.Config(["legate", "--ranks-per-node", "2"])
-
-        assert c.console
-        assert c.multi_node.not_control_replicable
-
-        out, _ = capsys.readouterr()
-        assert (
-            scrub(out).strip()
-            == "WARNING: Disabling control replication for interactive run"
-        )
-
     def test_log_to_file_fixup(self, capsys: Capsys) -> None:
-        # add --no-replicate to suppress unrelated stdout warning
-        c = m.Config(["legate", "--no-replicate", "--logging", "foo", "--spy"])
+        c = m.Config(["legate", "--logging", "foo", "--spy"])
 
         assert c.logging.log_to_file
 
@@ -429,10 +384,7 @@ class TestConfig:
         "args",
         powerset(
             (
-                "--no-replicate",
-                "--rlwrap",
                 "--spy",
-                "--progress",
                 "--gdb",
                 "--profile",
                 "--cprofile",
@@ -513,7 +465,6 @@ class TestConfig:
         c = m.Config(
             [
                 "legate",
-                "--rlwrap",
                 "--gpus",
                 "2",
                 "--module",
@@ -532,7 +483,7 @@ class TestConfig:
     def test_default_run_mode_with_script_no_module(
         self, opts: list[str]
     ) -> None:
-        c = m.Config(["legate", "--rlwrap", "--gpus", "2", "script.py"] + opts)
+        c = m.Config(["legate", "--gpus", "2", "script.py"] + opts)
 
         assert c.user_opts == tuple(opts)
         assert c.user_program == "script.py"
@@ -544,8 +495,7 @@ class TestConfig:
         self, opts: list[str]
     ) -> None:
         c = m.Config(
-            ["legate", "--rlwrap", "--gpus", "2", "--module", "mod", "prog"]
-            + opts
+            ["legate", "--gpus", "2", "--module", "mod", "prog"] + opts
         )
 
         assert c.user_opts == tuple(opts)
@@ -557,7 +507,7 @@ class TestConfig:
     def test_default_run_mode_with_prog_no_modue(
         self, opts: list[str]
     ) -> None:
-        c = m.Config(["legate", "--rlwrap", "--gpus", "2", "prog"] + opts)
+        c = m.Config(["legate", "--gpus", "2", "prog"] + opts)
 
         assert c.user_opts == tuple(opts)
         assert c.user_program == "prog"

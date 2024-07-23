@@ -98,9 +98,13 @@ class Config:
             False,
             False,
         )
-        self.info = Info(False, False, self.verbose > 0, False)
-        self.other = Other(False, [], [], None, False, False)
+        self.info = Info(self.verbose > 0, False)
+        self.other = Other(False, [], [], None, False)
 
     @cached_property
     def run_mode(self) -> RunMode:
         return "python"
+
+    @cached_property
+    def console(self) -> bool:
+        return True

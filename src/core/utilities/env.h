@@ -266,5 +266,6 @@ inline constexpr detail::EnvironmentVariable<std::uint32_t> LEGATE_MAX_LRU_LENGT
   "LEGATE_MAX_LRU_LENGTH"};
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_CONSENSUS{"LEGATE_CONSENSUS"};
 inline constexpr detail::EnvironmentVariable<bool> LEGATE_DISABLE_MPI{"LEGATE_DISABLE_MPI"};
+inline constexpr detail::EnvironmentVariable<std::string> LEGATE_CONFIG{"LEGATE_CONFIG"};
 
 }  // namespace legate

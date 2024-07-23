@@ -67,11 +67,10 @@ def genconfig() -> Any:
 
         if multi_rank:
             # This is annoying but we can only replace the entire dataclass
-            nocr = config.multi_node.not_control_replicable
             launcher = config.multi_node.launcher
             launcher_extra = config.multi_node.launcher_extra
             config.multi_node = MultiNode(
-                *multi_rank, nocr, launcher, launcher_extra
+                *multi_rank, launcher, launcher_extra
             )
 
         return config

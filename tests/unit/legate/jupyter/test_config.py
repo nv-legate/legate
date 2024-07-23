@@ -49,7 +49,6 @@ class TestConfig:
         assert c.multi_node == m.MultiNode(
             nodes=defaults.LEGATE_NODES,
             ranks_per_node=defaults.LEGATE_RANKS_PER_NODE,
-            not_control_replicable=False,
             launcher="none",
             launcher_extra=[],
         )
@@ -103,9 +102,7 @@ class TestConfig:
             spy=False,
         )
 
-        assert c.info == m.Info(
-            progress=False, mem_usage=False, verbose=False, bind_detail=False
-        )
+        assert c.info == m.Info(verbose=False, bind_detail=False)
 
         assert c.other == m.Other(
             timing=False,
@@ -113,7 +110,6 @@ class TestConfig:
             wrapper_inner=[],
             module=None,
             dry_run=False,
-            rlwrap=False,
         )
 
     def test_color_arg(self) -> None:

@@ -22,14 +22,15 @@ from typing import TYPE_CHECKING, Any
 from ..util.system import System
 from ..util.types import DataclassMixin
 from ..util.ui import kvtable, rule, section, value
-from .command import CMD_PARTS_CANONICAL, CMD_PARTS_EXEC, CMD_PARTS_LEGION
+from .command import CMD_PARTS_EXEC, CMD_PARTS_PYTHON
 from .config import ConfigProtocol
-from .launcher import Launcher, SimpleLauncher
+from .environment import ENV_PARTS_LEGATE
+from .launcher import Launcher
 
 if TYPE_CHECKING:
     from ..util.types import Command, EnvDict
 
-__all__ = ("LegateDriver", "CanonicalDriver", "format_verbose")
+__all__ = ("LegateDriver", "format_verbose")
 
 
 @dataclass(frozen=True)
@@ -64,7 +65,7 @@ class LegateDriver:
         system = self.system
 
         cmd_parts = (
-            CMD_PARTS_LEGION if config.run_mode == "python" else CMD_PARTS_EXEC
+            CMD_PARTS_PYTHON if config.run_mode == "python" else CMD_PARTS_EXEC
         )
 
         parts = (part(config, system, launcher) for part in cmd_parts)
@@ -72,9 +73,14 @@ class LegateDriver:
 
     @property
     def env(self) -> EnvDict:
-        """The system environment that should be used when started Legate."""
-        # in case we want to augment the launcher env we could do it here
-        return self.launcher.env
+        """The system environment that should be used when starting Legate."""
+        env = dict(self.launcher.env)
+
+        env.setdefault("LEGATE_CONFIG", "")
+        legate_parts = (part(self.config) for part in ENV_PARTS_LEGATE)
+        env["LEGATE_CONFIG"] += " " + " ".join(sum(legate_parts, ()))
+
+        return env
 
     @property
     def custom_env_vars(self) -> set[str]:
@@ -82,8 +88,7 @@ class LegateDriver:
         for the system environment.
 
         """
-        # in case we want to augment the launcher env we could do it here
-        return self.launcher.custom_env_vars
+        return {"LEGATE_CONFIG", *self.launcher.custom_env_vars}
 
     @property
     def dry_run(self) -> bool:
@@ -110,6 +115,9 @@ class LegateDriver:
         """
         if self.dry_run:
             return 0
+
+        if self.config.multi_node.nodes > 1 and self.config.console:
+            raise RuntimeError("Cannot start console with more than one node.")
 
         if self.config.other.timing:
             self.print_on_head_node(f"Legate start: {datetime.now()}")
@@ -140,46 +148,6 @@ class LegateDriver:
 
         if launcher.kind != "none" or launcher.detected_rank_id == "0":
             print(*args, **kw)
-
-
-class CanonicalDriver(LegateDriver):
-    """Coordinate the system, user-configuration, and launcher to appropriately
-    execute the Legate process.
-
-    Parameters
-    ----------
-        config : Config
-
-        system : System
-
-    """
-
-    def __init__(self, config: ConfigProtocol, system: System) -> None:
-        self.config = config
-        self.system = system
-        self.launcher = SimpleLauncher(config, system)
-
-    @property
-    def cmd(self) -> Command:
-        """The full command invocation that should be used to start Legate."""
-        config = self.config
-        launcher = self.launcher
-        system = self.system
-
-        parts = (
-            part(config, system, launcher) for part in CMD_PARTS_CANONICAL
-        )
-        return sum(parts, ())
-
-    def run(self) -> int:
-        """Run the Legate process.
-
-        Returns
-        -------
-            int : process return code
-
-        """
-        assert False, "This function should not be invoked."
 
 
 def get_versions() -> LegateVersions:

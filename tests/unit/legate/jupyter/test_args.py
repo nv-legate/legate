@@ -44,9 +44,6 @@ class TestParserDefaults:
             == defaults.LEGATE_RANKS_PER_NODE
         )
 
-    def test_no_replicate(self) -> None:
-        assert m.parser.get_default("not_control_replicable") is False
-
     def test_launcher(self) -> None:
         assert m.parser.get_default("launcher") == "none"
 

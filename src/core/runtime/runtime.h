@@ -20,15 +20,16 @@
 #include "core/operation/task.h"
 #include "core/runtime/library.h"
 #include "core/runtime/resource.h"
-#include "core/task/exception.h"
 #include "core/task/variant_options.h"
 #include "core/type/type_info.h"
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
 #include <string_view>
-#include <type_traits>
+#include <utility>
+#include <vector>
 
 /**
  * @file
@@ -640,10 +641,19 @@ class Runtime {
  *
  * @brief Checks if the runtime has started.
  *
- * @return true If the runtime has started
- * @return false Either if the runtime has not started yet or after legate::finish is called
+ * @return `true` if the runtime has started, `false` if the runtime has not started yet or
+ * after `finish()` is called.
  */
 [[nodiscard]] bool has_started();
+
+/**
+ * @ingroup runtime
+ *
+ * @brief Checks if the runtime has finished.
+ *
+ * @return `true` if `finish()` has been called, `false` otherwise.
+ */
+[[nodiscard]] bool has_finished();
 
 /**
  * @ingroup runtime
@@ -656,7 +666,7 @@ class Runtime {
  */
 [[nodiscard]] std::int32_t finish();
 
-void destroy();
+[[deprecated("since 24.09: use legate::finish() instead")]] void destroy();
 
 /**
  * @ingroup runtime

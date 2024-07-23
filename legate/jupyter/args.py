@@ -62,7 +62,6 @@ kernel.add_argument(
 multi_node = parser.add_argument_group("Multi-node configuration")
 multi_node.add_argument(sa.NODES.name, **sa.NODES.kwargs)
 multi_node.add_argument(sa.RANKS_PER_NODE.name, **sa.RANKS_PER_NODE.kwargs)
-multi_node.add_argument(sa.NOCR.name, **sa.NOCR.kwargs)
 multi_node.add_argument(sa.LAUNCHER.name, **sa.LAUNCHER.kwargs)
 multi_node.add_argument(sa.LAUNCHER_EXTRA.name, **sa.LAUNCHER_EXTRA.kwargs)
 

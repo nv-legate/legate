@@ -39,7 +39,6 @@ __all__ = ("Config",)
 class MultiNode(DataclassMixin):
     nodes: int
     ranks_per_node: int
-    not_control_replicable: bool
     launcher: LauncherType
     launcher_extra: list[str]
 
@@ -129,8 +128,6 @@ class Debugging(DataclassMixin):
 
 @dataclass(frozen=True)
 class Info(DataclassMixin):
-    progress: bool
-    mem_usage: bool
     verbose: bool
     bind_detail: bool
 
@@ -142,7 +139,6 @@ class Other(DataclassMixin):
     wrapper_inner: list[str]
     module: str | None
     dry_run: bool
-    rlwrap: bool
 
 
 class ConfigProtocol(Protocol):
@@ -161,6 +157,10 @@ class ConfigProtocol(Protocol):
     debugging: Debugging
     info: Info
     other: Other
+
+    @cached_property
+    def console(self) -> bool:
+        pass
 
     @cached_property
     def run_mode(self) -> RunMode:
@@ -193,7 +193,6 @@ class Config:
         self._user_run_mode = args.run_mode
 
         # these may modify the args, so apply before dataclass conversions
-        self._fixup_nocr(args)
         self._fixup_log_to_file(args)
 
         self.multi_node = object_to_dataclass(args, MultiNode)
@@ -227,28 +226,19 @@ class Config:
         if self._user_run_mode is not None:
             return self._user_run_mode
 
-        # no user program, just run legion_python
+        # no user program, just run python
         if self.user_program is None:
             return "python"
 
-        # --module specified means run with legion_python
+        # --module specified means run with python
         if self.other.module is not None:
             return "python"
 
-        # otherwise assume .py means run with legion_python
+        # otherwise assume .py means run with python
         if self.user_program.endswith(".py"):
             return "python"
 
         return "exec"
-
-    def _fixup_nocr(self, args: Namespace) -> None:
-        # this is slightly duplicative of MultiNode.ranks property, but fixup
-        # checks happen before sub-configs are initialized from args
-        ranks = int(args.nodes) * int(args.ranks_per_node)
-
-        if self.console and not args.not_control_replicable and ranks > 1:
-            print(warn("Disabling control replication for interactive run"))
-            args.not_control_replicable = True
 
     def _fixup_log_to_file(self, args: Namespace) -> None:
         # Spy output is dumped to the same place as other logging, so we must

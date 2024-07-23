@@ -19,7 +19,9 @@
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/internal_shared_ptr.h"
 
+#include <fmt/core.h>
 #include <optional>
+#include <stdexcept>
 
 namespace legate {
 
@@ -308,35 +310,63 @@ std::optional<Runtime> the_public_runtime{};
 
 /*static*/ Runtime* Runtime::get_runtime()
 {
-  if (LEGATE_UNLIKELY(!the_public_runtime.has_value())) {
-    auto* impl = detail::Runtime::get_runtime();
+  if (!has_started()) {
+    throw std::runtime_error{
+      "Legate runtime has not been initialized. Please invoke legate::start to use the "
+      "runtime"};
+  }
 
-    if (!impl->initialized()) {
-      throw std::runtime_error{
-        "Legate runtime has not been initialized. Please invoke legate::start to use the "
-        "runtime"};
-    }
-    the_public_runtime.emplace(Runtime{impl});
+  if (LEGATE_UNLIKELY(!the_public_runtime.has_value())) {
+    the_public_runtime.emplace(Runtime{detail::Runtime::get_runtime()});
   }
   return &*the_public_runtime;
 }
 
-std::int32_t start(std::int32_t argc, char** argv) { return detail::Runtime::start(argc, argv); }
+std::int32_t start(std::int32_t argc, char** argv)
+{
+  if (has_started()) {
+    return 0;
+  }
 
-bool has_started() { return detail::Runtime::get_runtime()->initialized(); }
+  if (has_finished()) {
+    throw std::runtime_error{"Legate runtime cannot be started after legate::finish is called"};
+  }
+
+  auto ret = detail::Runtime::start(argc, argv);
+  // Called for effect, otherwise the following:
+  //
+  // legate::start(...);
+  // legate::finish();
+  //
+  // Would never finalize the runtime, since the_public_runtime would never have been
+  // constructed, so finish() would just return 0
+  if (ret == 0) {
+    static_cast<void>(Runtime::get_runtime());
+  }
+  return ret;
+}
+
+bool has_started() { return detail::has_started(); }
+
+bool has_finished() { return detail::has_finished(); }
 
 std::int32_t finish()
 {
-  if (the_public_runtime.has_value()) {
-    const auto ret = Runtime::get_runtime()->impl()->finish();
-
-    the_public_runtime.reset();
-    return ret;
+  if (!has_started()) {
+    return 0;
   }
-  return 0;
+
+  const auto ret = Runtime::get_runtime()->impl()->finish();
+  the_public_runtime.reset();
+  return ret;
 }
 
-void destroy() { detail::Runtime::get_runtime()->destroy(); }
+void destroy()
+{
+  if (const auto ret = finish()) {
+    throw std::runtime_error{fmt::format("failed to finalize legate runtime, error code: {}", ret)};
+  }
+}
 
 mapping::Machine get_machine() { return Runtime::get_runtime()->get_machine(); }
 

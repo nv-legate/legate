@@ -68,6 +68,10 @@ ArgList = list[str]
 EnvDict: TypeAlias = dict[str, str]
 
 
+#: Represent part of a environment variable to build
+EnvPart: TypeAlias = tuple[str, ...]
+
+
 #: Represent part of a command-line command to execute
 CommandPart: TypeAlias = tuple[str, ...]
 
@@ -137,7 +141,6 @@ class LegionPaths(DataclassMixin):
     realm_defines_h: Path
     legion_defines_h: Path
     legion_spy_py: Path
-    legion_python: Path
     legion_prof: Path
     legion_module: Path | None
     legion_jupyter_module: Path | None
