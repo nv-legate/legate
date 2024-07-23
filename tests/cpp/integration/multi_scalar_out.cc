@@ -118,9 +118,25 @@ class MixedTask : public legate::LegateTask<MixedTask> {
   }
 };
 
-class ExnTask : public legate::LegateTask<ExnTask> {
+class UnboundTask : public legate::LegateTask<UnboundTask> {
  public:
   static constexpr std::int32_t TASK_ID = 3;
+  static void cpu_variant(legate::TaskContext context)
+  {
+    auto&& outputs = context.outputs();
+    auto&& scalars = context.scalars();
+
+    for (auto&& [output, scalar] : legate::detail::zip_shortest(outputs, scalars)) {
+      double_dispatch(output.dim(), output.type().code(), WriteFn{}, output.data(), scalar);
+    }
+
+    outputs.back().data().bind_empty_data();
+  }
+};
+
+class ExnTask : public legate::LegateTask<ExnTask> {
+ public:
+  static constexpr std::int32_t TASK_ID = 4;
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     throw legate::TaskException{std::string{EXN_MSG}};
@@ -136,12 +152,16 @@ class CheckFn {
     auto&& shape = store.shape<DIM>();
 
     EXPECT_EQ((store.read_accessor<T, DIM>()[shape.lo]), scalar.value<T>());
+
+    auto alloc = store.get_inline_allocation();
+
+    EXPECT_EQ(*static_cast<const T*>(alloc.ptr), scalar.value<T>());
   }
 };
 
 class CheckerTask : public legate::LegateTask<CheckerTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 4;
+  static constexpr std::int32_t TASK_ID = 5;
   static void cpu_variant(legate::TaskContext context)
   {
     auto&& output = context.input(0).data();
@@ -158,6 +178,7 @@ class Config {
     WriterTask::register_variants(library);
     ReducerTask::register_variants(library);
     MixedTask::register_variants(library);
+    UnboundTask::register_variants(library);
     ExnTask::register_variants(library);
     CheckerTask::register_variants(library);
   }
@@ -235,6 +256,22 @@ void test_mixed_auto(legate::Library library,
   runtime->submit(std::move(task));
 }
 
+void test_unbound(legate::Library library,
+                  const std::vector<legate::LogicalStore>& stores,
+                  const std::vector<legate::Scalar>& scalars)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto task    = runtime->create_task(library, UnboundTask::TASK_ID);
+  for (auto&& store : stores) {
+    task.add_output(store);
+  }
+  for (auto&& scalar : scalars) {
+    task.add_scalar_arg(scalar);
+  }
+  task.add_output(runtime->create_store(legate::int64()));
+  runtime->submit(std::move(task));
+}
+
 void test_exn_and_unbound(legate::Library library,
                           const legate::LogicalStore& input,
                           const legate::LogicalStore& output1,
@@ -309,8 +346,9 @@ std::vector<legate::LogicalStore> create_stores(const std::vector<legate::Scalar
   result.reserve(scalars.size());
 
   for (auto&& [idx, scalar] : legate::detail::enumerate(scalars)) {
-    auto store =
-      runtime->create_store(legate::Shape{legate::full(idx % 3 + 1, uint64_t{1})}, scalar.type());
+    auto store = runtime->create_store(legate::Shape{legate::full(idx % 3 + 1, uint64_t{1})},
+                                       scalar.type(),
+                                       true /*optimize_scalar*/);
     runtime->issue_fill(store, create_zero(scalar.type()));
     result.push_back(std::move(store));
   }
@@ -384,6 +422,21 @@ TEST_F(MultiScalarOut, MixedAuto)
 
   for (auto&& [idx, store] : legate::detail::enumerate(out_or_reds)) {
     validate_store(library, store, (idx % 3 == 1) ? reduction_results[idx] : values_to_write[idx]);
+  }
+}
+
+TEST_F(MultiScalarOut, Unbound)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
+  auto values_to_write = generate_inputs();
+  auto stores          = create_stores(values_to_write);
+
+  test_unbound(library, stores, values_to_write);
+
+  for (auto&& [store, to_match] : legate::detail::zip_equal(stores, values_to_write)) {
+    validate_store(library, store, to_match);
   }
 }
 

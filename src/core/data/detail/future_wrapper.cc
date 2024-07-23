@@ -89,11 +89,18 @@ class GetInlineAllocFromFuture {
   template <std::int32_t DIM>
   [[nodiscard]] InlineAllocation operator()(const Legion::Future& future,
                                             const Domain& domain,
-                                            std::size_t field_size)
+                                            std::size_t field_size,
+                                            std::size_t field_offset)
   {
     const auto rect = domain_to_rect_<DIM>(domain);
-    const auto acc  = AccessorRO<std::int8_t, DIM>{
-      future, rect, Memory::Kind::NO_MEMKIND, field_size, false /*check_field_size*/};
+    const auto acc  = AccessorRO<std::int8_t, DIM>{future,
+                                                   rect,
+                                                   Memory::Kind::NO_MEMKIND,
+                                                   field_size,
+                                                   false /*check_field_size*/,
+                                                   false,
+                                                   nullptr,
+                                                   field_offset};
 
     auto strides = std::vector<std::size_t>(DIM, 0);
     auto ptr     = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
@@ -122,8 +129,12 @@ class GetInlineAllocFromFuture {
 InlineAllocation FutureWrapper::get_inline_allocation(const Domain& domain) const
 {
   if (is_read_only()) {
-    return dim_dispatch(
-      std::max(1, domain.dim), GetInlineAllocFromFuture{}, get_future(), domain, field_size());
+    return dim_dispatch(std::max(1, domain.dim),
+                        GetInlineAllocFromFuture{},
+                        get_future(),
+                        domain,
+                        field_size(),
+                        field_offset());
   }
   return dim_dispatch(
     std::max(1, domain.dim), GetInlineAllocFromFuture{}, get_buffer(), domain, field_size());
