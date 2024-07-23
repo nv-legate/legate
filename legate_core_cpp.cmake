@@ -727,13 +727,15 @@ endif()
 ]=]
        "${helper_functions}")
 
+get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
+
 rapids_export(INSTALL legate_core
               EXPORT_SET legate-core-exports
               GLOBAL_TARGETS core
               NAMESPACE legate::
               DOCUMENTATION doc_string
               FINAL_CODE_BLOCK code_string
-              LANGUAGES ${ENABLED_LANGUAGES})
+              LANGUAGES ${languages})
 
 # build export targets
 rapids_export(BUILD legate_core
@@ -742,7 +744,7 @@ rapids_export(BUILD legate_core
               NAMESPACE legate::
               DOCUMENTATION doc_string
               FINAL_CODE_BLOCK code_string
-              LANGUAGES ${ENABLED_LANGUAES})
+              LANGUAGES ${languages})
 
 # Symlink the module directory into the binary dir, so that the helper functions in
 # legate_core-config.cmake can be used even if the project is not installed.
