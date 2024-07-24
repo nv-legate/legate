@@ -729,6 +729,10 @@ endif()
 
 get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
 
+list(REMOVE_ITEM languages NONE)
+
+message(STATUS "Enabled languages: ${languages}")
+
 rapids_export(INSTALL legate_core
               EXPORT_SET legate-core-exports
               GLOBAL_TARGETS core
