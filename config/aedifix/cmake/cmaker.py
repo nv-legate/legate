@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
 from ..util.exception import CMakeConfigureError, WrongOrderError
 from .cmake_flags import CMakeList
@@ -24,6 +24,14 @@ if TYPE_CHECKING:
 
     _T = TypeVar("_T")
     _CMakeFlagT = TypeVar("_CMakeFlagT", bound=CMakeFlagBase)
+
+
+class CMakeCommandSpec(TypedDict):
+    CMAKE_EXECUTABLE: str
+    CMAKE_GENERATOR: str
+    SOURCE_DIR: str
+    BUILD_DIR: str
+    CMAKE_COMMANDS: list[str]
 
 
 class CMaker:
@@ -180,7 +188,9 @@ class CMaker:
 
     @staticmethod
     def _dump_cmake_command_spec(
-        manager: ConfigurationManager, cmd_spec: dict[str, Any], cmd_file: Path
+        manager: ConfigurationManager,
+        cmd_spec: CMakeCommandSpec,
+        cmd_file: Path,
     ) -> None:
         if cmd_file.exists():
             manager.log(f"Command file {cmd_file} already exists, loading it")
@@ -248,18 +258,19 @@ class CMaker:
             generator.value,
         ]
 
-        def create_cmake_extra_commands(quote: bool) -> list[str]:
+        def create_cmake_commands(quote: bool) -> list[str]:
             # These are the commands should go in the cmake_command.txt since
             # they are general for any invocation
-            flags = ["--log-context", "--log-level=DEBUG"]
+            ret = ["--log-context", "--log-level=DEBUG"]
             debug_value: int = manager.cl_args.debug_configure.value
             if debug_value >= 1:
-                flags.append("--debug-find")
+                ret.append("--debug-find")
             if debug_value >= 2:
-                flags.append("--trace")
+                ret.append("--trace")
             if debug_value >= 3:
-                flags.append("--trace-expand")
-            flags.extend(
+                ret.append("--trace-expand")
+
+            ret.extend(
                 (
                     f"-D{manager.project_arch_name}:STRING"
                     f"='{manager.project_arch}'",
@@ -268,23 +279,27 @@ class CMaker:
                 )
             )
 
-            return flags + [
+            ret.extend(
                 value.to_command_line(quote=quote) for value in args.values()
-            ]
+            )
 
-        cmake_extra_command = create_cmake_extra_commands(quote=False)
+            ret.extend(extra_argv)
+
+            return ret
+
+        cmake_extra_command = create_cmake_commands(quote=False)
         cmake_command = list(
-            map(str, cmake_base_command + cmake_extra_command + extra_argv)
+            map(str, cmake_base_command + cmake_extra_command)
         )
         manager.log("Built CMake arguments:")
         manager.log("- " + "\n- ".join(cmake_command))
 
-        cmd_spec = {
+        cmd_spec: CMakeCommandSpec = {
             "CMAKE_EXECUTABLE": str(cmake_exe),
             "CMAKE_GENERATOR": generator.value,
             "SOURCE_DIR": str(source_dir),
             "BUILD_DIR": str(build_dir),
-            "CMAKE_COMMANDS": create_cmake_extra_commands(quote=True),
+            "CMAKE_COMMANDS": create_cmake_commands(quote=True),
         }
 
         self._dump_cmake_command_spec(

@@ -20,6 +20,7 @@ from typing import Any, TypeAlias
 import pytest
 from pytest import CaptureFixture, MonkeyPatch
 
+from ..cmake.cmaker import CMakeCommandSpec
 from ..logger import Logger
 from ..main import basic_configure
 from ..manager import ConfigurationManager
@@ -66,7 +67,6 @@ def shutil_which(thing: str) -> Path:
 
 
 Argv: TypeAlias = list[str]
-CMakeSpec: TypeAlias = dict[str, str | list[str]]
 
 
 class TestInfo:
@@ -108,7 +108,7 @@ class TestInfo:
         assert not self.cmakecache_txt.exists()
         assert not self.command_spec.exists()
 
-    def post_test(self, argv: Argv, expected_spec: CMakeSpec) -> None:
+    def post_test(self, argv: Argv, expected_spec: CMakeCommandSpec) -> None:
         # basics
         assert self.arch_dir.is_dir()
         # configure.log
@@ -252,7 +252,7 @@ class TestMain:
 
         num_cpus = _detect_num_cpus()
         argv: Argv = []
-        expected_spec: CMakeSpec = {
+        expected_spec: CMakeCommandSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
             "CMAKE_GENERATOR": test_info.generator,
             "SOURCE_DIR": f"{AEDIFIX_PYTEST_DIR}",
@@ -285,7 +285,7 @@ class TestMain:
 
         num_cpus = _detect_num_cpus()
         argv: Argv = ["--build-type=release"]
-        expected_spec: CMakeSpec = {
+        expected_spec: CMakeCommandSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
             "CMAKE_GENERATOR": test_info.generator,
             "SOURCE_DIR": f"{AEDIFIX_PYTEST_DIR}",
@@ -318,7 +318,7 @@ class TestMain:
 
         num_cpus = _detect_num_cpus()
         argv: Argv = ["--build-type=relwithdebinfo"]
-        expected_spec: CMakeSpec = {
+        expected_spec: CMakeCommandSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
             "CMAKE_GENERATOR": test_info.generator,
             "SOURCE_DIR": f"{AEDIFIX_PYTEST_DIR}",
@@ -379,7 +379,7 @@ class TestMain:
             f"--CFLAGS={flags}",
             f"--CXXFLAGS={flags}",
         ]
-        expected_spec: CMakeSpec = {
+        expected_spec: CMakeCommandSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
             "CMAKE_GENERATOR": test_info.generator,
             "SOURCE_DIR": f"{AEDIFIX_PYTEST_DIR}",
@@ -399,6 +399,49 @@ class TestMain:
                 f"-DCMAKE_C_COMPILER:FILEPATH={cc}",
                 f"-DCMAKE_C_FLAGS:STRING='{flags}'",
                 "-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON",
+            ],
+        }
+
+        ret = basic_configure(argv, DummyMainModule)
+        assert ret == 0
+        test_info.post_test(argv, expected_spec)
+
+    def test_extra_argv(
+        self, AEDIFIX_PYTEST_DIR: Path, AEDIFIX_PYTEST_ARCH: str
+    ) -> None:
+        test_info = TestInfo(
+            AEDIFIX_PYTEST_DIR, AEDIFIX_PYTEST_ARCH, generator="Unix Makefiles"
+        )
+        test_info.pre_test()
+
+        num_cpus = _detect_num_cpus()
+        argv: Argv = [
+            "--build-type=relwithdebinfo",
+            f"--cmake-generator={test_info.generator}",
+            "--",
+            "-DFOO=BAR",
+            "-DBAZ=1234",
+        ]
+        expected_spec: CMakeCommandSpec = {
+            "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
+            "CMAKE_GENERATOR": test_info.generator,
+            "SOURCE_DIR": f"{AEDIFIX_PYTEST_DIR}",
+            "BUILD_DIR": f"{test_info.cmake_dir}",
+            "CMAKE_COMMANDS": [
+                "--log-context",
+                "--log-level=DEBUG",
+                f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
+                f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
+                "-DBUILD_SHARED_LIBS:BOOL=ON",
+                f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
+                "-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo",
+                "-DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON",
+                "-DCMAKE_COLOR_MAKEFILE:BOOL=ON",
+                "-DCMAKE_CXX_FLAGS:STRING='-O0 -g -g3 -O3'",
+                "-DCMAKE_C_FLAGS:STRING='-O0 -g -g3 -O3'",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON",
+                "-DFOO=BAR",
+                "-DBAZ=1234",
             ],
         }
 
