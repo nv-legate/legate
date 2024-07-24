@@ -17,6 +17,10 @@
 
 #include "legion.h"
 
+#include <functional>
+#include <type_traits>
+#include <utility>
+
 namespace legate {
 
 template <typename T1, typename T2>
@@ -40,6 +44,14 @@ struct hash<legate::Domain> {
       legate::hash_combine(result, domain.rect_data[idx]);
     }
     return result;
+  }
+};
+
+template <typename T>
+struct hash<std::reference_wrapper<T>> {  // NOLINT(cert-dcl58-cpp)
+  [[nodiscard]] std::size_t operator()(const std::reference_wrapper<T>& v) const noexcept
+  {
+    return std::hash<std::decay_t<T>>{}(v.get());
   }
 };
 

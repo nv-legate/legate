@@ -62,22 +62,19 @@ std::string Operation::to_string() const
   return result;
 }
 
-const Variable* Operation::find_or_declare_partition(InternalSharedPtr<LogicalStore> store)
+const Variable* Operation::find_or_declare_partition(const InternalSharedPtr<LogicalStore>& store)
 {
-  auto finder = part_mappings_.find(store);
-  if (finder != part_mappings_.end()) {
-    return finder->second;
+  if (const auto it = part_mappings_.find(store); it != part_mappings_.end()) {
+    return it->second;
   }
-  const auto* symb                 = declare_partition();
-  part_mappings_[std::move(store)] = symb;
+  const auto* symb      = declare_partition();
+  part_mappings_[store] = symb;
   return symb;
 }
 
 const Variable* Operation::declare_partition()
 {
-  return partition_symbols_
-    .emplace_back(std::make_unique<Variable>(this, static_cast<std::int32_t>(next_part_id_++)))
-    .get();
+  return &partition_symbols_.emplace_back(this, next_part_id_++);
 }
 
 const InternalSharedPtr<LogicalStore>& Operation::find_store(const Variable* variable) const
@@ -85,20 +82,22 @@ const InternalSharedPtr<LogicalStore>& Operation::find_store(const Variable* var
   return store_mappings_.at(*variable);
 }
 
-void Operation::record_partition_(const Variable* variable, InternalSharedPtr<LogicalStore> store)
+void Operation::record_partition_(
+  const Variable* variable,
+  // Obviously, it is moved, but clang-tidy does not see that...
+  InternalSharedPtr<LogicalStore> store  // NOLINT(performance-unnecessary-value-param)
+)
 {
-  auto finder = store_mappings_.find(*variable);
-  if (finder != store_mappings_.end()) {
-    if (finder->second->id() != store->id()) {
-      throw std::invalid_argument{
-        fmt::format("Variable {} is already assigned to another store", *variable)};
-    }
-    return;
+  const auto sid            = store->id();
+  const auto [it, inserted] = store_mappings_.try_emplace(*variable, std::move(store));
+  const auto& mapped_store  = it->second;
+
+  if (inserted) {
+    part_mappings_.try_emplace(mapped_store, variable);
+  } else if (mapped_store->id() != sid) {
+    throw std::invalid_argument{
+      fmt::format("Variable {} is already assigned to another store", *variable)};
   }
-  if (part_mappings_.find(store) == part_mappings_.end()) {
-    part_mappings_.insert({store, variable});
-  }
-  store_mappings_[*variable] = std::move(store);
 }
 
 std::unique_ptr<StoreProjection> Operation::create_store_projection_(const Strategy& strategy,

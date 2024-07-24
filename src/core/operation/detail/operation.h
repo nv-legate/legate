@@ -18,15 +18,15 @@
 #include "core/operation/detail/store_projection.h"
 #include "core/partitioning/detail/constraint.h"
 #include "core/utilities/detail/formatters.h"
-#include "core/utilities/hash.h"
+#include "core/utilities/detail/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
 
+#include <deque>
 #include <fmt/format.h>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <unordered_map>
-#include <vector>
 
 namespace legate::detail {
 class ConstraintSolver;
@@ -65,7 +65,8 @@ class Operation {
   [[nodiscard]] virtual bool always_flush() const;
   [[nodiscard]] virtual bool supports_replicated_write() const;
 
-  [[nodiscard]] const Variable* find_or_declare_partition(InternalSharedPtr<LogicalStore> store);
+  [[nodiscard]] const Variable* find_or_declare_partition(
+    const InternalSharedPtr<LogicalStore>& store);
   [[nodiscard]] const Variable* declare_partition();
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& find_store(const Variable* variable) const;
 
@@ -80,10 +81,11 @@ class Operation {
     const Strategy& strategy, const Domain& launch_domain, const StoreArg& arg);
 
   std::uint64_t unique_id_{};
-  std::uint32_t next_part_id_{};
+  std::int32_t next_part_id_{};
   std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
-  std::vector<std::unique_ptr<Variable>> partition_symbols_{};
-  std::unordered_map<Variable, InternalSharedPtr<LogicalStore>> store_mappings_{};
+  std::deque<Variable> partition_symbols_{};
+  std::unordered_map<std::reference_wrapper<const Variable>, InternalSharedPtr<LogicalStore>>
+    store_mappings_{};
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> part_mappings_{};
   std::string provenance_{};
   mapping::detail::Machine machine_{};
