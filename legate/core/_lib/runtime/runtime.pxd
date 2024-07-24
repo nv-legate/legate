@@ -205,7 +205,7 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
         @staticmethod
         _Runtime* get_runtime()
 
-    cdef int32_t start(int32_t, char**)
+    cdef int32_t start(int32_t, char**) except+
 
     cdef int32_t finish()
 

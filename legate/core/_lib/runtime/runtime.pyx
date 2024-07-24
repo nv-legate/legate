@@ -10,8 +10,8 @@
 # its affiliates is strictly prohibited.
 
 from libc.stdint cimport int32_t, int64_t, uint32_t
-from libc.stdlib cimport free as std_free, malloc as std_malloc
 from libcpp cimport bool
+from libcpp.memory cimport unique_ptr as std_unique_ptr
 from libcpp.utility cimport move as std_move
 
 
@@ -542,22 +542,59 @@ cdef class Runtime(Unconstructable):
         _shutdown_manager.add_shutdown_callback(callback)
 
 
+cdef extern from *:
+    """
+    #include <new>
+    #include <memory>
+    #include <cstddef>
+
+    namespace {
+
+    template <typename T>
+    std::unique_ptr<T[]> make_unique_array(std::size_t n)
+    {
+      return std::make_unique<T[]>(n);
+    }
+
+    } // namespace
+    """
+    # We need this helper because Cython does not support the array-new syntax,
+    # i.e. new T[], which we need below in converting argv to char pointers.
+    std_unique_ptr[T[]] make_unique_array[T](size_t)
+    # Once again, working around the deficiencies of Cython. When you
+    #
+    # cdef SomeType[char *] v = a_template_fn[char *]()
+    #                                        ~~~~~~~
+    #              /----------------------------|
+    #            -----
+    # The second char * is not allowed, because Cython does not allow spaces in
+    # the type names within template functions? Or maybe it's a bug in the
+    # Cython compiler. But either way, the make_unique_array() call below does
+    # not compile without this typedef
+    ctypedef char *char_p "char *"
+
 cdef Runtime initialize():
-    cdef int32_t argc = len(sys.argv)
-    cdef char** argv = <char**> std_malloc(argc * cython.sizeof(cython.p_char))
-    cdef int i, j
-    cdef str val
-    cdef bytes arg
-    for i, val in enumerate(sys.argv):
-        arg = val.encode()
-        argv[i] = <char*> std_malloc(len(arg) + 1)
-        for j, v in enumerate(arg):
-            argv[i][j] = <char> v
-        argv[i][len(arg)] = 0
-    start(argc, argv)
-    for i in range(argc):
-        std_free(argv[i])
-    std_free(argv)
+    cdef list sys_argv = sys.argv
+    cdef int32_t argc = len(sys_argv)
+    cdef std_unique_ptr[char *[]] argv = make_unique_array[char_p](argc + 1)
+    cdef char **argv_ptr = <char **>argv.get()
+
+    cdef str arg
+    cdef list argv_bytes = [arg.encode() for arg in sys_argv]
+
+    cdef int i
+    cdef bytes arg_bytes
+
+    for i, arg_bytes in enumerate(argv_bytes):
+        argv_ptr[i] = arg_bytes
+
+    cdef int32_t ret = start(argc, argv_ptr)
+
+    if ret:
+        raise RuntimeError(
+            f"Failed to initialize legate runtime, return code: {ret}"
+        )
+
     return Runtime.from_handle(_Runtime.get_runtime())
 
 
