@@ -23,7 +23,7 @@ void TaskInfo::add_variant_(AddVariantKey,
                             LegateVariantCode vid,
                             LegionVariantImpl<T> /*body*/,
                             Processor::TaskFuncPtr entry,
-                            const VariantOptions& default_options,
+                            const VariantOptions* decl_options,
                             const std::map<LegateVariantCode, VariantOptions>& registration_options)
 // NOLINTEND(readability-identifier-naming)
 {
@@ -35,7 +35,7 @@ void TaskInfo::add_variant_(AddVariantKey,
                vid,
                VariantImpl{},
                entry,
-               default_options,
+               decl_options,
                registration_options);
 }
 

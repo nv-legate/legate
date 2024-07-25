@@ -157,7 +157,7 @@ cdef extern from *:
         variant_kind,
         cy_entry,
         py_entry,
-        VariantOptions::DEFAULT_OPTIONS
+        nullptr
       );
     }
 

@@ -113,21 +113,29 @@ void TaskInfo::add_variant_(AddVariantKey,
                             LegateVariantCode vid,
                             VariantImpl body,
                             Processor::TaskFuncPtr entry,
-                            const VariantOptions& default_options,
+                            const VariantOptions* decl_options,
                             const std::map<LegateVariantCode, VariantOptions>& registration_options)
 {
   auto&& options = [&]() -> const VariantOptions& {
+    // 1. The variant options (if any) supplied at the call-site of `register_variants()`.
     if (const auto it = registration_options.find(vid); it != registration_options.end()) {
       return it->second;
     }
 
+    // 2. The default variant options (if any) found in `XXX_VARIANT_OPTIONS`.
+    if (decl_options) {
+      return *decl_options;
+    }
+
+    // 3. The variant options provided by `Library::get_default_variant_options()`.
     auto&& lib_defaults = library.get_default_variant_options();
 
     if (const auto it = lib_defaults.find(vid); it != lib_defaults.end()) {
       return it->second;
     }
 
-    return default_options;
+    // 4. The global default variant options found in `VariantOptions::DEFAULT_OPTIONS`.
+    return VariantOptions::DEFAULT_OPTIONS;
   }();
 
   impl_->add_variant(vid, body, Legion::CodeDescriptor{entry}, options);
@@ -191,47 +199,6 @@ std::ostream& operator<<(std::ostream& os, const TaskInfo& info)
   }
   os << "}";
   return os;
-}
-
-// ==========================================================================================
-
-void TaskInfo::add_variant(LegateVariantCode vid,
-                           VariantImpl body,
-                           const Legion::CodeDescriptor& code_desc,
-                           const VariantOptions& options)
-{
-  impl_->add_variant(vid, body, code_desc, options);
-}
-
-void TaskInfo::add_variant(LegateVariantCode vid,
-                           VariantImpl body,
-                           Processor::TaskFuncPtr entry,
-                           const std::map<LegateVariantCode, VariantOptions>& all_options)
-{
-  add_variant_(
-    AddVariantKey{},
-    Library{const_cast<detail::Library*>(detail::Runtime::get_runtime()->core_library())},
-    vid,
-    body,
-    entry,
-    VariantOptions::DEFAULT_OPTIONS,
-    all_options);
-}
-
-void TaskInfo::add_variant(LegateVariantCode vid,
-                           VariantImpl body,
-                           Processor::TaskFuncPtr entry,
-                           const VariantOptions& default_options,
-                           const std::map<LegateVariantCode, VariantOptions>& all_options)
-{
-  add_variant_(
-    AddVariantKey{},
-    Library{const_cast<detail::Library*>(detail::Runtime::get_runtime()->core_library())},
-    vid,
-    body,
-    entry,
-    default_options,
-    all_options);
 }
 
 }  // namespace legate

@@ -29,9 +29,6 @@ Changes: Latest Development Version
   ``VariantOptions::with_elide_device_ctx_sync()`` to allow specifying that a particular
   task variant need not perform device context synchronization after task completion.
 - Add ``TaskContext::get_task_stream()`` to retrieve the current tasks' active CUDA stream.
-- Deprecate ``TaskInfo::add_variant()``. Users are encouraged to wrap their tasks in
-  ``LegateTask`` and call ``LegateTask::register_variants()`` instead to handle the
-  various task variants registration steps.
 - Deprecate ``TaskRegistrar::record_task(std::int64_t std::unique_ptr<TaskInfo>)``. Users
   should use ``LegateTask::Registrar`` combined with ``TaskRegistrar::record_all_task()``
   instead.

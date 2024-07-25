@@ -64,7 +64,7 @@ inline void task_wrapper_dyn_name(const void* args,
     template <typename U>                                                                    \
     using has_default_variant_options = decltype(U::NAME##_VARIANT_OPTIONS);                 \
                                                                                              \
-    [[nodiscard]] static constexpr const VariantOptions& get_default_options_() noexcept     \
+    [[nodiscard]] static constexpr const VariantOptions* get_default_options_() noexcept     \
     {                                                                                        \
       if constexpr (traits::detail::is_detected_v<has_default_variant_options, T>) {         \
         static_assert(                                                                       \
@@ -72,16 +72,16 @@ inline void task_wrapper_dyn_name(const void* args,
           "Default variant options for " #NAME                                               \
           " variant has incompatible type. Expected static constexpr VariantOptions " #NAME  \
           "_VARIANT_OPTIONS = ...");                                                         \
-        return T::NAME##_VARIANT_OPTIONS;                                                    \
+        return &T::NAME##_VARIANT_OPTIONS;                                                   \
       } else {                                                                               \
-        return VariantOptions::DEFAULT_OPTIONS;                                              \
+        return nullptr;                                                                      \
       }                                                                                      \
     }                                                                                        \
                                                                                              \
    public:                                                                                   \
     static constexpr auto variant  = T::name##_variant;                                      \
     static constexpr auto id       = LEGATE_##NAME##_VARIANT;                                \
-    static constexpr auto& options = get_default_options_();                                 \
+    static constexpr auto* options = get_default_options_();                                 \
                                                                                              \
     static_assert(std::is_convertible_v<decltype(variant), VariantImpl> ||                   \
                     std::is_same_v<typename T::BASE, LegionTask<T>>,                         \
@@ -117,7 +117,7 @@ class VariantHelper<T, SELECTOR, true> {
     // can register it later when it is ready
     constexpr auto variant_impl = SELECTOR<T>::variant;
     constexpr auto variant_kind = SELECTOR<T>::id;
-    constexpr auto& options     = SELECTOR<T>::options;
+    constexpr auto* options     = SELECTOR<T>::options;
 
     if constexpr (std::is_convertible_v<decltype(variant_impl), VariantImpl>) {
       constexpr auto entry = T::BASE::template task_wrapper_<variant_impl, variant_kind>;

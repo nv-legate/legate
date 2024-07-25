@@ -68,7 +68,9 @@ namespace legate {
  * are selected in the following order:
  * 1. The variant options (if any) supplied at the call-site of `register_variants()`.
  * 2. The default variant options (if any) found in `XXX_VARIANT_OPTIONS`.
- * 3. The global default variant options found in `VariantOptions::DEFAULT_OPTIONS`.
+ * 3. The variant options provided by `Library::get_default_variant_options()`.
+ * 4. The global default variant options found in `VariantOptions::DEFAULT_OPTIONS`.
+ *
  */
 template <typename T>
 class LegateTask {

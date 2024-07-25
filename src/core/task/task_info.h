@@ -102,7 +102,7 @@ class TaskInfo {
                     LegateVariantCode vid,
                     VariantImpl body,
                     Processor::TaskFuncPtr entry,
-                    const VariantOptions& default_options,
+                    const VariantOptions* decl_options,
                     const std::map<LegateVariantCode, VariantOptions>& registration_options = {});
 
   // These are "private" insofar that the access key is private
@@ -113,7 +113,7 @@ class TaskInfo {
                     LegateVariantCode vid,
                     LegionVariantImpl<T> body,
                     Processor::TaskFuncPtr entry,
-                    const VariantOptions& default_options,
+                    const VariantOptions* decl_options,
                     const std::map<LegateVariantCode, VariantOptions>& registration_options = {});
   // NOLINTEND(readability-identifier-naming)
 
@@ -130,23 +130,6 @@ class TaskInfo {
                     LegateVariantCode vid,
                     const VariantOptions* callsite_options,
                     Legion::CodeDescriptor&& descr);
-
-  [[deprecated("since 24.09: Use LegateTask and LegateTask::register_variants() instead")]] void
-  add_variant(LegateVariantCode vid,
-              VariantImpl body,
-              const Legion::CodeDescriptor& code_desc,
-              const VariantOptions& options);
-  [[deprecated("since 24.09: Use LegateTask and LegateTask::register_variants() instead")]] void
-  add_variant(LegateVariantCode vid,
-              VariantImpl body,
-              Processor::TaskFuncPtr entry,
-              const std::map<LegateVariantCode, VariantOptions>& all_options = {});
-  [[deprecated("since 24.09: Use LegateTask and LegateTask::register_variants() instead")]] void
-  add_variant(LegateVariantCode vid,
-              VariantImpl body,
-              Processor::TaskFuncPtr entry,
-              const VariantOptions& default_options,
-              const std::map<LegateVariantCode, VariantOptions>& all_options = {});
 
  private:
   friend std::ostream& operator<<(std::ostream& os, const TaskInfo& info);
