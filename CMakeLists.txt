@@ -121,7 +121,7 @@ set_property(DIRECTORY
                       cmake/patches/mdspan_cpp_lib_span_layout_stride.diff
                       cmake/patches/span_proper_cmake_project.diff)
 
-set(legate_core_version 24.05.00)
+set(legate_core_version 24.09.00)
 
 if(SKBUILD)
   project(legate_core_python
