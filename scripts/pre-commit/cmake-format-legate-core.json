@@ -11,6 +11,23 @@
                     "PACKAGE": "1"
                 }
             },
+            "legate_core_list_escape_re_chars": {
+                "pargs": {
+                    "nargs": "2"
+                }
+            },
+            "legate_core_string_ends_with": {
+                "kwargs": {
+                    "ENDS_WITH": "1",
+                    "RESULT_VAR": "1",
+                    "SRC": "1"
+                }
+            },
+            "legate_core_string_escape_re_chars": {
+                "pargs": {
+                    "nargs": "2"
+                }
+            },
             "rapids_cmake_build_type": {
                 "pargs": {
                     "nargs": 1

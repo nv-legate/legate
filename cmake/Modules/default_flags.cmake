@@ -15,6 +15,8 @@ include_guard(GLOBAL)
 include(CheckCompilerFlag)
 include(CheckLinkerFlag)
 
+include(${CMAKE_CURRENT_LIST_DIR}/utilities.cmake)
+
 function(legate_core_set_default_flags_impl)
   list(APPEND CMAKE_MESSAGE_CONTEXT "set_default_flags")
 
@@ -44,6 +46,7 @@ function(legate_core_set_default_flags_impl)
     return()
   endif()
 
+  set(dest)
   set(cmake_req_link_backup "${CMAKE_REQUIRED_LINK_OPTIONS}")
   foreach(flag IN LISTS _FLAGS_FLAGS)
     string(MAKE_C_IDENTIFIER "${flag}" flag_sanitized)
@@ -125,11 +128,29 @@ function(legate_core_configure_default_compiler_flags)
     # Don't set cache because we still need to de-listify the result first
     legate_core_set_default_flags_impl(LANG CXX DEST_VAR cmake_cxx_flags_tmp FLAGS
                                        ${default_cxx_flags_sanitizer})
+
     list(JOIN cmake_cxx_flags_tmp " " cmake_cxx_flags_tmp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${cmake_cxx_flags_tmp}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
-    # OK, now we can set cache
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
+    # Don't assign this blindly, first, check if CMAKE_CXX_FLAGS ends with exactly the
+    # flags we intend to append. We do this because otherwise, every time any cmake
+    # changes are made, we end up appending the same flags to an ever growing
+    # CMAKE_CXX_FLAGS:
+    #
+    # 1st configure: -foo -bar -baz 2nd configure: -foo -bar -baz -foo -bar -baz ...
+    #
+    # This plays havoc with compiler caches like ccache, which treat each such variant as
+    # different, and hence causes a full (uncached!) recompilation of all dependencies.
+    legate_core_string_ends_with(SRC "${CMAKE_CXX_FLAGS}"
+                                 ENDS_WITH "${cmake_cxx_flags_tmp}" RESULT_VAR found)
+
+    if(found)
+      message(STATUS "CMAKE_CXX_FLAGS already ends with sanitizer flags, not adding them")
+    else()
+      message(STATUS "CMAKE_CXX_FLAGS does not end with sanitizer flags, adding them")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${cmake_cxx_flags_tmp}")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
+      # OK, now we can set cache
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
+    endif()
   endif()
 
   if(NOT legate_core_CUDA_FLAGS)
