@@ -46,8 +46,7 @@ run_test_or_analysis() {
               return 0
             fi
 
-            ucx_libs=
-            [ "${UCX_ENABLED}" = "ON" ] && ucx_libs=ucx\ openmpi\ openssh
+            ucx_libs=ucx\ openmpi\ openssh
 
             set +eou pipefail
             mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
@@ -87,12 +86,11 @@ run_test_or_analysis() {
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil
 
             WORKERS=""
-            if [[ "${UCX_ENABLED}" == "ON" ]]; then
-              set +eou pipefail
-              mamba install -y -n "${CONDA_ENV}" ucx openmpi openssh
-              set -eou pipefail
-              WORKERS="-j 1"
-            fi
+
+            set +eou pipefail
+            mamba install -y -n "${CONDA_ENV}" ucx openmpi openssh
+            set -eou pipefail
+            WORKERS="-j 1"
 
             cd "${LEGATE_CORE_DIR}"
 

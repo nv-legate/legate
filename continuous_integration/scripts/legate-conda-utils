@@ -7,16 +7,13 @@ make_conda_env_from_yaml() {
 }
 
 generate_yaml_file() {
-    UCX_PKG=ucx
-    [[ "${UCX_ENABLED}" = "OFF" ]] && UCX_PKG=no-ucx
-
     if [[ "$USE_CUDA" == "OFF" ]]; then
         yaml_file=$(\
             "$REPO_DIR"/scripts/generate-conda-envs.py \
                 --os "$OS_SHORT_NAME" \
                 --compilers                         \
                 --openmpi                           \
-                --${UCX_PKG}                        \
+                --ucx                               \
             | head -n1 | cut -d' ' -f3              \
         )
     else
@@ -26,7 +23,7 @@ generate_yaml_file() {
                 --compilers                         \
                 --ctk "${CUDA_VERSION}"             \
                 --openmpi                           \
-                --${UCX_PKG}                        \
+                --ucx                               \
             | head -n1 | cut -d' ' -f3              \
         )
     fi

@@ -52,9 +52,6 @@ build_legate_release() {
     GPU_ENABLED=true
     [ "${USE_CUDA:-}" = "OFF" ] && GPU_ENABLED=false
 
-    UCX_CONFIGURED=true
-    [ "${UCX_ENABLED:-}" = "OFF" ] && UCX_CONFIGURED=false
-
     UPLOAD_BUILD=true
     [ "${UPLOAD_ENABLED:-}" = "OFF" ] && UPLOAD_BUILD=false
 
@@ -67,7 +64,7 @@ build_legate_release() {
     # convert '-' to '_' for meta.yaml to accept.
     build_mode_str=$(echo ${LEGATE_CORE_BUILD_MODE} | sed -r 's/-/_/g')
 
-    variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"build_mode_str\": [$build_mode_str], \"gpu_enabled\": [$GPU_ENABLED], \"ucx_configured\": [$UCX_CONFIGURED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION]}")
+    variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"build_mode_str\": [$build_mode_str], \"gpu_enabled\": [$GPU_ENABLED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION]}")
     conda_build_args+=(--variants "$variantOpts")
 
     # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to

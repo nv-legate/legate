@@ -17,9 +17,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ucx-enabled:
-          - true
-          - false
         platform:
           - linux
           - linux-aarch64
@@ -34,10 +31,6 @@ jobs:
         upload-enabled:
           - false
         exclude:
-          - build-mode: debug
-            ucx-enabled: true
-          - build-mode: debug-sanitizer
-            ucx-enabled: true
           - platform: linux-aarch64
             target-device: gpu
     uses:
@@ -46,7 +39,7 @@ jobs:
       platform: ${{ matrix.platform }}
       target-device: ${{ matrix.target-device }}
       build-mode: ${{ matrix.build-mode }}
-      ucx-enabled: ${{ matrix.ucx-enabled }}
+      ucx-enabled: true
       build-type: release
       upload-enabled: ${{ matrix.upload-enabled }}
     secrets: inherit

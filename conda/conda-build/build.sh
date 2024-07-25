@@ -2,7 +2,7 @@
 
 echo -e "\n\n--------------------- CONDA/CONDA-BUILD/BUILD.SH -----------------------\n"
 
-set -eo pipefail
+set -xeo pipefail
 
 # LICENSE, README.md, conda/, and configure are guaranteed to always be at the root
 # directory. If we can't find them, then probably we are not in the root directory.
@@ -61,9 +61,7 @@ function preamble()
     configure_args+=(--build-type=release)
   fi
 
-  if [[ "${UCX_ENABLED:-0}" == '1' ]]; then
-    configure_args+=(--with-ucx)
-  fi
+  configure_args+=(--with-ucx)
 
   export CUDAHOSTCXX="${CXX}"
   export OPENSSL_DIR="${PREFIX}"
@@ -75,7 +73,7 @@ function preamble()
 
 function configure_legate()
 {
-  set -ou pipefail
+  set -xou pipefail
   set +e
 
   ./configure \
@@ -98,7 +96,7 @@ function configure_legate()
 
 function pip_install_legate()
 {
-  set -eo pipefail
+  set -xeo pipefail
   SKBUILD_BUILD_OPTIONS="-j${CPU_COUNT} VERBOSE=1" "${PYTHON}" -m pip install \
                        --root / \
                        --no-deps \
