@@ -18,12 +18,6 @@
 
 #include <cstdint>
 
-// TODO(jfaibussowit)
-// Decouple these
-#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
-#include <mpi.h>
-#endif
-
 namespace legate::detail::comm::coll {
 class ThreadComm;
 }  // namespace legate::detail::comm::coll
@@ -43,10 +37,7 @@ enum class CollDataType : std::uint8_t {
   CollDouble,
 };
 
-enum CollCommType : std::uint8_t {
-  CollMPI,
-  CollLocal,
-};
+enum class CollCommType : std::uint8_t { CollMPI, CollLocal };
 
 // TODO(jfaibussowit)
 // Decouple these
@@ -63,7 +54,7 @@ class Coll_Comm {
   // TODO(jfaibussowit)
   // Decouple these
 #if LEGATE_DEFINED(LEGATE_USE_NETWORK)
-  MPI_Comm mpi_comm{};
+  std::ptrdiff_t mpi_comm{};
   RankMappingTable mapping_table{};
 #endif
   detail::comm::coll::ThreadComm* local_comm{};

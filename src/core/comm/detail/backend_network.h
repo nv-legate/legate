@@ -57,6 +57,14 @@ class BackendNetwork {
                           legate::comm::coll::CollDataType type,
                           legate::comm::coll::CollComm global_comm) = 0;
 
+  static void create_network(std::unique_ptr<BackendNetwork>&& network);
+  [[nodiscard]] static std::unique_ptr<BackendNetwork>& get_network();
+  [[nodiscard]] static bool has_network();
+
+  // NOLINTBEGIN(readability-identifier-naming)
+  [[nodiscard]] static legate::comm::coll::CollCommType guess_comm_type_();
+  // NOLINTEND(readability-identifier-naming)
+
  protected:
   std::int32_t get_unique_id_();
 
@@ -70,7 +78,5 @@ class BackendNetwork {
   bool coll_inited_{};
   int current_unique_id_{};
 };
-
-extern std::unique_ptr<BackendNetwork> backend_network;
 
 }  // namespace legate::detail::comm::coll

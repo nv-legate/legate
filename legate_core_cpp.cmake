@@ -179,6 +179,7 @@ list(APPEND
      src/core/comm/detail/backend_network.cc
      src/core/comm/detail/comm.cc
      src/core/comm/detail/comm_cpu.cc
+     src/core/comm/detail/comm_local.cc
      src/core/comm/detail/local_network.cc
      src/core/comm/detail/logger.cc
      src/core/comm/detail/thread_comm.cc
@@ -282,7 +283,8 @@ list(APPEND
      src/core/experimental/stl/detail/clang_tidy_dummy.cpp)
 
 if(Legion_NETWORKS)
-  list(APPEND legate_core_SOURCES src/core/comm/detail/mpi_network.cc)
+  list(APPEND legate_core_SOURCES src/core/comm/detail/mpi_network.cc
+       src/core/comm/detail/mpi_interface.cc src/core/comm/detail/comm_mpi.cc)
 endif()
 
 if(Legion_USE_OpenMP)
@@ -666,6 +668,8 @@ install(FILES src/timing/timing.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate
 install(DIRECTORY ${LEGATE_CORE_DIR}/cmake/Modules
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate_core" FILES_MATCHING
         PATTERN "*.cmake")
+
+install(DIRECTORY share DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}")
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 

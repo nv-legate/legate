@@ -12,8 +12,8 @@
 
 #include "core/comm/detail/mpi_network.h"
 
-#include "core/comm/coll.h"
 #include "core/comm/detail/logger.h"
+#include "core/comm/detail/mpi_interface.h"
 #include "core/utilities/macros.h"
 #include "core/utilities/scope_guard.h"
 #include "core/utilities/span.h"
@@ -28,20 +28,9 @@
 #include <memory>
 #include <numeric>
 #include <unordered_map>
+#include <utility>
 
 namespace legate::detail::comm::coll {
-
-#define LEGATE_CHECK_MPI(...)                                                                     \
-  do {                                                                                            \
-    const int lgcore_check_mpi_result_ = __VA_ARGS__;                                             \
-    if (LEGATE_UNLIKELY(lgcore_check_mpi_result_ != MPI_SUCCESS)) {                               \
-      LEGATE_ABORT("Internal MPI failure with error code "                                        \
-                   << lgcore_check_mpi_result_ << " in " << __FILE__ << ":" << __LINE__ << " in " \
-                   << __func__ << "(): " << LEGATE_STRINGIZE(__VA_ARGS__));                       \
-    }                                                                                             \
-  } while (0)
-
-// public functions start from here
 
 MPINetwork::MPINetwork(int /*argc*/, char* /*argv*/[])
 {
@@ -50,19 +39,20 @@ MPINetwork::MPINetwork(int /*argc*/, char* /*argv*/[])
 
   int init_flag = 0;
 
-  LEGATE_CHECK_MPI(MPI_Initialized(&init_flag));
+  LEGATE_CHECK_MPI(MPIInterface::mpi_initialized(&init_flag));
   if (!init_flag) {
     int provided;
 
     logger().info() << "MPI being initialized by legate";
-    LEGATE_CHECK_MPI(MPI_Init_thread(nullptr, nullptr, MPI_THREAD_MULTIPLE, &provided));
+    LEGATE_CHECK_MPI(MPIInterface::mpi_init_thread(
+      nullptr, nullptr, MPIInterface::MPI_THREAD_MULTIPLE(), &provided));
     self_init_mpi_ = true;
   }
 
   int mpi_thread_model;
 
-  LEGATE_CHECK_MPI(MPI_Query_thread(&mpi_thread_model));
-  if (mpi_thread_model != MPI_THREAD_MULTIPLE) {
+  LEGATE_CHECK_MPI(MPIInterface::mpi_query_thread(&mpi_thread_model));
+  if (mpi_thread_model != MPIInterface::MPI_THREAD_MULTIPLE()) {
     LEGATE_ABORT(
       "MPI has been initialized by others, but is not initialized with "
       "MPI_THREAD_MULTIPLE");
@@ -71,7 +61,8 @@ MPINetwork::MPINetwork(int /*argc*/, char* /*argv*/[])
   int flag    = 0;
   int* tag_ub = nullptr;
   // check
-  LEGATE_CHECK_MPI(MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &tag_ub, &flag));
+  LEGATE_CHECK_MPI(MPIInterface::mpi_comm_get_attr(
+    MPIInterface::MPI_COMM_WORLD(), MPIInterface::MPI_TAG_UB(), &tag_ub, &flag));
   LEGATE_CHECK(flag);
   mpi_tag_ub_ = *tag_ub;
   LEGATE_CHECK(mpi_comms_.empty());
@@ -85,19 +76,19 @@ MPINetwork::~MPINetwork()
   LEGATE_CHECK(BackendNetwork::coll_inited_ == true);
 
   int finalized = 0;
-  LEGATE_CHECK_MPI(MPI_Finalized(&finalized));
-  if (finalized == 1) {
+  LEGATE_CHECK_MPI(MPIInterface::mpi_finalized(&finalized));
+  if (finalized) {
     LEGATE_ABORT("MPI should not have been finalized");
   }
 
-  for (MPI_Comm& mpi_comm : mpi_comms_) {
-    LEGATE_CHECK_MPI(MPI_Comm_free(&mpi_comm));
+  for (auto& mpi_comm : mpi_comms_) {
+    LEGATE_CHECK_MPI(MPIInterface::mpi_comm_free(&mpi_comm));
   }
   mpi_comms_.clear();
 
   if (self_init_mpi_) {
     logger().info() << "finalize mpi";
-    LEGATE_CHECK_MPI(MPI_Finalize());
+    LEGATE_CHECK_MPI(MPIInterface::mpi_finalize());
   }
   BackendNetwork::coll_inited_ = false;
 }
@@ -106,26 +97,29 @@ void MPINetwork::abort()
 {
   int init = 0;
 
-  static_cast<void>(MPI_Initialized(&init));
+  static_cast<void>(MPIInterface::mpi_initialized(&init));
   if (init) {
     // noreturn
-    static_cast<void>(MPI_Abort(MPI_COMM_WORLD, 1));
+    static_cast<void>(MPIInterface::mpi_abort(MPIInterface::MPI_COMM_WORLD(), 1));
   }
 }
 
 int MPINetwork::init_comm()
 {
   auto id = get_unique_id_();
+
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    int send_id = id;
+    auto send_id = id;
     // check if all ranks get the same unique id
-    LEGATE_CHECK_MPI(MPI_Bcast(&send_id, 1, MPI_INT, 0, MPI_COMM_WORLD));
+    LEGATE_CHECK_MPI(MPIInterface::mpi_bcast(
+      &send_id, 1, MPIInterface::MPI_INT(), 0, MPIInterface::MPI_COMM_WORLD()));
     LEGATE_CHECK(send_id == id);
   }
   LEGATE_CHECK(static_cast<int>(mpi_comms_.size()) == id);
   // create mpi comm
-  MPI_Comm mpi_comm;
-  LEGATE_CHECK_MPI(MPI_Comm_dup(MPI_COMM_WORLD, &mpi_comm));
+  MPIInterface::MPI_Comm mpi_comm;
+
+  LEGATE_CHECK_MPI(MPIInterface::mpi_comm_dup(MPIInterface::MPI_COMM_WORLD(), &mpi_comm));
   mpi_comms_.push_back(mpi_comm);
   logger().debug() << "Init comm id " << id;
   return id;
@@ -167,10 +161,11 @@ void MPINetwork::comm_create(legate::comm::coll::CollComm global_comm,
 
   int compare_result;
 
-  LEGATE_CHECK_MPI(MPI_Comm_compare(global_comm->mpi_comm, MPI_COMM_WORLD, &compare_result));
-  LEGATE_CHECK(MPI_CONGRUENT == compare_result);
-  LEGATE_CHECK_MPI(MPI_Comm_rank(global_comm->mpi_comm, &global_comm->mpi_rank));
-  LEGATE_CHECK_MPI(MPI_Comm_size(global_comm->mpi_comm, &global_comm->mpi_comm_size));
+  LEGATE_CHECK_MPI(MPIInterface::mpi_comm_compare(
+    global_comm->mpi_comm, MPIInterface::MPI_COMM_WORLD(), &compare_result));
+  LEGATE_CHECK(MPIInterface::MPI_CONGRUENT() == compare_result);
+  LEGATE_CHECK_MPI(MPIInterface::mpi_comm_rank(global_comm->mpi_comm, &global_comm->mpi_rank));
+  LEGATE_CHECK_MPI(MPIInterface::mpi_comm_size(global_comm->mpi_comm, &global_comm->mpi_comm_size));
 
   auto global_ranks = std::make_unique<int[]>(global_comm_size);
   auto mpi_ranks    = std::make_unique<int[]>(global_comm_size);
@@ -204,9 +199,9 @@ void MPINetwork::all_to_all_v(const void* sendbuf,
   const int total_size  = global_comm->global_comm_size;
   const int global_rank = global_comm->global_rank;
   const auto mpi_type   = dtype_to_mpi_dtype_(type);
-  MPI_Aint lb, type_extent;
+  MPIInterface::MPI_Aint lb, type_extent;
 
-  LEGATE_CHECK_MPI(MPI_Type_get_extent(mpi_type, &lb, &type_extent));
+  LEGATE_CHECK_MPI(MPIInterface::mpi_type_get_extent(mpi_type, &lb, &type_extent));
   for (int i = 1; i < total_size + 1; i++) {
     const auto sendto_global_rank   = (global_rank + i) % total_size;
     const auto recvfrom_global_rank = (global_rank + total_size - i) % total_size;
@@ -241,20 +236,20 @@ void MPINetwork::all_to_all_v(const void* sendbuf,
                        << recv_tag;
     }
 
-    MPI_Status status;
+    MPIInterface::MPI_Status status;
 
-    LEGATE_CHECK_MPI(MPI_Sendrecv(src,
-                                  scount,
-                                  mpi_type,
-                                  sendto_mpi_rank,
-                                  send_tag,
-                                  dst,
-                                  rcount,
-                                  mpi_type,
-                                  recvfrom_mpi_rank,
-                                  recv_tag,
-                                  global_comm->mpi_comm,
-                                  &status));
+    LEGATE_CHECK_MPI(MPIInterface::mpi_sendrecv(src,
+                                                scount,
+                                                mpi_type,
+                                                sendto_mpi_rank,
+                                                send_tag,
+                                                dst,
+                                                rcount,
+                                                mpi_type,
+                                                recvfrom_mpi_rank,
+                                                recv_tag,
+                                                global_comm->mpi_comm,
+                                                &status));
   }
 }
 
@@ -267,9 +262,9 @@ void MPINetwork::all_to_all(const void* sendbuf,
   const auto total_size  = global_comm->global_comm_size;
   const auto global_rank = global_comm->global_rank;
   const auto mpi_type    = dtype_to_mpi_dtype_(type);
-  MPI_Aint lb, type_extent;
+  MPIInterface::MPI_Aint lb, type_extent;
 
-  LEGATE_CHECK_MPI(MPI_Type_get_extent(mpi_type, &lb, &type_extent));
+  LEGATE_CHECK_MPI(MPIInterface::mpi_type_get_extent(mpi_type, &lb, &type_extent));
   for (int i = 1; i < total_size + 1; i++) {
     const auto sendto_global_rank   = (global_rank + i) % total_size;
     const auto recvfrom_global_rank = (global_rank + total_size - i) % total_size;
@@ -297,20 +292,20 @@ void MPINetwork::all_to_all(const void* sendbuf,
                        << recvfrom_mpi_rank << "), recv_tag " << recv_tag;
     }
 
-    MPI_Status status;
+    MPIInterface::MPI_Status status;
 
-    LEGATE_CHECK_MPI(MPI_Sendrecv(src,
-                                  count,
-                                  mpi_type,
-                                  sendto_mpi_rank,
-                                  send_tag,
-                                  dst,
-                                  count,
-                                  mpi_type,
-                                  recvfrom_mpi_rank,
-                                  recv_tag,
-                                  global_comm->mpi_comm,
-                                  &status));
+    LEGATE_CHECK_MPI(MPIInterface::mpi_sendrecv(src,
+                                                count,
+                                                mpi_type,
+                                                sendto_mpi_rank,
+                                                send_tag,
+                                                dst,
+                                                count,
+                                                mpi_type,
+                                                recvfrom_mpi_rank,
+                                                recv_tag,
+                                                global_comm->mpi_comm,
+                                                &status));
   }
 }
 
@@ -323,9 +318,9 @@ void MPINetwork::all_gather(const void* sendbuf,
   const int total_size = global_comm->global_comm_size;
   const auto mpi_type  = dtype_to_mpi_dtype_(type);
   auto sendbuf_tmp     = const_cast<void*>(sendbuf);
-  MPI_Aint lb, type_extent;
+  MPIInterface::MPI_Aint lb, type_extent;
 
-  LEGATE_CHECK_MPI(MPI_Type_get_extent(mpi_type, &lb, &type_extent));
+  LEGATE_CHECK_MPI(MPIInterface::mpi_type_get_extent(mpi_type, &lb, &type_extent));
 
   const auto num_bytes = static_cast<std::size_t>(type_extent * count);
   // MPI_IN_PLACE
@@ -352,7 +347,7 @@ void MPINetwork::gather_(const void* sendbuf,
                          int root,
                          legate::comm::coll::CollComm global_comm)
 {
-  MPI_Status status;
+  MPIInterface::MPI_Status status;
   const int total_size  = global_comm->global_comm_size;
   const int global_rank = global_comm->global_rank;
   const auto mpi_type   = dtype_to_mpi_dtype_(type);
@@ -374,13 +369,14 @@ void MPINetwork::gather_(const void* sendbuf,
                        << global_comm->mpi_rank << ", send to " << root << " (" << root_mpi_rank
                        << "), tag " << tag;
     }
-    LEGATE_CHECK_MPI(MPI_Send(sendbuf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm));
+    LEGATE_CHECK_MPI(
+      MPIInterface::mpi_send(sendbuf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm));
   }
 
   // root
-  MPI_Aint lb, type_extent;
+  MPIInterface::MPI_Aint lb, type_extent;
 
-  LEGATE_CHECK_MPI(MPI_Type_get_extent(mpi_type, &lb, &type_extent));
+  LEGATE_CHECK_MPI(MPIInterface::mpi_type_get_extent(mpi_type, &lb, &type_extent));
 
   const auto incr = static_cast<std::size_t>(type_extent * static_cast<std::ptrdiff_t>(count));
   char* dst       = static_cast<char*>(recvbuf);
@@ -398,8 +394,8 @@ void MPINetwork::gather_(const void* sendbuf,
     if (global_rank == i) {
       std::memcpy(dst, sendbuf, incr);
     } else {
-      LEGATE_CHECK_MPI(
-        MPI_Recv(dst, count, mpi_type, recvfrom_mpi_rank, tag, global_comm->mpi_comm, &status));
+      LEGATE_CHECK_MPI(MPIInterface::mpi_recv(
+        dst, count, mpi_type, recvfrom_mpi_rank, tag, global_comm->mpi_comm, &status));
     }
     dst += incr;
   }
@@ -429,10 +425,10 @@ void MPINetwork::bcast_(void* buf,
                      root_mpi_rank,
                      tag);
     }
-    MPI_Status status;
+    MPIInterface::MPI_Status status;
 
-    LEGATE_CHECK_MPI(
-      MPI_Recv(buf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm, &status));
+    LEGATE_CHECK_MPI(MPIInterface::mpi_recv(
+      buf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm, &status));
   }
 
   // root
@@ -447,46 +443,48 @@ void MPINetwork::bcast_(void* buf,
                        << sendto_mpi_rank << "), tag " << tag;
     }
     if (global_rank != i) {
-      LEGATE_CHECK_MPI(MPI_Send(buf, count, mpi_type, sendto_mpi_rank, tag, global_comm->mpi_comm));
+      LEGATE_CHECK_MPI(
+        MPIInterface::mpi_send(buf, count, mpi_type, sendto_mpi_rank, tag, global_comm->mpi_comm));
     }
   }
 }
 
 // protected functions start from here
 
-MPI_Datatype MPINetwork::dtype_to_mpi_dtype_(legate::comm::coll::CollDataType dtype)
+mpi::detail::MPIInterface::MPI_Datatype MPINetwork::dtype_to_mpi_dtype_(
+  legate::comm::coll::CollDataType dtype)
 {
   switch (dtype) {
     case legate::comm::coll::CollDataType::CollInt8: {
-      return MPI_INT8_T;
+      return MPIInterface::MPI_INT8_T();
     }
     case legate::comm::coll::CollDataType::CollChar: {
-      return MPI_CHAR;
+      return MPIInterface::MPI_CHAR();
     }
     case legate::comm::coll::CollDataType::CollUint8: {
-      return MPI_UINT8_T;
+      return MPIInterface::MPI_UINT8_T();
     }
     case legate::comm::coll::CollDataType::CollInt: {
-      return MPI_INT;
+      return MPIInterface::MPI_INT();
     }
     case legate::comm::coll::CollDataType::CollUint32: {
-      return MPI_UINT32_T;
+      return MPIInterface::MPI_UINT32_T();
     }
     case legate::comm::coll::CollDataType::CollInt64: {
-      return MPI_INT64_T;
+      return MPIInterface::MPI_INT64_T();
     }
     case legate::comm::coll::CollDataType::CollUint64: {
-      return MPI_UINT64_T;
+      return MPIInterface::MPI_UINT64_T();
     }
     case legate::comm::coll::CollDataType::CollFloat: {
-      return MPI_FLOAT;
+      return MPIInterface::MPI_FLOAT();
     }
     case legate::comm::coll::CollDataType::CollDouble: {
-      return MPI_DOUBLE;
+      return MPIInterface::MPI_DOUBLE();
     }
     default: {
       LEGATE_ABORT("Unknown datatype");
-      return MPI_BYTE;
+      return MPIInterface::MPI_BYTE();
     }
   }
 }

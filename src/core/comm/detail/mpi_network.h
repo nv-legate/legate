@@ -12,21 +12,17 @@
 
 #pragma once
 
-#include "core/utilities/compiler.h"
-#include "core/utilities/macros.h"
-
-#include "legate_defines.h"
-
-#if LEGATE_DEFINED(LEGATE_USE_NETWORK) || LEGATE_DEFINED(LEGATE_DOXYGEN)
 #include "core/comm/coll_comm.h"
 #include "core/comm/detail/backend_network.h"
+#include "core/comm/detail/mpi_interface.h"
 
-#include <mpi.h>
 #include <vector>
 
 namespace legate::detail::comm::coll {
 
-class MPINetwork : public BackendNetwork {
+class MPINetwork final : public BackendNetwork {
+  using MPIInterface = mpi::detail::MPIInterface;
+
  public:
   MPINetwork(int argc, char* argv[]);
 
@@ -65,7 +61,7 @@ class MPINetwork : public BackendNetwork {
                   legate::comm::coll::CollDataType type,
                   legate::comm::coll::CollComm global_comm) override;
 
- protected:
+ private:
   void gather_(const void* sendbuf,
                void* recvbuf,
                int count,
@@ -79,7 +75,8 @@ class MPINetwork : public BackendNetwork {
               int root,
               legate::comm::coll::CollComm global_comm);
 
-  [[nodiscard]] static MPI_Datatype dtype_to_mpi_dtype_(legate::comm::coll::CollDataType dtype);
+  [[nodiscard]] static MPIInterface::MPI_Datatype dtype_to_mpi_dtype_(
+    legate::comm::coll::CollDataType dtype);
 
   [[nodiscard]] int generate_alltoall_tag_(int rank1,
                                            int rank2,
@@ -93,12 +90,9 @@ class MPINetwork : public BackendNetwork {
 
   [[nodiscard]] int generate_gather_tag_(int rank, legate::comm::coll::CollComm global_comm) const;
 
- private:
   int mpi_tag_ub_{};
   bool self_init_mpi_{};
-  std::vector<MPI_Comm> mpi_comms_{};
+  std::vector<MPIInterface::MPI_Comm> mpi_comms_{};
 };
 
 }  // namespace legate::detail::comm::coll
-
-#endif
