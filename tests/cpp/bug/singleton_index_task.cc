@@ -28,7 +28,7 @@ constexpr std::string_view LIBRARY_NAME = "test_singleton_index_task";
 }  // namespace
 
 struct Checker : public legate::LegateTask<Checker> {
-  static const std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_EQ(context.num_communicators(), 0);

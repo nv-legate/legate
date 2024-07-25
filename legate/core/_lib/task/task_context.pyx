@@ -10,7 +10,6 @@
 # its affiliates is strictly prohibited.
 
 from cpython.bytes cimport PyBytes_AsStringAndSize
-from libc.stdint cimport int64_t
 
 from ..data.physical_array cimport PhysicalArray
 from ..data.scalar cimport Scalar
@@ -32,7 +31,7 @@ cdef class TaskContext(Unconstructable):
         result._scalars = None
         return result
 
-    cpdef int64_t get_task_id(self):
+    cpdef _GlobalTaskID get_task_id(self):
         return self._handle.task_id()
 
     cpdef legate_core_variant_t get_variant_kind(self):

@@ -20,7 +20,7 @@ namespace mixed_dim {
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct Tester : public legate::LegateTask<Tester> {
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
   static void cpu_variant(legate::TaskContext context)
   {

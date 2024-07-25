@@ -21,8 +21,7 @@ namespace buffer_test {
 
 namespace {
 
-constexpr std::int64_t BUFFER_TASK_ID = 0;
-constexpr auto MAX_ALIGNMENT          = 16;
+constexpr auto MAX_ALIGNMENT = 16;
 
 }  // namespace
 
@@ -67,7 +66,7 @@ class BufferFn {
 };
 
 struct BufferTask : public legate::LegateTask<BufferTask> {
-  static const std::int32_t TASK_ID = BUFFER_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -99,7 +98,7 @@ void test_buffer(std::int32_t dim,
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
-  auto task          = runtime->create_task(context, BUFFER_TASK_ID);
+  auto task          = runtime->create_task(context, BufferTask::TASK_ID);
   BufferParams param = {dim, bytes, static_cast<std::uint64_t>(kind), alignment};
   task.add_scalar_arg(
     legate::Scalar{std::move(param),

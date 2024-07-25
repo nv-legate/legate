@@ -41,7 +41,8 @@ constexpr std::int32_t CHECK_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * 
 
 template <std::int32_t IND_DIM, std::int32_t TGT_DIM>
 struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TGT_DIM>> {
-  static constexpr std::int32_t TASK_ID = CHECK_SCATTER_TASK + IND_DIM * TEST_MAX_DIM + TGT_DIM;
+  static constexpr auto TASK_ID =
+    legate::LocalTaskID{CHECK_SCATTER_TASK + IND_DIM * TEST_MAX_DIM + TGT_DIM};
 
   struct CheckScatterTaskBody {
     template <legate::Type::Code CODE>
@@ -157,7 +158,7 @@ void check_scatter_output(legate::Library library,
   auto machine = runtime->get_machine();
 
   const auto task_id =
-    static_cast<std::int32_t>(CHECK_SCATTER_TASK + ind.dim() * TEST_MAX_DIM + tgt.dim());
+    static_cast<legate::LocalTaskID>(CHECK_SCATTER_TASK + ind.dim() * TEST_MAX_DIM + tgt.dim());
 
   auto task = runtime->create_task(library, task_id);
 

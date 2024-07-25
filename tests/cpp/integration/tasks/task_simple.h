@@ -18,10 +18,6 @@
 
 namespace task::simple {
 
-enum TaskOpCode {
-  HELLO = 0,
-};
-
 inline constexpr std::string_view LIBRARY_NAME = "legate.simple";
 
 extern Legion::Logger logger;
@@ -29,7 +25,7 @@ extern Legion::Logger logger;
 void register_tasks();
 
 struct HelloTask : public legate::LegateTask<HelloTask> {
-  static constexpr std::int32_t TASK_ID = HELLO;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext context);
 };
 

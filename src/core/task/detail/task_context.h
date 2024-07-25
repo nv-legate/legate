@@ -41,7 +41,7 @@ class TaskContext {
   [[nodiscard]] const std::vector<legate::Scalar>& scalars() const noexcept;
   [[nodiscard]] const std::vector<legate::comm::Communicator>& communicators() const noexcept;
 
-  [[nodiscard]] std::int64_t task_id() const noexcept;
+  [[nodiscard]] GlobalTaskID task_id() const noexcept;
   [[nodiscard]] LegateVariantCode variant_kind() const noexcept;
   [[nodiscard]] bool is_single_task() const;
   [[nodiscard]] bool can_raise_exception() const;

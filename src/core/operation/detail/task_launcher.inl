@@ -19,7 +19,7 @@ namespace legate::detail {
 inline TaskLauncher::TaskLauncher(const Library* library,
                                   const mapping::detail::Machine& machine,
                                   std::variant<std::string_view, std::string> provenance,
-                                  std::int64_t task_id,
+                                  LocalTaskID task_id,
                                   std::int64_t tag)
   : library_{library},
     task_id_{task_id},
@@ -46,7 +46,7 @@ inline TaskLauncher::TaskLauncher(const Library* library,
 
 inline TaskLauncher::TaskLauncher(const Library* library,
                                   const mapping::detail::Machine& machine,
-                                  std::int64_t task_id,
+                                  LocalTaskID task_id,
                                   std::int64_t tag)
   : TaskLauncher{library, machine, {}, task_id, tag}
 {

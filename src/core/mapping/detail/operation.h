@@ -56,7 +56,7 @@ class Task : public Mappable {
        Legion::Mapping::MapperRuntime* runtime,
        Legion::Mapping::MapperContext context);
 
-  [[nodiscard]] std::int64_t task_id() const;
+  [[nodiscard]] LocalTaskID task_id() const;
 
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& inputs() const;
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& outputs() const;

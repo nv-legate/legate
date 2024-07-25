@@ -19,14 +19,6 @@ namespace physical_array_unit_test {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-enum class ArrayTaskID : std::uint8_t {
-  PRIMITIVE_UNBOUND_ARRAY_TASK_ID = 0,
-  LIST_ARRAY_TASK_ID              = 1,
-  STRING_ARRAY_TASK_ID            = 2,
-  FILL_ARRAY_TASK_ID              = 3,
-  CHECK_ARRAY_TASK_ID             = 4,
-};
-
 enum class ArrayType : std::uint8_t {
   PRIMITIVE_ARRAY = 0,
   LIST_ARRAY      = 1,
@@ -34,32 +26,27 @@ enum class ArrayType : std::uint8_t {
 };
 
 struct UnboundArrayTask : public legate::LegateTask<UnboundArrayTask> {
-  static constexpr std::int32_t TASK_ID =
-    static_cast<std::underlying_type_t<ArrayTaskID>>(ArrayTaskID::PRIMITIVE_UNBOUND_ARRAY_TASK_ID);
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct ListArrayTask : public legate::LegateTask<ListArrayTask> {
-  static constexpr std::int32_t TASK_ID =
-    static_cast<std::underlying_type_t<ArrayTaskID>>(ArrayTaskID::LIST_ARRAY_TASK_ID);
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct StringArrayTask : public legate::LegateTask<StringArrayTask> {
-  static constexpr std::int32_t TASK_ID =
-    static_cast<std::underlying_type_t<ArrayTaskID>>(ArrayTaskID::STRING_ARRAY_TASK_ID);
+  static constexpr auto TASK_ID = legate::LocalTaskID{2};
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct FillTask : public legate::LegateTask<FillTask> {
-  static constexpr std::int32_t TASK_ID =
-    static_cast<std::underlying_type_t<ArrayTaskID>>(ArrayTaskID::FILL_ARRAY_TASK_ID);
+  static constexpr auto TASK_ID = legate::LocalTaskID{3};
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct CheckTask : public legate::LegateTask<CheckTask> {
-  static constexpr std::int32_t TASK_ID =
-    static_cast<std::underlying_type_t<ArrayTaskID>>(ArrayTaskID::CHECK_ARRAY_TASK_ID);
+  static constexpr auto TASK_ID = legate::LocalTaskID{4};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -562,9 +549,8 @@ void test_unbound_array(bool nullable)
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
   auto dim           = 3;
   auto logical_array = runtime->create_array(legate::uint32(), dim, nullable);
-  auto task          = runtime->create_task(
-    context, static_cast<std::int64_t>(ArrayTaskID::PRIMITIVE_UNBOUND_ARRAY_TASK_ID));
-  auto part = task.declare_partition();
+  auto task          = runtime->create_task(context, UnboundArrayTask::TASK_ID);
+  auto part          = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
   runtime->submit(std::move(task));
@@ -578,9 +564,8 @@ void test_bound_list_array(bool nullable)
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
   auto arr_type      = legate::list_type(legate::int64()).as_list_type();
   auto logical_array = runtime->create_array({6}, arr_type, nullable);
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::LIST_ARRAY_TASK_ID));
-  auto part = task.declare_partition();
+  auto task          = runtime->create_task(context, ListArrayTask::TASK_ID);
+  auto part          = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
   task.add_scalar_arg(legate::Scalar{false});
@@ -594,9 +579,8 @@ void test_unbound_list_array(bool nullable)
   auto arr_type      = legate::list_type(legate::int64()).as_list_type();
   auto dim           = 1;
   auto logical_array = runtime->create_array(arr_type, dim, nullable);
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::LIST_ARRAY_TASK_ID));
-  auto part = task.declare_partition();
+  auto task          = runtime->create_task(context, ListArrayTask::TASK_ID);
+  auto part          = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
   task.add_scalar_arg(legate::Scalar{true});
@@ -609,9 +593,8 @@ void test_bound_string_array(bool nullable)
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
   auto str_type      = legate::string_type();
   auto logical_array = runtime->create_array({5}, str_type, nullable);
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::STRING_ARRAY_TASK_ID));
-  auto part = task.declare_partition();
+  auto task          = runtime->create_task(context, StringArrayTask::TASK_ID);
+  auto part          = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
   task.add_scalar_arg(legate::Scalar{false});
@@ -625,9 +608,8 @@ void test_unbound_string_array(bool nullable)
   auto str_type      = legate::string_type();
   auto dim           = 1;
   auto logical_array = runtime->create_array(str_type, dim, nullable);
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::STRING_ARRAY_TASK_ID));
-  auto part = task.declare_partition();
+  auto task          = runtime->create_task(context, StringArrayTask::TASK_ID);
+  auto part          = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
   task.add_scalar_arg(legate::Scalar{true});
@@ -659,8 +641,7 @@ void test_fill_bound_primitive_array(bool nullable)
   auto logical_array = runtime->create_array({1, 4}, legate::int32(), nullable);
 
   // Fill task
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::FILL_ARRAY_TASK_ID));
+  auto task = runtime->create_task(context, FillTask::TASK_ID);
   auto part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -670,7 +651,7 @@ void test_fill_bound_primitive_array(bool nullable)
   runtime->submit(std::move(task));
 
   // Check task
-  task = runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::CHECK_ARRAY_TASK_ID));
+  task = runtime->create_task(context, CheckTask::TASK_ID);
   part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -688,8 +669,7 @@ void test_fill_unbound_primitive_array(bool nullable)
   auto logical_array = runtime->create_array(legate::int32(), dim, nullable);
 
   // Fill task
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::FILL_ARRAY_TASK_ID));
+  auto task = runtime->create_task(context, FillTask::TASK_ID);
   auto part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -699,7 +679,7 @@ void test_fill_unbound_primitive_array(bool nullable)
   runtime->submit(std::move(task));
 
   // Check task
-  task = runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::CHECK_ARRAY_TASK_ID));
+  task = runtime->create_task(context, CheckTask::TASK_ID);
   part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -717,8 +697,7 @@ void test_fill_bound_list_array(bool nullable)
   auto logical_array = runtime->create_array({3}, arr_type, nullable);
 
   // Fill task
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::FILL_ARRAY_TASK_ID));
+  auto task = runtime->create_task(context, FillTask::TASK_ID);
   auto part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -728,7 +707,7 @@ void test_fill_bound_list_array(bool nullable)
   runtime->submit(std::move(task));
 
   // Check task
-  task = runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::CHECK_ARRAY_TASK_ID));
+  task = runtime->create_task(context, CheckTask::TASK_ID);
   part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -747,8 +726,7 @@ void test_fill_unbound_list_array(bool nullable)
   auto logical_array = runtime->create_array(arr_type, dim, nullable);
 
   // Fill task
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::FILL_ARRAY_TASK_ID));
+  auto task = runtime->create_task(context, FillTask::TASK_ID);
   auto part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -758,7 +736,7 @@ void test_fill_unbound_list_array(bool nullable)
   runtime->submit(std::move(task));
 
   // Check task
-  task = runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::CHECK_ARRAY_TASK_ID));
+  task = runtime->create_task(context, CheckTask::TASK_ID);
   part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -776,8 +754,7 @@ void test_fill_bound_string_array(bool nullable)
   auto logical_array = runtime->create_array({3}, arr_type, nullable);
 
   // Fill task
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::FILL_ARRAY_TASK_ID));
+  auto task = runtime->create_task(context, FillTask::TASK_ID);
   auto part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -787,7 +764,7 @@ void test_fill_bound_string_array(bool nullable)
   runtime->submit(std::move(task));
 
   // Check task
-  task = runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::CHECK_ARRAY_TASK_ID));
+  task = runtime->create_task(context, CheckTask::TASK_ID);
   part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -806,8 +783,7 @@ void test_fill_unbound_string_array(bool nullable)
   auto logical_array = runtime->create_array(arr_type, dim, nullable);
 
   // Fill task
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::FILL_ARRAY_TASK_ID));
+  auto task = runtime->create_task(context, FillTask::TASK_ID);
   auto part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});
@@ -817,7 +793,7 @@ void test_fill_unbound_string_array(bool nullable)
   runtime->submit(std::move(task));
 
   // Check task
-  task = runtime->create_task(context, static_cast<std::int64_t>(ArrayTaskID::CHECK_ARRAY_TASK_ID));
+  task = runtime->create_task(context, CheckTask::TASK_ID);
   part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});

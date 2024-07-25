@@ -25,7 +25,7 @@ constexpr std::int32_t SCL_VAL = 42;
 
 class NormalTask : public legate::LegateTask<NormalTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext context)
   {
     auto scalar_value = context.scalar(0).value<std::int32_t>();
@@ -35,7 +35,7 @@ class NormalTask : public legate::LegateTask<NormalTask> {
 
 class ExceptionUnboundTask : public legate::LegateTask<ExceptionUnboundTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static void cpu_variant(legate::TaskContext context)
   {
     auto scalar_value = context.scalar(0).value<std::int32_t>();

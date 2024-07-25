@@ -39,7 +39,7 @@ namespace legate::detail::comm::mpi {
 
 class InitMapping : public legate::detail::LegionTask<InitMapping> {
  public:
-  static constexpr std::int32_t TASK_ID = LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID;
+  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID};
 
   static int cpu_variant(const Legion::Task* task,
                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
@@ -81,7 +81,7 @@ class InitMapping : public legate::detail::LegionTask<InitMapping> {
 
 class Init : public legate::detail::LegionTask<Init> {
  public:
-  static constexpr std::int32_t TASK_ID = LEGATE_CORE_INIT_CPUCOLL_TASK_ID;
+  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_INIT_CPUCOLL_TASK_ID};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
@@ -153,7 +153,7 @@ class Init : public legate::detail::LegionTask<Init> {
 
 class Finalize : public legate::detail::LegionTask<Finalize> {
  public:
-  static constexpr std::int32_t TASK_ID = LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID;
+  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);

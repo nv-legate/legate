@@ -34,7 +34,7 @@ namespace {
 
 }  // namespace
 
-std::int64_t TaskContext::task_id() const noexcept { return impl()->task_id(); }
+GlobalTaskID TaskContext::task_id() const noexcept { return impl()->task_id(); }
 
 LegateVariantCode TaskContext::variant_kind() const noexcept { return impl()->variant_kind(); }
 

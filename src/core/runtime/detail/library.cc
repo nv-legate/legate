@@ -17,6 +17,7 @@
 #include "core/runtime/detail/config.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
+#include "core/utilities/detail/type_traits.h"
 #include "core/utilities/scope_guard.h"
 
 #include "mappers/logging_wrapper.h"
@@ -49,9 +50,9 @@ Library::Library(ConstructKey,
 {
 }
 
-Legion::TaskID Library::get_task_id(std::int64_t local_task_id) const
+GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
 {
-  return static_cast<Legion::TaskID>(task_scope_.translate(local_task_id));
+  return static_cast<GlobalTaskID>(task_scope_.translate(static_cast<std::int64_t>(local_task_id)));
 }
 
 Legion::ReductionOpID Library::get_reduction_op_id(std::int64_t local_redop_id) const
@@ -72,9 +73,9 @@ Legion::ShardingID Library::get_sharding_id(std::int64_t local_shard_id) const
   return static_cast<Legion::ShardingID>(shard_scope_.translate(local_shard_id));
 }
 
-std::int64_t Library::get_local_task_id(Legion::TaskID task_id) const
+LocalTaskID Library::get_local_task_id(GlobalTaskID task_id) const
 {
-  return task_scope_.invert(task_id);
+  return static_cast<LocalTaskID>(task_scope_.invert(static_cast<std::int64_t>(task_id)));
 }
 
 std::int64_t Library::get_local_reduction_op_id(Legion::ReductionOpID redop_id) const
@@ -95,7 +96,10 @@ std::int64_t Library::get_local_sharding_id(Legion::ShardingID shard_id) const
   return shard_scope_.invert(shard_id);
 }
 
-bool Library::valid_task_id(Legion::TaskID task_id) const { return task_scope_.in_scope(task_id); }
+bool Library::valid_task_id(GlobalTaskID task_id) const
+{
+  return task_scope_.in_scope(static_cast<std::int64_t>(task_id));
+}
 
 bool Library::valid_reduction_op_id(Legion::ReductionOpID redop_id) const
 {
@@ -112,7 +116,7 @@ bool Library::valid_sharding_id(Legion::ShardingID shard_id) const
   return shard_scope_.in_scope(shard_id);
 }
 
-std::string_view Library::get_task_name(std::int64_t local_task_id) const
+std::string_view Library::get_task_name(LocalTaskID local_task_id) const
 {
   return find_task(local_task_id)->name();
 }
@@ -171,7 +175,7 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_c
   }
 }
 
-void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
+void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
   const auto task_id = [&] {
     try {
@@ -186,8 +190,10 @@ void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo
   }();
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "[" << library_name_ << "] task " << local_task_id
-                         << " (global id: " << task_id << "), " << *task_info;
+    log_legate().debug() << "[" << library_name_ << "] task "
+                         << traits::detail::to_underlying(local_task_id)
+                         << " (global id: " << traits::detail::to_underlying(task_id) << "), "
+                         << *task_info;
   }
   if (tasks_.find(local_task_id) != tasks_.end()) {
     throw std::invalid_argument{
@@ -197,7 +203,7 @@ void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo
   tasks_.emplace(local_task_id, std::move(task_info));
 }
 
-const TaskInfo* Library::find_task(std::int64_t local_task_id) const
+const TaskInfo* Library::find_task(LocalTaskID local_task_id) const
 {
   auto finder = tasks_.find(local_task_id);
 

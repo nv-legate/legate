@@ -19,6 +19,7 @@ from ..._lib.operation.task cimport AutoTask
 from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.runtime.library cimport Library
 from ..._lib.task.task_context cimport TaskContext
+from ..._lib.utilities.typedefs cimport _LocalTaskID
 from .invoker cimport VariantInvoker
 from .type cimport VariantList, VariantMapping
 
@@ -28,17 +29,17 @@ from .type import UserFunction
 cdef class PyTask:
     # Cython has no support for class variables, so this must be an instance
     # variable...
-    cdef readonly int64_t UNREGISTERED_ID
+    cdef readonly _LocalTaskID UNREGISTERED_ID
     cdef:
         str                         _name
         VariantInvoker              _invoker
         VariantMapping              _variants
-        int64_t                     _task_id
+        _LocalTaskID                _task_id
         Library                     _library
         tuple[ConstraintProxy, ...] _constraints
         bool                        _throws
 
-    cpdef int64_t complete_registration(self)
+    cpdef _LocalTaskID complete_registration(self)
     cdef void _update_variant(self, func: UserFunction, variant: TaskTarget)
     cpdef void cpu_variant(self, func: UserFunction)
     cpdef void gpu_variant(self, func: UserFunction)

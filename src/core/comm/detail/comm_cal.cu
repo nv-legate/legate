@@ -101,7 +101,7 @@ void check_cal(calError_t error, const char* file, int line)
 
 class Init : public detail::LegionTask<Init> {
  public:
-  static constexpr std::int32_t TASK_ID = LEGATE_CORE_INIT_CAL_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{LEGATE_CORE_INIT_CAL_TASK_ID};
 
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
@@ -142,7 +142,7 @@ class Init : public detail::LegionTask<Init> {
 
 class Finalize : public detail::LegionTask<Finalize> {
  public:
-  static constexpr std::int32_t TASK_ID = LEGATE_CORE_FINALIZE_CAL_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{LEGATE_CORE_FINALIZE_CAL_TASK_ID};
 
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 

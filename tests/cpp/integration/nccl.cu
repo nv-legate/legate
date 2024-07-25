@@ -20,13 +20,10 @@
 
 namespace test_nccl {
 
-enum TaskIDs {
-  NCCL_TESTER = 0,
-};
-
 constexpr std::size_t SIZE = 100;
 
 struct NCCLTester : public legate::LegateTask<NCCLTester> {
+  static constexpr auto TASK_ID             = legate::LocalTaskID{0};
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
   static void gpu_variant(legate::TaskContext context)
@@ -67,7 +64,7 @@ class Config {
   static constexpr std::string_view LIBRARY_NAME = "test_nccl";
   static void registration_callback(legate::Library library)
   {
-    NCCLTester::register_variants(library, NCCL_TESTER);
+    NCCLTester::register_variants(library, NCCLTester::TASK_ID);
   }
 };
 
@@ -79,7 +76,7 @@ void test_nccl_auto(std::int32_t ndim)
   auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto store   = runtime->create_store(legate::full(ndim, SIZE), legate::int32());
 
-  auto task = runtime->create_task(context, NCCL_TESTER);
+  auto task = runtime->create_task(context, NCCLTester::TASK_ID);
   auto part = task.declare_partition();
   task.add_output(store, part);
   task.add_communicator("nccl");
@@ -103,7 +100,7 @@ void test_nccl_manual(std::int32_t ndim)
 
   auto part = store.partition_by_tiling(tile_shape.data());
 
-  auto task = runtime->create_task(context, NCCL_TESTER, launch_shape);
+  auto task = runtime->create_task(context, NCCLTester::TASK_ID, launch_shape);
   task.add_output(part);
   task.add_communicator("nccl");
   runtime->submit(std::move(task));

@@ -152,9 +152,9 @@ void check_gather_scatter_output(legate::Library library,
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
 
-  const auto task_id =
-    static_cast<std::int32_t>(CHECK_GATHER_SCATTER_TASK + src.dim() * TEST_MAX_DIM * TEST_MAX_DIM +
-                              src_ind.dim() * TEST_MAX_DIM + tgt.dim());
+  const auto task_id = static_cast<legate::LocalTaskID>(CHECK_GATHER_SCATTER_TASK +
+                                                        src.dim() * TEST_MAX_DIM * TEST_MAX_DIM +
+                                                        src_ind.dim() * TEST_MAX_DIM + tgt.dim());
 
   auto task = runtime->create_task(library, task_id);
 

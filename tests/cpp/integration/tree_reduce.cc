@@ -31,13 +31,13 @@ enum TaskIDs : std::uint8_t {
 };
 
 struct ProduceNormalTask : public legate::LegateTask<ProduceNormalTask> {
-  static constexpr std::int32_t TASK_ID = TASK_PRODUCE_NORMAL;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_PRODUCE_NORMAL};
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
-  static constexpr std::int32_t TASK_ID = TASK_PRODUCE_UNBOUND;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_PRODUCE_UNBOUND};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -51,7 +51,7 @@ struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
 };
 
 struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
-  static constexpr std::int32_t TASK_ID = TASK_REDUCE_NORMAL;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_REDUCE_NORMAL};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -66,7 +66,7 @@ struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
 };
 
 struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
-  static constexpr std::int32_t TASK_ID = TASK_REDUCE_UNBOUND;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_REDUCE_UNBOUND};
 
   static void cpu_variant(legate::TaskContext context)
   {

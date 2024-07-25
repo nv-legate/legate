@@ -28,7 +28,7 @@ class Reduce final : public Operation {
   Reduce(const Library* library,
          InternalSharedPtr<LogicalStore> store,
          InternalSharedPtr<LogicalStore> out_store,
-         std::int64_t task_id,
+         LocalTaskID task_id,
          std::uint64_t unique_id,
          std::int32_t radix,
          std::int32_t priority,
@@ -43,7 +43,7 @@ class Reduce final : public Operation {
  private:
   std::int32_t radix_{};
   const Library* library_{};
-  std::int64_t task_id_{};
+  LocalTaskID task_id_{};
   InternalSharedPtr<LogicalStore> input_{};
   InternalSharedPtr<LogicalStore> output_{};
   const Variable* input_part_{};

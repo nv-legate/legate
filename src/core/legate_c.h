@@ -14,8 +14,6 @@
 
 #ifndef LEGATE_USE_PYTHON_CFFI
 #include "legion/legion_config.h"
-//
-#include <cstdint>
 #endif
 
 // We cannot specify enum types here since these declarations are supposed to be c-compatible

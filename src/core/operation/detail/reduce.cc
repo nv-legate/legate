@@ -33,7 +33,7 @@ namespace legate::detail {
 Reduce::Reduce(const Library* library,
                InternalSharedPtr<LogicalStore> store,
                InternalSharedPtr<LogicalStore> out_store,
-               std::int64_t task_id,
+               LocalTaskID task_id,
                std::uint64_t unique_id,
                std::int32_t radix,
                std::int32_t priority,

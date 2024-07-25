@@ -20,7 +20,6 @@ namespace alignment_constraints {
 // NOLINTBEGIN(readability-magic-numbers)
 
 enum TaskIDs : std::uint8_t {
-  INIT                       = 0,
   ALIGNMENT_TESTER           = 0,
   ALIGNMENT_BROADCAST_TESTER = 3,
   TRANSFORMED_TESTER         = 6,
@@ -28,14 +27,14 @@ enum TaskIDs : std::uint8_t {
 
 // Dummy task to make the runtime think the store is initialized
 struct Initializer : public legate::LegateTask<Initializer> {
-  static constexpr std::int32_t TASK_ID = INIT;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 template <std::int32_t DIM>
 struct AlignmentTester : public legate::LegateTask<AlignmentTester<DIM>> {
-  static constexpr std::int32_t TASK_ID = ALIGNMENT_TESTER + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{ALIGNMENT_TESTER + DIM};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -49,7 +48,7 @@ struct AlignmentTester : public legate::LegateTask<AlignmentTester<DIM>> {
 
 template <std::int32_t DIM>
 struct AlignmentBroadcastTester : public legate::LegateTask<AlignmentBroadcastTester<DIM>> {
-  static constexpr std::int32_t TASK_ID = ALIGNMENT_BROADCAST_TESTER + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{ALIGNMENT_BROADCAST_TESTER + DIM};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -65,7 +64,7 @@ struct AlignmentBroadcastTester : public legate::LegateTask<AlignmentBroadcastTe
 
 template <std::int32_t DIM>
 struct TransformedTester : public legate::LegateTask<TransformedTester<DIM>> {
-  static constexpr std::int32_t TASK_ID = TRANSFORMED_TESTER + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TRANSFORMED_TESTER + DIM};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -105,8 +104,8 @@ void test_alignment()
     auto store2 = runtime->create_store(legate::Shape{extents}, legate::int64());
     auto store3 = runtime->create_store(legate::Shape{extents}, legate::int64());
 
-    auto task =
-      runtime->create_task(context, ALIGNMENT_TESTER + static_cast<std::int64_t>(extents.size()));
+    auto task = runtime->create_task(
+      context, legate::LocalTaskID{ALIGNMENT_TESTER + static_cast<std::int64_t>(extents.size())});
     auto part1 = task.add_output(store1);
     auto part2 = task.add_output(store2);
     auto part3 = task.add_output(store3);
@@ -132,7 +131,8 @@ void test_alignment_and_broadcast()
     auto store2 = runtime->create_store(legate::Shape{extents}, legate::int64());
 
     auto task = runtime->create_task(
-      context, ALIGNMENT_BROADCAST_TESTER + static_cast<std::int64_t>(extents.size()));
+      context,
+      legate::LocalTaskID{ALIGNMENT_BROADCAST_TESTER + static_cast<std::int64_t>(extents.size())});
     auto part1 = task.add_output(store1);
     auto part2 = task.add_output(store2);
 
@@ -153,7 +153,7 @@ void initialize(const legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, INIT);
+  auto task    = runtime->create_task(context, Initializer::TASK_ID);
 
   task.add_output(store);
 
@@ -166,8 +166,8 @@ void test_alignment_transformed()
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto launch_tester = [&](auto store1, auto store2) {
-    auto task =
-      runtime->create_task(context, static_cast<std::int64_t>(TRANSFORMED_TESTER) + store1.dim());
+    auto task = runtime->create_task(
+      context, legate::LocalTaskID{static_cast<std::int64_t>(TRANSFORMED_TESTER) + store1.dim()});
     auto part1 = task.add_input(store1);
     auto part2 = task.add_input(store2);
 
@@ -210,8 +210,8 @@ void test_redundant_alignment()
   auto store2                              = runtime->create_store(shapes, legate::int64());
   auto store3                              = runtime->create_store(shapes, legate::int64());
 
-  auto task =
-    runtime->create_task(context, ALIGNMENT_TESTER + static_cast<std::int64_t>(extents.size()));
+  auto task = runtime->create_task(
+    context, legate::LocalTaskID{ALIGNMENT_TESTER + static_cast<std::int64_t>(extents.size())});
   auto part1 = task.add_output(store1);
   auto part2 = task.add_output(store2);
   auto part3 = task.add_output(store3);
@@ -234,8 +234,8 @@ void test_invalid_alignment()
 
   auto store1 = runtime->create_store(legate::Shape{10}, legate::int64());
   auto store2 = runtime->create_store(legate::Shape{9}, legate::int64());
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(TRANSFORMED_TESTER) + store1.dim());
+  auto task   = runtime->create_task(
+    context, legate::LocalTaskID{static_cast<std::int64_t>(TRANSFORMED_TESTER) + store1.dim()});
 
   auto part1 = task.add_output(store1);
   auto part2 = task.add_output(store2);

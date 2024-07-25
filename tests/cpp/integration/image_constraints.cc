@@ -257,10 +257,10 @@ void initialize_function(const legate::LogicalStore& func,
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
-  auto task =
-    runtime->create_task(context,
-                         static_cast<std::int64_t>(INIT_FUNC) +
-                           static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim());
+  auto task    = runtime->create_task(
+    context,
+    legate::LocalTaskID{static_cast<std::int64_t>(INIT_FUNC) +
+                        static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim()});
   auto part = task.declare_partition();
   task.add_output(func, part);
   task.add_scalar_arg(legate::Scalar{range_extents});
@@ -279,10 +279,10 @@ void check_image(const legate::LogicalStore& func,
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto is_rect = func.type().code() == legate::Type::Code::STRUCT;
-  auto task =
-    runtime->create_task(context,
-                         static_cast<std::int64_t>(IMAGE_TESTER) +
-                           static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim());
+  auto task    = runtime->create_task(
+    context,
+    legate::LocalTaskID{static_cast<std::int64_t>(IMAGE_TESTER) +
+                        static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim()});
   auto part_domain = task.declare_partition();
   auto part_range  = task.declare_partition();
 
@@ -326,7 +326,8 @@ void test_invalid()
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto create_task = [&](auto func, auto range) {
-    auto task = runtime->create_task(context, static_cast<std::int64_t>(IMAGE_TESTER) + func.dim());
+    auto task = runtime->create_task(
+      context, legate::LocalTaskID{static_cast<std::int64_t>(IMAGE_TESTER) + func.dim()});
     auto part_domain = task.declare_partition();
     auto part_range  = task.declare_partition();
 

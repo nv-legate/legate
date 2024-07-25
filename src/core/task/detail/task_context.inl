@@ -34,7 +34,10 @@ inline const std::vector<legate::comm::Communicator>& TaskContext::communicators
   return comms_;
 }
 
-inline std::int64_t TaskContext::task_id() const noexcept { return task_->task_id; }
+inline GlobalTaskID TaskContext::task_id() const noexcept
+{
+  return static_cast<GlobalTaskID>(task_->task_id);
+}
 
 inline LegateVariantCode TaskContext::variant_kind() const noexcept { return variant_kind_; }
 

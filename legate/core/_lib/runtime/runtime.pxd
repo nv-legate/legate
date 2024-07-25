@@ -25,7 +25,7 @@ from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
 from ..task.exception cimport _TaskException
 from ..type.type_info cimport Type, _Type
 from ..utilities.tuple cimport _tuple
-from ..utilities.typedefs cimport _Domain
+from ..utilities.typedefs cimport _Domain, _LocalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 from .detail.runtime cimport _RuntimeImpl
 from .library cimport Library, _Library
@@ -150,11 +150,11 @@ cdef extern from *:
 cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
     cdef cppclass _Runtime "legate::Runtime":
         _Library find_library(std_string_view) except+
-        _AutoTask create_task(_Library, int64_t) except+
+        _AutoTask create_task(_Library, _LocalTaskID) except+
         _ManualTask create_task(
-            _Library, int64_t, const _tuple[uint64_t]&
+            _Library, _LocalTaskID, const _tuple[uint64_t]&
         ) except+
-        _ManualTask create_task(_Library, int64_t, const _Domain&) except+
+        _ManualTask create_task(_Library, _LocalTaskID, const _Domain&) except+
         void issue_copy(_LogicalStore, _LogicalStore) except+
         void issue_copy(_LogicalStore, _LogicalStore, int32_t) except+
         void issue_gather(_LogicalStore, _LogicalStore, _LogicalStore) except+
@@ -174,7 +174,7 @@ cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
         void issue_fill(_LogicalArray&, _LogicalStore) except+
         void issue_fill(_LogicalArray&, _Scalar) except+
         _LogicalStore tree_reduce(
-            _Library, int64_t, _LogicalStore, int64_t
+            _Library, _LocalTaskID, _LogicalStore, int64_t
         ) except+
         void submit(_AutoTask) except +handle_legate_exception
         void submit(_ManualTask) except +handle_legate_exception
@@ -219,11 +219,13 @@ cdef class Runtime(Unconstructable):
     cdef Runtime from_handle(_Runtime*)
 
     cpdef Library find_library(self, str library_name)
-    cpdef AutoTask create_auto_task(self, Library library, int64_t task_id)
+    cpdef AutoTask create_auto_task(
+        self, Library library, _LocalTaskID task_id)
+
     cpdef ManualTask create_manual_task(
         self,
         Library library,
-        int64_t task_id,
+        _LocalTaskID task_id,
         object launch_shape,
         object lower_bounds = *,
     )
@@ -259,7 +261,7 @@ cdef class Runtime(Unconstructable):
     cpdef LogicalStore tree_reduce(
         self,
         Library library,
-        int64_t task_id,
+        _LocalTaskID task_id,
         LogicalStore store,
         int64_t radix = *,
     )

@@ -33,7 +33,7 @@ namespace legate::detail {
 ////////////////////////////////////////////////////
 
 Task::Task(const Library* library,
-           std::int64_t task_id,
+           LocalTaskID task_id,
            std::uint64_t unique_id,
            std::int32_t priority,
            mapping::detail::Machine machine)
@@ -80,7 +80,7 @@ void Task::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
 void Task::launch_task_(Strategy* p_strategy)
 {
   auto& strategy     = *p_strategy;
-  auto launcher      = detail::TaskLauncher{library_, machine_, provenance(), task_id_};
+  auto launcher      = detail::TaskLauncher{library_, machine_, provenance(), local_task_id()};
   auto launch_domain = strategy.launch_domain(this);
 
   launcher.set_priority(priority());
@@ -266,7 +266,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
 
 std::string Task::to_string() const
 {
-  auto result = fmt::format("{}:{}", library_->get_task_name(task_id_), unique_id_);
+  auto result = fmt::format("{}:{}", library_->get_task_name(local_task_id()), unique_id_);
 
   if (!provenance().empty()) {
     fmt::format_to(std::back_inserter(result), "[{}]", provenance());
@@ -410,7 +410,8 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
   }
 
   auto* core_lib = detail::Runtime::get_runtime()->core_library();
-  auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance(), LEGATE_CORE_FIXUP_RANGES};
+  auto launcher  = detail::TaskLauncher{
+    core_lib, machine_, provenance(), static_cast<LocalTaskID>(LEGATE_CORE_FIXUP_RANGES)};
 
   launcher.set_priority(priority());
 
@@ -427,7 +428,7 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
 ////////////////////////////////////////////////////
 
 ManualTask::ManualTask(const Library* library,
-                       std::int64_t task_id,
+                       LocalTaskID task_id,
                        const Domain& launch_domain,
                        std::uint64_t unique_id,
                        std::int32_t priority,

@@ -18,7 +18,7 @@
 namespace test_find_memory_kind {
 
 struct Checker : public legate::LegateTask<Checker> {
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     EXPECT_EQ(legate::find_memory_kind_for_executing_processor(), legate::Memory::Kind::SYSTEM_MEM);

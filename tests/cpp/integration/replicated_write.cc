@@ -26,7 +26,7 @@ namespace replicated_write_test {
 
 class WriterTask : public legate::LegateTask<WriterTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -60,7 +60,7 @@ class WriterTask : public legate::LegateTask<WriterTask> {
 
 class TaskThatDoesNothing : public legate::LegateTask<TaskThatDoesNothing> {
  public:
-  static constexpr std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
 
   static void cpu_variant(legate::TaskContext /*context*/)
   {
@@ -71,7 +71,7 @@ class TaskThatDoesNothing : public legate::LegateTask<TaskThatDoesNothing> {
 
 class CheckerTask : public legate::LegateTask<CheckerTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 2;
+  static constexpr auto TASK_ID = legate::LocalTaskID{2};
 
   static void cpu_variant(legate::TaskContext context)
   {

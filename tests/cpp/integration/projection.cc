@@ -26,7 +26,7 @@ constexpr std::uint64_t SMALL_EXTENT  = 2;
 }  // namespace
 
 struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> {
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -54,7 +54,7 @@ struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> 
 };
 
 struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
-  static constexpr std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static void cpu_variant(legate::TaskContext context)
   {
     if (context.is_single_task()) {

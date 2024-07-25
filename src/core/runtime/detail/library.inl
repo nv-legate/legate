@@ -66,7 +66,12 @@ inline std::string_view Library::get_library_name() const { return library_name_
 
 inline Legion::MapperID Library::get_mapper_id() const { return mapper_id_; }
 
-inline std::int64_t Library::get_new_task_id() { return task_scope_.generate_id(); }
+inline LocalTaskID Library::get_new_task_id()
+{
+  static_assert(
+    std::is_same_v<decltype(task_scope_.generate_id()), std::underlying_type_t<LocalTaskID>>);
+  return static_cast<LocalTaskID>(task_scope_.generate_id());
+}
 
 inline Legion::Mapping::Mapper* Library::get_legion_mapper() const { return legion_mapper_; }
 

@@ -83,7 +83,7 @@ void check_physical_store(const legate::PhysicalStore& store,
 enum TaskOpCode : std::uint8_t { ADDER = 0, CHECKER = 1 };
 
 struct AdderTask : public legate::LegateTask<AdderTask> {
-  static constexpr std::int32_t TASK_ID = ADDER;
+  static constexpr auto TASK_ID = legate::LocalTaskID{ADDER};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -94,7 +94,7 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
 };
 
 struct CheckerTask : public legate::LegateTask<CheckerTask> {
-  static constexpr std::int32_t TASK_ID = CHECKER;
+  static constexpr auto TASK_ID = legate::LocalTaskID{CHECKER};
 
   static void cpu_variant(legate::TaskContext context)
   {

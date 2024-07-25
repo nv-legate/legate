@@ -26,14 +26,14 @@ constexpr std::size_t LIB_DEFAULT_RETURN_SIZE = 56;
 }  // namespace
 
 struct HasDeclOptions : public legate::LegateTask<HasDeclOptions> {
-  static constexpr std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static constexpr auto CPU_VARIANT_OPTIONS =
     legate::VariantOptions{}.with_return_size(DECL_RETURN_SIZE);
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 struct NoDeclOptions : public legate::LegateTask<NoDeclOptions> {
-  static constexpr std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
@@ -47,7 +47,7 @@ legate::Library create_library(std::string_view library_name)
 }
 
 void check_return_size(const legate::Library& library,
-                       std::int32_t task_id,
+                       legate::LocalTaskID task_id,
                        std::size_t return_size_to_match)
 {
   auto&& vinfo = library.find_task(task_id)->find_variant(LEGATE_CPU_VARIANT);

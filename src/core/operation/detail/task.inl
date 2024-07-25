@@ -34,12 +34,12 @@ inline bool Task::supports_replicated_write() const { return true; }
 
 inline const Library* Task::library() const { return library_; }
 
-inline std::int64_t Task::local_task_id() const { return task_id_; }
+inline LocalTaskID Task::local_task_id() const { return task_id_; }
 
 // ==========================================================================================
 
 inline AutoTask::AutoTask(const Library* library,
-                          std::int64_t task_id,
+                          LocalTaskID task_id,
                           std::uint64_t unique_id,
                           std::int32_t priority,
                           mapping::detail::Machine machine)

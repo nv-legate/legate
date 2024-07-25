@@ -12,6 +12,10 @@
 
 from libc.stdint cimport int32_t, int64_t
 
+from typing import NewType
+
+LocalTaskID = NewType("LocalTaskID", int)
+GlobalTaskID = NewType("GlobalTaskID", int)
 
 cdef class DomainPoint:
     @staticmethod

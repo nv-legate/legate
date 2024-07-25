@@ -68,8 +68,8 @@ void hello_cpu_variant(legate::TaskContext& context)
 
 template <std::int32_t TID>
 struct BaseTask : public legate::LegateTask<BaseTask<TID>> {
-  using Registrar                       = Registry;
-  static constexpr std::int32_t TASK_ID = TID;
+  using Registrar               = Registry;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TID};
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
 
@@ -98,13 +98,15 @@ void test_register_tasks(legate::Library& context)
 
   HelloTask3::register_variants(context, all_options);
 
-  BaseTask2::register_variants(context, HELLO4);
-  BaseTask2::register_variants(context, HELLO5, all_options);
+  BaseTask2::register_variants(context, legate::LocalTaskID{HELLO4});
+  BaseTask2::register_variants(context, legate::LocalTaskID{HELLO5}, all_options);
 
   // registered taskID the second time would throw exception
   EXPECT_THROW(HelloTask2::register_variants(context), std::invalid_argument);
-  EXPECT_THROW(BaseTask2::register_variants(context, HELLO4, all_options), std::invalid_argument);
-  EXPECT_THROW(BaseTask2::register_variants(context, HELLO2), std::invalid_argument);
+  EXPECT_THROW(BaseTask2::register_variants(context, legate::LocalTaskID{HELLO4}, all_options),
+               std::invalid_argument);
+  EXPECT_THROW(BaseTask2::register_variants(context, legate::LocalTaskID{HELLO2}),
+               std::invalid_argument);
 }
 
 void test_auto_task(const legate::Library& context,
@@ -112,7 +114,7 @@ void test_auto_task(const legate::Library& context,
                     TaskID taskid)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, taskid);
+  auto task    = runtime->create_task(context, legate::LocalTaskID{taskid});
   auto part    = task.declare_partition();
   task.add_output(store, part);
   runtime->submit(std::move(task));
@@ -123,8 +125,9 @@ void test_manual_task(const legate::Library& context,
                       TaskID taskid)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(context, taskid, legate::tuple<std::uint64_t>{3, 3});
-  auto part    = store.partition_by_tiling({2, 2});
+  auto task =
+    runtime->create_task(context, legate::LocalTaskID{taskid}, legate::tuple<std::uint64_t>{3, 3});
+  auto part = store.partition_by_tiling({2, 2});
   task.add_output(part);
   runtime->submit(std::move(task));
 }
@@ -145,7 +148,8 @@ TEST_F(RegisterVariants, All)
   auto context = runtime->create_library("test_register_variants1");
 
   for (auto task_id : TASK_IDS) {
-    EXPECT_THROW(static_cast<void>(context.get_task_name(task_id)), std::out_of_range);
+    EXPECT_THROW(static_cast<void>(context.get_task_name(legate::LocalTaskID{task_id})),
+                 std::out_of_range);
   }
 
   test_register_tasks(context);
@@ -155,7 +159,7 @@ TEST_F(RegisterVariants, All)
     const std::string task_name =
       task_id >= HELLO4 ? "register_variants::BaseTask2"
                         : fmt::format("register_variants::BaseTask<{}>", fmt::underlying(task_id));
-    EXPECT_STREQ(context.get_task_name(task_id).data(), task_name.c_str());
+    EXPECT_STREQ(context.get_task_name(legate::LocalTaskID{task_id}).data(), task_name.c_str());
   }
 
   auto store = runtime->create_store(legate::Shape{5, 5}, legate::int64());
@@ -172,7 +176,7 @@ TEST_F(RegisterVariants, All)
 
 class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
  public:
-  static constexpr std::int32_t TASK_ID     = 0;
+  static constexpr auto TASK_ID             = legate::LocalTaskID{0};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
   static constexpr auto OMP_VARIANT_OPTIONS = legate::VariantOptions{}.with_leaf(false);
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_return_size(1234);

@@ -27,7 +27,7 @@ constexpr std::int64_t BLOAT_TESTER = 0;
 
 template <std::int32_t DIM>
 struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
-  static constexpr std::int32_t TASK_ID = BLOAT_TESTER + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{BLOAT_TESTER + DIM};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -86,7 +86,8 @@ void test_bloat(const BloatTestSpec& spec)
   runtime->issue_fill(source, legate::Scalar(int64_t{0}));
   runtime->issue_fill(bloated, legate::Scalar(int64_t{0}));
 
-  auto task         = runtime->create_task(context, BLOAT_TESTER + source.dim());
+  auto task =
+    runtime->create_task(context, static_cast<legate::LocalTaskID>(BLOAT_TESTER + source.dim()));
   auto part_source  = task.add_input(source);
   auto part_bloated = task.add_input(bloated);
   task.add_constraint(
@@ -107,7 +108,7 @@ void test_invalid()
     auto source  = runtime->create_store(legate::Shape{1, 2}, legate::float16());
     auto bloated = runtime->create_store(legate::Shape{2, 3, 4}, legate::int64());
 
-    auto task         = runtime->create_task(context, BLOAT_TESTER + 2);
+    auto task = runtime->create_task(context, static_cast<legate::LocalTaskID>(BLOAT_TESTER + 2));
     auto part_source  = task.add_output(source);
     auto part_bloated = task.add_output(bloated);
     task.add_constraint(legate::bloat(part_source,
@@ -122,7 +123,7 @@ void test_invalid()
     auto source  = runtime->create_store(legate::Shape{1, 2}, legate::float16());
     auto bloated = runtime->create_store(legate::Shape{2, 3}, legate::int64());
 
-    auto task         = runtime->create_task(context, BLOAT_TESTER + 2);
+    auto task = runtime->create_task(context, static_cast<legate::LocalTaskID>(BLOAT_TESTER + 2));
     auto part_source  = task.add_output(source);
     auto part_bloated = task.add_output(bloated);
     task.add_constraint(legate::bloat(part_source,
@@ -137,7 +138,7 @@ void test_invalid()
     auto source  = runtime->create_store(legate::Shape{1, 2}, legate::float16());
     auto bloated = runtime->create_store(legate::Shape{2, 3}, legate::int64());
 
-    auto task         = runtime->create_task(context, BLOAT_TESTER + 2);
+    auto task = runtime->create_task(context, static_cast<legate::LocalTaskID>(BLOAT_TESTER + 2));
     auto part_source  = task.add_output(source);
     auto part_bloated = task.add_output(bloated);
     task.add_constraint(legate::bloat(part_source,

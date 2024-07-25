@@ -33,7 +33,7 @@ void validate(legate::TaskContext context)
 }
 
 struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
-  static constexpr std::int32_t TASK_ID = MULTI_VARIANT;
+  static constexpr auto TASK_ID = legate::LocalTaskID{MULTI_VARIANT};
 
   static void cpu_variant(legate::TaskContext context) { validate(context); }
 #if LEGATE_DEFINED(USE_OPENMP)
@@ -45,7 +45,7 @@ struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
 };
 
 struct CpuVariantOnlyTask : public legate::LegateTask<CpuVariantOnlyTask> {
-  static constexpr std::int32_t TASK_ID = CPU_VARIANT;
+  static constexpr auto TASK_ID = legate::LocalTaskID{CPU_VARIANT};
   static void cpu_variant(legate::TaskContext context) { validate(context); }
 };
 

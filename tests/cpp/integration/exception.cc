@@ -26,7 +26,7 @@ constexpr std::uint32_t NUM_NORM = 7;
 }  // namespace
 
 struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext context)
   {
     auto index = context.scalar(0).value<std::int32_t>();
@@ -39,7 +39,7 @@ struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
 };
 
 struct NormalTask : public legate::LegateTask<NormalTask> {
-  static constexpr std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 

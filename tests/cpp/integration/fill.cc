@@ -36,18 +36,18 @@ enum TaskIDs : std::uint8_t {
 
 template <std::int32_t DIM>
 struct CheckTask : public legate::LegateTask<CheckTask<DIM>> {
-  static constexpr std::int32_t TASK_ID = CHECK_TASK + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK_TASK + DIM};
   static void cpu_variant(legate::TaskContext context);
 };
 
 template <std::int32_t DIM>
 struct CheckSliceTask : public legate::LegateTask<CheckSliceTask<DIM>> {
-  static constexpr std::int32_t TASK_ID = CHECK_SLICE_TASK + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK_SLICE_TASK + DIM};
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct WrapFillValueTask : public legate::LegateTask<WrapFillValueTask> {
-  static constexpr std::int32_t TASK_ID = WRAP_FILL_VAL_TASK;
+  static constexpr auto TASK_ID = legate::LocalTaskID{WRAP_FILL_VAL_TASK};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -171,7 +171,8 @@ void check_output(const legate::LogicalArray& array, const legate::Scalar& value
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto task = runtime->create_task(context, static_cast<std::int64_t>(CHECK_TASK) + array.dim());
+  auto task = runtime->create_task(
+    context, legate::LocalTaskID{static_cast<std::int64_t>(CHECK_TASK) + array.dim()});
   task.add_input(array);
   task.add_scalar_arg(value);
   runtime->submit(std::move(task));
@@ -185,8 +186,8 @@ void check_output_slice(const legate::LogicalArray& array,
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(CHECK_SLICE_TASK) + array.dim());
+  auto task = runtime->create_task(
+    context, legate::LocalTaskID{static_cast<std::int64_t>(CHECK_SLICE_TASK) + array.dim()});
   task.add_input(array);
   task.add_scalar_arg(value_in_slice);
   task.add_scalar_arg(value_outside_slice);
@@ -200,7 +201,7 @@ legate::LogicalStore wrap_fill_value(const legate::Scalar& value)
   auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto result  = runtime->create_store(legate::Shape{1}, value.type(), true);
 
-  auto task = runtime->create_task(context, WRAP_FILL_VAL_TASK);
+  auto task = runtime->create_task(context, legate::LocalTaskID{WRAP_FILL_VAL_TASK});
   task.add_output(result);
   task.add_scalar_arg(value);
   runtime->submit(std::move(task));

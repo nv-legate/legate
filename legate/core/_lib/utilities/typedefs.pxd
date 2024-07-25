@@ -16,6 +16,14 @@ from ..task.task_context cimport _TaskContext
 
 
 cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
+    ctypedef unsigned int _Legion_TaskID "Legion::TaskID"
+
+    cdef enum class _LocalTaskID "legate::LocalTaskID" (int64_t):
+        pass
+
+    cdef enum class _GlobalTaskID "legate::GlobalTaskID" (_Legion_TaskID):
+        pass
+
     cdef cppclass _DomainPoint "legate::DomainPoint":
         _DomainPoint()
         int32_t get_dim()

@@ -21,7 +21,7 @@ namespace region_manager {
 
 class TesterTask : public legate::LegateTask<TesterTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -52,7 +52,7 @@ TEST_F(RegionManager, Normal)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, 0);
+  auto task    = runtime->create_task(context, TesterTask::TASK_ID);
 
   std::vector<legate::LogicalStore> stores;
   for (std::uint32_t idx = 0; idx < legate::detail::RegionManager::MAX_NUM_FIELDS * 2; ++idx) {
@@ -69,7 +69,7 @@ TEST_F(RegionManager, Unbound)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, 0);
+  auto task    = runtime->create_task(context, TesterTask::TASK_ID);
 
   std::vector<legate::LogicalStore> stores;
   std::vector<legate::Variable> parts;

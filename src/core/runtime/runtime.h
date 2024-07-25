@@ -136,7 +136,7 @@ class Runtime {
    *
    * @return Task object
    */
-  [[nodiscard]] AutoTask create_task(Library library, std::int64_t task_id);
+  [[nodiscard]] AutoTask create_task(Library library, LocalTaskID task_id);
   /**
    * @brief Creates a ManualTask
    *
@@ -147,7 +147,7 @@ class Runtime {
    * @return Task object
    */
   [[nodiscard]] ManualTask create_task(Library library,
-                                       std::int64_t task_id,
+                                       LocalTaskID task_id,
                                        const tuple<std::uint64_t>& launch_shape);
   /**
    * @brief Creates a ManualTask
@@ -163,7 +163,7 @@ class Runtime {
    * @return Task object
    */
   [[nodiscard]] ManualTask create_task(Library library,
-                                       std::int64_t task_id,
+                                       LocalTaskID task_id,
                                        const Domain& launch_domain);
   /**
    * @brief Issues a copy between stores.
@@ -326,7 +326,7 @@ class Runtime {
    *
    */
   [[nodiscard]] LogicalStore tree_reduce(Library library,
-                                         std::int64_t task_id,
+                                         LocalTaskID task_id,
                                          const LogicalStore& store,
                                          std::int32_t radix = 4);
 

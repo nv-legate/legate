@@ -9,7 +9,6 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int64_t, uint32_t
 from libc.stdio cimport fflush as std_fflush, fprintf as std_fprintf, stderr
 from libc.stdlib cimport abort as std_abort
 from libcpp.string cimport string as std_string
@@ -19,7 +18,7 @@ from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..legate_c cimport legate_core_variant_t
 from ..runtime.library cimport Library, _Library
 from ..runtime.runtime cimport get_legate_runtime
-from ..utilities.typedefs cimport TaskFuncPtr
+from ..utilities.typedefs cimport TaskFuncPtr, _GlobalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 from .task_context cimport TaskContext, _TaskContext
 from .variant_helper cimport task_wrapper_dyn_name
@@ -46,7 +45,7 @@ cdef extern from *:
     ctypedef int LEGATE_OMP_VARIANT_T "LEGATE_OMP_VARIANT"
 
 
-cdef dict[int64_t, dict[legate_core_variant_t, object]] \
+cdef dict[_GlobalTaskID, dict[legate_core_variant_t, object]] \
     _gid_to_variant_callbacks = {}
 
 # Note the alternate name, otherwise Cython mangles the resulting function name
@@ -55,7 +54,7 @@ cdef dict[int64_t, dict[legate_core_variant_t, object]] \
 # code
 cdef extern void _py_variant "_py_variant"(_TaskContext ctx) with gil:
     cdef TaskContext py_ctx = TaskContext.from_handle(&ctx)
-    cdef int64_t global_task_id = py_ctx.get_task_id()
+    cdef _GlobalTaskID global_task_id = py_ctx.get_task_id()
     cdef legate_core_variant_t variant_kind = py_ctx.get_variant_kind()
 
     cdef std_string abort_message
@@ -178,7 +177,7 @@ cdef class TaskInfo(Unconstructable):
 
     @staticmethod
     cdef TaskInfo from_handle(
-        _TaskInfo* p_handle, int64_t local_task_id
+        _TaskInfo* p_handle, _LocalTaskID local_task_id
     ):
         cdef TaskInfo result = TaskInfo.__new__(TaskInfo)
         result._handle = p_handle
@@ -203,14 +202,17 @@ cdef class TaskInfo(Unconstructable):
                 f"Task (local id: {self.get_local_id()}) has no variants!"
             )
 
-    cdef void register_global_variant_callbacks(self, uint32_t global_task_id):
+    cdef void register_global_variant_callbacks(
+        self,
+        _GlobalTaskID global_task_id
+    ):
         assert global_task_id not in _gid_to_variant_callbacks, \
             f"Already registered task (local id: {self.get_local_id()})"
         _gid_to_variant_callbacks[global_task_id] = self._registered_variants
         self._registered_variants = {}
         return
 
-    cdef int64_t get_local_id(self):
+    cdef _LocalTaskID get_local_id(self):
         return self._local_id
 
     def __dealloc__(self) -> None:
@@ -235,7 +237,7 @@ cdef class TaskInfo(Unconstructable):
     @classmethod
     def from_variants(
         cls,
-        int64_t local_task_id,
+        _LocalTaskID local_task_id,
         str name,
         list[tuple[legate_core_variant_t, object]] variants
     ) -> TaskInfo:

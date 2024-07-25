@@ -13,6 +13,7 @@ from collections.abc import Callable
 from typing import Any
 
 from ..._ext.task.type import VariantFunction
+from ..utilities.typedefs import LocalTaskID
 
 class TaskInfo:
     def __dealloc__(self) -> None: ...
@@ -20,7 +21,7 @@ class TaskInfo:
     @classmethod
     def from_variants(
         cls,
-        local_task_id: int,
+        local_task_id: LocalTaskID,
         name: str,
         variants: list[tuple[int, VariantFunction]],
     ) -> TaskInfo: ...

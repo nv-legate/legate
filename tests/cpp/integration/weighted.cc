@@ -31,7 +31,7 @@ enum TaskIDs : std::uint8_t {
 };
 
 struct Initializer : public legate::LegateTask<Initializer> {
-  static constexpr std::int32_t TASK_ID = INIT;
+  static constexpr auto TASK_ID = legate::LocalTaskID{INIT};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -46,7 +46,7 @@ struct Initializer : public legate::LegateTask<Initializer> {
 };
 
 struct Tester : public legate::LegateTask<Tester> {
-  static constexpr std::int32_t TASK_ID = CHECK;
+  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK};
 
   static void cpu_variant(legate::TaskContext context)
   {

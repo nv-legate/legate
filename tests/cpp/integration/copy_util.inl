@@ -62,7 +62,7 @@ struct FillTask : public legate::LegateTask<FillTask<DIM>> {
     }
   };
 
-  static const std::int32_t TASK_ID = FILL_TASK + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{FILL_TASK + DIM};
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
@@ -92,7 +92,8 @@ legate::Point<DIM> delinearize(std::size_t index,
 
 template <std::int32_t IND_DIM, std::int32_t DATA_DIM>
 struct FillIndirectTask : public legate::LegateTask<FillIndirectTask<IND_DIM, DATA_DIM>> {
-  static const std::int32_t TASK_ID = FILL_INDIRECT_TASK + IND_DIM * TEST_MAX_DIM + DATA_DIM;
+  static constexpr auto TASK_ID =
+    legate::LocalTaskID{FILL_INDIRECT_TASK + IND_DIM * TEST_MAX_DIM + DATA_DIM};
   static void cpu_variant(legate::TaskContext context)
   {
     auto output     = context.output(0).data();
@@ -122,7 +123,7 @@ void fill_input(legate::Library library,
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  auto task    = runtime->create_task(library, FILL_TASK + src.dim());
+  auto task    = runtime->create_task(library, legate::LocalTaskID{FILL_TASK + src.dim()});
   task.add_output(src, task.declare_partition());
   task.add_scalar_arg(value);
   runtime->submit(std::move(task));
@@ -132,11 +133,11 @@ void fill_indirect(legate::Library library,
                    const legate::LogicalStore& ind,
                    const legate::LogicalStore& data)
 {
-  auto runtime         = legate::Runtime::get_runtime();
-  auto machine         = runtime->get_machine();
-  std::int32_t task_id = FILL_INDIRECT_TASK + ind.dim() * TEST_MAX_DIM + data.dim();
-  auto task            = runtime->create_task(library, task_id);
-  auto part            = task.declare_partition();
+  auto runtime = legate::Runtime::get_runtime();
+  auto machine = runtime->get_machine();
+  auto task_id = legate::LocalTaskID{FILL_INDIRECT_TASK + ind.dim() * TEST_MAX_DIM + data.dim()};
+  auto task    = runtime->create_task(library, task_id);
+  auto part    = task.declare_partition();
   task.add_output(ind, part);
   // Technically indirection fields for gather coipes can have repeated points
   // and thus be initialized in parallel, but we always serialize the

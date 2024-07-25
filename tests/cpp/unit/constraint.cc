@@ -23,7 +23,7 @@ namespace {
 
 // Dummy task to make the runtime think the store is initialized
 struct Initializer : public legate::LegateTask<Initializer> {
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };

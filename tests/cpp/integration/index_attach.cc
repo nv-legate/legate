@@ -33,9 +33,8 @@ namespace index_attach {
 
 namespace {
 
-constexpr std::size_t TILE_SIZE       = 5;
-constexpr std::uint64_t INIT_VALUE    = 10;
-constexpr std::int32_t ACCESS_TASK_ID = 0;
+constexpr std::size_t TILE_SIZE    = 5;
+constexpr std::uint64_t INIT_VALUE = 10;
 
 }  // namespace
 
@@ -67,7 +66,7 @@ class AccessStoreFn {
 
 class AccessTask : public legate::LegateTask<AccessTask> {
  public:
-  static constexpr std::int32_t TASK_ID = ACCESS_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -93,7 +92,7 @@ void test_access_by_task(legate::ExternalAllocation& ext, T value)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
-  auto task          = runtime->create_task(context, ACCESS_TASK_ID);
+  auto task          = runtime->create_task(context, AccessTask::TASK_ID);
   auto logical_store = runtime->create_store(
     legate::Shape{TILE_SIZE}, legate::primitive_type(legate::type_code_of_v<T>), ext);
 

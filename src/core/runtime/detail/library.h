@@ -68,32 +68,32 @@ class Library {
 
   [[nodiscard]] std::string_view get_library_name() const;
 
-  [[nodiscard]] Legion::TaskID get_task_id(std::int64_t local_task_id) const;
+  [[nodiscard]] GlobalTaskID get_task_id(LocalTaskID local_task_id) const;
   [[nodiscard]] Legion::MapperID get_mapper_id() const;
   [[nodiscard]] Legion::ReductionOpID get_reduction_op_id(std::int64_t local_redop_id) const;
   [[nodiscard]] Legion::ProjectionID get_projection_id(std::int64_t local_proj_id) const;
   [[nodiscard]] Legion::ShardingID get_sharding_id(std::int64_t local_shard_id) const;
 
-  [[nodiscard]] std::int64_t get_local_task_id(Legion::TaskID task_id) const;
+  [[nodiscard]] LocalTaskID get_local_task_id(GlobalTaskID task_id) const;
   [[nodiscard]] std::int64_t get_local_reduction_op_id(Legion::ReductionOpID redop_id) const;
   [[nodiscard]] std::int64_t get_local_projection_id(Legion::ProjectionID proj_id) const;
   [[nodiscard]] std::int64_t get_local_sharding_id(Legion::ShardingID shard_id) const;
 
-  [[nodiscard]] bool valid_task_id(Legion::TaskID task_id) const;
+  [[nodiscard]] bool valid_task_id(GlobalTaskID task_id) const;
   [[nodiscard]] bool valid_reduction_op_id(Legion::ReductionOpID redop_id) const;
   [[nodiscard]] bool valid_projection_id(Legion::ProjectionID proj_id) const;
   [[nodiscard]] bool valid_sharding_id(Legion::ShardingID shard_id) const;
 
-  [[nodiscard]] std::int64_t get_new_task_id();
+  [[nodiscard]] LocalTaskID get_new_task_id();
 
-  [[nodiscard]] std::string_view get_task_name(std::int64_t local_task_id) const;
+  [[nodiscard]] std::string_view get_task_name(LocalTaskID local_task_id) const;
   [[nodiscard]] std::unique_ptr<Scalar> get_tunable(std::int64_t tunable_id,
                                                     InternalSharedPtr<Type> type) const;
   void register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback);
   [[nodiscard]] Legion::Mapping::Mapper* get_legion_mapper() const;
 
-  void register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
-  [[nodiscard]] const TaskInfo* find_task(std::int64_t local_task_id) const;
+  void register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
+  [[nodiscard]] const TaskInfo* find_task(LocalTaskID local_task_id) const;
 
   [[nodiscard]] const std::map<LegateVariantCode, VariantOptions>& get_default_variant_options()
     const;
@@ -109,7 +109,7 @@ class Library {
   Legion::MapperID mapper_id_{};
   std::unique_ptr<mapping::Mapper> mapper_{};
   Legion::Mapping::Mapper* legion_mapper_{};
-  std::unordered_map<int64_t, std::unique_ptr<TaskInfo>> tasks_{};
+  std::unordered_map<LocalTaskID, std::unique_ptr<TaskInfo>> tasks_{};
   std::map<LegateVariantCode, VariantOptions> default_options_{};
 };
 

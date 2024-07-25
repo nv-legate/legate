@@ -75,7 +75,7 @@ class TaskInfo {
   [[deprecated("since 24.09: use find_variant() directly")]] [[nodiscard]] bool has_variant(
     LegateVariantCode vid) const;
 
-  void register_task(Legion::TaskID task_id);
+  void register_task(GlobalTaskID task_id);
 
   TaskInfo(const TaskInfo&)            = delete;
   TaskInfo& operator=(const TaskInfo&) = delete;

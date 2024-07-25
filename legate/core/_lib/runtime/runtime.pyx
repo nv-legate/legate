@@ -124,7 +124,9 @@ cdef class Runtime(Unconstructable):
     def core_library(self) -> Library:
         return self.find_library("legate.core")
 
-    cpdef AutoTask create_auto_task(self, Library library, int64_t task_id):
+    cpdef AutoTask create_auto_task(
+        self, Library library, _LocalTaskID task_id
+    ):
         """
         Creates an auto task.
 
@@ -133,7 +135,7 @@ cdef class Runtime(Unconstructable):
         library: Library
             Library to which the task id belongs
 
-        task_id : int
+        task_id : LocalTaskID
             Task id. Scoped locally within the library; i.e., different
             libraries can use the same task id. There must be a task
             implementation corresponding to the task id.
@@ -150,7 +152,7 @@ cdef class Runtime(Unconstructable):
     cpdef ManualTask create_manual_task(
         self,
         Library library,
-        int64_t task_id,
+        _LocalTaskID task_id,
         object launch_shape,
         object lower_bounds = None,
     ):
@@ -166,7 +168,7 @@ cdef class Runtime(Unconstructable):
         library: Library
             Library to which the task id belongs
 
-        task_id : int
+        task_id : LocalTaskID
             Task id. Scoped locally within the library; i.e., different
             libraries can use the same task id. There must be a task
             implementation corresponding to the task id.
@@ -325,7 +327,7 @@ cdef class Runtime(Unconstructable):
     cpdef LogicalStore tree_reduce(
         self,
         Library library,
-        int64_t task_id,
+        _LocalTaskID task_id,
         LogicalStore store,
         int64_t radix = 4,
     ):
@@ -339,7 +341,7 @@ cdef class Runtime(Unconstructable):
         library: Library
             Library to which the task id belongs
 
-        task_id : int
+        task_id : LocalTaskID
             Id of the reducer task
 
         store : LogicalStore

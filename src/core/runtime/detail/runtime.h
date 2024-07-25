@@ -83,11 +83,11 @@ class Runtime {
   void initialize(Legion::Context legion_context, std::int32_t argc, char** argv);
 
   [[nodiscard]] mapping::detail::Machine slice_machine_for_task(const Library* library,
-                                                                std::int64_t task_id) const;
+                                                                LocalTaskID task_id) const;
   [[nodiscard]] InternalSharedPtr<AutoTask> create_task(const Library* library,
-                                                        std::int64_t task_id);
+                                                        LocalTaskID task_id);
   [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library* library,
-                                                          std::int64_t task_id,
+                                                          LocalTaskID task_id,
                                                           const Domain& launch_domain);
   void issue_copy(InternalSharedPtr<LogicalStore> target,
                   InternalSharedPtr<LogicalStore> source,
@@ -111,7 +111,7 @@ class Runtime {
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
   void tree_reduce(const Library* library,
-                   std::int64_t task_id,
+                   LocalTaskID task_id,
                    InternalSharedPtr<LogicalStore> store,
                    InternalSharedPtr<LogicalStore> out_store,
                    std::int32_t radix);

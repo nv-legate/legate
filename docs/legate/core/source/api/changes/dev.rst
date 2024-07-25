@@ -16,6 +16,31 @@ Changes: Latest Development Version
 
 - Deprecate ``legate::destroy()``. Users should call ``legate::finish()`` instead.
 - Add ``legate::has_finished()``.
+- Add ``LocalTaskID`` and ``GlobalTaskID``, to describe local and global Task ID's. Use
+  these across the public and private API whenever local or global Task ID's are
+  requested. Unfortunately, this change could not be made in a backwards-compatible way,
+  and users are therefore required to make the following changes. Users that previously did
+
+  .. code-block:: c++
+
+     struct MyTask : LegateTask<MyTask> {
+       static constexpr auto TASK_ID = 0;
+     };
+
+     runtime->create_task(..., MyTask::TASK_ID);
+
+  Must now either
+
+  .. code-block:: c++
+
+     struct MyTask : LegateTask<MyTask> {
+       static constexpr auto TASK_ID = legate::LocalTaskID{0};
+
+  or
+
+  .. code-block:: c++
+
+     runtime->create_task(..., legate::LocalTaskID{MyTask::TASK_ID});
 
 .. rubric:: Data
 

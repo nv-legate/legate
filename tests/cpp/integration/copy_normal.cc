@@ -54,7 +54,7 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
     }
   };
 
-  static const std::int32_t TASK_ID = CHECK_COPY_TASK + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK_COPY_TASK + DIM};
   static void cpu_variant(legate::TaskContext context)
   {
     auto source = context.input(0).data();
@@ -96,7 +96,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
     }
   };
 
-  static constexpr std::int32_t TASK_ID = CHECK_COPY_REDUCTION_TASK + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK_COPY_REDUCTION_TASK + DIM};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -138,7 +138,8 @@ void check_copy_output(legate::Library library,
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  auto task = runtime->create_task(library, static_cast<std::int64_t>(CHECK_COPY_TASK) + tgt.dim());
+  auto task    = runtime->create_task(
+    library, legate::LocalTaskID{static_cast<std::int64_t>(CHECK_COPY_TASK) + tgt.dim()});
 
   auto src_part = task.declare_partition();
   auto tgt_part = task.declare_partition();
@@ -157,8 +158,8 @@ void check_copy_reduction_output(legate::Library library,
 {
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
-  auto task =
-    runtime->create_task(library, static_cast<std::int64_t>(CHECK_COPY_REDUCTION_TASK) + tgt.dim());
+  auto task    = runtime->create_task(
+    library, legate::LocalTaskID{static_cast<std::int64_t>(CHECK_COPY_REDUCTION_TASK) + tgt.dim()});
 
   auto src_part = task.declare_partition();
   auto tgt_part = task.declare_partition();

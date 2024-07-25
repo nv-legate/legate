@@ -25,7 +25,7 @@ enum TaskIDs : std::uint8_t {
 };
 
 struct Arange : public legate::LegateTask<Arange> {
-  static constexpr std::int32_t TASK_ID = ARANGE;
+  static constexpr auto TASK_ID = legate::LocalTaskID{ARANGE};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -40,7 +40,7 @@ struct Arange : public legate::LegateTask<Arange> {
 };
 
 struct Copy : public legate::LegateTask<Copy> {
-  static constexpr std::int32_t TASK_ID = COPY;
+  static constexpr auto TASK_ID = legate::LocalTaskID{COPY};
 
   static void cpu_variant(legate::TaskContext context)
   {

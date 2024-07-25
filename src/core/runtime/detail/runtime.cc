@@ -263,7 +263,7 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
 }
 
 mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
-                                                         std::int64_t task_id) const
+                                                         LocalTaskID task_id) const
 {
   const auto* task_info = library->find_task(task_id);
   auto sliced           = get_machine().only_if([&](mapping::TaskTarget t) {
@@ -282,7 +282,7 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
 }
 
 // This function should be moved to the library context
-InternalSharedPtr<AutoTask> Runtime::create_task(const Library* library, std::int64_t task_id)
+InternalSharedPtr<AutoTask> Runtime::create_task(const Library* library, LocalTaskID task_id)
 {
   auto machine = slice_machine_for_task(library, task_id);
   auto task    = make_internal_shared<AutoTask>(
@@ -292,7 +292,7 @@ InternalSharedPtr<AutoTask> Runtime::create_task(const Library* library, std::in
 }
 
 InternalSharedPtr<ManualTask> Runtime::create_task(const Library* library,
-                                                   std::int64_t task_id,
+                                                   LocalTaskID task_id,
                                                    const Domain& launch_domain)
 {
   if (launch_domain.empty()) {
@@ -436,7 +436,7 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
 }
 
 void Runtime::tree_reduce(const Library* library,
-                          std::int64_t task_id,
+                          LocalTaskID task_id,
                           InternalSharedPtr<LogicalStore> store,
                           InternalSharedPtr<LogicalStore> out_store,
                           std::int32_t radix)
@@ -1027,10 +1027,10 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
   LEGATE_ASSERT(partition->has_launch_domain());
   auto&& launch_domain = partition->launch_domain();
   auto output          = create_store(domain_type(), 1, true);
-  auto task =
-    create_task(core_library_,
-                sorted ? LEGATE_CORE_FIND_BOUNDING_BOX_SORTED : LEGATE_CORE_FIND_BOUNDING_BOX,
-                launch_domain);
+  auto task            = create_task(core_library_,
+                          static_cast<LocalTaskID>(sorted ? LEGATE_CORE_FIND_BOUNDING_BOX_SORTED
+                                                                     : LEGATE_CORE_FIND_BOUNDING_BOX),
+                          launch_domain);
 
   task->add_input(create_store_partition(store, partition, std::nullopt), std::nullopt);
   task->add_output(output);
@@ -1206,8 +1206,11 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result,
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
   auto variant        = mapping::detail::to_variant_code(machine.preferred_target());
-  auto launcher =
-    TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
+  auto launcher       = TaskLauncher{core_library_,
+                               machine,
+                               provenance,
+                               legate::LocalTaskID{LEGATE_CORE_EXTRACT_SCALAR_TASK_ID},
+                               variant};
 
   launcher.add_future(result);
   launcher.add_scalar(Scalar{offset});
@@ -1223,8 +1226,11 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
   auto variant        = mapping::detail::to_variant_code(machine.preferred_target());
-  auto launcher =
-    TaskLauncher{core_library_, machine, provenance, LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, variant};
+  auto launcher       = TaskLauncher{core_library_,
+                               machine,
+                               provenance,
+                               legate::LocalTaskID{LEGATE_CORE_EXTRACT_SCALAR_TASK_ID},
+                               variant};
 
   launcher.add_future_map(result);
   launcher.add_scalar(Scalar{offset});
@@ -1942,7 +1948,8 @@ void register_legate_core_tasks(Library* core_lib)
   if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
     register_extract_scalar_variant<LEGATE_OMP_VARIANT>(core_lib, task_info);
   }
-  core_lib->register_task(LEGATE_CORE_EXTRACT_SCALAR_TASK_ID, std::move(task_info));
+  core_lib->register_task(legate::LocalTaskID{LEGATE_CORE_EXTRACT_SCALAR_TASK_ID},
+                          std::move(task_info));
 
   register_array_tasks(core_lib);
   register_partitioning_tasks(core_lib);

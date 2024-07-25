@@ -25,7 +25,7 @@ constexpr const std::size_t N_TILES_PER_DIM = 2;
 }  // namespace
 
 struct ProjTesterTask : public legate::LegateTask<ProjTesterTask> {
-  static const std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static void cpu_variant(legate::TaskContext context)
   {
     auto task_index = context.get_task_index();

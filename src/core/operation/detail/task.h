@@ -51,7 +51,7 @@ class Task : public Operation {
   };
 
   Task(const Library* library,
-       std::int64_t task_id,
+       LocalTaskID task_id,
        std::uint64_t unique_id,
        std::int32_t priority,
        mapping::detail::Machine machine);
@@ -80,11 +80,11 @@ class Task : public Operation {
   [[nodiscard]] bool always_flush() const override;
   [[nodiscard]] bool supports_replicated_write() const override;
   [[nodiscard]] const Library* library() const;
-  [[nodiscard]] std::int64_t local_task_id() const;
+  [[nodiscard]] LocalTaskID local_task_id() const;
 
  protected:
   const Library* library_{};
-  std::int64_t task_id_{};
+  LocalTaskID task_id_{};
   bool concurrent_{};
   bool has_side_effect_{};
   bool can_throw_exception_{};
@@ -103,7 +103,7 @@ class Task : public Operation {
 class AutoTask final : public Task {
  public:
   AutoTask(const Library* library,
-           std::int64_t task_id,
+           LocalTaskID task_id,
            std::uint64_t unique_id,
            std::int32_t priority,
            mapping::detail::Machine machine);
@@ -140,7 +140,7 @@ class AutoTask final : public Task {
 class ManualTask final : public Task {
  public:
   ManualTask(const Library* library,
-             std::int64_t task_id,
+             LocalTaskID task_id,
              const Domain& launch_domain,
              std::uint64_t unique_id,
              std::int32_t priority,

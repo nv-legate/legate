@@ -23,7 +23,7 @@ namespace provenance {
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
   static void cpu_variant(legate::TaskContext context);
 };

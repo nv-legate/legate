@@ -19,7 +19,7 @@
 namespace test_is_running_in_task {
 
 struct Checker : public legate::LegateTask<Checker> {
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     EXPECT_TRUE(legate::is_running_in_task());

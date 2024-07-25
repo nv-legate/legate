@@ -24,7 +24,7 @@ class Library;
 
 class FindBoundingBox : public LegateTask<FindBoundingBox> {
  public:
-  static constexpr std::int32_t TASK_ID = LEGATE_CORE_FIND_BOUNDING_BOX;
+  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_FIND_BOUNDING_BOX};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true);
 
@@ -39,7 +39,7 @@ class FindBoundingBox : public LegateTask<FindBoundingBox> {
 
 class FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
  public:
-  static constexpr std::int32_t TASK_ID = LEGATE_CORE_FIND_BOUNDING_BOX_SORTED;
+  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_FIND_BOUNDING_BOX_SORTED};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true);
 

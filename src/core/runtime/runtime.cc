@@ -65,19 +65,19 @@ Library Runtime::find_or_create_library(
                                                false /*in_callback*/)};
 }
 
-AutoTask Runtime::create_task(Library library, std::int64_t task_id)
+AutoTask Runtime::create_task(Library library, LocalTaskID task_id)
 {
   return AutoTask{impl_->create_task(library.impl(), task_id)};
 }
 
 ManualTask Runtime::create_task(Library library,
-                                std::int64_t task_id,
+                                LocalTaskID task_id,
                                 const tuple<std::uint64_t>& launch_shape)
 {
   return create_task(library, task_id, detail::to_domain(launch_shape));
 }
 
-ManualTask Runtime::create_task(Library library, std::int64_t task_id, const Domain& launch_domain)
+ManualTask Runtime::create_task(Library library, LocalTaskID task_id, const Domain& launch_domain)
 {
   return ManualTask{impl_->create_task(library.impl(), task_id, launch_domain)};
 }
@@ -163,7 +163,7 @@ void Runtime::issue_fill(const LogicalArray& lhs, const Scalar& value)
 }
 
 LogicalStore Runtime::tree_reduce(Library library,
-                                  std::int64_t task_id,
+                                  LocalTaskID task_id,
                                   const LogicalStore& store,
                                   std::int32_t radix)
 {

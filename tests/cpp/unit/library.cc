@@ -18,6 +18,7 @@
 #include "utilities/utilities.h"
 
 #include <gtest/gtest.h>
+#include <string_view>
 
 namespace test_library {
 
@@ -82,8 +83,8 @@ TEST_F(Library, FindOrCreate)
   auto p_lib2      = runtime->find_or_create_library(LIBNAME, config, nullptr, {}, &created);
   ASSERT_FALSE(created);
   ASSERT_EQ(p_lib1, p_lib2);
-  ASSERT_TRUE(p_lib2.valid_task_id(p_lib2.get_task_id(0)));
-  ASSERT_THROW(static_cast<void>(p_lib2.get_task_id(1)), std::out_of_range);
+  ASSERT_TRUE(p_lib2.valid_task_id(p_lib2.get_task_id(legate::LocalTaskID{0})));
+  ASSERT_THROW(static_cast<void>(p_lib2.get_task_id(legate::LocalTaskID{1})), std::out_of_range);
 
   auto p_lib3 = runtime->find_or_create_library(LIBNAME1, config, nullptr, {}, &created);
   ASSERT_TRUE(created);
@@ -157,12 +158,13 @@ TEST_F(Library, TaskID)
   auto* runtime = legate::Runtime::get_runtime();
   auto lib      = runtime->create_library(LIBNAME, config);
 
-  auto local_task_id = 0;
+  auto local_task_id = legate::LocalTaskID{0};
   auto task_id       = lib.get_task_id(local_task_id);
   ASSERT_TRUE(lib.valid_task_id(task_id));
   ASSERT_EQ(lib.get_local_task_id(task_id), local_task_id);
 
-  auto task_id_negative = task_id + 1;
+  auto task_id_negative =
+    legate::GlobalTaskID{static_cast<std::underlying_type_t<decltype(task_id)>>(task_id) + 1};
   ASSERT_FALSE(lib.valid_task_id(task_id_negative));
 }
 
@@ -269,3 +271,59 @@ TEST_F(Library, VariantOptions)
 }
 
 }  // namespace test_library
+
+namespace example {
+
+using Library = DefaultFixture;
+
+/// [Foo declaration]
+class Foo : public legate::LegateTask<Foo> {
+ public:
+  // Foo declares a local task ID of 10
+  static constexpr auto TASK_ID = legate::LocalTaskID{10};
+
+  static void cpu_variant(legate::TaskContext /* ctx */)
+  {
+    // some very useful work...
+  }
+};
+/// [Foo declaration]
+
+TEST_F(Library, TaskIDExample)
+{
+  constexpr auto BAR_LIBNAME = std::string_view{"test_library.example.bar_lib"};
+  constexpr auto BAZ_LIBNAME = std::string_view{"test_library.example.baz_lib"};
+  const auto runtime         = legate::Runtime::get_runtime();
+
+  // We don't care about const below, as it muddies up the example with pointless noise
+  // NOLINTBEGIN(misc-const-correctness)
+
+  /// [TaskID registration]
+  legate::Library bar_lib = runtime->create_library(BAR_LIBNAME);
+  legate::Library baz_lib = runtime->create_library(BAZ_LIBNAME);
+
+  // Foo registers itself with bar, claiming the bar-local task ID of 10.
+  Foo::register_variants(bar_lib);
+  // Retrieve the global task ID after registration.
+  legate::GlobalTaskID gid_bar = bar_lib.get_task_id(Foo::TASK_ID);
+
+  // This should be false, Foo has not registered itself to baz yet.
+  ASSERT_FALSE(baz_lib.valid_task_id(gid_bar));
+
+  // However, we can query information from Legion about this task (such as its name), since
+  // the global task ID has been assigned.
+  const char* legion_task_name{};
+
+  Legion::Runtime::get_runtime()->retrieve_name(static_cast<Legion::TaskID>(gid_bar),
+                                                legion_task_name);
+  ASSERT_STREQ(legion_task_name, "example::Foo");
+
+  // We can get the same information using the local ID from the Library
+  auto task_name = bar_lib.get_task_name(Foo::TASK_ID);
+
+  ASSERT_EQ(task_name, legion_task_name);
+  /// [TaskID registration]
+  // NOLINTEND(misc-const-correctness)
+}
+
+}  // namespace example

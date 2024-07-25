@@ -54,7 +54,7 @@ namespace legate {
  * Each task can also declare the following static members which are used as defaults in
  * variious circumstances:
  *
- * - `static constexpr std::int32_t TASK_ID`: Specifies the default local task ID used when
+ * - `static constexpr legate::LocalTaskID TASK_ID`: Specifies the default local task ID used when
  *   registering a task with a library, and subsequent creation. If not present, then the user
  *   must pass the required task ID whenever creating or registering the task.
  * - `static constexpr VariantOptions CPU_VARIANT_OPTIONS`: Specifies the default variant
@@ -115,7 +115,7 @@ class LegateTask {
    */
   static void register_variants(
     Library library,
-    std::int64_t task_id,
+    LocalTaskID task_id,
     const std::map<LegateVariantCode, VariantOptions>& all_options = {});
 
  protected:

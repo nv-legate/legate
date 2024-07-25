@@ -27,11 +27,9 @@ constexpr std::size_t SIZE = 10;
 
 }  // namespace
 
-enum TaskIDs : std::uint8_t {
-  CPU_COMM_TESTER = 0,
-};
-
 struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> {
+  static constexpr auto TASK_ID = legate::LocalTaskID{};
+
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
   static void cpu_variant(legate::TaskContext context)
@@ -58,7 +56,7 @@ class Config {
   static constexpr std::string_view LIBRARY_NAME = "test_cpu_communicator";
   static void registration_callback(legate::Library library)
   {
-    CPUCommunicatorTester::register_variants(library, CPU_COMM_TESTER);
+    CPUCommunicatorTester::register_variants(library);
   }
 };
 
@@ -74,7 +72,7 @@ void test_cpu_communicator_auto(std::int32_t ndim)
     },
     legate::int32());
 
-  auto task = runtime->create_task(context, CPU_COMM_TESTER);
+  auto task = runtime->create_task(context, CPUCommunicatorTester::TASK_ID);
   auto part = task.declare_partition();
   task.add_output(store, part);
   task.add_communicator("cpu");
@@ -102,7 +100,7 @@ void test_cpu_communicator_manual(std::int32_t ndim)
 
   auto part = store.partition_by_tiling(tile_shape.data());
 
-  auto task = runtime->create_task(context, CPU_COMM_TESTER, launch_shape);
+  auto task = runtime->create_task(context, CPUCommunicatorTester::TASK_ID, launch_shape);
   task.add_output(part);
   task.add_communicator("cpu");
   runtime->submit(std::move(task));

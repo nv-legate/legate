@@ -45,7 +45,7 @@ class TaskContext {
    *
    * @return The global task id
    */
-  [[nodiscard]] std::int64_t task_id() const noexcept;
+  [[nodiscard]] GlobalTaskID task_id() const noexcept;
   /**
    * @brief Returns the Legate variant kind of the task
    *

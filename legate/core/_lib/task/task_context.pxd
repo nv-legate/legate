@@ -9,13 +9,14 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int64_t, uint32_t
+from libc.stdint cimport uint32_t
 from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
 from ..data.physical_array cimport PhysicalArray, _PhysicalArray
 from ..data.scalar cimport Scalar, _Scalar
 from ..legate_c cimport legate_core_variant_t
+from ..utilities.typedefs cimport _GlobalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 from .detail.task_context cimport _TaskContextImpl
 
@@ -23,7 +24,7 @@ from .detail.task_context cimport _TaskContextImpl
 cdef extern from "core/task/task_context.h" namespace "legate" nogil:
     cdef cppclass _TaskContext "legate::TaskContext":
         _TaskContextImpl* impl() const
-        int64_t task_id() const
+        _GlobalTaskID task_id() const
         legate_core_variant_t variant_kind() const
 
         _PhysicalArray input(uint32_t) const
@@ -47,6 +48,6 @@ cdef class TaskContext(Unconstructable):
     # the defacto constructor
     @staticmethod
     cdef TaskContext from_handle(_TaskContext* ptr)
-    cpdef int64_t get_task_id(self)
+    cpdef _GlobalTaskID get_task_id(self)
     cpdef legate_core_variant_t get_variant_kind(self)
     cpdef void set_exception(self, Exception) except *

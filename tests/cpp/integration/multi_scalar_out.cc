@@ -64,7 +64,8 @@ class ReduceFn {
 
 class WriterTask : public legate::LegateTask<WriterTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto&& outputs = context.outputs();
@@ -78,7 +79,7 @@ class WriterTask : public legate::LegateTask<WriterTask> {
 
 class ReducerTask : public legate::LegateTask<ReducerTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static void cpu_variant(legate::TaskContext context)
   {
     auto&& reductions = context.reductions();
@@ -94,7 +95,8 @@ class ReducerTask : public legate::LegateTask<ReducerTask> {
 
 class MixedTask : public legate::LegateTask<MixedTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 2;
+  static constexpr auto TASK_ID = legate::LocalTaskID{2};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto&& outputs    = context.outputs();
@@ -120,7 +122,8 @@ class MixedTask : public legate::LegateTask<MixedTask> {
 
 class UnboundTask : public legate::LegateTask<UnboundTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 3;
+  static constexpr auto TASK_ID = legate::LocalTaskID{3};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto&& outputs = context.outputs();
@@ -136,7 +139,8 @@ class UnboundTask : public legate::LegateTask<UnboundTask> {
 
 class ExnTask : public legate::LegateTask<ExnTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 4;
+  static constexpr auto TASK_ID = legate::LocalTaskID{4};
+
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     throw legate::TaskException{std::string{EXN_MSG}};
@@ -161,7 +165,8 @@ class CheckFn {
 
 class CheckerTask : public legate::LegateTask<CheckerTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 5;
+  static constexpr auto TASK_ID = legate::LocalTaskID{5};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto&& output = context.input(0).data();
@@ -173,6 +178,7 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_multi_scalar";
+
   static void registration_callback(legate::Library library)
   {
     WriterTask::register_variants(library);

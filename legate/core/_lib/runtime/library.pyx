@@ -14,6 +14,7 @@ from libc.stdint cimport int64_t, uint32_t
 from ..data.scalar cimport Scalar
 from ..task.task_info cimport _TaskInfo
 from ..type.type_info cimport Type
+from ..utilities.typedefs cimport _GlobalTaskID, _LocalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 
 
@@ -24,10 +25,10 @@ cdef class Library(Unconstructable):
         result._handle = handle
         return result
 
-    cpdef int64_t get_new_task_id(self):
+    cpdef _LocalTaskID get_new_task_id(self):
         return self._handle.get_new_task_id()
 
-    cpdef uint32_t get_task_id(self, int64_t local_task_id):
+    cpdef _GlobalTaskID get_task_id(self, _LocalTaskID local_task_id):
         return self._handle.get_task_id(local_task_id)
 
     cpdef uint32_t get_mapper_id(self):
@@ -41,8 +42,8 @@ cdef class Library(Unconstructable):
             self._handle.get_tunable(tunable_id, dtype._handle)
         )
 
-    cpdef uint32_t register_task(self, TaskInfo task_info):
-        cdef int64_t local_task_id = task_info.get_local_id()
+    cpdef _GlobalTaskID register_task(self, TaskInfo task_info):
+        cdef _LocalTaskID local_task_id = task_info.get_local_id()
 
         # do the check now before we potentially do things we can't undo
         task_info.validate_registered_py_variants()
@@ -52,7 +53,7 @@ cdef class Library(Unconstructable):
             std_unique_ptr[_TaskInfo](task_info.release())
         )
 
-        cdef uint32_t global_task_id = self.get_task_id(local_task_id)
+        cdef _GlobalTaskID global_task_id = self.get_task_id(local_task_id)
 
         task_info.register_global_variant_callbacks(global_task_id)
         return global_task_id

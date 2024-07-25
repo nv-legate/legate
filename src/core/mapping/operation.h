@@ -39,7 +39,7 @@ class Task {
    *
    * @return Task id
    */
-  [[nodiscard]] std::int64_t task_id() const;
+  [[nodiscard]] LocalTaskID task_id() const;
 
   /**
    * @brief Returns metadata for the task's input arrays

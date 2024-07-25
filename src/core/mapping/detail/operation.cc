@@ -40,7 +40,10 @@ Task::Task(const Legion::Task* task,
   scalars_    = dez.unpack_scalars();
 }
 
-std::int64_t Task::task_id() const { return library_->get_local_task_id(task_->task_id); }
+LocalTaskID Task::task_id() const
+{
+  return library_->get_local_task_id(static_cast<GlobalTaskID>(task_->task_id));
+}
 
 TaskTarget Task::target() const
 {

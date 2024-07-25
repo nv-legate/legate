@@ -16,6 +16,7 @@
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/detail/constraint.h"
 #include "core/type/detail/type_info.h"
+#include "core/utilities/typedefs.h"
 
 #include <fmt/format.h>
 
@@ -67,6 +68,18 @@ format_context::iterator formatter<legate_core_variant_t>::format(legate_core_va
   }
 
   return formatter<string_view>::format(name, ctx);
+}
+
+format_context::iterator formatter<legate::LocalTaskID>::format(legate::LocalTaskID id,
+                                                                format_context& ctx) const
+{
+  return formatter<std::underlying_type_t<legate::LocalTaskID>>::format(fmt::underlying(id), ctx);
+}
+
+format_context::iterator formatter<legate::GlobalTaskID>::format(legate::GlobalTaskID id,
+                                                                 format_context& ctx) const
+{
+  return formatter<std::underlying_type_t<legate::GlobalTaskID>>::format(fmt::underlying(id), ctx);
 }
 
 }  // namespace fmt

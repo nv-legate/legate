@@ -20,12 +20,12 @@ namespace partitioner_test {
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct Initializer : public legate::LegateTask<Initializer> {
-  static const std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 struct Checker : public legate::LegateTask<Checker> {
-  static const std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static void cpu_variant(legate::TaskContext context) { EXPECT_FALSE(context.is_single_task()); }
 };
 

@@ -9,7 +9,6 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int64_t, uint32_t
 from libcpp cimport bool
 from libcpp.functional cimport reference_wrapper as std_reference_wrapper
 from libcpp.map cimport map as std_map
@@ -18,7 +17,12 @@ from libcpp.string cimport string as std_string
 
 from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
 from ..legate_c cimport legate_core_variant_t
-from ..utilities.typedefs cimport TaskFuncPtr, VariantImpl
+from ..utilities.typedefs cimport (
+    TaskFuncPtr,
+    VariantImpl,
+    _GlobalTaskID,
+    _LocalTaskID,
+)
 from ..utilities.unconstructable cimport Unconstructable
 from .variant_options cimport _VariantOptions
 
@@ -50,16 +54,16 @@ cdef extern from "core/task/task_info.h" namespace "legate" nogil:
 cdef class TaskInfo(Unconstructable):
     cdef:
         _TaskInfo *_handle
-        int64_t _local_id
+        _LocalTaskID _local_id
         dict _registered_variants
 
     cdef void _assert_valid(self)
 
     @staticmethod
-    cdef TaskInfo from_handle(_TaskInfo*, int64_t)
+    cdef TaskInfo from_handle(_TaskInfo*, _LocalTaskID)
     cdef _TaskInfo *release(self) except NULL
     cdef void validate_registered_py_variants(self)
-    cdef void register_global_variant_callbacks(self, uint32_t)
-    cdef int64_t get_local_id(self)
+    cdef void register_global_variant_callbacks(self, _GlobalTaskID)
+    cdef _LocalTaskID get_local_id(self)
     cpdef bool has_variant(self, int)
     cpdef void add_variant(self, legate_core_variant_t, object)

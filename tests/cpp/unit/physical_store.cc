@@ -69,7 +69,7 @@ void test_future_store(const legate::Scalar& scalar);
 legate::PhysicalStore create_unbound_store_by_task(UnboundStoreOpCode op_code,
                                                    const legate::Type& type,
                                                    std::uint32_t dim = 1);
-void test_array_store(legate::LogicalArray& logical_array, std::int32_t id);
+void test_array_store(legate::LogicalArray& logical_array, legate::LocalTaskID id);
 legate::Shape get_shape(std::int32_t dim);
 // clang-tidy complains that "RO", "WO", "RW", "RD" are not lower case, but that's OK.
 // NOLINTBEGIN(readability-identifier-naming)
@@ -328,7 +328,7 @@ struct ReduceAccessorFn {
 };
 
 struct UnboundStoreTask : public legate::LegateTask<UnboundStoreTask> {
-  static constexpr std::int32_t TASK_ID = StoreTaskID::UNBOUND_STORE_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::UNBOUND_STORE_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -340,7 +340,7 @@ struct UnboundStoreTask : public legate::LegateTask<UnboundStoreTask> {
 }
 
 struct AccessorTestTask : public legate::LegateTask<AccessorTestTask> {
-  static constexpr std::int32_t TASK_ID = StoreTaskID::ACCESSOR_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::ACCESSOR_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -375,7 +375,7 @@ struct AccessorTestTask : public legate::LegateTask<AccessorTestTask> {
 }
 
 struct PrimitiveArrayStoreTask : public legate::LegateTask<PrimitiveArrayStoreTask> {
-  static constexpr std::int32_t TASK_ID = StoreTaskID::PRIMITIVE_ARRAY_STORE_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::PRIMITIVE_ARRAY_STORE_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -412,7 +412,7 @@ struct ArrayStoreFn {
 }
 
 struct ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
-  static constexpr std::int32_t TASK_ID = StoreTaskID::LIST_ARRAY_STORE_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::LIST_ARRAY_STORE_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -437,7 +437,7 @@ struct ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
 }
 
 struct StringArrayStoreTask : public legate::LegateTask<StringArrayStoreTask> {
-  static constexpr std::int32_t TASK_ID = StoreTaskID::STRING_ARRAY_STORE_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::STRING_ARRAY_STORE_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -463,7 +463,7 @@ struct StringArrayStoreTask : public legate::LegateTask<StringArrayStoreTask> {
 }
 
 struct FutureStoreTask : public legate::LegateTask<FutureStoreTask> {
-  static constexpr std::int32_t TASK_ID = StoreTaskID::FUTURE_STORE_TASK_ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::FUTURE_STORE_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -834,7 +834,7 @@ void test_bound_store(legate::PhysicalStore& store, const legate::Rect<DIM>& exp
   EXPECT_THROW(store.bind_empty_data(), std::invalid_argument);
 }
 
-void test_array_store(legate::LogicalArray& logical_array, std::int32_t id)
+void test_array_store(legate::LogicalArray& logical_array, legate::LocalTaskID id)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);

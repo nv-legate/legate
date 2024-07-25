@@ -13,7 +13,6 @@
 #pragma once
 
 // Useful for IDEs
-#include "core/runtime/runtime.h"
 #include "core/task/registrar.h"
 #include "core/task/task.h"
 #include "core/utilities/compiler.h"
@@ -36,13 +35,13 @@ template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
   Library library, const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
-  register_variants(std::move(library), T::TASK_ID, all_options);
+  register_variants(std::move(library), static_cast<LocalTaskID>(T::TASK_ID), all_options);
 }
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
   Library library,
-  std::int64_t task_id,
+  LocalTaskID task_id,
   const std::map<LegateVariantCode, VariantOptions>& all_options)
 {
   auto task_info = create_task_info_(library, all_options);

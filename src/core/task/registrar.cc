@@ -22,11 +22,11 @@ namespace legate {
 
 class TaskRegistrar::Impl {
  public:
-  std::vector<std::pair<std::int64_t, std::function<std::unique_ptr<TaskInfo>(const Library&)>>>
+  std::vector<std::pair<LocalTaskID, std::function<std::unique_ptr<TaskInfo>(const Library&)>>>
     pending_task_infos{};
 };
 
-void TaskRegistrar::record_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
+void TaskRegistrar::record_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
   record_task(RecordTaskKey{},
               local_task_id,
@@ -40,7 +40,7 @@ void TaskRegistrar::record_task(std::int64_t local_task_id, std::unique_ptr<Task
 
 void TaskRegistrar::record_task(
   RecordTaskKey,
-  std::int64_t local_task_id,
+  LocalTaskID local_task_id,
   std::function<std::unique_ptr<TaskInfo>(const Library&)> deferred_task_info)
 {
   impl_->pending_task_infos.emplace_back(local_task_id, std::move(deferred_task_info));

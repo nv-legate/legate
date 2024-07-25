@@ -21,13 +21,13 @@ namespace test_registration {
 
 template <std::int32_t ID>
 struct CPUVariantTask : public legate::LegateTask<CPUVariantTask<ID>> {
-  static const std::int32_t TASK_ID = ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{ID};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 template <std::int32_t ID>
 struct GPUVariantTask : public legate::LegateTask<GPUVariantTask<ID>> {
-  static const std::int32_t TASK_ID = ID;
+  static constexpr auto TASK_ID = legate::LocalTaskID{ID};
   static void gpu_variant(legate::TaskContext /*context*/) {}
 };
 

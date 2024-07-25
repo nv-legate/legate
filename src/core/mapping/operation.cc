@@ -17,7 +17,7 @@
 
 namespace legate::mapping {
 
-std::int64_t Task::task_id() const { return impl_()->task_id(); }
+LocalTaskID Task::task_id() const { return impl_()->task_id(); }
 
 namespace {
 

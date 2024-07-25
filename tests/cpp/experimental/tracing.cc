@@ -22,7 +22,7 @@ namespace tracing_test {
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct DummyTask : public legate::LegateTask<DummyTask> {
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 

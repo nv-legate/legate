@@ -15,6 +15,7 @@ from libcpp.memory cimport unique_ptr as std_unique_ptr
 from ..data.scalar cimport Scalar, _Scalar
 from ..task.task_info cimport TaskInfo, _TaskInfo
 from ..type.type_info cimport Type, _Type
+from ..utilities.typedefs cimport _GlobalTaskID, _LocalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 
 
@@ -22,12 +23,12 @@ cdef extern from "core/runtime/library.h" namespace "legate" nogil:
     cdef cppclass _Library "legate::Library":
         _Library()
         _Library(const _Library&)
-        int64_t get_new_task_id()
-        uint32_t get_task_id(int64_t)
+        _LocalTaskID get_new_task_id()
+        _GlobalTaskID get_task_id(_LocalTaskID)
         uint32_t get_mapper_id()
         uint32_t get_reduction_op_id(int64_t)
         _Scalar get_tunable(int64_t, _Type)
-        void register_task(int64_t, std_unique_ptr[_TaskInfo])
+        void register_task(_LocalTaskID, std_unique_ptr[_TaskInfo])
 
 
 cdef class Library(Unconstructable):
@@ -36,9 +37,9 @@ cdef class Library(Unconstructable):
     @staticmethod
     cdef Library from_handle(_Library)
 
-    cpdef int64_t get_new_task_id(self)
-    cpdef uint32_t get_task_id(self, int64_t local_task_id)
+    cpdef _LocalTaskID get_new_task_id(self)
+    cpdef _GlobalTaskID get_task_id(self, _LocalTaskID local_task_id)
     cpdef uint32_t get_mapper_id(self)
     cpdef uint32_t get_reduction_op_id(self, int64_t local_redop_id)
     cpdef Scalar get_tunable(self, int64_t tunable_id, Type dtype)
-    cpdef uint32_t register_task(self, TaskInfo task_info)
+    cpdef _GlobalTaskID register_task(self, TaskInfo task_info)

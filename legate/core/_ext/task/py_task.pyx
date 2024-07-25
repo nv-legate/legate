@@ -25,6 +25,7 @@ from ..._lib.runtime.library cimport Library
 from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.task.task_info cimport TaskInfo
+from ..._lib.utilities.typedefs cimport _LocalTaskID
 from .invoker cimport VariantInvoker
 from .type cimport VariantKind, VariantList, VariantMapping
 from .util cimport validate_variant
@@ -72,7 +73,7 @@ cdef class PyTask:
             ``PyTask.complete_registration()``) before use.
         """
         # Cython has no support for class variables...
-        self.UNREGISTERED_ID = -1
+        self.UNREGISTERED_ID = <_LocalTaskID>-1
 
         if library is None:
             library = get_legate_runtime().core_library
@@ -233,7 +234,7 @@ cdef class PyTask:
         """
         self.prepare_call(*args, **kwargs).execute()
 
-    cpdef int64_t complete_registration(self):
+    cpdef _LocalTaskID complete_registration(self):
         r"""Complete registration for a task.
 
         Returns
@@ -271,7 +272,7 @@ cdef class PyTask:
         if not variants:
             raise ValueError("Task has no registered variants")
 
-        cdef int64_t task_id = self._library.get_new_task_id()
+        cdef _LocalTaskID task_id = self._library.get_new_task_id()
         cdef TaskInfo task_info = TaskInfo.from_variants(
             task_id, self._name, variants
         )

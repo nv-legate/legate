@@ -40,7 +40,7 @@ struct AllocatorParams {
 };
 
 struct ScopedAllocatorTask : public legate::LegateTask<ScopedAllocatorTask> {
-  static constexpr std::int32_t TASK_ID = 1;
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
 
   static void cpu_variant(legate::TaskContext context);
 };

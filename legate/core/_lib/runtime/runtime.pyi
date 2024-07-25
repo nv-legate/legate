@@ -20,17 +20,24 @@ from ..data.shape import Shape
 from ..mapping.machine import Machine
 from ..operation.task import AutoTask, ManualTask
 from ..type.type_info import Type
+from ..utilities.typedefs import LocalTaskID
 from .library import Library
 
 class Runtime:
     def find_library(self, library_name: str) -> Library: ...
     @property
     def core_library(self) -> Library: ...
-    def create_auto_task(self, library: Library, task_id: int) -> AutoTask: ...
+    # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
+    # but we allow int as a type-checking convencience to users
+    def create_auto_task(
+        self, library: Library, task_id: LocalTaskID | int
+    ) -> AutoTask: ...
+    # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
+    # but we allow int as a type-checking convencience to users
     def create_manual_task(
         self,
         library: Library,
-        task_id: int,
+        task_id: LocalTaskID | int,
         launch_shape: Iterable[int],
         lower_bounds: Iterable[int] | None = None,
     ) -> ManualTask: ...
@@ -65,10 +72,12 @@ class Runtime:
     def issue_fill(
         self, lhs: LogicalStore | LogicalArray, value: Any
     ) -> None: ...
+    # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
+    # but we allow int as a type-checking convencience to users
     def tree_reduce(
         self,
         library: Library,
-        task_id: int,
+        task_id: LocalTaskID | int,
         store: LogicalStore,
         radix: int = 4,
     ) -> LogicalStore: ...

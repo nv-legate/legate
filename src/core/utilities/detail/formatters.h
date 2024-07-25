@@ -16,6 +16,14 @@
 
 #include <fmt/format.h>
 #include <string>
+#include <type_traits>
+
+namespace legate {
+
+enum class LocalTaskID : std::int64_t;
+enum class GlobalTaskID : unsigned /* A.K.A. Legion::TaskID */;
+
+}  // namespace legate
 
 namespace legate::detail {
 
@@ -76,6 +84,16 @@ struct formatter<T, Char, std::enable_if_t<std::is_base_of_v<legate::detail::Exp
 template <>
 struct formatter<legate_core_variant_t> : formatter<string_view> {
   format_context::iterator format(legate_core_variant_t variant, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::LocalTaskID> : formatter<std::underlying_type_t<legate::LocalTaskID>> {
+  format_context::iterator format(legate::LocalTaskID id, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::GlobalTaskID> : formatter<std::underlying_type_t<legate::GlobalTaskID>> {
+  format_context::iterator format(legate::GlobalTaskID id, format_context& ctx) const;
 };
 
 }  // namespace fmt

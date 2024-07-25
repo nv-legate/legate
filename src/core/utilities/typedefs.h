@@ -51,6 +51,38 @@ using Logger = Legion::Logger;
 
 using TunableID = Legion::TunableID;
 
+/**
+ * @brief Integer type representing a `Library`-local task ID.
+ *
+ * All tasks are uniquely identifiable via a "task ID". These task ID's come in 2 flavors:
+ * global and local. When a task is registered to a `Library`, the task must declare a unique
+ * "local" task ID (`LocalTaskID`) within that `Library`. This task ID must not coincide with
+ * any other task ID within that `Library`. After registration, the task is also assigned a
+ * "global" ID (`GlobalTaskID`) which is guaranteed to be unique across the entire program.
+ *
+ * `GlobalTaskID`s may therefore be used to refer to tasks registered to other `Library`s or to
+ * refer to the task when interfacing with Legion.
+ *
+ * For example, consider a task `Foo`:
+ * @snippet unit/library.cc Foo declaration
+ * And two `Library`s, `bar` and `baz`:
+ * @snippet unit/library.cc TaskID registration
+ *
+ * @see GlobalTaskID Library Library::get_task_id()
+ */
+enum class LocalTaskID : std::int64_t {};
+
+/**
+ * @brief Integer type representing a global task ID.
+ *
+ * `GlobalTaskID`s may be used to refer to tasks registered to other `Library`s or to refer to
+ * the task when interfacing with Legion. See `LocalTaskID` for further discussion on task ID's
+ * and task registration.
+ *
+ * @see LocalTaskID Library Library::get_local_task_id()
+ */
+enum class GlobalTaskID : Legion::TaskID {};
+
 // Geometry types
 
 /** @defgroup geometry Geometry types

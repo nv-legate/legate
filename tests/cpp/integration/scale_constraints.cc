@@ -27,7 +27,7 @@ enum TaskIDs : std::uint8_t {
 
 template <std::int32_t DIM>
 struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
-  static constexpr std::int32_t TASK_ID = SCALE_TESTER + DIM;
+  static constexpr auto TASK_ID = legate::LocalTaskID{SCALE_TESTER + DIM};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -82,8 +82,8 @@ void test_scale(const ScaleTestSpec& spec)
   auto smaller = runtime->create_store(spec.smaller_extents, legate::float16());
   auto bigger  = runtime->create_store(spec.bigger_extents, legate::int64());
 
-  auto task =
-    runtime->create_task(context, static_cast<std::int64_t>(SCALE_TESTER) + smaller.dim());
+  auto task = runtime->create_task(
+    context, legate::LocalTaskID{static_cast<std::int64_t>(SCALE_TESTER) + smaller.dim()});
   auto part_smaller = task.add_output(smaller);
   auto part_bigger  = task.add_output(bigger);
   task.add_constraint(legate::scale(spec.factors, part_smaller, part_bigger));
@@ -102,7 +102,7 @@ void test_invalid()
     auto smaller = runtime->create_store(legate::Shape{1, 2}, legate::float16());
     auto bigger  = runtime->create_store(legate::Shape{2, 3, 4}, legate::int64());
 
-    auto task         = runtime->create_task(context, SCALE_TESTER + 2);
+    auto task         = runtime->create_task(context, legate::LocalTaskID{SCALE_TESTER + 2});
     auto part_smaller = task.add_output(smaller);
     auto part_bigger  = task.add_output(bigger);
     task.add_constraint(legate::scale({2, 3}, part_smaller, part_bigger));
@@ -114,7 +114,7 @@ void test_invalid()
     auto smaller = runtime->create_store(legate::Shape{1, 2, 3}, legate::float16());
     auto bigger  = runtime->create_store(legate::Shape{2, 3, 4}, legate::int64());
 
-    auto task         = runtime->create_task(context, SCALE_TESTER + 3);
+    auto task         = runtime->create_task(context, legate::LocalTaskID{SCALE_TESTER + 3});
     auto part_smaller = task.add_output(smaller);
     auto part_bigger  = task.add_output(bigger);
     task.add_constraint(legate::scale({2, 3}, part_smaller, part_bigger));

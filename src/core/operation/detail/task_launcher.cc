@@ -29,7 +29,7 @@
 
 namespace legate::detail {
 
-std::int64_t TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
+GlobalTaskID TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
 
 std::int64_t TaskLauncher::legion_mapper_id() const { return library_->get_mapper_id(); }
 

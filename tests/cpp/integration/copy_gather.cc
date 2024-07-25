@@ -55,7 +55,8 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
     }
   };
 
-  static constexpr std::int32_t TASK_ID = CHECK_GATHER_TASK + IND_DIM * TEST_MAX_DIM + SRC_DIM;
+  static constexpr auto TASK_ID =
+    legate::LocalTaskID{CHECK_GATHER_TASK + IND_DIM * TEST_MAX_DIM + SRC_DIM};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -103,13 +104,14 @@ void check_gather_output(legate::Library library,
                          const legate::LogicalStore& tgt,
                          const legate::LogicalStore& ind)
 {
-  auto runtime       = legate::Runtime::get_runtime();
-  auto machine       = runtime->get_machine();
-  const auto task_id = CHECK_GATHER_TASK + ind.dim() * TEST_MAX_DIM + src.dim();
-  auto task          = runtime->create_task(library, task_id);
-  auto src_part      = task.declare_partition();
-  auto tgt_part      = task.declare_partition();
-  auto ind_part      = task.declare_partition();
+  auto runtime = legate::Runtime::get_runtime();
+  auto machine = runtime->get_machine();
+  const auto task_id =
+    legate::LocalTaskID{CHECK_GATHER_TASK + ind.dim() * TEST_MAX_DIM + src.dim()};
+  auto task     = runtime->create_task(library, task_id);
+  auto src_part = task.declare_partition();
+  auto tgt_part = task.declare_partition();
+  auto ind_part = task.declare_partition();
   task.add_input(src, src_part);
   task.add_input(tgt, tgt_part);
   task.add_input(ind, ind_part);

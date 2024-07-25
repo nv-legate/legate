@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "core/utilities/typedefs.h"
+
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -84,7 +86,7 @@ class TaskRegistrar {
   void register_all_tasks(Library& library);
 
   [[deprecated("since 24.09: Use register_all_tasks() instead")]] void record_task(
-    std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info);
+    LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
 
   class RecordTaskKey {
     RecordTaskKey() = default;
@@ -95,7 +97,7 @@ class TaskRegistrar {
   };
 
   void record_task(RecordTaskKey,
-                   std::int64_t local_task_id,
+                   LocalTaskID local_task_id,
                    std::function<std::unique_ptr<TaskInfo>(const Library&)> deferred_task_info);
 
  private:

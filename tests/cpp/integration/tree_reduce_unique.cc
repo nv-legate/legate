@@ -26,7 +26,7 @@ constexpr std::size_t TILE_SIZE = 10;
 enum TaskIDs : std::uint8_t { TASK_FILL = 1, TASK_UNIQUE, TASK_UNIQUE_REDUCE, TASK_CHECK };
 
 struct FillTask : public legate::LegateTask<FillTask> {
-  static constexpr std::int32_t TASK_ID = TASK_FILL;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_FILL};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -41,7 +41,7 @@ struct FillTask : public legate::LegateTask<FillTask> {
 };
 
 struct UniqueTask : public legate::LegateTask<UniqueTask> {
-  static constexpr std::int32_t TASK_ID = TASK_UNIQUE;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_UNIQUE};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -65,7 +65,7 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
 };
 
 struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
-  static constexpr std::int32_t TASK_ID = TASK_UNIQUE_REDUCE;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_UNIQUE_REDUCE};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -95,7 +95,7 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
 };
 
 struct CheckTask : public legate::LegateTask<CheckTask> {
-  static constexpr std::int32_t TASK_ID = TASK_CHECK;
+  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_CHECK};
 
   static void cpu_variant(legate::TaskContext context)
   {

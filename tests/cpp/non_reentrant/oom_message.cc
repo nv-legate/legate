@@ -24,7 +24,7 @@ constexpr auto HUGE_SIZE     = static_cast<std::uint64_t>(1) << HUGE_EXPONENT;  
 
 class DummyTask : public legate::LegateTask<DummyTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
   static void cpu_variant(legate::TaskContext) {}
 };

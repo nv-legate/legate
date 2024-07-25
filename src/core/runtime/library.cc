@@ -19,7 +19,7 @@ namespace legate {
 
 std::string_view Library::get_library_name() const { return impl()->get_library_name(); }
 
-Legion::TaskID Library::get_task_id(std::int64_t local_task_id) const
+GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
 {
   return impl()->get_task_id(local_task_id);
 }
@@ -41,7 +41,7 @@ Legion::ShardingID Library::get_sharding_id(std::int64_t local_shard_id) const
   return impl()->get_sharding_id(local_shard_id);
 }
 
-std::int64_t Library::get_local_task_id(Legion::TaskID task_id) const
+LocalTaskID Library::get_local_task_id(GlobalTaskID task_id) const
 {
   return impl()->get_local_task_id(task_id);
 }
@@ -61,7 +61,7 @@ std::int64_t Library::get_local_sharding_id(Legion::ShardingID shard_id) const
   return impl()->get_local_sharding_id(shard_id);
 }
 
-bool Library::valid_task_id(Legion::TaskID task_id) const { return impl()->valid_task_id(task_id); }
+bool Library::valid_task_id(GlobalTaskID task_id) const { return impl()->valid_task_id(task_id); }
 
 bool Library::valid_reduction_op_id(Legion::ReductionOpID redop_id) const
 {
@@ -78,9 +78,9 @@ bool Library::valid_sharding_id(Legion::ShardingID shard_id) const
   return impl()->valid_sharding_id(shard_id);
 }
 
-std::int64_t Library::get_new_task_id() { return impl()->get_new_task_id(); }
+LocalTaskID Library::get_new_task_id() { return impl()->get_new_task_id(); }
 
-std::string_view Library::get_task_name(std::int64_t local_task_id) const
+std::string_view Library::get_task_name(LocalTaskID local_task_id) const
 {
   return impl()->get_task_name(local_task_id);
 }
@@ -95,7 +95,7 @@ void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper)
   impl()->register_mapper(std::move(mapper), false /*in_callback*/);
 }
 
-void Library::register_task(std::int64_t local_task_id, std::unique_ptr<TaskInfo> task_info)
+void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info)
 {
   impl()->register_task(local_task_id, std::move(task_info));
 }
@@ -105,7 +105,7 @@ const std::map<LegateVariantCode, VariantOptions>& Library::get_default_variant_
   return impl()->get_default_variant_options();
 }
 
-const TaskInfo* Library::find_task(std::int64_t local_task_id) const
+const TaskInfo* Library::find_task(LocalTaskID local_task_id) const
 {
   return impl()->find_task(local_task_id);
 }

@@ -44,10 +44,10 @@ class ignore {  // NOLINT(readability-identifier-naming)
 namespace detail {
 
 template <typename LegateTask>
-[[nodiscard]] std::int64_t task_id_for(Library& library)
+[[nodiscard]] LocalTaskID task_id_for(Library& library)
 {
-  static const std::int64_t s_task_id = [&] {
-    const std::int64_t task_id = library.get_new_task_id();
+  static const LocalTaskID s_task_id = [&] {
+    const LocalTaskID task_id = library.get_new_task_id();
 
     LegateTask::register_variants(library, task_id);
     return task_id;

@@ -33,15 +33,15 @@ class TaskLauncher {
   TaskLauncher(const Library* library,
                const mapping::detail::Machine& machine,
                std::variant<std::string_view, std::string> provenance,
-               std::int64_t task_id,
+               LocalTaskID task_id,
                std::int64_t tag = 0);
 
   TaskLauncher(const Library* library,
                const mapping::detail::Machine& machine,
-               std::int64_t task_id,
+               LocalTaskID task_id,
                std::int64_t tag = 0);
 
-  [[nodiscard]] std::int64_t legion_task_id() const;
+  [[nodiscard]] GlobalTaskID legion_task_id() const;
   [[nodiscard]] std::int64_t legion_mapper_id() const;
 
   void add_input(std::unique_ptr<Analyzable> arg);
@@ -79,7 +79,7 @@ class TaskLauncher {
   void report_interfering_stores_() const;
 
   const Library* library_{};
-  std::int64_t task_id_{};
+  LocalTaskID task_id_{};
   std::int64_t tag_{};
   const mapping::detail::Machine& machine_;
   std::variant<std::string_view, std::string> provenance_{};

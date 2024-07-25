@@ -44,7 +44,7 @@ class TaskInfo::Impl {
   [[nodiscard]] std::optional<std::reference_wrapper<const VariantInfo>> find_variant(
     LegateVariantCode vid) const;
 
-  void register_task(Legion::TaskID task_id) const;
+  void register_task(GlobalTaskID task_id) const;
 
   [[nodiscard]] std::string_view name() const;
   [[nodiscard]] const std::map<LegateVariantCode, VariantInfo>& variants() const;
@@ -83,14 +83,16 @@ std::optional<std::reference_wrapper<const VariantInfo>> TaskInfo::Impl::find_va
   return it->second;
 }
 
-void TaskInfo::Impl::register_task(Legion::TaskID task_id) const
+void TaskInfo::Impl::register_task(GlobalTaskID task_id) const
 {
   const auto runtime = Legion::Runtime::get_runtime();
 
-  runtime->attach_name(task_id, name().data(), false /*mutable*/, true /*local_only*/);
+  runtime->attach_name(
+    static_cast<Legion::TaskID>(task_id), name().data(), false /*mutable*/, true /*local_only*/);
   for (auto&& [vid, vinfo] : variants()) {
     auto&& options = vinfo.options;
-    Legion::TaskVariantRegistrar registrar{task_id, false /*global*/, VARIANT_NAMES[vid].data()};
+    Legion::TaskVariantRegistrar registrar{
+      static_cast<Legion::TaskID>(task_id), false /*global*/, VARIANT_NAMES[vid].data()};
 
     registrar.add_constraint(Legion::ProcessorConstraint{VARIANT_PROC_KINDS[vid]});
     options.populate_registrar(registrar);
@@ -177,7 +179,7 @@ std::optional<std::reference_wrapper<const VariantInfo>> TaskInfo::find_variant(
 
 bool TaskInfo::has_variant(LegateVariantCode vid) const { return find_variant(vid).has_value(); }
 
-void TaskInfo::register_task(Legion::TaskID task_id) { impl_->register_task(task_id); }
+void TaskInfo::register_task(GlobalTaskID task_id) { impl_->register_task(task_id); }
 
 std::ostream& operator<<(std::ostream& os, const VariantInfo& info)
 {

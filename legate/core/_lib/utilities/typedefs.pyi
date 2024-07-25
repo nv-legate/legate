@@ -9,6 +9,11 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from typing import NewType
+
+LocalTaskID = NewType("LocalTaskID", int)
+GlobalTaskID = NewType("GlobalTaskID", int)
+
 class DomainPoint:
     def __init__(self) -> None: ...
     @property
