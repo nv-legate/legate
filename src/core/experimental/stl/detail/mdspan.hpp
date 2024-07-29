@@ -353,8 +353,8 @@ class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
   using difference_type   = std::ptrdiff_t;
   using iterator_category = std::random_access_iterator_tag;
   using pointer           = std::conditional_t<std::is_lvalue_reference_v<reference>,
-                                     std::add_pointer_t<reference>,
-                                     pointer_type>;
+                                               std::add_pointer_t<reference>,
+                                               pointer_type>;
 
   LEGATE_HOST_DEVICE [[nodiscard]] reference operator*() const noexcept
   {

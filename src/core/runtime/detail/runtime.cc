@@ -1029,7 +1029,7 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
   auto output          = create_store(domain_type(), 1, true);
   auto task            = create_task(core_library_,
                           static_cast<LocalTaskID>(sorted ? LEGATE_CORE_FIND_BOUNDING_BOX_SORTED
-                                                                     : LEGATE_CORE_FIND_BOUNDING_BOX),
+                                                          : LEGATE_CORE_FIND_BOUNDING_BOX),
                           launch_domain);
 
   task->add_input(create_store_partition(store, partition, std::nullopt), std::nullopt);

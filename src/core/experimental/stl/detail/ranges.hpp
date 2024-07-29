@@ -89,8 +89,8 @@ class tag {
   }
 
   template <typename Range>
-  [[nodiscard]] auto operator()(Range&& rng) const noexcept(nothrow_begin<Range>())
-    -> begin_result_t<Range>
+  [[nodiscard]] auto operator()(Range&& rng) const
+    noexcept(nothrow_begin<Range>()) -> begin_result_t<Range>
   {
     if constexpr (meta::evaluable_q<member_begin_t, Range>) {
       return std::forward<Range>(rng).begin();
@@ -132,8 +132,8 @@ class tag {
   }
 
   template <typename Range>
-  [[nodiscard]] auto operator()(Range&& rng) const noexcept(nothrow_end<Range>())
-    -> end_result_t<Range>
+  [[nodiscard]] auto operator()(Range&& rng) const
+    noexcept(nothrow_end<Range>()) -> end_result_t<Range>
   {
     if constexpr (meta::evaluable_q<member_end_t, Range>) {
       return std::forward<Range>(rng).end();
@@ -176,13 +176,13 @@ using range_value_t = typename std::iterator_traits<iterator_t<Range>>::value_ty
 namespace detail {
 
 template <typename Iter>
-auto is_iterator_like(Iter iter, Iter other)
-  -> decltype((void)++iter, (void)*iter, (void)(iter == other));
+auto is_iterator_like(Iter iter,
+                      Iter other) -> decltype((void)++iter, (void)*iter, (void)(iter == other));
 
 template <typename Range>
-auto is_range_like(Range&& rng)
-  -> decltype(detail::is_iterator_like(stl::begin(rng), stl::begin(rng)),
-              (void)(stl::begin(rng) == stl::end(rng)));
+auto is_range_like(Range&& rng) -> decltype(detail::is_iterator_like(stl::begin(rng),
+                                                                     stl::begin(rng)),
+                                            (void)(stl::begin(rng) == stl::end(rng)));
 
 template <typename Range>
 using is_range_like_t = decltype(detail::is_range_like(std::declval<Range>()));

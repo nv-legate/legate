@@ -21,28 +21,28 @@ repos:
       hooks:
             - id: isort
     - repo: https://github.com/psf/black
-      rev: 24.1.1
+      rev: 24.4.2
       hooks:
             - id: black
     - repo: https://github.com/PyCQA/flake8
-      rev: 7.0.0
+      rev: 7.1.0
       hooks:
             - id: flake8
     - repo: https://github.com/pre-commit/mirrors-clang-format
-      rev: 'v17.0.6'
+      rev: 'v18.1.8'
       hooks:
         - id: clang-format
           files: \.(cu|cuh|h|hpp|cc|inl)$
           types_or: []
     - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: 'v1.8.0'
+      rev: 'v1.11.0'
       hooks:
         - id: mypy
           pass_filenames: false
           args: ['legate', 'tests', 'config', 'test.py']
           additional_dependencies: [numpy,pytest,pytest_mock,types-psutil]
     - repo: https://github.com/MarcoGorelli/cython-lint
-      rev: v0.16.0
+      rev: v0.16.2
       hooks:
       - id: cython-lint
       - id: double-quote-cython-strings

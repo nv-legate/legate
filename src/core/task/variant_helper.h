@@ -126,10 +126,10 @@ class VariantHelper<T, SELECTOR, true> {
         TaskInfo::AddVariantKey{}, lib, variant_kind, variant_impl, entry, options, all_options);
     } else {
       using RET            = std::invoke_result_t<decltype(variant_impl),
-                                       const Legion::Task*,
-                                       const std::vector<Legion::PhysicalRegion>&,
-                                       Legion::Context,
-                                       Legion::Runtime*>;
+                                                  const Legion::Task*,
+                                                  const std::vector<Legion::PhysicalRegion>&,
+                                                  Legion::Context,
+                                                  Legion::Runtime*>;
       constexpr auto entry = T::BASE::template task_wrapper_<RET, variant_impl, variant_kind>;
 
       task_info->add_variant_(

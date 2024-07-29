@@ -178,7 +178,16 @@ class SettingBase:
 
     @property
     def default(self) -> Unset[T]:
-        return self._default
+        # Confusing error:
+        #
+        # legate/util/settings.py: note: In member "default" of class
+        # "SettingBase": legate/util/settings.py:181:16: error: Incompatible
+        # return value type (got "T@__init__ | type[_Unset]", expected
+        # "T@default | type[_Unset]") [return-value]
+        #
+        #             return self._default
+        #                    ^~~~~~~~~~~~~
+        return self._default  # type: ignore[return-value]
 
     @property
     def convert_type(self) -> str:

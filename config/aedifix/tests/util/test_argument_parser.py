@@ -98,7 +98,7 @@ class TestConfigArgument:
             assert action.const == (None if const is Unset else const)
             assert action.default == (None if default is Unset else default)
             assert action.metavar == (None if metavar is Unset else metavar)
-            assert action.type is ty  # type: ignore[comparison-overlap]
+            assert action.type is ty
         assert action.choices is None
         assert action.required is False
         assert action.help is None
