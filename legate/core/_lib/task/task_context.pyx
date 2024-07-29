@@ -13,6 +13,7 @@ from cpython.bytes cimport PyBytes_AsStringAndSize
 
 from ..data.physical_array cimport PhysicalArray
 from ..data.scalar cimport Scalar
+from ..utilities.typedefs cimport VariantCode
 from ..utilities.unconstructable cimport Unconstructable
 from .detail.returned_python_exception cimport _ReturnedPythonException
 
@@ -34,7 +35,7 @@ cdef class TaskContext(Unconstructable):
     cpdef _GlobalTaskID get_task_id(self):
         return self._handle.task_id()
 
-    cpdef legate_core_variant_t get_variant_kind(self):
+    cpdef VariantCode get_variant_kind(self):
         return self._handle.variant_kind()
 
     @property

@@ -509,12 +509,9 @@ rapids_cmake_install_lib_dir(lib_dir)
 
 install(TARGETS legate_core DESTINATION ${lib_dir} EXPORT legate-core-exports)
 
-install(FILES src/legate.h src/legate_preamble.h
-              ${CMAKE_CURRENT_BINARY_DIR}/include/legate/version_config.hpp
+install(FILES src/legate.h ${CMAKE_CURRENT_BINARY_DIR}/include/legate/version_config.hpp
               ${CMAKE_CURRENT_BINARY_DIR}/include/legate/legate_defines.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate)
-
-install(FILES src/core/legate_c.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core)
 
 install(FILES src/core/comm/coll_comm.h src/core/comm/coll.h src/core/comm/communicator.h
               src/core/comm/communicator.inl

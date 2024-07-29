@@ -15,24 +15,8 @@ from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
 import builtins
-from enum import IntEnum, unique
 
 import numpy as np
-
-from ..legate_c cimport legate_core_reduction_op_kind_t
-
-
-@unique
-class ReductionOp(IntEnum):
-    ADD = legate_core_reduction_op_kind_t._ADD
-    SUB = legate_core_reduction_op_kind_t._SUB
-    MUL = legate_core_reduction_op_kind_t._MUL
-    DIV = legate_core_reduction_op_kind_t._DIV
-    MAX = legate_core_reduction_op_kind_t._MAX
-    MIN = legate_core_reduction_op_kind_t._MIN
-    OR = legate_core_reduction_op_kind_t._OR
-    AND = legate_core_reduction_op_kind_t._AND
-    XOR = legate_core_reduction_op_kind_t._XOR
 
 
 cdef dict _NUMPY_DTYPES = {

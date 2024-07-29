@@ -159,8 +159,7 @@ class Library {
   void register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
   [[nodiscard]] const TaskInfo* find_task(LocalTaskID local_task_id) const;
 
-  [[nodiscard]] const std::map<LegateVariantCode, VariantOptions>& get_default_variant_options()
-    const;
+  [[nodiscard]] const std::map<VariantCode, VariantOptions>& get_default_variant_options() const;
 
   LEGATE_CYTHON_DEFAULT_CTOR(Library);
 

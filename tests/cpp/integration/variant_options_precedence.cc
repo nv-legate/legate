@@ -43,14 +43,15 @@ legate::Library create_library(std::string_view library_name)
     library_name,
     legate::ResourceConfig{},
     nullptr,
-    {{LEGATE_CPU_VARIANT, legate::VariantOptions{}.with_return_size(LIB_DEFAULT_RETURN_SIZE)}});
+    {{legate::VariantCode::CPU,
+      legate::VariantOptions{}.with_return_size(LIB_DEFAULT_RETURN_SIZE)}});
 }
 
 void check_return_size(const legate::Library& library,
                        legate::LocalTaskID task_id,
                        std::size_t return_size_to_match)
 {
-  auto&& vinfo = library.find_task(task_id)->find_variant(LEGATE_CPU_VARIANT);
+  auto&& vinfo = library.find_task(task_id)->find_variant(legate::VariantCode::CPU);
   ASSERT_TRUE(vinfo.has_value());
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   EXPECT_EQ(vinfo->get().options.return_size, return_size_to_match);
@@ -62,7 +63,8 @@ TEST_F(VariantOptionsPrecedence, RegOptions)
 {
   auto library = create_library("test_reg_options");
   HasDeclOptions::register_variants(
-    library, {{LEGATE_CPU_VARIANT, legate::VariantOptions{}.with_return_size(REG_RETURN_SIZE)}});
+    library,
+    {{legate::VariantCode::CPU, legate::VariantOptions{}.with_return_size(REG_RETURN_SIZE)}});
   check_return_size(library, HasDeclOptions::TASK_ID, REG_RETURN_SIZE);
 }
 

@@ -34,7 +34,7 @@ class LegionTask : private LegateTask<T> {
   template <typename, template <typename...> typename, bool>
   friend class VariantHelper;
 
-  template <typename U, LegionVariantImpl<U> variant_fn, LegateVariantCode variant_kind>
+  template <typename U, LegionVariantImpl<U> variant_fn, VariantCode variant_kind>
   static void task_wrapper_(const void* args,
                             std::size_t arglen,
                             const void* userdata,

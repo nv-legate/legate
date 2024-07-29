@@ -14,6 +14,7 @@
 
 #include "core/partitioning/partition.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/core_ids.h"
 
 #include <algorithm>
 #include <fmt/format.h>
@@ -139,7 +140,7 @@ tuple<std::uint64_t> TransformStack::invert_point(tuple<std::uint64_t> point) co
 void TransformStack::pack(BufferBuilder& buffer) const
 {
   if (identity()) {
-    buffer.pack<std::int32_t>(-1);
+    buffer.pack<CoreTransform>(CoreTransform::INVALID);
   } else {
     transform_->pack(buffer);
     parent_->pack(buffer);
@@ -295,7 +296,7 @@ tuple<std::uint64_t> Shift::invert_point(tuple<std::uint64_t> point) const
 
 void Shift::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_SHIFT);
+  buffer.pack<CoreTransform>(CoreTransform::SHIFT);
   buffer.pack<std::int32_t>(dim_);
   buffer.pack<std::int64_t>(offset_);
 }
@@ -421,7 +422,7 @@ tuple<std::uint64_t> Promote::invert_point(tuple<std::uint64_t> point) const
 
 void Promote::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_PROMOTE);
+  buffer.pack<CoreTransform>(CoreTransform::PROMOTE);
   buffer.pack<std::int32_t>(extra_dim_);
   buffer.pack<std::int64_t>(dim_size_);
 }
@@ -563,7 +564,7 @@ tuple<std::uint64_t> Project::invert_point(tuple<std::uint64_t> point) const
 
 void Project::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_PROJECT);
+  buffer.pack<CoreTransform>(CoreTransform::PROJECT);
   buffer.pack<std::int32_t>(dim_);
   buffer.pack<std::int64_t>(coord_);
 }
@@ -727,7 +728,7 @@ void print_vector(std::ostream& out, const std::vector<T>& vec)
 
 void Transpose::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_TRANSPOSE);
+  buffer.pack<CoreTransform>(CoreTransform::TRANSPOSE);
   buffer.pack<std::uint32_t>(axes_.size());
   for (auto axis : axes_) {
     buffer.pack<std::int32_t>(axis);
@@ -951,7 +952,7 @@ tuple<std::uint64_t> Delinearize::invert_point(tuple<std::uint64_t> /*point*/) c
 
 void Delinearize::pack(BufferBuilder& buffer) const
 {
-  buffer.pack<std::int32_t>(LEGATE_CORE_TRANSFORM_DELINEARIZE);
+  buffer.pack<CoreTransform>(CoreTransform::DELINEARIZE);
   buffer.pack<std::int32_t>(dim_);
   buffer.pack<std::uint32_t>(sizes_.size());
   for (auto extent : sizes_) {

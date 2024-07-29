@@ -12,13 +12,14 @@
 
 #pragma once
 
-#include "core/legate_c.h"
-
 #include "legion.h"
 
 #include "legate_defines.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <vector>
 
 /**
  * @file
@@ -39,11 +40,18 @@ using LegionVariantImpl = T (*)(const Legion::Task*,
                                 Legion::Runtime*);
 using ShutdownCallback  = std::function<void(void)>;
 
-// C enum typedefs
-using LegateVariantCode = legate_core_variant_t;
-using LegateMappingTag  = legate_core_mapping_tag_t;
+// The size of this enum is deliberate
+enum class VariantCode : Legion::VariantID {  // NOLINT(performance-enum-size)
+  NONE,
+  CPU,
+  GPU,
+  OMP,
+};
 
-using LegateMainFnPtr = void (*)(int32_t, char**);
+using LegateVariantCode [[deprecated("since 24.09: use legate::VariantCode instead")]] =
+  VariantCode;
+
+using LegateMainFnPtr = void (*)(std::int32_t, char**);
 
 using Logger = Legion::Logger;
 
@@ -397,3 +405,13 @@ struct hash<legate::Memory> {
 };
 
 }  // namespace std
+
+// backwards-compat workaround, should not use
+[[deprecated("since 24.09: using legate::VariantCode::NONE instead")]] inline constexpr auto
+  LEGATE_NO_VARIANT = legate::VariantCode::NONE;
+[[deprecated("since 24.09: using legate::VariantCode::CPU instead")]] inline constexpr auto
+  LEGATE_CPU_VARIANT = legate::VariantCode::CPU;
+[[deprecated("since 24.09: using legate::VariantCode::GPU instead")]] inline constexpr auto
+  LEGATE_GPU_VARIANT = legate::VariantCode::GPU;
+[[deprecated("since 24.09: using legate::VariantCode::OMP instead")]] inline constexpr auto
+  LEGATE_OMP_VARIANT = legate::VariantCode::OMP;

@@ -84,9 +84,9 @@ void test_register_tasks(legate::Library& context)
   using HelloTask2 = BaseTask<HELLO2>;
   using HelloTask3 = BaseTask<HELLO3>;
 
-  std::map<legate::LegateVariantCode, legate::VariantOptions> all_options;
-  all_options[LEGATE_CPU_VARIANT] = legate::VariantOptions{};
-  all_options[LEGATE_GPU_VARIANT] = legate::VariantOptions{};
+  std::map<legate::VariantCode, legate::VariantOptions> all_options;
+  all_options[legate::VariantCode::CPU] = legate::VariantOptions{};
+  all_options[legate::VariantCode::GPU] = legate::VariantOptions{};
 
   {
     HelloTask::register_variants();
@@ -200,10 +200,11 @@ TEST_F(RegisterVariants, DefaultVariantOptions)
   static_assert(legate::VariantOptions::DEFAULT_OPTIONS != DefaultOptionsTask::OMP_VARIANT_OPTIONS);
   static_assert(legate::VariantOptions::DEFAULT_OPTIONS != DefaultOptionsTask::GPU_VARIANT_OPTIONS);
 
-  constexpr std::array variant_kinds = {LEGATE_CPU_VARIANT, LEGATE_OMP_VARIANT, LEGATE_GPU_VARIANT};
-  constexpr std::array options       = {DefaultOptionsTask::CPU_VARIANT_OPTIONS,
-                                        DefaultOptionsTask::OMP_VARIANT_OPTIONS,
-                                        DefaultOptionsTask::GPU_VARIANT_OPTIONS};
+  constexpr std::array variant_kinds = {
+    legate::VariantCode::CPU, legate::VariantCode::OMP, legate::VariantCode::GPU};
+  constexpr std::array options = {DefaultOptionsTask::CPU_VARIANT_OPTIONS,
+                                  DefaultOptionsTask::OMP_VARIANT_OPTIONS,
+                                  DefaultOptionsTask::GPU_VARIANT_OPTIONS};
 
   for (auto&& [variant_kind, default_options] : legate::detail::zip_equal(variant_kinds, options)) {
     const auto variant = task_info->find_variant(variant_kind);

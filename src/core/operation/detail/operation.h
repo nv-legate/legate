@@ -13,10 +13,10 @@
 #pragma once
 
 #include "core/data/detail/logical_store.h"
-#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/store_projection.h"
 #include "core/partitioning/detail/constraint.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/formatters.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
@@ -82,7 +82,7 @@ class Operation {
 
   std::uint64_t unique_id_{};
   std::int32_t next_part_id_{};
-  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
+  std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
   std::deque<Variable> partition_symbols_{};
   std::unordered_map<std::reference_wrapper<const Variable>, InternalSharedPtr<LogicalStore>>
     store_mappings_{};

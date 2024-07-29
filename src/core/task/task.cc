@@ -61,7 +61,7 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 }
 
 void task_wrapper(VariantImpl variant_impl,
-                  LegateVariantCode variant_kind,
+                  VariantCode variant_kind,
                   std::optional<std::string_view> task_name,
                   const void* args,
                   std::size_t arglen,

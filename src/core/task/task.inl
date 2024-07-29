@@ -20,8 +20,7 @@
 namespace legate {
 
 template <typename T>
-/*static*/ void LegateTask<T>::register_variants(
-  std::map<LegateVariantCode, VariantOptions> all_options)
+/*static*/ void LegateTask<T>::register_variants(std::map<VariantCode, VariantOptions> all_options)
 {
   T::Registrar::get_registrar().record_task(
     TaskRegistrar::RecordTaskKey{},
@@ -33,16 +32,14 @@ template <typename T>
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
-  Library library, const std::map<LegateVariantCode, VariantOptions>& all_options)
+  Library library, const std::map<VariantCode, VariantOptions>& all_options)
 {
   register_variants(std::move(library), static_cast<LocalTaskID>(T::TASK_ID), all_options);
 }
 
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
-  Library library,
-  LocalTaskID task_id,
-  const std::map<LegateVariantCode, VariantOptions>& all_options)
+  Library library, LocalTaskID task_id, const std::map<VariantCode, VariantOptions>& all_options)
 {
   auto task_info = create_task_info_(library, all_options);
   library.register_task(task_id, std::move(task_info));
@@ -50,7 +47,7 @@ template <typename T>
 
 template <typename T>
 /*static*/ std::unique_ptr<TaskInfo> LegateTask<T>::create_task_info_(
-  const Library& lib, const std::map<LegateVariantCode, VariantOptions>& all_options)
+  const Library& lib, const std::map<VariantCode, VariantOptions>& all_options)
 {
   auto task_info = std::make_unique<TaskInfo>(std::string{task_name_()});
   detail::VariantHelper<T, detail::CPUVariant>::record(lib, task_info.get(), all_options);
@@ -67,7 +64,7 @@ template <typename T>
 }
 
 template <typename T>
-template <VariantImpl variant_fn, LegateVariantCode variant_kind>
+template <VariantImpl variant_fn, VariantCode variant_kind>
 /*static*/ void LegateTask<T>::task_wrapper_(const void* args,
                                              std::size_t arglen,
                                              const void* userdata,

@@ -8,11 +8,12 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from enum import IntEnum
 from typing import Any
 
 import numpy as np
 
-class ReductionOp:
+class ReductionOpKind(IntEnum):
     ADD: int
     SUB: int
     MUL: int

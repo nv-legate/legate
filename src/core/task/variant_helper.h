@@ -35,7 +35,7 @@ template <typename T>
 class LegionTask;
 
 void task_wrapper(VariantImpl,
-                  LegateVariantCode,
+                  VariantCode,
                   std::optional<std::string_view>,
                   const void*,
                   size_t,
@@ -43,7 +43,7 @@ void task_wrapper(VariantImpl,
                   size_t,
                   Legion::Processor);
 
-template <VariantImpl variant_fn, LegateVariantCode variant_kind>
+template <VariantImpl variant_fn, VariantCode variant_kind>
 inline void task_wrapper_dyn_name(const void* args,
                                   std::size_t arglen,
                                   const void* userdata,
@@ -80,7 +80,7 @@ inline void task_wrapper_dyn_name(const void* args,
                                                                                              \
    public:                                                                                   \
     static constexpr auto variant  = T::name##_variant;                                      \
-    static constexpr auto id       = LEGATE_##NAME##_VARIANT;                                \
+    static constexpr auto id       = VariantCode::NAME;                                      \
     static constexpr auto* options = get_default_options_();                                 \
                                                                                              \
     static_assert(std::is_convertible_v<decltype(variant), VariantImpl> ||                   \
@@ -101,7 +101,7 @@ class VariantHelper {
  public:
   static void record(const legate::Library& /*lib*/,
                      TaskInfo* /*task_info*/,
-                     const std::map<LegateVariantCode, VariantOptions>& /*all_options*/)
+                     const std::map<VariantCode, VariantOptions>& /*all_options*/)
   {
   }
 };
@@ -111,7 +111,7 @@ class VariantHelper<T, SELECTOR, true> {
  public:
   static void record(const legate::Library& lib,
                      TaskInfo* task_info,
-                     const std::map<LegateVariantCode, VariantOptions>& all_options)
+                     const std::map<VariantCode, VariantOptions>& all_options)
   {
     // Construct the code descriptor for this task so that the library
     // can register it later when it is ready

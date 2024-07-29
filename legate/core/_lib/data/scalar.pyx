@@ -36,7 +36,7 @@ from ..type.type_info cimport Type, _Type
 
 from ..type.type_info import null_type
 
-from ..legate_c cimport __convert_halfint_to_float, __half
+from ..utilities.typedefs cimport __convert_halfint_to_float, __half
 from ..utilities.utils cimport is_iterable
 
 

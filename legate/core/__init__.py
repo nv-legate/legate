@@ -30,7 +30,7 @@ from ._lib.runtime.scope import Scope
 
 get_legate_runtime()
 from .utils import Annotation
-from ._lib.legate_c import LEGATE_MAX_DIM
+from ._lib.legate_defines import LEGATE_MAX_DIM
 from ._lib.utilities.typedefs import GlobalTaskID, LocalTaskID
 from ._lib.data.inline_allocation import InlineAllocation
 from ._lib.data.logical_array import LogicalArray
@@ -55,7 +55,7 @@ from ._lib.task.task_context import TaskContext
 from ._lib.task.task_info import TaskInfo
 
 from .types import (
-    ReductionOp,
+    ReductionOpKind,
     Type,
     array_type,
     binary_type,

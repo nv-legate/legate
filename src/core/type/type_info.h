@@ -12,9 +12,10 @@
 
 #pragma once
 
-#include "core/legate_c.h"
 #include "core/utilities/compiler.h"
 #include "core/utilities/shared_ptr.h"
+
+#include "legion/legion_config.h"
 
 #include <iosfwd>
 #include <string>
@@ -47,15 +48,15 @@ class StructType;
  * @brief Enum for reduction operator kinds
  */
 enum class ReductionOpKind : std::int32_t {
-  ADD = ADD_LT, /*!< Addition */
-  SUB = SUB_LT, /*!< Subtraction */
-  MUL = MUL_LT, /*!< Multiplication */
-  DIV = DIV_LT, /*!< Division */
-  MAX = MAX_LT, /*!< Binary maximum operator */
-  MIN = MIN_LT, /*!< Binary minimum operator */
-  OR  = OR_LT,  /*!< Bitwise OR */
-  AND = AND_LT, /*!< Bitwse AND */
-  XOR = XOR_LT, /*!< Bitwas XOR */
+  ADD = LEGION_REDOP_KIND_SUM,  /*!< Addition */
+  SUB = LEGION_REDOP_KIND_DIFF, /*!< Subtraction */
+  MUL = LEGION_REDOP_KIND_PROD, /*!< Multiplication */
+  DIV = LEGION_REDOP_KIND_DIV,  /*!< Division */
+  MAX = LEGION_REDOP_KIND_MAX,  /*!< Binary maximum operator */
+  MIN = LEGION_REDOP_KIND_MIN,  /*!< Binary minimum operator */
+  OR  = LEGION_REDOP_KIND_OR,   /*!< Bitwise OR */
+  AND = LEGION_REDOP_KIND_AND,  /*!< Bitwse AND */
+  XOR = LEGION_REDOP_KIND_XOR,  /*!< Bitwas XOR */
 };
 // NOLINTEND(performance-enum-size)
 
@@ -72,26 +73,26 @@ class Type {
    * @brief Enum for type codes
    */
   enum class Code : std::int32_t {
-    NIL         = NULL_LT,        /*!< Null type */
-    BOOL        = BOOL_LT,        /*!< Boolean type */
-    INT8        = INT8_LT,        /*!< 8-bit signed integer type */
-    INT16       = INT16_LT,       /*!< 16-bit signed integer type */
-    INT32       = INT32_LT,       /*!< 32-bit signed integer type */
-    INT64       = INT64_LT,       /*!< 64-bit signed integer type */
-    UINT8       = UINT8_LT,       /*!< 8-bit unsigned integer type */
-    UINT16      = UINT16_LT,      /*!< 16-bit unsigned integer type */
-    UINT32      = UINT32_LT,      /*!< 32-bit unsigned integer type */
-    UINT64      = UINT64_LT,      /*!< 64-bit unsigned integer type */
-    FLOAT16     = FLOAT16_LT,     /*!< Half-precision floating point type */
-    FLOAT32     = FLOAT32_LT,     /*!< Single-precision floating point type */
-    FLOAT64     = FLOAT64_LT,     /*!< Double-precision floating point type */
-    COMPLEX64   = COMPLEX64_LT,   /*!< Single-precision complex type */
-    COMPLEX128  = COMPLEX128_LT,  /*!< Double-precision complex type */
-    BINARY      = BINARY_LT,      /*!< Opaque binary type */
-    FIXED_ARRAY = FIXED_ARRAY_LT, /*!< Fixed-size array type */
-    STRUCT      = STRUCT_LT,      /*!< Struct type */
-    STRING      = STRING_LT,      /*!< String type */
-    LIST        = LIST_LT,        /*!< List type */
+    BOOL       = LEGION_TYPE_BOOL,       /*!< Boolean type */
+    INT8       = LEGION_TYPE_INT8,       /*!< 8-bit signed integer type */
+    INT16      = LEGION_TYPE_INT16,      /*!< 16-bit signed integer type */
+    INT32      = LEGION_TYPE_INT32,      /*!< 32-bit signed integer type */
+    INT64      = LEGION_TYPE_INT64,      /*!< 64-bit signed integer type */
+    UINT8      = LEGION_TYPE_UINT8,      /*!< 8-bit unsigned integer type */
+    UINT16     = LEGION_TYPE_UINT16,     /*!< 16-bit unsigned integer type */
+    UINT32     = LEGION_TYPE_UINT32,     /*!< 32-bit unsigned integer type */
+    UINT64     = LEGION_TYPE_UINT64,     /*!< 64-bit unsigned integer type */
+    FLOAT16    = LEGION_TYPE_FLOAT16,    /*!< Half-precision floating point type */
+    FLOAT32    = LEGION_TYPE_FLOAT32,    /*!< Single-precision floating point type */
+    FLOAT64    = LEGION_TYPE_FLOAT64,    /*!< Double-precision floating point type */
+    COMPLEX64  = LEGION_TYPE_COMPLEX64,  /*!< Single-precision complex type */
+    COMPLEX128 = LEGION_TYPE_COMPLEX128, /*!< Double-precision complex type */
+    NIL,                                 /*!< Null type */
+    BINARY,                              /*!< Opaque binary type */
+    FIXED_ARRAY,                         /*!< Fixed-size array type */
+    STRUCT,                              /*!< Struct type */
+    STRING,                              /*!< String type */
+    LIST,                                /*!< List type */
   };
   // NOLINTEND(performance-enum-size)
 

@@ -18,6 +18,7 @@
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/core_ids.h"
 
 namespace legate::detail {
 
@@ -56,7 +57,7 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
     lhs_proj.proj_id,
     Legion::Predicate::TRUE_PRED,
     runtime->core_library()->get_mapper_id(),
-    static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
+    lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
     mapper_arg.to_legion_buffer(),
     provenance.data()};
 
@@ -84,7 +85,7 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
     lhs_proj.proj_id,
     Legion::Predicate::TRUE_PRED,
     runtime->core_library()->get_mapper_id(),
-    static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
+    lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
     mapper_arg.to_legion_buffer(),
     provenance.data()};
 
@@ -110,7 +111,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
     std::move(future_value),
     Legion::Predicate::TRUE_PRED,
     runtime->core_library()->get_mapper_id(),
-    static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
+    lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
     mapper_arg.to_legion_buffer(),
     provenance.data()};
 
@@ -135,7 +136,7 @@ void FillLauncher::launch_single(LogicalStore* lhs,
     Legion::UntypedBuffer{value.data(), value.size()},
     Legion::Predicate::TRUE_PRED,
     runtime->core_library()->get_mapper_id(),
-    static_cast<Legion::MappingTagID>(lhs_proj.is_key ? LEGATE_CORE_KEY_STORE_TAG : 0),
+    lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
     mapper_arg.to_legion_buffer(),
     provenance.data()};
 

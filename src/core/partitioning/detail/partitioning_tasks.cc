@@ -12,7 +12,6 @@
 
 #include "core/partitioning/detail/partitioning_tasks.h"
 
-#include "core/legate_c.h"
 #include "core/task/task_context.h"
 #include "core/utilities/dispatch.h"
 

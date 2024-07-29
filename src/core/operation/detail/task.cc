@@ -22,6 +22,7 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/task/detail/task_return_layout.h"
 #include "core/type/detail/type_info.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/zip.h"
 
 #include <fmt/format.h>
@@ -135,7 +136,7 @@ void Task::launch_task_(Strategy* p_strategy)
   launcher.set_concurrent(concurrent_);
   launcher.throws_exception(can_throw_exception_);
   launcher.can_elide_device_ctx_sync([&] {
-    const auto variant = library()->find_task(local_task_id())->find_variant(LEGATE_GPU_VARIANT);
+    const auto variant = library()->find_task(local_task_id())->find_variant(VariantCode::GPU);
 
     return variant.has_value() && variant->get().options.elide_device_ctx_sync;
   }());
@@ -410,8 +411,8 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
   }
 
   auto* core_lib = detail::Runtime::get_runtime()->core_library();
-  auto launcher  = detail::TaskLauncher{
-    core_lib, machine_, provenance(), static_cast<LocalTaskID>(LEGATE_CORE_FIXUP_RANGES)};
+  auto launcher =
+    detail::TaskLauncher{core_lib, machine_, provenance(), LocalTaskID{CoreTask::FIXUP_RANGES}};
 
   launcher.set_priority(priority());
 

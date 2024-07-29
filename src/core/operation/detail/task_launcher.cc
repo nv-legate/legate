@@ -137,7 +137,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
                                        Legion::Predicate::TRUE_PRED,
                                        false /*must*/,
                                        static_cast<Legion::MapperID>(legion_mapper_id()),
-                                       static_cast<Legion::MappingTagID>(tag_),
+                                       tag_,
                                        mapper_arg.to_legion_buffer(),
                                        provenance().data()};
 
@@ -209,7 +209,7 @@ Legion::Future TaskLauncher::execute_single()
                                    task_arg.to_legion_buffer(),
                                    Legion::Predicate::TRUE_PRED,
                                    static_cast<Legion::MapperID>(legion_mapper_id()),
-                                   static_cast<Legion::MappingTagID>(tag_),
+                                   tag_,
                                    mapper_arg.to_legion_buffer(),
                                    provenance().data()};
 

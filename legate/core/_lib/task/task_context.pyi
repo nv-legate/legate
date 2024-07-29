@@ -11,11 +11,11 @@
 
 from ..data.physical_array import PhysicalArray
 from ..data.scalar import Scalar
-from ..utilities.typedefs import GlobalTaskID
+from ..utilities.typedefs import GlobalTaskID, VariantCode
 
 class TaskContext:
     def get_task_id(self) -> GlobalTaskID: ...
-    def get_variant_kind(self) -> int: ...
+    def get_variant_kind(self) -> VariantCode: ...
     @property
     def inputs(self) -> tuple[PhysicalArray, ...]: ...
     @property

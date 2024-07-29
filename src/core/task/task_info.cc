@@ -37,28 +37,28 @@ class TaskInfo::Impl {
  public:
   explicit Impl(std::string task_name);
 
-  void add_variant(LegateVariantCode vid,
+  void add_variant(VariantCode vid,
                    VariantImpl body,
                    const Legion::CodeDescriptor& code_desc,
                    const VariantOptions& options);
   [[nodiscard]] std::optional<std::reference_wrapper<const VariantInfo>> find_variant(
-    LegateVariantCode vid) const;
+    VariantCode vid) const;
 
   void register_task(GlobalTaskID task_id) const;
 
   [[nodiscard]] std::string_view name() const;
-  [[nodiscard]] const std::map<LegateVariantCode, VariantInfo>& variants() const;
+  [[nodiscard]] const std::map<VariantCode, VariantInfo>& variants() const;
 
  private:
   std::string task_name_{};
-  std::map<LegateVariantCode, VariantInfo> variants_{};
+  std::map<VariantCode, VariantInfo> variants_{};
 };
 
 TaskInfo::Impl::Impl(std::string task_name) : task_name_{std::move(task_name)} {}
 
 static_assert(!traits::detail::is_pure_move_constructible_v<Legion::CodeDescriptor>,
               "Use by value and std::move for Legion::CodeDescriptor");
-void TaskInfo::Impl::add_variant(LegateVariantCode vid,
+void TaskInfo::Impl::add_variant(VariantCode vid,
                                  VariantImpl body,
                                  const Legion::CodeDescriptor& code_desc,
                                  const VariantOptions& options)
@@ -73,7 +73,7 @@ void TaskInfo::Impl::add_variant(LegateVariantCode vid,
 }
 
 std::optional<std::reference_wrapper<const VariantInfo>> TaskInfo::Impl::find_variant(
-  LegateVariantCode vid) const
+  VariantCode vid) const
 {
   const auto it = variants().find(vid);
 
@@ -89,7 +89,8 @@ void TaskInfo::Impl::register_task(GlobalTaskID task_id) const
 
   runtime->attach_name(
     static_cast<Legion::TaskID>(task_id), name().data(), false /*mutable*/, true /*local_only*/);
-  for (auto&& [vid, vinfo] : variants()) {
+  for (auto&& [vcode, vinfo] : variants()) {
+    const auto vid = traits::detail::to_underlying(vcode);
     auto&& options = vinfo.options;
     Legion::TaskVariantRegistrar registrar{
       static_cast<Legion::TaskID>(task_id), false /*global*/, VARIANT_NAMES[vid].data()};
@@ -103,20 +104,17 @@ void TaskInfo::Impl::register_task(GlobalTaskID task_id) const
 
 std::string_view TaskInfo::Impl::name() const { return task_name_; }
 
-const std::map<LegateVariantCode, VariantInfo>& TaskInfo::Impl::variants() const
-{
-  return variants_;
-}
+const std::map<VariantCode, VariantInfo>& TaskInfo::Impl::variants() const { return variants_; }
 
 // ==========================================================================================
 
 void TaskInfo::add_variant_(AddVariantKey,
                             Library library,
-                            LegateVariantCode vid,
+                            VariantCode vid,
                             VariantImpl body,
                             Processor::TaskFuncPtr entry,
                             const VariantOptions* decl_options,
-                            const std::map<LegateVariantCode, VariantOptions>& registration_options)
+                            const std::map<VariantCode, VariantOptions>& registration_options)
 {
   auto&& options = [&]() -> const VariantOptions& {
     // 1. The variant options (if any) supplied at the call-site of `register_variants()`.
@@ -145,7 +143,7 @@ void TaskInfo::add_variant_(AddVariantKey,
 
 void TaskInfo::add_variant_(RuntimeAddVariantKey,
                             Library core_lib,
-                            LegateVariantCode vid,
+                            VariantCode vid,
                             const VariantOptions* callsite_options,
                             Legion::CodeDescriptor&& descr)
 {
@@ -172,12 +170,12 @@ TaskInfo::~TaskInfo() = default;
 std::string_view TaskInfo::name() const { return impl_->name(); }
 
 std::optional<std::reference_wrapper<const VariantInfo>> TaskInfo::find_variant(
-  LegateVariantCode vid) const
+  VariantCode vid) const
 {
   return impl_->find_variant(vid);
 }
 
-bool TaskInfo::has_variant(LegateVariantCode vid) const { return find_variant(vid).has_value(); }
+bool TaskInfo::has_variant(VariantCode vid) const { return find_variant(vid).has_value(); }
 
 void TaskInfo::register_task(GlobalTaskID task_id) { impl_->register_task(task_id); }
 
@@ -197,7 +195,7 @@ std::ostream& operator<<(std::ostream& os, const TaskInfo& info)
 {
   os << info.name() << " {";
   for (auto&& [vid, vinfo] : info.impl_->variants()) {
-    os << VARIANT_NAMES[vid] << ":[" << vinfo << "],";
+    os << fmt::format("{}", vid) << ":[" << vinfo << "],";
   }
   os << "}";
   return os;

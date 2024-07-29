@@ -36,7 +36,7 @@ namespace {
 
 GlobalTaskID TaskContext::task_id() const noexcept { return impl()->task_id(); }
 
-LegateVariantCode TaskContext::variant_kind() const noexcept { return impl()->variant_kind(); }
+VariantCode TaskContext::variant_kind() const noexcept { return impl()->variant_kind(); }
 
 PhysicalArray TaskContext::input(std::uint32_t index) const
 {

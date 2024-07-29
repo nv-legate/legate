@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 
 # Note import, not cimport. We want the Python version of the enum
-from ..legate_c import legate_core_variant_t
+from ..utilities.typedefs import VariantCode
 
 
 cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
@@ -26,4 +26,4 @@ cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
         ZCMEM
         SOCKETMEM
 
-cdef dict[TaskTarget, legate_core_variant_t] TASK_TARGET_TO_VARIANT_KIND
+cdef dict[TaskTarget, VariantCode] TASK_TARGET_TO_VARIANT_KIND

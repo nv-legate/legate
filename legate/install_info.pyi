@@ -13,8 +13,6 @@ def get_libpath(lib_base_name: str, full_lib_name: str) -> str: ...
 
 libpath: str
 
-header: str
-
 networks: list[str]
 
 max_dim: int

@@ -30,9 +30,9 @@ T Runtime::get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id)
 }
 
 template <typename T>
-T Runtime::get_core_tunable(std::int64_t tunable_id)
+T Runtime::get_core_tunable(CoreTunable tunable_id)
 {
-  return get_tunable<T>(core_library_->get_mapper_id(), tunable_id);
+  return get_tunable<T>(core_library()->get_mapper_id(), static_cast<std::int64_t>(tunable_id));
 }
 
 inline bool Runtime::initialized() const { return initialized_; }

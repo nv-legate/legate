@@ -13,9 +13,9 @@
 #pragma once
 
 #include "core/data/detail/scalar.h"
-#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/launcher_arg.h"
+#include "core/utilities/detail/core_ids.h"
 
 #include <memory>
 #include <string>
@@ -34,12 +34,12 @@ class TaskLauncher {
                const mapping::detail::Machine& machine,
                std::variant<std::string_view, std::string> provenance,
                LocalTaskID task_id,
-               std::int64_t tag = 0);
+               Legion::MappingTagID tag = 0);
 
   TaskLauncher(const Library* library,
                const mapping::detail::Machine& machine,
                LocalTaskID task_id,
-               std::int64_t tag = 0);
+               Legion::MappingTagID tag = 0);
 
   [[nodiscard]] GlobalTaskID legion_task_id() const;
   [[nodiscard]] std::int64_t legion_mapper_id() const;
@@ -80,10 +80,10 @@ class TaskLauncher {
 
   const Library* library_{};
   LocalTaskID task_id_{};
-  std::int64_t tag_{};
+  Legion::MappingTagID tag_{};
   const mapping::detail::Machine& machine_;
   std::variant<std::string_view, std::string> provenance_{};
-  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
+  std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
 
   bool has_side_effect_{true};
   bool concurrent_{};

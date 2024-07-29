@@ -11,7 +11,6 @@
 
 from libc.stddef cimport size_t
 
-from ..legate_c cimport legate_core_variant_t
 from ..utilities.typedefs cimport _Processor
 
 

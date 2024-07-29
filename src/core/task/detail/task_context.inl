@@ -39,7 +39,7 @@ inline GlobalTaskID TaskContext::task_id() const noexcept
   return static_cast<GlobalTaskID>(task_->task_id);
 }
 
-inline LegateVariantCode TaskContext::variant_kind() const noexcept { return variant_kind_; }
+inline VariantCode TaskContext::variant_kind() const noexcept { return variant_kind_; }
 
 inline bool TaskContext::is_single_task() const { return !task_->is_index_space; }
 

@@ -51,7 +51,7 @@ class TaskContext {
    *
    * @return The variant kind
    */
-  [[nodiscard]] LegateVariantCode variant_kind() const noexcept;
+  [[nodiscard]] VariantCode variant_kind() const noexcept;
   /**
    * @brief Returns an input array of the task
    *

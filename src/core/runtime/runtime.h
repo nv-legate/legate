@@ -81,11 +81,10 @@ class Runtime {
    *
    * @throw std::invalid_argument If a library already exists for a given name
    */
-  [[nodiscard]] Library create_library(
-    std::string_view library_name,
-    const ResourceConfig& config                                = ResourceConfig{},
-    std::unique_ptr<mapping::Mapper> mapper                     = nullptr,
-    std::map<LegateVariantCode, VariantOptions> default_options = {});
+  [[nodiscard]] Library create_library(std::string_view library_name,
+                                       const ResourceConfig& config            = ResourceConfig{},
+                                       std::unique_ptr<mapping::Mapper> mapper = nullptr,
+                                       std::map<VariantCode, VariantOptions> default_options = {});
   /**
    * @brief Finds a library
    *
@@ -123,10 +122,10 @@ class Runtime {
    */
   [[nodiscard]] Library find_or_create_library(
     std::string_view library_name,
-    const ResourceConfig& config                                       = ResourceConfig{},
-    std::unique_ptr<mapping::Mapper> mapper                            = nullptr,
-    const std::map<LegateVariantCode, VariantOptions>& default_options = {},
-    bool* created                                                      = nullptr);
+    const ResourceConfig& config                                 = ResourceConfig{},
+    std::unique_ptr<mapping::Mapper> mapper                      = nullptr,
+    const std::map<VariantCode, VariantOptions>& default_options = {},
+    bool* created                                                = nullptr);
 
   /**
    * @brief Creates an AutoTask

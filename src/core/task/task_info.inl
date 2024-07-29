@@ -20,11 +20,11 @@ namespace legate {
 template <typename T>
 void TaskInfo::add_variant_(AddVariantKey,
                             Library library,
-                            LegateVariantCode vid,
+                            VariantCode vid,
                             LegionVariantImpl<T> /*body*/,
                             Processor::TaskFuncPtr entry,
                             const VariantOptions* decl_options,
-                            const std::map<LegateVariantCode, VariantOptions>& registration_options)
+                            const std::map<VariantCode, VariantOptions>& registration_options)
 // NOLINTEND(readability-identifier-naming)
 {
   // TODO(wonchanl): pass a null pointer as the body here as the function does not have the type

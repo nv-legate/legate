@@ -42,7 +42,7 @@ class Config {
   {
     auto options =
       legate::VariantOptions{}.with_return_size(8192);  // NOLINT(readability-magic-numbers)
-    TesterTask::register_variants(library, {{LEGATE_CPU_VARIANT, options}});
+    TesterTask::register_variants(library, {{legate::VariantCode::CPU, options}});
   }
 };
 

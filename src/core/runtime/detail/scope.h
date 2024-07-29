@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/runtime/exception_mode.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <cstdint>
@@ -38,7 +38,7 @@ class Scope {
   [[nodiscard]] InternalSharedPtr<Machine> exchange_machine(InternalSharedPtr<Machine> machine);
 
  private:
-  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
+  std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
   ExceptionMode exception_mode_{ExceptionMode::IMMEDIATE};
   std::string provenance_{};
   InternalSharedPtr<Machine> machine_{};

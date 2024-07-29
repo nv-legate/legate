@@ -29,6 +29,7 @@
 #include "core/runtime/resource.h"
 #include "core/task/detail/returned_exception.h"
 #include "core/type/type_info.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
@@ -62,7 +63,7 @@ class Runtime {
   [[nodiscard]] Library* create_library(std::string_view library_name,
                                         const ResourceConfig& config,
                                         std::unique_ptr<mapping::Mapper> mapper,
-                                        std::map<LegateVariantCode, VariantOptions> default_options,
+                                        std::map<VariantCode, VariantOptions> default_options,
                                         bool in_callback);
   [[nodiscard]] const Library* find_library(std::string_view library_name, bool can_fail) const;
   [[nodiscard]] Library* find_library(std::string_view library_name, bool can_fail);
@@ -70,7 +71,7 @@ class Runtime {
     std::string_view library_name,
     const ResourceConfig& config,
     std::unique_ptr<mapping::Mapper> mapper,
-    const std::map<LegateVariantCode, VariantOptions>& default_options,
+    const std::map<VariantCode, VariantOptions>& default_options,
     bool* created,
     bool in_callback);
 
@@ -260,10 +261,10 @@ class Runtime {
 
   [[nodiscard]] Legion::Future get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id);
 
-  template <class T>
+  template <typename T>
   [[nodiscard]] T get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id);
-  template <class T>
-  [[nodiscard]] T get_core_tunable(std::int64_t tunable_id);
+  template <typename T>
+  [[nodiscard]] T get_core_tunable(CoreTunable tunable_id);
 
   [[nodiscard]] Legion::Future dispatch(
     Legion::TaskLauncher& launcher, std::vector<Legion::OutputRequirement>& output_requirements);
@@ -357,7 +358,8 @@ class Runtime {
 
   using AffineProjectionDesc   = std::pair<uint32_t, proj::SymbolicPoint>;
   using CompoundProjectionDesc = std::pair<tuple<std::uint64_t>, proj::SymbolicPoint>;
-  std::int64_t next_projection_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
+  std::int64_t next_projection_id_{
+    static_cast<std::int64_t>(CoreProjectionOp::FIRST_DYNAMIC_FUNCTOR)};
   std::unordered_map<AffineProjectionDesc, Legion::ProjectionID, hasher<AffineProjectionDesc>>
     affine_projections_{};
   std::unordered_map<tuple<std::uint64_t>, Legion::ProjectionID, hasher<tuple<std::uint64_t>>>
@@ -366,7 +368,8 @@ class Runtime {
     compound_projections_{};
 
   using ShardingDesc = std::pair<Legion::ProjectionID, mapping::ProcessorRange>;
-  std::int64_t next_sharding_id_{LEGATE_CORE_FIRST_DYNAMIC_FUNCTOR_ID};
+  std::int64_t next_sharding_id_{
+    static_cast<std::int64_t>(CoreProjectionOp::FIRST_DYNAMIC_FUNCTOR)};
   std::unordered_map<ShardingDesc, Legion::ShardingID, hasher<ShardingDesc>>
     registered_shardings_{};
 

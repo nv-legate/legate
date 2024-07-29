@@ -13,6 +13,7 @@
 #pragma once
 
 // Useful for IDEs
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/deserializer.h"
 
 #include <cstddef>
@@ -57,6 +58,13 @@ inline T BaseDeserializer<Deserializer>::unpack()
   T value;
   static_cast<Deserializer*>(this)->unpack_impl(value);
   return value;
+}
+
+template <typename Deserializer>
+template <typename T, std::enable_if_t<std::is_enum_v<T>>*>
+void BaseDeserializer<Deserializer>::unpack_impl(T& value)
+{
+  value = T{static_cast<Deserializer*>(this)->template unpack<std::underlying_type_t<T>>()};
 }
 
 template <typename Deserializer>
@@ -233,39 +241,38 @@ Span<const std::int8_t> BaseDeserializer<Deserializer>::current_args() const
 template <typename Deserializer>
 InternalSharedPtr<TransformStack> BaseDeserializer<Deserializer>::unpack_transform_()
 {
-  auto code = unpack<std::int32_t>();
+  const auto code = unpack<CoreTransform>();
+
   switch (code) {
-    case -1: {
-      return make_internal_shared<TransformStack>();
-    }
-    case LEGATE_CORE_TRANSFORM_SHIFT: {
+    case CoreTransform::INVALID: return make_internal_shared<TransformStack>();
+    case CoreTransform::SHIFT: {
       auto dim    = unpack<std::int32_t>();
       auto offset = unpack<std::int64_t>();
       auto parent = unpack_transform_();
       return make_internal_shared<TransformStack>(std::make_unique<Shift>(dim, offset),
                                                   std::move(parent));
     }
-    case LEGATE_CORE_TRANSFORM_PROMOTE: {
+    case CoreTransform::PROMOTE: {
       auto extra_dim = unpack<std::int32_t>();
       auto dim_size  = unpack<std::int64_t>();
       auto parent    = unpack_transform_();
       return make_internal_shared<TransformStack>(std::make_unique<Promote>(extra_dim, dim_size),
                                                   std::move(parent));
     }
-    case LEGATE_CORE_TRANSFORM_PROJECT: {
+    case CoreTransform::PROJECT: {
       auto dim    = unpack<std::int32_t>();
       auto coord  = unpack<std::int64_t>();
       auto parent = unpack_transform_();
       return make_internal_shared<TransformStack>(std::make_unique<Project>(dim, coord),
                                                   std::move(parent));
     }
-    case LEGATE_CORE_TRANSFORM_TRANSPOSE: {
+    case CoreTransform::TRANSPOSE: {
       auto axes   = unpack<std::vector<std::int32_t>>();
       auto parent = unpack_transform_();
       return make_internal_shared<TransformStack>(std::make_unique<Transpose>(std::move(axes)),
                                                   std::move(parent));
     }
-    case LEGATE_CORE_TRANSFORM_DELINEARIZE: {
+    case CoreTransform::DELINEARIZE: {
       auto dim    = unpack<std::int32_t>();
       auto sizes  = unpack<std::vector<std::uint64_t>>();
       auto parent = unpack_transform_();
@@ -273,14 +280,14 @@ InternalSharedPtr<TransformStack> BaseDeserializer<Deserializer>::unpack_transfo
         std::make_unique<Delinearize>(dim, std::move(sizes)), std::move(parent));
     }
   }
-  LEGATE_ABORT("Unhandled transform code: " << code);
+  LEGATE_ABORT("Unhandled transform code: " << traits::detail::to_underlying(code));
   return nullptr;
 }
 
 template <typename Deserializer>
 InternalSharedPtr<Type> BaseDeserializer<Deserializer>::unpack_type_()
 {
-  auto code = static_cast<Type::Code>(unpack<std::underlying_type_t<Type::Code>>());
+  auto code = unpack<Type::Code>();
   switch (code) {
     case Type::Code::FIXED_ARRAY: {
       auto uid  = unpack<std::uint32_t>();

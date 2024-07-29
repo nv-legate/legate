@@ -9,10 +9,17 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from enum import Enum
 from typing import NewType
 
 LocalTaskID = NewType("LocalTaskID", int)
 GlobalTaskID = NewType("GlobalTaskID", int)
+
+class VariantCode(Enum):
+    NONE: int
+    CPU: int
+    GPU: int
+    OMP: int
 
 class DomainPoint:
     def __init__(self) -> None: ...

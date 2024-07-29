@@ -15,10 +15,9 @@ from libcpp.string cimport string as std_string
 from libcpp.unordered_map cimport unordered_map as std_unordered_map
 
 from ..._ext.cython_libcpp.string_view cimport str_from_string_view
-from ..legate_c cimport legate_core_variant_t
 from ..runtime.library cimport Library, _Library
 from ..runtime.runtime cimport get_legate_runtime
-from ..utilities.typedefs cimport TaskFuncPtr, _GlobalTaskID
+from ..utilities.typedefs cimport TaskFuncPtr, VariantCode, _GlobalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 from .task_context cimport TaskContext, _TaskContext
 from .variant_helper cimport task_wrapper_dyn_name
@@ -40,12 +39,12 @@ cdef extern from *:
     # case, the function "_py_variant()" defined below). Everything else (the
     # name of the typedef, or the dummy type it aliases) is irrelevant.
     ctypedef int py_variant_t "_py_variant"
-    ctypedef int LEGATE_CPU_VARIANT_T "LEGATE_CPU_VARIANT"
-    ctypedef int LEGATE_GPU_VARIANT_T "LEGATE_GPU_VARIANT"
-    ctypedef int LEGATE_OMP_VARIANT_T "LEGATE_OMP_VARIANT"
+    ctypedef int LEGATE_CPU_VARIANT_T "legate::VariantCode::CPU"
+    ctypedef int LEGATE_GPU_VARIANT_T "legate::VariantCode::GPU"
+    ctypedef int LEGATE_OMP_VARIANT_T "legate::VariantCode::OMP"
 
 
-cdef dict[_GlobalTaskID, dict[legate_core_variant_t, object]] \
+cdef dict[_GlobalTaskID, dict[VariantCode, object]] \
     _gid_to_variant_callbacks = {}
 
 # Note the alternate name, otherwise Cython mangles the resulting function name
@@ -55,7 +54,7 @@ cdef dict[_GlobalTaskID, dict[legate_core_variant_t, object]] \
 cdef extern void _py_variant "_py_variant"(_TaskContext ctx) with gil:
     cdef TaskContext py_ctx = TaskContext.from_handle(&ctx)
     cdef _GlobalTaskID global_task_id = py_ctx.get_task_id()
-    cdef legate_core_variant_t variant_kind = py_ctx.get_variant_kind()
+    cdef VariantCode variant_kind = py_ctx.get_variant_kind()
 
     cdef std_string abort_message
     cdef dict variant_callbacks
@@ -107,21 +106,22 @@ cdef extern void _py_variant "_py_variant"(_TaskContext ctx) with gil:
 
 # Need an initializer function since I could not figure out how to initialize a
 # std::unordered_map from a = {a : b, c : d} expression...
-cdef std_unordered_map[legate_core_variant_t, TaskFuncPtr] _init_vmap():
-    cdef std_unordered_map[legate_core_variant_t, TaskFuncPtr] result
+cdef std_unordered_map[VariantCode, TaskFuncPtr] _init_vmap():
+    cdef std_unordered_map[VariantCode, TaskFuncPtr] result
 
+    result.reserve(3)
     result[
-        legate_core_variant_t._LEGATE_CPU_VARIANT
+        VariantCode.CPU
     ] = task_wrapper_dyn_name[py_variant_t, LEGATE_CPU_VARIANT_T]
     result[
-        legate_core_variant_t._LEGATE_GPU_VARIANT
+        VariantCode.GPU
     ] = task_wrapper_dyn_name[py_variant_t, LEGATE_GPU_VARIANT_T]
     result[
-        legate_core_variant_t._LEGATE_OMP_VARIANT
+        VariantCode.OMP
     ] = task_wrapper_dyn_name[py_variant_t, LEGATE_OMP_VARIANT_T]
     return result
 
-cdef std_unordered_map[legate_core_variant_t, TaskFuncPtr] \
+cdef std_unordered_map[VariantCode, TaskFuncPtr] \
     _variant_to_callback = _init_vmap()
 
 
@@ -146,7 +146,7 @@ cdef extern from *:
     void cytaskinfo_add_variant(
       legate::TaskInfo *handle,
       legate::Library *core_lib,
-      legate::LegateVariantCode variant_kind,
+      legate::VariantCode variant_kind,
       legate::VariantImpl cy_entry,
       legate::Processor::TaskFuncPtr py_entry)
     {
@@ -166,7 +166,7 @@ cdef extern from *:
         "legate::detail::cython::cytaskinfo_add_variant" (
             _TaskInfo *,
             _Library *,
-            legate_core_variant_t,
+            VariantCode,
             VariantImpl,
             TaskFuncPtr
         )
@@ -222,13 +222,11 @@ cdef class TaskInfo(Unconstructable):
 
     def __repr__(self) -> str:
         # must regular import here to get the python enum version
-        from ..legate_c import (
-            legate_core_variant_t as py_legate_core_variant_t,
-        )
+        from ..utilities.typedefs import VariantCode as py_VariantCode
 
         cdef list[str] descr = [
             vid.name
-            for vid in py_legate_core_variant_t
+            for vid in py_VariantCode
             if self.has_variant(vid)
         ]
         cdef str variants = ", ".join(descr) if descr else "None"
@@ -239,7 +237,7 @@ cdef class TaskInfo(Unconstructable):
         cls,
         _LocalTaskID local_task_id,
         str name,
-        list[tuple[legate_core_variant_t, object]] variants
+        list[tuple[VariantCode, object]] variants
     ) -> TaskInfo:
         if not variants:
             raise ValueError(
@@ -269,15 +267,11 @@ cdef class TaskInfo(Unconstructable):
         self._assert_valid()
         return str_from_string_view(self._handle.name())
 
-    cpdef bool has_variant(self, int variant_id):
+    cpdef bool has_variant(self, VariantCode variant_id):
         self._assert_valid()
-        return self._handle.find_variant(
-            <legate_core_variant_t>variant_id
-        ).has_value()
+        return self._handle.find_variant(variant_id).has_value()
 
-    cpdef void add_variant(
-        self, legate_core_variant_t variant_kind, object fn
-    ):
+    cpdef void add_variant(self, VariantCode variant_kind, object fn):
         self._assert_valid()
         if not callable(fn):
             raise TypeError(

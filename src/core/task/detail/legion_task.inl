@@ -18,7 +18,7 @@
 namespace legate::detail {
 
 template <typename T>
-template <typename U, LegionVariantImpl<U> variant_fn, LegateVariantCode /*variant_kind*/>
+template <typename U, LegionVariantImpl<U> variant_fn, VariantCode /*variant_kind*/>
 /*static*/ void LegionTask<T>::task_wrapper_(const void* args,
                                              std::size_t arglen,
                                              const void* userdata,

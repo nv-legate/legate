@@ -246,16 +246,16 @@ TEST_F(Library, VariantOptions)
 {
   const auto runtime = legate::Runtime::get_runtime();
 
-  const std::map<legate::LegateVariantCode, legate::VariantOptions> default_options1 = {};
+  const std::map<legate::VariantCode, legate::VariantOptions> default_options1 = {};
   const auto lib1 = runtime->create_library("test_library.foo", {}, nullptr, default_options1);
 
   ASSERT_EQ(lib1.get_default_variant_options(), default_options1);
   // Repeated calls should get the same thing
   ASSERT_EQ(lib1.get_default_variant_options(), default_options1);
 
-  const std::map<legate::LegateVariantCode, legate::VariantOptions> default_options2 = {
-    {LEGATE_CPU_VARIANT, legate::VariantOptions{}.with_return_size(1234)},
-    {LEGATE_GPU_VARIANT,
+  const std::map<legate::VariantCode, legate::VariantOptions> default_options2 = {
+    {legate::VariantCode::CPU, legate::VariantOptions{}.with_return_size(1234)},
+    {legate::VariantCode::GPU,
      legate::VariantOptions{}.with_idempotent(true).with_concurrent(true).with_return_size(
        7355608)}};
   const auto lib2 = runtime->create_library("test_library.bar", {}, nullptr, default_options2);

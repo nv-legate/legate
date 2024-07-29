@@ -12,11 +12,11 @@
 
 #include "core/runtime/detail/partition_manager.h"
 
-#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/zip.h"
 
@@ -26,12 +26,8 @@
 namespace legate::detail {
 
 PartitionManager::PartitionManager(Runtime* runtime)
+  : min_shard_volume_{runtime->get_core_tunable<std::int64_t>(CoreTunable::MIN_SHARD_VOLUME)}
 {
-  auto mapper_id = runtime->core_library()->get_mapper_id();
-
-  min_shard_volume_ =
-    runtime->get_tunable<std::int64_t>(mapper_id, LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME);
-
   LEGATE_ASSERT(min_shard_volume_ > 0);
 }
 

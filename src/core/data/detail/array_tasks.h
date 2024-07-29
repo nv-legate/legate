@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/legate_c.h"
 #include "core/task/task.h"
 #include "core/task/variant_options.h"
+#include "core/utilities/detail/core_ids.h"
 
 namespace legate::detail {
 
@@ -20,7 +20,7 @@ class Library;
 
 class FixupRanges : public LegateTask<FixupRanges> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_FIXUP_RANGES};
+  static constexpr auto TASK_ID = LocalTaskID{CoreTask::FIXUP_RANGES};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true);
 
@@ -35,7 +35,7 @@ class FixupRanges : public LegateTask<FixupRanges> {
 
 class OffsetsToRanges : public LegateTask<OffsetsToRanges> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_OFFSETS_TO_RANGES};
+  static constexpr auto TASK_ID = LocalTaskID{CoreTask::OFFSETS_TO_RANGES};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true);
 
@@ -50,7 +50,7 @@ class OffsetsToRanges : public LegateTask<OffsetsToRanges> {
 
 class RangesToOffsets : public LegateTask<RangesToOffsets> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_RANGES_TO_OFFSETS};
+  static constexpr auto TASK_ID = LocalTaskID{CoreTask::RANGES_TO_OFFSETS};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true);
 

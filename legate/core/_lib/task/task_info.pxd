@@ -16,9 +16,9 @@ from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
 from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
-from ..legate_c cimport legate_core_variant_t
 from ..utilities.typedefs cimport (
     TaskFuncPtr,
+    VariantCode,
     VariantImpl,
     _GlobalTaskID,
     _LocalTaskID,
@@ -34,21 +34,17 @@ cdef extern from "core/task/task_info.h" namespace "legate" nogil:
     cdef cppclass _TaskInfo "legate::TaskInfo":
         _TaskInfo(std_string)
         std_optional[std_reference_wrapper[const _VariantInfo]] \
-            find_variant(legate_core_variant_t) const
+            find_variant(VariantCode) const
         std_string_view  name() const
         # add_variant's final argument is defaulted in C++, this is the only
         # way I knew how to do the same in Cython. = {}, = (), or
         # = std_map[...]() all did not work...
+        void add_variant(VariantCode, VariantImpl, TaskFuncPtr) except +
         void add_variant(
-            legate_core_variant_t,
+            VariantCode,
             VariantImpl,
             TaskFuncPtr,
-        ) except +
-        void add_variant(
-            legate_core_variant_t,
-            VariantImpl,
-            TaskFuncPtr,
-            const std_map[legate_core_variant_t, _VariantOptions]&
+            const std_map[VariantCode, _VariantOptions]&
         ) except +
 
 cdef class TaskInfo(Unconstructable):
@@ -65,5 +61,5 @@ cdef class TaskInfo(Unconstructable):
     cdef void validate_registered_py_variants(self)
     cdef void register_global_variant_callbacks(self, _GlobalTaskID)
     cdef _LocalTaskID get_local_id(self)
-    cpdef bool has_variant(self, int)
-    cpdef void add_variant(self, legate_core_variant_t, object)
+    cpdef bool has_variant(self, VariantCode)
+    cpdef void add_variant(self, VariantCode, object)

@@ -52,18 +52,18 @@ format_context::iterator formatter<legate::detail::Expr>::format(const legate::d
   return formatter<std::string>::format(expr.to_string(), ctx);
 }
 
-format_context::iterator formatter<legate_core_variant_t>::format(legate_core_variant_t variant,
-                                                                  format_context& ctx) const
+format_context::iterator formatter<legate::VariantCode>::format(legate::VariantCode variant,
+                                                                format_context& ctx) const
 {
   string_view name = "(unknown)";
 
   switch (variant) {
 #define LEGATE_VARIANT_CASE(x) \
-  case x: name = #x; break
-    LEGATE_VARIANT_CASE(LEGATE_NO_VARIANT);
-    LEGATE_VARIANT_CASE(LEGATE_CPU_VARIANT);
-    LEGATE_VARIANT_CASE(LEGATE_GPU_VARIANT);
-    LEGATE_VARIANT_CASE(LEGATE_OMP_VARIANT);
+  case legate::VariantCode::x: name = #x "_VARIANT"; break
+    LEGATE_VARIANT_CASE(NONE);
+    LEGATE_VARIANT_CASE(CPU);
+    LEGATE_VARIANT_CASE(GPU);
+    LEGATE_VARIANT_CASE(OMP);
 #undef LEGATE_VARIANT_CASE
   }
 

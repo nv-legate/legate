@@ -18,13 +18,13 @@
 #include "core/comm/detail/comm_cpu_factory.h"
 #include "core/comm/detail/mpi_interface.h"
 #include "core/task/detail/legion_task.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/macros.h"
 
 #include "legate_defines.h"
 
 #include <algorithm>
 #include <cstddef>
-#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <vector>
@@ -39,7 +39,7 @@ namespace legate::detail::comm::mpi {
 
 class InitMapping : public legate::detail::LegionTask<InitMapping> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_INIT_CPUCOLL_MAPPING_TASK_ID};
+  static constexpr auto TASK_ID = LocalTaskID{CoreTask::INIT_CPUCOLL_MAPPING};
 
   static int cpu_variant(const Legion::Task* task,
                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
@@ -81,7 +81,7 @@ class InitMapping : public legate::detail::LegionTask<InitMapping> {
 
 class Init : public legate::detail::LegionTask<Init> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_INIT_CPUCOLL_TASK_ID};
+  static constexpr auto TASK_ID = LocalTaskID{CoreTask::INIT_CPUCOLL};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
@@ -153,7 +153,7 @@ class Init : public legate::detail::LegionTask<Init> {
 
 class Finalize : public legate::detail::LegionTask<Finalize> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{LEGATE_CORE_FINALIZE_CPUCOLL_TASK_ID};
+  static constexpr auto TASK_ID = LocalTaskID{CoreTask::FINALIZE_CPUCOLL};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);

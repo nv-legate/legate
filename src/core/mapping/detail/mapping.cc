@@ -60,14 +60,14 @@ Memory::Kind to_kind(StoreTarget target)
   return Memory::Kind::SYSTEM_MEM;
 }
 
-LegateVariantCode to_variant_code(TaskTarget target)
+VariantCode to_variant_code(TaskTarget target)
 {
   switch (target) {
-    case TaskTarget::GPU: return LEGATE_GPU_VARIANT;
-    case TaskTarget::OMP: return LEGATE_OMP_VARIANT;
-    case TaskTarget::CPU: return LEGATE_CPU_VARIANT;
+    case TaskTarget::GPU: return VariantCode::GPU;
+    case TaskTarget::OMP: return VariantCode::OMP;
+    case TaskTarget::CPU: return VariantCode::CPU;
   }
-  return LEGATE_CPU_VARIANT;
+  return VariantCode::CPU;
 }
 
 void DimOrdering::populate_dimension_ordering(std::uint32_t ndim,

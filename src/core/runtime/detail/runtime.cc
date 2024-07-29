@@ -107,7 +107,7 @@ Library* Runtime::create_library(
   // because we first check that the key does not yet exist.
   //
   // NOLINTNEXTLINE(performance-unnecessary-value-param)
-  std::map<LegateVariantCode, VariantOptions> default_options,
+  std::map<VariantCode, VariantOptions> default_options,
   bool in_callback)
 {
   if (libraries_.find(library_name) != libraries_.end()) {
@@ -166,7 +166,7 @@ Library* Runtime::find_or_create_library(
   std::string_view library_name,
   const ResourceConfig& config,
   std::unique_ptr<mapping::Mapper> mapper,
-  const std::map<LegateVariantCode, VariantOptions>& default_options,
+  const std::map<VariantCode, VariantOptions>& default_options,
   bool* created,
   bool in_callback)
 {
@@ -255,10 +255,9 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
   partition_manager_.emplace(this);
   static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
 
-  Config::has_socket_mem =
-    get_tunable<bool>(core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM);
-  Config::max_field_reuse_size = get_tunable<decltype(Config::max_field_reuse_size)>(
-    core_library_->get_mapper_id(), LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE);
+  Config::has_socket_mem = get_core_tunable<bool>(CoreTunable::HAS_SOCKET_MEM);
+  Config::max_field_reuse_size =
+    get_core_tunable<decltype(Config::max_field_reuse_size)>(CoreTunable::FIELD_REUSE_SIZE);
   comm::register_builtin_communicator_factories(core_library_);
 }
 
@@ -856,12 +855,13 @@ void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
   if (provenance.empty()) {
     return;
   }
-  legion_runtime_->attach_semantic_information(rf->region().get_field_space(),
-                                               rf->field_id(),
-                                               LEGATE_CORE_ALLOC_INFO_TAG,
-                                               static_cast<const void*>(provenance.data()),
-                                               provenance.size(),
-                                               /*is_mutable=*/true);
+  legion_runtime_->attach_semantic_information(
+    rf->region().get_field_space(),
+    rf->field_id(),
+    static_cast<Legion::SemanticTag>(CoreSemanticTag::ALLOC_INFO),
+    static_cast<const void*>(provenance.data()),
+    provenance.size(),
+    /*is_mutable=*/true);
 }
 
 Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
@@ -1027,10 +1027,10 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
   LEGATE_ASSERT(partition->has_launch_domain());
   auto&& launch_domain = partition->launch_domain();
   auto output          = create_store(domain_type(), 1, true);
-  auto task            = create_task(core_library_,
-                          static_cast<LocalTaskID>(sorted ? LEGATE_CORE_FIND_BOUNDING_BOX_SORTED
-                                                          : LEGATE_CORE_FIND_BOUNDING_BOX),
-                          launch_domain);
+  auto task            = create_task(
+    core_library_,
+    LocalTaskID{sorted ? CoreTask::FIND_BOUNDING_BOX_SORTED : CoreTask::FIND_BOUNDING_BOX},
+    launch_domain);
 
   task->add_input(create_store_partition(store, partition, std::nullopt), std::nullopt);
   task->add_output(output);
@@ -1205,12 +1205,10 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result,
 {
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
-  auto variant        = mapping::detail::to_variant_code(machine.preferred_target());
-  auto launcher       = TaskLauncher{core_library_,
-                               machine,
-                               provenance,
-                               legate::LocalTaskID{LEGATE_CORE_EXTRACT_SCALAR_TASK_ID},
-                               variant};
+  auto variant =
+    static_cast<Legion::MappingTagID>(mapping::detail::to_variant_code(machine.preferred_target()));
+  auto launcher = TaskLauncher{
+    core_library_, machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
 
   launcher.add_future(result);
   launcher.add_scalar(Scalar{offset});
@@ -1225,12 +1223,10 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
 {
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
-  auto variant        = mapping::detail::to_variant_code(machine.preferred_target());
-  auto launcher       = TaskLauncher{core_library_,
-                               machine,
-                               provenance,
-                               legate::LocalTaskID{LEGATE_CORE_EXTRACT_SCALAR_TASK_ID},
-                               variant};
+  auto variant =
+    static_cast<Legion::MappingTagID>(mapping::detail::to_variant_code(machine.preferred_target()));
+  auto launcher = TaskLauncher{
+    core_library_, machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
 
   launcher.add_future_map(result);
   launcher.add_scalar(Scalar{offset});
@@ -1254,13 +1250,15 @@ Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
 
 Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map) const
 {
-  auto reduction_op = core_library_->get_reduction_op_id(LEGATE_CORE_JOIN_EXCEPTION_OP);
-  return legion_runtime_->reduce_future_map(legion_context_,
-                                            future_map,
-                                            reduction_op,
-                                            false /*deterministic*/,
-                                            core_library_->get_mapper_id(),
-                                            LEGATE_CORE_JOIN_EXCEPTION_TAG);
+  auto reduction_op = core_library_->get_reduction_op_id(
+    traits::detail::to_underlying(CoreReductionOp::JOIN_EXCEPTION));
+  return legion_runtime_->reduce_future_map(
+    legion_context_,
+    future_map,
+    reduction_op,
+    false /*deterministic*/,
+    core_library_->get_mapper_id(),
+    static_cast<Legion::MappingTagID>(CoreMappingTag::JOIN_EXCEPTION));
 }
 
 void Runtime::discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id)
@@ -1298,11 +1296,10 @@ void Runtime::end_trace(std::uint32_t trace_id)
 
 InternalSharedPtr<mapping::detail::Machine> Runtime::create_toplevel_machine()
 {
-  auto mapper_id    = core_library_->get_mapper_id();
-  auto num_nodes    = get_tunable<std::uint32_t>(mapper_id, LEGATE_CORE_TUNABLE_NUM_NODES);
-  auto num_gpus     = get_tunable<std::uint32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_GPUS);
-  auto num_omps     = get_tunable<std::uint32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_OMPS);
-  auto num_cpus     = get_tunable<std::uint32_t>(mapper_id, LEGATE_CORE_TUNABLE_TOTAL_CPUS);
+  auto num_nodes    = get_core_tunable<std::uint32_t>(CoreTunable::NUM_NODES);
+  auto num_gpus     = get_core_tunable<std::uint32_t>(CoreTunable::TOTAL_GPUS);
+  auto num_omps     = get_core_tunable<std::uint32_t>(CoreTunable::TOTAL_OMPS);
+  auto num_cpus     = get_core_tunable<std::uint32_t>(CoreTunable::TOTAL_CPUS);
   auto create_range = [&num_nodes](std::uint32_t num_procs) {
     auto per_node_count = static_cast<std::uint32_t>(num_procs / num_nodes);
     return mapping::ProcessorRange{0, num_procs, per_node_count};
@@ -1746,7 +1743,7 @@ void initialize_core_library_callback(
     legion_context = Legion::Runtime::get_context();
   } else {
     // Otherwise we  make this thread into an implicit top-level task
-    legion_context = legion_runtime->begin_implicit_task(LEGATE_CORE_TOPLEVEL_TASK_ID,
+    legion_context = legion_runtime->begin_implicit_task(CoreTask::TOPLEVEL,
                                                          0 /*mapper id*/,
                                                          Processor::LOC_PROC,
                                                          TOPLEVEL_NAME,
@@ -1885,7 +1882,7 @@ std::int32_t Runtime::finish()
 
 namespace {
 
-template <LegateVariantCode variant_kind>
+template <VariantCode variant_kind>
 void extract_scalar_task(const void* args,
                          std::size_t arglen,
                          const void* /*userdata*/,
@@ -1919,7 +1916,7 @@ void extract_scalar_task(const void* args,
   return_value.finalize(legion_context);
 }
 
-template <LegateVariantCode variant_id>
+template <VariantCode variant_id>
 void register_extract_scalar_variant(Library* core_lib,
                                      const std::unique_ptr<TaskInfo>& task_info,
                                      const VariantOptions* variant_options = nullptr)
@@ -1939,28 +1936,30 @@ void register_legate_core_tasks(Library* core_lib)
 {
   auto task_info = std::make_unique<TaskInfo>("core::extract_scalar");
 
-  register_extract_scalar_variant<LEGATE_CPU_VARIANT>(core_lib, task_info);
+  register_extract_scalar_variant<VariantCode::CPU>(core_lib, task_info);
   if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     constexpr auto options = VariantOptions{}.with_elide_device_ctx_sync(true);
 
-    register_extract_scalar_variant<LEGATE_GPU_VARIANT>(core_lib, task_info, &options);
+    register_extract_scalar_variant<VariantCode::GPU>(core_lib, task_info, &options);
   }
   if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
-    register_extract_scalar_variant<LEGATE_OMP_VARIANT>(core_lib, task_info);
+    register_extract_scalar_variant<VariantCode::OMP>(core_lib, task_info);
   }
-  core_lib->register_task(legate::LocalTaskID{LEGATE_CORE_EXTRACT_SCALAR_TASK_ID},
-                          std::move(task_info));
+  core_lib->register_task(LocalTaskID{CoreTask::EXTRACT_SCALAR}, std::move(task_info));
 
   register_array_tasks(core_lib);
   register_partitioning_tasks(core_lib);
   comm::register_tasks(core_lib);
 }
 
-#define BUILTIN_REDOP_ID(OP, TYPE_CODE) \
-  (LEGION_REDOP_BASE + (OP) * LEGION_TYPE_TOTAL + (static_cast<std::int32_t>(TYPE_CODE)))
+#define BUILTIN_REDOP_ID(OP, TYPE_CODE)                                    \
+  (LEGION_REDOP_BASE + static_cast<std::int32_t>(OP) * LEGION_TYPE_TOTAL + \
+   (static_cast<std::int32_t>(TYPE_CODE)))
 
-#define RECORD(OP, TYPE_CODE) \
-  PrimitiveType(TYPE_CODE).record_reduction_operator(OP, BUILTIN_REDOP_ID(OP, TYPE_CODE));
+#define RECORD(OP, TYPE_CODE)                           \
+  PrimitiveType(TYPE_CODE).record_reduction_operator(   \
+    traits::detail::to_underlying(ReductionOpKind::OP), \
+    BUILTIN_REDOP_ID(ReductionOpKind::OP, TYPE_CODE));
 
 #define RECORD_INT(OP)           \
   RECORD(OP, Type::Code::BOOL)   \
@@ -1987,21 +1986,21 @@ void register_legate_core_tasks(Library* core_lib)
 
 void register_builtin_reduction_ops()
 {
-  RECORD_ALL(ADD_LT)
-  RECORD(ADD_LT, Type::Code::COMPLEX128)
-  RECORD_ALL(SUB_LT)
-  RECORD_ALL(MUL_LT)
-  RECORD_ALL(DIV_LT)
+  RECORD_ALL(ADD)
+  RECORD(ADD, Type::Code::COMPLEX128)
+  RECORD_ALL(SUB)
+  RECORD_ALL(MUL)
+  RECORD_ALL(DIV)
 
-  RECORD_INT(MAX_LT)
-  RECORD_FLOAT(MAX_LT)
+  RECORD_INT(MAX)
+  RECORD_FLOAT(MAX)
 
-  RECORD_INT(MIN_LT)
-  RECORD_FLOAT(MIN_LT)
+  RECORD_INT(MIN)
+  RECORD_FLOAT(MIN)
 
-  RECORD_INT(OR_LT)
-  RECORD_INT(AND_LT)
-  RECORD_INT(XOR_LT)
+  RECORD_INT(OR)
+  RECORD_INT(AND)
+  RECORD_INT(XOR)
 }
 
 extern void register_exception_reduction_op(const Library* context);
@@ -2014,12 +2013,12 @@ void initialize_core_library_callback(
   Config::parse();
 
   ResourceConfig config;
-  config.max_tasks       = LEGATE_CORE_MAX_TASK_ID;
-  config.max_dyn_tasks   = config.max_tasks - LEGATE_CORE_FIRST_DYNAMIC_TASK_ID;
-  config.max_projections = LEGATE_CORE_MAX_FUNCTOR_ID;
+  config.max_tasks       = CoreTask::MAX_TASK;
+  config.max_dyn_tasks   = config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
+  config.max_projections = traits::detail::to_underlying(CoreProjectionOp::MAX_FUNCTOR);
   // We register one sharding functor for each new projection functor
-  config.max_shardings     = LEGATE_CORE_MAX_FUNCTOR_ID;
-  config.max_reduction_ops = LEGATE_CORE_MAX_REDUCTION_OP_ID;
+  config.max_shardings     = traits::detail::to_underlying(CoreShardID::MAX_FUNCTOR);
+  config.max_reduction_ops = traits::detail::to_underlying(CoreReductionOp::MAX_REDUCTION);
 
   auto core_lib = Runtime::get_runtime()->create_library(
     CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), {}, true /*in_callback*/);

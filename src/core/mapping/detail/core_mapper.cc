@@ -13,6 +13,7 @@
 #include "core/mapping/detail/core_mapper.h"
 
 #include "core/mapping/detail/machine.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/env.h"
 
@@ -68,20 +69,22 @@ std::vector<legate::mapping::StoreMapping> CoreMapper::store_mappings(
 
 Scalar CoreMapper::tunable_value(TunableID tunable_id)
 {
-  switch (tunable_id) {
-    case LEGATE_CORE_TUNABLE_TOTAL_CPUS: {
+  using legate::detail::CoreTunable;
+
+  switch (CoreTunable{tunable_id}) {
+    case CoreTunable::TOTAL_CPUS: {
       return Scalar{static_cast<std::int32_t>(MACHINE.total_cpu_count())};  // assume symmetry
     }
-    case LEGATE_CORE_TUNABLE_TOTAL_GPUS: {
+    case CoreTunable::TOTAL_GPUS: {
       return Scalar{static_cast<std::int32_t>(MACHINE.total_gpu_count())};  // assume symmetry
     }
-    case LEGATE_CORE_TUNABLE_TOTAL_OMPS: {
+    case CoreTunable::TOTAL_OMPS: {
       return Scalar{static_cast<std::int32_t>(MACHINE.total_omp_count())};  // assume symmetry
     }
-    case LEGATE_CORE_TUNABLE_NUM_NODES: {
+    case CoreTunable::NUM_NODES: {
       return Scalar{static_cast<std::int32_t>(MACHINE.total_nodes)};
     }
-    case LEGATE_CORE_TUNABLE_MIN_SHARD_VOLUME: {
+    case CoreTunable::MIN_SHARD_VOLUME: {
       // TODO(wonchanl): make these profile guided
       if (MACHINE.has_gpus()) {
         // Make sure we can get at least 1M elements on each GPU
@@ -94,13 +97,13 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
       // Make sure we can get at least 8KB elements on each CPU
       return Scalar{MIN_CPU_CHUNK};
     }
-    case LEGATE_CORE_TUNABLE_HAS_SOCKET_MEM: {
+    case CoreTunable::HAS_SOCKET_MEM: {
       return Scalar{MACHINE.has_socket_memory()};
     }
-    case LEGATE_CORE_TUNABLE_WINDOW_SIZE: {
+    case CoreTunable::WINDOW_SIZE: {
       return Scalar{WINDOW_SIZE};
     }
-    case LEGATE_CORE_TUNABLE_FIELD_REUSE_SIZE: {
+    case CoreTunable::FIELD_REUSE_SIZE: {
       // Multiply this by the total number of nodes and then scale by the frac
       const auto global_mem_size = [&] {
         if (MACHINE.has_gpus()) {
@@ -114,7 +117,7 @@ Scalar CoreMapper::tunable_value(TunableID tunable_id)
 
       return Scalar{global_mem_size / FIELD_REUSE_FRAC};
     }
-    case LEGATE_CORE_TUNABLE_MAX_LRU_LENGTH: {
+    case CoreTunable::MAX_LRU_LENGTH: {
       return Scalar{MAX_LRU_LENGTH};
     }
     default: break;

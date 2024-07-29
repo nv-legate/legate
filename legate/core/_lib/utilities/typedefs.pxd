@@ -9,11 +9,19 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 from libc.stddef cimport size_t
-from libc.stdint cimport int32_t, int64_t
+from libc.stdint cimport int32_t, int64_t, uint16_t
 from libcpp cimport bool
 
 from ..task.task_context cimport _TaskContext
 
+
+cdef extern from "legion.h" nogil:
+    cdef cppclass __half:
+        __half()
+        __half(float)
+        uint16_t raw() const
+
+    float __convert_halfint_to_float(uint16_t)
 
 cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
     ctypedef unsigned int _Legion_TaskID "Legion::TaskID"
@@ -40,6 +48,12 @@ cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
 
     cdef cppclass _Processor "legate::Processor":
         pass
+
+    cpdef enum class VariantCode:
+        NONE
+        CPU
+        GPU
+        OMP
 
 # note missing nogil!
 cdef extern from "core/utilities/typedefs.h" namespace "legate":

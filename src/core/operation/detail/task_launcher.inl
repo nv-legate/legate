@@ -20,7 +20,7 @@ inline TaskLauncher::TaskLauncher(const Library* library,
                                   const mapping::detail::Machine& machine,
                                   std::variant<std::string_view, std::string> provenance,
                                   LocalTaskID task_id,
-                                  std::int64_t tag)
+                                  Legion::MappingTagID tag)
   : library_{library},
     task_id_{task_id},
     tag_{tag},
@@ -47,7 +47,7 @@ inline TaskLauncher::TaskLauncher(const Library* library,
 inline TaskLauncher::TaskLauncher(const Library* library,
                                   const mapping::detail::Machine& machine,
                                   LocalTaskID task_id,
-                                  std::int64_t tag)
+                                  Legion::MappingTagID tag)
   : TaskLauncher{library, machine, {}, task_id, tag}
 {
 }

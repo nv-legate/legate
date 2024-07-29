@@ -32,7 +32,7 @@ namespace legate::detail {
 class TaskContext {
  public:
   TaskContext(const Legion::Task* task,
-              LegateVariantCode variant_kind,
+              VariantCode variant_kind,
               const std::vector<Legion::PhysicalRegion>& regions);
 
   [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& inputs();
@@ -42,7 +42,7 @@ class TaskContext {
   [[nodiscard]] const std::vector<legate::comm::Communicator>& communicators() const noexcept;
 
   [[nodiscard]] GlobalTaskID task_id() const noexcept;
-  [[nodiscard]] LegateVariantCode variant_kind() const noexcept;
+  [[nodiscard]] VariantCode variant_kind() const noexcept;
   [[nodiscard]] bool is_single_task() const;
   [[nodiscard]] bool can_raise_exception() const;
   [[nodiscard]] bool can_elide_device_ctx_sync() const;
@@ -68,7 +68,7 @@ class TaskContext {
   [[nodiscard]] std::vector<ReturnValue> get_return_values_() const;
 
   const Legion::Task* task_{};
-  LegateVariantCode variant_kind_{};
+  VariantCode variant_kind_{};
   const std::vector<Legion::PhysicalRegion>& regions_;
 
   std::vector<InternalSharedPtr<PhysicalArray>> inputs_{}, outputs_{}, reductions_{};

@@ -14,6 +14,12 @@ Changes: Latest Development Version
 
 .. rubric:: General
 
+- Remove ``legate_c.h`` and all macros defined therein.
+- Remove ``legate_preamble.h``.
+- Deprecate ``LEGATE_NO_VARIANT``, ``LEGATE_CPU_VARIANT``, ``LEGATE_GPU_VARIANT``, and
+  ``LEGATE_OMP_VARIANT``. Users should use the corresponding ``legate::VariantCode``
+  instead.
+- Deprecate ``LegateVariantCode``. Users should use ``legate::VariantCode`` instead.
 - Deprecate ``legate::destroy()``. Users should call ``legate::finish()`` instead.
 - Add ``legate::has_finished()``.
 - Add ``LocalTaskID`` and ``GlobalTaskID``, to describe local and global Task ID's. Use

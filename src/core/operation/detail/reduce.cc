@@ -27,6 +27,7 @@
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/core_ids.h"
 
 namespace legate::detail {
 
@@ -82,7 +83,11 @@ void Reduce::launch(Strategy* p_strategy)
 
   do {
     auto launcher =
-      detail::TaskLauncher{library_, machine_, provenance_, task_id_, LEGATE_CORE_TREE_REDUCE_TAG};
+      detail::TaskLauncher{library_,
+                           machine_,
+                           provenance_,
+                           task_id_,
+                           static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)};
 
     launcher.set_priority(priority());
 

@@ -55,8 +55,6 @@ def get_libpath(lib_base_name: str, full_lib_name: str) -> str:
 
 libpath: str = get_libpath("@legate_core_LIB_NAME@", "@legate_core_FULL_LIB_NAME@")
 
-header: str = """@header@"""
-
 networks: list[str] = "@Legion_NETWORKS@".split()
 
 max_dim: int = int("@Legion_MAX_DIM@")

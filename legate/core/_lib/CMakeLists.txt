@@ -22,6 +22,6 @@ add_subdirectory(type)
 add_subdirectory(utilities)
 add_subdirectory(task)
 
-set(cython_sources legate_c.pyx)
+set(cython_sources legate_defines.pyx)
 
 legate_core_create_cython_modules(SOURCES "${cython_sources}")

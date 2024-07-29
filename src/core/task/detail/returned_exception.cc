@@ -14,6 +14,7 @@
 
 #include "core/runtime/detail/library.h"
 #include "core/utilities/assert.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/type_traits.h"
 
 #include <cstddef>
@@ -171,8 +172,9 @@ void returned_exception_fold(const Legion::ReductionOp* /*reduction_op*/,
 
 void register_exception_reduction_op(const Library* library)
 {
-  const auto redop_id = library->get_reduction_op_id(LEGATE_CORE_JOIN_EXCEPTION_OP);
-  auto* redop         = Realm::ReductionOpUntyped::create_reduction_op<JoinReturnedException>();
+  const auto redop_id =
+    library->get_reduction_op_id(traits::detail::to_underlying(CoreReductionOp::JOIN_EXCEPTION));
+  auto* redop = Realm::ReductionOpUntyped::create_reduction_op<JoinReturnedException>();
   Legion::Runtime::register_reduction_op(
     redop_id, redop, returned_exception_init, returned_exception_fold);
 }

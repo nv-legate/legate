@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/store_projection.h"
+#include "core/utilities/detail/core_ids.h"
 
 #include <memory>
 #include <vector>
@@ -90,7 +90,7 @@ class CopyLauncher {
 
  private:
   const mapping::detail::Machine& machine_;
-  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
+  std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
   std::int64_t tag_{};
   Legion::ProjectionID key_proj_id_{};
 

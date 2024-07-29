@@ -13,6 +13,7 @@
 #include "core/operation/detail/store_projection.h"
 
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/core_ids.h"
 
 namespace legate::detail {
 
@@ -24,8 +25,8 @@ void BaseStoreProjection::populate_requirement<true>(Legion::RegionRequirement& 
                                                      bool is_key,
                                                      bool is_single) const
 {
-  auto parent = Runtime::get_runtime()->find_parent_region(region);
-  auto tag    = static_cast<Legion::MappingTagID>(is_key ? LEGATE_CORE_KEY_STORE_TAG : 0);
+  auto parent    = Runtime::get_runtime()->find_parent_region(region);
+  const auto tag = is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0;
 
   // REVIEW
   // must explicitly call the destructor here, otherwise this whole business is UB!!!
@@ -55,8 +56,8 @@ void BaseStoreProjection::populate_requirement<false>(Legion::RegionRequirement&
     return;
   }
 
-  auto parent = Runtime::get_runtime()->find_parent_region(region);
-  auto tag    = static_cast<Legion::MappingTagID>(is_key ? LEGATE_CORE_KEY_STORE_TAG : 0);
+  auto parent    = Runtime::get_runtime()->find_parent_region(region);
+  const auto tag = is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0;
 
   // see above
   requirement.~RegionRequirement();

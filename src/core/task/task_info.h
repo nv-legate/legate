@@ -39,7 +39,7 @@ namespace cython {
 
 void cytaskinfo_add_variant(legate::TaskInfo* handle,
                             legate::Library* core_lib,
-                            legate::LegateVariantCode variant_kind,
+                            legate::VariantCode variant_kind,
                             legate::VariantImpl cy_entry,
                             legate::Processor::TaskFuncPtr py_entry);
 
@@ -71,9 +71,9 @@ class TaskInfo {
   [[nodiscard]] std::string_view name() const;
 
   [[nodiscard]] std::optional<std::reference_wrapper<const VariantInfo>> find_variant(
-    LegateVariantCode vid) const;
+    VariantCode vid) const;
   [[deprecated("since 24.09: use find_variant() directly")]] [[nodiscard]] bool has_variant(
-    LegateVariantCode vid) const;
+    VariantCode vid) const;
 
   void register_task(GlobalTaskID task_id);
 
@@ -88,7 +88,7 @@ class TaskInfo {
     friend TaskInfo;
     friend void legate::detail::cython::cytaskinfo_add_variant(legate::TaskInfo*,
                                                                legate::Library*,
-                                                               legate::LegateVariantCode,
+                                                               legate::VariantCode,
                                                                legate::VariantImpl,
                                                                legate::Processor::TaskFuncPtr);
     template <typename T, template <typename...> typename SELECTOR, bool valid>
@@ -99,22 +99,22 @@ class TaskInfo {
   // NOLINTNEXTLINE(readability-identifier-naming)
   void add_variant_(AddVariantKey,
                     Library library,
-                    LegateVariantCode vid,
+                    VariantCode vid,
                     VariantImpl body,
                     Processor::TaskFuncPtr entry,
                     const VariantOptions* decl_options,
-                    const std::map<LegateVariantCode, VariantOptions>& registration_options = {});
+                    const std::map<VariantCode, VariantOptions>& registration_options = {});
 
   // These are "private" insofar that the access key is private
   // NOLINTBEGIN(readability-identifier-naming)
   template <typename T>
   void add_variant_(AddVariantKey,
                     Library library,
-                    LegateVariantCode vid,
+                    VariantCode vid,
                     LegionVariantImpl<T> body,
                     Processor::TaskFuncPtr entry,
                     const VariantOptions* decl_options,
-                    const std::map<LegateVariantCode, VariantOptions>& registration_options = {});
+                    const std::map<VariantCode, VariantOptions>& registration_options = {});
   // NOLINTEND(readability-identifier-naming)
 
   // TODO(wonchanl): remove once scalar extraction workaround is removed
@@ -127,7 +127,7 @@ class TaskInfo {
   // NOLINTNEXTLINE(readability-identifier-naming)
   void add_variant_(RuntimeAddVariantKey,
                     Library core_lib,
-                    LegateVariantCode vid,
+                    VariantCode vid,
                     const VariantOptions* callsite_options,
                     Legion::CodeDescriptor&& descr);
 

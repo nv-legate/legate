@@ -30,7 +30,7 @@ namespace legate::detail {
 Library::Library(ConstructKey,
                  std::string library_name,
                  const ResourceConfig& config,
-                 std::map<LegateVariantCode, VariantOptions> default_options)
+                 std::map<VariantCode, VariantOptions> default_options)
   : runtime_{Legion::Runtime::get_runtime()},
     library_name_{std::move(library_name)},
     task_scope_{runtime_->generate_library_task_ids(library_name_.c_str(), config.max_tasks),

@@ -75,8 +75,7 @@ inline LocalTaskID Library::get_new_task_id()
 
 inline Legion::Mapping::Mapper* Library::get_legion_mapper() const { return legion_mapper_; }
 
-inline const std::map<LegateVariantCode, VariantOptions>& Library::get_default_variant_options()
-  const
+inline const std::map<VariantCode, VariantOptions>& Library::get_default_variant_options() const
 {
   return default_options_;
 }

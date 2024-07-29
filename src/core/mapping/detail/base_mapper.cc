@@ -19,6 +19,7 @@
 #include "core/mapping/operation.h"
 #include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/shard.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/type_traits.h"
 #include "core/utilities/detail/zip.h"
@@ -215,7 +216,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
 
   Legion::ProjectionID projection = 0;
   for (auto&& req : task.regions) {
-    if (req.tag == LEGATE_CORE_KEY_STORE_TAG) {
+    if (req.tag == traits::detail::to_underlying(legate::detail::CoreMappingTag::KEY_STORE)) {
       projection = req.projection;
       break;
     }
@@ -273,10 +274,10 @@ std::optional<Legion::VariantID> BaseMapper::find_variant_(Legion::Mapping::Mapp
   std::optional<Legion::VariantID> result;
   for (auto vid : avail_variants) {
     LEGATE_ASSERT(vid > 0);
-    switch (vid) {
-      case LEGATE_CPU_VARIANT:
-      case LEGATE_OMP_VARIANT:
-      case LEGATE_GPU_VARIANT: {
+    switch (VariantCode{vid}) {
+      case VariantCode::CPU: [[fallthrough]];
+      case VariantCode::OMP: [[fallthrough]];
+      case VariantCode::GPU: {
         result = vid;
         break;
       }
@@ -1476,7 +1477,8 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
     if (LEGATE_DEFINED(LEGATE_MAP_FUTURE_MAP_REDUCTIONS_TO_GPU)) {
       // If this was joining exceptions, we should put instances on a host-visible memory
       // because they need serdez
-      if (input.tag == LEGATE_CORE_JOIN_EXCEPTION_TAG) {
+      if (input.tag ==
+          traits::detail::to_underlying(legate::detail::CoreMappingTag::JOIN_EXCEPTION)) {
         dest_memories.push_back(local_machine_.zerocopy_memory());
       } else {
         auto&& fbufs = local_machine_.frame_buffers();
@@ -1583,11 +1585,18 @@ std::string_view BaseMapper::retrieve_alloc_info_(Legion::Mapping::MapperContext
                                                   Legion::FieldSpace fs,
                                                   Legion::FieldID fid)
 {
+  constexpr auto tag =
+    static_cast<Legion::SemanticTag>(legate::detail::CoreSemanticTag::ALLOC_INFO);
   const void* orig_info;
   std::size_t size;
 
-  if (runtime->retrieve_semantic_information(
-        ctx, fs, fid, LEGATE_CORE_ALLOC_INFO_TAG, orig_info, size, /*can_fail=*/true)) {
+  if (runtime->retrieve_semantic_information(ctx,
+                                             fs,
+                                             fid,
+                                             tag,
+                                             orig_info,
+                                             size,
+                                             /*can_fail=*/true)) {
     const char* alloc_info = static_cast<const char*>(orig_info);
 
     if (size > 0 && alloc_info[0] != '\0') {

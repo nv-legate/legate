@@ -41,7 +41,7 @@ std::optional<Library> Runtime::maybe_find_library(std::string_view library_name
 Library Runtime::create_library(std::string_view library_name,
                                 const ResourceConfig& config,
                                 std::unique_ptr<mapping::Mapper> mapper,
-                                std::map<LegateVariantCode, VariantOptions> default_options)
+                                std::map<VariantCode, VariantOptions> default_options)
 {
   return Library{impl_->create_library(std::move(library_name),
                                        config,
@@ -54,7 +54,7 @@ Library Runtime::find_or_create_library(
   std::string_view library_name,
   const ResourceConfig& config,
   std::unique_ptr<mapping::Mapper> mapper,
-  const std::map<LegateVariantCode, VariantOptions>& default_options,
+  const std::map<VariantCode, VariantOptions>& default_options,
   bool* created)
 {
   return Library{impl_->find_or_create_library(std::move(library_name),

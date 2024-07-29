@@ -15,12 +15,13 @@
 #include "core/cuda/cuda.h"
 #include "core/data/detail/physical_store.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/deserializer.h"
 
 namespace legate::detail {
 
 TaskContext::TaskContext(const Legion::Task* task,
-                         LegateVariantCode variant_kind,
+                         VariantCode variant_kind,
                          const std::vector<Legion::PhysicalRegion>& regions)
   : task_{task}, variant_kind_{variant_kind}, regions_{regions}
 {
@@ -70,7 +71,7 @@ TaskContext::TaskContext(const Legion::Task* task,
   // For reduction tree cases, some input stores may be mapped to NO_REGION
   // when the number of subregions isn't a multiple of the chosen radix.
   // To simplify the programming mode, we filter out those "invalid" stores out.
-  if (task_->tag == LEGATE_CORE_TREE_REDUCE_TAG) {
+  if (task_->tag == static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)) {
     std::vector<InternalSharedPtr<PhysicalArray>> inputs;
     for (auto&& input : inputs_) {
       if (input->valid()) {
@@ -145,7 +146,7 @@ std::vector<ReturnValue> TaskContext::get_return_values_() const
 
   // If this is a reduction task, we do sanity checks on the invariants
   // the Python code relies on.
-  if (task_->tag == LEGATE_CORE_TREE_REDUCE_TAG) {
+  if (task_->tag == static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)) {
     if (return_values.size() != 1 || unbound_stores_.size() != 1) {
       LEGATE_ABORT("Reduction tasks must have only one unbound output and no others");
     }

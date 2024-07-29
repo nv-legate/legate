@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include "core/legate_c.h"
-
 #include <fmt/format.h>
 #include <string>
 #include <type_traits>
@@ -21,7 +19,8 @@
 namespace legate {
 
 enum class LocalTaskID : std::int64_t;
-enum class GlobalTaskID : unsigned /* A.K.A. Legion::TaskID */;
+enum class GlobalTaskID : unsigned int /* A.K.A. Legion::TaskID */;
+enum class VariantCode : unsigned int /* A.K.A. Legion::VariantID */;
 
 }  // namespace legate
 
@@ -82,8 +81,8 @@ struct formatter<T, Char, std::enable_if_t<std::is_base_of_v<legate::detail::Exp
 };
 
 template <>
-struct formatter<legate_core_variant_t> : formatter<string_view> {
-  format_context::iterator format(legate_core_variant_t variant, format_context& ctx) const;
+struct formatter<legate::VariantCode> : formatter<string_view> {
+  format_context::iterator format(legate::VariantCode variant, format_context& ctx) const;
 };
 
 template <>

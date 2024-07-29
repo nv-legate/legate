@@ -61,7 +61,7 @@ class Library {
   Library(ConstructKey,
           std::string library_name,
           const ResourceConfig& config,
-          std::map<LegateVariantCode, VariantOptions> default_options);
+          std::map<VariantCode, VariantOptions> default_options);
 
   Library(const Library&) = delete;
   Library(Library&&)      = delete;
@@ -95,8 +95,7 @@ class Library {
   void register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
   [[nodiscard]] const TaskInfo* find_task(LocalTaskID local_task_id) const;
 
-  [[nodiscard]] const std::map<LegateVariantCode, VariantOptions>& get_default_variant_options()
-    const;
+  [[nodiscard]] const std::map<VariantCode, VariantOptions>& get_default_variant_options() const;
 
  private:
   Legion::Runtime* runtime_{};
@@ -110,7 +109,7 @@ class Library {
   std::unique_ptr<mapping::Mapper> mapper_{};
   Legion::Mapping::Mapper* legion_mapper_{};
   std::unordered_map<LocalTaskID, std::unique_ptr<TaskInfo>> tasks_{};
-  std::map<LegateVariantCode, VariantOptions> default_options_{};
+  std::map<VariantCode, VariantOptions> default_options_{};
 };
 
 }  // namespace legate::detail

@@ -23,8 +23,8 @@ from libcpp cimport bool as cpp_bool
 from libcpp.complex cimport complex as std_complex
 
 from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
-from ..legate_c cimport __half
 from ..type.type_info cimport _Type
+from ..utilities.typedefs cimport __half
 
 
 cdef extern from "core/data/scalar.h" namespace "legate" nogil:

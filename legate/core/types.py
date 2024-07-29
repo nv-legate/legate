@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from ._lib.type.type_info import (
     FixedArrayType,
-    ReductionOp,
+    ReductionOpKind,
     StructType,
     Type,
     array_type,
@@ -40,7 +40,7 @@ from ._lib.type.type_info import (
 
 __all__ = (
     "FixedArrayType",
-    "ReductionOp",
+    "ReductionOpKind",
     "StructType",
     "Type",
     "array_type",

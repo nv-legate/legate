@@ -29,7 +29,7 @@ namespace legate::mapping::detail {
 
 [[nodiscard]] Memory::Kind to_kind(StoreTarget target);
 
-[[nodiscard]] LegateVariantCode to_variant_code(TaskTarget target);
+[[nodiscard]] VariantCode to_variant_code(TaskTarget target);
 
 class DimOrdering {
  public:

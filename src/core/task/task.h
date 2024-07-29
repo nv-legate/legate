@@ -88,7 +88,7 @@ class LegateTask {
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
    * use the default set of options as discussed in the class description.
    */
-  static void register_variants(std::map<LegateVariantCode, VariantOptions> all_options = {});
+  static void register_variants(std::map<VariantCode, VariantOptions> all_options = {});
 
   /**
    * @brief Registers all variants of this task immediately.
@@ -100,8 +100,8 @@ class LegateTask {
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
    * use the default set of options as discussed in the class description.
    */
-  static void register_variants(
-    Library library, const std::map<LegateVariantCode, VariantOptions>& all_options = {});
+  static void register_variants(Library library,
+                                const std::map<VariantCode, VariantOptions>& all_options = {});
 
   /**
    * @brief Registers all variants of this task immediately.
@@ -113,10 +113,9 @@ class LegateTask {
    * @param all_options Options for task variants. Variants with no entires in `all_options` will
    * use the default set of options as discussed in the class description.
    */
-  static void register_variants(
-    Library library,
-    LocalTaskID task_id,
-    const std::map<LegateVariantCode, VariantOptions>& all_options = {});
+  static void register_variants(Library library,
+                                LocalTaskID task_id,
+                                const std::map<VariantCode, VariantOptions>& all_options = {});
 
  protected:
   [[nodiscard]] static std::string_view task_name_();
@@ -127,9 +126,9 @@ class LegateTask {
 
   // A helper to find and register all variants of a task
   [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info_(
-    const Library& lib, const std::map<LegateVariantCode, VariantOptions>& all_options);
+    const Library& lib, const std::map<VariantCode, VariantOptions>& all_options);
 
-  template <VariantImpl variant_fn, LegateVariantCode variant_kind>
+  template <VariantImpl variant_fn, VariantCode variant_kind>
   static void task_wrapper_(const void* args,
                             std::size_t arglen,
                             const void* userdata,

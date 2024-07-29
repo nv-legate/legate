@@ -43,7 +43,8 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
 {
   const Domain launch_domain{
     Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
-  const auto tag = mapping::detail::to_variant_code(machine.preferred_target());
+  const auto tag =
+    static_cast<Legion::MappingTagID>(mapping::detail::to_variant_code(machine.preferred_target()));
   // Generate a unique ID
   auto comm_id = Legion::Future::from_value<std::int32_t>(legate::comm::coll::collInitComm());
   // Find a mapping of all participants
@@ -75,7 +76,8 @@ void Factory<IT, IMT, FT>::finalize_(const mapping::detail::Machine& machine,
 {
   const Domain launch_domain{
     Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
-  const auto tag = mapping::detail::to_variant_code(machine.preferred_target());
+  const auto tag =
+    static_cast<Legion::MappingTagID>(mapping::detail::to_variant_code(machine.preferred_target()));
   detail::TaskLauncher launcher{core_library_, machine, finalize_task_type::TASK_ID, tag};
 
   launcher.set_concurrent(true);

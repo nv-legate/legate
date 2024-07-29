@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "core/legate_c.h"
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/store_projection.h"
+#include "core/utilities/detail/core_ids.h"
 
 namespace legate::detail {
 
@@ -42,7 +42,7 @@ class FillLauncher {
   void pack_mapper_arg_(BufferBuilder& buffer, Legion::ProjectionID proj_id);
 
   const mapping::detail::Machine& machine_;
-  std::int32_t priority_{LEGATE_CORE_DEFAULT_TASK_PRIORITY};
+  std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
   std::int64_t tag_{};
 };
 

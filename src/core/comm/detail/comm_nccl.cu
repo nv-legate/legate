@@ -20,6 +20,7 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 #include "core/task/detail/legion_task.h"
+#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/nvtx_help.h"
 #include "core/utilities/typedefs.h"
 
@@ -69,7 +70,7 @@ class Payload {
 
 class InitId : public detail::LegionTask<InitId> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{LEGATE_CORE_INIT_NCCL_ID_TASK_ID};
+  static constexpr auto TASK_ID = legate::LocalTaskID{CoreTask::INIT_NCCL_ID};
 
   static ncclUniqueId gpu_variant(const Legion::Task* task,
                                   const std::vector<Legion::PhysicalRegion>& /*regions*/,
@@ -89,7 +90,7 @@ class InitId : public detail::LegionTask<InitId> {
 
 class Init : public detail::LegionTask<Init> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{LEGATE_CORE_INIT_NCCL_TASK_ID};
+  static constexpr auto TASK_ID = legate::LocalTaskID{CoreTask::INIT_NCCL};
 
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
@@ -182,7 +183,7 @@ class Init : public detail::LegionTask<Init> {
 
 class Finalize : public detail::LegionTask<Finalize> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{LEGATE_CORE_FINALIZE_NCCL_TASK_ID};
+  static constexpr auto TASK_ID = legate::LocalTaskID{CoreTask::FINALIZE_NCCL};
 
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
@@ -241,13 +242,13 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
 
   // Create a communicator ID
   detail::TaskLauncher init_nccl_id_launcher{
-    core_library_, machine, InitId::TASK_ID, LEGATE_GPU_VARIANT};
+    core_library_, machine, InitId::TASK_ID, static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   init_nccl_id_launcher.set_side_effect(true);
   auto nccl_id = init_nccl_id_launcher.execute_single();
 
   // Then create the communicators on participating GPUs
   detail::TaskLauncher init_nccl_launcher{
-    core_library_, machine, Init::TASK_ID, LEGATE_GPU_VARIANT};
+    core_library_, machine, Init::TASK_ID, static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   init_nccl_launcher.add_future(nccl_id);
   init_nccl_launcher.set_concurrent(true);
   return init_nccl_launcher.execute(launch_domain);
@@ -259,7 +260,8 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
 {
   Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
-  detail::TaskLauncher launcher{core_library_, machine, Finalize::TASK_ID, LEGATE_GPU_VARIANT};
+  detail::TaskLauncher launcher{
+    core_library_, machine, Finalize::TASK_ID, static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);

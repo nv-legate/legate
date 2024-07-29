@@ -9,10 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Note import, not cimport. We want the Python version of the enum
-from ..utilities.typedefs import VariantCode
+from libc.stdint cimport int32_t
 
 
-cdef dict[TaskTarget, VariantCode] TASK_TARGET_TO_VARIANT_KIND = {
-    target: getattr(VariantCode, target.name) for target in TaskTarget
-}
+cdef extern from "legate_defines.h" nogil:
+    cdef int32_t _LEGATE_MAX_DIM "LEGATE_MAX_DIM"
