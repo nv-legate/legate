@@ -49,9 +49,6 @@ function(legate_core_string_ends_with)
 
   legate_core_string_escape_re_chars(ends_with ends_with)
 
-  message("src: ${src}")
-  message("ends_with: ${ends_with}")
-
   if("${src}" MATCHES "${ends_with}$")
     set(${_LEGATE_CORE_RESULT_VAR} TRUE PARENT_SCOPE)
   else()
