@@ -172,4 +172,4 @@ docs: doxygen
 ##
 .PHONY: docserve
 docserve:
-	@(PYTHON) -m http.server -d $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/cmake_build/docs/legate/core/sphinx
+	@$(PYTHON) -m http.server -d $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/cmake_build/docs/legate/core/sphinx

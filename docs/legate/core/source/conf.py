@@ -27,6 +27,9 @@ JSON_URL = SWITCHER_DEV if getenv("SWITCHER_DEV") == "1" else SWITCHER_PROD
 # -- Project information -----------------------------------------------------
 
 project = "NVIDIA legate.core"
+if "dev" in legate.__version__:
+    project += f" ({legate.__version__})"
+
 copyright = "2021-2024, NVIDIA"
 author = "NVIDIA Corporation"
 
