@@ -537,7 +537,8 @@ cdef class Runtime(Unconstructable):
     cpdef void finish(self):
         global _shutdown_manager
         _shutdown_manager.perform_callbacks()
-        finish()
+        with nogil:
+            finish()
 
     cpdef void add_shutdown_callback(self, callback: ShutdownCallback):
         global _shutdown_manager
