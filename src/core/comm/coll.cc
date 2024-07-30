@@ -133,7 +133,7 @@ void collFinalize()
 
 void collAbort() noexcept
 {
-  if (coll_detail::BackendNetwork::get_network()) {
+  if (coll_detail::BackendNetwork::has_network()) {
     coll_detail::BackendNetwork::get_network()->abort();
   }
 }
