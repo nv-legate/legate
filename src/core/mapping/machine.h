@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/mapping/mapping.h"
+#include "core/utilities/compiler.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 
@@ -114,10 +115,10 @@ class ProcessorRange {
                  std::uint32_t high_id,
                  std::uint32_t per_node_proc_count) noexcept;
 
-  ProcessorRange operator&(const ProcessorRange&) const;
-  bool operator==(const ProcessorRange& other) const noexcept;
-  bool operator!=(const ProcessorRange& other) const noexcept;
-  bool operator<(const ProcessorRange& other) const noexcept;
+  [[nodiscard]] ProcessorRange operator&(const ProcessorRange&) const;
+  [[nodiscard]] bool operator==(const ProcessorRange& other) const noexcept;
+  [[nodiscard]] bool operator!=(const ProcessorRange& other) const noexcept;
+  [[nodiscard]] bool operator<(const ProcessorRange& other) const noexcept;
   [[nodiscard]] std::size_t hash() const noexcept;
 };
 
@@ -254,7 +255,7 @@ class Machine {
    *
    * @return Machine descriptor with the chosen processor range
    */
-  Machine operator[](TaskTarget target) const;
+  [[nodiscard]] Machine operator[](TaskTarget target) const;
   /**
    * @brief Selects the processor ranges for a given set of processor types and constructs a machine
    * descriptor with them.
@@ -265,9 +266,9 @@ class Machine {
    *
    * @return Machine descriptor with the chosen processor ranges
    */
-  Machine operator[](const std::vector<TaskTarget>& targets) const;
-  bool operator==(const Machine& other) const;
-  bool operator!=(const Machine& other) const;
+  [[nodiscard]] Machine operator[](const std::vector<TaskTarget>& targets) const;
+  [[nodiscard]] bool operator==(const Machine& other) const;
+  [[nodiscard]] bool operator!=(const Machine& other) const;
   /**
    * @brief Computes an intersection between two machine descriptors
    *
@@ -275,7 +276,7 @@ class Machine {
    *
    * @return Machine descriptor
    */
-  Machine operator&(const Machine& other) const;
+  [[nodiscard]] Machine operator&(const Machine& other) const;
   /**
    * @brief Indicates whether the machine descriptor is empty.
    *
@@ -286,7 +287,7 @@ class Machine {
    */
   [[nodiscard]] bool empty() const;
 
-  Machine() = default;
+  LEGATE_CYTHON_DEFAULT_CTOR(Machine);
   explicit Machine(std::map<TaskTarget, ProcessorRange> ranges);
   explicit Machine(InternalSharedPtr<detail::Machine> impl);
   explicit Machine(detail::Machine impl);
