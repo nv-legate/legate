@@ -169,6 +169,12 @@ class TestDriver:
 
         assert pv_out not in run_out
 
+    def test_module(self, genconfig: GenConfig, mocker: MockerFixture) -> None:
+        config = genconfig(["--module", "some_mod"])
+        driver = m.LegateDriver(config, SYSTEM)
+
+        assert driver.cmd[-3:-1] == ("-m", "some_mod")
+
 
 class Test_format_verbose:
     def test_system_only(self) -> None:

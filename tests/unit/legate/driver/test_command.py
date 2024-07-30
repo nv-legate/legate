@@ -63,6 +63,7 @@ def test_CMD_PARTS() -> None:
         m.cmd_valgrind,
         m.cmd_wrapper_inner,
         m.cmd_python,
+        m.cmd_module,
         m.cmd_user_program,
         m.cmd_user_opts,
     )

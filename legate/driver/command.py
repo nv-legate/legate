@@ -252,6 +252,7 @@ _CMD_PARTS_PRE = (
 CMD_PARTS_PYTHON = _CMD_PARTS_PRE + (
     # Executable name that will get stripped by the runtime
     cmd_python,
+    cmd_module,
     # User script
     cmd_user_program,
     # Append user flags so they can override whatever we provided
