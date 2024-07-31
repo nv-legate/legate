@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TypeAlias
 
 from ...util.ui import dim, failed, passed, shell, skipped, timeout, yellow
@@ -125,6 +125,36 @@ def adjust_workers(
     return workers
 
 
+def format_duration(start: datetime, end: datetime) -> str:
+    r"""Format a duration from START to END for display.
+
+    Parameters
+    ----------
+    start : datetime
+        The start of the duration
+    end : datetime
+        The end of the duration
+
+    Returns
+    -------
+    str
+        The formatted duration
+
+    Raises
+    ------
+    ValueError
+        If the duration is invalid, such as when end comes before start.
+    """
+    if end < start:
+        raise ValueError(f"End ({end}) happens before start ({start})")
+
+    duration = (end - start).total_seconds()
+    time = f"{duration:0.2f}s"
+    start_str = start.strftime("%H:%M:%S.%f")[:-4]
+    end_str = end.strftime("%H:%M:%S.%f")[:-4]
+    return f" {yellow(time)} " + dim(f"{{{start_str}, {end_str}}}")
+
+
 def log_proc(
     name: str, proc: ProcessResult, config: Config, *, verbose: bool
 ) -> None:
@@ -135,10 +165,8 @@ def log_proc(
     if proc.time is None or proc.start is None or proc.end is None:
         duration = ""
     else:
-        time = f"{proc.time.total_seconds():0.2f}s"
-        start = proc.start.strftime("%H:%M:%S.%f")[:-4]
-        end = proc.end.strftime("%H:%M:%S.%f")[:-4]
-        duration = f" {yellow(time)} " + dim(f"{{{start}, {end}}}")
+        assert proc.end - proc.start == proc.time
+        duration = format_duration(proc.start, proc.end)
 
     msg = f"({name}){duration} {proc.test_display}"
     details = proc.output.split("\n") if verbose else None

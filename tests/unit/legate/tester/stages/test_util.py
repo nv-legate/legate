@@ -154,6 +154,30 @@ class Test_log_proc:
 
         assert LOG.lines == (timeout(f"(foo) {proc.test_display}"),)
 
+    def test_timeout_verbose(self) -> None:
+        config = Config([])
+        start = datetime.now()
+        end = start + timedelta(seconds=45)
+        proc = ProcessResult(
+            "proc",
+            "proc_display",
+            start=start,
+            end=end,
+            timeout=True,
+            output="foo\nbar",
+        )
+        duration = m.format_duration(start=start, end=end)
+        details = proc.output.split("\n")
+
+        LOG.clear()
+        m.log_proc("foo", proc, config, verbose=True)
+
+        assert LOG.lines == tuple(
+            timeout(
+                f"(foo){duration} {proc.test_display}", details=details
+            ).split("\n")
+        )
+
     def test_dry_run(self) -> None:
         config = Config(["test.py", "--dry-run"])
         proc = ProcessResult("proc", "proc_display")
@@ -188,6 +212,8 @@ class Test_log_proc:
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
-        assert LOG.lines[0] == shell(proc.invocation)
-        assert LOG.lines[1].startswith(passed("(foo) 2.41s {"))
-        assert LOG.lines[1].endswith(f"}} {proc.test_display}")
+        duration = m.format_duration(start=start, end=end)
+        assert LOG.lines == (
+            shell(proc.invocation),
+            passed(f"(foo){duration} {proc.test_display}"),
+        )

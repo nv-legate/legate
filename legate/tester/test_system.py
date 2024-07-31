@@ -155,8 +155,15 @@ class TestSystem(System):
                 output = ""
             else:
                 output = te.stdout.decode(errors="replace")
+
+            assert timeout is not None  # mypy
             return ProcessResult(
-                invocation, test_display, timeout=True, output=output
+                invocation,
+                test_display,
+                start=start,
+                end=start + timedelta(seconds=timeout),
+                timeout=True,
+                output=output,
             )
 
         end = datetime.now()
