@@ -78,10 +78,11 @@ selection.add_argument(
 )
 
 selection.add_argument(
-    "--gtest-file",
-    dest="gtest_file",
+    "--gtest-files",
+    dest="gtest_files",
     default=None,
-    help="Path to GTest binary",
+    nargs="+",
+    help="Path to GTest binary(s)",
 )
 
 gtest_group = selection.add_mutually_exclusive_group()

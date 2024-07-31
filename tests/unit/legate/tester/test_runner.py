@@ -159,8 +159,7 @@ class TestGTestRunner:
 
     def test_test_specs(self) -> None:
         c = Config(["test.py"])
-        c.gtest_file = Path("foo")
-        c.gtest_tests = ["bar", "baz"]
+        c.gtest_tests = {Path("foo"): ["bar", "baz"]}
         r = m.GTestRunner()
         assert r.test_specs(c) == (
             m.TestSpec(Path("foo"), "bar", "bar"),
@@ -246,8 +245,7 @@ class TestGTestRunner:
 
         def test_missing_gtest_file_bad(self) -> None:
             c = Config(["test.py"])
-            c.gtest_file = None
-            c.gtest_tests = ["bar"]
+            c.gtest_tests = {Path(): []}
             r = m.GTestRunner()
             with pytest.raises(
                 ValueError,
@@ -260,8 +258,7 @@ class TestGTestRunner:
 
         def test_zero_tests_bad(self) -> None:
             c = Config(["test.py"])
-            c.gtest_file = "foo"
-            c.gtest_tests = []
+            c.gtest_tests = {}
             r = m.GTestRunner()
             with pytest.raises(
                 ValueError,
@@ -274,8 +271,16 @@ class TestGTestRunner:
 
         def test_multi_tests_bad(self) -> None:
             c = Config(["test.py"])
-            c.gtest_file = "foo"
-            c.gtest_tests = ["bar", "baz"]
+            c.gtest_tests = {Path("foo"): ["bar", "baz"]}
+            r = m.GTestRunner()
+            with pytest.raises(
+                ValueError, match="--gdb can only be used with a single test"
+            ):
+                r.cmd_gdb(c)
+
+        def test_multi_tests_bad_multi(self) -> None:
+            c = Config(["test.py"])
+            c.gtest_tests = {Path("foo"): ["bar"], Path("baz"): ["bop"]}
             r = m.GTestRunner()
             with pytest.raises(
                 ValueError, match="--gdb can only be used with a single test"
@@ -284,8 +289,7 @@ class TestGTestRunner:
 
         def test_good(self) -> None:
             c = Config(["test.py"])
-            c.gtest_file = "foo"
-            c.gtest_tests = ["bar"]
+            c.gtest_tests = {Path("foo"): ["bar"]}
             r = m.GTestRunner()
             assert r.cmd_gdb(c) == r._cmd_single(
                 m.TestSpec(Path("foo"), "", "bar"), c, []

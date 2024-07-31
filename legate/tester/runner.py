@@ -62,7 +62,7 @@ class Runner:
 
         """
         # TODO: change this when legate/gtest subcommands split
-        if config.gtest_file:
+        if config.gtest_tests:
             return GTestRunner()
         else:
             return LegateRunner()
@@ -290,15 +290,21 @@ class GTestRunner(Runner):
         if config.multi_node.ranks_per_node > 1 or config.multi_node.nodes > 1:
             raise ValueError("--gdb can only be used with a single rank")
 
-        if len(config.gtest_tests) == 0 or config.gtest_file is None:
-            raise ValueError(
-                "--gdb can only be used with a single test (none were given)"
-            )
+        gtest_tests = config.gtest_tests
+        test_lists = list(gtest_tests.values())
 
-        if len(config.gtest_tests) > 1:
-            raise ValueError("--gdb can only be used with a single test")
+        match sum(map(len, test_lists)):
+            case 0:
+                raise ValueError(
+                    "--gdb can only be used with a single test (none were "
+                    "given)"
+                )
+            case 1:
+                pass
+            case _:
+                raise ValueError("--gdb can only be used with a single test")
 
-        spec = TestSpec(config.gtest_file, "", config.gtest_tests[0])
+        spec = TestSpec(list(gtest_tests.keys())[0], "", test_lists[0][0])
         return self._cmd_single(spec, config, [])
 
     def cmd(
@@ -355,8 +361,9 @@ class GTestRunner(Runner):
 
         """
         return tuple(
-            TestSpec(path=config.gtest_file, arg=test, display=test)
-            for test in config.gtest_tests
+            TestSpec(path=test_file, arg=test, display=test)
+            for test_file, test_list in config.gtest_tests.items()
+            for test in test_list
         )
 
     def gtest_args(self, test_spec: TestSpec, *, gdb: bool = False) -> ArgList:

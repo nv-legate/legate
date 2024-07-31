@@ -92,7 +92,7 @@ class TestPlan:
         except RuntimeError:
             gpus = "N/A"
 
-        if self._config.gtest_file:
+        if self._config.gtest_tests:
             details = (
                 f"* Feature stages       : {', '.join(yellow(x) for x in self._config.features)}",  # noqa E501
                 f"* Test files per stage : {yellow(str(len(self._config.gtest_tests)))}",  # noqa E501

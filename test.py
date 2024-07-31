@@ -35,7 +35,7 @@ from legate.tester.test_system import TestSystem  # noqa E402
 
 def main() -> int:
     parser.set_defaults(
-        gtest_file=GTEST_TESTS_BIN,
+        gtest_files=GTEST_TESTS_BIN,
         mpi_output_filename=(
             GTESTS_TEST_DIR / "mpi_result" if GTESTS_TEST_DIR else None
         ),
@@ -48,7 +48,7 @@ def main() -> int:
     return plan.execute()
 
 
-def _find_latest_cpp_test_dir() -> tuple[Path, Path] | tuple[None, None]:
+def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
     if not (LEGATE_CORE_ARCH := os.environ.get("LEGATE_CORE_ARCH")):
         return None, None
 
@@ -61,17 +61,21 @@ def _find_latest_cpp_test_dir() -> tuple[Path, Path] | tuple[None, None]:
     def make_test_dir(prefix: Path) -> Path:
         return prefix / "tests" / "cpp"
 
-    def make_test_bin(prefix: Path) -> Path:
-        return prefix / "bin" / "tests_with_runtime"
+    def make_test_bin(prefix: Path) -> list[Path]:
+        return [
+            prefix / "bin" / "tests_with_runtime",
+            prefix / "bin" / "tests_wo_runtime",
+            prefix / "bin" / "tests_non_reentrant",
+        ]
 
-    def get_cpp_lib_dir() -> tuple[Path, Path] | None:
+    def get_cpp_lib_dir() -> tuple[Path, list[Path]] | None:
         cpp_lib = make_test_dir(lg_arch_dir / "cmake_build")
         cpp_bin = make_test_bin(cpp_lib)
-        if cpp_bin.exists():
+        if all(p.exists() for p in cpp_bin):
             return cpp_lib, cpp_bin
         return None
 
-    def get_py_lib_dir() -> tuple[Path, Path] | None:
+    def get_py_lib_dir() -> tuple[Path, list[Path]] | None:
         # Skbuild puts everything under a
         # <os-name>-<os-version>-<cpu-arch>-<py-version> directory inside the
         # skbuild directory. Since we are not interested in reverse engineering
@@ -94,7 +98,7 @@ def _find_latest_cpp_test_dir() -> tuple[Path, Path] | tuple[None, None]:
             skbuild_base / "cmake-build" / "legate-core-cpp"
         )
         py_bin = make_test_bin(py_lib)
-        if py_bin.exists():
+        if all(p.exists() for p in py_bin):
             return py_lib, py_bin
         return None
 
@@ -104,7 +108,10 @@ def _find_latest_cpp_test_dir() -> tuple[Path, Path] | tuple[None, None]:
         py_lib_dir, py_bin = py_exists
 
     if cpp_exists and py_exists:
-        if cpp_bin.stat().st_mtime > py_bin.stat().st_mtime:
+        if all(
+            cpp_bin_exe.stat().st_mtime > py_bin_exe.stat().st_mtime
+            for cpp_bin_exe, py_bin_exe in zip(cpp_bin, py_bin)
+        ):
             return cpp_lib_dir, cpp_bin
         return py_lib_dir, py_bin
     elif cpp_exists:

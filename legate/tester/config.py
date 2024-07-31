@@ -141,7 +141,6 @@ class Config:
         self.integration = True
         self.files = args.files
         self.last_failed = args.last_failed
-        self.gtest_file = args.gtest_file
         self.test_root = args.test_root
         # NOTE: This reads the rest of the configuration, so do it last
         self.gtest_tests = self._compute_gtest_tests(args)
@@ -284,15 +283,16 @@ class Config:
         except OSError:
             return ()
 
-    def _compute_gtest_tests(self, args: Namespace) -> list[str]:
-        if args.gtest_file is None:
-            return []
+    def _compute_gtest_tests_single(
+        self, gtest_file: Path | str, to_skip: set[str], args: Namespace
+    ) -> list[str]:
+        gtest_file = Path(gtest_file).resolve()
+        if not gtest_file.exists():
+            raise ValueError(
+                f"gtest binary: '{gtest_file}' does not appear to exist"
+            )
 
-        to_skip = set(args.gtest_skip_list)
-        if args.gtest_tests:
-            return [test for test in args.gtest_tests if test not in to_skip]
-
-        list_command = [args.gtest_file, "--gtest_list_tests"]
+        list_command = [str(gtest_file), "--gtest_list_tests"]
         if args.gtest_filter is not None:
             list_command.append(f"--gtest_filter={args.gtest_filter}")
 
@@ -339,3 +339,31 @@ class Config:
             test_names.append(test_name)
 
         return test_names
+
+    def _compute_gtest_tests(self, args: Namespace) -> dict[Path, list[str]]:
+        if args.gtest_files is None:
+            return {}
+
+        to_skip = set(args.gtest_skip_list)
+        all_tests = {
+            gtest_file: self._compute_gtest_tests_single(
+                gtest_file, to_skip, args
+            )
+            for gtest_file in args.gtest_files
+        }
+
+        if args.gtest_tests:
+            remain_tests = {
+                t for test in args.gtest_tests for t in test.split()
+            }
+
+            for test_file in list(all_tests.keys()):
+                test_list = [
+                    t for t in all_tests[test_file] if t in remain_tests
+                ]
+                if test_list:
+                    all_tests[test_file] = test_list
+                else:
+                    del all_tests[test_file]
+
+        return all_tests
