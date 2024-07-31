@@ -20,8 +20,11 @@ include(cmake/Modules/legate_core_options.cmake)
 # ########################################################################################
 # * Project definition -------------------------------------------------------
 
+include(GNUInstallDirs)
+
 # Write the version header
-rapids_cmake_write_version_file(include/legate/version_config.hpp)
+rapids_cmake_write_version_file(${CMAKE_INSTALL_INCLUDEDIR}/legate/core/version.h
+                                PREFIX LEGATE)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/compile_commands.cmake)
 
@@ -492,8 +495,9 @@ set(legate_core_LOCAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_include_directories(legate_core
                            PUBLIC $<BUILD_INTERFACE:${legate_core_LOCAL_INCLUDE_DIR}>
-                                  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/legate>
-                           INTERFACE $<INSTALL_INTERFACE:include/legate>)
+                                  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate>
+                           INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate>
+)
 
 if(legate_core_BUILD_DOCS)
   add_subdirectory(docs/legate/core)
@@ -503,15 +507,17 @@ endif()
 # * install targets-----------------------------------------------------------
 
 include(CPack)
-include(GNUInstallDirs)
 
 rapids_cmake_install_lib_dir(lib_dir)
 
 install(TARGETS legate_core DESTINATION ${lib_dir} EXPORT legate-core-exports)
 
-install(FILES src/legate.h ${CMAKE_CURRENT_BINARY_DIR}/include/legate/version_config.hpp
-              ${CMAKE_CURRENT_BINARY_DIR}/include/legate/legate_defines.h
+install(FILES src/legate.h
+              ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate_defines.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/core/version.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core)
 
 install(FILES src/core/comm/coll_comm.h src/core/comm/coll.h src/core/comm/communicator.h
               src/core/comm/communicator.inl
