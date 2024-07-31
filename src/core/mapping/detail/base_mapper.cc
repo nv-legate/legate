@@ -692,17 +692,21 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
     // reuse reductions only for GPU tasks:
     if (target_proc.kind() == Processor::TOC_PROC) {
       // See if we already have it in our local instances
-      if (fields.size() == 1 && regions.size() == 1 &&
-          reduction_instances_->find_instance(
-            redop, regions.front(), fields.front(), target_memory, result, policy)) {
-        if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-          logger.debug() << "Operation " << mappable.get_unique_id()
-                         << ": reused cached reduction instance " << result << " for "
-                         << regions.front();
+      if (fields.size() == 1 && regions.size() == 1) {
+        auto ret = reduction_instances_->find_instance(
+          redop, regions.front(), fields.front(), target_memory, policy);
+
+        if (ret.has_value()) {
+          if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+            logger.debug() << "Operation " << mappable.get_unique_id()
+                           << ": reused cached reduction instance " << result << " for "
+                           << regions.front();
+          }
+          result = *std::move(ret);
+          runtime->enable_reentrant(ctx);
+          // Needs acquire to keep the runtime happy
+          return true;
         }
-        runtime->enable_reentrant(ctx);
-        // Needs acquire to keep the runtime happy
-        return true;
       }
     }
 
@@ -764,16 +768,20 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
                               : policy.allocation;
 
   // See if we already have it in our local instances
-  if (fields.size() == 1 && regions.size() == 1 && alloc_policy != AllocPolicy::MUST_ALLOC &&
-      local_instances_->find_instance(
-        regions.front(), fields.front(), target_memory, result, policy)) {
-    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      logger.debug() << "Operation " << mappable.get_unique_id() << ": reused cached instance "
-                     << result << " for " << regions.front();
+  if (fields.size() == 1 && regions.size() == 1 && alloc_policy != AllocPolicy::MUST_ALLOC) {
+    auto ret =
+      local_instances_->find_instance(regions.front(), fields.front(), target_memory, policy);
+
+    if (ret.has_value()) {
+      if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+        logger.debug() << "Operation " << mappable.get_unique_id() << ": reused cached instance "
+                       << result << " for " << regions.front();
+      }
+      result = *std::move(ret);
+      runtime->enable_reentrant(ctx);
+      // Needs acquire to keep the runtime happy
+      return true;
     }
-    runtime->enable_reentrant(ctx);
-    // Needs acquire to keep the runtime happy
-    return true;
   }
 
   InternalSharedPtr<RegionGroup> group{nullptr};

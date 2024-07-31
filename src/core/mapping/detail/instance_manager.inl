@@ -21,37 +21,39 @@ namespace legate::mapping::detail {
 // Silence pass-by-value since Legion::Domain is POD, and the move ctor just does the copy
 // anyways. Unfortunately there is no way to check this programatically (e.g. via a
 // static_assert).
-inline RegionGroup::RegionGroup(std::set<Region> regions_,
+inline RegionGroup::RegionGroup(std::set<Legion::LogicalRegion> regions_,
                                 const Domain& bounding_box_  // NOLINT(modernize-pass-by-value)
                                 )
   : regions{std::move(regions_)}, bounding_box{bounding_box_}
 {
 }
 
-inline std::vector<RegionGroup::Region> RegionGroup::get_regions() const
+inline std::vector<Legion::LogicalRegion> RegionGroup::get_regions() const
 {
   return {regions.begin(), regions.end()};
 }
 
 // ==========================================================================================
 
-inline InstanceSet::InstanceSpec::InstanceSpec(Instance inst, InstanceMappingPolicy po)
+inline InstanceSet::InstanceSpec::InstanceSpec(Legion::Mapping::PhysicalInstance inst,
+                                               InstanceMappingPolicy po)
   : instance{std::move(inst)}, policy{std::move(po)}
 {
 }
 
 // ==========================================================================================
 
-inline ReductionInstanceSet::ReductionInstanceSpec::ReductionInstanceSpec(const ReductionOpID& op,
-                                                                          Instance inst,
-                                                                          InstanceMappingPolicy po)
+inline ReductionInstanceSet::ReductionInstanceSpec::ReductionInstanceSpec(
+  Legion::ReductionOpID op, Legion::Mapping::PhysicalInstance inst, InstanceMappingPolicy po)
   : redop{op}, instance{std::move(inst)}, policy{std::move(po)}
 {
 }
 
 // ==========================================================================================
 
-inline BaseInstanceManager::FieldMemInfo::FieldMemInfo(RegionTreeID t, FieldID f, Memory m)
+inline BaseInstanceManager::FieldMemInfo::FieldMemInfo(Legion::RegionTreeID t,
+                                                       Legion::FieldID f,
+                                                       Memory m)
   : tid{t}, fid{f}, memory{m}
 {
 }
