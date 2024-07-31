@@ -14,10 +14,25 @@ from typing import Any, Type
 
 import numpy as np
 import pytest
-from utils import tasks
-from utils.data import ARRAY_TYPES, SCALAR_VALS
+from utils import tasks, utils
+from utils.data import (
+    ARRAY_TYPES,
+    EMPTY_SHAPES,
+    LARGE_SHAPES,
+    SCALAR_VALS,
+    SHAPES,
+)
 
-from legate.core import LogicalArray, Scalar, get_legate_runtime, types as ty
+from legate.core import (
+    ImageComputationHint,
+    LogicalArray,
+    Scalar,
+    bloat,
+    get_legate_runtime,
+    image,
+    scale,
+    types as ty,
+)
 from legate.core.task import task
 
 
@@ -136,9 +151,9 @@ class TestAutoTask:
         auto_task.add_output(out_store)
 
         arr_np = np.ndarray(shape=shape, dtype=np.int32)
-        auto_task.add_broadcast(out_store)
 
         auto_task.add_scalar_arg(arr_np, (ty.int32,))
+        auto_task.add_broadcast(out_store)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
@@ -173,25 +188,11 @@ class TestAutoTask:
         )
 
     @pytest.mark.parametrize(
-        "shape",
-        [(1, 2, 1), (2, 101, 10), (3, 4096, 12), (65535, 1, 2)],
-        ids=str,
+        "initialize", [True, False], ids=["initialized", "uninitialized"]
     )
-    @pytest.mark.parametrize(
-        "accessed",
-        [
-            True,
-            pytest.param(
-                False,
-                marks=pytest.mark.xfail(
-                    reason="crashes application", run=False
-                ),
-            ),
-        ],
-        ids=["accessed", "unaccessed"],
-    )
-    def test_uninitialized_input_store(
-        self, shape: tuple[int, ...], accessed: bool
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES)
+    def test_new_input_store(
+        self, shape: tuple[int, ...], initialize: bool
     ) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
@@ -199,8 +200,12 @@ class TestAutoTask:
         )
 
         in_store = runtime.create_store(ty.int32, shape=shape)
-
-        if accessed:
+        if initialize:
+            in_store.fill(123)
+        else:
+            # TODO(yimoj) [issue 465]
+            # this shouldn't be done, but it's allowed and works
+            # so keeping it here instead of TestAutoTaskErrors for now
             in_store.get_physical_store().get_inline_allocation()
 
         out_store = runtime.create_store(ty.int32, shape)
@@ -208,13 +213,204 @@ class TestAutoTask:
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
         auto_task.add_alignment(out_store, in_store)
-        # issue 465: crashes application if input store is not accessed prior
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
-            in_store.get_physical_store().get_inline_allocation(),
-            out_store.get_physical_store().get_inline_allocation(),
+            np.asarray(in_store.get_physical_store().get_inline_allocation()),
+            np.asarray(out_store.get_physical_store().get_inline_allocation()),
         )
+
+
+class TestAutoTaskConstraints:
+    def test_add_reduction(self) -> None:
+        runtime = get_legate_runtime()
+        in_arr = np.arange(10, dtype=np.float64)
+        in_store = runtime.create_store_from_buffer(
+            ty.float64, in_arr.shape, in_arr, False
+        )
+        out_arr = np.array((0,), dtype=np.float64)
+        out_store = runtime.create_store_from_buffer(
+            ty.float64, out_arr.shape, out_arr, False
+        )
+
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.array_sum_task.task_id
+        )
+        auto_task.add_input(in_store)
+        auto_task.add_reduction(out_store, ty.ReductionOpKind.ADD)
+        auto_task.execute()
+        runtime.issue_execution_fence(block=True)
+
+        np.testing.assert_allclose(
+            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            np.sum(in_arr),
+        )
+
+    def test_add_broadcast(self) -> None:
+        runtime = get_legate_runtime()
+        count = runtime.machine.count()
+        src_shape, tgt_shape = ((5, 1024, 5), (5, 1024 * count, 5))
+        in_np, in_store = utils.random_array_and_store(src_shape)
+        out_np, out_store = utils.zero_array_and_store(ty.float64, tgt_shape)
+
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.copy_store_task.task_id
+        )
+        auto_task.add_input(in_store)
+        auto_task.add_output(out_store)
+        auto_task.add_broadcast(in_store)
+        auto_task.execute()
+        runtime.issue_execution_fence(block=True)
+
+        for i in range(count):
+            np.testing.assert_allclose(
+                out_np[:, 1024 * i : 1024 * (i + 1), :], in_np
+            )
+
+    @pytest.mark.parametrize("hint", ImageComputationHint, ids=str)
+    def test_image_constraint(self, hint: ImageComputationHint) -> None:
+        @task(variants=tuple(tasks.KNOWN_VARIANTS))
+        def image_task(
+            func_store: tasks.InputStore,
+            range_store: tasks.InputStore,
+            range_arr: np.ndarray[Any, Any],
+            range_shape: tuple[int, ...],
+        ) -> None:
+            func_buf = tasks.asarray(func_store.get_inline_allocation())
+            range_buf = tasks.asarray(range_store.get_inline_allocation())
+            try:
+                func_np = np.frombuffer(func_buf, dtype="int64")
+            except TypeError as exc:
+                tasks.check_cupy(exc)
+                func_np = tasks.cupy.frombuffer(
+                    func_buf.tobytes(), dtype="int64"
+                )
+                range_arr = tasks.cupy.asarray(range_arr)
+            range_arr = range_arr.reshape(range_shape)
+            func_np = func_np.reshape(
+                func_np.size // range_buf.ndim, range_buf.ndim
+            )
+
+            for idx in func_np:
+                try:
+                    assert np.isin(range_arr[tuple(idx)], range_buf)
+                except ValueError as exc:
+                    tasks.check_cupy(exc)
+                    assert tasks.cupy.isin(range_arr[tuple(idx)], range_buf)
+
+        runtime = get_legate_runtime()
+        shape = (5, 4096, 5)
+        func_shape = (2, 2048, 5)
+        ndim = len(shape)
+        indices = np.indices(shape)
+        point_type = ty.point_type(ndim)
+        points = np.stack(indices, axis=indices.ndim - 1).reshape(
+            (indices.size // ndim, ndim)
+        )
+
+        func_arr = np.frombuffer(points, dtype=f"|V{point_type.size}").reshape(
+            shape
+        )
+        rng = np.random.default_rng()
+        rng.shuffle(func_arr)
+        func_store = runtime.create_store_from_buffer(
+            ty.point_type(len(shape)),
+            func_shape,
+            func_arr[: np.prod(func_shape)],
+            False,
+        )
+
+        range_np, range_store = utils.random_array_and_store(shape)
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, image_task.task_id
+        )
+        func_part = auto_task.declare_partition()
+        range_part = auto_task.declare_partition()
+        auto_task.add_input(func_store, func_part)
+        auto_task.add_input(range_store, range_part)
+        auto_task.add_scalar_arg(
+            range_np, ty.array_type(ty.float64, range_np.size)
+        )
+        auto_task.add_scalar_arg(range_np.shape, (ty.int64,))
+        auto_task.add_constraint(image(func_part, range_part, hint))
+        auto_task.throws_exception(Exception)
+        auto_task.execute()
+
+        runtime.issue_execution_fence(block=True)
+
+    @pytest.mark.parametrize("in_shape", SHAPES + LARGE_SHAPES, ids=str)
+    def test_repeat_with_scale(self, in_shape: tuple[int, ...]) -> None:
+        runtime = get_legate_runtime()
+        in_np, in_store = utils.random_array_and_store(in_shape)
+        repeats = np.random.randint(1, 5, in_np.ndim)
+        out_shape = tuple(
+            in_shape[i] * repeats[i] for i in range(len(in_shape))
+        )
+        out_np, out_store = utils.zero_array_and_store(ty.float64, out_shape)
+
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.repeat_task.task_id
+        )
+        in_part = auto_task.declare_partition()
+        out_part = auto_task.declare_partition()
+        auto_task.add_input(in_store, in_part)
+        auto_task.add_output(out_store, out_part)
+        auto_task.add_scalar_arg(repeats, (ty.int32,))
+        auto_task.add_constraint(scale(tuple(repeats), in_part, out_part))
+        auto_task.throws_exception(Exception)
+        auto_task.execute()
+        runtime.issue_execution_fence(block=True)
+        exp = in_np
+        for i in range(in_np.ndim):
+            exp = np.repeat(exp, repeats[i], axis=i)
+        np.testing.assert_allclose(out_np, exp)
+
+    @pytest.mark.parametrize("shape", SHAPES + LARGE_SHAPES, ids=str)
+    def test_bloat_constraints(self, shape: tuple[int, ...]) -> None:
+
+        @task(variants=tuple(tasks.KNOWN_VARIANTS))
+        def bloat_task(
+            in_store: tasks.InputStore,
+            bloat_store: tasks.InputStore,
+            low_offsets: tuple[int, ...],
+            high_offsets: tuple[int, ...],
+            shape: tuple[int, ...],
+        ) -> None:
+            # not sure how this is supposed to be used
+            # so just check the constraints for now
+            for i in range(in_store.ndim):
+                assert (
+                    max(0, in_store.domain.lo[i] - low_offsets[i])
+                    == bloat_store.domain.lo[i]
+                )
+                assert (
+                    min(shape[i] - 1, in_store.domain.hi[i] + high_offsets[i])
+                    == bloat_store.domain.hi[i]
+                )
+
+        low_offsets = tuple(np.random.randint(1, 6) for _ in shape)
+
+        runtime = get_legate_runtime()
+        high_offsets = low_offsets[::-1]
+        _, source_store = utils.random_array_and_store(shape)
+        _, bloat_store = utils.random_array_and_store(shape)
+
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, bloat_task.task_id
+        )
+        source_part = auto_task.declare_partition()
+        bloat_part = auto_task.declare_partition()
+        auto_task.add_input(source_store, source_part)
+        auto_task.add_input(bloat_store, bloat_part)
+        auto_task.add_scalar_arg(low_offsets, (ty.int64,))
+        auto_task.add_scalar_arg(high_offsets, (ty.int64,))
+        auto_task.add_scalar_arg(shape, (ty.int64,))
+        auto_task.add_constraint(
+            bloat(source_part, bloat_part, low_offsets, high_offsets)
+        )
+        auto_task.throws_exception(Exception)
+        auto_task.execute()
+        runtime.issue_execution_fence(block=True)
 
 
 class TestAutoTaskErrors:
@@ -265,6 +461,57 @@ class TestAutoTaskErrors:
         with pytest.raises(TypeError, match=msg):
             auto_task.add_scalar_arg(123, (ty.int32,))
 
+    @pytest.mark.xfail(run=False, reason="arbitrary crash during reuse")
+    def test_auto_task_reuse(self) -> None:
+        runtime = get_legate_runtime()
+        library = runtime.core_library
+        auto_task = runtime.create_auto_task(library, tasks.basic_task.task_id)
+        auto_task.add_output(runtime.create_store(ty.bool_))
+        auto_task.throws_exception(ValueError)
+        msg = "Wrong number of given arguments"
+        with pytest.raises(ValueError, match=msg):
+            auto_task.execute()
+        runtime.issue_execution_fence(block=True)
+        # TODO(yimoj) [issue 384, 440]
+        # reusing auto task should not be allowed
+        # actual behavior to be updated after reuse check is implemented
+        try:
+            auto_task.execute()
+        except Exception as exc:
+            assert msg not in str(exc)
+        runtime.issue_execution_fence(block=True)
+
+    @pytest.mark.xfail(run=False, reason="crashes application")
+    def test_uninitialized_input_store(self) -> None:
+        runtime = get_legate_runtime()
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.copy_store_task.task_id
+        )
+
+        in_store = runtime.create_store(ty.int32, shape=(1,))
+        out_store = runtime.create_store(ty.int32, shape=(1,))
+
+        auto_task.add_input(in_store)
+        auto_task.add_output(out_store)
+        auto_task.add_alignment(out_store, in_store)
+        # TODO(yimoj) [issue 465]
+        # crashes application if input store is not accessed prior
+        # need to be updated when this is raising python exception properly
+        auto_task.execute()
+
+    def test_add_invalid_communicator(self) -> None:
+        runtime = get_legate_runtime()
+        library = runtime.core_library
+        exc = RuntimeError
+        msg = "No factory available for communicator"
+
+        task = runtime.create_auto_task(library, tasks.basic_task.task_id)
+        with pytest.raises(exc, match=msg):
+            task.add_communicator("foo")
+
+
+class TestAutoTaskConstraintsErrors:
+
     def test_alignment_shape_mismatch(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
@@ -311,22 +558,27 @@ class TestAutoTaskErrors:
             auto_task.execute()
         runtime.issue_execution_fence(block=True)
 
-    @pytest.mark.xfail(run=False, reason="arbitrary crash during reuse")
-    def test_auto_task_reuse(self) -> None:
+    @pytest.mark.parametrize("offsets", [(1, 2), (1, 2, 3, 4)], ids=str)
+    def test_bloat_offset_mismatching_dims(
+        self, offsets: tuple[int, ...]
+    ) -> None:
+        shape = (1, 2, 3)
+
         runtime = get_legate_runtime()
-        library = runtime.core_library
-        auto_task = runtime.create_auto_task(library, tasks.basic_task.task_id)
-        auto_task.add_output(runtime.create_store(ty.bool_))
-        auto_task.throws_exception(ValueError)
-        msg = "Wrong number of given arguments"
+        _, source_store = utils.random_array_and_store(shape)
+        _, bloat_store = utils.random_array_and_store(shape)
+
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.copy_store_task.task_id
+        )
+        source_part = auto_task.declare_partition()
+        bloat_part = auto_task.declare_partition()
+        auto_task.add_input(source_store, source_part)
+        auto_task.add_output(bloat_store, bloat_part)
+        auto_task.add_constraint(
+            bloat(source_part, bloat_part, offsets, offsets)
+        )
+        msg = "Bloating constraint requires the number of offsets to match"
         with pytest.raises(ValueError, match=msg):
             auto_task.execute()
-        runtime.issue_execution_fence(block=True)
-        # issue 384/440
-        # reusing auto task should not be allowed
-        # actual behavior to be updated after reuse check is implemented
-        try:
-            auto_task.execute()
-        except Exception as exc:
-            assert msg not in str(exc)
         runtime.issue_execution_fence(block=True)

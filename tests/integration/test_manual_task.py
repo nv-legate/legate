@@ -198,49 +198,6 @@ class TestManualTask:
         manual_task.execute()
         runtime.issue_execution_fence(block=True)
 
-    @pytest.mark.parametrize(
-        "shape",
-        SHAPES,
-        ids=str,
-    )
-    @pytest.mark.parametrize(
-        "accessed",
-        [
-            True,
-            pytest.param(
-                False,
-                marks=pytest.mark.xfail(
-                    reason="crashes application", run=False
-                ),
-            ),
-        ],
-        ids=["accessed", "unaccessed"],
-    )
-    def test_uninitialized_input_store(
-        self, shape: tuple[int, ...], accessed: bool
-    ) -> None:
-        runtime = get_legate_runtime()
-        manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.copy_store_task.task_id, shape
-        )
-
-        in_store = runtime.create_store(ty.int32, shape=shape)
-
-        if accessed:
-            in_store.get_physical_store().get_inline_allocation()
-
-        out_store = runtime.create_store(ty.int32, shape)
-
-        manual_task.add_input(in_store)
-        manual_task.add_output(out_store)
-        # issue 465: crashes application if input store is not accessed prior
-        manual_task.execute()
-        runtime.issue_execution_fence(block=True)
-        np.testing.assert_allclose(
-            in_store.get_physical_store().get_inline_allocation(),
-            out_store.get_physical_store().get_inline_allocation(),
-        )
-
     def test_add_reduction(self) -> None:
         runtime = get_legate_runtime()
         in_arr = np.arange(10, dtype=np.float64)
@@ -257,7 +214,7 @@ class TestManualTask:
         )
 
         manual_task.add_input(in_store)
-        manual_task.add_reduction(out_store, ty.ReductionOp.ADD)
+        manual_task.add_reduction(out_store, ty.ReductionOpKind.ADD)
         manual_task.throws_exception(Exception)
         manual_task.execute()
         np.testing.assert_allclose(
@@ -321,7 +278,7 @@ class TestManualTaskErrors:
         with pytest.raises(ValueError, match=msg):
             manual_task.execute()
         runtime.issue_execution_fence(block=True)
-        # issue 384
+        # TODO(yimoj) [issue 384]
         # reusing task should not be allowed
         # actual behavior to be updated after reuse check is implemented
         try:
@@ -358,6 +315,7 @@ class TestManualTaskErrors:
         exc_task.add_output(runtime.create_store(ty.bool_))
         exc_task.throws_exception(exc)
         with pytest.raises(exc, match=msg):
+            # TODO(yimoj) [issue 450]
             # Error same as issue 450, exception not catchable in python
             # [error 609] LEGION ERROR: Output region 0 of task basic_task
             # is requested to have 1 dimensions, but the color space has 3
@@ -374,3 +332,33 @@ class TestManualTaskErrors:
             runtime.create_manual_task(
                 runtime.core_library, tasks.basic_task.task_id, (0, 0, 0)
             )
+
+    @pytest.mark.xfail(run=False, reason="crashes application")
+    def test_uninitialized_input_store(self) -> None:
+        runtime = get_legate_runtime()
+        shape = (1,)
+        manual_task = runtime.create_manual_task(
+            runtime.core_library, tasks.copy_store_task.task_id, shape
+        )
+
+        in_store = runtime.create_store(ty.int32, shape=shape)
+        out_store = runtime.create_store(ty.int32, shape)
+
+        manual_task.add_input(in_store)
+        manual_task.add_output(out_store)
+        # TODO(yimoj) [issue 465]
+        # crashes application if input store is not accessed prior
+        # need to be updated when this is raising python exception properly
+        manual_task.execute()
+
+    def test_add_invalid_communicator(self) -> None:
+        runtime = get_legate_runtime()
+        library = runtime.core_library
+        exc = RuntimeError
+        msg = "No factory available for communicator"
+
+        task = runtime.create_manual_task(
+            library, tasks.basic_task.task_id, (1,)
+        )
+        with pytest.raises(exc, match=msg):
+            task.add_communicator("foo")

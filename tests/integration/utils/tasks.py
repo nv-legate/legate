@@ -32,12 +32,16 @@ from legate.core.task import (
 )
 
 
+def check_cupy(exc: Exception) -> None:
+    if cupy is None:
+        raise RuntimeError("Need to install cupy for GPU variant") from exc
+
+
 def asarray(alloc: InlineAllocation) -> NDArray[Any]:
     try:
         arr = np.asarray(alloc)
     except ValueError as exc:
-        if cupy is None:
-            raise RuntimeError("Need to install cupy for GPU variant") from exc
+        check_cupy(exc)
         arr = cupy.asarray(alloc)
     return arr
 
@@ -88,7 +92,8 @@ def copy_np_array_task(out: OutputStore, np_arr: NDArray[Any]) -> None:
     out_arr_np = asarray(out.get_inline_allocation())
     try:
         out_arr_np[:] = np_arr[:]
-    except ValueError:
+    except ValueError as exc:
+        check_cupy(exc)
         out_arr_np[:] = cupy.asarray(np_arr)[:]
 
 
@@ -97,3 +102,19 @@ def array_sum_task(store: InputStore, out: ReductionStore) -> None:
     store_arr = asarray(store.get_inline_allocation())
     out_arr = asarray(out.get_inline_allocation())
     out_arr[:] = out_arr + store_arr.sum()
+
+
+@task(variants=tuple(KNOWN_VARIANTS))
+def repeat_task(
+    store: InputStore, out: OutputStore, repeats: tuple[int, ...]
+) -> None:
+    store_arr = asarray(store.get_inline_allocation())
+    out_arr = asarray(out.get_inline_allocation())
+    repeat_arr = store_arr
+    for i in range(store_arr.ndim):
+        try:
+            repeat_arr = np.repeat(repeat_arr, repeats[i], axis=i)
+        except ValueError as exc:
+            check_cupy(exc)
+            repeat_arr = cupy.repeat(store_arr, repeats[i], axis=i)
+    out_arr[:] = repeat_arr

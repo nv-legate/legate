@@ -25,7 +25,8 @@ class TestLogicalStoreOperation:
             ((1, 0, 4), 1, (0,)),
             ((1024,), 0, (256, 4)),
             ((1, 2, 4), 2, (1, 4)),
-            # Issue-503: Delinearize allows sizes [0,0] but SIGFPE when
+            # TODO(yimoj) [issue 503]
+            # Delinearize allows sizes [0,0] but SIGFPE when
             # InlineAllocation is accessed.
             # Fatal Python error: Floating point exception
             pytest.param(
@@ -115,14 +116,13 @@ class TestLogicalStoreOperation:
     @pytest.mark.parametrize(
         "shape, dim",
         [
-            pytest.param(
-                tuple(),
-                0,
-                marks=pytest.mark.xfail(
-                    reason="issue-932: "
-                    "mismatching shape in store and InlineAllocation"
-                ),
-            ),
+            # TODO(yimoj) [issue 498]
+            # crashes application when inline allocation is accessed
+            # legion_python: /legion-src/runtime/legion/legion_domain.inl:954:
+            # Legion::Domain::operator Legion::Rect<DIM, T>() const
+            # [with int DIM = 1; T = long long int; Legion::Rect<DIM, T> =
+            # Realm::Rect<1, long long int>]: Assertion `DIM == dim' failed.
+            pytest.param(tuple(), 0, marks=pytest.mark.xfail(run=False)),
             ((1,), 0),
             ((1, 2, 3), 2),
             ((1024, 1, 1), 2),
@@ -140,7 +140,8 @@ class TestLogicalStoreOperation:
         expanded_arr = np.expand_dims(arr, dim)
         promoted = store.promote(dim, size)
 
-        # issue-932: when size > 0 np.asarray raises ValueError:
+        # TODO(yimoj) [issue 932]
+        # when size > 0 np.asarray raises ValueError:
         # ValueError: mismatch in length of strides and shape
         promoted_arr = np.asarray(
             promoted.get_physical_store().get_inline_allocation()
@@ -148,7 +149,8 @@ class TestLogicalStoreOperation:
         assert promoted.equal_storage(store)
         assert np.allclose(expanded_arr, promoted_arr)
 
-        # issue-932: when size == 0 this fails due to the mismatching ndims:
+        # TODO(yimoj) [issue 932]
+        # when size == 0 this fails due to the mismatching ndims:
         # E       assert 1 == 2
         # E        +  where 1 = array([257], dtype=int16).ndim
         # E        +  and   2 = array([], shape=(0, 1), dtype=int16).ndim
@@ -228,7 +230,7 @@ class TestLogicalStoreOperation:
                 LEGATE_MAX_DIM // 3,
                 LEGATE_MAX_DIM // 2,
                 marks=pytest.mark.xfail(
-                    # Issue-522
+                    # TODO(yimoj) [issue 522]
                     # LogicalStore Shape(0,1,2,1)
                     # __array_interface__ (0, 1, 2, 3)
                     reason="wrong shape in array interface"
@@ -261,7 +263,8 @@ class TestLogicalStoreOperationErrors:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.float64, shape)
         with pytest.raises(IndexError, match="maximum number of dimensions"):
-            # issue-288 promote does not respect LEGATE_MAX_DIM
+            # TODO(yimoj) [issue 288]
+            # promote does not respect LEGATE_MAX_DIM
             store.promote(0, 1)
 
     def test_promote_out_of_bounds_axis(self) -> None:

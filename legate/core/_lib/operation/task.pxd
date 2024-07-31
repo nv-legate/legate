@@ -47,7 +47,7 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
         void set_concurrent(bool)
         void set_side_effect(bool)
         void throws_exception(bool)
-        void add_communicator(std_string_view)
+        void add_communicator(std_string_view) except+
 
     cdef cppclass _ManualTask "legate::ManualTask":
         _ManualTask()
@@ -69,7 +69,7 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
         void set_concurrent(bool)
         void set_side_effect(bool)
         void throws_exception(bool)
-        void add_communicator(std_string_view)
+        void add_communicator(std_string_view) except+
 
 
 cdef class AutoTask(Unconstructable):
