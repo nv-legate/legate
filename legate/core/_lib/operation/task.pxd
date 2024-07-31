@@ -41,8 +41,8 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
         _Variable add_reduction(_LogicalArray, int32_t, _Variable) except+
         void add_scalar_arg(const _Scalar& scalar)
         void add_constraint(_Constraint)
-        _Variable find_or_declare_partition(_LogicalArray)
-        _Variable declare_partition()
+        _Variable find_or_declare_partition(_LogicalArray) except+
+        _Variable declare_partition() except+
         std_string_view provenance() const
         void set_concurrent(bool)
         void set_side_effect(bool)

@@ -64,12 +64,18 @@ std::string Operation::to_string() const
 
 const Variable* Operation::find_or_declare_partition(const InternalSharedPtr<LogicalStore>& store)
 {
-  if (const auto it = part_mappings_.find(store); it != part_mappings_.end()) {
-    return it->second;
+  const auto [it, inserted] = part_mappings_.try_emplace(store);
+
+  if (inserted) {
+    try {
+      it->second = declare_partition();
+    } catch (...) {
+      // strong exception guarantee
+      part_mappings_.erase(it);
+      throw;
+    }
   }
-  const auto* symb      = declare_partition();
-  part_mappings_[store] = symb;
-  return symb;
+  return it->second;
 }
 
 const Variable* Operation::declare_partition()
@@ -93,7 +99,13 @@ void Operation::record_partition_(
   const auto& mapped_store  = it->second;
 
   if (inserted) {
-    part_mappings_.try_emplace(mapped_store, variable);
+    try {
+      part_mappings_.try_emplace(mapped_store, variable);
+    } catch (...) {
+      // strong exception guarantee
+      store_mappings_.erase(it);
+      throw;
+    }
   } else if (mapped_store->id() != sid) {
     throw std::invalid_argument{
       fmt::format("Variable {} is already assigned to another store", *variable)};
