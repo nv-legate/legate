@@ -112,6 +112,7 @@ cdef class VariantInvoker:
             elif issubclass(ty, _OUTPUT_TYPES):
                 outputs.append(name)
             elif issubclass(ty, ReductionStore):
+                raise NotImplementedError("Reductions not yet implemented")
                 reductions.append(name)
             else:
                 if issubclass(ty, _BASE_TYPES):
@@ -231,8 +232,7 @@ cdef class VariantInvoker:
                 assert isinstance(user_param, (LogicalStore, LogicalArray))
                 task.add_output(user_param)
             elif issubclass(expected_ty, ReductionStore):
-                raise NotImplementedError()
-                task.add_reduction(user_param, None)  # type: ignore
+                raise NotImplementedError("Reductions not yet implemented")
             else:
                 raise NotImplementedError(
                     f"Unsupported parameter type {expected_ty}"
