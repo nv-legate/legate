@@ -74,8 +74,6 @@ class TestPlan:
 
         self._log_failures(all_procs)
 
-        self._log_timeouts(all_procs)
-
         self._record_last_failed(all_procs)
 
         LOG(self.outro(total, passed))
@@ -141,24 +139,13 @@ class TestPlan:
         return f"{overall}\n"
 
     def _log_failures(self, all_procs: tuple[ProcessResult, ...]) -> None:
-        if not any(proc.returncode for proc in all_procs):
+        if all(proc.passed for proc in all_procs):
             return
 
         LOG(f"{banner('FAILURES')}\n")
 
         for stage in self._stages:
-            procs = (proc for proc in stage.result.procs if proc.returncode)
-            for proc in procs:
-                log_proc(stage.name, proc, self._config, verbose=True)
-
-    def _log_timeouts(self, all_procs: tuple[ProcessResult, ...]) -> None:
-        if not any(proc.timeout for proc in all_procs):
-            return
-
-        LOG(f"{banner('TIMEOUTS')}\n")
-
-        for stage in self._stages:
-            procs = (proc for proc in stage.result.procs if proc.timeout)
+            procs = (proc for proc in stage.result.procs if not proc.passed)
             for proc in procs:
                 log_proc(stage.name, proc, self._config, verbose=True)
 
