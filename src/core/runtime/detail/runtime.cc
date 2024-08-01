@@ -1213,8 +1213,8 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result,
     core_library_, machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
 
   launcher.add_future(result);
-  launcher.add_scalar(Scalar{offset});
-  launcher.add_scalar(Scalar{size});
+  launcher.add_scalar(make_internal_shared<Scalar>(offset));
+  launcher.add_scalar(make_internal_shared<Scalar>(size));
   return launcher.execute_single();
 }
 
@@ -1231,8 +1231,8 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
     core_library_, machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
 
   launcher.add_future_map(result);
-  launcher.add_scalar(Scalar{offset});
-  launcher.add_scalar(Scalar{size});
+  launcher.add_scalar(make_internal_shared<Scalar>(offset));
+  launcher.add_scalar(make_internal_shared<Scalar>(size));
   return launcher.execute(launch_domain);
 }
 

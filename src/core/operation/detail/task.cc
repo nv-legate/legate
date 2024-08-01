@@ -105,13 +105,7 @@ void Task::launch_task_(Strategy* p_strategy)
 
   // Add by-value scalars
   for (auto&& scalar : scalars_) {
-    // TODO(jfaibussowit)
-    // Copy is deliberate, we do not want to move out of scalar, since that would invalidate
-    // the user-held scalar. Rather, launcher.add_scalar() should accept a InternalSharedPtr
-    // argument instead...
-    auto scal = *scalar;
-
-    launcher.add_scalar(std::move(scal));
+    launcher.add_scalar(std::move(scalar));
   }
 
   // Add communicators

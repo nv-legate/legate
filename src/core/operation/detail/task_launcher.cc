@@ -46,9 +46,9 @@ void TaskLauncher::add_reduction(std::unique_ptr<Analyzable> arg)
   reductions_.push_back(std::move(arg));
 }
 
-void TaskLauncher::add_scalar(Scalar&& scalar)
+void TaskLauncher::add_scalar(InternalSharedPtr<Scalar> scalar)
 {
-  scalars_.emplace_back(std::make_unique<ScalarArg>(std::move(scalar)));
+  scalars_.emplace_back(std::move(scalar));
 }
 
 void TaskLauncher::add_future(const Legion::Future& future) { futures_.push_back(future); }
@@ -82,11 +82,11 @@ void pack_args(BufferBuilder& buffer,
   }
 }
 
-void pack_args(BufferBuilder& buffer, const std::vector<std::unique_ptr<ScalarArg>>& args)
+void pack_args(BufferBuilder& buffer, const std::vector<ScalarArg>& args)
 {
   buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
   for (auto&& arg : args) {
-    arg->pack(buffer);
+    arg.pack(buffer);
   }
 }
 

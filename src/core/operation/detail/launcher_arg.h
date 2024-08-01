@@ -59,12 +59,12 @@ class Analyzable {
 
 class ScalarArg final : public Serializable {
  public:
-  explicit ScalarArg(Scalar&& scalar);
+  explicit ScalarArg(InternalSharedPtr<Scalar> scalar);
 
   void pack(BufferBuilder& buffer) const override;
 
  private:
-  Scalar scalar_;
+  InternalSharedPtr<Scalar> scalar_{};
 };
 
 class RegionFieldArg final : public Analyzable {

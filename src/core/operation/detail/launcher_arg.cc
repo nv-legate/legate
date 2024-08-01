@@ -23,7 +23,7 @@
 
 namespace legate::detail {
 
-void ScalarArg::pack(BufferBuilder& buffer) const { scalar_.pack(buffer); }
+void ScalarArg::pack(BufferBuilder& buffer) const { scalar_->pack(buffer); }
 
 void RegionFieldArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {

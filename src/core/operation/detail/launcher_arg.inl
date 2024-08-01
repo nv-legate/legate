@@ -29,7 +29,7 @@ inline void Analyzable::perform_invalidations() const {}
 
 // ==========================================================================================
 
-inline ScalarArg::ScalarArg(Scalar&& scalar) : scalar_{std::move(scalar)} {}
+inline ScalarArg::ScalarArg(InternalSharedPtr<Scalar> scalar) : scalar_{std::move(scalar)} {}
 
 // ==========================================================================================
 

@@ -33,6 +33,7 @@ namespace legate::cuda {
 /**
  * @ingroup task
  * @brief A simple wrapper around CUDA streams to inject auxiliary features
+ * @deprecated since 24.09: please provide your own implementation of this class
  *
  * When `LEGATE_SYNC_STREAM_VIEW` is set to 1, every `StreamView` synchronizes the CUDA stream
  * that it wraps when it is destroyed.
@@ -41,6 +42,7 @@ class LEGATE_CORE_STREAM_VIEW_DEPRECATED StreamView {
  public:
   /**
    * @brief Creates a `StreamView` with a raw CUDA stream
+   * @deprecated since 24.09: please provide your own implementation of this class
    *
    * @param stream Raw CUDA stream to wrap
    */
@@ -55,6 +57,7 @@ class LEGATE_CORE_STREAM_VIEW_DEPRECATED StreamView {
 
   /**
    * @brief Unwraps the raw CUDA stream
+   * @deprecated since 24.09: please provide your own implementation of this class
    *
    * @return Raw CUDA stream wrapped by the `StreamView`
    */
@@ -79,6 +82,7 @@ class LEGATE_CORE_STREAM_VIEW_DEPRECATED StreamView {
 /**
  * @ingroup task
  * @brief A stream pool
+ * @deprecated since 24.09: use legate::TaskContext::get_task_stream() instead
  */
 class LEGATE_CORE_STREAM_POOL_DEPRECATED StreamPool {
  public:
@@ -86,6 +90,7 @@ class LEGATE_CORE_STREAM_POOL_DEPRECATED StreamPool {
 
   /**
    * @brief Returns a `StreamView` in the pool
+   * @deprecated since 24.09: use legate::TaskContext::get_task_stream() instead
    *
    * @return A `StreamView` object. Currently, all stream views returned from this pool are backed
    * by the same CUDA stream.
@@ -94,6 +99,7 @@ class LEGATE_CORE_STREAM_POOL_DEPRECATED StreamPool {
 
   /**
    * @brief Returns a singleton stream pool
+   * @deprecated since 24.09: use legate::TaskContext::get_task_stream() instead
    *
    * The stream pool is alive throughout the program execution.
    *
@@ -103,8 +109,6 @@ class LEGATE_CORE_STREAM_POOL_DEPRECATED StreamPool {
 
  private:
   // For now we keep only one stream in the pool
-  // TODO(mpapadakis): If this ever changes, the use of non-stream-ordered `DeferredBuffer`s
-  // in `core/data/buffer.h` will no longer be safe.
   std::optional<cudaStream_t> cached_stream_{};
 };
 

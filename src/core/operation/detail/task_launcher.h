@@ -47,7 +47,7 @@ class TaskLauncher {
   void add_input(std::unique_ptr<Analyzable> arg);
   void add_output(std::unique_ptr<Analyzable> arg);
   void add_reduction(std::unique_ptr<Analyzable> arg);
-  void add_scalar(Scalar&& scalar);
+  void add_scalar(InternalSharedPtr<Scalar> scalar);
 
   void add_future(const Legion::Future& future);
   void add_future_map(const Legion::FutureMap& future_map);
@@ -95,7 +95,7 @@ class TaskLauncher {
   std::vector<std::unique_ptr<Analyzable>> inputs_{};
   std::vector<std::unique_ptr<Analyzable>> outputs_{};
   std::vector<std::unique_ptr<Analyzable>> reductions_{};
-  std::vector<std::unique_ptr<ScalarArg>> scalars_{};
+  std::vector<ScalarArg> scalars_{};
   std::vector<Legion::Future> futures_{};
   std::vector<const OutputRegionArg*> unbound_stores_{};
   std::vector<Legion::FutureMap> future_maps_{};
