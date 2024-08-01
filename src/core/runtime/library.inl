@@ -62,7 +62,7 @@ namespace legate {
 inline Library::Library(detail::Library* impl) : impl_{impl} {}
 
 template <typename REDOP>
-std::int32_t Library::register_reduction_operator(std::int32_t redop_id)
+GlobalRedopID Library::register_reduction_operator(LocalRedopID redop_id)
 {
   auto legion_redop_id = get_reduction_op_id(redop_id);
 #ifndef __CUDACC__

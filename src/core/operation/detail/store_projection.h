@@ -37,13 +37,13 @@ class BaseStoreProjection {
                             bool is_key,
                             bool is_single = SINGLE) const;
 
-  void set_reduction_op(Legion::ReductionOpID _redop);
+  void set_reduction_op(GlobalRedopID _redop);
 
   [[nodiscard]] std::size_t hash() const noexcept;
 
   Legion::LogicalPartition partition{Legion::LogicalPartition::NO_PART};
   Legion::ProjectionID proj_id{};
-  Legion::ReductionOpID redop{-1};
+  GlobalRedopID redop{-1};
 };
 
 class StoreProjection final : public BaseStoreProjection {

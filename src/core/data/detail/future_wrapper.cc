@@ -157,12 +157,13 @@ mapping::StoreTarget FutureWrapper::target() const
 
 // Initializing isn't a const operation, even if all member functions are used const-ly
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void FutureWrapper::initialize_with_identity(std::int32_t redop_id)
+void FutureWrapper::initialize_with_identity(GlobalRedopID redop_id)
 {
   const auto untyped_acc = AccessorWO<std::int8_t, 1>{get_buffer(), field_size()};
   auto* ptr              = untyped_acc.ptr(0);
-  const auto* redop      = Legion::Runtime::get_reduction_op(redop_id);
-  const auto* identity   = redop->identity;
+  const auto* redop =
+    Legion::Runtime::get_reduction_op(static_cast<Legion::ReductionOpID>(redop_id));
+  const auto* identity = redop->identity;
 
   LEGATE_ASSERT(redop->sizeof_lhs == field_size());
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) &&

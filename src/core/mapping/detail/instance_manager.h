@@ -94,21 +94,21 @@ class ReductionInstanceSet {
   class ReductionInstanceSpec {
    public:
     ReductionInstanceSpec() = default;
-    ReductionInstanceSpec(Legion::ReductionOpID op,
+    ReductionInstanceSpec(GlobalRedopID op,
                           Legion::Mapping::PhysicalInstance inst,
                           InstanceMappingPolicy po);
 
-    Legion::ReductionOpID redop{0};
+    GlobalRedopID redop{0};
     Legion::Mapping::PhysicalInstance instance{};
     InstanceMappingPolicy policy{};
   };
 
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
-    Legion::ReductionOpID redop,
+    GlobalRedopID redop,
     const Legion::LogicalRegion& region,
     const InstanceMappingPolicy& policy) const;
 
-  void record_instance(Legion::ReductionOpID redop,
+  void record_instance(GlobalRedopID redop,
                        const Legion::LogicalRegion& region,
                        Legion::Mapping::PhysicalInstance instance,
                        InstanceMappingPolicy policy);
@@ -172,13 +172,13 @@ class InstanceManager : public BaseInstanceManager {
 class ReductionInstanceManager : public BaseInstanceManager {
  public:
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
-    Legion::ReductionOpID redop,
+    GlobalRedopID redop,
     const Legion::LogicalRegion& region,
     Legion::FieldID field_id,
     Memory memory,
     const InstanceMappingPolicy& policy = {});
 
-  void record_instance(Legion::ReductionOpID redop,
+  void record_instance(GlobalRedopID redop,
                        const Legion::LogicalRegion& region,
                        Legion::FieldID field_id,
                        Legion::Mapping::PhysicalInstance instance,

@@ -32,6 +32,16 @@ cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
     cdef enum class _GlobalTaskID "legate::GlobalTaskID" (_Legion_TaskID):
         pass
 
+    ctypedef int _Legion_ReductionOpID "Legion::ReductionOpID"
+
+    cdef enum class _LocalRedopID "legate::LocalRedopID" (int64_t):
+        pass
+
+    cdef enum class _GlobalRedopID "legate::GlobalRedopID" (
+        _Legion_ReductionOpID
+    ):
+        pass
+
     cdef cppclass _DomainPoint "legate::DomainPoint":
         _DomainPoint()
         int32_t get_dim()

@@ -73,7 +73,7 @@ void Task::record_unbound_output(InternalSharedPtr<LogicalStore> store)
 }
 
 void Task::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
-                                   Legion::ReductionOpID legion_redop_id)
+                                   GlobalRedopID legion_redop_id)
 {
   scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
 }
@@ -87,13 +87,13 @@ void Task::launch_task_(Strategy* p_strategy)
   launcher.set_priority(priority());
 
   for (auto&& [arr, mapping, projection] : inputs_) {
-    launcher.add_input(
-      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_READ_ONLY, -1));
+    launcher.add_input(arr->to_launcher_arg(
+      mapping, strategy, launch_domain, projection, LEGION_READ_ONLY, GlobalRedopID{-1}));
   }
 
   for (auto&& [arr, mapping, projection] : outputs_) {
-    launcher.add_output(
-      arr->to_launcher_arg(mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, -1));
+    launcher.add_output(arr->to_launcher_arg(
+      mapping, strategy, launch_domain, projection, LEGION_WRITE_ONLY, GlobalRedopID{-1}));
   }
 
   for (auto&& [redop, rest] : legate::detail::zip_equal(reduction_ops_, reductions_)) {
@@ -293,10 +293,11 @@ const Variable* AutoTask::add_output(InternalSharedPtr<LogicalArray> array)
   return symb;
 }
 
-const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array, std::int32_t redop)
+const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
+                                        std::int32_t redop_kind)
 {
   auto symb = find_or_declare_partition(array);
-  add_reduction(std::move(array), redop, symb);
+  add_reduction(std::move(array), redop_kind, symb);
   return symb;
 }
 
@@ -330,7 +331,7 @@ void AutoTask::add_output(InternalSharedPtr<LogicalArray> array, const Variable*
 }
 
 void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
-                             std::int32_t redop,
+                             std::int32_t redop_kind,
                              const Variable* partition_symbol)
 {
   if (array->unbound()) {
@@ -340,10 +341,10 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
   if (array->type()->variable_size()) {
     throw std::invalid_argument{"List/string arrays cannot be used for reduction"};
   }
-  auto legion_redop_id = array->type()->find_reduction_operator(redop);
+  auto legion_redop_id = array->type()->find_reduction_operator(redop_kind);
 
-  array->record_scalar_reductions(this, static_cast<Legion::ReductionOpID>(legion_redop_id));
-  reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
+  array->record_scalar_reductions(this, legion_redop_id);
+  reduction_ops_.push_back(legion_redop_id);
 
   auto& arg = reductions_.emplace_back(std::move(array));
 
@@ -479,34 +480,32 @@ void ManualTask::add_output(const InternalSharedPtr<LogicalStorePartition>& stor
 }
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
-                               Legion::ReductionOpID redop)
+                               std::int32_t redop_kind)
 {
   if (store->unbound()) {
     throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
   }
 
-  auto legion_redop_id = store->type()->find_reduction_operator(redop);
+  auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);
   if (store->has_scalar_storage()) {
-    record_scalar_reduction(store, static_cast<Legion::ReductionOpID>(legion_redop_id));
+    record_scalar_reduction(store, legion_redop_id);
   }
   add_store_(reductions_, store, create_no_partition());
-  reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
+  reduction_ops_.push_back(legion_redop_id);
 }
 
 void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
-                               Legion::ReductionOpID redop,
+                               std::int32_t redop_kind,
                                std::optional<SymbolicPoint> projection)
 {
-  auto legion_redop_id =
-    static_cast<std::int32_t>(store_partition->store()->type()->find_reduction_operator(redop));
+  auto legion_redop_id = store_partition->store()->type()->find_reduction_operator(redop_kind);
 
   if (store_partition->store()->has_scalar_storage()) {
-    record_scalar_reduction(store_partition->store(),
-                            static_cast<Legion::ReductionOpID>(legion_redop_id));
+    record_scalar_reduction(store_partition->store(), legion_redop_id);
   }
   add_store_(
     reductions_, store_partition->store(), store_partition->partition(), std::move(projection));
-  reduction_ops_.push_back(static_cast<Legion::ReductionOpID>(legion_redop_id));
+  reduction_ops_.push_back(legion_redop_id);
 }
 
 void ManualTask::add_store_(std::vector<ArrayArg>& store_args,

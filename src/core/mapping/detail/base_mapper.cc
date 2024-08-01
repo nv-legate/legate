@@ -660,10 +660,10 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
   const auto& policy = mapping.policy;
   auto target_memory = local_machine_.get_memory(target_proc, policy.target);
 
-  auto redop = (*reqs.begin())->redop;
+  auto redop = GlobalRedopID{(*reqs.begin())->redop};
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     for (auto* req : reqs) {
-      if (redop != req->redop) {
+      if (redop != GlobalRedopID{req->redop}) {
         LEGATE_ABORT(
           "Colocated stores should be either non-reduction arguments "
           "or reductions with the same reduction operator.");
@@ -672,7 +672,7 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
   }
   // Targets of reduction copies should be mapped to normal instances
   if (mappable.get_mappable_type() == Legion::Mappable::COPY_MAPPABLE) {
-    redop = 0;
+    redop = GlobalRedopID{0};
   }
 
   // Generate layout constraints from the store mapping
@@ -681,7 +681,7 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
   auto& fields = layout_constraints.field_constraint.field_set;
 
   // If we're making a reduction instance:
-  if (redop != 0) {
+  if (redop != GlobalRedopID{0}) {
     // We need to hold the instance manager lock as we're about to try
     // to find an instance
     const Legion::Mapping::AutoLock reduction_lock{ctx, reduction_instances_->manager_lock()};
@@ -711,8 +711,8 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
     }
 
     // if we didn't find it, create one
-    layout_constraints.add_constraint(
-      Legion::SpecializedConstraint(REDUCTION_FOLD_SPECIALIZE, redop));
+    layout_constraints.add_constraint(Legion::SpecializedConstraint{
+      REDUCTION_FOLD_SPECIALIZE, static_cast<Legion::ReductionOpID>(redop)});
     std::size_t footprint = 0;
     if (runtime->create_physical_instance(ctx,
                                           target_memory,
@@ -876,7 +876,7 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
                                         const Legion::Mappable& mappable,
                                         const StoreMapping& mapping,
                                         Memory target_memory,
-                                        Legion::ReductionOpID redop,
+                                        GlobalRedopID redop,
                                         std::size_t footprint)
 {
   std::string_view opname;
@@ -891,8 +891,8 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
 
   std::stringstream req_ss;
 
-  if (redop > 0) {
-    req_ss << "reduction (" << redop << ") requirement(s) ";
+  if (redop > GlobalRedopID{0}) {
+    req_ss << "reduction (" << traits::detail::to_underlying(redop) << ") requirement(s) ";
   } else {
     req_ss << "region requirement(s) ";
   }

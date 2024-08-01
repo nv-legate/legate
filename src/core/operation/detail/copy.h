@@ -30,7 +30,7 @@ class Copy final : public Operation {
        std::uint64_t unique_id,
        std::int32_t priority,
        mapping::detail::Machine machine,
-       std::optional<std::int32_t> redop);
+       std::optional<std::int32_t> redop_kind);
 
   void validate() override;
   void launch(Strategy* strategy) override;
@@ -43,7 +43,7 @@ class Copy final : public Operation {
   StoreArg target_{};
   StoreArg source_{};
   InternalSharedPtr<Alignment> constraint_{};
-  std::optional<std::int32_t> redop_{};
+  std::optional<std::int32_t> redop_kind_{};
 };
 
 }  // namespace legate::detail

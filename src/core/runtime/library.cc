@@ -26,7 +26,7 @@ GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
 
 Legion::MapperID Library::get_mapper_id() const { return impl()->get_mapper_id(); }
 
-Legion::ReductionOpID Library::get_reduction_op_id(std::int64_t local_redop_id) const
+GlobalRedopID Library::get_reduction_op_id(LocalRedopID local_redop_id) const
 {
   return impl()->get_reduction_op_id(local_redop_id);
 }
@@ -46,7 +46,7 @@ LocalTaskID Library::get_local_task_id(GlobalTaskID task_id) const
   return impl()->get_local_task_id(task_id);
 }
 
-std::int64_t Library::get_local_reduction_op_id(Legion::ReductionOpID redop_id) const
+LocalRedopID Library::get_local_reduction_op_id(GlobalRedopID redop_id) const
 {
   return impl()->get_local_reduction_op_id(redop_id);
 }
@@ -63,7 +63,7 @@ std::int64_t Library::get_local_sharding_id(Legion::ShardingID shard_id) const
 
 bool Library::valid_task_id(GlobalTaskID task_id) const { return impl()->valid_task_id(task_id); }
 
-bool Library::valid_reduction_op_id(Legion::ReductionOpID redop_id) const
+bool Library::valid_reduction_op_id(GlobalRedopID redop_id) const
 {
   return impl()->valid_reduction_op_id(redop_id);
 }

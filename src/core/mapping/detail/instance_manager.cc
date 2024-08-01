@@ -303,7 +303,7 @@ void InstanceSet::dump_and_sanity_check_() const
 }
 
 std::optional<Legion::Mapping::PhysicalInstance> ReductionInstanceSet::find_instance(
-  Legion::ReductionOpID redop,
+  GlobalRedopID redop,
   const Legion::LogicalRegion& region,
   const InstanceMappingPolicy& policy) const
 {
@@ -315,7 +315,7 @@ std::optional<Legion::Mapping::PhysicalInstance> ReductionInstanceSet::find_inst
   return std::nullopt;
 }
 
-void ReductionInstanceSet::record_instance(Legion::ReductionOpID redop,
+void ReductionInstanceSet::record_instance(GlobalRedopID redop,
                                            const Legion::LogicalRegion& region,
                                            Legion::Mapping::PhysicalInstance instance,
                                            InstanceMappingPolicy policy)
@@ -430,7 +430,7 @@ std::map<Memory, std::size_t> InstanceManager::aggregate_instance_sizes() const
 }
 
 std::optional<Legion::Mapping::PhysicalInstance> ReductionInstanceManager::find_instance(
-  Legion::ReductionOpID redop,
+  GlobalRedopID redop,
   const Legion::LogicalRegion& region,
   Legion::FieldID field_id,
   Memory memory,
@@ -449,7 +449,7 @@ std::optional<Legion::Mapping::PhysicalInstance> ReductionInstanceManager::find_
   return it->second.find_instance(redop, region, policy);
 }
 
-void ReductionInstanceManager::record_instance(Legion::ReductionOpID redop,
+void ReductionInstanceManager::record_instance(GlobalRedopID redop,
                                                const Legion::LogicalRegion& region,
                                                Legion::FieldID field_id,
                                                Legion::Mapping::PhysicalInstance instance,

@@ -707,13 +707,14 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
       FutureWrapper{true, type()->size(), storage->scalar_offset(), domain, storage->get_future()};
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
-    return make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(future), transform_);
+    return make_internal_shared<PhysicalStore>(
+      dim(), type(), GlobalRedopID{-1}, std::move(future), transform_);
   }
 
   LEGATE_ASSERT(storage->kind() == Storage::Kind::REGION_FIELD);
   auto region_field = storage->map();
-  mapped_ =
-    make_internal_shared<PhysicalStore>(dim(), type(), -1, std::move(region_field), transform_);
+  mapped_           = make_internal_shared<PhysicalStore>(
+    dim(), type(), GlobalRedopID{-1}, std::move(region_field), transform_);
   return mapped_;
 }
 
@@ -898,7 +899,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  std::int64_t redop)
+  GlobalRedopID redop)
 {
   LEGATE_ASSERT(self.get() == this);
 
@@ -922,7 +923,7 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_(
 std::unique_ptr<Analyzable> LogicalStore::future_to_launcher_arg_(Legion::Future future,
                                                                   const Domain& launch_domain,
                                                                   Legion::PrivilegeMode privilege,
-                                                                  std::int64_t redop)
+                                                                  GlobalRedopID redop)
 {
   if (!launch_domain.is_valid() && LEGION_REDUCE == privilege) {
     privilege = LEGION_READ_WRITE;
@@ -954,10 +955,10 @@ std::unique_ptr<Analyzable> LogicalStore::future_to_launcher_arg_(Legion::Future
 }
 
 std::unique_ptr<Analyzable> LogicalStore::future_map_to_launcher_arg_(
-  const Domain& launch_domain, Legion::PrivilegeMode privilege, std::int64_t redop)
+  const Domain& launch_domain, Legion::PrivilegeMode privilege, GlobalRedopID redop)
 {
   if (unbound()) {
-    return std::make_unique<WriteOnlyScalarStoreArg>(this, -1 /*redop*/);
+    return std::make_unique<WriteOnlyScalarStoreArg>(this, GlobalRedopID{-1} /*redop*/);
   }
   LEGATE_ASSERT(get_storage()->replicated());
 
@@ -1001,7 +1002,7 @@ std::unique_ptr<Analyzable> LogicalStore::region_field_to_launcher_arg_(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  std::int64_t redop)
+  GlobalRedopID redop)
 {
   if (unbound()) {
     auto&& [field_space, field_id] = strategy.find_field_for_unbound_store(variable);
@@ -1012,7 +1013,7 @@ std::unique_ptr<Analyzable> LogicalStore::region_field_to_launcher_arg_(
   auto store_partition = create_partition_(self, partition);
   auto store_proj      = store_partition->create_store_projection(launch_domain, projection);
   store_proj->is_key   = strategy.is_key_partition(variable);
-  store_proj->redop    = static_cast<Legion::ReductionOpID>(redop);
+  store_proj->redop    = redop;
 
   if (privilege == LEGION_REDUCE && store_partition->is_disjoint_for(launch_domain)) {
     privilege = LEGION_READ_WRITE;

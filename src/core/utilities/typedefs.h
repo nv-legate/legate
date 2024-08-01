@@ -91,6 +91,30 @@ enum class LocalTaskID : std::int64_t {};
  */
 enum class GlobalTaskID : Legion::TaskID {};
 
+/**
+ * @brief Integer type representing a `Library`-local reduction operator ID.
+ *
+ * All reduction operators are uniquely identifiable via a "reduction ID", which serve as proxy
+ * task ID's for the reduction meta-tasks. When a reduction operator is registered with a
+ * `Library`, the reduction must declare a unique "local" ID (`LocalRedopID`) within that
+ * `Library`. The `Library` then assigns a globally unique ID to the reduction operator, which
+ * may be used to refer to the operator across the entire program.
+ *
+ * @see GlobalRedopID Library Library::get_reduction_op_id()
+ */
+enum class LocalRedopID : std::int64_t {};
+
+/**
+ * @brief Integer type representing a global reduction operator ID.
+ *
+ * `GlobalRedopID`s may be used to refer to reduction operators registered to other `Library`s,
+ * or to refer to the reduction operator when interfacing with Legion. See `LocalRedopID` for
+ * further discussion on reduction operator ID's.
+ *
+ * @see LocalRedopID
+ */
+enum class GlobalRedopID : Legion::ReductionOpID {};
+
 // Geometry types
 
 /** @defgroup geometry Geometry types

@@ -12,7 +12,12 @@
 from ..data.scalar import Scalar
 from ..task.task_info import TaskInfo
 from ..type.type_info import Type
-from ..utilities.typedefs import GlobalTaskID, LocalTaskID
+from ..utilities.typedefs import (
+    GlobalRedopID,
+    GlobalTaskID,
+    LocalRedopID,
+    LocalTaskID,
+)
 
 class Library:
     def get_new_task_id(self) -> LocalTaskID: ...
@@ -22,6 +27,8 @@ class Library:
         self, local_task_id: int | LocalTaskID
     ) -> GlobalTaskID: ...
     def get_mapper_id(self) -> int: ...
-    def get_reduction_op_id(self, local_redop_id: int) -> int: ...
+    def get_reduction_op_id(
+        self, local_redop_id: LocalRedopID | int
+    ) -> GlobalRedopID: ...
     def get_tunable(self, tunable_id: int, dtype: Type) -> Scalar: ...
     def register_task(self, task_info: TaskInfo) -> GlobalTaskID: ...

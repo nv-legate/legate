@@ -34,7 +34,9 @@ cdef class Library(Unconstructable):
     cpdef uint32_t get_mapper_id(self):
         return self._handle.get_mapper_id()
 
-    cpdef uint32_t get_reduction_op_id(self, int64_t local_redop_id):
+    cpdef _GlobalRedopID get_reduction_op_id(
+        self, _LocalRedopID local_redop_id
+    ):
         return self._handle.get_reduction_op_id(local_redop_id)
 
     cpdef Scalar get_tunable(self, int64_t tunable_id, Type dtype):

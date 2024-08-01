@@ -173,17 +173,17 @@ std::uint32_t Type::size() const
   return {};
 }
 
-void Type::record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const
+void Type::record_reduction_operator(std::int32_t op_kind, GlobalRedopID global_op_id) const
 {
   detail::Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);
 }
 
-std::int32_t Type::find_reduction_operator(std::int32_t op_kind) const
+GlobalRedopID Type::find_reduction_operator(std::int32_t op_kind) const
 {
   return detail::Runtime::get_runtime()->find_reduction_operator(uid(), op_kind);
 }
 
-std::int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
+GlobalRedopID Type::find_reduction_operator(ReductionOpKind op_kind) const
 {
   return find_reduction_operator(static_cast<std::int32_t>(op_kind));
 }

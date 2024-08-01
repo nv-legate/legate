@@ -54,17 +54,17 @@ class Library {
 
   [[nodiscard]] GlobalTaskID get_task_id(LocalTaskID local_task_id) const;
   [[nodiscard]] Legion::MapperID get_mapper_id() const;
-  [[nodiscard]] Legion::ReductionOpID get_reduction_op_id(std::int64_t local_redop_id) const;
+  [[nodiscard]] GlobalRedopID get_reduction_op_id(LocalRedopID local_redop_id) const;
   [[nodiscard]] Legion::ProjectionID get_projection_id(std::int64_t local_proj_id) const;
   [[nodiscard]] Legion::ShardingID get_sharding_id(std::int64_t local_shard_id) const;
 
   [[nodiscard]] LocalTaskID get_local_task_id(GlobalTaskID task_id) const;
-  [[nodiscard]] std::int64_t get_local_reduction_op_id(Legion::ReductionOpID redop_id) const;
+  [[nodiscard]] LocalRedopID get_local_reduction_op_id(GlobalRedopID redop_id) const;
   [[nodiscard]] std::int64_t get_local_projection_id(Legion::ProjectionID proj_id) const;
   [[nodiscard]] std::int64_t get_local_sharding_id(Legion::ShardingID shard_id) const;
 
   [[nodiscard]] bool valid_task_id(GlobalTaskID task_id) const;
-  [[nodiscard]] bool valid_reduction_op_id(Legion::ReductionOpID redop_id) const;
+  [[nodiscard]] bool valid_reduction_op_id(GlobalRedopID redop_id) const;
   [[nodiscard]] bool valid_projection_id(Legion::ProjectionID proj_id) const;
   [[nodiscard]] bool valid_sharding_id(Legion::ShardingID shard_id) const;
 
@@ -148,7 +148,7 @@ class Library {
    * @return Global reduction operator ID
    */
   template <typename REDOP>
-  [[nodiscard]] std::int32_t register_reduction_operator(std::int32_t redop_id);
+  [[nodiscard]] GlobalRedopID register_reduction_operator(LocalRedopID redop_id);
   /**
    * @brief Registers a library mapper. Replaces the existing mapper if there already is one.
    *

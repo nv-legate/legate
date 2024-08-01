@@ -13,6 +13,8 @@ from typing import Any
 
 import numpy as np
 
+from ..utilities.typedefs import GlobalRedopID
+
 class ReductionOpKind(IntEnum):
     ADD: int
     SUB: int
@@ -42,9 +44,13 @@ class Type:
     @property
     def is_primitive(self) -> bool: ...
     def record_reduction_op(
-        self, op_kind: int, reduction_op_id: int
+        self,
+        op_kind: ReductionOpKind | int,
+        reduction_op_id: GlobalRedopID | int,
     ) -> None: ...
-    def reduction_op_id(self, op_kind: int) -> int: ...
+    def reduction_op_id(
+        self, op_kind: ReductionOpKind | int
+    ) -> GlobalRedopID: ...
     def __repr__(self) -> str: ...
     def to_numpy_dtype(self) -> np.dtype[Any]: ...
     @property

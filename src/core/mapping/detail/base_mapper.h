@@ -268,7 +268,7 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                               const Legion::Mappable& mappable,
                               const StoreMapping& mapping,
                               Memory target_memory,
-                              Legion::ReductionOpID redop,
+                              GlobalRedopID redop,
                               std::size_t footprint);
   void legate_select_sources_(
     Legion::Mapping::MapperContext ctx,

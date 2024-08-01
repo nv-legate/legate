@@ -28,12 +28,12 @@ Copy::Copy(InternalSharedPtr<LogicalStore> target,
            std::uint64_t unique_id,
            std::int32_t priority,
            mapping::detail::Machine machine,
-           std::optional<std::int32_t> redop)
+           std::optional<std::int32_t> redop_kind)
   : Operation{unique_id, priority, std::move(machine)},
     target_{std::move(target), declare_partition()},
     source_{std::move(source), declare_partition()},
     constraint_{align(target_.variable, source_.variable)},
-    redop_{redop}
+    redop_kind_{redop_kind}
 {
   record_partition_(target_.variable, target_.store);
   record_partition_(source_.variable, source_.store);
@@ -56,7 +56,7 @@ void Copy::validate()
   if (target_.store->has_scalar_storage() != source_.store->has_scalar_storage()) {
     throw std::runtime_error{"Copies are supported only between the same kind of stores"};
   }
-  if (redop_ && target_.store->has_scalar_storage()) {
+  if (redop_kind_ && target_.store->has_scalar_storage()) {
     throw std::runtime_error{"Reduction copies don't support future-backed target stores"};
   }
 }
@@ -74,14 +74,13 @@ void Copy::launch(Strategy* p_strategy)
 
   launcher.add_input(source_.store, create_store_projection_(strategy, launch_domain, source_));
 
-  if (!redop_) {
+  if (!redop_kind_) {
     launcher.add_output(target_.store, create_store_projection_(strategy, launch_domain, target_));
   } else {
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
     auto proj            = store_partition->create_store_projection(launch_domain);
 
-    proj->set_reduction_op(static_cast<Legion::ReductionOpID>(
-      target_.store->type()->find_reduction_operator(redop_.value())));
+    proj->set_reduction_op(target_.store->type()->find_reduction_operator(redop_kind_.value()));
     launcher.add_reduction(target_.store, std::move(proj));
   }
 
@@ -95,7 +94,8 @@ void Copy::launch(Strategy* p_strategy)
 void Copy::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));
-  solver.add_partition_symbol(target_.variable, !redop_ ? AccessMode::WRITE : AccessMode::REDUCE);
+  solver.add_partition_symbol(target_.variable,
+                              !redop_kind_ ? AccessMode::WRITE : AccessMode::REDUCE);
   if (target_.store->has_scalar_storage()) {
     solver.add_constraint(broadcast(target_.variable));
   }

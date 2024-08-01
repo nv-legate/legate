@@ -38,7 +38,7 @@ void CopyArg::pack(BufferBuilder& buffer) const
 {
   store_->pack(buffer);
 
-  buffer.pack<std::int32_t>(store_proj_->redop);
+  buffer.pack<GlobalRedopID>(store_proj_->redop);
   buffer.pack<std::int32_t>(region_.get_dim());
   buffer.pack<std::uint32_t>(req_idx_);
   buffer.pack<std::uint32_t>(field_id_);
@@ -81,6 +81,7 @@ void CopyLauncher::add_reduction(const InternalSharedPtr<LogicalStore>& store,
 {
   add_store(outputs_, store, std::move(store_proj), LEGION_REDUCE);
 }
+
 void CopyLauncher::add_source_indirect(const InternalSharedPtr<LogicalStore>& store,
                                        std::unique_ptr<StoreProjection> store_proj)
 {
@@ -107,7 +108,7 @@ void CopyLauncher::execute(const Legion::Domain& launch_domain)
                                               static_cast<Legion::MappingTagID>(tag_),
                                               mapper_arg.to_legion_buffer(),
                                               provenance.data()};
-  populate_copy(index_copy);
+  populate_copy_(index_copy);
   runtime->dispatch(index_copy);
 }
 
@@ -124,7 +125,7 @@ void CopyLauncher::execute_single()
                                           static_cast<Legion::MappingTagID>(tag_),
                                           mapper_arg.to_legion_buffer(),
                                           provenance.data()};
-  populate_copy(single_copy);
+  populate_copy_(single_copy);
   runtime->dispatch(single_copy);
 }
 
@@ -162,8 +163,8 @@ constexpr bool is_single_v<Legion::IndexCopyLauncher> = false;
 
 }  // namespace
 
-template <class Launcher>
-void CopyLauncher::populate_copy(Launcher& launcher)
+template <typename Launcher>
+void CopyLauncher::populate_copy_(Launcher& launcher)
 {
   auto populate_requirements = [&](auto& args, auto& requirements) {
     requirements.resize(args.size());

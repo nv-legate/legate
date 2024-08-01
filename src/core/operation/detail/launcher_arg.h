@@ -110,7 +110,7 @@ class ScalarStoreArg final : public Analyzable {
                  Legion::Future future,
                  std::size_t scalar_offset,
                  bool read_only,
-                 Legion::ReductionOpID redop);
+                 GlobalRedopID redop);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
@@ -120,7 +120,7 @@ class ScalarStoreArg final : public Analyzable {
   Legion::Future future_{};
   std::size_t scalar_offset_{};
   bool read_only_{};
-  Legion::ReductionOpID redop_{};
+  GlobalRedopID redop_{};
 };
 
 class ReplicatedScalarStoreArg final : public Analyzable {
@@ -142,14 +142,14 @@ class ReplicatedScalarStoreArg final : public Analyzable {
 
 class WriteOnlyScalarStoreArg final : public Analyzable {
  public:
-  WriteOnlyScalarStoreArg(LogicalStore* store, Legion::ReductionOpID redop);
+  WriteOnlyScalarStoreArg(LogicalStore* store, GlobalRedopID redop);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
   void analyze(StoreAnalyzer& analyzer) override;
 
  private:
   LogicalStore* store_{};
-  Legion::ReductionOpID redop_{};
+  GlobalRedopID redop_{};
 };
 
 class BaseArrayArg final : public Analyzable {

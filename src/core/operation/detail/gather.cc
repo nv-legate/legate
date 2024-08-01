@@ -26,13 +26,13 @@ Gather::Gather(InternalSharedPtr<LogicalStore> target,
                std::uint64_t unique_id,
                std::int32_t priority,
                mapping::detail::Machine machine,
-               std::optional<std::int32_t> redop)
+               std::optional<std::int32_t> redop_kind)
   : Operation{unique_id, priority, std::move(machine)},
     target_{target, declare_partition()},
     source_{source, declare_partition()},
     source_indirect_{source_indirect, declare_partition()},
     constraint_(align(target_.variable, source_indirect_.variable)),
-    redop_{redop}
+    redop_kind_{redop_kind}
 {
   record_partition_(target_.variable, std::move(target));
   record_partition_(source_.variable, std::move(source));
@@ -72,14 +72,13 @@ void Gather::launch(Strategy* p_strategy)
   launcher.add_source_indirect(source_indirect_.store,
                                create_store_projection_(strategy, launch_domain, source_indirect_));
 
-  if (!redop_) {
+  if (!redop_kind_) {
     launcher.add_output(target_.store, create_store_projection_(strategy, launch_domain, target_));
   } else {
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
     auto proj            = store_partition->create_store_projection(launch_domain);
 
-    proj->set_reduction_op(static_cast<Legion::ReductionOpID>(
-      target_.store->type()->find_reduction_operator(redop_.value())));
+    proj->set_reduction_op(target_.store->type()->find_reduction_operator(redop_kind_.value()));
     launcher.add_reduction(target_.store, std::move(proj));
   }
 
@@ -95,7 +94,8 @@ void Gather::launch(Strategy* p_strategy)
 void Gather::add_to_solver(ConstraintSolver& solver)
 {
   solver.add_constraint(std::move(constraint_));
-  solver.add_partition_symbol(target_.variable, !redop_ ? AccessMode::WRITE : AccessMode::REDUCE);
+  solver.add_partition_symbol(target_.variable,
+                              !redop_kind_ ? AccessMode::WRITE : AccessMode::REDUCE);
   solver.add_partition_symbol(source_.variable, AccessMode::READ);
   solver.add_partition_symbol(source_indirect_.variable, AccessMode::READ);
 }

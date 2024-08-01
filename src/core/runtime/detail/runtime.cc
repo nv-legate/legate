@@ -188,24 +188,24 @@ Library* Runtime::find_or_create_library(
 
 void Runtime::record_reduction_operator(std::uint32_t type_uid,
                                         std::int32_t op_kind,
-                                        std::int32_t legion_op_id)
+                                        GlobalRedopID legion_op_id)
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %d)",
                        type_uid,
                        op_kind,
-                       legion_op_id);
+                       static_cast<Legion::ReductionOpID>(legion_op_id));
   }
-  auto key    = std::make_pair(type_uid, op_kind);
-  auto finder = reduction_ops_.find(key);
-  if (finder != reduction_ops_.end()) {
+
+  const auto inserted = reduction_ops_.try_emplace({type_uid, op_kind}, legion_op_id).second;
+
+  if (!inserted) {
     throw std::invalid_argument{
       fmt::format("Reduction op {} already exists for type {}", op_kind, type_uid)};
   }
-  reduction_ops_[key] = legion_op_id;
 }
 
-std::int32_t Runtime::find_reduction_operator(std::uint32_t type_uid, std::int32_t op_kind) const
+GlobalRedopID Runtime::find_reduction_operator(std::uint32_t type_uid, std::int32_t op_kind) const
 {
   auto finder = reduction_ops_.find({type_uid, op_kind});
   if (reduction_ops_.end() == finder) {
@@ -216,8 +216,10 @@ std::int32_t Runtime::find_reduction_operator(std::uint32_t type_uid, std::int32
       fmt::format("Reduction op {} does not exist for type {}", op_kind, type_uid)};
   }
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug(
-      "Found reduction op %d (type_uid: %d, op_kind: %d)", finder->second, type_uid, op_kind);
+    log_legate().debug("Found reduction op %d (type_uid: %d, op_kind: %d)",
+                       static_cast<Legion::ReductionOpID>(finder->second),
+                       type_uid,
+                       op_kind);
   }
   return finder->second;
 }
@@ -1235,12 +1237,12 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
 }
 
 Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
-                                          std::int32_t reduction_op,
+                                          GlobalRedopID reduction_op,
                                           const Legion::Future& init_value) const
 {
   return legion_runtime_->reduce_future_map(legion_context_,
                                             future_map,
-                                            reduction_op,
+                                            static_cast<Legion::ReductionOpID>(reduction_op),
                                             false /*deterministic*/,
                                             core_library_->get_mapper_id(),
                                             0 /*tag*/,
@@ -1250,12 +1252,12 @@ Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
 
 Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map) const
 {
-  auto reduction_op = core_library_->get_reduction_op_id(
-    traits::detail::to_underlying(CoreReductionOp::JOIN_EXCEPTION));
+  auto reduction_op =
+    core_library_->get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
   return legion_runtime_->reduce_future_map(
     legion_context_,
     future_map,
-    reduction_op,
+    static_cast<Legion::ReductionOpID>(reduction_op),
     false /*deterministic*/,
     core_library_->get_mapper_id(),
     static_cast<Legion::MappingTagID>(CoreMappingTag::JOIN_EXCEPTION));
@@ -1952,12 +1954,13 @@ void register_legate_core_tasks(Library* core_lib)
   comm::register_tasks(core_lib);
 }
 
-#define BUILTIN_REDOP_ID(OP, TYPE_CODE)                                    \
-  (LEGION_REDOP_BASE + static_cast<std::int32_t>(OP) * LEGION_TYPE_TOTAL + \
-   (static_cast<std::int32_t>(TYPE_CODE)))
+#define BUILTIN_REDOP_ID(OP, TYPE_CODE)                                          \
+  static_cast<GlobalRedopID>(LEGION_REDOP_BASE +                                 \
+                             static_cast<std::int64_t>(OP) * LEGION_TYPE_TOTAL + \
+                             static_cast<std::int64_t>(TYPE_CODE))
 
 #define RECORD(OP, TYPE_CODE)                           \
-  PrimitiveType(TYPE_CODE).record_reduction_operator(   \
+  PrimitiveType{TYPE_CODE}.record_reduction_operator(   \
     traits::detail::to_underlying(ReductionOpKind::OP), \
     BUILTIN_REDOP_ID(ReductionOpKind::OP, TYPE_CODE));
 
@@ -2002,6 +2005,13 @@ void register_builtin_reduction_ops()
   RECORD_INT(AND)
   RECORD_INT(XOR)
 }
+
+#undef RECORD_ALL
+#undef RECORD_COMPLEX
+#undef RECORD_FLOAT
+#undef RECORD_INT
+#undef RECORD
+#undef BUILTIN_REDOP_ID
 
 extern void register_exception_reduction_op(const Library* context);
 

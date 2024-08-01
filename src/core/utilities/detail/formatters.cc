@@ -82,4 +82,16 @@ format_context::iterator formatter<legate::GlobalTaskID>::format(legate::GlobalT
   return formatter<std::underlying_type_t<legate::GlobalTaskID>>::format(fmt::underlying(id), ctx);
 }
 
+format_context::iterator formatter<legate::LocalRedopID>::format(legate::LocalRedopID id,
+                                                                 format_context& ctx) const
+{
+  return formatter<std::underlying_type_t<legate::LocalRedopID>>::format(fmt::underlying(id), ctx);
+}
+
+format_context::iterator formatter<legate::GlobalRedopID>::format(legate::GlobalRedopID id,
+                                                                  format_context& ctx) const
+{
+  return formatter<std::underlying_type_t<legate::GlobalRedopID>>::format(fmt::underlying(id), ctx);
+}
+
 }  // namespace fmt

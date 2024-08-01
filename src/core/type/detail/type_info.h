@@ -41,9 +41,9 @@ class Type {
   virtual void pack(BufferBuilder& buffer) const            = 0;
   [[nodiscard]] virtual bool equal(const Type& other) const = 0;
 
-  void record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const;
-  [[nodiscard]] std::int32_t find_reduction_operator(std::int32_t op_kind) const;
-  [[nodiscard]] std::int32_t find_reduction_operator(ReductionOpKind op_kind) const;
+  void record_reduction_operator(std::int32_t op_kind, GlobalRedopID global_op_id) const;
+  [[nodiscard]] GlobalRedopID find_reduction_operator(std::int32_t op_kind) const;
+  [[nodiscard]] GlobalRedopID find_reduction_operator(ReductionOpKind op_kind) const;
   bool operator==(const Type& other) const;
   bool operator!=(const Type& other) const;
 

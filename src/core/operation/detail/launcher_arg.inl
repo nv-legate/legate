@@ -63,7 +63,7 @@ inline ScalarStoreArg::ScalarStoreArg(LogicalStore* store,
                                       Legion::Future future,
                                       std::size_t scalar_offset,
                                       bool read_only,
-                                      Legion::ReductionOpID redop)
+                                      GlobalRedopID redop)
   : store_{store},
     future_{std::move(future)},
     scalar_offset_{scalar_offset},
@@ -87,8 +87,7 @@ inline ReplicatedScalarStoreArg::ReplicatedScalarStoreArg(LogicalStore* store,
 
 // ==========================================================================================
 
-inline WriteOnlyScalarStoreArg::WriteOnlyScalarStoreArg(LogicalStore* store,
-                                                        Legion::ReductionOpID redop)
+inline WriteOnlyScalarStoreArg::WriteOnlyScalarStoreArg(LogicalStore* store, GlobalRedopID redop)
   : store_{store}, redop_{redop}
 {
 }

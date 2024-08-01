@@ -55,9 +55,10 @@ GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
   return static_cast<GlobalTaskID>(task_scope_.translate(static_cast<std::int64_t>(local_task_id)));
 }
 
-Legion::ReductionOpID Library::get_reduction_op_id(std::int64_t local_redop_id) const
+GlobalRedopID Library::get_reduction_op_id(LocalRedopID local_redop_id) const
 {
-  return static_cast<Legion::ReductionOpID>(redop_scope_.translate(local_redop_id));
+  return static_cast<GlobalRedopID>(
+    redop_scope_.translate(static_cast<std::int64_t>(local_redop_id)));
 }
 
 Legion::ProjectionID Library::get_projection_id(std::int64_t local_proj_id) const
@@ -78,9 +79,9 @@ LocalTaskID Library::get_local_task_id(GlobalTaskID task_id) const
   return static_cast<LocalTaskID>(task_scope_.invert(static_cast<std::int64_t>(task_id)));
 }
 
-std::int64_t Library::get_local_reduction_op_id(Legion::ReductionOpID redop_id) const
+LocalRedopID Library::get_local_reduction_op_id(GlobalRedopID redop_id) const
 {
-  return redop_scope_.invert(redop_id);
+  return static_cast<LocalRedopID>(redop_scope_.invert(static_cast<std::int64_t>(redop_id)));
 }
 
 std::int64_t Library::get_local_projection_id(Legion::ProjectionID proj_id) const
@@ -101,9 +102,9 @@ bool Library::valid_task_id(GlobalTaskID task_id) const
   return task_scope_.in_scope(static_cast<std::int64_t>(task_id));
 }
 
-bool Library::valid_reduction_op_id(Legion::ReductionOpID redop_id) const
+bool Library::valid_reduction_op_id(GlobalRedopID redop_id) const
 {
-  return redop_scope_.in_scope(redop_id);
+  return redop_scope_.in_scope(static_cast<std::int64_t>(redop_id));
 }
 
 bool Library::valid_projection_id(Legion::ProjectionID proj_id) const

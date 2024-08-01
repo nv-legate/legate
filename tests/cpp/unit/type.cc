@@ -22,7 +22,7 @@ using TypeUnit = DefaultFixture;
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-constexpr std::int32_t GLOBAL_OP_ID = 0x1F;
+constexpr auto GLOBAL_OP_ID = legate::GlobalRedopID{0x1F};
 
 const std::array<legate::Type, 13>& PRIMITIVE_TYPE()
 {

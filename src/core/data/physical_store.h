@@ -397,7 +397,7 @@ class PhysicalStore {
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
   void get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
-  [[nodiscard]] std::int32_t get_redop_id_() const;
+  [[nodiscard]] GlobalRedopID get_redop_id_() const;
   template <typename ACC, typename T, std::int32_t DIM>
   [[nodiscard]] ACC create_field_accessor_(const Rect<DIM>& bounds) const;
   template <typename ACC, typename T, std::int32_t DIM>

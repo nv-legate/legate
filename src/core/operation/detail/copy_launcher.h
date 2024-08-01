@@ -85,10 +85,11 @@ class CopyLauncher {
 
   void pack_args(BufferBuilder& buffer);
   void pack_sharding_functor_id(BufferBuilder& buffer);
-  template <class Launcher>
-  void populate_copy(Launcher& launcher);
 
  private:
+  template <typename Launcher>
+  void populate_copy_(Launcher& launcher);
+
   const mapping::detail::Machine& machine_;
   std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
   std::int64_t tag_{};

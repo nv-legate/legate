@@ -32,11 +32,20 @@ class TransAccessorFn {
   template <std::int32_t M>
   ACC operator()(const Legion::PhysicalRegion& pr,
                  Legion::FieldID fid,
-                 std::int32_t redop_id,
+                 GlobalRedopID redop_id,
                  const Legion::AffineTransform<M, N>& transform,
                  const Rect<N>& bounds)
   {
-    return {pr, fid, redop_id, transform, bounds, false, nullptr, 0, sizeof(T), false};
+    return {pr,
+            fid,
+            static_cast<Legion::ReductionOpID>(redop_id),
+            transform,
+            bounds,
+            false,
+            nullptr,
+            0,
+            sizeof(T),
+            false};
   }
 };
 
@@ -327,7 +336,7 @@ ACC PhysicalStore::create_reduction_accessor_(const Rect<DIM>& bounds) const
                         transform,
                         bounds);
   }
-  return {pr, fid, get_redop_id_(), bounds};
+  return {pr, fid, static_cast<Legion::ReductionOpID>(get_redop_id_()), bounds};
 }
 
 inline PhysicalStore::PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl)

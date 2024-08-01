@@ -131,14 +131,14 @@ void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
   }
 }
 
-void BaseLogicalArray::record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const
+void BaseLogicalArray::record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const
 {
   if (data_->has_scalar_storage()) {
     task->record_scalar_reduction(data_, redop);
   }
   if (nullable() && null_mask_->has_scalar_storage()) {
     auto null_redop = bool_()->find_reduction_operator(ReductionOpKind::MUL);
-    task->record_scalar_reduction(null_mask_, static_cast<Legion::ReductionOpID>(null_redop));
+    task->record_scalar_reduction(null_mask_, null_redop);
   }
 }
 
@@ -163,16 +163,17 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  std::int32_t redop) const
+  GlobalRedopID redop) const
 {
   auto data_arg = store_to_launcher_arg(
     data_, mapping.at(data_), strategy, launch_domain, projection, privilege, redop);
   std::unique_ptr<Analyzable> null_mask_arg{};
 
   if (nullable()) {
-    auto null_redop =
-      privilege == LEGION_REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
-    null_mask_arg = store_to_launcher_arg(null_mask_,
+    auto null_redop = privilege == LEGION_REDUCE
+                        ? bool_()->find_reduction_operator(ReductionOpKind::MUL)
+                        : GlobalRedopID{-1};
+    null_mask_arg   = store_to_launcher_arg(null_mask_,
                                           mapping.at(null_mask_),
                                           strategy,
                                           launch_domain,
@@ -270,7 +271,7 @@ void ListLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
   vardata_->record_scalar_or_unbound_outputs(task);
 }
 
-void ListLogicalArray::record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const
+void ListLogicalArray::record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const
 {
   vardata_->record_scalar_reductions(task, redop);
 }
@@ -294,7 +295,7 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  std::int32_t redop) const
+  GlobalRedopID redop) const
 {
   const auto desc_priv =
     (LEGION_READ_ONLY == privilege || vardata_->unbound()) ? privilege : LEGION_READ_WRITE;
@@ -449,14 +450,14 @@ void StructLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
   }
 }
 
-void StructLogicalArray::record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const
+void StructLogicalArray::record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const
 {
   for (auto&& field : fields_) {
     field->record_scalar_reductions(task, redop);
   }
   if (nullable() && null_mask_->has_scalar_storage()) {
     auto null_redop = bool_()->find_reduction_operator(ReductionOpKind::MUL);
-    task->record_scalar_reduction(null_mask_, static_cast<Legion::ReductionOpID>(null_redop));
+    task->record_scalar_reduction(null_mask_, null_redop);
   }
 }
 
@@ -487,13 +488,14 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  std::int32_t redop) const
+  GlobalRedopID redop) const
 {
   std::unique_ptr<Analyzable> null_mask_arg = nullptr;
   if (nullable()) {
-    auto null_redop =
-      privilege == LEGION_REDUCE ? bool_()->find_reduction_operator(ReductionOpKind::MUL) : -1;
-    null_mask_arg = store_to_launcher_arg(null_mask_,
+    auto null_redop = privilege == LEGION_REDUCE
+                        ? bool_()->find_reduction_operator(ReductionOpKind::MUL)
+                        : GlobalRedopID{-1};
+    null_mask_arg   = store_to_launcher_arg(null_mask_,
                                           mapping.at(null_mask_),
                                           strategy,
                                           launch_domain,

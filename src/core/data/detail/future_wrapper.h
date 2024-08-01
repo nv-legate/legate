@@ -40,7 +40,7 @@ class FutureWrapper {
   [[nodiscard]] InlineAllocation get_inline_allocation() const;
   [[nodiscard]] mapping::StoreTarget target() const;
 
-  void initialize_with_identity(std::int32_t redop_id);
+  void initialize_with_identity(GlobalRedopID redop_id);
 
   [[nodiscard]] ReturnValue pack(const InternalSharedPtr<Type>& type) const;
 

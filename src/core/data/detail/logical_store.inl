@@ -173,7 +173,7 @@ inline std::unique_ptr<Analyzable> store_to_launcher_arg(
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  std::int64_t redop)
+  GlobalRedopID redop)
 {
   return self->to_launcher_arg_(
     self, variable, strategy, launch_domain, projection, privilege, redop);

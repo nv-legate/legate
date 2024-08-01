@@ -66,7 +66,7 @@ class Store {
    *
    * @return Reduction oeprator id
    */
-  [[nodiscard]] std::int32_t redop() const;
+  [[nodiscard]] GlobalRedopID redop() const;
 
   /**
    * @brief Indicates whether the store can colocate in an instance with a given store

@@ -79,11 +79,11 @@ cdef class Type:
         return self._handle.is_primitive()
 
     cpdef void record_reduction_op(
-        self, int32_t op_kind, int64_t reduction_op_id
+        self, int32_t op_kind, _GlobalRedopID reduction_op_id
     ):
         self._handle.record_reduction_operator(op_kind, reduction_op_id)
 
-    cpdef int64_t reduction_op_id(self, int32_t op_kind):
+    cpdef _GlobalRedopID reduction_op_id(self, int32_t op_kind):
         return self._handle.find_reduction_operator(op_kind)
 
     def __repr__(self) -> str:

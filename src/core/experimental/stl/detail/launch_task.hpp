@@ -283,16 +283,16 @@ class Function<Fn> {
 /**
  * @cond
  */
-[[nodiscard]] inline std::int32_t next_reduction_id_()  // NOLINT(readability-identifier-naming)
+[[nodiscard]] inline LocalRedopID next_reduction_id_()  // NOLINT(readability-identifier-naming)
 {
-  static std::atomic<std::int32_t> id{};
-  return id.fetch_add(1);
+  static std::atomic<std::underlying_type_t<LocalRedopID>> id{};
+  return static_cast<LocalRedopID>(id.fetch_add(1));
 }
 
 template <typename T>
-[[nodiscard]] std::int32_t reduction_id_for_()  // NOLINT(readability-identifier-naming)
+[[nodiscard]] LocalRedopID reduction_id_for_()  // NOLINT(readability-identifier-naming)
 {
-  static const std::int32_t id = next_reduction_id_();
+  static const LocalRedopID id = next_reduction_id_();
   return id;
 }
 
@@ -311,10 +311,10 @@ template <typename T>
 }
 
 template <typename Fun>
-[[nodiscard]] std::int32_t get_reduction_id_()  // NOLINT(readability-identifier-naming)
+[[nodiscard]] GlobalRedopID get_reduction_id_()  // NOLINT(readability-identifier-naming)
 {
-  static const std::int32_t id = []() -> std::int32_t {
-    const std::int32_t new_id           = reduction_id_for_<Fun>();
+  static const GlobalRedopID id = []() -> GlobalRedopID {
+    const LocalRedopID new_id           = reduction_id_for_<Fun>();
     const observer_ptr<Runtime> runtime = Runtime::get_runtime();
     Library library = runtime->find_or_create_library("legate.stl", LEGATE_STL_RESOURCE_CONFIG);
 
@@ -328,7 +328,7 @@ template <typename ElementType, typename Fun>
 {
   static const auto kind = []() -> std::int32_t {
     const Type type{primitive_type(type_code_of_v<ElementType>)};
-    const std::int32_t id       = get_reduction_id_<Fun>();
+    const GlobalRedopID id      = get_reduction_id_<Fun>();
     const std::int32_t red_kind = reduction_kind_for_<Fun>();
 
     type.record_reduction_operator(red_kind, id);

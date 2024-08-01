@@ -65,12 +65,12 @@ class PhysicalStore {
  public:
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
-                std::int32_t redop_id,
+                GlobalRedopID redop_id,
                 FutureWrapper future,
                 InternalSharedPtr<detail::TransformStack> transform = nullptr);
   PhysicalStore(std::int32_t dim,
                 InternalSharedPtr<Type> type,
-                std::int32_t redop_id,
+                GlobalRedopID redop_id,
                 RegionField&& region_field,
                 InternalSharedPtr<detail::TransformStack> transform = nullptr);
   PhysicalStore(std::int32_t dim,
@@ -120,7 +120,7 @@ class PhysicalStore {
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
   void get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
-  [[nodiscard]] std::int32_t get_redop_id_() const;
+  [[nodiscard]] GlobalRedopID get_redop_id_() const;
 
   [[nodiscard]] bool is_read_only_future_() const;
   [[nodiscard]] std::size_t get_field_offset_() const;
@@ -133,7 +133,7 @@ class PhysicalStore {
   bool is_unbound_store_{};
   std::int32_t dim_{-1};
   InternalSharedPtr<Type> type_{};
-  std::int32_t redop_id_{-1};
+  GlobalRedopID redop_id_{-1};
 
   FutureWrapper future_{};
   RegionField region_field_{};

@@ -66,7 +66,7 @@ class Task : public Operation {
   void record_scalar_output(InternalSharedPtr<LogicalStore> store);
   void record_unbound_output(InternalSharedPtr<LogicalStore> store);
   void record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
-                               Legion::ReductionOpID legion_redop_id);
+                               GlobalRedopID legion_redop_id);
 
  protected:
   void launch_task_(Strategy* strategy);
@@ -92,11 +92,10 @@ class Task : public Operation {
   std::vector<ArrayArg> inputs_{};
   std::vector<ArrayArg> outputs_{};
   std::vector<ArrayArg> reductions_{};
-  std::vector<Legion::ReductionOpID> reduction_ops_{};
+  std::vector<GlobalRedopID> reduction_ops_{};
   std::vector<InternalSharedPtr<LogicalStore>> unbound_outputs_{};
   std::vector<InternalSharedPtr<LogicalStore>> scalar_outputs_{};
-  std::vector<std::pair<InternalSharedPtr<LogicalStore>, Legion::ReductionOpID>>
-    scalar_reductions_{};
+  std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>> scalar_reductions_{};
   std::vector<CommunicatorFactory*> communicator_factories_{};
 };
 
@@ -111,12 +110,12 @@ class AutoTask final : public Task {
   [[nodiscard]] const Variable* add_input(InternalSharedPtr<LogicalArray> array);
   [[nodiscard]] const Variable* add_output(InternalSharedPtr<LogicalArray> array);
   [[nodiscard]] const Variable* add_reduction(InternalSharedPtr<LogicalArray> array,
-                                              std::int32_t redop);
+                                              std::int32_t redop_kind);
 
   void add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol);
   void add_output(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol);
   void add_reduction(InternalSharedPtr<LogicalArray> array,
-                     std::int32_t redop,
+                     std::int32_t redop_kind,
                      const Variable* partition_symbol);
 
   [[nodiscard]] const Variable* find_or_declare_partition(
@@ -152,9 +151,9 @@ class ManualTask final : public Task {
   void add_output(const InternalSharedPtr<LogicalStore>& store);
   void add_output(const InternalSharedPtr<LogicalStorePartition>& store_partition,
                   std::optional<SymbolicPoint> projection);
-  void add_reduction(const InternalSharedPtr<LogicalStore>& store, Legion::ReductionOpID redop);
+  void add_reduction(const InternalSharedPtr<LogicalStore>& store, std::int32_t redop_kind);
   void add_reduction(const InternalSharedPtr<LogicalStorePartition>& store_partition,
-                     Legion::ReductionOpID redop,
+                     std::int32_t redop_kind,
                      std::optional<SymbolicPoint> projection);
 
  private:

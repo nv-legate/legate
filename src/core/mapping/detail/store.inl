@@ -65,9 +65,9 @@ inline std::int32_t Store::dim() const { return dim_; }
 
 inline const InternalSharedPtr<legate::detail::Type>& Store::type() const { return type_; }
 
-inline bool Store::is_reduction() const { return redop() > 0; }
+inline bool Store::is_reduction() const { return redop() > GlobalRedopID{0}; }
 
-inline std::int32_t Store::redop() const { return redop_id_; }
+inline GlobalRedopID Store::redop() const { return redop_id_; }
 
 inline RegionField::Id Store::unique_region_field_id() const { return region_field().unique_id(); }
 

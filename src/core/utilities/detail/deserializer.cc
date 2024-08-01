@@ -99,12 +99,12 @@ InternalSharedPtr<PhysicalStore> TaskDeserializer::unpack_store()
   auto dim       = unpack<std::int32_t>();
   auto type      = unpack_type_();
   auto transform = unpack_transform_();
-  auto redop_id  = unpack<std::int32_t>();
+  auto redop_id  = unpack<GlobalRedopID>();
 
   if (is_future) {
     auto fut = unpack<FutureWrapper>();
 
-    if (redop_id != -1 && !fut.valid()) {
+    if (redop_id != GlobalRedopID{-1} && !fut.valid()) {
       fut.initialize_with_identity(redop_id);
     }
     return make_internal_shared<PhysicalStore>(
@@ -116,7 +116,7 @@ InternalSharedPtr<PhysicalStore> TaskDeserializer::unpack_store()
     return make_internal_shared<PhysicalStore>(
       dim, std::move(type), redop_id, std::move(rf), std::move(transform));
   }
-  LEGATE_CHECK(redop_id == -1);
+  LEGATE_CHECK(redop_id == GlobalRedopID{-1});
   auto out = unpack<UnboundRegionField>();
 
   return make_internal_shared<PhysicalStore>(
@@ -262,7 +262,7 @@ InternalSharedPtr<Store> TaskDeserializer::unpack_store()
 
     return make_internal_shared<Store>(dim, std::move(type), std::move(fut), std::move(transform));
   }
-  auto redop_id = unpack<std::int32_t>();
+  auto redop_id = unpack<GlobalRedopID>();
   RegionField rf;
   unpack_impl(rf, unbound);
   return make_internal_shared<Store>(
@@ -321,7 +321,7 @@ void CopyDeserializer::unpack_impl(Store& store)
   LEGATE_CHECK(!is_future && !unbound);
   static_cast<void>(is_future);
 
-  auto redop_id = unpack<std::int32_t>();
+  auto redop_id = unpack<GlobalRedopID>();
   RegionField rf;
 
   unpack_impl(rf);

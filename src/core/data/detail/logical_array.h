@@ -66,8 +66,8 @@ class LogicalArray {
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> child(std::uint32_t index) const = 0;
   [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& primary_store() const     = 0;
 
-  virtual void record_scalar_or_unbound_outputs(AutoTask* task) const                      = 0;
-  virtual void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const = 0;
+  virtual void record_scalar_or_unbound_outputs(AutoTask* task) const              = 0;
+  virtual void record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const = 0;
 
   virtual void generate_constraints(
     AutoTask* task,
@@ -80,7 +80,7 @@ class LogicalArray {
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
-    std::int32_t redop) const = 0;
+    GlobalRedopID redop) const = 0;
   [[nodiscard]] virtual std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const = 0;
 
@@ -121,7 +121,7 @@ class BaseLogicalArray final : public LogicalArray {
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
 
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
-  void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
+  void record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const override;
 
   void generate_constraints(
     AutoTask* task,
@@ -134,7 +134,7 @@ class BaseLogicalArray final : public LogicalArray {
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
-    std::int32_t redop) const override;
+    GlobalRedopID redop) const override;
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
@@ -177,7 +177,7 @@ class ListLogicalArray final : public LogicalArray {
   [[nodiscard]] InternalSharedPtr<LogicalArray> vardata() const;
 
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
-  void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
+  void record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const override;
 
   void generate_constraints(
     AutoTask* task,
@@ -190,7 +190,7 @@ class ListLogicalArray final : public LogicalArray {
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
-    std::int32_t redop) const override;
+    GlobalRedopID redop) const override;
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
@@ -232,7 +232,7 @@ class StructLogicalArray final : public LogicalArray {
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
 
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
-  void record_scalar_reductions(AutoTask* task, Legion::ReductionOpID redop) const override;
+  void record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const override;
 
   void generate_constraints(
     AutoTask* task,
@@ -245,7 +245,7 @@ class StructLogicalArray final : public LogicalArray {
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
-    std::int32_t redop) const override;
+    GlobalRedopID redop) const override;
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 

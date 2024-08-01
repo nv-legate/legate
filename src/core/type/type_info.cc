@@ -57,22 +57,22 @@ ListType Type::as_list_type() const
   return ListType{impl()};
 }
 
-void Type::record_reduction_operator(std::int32_t op_kind, std::int32_t global_op_id) const
+void Type::record_reduction_operator(std::int32_t op_kind, GlobalRedopID global_op_id) const
 {
   impl()->record_reduction_operator(op_kind, global_op_id);
 }
 
-void Type::record_reduction_operator(ReductionOpKind op_kind, std::int32_t global_op_id) const
+void Type::record_reduction_operator(ReductionOpKind op_kind, GlobalRedopID global_op_id) const
 {
   impl()->record_reduction_operator(static_cast<std::int32_t>(op_kind), global_op_id);
 }
 
-std::int32_t Type::find_reduction_operator(std::int32_t op_kind) const
+GlobalRedopID Type::find_reduction_operator(std::int32_t op_kind) const
 {
   return impl()->find_reduction_operator(op_kind);
 }
 
-std::int32_t Type::find_reduction_operator(ReductionOpKind op_kind) const
+GlobalRedopID Type::find_reduction_operator(ReductionOpKind op_kind) const
 {
   return impl()->find_reduction_operator(static_cast<std::int32_t>(op_kind));
 }

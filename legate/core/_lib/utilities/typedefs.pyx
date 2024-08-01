@@ -17,6 +17,9 @@ from typing import NewType
 LocalTaskID = NewType("LocalTaskID", int)
 GlobalTaskID = NewType("GlobalTaskID", int)
 
+LocalRedopID = NewType("LocalRedopID", int)
+GlobalRedopID = NewType("GlobalRedopID", int)
+
 cdef class DomainPoint:
     @staticmethod
     cdef DomainPoint from_handle(_DomainPoint handle):

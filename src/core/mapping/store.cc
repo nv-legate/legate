@@ -24,7 +24,7 @@ std::uint32_t Store::dim() const { return impl()->dim(); }
 
 bool Store::is_reduction() const { return impl()->is_reduction(); }
 
-std::int32_t Store::redop() const { return impl()->redop(); }
+GlobalRedopID Store::redop() const { return impl()->redop(); }
 
 bool Store::can_colocate_with(const Store& other) const
 {

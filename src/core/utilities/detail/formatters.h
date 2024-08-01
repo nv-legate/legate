@@ -22,6 +22,9 @@ enum class LocalTaskID : std::int64_t;
 enum class GlobalTaskID : unsigned int /* A.K.A. Legion::TaskID */;
 enum class VariantCode : unsigned int /* A.K.A. Legion::VariantID */;
 
+enum class LocalRedopID : std::int64_t;
+enum class GlobalRedopID : int /* A.K.A. Legion::ReductionOpID */;
+
 }  // namespace legate
 
 namespace legate::detail {
@@ -93,6 +96,16 @@ struct formatter<legate::LocalTaskID> : formatter<std::underlying_type_t<legate:
 template <>
 struct formatter<legate::GlobalTaskID> : formatter<std::underlying_type_t<legate::GlobalTaskID>> {
   format_context::iterator format(legate::GlobalTaskID id, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::LocalRedopID> : formatter<std::underlying_type_t<legate::LocalRedopID>> {
+  format_context::iterator format(legate::LocalRedopID id, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::GlobalRedopID> : formatter<std::underlying_type_t<legate::GlobalRedopID>> {
+  format_context::iterator format(legate::GlobalRedopID id, format_context& ctx) const;
 };
 
 }  // namespace fmt

@@ -48,6 +48,9 @@ Changes: Latest Development Version
 
      runtime->create_task(..., legate::LocalTaskID{MyTask::TASK_ID});
 
+- Add ``LocalRedopID`` and ``GlobalRedopID``, to describe local and global reduction
+  operator ID's.
+
 .. rubric:: Data
 
 .. rubric:: Mapping

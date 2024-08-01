@@ -71,11 +71,12 @@ class AutoTask {
    * associated with the array
    *
    * @param array An array to add to the task for reductions
-   * @param redop ID of the reduction operator to use. The array's type must support the operator.
+   * @param redop_kind ID of the reduction operator to use. The array's type must support the
+   * operator.
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(const LogicalArray& array, ReductionOpKind redop);
+  Variable add_reduction(const LogicalArray& array, ReductionOpKind redop_kind);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -83,11 +84,12 @@ class AutoTask {
    * associated with the array
    *
    * @param array An array to add to the task for reductions
-   * @param redop ID of the reduction operator to use. The array's type must support the operator.
+   * @param redop_kind ID of the reduction operator to use. The array's type must support the
+   * operator.
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(const LogicalArray& array, std::int32_t redop);
+  Variable add_reduction(const LogicalArray& array, std::int32_t redop_kind);
 
   /**
    * @brief Adds an array to the task as input
@@ -120,13 +122,14 @@ class AutoTask {
    * associated with the array
    *
    * @param array An array to add to the task for reductions
-   * @param redop ID of the reduction operator to use. The array's type must support the operator.
+   * @param redop_kind ID of the reduction operator to use. The array's type must support the
+   * operator.
    * @param partition_symbol A partition symbol for the array
    *
    * @return The partition symbol assigned to the array
    */
   Variable add_reduction(const LogicalArray& array,
-                         ReductionOpKind redop,
+                         ReductionOpKind redop_kind,
                          Variable partition_symbol);
   /**
    * @brief Adds an array to the task for reductions
@@ -135,12 +138,15 @@ class AutoTask {
    * associated with the array
    *
    * @param array An array to add to the task for reductions
-   * @param redop ID of the reduction operator to use. The array's type must support the operator.
+   * @param redop_kind ID of the reduction operator to use. The array's type must support the
+   * operator.
    * @param partition_symbol A partition symbol for the array
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(const LogicalArray& array, std::int32_t redop, Variable partition_symbol);
+  Variable add_reduction(const LogicalArray& array,
+                         std::int32_t redop_kind,
+                         Variable partition_symbol);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -280,39 +286,43 @@ class ManualTask {
    * The store will be unpartitioned but broadcasted to all the tasks
    *
    * @param store A store to add to the task for reductions
-   * @param redop ID of the reduction operator to use. The store's type must support the operator.
+   * @param redop_kind ID of the reduction operator to use. The store's type must support the
+   * operator.
    */
-  void add_reduction(const LogicalStore& store, ReductionOpKind redop);
+  void add_reduction(const LogicalStore& store, ReductionOpKind redop_kind);
   /**
    * @brief Adds a store to the task for reductions
    *
    * The store will be unpartitioned but broadcasted to all the tasks
    *
    * @param store A store to add to the task for reductions
-   * @param redop ID of the reduction operator to use. The store's type must support the operator.
+   * @param redop_kind ID of the reduction operator to use. The store's type must support the
+   * operator.
    */
-  void add_reduction(const LogicalStore& store, std::int32_t redop);
+  void add_reduction(const LogicalStore& store, std::int32_t redop_kind);
   /**
    * @brief Adds a store partition to the task for reductions
    *
    * @param store_partition A store partition to add to the task for reductions
-   * @param redop ID of the reduction operator to use. The store's type must support the operator.
+   * @param redop_kind ID of the reduction operator to use. The store's type must support the
+   * operator.
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
    */
   void add_reduction(const LogicalStorePartition& store_partition,
-                     ReductionOpKind redop,
+                     ReductionOpKind redop_kind,
                      std::optional<SymbolicPoint> projection = std::nullopt);
   /**
    * @brief Adds a store partition to the task for reductions
    *
    * @param store_partition A store partition to add to the task for reductions
-   * @param redop ID of the reduction operator to use. The store's type must support the operator.
+   * @param redop_kind ID of the reduction operator to use. The store's type must support the
+   * operator.
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
    */
   void add_reduction(const LogicalStorePartition& store_partition,
-                     std::int32_t redop,
+                     std::int32_t redop_kind,
                      std::optional<SymbolicPoint> projection = std::nullopt);
   /**
    * @brief Adds a by-value scalar argument to the task

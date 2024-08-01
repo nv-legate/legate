@@ -32,7 +32,7 @@ void RegionFieldArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   auto region   = store_->get_region_field()->region();
   auto field_id = store_->get_region_field()->field_id();
 
-  buffer.pack<std::int32_t>(store_proj_->redop);
+  buffer.pack<GlobalRedopID>(store_proj_->redop);
   buffer.pack<std::int32_t>(region.get_dim());
   buffer.pack<std::uint32_t>(analyzer.get_index(region, privilege_, *store_proj_, field_id));
   buffer.pack<std::uint32_t>(field_id);
@@ -57,7 +57,7 @@ void OutputRegionArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer)
 {
   store_->pack(buffer);
 
-  buffer.pack<std::int32_t>(-1);
+  buffer.pack<GlobalRedopID>(GlobalRedopID{-1});
   buffer.pack<std::uint32_t>(store_->dim());
   // Need to cache the requirement index for post-processing
   requirement_index_ = analyzer.get_index(field_space_, field_id_);
@@ -79,7 +79,7 @@ void ScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
 {
   store_->pack(buffer);
 
-  buffer.pack<std::int32_t>(redop_);
+  buffer.pack<GlobalRedopID>(redop_);
   buffer.pack<bool>(read_only_);
   buffer.pack<std::int32_t>(analyzer.get_index(future_));
   buffer.pack<std::uint32_t>(store_->type()->size());
@@ -93,7 +93,7 @@ void ReplicatedScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& 
 {
   store_->pack(buffer);
 
-  buffer.pack<std::int32_t>(-1);
+  buffer.pack<GlobalRedopID>(GlobalRedopID{-1});
   buffer.pack<bool>(read_only_);
   buffer.pack<std::int32_t>(analyzer.get_index(future_map_));
   buffer.pack<std::uint32_t>(store_->type()->size());
@@ -108,7 +108,7 @@ void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /
   store_->pack(buffer);
 
   // redop
-  buffer.pack<std::int32_t>(redop_);
+  buffer.pack<GlobalRedopID>(redop_);
   // read-only
   buffer.pack<bool>(false);
   // future index

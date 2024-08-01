@@ -89,7 +89,7 @@ class Store {
         Legion::Mapping::MapperContext context,
         std::int32_t dim,
         InternalSharedPtr<legate::detail::Type> type,
-        std::int32_t redop_id,
+        GlobalRedopID redop_id,
         const RegionField& region_field,
         bool is_unbound_store                                         = false,
         InternalSharedPtr<legate::detail::TransformStack>&& transform = nullptr);
@@ -104,7 +104,7 @@ class Store {
   [[nodiscard]] const InternalSharedPtr<legate::detail::Type>& type() const;
 
   [[nodiscard]] bool is_reduction() const;
-  [[nodiscard]] std::int32_t redop() const;
+  [[nodiscard]] GlobalRedopID redop() const;
 
   [[nodiscard]] bool can_colocate_with(const Store& other) const;
   [[nodiscard]] const RegionField& region_field() const;
@@ -123,7 +123,7 @@ class Store {
   bool is_unbound_store_{};
   std::int32_t dim_{-1};
   InternalSharedPtr<legate::detail::Type> type_{};
-  std::int32_t redop_id_{-1};
+  GlobalRedopID redop_id_{-1};
 
   FutureWrapper future_;
   RegionField region_field_;

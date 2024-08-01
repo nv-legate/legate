@@ -280,7 +280,7 @@ class LogicalStore {
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
-    std::int64_t redop);
+    GlobalRedopID redop);
   friend std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
     const InternalSharedPtr<LogicalStore>& self,
     const Domain& launch_domain,
@@ -293,7 +293,7 @@ class LogicalStore {
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
-    std::int64_t redop);
+    GlobalRedopID redop);
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup_(
     const InternalSharedPtr<LogicalStore>& self,
     const Domain& launch_domain,
@@ -302,9 +302,9 @@ class LogicalStore {
   [[nodiscard]] std::unique_ptr<Analyzable> future_to_launcher_arg_(Legion::Future future,
                                                                     const Domain& launch_domain,
                                                                     Legion::PrivilegeMode privilege,
-                                                                    std::int64_t redop);
+                                                                    GlobalRedopID redop);
   [[nodiscard]] std::unique_ptr<Analyzable> future_map_to_launcher_arg_(
-    const Domain& launch_domain, Legion::PrivilegeMode privilege, std::int64_t redop);
+    const Domain& launch_domain, Legion::PrivilegeMode privilege, GlobalRedopID redop);
   [[nodiscard]] std::unique_ptr<Analyzable> region_field_to_launcher_arg_(
     const InternalSharedPtr<LogicalStore>& self,
     const Variable* variable,
@@ -312,7 +312,7 @@ class LogicalStore {
     const Domain& launch_domain,
     const std::optional<SymbolicPoint>& projection,
     Legion::PrivilegeMode privilege,
-    std::int64_t redop);
+    GlobalRedopID redop);
 
  public:
   [[nodiscard]] std::string to_string() const;
@@ -370,7 +370,7 @@ class LogicalStorePartition {
   const Domain& launch_domain,
   const std::optional<SymbolicPoint>& projection,
   Legion::PrivilegeMode privilege,
-  std::int64_t redop = -1);
+  GlobalRedopID redop = GlobalRedopID{-1});
 
 [[nodiscard]] std::unique_ptr<Analyzable> store_to_launcher_arg_for_fixup(
   const InternalSharedPtr<LogicalStore>& self,

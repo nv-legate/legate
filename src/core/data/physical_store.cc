@@ -135,7 +135,7 @@ void PhysicalStore::get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldI
   impl()->get_region_field_(pr, fid);
 }
 
-std::int32_t PhysicalStore::get_redop_id_() const { return impl()->get_redop_id_(); }
+GlobalRedopID PhysicalStore::get_redop_id_() const { return impl()->get_redop_id_(); }
 
 const Legion::Future& PhysicalStore::get_future_() const { return impl()->get_future(); }
 

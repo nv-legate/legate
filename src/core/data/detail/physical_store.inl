@@ -47,7 +47,7 @@ inline Legion::FieldID UnboundRegionField::get_field_id() const { return fid_; }
 
 inline PhysicalStore::PhysicalStore(std::int32_t dim,
                                     InternalSharedPtr<Type> type,
-                                    std::int32_t redop_id,
+                                    GlobalRedopID redop_id,
                                     FutureWrapper future,
                                     InternalSharedPtr<detail::TransformStack> transform)
   : is_future_{true},
@@ -64,7 +64,7 @@ inline PhysicalStore::PhysicalStore(std::int32_t dim,
 
 inline PhysicalStore::PhysicalStore(std::int32_t dim,
                                     InternalSharedPtr<Type> type,
-                                    std::int32_t redop_id,
+                                    GlobalRedopID redop_id,
                                     RegionField&& region_field,
                                     InternalSharedPtr<detail::TransformStack> transform)
   : dim_{dim},
@@ -108,6 +108,6 @@ inline ReturnValue PhysicalStore::pack() const { return future_.pack(type_); }
 
 inline ReturnValue PhysicalStore::pack_weight() const { return unbound_field_.pack_weight(); }
 
-inline std::int32_t PhysicalStore::get_redop_id_() const { return redop_id_; }
+inline GlobalRedopID PhysicalStore::get_redop_id_() const { return redop_id_; }
 
 }  // namespace legate::detail

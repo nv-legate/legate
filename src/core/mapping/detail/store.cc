@@ -51,7 +51,7 @@ Store::Store(Legion::Mapping::MapperRuntime* runtime,
              Legion::Mapping::MapperContext context,
              std::int32_t dim,
              InternalSharedPtr<legate::detail::Type> type,
-             std::int32_t redop_id,
+             GlobalRedopID redop_id,
              const RegionField& region_field,
              bool is_unbound_store,
              InternalSharedPtr<legate::detail::TransformStack>&& transform)

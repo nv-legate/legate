@@ -44,7 +44,7 @@ inline InstanceSet::InstanceSpec::InstanceSpec(Legion::Mapping::PhysicalInstance
 // ==========================================================================================
 
 inline ReductionInstanceSet::ReductionInstanceSpec::ReductionInstanceSpec(
-  Legion::ReductionOpID op, Legion::Mapping::PhysicalInstance inst, InstanceMappingPolicy po)
+  GlobalRedopID op, Legion::Mapping::PhysicalInstance inst, InstanceMappingPolicy po)
   : redop{op}, instance{std::move(inst)}, policy{std::move(po)}
 {
 }

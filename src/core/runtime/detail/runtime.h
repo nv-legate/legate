@@ -77,9 +77,9 @@ class Runtime {
 
   void record_reduction_operator(std::uint32_t type_uid,
                                  std::int32_t op_kind,
-                                 std::int32_t legion_op_id);
-  [[nodiscard]] std::int32_t find_reduction_operator(std::uint32_t type_uid,
-                                                     std::int32_t op_kind) const;
+                                 GlobalRedopID legion_op_id);
+  [[nodiscard]] GlobalRedopID find_reduction_operator(std::uint32_t type_uid,
+                                                      std::int32_t op_kind) const;
 
   void initialize(Legion::Context legion_context, std::int32_t argc, char** argv);
 
@@ -286,8 +286,8 @@ class Runtime {
                                                  const Legion::Domain& launch_domain) const;
   [[nodiscard]] Legion::Future reduce_future_map(
     const Legion::FutureMap& future_map,
-    std::int32_t reduction_op,
-    const Legion::Future& init_value = Legion::Future()) const;
+    GlobalRedopID reduction_op,
+    const Legion::Future& init_value = Legion::Future{}) const;
   [[nodiscard]] Legion::Future reduce_exception_future_map(
     const Legion::FutureMap& future_map) const;
 
@@ -387,8 +387,9 @@ class Runtime {
   // library-specific shutdown callbacks that can launch tasks.
   std::map<std::string, Library, std::less<>> libraries_{};
 
-  using ReductionOpTableKey = std::pair<uint32_t, std::int32_t>;
-  std::unordered_map<ReductionOpTableKey, int32_t, hasher<ReductionOpTableKey>> reduction_ops_{};
+  using ReductionOpTableKey = std::pair<std::uint32_t, std::int32_t>;
+  std::unordered_map<ReductionOpTableKey, GlobalRedopID, hasher<ReductionOpTableKey>>
+    reduction_ops_{};
 
   std::vector<Legion::Future> pending_exceptions_{};
 };

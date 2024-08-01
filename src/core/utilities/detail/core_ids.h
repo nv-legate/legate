@@ -19,6 +19,7 @@
 namespace legate {
 
 enum class LocalTaskID : std::int64_t;
+enum class LocalRedopID : std::int64_t;
 
 }  // namespace legate
 
@@ -104,10 +105,14 @@ enum class CoreTunable : Legion::TunableID {  // NOLINT(performance-enum-size)
   MAX_LRU_LENGTH,
 };
 
-enum class CoreReductionOp : std::int64_t {  // NOLINT(performance-enum-size)
+namespace CoreReductionOp {  // NOLINT(readability-identifier-naming)
+
+enum CoreReductionOp : std::underlying_type_t<LocalRedopID> {  // NOLINT(performance-enum-size)
   JOIN_EXCEPTION,
   MAX_REDUCTION,
 };
+
+}  // namespace CoreReductionOp
 
 enum class CoreSemanticTag : Legion::SemanticTag {  // NOLINT(performance-enum-size)
   // 0 is reserved by Legion for the object's name

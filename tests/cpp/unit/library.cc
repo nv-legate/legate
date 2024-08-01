@@ -110,7 +110,7 @@ TEST_F(Library, InvalidReductionOPID)
 
   auto* runtime = legate::Runtime::get_runtime();
   auto lib      = runtime->create_library(LIBNAME);
-  auto local_id = 0;
+  auto local_id = legate::LocalRedopID{0};
   ASSERT_THROW(static_cast<void>(lib.register_reduction_operator<SumReduction_Int32>(local_id)),
                std::out_of_range);
 }
@@ -125,11 +125,11 @@ TEST_F(Library, RegisterReductionOP)
 
   auto* runtime = legate::Runtime::get_runtime();
   auto lib      = runtime->create_library(LIBNAME, config);
-  auto local_id = 0;
+  auto local_id = legate::LocalRedopID{0};
   auto id       = lib.register_reduction_operator<SumReduction_Int32>(local_id);
 
-  ASSERT_TRUE(lib.valid_reduction_op_id(static_cast<Legion::ReductionOpID>(id)));
-  ASSERT_EQ(lib.get_local_reduction_op_id(static_cast<Legion::ReductionOpID>(id)), local_id);
+  ASSERT_TRUE(lib.valid_reduction_op_id(id));
+  ASSERT_EQ(lib.get_local_reduction_op_id(id), local_id);
 }
 
 TEST_F(Library, RegisterMapper)

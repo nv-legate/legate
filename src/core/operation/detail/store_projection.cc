@@ -33,7 +33,8 @@ void BaseStoreProjection::populate_requirement<true>(Legion::RegionRequirement& 
   // see https://eel.is/c++draft/basic.life#1
   requirement.~RegionRequirement();
   if (LEGION_REDUCE == privilege) {
-    new (&requirement) Legion::RegionRequirement{region, redop, LEGION_EXCLUSIVE, parent, tag};
+    new (&requirement) Legion::RegionRequirement{
+      region, static_cast<Legion::ReductionOpID>(redop), LEGION_EXCLUSIVE, parent, tag};
   } else if (!is_single && (privilege & LEGION_WRITE_PRIV) != 0) {
     new (&requirement)
       Legion::RegionRequirement{region, privilege, LEGION_COLLECTIVE_EXCLUSIVE, parent, tag};
@@ -62,8 +63,8 @@ void BaseStoreProjection::populate_requirement<false>(Legion::RegionRequirement&
   // see above
   requirement.~RegionRequirement();
   if (LEGION_REDUCE == privilege) {
-    new (&requirement)
-      Legion::RegionRequirement{partition, proj_id, redop, LEGION_EXCLUSIVE, parent, tag};
+    new (&requirement) Legion::RegionRequirement{
+      partition, proj_id, static_cast<Legion::ReductionOpID>(redop), LEGION_EXCLUSIVE, parent, tag};
   } else {
     new (&requirement)
       Legion::RegionRequirement{partition, proj_id, privilege, LEGION_EXCLUSIVE, parent, tag};

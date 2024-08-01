@@ -95,11 +95,13 @@ void ReturnedException::throw_exception()
     case ExceptionKind::PYTHON:
       return construct_specific_from_buffer_<ReturnedPythonException>(buf);
   }
-  LEGATE_ABORT("Unhandled exception kind: " << static_cast<int>(kind));
+  LEGATE_ABORT("Unhandled exception kind: " << traits::detail::to_underlying(kind));
   LEGATE_UNREACHABLE();
 }
 
 // ==========================================================================================
+
+namespace {
 
 class JoinReturnedException {
  public:
@@ -107,7 +109,7 @@ class JoinReturnedException {
   using RHS = LHS;
 
   // Realm looks for a member of exactly this name
-  static const ReturnedException identity;  // NOLINT(readability-identifier-naming)
+  static inline const ReturnedException identity{};  // NOLINT(readability-identifier-naming)
 
   template <bool EXCLUSIVE>
   static void apply(LHS& lhs, RHS rhs)
@@ -123,7 +125,7 @@ class JoinReturnedException {
 
  private:
   template <bool EXCLUSIVE>
-  static void do_op_(LHS& lhs, RHS rhs)
+  static void do_op_(LHS& lhs, RHS&& rhs)
   {
     LEGATE_CHECK(EXCLUSIVE);
     if (lhs.raised() || !rhs.raised()) {
@@ -132,10 +134,6 @@ class JoinReturnedException {
     lhs = std::move(rhs);
   }
 };
-
-/*static*/ const ReturnedException JoinReturnedException::identity{};
-
-namespace {
 
 void pack_returned_exception(const ReturnedException& value, void** ptr, std::size_t* size)
 {
@@ -172,11 +170,13 @@ void returned_exception_fold(const Legion::ReductionOp* /*reduction_op*/,
 
 void register_exception_reduction_op(const Library* library)
 {
-  const auto redop_id =
-    library->get_reduction_op_id(traits::detail::to_underlying(CoreReductionOp::JOIN_EXCEPTION));
-  auto* redop = Realm::ReductionOpUntyped::create_reduction_op<JoinReturnedException>();
-  Legion::Runtime::register_reduction_op(
-    redop_id, redop, returned_exception_init, returned_exception_fold);
+  const auto redop_id = library->get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
+  auto* redop         = Realm::ReductionOpUntyped::create_reduction_op<JoinReturnedException>();
+
+  Legion::Runtime::register_reduction_op(static_cast<Legion::ReductionOpID>(redop_id),
+                                         redop,
+                                         returned_exception_init,
+                                         returned_exception_fold);
 }
 
 }  // namespace legate::detail

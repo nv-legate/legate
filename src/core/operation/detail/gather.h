@@ -18,7 +18,6 @@
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <optional>
-#include <string>
 
 namespace legate::detail {
 
@@ -32,7 +31,7 @@ class Gather final : public Operation {
          std::uint64_t unique_id,
          std::int32_t priority,
          mapping::detail::Machine machine,
-         std::optional<std::int32_t> redop);
+         std::optional<std::int32_t> redop_kind);
 
   void set_indirect_out_of_range(bool flag);
 
@@ -49,7 +48,7 @@ class Gather final : public Operation {
   StoreArg source_{};
   StoreArg source_indirect_{};
   InternalSharedPtr<Constraint> constraint_{};
-  std::optional<std::int32_t> redop_{};
+  std::optional<std::int32_t> redop_kind_{};
 };
 
 }  // namespace legate::detail
