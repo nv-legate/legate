@@ -36,30 +36,30 @@ struct hasher;
 
 template <typename T>
 struct hasher<T, std::enable_if_t<std::is_constructible_v<std::hash<T>>>> {
-  [[nodiscard]] std::size_t operator()(const T& v) const noexcept { return std::hash<T>{}(v); }
+  [[nodiscard]] constexpr std::size_t operator()(const T& v) const noexcept
+  {
+    return std::hash<T>{}(v);
+  }
 };
 
 template <typename T>
 struct hasher<T, std::enable_if_t<!std::is_constructible_v<std::hash<T>> && has_hash_member_v<T>>> {
-  [[nodiscard]] std::size_t operator()(const T& v) const noexcept { return v.hash(); }
+  [[nodiscard]] constexpr std::size_t operator()(const T& v) const noexcept { return v.hash(); }
 };
 
-inline void hash_combine(std::size_t&) noexcept {}
-
-template <typename T, typename... Ts>
-void hash_combine(std::size_t& target, const T& v, Ts&&... vs) noexcept
+template <typename T>
+constexpr void hash_combine(std::size_t& target, const T& v) noexcept
 {
   // NOLINTNEXTLINE(readability-magic-numbers): the constants here are meant to be magic...
   target ^= hasher<T>{}(v) + 0x9e3779b9 + (target << 6) + (target >> 2);
-  hash_combine(target, std::forward<Ts>(vs)...);
 }
 
-template <typename... Ts>
-[[nodiscard]] std::size_t hash_all(Ts&&... vs) noexcept
+template <typename... T>
+[[nodiscard]] constexpr std::size_t hash_all(const T&... vs) noexcept
 {
   std::size_t result = 0;
 
-  hash_combine(result, std::forward<Ts>(vs)...);
+  (hash_combine(result, vs), ...);
   return result;
 }
 
