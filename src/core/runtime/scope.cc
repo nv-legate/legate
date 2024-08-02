@@ -149,7 +149,7 @@ Scope::~Scope() = default;
 
 /*static*/ std::string_view Scope::provenance()
 {
-  return detail::Runtime::get_runtime()->scope().provenance();
+  return detail::Runtime::get_runtime()->scope().provenance().as_string_view();
 }
 
 /*static*/ mapping::Machine Scope::machine()

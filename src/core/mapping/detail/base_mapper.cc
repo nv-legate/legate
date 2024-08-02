@@ -21,6 +21,7 @@
 #include "core/runtime/detail/shard.h"
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/formatters.h"
 #include "core/utilities/detail/type_traits.h"
 #include "core/utilities/detail/zip.h"
 #include "core/utilities/env.h"

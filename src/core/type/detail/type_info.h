@@ -223,7 +223,7 @@ class ListType final : public ExtensionType {
 namespace fmt {
 
 template <>
-struct formatter<legate::detail::Type::Code> : formatter<string_view> {
+struct formatter<legate::detail::Type::Code> : formatter<legate::detail::ZStringView> {
   format_context::iterator format(legate::detail::Type::Code a, format_context& ctx) const;
 };
 

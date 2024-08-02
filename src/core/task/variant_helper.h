@@ -15,11 +15,11 @@
 #include "core/task/task_info.h"
 #include "core/task/variant_options.h"
 #include "core/utilities/detail/type_traits.h"
+#include "core/utilities/detail/zstring_view.h"
 
 #include "legion.h"
 
 #include <optional>
-#include <string_view>
 #include <type_traits>
 
 namespace legate {
@@ -36,7 +36,7 @@ class LegionTask;
 
 void task_wrapper(VariantImpl,
                   VariantCode,
-                  std::optional<std::string_view>,
+                  std::optional<detail::ZStringView>,
                   const void*,
                   size_t,
                   const void*,

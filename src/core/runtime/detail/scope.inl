@@ -22,7 +22,7 @@ inline std::int32_t Scope::priority() const { return priority_; }
 
 inline ExceptionMode Scope::exception_mode() const { return exception_mode_; }
 
-inline std::string_view Scope::provenance() const { return provenance_; }
+inline ZStringView Scope::provenance() const { return provenance_; }
 
 inline const InternalSharedPtr<Scope::Machine>& Scope::machine() const { return machine_; }
 

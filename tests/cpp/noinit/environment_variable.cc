@@ -10,6 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/detail/zstring_view.h"
 #include "core/utilities/env.h"
 
 #include "utilities/utilities.h"
@@ -189,7 +190,7 @@ class Environ : public DefaultFixture {
     const auto name = make_env_var_name_();
     auto env_var    = legate::detail::EnvironmentVariable<T>{name};
 
-    EXPECT_EQ(name, static_cast<std::string_view>(env_var));
+    EXPECT_EQ(name, static_cast<legate::detail::ZStringView>(env_var));
 
     const auto cur_val = detail::Environment::get_env_var(env_var.data());
 
@@ -199,7 +200,7 @@ class Environ : public DefaultFixture {
   }
 
  private:
-  [[nodiscard]] std::string_view make_env_var_name_() const
+  [[nodiscard]] legate::detail::ZStringView make_env_var_name_() const
   {
     auto name = detail::get_random_value<std::string>();
 

@@ -35,6 +35,11 @@ class Shape;
 class Constraint;
 class Expr;
 
+template <typename CharT, typename TraitsT>
+class BasicZStringView;
+
+using ZStringView = BasicZStringView<char, std::char_traits<char>>;
+
 }  // namespace legate::detail
 
 namespace fmt {
@@ -107,5 +112,18 @@ template <>
 struct formatter<legate::GlobalRedopID> : formatter<std::underlying_type_t<legate::GlobalRedopID>> {
   format_context::iterator format(legate::GlobalRedopID id, format_context& ctx) const;
 };
+
+template <>
+struct formatter<legate::detail::ZStringView> : formatter<string_view> {
+  format_context::iterator format(const legate::detail::ZStringView& sv, format_context& ctx) const;
+};
+
+#ifndef DOXYGEN
+// Needed because fmt tries to cast BasicZStringView to its private base class
+// (std::string_view), and therefore fails to compile. So we tell it directly that
+// BasicZStringView is not, in fact, a string.
+template <typename C, typename T>
+struct detail::is_string<legate::detail::BasicZStringView<C, T>> : std::false_type {};
+#endif
 
 }  // namespace fmt

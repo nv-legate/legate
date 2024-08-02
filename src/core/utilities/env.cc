@@ -12,7 +12,9 @@
 
 #include "core/utilities/env.h"
 
-#include "core/utilities/assert.h"  // LEGATE_LIKELY()
+#include "core/utilities/assert.h"             // LEGATE_LIKELY()
+#include "core/utilities/detail/formatters.h"  // to format ZStringView
+#include "core/utilities/detail/zstring_view.h"
 
 #include <cerrno>
 #include <charconv>
@@ -38,20 +40,14 @@ namespace {
 }
 
 template <typename T>
-[[nodiscard]] std::optional<T> read_env_common(std::string_view variable)
+[[nodiscard]] std::optional<T> read_env_common(ZStringView variable)
 {
   if (variable.empty()) {
     throw std::invalid_argument{"Environment variable name is empty"};
   }
 
   const auto _      = ENVIRONMENT_LOCK();
-  const char* value = [&] {
-    if (LEGATE_LIKELY(variable.back())) {
-      return std::getenv(variable.data());
-    }
-    // std::string will null-terminate a non-null-terminated string_view for us
-    return std::getenv(std::string{variable}.c_str());
-  }();
+  const char* value = std::getenv(variable.data());
 
   if (!value) {
     return std::nullopt;
@@ -74,16 +70,16 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] std::optional<T> read_env(std::string_view) = delete;
+[[nodiscard]] std::optional<T> read_env(ZStringView) = delete;
 
 template <>
-[[nodiscard]] std::optional<std::string> read_env(std::string_view variable)
+[[nodiscard]] std::optional<std::string> read_env(ZStringView variable)
 {
   return read_env_common<std::string>(variable);
 }
 
 template <>
-[[nodiscard]] std::optional<std::int64_t> read_env(std::string_view variable)
+[[nodiscard]] std::optional<std::int64_t> read_env(ZStringView variable)
 {
   auto parsed_val = read_env_common<std::int64_t>(variable);
 
@@ -97,7 +93,7 @@ template <>
 }
 
 template <>
-[[nodiscard]] std::optional<bool> read_env(std::string_view variable)
+[[nodiscard]] std::optional<bool> read_env(ZStringView variable)
 {
   if (const auto v = read_env<std::int64_t>(std::move(variable)); v.has_value()) {
     return *v > 0;
@@ -106,7 +102,7 @@ template <>
 }
 
 template <>
-[[nodiscard]] std::optional<std::uint32_t> read_env(std::string_view variable)
+[[nodiscard]] std::optional<std::uint32_t> read_env(ZStringView variable)
 {
   if (const auto v = read_env<std::int64_t>(std::move(variable)); v.has_value()) {
     return static_cast<std::uint32_t>(*v);
@@ -115,8 +111,8 @@ template <>
 }
 
 template <typename T, typename U = T>
-[[nodiscard]] T read_env_with_defaults(std::optional<T> (*read_env_impl_fn)(std::string_view),
-                                       std::string_view variable,
+[[nodiscard]] T read_env_with_defaults(std::optional<T> (*read_env_impl_fn)(ZStringView),
+                                       ZStringView variable,
                                        U default_value,
                                        std::optional<U> test_value)
 {
@@ -157,7 +153,7 @@ void EnvironmentVariableBase::set_(std::string_view value, bool overwrite) const
   }();
   if (LEGATE_UNLIKELY(ret)) {
     throw std::runtime_error{fmt::format("setenv({}, {}) failed with exit code: {}: {}",
-                                         static_cast<std::string_view>(*this),
+                                         static_cast<ZStringView>(*this),
                                          value,
                                          ret,
                                          std::strerror(errno))};

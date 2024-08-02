@@ -16,11 +16,9 @@
 #include "core/mapping/detail/machine.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/utilities/detail/core_ids.h"
+#include "core/utilities/detail/zstring_view.h"
 
 #include <memory>
-#include <string>
-#include <string_view>
-#include <variant>
 #include <vector>
 
 namespace legate::detail {
@@ -32,7 +30,7 @@ class TaskLauncher {
  public:
   TaskLauncher(const Library* library,
                const mapping::detail::Machine& machine,
-               std::variant<std::string_view, std::string> provenance,
+               ZStringView provenance,
                LocalTaskID task_id,
                Legion::MappingTagID tag = 0);
 
@@ -63,7 +61,7 @@ class TaskLauncher {
 
   Legion::FutureMap execute(const Legion::Domain& launch_domain);
   Legion::Future execute_single();
-  [[nodiscard]] std::string_view provenance() const;
+  [[nodiscard]] ZStringView provenance() const;
 
  private:
   void pack_mapper_arg_(BufferBuilder& buffer);
@@ -82,7 +80,7 @@ class TaskLauncher {
   LocalTaskID task_id_{};
   Legion::MappingTagID tag_{};
   const mapping::detail::Machine& machine_;
-  std::variant<std::string_view, std::string> provenance_{};
+  ZStringView provenance_{};
   std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
 
   bool has_side_effect_{true};

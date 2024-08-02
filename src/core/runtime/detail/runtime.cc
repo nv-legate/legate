@@ -43,6 +43,7 @@
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/env_defaults.h"
+#include "core/utilities/detail/formatters.h"
 #include "core/utilities/detail/tuple.h"
 #include "core/utilities/env.h"
 #include "core/utilities/hash.h"
@@ -114,7 +115,7 @@ Library* Runtime::create_library(
     throw std::invalid_argument{fmt::format("Library {} already exists", library_name)};
   }
 
-  log_legate().debug("Library %s is created", library_name.data());
+  log_legate().debug() << "Library " << library_name << " is created";
   if (nullptr == mapper) {
     mapper = std::make_unique<mapping::detail::DefaultMapper>();
   }
@@ -628,8 +629,10 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
     throw std::invalid_argument{"Null type or zero-size types cannot be used for stores"};
   }
   check_dimensionality_(dim);
-  auto storage = make_internal_shared<detail::Storage>(
-    make_internal_shared<Shape>(dim), std::move(type), optimize_scalar, get_provenance());
+  auto storage = make_internal_shared<detail::Storage>(make_internal_shared<Shape>(dim),
+                                                       std::move(type),
+                                                       optimize_scalar,
+                                                       get_provenance().as_string_view());
   return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
@@ -649,7 +652,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> s
   }
   check_dimensionality_(shape->ndim());
   auto storage = make_internal_shared<detail::Storage>(
-    std::move(shape), std::move(type), optimize_scalar, get_provenance());
+    std::move(shape), std::move(type), optimize_scalar, get_provenance().as_string_view());
   return make_internal_shared<LogicalStore>(std::move(storage));
 }
 
@@ -667,7 +670,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
   }
   auto future  = Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
   auto storage = make_internal_shared<detail::Storage>(
-    std::move(shape), scalar.type(), future, get_provenance());
+    std::move(shape), scalar.type(), future, get_provenance().as_string_view());
   return make_internal_shared<detail::LogicalStore>(std::move(storage));
 }
 
@@ -697,7 +700,9 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
                                   false /*restricted*/,
                                   !allocation->read_only() /*mapped*/};
   launcher.collective = true;  // each shard will attach a full local copy of the entire buffer
-  launcher.provenance = get_provenance();
+  static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
+                "Don't use to_string() below");
+  launcher.provenance = get_provenance().to_string();
   launcher.constraints.ordering_constraint.ordering.clear();
   ordering->populate_dimension_ordering(store->dim(),
                                         launcher.constraints.ordering_constraint.ordering);
@@ -773,7 +778,9 @@ Runtime::IndexAttachResult Runtime::create_store(
 
     launcher.add_external_resource(substore->get_region_field()->region(), alloc->resource());
   }
-  launcher.provenance = get_provenance();
+  static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
+                "Don't use to_string() below");
+  launcher.provenance = get_provenance().to_string();
   launcher.constraints.ordering_constraint.ordering.clear();
   ordering->populate_dimension_ordering(store->dim(),
                                         launcher.constraints.ordering_constraint.ordering);
@@ -850,6 +857,7 @@ InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(InternalShare
 }
 
 void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
+                                // string_view is OK here because we pass the size along with it
                                 std::string_view provenance)
 {
   // It's safe to just attach the info to the FieldSpace+FieldID, since FieldSpaces are not shared
@@ -861,7 +869,7 @@ void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
     rf->region().get_field_space(),
     rf->field_id(),
     static_cast<Legion::SemanticTag>(CoreSemanticTag::ALLOC_INFO),
-    static_cast<const void*>(provenance.data()),
+    provenance.data(),
     provenance.size(),
     /*is_mutable=*/true);
 }
@@ -874,7 +882,9 @@ Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
   auto mapper_id = core_library_->get_mapper_id();
   // TODO(wonchanl): We need to pass the metadata about logical store
   Legion::InlineLauncher launcher{req, mapper_id};
-  launcher.provenance       = get_provenance();
+  static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
+                "Don't use to_string() below");
+  launcher.provenance       = get_provenance().to_string();
   Legion::PhysicalRegion pr = legion_runtime_->map_region(legion_context_, launcher);
   pr.wait_until_valid(true /*silence_warnings*/);
   return pr;
@@ -1316,7 +1326,7 @@ InternalSharedPtr<mapping::detail::Machine> Runtime::create_toplevel_machine()
 
 const mapping::detail::Machine& Runtime::get_machine() const { return *scope().machine(); }
 
-std::string_view Runtime::get_provenance() const { return scope().provenance(); }
+ZStringView Runtime::get_provenance() const { return scope().provenance(); }
 
 Legion::ProjectionID Runtime::get_affine_projection(std::uint32_t src_ndim,
                                                     const proj::SymbolicPoint& point)
@@ -1496,7 +1506,7 @@ void try_set_property(Runtime& runtime,
                       const std::string& module_name,
                       const std::string& property_name,
                       const VarWithDefault<DEFAULT, SCALE, Value>& var,
-                      std::string_view error_msg)
+                      ZStringView error_msg)
 {
   auto value = var.value();
   if (value < 0) {

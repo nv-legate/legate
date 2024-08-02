@@ -16,6 +16,7 @@
 #include "core/task/task_info.h"
 #include "core/task/variant_helper.h"
 #include "core/task/variant_options.h"
+#include "core/utilities/detail/zstring_view.h"
 #include "core/utilities/typedefs.h"
 
 #include <map>
@@ -118,7 +119,7 @@ class LegateTask {
                                 const std::map<VariantCode, VariantOptions>& all_options = {});
 
  protected:
-  [[nodiscard]] static std::string_view task_name_();
+  [[nodiscard]] static detail::ZStringView task_name_();
 
  private:
   template <typename, template <typename...> typename, bool>

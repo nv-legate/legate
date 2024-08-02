@@ -634,6 +634,8 @@ install(FILES src/core/utilities/detail/compressed_pair.h
               src/core/utilities/detail/zip.inl
               src/core/utilities/detail/enumerate.h
               src/core/utilities/detail/enumerate.inl
+              src/core/utilities/detail/zstring_view.h
+              src/core/utilities/detail/zstring_view.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities/detail)
 
 # Legate STL headers

@@ -15,16 +15,16 @@
 #include "core/partitioning/detail/constraint.h"
 #include "core/partitioning/detail/partitioner.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/utilities/detail/formatters.h"
 
 #include <fmt/format.h>
 #include <stdexcept>
-#include <string_view>
 
 namespace legate::detail {
 
 namespace {
 
-[[nodiscard]] std::string_view OP_NAME(Operation::Kind kind)
+[[nodiscard]] ZStringView OP_NAME(Operation::Kind kind)
 {
   switch (kind) {
     case Operation::Kind::AUTO_TASK: return "AutoTask";
@@ -47,7 +47,7 @@ Operation::Operation(std::uint64_t unique_id,
                      mapping::detail::Machine machine)
   : unique_id_{unique_id},
     priority_{priority},
-    provenance_{Runtime::get_runtime()->get_provenance()},
+    provenance_{Runtime::get_runtime()->get_provenance().to_string()},
     machine_{std::move(machine)}
 {
 }
@@ -129,7 +129,7 @@ namespace fmt {
 format_context::iterator formatter<legate::detail::Operation::Kind>::format(
   legate::detail::Operation::Kind kind, format_context& ctx) const
 {
-  return formatter<string_view>::format(legate::detail::OP_NAME(kind), ctx);
+  return formatter<legate::detail::ZStringView>::format(legate::detail::OP_NAME(kind), ctx);
 }
 
 }  // namespace fmt

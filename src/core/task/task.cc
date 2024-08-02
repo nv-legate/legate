@@ -26,7 +26,6 @@
 
 #include <ios>
 #include <optional>
-#include <string_view>
 
 namespace legate::detail {
 
@@ -62,7 +61,7 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 
 void task_wrapper(VariantImpl variant_impl,
                   VariantCode variant_kind,
-                  std::optional<std::string_view> task_name,
+                  std::optional<ZStringView> task_name,
                   const void* args,
                   std::size_t arglen,
                   const void* /*userdata*/,
@@ -115,7 +114,7 @@ void task_wrapper(VariantImpl variant_impl,
       } else {
         // If a Legate exception is thrown by a task that does not declare any exception,
         // this is a bug in the library that needs to be reported to the developer
-        LEGATE_ABORT("Task " << get_task_name().data()
+        LEGATE_ABORT("Task " << get_task_name()
                              << " threw an exception \""
                              // TODO(jfaibussowit): need to extract the actual error message here
                              << "Unknown Python exception"
@@ -134,7 +133,7 @@ void task_wrapper(VariantImpl variant_impl,
     } else {
       // If a Legate exception is thrown by a task that does not declare any exception,
       // this is a bug in the library that needs to be reported to the developer
-      LEGATE_ABORT("Task " << get_task_name().data() << " threw an exception \"" << e.what()
+      LEGATE_ABORT("Task " << get_task_name() << " threw an exception \"" << e.what()
                            << "\", but the task did not declare any exception.");
     }
   }

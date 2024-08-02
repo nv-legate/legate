@@ -24,6 +24,6 @@ inline std::int32_t Operation::priority() const { return priority_; }
 
 inline const mapping::detail::Machine& Operation::machine() const { return machine_; }
 
-inline std::string_view Operation::provenance() const { return provenance_; }
+inline ZStringView Operation::provenance() const { return provenance_; }
 
 }  // namespace legate::detail

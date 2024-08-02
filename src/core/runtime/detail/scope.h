@@ -15,11 +15,11 @@
 #include "core/mapping/detail/machine.h"
 #include "core/runtime/exception_mode.h"
 #include "core/utilities/detail/core_ids.h"
+#include "core/utilities/detail/zstring_view.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <cstdint>
 #include <string>
-#include <string_view>
 
 namespace legate::detail {
 
@@ -29,7 +29,7 @@ class Scope {
  public:
   [[nodiscard]] std::int32_t priority() const;
   [[nodiscard]] ExceptionMode exception_mode() const;
-  [[nodiscard]] std::string_view provenance() const;
+  [[nodiscard]] ZStringView provenance() const;
   [[nodiscard]] const InternalSharedPtr<Machine>& machine() const;
 
   [[nodiscard]] std::int32_t exchange_priority(std::int32_t priority);

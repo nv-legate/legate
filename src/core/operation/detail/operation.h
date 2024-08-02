@@ -19,13 +19,13 @@
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/formatters.h"
 #include "core/utilities/detail/hash.h"
+#include "core/utilities/detail/zstring_view.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include <deque>
 #include <fmt/format.h>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 
 namespace legate::detail {
@@ -72,7 +72,7 @@ class Operation {
 
   [[nodiscard]] std::int32_t priority() const;
   [[nodiscard]] const mapping::detail::Machine& machine() const;
-  [[nodiscard]] std::string_view provenance() const;
+  [[nodiscard]] ZStringView provenance() const;
 
  protected:
   void record_partition_(const Variable* variable, InternalSharedPtr<LogicalStore> store);
@@ -98,7 +98,7 @@ class Operation {
 namespace fmt {
 
 template <>
-struct formatter<legate::detail::Operation::Kind> : formatter<string_view> {
+struct formatter<legate::detail::Operation::Kind> : formatter<legate::detail::ZStringView> {
   format_context::iterator format(legate::detail::Operation::Kind kind, format_context& ctx) const;
 };
 

@@ -15,6 +15,7 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/buffer_builder.h"
 #include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/zstring_view.h"
 
 #include <algorithm>
 #include <atomic>
@@ -36,7 +37,7 @@ class StaticDeterminationError : public std::invalid_argument {
   using std::invalid_argument::invalid_argument;
 };
 
-[[nodiscard]] std::string_view TYPE_NAME(Type::Code code)
+[[nodiscard]] ZStringView TYPE_NAME(Type::Code code)
 {
   switch (code) {
     case Type::Code::BOOL: return "bool";
@@ -195,7 +196,7 @@ PrimitiveType::PrimitiveType(Code type_code)
 {
 }
 
-std::string PrimitiveType::to_string() const { return std::string{TYPE_NAME(code)}; }
+std::string PrimitiveType::to_string() const { return TYPE_NAME(code).to_string(); }
 
 void PrimitiveType::pack(BufferBuilder& buffer) const
 {
@@ -644,7 +645,7 @@ namespace fmt {
 format_context::iterator formatter<legate::detail::Type::Code>::format(legate::detail::Type::Code a,
                                                                        format_context& ctx) const
 {
-  return formatter<string_view>::format(legate::detail::TYPE_NAME(a), ctx);
+  return formatter<legate::detail::ZStringView>::format(legate::detail::TYPE_NAME(a), ctx);
 }
 
 }  // namespace fmt

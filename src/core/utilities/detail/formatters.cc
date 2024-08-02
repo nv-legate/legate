@@ -16,6 +16,7 @@
 #include "core/operation/detail/operation.h"
 #include "core/partitioning/detail/constraint.h"
 #include "core/type/detail/type_info.h"
+#include "core/utilities/detail/zstring_view.h"
 #include "core/utilities/typedefs.h"
 
 #include <fmt/format.h>
@@ -92,6 +93,12 @@ format_context::iterator formatter<legate::GlobalRedopID>::format(legate::Global
                                                                   format_context& ctx) const
 {
   return formatter<std::underlying_type_t<legate::GlobalRedopID>>::format(fmt::underlying(id), ctx);
+}
+
+format_context::iterator formatter<legate::detail::ZStringView>::format(
+  const legate::detail::ZStringView& sv, format_context& ctx) const
+{
+  return formatter<string_view>::format(sv.as_string_view(), ctx);
 }
 
 }  // namespace fmt

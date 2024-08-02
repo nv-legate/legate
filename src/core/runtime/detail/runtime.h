@@ -31,6 +31,7 @@
 #include "core/type/type_info.h"
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/hash.h"
+#include "core/utilities/detail/zstring_view.h"
 #include "core/utilities/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
 
@@ -310,7 +311,7 @@ class Runtime {
 
   InternalSharedPtr<mapping::detail::Machine> create_toplevel_machine();
   [[nodiscard]] const mapping::detail::Machine& get_machine() const;
-  [[nodiscard]] std::string_view get_provenance() const;
+  [[nodiscard]] ZStringView get_provenance() const;
   [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;
   [[nodiscard]] std::uint32_t node_count() const;
   [[nodiscard]] std::uint32_t node_id() const;

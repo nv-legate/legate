@@ -14,6 +14,7 @@
 
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/formatters.h"
+#include "core/utilities/detail/zstring_view.h"
 #include "core/utilities/typedefs.h"
 
 #include <array>
@@ -24,7 +25,7 @@ namespace legate {
 
 namespace {
 
-constexpr std::array<std::string_view, 4> VARIANT_NAMES = {"(invalid)", "CPU", "GPU", "OMP"};
+constexpr std::array<detail::ZStringView, 4> VARIANT_NAMES = {"(invalid)", "CPU", "GPU", "OMP"};
 
 constexpr std::array<Processor::Kind, 4> VARIANT_PROC_KINDS = {Processor::Kind::NO_KIND,
                                                                Processor::Kind::LOC_PROC,
@@ -46,7 +47,7 @@ class TaskInfo::Impl {
 
   void register_task(GlobalTaskID task_id) const;
 
-  [[nodiscard]] std::string_view name() const;
+  [[nodiscard]] detail::ZStringView name() const;
   [[nodiscard]] const std::map<VariantCode, VariantInfo>& variants() const;
 
  private:
@@ -102,7 +103,7 @@ void TaskInfo::Impl::register_task(GlobalTaskID task_id) const
   }
 }
 
-std::string_view TaskInfo::Impl::name() const { return task_name_; }
+detail::ZStringView TaskInfo::Impl::name() const { return task_name_; }
 
 const std::map<VariantCode, VariantInfo>& TaskInfo::Impl::variants() const { return variants_; }
 
@@ -167,7 +168,7 @@ TaskInfo::TaskInfo(std::string task_name) : impl_{std::make_unique<Impl>(std::mo
 
 TaskInfo::~TaskInfo() = default;
 
-std::string_view TaskInfo::name() const { return impl_->name(); }
+std::string_view TaskInfo::name() const { return impl_->name().as_string_view(); }
 
 std::optional<std::reference_wrapper<const VariantInfo>> TaskInfo::find_variant(
   VariantCode vid) const

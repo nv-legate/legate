@@ -12,10 +12,11 @@
 
 #pragma once
 
+#include "core/utilities/detail/zstring_view.h"
+
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <utility>
 
 /**
@@ -31,27 +32,27 @@ class EnvironmentVariableBase {
  public:
   EnvironmentVariableBase() = delete;
   // NOLINTNEXTLINE(google-explicit-constructor)
-  constexpr EnvironmentVariableBase(std::string_view name) noexcept;
+  constexpr EnvironmentVariableBase(ZStringView name) noexcept;
 
   // NOLINTNEXTLINE(google-explicit-constructor)
-  [[nodiscard]] constexpr operator std::string_view() const noexcept;
+  [[nodiscard]] constexpr operator ZStringView() const noexcept;
   [[nodiscard]] constexpr const char* data() const noexcept;
 
  protected:
   void set_(std::string_view value, bool overwrite) const;
 
  private:
-  std::string_view name_{};
+  ZStringView name_{};
 };
 
 // Need to define these here (instead of a .inl) so that they can be used in constexpr contexts
 // below
-constexpr EnvironmentVariableBase::EnvironmentVariableBase(std::string_view name) noexcept
+constexpr EnvironmentVariableBase::EnvironmentVariableBase(ZStringView name) noexcept
   : name_{std::move(name)}
 {
 }
 
-constexpr EnvironmentVariableBase::operator std::string_view() const noexcept { return name_; }
+constexpr EnvironmentVariableBase::operator ZStringView() const noexcept { return name_; }
 
 constexpr const char* EnvironmentVariableBase::data() const noexcept { return name_.data(); }
 

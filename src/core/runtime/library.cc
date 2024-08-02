@@ -17,7 +17,10 @@
 
 namespace legate {
 
-std::string_view Library::get_library_name() const { return impl()->get_library_name(); }
+std::string_view Library::get_library_name() const
+{
+  return impl()->get_library_name().as_string_view();
+}
 
 GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
 {

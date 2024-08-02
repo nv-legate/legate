@@ -16,6 +16,7 @@
 #include "core/mapping/mapping.h"
 #include "core/runtime/resource.h"
 #include "core/task/task_info.h"
+#include "core/utilities/detail/zstring_view.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
 
@@ -66,7 +67,7 @@ class Library {
   Library(const Library&) = delete;
   Library(Library&&)      = delete;
 
-  [[nodiscard]] std::string_view get_library_name() const;
+  [[nodiscard]] ZStringView get_library_name() const;
 
   [[nodiscard]] GlobalTaskID get_task_id(LocalTaskID local_task_id) const;
   [[nodiscard]] Legion::MapperID get_mapper_id() const;
