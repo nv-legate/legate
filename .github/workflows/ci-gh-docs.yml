@@ -13,12 +13,10 @@ on:
 
 jobs:
   build-and-test:
-    name: Build documentation (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.build-mode }}, ${{ matrix.ucx-enabled }})
+    name: Build documentation (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.build-mode }}, ucx enabled)
     strategy:
       fail-fast: false
       matrix:
-        ucx-enabled:
-          - true
         platform:
           - linux
         target-device:
@@ -31,5 +29,4 @@ jobs:
       platform: ${{ matrix.platform }}
       target-device: ${{ matrix.target-device }}
       build-mode: ${{ matrix.build-mode }}
-      ucx-enabled: ${{ matrix.ucx-enabled }}
     secrets: inherit

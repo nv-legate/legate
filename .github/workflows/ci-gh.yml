@@ -13,7 +13,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and test (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.build-mode }}, ${{ matrix.ucx-enabled }})
+    name: Build and test (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.build-mode }}, ucx enabled)
     strategy:
       fail-fast: false
       matrix:
@@ -39,7 +39,6 @@ jobs:
       platform: ${{ matrix.platform }}
       target-device: ${{ matrix.target-device }}
       build-mode: ${{ matrix.build-mode }}
-      ucx-enabled: true
       build-type: release
       upload-enabled: ${{ matrix.upload-enabled }}
     secrets: inherit

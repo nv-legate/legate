@@ -13,14 +13,13 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and test (mac, cpu, release, no_ucx)
+    name: Build and test (mac, cpu, release, ucx)
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: mac
       target-device: cpu
       cmake-preset: release
-      ucx-enabled: false
-      build-type: ci
+      build-type: release
       upload-enabled: false
     secrets: inherit
