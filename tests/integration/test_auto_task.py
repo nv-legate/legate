@@ -175,11 +175,14 @@ class TestAutoTask:
         arg2_store = runtime.create_store_from_buffer(
             ty.float64, arg2_np.shape, arg2_np, False
         )
-        arg2_array = LogicalArray.from_store(arg1_store)
+        arg1_array = LogicalArray.from_store(arg1_store)
         out_store = runtime.create_store(ty.float64, (5, 4, 3, 2))
-        auto_task.add_input(arg2_array)
+        auto_task.add_input(arg1_array)
         auto_task.add_input(arg2_store)
         auto_task.add_output(out_store)
+        auto_task.add_broadcast(arg1_array)
+        auto_task.add_broadcast(arg2_store)
+        auto_task.add_broadcast(out_store)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
@@ -222,6 +225,9 @@ class TestAutoTask:
 
 
 class TestAutoTaskConstraints:
+    # TODO(Jacobfaib) [issue 1026]
+    # PyTask doesn't accept ReductionStore any more
+    @pytest.mark.xfail(reason="Reduction not implemented yet")
     def test_add_reduction(self) -> None:
         runtime = get_legate_runtime()
         in_arr = np.arange(10, dtype=np.float64)

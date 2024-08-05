@@ -97,7 +97,9 @@ def copy_np_array_task(out: OutputStore, np_arr: NDArray[Any]) -> None:
         out_arr_np[:] = cupy.asarray(np_arr)[:]
 
 
-@task(variants=tuple(KNOWN_VARIANTS))
+# TODO(Jacobfaib) [issue 1026]
+# PyTask doesn't accept ReductionStore any more
+# @task(variants=tuple(KNOWN_VARIANTS))
 def array_sum_task(store: InputStore, out: ReductionStore) -> None:
     store_arr = asarray(store.get_inline_allocation())
     out_arr = asarray(out.get_inline_allocation())
