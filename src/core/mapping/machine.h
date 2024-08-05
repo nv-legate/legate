@@ -17,6 +17,8 @@
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <iosfwd>
 #include <map>
 #include <set>
@@ -38,9 +40,10 @@ namespace legate::mapping {
  */
 class NodeRange {
  public:
-  [[nodiscard]] bool operator<(const NodeRange& other) const noexcept;
-  [[nodiscard]] bool operator==(const NodeRange& other) const noexcept;
-  [[nodiscard]] bool operator!=(const NodeRange& other) const noexcept;
+  [[nodiscard]] constexpr bool operator<(const NodeRange& other) const noexcept;
+  [[nodiscard]] constexpr bool operator==(const NodeRange& other) const noexcept;
+  [[nodiscard]] constexpr bool operator!=(const NodeRange& other) const noexcept;
+  [[nodiscard]] std::size_t hash() const noexcept;
 
   std::uint32_t low{};
   std::uint32_t high{};
@@ -71,14 +74,14 @@ class ProcessorRange {
    *
    * @return Processor count
    */
-  [[nodiscard]] std::uint32_t count() const noexcept;
+  [[nodiscard]] constexpr std::uint32_t count() const noexcept;
   /**
    * @brief Checks if the processor range is empty
    *
    * @return true The range is empty
    * @return false The range is not empty
    */
-  [[nodiscard]] bool empty() const noexcept;
+  [[nodiscard]] constexpr bool empty() const noexcept;
   /**
    * @brief Slices the processor range for a given sub-range
    *
@@ -87,13 +90,13 @@ class ProcessorRange {
    *
    * @return Sliced procesor range
    */
-  [[nodiscard]] ProcessorRange slice(std::uint32_t from, std::uint32_t to) const;
+  [[nodiscard]] constexpr ProcessorRange slice(std::uint32_t from, std::uint32_t to) const;
   /**
    * @brief Computes a range of node IDs for this processor range
    *
    * @return Node range in a pair
    */
-  [[nodiscard]] NodeRange get_node_range() const;
+  [[nodiscard]] constexpr NodeRange get_node_range() const;
   /**
    * @brief Converts the range to a human-readable string
    *
@@ -103,7 +106,7 @@ class ProcessorRange {
   /**
    * @brief Creates an empty processor range
    */
-  ProcessorRange() = default;
+  constexpr ProcessorRange() = default;
   /**
    * @brief Creates a processor range
    *
@@ -111,14 +114,14 @@ class ProcessorRange {
    * @param high_id End processor ID
    * @param per_node_proc_count Number of per-node processors
    */
-  ProcessorRange(std::uint32_t low_id,
-                 std::uint32_t high_id,
-                 std::uint32_t per_node_proc_count) noexcept;
+  constexpr ProcessorRange(std::uint32_t low_id,
+                           std::uint32_t high_id,
+                           std::uint32_t per_node_proc_count) noexcept;
 
-  [[nodiscard]] ProcessorRange operator&(const ProcessorRange&) const;
-  [[nodiscard]] bool operator==(const ProcessorRange& other) const noexcept;
-  [[nodiscard]] bool operator!=(const ProcessorRange& other) const noexcept;
-  [[nodiscard]] bool operator<(const ProcessorRange& other) const noexcept;
+  [[nodiscard]] constexpr ProcessorRange operator&(const ProcessorRange&) const;
+  [[nodiscard]] constexpr bool operator==(const ProcessorRange& other) const noexcept;
+  [[nodiscard]] constexpr bool operator!=(const ProcessorRange& other) const noexcept;
+  [[nodiscard]] constexpr bool operator<(const ProcessorRange& other) const noexcept;
   [[nodiscard]] std::size_t hash() const noexcept;
 };
 

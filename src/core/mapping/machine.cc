@@ -13,63 +13,22 @@
 #include "core/mapping/machine.h"
 
 #include "core/mapping/detail/machine.h"
-#include "core/utilities/hash.h"
 
 #include <fmt/format.h>
 #include <iostream>
-#include <stdexcept>
 #include <utility>
 
 namespace legate::mapping {
+
+std::size_t NodeRange::hash() const noexcept { return hash_all(low, high); }
 
 /////////////////////////////////////
 // legate::mapping::ProcessorRange
 /////////////////////////////////////
 
-ProcessorRange ProcessorRange::slice(std::uint32_t from, std::uint32_t to) const
-{
-  auto new_low  = std::min(low + from, high);
-  auto new_high = std::min(low + to, high);
-  return {new_low, new_high, per_node_count};
-}
-
-NodeRange ProcessorRange::get_node_range() const
-{
-  if (empty()) {
-    throw std::invalid_argument{"Illegal to get a node range of an empty processor range"};
-  }
-  return {low / per_node_count, (high + per_node_count - 1) / per_node_count};
-}
-
 std::string ProcessorRange::to_string() const
 {
   return fmt::format("Proc([{},{}], {} per node)", low, high, per_node_count);
-}
-
-ProcessorRange ProcessorRange::operator&(const ProcessorRange& other) const
-{
-  if (other.per_node_count != per_node_count) {
-    throw std::invalid_argument{
-      "Invalid to compute an intersection between processor ranges with different per-node counts"};
-  }
-  return {std::max(low, other.low), std::min(high, other.high), per_node_count};
-}
-
-bool ProcessorRange::operator<(const ProcessorRange& other) const noexcept
-{
-  if (low < other.low) {
-    return true;
-  }
-  if (low > other.low) {
-    return false;
-  }
-  if (high < other.high) {
-    return true;
-  }
-  if (high > other.high) {
-    return false;
-  }
-  return per_node_count < other.per_node_count;
 }
 
 std::size_t ProcessorRange::hash() const noexcept { return hash_all(low, high, per_node_count); }

@@ -55,6 +55,8 @@ Changes: Latest Development Version
 
 .. rubric:: Mapping
 
+- Add ``NodeRange::hash()``.
+
 .. rubric:: Partitioning
 
 .. rubric:: Tasks
