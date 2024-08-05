@@ -14,16 +14,17 @@ from typing import Any
 
 import numpy as np
 import pytest
-from utils import tasks, utils
-from utils.data import (
+
+from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
+
+from .utils import tasks, utils
+from .utils.data import (
     ARRAY_TYPES,
     BROADCAST_SHAPES,
     EMPTY_SHAPES,
     SCALAR_VALS,
     SHAPES,
 )
-
-from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
 
 
 class TestStoreOps:
@@ -59,7 +60,7 @@ class TestStoreOps:
         arr_np, store = utils.random_array_and_store(shape)
         out_np, out = utils.zero_array_and_store(dtype, shape=shape)
         exp_np = arr_np + out_np
-        runtime.issue_copy(out, store, ty.ReductionOp.ADD)
+        runtime.issue_copy(out, store, ty.ReductionOpKind.ADD)
         np.testing.assert_allclose(out_np, exp_np)
 
     @pytest.mark.xfail(run=False, reason="issue-733: hangs or segfaults")
@@ -84,7 +85,7 @@ class TestStoreOps:
         arr_np = np.asarray(store.get_physical_store().get_inline_allocation())
         out_np = np.asarray(out.get_physical_store().get_inline_allocation())
         exp_np = arr_np * out_np
-        runtime.issue_copy(out, store, ty.ReductionOp.MUL)
+        runtime.issue_copy(out, store, ty.ReductionOpKind.MUL)
         np.testing.assert_allclose(out_np, exp_np)
 
     @pytest.mark.parametrize("src_shape, tgt_shape", BROADCAST_SHAPES, ids=str)
@@ -98,7 +99,9 @@ class TestStoreOps:
         ind = runtime.create_store(ty.point_type(ndim), tgt_shape)
         runtime.issue_fill(ind, Scalar((0,) * ndim, ty.point_type(ndim)))
         runtime.issue_gather(out, store, ind)
-        assert np.all(np.in1d(out_np, arr_np)[: min(len(out_np), len(arr_np))])
+        assert (
+            np.isin(out_np, arr_np).ravel()[: min(len(out_np), len(arr_np))]
+        ).all()
 
     @pytest.mark.parametrize("src_shape, tgt_shape", BROADCAST_SHAPES, ids=str)
     def test_issue_scatter(
@@ -112,7 +115,7 @@ class TestStoreOps:
         ind = runtime.create_store(ty.point_type(ndim), src_shape)
         runtime.issue_fill(ind, Scalar((0,) * ndim, ty.point_type(ndim)))
         runtime.issue_scatter(out, ind, store)
-        assert np.in1d(out_np, arr_np)[0]
+        assert np.isin(out_np, arr_np).ravel()[0]
 
     @pytest.mark.parametrize("src_shape, tgt_shape", BROADCAST_SHAPES, ids=str)
     def test_issue_scatter_gather(
@@ -136,7 +139,7 @@ class TestStoreOps:
             Scalar((0,) * tgt_ndim, ty.point_type(tgt_ndim)),
         )
         runtime.issue_scatter_gather(out, tgt_ind, store, src_ind)
-        assert np.in1d(out_np, arr_np)[0]
+        assert np.isin(out_np, arr_np).ravel()[0]
 
     @pytest.mark.parametrize(
         "dtype, val", zip(ARRAY_TYPES, SCALAR_VALS), ids=str
@@ -275,3 +278,9 @@ class TestStoreOpsErrors:
             runtime.tree_reduce(
                 runtime.core_library, tasks.zeros_task.task_id, store
             )
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(pytest.main(sys.argv))

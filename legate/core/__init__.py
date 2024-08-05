@@ -36,6 +36,7 @@ from ._lib.utilities.typedefs import (
     LocalTaskID,
     LocalRedopID,
     GlobalRedopID,
+    VariantCode,
 )
 from ._lib.data.inline_allocation import InlineAllocation
 from ._lib.data.logical_array import LogicalArray

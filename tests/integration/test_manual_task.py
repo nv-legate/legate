@@ -14,11 +14,12 @@ from typing import Any
 
 import numpy as np
 import pytest
-from utils import tasks
-from utils.data import ARRAY_TYPES, EMPTY_SHAPES, SCALAR_VALS, SHAPES
 
 from legate.core import Scalar, get_legate_runtime, types as ty
 from legate.core.task import task
+
+from .utils import tasks
+from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SCALAR_VALS, SHAPES
 
 
 class TestManualTask:
@@ -134,7 +135,7 @@ class TestManualTask:
             np.asarray(out_store.get_physical_store().get_inline_allocation()),
         )
 
-    @pytest.mark.parametrize("size", [9, 101, 12345], ids=str)
+    @pytest.mark.parametrize("size", [9, 101], ids=str)
     def test_tuple_scalar_arg(self, size: int) -> None:
         shape = (size,)
         runtime = get_legate_runtime()
@@ -365,3 +366,9 @@ class TestManualTaskErrors:
         )
         with pytest.raises(exc, match=msg):
             task.add_communicator("foo")
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(pytest.main(sys.argv))

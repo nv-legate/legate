@@ -14,14 +14,6 @@ from typing import Any, Type
 
 import numpy as np
 import pytest
-from utils import tasks, utils
-from utils.data import (
-    ARRAY_TYPES,
-    EMPTY_SHAPES,
-    LARGE_SHAPES,
-    SCALAR_VALS,
-    SHAPES,
-)
 
 from legate.core import (
     ImageComputationHint,
@@ -34,6 +26,15 @@ from legate.core import (
     types as ty,
 )
 from legate.core.task import task
+
+from .utils import tasks, utils
+from .utils.data import (
+    ARRAY_TYPES,
+    EMPTY_SHAPES,
+    LARGE_SHAPES,
+    SCALAR_VALS,
+    SHAPES,
+)
 
 
 class TestAutoTask:
@@ -588,3 +589,9 @@ class TestAutoTaskConstraintsErrors:
         with pytest.raises(ValueError, match=msg):
             auto_task.execute()
         runtime.issue_execution_fence(block=True)
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(pytest.main(sys.argv))

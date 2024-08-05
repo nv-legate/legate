@@ -380,3 +380,9 @@ class TestLogicalStoreOperationErrors:
             partition.get_child_store(
                 *[idx - 1 if idx > 0 else 0 for idx in partition.color_shape]
             )
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(pytest.main(sys.argv))

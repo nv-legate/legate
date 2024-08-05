@@ -12,11 +12,12 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from utils import utils
-from utils.data import ARRAY_TYPES, EMPTY_SHAPES, SHAPES
 
 import legate.core.types as ty
 from legate.core import LEGATE_MAX_DIM, LogicalArray, get_legate_runtime
+
+from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SHAPES
+from .utils.utils import random_array_and_store
 
 
 class TestArrayCreation:
@@ -26,7 +27,7 @@ class TestArrayCreation:
         self, shape: tuple[int, ...], dtype: ty.Type
     ) -> None:
         runtime = get_legate_runtime()
-        np_arr0, store = utils.random_array_and_store(shape)
+        np_arr0, store = random_array_and_store(shape)
         lg_arr1 = LogicalArray.from_store(store)
         np_arr1 = np.asarray(lg_arr1.get_physical_array())
         lg_arr2 = runtime.create_array_like(lg_arr1, dtype)

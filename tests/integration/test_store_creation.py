@@ -14,9 +14,10 @@ from typing import Any
 
 import numpy as np
 import pytest
-from utils.data import ARRAY_TYPES, SCALAR_VALS
 
 from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
+
+from .utils.data import ARRAY_TYPES, SCALAR_VALS
 
 
 class TestStoreCreation:
@@ -132,3 +133,9 @@ class TestStoreCreationErrors:
         store = runtime.create_store(ty.int64)
         with pytest.raises(ValueError, match=msg):
             store.get_physical_store()
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(pytest.main(sys.argv))

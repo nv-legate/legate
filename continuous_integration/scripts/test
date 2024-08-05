@@ -78,6 +78,7 @@ run_test_or_analysis() {
               return 1
             else
               pytest tests/unit
+              pytest tests/integration
             fi
 
             ;;

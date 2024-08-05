@@ -16,3 +16,7 @@
 add_subdirectory(hello)
 add_subdirectory(io)
 add_subdirectory(reduction)
+add_subdirectory(region_manager)
+add_subdirectory(registry)
+add_subdirectory(scoping)
+add_subdirectory(tree_reduce)
