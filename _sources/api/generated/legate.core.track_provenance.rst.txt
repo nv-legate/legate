@@ -1,6 +1,0 @@
-﻿legate.core.track\_provenance
-=============================
-
-.. currentmodule:: legate.core
-
-.. autofunction:: track_provenance

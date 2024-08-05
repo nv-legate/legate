@@ -1,6 +1,0 @@
-﻿legate.core.ProcessorRange.empty
-================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: ProcessorRange.empty

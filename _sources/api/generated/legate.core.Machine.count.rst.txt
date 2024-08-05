@@ -1,6 +1,0 @@
-﻿legate.core.Machine.count
-=========================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Machine.count

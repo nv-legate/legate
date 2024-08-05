@@ -1,6 +1,0 @@
-﻿legate.core.LogicalStore.slice
-==============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: LogicalStore.slice

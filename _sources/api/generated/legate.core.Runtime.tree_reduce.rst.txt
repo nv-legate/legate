@@ -1,6 +1,0 @@
-﻿legate.core.Runtime.tree\_reduce
-================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Runtime.tree_reduce

@@ -1,6 +1,0 @@
-﻿legate.core.Machine.only
-========================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Machine.only

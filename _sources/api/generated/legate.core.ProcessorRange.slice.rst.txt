@@ -1,6 +1,0 @@
-﻿legate.core.ProcessorRange.slice
-================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: ProcessorRange.slice

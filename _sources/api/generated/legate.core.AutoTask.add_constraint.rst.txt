@@ -1,6 +1,0 @@
-﻿legate.core.AutoTask.add\_constraint
-====================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: AutoTask.add_constraint

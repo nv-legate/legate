@@ -1,6 +1,0 @@
-﻿legate.core.Runtime.create\_auto\_task
-======================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Runtime.create_auto_task

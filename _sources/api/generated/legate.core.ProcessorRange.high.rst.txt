@@ -1,6 +1,0 @@
-﻿legate.core.ProcessorRange.high
-===============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: ProcessorRange.high

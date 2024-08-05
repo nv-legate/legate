@@ -1,6 +1,0 @@
-﻿legate.core.ManualTask.execute
-==============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: ManualTask.execute

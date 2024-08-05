@@ -1,6 +1,0 @@
-﻿legate.core.AutoTask.declare\_partition
-=======================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: AutoTask.declare_partition

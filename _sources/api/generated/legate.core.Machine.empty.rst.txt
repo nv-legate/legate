@@ -1,6 +1,0 @@
-﻿legate.core.Machine.empty
-=========================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: Machine.empty

@@ -1,6 +1,0 @@
-﻿legate.core.ProcessorRange.\_\_and\_\_
-======================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: ProcessorRange.__and__

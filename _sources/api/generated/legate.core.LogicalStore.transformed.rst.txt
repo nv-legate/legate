@@ -1,6 +1,0 @@
-﻿legate.core.LogicalStore.transformed
-====================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: LogicalStore.transformed

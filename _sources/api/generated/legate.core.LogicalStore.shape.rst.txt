@@ -1,6 +1,0 @@
-﻿legate.core.LogicalStore.shape
-==============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: LogicalStore.shape

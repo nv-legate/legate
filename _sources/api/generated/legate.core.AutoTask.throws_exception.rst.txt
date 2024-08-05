@@ -1,6 +1,0 @@
-﻿legate.core.AutoTask.throws\_exception
-======================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: AutoTask.throws_exception

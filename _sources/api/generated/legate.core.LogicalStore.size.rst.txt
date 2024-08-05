@@ -1,6 +1,0 @@
-﻿legate.core.LogicalStore.size
-=============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: LogicalStore.size

@@ -1,6 +1,0 @@
-﻿legate.core.LogicalStorePartition.store
-=======================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: LogicalStorePartition.store

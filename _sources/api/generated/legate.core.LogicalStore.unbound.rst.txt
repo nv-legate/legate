@@ -1,6 +1,0 @@
-﻿legate.core.LogicalStore.unbound
-================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: LogicalStore.unbound

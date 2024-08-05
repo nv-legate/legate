@@ -1,6 +1,0 @@
-﻿legate.core.AutoTask.add\_scalar\_arg
-=====================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: AutoTask.add_scalar_arg
