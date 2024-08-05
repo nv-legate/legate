@@ -28,16 +28,18 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::load_refcount
 }
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::increment_refcount_(
-  std::atomic<ref_count_type>& refcount) noexcept
+  std::atomic<ref_count_type>* refcount) noexcept
 {
-  return refcount.fetch_add(1, std::memory_order_relaxed) + 1;
+  return refcount->fetch_add(1, std::memory_order_relaxed) + 1;
 }
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::decrement_refcount_(
-  std::atomic<ref_count_type>& refcount) noexcept
+  std::atomic<ref_count_type>* refcount) noexcept
 {
-  LEGATE_ASSERT(refcount > 0);
-  return refcount.fetch_sub(1, std::memory_order_acq_rel) - 1;
+  const auto v = refcount->fetch_sub(1, std::memory_order_acq_rel);
+
+  LEGATE_ASSERT(v > 0);
+  return v - 1;
 }
 
 inline void ControlBlockBase::maybe_destroy_control_block() noexcept
@@ -64,32 +66,32 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_ref_cnt(
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::strong_ref() noexcept
 {
-  return increment_refcount_(strong_refs_);
+  return increment_refcount_(&strong_refs_);
 }
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::weak_ref() noexcept
 {
-  return increment_refcount_(weak_refs_);
+  return increment_refcount_(&weak_refs_);
 }
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_ref() noexcept
 {
-  return increment_refcount_(user_refs_);
+  return increment_refcount_(&user_refs_);
 }
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::strong_deref() noexcept
 {
-  return decrement_refcount_(strong_refs_);
+  return decrement_refcount_(&strong_refs_);
 }
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::weak_deref() noexcept
 {
-  return decrement_refcount_(weak_refs_);
+  return decrement_refcount_(&weak_refs_);
 }
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::user_deref() noexcept
 {
-  return decrement_refcount_(user_refs_);
+  return decrement_refcount_(&user_refs_);
 }
 
 // ==========================================================================================

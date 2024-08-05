@@ -57,9 +57,9 @@ class ControlBlockBase {
   [[nodiscard]] static ref_count_type load_refcount_(
     const std::atomic<ref_count_type>& refcount) noexcept;
   [[nodiscard]] static ref_count_type increment_refcount_(
-    std::atomic<ref_count_type>& refcount) noexcept;
+    std::atomic<ref_count_type>* refcount) noexcept;
   [[nodiscard]] static ref_count_type decrement_refcount_(
-    std::atomic<ref_count_type>& refcount) noexcept;
+    std::atomic<ref_count_type>* refcount) noexcept;
 
   std::atomic<ref_count_type> strong_refs_{1};  // The number of InternalSharedPtr's
   std::atomic<ref_count_type> weak_refs_{};     // The number of InternalWeakPtr
