@@ -74,9 +74,9 @@ void ScatterGather::validate()
 
 void ScatterGather::launch(Strategy* p_strategy)
 {
-  auto& strategy     = *p_strategy;
-  auto launcher      = CopyLauncher{machine_, priority()};
-  auto launch_domain = strategy.launch_domain(this);
+  auto& strategy       = *p_strategy;
+  auto launcher        = CopyLauncher{machine_, priority()};
+  auto&& launch_domain = strategy.launch_domain(this);
 
   launcher.add_input(source_.store, create_store_projection_(strategy, launch_domain, source_));
   launcher.add_source_indirect(source_indirect_.store,

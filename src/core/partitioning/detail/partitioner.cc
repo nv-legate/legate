@@ -21,85 +21,108 @@
 #include "core/runtime/detail/runtime.h"
 
 #include <algorithm>
-#include <set>
 #include <tuple>
 
 namespace legate::detail {
 
-////////////////////////////////////////////////////
-// legate::detail::LaunchDomainResolver
-////////////////////////////////////////////////////
+namespace {
 
 class LaunchDomainResolver {
-  static constexpr std::uint32_t UNSET = -1U;
-
  public:
   void record_launch_domain(const Domain& launch_domain);
   void record_unbound_store(std::uint32_t unbound_dim);
-  void set_must_be_sequential(bool must_be_sequential) { must_be_sequential_ = must_be_sequential; }
+  void set_must_be_sequential(bool must_be_sequential);
 
   [[nodiscard]] Domain resolve_launch_domain() const;
 
  private:
+  template <typename T>
+  static void set_min_optional_(const T& value, bool* on_change_flag, std::optional<T>* opt);
+
   bool must_be_sequential_{};
   bool must_be_1d_{};
-  std::uint32_t unbound_dim_{UNSET};
-  std::set<Domain> launch_domains_{};
-  std::set<std::int64_t> launch_volumes_{};
+  std::optional<std::uint32_t> unbound_dim_{};
+  std::optional<Domain> launch_domain_{};
+  std::optional<std::size_t> launch_volume_{};
 };
+
+// ==========================================================================================
+
+template <typename T>
+void LaunchDomainResolver::set_min_optional_(const T& value,
+                                             bool* on_change_flag,
+                                             std::optional<T>* opt)
+{
+  if (opt->has_value()) {
+    if (*opt != value) {
+      *on_change_flag = true;
+    }
+    *opt = std::min(value, **opt);
+  } else {
+    opt->emplace(value);
+  }
+}
+
+// ==========================================================================================
 
 void LaunchDomainResolver::record_launch_domain(const Domain& launch_domain)
 {
-  launch_domains_.insert(launch_domain);
-  launch_volumes_.insert(
-    static_cast<decltype(launch_volumes_)::value_type>(launch_domain.get_volume()));
-  if (launch_domains_.size() > 1) {
-    must_be_1d_ = true;
-  }
-  if (launch_volumes_.size() > 1) {
-    must_be_sequential_ = true;
-  }
+  set_min_optional_(launch_domain, &must_be_1d_, &launch_domain_);
+  set_min_optional_(launch_domain.get_volume(), &must_be_sequential_, &launch_volume_);
 }
 
 void LaunchDomainResolver::record_unbound_store(std::uint32_t unbound_dim)
 {
-  if (unbound_dim_ != UNSET && unbound_dim_ != unbound_dim) {
-    must_be_sequential_ = true;
+  if (unbound_dim_.has_value() && *unbound_dim_ != unbound_dim) {
+    set_must_be_sequential(true);
   } else {
     unbound_dim_ = unbound_dim;
   }
 }
 
+void LaunchDomainResolver::set_must_be_sequential(bool must_be_sequential)
+{
+  must_be_sequential_ = must_be_sequential;
+}
+
 Domain LaunchDomainResolver::resolve_launch_domain() const
 {
-  if (must_be_sequential_ || launch_domains_.empty()) {
+  if (must_be_sequential_ || !launch_domain_.has_value()) {
     return {};
   }
   if (must_be_1d_) {
-    if (unbound_dim_ != UNSET && unbound_dim_ > 1) {
+    if (unbound_dim_.value_or(0) > 1) {
       return {};
     }
-    LEGATE_ASSERT(launch_volumes_.size() == 1);
-    const std::int64_t volume = *launch_volumes_.begin();
-    return {0, volume - 1};
+    LEGATE_ASSERT(launch_volume_.has_value() && *launch_volume_ >= 1);
+    return {
+      0,
+      static_cast<coord_t>(*launch_volume_ - 1)  // NOLINT(bugprone-unchecked-optional-access)
+    };
   }
 
-  LEGATE_ASSERT(launch_domains_.size() == 1);
-  auto& launch_domain = *launch_domains_.begin();
-  if (unbound_dim_ != UNSET && launch_domain.dim != static_cast<std::int32_t>(unbound_dim_)) {
+  LEGATE_ASSERT(launch_domain_.has_value());
+
+  const auto& launch_domain = *launch_domain_;
+
+  if (unbound_dim_.has_value() && launch_domain.dim != static_cast<int>(*unbound_dim_)) {
     return {};
   }
   return launch_domain;
 }
 
+}  // namespace
+
 ////////////////////////////////////////////////////
 // legate::detail::Strategy
 ////////////////////////////////////////////////////
 
-Domain Strategy::launch_domain(const Operation* op) const
+const Domain& Strategy::launch_domain(const Operation* op) const
 {
+  static const auto empty = Domain{};
+
   auto finder = launch_domains_.find(op);
-  return finder != launch_domains_.end() ? finder->second : Domain{};
+  return finder != launch_domains_.end() ? finder->second : empty;
 }
 
 void Strategy::set_launch_domain(const Operation* op, const Domain& domain)
@@ -110,7 +133,7 @@ void Strategy::set_launch_domain(const Operation* op, const Domain& domain)
 
 void Strategy::insert(const Variable* partition_symbol, InternalSharedPtr<Partition> partition)
 {
-  LEGATE_ASSERT(assignments_.find(*partition_symbol) == assignments_.end());
+  LEGATE_ASSERT(!has_assignment(partition_symbol));
   assignments_.insert({*partition_symbol, std::move(partition)});
 }
 
@@ -132,16 +155,14 @@ bool Strategy::has_assignment(const Variable* partition_symbol) const
 
 const InternalSharedPtr<Partition>& Strategy::operator[](const Variable* partition_symbol) const
 {
-  auto finder = assignments_.find(*partition_symbol);
-
-  LEGATE_ASSERT(finder != assignments_.end());
-  return finder->second;
+  LEGATE_ASSERT(has_assignment(partition_symbol));
+  return assignments_.find(*partition_symbol)->second;
 }
 
 const std::pair<Legion::FieldSpace, Legion::FieldID>& Strategy::find_field_for_unbound_store(
   const Variable* partition_symbol) const
 {
-  auto finder = fields_for_unbound_stores_.find(*partition_symbol);
+  const auto finder = fields_for_unbound_stores_.find(*partition_symbol);
 
   LEGATE_ASSERT(finder != fields_for_unbound_stores_.end());
   return finder->second;
@@ -149,7 +170,7 @@ const std::pair<Legion::FieldSpace, Legion::FieldID>& Strategy::find_field_for_u
 
 bool Strategy::is_key_partition(const Variable* partition_symbol) const
 {
-  return key_partition_.has_value() && key_partition_.value() == partition_symbol;
+  return key_partition_.has_value() && *key_partition_ == partition_symbol;
 }
 
 void Strategy::dump() const
@@ -174,25 +195,22 @@ void Strategy::dump() const
 
 void Strategy::compute_launch_domains_(const ConstraintSolver& solver)
 {
-  std::map<const Operation*, LaunchDomainResolver> domain_resolvers;
+  std::unordered_map<const Operation*, LaunchDomainResolver> domain_resolvers;
 
   for (auto&& [part_symb, partition] : assignments_) {
-    auto* op              = part_symb.operation();
-    auto& domain_resolver = domain_resolvers[op];
+    const auto* op         = part_symb.operation();
+    auto&& domain_resolver = domain_resolvers[op];
 
     if (partition->has_launch_domain()) {
       domain_resolver.record_launch_domain(partition->launch_domain());
-      continue;
-    }
-
-    auto store = op->find_store(&part_symb);
-    if (store->unbound()) {
+    } else if (auto&& store = op->find_store(&part_symb); store->unbound()) {
       domain_resolver.record_unbound_store(store->dim());
     } else if (!op->supports_replicated_write() && solver.is_output(part_symb)) {
       domain_resolver.set_must_be_sequential(true);
     }
   }
 
+  launch_domains_.reserve(domain_resolvers.size());
   for (auto&& [op, domain_resolver] : domain_resolvers) {
     launch_domains_[op] = domain_resolver.resolve_launch_domain();
   }
@@ -200,7 +218,7 @@ void Strategy::compute_launch_domains_(const ConstraintSolver& solver)
 
 void Strategy::record_key_partition_(const Variable* partition_symbol)
 {
-  if (!key_partition_) {
+  if (!key_partition_.has_value()) {
     key_partition_ = partition_symbol;
   }
 }

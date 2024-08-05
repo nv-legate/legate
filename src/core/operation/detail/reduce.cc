@@ -54,7 +54,8 @@ Reduce::Reduce(const Library* library,
 
 void Reduce::launch(Strategy* p_strategy)
 {
-  auto& strategy     = *p_strategy;
+  auto& strategy = *p_strategy;
+  // Copy is deliberate, launch_domain is updated in the loop
   auto launch_domain = strategy.launch_domain(this);
   auto n_tasks       = launch_domain.is_valid() ? launch_domain.get_volume() : 1;
 

@@ -80,9 +80,9 @@ void Task::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
 
 void Task::launch_task_(Strategy* p_strategy)
 {
-  auto& strategy     = *p_strategy;
-  auto launcher      = detail::TaskLauncher{library_, machine_, provenance(), local_task_id()};
-  auto launch_domain = strategy.launch_domain(this);
+  auto& strategy       = *p_strategy;
+  auto launcher        = detail::TaskLauncher{library_, machine_, provenance(), local_task_id()};
+  auto&& launch_domain = strategy.launch_domain(this);
 
   launcher.set_priority(priority());
 
@@ -400,7 +400,7 @@ void AutoTask::launch(Strategy* p_strategy)
 
 void AutoTask::fixup_ranges_(Strategy& strategy)
 {
-  auto launch_domain = strategy.launch_domain(this);
+  auto&& launch_domain = strategy.launch_domain(this);
   if (!launch_domain.is_valid()) {
     return;
   }
@@ -414,7 +414,7 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
   for (auto* array : arrays_to_fixup_) {
     // TODO(wonchanl): We should pass projection functors here once we start supporting string/list
     // legate arrays in ManualTasks
-    launcher.add_output(array->to_launcher_arg_for_fixup(launch_domain, NO_ACCESS));
+    launcher.add_output(array->to_launcher_arg_for_fixup(launch_domain, LEGION_NO_ACCESS));
   }
   launcher.execute(launch_domain);
 }
