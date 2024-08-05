@@ -877,23 +877,21 @@ void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
 Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
                                                  Legion::FieldID field_id)
 {
-  Legion::RegionRequirement req(region, LEGION_READ_WRITE, EXCLUSIVE, region);
+  Legion::RegionRequirement req{region, LEGION_READ_WRITE, EXCLUSIVE, region};
+
   req.add_field(field_id);
-  auto mapper_id = core_library_->get_mapper_id();
+
   // TODO(wonchanl): We need to pass the metadata about logical store
-  Legion::InlineLauncher launcher{req, mapper_id};
+  Legion::InlineLauncher launcher{req, core_library_->get_mapper_id()};
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");
-  launcher.provenance       = get_provenance().to_string();
-  Legion::PhysicalRegion pr = legion_runtime_->map_region(legion_context_, launcher);
-  pr.wait_until_valid(true /*silence_warnings*/);
-  return pr;
+  launcher.provenance = get_provenance().to_string();
+  return legion_runtime_->map_region(legion_context_, launcher);
 }
 
 void Runtime::remap_physical_region(Legion::PhysicalRegion pr)
 {
-  legion_runtime_->remap_region(legion_context_, pr, get_provenance().data());
-  pr.wait_until_valid(true /*silence_warnings*/);
+  legion_runtime_->remap_region(legion_context_, std::move(pr), get_provenance().data());
 }
 
 void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
@@ -1276,7 +1274,11 @@ Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& fut
 void Runtime::discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id)
 {
   Legion::DiscardLauncher launcher{region, region};
+
   launcher.add_field(field_id);
+  static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
+                "Don't use to_string() below");
+  launcher.provenance = get_provenance().to_string();
   legion_runtime_->discard_fields(legion_context_, launcher);
 }
 
@@ -1908,7 +1910,7 @@ void extract_scalar_task(const void* args,
   Legion::Runtime* runtime;
   Legion::Runtime::legion_task_preamble(args, arglen, p, task, regions, legion_context, runtime);
 
-  legate::detail::show_progress(task, legion_context, runtime);
+  show_progress(task, legion_context, runtime);
 
   const detail::TaskContext context{task, variant_kind, *regions};
   auto offset = context.scalars()[0].value<std::size_t>();

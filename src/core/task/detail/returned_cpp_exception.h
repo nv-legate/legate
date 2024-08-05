@@ -14,6 +14,7 @@
 
 #include "core/task/detail/return_value.h"
 #include "core/task/detail/returned_exception_common.h"
+#include "core/utilities/detail/zstring_view.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -28,6 +29,7 @@ class ReturnedCppException {
 
   [[nodiscard]] static constexpr ExceptionKind kind();
   [[nodiscard]] std::int32_t index() const;
+  [[nodiscard]] ZStringView message() const;
   [[nodiscard]] std::uint64_t size() const;
   [[nodiscard]] bool raised() const;
 

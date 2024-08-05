@@ -18,11 +18,17 @@
 
 namespace legate::detail {
 
-inline std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::inputs() { return inputs_; }
+inline const std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::inputs() const noexcept
+{
+  return inputs_;
+}
 
-inline std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::outputs() { return outputs_; }
+inline const std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::outputs() const noexcept
+{
+  return outputs_;
+}
 
-inline std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::reductions()
+inline const std::vector<InternalSharedPtr<PhysicalArray>>& TaskContext::reductions() const noexcept
 {
   return reductions_;
 }
@@ -41,21 +47,27 @@ inline GlobalTaskID TaskContext::task_id() const noexcept
 
 inline VariantCode TaskContext::variant_kind() const noexcept { return variant_kind_; }
 
-inline bool TaskContext::is_single_task() const { return !task_->is_index_space; }
+inline bool TaskContext::is_single_task() const noexcept { return !task_->is_index_space; }
 
-inline bool TaskContext::can_raise_exception() const { return can_raise_exception_; }
+inline bool TaskContext::can_raise_exception() const noexcept { return can_raise_exception_; }
 
-inline bool TaskContext::can_elide_device_ctx_sync() const { return can_elide_device_ctx_sync_; }
+inline bool TaskContext::can_elide_device_ctx_sync() const noexcept
+{
+  return can_elide_device_ctx_sync_;
+}
 
-inline const DomainPoint& TaskContext::get_task_index() const { return task_->index_point; }
+inline const DomainPoint& TaskContext::get_task_index() const noexcept
+{
+  return task_->index_point;
+}
 
-inline const Domain& TaskContext::get_launch_domain() const { return task_->index_domain; }
+inline const Domain& TaskContext::get_launch_domain() const noexcept { return task_->index_domain; }
 
 inline void TaskContext::set_exception(ReturnedException what) { excn_ = std::move(what); }
 
 inline std::optional<ReturnedException>& TaskContext::get_exception() noexcept { return excn_; }
 
-inline const mapping::detail::Machine& TaskContext::machine() const { return machine_; }
+inline const mapping::detail::Machine& TaskContext::machine() const noexcept { return machine_; }
 
 inline std::string_view TaskContext::get_provenance() const
 {

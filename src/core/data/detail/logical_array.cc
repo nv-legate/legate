@@ -249,7 +249,7 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::child(std::uint32_t index) con
   return nullptr;
 }
 
-InternalSharedPtr<BaseLogicalArray> ListLogicalArray::descriptor() const
+const InternalSharedPtr<BaseLogicalArray>& ListLogicalArray::descriptor() const
 {
   if (unbound()) {
     throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
@@ -257,7 +257,7 @@ InternalSharedPtr<BaseLogicalArray> ListLogicalArray::descriptor() const
   return descriptor_;
 }
 
-InternalSharedPtr<LogicalArray> ListLogicalArray::vardata() const
+const InternalSharedPtr<LogicalArray>& ListLogicalArray::vardata() const
 {
   if (unbound()) {
     throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};

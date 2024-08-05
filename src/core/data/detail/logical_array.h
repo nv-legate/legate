@@ -173,8 +173,8 @@ class ListLogicalArray final : public LogicalArray {
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array() const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
-  [[nodiscard]] InternalSharedPtr<BaseLogicalArray> descriptor() const;
-  [[nodiscard]] InternalSharedPtr<LogicalArray> vardata() const;
+  [[nodiscard]] const InternalSharedPtr<BaseLogicalArray>& descriptor() const;
+  [[nodiscard]] const InternalSharedPtr<LogicalArray>& vardata() const;
 
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const override;

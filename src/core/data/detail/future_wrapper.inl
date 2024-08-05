@@ -30,6 +30,10 @@ inline bool FutureWrapper::is_read_only() const { return read_only_; }
 
 inline const Legion::Future& FutureWrapper::get_future() const { return future_; }
 
-inline const Legion::UntypedDeferredValue& FutureWrapper::get_buffer() const { return buffer_; }
+inline const Legion::UntypedDeferredValue& FutureWrapper::get_buffer() const
+{
+  LEGATE_ASSERT(!is_read_only());
+  return buffer_;
+}
 
 }  // namespace legate::detail

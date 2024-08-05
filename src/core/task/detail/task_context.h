@@ -35,24 +35,24 @@ class TaskContext {
               VariantCode variant_kind,
               const std::vector<Legion::PhysicalRegion>& regions);
 
-  [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& inputs();
-  [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& outputs();
-  [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>>& reductions();
+  [[nodiscard]] const std::vector<InternalSharedPtr<PhysicalArray>>& inputs() const noexcept;
+  [[nodiscard]] const std::vector<InternalSharedPtr<PhysicalArray>>& outputs() const noexcept;
+  [[nodiscard]] const std::vector<InternalSharedPtr<PhysicalArray>>& reductions() const noexcept;
   [[nodiscard]] const std::vector<legate::Scalar>& scalars() const noexcept;
   [[nodiscard]] const std::vector<legate::comm::Communicator>& communicators() const noexcept;
 
   [[nodiscard]] GlobalTaskID task_id() const noexcept;
   [[nodiscard]] VariantCode variant_kind() const noexcept;
-  [[nodiscard]] bool is_single_task() const;
-  [[nodiscard]] bool can_raise_exception() const;
-  [[nodiscard]] bool can_elide_device_ctx_sync() const;
-  [[nodiscard]] const DomainPoint& get_task_index() const;
-  [[nodiscard]] const Domain& get_launch_domain() const;
+  [[nodiscard]] bool is_single_task() const noexcept;
+  [[nodiscard]] bool can_raise_exception() const noexcept;
+  [[nodiscard]] bool can_elide_device_ctx_sync() const noexcept;
+  [[nodiscard]] const DomainPoint& get_task_index() const noexcept;
+  [[nodiscard]] const Domain& get_launch_domain() const noexcept;
 
   void set_exception(ReturnedException what);
   [[nodiscard]] std::optional<ReturnedException>& get_exception() noexcept;
 
-  [[nodiscard]] const mapping::detail::Machine& machine() const;
+  [[nodiscard]] const mapping::detail::Machine& machine() const noexcept;
   [[nodiscard]] std::string_view get_provenance() const;
 
   /**

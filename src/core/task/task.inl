@@ -71,8 +71,14 @@ template <VariantImpl variant_fn, VariantCode variant_kind>
                                              std::size_t userlen,
                                              Legion::Processor p)
 {
-  detail::task_wrapper(
-    variant_fn, variant_kind, task_name_(), args, arglen, userdata, userlen, std::move(p));
+  detail::task_wrapper(variant_fn,
+                       variant_kind,
+                       task_name_().as_string_view(),
+                       args,
+                       arglen,
+                       userdata,
+                       userlen,
+                       std::move(p));
 }
 
 }  // namespace legate

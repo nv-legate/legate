@@ -101,6 +101,7 @@ Storage::Storage(tuple<std::uint64_t> extents,
   }
 }
 
+// Leak is intentional
 // NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
 Storage::~Storage()
 {
@@ -314,8 +315,8 @@ void Storage::set_future_map(Legion::FutureMap future_map, std::size_t scalar_of
 RegionField Storage::map()
 {
   LEGATE_ASSERT(Kind::REGION_FIELD == kind_);
-  auto region_field = get_region_field();
-  auto mapped       = region_field->map();
+  auto&& region_field = get_region_field();
+  auto mapped         = region_field->map();
   // Set the right subregion so the physical store can see the right domain
   mapped.set_logical_region(region_field->region());
   return mapped;

@@ -29,10 +29,12 @@ cdef extern from "core/task/task_context.h" namespace "legate" nogil:
         _PhysicalArray input(uint32_t) const
         _PhysicalArray output(uint32_t) const
         _PhysicalArray reduction(uint32_t) const
+        const _Scalar &scalar(uint32_t) const
         size_t num_inputs() const
         size_t num_outputs() const
         size_t num_reductions() const
         const std_vector[_Scalar]& scalars() except +
+        size_t num_scalars() const
 
 
 cdef class TaskContext(Unconstructable):

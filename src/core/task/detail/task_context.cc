@@ -18,6 +18,9 @@
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/deserializer.h"
 
+#include <algorithm>
+#include <iterator>
+
 namespace legate::detail {
 
 TaskContext::TaskContext(const Legion::Task* task,
@@ -36,9 +39,19 @@ TaskContext::TaskContext(const Legion::Task* task,
   reductions_ = dez.unpack_arrays();
   scalars_    = dez.unpack_scalars();
 
-  // Make copies of stores that we need to postprocess, as clients might move the stores away
+  // Make copies of stores that we need to postprocess, as clients might move the stores
+  // away. Use a temporary vector here to amortize the push-backs from each populate_stores()
+  // call.
+  std::vector<InternalSharedPtr<PhysicalStore>> stores_cache;
+  const auto get_stores = [&](InternalSharedPtr<PhysicalArray>& phys_array)
+    -> std::vector<InternalSharedPtr<PhysicalStore>>& {
+    stores_cache.clear();
+    phys_array->populate_stores(stores_cache);
+    return stores_cache;
+  };
+
   for (auto&& output : outputs_) {
-    for (auto&& store : output->stores()) {
+    for (auto&& store : get_stores(output)) {
       if (store->is_unbound_store()) {
         unbound_stores_.push_back(std::move(store));
       } else if (store->is_future()) {
@@ -47,11 +60,12 @@ TaskContext::TaskContext(const Legion::Task* task,
     }
   }
   for (auto&& reduction : reductions_) {
-    for (auto&& store : reduction->stores()) {
-      if (store->is_future()) {
-        scalar_stores_.push_back(std::move(store));
-      }
-    }
+    auto&& stores = get_stores(reduction);
+
+    std::copy_if(std::make_move_iterator(stores.begin()),
+                 std::make_move_iterator(stores.end()),
+                 std::back_inserter(scalar_stores_),
+                 [](const InternalSharedPtr<PhysicalStore>& store) { return store->is_future(); });
   }
 
   can_raise_exception_       = dez.unpack<bool>();

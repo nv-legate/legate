@@ -61,7 +61,7 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
 
 void task_wrapper(VariantImpl variant_impl,
                   VariantCode variant_kind,
-                  std::optional<ZStringView> task_name,
+                  std::optional<std::string_view> task_name,
                   const void* args,
                   std::size_t arglen,
                   const void* /*userdata*/,
@@ -75,7 +75,10 @@ void task_wrapper(VariantImpl variant_impl,
   Legion::Runtime* runtime;
   Legion::Runtime::legion_task_preamble(args, arglen, p, task, regions, legion_context, runtime);
   const auto get_task_name = [&] {
-    return task_name.has_value() ? task_name.value() : task->get_task_name();
+    if (!task_name.has_value()) {
+      task_name = task->get_task_name();
+    }
+    return *task_name;
   };
 
   // Cannot use if (LEGATE_DEFINED(...)) here since nvtx::Range is a RAII class which begins and

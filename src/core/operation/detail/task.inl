@@ -28,9 +28,13 @@ inline Task::ArrayArg::ArrayArg(InternalSharedPtr<LogicalArray> _array,
 
 // ==========================================================================================
 
-inline bool Task::always_flush() const { return can_throw_exception_; }
+inline bool Task::always_flush() const { return can_throw_exception(); }
 
 inline bool Task::supports_replicated_write() const { return true; }
+
+inline bool Task::can_throw_exception() const { return can_throw_exception_; }
+
+inline bool Task::can_elide_device_ctx_sync() const { return can_elide_device_ctx_sync_; }
 
 inline const Library* Task::library() const { return library_; }
 

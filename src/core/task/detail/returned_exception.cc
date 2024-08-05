@@ -74,6 +74,11 @@ std::string ReturnedException::to_string() const
   return visit([&](auto&& rexn) { return rexn.to_string(); });
 }
 
+ExceptionKind ReturnedException::kind() const
+{
+  return visit([&](auto&& rexn) { return rexn.kind(); });
+}
+
 void ReturnedException::throw_exception()
 {
   visit([&](auto&& rexn) {

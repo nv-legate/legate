@@ -12,9 +12,7 @@
 
 #include "core/operation/task.h"
 
-#include "core/data/detail/scalar.h"
 #include "core/operation/detail/task.h"
-#include "core/partitioning/detail/constraint.h"
 
 namespace legate {
 
@@ -22,7 +20,7 @@ namespace legate {
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-[[nodiscard]] const SharedPtr<detail::AutoTask>& AutoTask::impl_() const { return pimpl_; }
+const SharedPtr<detail::AutoTask>& AutoTask::impl_() const { return pimpl_; }
 
 // ==========================================================================================
 
@@ -111,7 +109,7 @@ AutoTask::~AutoTask() noexcept = default;
 // legate::ManualTask
 ////////////////////////////////////////////////////
 
-[[nodiscard]] const SharedPtr<detail::ManualTask>& ManualTask::impl_() const { return pimpl_; }
+const SharedPtr<detail::ManualTask>& ManualTask::impl_() const { return pimpl_; }
 
 // ==========================================================================================
 

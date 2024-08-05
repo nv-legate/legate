@@ -96,8 +96,6 @@ class BasicZStringView : private std::basic_string_view<CharT, TraitsT> {
   using base_view_type::compare;
   using base_view_type::copy;
   using base_view_type::substr;
-
- private:
 };
 
 template <typename C, typename T>

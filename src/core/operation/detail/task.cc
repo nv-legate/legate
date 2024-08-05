@@ -38,7 +38,15 @@ Task::Task(const Library* library,
            std::uint64_t unique_id,
            std::int32_t priority,
            mapping::detail::Machine machine)
-  : Operation{unique_id, priority, std::move(machine)}, library_{library}, task_id_{task_id}
+  : Operation{unique_id, priority, std::move(machine)},
+    library_{library},
+    task_id_{task_id},
+    can_elide_device_ctx_sync_{[&] {
+      const auto variant =
+        this->library()->find_task(local_task_id())->find_variant(VariantCode::GPU);
+
+      return variant.has_value() && variant->get().options.elide_device_ctx_sync;
+    }()}
 {
 }
 
@@ -128,16 +136,12 @@ void Task::launch_task_(Strategy* p_strategy)
 
   launcher.set_side_effect(has_side_effect_);
   launcher.set_concurrent(concurrent_);
-  launcher.throws_exception(can_throw_exception_);
-  launcher.can_elide_device_ctx_sync([&] {
-    const auto variant = library()->find_task(local_task_id())->find_variant(VariantCode::GPU);
-
-    return variant.has_value() && variant->get().options.elide_device_ctx_sync;
-  }());
+  launcher.throws_exception(can_throw_exception());
+  launcher.can_elide_device_ctx_sync(can_elide_device_ctx_sync());
 
   // TODO(wonchanl): Once we implement a precise interference checker, this workaround can be
   // removed
-  auto has_projection = [](auto& args) {
+  constexpr auto has_projection = [](auto& args) {
     return std::any_of(
       args.begin(), args.end(), [](const auto& arg) { return arg.projection.has_value(); });
   };
@@ -167,7 +171,7 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
   auto num_unbound_outs = unbound_outputs_.size();
 
   auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
-               static_cast<std::size_t>(can_throw_exception_);
+               static_cast<std::size_t>(can_throw_exception());
   if (0 == total) {
     return;
   }
@@ -176,7 +180,7 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
       scalar_outputs_.front()->set_future(result);
     } else if (1 == num_scalar_reds) {
       scalar_reductions_.front().first->set_future(result);
-    } else if (can_throw_exception_) {
+    } else if (can_throw_exception()) {
       detail::Runtime::get_runtime()->record_pending_exception(result);
     } else {
       LEGATE_ASSERT(1 == num_unbound_outs);
@@ -195,7 +199,7 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
     for (auto&& [store, _] : scalar_reductions_) {
       store->set_future(result, compute_offset(store));
     }
-    if (can_throw_exception_) {
+    if (can_throw_exception()) {
       runtime->record_pending_exception(runtime->extract_scalar(
         result, return_layout.total_size(), std::numeric_limits<std::uint32_t>::max()));
     }
@@ -209,7 +213,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
   auto num_unbound_outs = unbound_outputs_.size();
 
   auto total = num_scalar_outs + num_scalar_reds + num_unbound_outs +
-               static_cast<std::size_t>(can_throw_exception_);
+               static_cast<std::size_t>(can_throw_exception());
   if (0 == total) {
     return;
   }
@@ -222,7 +226,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
       auto& [store, redop] = scalar_reductions_.front();
 
       store->set_future(runtime->reduce_future_map(result, redop, store->get_future()));
-    } else if (can_throw_exception_) {
+    } else if (can_throw_exception()) {
       runtime->record_pending_exception(runtime->reduce_exception_future_map(result));
     } else {
       LEGATE_ASSERT(1 == num_unbound_outs);
@@ -248,7 +252,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
 
       store->set_future(runtime->reduce_future_map(values, redop, store->get_future()));
     }
-    if (can_throw_exception_) {
+    if (can_throw_exception()) {
       auto exn_fm = runtime->extract_scalar(result,
                                             return_layout.total_size(),
                                             std::numeric_limits<std::uint32_t>::max(),

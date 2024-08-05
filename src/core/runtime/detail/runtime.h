@@ -374,7 +374,7 @@ class Runtime {
   std::unordered_map<ShardingDesc, Legion::ShardingID, hasher<ShardingDesc>>
     registered_shardings_{};
 
-  std::vector<InternalSharedPtr<Operation>> operations_;
+  std::vector<InternalSharedPtr<Operation>> operations_{};
   std::size_t window_size_{1};
   std::uint64_t cur_op_id_{};
 

@@ -22,7 +22,7 @@ TaskTarget to_target(Processor::Kind kind)
     case Processor::Kind::TOC_PROC: return TaskTarget::GPU;
     case Processor::Kind::OMP_PROC: return TaskTarget::OMP;
     case Processor::Kind::LOC_PROC: return TaskTarget::CPU;
-    default: LEGATE_ABORT("Unhandled Processor::Kind " << static_cast<int>(kind));
+    default: LEGATE_ABORT("Unhandled Processor::Kind " << traits::detail::to_underlying(kind));
   }
   return TaskTarget::CPU;
 }
@@ -34,7 +34,7 @@ StoreTarget to_target(Memory::Kind kind)
     case Memory::Kind::GPU_FB_MEM: return StoreTarget::FBMEM;
     case Memory::Kind::Z_COPY_MEM: return StoreTarget::ZCMEM;
     case Memory::Kind::SOCKET_MEM: return StoreTarget::SOCKETMEM;
-    default: LEGATE_ABORT("Unhandled Processor::Kind " << static_cast<int>(kind));
+    default: LEGATE_ABORT("Unhandled Processor::Kind " << traits::detail::to_underlying(kind));
   }
   return StoreTarget::SYSMEM;
 }
@@ -69,6 +69,8 @@ VariantCode to_variant_code(TaskTarget target)
   }
   return VariantCode::CPU;
 }
+
+VariantCode to_variant_code(Processor::Kind kind) { return to_variant_code(to_target(kind)); }
 
 void DimOrdering::populate_dimension_ordering(std::uint32_t ndim,
                                               std::vector<Legion::DimensionKind>& ordering) const

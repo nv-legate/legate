@@ -40,6 +40,8 @@ cdef class TaskContext(Unconstructable):
 
     @property
     def inputs(self) -> tuple[PhysicalArray, ...]:
+        cdef int i
+
         if self._inputs is None:
             self._inputs = tuple(
                 PhysicalArray.from_handle(self._handle.input(i))
@@ -49,6 +51,8 @@ cdef class TaskContext(Unconstructable):
 
     @property
     def outputs(self) -> tuple[PhysicalArray, ...]:
+        cdef int i
+
         if self._outputs is None:
             self._outputs = tuple(
                 PhysicalArray.from_handle(self._handle.output(i))
@@ -58,6 +62,8 @@ cdef class TaskContext(Unconstructable):
 
     @property
     def reductions(self) -> tuple[PhysicalArray, ...]:
+        cdef int i
+
         if self._reductions is None:
             self._reductions = tuple(
                 PhysicalArray.from_handle(self._handle.reduction(i))
@@ -67,9 +73,12 @@ cdef class TaskContext(Unconstructable):
 
     @property
     def scalars(self) -> tuple[Scalar, ...]:
+        cdef int i
+
         if self._scalars is None:
             self._scalars = tuple(
-                Scalar.from_handle(a) for a in self._handle.scalars()
+                Scalar.from_handle(self._handle.scalar(i))
+                for i in range(self._handle.num_scalars())
             )
         return self._scalars
 

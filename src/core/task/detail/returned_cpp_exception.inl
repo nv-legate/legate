@@ -23,13 +23,14 @@ inline ReturnedCppException::ReturnedCppException(std::int32_t index, std::strin
 
 inline std::int32_t ReturnedCppException::index() const { return index_; }
 
+inline ZStringView ReturnedCppException::message() const { return message_; }
+
 inline std::uint64_t ReturnedCppException::size() const
 {
-  return static_cast<std::uint64_t>(message_.size());
+  return static_cast<std::uint64_t>(message().size());
 }
 
-// NOLINTNEXTLINE(readability-redundant-inline-specifier)
-inline bool ReturnedCppException::raised() const { return !message_.empty(); }
+inline bool ReturnedCppException::raised() const { return !message().empty(); }
 
 // NOLINTNEXTLINE(readability-redundant-inline-specifier)
 inline constexpr ExceptionKind ReturnedCppException::kind() { return ExceptionKind::CPP; }

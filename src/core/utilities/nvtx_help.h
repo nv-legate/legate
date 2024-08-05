@@ -12,16 +12,18 @@
 
 #pragma once
 
+#include "core/utilities/macros.h"
+
 #include "legate_defines.h"
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
 #include <nvtx3/nvToolsExt.h>
 #else
 using nvtxRangeId_t = char;
-// NOLINTBEGIN(readability-redundant-inline-specifier,readability-identifier-naming)
-inline constexpr nvtxRangeId_t nvtxRangeStartA(const char*) noexcept { return 0; }
-inline constexpr void nvtxRangeEnd(nvtxRangeId_t) noexcept {}
-// NOLINTEND(readability-redundant-inline-specifier,readability-identifier-naming)
+// NOLINTBEGIN(readability-identifier-naming)
+constexpr nvtxRangeId_t nvtxRangeStartA(const char*) noexcept { return 0; }
+constexpr void nvtxRangeEnd(nvtxRangeId_t) noexcept {}
+// NOLINTEND(readability-identifier-naming)
 #endif
 
 namespace legate::nvtx {
@@ -29,6 +31,12 @@ namespace legate::nvtx {
 class Range {
  public:
   explicit Range(const char* message) noexcept : range_{nvtxRangeStartA(message)} {}
+
+  Range()                        = delete;
+  Range(const Range&)            = delete;
+  Range& operator=(const Range&) = delete;
+  Range(Range&&)                 = delete;
+  Range& operator=(Range&&)      = delete;
 
   ~Range() noexcept { nvtxRangeEnd(range_); }
 

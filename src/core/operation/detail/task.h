@@ -79,6 +79,8 @@ class Task : public Operation {
   [[nodiscard]] std::string to_string() const override;
   [[nodiscard]] bool always_flush() const override;
   [[nodiscard]] bool supports_replicated_write() const override;
+  [[nodiscard]] bool can_throw_exception() const;
+  [[nodiscard]] bool can_elide_device_ctx_sync() const;
   [[nodiscard]] const Library* library() const;
   [[nodiscard]] LocalTaskID local_task_id() const;
 
@@ -88,6 +90,7 @@ class Task : public Operation {
   bool concurrent_{};
   bool has_side_effect_{};
   bool can_throw_exception_{};
+  bool can_elide_device_ctx_sync_{};
   std::vector<InternalSharedPtr<Scalar>> scalars_{};
   std::vector<ArrayArg> inputs_{};
   std::vector<ArrayArg> outputs_{};

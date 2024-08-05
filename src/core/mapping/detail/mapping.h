@@ -14,7 +14,9 @@
 
 #include "core/mapping/detail/store.h"
 #include "core/mapping/mapping.h"
+#include "core/utilities/typedefs.h"
 
+#include <cstdint>
 #include <memory>
 #include <set>
 #include <vector>
@@ -30,6 +32,8 @@ namespace legate::mapping::detail {
 [[nodiscard]] Memory::Kind to_kind(StoreTarget target);
 
 [[nodiscard]] VariantCode to_variant_code(TaskTarget target);
+
+[[nodiscard]] VariantCode to_variant_code(Processor::Kind kind);
 
 class DimOrdering {
  public:

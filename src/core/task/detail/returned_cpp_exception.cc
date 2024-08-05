@@ -13,6 +13,7 @@
 #include "core/task/detail/returned_cpp_exception.h"
 
 #include "core/task/exception.h"
+#include "core/utilities/detail/formatters.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -56,7 +57,7 @@ void ReturnedCppException::legion_serialize(void* buffer) const
   if (raised()) {
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, index());
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, size());
-    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, size(), message_.data());
+    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, size(), message().data());
   }
 }
 
@@ -101,7 +102,7 @@ ReturnValue ReturnedCppException::pack() const
 
 std::string ReturnedCppException::to_string() const
 {
-  return fmt::format("ReturnedCppException(index = {}, message = {})", index_, message_);
+  return fmt::format("ReturnedCppException(index = {}, message = {})", index(), message());
 }
 
 }  // namespace legate::detail

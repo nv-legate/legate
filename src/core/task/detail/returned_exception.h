@@ -59,6 +59,7 @@ class ReturnedException {
 
   [[nodiscard]] ReturnValue pack() const;
   [[nodiscard]] std::string to_string() const;
+  [[nodiscard]] ExceptionKind kind() const;
 
   [[noreturn]] void throw_exception();
 
