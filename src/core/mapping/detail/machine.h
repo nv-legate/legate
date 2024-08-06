@@ -118,6 +118,8 @@ class LocalMachine {
 
   [[nodiscard]] std::size_t total_frame_buffer_size() const;
   [[nodiscard]] std::size_t total_socket_memory_size() const;
+  [[nodiscard]] std::size_t total_system_memory_size() const;
+  [[nodiscard]] std::size_t calculate_field_reuse_size() const;
 
   [[nodiscard]] bool has_cpus() const;
   [[nodiscard]] bool has_gpus() const;

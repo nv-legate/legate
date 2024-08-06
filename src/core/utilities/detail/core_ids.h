@@ -93,18 +93,6 @@ enum class CoreShardID : std::underlying_type_t<CoreProjectionOp> {
     static_cast<std::underlying_type_t<CoreProjectionOp>>(CoreProjectionOp::MAX_FUNCTOR),
 };
 
-enum class CoreTunable : Legion::TunableID {  // NOLINT(performance-enum-size)
-  TOTAL_CPUS = 12345,
-  TOTAL_OMPS,
-  TOTAL_GPUS,
-  NUM_NODES,
-  HAS_SOCKET_MEM,
-  MIN_SHARD_VOLUME,
-  WINDOW_SIZE,
-  FIELD_REUSE_SIZE,
-  MAX_LRU_LENGTH,
-};
-
 namespace CoreReductionOp {  // NOLINT(readability-identifier-naming)
 
 enum CoreReductionOp : std::underlying_type_t<LocalRedopID> {  // NOLINT(performance-enum-size)

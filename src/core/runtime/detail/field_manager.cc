@@ -185,10 +185,11 @@ std::uint32_t ConsensusMatchingFieldManager::calculate_match_credit_(
     // completed), therefore make a worst-case assumption.
     return Runtime::get_runtime()->field_reuse_freq();
   }
-  const auto size = shape->volume() * field_size;
-  if (size > Config::max_field_reuse_size) {
-    LEGATE_CHECK(Config::max_field_reuse_size > 0);
-    return (size + Config::max_field_reuse_size - 1) / Config::max_field_reuse_size;
+  const auto size             = shape->volume() * field_size;
+  const auto field_reuse_size = Runtime::get_runtime()->field_reuse_size();
+  if (size > field_reuse_size) {
+    LEGATE_CHECK(field_reuse_size > 0);
+    return (size + field_reuse_size - 1) / field_reuse_size;
   }
   return 1;
 }

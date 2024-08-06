@@ -18,15 +18,37 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/detail/zip.h"
+#include "core/utilities/env.h"
 
 #include <algorithm>
 #include <cmath>
 
 namespace legate::detail {
 
-PartitionManager::PartitionManager(Runtime* runtime)
-  : min_shard_volume_{runtime->get_core_tunable<std::int64_t>(CoreTunable::MIN_SHARD_VOLUME)}
+namespace {
+
+[[nodiscard]] std::int64_t min_shard_volume()
+{
+  const auto& local_machine = Runtime::get_runtime()->local_machine();
+
+  // TODO(wonchanl): make these configurable via Scope
+  if (local_machine.has_gpus()) {
+    // Make sure we can get at least 1M elements on each GPU
+    return LEGATE_MIN_GPU_CHUNK.get(LEGATE_MIN_GPU_CHUNK_DEFAULT, LEGATE_MIN_GPU_CHUNK_TEST);
+  }
+  if (local_machine.has_omps()) {
+    // Make sure we get at least 128K elements on each OpenMP
+    return LEGATE_MIN_OMP_CHUNK.get(LEGATE_MIN_OMP_CHUNK_DEFAULT, LEGATE_MIN_OMP_CHUNK_TEST);
+  }
+  // Make sure we can get at least 8KB elements on each CPU
+  return LEGATE_MIN_CPU_CHUNK.get(LEGATE_MIN_CPU_CHUNK_DEFAULT, LEGATE_MIN_CPU_CHUNK_TEST);
+}
+
+}  // namespace
+
+PartitionManager::PartitionManager() : min_shard_volume_{min_shard_volume()}
 {
   LEGATE_ASSERT(min_shard_volume_ > 0);
 }

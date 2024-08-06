@@ -13,6 +13,8 @@
 #include "core/mapping/detail/machine.h"
 
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/env_defaults.h"
+#include "core/utilities/env.h"
 
 #include "realm/network.h"
 
@@ -344,7 +346,7 @@ std::size_t LocalMachine::total_frame_buffer_size() const
 {
   // We assume that all memories of the same kind are symmetric in size
   const std::size_t per_node_size =
-    frame_buffers_.size() * frame_buffers_.begin()->second.capacity();
+    frame_buffers().size() * frame_buffers().begin()->second.capacity();
   return per_node_size * total_nodes;
 }
 
@@ -352,14 +354,33 @@ std::size_t LocalMachine::total_socket_memory_size() const
 {
   // We assume that all memories of the same kind are symmetric in size
   const std::size_t per_node_size =
-    socket_memories_.size() * socket_memories_.begin()->second.capacity();
+    socket_memories().size() * socket_memories().begin()->second.capacity();
   return per_node_size * total_nodes;
+}
+
+std::size_t LocalMachine::total_system_memory_size() const
+{
+  // We assume that all memories of the same kind are symmetric in size
+  return system_memory().capacity() * total_nodes;
+}
+
+[[nodiscard]] std::size_t LocalMachine::calculate_field_reuse_size() const
+{
+  static const auto FIELD_REUSE_FRAC =
+    LEGATE_FIELD_REUSE_FRAC.get(LEGATE_FIELD_REUSE_FRAC_DEFAULT, LEGATE_FIELD_REUSE_FRAC_TEST);
+  if (has_gpus()) {
+    return total_frame_buffer_size() / FIELD_REUSE_FRAC;
+  }
+  if (has_socket_memory()) {
+    return total_socket_memory_size() / FIELD_REUSE_FRAC;
+  }
+  return total_system_memory_size() / FIELD_REUSE_FRAC;
 }
 
 bool LocalMachine::has_socket_memory() const
 {
-  return !socket_memories_.empty() &&
-         socket_memories_.begin()->second.kind() == Legion::Memory::SOCKET_MEM;
+  return !socket_memories().empty() &&
+         socket_memories().begin()->second.kind() == Legion::Memory::SOCKET_MEM;
 }
 
 LocalProcessorRange LocalMachine::slice(TaskTarget target,
@@ -399,10 +420,10 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
 Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) const
 {
   switch (target) {
-    case StoreTarget::SYSMEM: return system_memory_;
-    case StoreTarget::FBMEM: return frame_buffers_.at(proc);
-    case StoreTarget::ZCMEM: return zerocopy_memory_;
-    case StoreTarget::SOCKETMEM: return socket_memories_.at(proc);
+    case StoreTarget::SYSMEM: return system_memory();
+    case StoreTarget::FBMEM: return frame_buffers().at(proc);
+    case StoreTarget::ZCMEM: return zerocopy_memory();
+    case StoreTarget::SOCKETMEM: return socket_memories().at(proc);
     default: LEGATE_ABORT("invalid StoreTarget: " << legate::traits::detail::to_underlying(target));
   }
   return Legion::Memory::NO_MEMORY;

@@ -23,18 +23,6 @@ ConsensusMatchResult<T> Runtime::issue_consensus_match(std::vector<T>&& input)
   return {std::move(input), legion_context_, legion_runtime_};
 }
 
-template <typename T>
-T Runtime::get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id)
-{
-  return get_tunable(mapper_id, tunable_id).get_result<T>();
-}
-
-template <typename T>
-T Runtime::get_core_tunable(CoreTunable tunable_id)
-{
-  return get_tunable<T>(core_library()->get_mapper_id(), static_cast<std::int64_t>(tunable_id));
-}
-
 inline bool Runtime::initialized() const { return initialized_; }
 
 inline void Runtime::register_shutdown_callback(ShutdownCallback callback)
@@ -53,6 +41,8 @@ inline std::uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 inline std::uint64_t Runtime::get_unique_storage_id() { return next_storage_id_++; }
 
 inline std::uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq_; }
+
+inline std::size_t Runtime::field_reuse_size() const { return field_reuse_size_; }
 
 inline FieldManager* Runtime::field_manager() { return field_manager_.get(); }
 

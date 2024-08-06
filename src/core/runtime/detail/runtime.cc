@@ -87,8 +87,10 @@ constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
 
 Runtime::Runtime()
   : legion_runtime_{Legion::Runtime::get_runtime()},
+    window_size_{LEGATE_WINDOW_SIZE.get(LEGATE_WINDOW_SIZE_DEFAULT, LEGATE_WINDOW_SIZE_TEST)},
     field_reuse_freq_{
       LEGATE_FIELD_REUSE_FREQ.get(LEGATE_FIELD_REUSE_FREQ_DEFAULT, LEGATE_FIELD_REUSE_FREQ_TEST)},
+    field_reuse_size_{local_machine().calculate_field_reuse_size()},
     force_consensus_match_{LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST)}
 {
 }
@@ -238,9 +240,8 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
   }
   LEGATE_SCOPE_FAIL(
     // de-initialize everything in reverse order
-    Config::max_field_reuse_size = 0;
-    Config::has_socket_mem       = false;
-    scope_                       = Scope{};
+    Config::has_socket_mem = false;
+    scope_                 = Scope{};
     partition_manager_.reset();
     communicator_manager_.reset();
     field_manager_.reset();
@@ -255,12 +256,10 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
   field_manager_ = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
                                               : std::make_unique<FieldManager>();
   communicator_manager_.emplace();
-  partition_manager_.emplace(this);
+  partition_manager_.emplace();
   static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
 
-  Config::has_socket_mem = get_core_tunable<bool>(CoreTunable::HAS_SOCKET_MEM);
-  Config::max_field_reuse_size =
-    get_core_tunable<decltype(Config::max_field_reuse_size)>(CoreTunable::FIELD_REUSE_SIZE);
+  Config::has_socket_mem = local_machine_.has_socket_memory();
   comm::register_builtin_communicator_factories(core_library_);
 }
 
@@ -1310,11 +1309,11 @@ void Runtime::end_trace(std::uint32_t trace_id)
 
 InternalSharedPtr<mapping::detail::Machine> Runtime::create_toplevel_machine()
 {
-  auto num_nodes    = get_core_tunable<std::uint32_t>(CoreTunable::NUM_NODES);
-  auto num_gpus     = get_core_tunable<std::uint32_t>(CoreTunable::TOTAL_GPUS);
-  auto num_omps     = get_core_tunable<std::uint32_t>(CoreTunable::TOTAL_OMPS);
-  auto num_cpus     = get_core_tunable<std::uint32_t>(CoreTunable::TOTAL_CPUS);
-  auto create_range = [&num_nodes](std::uint32_t num_procs) {
+  const auto num_nodes = local_machine_.total_nodes;
+  const auto num_gpus  = local_machine_.total_gpu_count();
+  const auto num_omps  = local_machine_.total_omp_count();
+  const auto num_cpus  = local_machine_.total_cpu_count();
+  auto create_range    = [&num_nodes](std::uint32_t num_procs) {
     auto per_node_count = static_cast<std::uint32_t>(num_procs / num_nodes);
     return mapping::ProcessorRange{0, num_procs, per_node_count};
   };

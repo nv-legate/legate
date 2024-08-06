@@ -24,7 +24,6 @@ namespace legate::detail {
   Config::log_mapping_decisions      = false;
   Config::log_partitioning_decisions = false;
   Config::has_socket_mem             = false;
-  Config::max_field_reuse_size       = 0;
   Config::warmup_nccl                = false;
 }
 

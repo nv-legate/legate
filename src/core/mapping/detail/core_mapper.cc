@@ -35,22 +35,6 @@ class CoreMapper final : public Mapper {
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::StoreTarget>& options) override;
   [[nodiscard]] legate::Scalar tunable_value(legate::TunableID tunable_id) override;
-
- private:
-  const LocalMachine MACHINE{};
-  // TODO(wonchanl): Some of these should be moved to legate::detail::Config
-  const std::int64_t MIN_GPU_CHUNK{
-    LEGATE_MIN_GPU_CHUNK.get(LEGATE_MIN_GPU_CHUNK_DEFAULT, LEGATE_MIN_GPU_CHUNK_TEST)};
-  const std::int64_t MIN_CPU_CHUNK{
-    LEGATE_MIN_CPU_CHUNK.get(LEGATE_MIN_CPU_CHUNK_DEFAULT, LEGATE_MIN_CPU_CHUNK_TEST)};
-  const std::int64_t MIN_OMP_CHUNK{
-    LEGATE_MIN_OMP_CHUNK.get(LEGATE_MIN_OMP_CHUNK_DEFAULT, LEGATE_MIN_OMP_CHUNK_TEST)};
-  const std::uint32_t WINDOW_SIZE{
-    LEGATE_WINDOW_SIZE.get(LEGATE_WINDOW_SIZE_DEFAULT, LEGATE_WINDOW_SIZE_TEST)};
-  const std::uint32_t FIELD_REUSE_FRAC{
-    LEGATE_FIELD_REUSE_FRAC.get(LEGATE_FIELD_REUSE_FRAC_DEFAULT, LEGATE_FIELD_REUSE_FRAC_TEST)};
-  const std::uint32_t MAX_LRU_LENGTH{
-    LEGATE_MAX_LRU_LENGTH.get(LEGATE_MAX_LRU_LENGTH_DEFAULT, LEGATE_MAX_LRU_LENGTH_TEST)};
 };
 
 void CoreMapper::set_machine(const legate::mapping::MachineQueryInterface* /*m*/) {}
@@ -67,63 +51,10 @@ std::vector<legate::mapping::StoreMapping> CoreMapper::store_mappings(
   return {};
 }
 
-Scalar CoreMapper::tunable_value(TunableID tunable_id)
+Scalar CoreMapper::tunable_value(TunableID /*tunable_id*/)
 {
-  using legate::detail::CoreTunable;
-
-  switch (CoreTunable{tunable_id}) {
-    case CoreTunable::TOTAL_CPUS: {
-      return Scalar{static_cast<std::int32_t>(MACHINE.total_cpu_count())};  // assume symmetry
-    }
-    case CoreTunable::TOTAL_GPUS: {
-      return Scalar{static_cast<std::int32_t>(MACHINE.total_gpu_count())};  // assume symmetry
-    }
-    case CoreTunable::TOTAL_OMPS: {
-      return Scalar{static_cast<std::int32_t>(MACHINE.total_omp_count())};  // assume symmetry
-    }
-    case CoreTunable::NUM_NODES: {
-      return Scalar{static_cast<std::int32_t>(MACHINE.total_nodes)};
-    }
-    case CoreTunable::MIN_SHARD_VOLUME: {
-      // TODO(wonchanl): make these profile guided
-      if (MACHINE.has_gpus()) {
-        // Make sure we can get at least 1M elements on each GPU
-        return Scalar{MIN_GPU_CHUNK};
-      }
-      if (MACHINE.has_omps()) {
-        // Make sure we get at least 128K elements on each OpenMP
-        return Scalar{MIN_OMP_CHUNK};
-      }
-      // Make sure we can get at least 8KB elements on each CPU
-      return Scalar{MIN_CPU_CHUNK};
-    }
-    case CoreTunable::HAS_SOCKET_MEM: {
-      return Scalar{MACHINE.has_socket_memory()};
-    }
-    case CoreTunable::WINDOW_SIZE: {
-      return Scalar{WINDOW_SIZE};
-    }
-    case CoreTunable::FIELD_REUSE_SIZE: {
-      // Multiply this by the total number of nodes and then scale by the frac
-      const auto global_mem_size = [&] {
-        if (MACHINE.has_gpus()) {
-          return MACHINE.total_frame_buffer_size();
-        }
-        if (MACHINE.has_socket_memory()) {
-          return MACHINE.total_socket_memory_size();
-        }
-        return MACHINE.system_memory().capacity();
-      }();
-
-      return Scalar{global_mem_size / FIELD_REUSE_FRAC};
-    }
-    case CoreTunable::MAX_LRU_LENGTH: {
-      return Scalar{MAX_LRU_LENGTH};
-    }
-    default: break;
-  }
   // Illegal tunable variable
-  LEGATE_ABORT("Illegal tunable variable" << tunable_id);
+  LEGATE_ABORT("Tunable values are no longer supported");
   return Scalar{0};
 }
 

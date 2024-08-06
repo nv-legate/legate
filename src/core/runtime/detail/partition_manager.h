@@ -37,7 +37,7 @@ class Runtime;
 
 class PartitionManager {
  public:
-  explicit PartitionManager(Runtime* runtime);
+  PartitionManager();
 
   [[nodiscard]] const std::vector<std::uint32_t>& get_factors(
     const mapping::detail::Machine& machine);

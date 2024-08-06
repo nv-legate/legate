@@ -200,6 +200,7 @@ class Runtime {
                                       bool flush,
                                       bool unordered);
   [[nodiscard]] std::uint32_t field_reuse_freq() const;
+  [[nodiscard]] std::size_t field_reuse_size() const;
   [[nodiscard]] bool consensus_match_required() const;
   void progress_unordered_operations() const;
 
@@ -261,11 +262,6 @@ class Runtime {
   void destroy_barrier(Legion::PhaseBarrier barrier);
 
   [[nodiscard]] Legion::Future get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id);
-
-  template <typename T>
-  [[nodiscard]] T get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id);
-  template <typename T>
-  [[nodiscard]] T get_core_tunable(CoreTunable tunable_id);
 
   [[nodiscard]] Legion::Future dispatch(
     Legion::TaskLauncher& launcher, std::vector<Legion::OutputRequirement>& output_requirements);
@@ -382,6 +378,7 @@ class Runtime {
   std::uint64_t next_store_id_{1};
   std::uint64_t next_storage_id_{1};
   std::uint32_t field_reuse_freq_{};
+  std::size_t field_reuse_size_{1};
   bool force_consensus_match_{};
 
   // This could be a hash map, but kept as an ordered map just in case we may later support
