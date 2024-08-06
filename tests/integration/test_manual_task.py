@@ -199,9 +199,6 @@ class TestManualTask:
         manual_task.execute()
         runtime.issue_execution_fence(block=True)
 
-    # TODO(Jacobfaib) [issue 1026]
-    # PyTask doesn't accept ReductionStore any more
-    @pytest.mark.xfail(reason="Reduction not implemented yet")
     def test_add_reduction(self) -> None:
         runtime = get_legate_runtime()
         in_arr = np.arange(10, dtype=np.float64)

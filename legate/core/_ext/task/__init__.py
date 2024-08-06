@@ -19,6 +19,14 @@ from .type import (
     ReductionStore,
     InputArray,
     OutputArray,
+    ReductionArray,
+    ADD,
+    MUL,
+    MAX,
+    MIN,
+    OR,
+    AND,
+    XOR,
 )
 from . import util
 
@@ -31,4 +39,12 @@ __all__ = (
     "ReductionStore",
     "InputArray",
     "OutputArray",
+    "ReductionArray",
+    "ADD",
+    "MUL",
+    "MAX",
+    "MIN",
+    "OR",
+    "AND",
+    "XOR",
 )

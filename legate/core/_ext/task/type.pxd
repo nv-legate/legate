@@ -14,14 +14,13 @@ from typing import Optional
 
 from ..._lib.data.physical_array cimport PhysicalArray
 from ..._lib.data.physical_store cimport PhysicalStore
-from ..._lib.mapping.mapping cimport TaskTarget
 from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.task.task_context cimport TaskContext
+from ..._lib.utilities.typedefs cimport VariantCode
 
 ctypedef dict[str, type] SignatureMapping
 ctypedef tuple[str, ...] ParamList
-ctypedef str VariantKind  # Literal["cpu", "gpu", "omp"]
-ctypedef tuple[VariantKind, ...] VariantList
+ctypedef tuple[VariantCode, ...] VariantList
 # Would use UserFunction | None below, but get:
 #
 # legate.core.internal/legate/core/_ext/task/type.pxd:26:39: Compiler crash in
@@ -55,16 +54,13 @@ ctypedef tuple[VariantKind, ...] VariantList
 #     AttributeError: 'NoneType' object has no attribute 'is_builtin_type'
 #
 # ...oops?
-ctypedef dict[TaskTarget, Optional[UserFunction]] VariantMapping
+ctypedef dict[VariantCode, Optional[UserFunction]] VariantMapping
 
 cdef class InputStore(PhysicalStore):
     pass
 
 
 cdef class OutputStore(PhysicalStore):
-    pass
-
-cdef class ReductionStore(PhysicalStore):
     pass
 
 

@@ -31,6 +31,14 @@ from .._ext.task import (
     ReductionStore,
     InputArray,
     OutputArray,
+    ReductionArray,
+    ADD,
+    MUL,
+    MAX,
+    MIN,
+    OR,
+    AND,
+    XOR,
 )
 
 __all__ = (
@@ -42,6 +50,14 @@ __all__ = (
     "ReductionStore",
     "InputArray",
     "OutputArray",
+    "ReductionArray",
+    "ADD",
+    "MUL",
+    "MAX",
+    "MIN",
+    "OR",
+    "AND",
+    "XOR",
 )
 
 # Not in __all__, this is intentional! This module is only "exposed" for

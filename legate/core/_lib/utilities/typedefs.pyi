@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from enum import Enum
+from enum import IntEnum
 from typing import NewType
 
 LocalTaskID = NewType("LocalTaskID", int)
@@ -18,7 +18,7 @@ GlobalTaskID = NewType("GlobalTaskID", int)
 LocalRedopID = NewType("LocalRedopID", int)
 GlobalRedopID = NewType("GlobalRedopID", int)
 
-class VariantCode(Enum):
+class VariantCode(IntEnum):
     NONE: int
     CPU: int
     GPU: int

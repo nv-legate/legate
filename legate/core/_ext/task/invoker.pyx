@@ -14,8 +14,13 @@ from libcpp cimport bool
 
 import inspect
 from collections.abc import Callable
-from inspect import Parameter, Signature
-from typing import Any, TypeVar
+from inspect import Parameter, Signature, isclass as inspect_isclass
+from typing import (
+    Any,
+    TypeVar,
+    get_args as typing_get_args,
+    get_origin as typing_get_origin,
+)
 
 from ..._lib.data.logical_array cimport LogicalArray
 from ..._lib.data.logical_store cimport LogicalStore
@@ -32,20 +37,90 @@ from .type cimport (
     OutputArray,
     OutputStore,
     ParamList,
-    ReductionStore,
 )
 
-from .type import UserFunction
+from .type import ReductionArray, ReductionStore, UserFunction
 
 
 cdef object _T = TypeVar("_T")
 cdef object _U = TypeVar("_U")
 
-cdef tuple[type, ...] _BASE_TYPES = (PhysicalStore, PhysicalArray)
+cdef tuple[type, ...] _BASE_PHYSICAL_TYPES = (PhysicalStore, PhysicalArray)
 cdef tuple[type, ...] _BASE_LOGICAL_TYPES = (LogicalStore, LogicalArray)
+cdef tuple[type, ...] _BASE_TYPES = _BASE_PHYSICAL_TYPES + _BASE_LOGICAL_TYPES
 cdef tuple[type, ...] _INPUT_TYPES = (InputStore, InputArray)
 cdef tuple[type, ...] _OUTPUT_TYPES = (OutputStore, OutputArray)
-cdef tuple[type, ...] _OBJECT_TYPES = _INPUT_TYPES + _OUTPUT_TYPES
+cdef tuple[type, ...] _REDUCTION_TYPES = (ReductionStore, ReductionArray)
+
+cdef inline type _unpack_generic_type(object annotation):
+    if inspect_isclass(annotation):
+        return annotation
+
+    cdef type ret = typing_get_origin(annotation)
+    assert ret is not None, f"Unknown annotation type: {annotation}"
+    return ret
+
+cdef tuple[
+    tuple[str], tuple[str], tuple[str], tuple[str]
+] _parse_signature(object signature):
+    cdef list[str] inputs = []
+    cdef list[str] outputs = []
+    cdef list[str] reductions = []
+    cdef list[str] scalars = []
+    cdef str name
+    cdef type ty
+    cdef int num_redops
+
+    for name, param_descr in signature.parameters.items():
+        annotation = param_descr.annotation
+        if annotation is Signature.empty:
+            raise TypeError(
+                f"Untyped parameters are not allowed, found {param_descr}"
+            )
+
+        if param_descr.kind != Parameter.POSITIONAL_OR_KEYWORD:
+            raise NotImplementedError(
+                "'/', '*', '*args', '**kwargs' "
+                "not yet allowed in parameter list"
+            )
+
+        if param_descr.default is not Parameter.empty:
+            raise NotImplementedError(
+                f"Default values for {annotation} not yet supported"
+            )
+
+        ty = _unpack_generic_type(annotation)
+        if issubclass(ty, _INPUT_TYPES):
+            inputs.append(name)
+        elif issubclass(ty, _OUTPUT_TYPES):
+            outputs.append(name)
+        elif issubclass(ty, _REDUCTION_TYPES):
+            # Reduction stores, which are typing._GenericAlias (not a
+            # type!)
+            if (num_redops := len(typing_get_args(annotation))) != 1:
+                raise TypeError(
+                    f"Type hint '{annotation}' has an invalid number of "
+                    f"reduction operators ({num_redops}), expected 1. "
+                    f"For example: '{name}: {annotation.__name__}[ADD]'"
+                )
+            reductions.append(name)
+        elif issubclass(ty, _BASE_TYPES):
+            # Is a bare Store/Array an input? an output? who knows!
+            raise TypeError(
+                f"Type hint '{annotation}' is invalid, because it is "
+                "impossible to deduce intent from it. Must use either "
+                "Input/Output/Reduction variant"
+            )
+        else:
+            scalars.append(name)
+
+    return (
+        tuple(inputs),
+        tuple(outputs),
+        tuple(reductions),
+        tuple(scalars),
+    )
+
 
 cdef class VariantInvoker:
     r"""Encapsulate the calling conventions between a user-supplied task
@@ -83,48 +158,13 @@ cdef class VariantInvoker:
                 f"expected 'None' as return-type, found {ret_type}"
             )
 
-        cdef list[str] inputs = []
-        cdef list[str] outputs = []
-        cdef list[str] reductions = []
-        cdef list[str] scalars = []
-        cdef str name
-
-        for name, param_descr in signature.parameters.items():
-            ty = param_descr.annotation
-            if ty is Signature.empty:
-                raise TypeError(
-                    f"Untyped parameters are not allowed, found {param_descr}"
-                )
-
-            if param_descr.kind != Parameter.POSITIONAL_OR_KEYWORD:
-                raise NotImplementedError(
-                    "'/', '*', '*args', '**kwargs' "
-                    "not yet allowed in parameter list"
-                )
-
-            if param_descr.default is not Parameter.empty:
-                raise NotImplementedError(
-                    f"Default values for {ty} not yet supported"
-                )
-
-            if issubclass(ty, _INPUT_TYPES):
-                inputs.append(name)
-            elif issubclass(ty, _OUTPUT_TYPES):
-                outputs.append(name)
-            elif issubclass(ty, ReductionStore):
-                raise NotImplementedError("Reductions not yet implemented")
-                reductions.append(name)
-            else:
-                if issubclass(ty, _BASE_TYPES):
-                    # Is a bare Store/Array an input? an output? who knows!
-                    raise NotImplementedError(f"Don't know how to handle {ty}")
-                scalars.append(name)
-
         self._signature = signature
-        self._inputs = tuple(inputs)
-        self._outputs = tuple(outputs)
-        self._reductions = tuple(reductions)
-        self._scalars = tuple(scalars)
+        (
+            self._inputs,
+            self._outputs,
+            self._reductions,
+            self._scalars
+        ) = _parse_signature(signature)
 
     @property
     def inputs(self) -> ParamList:
@@ -200,10 +240,13 @@ cdef class VariantInvoker:
             )
         param_tup.seen = True
 
-        cdef type expected_ty = expected_param.annotation
+        annotation = expected_param.annotation
+
+        cdef type expected_ty = _unpack_generic_type(annotation)
+
         # Note issubclass(), expected_ty is the class itself, not
         # an instance of it!
-        if issubclass(expected_ty, _BASE_TYPES):
+        if issubclass(expected_ty, _BASE_PHYSICAL_TYPES):
             if not isinstance(user_param, _BASE_LOGICAL_TYPES):
                 raise TypeError(
                     f"Argument: '{param_name}' "
@@ -217,36 +260,25 @@ cdef class VariantInvoker:
                 )
 
             if issubclass(expected_ty, _INPUT_TYPES):
-                # Would have used
-                # isinstance(user_param, _BASE_LOGICAL_TYPES)
-                # here, but mypy balks:
-                #
-                # legate/core/task/invoker.py:261:36: error: Argument 1 to
-                # "add_input" of "AutoTask" has incompatible type "object";
-                # expected "LogicalArray | LogicalStore"  [arg-type]
-                #   task.add_input(user_param)
-                #                  ^~~~~~~~~~
-                assert isinstance(user_param, (LogicalStore, LogicalArray))
                 task.add_input(user_param)
             elif issubclass(expected_ty, _OUTPUT_TYPES):
-                assert isinstance(user_param, (LogicalStore, LogicalArray))
                 task.add_output(user_param)
-            elif issubclass(expected_ty, ReductionStore):
-                raise NotImplementedError("Reductions not yet implemented")
+            elif issubclass(expected_ty, _REDUCTION_TYPES):
+                task.add_reduction(user_param, typing_get_args(annotation)[0])
             else:
                 raise NotImplementedError(
                     f"Unsupported parameter type {expected_ty}"
                 )
+        elif not isinstance(user_param, expected_ty):
+            raise TypeError(
+                f"Task expected a value of type {expected_ty} for "
+                f"parameter {param_name}, but got {type(user_param)}"
+            )
         else:
-            if not isinstance(user_param, expected_ty):
-                raise TypeError(
-                    f"Task expected a value of type {expected_ty} for "
-                    f"parameter {param_name}, but got {type(user_param)}"
-                )
-
             task.add_scalar_arg(
                 user_param, dtype=Type.from_python_type(type(user_param))
             )
+
         param_tup.value = user_param
 
     cdef ParamMapping _prepare_params(
@@ -440,7 +472,8 @@ cdef class VariantInvoker:
         def maybe_unpack_array(
             name: str, arg: PhysicalArray
         ) -> PhysicalArray | PhysicalStore:
-            cdef type arg_ty = params[name].annotation
+            cdef type arg_ty = _unpack_generic_type(params[name].annotation)
+
             if issubclass(arg_ty, PhysicalArray):
                 return arg
             if issubclass(arg_ty, PhysicalStore):
@@ -465,9 +498,8 @@ cdef class VariantInvoker:
                     f"expected {len(names)}"
                 )
             cdef str name
-            kw.update(
-                {name: unpacker(name, val) for name, val in zip(names, vals)}
-            )
+            for name, val in zip(names, vals):
+                kw[name] = unpacker(name, val)
 
         unpack_args(self.inputs, ctx.inputs, maybe_unpack_array)
         unpack_args(self.outputs, ctx.outputs, maybe_unpack_array)
@@ -476,7 +508,7 @@ cdef class VariantInvoker:
         return func(**kw)
 
     @staticmethod
-    cdef object _get_signature(func: Any):
+    cdef object _get_signature(object func):
         return inspect.signature(func, eval_str=True)
 
     cpdef bool valid_signature(self, func: UserFunction):

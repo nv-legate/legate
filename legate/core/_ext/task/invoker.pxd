@@ -67,6 +67,6 @@ cdef class VariantInvoker:
     )
 
     @staticmethod
-    cdef object _get_signature(func: Any)  # -> inspect.Signature
+    cdef object _get_signature(object func)  # -> inspect.Signature
     cpdef bool valid_signature(self, func: UserFunction)
     cpdef void validate_signature(self, func: UserFunction)

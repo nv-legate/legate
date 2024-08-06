@@ -19,8 +19,20 @@ import numpy.testing
 import pytest
 
 import legate.core as lg
-from legate.core import PhysicalStore, get_legate_runtime, task as lct
-from legate.core.task import InputStore, OutputStore, PyTask, VariantInvoker
+from legate.core import (
+    PhysicalStore,
+    VariantCode,
+    get_legate_runtime,
+    task as lct,
+)
+from legate.core.task import (
+    ADD,
+    InputStore,
+    OutputStore,
+    PyTask,
+    ReductionStore,
+    VariantInvoker,
+)
 
 from .util.task_util import (
     UNTYPED_FUNCS,
@@ -444,6 +456,14 @@ class TestTask(BaseTest):
         ):
             lct.task(constraints=(lg.align("x", "y"),))(baz)
 
+    def test_reduction(self) -> None:
+        @lct.task(throws_exception=True)
+        def foo(store: ReductionStore[ADD]) -> None:
+            assert_isinstance(store, PhysicalStore)
+
+        x = make_input_store()
+        foo(x)
+
 
 class TestVariantInvoker(BaseTest):
     @pytest.mark.parametrize("func", USER_FUNCS)
@@ -568,15 +588,13 @@ class TestVariantInvoker(BaseTest):
 
 class TestTaskUtil:
     @pytest.mark.parametrize("variant_kind", sorted(lct._util.KNOWN_VARIANTS))
-    def test_validate_variant_good(self, variant_kind: str) -> None:
-        assert isinstance(variant_kind, str)
-        lct._util.validate_variant(variant_kind)  # type: ignore[arg-type]
+    def test_validate_variant_good(self, variant_kind: VariantCode) -> None:
+        assert isinstance(variant_kind, VariantCode)
+        lct._util.validate_variant(variant_kind)
 
     def test_validate_variant_bad(self) -> None:
         with pytest.raises(ValueError):
-            lct._util.validate_variant(
-                "this_variant_does_not_exist"  # type: ignore[arg-type]
-            )
+            lct._util.validate_variant(345)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":

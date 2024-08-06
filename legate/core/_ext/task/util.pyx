@@ -13,18 +13,21 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, TypeVar
 
-from .type cimport VariantKind, VariantList
+from ..._lib.utilities.typedefs cimport VariantCode
+from .type cimport VariantList
 
 
-cdef set[VariantKind] _KNOWN_VARIANTS = {"cpu", "gpu", "omp"}
+cdef set[VariantCode] _KNOWN_VARIANTS = {
+    VariantCode.CPU, VariantCode.GPU, VariantCode.OMP
+}
 # for python export
 KNOWN_VARIANTS = _KNOWN_VARIANTS
 
-cdef VariantList DEFAULT_VARIANT_LIST = ("cpu",)
+cdef VariantList DEFAULT_VARIANT_LIST = (VariantCode.CPU,)
 
 cdef object _T = TypeVar("_T")
 
-cpdef void validate_variant(kind: VariantKind):
+cpdef void validate_variant(VariantCode kind):
     r"""Confirm that a variant kind is one of the known variants.
 
     Parameters

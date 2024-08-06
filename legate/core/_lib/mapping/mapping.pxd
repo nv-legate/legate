@@ -9,10 +9,6 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-# Note import, not cimport. We want the Python version of the enum
-from ..utilities.typedefs import VariantCode
-
-
 cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
     cpdef enum class TaskTarget:
         GPU
@@ -25,5 +21,3 @@ cdef extern from "core/mapping/mapping.h" namespace "legate::mapping" nogil:
         FBMEM
         ZCMEM
         SOCKETMEM
-
-cdef dict[TaskTarget, VariantCode] TASK_TARGET_TO_VARIANT_KIND

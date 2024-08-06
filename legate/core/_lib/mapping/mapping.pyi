@@ -23,5 +23,3 @@ class StoreTarget(IntEnum):
     FBMEM: int
     ZCMEM: int
     SOCKETMEM: int
-
-TASK_TARGET_TO_VARIANT_KIND: dict[TaskTarget, int]

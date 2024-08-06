@@ -11,13 +11,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Callable, Literal, TypeAlias
+from typing import Any, Callable, Generic, Literal, TypeAlias, TypeVar
 
 from ..._lib.data.physical_array import PhysicalArray
 from ..._lib.data.physical_store import PhysicalStore
-from ..._lib.mapping.mapping import TaskTarget
 from ..._lib.partitioning.constraint import ConstraintProxy
 from ..._lib.task.task_context import TaskContext
+from ..._lib.type.type_info import ReductionOpKind
+from ..._lib.utilities.typedefs import VariantCode
 
 SignatureMapping: TypeAlias = dict[str, type]
 
@@ -27,16 +28,24 @@ UserFunction: TypeAlias = Callable[..., None]
 
 VariantFunction: TypeAlias = Callable[[TaskContext], None]
 
-VariantKind: TypeAlias = Literal["cpu", "gpu", "omp"]
+VariantList: TypeAlias = tuple[VariantCode, ...]
 
-VariantList: TypeAlias = tuple[VariantKind, ...]
+_T = TypeVar("_T", bound=ReductionOpKind)
 
-VariantMapping: TypeAlias = dict[TaskTarget, UserFunction | None]
+# Must be up to date with ReductionOpKind
+ADD: TypeAlias = Literal[ReductionOpKind.ADD]
+MUL: TypeAlias = Literal[ReductionOpKind.MUL]
+MAX: TypeAlias = Literal[ReductionOpKind.MAX]
+MIN: TypeAlias = Literal[ReductionOpKind.MIN]
+OR: TypeAlias = Literal[ReductionOpKind.OR]
+AND: TypeAlias = Literal[ReductionOpKind.AND]
+XOR: TypeAlias = Literal[ReductionOpKind.XOR]
 
 class InputStore(PhysicalStore): ...
 class OutputStore(PhysicalStore): ...
-class ReductionStore(PhysicalStore): ...
+class ReductionStore(Generic[_T], PhysicalStore): ...
 class InputArray(PhysicalArray): ...
 class OutputArray(PhysicalArray): ...
+class ReductionArray(Generic[_T], PhysicalArray): ...
 
 ConstraintSet: TypeAlias = tuple[ConstraintProxy, ...]

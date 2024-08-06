@@ -8,11 +8,3 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-
-# Note import, not cimport. We want the Python version of the enum
-from ..utilities.typedefs import VariantCode
-
-
-cdef dict[TaskTarget, VariantCode] TASK_TARGET_TO_VARIANT_KIND = {
-    target: getattr(VariantCode, target.name) for target in TaskTarget
-}

@@ -23,6 +23,7 @@ from numpy._typing import NDArray
 from legate.core import InlineAllocation, Scalar
 from legate.core._ext.task.util import KNOWN_VARIANTS
 from legate.core.task import (
+    ADD,
     InputArray,
     InputStore,
     OutputArray,
@@ -97,10 +98,8 @@ def copy_np_array_task(out: OutputStore, np_arr: NDArray[Any]) -> None:
         out_arr_np[:] = cupy.asarray(np_arr)[:]
 
 
-# TODO(Jacobfaib) [issue 1026]
-# PyTask doesn't accept ReductionStore any more
-# @task(variants=tuple(KNOWN_VARIANTS))
-def array_sum_task(store: InputStore, out: ReductionStore) -> None:
+@task(variants=tuple(KNOWN_VARIANTS))
+def array_sum_task(store: InputStore, out: ReductionStore[ADD]) -> None:
     store_arr = asarray(store.get_inline_allocation())
     out_arr = asarray(out.get_inline_allocation())
     out_arr[:] = out_arr + store_arr.sum()

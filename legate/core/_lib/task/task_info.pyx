@@ -254,6 +254,7 @@ cdef class TaskInfo(Unconstructable):
             del tptr  # strong exception guarantee
             raise
 
+        cdef VariantCode variant_kind
         for variant_kind, variant_fn in variants:
             task_info.add_variant(variant_kind, variant_fn)
         return task_info

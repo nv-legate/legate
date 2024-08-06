@@ -13,13 +13,11 @@ from __future__ import annotations
 from libc.stdint cimport int64_t
 from libcpp cimport bool
 
-from ..._lib.mapping.mapping import TaskTarget
-
 from ..._lib.operation.task cimport AutoTask
 from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.runtime.library cimport Library
 from ..._lib.task.task_context cimport TaskContext
-from ..._lib.utilities.typedefs cimport _LocalTaskID
+from ..._lib.utilities.typedefs cimport VariantCode, _LocalTaskID
 from .invoker cimport VariantInvoker
 from .type cimport VariantList, VariantMapping
 
@@ -40,7 +38,7 @@ cdef class PyTask:
         bool                        _throws
 
     cpdef _LocalTaskID complete_registration(self)
-    cdef void _update_variant(self, func: UserFunction, variant: TaskTarget)
+    cdef void _update_variant(self, func: UserFunction, VariantCode variant)
     cpdef void cpu_variant(self, func: UserFunction)
     cpdef void gpu_variant(self, func: UserFunction)
     cpdef void omp_variant(self, func: UserFunction)
@@ -49,7 +47,7 @@ cdef class PyTask:
         func: UserFunction,
         VariantList variants,
     )
-    cdef void _invoke_variant(self, TaskContext ctx, kind: TaskTarget)
+    cdef void _invoke_variant(self, TaskContext ctx, VariantCode variant)
     cdef void _cpu_variant(self, TaskContext ctx)
     cdef void _gpu_variant(self, TaskContext ctx)
     cdef void _omp_variant(self, TaskContext ctx)

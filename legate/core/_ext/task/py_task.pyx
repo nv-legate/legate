@@ -13,21 +13,16 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from ..._lib.mapping.mapping cimport TASK_TARGET_TO_VARIANT_KIND
-
-# import deliberate here, we want the Python enum
-
-from ..._lib.mapping.mapping import TaskTarget
-
 from ..._lib.operation.task cimport AutoTask
 from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.runtime.library cimport Library
 from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.task.task_info cimport TaskInfo
-from ..._lib.utilities.typedefs cimport _LocalTaskID
+from ..._lib.utilities.typedefs cimport VariantCode, _LocalTaskID
+from ..._lib.utilities.typedefs import VariantCode as PyVariantCode
 from .invoker cimport VariantInvoker
-from .type cimport VariantKind, VariantList, VariantMapping
+from .type cimport VariantList, VariantMapping
 from .util cimport validate_variant
 
 from .type import UserFunction
@@ -256,17 +251,16 @@ cdef class PyTask:
             return self._task_id
 
         cdef dict proc_kind_to_variant = {
-            TaskTarget.GPU: self._gpu_variant,
-            TaskTarget.CPU: self._cpu_variant,
-            TaskTarget.OMP: self._omp_variant,
+            VariantCode.CPU: self._cpu_variant,
+            VariantCode.GPU: self._gpu_variant,
+            VariantCode.OMP: self._omp_variant,
         }
 
+        cdef VariantCode v
+
         cdef list variants = [
-            (
-                TASK_TARGET_TO_VARIANT_KIND[proc_kind],
-                proc_kind_to_variant[proc_kind],
-            )
-            for proc_kind, fn in self._variants.items()
+            (v, proc_kind_to_variant[v])
+            for v, fn in self._variants.items()
             if fn is not None
         ]
         if not variants:
@@ -280,13 +274,14 @@ cdef class PyTask:
         self._task_id = task_id
         return task_id
 
-    cdef void _update_variant(self, func: UserFunction, variant: TaskTarget):
+    cdef void _update_variant(self, func: UserFunction, VariantCode variant):
         if self.registered:
             raise RuntimeError(
                 f"Task (id: {self._task_id}) has already completed "
                 "registration and cannot update its variants"
             )
-        validate_variant(variant.name.casefold())
+
+        validate_variant(variant)
         self._invoker.validate_signature(func)
         self._variants[variant] = func
 
@@ -309,7 +304,7 @@ cdef class PyTask:
         the old variant with ``func``. Therefore, this method may be used to
         update variants as well as add new ones.
         """
-        self._update_variant(func, TaskTarget.CPU)
+        self._update_variant(func, VariantCode.CPU)
 
     cpdef void gpu_variant(self, func: UserFunction):
         r"""Register a GPU variant for this task
@@ -330,7 +325,7 @@ cdef class PyTask:
         the old variant with ``func``. Therefore, this method may be used to
         update variants as well as add new ones.
         """
-        self._update_variant(func, TaskTarget.GPU)
+        self._update_variant(func, VariantCode.GPU)
 
     cpdef void omp_variant(self, func: UserFunction):
         r"""Register an OpenMP variant for this task
@@ -351,33 +346,32 @@ cdef class PyTask:
         the old variant with ``func``. Therefore, this method may be used to
         update variants as well as add new ones.
         """
-        self._update_variant(func, TaskTarget.OMP)
+        self._update_variant(func, VariantCode.OMP)
 
     cdef VariantMapping _init_variants(
         self,
         func: UserFunction,
         variants: VariantList
     ):
-        cdef VariantKind v
+        cdef VariantCode v
         for v in variants:
             validate_variant(v)
         self._invoker.validate_signature(func)
-        return {
-            TaskTarget.CPU: func if "cpu" in variants else None,
-            TaskTarget.GPU: func if "gpu" in variants else None,
-            TaskTarget.OMP: func if "omp" in variants else None,
-        }
 
-    cdef void _invoke_variant(self, ctx: TaskContext, kind: TaskTarget):
-        variant = self._variants[kind]
-        assert variant is not None, f"Task has no variant for kind: {kind}"
-        self._invoker(ctx, variant)
+        return {v: func if v in variants else None for v in PyVariantCode}
+
+    cdef void _invoke_variant(self, TaskContext ctx, VariantCode variant):
+        variant_impl = self._variants[variant]
+        assert variant_impl is not None, (
+            f"Task has no variant for kind: {variant}"
+        )
+        self._invoker(ctx, variant_impl)
 
     cdef void _cpu_variant(self, TaskContext ctx):
-        self._invoke_variant(ctx, TaskTarget.CPU)
+        self._invoke_variant(ctx, VariantCode.CPU)
 
     cdef void _gpu_variant(self, TaskContext ctx):
-        self._invoke_variant(ctx, TaskTarget.GPU)
+        self._invoke_variant(ctx, VariantCode.GPU)
 
     cdef void _omp_variant(self, TaskContext ctx):
-        self._invoke_variant(ctx, TaskTarget.OMP)
+        self._invoke_variant(ctx, VariantCode.OMP)

@@ -13,13 +13,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, Final, TypeAlias, TypeVar
 
-from .type import VariantKind, VariantList
+from ..._lib.utilities.typedefs import VariantCode
+from .type import VariantList
 
 _T = TypeVar("_T")
 
-KNOWN_VARIANTS: Final[set[VariantKind]] = {"cpu", "gpu", "omp"}
+KNOWN_VARIANTS: Final[set[VariantCode]] = ...
 
-DEFAULT_VARIANT_LIST: Final[VariantList] = ("cpu",)
+DEFAULT_VARIANT_LIST: Final[VariantList] = ...
 
-def validate_variant(kind: VariantKind) -> None: ...
+def validate_variant(kind: VariantCode) -> None: ...
 def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]: ...
