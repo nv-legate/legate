@@ -126,16 +126,6 @@ if(Legion_USE_Python AND (NOT Python3_FOUND))
   _find_package_python3()
 endif()
 
-if(Legion_NETWORKS)
-  rapids_find_package(MPI
-                      GLOBAL_TARGETS MPI::MPI_CXX
-                      BUILD_EXPORT_SET legate-core-exports
-                      INSTALL_EXPORT_SET legate-core-exports
-                      COMPONENTS CXX
-                      FIND_ARGS
-                      REQUIRED)
-endif()
-
 if(Legion_USE_CUDA)
   # Enable the CUDA language
   enable_language(CUDA)
@@ -154,6 +144,21 @@ if(Legion_USE_CUDA)
                       INSTALL_EXPORT_SET legate-core-exports)
   # Find NCCL
   legate_core_find_or_configure(PACKAGE NCCL)
+endif()
+
+# ########################################################################################
+# * MPI wrapper --------------------------------------------------------------
+
+if(Legion_NETWORKS)
+  # The wrapper that we compile and link against needs to have weak symbols so that the
+  # user can override them later
+  set(LEGATE_MPI_WRAPPER_WEAK_SYMBOLS ON)
+  # The wrapper we build should not install anything but the library object itself,
+  # because we want to install the sources (and cmake files) to a different location
+  # ourselves.
+  set(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES OFF)
+
+  add_subdirectory(share/legate/mpi_wrapper)
 endif()
 
 # ########################################################################################
@@ -387,12 +392,15 @@ target_link_libraries(legate_core
                       #
                       # This is also why CCCL::Thrust comes *before* Legion, because
                       # Legion may pick up headers from inside the conda environment.
-                      PUBLIC CCCL::Thrust
+                      #
+                      # Similarly, we want the MPI wrapper to load as early as possible,
+                      # since it provides our MPI symbols.
+                      PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper>
+                             CCCL::Thrust
                              Legion::Legion
                              # See
                              # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
                              $<TARGET_NAME_IF_EXISTS:$<IF:$<TARGET_EXISTS:CUDA::nvtx3>,CUDA::nvtx3,CUDA::nvToolsExt>>
-                             $<TARGET_NAME_IF_EXISTS:MPI::MPI_CXX>
                              $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
                              $<TARGET_NAME_IF_EXISTS:std::mdspan>
                              $<TARGET_NAME_IF_EXISTS:std::span>
@@ -670,11 +678,27 @@ install(FILES src/core/experimental/stl/detail/for_each.hpp
 # Legate timing header
 install(FILES src/timing/timing.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/timing)
 
-install(DIRECTORY ${LEGATE_CORE_DIR}/cmake/Modules
+install(DIRECTORY ${LEGATE_CORE_DIR}/cmake/Modules/
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate_core" FILES_MATCHING
         PATTERN "*.cmake")
 
-install(DIRECTORY share DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}")
+# MPI Wrapper
+#
+# We want to install the entire CMake project for the wrapper as-is into the share folder
+# in the install path. That way -- once installed -- the user can build the wrapper
+# themselves. This is also why we specifically avoided generating the install rules
+install(FILES share/legate/mpi_wrapper/install.bash
+              share/legate/mpi_wrapper/CMakeLists.txt
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper")
+
+install(FILES share/legate/mpi_wrapper/cmake/Config.cmake.in
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper/cmake")
+
+install(FILES share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper.cc
+              share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper.h
+              share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper_types.h
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper/src/legate_mpi_wrapper"
+)
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 

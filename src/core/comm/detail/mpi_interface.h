@@ -15,8 +15,12 @@
 #include "core/utilities/abort.h"
 #include "core/utilities/macros.h"
 
-#include "../share/legate/lib/mpi_wrapper_types.h"
-
+// Cannot use #include <legate_mpi_wrapper/mpi_wrapper_types.h> here because -- depending on whether
+// we have MPI or not -- the MPI wrapper CMake target might not have been defined, and hence,
+// legate does not have the right include paths set up for it.
+//
+// So to be general, we just include the specific location directly.
+#include <../share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper_types.h>
 #include <cstddef>
 
 namespace legate::detail::comm::mpi::detail {

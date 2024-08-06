@@ -12,8 +12,8 @@
 
 // Must use C-isms here since mpi_wrapper.cc might be compiled by C compiler
 // NOLINTBEGIN
-#ifndef LEGATE_SHARE_LIB_MPI_WRAPPER_H
-#define LEGATE_SHARE_LIB_MPI_WRAPPER_H
+#ifndef LEGATE_SHARE_LEGATE_MPI_WRAPPER_TYPES_H
+#define LEGATE_SHARE_LEGATE_MPI_WRAPPER_TYPES_H
 
 #include <stddef.h>
 
@@ -41,5 +41,5 @@ typedef struct Legate_MPI_Status {
   char original_private_[LEGATE_MPI_STATUS_THUNK_SIZE];
 } Legate_MPI_Status;
 
-#endif
+#endif  // LEGATE_SHARE_LEGATE_MPI_WRAPPER_TYPES_H
 // NOLINTEND

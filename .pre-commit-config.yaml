@@ -66,7 +66,7 @@ repos:
             'types_or': [c++, c, cuda]
             require_serial: false
             stages: [pre-commit]
-            exclude: '^(src/core/legate_c\.h|src/legate_preamble\.h|src/core/experimental/stl/detail/config\.hpp|src/core/utilities/compiler\.h|src/legate_defines\.h|share/legate/lib/mpi_wrapper.*|src/core/comm/detail/mpi_interface.cc)$'
+            exclude: '^(src/core/experimental/stl/detail/config\.hpp|src/core/utilities/compiler\.h|share/legate/mpi_wrapper/.*)$'
         -   id: legate-assert
             name: legate-assert
             description: 'Find uses of assert() that should be using LegateAssert()'
@@ -84,7 +84,7 @@ repos:
             'types_or': [c++, c, cuda]
             require_serial: false
             stages: [pre-commit]
-            exclude: '^(src/core/utilities/abort.h|share/legate/lib/mpi_.*)$'
+            exclude: '^(src/core/utilities/abort.h|share/legate/mpi_wrapper/.*)$'
         -   id: cmake-format
             name: cmake-format
             entry: ./scripts/pre-commit/cmake-format.bash cmake-format

@@ -11,44 +11,7 @@
  */
 #include "core/comm/detail/mpi_interface.h"
 
-// This is a clang/gcc extension, so we can define it ourselves if not already
-#ifndef __has_attribute
-#define __has_attribute(x) 0
-#endif
-
-#if __has_attribute(weak) || defined(__GNUC__)
-#define LEGATE_WEAK __attribute__((weak))
-#elif __has_attribute(__weak__)
-#define LEGATE_WEAK __attribute__((__weak__))
-#elif defined(__has_cpp_attribute)  // this is not, so we should not define it ourselves
-#if __has_cpp_attribute(gnu::weak)
-#define LEGATE_WEAK [[gnu::weak]]
-#endif
-#endif
-
-#ifndef LEGATE_WEAK
-#error "Could not determine attribute for weak linkage!"
-#endif
-
-#include "../share/legate/lib/mpi_wrapper.cc"  // NOLINT(bugprone-suspicious-include)
-
-// OpenMPI likes to define these as macros
-#undef MPI_COMM_WORLD
-#undef MPI_THREAD_MULTIPLE
-#undef MPI_TAG_UB
-#undef MPI_INT8_T
-#undef MPI_UINT8_T
-#undef MPI_CHAR
-#undef MPI_BYTE
-#undef MPI_INT
-#undef MPI_INT32_T
-#undef MPI_UINT32_T
-#undef MPI_INT64_T
-#undef MPI_UINT64_T
-#undef MPI_FLOAT
-#undef MPI_DOUBLE
-#undef MPI_CONGRUENT
-#undef MPI_SUCCESS
+#include <legate_mpi_wrapper/mpi_wrapper.h>
 
 namespace legate::detail::comm::mpi::detail {
 
