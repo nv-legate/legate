@@ -75,12 +75,14 @@ function(legate_core_set_default_flags_impl)
   endif()
 endfunction()
 
+# Too many statements 51/50
+#
+# cmake-lint: disable=R0915
 function(legate_core_configure_default_compiler_flags)
-  set(default_cxx_flags_debug
+  set(default_warning_flags
       "-Wall"
       "-Wextra"
       "-Werror"
-      "-fstack-protector"
       "-Walloca"
       "-Wdeprecated"
       "-Wimplicit-fallthrough"
@@ -94,13 +96,14 @@ function(legate_core_configure_default_compiler_flags)
       "-Wshadow-all"
       "-Warray-bounds-pointer-arithmetic"
       "-Wassign-enum"
-      "-Wformat-pedantic"
-      "-D_LIBCPP_ENABLE_ASSERTIONS=1"
-      "-D_LIBCPP_ENABLE_NODISCARD=1")
+      "-Wformat-pedantic")
+  set(default_cxx_flags_debug
+      ${default_warning_flags} "-g" "-O0" "-fstack-protector"
+      "-D_LIBCPP_ENABLE_ASSERTIONS=1" "-D_LIBCPP_ENABLE_NODISCARD=1")
   set(default_cxx_flags_sanitizer
       "-fsanitize=address,undefined,bounds" "-fno-sanitize-recover=undefined"
       "-fno-omit-frame-pointer" "-g")
-  set(default_cxx_flags_release "-O3" "-fstack-protector-strong")
+  set(default_cxx_flags_release ${default_warning_flags} "-O3" "-fstack-protector-strong")
   set(default_cxx_flags_relwithdebinfo ${default_cxx_flags_debug}
                                        ${default_cxx_flags_release})
 
