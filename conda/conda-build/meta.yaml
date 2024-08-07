@@ -112,6 +112,9 @@ build:
     - BUILD_MARCH
 {% if not gpu_enabled_bool %}
     - CPU_ONLY=1
+  # The CPU-only packages having more track_features than the GPU builds helps
+  # the solver to prefer the GPU builds when both are viable candidates.
+  # ref: https://docs.conda.io/projects/conda-build/en/latest/resources/define-metadata.html#track-features
   track_features:
     - cpu_only
 {% endif %}
@@ -177,13 +180,13 @@ requirements:
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
 {% if gpu_enabled_bool %}
+    - cuda-version ={{ cuda_version }}
+    # these are all constrained by cuda-version
     - nccl
-    - cuda-nvtx-dev ={{ cuda_version }}
-    - cuda-cudart ={{ cuda_version }}
-    - cuda-cudart-static ={{ cuda_version }}
-    - cuda-nvml-dev ={{ cuda_version }}
-    - cuda-driver-dev ={{ cuda_version }}
-    - cuda-cudart-dev ={{ cuda_version }}
+    - cuda-cudart-dev
+    - cuda-nvtx-dev
+    - cuda-nvml-dev
+    - cuda-driver-dev
     - libcublas-dev
     - libcufft-dev
     - libcurand-dev
@@ -206,8 +209,17 @@ requirements:
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
 {% if gpu_enabled_bool %}
-    - cuda-cudart  >={{ cuda_version }},<{{ cuda_major+1 }}
-    - cuda-version >={{ cuda_version }},<{{ cuda_major+1 }}
+    # Pin to all minor versions of CUDA newer than the one built against, within the same major version.
+    # cuda-version constrains the CUDA runtime version and ensures a compatible driver is available
+    - {{ pin_compatible('cuda-version', min_pin='x.x', max_pin='x') }}
+    # including __cuda here in 'run' ensures that 'conda install' always
+    # prefers the CPU-only packages in environments without CUDA
+    #
+    # The floor on __cuda makes this stricter than the default constraint that comes through
+    # depending on 'cuda-version' alone.
+    - __cuda >={{ cuda_version }}
+    # all other CUDA dependencies are constrained by cuda-version
+    - cuda-cudart
     - nccl
 {% endif %}
 {% if ucx_configured_bool %}
@@ -218,9 +230,6 @@ requirements:
   run_constrained:
     - __glibc >=2.17  # [linux]
     - python >= 3.10
-{% if gpu_enabled_bool %}
-    - __cuda
-{% endif %}
 
 test:
   imports:

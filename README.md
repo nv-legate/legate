@@ -66,12 +66,21 @@ conda install -c conda-forge -c legate legate-core
 
 Only linux-64 packages are available at the moment.
 
-The default package contains GPU support, and is compatible with CUDA >= 11.8
-(driver >= 520), and Volta or later GPU architectures. There are also CPU-only
-packages available, which will be automatically selected when installing on a
-machine without GPUs available. See https://nv-legate.github.io/legate.core
-for details about manually forcing different install configurations, or 
-[BUILD.md](BUILD.md) for instructions on building Legate Core from source.
+In an environment without GPUs available, `conda install` will by default choose a CPU-only package.
+To install a version with GPU support in such an environment, use environment variable `CONDA_OVERRIDE_CUDA`.
+
+```shell
+CONDA_OVERRIDE_CUDA="12.2" \
+  conda install -c conda-forge -c legate legate-core
+```
+
+Packages with GPU support are also available, and will be chosen automatically
+by `conda install` on systems with GPUs available.
+
+The packages with GPU support are compatible with CUDA >= 11.8, and Volta or later GPU architectures.
+
+See https://nv-legate.github.io/legate.core for details about manually forcing different
+install configurations, or [BUILD.md](BUILD.md) for instructions on building Legate Core from source.
 
 ## Documentation
 
