@@ -17,9 +17,7 @@ from ..utilities.typedefs import GlobalRedopID
 
 class ReductionOpKind(IntEnum):
     ADD: int
-    SUB: int
     MUL: int
-    DIV: int
     MAX: int
     MIN: int
     OR: int

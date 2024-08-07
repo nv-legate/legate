@@ -2002,9 +2002,7 @@ void register_builtin_reduction_ops()
 {
   RECORD_ALL(ADD)
   RECORD(ADD, Type::Code::COMPLEX128)
-  RECORD_ALL(SUB)
   RECORD_ALL(MUL)
-  RECORD_ALL(DIV)
 
   RECORD_INT(MAX)
   RECORD_FLOAT(MAX)

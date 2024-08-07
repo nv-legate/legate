@@ -71,9 +71,7 @@ cdef extern from "core/type/type_info.h" namespace "legate::Type" nogil:
 cdef extern from "core/type/type_info.h" namespace "legate" nogil:
     cpdef enum class ReductionOpKind:
         ADD
-        SUB
         MUL
-        DIV
         MAX
         MIN
         OR

@@ -173,13 +173,6 @@ void test_reduction_op(const legate::Type& type)
   EXPECT_THROW(type.record_reduction_operator(
                  static_cast<std::int32_t>(legate::ReductionOpKind::ADD), GLOBAL_OP_ID),
                std::invalid_argument);
-
-  // reduction op doesn't exist
-  EXPECT_THROW(
-    (void)type.find_reduction_operator(static_cast<std::int32_t>(legate::ReductionOpKind::SUB)),
-    std::invalid_argument);
-  EXPECT_THROW((void)type.find_reduction_operator(legate::ReductionOpKind::SUB),
-               std::invalid_argument);
 }
 
 TEST_F(TypeUnit, PrimitiveType)

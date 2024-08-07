@@ -49,9 +49,7 @@ class StructType;
  */
 enum class ReductionOpKind : std::int32_t {
   ADD = LEGION_REDOP_KIND_SUM,  /*!< Addition */
-  SUB = LEGION_REDOP_KIND_DIFF, /*!< Subtraction */
   MUL = LEGION_REDOP_KIND_PROD, /*!< Multiplication */
-  DIV = LEGION_REDOP_KIND_DIV,  /*!< Division */
   MAX = LEGION_REDOP_KIND_MAX,  /*!< Binary maximum operator */
   MIN = LEGION_REDOP_KIND_MIN,  /*!< Binary minimum operator */
   OR  = LEGION_REDOP_KIND_OR,   /*!< Bitwise OR */

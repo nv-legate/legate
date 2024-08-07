@@ -86,6 +86,11 @@ Changes: Latest Development Version
 
 .. rubric:: Types
 
+- Removed ``ReductionOpKind::DIV`` and ``ReductionOpKind::SUB``. Partial reduction results
+  are combined in an arbitrary order; since division and subtraction are neither
+  commutative nor associative, it is impossible to use these reliably as reduction
+  operators.
+
 .. rubric:: Runtime
 
 - Add optional ``default_options`` argument to ``Runtime::create_library()`` to specify
