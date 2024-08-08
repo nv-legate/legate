@@ -85,7 +85,7 @@ def mixed_sum_task(
 @task(variants=tuple(KNOWN_VARIANTS))
 def fill_task(out: OutputArray, val: Scalar) -> None:
     out_arr_np = asarray(out.data().get_inline_allocation())
-    out_arr_np.fill(val)
+    out_arr_np.fill(val.value())
 
 
 @task(variants=tuple(KNOWN_VARIANTS))

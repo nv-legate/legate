@@ -269,11 +269,16 @@ cdef class VariantInvoker:
                 raise NotImplementedError(
                     f"Unsupported parameter type {expected_ty}"
                 )
+        # Must do this elif _after_ we check for physical types above. The type
+        # hint says "InputArray" (A.K.A. PhysicalArray), but the user will be
+        # passing in LogicalArray.
         elif not isinstance(user_param, expected_ty):
             raise TypeError(
                 f"Task expected a value of type {expected_ty} for "
                 f"parameter {param_name}, but got {type(user_param)}"
             )
+        elif issubclass(expected_ty, Scalar):
+            task.add_scalar_arg(user_param)
         else:
             task.add_scalar_arg(
                 user_param, dtype=Type.from_python_type(type(user_param))
@@ -470,10 +475,8 @@ cdef class VariantInvoker:
         params = self.signature.parameters
 
         def maybe_unpack_array(
-            name: str, arg: PhysicalArray
+            arg_ty: type, name: str, arg: PhysicalArray
         ) -> PhysicalArray | PhysicalStore:
-            cdef type arg_ty = _unpack_generic_type(params[name].annotation)
-
             if issubclass(arg_ty, PhysicalArray):
                 return arg
             if issubclass(arg_ty, PhysicalStore):
@@ -484,7 +487,11 @@ cdef class VariantInvoker:
                 "this is a bug in legate.core!"
             )
 
-        def unpack_scalar(name: str, arg: Scalar) -> object:
+        def unpack_scalar(
+            arg_ty: type, name: str, arg: Scalar
+        ) -> object | Scalar:
+            if issubclass(arg_ty, Scalar):
+                return arg
             return arg.value()
 
         def unpack_args(
@@ -498,8 +505,11 @@ cdef class VariantInvoker:
                     f"expected {len(names)}"
                 )
             cdef str name
+            cdef type arg_ty
+
             for name, val in zip(names, vals):
-                kw[name] = unpacker(name, val)
+                arg_ty = _unpack_generic_type(params[name].annotation)
+                kw[name] = unpacker(arg_ty, name, val)
 
         unpack_args(self.inputs, ctx.inputs, maybe_unpack_array)
         unpack_args(self.outputs, ctx.outputs, maybe_unpack_array)
