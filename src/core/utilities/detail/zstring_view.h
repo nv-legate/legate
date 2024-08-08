@@ -102,22 +102,26 @@ template <typename C, typename T>
 std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& os, BasicZStringView<C, T> sv);
 
 template <typename C, typename T>
-bool operator==(BasicZStringView<C, T> lhs, BasicZStringView<C, T> rhs);
+constexpr bool operator==(BasicZStringView<C, T> lhs, BasicZStringView<C, T> rhs);
 
 template <typename C, typename T>
-bool operator!=(BasicZStringView<C, T> lhs, BasicZStringView<C, T> rhs);
+constexpr bool operator!=(BasicZStringView<C, T> lhs, BasicZStringView<C, T> rhs);
 
 template <typename C, typename T>
-bool operator==(typename BasicZStringView<C, T>::base_view_type lhs, BasicZStringView<C, T> rhs);
+constexpr bool operator==(typename BasicZStringView<C, T>::base_view_type lhs,
+                          BasicZStringView<C, T> rhs);
 
 template <typename C, typename T>
-bool operator!=(typename BasicZStringView<C, T>::base_view_type lhs, BasicZStringView<C, T> rhs);
+constexpr bool operator!=(typename BasicZStringView<C, T>::base_view_type lhs,
+                          BasicZStringView<C, T> rhs);
 
 template <typename C, typename T>
-bool operator==(BasicZStringView<C, T> lhs, typename BasicZStringView<C, T>::base_view_type rhs);
+constexpr bool operator==(BasicZStringView<C, T> lhs,
+                          typename BasicZStringView<C, T>::base_view_type rhs);
 
 template <typename C, typename T>
-bool operator!=(BasicZStringView<C, T> lhs, typename BasicZStringView<C, T>::base_view_type rhs);
+constexpr bool operator!=(BasicZStringView<C, T> lhs,
+                          typename BasicZStringView<C, T>::base_view_type rhs);
 
 }  // namespace legate::detail
 
@@ -125,7 +129,7 @@ namespace std {
 
 template <typename CharT, typename TraitsT>
 struct hash<legate::detail::BasicZStringView<CharT, TraitsT>> {  // NOLINT(cert-dcl58-cpp)
-  [[nodiscard]] std::size_t operator()(
+  [[nodiscard]] constexpr std::size_t operator()(
     const legate::detail::BasicZStringView<CharT, TraitsT>& sv) const noexcept;
 };
 

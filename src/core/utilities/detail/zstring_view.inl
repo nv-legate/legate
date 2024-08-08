@@ -76,37 +76,41 @@ std::basic_ostream<C, T>& operator<<(std::basic_ostream<C, T>& os, BasicZStringV
 }
 
 template <typename C, typename T>
-bool operator==(BasicZStringView<C, T> lhs, BasicZStringView<C, T> rhs)
+constexpr bool operator==(BasicZStringView<C, T> lhs, BasicZStringView<C, T> rhs)
 {
   return lhs.as_string_view() == rhs.as_string_view();
 }
 
 template <typename C, typename T>
-bool operator!=(BasicZStringView<C, T> lhs, BasicZStringView<C, T> rhs)
+constexpr bool operator!=(BasicZStringView<C, T> lhs, BasicZStringView<C, T> rhs)
 {
   return !(lhs == rhs);
 }
 
 template <typename C, typename T>
-bool operator==(typename BasicZStringView<C, T>::base_view_type lhs, BasicZStringView<C, T> rhs)
+constexpr bool operator==(typename BasicZStringView<C, T>::base_view_type lhs,
+                          BasicZStringView<C, T> rhs)
 {
   return lhs == rhs.as_string_view();
 }
 
 template <typename C, typename T>
-bool operator!=(typename BasicZStringView<C, T>::base_view_type lhs, BasicZStringView<C, T> rhs)
+constexpr bool operator!=(typename BasicZStringView<C, T>::base_view_type lhs,
+                          BasicZStringView<C, T> rhs)
 {
   return !(lhs == rhs);
 }
 
 template <typename C, typename T>
-bool operator==(BasicZStringView<C, T> lhs, typename BasicZStringView<C, T>::base_view_type rhs)
+constexpr bool operator==(BasicZStringView<C, T> lhs,
+                          typename BasicZStringView<C, T>::base_view_type rhs)
 {
   return lhs.as_string_view() == rhs;
 }
 
 template <typename C, typename T>
-bool operator!=(BasicZStringView<C, T> lhs, typename BasicZStringView<C, T>::base_view_type rhs)
+constexpr bool operator!=(BasicZStringView<C, T> lhs,
+                          typename BasicZStringView<C, T>::base_view_type rhs)
 {
   return !(lhs == rhs);
 }
@@ -116,13 +120,14 @@ bool operator!=(BasicZStringView<C, T> lhs, typename BasicZStringView<C, T>::bas
 namespace std {
 
 template <typename CharT, typename TraitsT>
-[[nodiscard]] std::size_t hash<legate::detail::BasicZStringView<CharT, TraitsT>>::operator()(
+[[nodiscard]] constexpr std::size_t
+hash<legate::detail::BasicZStringView<CharT, TraitsT>>::operator()(
   const legate::detail::BasicZStringView<CharT, TraitsT>& sv) const noexcept
 {
   using zsv_type = std::decay_t<decltype(sv)>;
   using sv_type  = typename zsv_type::base_view_type;
 
-  return std::hash<sv_type>{}(static_cast<const sv_type&>(sv));
+  return std::hash<sv_type>{}(sv.as_string_view());
 }
 
 }  // namespace std

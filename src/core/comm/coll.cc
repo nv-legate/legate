@@ -17,7 +17,7 @@
 #include "core/comm/detail/logger.h"
 #include "core/comm/detail/mpi_network.h"
 #include "core/utilities/assert.h"
-#include "core/utilities/env.h"
+#include "core/utilities/detail/env.h"
 #include "core/utilities/macros.h"
 
 #include "legate_defines.h"
@@ -103,7 +103,8 @@ void collAllgather(
 // called from main thread
 void collInit(int argc, char* argv[])
 {
-  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get(/* default_value */ false)) {
+  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) &&
+      detail::LEGATE_NEED_NETWORK.get(/* default_value */ false)) {
 #if LEGATE_DEFINED(LEGATE_USE_NETWORK)
     coll_detail::BackendNetwork::create_network(
       std::make_unique<detail::comm::coll::MPINetwork>(argc, argv));

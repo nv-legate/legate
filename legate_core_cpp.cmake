@@ -280,9 +280,9 @@ list(APPEND
      src/core/utilities/machine.cc
      src/core/utilities/linearize.cc
      src/core/utilities/internal_shared_ptr.cc
-     src/core/utilities/env.cc
      src/core/utilities/compiler.cc
      src/core/utilities/detail/buffer_builder.cc
+     src/core/utilities/detail/env.cc
      src/core/utilities/detail/tuple.cc
      src/core/utilities/detail/deserializer.cc
      src/core/utilities/detail/formatters.cc
@@ -631,7 +631,6 @@ install(FILES src/core/utilities/debug.h
               src/core/utilities/scope_guard.inl
               src/core/utilities/compiler.h
               src/core/utilities/macros.h
-              src/core/utilities/env.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/utilities)
 
 install(FILES src/core/utilities/detail/compressed_pair.h

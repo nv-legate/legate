@@ -12,11 +12,6 @@
 
 #include "core/mapping/detail/core_mapper.h"
 
-#include "core/mapping/detail/machine.h"
-#include "core/utilities/detail/core_ids.h"
-#include "core/utilities/detail/env_defaults.h"
-#include "core/utilities/env.h"
-
 #include <cstdlib>
 #include <vector>
 

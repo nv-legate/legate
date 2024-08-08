@@ -13,7 +13,7 @@
 #include "core/comm/detail/backend_network.h"
 
 #include "core/utilities/assert.h"
-#include "core/utilities/env.h"
+#include "core/utilities/detail/env.h"
 #include "core/utilities/macros.h"
 
 #include "legate_defines.h"

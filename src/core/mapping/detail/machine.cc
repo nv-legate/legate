@@ -13,15 +13,14 @@
 #include "core/mapping/detail/machine.h"
 
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/env.h"
 #include "core/utilities/detail/env_defaults.h"
-#include "core/utilities/env.h"
 
 #include "realm/network.h"
 
 #include <algorithm>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
-#include <sstream>
 #include <type_traits>
 #include <utility>
 
@@ -366,8 +365,8 @@ std::size_t LocalMachine::total_system_memory_size() const
 
 [[nodiscard]] std::size_t LocalMachine::calculate_field_reuse_size() const
 {
-  static const auto FIELD_REUSE_FRAC =
-    LEGATE_FIELD_REUSE_FRAC.get(LEGATE_FIELD_REUSE_FRAC_DEFAULT, LEGATE_FIELD_REUSE_FRAC_TEST);
+  static const auto FIELD_REUSE_FRAC = legate::detail::LEGATE_FIELD_REUSE_FRAC.get(
+    LEGATE_FIELD_REUSE_FRAC_DEFAULT, LEGATE_FIELD_REUSE_FRAC_TEST);
   if (has_gpus()) {
     return total_frame_buffer_size() / FIELD_REUSE_FRAC;
   }

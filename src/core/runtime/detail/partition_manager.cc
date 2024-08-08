@@ -16,11 +16,10 @@
 #include "core/partitioning/partition.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
-#include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/env.h"
 #include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/detail/zip.h"
-#include "core/utilities/env.h"
 
 #include <algorithm>
 #include <cmath>

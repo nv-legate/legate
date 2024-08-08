@@ -21,10 +21,10 @@
 #include "core/runtime/detail/shard.h"
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/env.h"
 #include "core/utilities/detail/formatters.h"
 #include "core/utilities/detail/type_traits.h"
 #include "core/utilities/detail/zip.h"
-#include "core/utilities/env.h"
 #include "core/utilities/linearize.h"
 
 #include "mappers/mapping_utilities.h"
@@ -101,7 +101,7 @@ BaseMapper::BaseMapper(mapping::Mapper* legate_mapper,
 BaseMapper::~BaseMapper()
 {
   // Compute the size of all our remaining instances in each memory
-  if (LEGATE_SHOW_USAGE.get().value_or(false)) {
+  if (legate::detail::LEGATE_SHOW_USAGE.get().value_or(false)) {
     auto mem_sizes             = local_instances_->aggregate_instance_sizes();
     const char* memory_kinds[] = {
 #define MEM_NAMES(name, desc) desc,

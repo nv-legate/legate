@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/utilities/env.h"
+#include "core/utilities/detail/env.h"
 
 #include "core/utilities/assert.h"             // LEGATE_LIKELY()
 #include "core/utilities/detail/formatters.h"  // to format ZStringView

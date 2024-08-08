@@ -12,7 +12,7 @@
 
 #include "core/runtime/detail/config.h"
 
-#include "core/utilities/env.h"
+#include "core/utilities/detail/env.h"
 
 namespace legate::detail {
 
