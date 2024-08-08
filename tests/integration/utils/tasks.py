@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+from types import ModuleType
 from typing import Any
 
 try:
@@ -45,6 +46,15 @@ def asarray(alloc: InlineAllocation) -> NDArray[Any]:
         check_cupy(exc)
         arr = cupy.asarray(alloc)
     return arr
+
+
+def numpy_or_cupy(alloc: InlineAllocation) -> ModuleType:
+    try:
+        np.asarray(alloc)
+    except ValueError as exc:
+        check_cupy(exc)
+        return cupy
+    return np
 
 
 @task(variants=tuple(KNOWN_VARIANTS))

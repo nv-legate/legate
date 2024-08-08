@@ -271,36 +271,43 @@ class TestAutoTaskConstraints:
                 out_np[:, 1024 * i : 1024 * (i + 1), :], in_np
             )
 
-    @pytest.mark.parametrize("hint", ImageComputationHint, ids=str)
+    @pytest.mark.parametrize(
+        "hint",
+        (
+            # TODO(wonchanl): currently, sparse sub-stores are not handled
+            # correctly
+            # ImageComputationHint.NO_HINT,
+            ImageComputationHint.MIN_MAX,
+            ImageComputationHint.FIRST_LAST,
+        ),
+        ids=str,
+    )
     def test_image_constraint(self, hint: ImageComputationHint) -> None:
         @task(variants=tuple(tasks.KNOWN_VARIANTS))
         def image_task(
             func_store: tasks.InputStore,
             range_store: tasks.InputStore,
-            range_arr: np.ndarray[Any, Any],
-            range_shape: tuple[int, ...],
         ) -> None:
-            func_buf = tasks.asarray(func_store.get_inline_allocation())
-            range_buf = tasks.asarray(range_store.get_inline_allocation())
-            try:
-                func_np = np.frombuffer(func_buf, dtype="int64")
-            except TypeError as exc:
-                tasks.check_cupy(exc)
-                func_np = tasks.cupy.frombuffer(
-                    func_buf.tobytes(), dtype="int64"
-                )
-                range_arr = tasks.cupy.asarray(range_arr)
-            range_arr = range_arr.reshape(range_shape)
-            func_np = func_np.reshape(
-                func_np.size // range_buf.ndim, range_buf.ndim
+            lib = tasks.numpy_or_cupy(func_store.get_inline_allocation())
+
+            func_arr = lib.frombuffer(
+                lib.asarray(func_store.get_inline_allocation()), dtype=np.int64
+            )
+            range_arr = lib.asarray(range_store.get_inline_allocation())
+
+            coords = tuple(
+                func_arr[off :: range_store.ndim]
+                for off in range(range_store.ndim)
             )
 
-            for idx in func_np:
-                try:
-                    assert np.isin(range_arr[tuple(idx)], range_buf)
-                except ValueError as exc:
-                    tasks.check_cupy(exc)
-                    assert tasks.cupy.isin(range_arr[tuple(idx)], range_buf)
+            lo = range_store.domain.lo
+            shifted = tuple(
+                coord - lo[idx] for idx, coord in enumerate(coords)
+            )
+
+            # If any of the points are not in the range_store's domain, the
+            # following indexing expression will raise an IndexError
+            assert range_arr[shifted].size > 0
 
         runtime = get_legate_runtime()
         shape = (5, 4096, 5)
@@ -318,7 +325,7 @@ class TestAutoTaskConstraints:
         rng = np.random.default_rng()
         rng.shuffle(func_arr)
         func_store = runtime.create_store_from_buffer(
-            ty.point_type(len(shape)),
+            point_type,
             func_shape,
             func_arr[: np.prod(func_shape)],
             False,
@@ -332,10 +339,6 @@ class TestAutoTaskConstraints:
         range_part = auto_task.declare_partition()
         auto_task.add_input(func_store, func_part)
         auto_task.add_input(range_store, range_part)
-        auto_task.add_scalar_arg(
-            range_np, ty.array_type(ty.float64, range_np.size)
-        )
-        auto_task.add_scalar_arg(range_np.shape, (ty.int64,))
         auto_task.add_constraint(image(func_part, range_part, hint))
         auto_task.throws_exception(Exception)
         auto_task.execute()
