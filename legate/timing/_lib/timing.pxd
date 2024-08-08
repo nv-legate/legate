@@ -9,15 +9,22 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from libc.stdint cimport int64_t
+
+from ...core._lib.utilities.unconstructable cimport Unconstructable
+
+
 cdef extern from "timing/timing.h" namespace "legate::timing" nogil:
     cdef cppclass Time:
-        int value()
+        int64_t value()
 
     cdef Time measure_microseconds()
     cdef Time measure_nanoseconds()
 
 
-cdef class PyTime:
+cdef class PyTime(Unconstructable):
     cdef Time _time
+
+    cpdef int64_t value(self)
 
 cpdef PyTime time(str units = *)

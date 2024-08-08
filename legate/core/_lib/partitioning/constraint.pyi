@@ -13,11 +13,13 @@ from collections.abc import Callable, Collection
 from enum import IntEnum, unique
 from typing import Any, TypeAlias, overload
 
-class Variable:
+from ..utilities.unconstructable import Unconstructable
+
+class Variable(Unconstructable):
     def __str__(self) -> str: ...
     def __repr__(self) -> str: ...
 
-class Constraint:
+class Constraint(Unconstructable):
     def __str__(self) -> str: ...
     def __repr__(self) -> str: ...
 

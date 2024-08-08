@@ -14,11 +14,12 @@ from typing import Any
 
 from ...data_interface import LegateDataInterfaceItem
 from ..type.type_info import Type
+from ..utilities.unconstructable import Unconstructable
 from .logical_store import LogicalStore
 from .physical_array import PhysicalArray
 from .shape import Shape
 
-class LogicalArray:
+class LogicalArray(Unconstructable):
     @staticmethod
     def from_store(store: LogicalStore) -> LogicalArray: ...
     @staticmethod

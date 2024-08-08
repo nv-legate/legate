@@ -9,10 +9,13 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from libc.stdint cimport int64_t
 from libcpp.utility cimport move as std_move
 
+from ...core._lib.utilities.unconstructable cimport Unconstructable
 
-cdef class PyTime:
+
+cdef class PyTime(Unconstructable):
     @staticmethod
     def measure_microseconds() -> PyTime:
         cdef PyTime result = PyTime.__new__(PyTime)
@@ -25,7 +28,7 @@ cdef class PyTime:
         result._time = std_move(measure_nanoseconds())
         return result
 
-    def value(self) -> int:
+    cpdef int64_t value(self):
         return self._time.value()
 
     def __int__(self) -> int:

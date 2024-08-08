@@ -14,8 +14,9 @@ from typing import Any
 
 from ..._ext.task.type import VariantFunction
 from ..utilities.typedefs import LocalTaskID, VariantCode
+from ..utilities.unconstructable import Unconstructable
 
-class TaskInfo:
+class TaskInfo(Unconstructable):
     def __dealloc__(self) -> None: ...
     def __repr__(self) -> str: ...
     @classmethod

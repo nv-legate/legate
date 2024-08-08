@@ -9,7 +9,9 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-class SymbolicExpr:
+from ..utilities.unconstructable import Unconstructable
+
+class SymbolicExpr(Unconstructable):
     @property
     def dim(self) -> int: ...
     @property

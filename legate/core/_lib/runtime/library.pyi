@@ -18,8 +18,9 @@ from ..utilities.typedefs import (
     LocalRedopID,
     LocalTaskID,
 )
+from ..utilities.unconstructable import Unconstructable
 
-class Library:
+class Library(Unconstructable):
     def get_new_task_id(self) -> LocalTaskID: ...
     # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
     # but we allow int as a type-checking convencience to users

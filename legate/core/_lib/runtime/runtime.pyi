@@ -21,9 +21,10 @@ from ..mapping.machine import Machine
 from ..operation.task import AutoTask, ManualTask
 from ..type.type_info import Type
 from ..utilities.typedefs import LocalTaskID
+from ..utilities.unconstructable import Unconstructable
 from .library import Library
 
-class Runtime:
+class Runtime(Unconstructable):
     def find_library(self, library_name: str) -> Library: ...
     @property
     def core_library(self) -> Library: ...

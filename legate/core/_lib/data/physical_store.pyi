@@ -14,9 +14,10 @@ from typing import Any
 from ..mapping.mapping import StoreTarget
 from ..type.type_info import Type
 from ..utilities.typedefs import Domain
+from ..utilities.unconstructable import Unconstructable
 from .inline_allocation import InlineAllocation
 
-class PhysicalStore:
+class PhysicalStore(Unconstructable):
     @property
     def ndim(self) -> int: ...
     @property

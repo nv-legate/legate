@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 
 cdef class Unconstructable:
-    def __init__(self) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         raise ValueError(
             f"{type(self).__name__} objects must not be constructed directly"
         )

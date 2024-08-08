@@ -13,9 +13,10 @@ from typing import Any
 
 from ..type.type_info import Type
 from ..utilities.typedefs import Domain
+from ..utilities.unconstructable import Unconstructable
 from .physical_store import PhysicalStore
 
-class PhysicalArray:
+class PhysicalArray(Unconstructable):
     @property
     def nullable(self) -> bool: ...
     @property

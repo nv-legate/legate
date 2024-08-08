@@ -14,10 +14,11 @@ from typing import Any
 
 from ...data_interface import Field, LegateDataInterfaceItem
 from ..type.type_info import Type
+from ..utilities.unconstructable import Unconstructable
 from .physical_store import PhysicalStore
 from .shape import Shape
 
-class LogicalStore:
+class LogicalStore(Unconstructable):
     @property
     def shape(self) -> Shape: ...
     @property

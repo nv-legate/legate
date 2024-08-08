@@ -16,9 +16,10 @@ from ..data.logical_array import LogicalArray
 from ..data.logical_store import LogicalStore, LogicalStorePartition
 from ..partitioning.constraint import Constraint, Variable
 from ..type.type_info import Type
+from ..utilities.unconstructable import Unconstructable
 from .projection import SymbolicPoint
 
-class AutoTask:
+class AutoTask(Unconstructable):
     def lock(self) -> None: ...
     def add_input(
         self,
@@ -67,7 +68,7 @@ class AutoTask:
     @property
     def raw_handle(self) -> int: ...
 
-class ManualTask:
+class ManualTask(Unconstructable):
     def add_input(
         self,
         arg: LogicalStore | LogicalStorePartition,
