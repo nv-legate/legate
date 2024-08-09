@@ -170,6 +170,50 @@ class Test_extract_values:
         assert m.extract_values(val) == expected
 
 
+class Test_parse_cuda_visible_devices:
+    test_data_singleton = [
+        ("0", 8, [0]),
+        ("7", 8, [7]),
+    ]
+
+    @pytest.mark.parametrize(
+        "env_string,max_gpu,expected", test_data_singleton
+    )
+    def test_singleton(
+        self, env_string: str, max_gpu: int, expected: list[int]
+    ) -> None:
+        assert m.parse_cuda_visible_devices(env_string, max_gpu) == expected
+
+    test_data_list = [
+        ("1,2,3", 8, [1, 2, 3]),
+        ("3,1,2", 8, [3, 1, 2]),
+    ]
+
+    @pytest.mark.parametrize("env_string,max_gpu,expected", test_data_list)
+    def test_list(
+        self, env_string: str, max_gpu: int, expected: list[int]
+    ) -> None:
+        assert m.parse_cuda_visible_devices(env_string, max_gpu) == expected
+
+    test_data_partial = [
+        ("1,2,-3", 8, [1, 2]),
+        ("1,2,x", 8, [1, 2]),
+        ("1,2,8", 8, [1, 2]),
+        ("1,2,-3,4", 8, [1, 2]),
+        ("1,2,x,4", 8, [1, 2]),
+        ("1,2,8,4", 8, [1, 2]),
+        ("-3,1,2", 8, []),
+        ("x,3,4", 8, []),
+        ("8,3,4", 8, []),
+    ]
+
+    @pytest.mark.parametrize("env_string,max_gpu,expected", test_data_partial)
+    def test_partial(
+        self, env_string: str, max_gpu: int, expected: list[int]
+    ) -> None:
+        assert m.parse_cuda_visible_devices(env_string, max_gpu) == expected
+
+
 @pytest.mark.skipif(platform.system() == "Darwin", reason="non-OSX test")
 def test_linux_cpus_repects_affinity(mocker: MockerFixture) -> None:
     mocker.patch(

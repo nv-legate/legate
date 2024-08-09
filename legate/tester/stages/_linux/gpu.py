@@ -44,6 +44,7 @@ class GPU(TestStage):
 
     def __init__(self, config: Config, system: TestSystem) -> None:
         self._init(config, system)
+        self._gpus = system.gpus
 
     def env(self, config: Config, system: TestSystem) -> EnvDict:
         return {}
@@ -52,13 +53,19 @@ class GPU(TestStage):
         time.sleep(config.execution.gpu_delay / 1000)
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
+        shard_gpu_ids = Shard(
+            ranks=[
+                tuple(self._gpus[r].id for r in rank) for rank in shard.ranks
+            ]
+        )
+
         args = [
             "--fbmem",
             str(config.memory.fbmem),
             "--gpus",
             str(sum(len(r) for r in shard.ranks) // len(shard.ranks)),
             "--gpu-bind",
-            str(shard),
+            str(shard_gpu_ids),
             "--sysmem",
             str(SMALL_SYSMEM),
         ]

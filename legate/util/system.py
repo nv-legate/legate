@@ -127,6 +127,22 @@ class System:
             )
             results.append(GPUInfo(i, info.total))
 
+        # Since pyNVML currently ignores CUDA_VISIBLE_DEVICES, we need to parse
+        # it ourselves
+        if env_string := self.env.get("CUDA_VISIBLE_DEVICES"):
+            # TODO(wonchanl): technically, CUDA_VISIBLE_DEVICES can have UUIDs
+            # as GPU identifiers, but here we assume it only has GPU indices
+
+            # We stop at the first invalid token to be consistent with how
+            # CUDA_VISIBLE_DEVICES is parsed by CUDA
+
+            results = [
+                results[device_id]
+                for device_id in parse_cuda_visible_devices(
+                    env_string, num_gpus
+                )
+            ]
+
         return tuple(results)
 
 
@@ -161,3 +177,18 @@ def linux_load_sibling_sets() -> set[tuple[int, ...]]:
         sibling_sets.add(extract_values(line.strip()))
 
     return sibling_sets
+
+
+def parse_cuda_visible_devices(env_string: str, num_gpus: int) -> list[int]:
+    device_ids = []
+
+    for token in env_string.split(","):
+        try:
+            device_id = int(token)
+            if device_id < 0 or device_id >= num_gpus:
+                break
+            device_ids.append(device_id)
+        except ValueError:
+            break
+
+    return device_ids
