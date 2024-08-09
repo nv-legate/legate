@@ -16,7 +16,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "mpi_wrapper")
 
 project(legate_mpi_wrapper VERSION 1.0 LANGUAGES CXX)
 
-if((NOT DEFINED CMAKE_BUILD_TYPE) OR (NOT CMAKE_BUILD_TYPE))
+if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
@@ -64,7 +64,7 @@ if(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES)
   )
 endif()
 
-target_link_libraries(mpi_wrapper PRIVATE MPI::MPI_CXX)
+target_link_libraries(mpi_wrapper PUBLIC MPI::MPI_CXX)
 
 set(lib_name "lgcore_mpi_wrapper")
 
