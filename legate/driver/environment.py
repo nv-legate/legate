@@ -30,7 +30,7 @@ def env_gpus(config: ConfigProtocol) -> EnvPart:
 
 
 def env_omps(config: ConfigProtocol) -> EnvPart:
-    return ("--omps", str(config.core.openmp))
+    return ("--omps", str(config.core.omps))
 
 
 def env_ompthreads(config: ConfigProtocol) -> EnvPart:
@@ -75,7 +75,19 @@ def env_log_file(config: ConfigProtocol) -> EnvPart:
 
 
 def env_eager_alloc(config: ConfigProtocol) -> EnvPart:
-    return ("-lg:eager_alloc_percentage", str(config.memory.eager_alloc))
+    return ("--eager-alloc-percentage", str(config.memory.eager_alloc))
+
+
+def env_profile(config: ConfigProtocol) -> EnvPart:
+    return ("--profile",) if config.profiling.profile else ()
+
+
+def env_spy(config: ConfigProtocol) -> EnvPart:
+    return ("--spy",) if config.debugging.spy else ()
+
+
+def env_freeze_on_error(config: ConfigProtocol) -> EnvPart:
+    return ("--freeze-on-error",) if config.debugging.freeze_on_error else ()
 
 
 ENV_PARTS_LEGATE = (
@@ -91,4 +103,8 @@ ENV_PARTS_LEGATE = (
     env_log_levels,
     env_logdir,
     env_log_file,
+    env_eager_alloc,
+    env_profile,
+    env_spy,
+    env_freeze_on_error,
 )

@@ -55,6 +55,7 @@
 #include "realm/network.h"
 
 #include <cstdlib>
+#include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <limits>
@@ -82,6 +83,21 @@ namespace {
 // generate IDs
 constexpr std::string_view CORE_LIBRARY_NAME = "legate.core";
 constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
+
+[[nodiscard]] std::filesystem::path normalize_log_dir(std::string log_dir)
+{
+  namespace fs = std::filesystem;
+
+  auto log_path = fs::path{std::move(log_dir)};
+
+  if (log_path.empty()) {
+    log_path = fs::current_path();  // cwd
+  }
+  // += (not /=) is intentional, will result in directory separator being appended
+  // verbatim
+  log_path += fs::path::preferred_separator;
+  return log_path;
+}
 
 }  // namespace
 
@@ -1559,7 +1575,10 @@ void handle_legate_args(std::string_view legate_config)
 
   std::string log_levels{};
   std::string log_dir{};
-  bool log_to_file = false;
+  bool log_to_file     = false;
+  bool profile         = false;
+  bool spy             = false;
+  bool freeze_on_error = false;
 
   Realm::CommandLineParser cp;
   auto args          = split_in_args(legate_config);
@@ -1574,9 +1593,12 @@ void handle_legate_args(std::string_view legate_config)
                          .add_option_int("--zcmem", zcmem.ref())
                          .add_option_int("--regmem", regmem.ref())
                          .add_option_int("--eager-alloc-percentage", eager_alloc_percent.ref())
+                         .add_option_bool("--profile", profile)
+                         .add_option_bool("--spy", spy)
                          .add_option_string("--logging", log_levels)
                          .add_option_string("--logdir", log_dir)
                          .add_option_bool("--log-to-file", log_to_file)
+                         .add_option_bool("--freeze-on-error", freeze_on_error)
                          .parse_command_line(args);
 
   if (!success) {
@@ -1636,23 +1658,50 @@ void handle_legate_args(std::string_view legate_config)
   // Set NUMA configuration properties
   try_set_property(rt, "numa", "numamem", numamem, "unable to set --numamem");
 
+  auto log_path = normalize_log_dir(std::move(log_dir));
+
   std::stringstream args_ss;
 
   // some values have to be passed via env var
   args_ss << "-lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0 ";
+
+  if (profile) {
+    args_ss << "-lg:prof 1 ";
+    args_ss << "-lg:prof_logfile ";
+    args_ss << log_path;
+    if (log_levels.empty()) {
+      log_levels = "legion_prof=2";
+    } else {
+      log_levels += ",legion_prof=2";
+    }
+  }
+
+  if (spy) {
+    args_ss << "-lg:spy ";
+    if (log_levels.empty()) {
+      log_levels = "legion_spy=2";
+    } else {
+      log_levels += ",legion_spy=2";
+    }
+  }
+
+  if (freeze_on_error) {
+    args_ss << "-ll:force_kthreads ";
+    constexpr detail::EnvironmentVariable<std::uint32_t> LEGION_FREEZE_ON_ERROR{
+      "LEGION_FREEZE_ON_ERROR"};
+    LEGION_FREEZE_ON_ERROR.set(1);
+  }
+
   if (!log_levels.empty()) {
     args_ss << "-level " << log_levels << " ";
   }
+
   if (log_to_file) {
     args_ss << "-logfile ";
-
-    if (log_dir.empty()) {
-      args_ss << "./";
-    } else {
-      args_ss << log_dir << "/";
-    }
+    args_ss << log_path;
     args_ss << "legate_%.log -errlevel 4 ";
   }
+
   if (const auto existing_default_args = LEGION_DEFAULT_ARGS.get();
       existing_default_args.has_value()) {
     args_ss << *existing_default_args;

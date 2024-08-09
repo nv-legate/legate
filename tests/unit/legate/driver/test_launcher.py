@@ -244,24 +244,6 @@ class TestLauncherEnv:
         # value is what it is, just verify it is a positive int
         assert int(env[name]) > 0
 
-    def test_freeze_on_error_false(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert "LEGION_FREEZE_ON_ERROR" not in env
-
-    def test_freeze_on_error_true(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch, "--freeze-on-error"])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert env["LEGION_FREEZE_ON_ERROR"] == "1"
-
     def test_realm_backtrace(
         self, genconfig: GenConfig, launch: LauncherType
     ) -> None:

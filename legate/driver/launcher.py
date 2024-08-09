@@ -197,7 +197,7 @@ class Launcher:
             # assert "LEGATE_NEED_CUDA" not in system.env
             env["LEGATE_NEED_CUDA"] = "1"
 
-        if config.core.openmp > 0:
+        if config.core.omps > 0:
             # TODO(bryevdv)
             # assert "LEGATE_NEED_OPENMP" not in system.env
             env["LEGATE_NEED_OPENMP"] = "1"
@@ -231,10 +231,6 @@ class Launcher:
 
         assert env["LEGATE_MAX_DIM"] is not None
         assert env["LEGATE_MAX_FIELDS"] is not None
-
-        # Special run modes
-        if config.debugging.freeze_on_error:
-            env["LEGION_FREEZE_ON_ERROR"] = "1"
 
         # Debugging options
         # TODO: consider also adding UCX_HANDLE_ERRORS=none if using ucx

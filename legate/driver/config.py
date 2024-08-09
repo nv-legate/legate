@@ -69,9 +69,14 @@ class Binding(DataclassMixin):
 class Core(DataclassMixin):
     cpus: int
     gpus: int
-    openmp: int
+    omps: int
     ompthreads: int
     utility: int
+
+    # compat alias for old field name
+    @property
+    def openmp(self) -> int:
+        return self.omps
 
 
 @dataclass(frozen=True)

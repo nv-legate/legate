@@ -63,7 +63,7 @@ class TestParserDefaults:
         assert m.parser.get_default("gpus") == defaults.LEGATE_GPUS
 
     def test_omps(self) -> None:
-        assert m.parser.get_default("openmp") == defaults.LEGATE_OMP_PROCS
+        assert m.parser.get_default("omps") == defaults.LEGATE_OMP_PROCS
 
     def test_ompthreads(self) -> None:
         assert (

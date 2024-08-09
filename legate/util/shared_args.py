@@ -112,7 +112,7 @@ OMPS = Argument(
     ArgSpec(
         type=int,
         default=defaults.LEGATE_OMP_PROCS,
-        dest="openmp",
+        dest="omps",
         help="Number of OpenMP groups to use per rank",
     ),
 )

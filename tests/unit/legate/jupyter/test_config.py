@@ -55,7 +55,7 @@ class TestConfig:
         assert c.core == m.Core(
             cpus=4,
             gpus=0,
-            openmp=defaults.LEGATE_OMP_PROCS,
+            omps=defaults.LEGATE_OMP_PROCS,
             ompthreads=defaults.LEGATE_OMP_THREADS,
             utility=defaults.LEGATE_UTILITY_CORES,
         )
