@@ -12,7 +12,7 @@
 
 #include "core/data/detail/logical_region_field.h"
 
-#include "core/partitioning/partition.h"
+#include "core/partitioning/detail/partition.h"
 #include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/tuple.h"

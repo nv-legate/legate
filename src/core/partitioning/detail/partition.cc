@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/partitioning/partition.h"
+#include "core/partitioning/detail/partition.h"
 
 #include "core/data/detail/logical_store.h"
 #include "core/runtime/detail/partition_manager.h"
@@ -24,7 +24,7 @@
 #include <fmt/ranges.h>
 #include <functional>
 
-namespace legate {
+namespace legate::detail {
 
 bool NoPartition::is_disjoint_for(const Domain& launch_domain) const
 {
@@ -482,4 +482,4 @@ std::ostream& operator<<(std::ostream& out, const Partition& partition)
   return out;
 }
 
-}  // namespace legate
+}  // namespace legate::detail

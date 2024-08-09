@@ -12,7 +12,7 @@
 
 #include "core/data/detail/transform.h"
 
-#include "core/partitioning/partition.h"
+#include "core/partitioning/detail/partition.h"
 #include "core/utilities/detail/buffer_builder.h"
 #include "core/utilities/detail/core_ids.h"
 

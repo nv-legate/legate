@@ -49,9 +49,6 @@ TEST_F(Constraint, Variable)
   auto part     = task.declare_partition();
   auto part_imp = part.impl();
   ASSERT_FALSE(part_imp->closed());
-  ASSERT_EQ(part_imp->kind(), legate::detail::Expr::Kind::VARIABLE);
-  ASSERT_EQ(dynamic_cast<const legate::detail::Literal*>(part_imp), nullptr);
-  ASSERT_EQ(dynamic_cast<const legate::detail::Variable*>(part_imp), part_imp);
   ASSERT_TRUE(part_imp->operation() != nullptr);
   ASSERT_FALSE(part.to_string().empty());
 

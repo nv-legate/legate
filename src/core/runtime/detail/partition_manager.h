@@ -13,9 +13,8 @@
 #pragma once
 
 #include "core/data/shape.h"
-#include "core/partitioning/constraint.h"
-#include "core/partitioning/partition.h"
-#include "core/partitioning/restriction.h"
+#include "core/partitioning/detail/partition.h"
+#include "core/partitioning/detail/restriction.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/hash.h"
 

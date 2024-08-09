@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "core/partitioning/partition.h"
+#include "core/partitioning/detail/partition.h"
 
 #include <stdexcept>
 
-namespace legate {
+namespace legate::detail {
 
 inline NoPartition::Kind NoPartition::kind() const { return Kind::NO_PARTITION; }
 
@@ -87,4 +87,4 @@ inline bool Image::is_convertible() const { return false; }
 
 // ==========================================================================================
 
-}  // namespace legate
+}  // namespace legate::detail

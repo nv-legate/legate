@@ -15,7 +15,7 @@
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/partitioning/detail/constraint_solver.h"
-#include "core/partitioning/partition.h"
+#include "core/partitioning/detail/partition.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/region_manager.h"

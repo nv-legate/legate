@@ -12,10 +12,9 @@
 
 #pragma once
 
-#include "core/data/shape.h"
 #include "core/mapping/detail/machine.h"
 #include "core/partitioning/constraint.h"
-#include "core/partitioning/restriction.h"
+#include "core/partitioning/detail/restriction.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/typedefs.h"
@@ -25,11 +24,9 @@
 #include <string>
 
 namespace legate::detail {
+
 class LogicalStore;
 class Storage;
-}  // namespace legate::detail
-
-namespace legate {
 
 class Partition {
  public:
@@ -258,6 +255,6 @@ class Image : public Partition {
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);
 
-}  // namespace legate
+}  // namespace legate::detail
 
-#include "core/partitioning/partition.inl"
+#include "core/partitioning/detail/partition.inl"

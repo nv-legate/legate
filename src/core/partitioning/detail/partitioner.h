@@ -23,15 +23,10 @@
 #include <unordered_map>
 #include <vector>
 
-namespace legate {
-
-class Partition;
-
-}  // namespace legate
-
 namespace legate::detail {
 
 class ConstraintSolver;
+class Partition;
 class Partitioner;
 
 class Strategy {

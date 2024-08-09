@@ -17,14 +17,6 @@
 
 namespace legate::detail {
 
-inline bool Literal::closed() const { return true; }
-
-inline Literal::Kind Literal::kind() const { return Kind::LITERAL; }
-
-inline const InternalSharedPtr<Partition>& Literal::partition() const { return partition_; }
-
-// ==========================================================================================
-
 inline Variable::Variable(const Operation* op, std::int32_t id) : op_{op}, id_{id} {}
 
 inline bool operator==(const Variable& lhs, const Variable& rhs)
@@ -33,8 +25,6 @@ inline bool operator==(const Variable& lhs, const Variable& rhs)
 }
 
 inline bool Variable::closed() const { return false; }
-
-inline Variable::Kind Variable::kind() const { return Kind::VARIABLE; }
 
 inline const Operation* Variable::operation() const { return op_; }
 

@@ -25,14 +25,10 @@
 #include <memory>
 #include <vector>
 
-namespace legate {
+namespace legate::detail {
 
 class Partition;
 class Tiling;
-
-}  // namespace legate
-
-namespace legate::detail {
 
 class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionField> {
  public:

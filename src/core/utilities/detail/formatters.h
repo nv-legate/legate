@@ -33,7 +33,7 @@ class Type;
 class Operation;
 class Shape;
 class Constraint;
-class Expr;
+class Variable;
 
 template <typename CharT, typename TraitsT>
 class BasicZStringView;
@@ -75,17 +75,8 @@ struct formatter<T, Char, std::enable_if_t<std::is_base_of_v<legate::detail::Con
 };
 
 template <>
-struct formatter<legate::detail::Expr> : formatter<std::string> {
-  format_context::iterator format(const legate::detail::Expr& expr, format_context& ctx) const;
-};
-
-template <typename T, typename Char>
-struct formatter<T, Char, std::enable_if_t<std::is_base_of_v<legate::detail::Expr, T>>>
-  : formatter<legate::detail::Expr, Char> {
-  format_context::iterator format(const T& expr, format_context& ctx) const
-  {
-    return formatter<legate::detail::Expr, Char>::format(expr, ctx);
-  }
+struct formatter<legate::detail::Variable> : formatter<std::string> {
+  format_context::iterator format(const legate::detail::Variable& var, format_context& ctx) const;
 };
 
 template <>

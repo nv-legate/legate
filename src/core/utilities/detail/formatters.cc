@@ -47,10 +47,10 @@ format_context::iterator formatter<legate::detail::Constraint>::format(
   return formatter<std::string>::format(constraint.to_string(), ctx);
 }
 
-format_context::iterator formatter<legate::detail::Expr>::format(const legate::detail::Expr& expr,
-                                                                 format_context& ctx) const
+format_context::iterator formatter<legate::detail::Variable>::format(
+  const legate::detail::Variable& var, format_context& ctx) const
 {
-  return formatter<std::string>::format(expr.to_string(), ctx);
+  return formatter<std::string>::format(var.to_string(), ctx);
 }
 
 format_context::iterator formatter<legate::VariantCode>::format(legate::VariantCode variant,

@@ -21,8 +21,8 @@
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/store_projection.h"
 #include "core/operation/projection.h"
-#include "core/partitioning/partition.h"
-#include "core/partitioning/restriction.h"
+#include "core/partitioning/detail/partition.h"
+#include "core/partitioning/detail/restriction.h"
 #include "core/utilities/detail/buffer_builder.h"
 #include "core/utilities/internal_shared_ptr.h"
 

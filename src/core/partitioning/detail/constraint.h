@@ -21,66 +21,24 @@
 #include <string>
 #include <vector>
 
-namespace legate {
-class Partition;
-}  // namespace legate
-
 namespace legate::detail {
+
 class Operation;
+class Partition;
 class Strategy;
 
 class LogicalStore;
-class Variable;
 
-class Expr {
- public:
-  enum class Kind : std::uint8_t {
-    LITERAL  = 0,
-    VARIABLE = 1,
-  };
-
-  Expr()                           = default;
-  virtual ~Expr()                  = default;
-  Expr(const Expr&)                = default;
-  Expr(Expr&&) noexcept            = default;
-  Expr& operator=(const Expr&)     = default;
-  Expr& operator=(Expr&&) noexcept = default;
-
-  virtual void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const = 0;
-  [[nodiscard]] virtual bool closed() const                                                  = 0;
-  [[nodiscard]] virtual std::string to_string() const                                        = 0;
-  [[nodiscard]] virtual Kind kind() const                                                    = 0;
-};
-
-class Literal final : public Expr {
- public:
-  explicit Literal(InternalSharedPtr<Partition> partition);
-
-  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
-
-  [[nodiscard]] bool closed() const override;
-  [[nodiscard]] std::string to_string() const override;
-
-  [[nodiscard]] Kind kind() const override;
-
-  [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
-
- private:
-  InternalSharedPtr<Partition> partition_{};
-};
-
-class Variable final : public Expr {
+class Variable {
  public:
   Variable(const Operation* op, std::int32_t id);
 
   friend bool operator==(const Variable& lhs, const Variable& rhs);
 
-  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const override;
+  void find_partition_symbols(std::vector<const Variable*>& partition_symbols) const;
 
-  [[nodiscard]] bool closed() const override;
-  [[nodiscard]] std::string to_string() const override;
-
-  [[nodiscard]] Kind kind() const override;
+  [[nodiscard]] bool closed() const;
+  [[nodiscard]] std::string to_string() const;
 
   [[nodiscard]] const Operation* operation() const;
   [[nodiscard]] std::int32_t id() const;

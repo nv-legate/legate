@@ -13,7 +13,7 @@
 #pragma once
 
 #include "core/partitioning/detail/constraint.h"
-#include "core/partitioning/restriction.h"
+#include "core/partitioning/detail/restriction.h"
 #include "core/utilities/detail/ordered_set.h"
 #include "core/utilities/hash.h"
 #include "core/utilities/internal_shared_ptr.h"

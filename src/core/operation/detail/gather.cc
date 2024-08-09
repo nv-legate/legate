@@ -15,8 +15,8 @@
 #include "core/operation/detail/copy_launcher.h"
 #include "core/partitioning/detail/constraint.h"
 #include "core/partitioning/detail/constraint_solver.h"
+#include "core/partitioning/detail/partition.h"
 #include "core/partitioning/detail/partitioner.h"
-#include "core/partitioning/partition.h"
 
 namespace legate::detail {
 

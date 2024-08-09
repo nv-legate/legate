@@ -14,7 +14,7 @@
 
 #include "core/utilities/tuple.h"
 
-namespace legate {
+namespace legate::detail {
 
 /**
  * @brief Enum to describe partitioning preference on dimensions of a store
@@ -33,4 +33,4 @@ using Restrictions = tuple<Restriction>;
 
 void join_inplace(Restrictions& lhs, const Restrictions& rhs);
 
-}  // namespace legate
+}  // namespace legate::detail

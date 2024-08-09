@@ -13,7 +13,7 @@
 #include "core/runtime/detail/partition_manager.h"
 
 #include "core/mapping/detail/machine.h"
-#include "core/partitioning/partition.h"
+#include "core/partitioning/detail/partition.h"
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/enumerate.h"

@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/partitioning/restriction.h"
+#include "core/partitioning/detail/restriction.h"
 
 #include "core/utilities/detail/zip.h"
 
 #include <algorithm>
 #include <stdexcept>
 
-namespace legate {
+namespace legate::detail {
 
 Restriction join(Restriction lhs, Restriction rhs) { return std::max(lhs, rhs); }
 
@@ -46,4 +46,4 @@ void join_inplace(Restrictions& lhs, const Restrictions& rhs)
   }
 }
 
-}  // namespace legate
+}  // namespace legate::detail

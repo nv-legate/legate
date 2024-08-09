@@ -244,12 +244,12 @@ list(APPEND
      src/core/operation/detail/task.cc
      src/core/operation/detail/task_launcher.cc
      src/core/partitioning/constraint.cc
-     src/core/partitioning/partition.cc
-     src/core/partitioning/restriction.cc
      src/core/partitioning/detail/constraint.cc
      src/core/partitioning/detail/constraint_solver.cc
+     src/core/partitioning/detail/partition.cc
      src/core/partitioning/detail/partitioner.cc
      src/core/partitioning/detail/partitioning_tasks.cc
+     src/core/partitioning/detail/restriction.cc
      src/core/runtime/library.cc
      src/core/runtime/runtime.cc
      src/core/runtime/scope.cc
@@ -576,8 +576,6 @@ install(FILES src/core/operation/projection.h src/core/operation/projection.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/operation)
 
 install(FILES src/core/partitioning/constraint.h src/core/partitioning/constraint.inl
-              src/core/partitioning/partition.h src/core/partitioning/partition.inl
-              src/core/partitioning/restriction.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/core/partitioning)
 
 install(FILES src/core/runtime/exception_mode.h

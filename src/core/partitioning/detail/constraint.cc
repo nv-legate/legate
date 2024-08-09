@@ -13,20 +13,14 @@
 #include "core/partitioning/detail/constraint.h"
 
 #include "core/operation/detail/operation.h"
+#include "core/partitioning/detail/partition.h"
 #include "core/partitioning/detail/partitioner.h"
-#include "core/partitioning/partition.h"
 #include "core/utilities/memory.h"
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
 namespace legate::detail {
-
-Literal::Literal(InternalSharedPtr<Partition> partition) : partition_{std::move(partition)} {}
-
-std::string Literal::to_string() const { return partition()->to_string(); }
-
-void Literal::find_partition_symbols(std::vector<const Variable*>& /*partition_symbols*/) const {}
 
 void Variable::find_partition_symbols(std::vector<const Variable*>& partition_symbols) const
 {

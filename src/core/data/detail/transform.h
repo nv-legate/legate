@@ -13,7 +13,7 @@
 #pragma once
 
 #include "core/data/shape.h"
-#include "core/partitioning/restriction.h"
+#include "core/partitioning/detail/restriction.h"
 #include "core/runtime/detail/projection.h"
 #include "core/utilities/detail/buffer_builder.h"
 #include "core/utilities/internal_shared_ptr.h"
@@ -24,13 +24,9 @@
 #include <memory>
 #include <string>
 
-namespace legate {
+namespace legate::detail {
 
 class Partition;
-
-}  // namespace legate
-
-namespace legate::detail {
 
 class NonInvertibleTransformation final : public std::exception {
  public:
