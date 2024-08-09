@@ -9,15 +9,15 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int32_t, int64_t, uint32_t
+from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.memory cimport unique_ptr as std_unique_ptr
 from libcpp.utility cimport move as std_move
 
-
 import atexit
 
 from ..._ext.cython_libcpp.string_view cimport (
+    string_view as std_string_view,
     string_view_from_py as std_string_view_from_py,
 )
 
@@ -28,7 +28,6 @@ import sys
 from collections.abc import Iterable
 from typing import Any
 
-cimport cython
 
 from ..data.external_allocation cimport _ExternalAllocation, create_from_buffer
 from ..data.logical_array cimport (
@@ -36,20 +35,22 @@ from ..data.logical_array cimport (
     _LogicalArray,
     to_cpp_logical_array,
 )
-from ..data.logical_store cimport LogicalStore
+from ..data.logical_store cimport LogicalStore, _LogicalStore
 from ..data.scalar cimport Scalar
-from ..data.shape cimport Shape
+from ..data.shape cimport Shape, _Shape
 from ..mapping.machine cimport Machine
-from ..operation.task cimport AutoTask, ManualTask
+from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
 from ..runtime.scope cimport Scope
 from ..type.type_info cimport Type
+from ..utilities.tuple cimport _tuple
+from ..utilities.typedefs cimport _Domain
 from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport (
     domain_from_iterables,
     is_iterable,
     uint64_tuple_from_iterable,
 )
-from .library cimport Library
+from .library cimport Library, _Library
 
 from ...utils import AnyCallable, ShutdownCallback
 
@@ -116,9 +117,13 @@ cdef class Runtime(Unconstructable):
         return result
 
     cpdef Library find_library(self, str library_name):
-        return Library.from_handle(
-            self._handle.find_library(std_string_view_from_py(library_name))
+        cdef std_string_view _library_name = std_string_view_from_py(
+            library_name
         )
+        cdef _Library handle
+        with nogil:
+            handle = self._handle.find_library(_library_name)
+        return Library.from_handle(handle)
 
     @property
     def core_library(self) -> Library:
@@ -145,9 +150,10 @@ cdef class Runtime(Unconstructable):
         AutoTask
             A new automatically parallelized task
         """
-        return AutoTask.from_handle(
-            self._handle.create_task(library._handle, task_id)
-        )
+        cdef _AutoTask handle
+        with nogil:
+            handle = self._handle.create_task(library._handle, task_id)
+        return AutoTask.from_handle(handle)
 
     cpdef ManualTask create_manual_task(
         self,
@@ -190,23 +196,30 @@ cdef class Runtime(Unconstructable):
         if lower_bounds is not None and not is_iterable(lower_bounds):
             raise ValueError("Lower bounds must be iterable")
 
+        cdef _ManualTask handle
+        cdef int v
+        cdef _tuple[uint64_t] _launch_shape
+        cdef _Domain _launch_domain
+
         if lower_bounds is None:
-            return ManualTask.from_handle(
-                self._handle.create_task(
+            _launch_shape = uint64_tuple_from_iterable(launch_shape)
+
+            with nogil:
+                handle = self._handle.create_task(
                     library._handle,
                     task_id,
-                    uint64_tuple_from_iterable(launch_shape),
+                    _launch_shape,
                 )
+        else:
+            _launch_domain = domain_from_iterables(
+                lower_bounds, tuple([v - 1 for v in launch_shape]),
             )
-        cdef int v
-        return ManualTask.from_handle(
-            self._handle.create_task(
-                library._handle, task_id, domain_from_iterables(
-                    lower_bounds,
-                    tuple([v - 1 for v in launch_shape]),
+
+            with nogil:
+                handle = self._handle.create_task(
+                    library._handle, task_id, _launch_domain
                 )
-            )
-        )
+        return ManualTask.from_handle(handle)
 
     cpdef void issue_copy(
         self,
@@ -214,12 +227,16 @@ cdef class Runtime(Unconstructable):
         LogicalStore source,
         redop: int | None = None,
     ):
+        cdef int32_t _redop
+
         if redop is None:
-            self._handle.issue_copy(target._handle, source._handle)
+            with nogil:
+                self._handle.issue_copy(target._handle, source._handle)
         else:
-            self._handle.issue_copy(
-                target._handle, source._handle, <int32_t> redop
-            )
+            _redop = <int32_t> redop
+
+            with nogil:
+                self._handle.issue_copy(target._handle, source._handle, _redop)
 
     cpdef void issue_gather(
         self,
@@ -228,19 +245,25 @@ cdef class Runtime(Unconstructable):
         LogicalStore source_indirect,
         redop: int | None = None,
     ):
+        cdef int32_t _redop
+
         if redop is None:
-            self._handle.issue_gather(
-                target._handle,
-                source._handle,
-                source_indirect._handle,
-            )
+            with nogil:
+                self._handle.issue_gather(
+                    target._handle,
+                    source._handle,
+                    source_indirect._handle,
+                )
         else:
-            self._handle.issue_gather(
-                target._handle,
-                source._handle,
-                source_indirect._handle,
-                <int32_t> redop,
-            )
+            _redop = <int32_t> redop
+
+            with nogil:
+                self._handle.issue_gather(
+                    target._handle,
+                    source._handle,
+                    source_indirect._handle,
+                    _redop,
+                )
 
     cpdef void issue_scatter(
         self,
@@ -249,19 +272,25 @@ cdef class Runtime(Unconstructable):
         LogicalStore source,
         redop: int | None = None,
     ):
+        cdef int32_t _redop
+
         if redop is None:
-            self._handle.issue_scatter(
-                target._handle,
-                target_indirect._handle,
-                source._handle,
-            )
+            with nogil:
+                self._handle.issue_scatter(
+                    target._handle,
+                    target_indirect._handle,
+                    source._handle,
+                )
         else:
-            self._handle.issue_scatter(
-                target._handle,
-                target_indirect._handle,
-                source._handle,
-                <int32_t> redop,
-            )
+            _redop = <int32_t> redop
+
+            with nogil:
+                self._handle.issue_scatter(
+                    target._handle,
+                    target_indirect._handle,
+                    source._handle,
+                    _redop,
+                )
 
     cpdef void issue_scatter_gather(
         self,
@@ -271,21 +300,27 @@ cdef class Runtime(Unconstructable):
         LogicalStore source_indirect,
         redop: int | None = None,
     ):
+        cdef int32_t _redop
+
         if redop is None:
-            self._handle.issue_scatter_gather(
-                target._handle,
-                target_indirect._handle,
-                source._handle,
-                source_indirect._handle,
-            )
+            with nogil:
+                self._handle.issue_scatter_gather(
+                    target._handle,
+                    target_indirect._handle,
+                    source._handle,
+                    source_indirect._handle,
+                )
         else:
-            self._handle.issue_scatter_gather(
-                target._handle,
-                target_indirect._handle,
-                source._handle,
-                source_indirect._handle,
-                <int32_t> redop,
-            )
+            _redop = <int32_t> redop
+
+            with nogil:
+                self._handle.issue_scatter_gather(
+                    target._handle,
+                    target_indirect._handle,
+                    source._handle,
+                    source_indirect._handle,
+                    _redop,
+                )
 
     cpdef void issue_fill(self, object array_or_store, object value):
         """
@@ -311,18 +346,21 @@ cdef class Runtime(Unconstructable):
         """
         cdef _LogicalArray arr = to_cpp_logical_array(array_or_store)
         cdef Scalar fill_value
+
         if isinstance(value, LogicalStore):
-            self._handle.issue_fill(
-                arr, (<LogicalStore> value)._handle
-            )
+            with nogil:
+                self._handle.issue_fill(arr, (<LogicalStore> value)._handle)
         elif isinstance(value, Scalar):
-            self._handle.issue_fill(arr, (<Scalar> value)._handle)
+            with nogil:
+                self._handle.issue_fill(arr, (<Scalar> value)._handle)
         elif value is None:
             fill_value = Scalar.null()
-            self._handle.issue_fill(arr, fill_value._handle)
+            with nogil:
+                self._handle.issue_fill(arr, fill_value._handle)
         else:
             fill_value = Scalar(value, Type.from_handle(arr.type()))
-            self._handle.issue_fill(arr, fill_value._handle)
+            with nogil:
+                self._handle.issue_fill(arr, fill_value._handle)
 
     cpdef LogicalStore tree_reduce(
         self,
@@ -358,11 +396,12 @@ cdef class Runtime(Unconstructable):
         LogicalStore
             LogicalStore that contains reduction results
         """
-        return LogicalStore.from_handle(
-            self._handle.tree_reduce(
+        cdef _LogicalStore _handle
+        with nogil:
+            _handle = self._handle.tree_reduce(
                 library._handle, task_id, store._handle, radix
             )
-        )
+        return LogicalStore.from_handle(_handle)
 
     cpdef void submit(self, object op):
         if isinstance(op, AutoTask):
@@ -396,26 +435,37 @@ cdef class Runtime(Unconstructable):
         if ndim is None and shape is None:
             ndim = 1
 
-        if shape is None:
-            return LogicalArray.from_handle(
-                self._handle.create_array(dtype._handle, ndim, nullable)
-            )
+        cdef _LogicalArray _handle
+        cdef _Shape _shape
+        cdef uint32_t _ndim
 
-        return LogicalArray.from_handle(
-            self._handle.create_array(
-                Shape.from_shape_like(shape),
-                dtype._handle,
-                nullable,
-                optimize_scalar,
-            )
-        )
+        if shape is None:
+            _ndim = ndim
+
+            with nogil:
+                _handle = self._handle.create_array(
+                    dtype._handle, _ndim, nullable
+                )
+        else:
+            _shape = Shape.from_shape_like(shape)
+            with nogil:
+                _handle = self._handle.create_array(
+                    _shape,
+                    dtype._handle,
+                    nullable,
+                    optimize_scalar,
+                )
+
+        return LogicalArray.from_handle(_handle)
 
     cpdef LogicalArray create_array_like(self, LogicalArray array, Type dtype):
-        return LogicalArray.from_handle(
-            self._handle.create_array_like(
+        cdef _LogicalArray _handle
+
+        with nogil:
+            _handle = self._handle.create_array_like(
                 array._handle, dtype._handle
             )
-        )
+        return LogicalArray.from_handle(_handle)
 
     cpdef LogicalStore create_store(
         self,
@@ -427,33 +477,43 @@ cdef class Runtime(Unconstructable):
         if ndim is not None and shape is not None:
             raise ValueError("ndim cannot be used with shape")
 
-        if shape is None:
-            ndim = 1 if ndim is None else ndim
-            return LogicalStore.from_handle(
-                self._handle.create_store(dtype._handle, <uint32_t> ndim)
-            )
+        cdef uint32_t _ndim
+        cdef _LogicalStore _handle
+        cdef _Shape _shape
 
-        return LogicalStore.from_handle(
-            self._handle.create_store(
-                Shape.from_shape_like(shape), dtype._handle, optimize_scalar
-            )
-        )
+        if shape is None:
+            _ndim = 1 if ndim is None else ndim
+            with nogil:
+                _handle = self._handle.create_store(dtype._handle, _ndim)
+        else:
+            _shape = Shape.from_shape_like(shape)
+            with nogil:
+                _handle = self._handle.create_store(
+                    _shape, dtype._handle, optimize_scalar
+                )
+
+        return LogicalStore.from_handle(_handle)
 
     cpdef LogicalStore create_store_from_scalar(
         self,
         Scalar scalar,
         shape: Shape | Iterable[int] | None = None,
     ):
-        if shape is None:
-            return LogicalStore.from_handle(
-                self._handle.create_store(scalar._handle)
-            )
+        cdef _LogicalStore _handle
+        cdef _Shape _shape
 
-        return LogicalStore.from_handle(
-            self._handle.create_store(
-                scalar._handle, Shape.from_shape_like(shape)
-            )
-        )
+        if shape is None:
+            with nogil:
+                _handle = self._handle.create_store(scalar._handle)
+        else:
+            _shape = Shape.from_shape_like(shape)
+
+            with nogil:
+                _handle = self._handle.create_store(
+                    scalar._handle, _shape
+                )
+
+        return LogicalStore.from_handle(_handle)
 
     cpdef LogicalStore create_store_from_buffer(
         self,
@@ -504,17 +564,20 @@ cdef class Runtime(Unconstructable):
         cdef _ExternalAllocation alloc = create_from_buffer(
             data, cpp_shape.volume() * dtype.size, read_only
         )
-        return LogicalStore.from_handle(
-            self._handle.create_store(
+        cdef _LogicalStore _handle
+
+        with nogil:
+            _handle = self._handle.create_store(
                 std_move(cpp_shape), dtype._handle, std_move(alloc)
             )
-        )
+        return LogicalStore.from_handle(_handle)
 
     cpdef void issue_mapping_fence(self):
-        self._handle.issue_mapping_fence()
+        with nogil:
+            self._handle.issue_mapping_fence()
 
     cpdef void issue_execution_fence(self, bool block = False):
-        with cython.nogil:
+        with nogil:
             # Must release the GIL in case we have in-flight python tasks,
             # since those can't run if we are stuck here holding the bag.
             self._handle.issue_execution_fence(block)
