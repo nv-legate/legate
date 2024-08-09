@@ -124,11 +124,11 @@ class TestRedopTaskStore:
             out_arr[:] = out_arr & np.bitwise_and.reduce(store_arr)
 
         runtime = get_legate_runtime()
-        in_arr = np.asarray(values, dtype=np.bool)
+        in_arr = np.asarray(values, dtype=np.bool_)
         in_store = runtime.create_store_from_buffer(
             ty.bool_, in_arr.shape, in_arr, False
         )
-        out_arr = np.array((True,), dtype=np.bool)
+        out_arr = np.array((True,), dtype=np.bool_)
         out_store = runtime.create_store_from_buffer(
             ty.bool_, out_arr.shape, out_arr, False
         )
