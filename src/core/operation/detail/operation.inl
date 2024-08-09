@@ -16,7 +16,7 @@
 
 namespace legate::detail {
 
-inline bool Operation::always_flush() const { return false; }
+inline bool Operation::StoreArg::needs_flush() const { return store->needs_flush(); }
 
 inline bool Operation::supports_replicated_write() const { return false; }
 

@@ -36,6 +36,7 @@ class Operation {
  protected:
   class StoreArg {
    public:
+    [[nodiscard]] bool needs_flush() const;
     InternalSharedPtr<LogicalStore> store{};
     const Variable* variable{};
   };
@@ -62,7 +63,7 @@ class Operation {
 
   [[nodiscard]] virtual Kind kind() const = 0;
   [[nodiscard]] virtual std::string to_string() const;
-  [[nodiscard]] virtual bool always_flush() const;
+  [[nodiscard]] virtual bool needs_flush() const = 0;
   [[nodiscard]] virtual bool supports_replicated_write() const;
 
   [[nodiscard]] const Variable* find_or_declare_partition(

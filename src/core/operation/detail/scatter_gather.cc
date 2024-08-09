@@ -114,4 +114,10 @@ void ScatterGather::add_to_solver(ConstraintSolver& solver)
   solver.add_partition_symbol(source_indirect_.variable, AccessMode::READ);
 }
 
+bool ScatterGather::needs_flush() const
+{
+  return target_.needs_flush() || source_.needs_flush() || target_indirect_.needs_flush() ||
+         source_indirect_.needs_flush();
+}
+
 }  // namespace legate::detail

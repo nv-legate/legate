@@ -41,6 +41,7 @@ class Scatter final : public Operation {
   void add_to_solver(ConstraintSolver& solver) override;
 
   [[nodiscard]] Kind kind() const override;
+  [[nodiscard]] bool needs_flush() const override;
 
  private:
   bool out_of_range_{true};

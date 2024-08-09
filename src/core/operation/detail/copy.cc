@@ -56,8 +56,12 @@ void Copy::validate()
   if (target_.store->has_scalar_storage() != source_.store->has_scalar_storage()) {
     throw std::runtime_error{"Copies are supported only between the same kind of stores"};
   }
-  if (redop_kind_ && target_.store->has_scalar_storage()) {
-    throw std::runtime_error{"Reduction copies don't support future-backed target stores"};
+  if (redop_kind_.has_value()) {
+    if (target_.store->has_scalar_storage()) {
+      throw std::runtime_error{"Reduction copies don't support future-backed target stores"};
+    }
+    // Try to retrieve the reduction operator ID here to check if it's defined for the value type
+    static_cast<void>(target_.store->type()->find_reduction_operator(*redop_kind_));
   }
 }
 
@@ -74,13 +78,13 @@ void Copy::launch(Strategy* p_strategy)
 
   launcher.add_input(source_.store, create_store_projection_(strategy, launch_domain, source_));
 
-  if (!redop_kind_) {
+  if (!redop_kind_.has_value()) {
     launcher.add_output(target_.store, create_store_projection_(strategy, launch_domain, target_));
   } else {
     auto store_partition = create_store_partition(target_.store, strategy[target_.variable]);
     auto proj            = store_partition->create_store_projection(launch_domain);
 
-    proj->set_reduction_op(target_.store->type()->find_reduction_operator(redop_kind_.value()));
+    proj->set_reduction_op(target_.store->type()->find_reduction_operator(*redop_kind_));
     launcher.add_reduction(target_.store, std::move(proj));
   }
 
@@ -101,5 +105,7 @@ void Copy::add_to_solver(ConstraintSolver& solver)
   }
   solver.add_partition_symbol(source_.variable, AccessMode::READ);
 }
+
+bool Copy::needs_flush() const { return target_.needs_flush() || source_.needs_flush(); }
 
 }  // namespace legate::detail

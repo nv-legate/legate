@@ -97,4 +97,15 @@ void Fill::add_to_solver(ConstraintSolver& solver)
   }
 }
 
+bool Fill::needs_flush() const
+{
+  if (lhs_->needs_flush()) {
+    return true;
+  }
+  if (const auto* logical_store = std::get_if<InternalSharedPtr<LogicalStore>>(&value_)) {
+    return (*logical_store)->needs_flush();
+  }
+  return false;
+}
+
 }  // namespace legate::detail

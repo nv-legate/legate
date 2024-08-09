@@ -16,6 +16,12 @@
 
 namespace legate::detail {
 
+inline bool LogicalArray::needs_flush() const
+{
+  // TODO(wonchanl): We will eventually need to handle unbound stores in the deferred manner
+  return unbound() || is_mapped();
+}
+
 inline BaseLogicalArray::BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
                                           InternalSharedPtr<LogicalStore> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
@@ -38,6 +44,11 @@ inline bool BaseLogicalArray::nullable() const { return null_mask_ != nullptr; }
 inline bool BaseLogicalArray::nested() const { return false; }
 
 inline std::uint32_t BaseLogicalArray::num_children() const { return 0; }
+
+inline bool BaseLogicalArray::is_mapped() const
+{
+  return data()->is_mapped() || (nullable() && null_mask()->is_mapped());
+}
 
 inline const InternalSharedPtr<LogicalStore>& BaseLogicalArray::data() const { return data_; }
 
@@ -74,6 +85,11 @@ inline bool ListLogicalArray::nested() const { return true; }
 
 inline std::uint32_t ListLogicalArray::num_children() const { return 2; }
 
+inline bool ListLogicalArray::is_mapped() const
+{
+  return descriptor()->is_mapped() || vardata()->is_mapped();
+}
+
 inline const InternalSharedPtr<LogicalStore>& ListLogicalArray::null_mask() const
 {
   return descriptor_->null_mask();
@@ -104,6 +120,11 @@ inline bool StructLogicalArray::nested() const { return true; }
 inline std::uint32_t StructLogicalArray::num_children() const
 {
   return static_cast<std::uint32_t>(fields_.size());
+}
+
+inline const std::vector<InternalSharedPtr<LogicalArray>>& StructLogicalArray::fields() const
+{
+  return fields_;
 }
 
 }  // namespace legate::detail

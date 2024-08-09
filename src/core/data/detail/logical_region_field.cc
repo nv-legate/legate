@@ -80,6 +80,15 @@ Domain LogicalRegionField::domain() const
   return Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
 }
 
+bool LogicalRegionField::is_mapped() const
+{
+  // Only the root has a physical region at the moment
+  if (parent()) {
+    return parent()->is_mapped();
+  }
+  return pr_.exists();
+}
+
 RegionField LogicalRegionField::map()
 {
   if (parent_ != nullptr) {

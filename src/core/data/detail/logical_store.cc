@@ -158,6 +158,13 @@ bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
   return true;
 }
 
+bool Storage::is_mapped() const
+{
+  // TODO(wonchanl): future- and future map-backed storages are considered unmapped until we
+  // implement the full state machine for them (they are currently read only)
+  return !unbound() && kind() == Kind::REGION_FIELD && get_region_field()->is_mapped();
+}
+
 InternalSharedPtr<Storage> Storage::slice(tuple<std::uint64_t> tile_shape,
                                           const tuple<std::uint64_t>& offsets)
 {
@@ -199,7 +206,7 @@ InternalSharedPtr<Storage> Storage::get_root()
   return parent_ ? parent_->get_root() : shared_from_this();
 }
 
-const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field()
+const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field() const
 {
   LEGATE_CHECK(kind_ == Kind::REGION_FIELD);
   if (region_field_) {
@@ -696,9 +703,16 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
   if (unbound()) {
     throw std::invalid_argument{"Unbound store cannot be inlined mapped"};
   }
+  // If there's already a physical store for this logical store, just return the cached one.
+  // Any operations using this logical store will immediately flush the scheduling window.
   if (mapped_) {
     return mapped_;
   }
+
+  // Otherwise, a physical allocation of this store is escaping to the user land for the first time,
+  // so we need to make sure all outstanding operations are launched
+  Runtime::get_runtime()->flush_scheduling_window();
+
   auto* storage = get_storage();
   if (storage->kind() == Storage::Kind::FUTURE ||
       (storage->kind() == Storage::Kind::FUTURE_MAP && storage->replicated())) {
@@ -1075,8 +1089,12 @@ bool LogicalStore::equal_storage(const LogicalStore& other) const
       auto&& other_rf = other.get_region_field();
       return rf->field_id() == other_rf->field_id() && rf->region() == other_rf->region();
     }
-    case Storage::Kind::FUTURE: return get_future() == other.get_future();
-    case Storage::Kind::FUTURE_MAP: return get_future_map() == other.get_future_map();
+    case Storage::Kind::FUTURE: [[fallthrough]];
+    case Storage::Kind::FUTURE_MAP: {
+      // Future- and future map-backed stores are not sliced and thus cannot be aliased through
+      // different storage objects, so equality on the storage is sufficient
+      return get_storage() == other.get_storage();
+    }
   }
   // Because sometimes, GCC is really stupid:
   //

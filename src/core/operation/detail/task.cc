@@ -25,6 +25,7 @@
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/zip.h"
 
+#include <algorithm>
 #include <fmt/format.h>
 
 namespace legate::detail {
@@ -271,6 +272,14 @@ std::string Task::to_string() const
     fmt::format_to(std::back_inserter(result), "[{}]", provenance());
   }
   return result;
+}
+
+bool Task::needs_flush() const
+{
+  constexpr auto needs_flush = [](auto&& array_arg) { return array_arg.needs_flush(); };
+  return can_throw_exception() || std::any_of(inputs_.begin(), inputs_.end(), needs_flush) ||
+         std::any_of(outputs_.begin(), outputs_.end(), needs_flush) ||
+         std::any_of(reductions_.begin(), reductions_.end(), needs_flush);
 }
 
 ////////////////////////////////////////////////////

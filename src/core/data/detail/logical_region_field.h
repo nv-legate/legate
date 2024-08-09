@@ -47,8 +47,10 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] const Legion::LogicalRegion& region() const;
   [[nodiscard]] Legion::FieldID field_id() const;
+  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& parent() const;
   [[nodiscard]] const LogicalRegionField& get_root() const;
   [[nodiscard]] Legion::Domain domain() const;
+  [[nodiscard]] bool is_mapped() const;
 
   [[nodiscard]] RegionField map();
   void attach(Legion::PhysicalRegion physical_region,

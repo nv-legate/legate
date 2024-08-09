@@ -44,6 +44,7 @@ class Task : public Operation {
    public:
     explicit ArrayArg(InternalSharedPtr<LogicalArray> _array);
     ArrayArg(InternalSharedPtr<LogicalArray> _array, std::optional<SymbolicPoint> _projection);
+    [[nodiscard]] bool needs_flush() const;
 
     InternalSharedPtr<LogicalArray> array{};
     std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> mapping{};
@@ -77,7 +78,7 @@ class Task : public Operation {
 
  public:
   [[nodiscard]] std::string to_string() const override;
-  [[nodiscard]] bool always_flush() const override;
+  [[nodiscard]] bool needs_flush() const override;
   [[nodiscard]] bool supports_replicated_write() const override;
   [[nodiscard]] bool can_throw_exception() const;
   [[nodiscard]] bool can_elide_device_ctx_sync() const;

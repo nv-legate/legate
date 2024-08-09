@@ -149,4 +149,6 @@ void Reduce::add_to_solver(detail::ConstraintSolver& solver)
   solver.add_partition_symbol(input_part_, AccessMode::READ);
 }
 
+bool Reduce::needs_flush() const { return output_->needs_flush() || input_->needs_flush(); }
+
 }  // namespace legate::detail

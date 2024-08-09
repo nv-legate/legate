@@ -35,6 +35,11 @@ inline const Legion::LogicalRegion& LogicalRegionField::region() const { return 
 
 inline Legion::FieldID LogicalRegionField::field_id() const { return fid_; }
 
+inline const InternalSharedPtr<LogicalRegionField>& LogicalRegionField::parent() const
+{
+  return parent_;
+}
+
 template <typename T>
 void LogicalRegionField::add_invalidation_callback(T&& callback)
 {

@@ -774,11 +774,11 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
       local_instances_->find_instance(regions.front(), fields.front(), target_memory, policy);
 
     if (ret.has_value()) {
+      result = *std::move(ret);
       if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
         logger.debug() << "Operation " << mappable.get_unique_id() << ": reused cached instance "
                        << result << " for " << regions.front();
       }
-      result = *std::move(ret);
       runtime->enable_reentrant(ctx);
       // Needs acquire to keep the runtime happy
       return true;

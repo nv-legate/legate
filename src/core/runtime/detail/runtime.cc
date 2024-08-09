@@ -489,7 +489,7 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
 {
   op->validate();
   auto& submitted = operations_.emplace_back(std::move(op));
-  if (submitted->always_flush() || operations_.size() >= window_size_) {
+  if (submitted->needs_flush() || operations_.size() >= window_size_) {
     flush_scheduling_window();
   }
 }
@@ -497,11 +497,13 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
 void Runtime::schedule_(std::vector<InternalSharedPtr<Operation>>&& operations)
 {
   // Move into temporary to "complete" the move from the caller side.
-  const auto ops      = std::move(operations);
-  const auto strategy = Partitioner{{ops.begin(), ops.end()}}.partition_stores();
+  const auto ops = std::move(operations);
 
-  for (auto&& op : ops) {
-    op->launch(strategy.get());
+  for (auto it = ops.begin(); it != ops.end(); ++it) {
+    // TODO(wonchanl): We need the side effect from the launch calls to get key partitions set
+    // correctly. In the future, the partitioner should manage key partitions.
+    const auto strategy = Partitioner{{it, it + 1}}.partition_stores();
+    (*it)->launch(strategy.get());
   }
 }
 
@@ -1315,11 +1317,13 @@ void Runtime::issue_execution_fence(bool block /*=false*/)
 
 void Runtime::begin_trace(std::uint32_t trace_id)
 {
+  flush_scheduling_window();
   legion_runtime_->begin_trace(legion_context_, trace_id);
 }
 
 void Runtime::end_trace(std::uint32_t trace_id)
 {
+  flush_scheduling_window();
   legion_runtime_->end_trace(legion_context_, trace_id);
 }
 

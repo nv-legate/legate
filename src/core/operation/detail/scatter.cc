@@ -102,4 +102,9 @@ void Scatter::add_to_solver(ConstraintSolver& solver)
   solver.add_partition_symbol(source_.variable, AccessMode::READ);
 }
 
+bool Scatter::needs_flush() const
+{
+  return target_.needs_flush() || source_.needs_flush() || target_indirect_.needs_flush();
+}
+
 }  // namespace legate::detail

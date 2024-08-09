@@ -113,6 +113,12 @@ inline Legion::FutureMap LogicalStore::get_future_map() const
   return get_storage()->get_future_map();
 }
 
+// We can't rely on the mapped_ here, as this store might just be an alias to some other store the
+// user created a physical store with. The storage_ holds the ground truth
+inline bool LogicalStore::is_mapped() const { return get_storage()->is_mapped(); }
+
+inline bool LogicalStore::needs_flush() const { return unbound() || is_mapped(); }
+
 inline const InternalSharedPtr<Partition>& LogicalStore::get_current_key_partition() const
 {
   return key_partition_;

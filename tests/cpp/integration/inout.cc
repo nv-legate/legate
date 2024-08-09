@@ -82,10 +82,11 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
   }
 };
 
-class InOut : public ::testing::Test {
+class InOut : public DefaultFixture {
  public:
   void SetUp() override
   {
+    DefaultFixture::SetUp();
     auto runtime = legate::Runtime::get_runtime();
     auto created = false;
     auto library = runtime->find_or_create_library(

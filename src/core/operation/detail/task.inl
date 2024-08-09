@@ -26,9 +26,9 @@ inline Task::ArrayArg::ArrayArg(InternalSharedPtr<LogicalArray> _array,
 {
 }
 
-// ==========================================================================================
+inline bool Task::ArrayArg::needs_flush() const { return array->needs_flush(); }
 
-inline bool Task::always_flush() const { return can_throw_exception(); }
+// ==========================================================================================
 
 inline bool Task::supports_replicated_write() const { return true; }
 

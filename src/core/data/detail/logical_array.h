@@ -49,6 +49,7 @@ class LogicalArray {
   [[nodiscard]] virtual bool nullable() const                         = 0;
   [[nodiscard]] virtual bool nested() const                           = 0;
   [[nodiscard]] virtual std::uint32_t num_children() const            = 0;
+  [[nodiscard]] virtual bool is_mapped() const                        = 0;
 
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> promote(std::int32_t extra_dim,
                                                                 std::size_t dim_size) const     = 0;
@@ -86,6 +87,7 @@ class LogicalArray {
 
   [[nodiscard]] static InternalSharedPtr<LogicalArray> from_store(
     InternalSharedPtr<LogicalStore> store);
+  [[nodiscard]] bool needs_flush() const;
 };
 
 class BaseLogicalArray final : public LogicalArray {
@@ -102,6 +104,7 @@ class BaseLogicalArray final : public LogicalArray {
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] std::uint32_t num_children() const override;
+  [[nodiscard]] bool is_mapped() const override;
 
   [[nodiscard]] InternalSharedPtr<LogicalArray> promote(std::int32_t extra_dim,
                                                         std::size_t dim_size) const override;
@@ -158,6 +161,7 @@ class ListLogicalArray final : public LogicalArray {
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] std::uint32_t num_children() const override;
+  [[nodiscard]] bool is_mapped() const override;
 
   [[nodiscard]] InternalSharedPtr<LogicalArray> promote(std::int32_t extra_dim,
                                                         std::size_t dim_size) const override;
@@ -215,6 +219,7 @@ class StructLogicalArray final : public LogicalArray {
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
   [[nodiscard]] std::uint32_t num_children() const override;
+  [[nodiscard]] bool is_mapped() const override;
 
   [[nodiscard]] InternalSharedPtr<LogicalArray> promote(std::int32_t extra_dim,
                                                         std::size_t dim_size) const override;
@@ -230,6 +235,7 @@ class StructLogicalArray final : public LogicalArray {
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array() const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
+  [[nodiscard]] const std::vector<InternalSharedPtr<LogicalArray>>& fields() const;
 
   void record_scalar_or_unbound_outputs(AutoTask* task) const override;
   void record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const override;

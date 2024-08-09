@@ -354,6 +354,13 @@ std::vector<T> make_array_from_op(const std::vector<T>& fields, F&& generator_fn
 
 }  // namespace
 
+bool StructLogicalArray::is_mapped() const
+{
+  return (nullable() && null_mask()->is_mapped()) ||
+         std::any_of(
+           fields().begin(), fields().end(), [](auto&& field) { return field->is_mapped(); });
+}
+
 InternalSharedPtr<LogicalArray> StructLogicalArray::promote(std::int32_t extra_dim,
                                                             std::size_t dim_size) const
 {

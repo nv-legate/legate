@@ -83,13 +83,14 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   [[nodiscard]] std::int32_t level() const;
   [[nodiscard]] std::size_t scalar_offset() const;
   [[nodiscard]] std::string_view provenance() const;
+  [[nodiscard]] bool is_mapped() const;
 
   [[nodiscard]] InternalSharedPtr<Storage> slice(tuple<std::uint64_t> tile_shape,
                                                  const tuple<std::uint64_t>& offsets);
   [[nodiscard]] InternalSharedPtr<const Storage> get_root() const;
   [[nodiscard]] InternalSharedPtr<Storage> get_root();
 
-  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field();
+  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const;
   [[nodiscard]] Legion::Future get_future() const;
   [[nodiscard]] Legion::FutureMap get_future_map() const;
   [[nodiscard]] std::variant<Legion::Future, Legion::FutureMap> get_future_or_future_map(
@@ -124,7 +125,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   Kind kind_{Kind::REGION_FIELD};
 
   std::size_t scalar_offset_{};
-  InternalSharedPtr<LogicalRegionField> region_field_{};
+  mutable InternalSharedPtr<LogicalRegionField> region_field_{};
   std::optional<Legion::Future> future_{};
   std::optional<Legion::FutureMap> future_map_{};
 
@@ -228,6 +229,8 @@ class LogicalStore {
 
  public:
   [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store();
+  [[nodiscard]] bool is_mapped() const;
+  [[nodiscard]] bool needs_flush() const;
   void detach();
   // Informs the runtime that references to this store may be removed in non-deterministic order
   // (e.g. by an asynchronous garbage collector).
