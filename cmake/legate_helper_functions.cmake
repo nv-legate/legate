@@ -380,7 +380,7 @@ from typing import Any
 from ctypes import CDLL, RTLD_GLOBAL
 
 # TODO: Make sure we only have one ffi instance?
-from legion_cffi import ffi
+import cffi
 
 def dlopen_no_autoclose(ffi: Any, lib_path: str) -> Any:
     # Use an already-opened library handle, which cffi will convert to a
@@ -396,6 +396,7 @@ class UserLibrary:
 
         shared_lib_path = self.get_shared_library()
         if shared_lib_path is not None:
+            ffi = cffi.FFI()
             header = self.get_c_header()
             if header is not None:
                 ffi.cdef(header)
