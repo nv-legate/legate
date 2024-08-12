@@ -1648,6 +1648,7 @@ void handle_legate_args(std::string_view legate_config)
       throw std::invalid_argument{"--omps configured with zero threads"};
     }
     LEGATE_NEED_OPENMP.set(true);
+    Config::num_omp_threads = ompthreads.value();
   }
   try {
     try_set_property(rt, "openmp", "ocpu", omps, "unable to set --omps");

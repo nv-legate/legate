@@ -14,12 +14,24 @@
 
 #include "core/cuda/cuda.h"
 #include "core/data/detail/physical_store.h"
+#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/deserializer.h"
+#include "core/utilities/macros.h"
+
+#include "legate_defines.h"
 
 #include <algorithm>
 #include <iterator>
+
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
+#include <omp.h>
+#else
+// Still needs a definition to get the code compiled without OpenMP
+// (which is safe as the call to this function is guarded by a if-constexpr)
+extern void omp_set_num_threads(std::int32_t);
+#endif
 
 namespace legate::detail {
 
@@ -107,14 +119,19 @@ TaskContext::TaskContext(const Legion::Task* task,
 
   // If the task is running on a GPU and there is at least one scalar store for reduction,
   // we need to wait for all the host-to-device copies for initialization to finish
-  if (LEGATE_DEFINED(LEGATE_USE_CUDA) &&
-      Processor::get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA) && variant_kind_ == VariantCode::GPU) {
     for (auto&& reduction : reductions_) {
       auto reduction_store = reduction->data();
       if (reduction_store->is_future()) {
         LEGATE_CHECK_CUDA(cudaDeviceSynchronize());
         break;
       }
+    }
+  }
+
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
+    if (variant_kind_ == VariantCode::OMP) {
+      omp_set_num_threads(static_cast<std::int32_t>(Config::num_omp_threads));
     }
   }
 }

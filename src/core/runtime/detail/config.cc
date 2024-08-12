@@ -25,6 +25,7 @@ namespace legate::detail {
   Config::log_partitioning_decisions = false;
   Config::has_socket_mem             = false;
   Config::warmup_nccl                = false;
+  Config::num_omp_threads            = 0;
 }
 
 /*static*/ void Config::parse()

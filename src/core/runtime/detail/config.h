@@ -28,6 +28,7 @@ class Config {
   static inline bool has_socket_mem                = false;
   static inline std::uint64_t max_field_reuse_size = 0;
   static inline bool warmup_nccl                   = false;
+  static inline std::int64_t num_omp_threads       = 0;
 
   static void parse();
 
