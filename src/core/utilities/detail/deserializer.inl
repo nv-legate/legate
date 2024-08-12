@@ -36,7 +36,7 @@ std::pair<void*, std::size_t> align_for_unpack(void* ptr,
     // If we get here, it means that someone did not pack the value correctly, likely without
     // first aligning the pointer!
     throw std::runtime_error{fmt::format(
-      "Failed to align buffer {} (of size: {}) to {}-byte alignment (remaining capacity: {))",
+      "Failed to align buffer {} (of size: {}) to {}-byte alignment (remaining capacity: {})",
       ptr,
       bytes,
       align,
