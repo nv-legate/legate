@@ -19,7 +19,7 @@ import builtins
 import numpy as np
 
 
-cdef dict _NUMPY_DTYPES = {
+cdef dict _TO_NUMPY_DTYPES = {
     _Type.Code.BOOL : np.dtype(np.bool_),
     _Type.Code.INT8 : np.dtype(np.int8),
     _Type.Code.INT16 : np.dtype(np.int16),
@@ -37,6 +37,100 @@ cdef dict _NUMPY_DTYPES = {
     _Type.Code.STRING : np.dtype(np.str_),
 }
 
+null_type = Type.from_handle(_null_type())
+bool_ = Type.from_handle(_bool())
+int8 = Type.from_handle(_int8())
+int16 = Type.from_handle(_int16())
+int32 = Type.from_handle(_int32())
+int64 = Type.from_handle(_int64())
+uint8 = Type.from_handle(_uint8())
+uint16 = Type.from_handle(_uint16())
+uint32 = Type.from_handle(_uint32())
+uint64 = Type.from_handle(_uint64())
+float16 = Type.from_handle(_float16())
+float32 = Type.from_handle(_float32())
+float64 = Type.from_handle(_float64())
+complex64 = Type.from_handle(_complex64())
+complex128 = Type.from_handle(_complex128())
+string_type = Type.from_handle(_string_type())
+
+cdef dict _FROM_NUMPY_DTYPES = {
+    np.dtype(np.bool_) : bool_,
+    np.dtype(np.int8) : int8,
+    np.dtype(np.int16) : int16,
+    np.dtype(np.int32) : int32,
+    np.dtype(np.int64) : int64,
+    np.dtype(np.uint8) : uint8,
+    np.dtype(np.uint16) : uint16,
+    np.dtype(np.uint32) : uint32,
+    np.dtype(np.uint64) : uint64,
+    np.dtype(np.float16) : float16,
+    np.dtype(np.float32) : float32,
+    np.dtype(np.float64) : float64,
+    np.dtype(np.complex64) : complex64,
+    np.dtype(np.complex128) : complex128,
+    np.dtype(np.str_) : string_type,
+}
+
+cdef inline Type deduce_numpy_type_(object py_object):
+    try:
+        return _FROM_NUMPY_DTYPES[py_object]
+    except KeyError:
+        raise NotImplementedError(f"Unhandled numpy data type: {py_object}")
+
+cdef inline Type deduce_sized_scalar_type_(object py_object):
+    # numpys conversion algorithm is overly pessimistic for floating point
+    # values with a large number of significant decimal digits. This leads to
+    # the unfortunate case that the returned dtypes do not round-trip back to
+    # the same value. For example:
+    #
+    # >>> f = 261.3544313109841
+    # >>> np.min_scalar_type(f)
+    # dtype('float16')
+    # >>> np.float16(f)
+    # np.float16(261.2)
+    # >>> float(np.float16(f))
+    # 261.25
+    #
+    # So we use the largest possible floating point type to cover our bases.
+    if isinstance(py_object, builtins.float):
+        return float64
+    if isinstance(py_object, builtins.complex):
+        return complex128
+    return deduce_numpy_type_(np.min_scalar_type(py_object))
+
+cdef inline Type deduce_array_type_(object py_object):
+    cdef uint32_t n_sub = len(py_object)
+
+    if n_sub == 0:
+        # We _should_ be able to do this if we know the type-hint that this
+        # corresponds to, but that would require a rework of these deduction
+        # methods to parse the type hint instead of the object itself.
+        raise NotImplementedError(
+            "Cannot yet deduce sub-array types from empty container: "
+            f"{py_object} (of type {type(py_object)})"
+        )
+
+    cdef Type first_type = Type.from_py_object(py_object[0])
+    cdef Type sub_type
+    cdef int idx
+
+    # Don't have to do this check if we're given a numpy array, because numpy
+    # will ensure all elems have the same type
+    if not isinstance(py_object, np.ndarray):
+        for idx, ty in enumerate(py_object):
+            if (sub_type := Type.from_py_object(ty)) != first_type:
+                raise NotImplementedError(
+                    f"Unsupported type: {py_object!r}. All elements must have "
+                    f"the same type. Element at index {idx} has type "
+                    f"{sub_type}, expected {first_type}"
+                )
+            if idx > 10:
+                # fail-safe in case we get a large iterable, in which case we
+                # simply trust that the user has done the right thing
+                break
+
+    return array_type(first_type, n_sub)
 
 cdef class Type:
     @staticmethod
@@ -55,8 +149,8 @@ cdef class Type:
         self._handle = _null_type()
 
     @property
-    def code(self) -> int32_t:
-        return <int32_t> self._handle.code()
+    def code(self) -> _Type.Code:
+        return <_Type.Code>self._handle.code()
 
     @property
     def size(self) -> uint32_t:
@@ -90,10 +184,10 @@ cdef class Type:
         return self._handle.to_string().decode()
 
     cpdef object to_numpy_dtype(self):
-        cdef int32_t code = self.code
-        if code in _NUMPY_DTYPES:
-            return _NUMPY_DTYPES[self.code]
-        else:
+        cdef _Type.Code code = self.code
+        try:
+            return _TO_NUMPY_DTYPES[code]
+        except KeyError:
             raise ValueError(f"Invalid type code: {code}")
 
     @property
@@ -107,18 +201,22 @@ cdef class Type:
         return isinstance(other, Type) and self._handle == other._handle
 
     @staticmethod
-    cdef Type from_python_type(type ty):
-        if issubclass(ty, builtins.bool):
+    cdef Type from_py_object(object py_object):
+        if isinstance(py_object, Type):
+            return py_object
+        if isinstance(py_object, builtins.bool):
             return bool_
-        if issubclass(ty, builtins.int):
-            return int64
-        if issubclass(ty, builtins.float):
-            return float64
-        if issubclass(ty, builtins.complex):
-            return complex128
-        if issubclass(ty, builtins.str):
+        if isinstance(
+            py_object, (builtins.int, builtins.float, builtins.complex)
+        ):
+            return deduce_sized_scalar_type_(py_object)
+        if isinstance(py_object, builtins.str):
             return string_type
-        raise NotImplementedError(f"unsupported type: {ty}")
+        if isinstance(py_object, (list, tuple, np.ndarray)):
+            return deduce_array_type_(py_object)
+        if isinstance(py_object, np.generic):
+            return deduce_numpy_type_(py_object.dtype)
+        raise NotImplementedError(f"unsupported type: {py_object!r}")
 
 
 cdef class FixedArrayType(Type):
@@ -191,24 +289,6 @@ cdef class StructType(Type):
             {"names": names, "formats": formats}, align=self.aligned
         )
 
-null_type = Type.from_handle(_null_type())
-bool_ = Type.from_handle(_bool())
-int8 = Type.from_handle(_int8())
-int16 = Type.from_handle(_int16())
-int32 = Type.from_handle(_int32())
-int64 = Type.from_handle(_int64())
-uint8 = Type.from_handle(_uint8())
-uint16 = Type.from_handle(_uint16())
-uint32 = Type.from_handle(_uint32())
-uint64 = Type.from_handle(_uint64())
-float16 = Type.from_handle(_float16())
-float32 = Type.from_handle(_float32())
-float64 = Type.from_handle(_float64())
-complex64 = Type.from_handle(_complex64())
-complex128 = Type.from_handle(_complex128())
-string_type = Type.from_handle(_string_type())
-
-
 cpdef Type binary_type(uint32_t size):
     return Type.from_handle(_binary_type(size))
 
@@ -221,6 +301,7 @@ cpdef FixedArrayType array_type(Type element_type, uint32_t N):
 
 cpdef StructType struct_type(list field_types, bool align = True):
     cdef std_vector[_Type] types = std_vector[_Type]()
+    cdef Type field_type
 
     types.reserve(len(field_types))
     for field_type in field_types:

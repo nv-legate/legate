@@ -13,8 +13,15 @@ from __future__ import annotations
 from libcpp cimport bool
 
 import inspect
+import warnings
 from collections.abc import Callable
 from inspect import Parameter, Signature, isclass as inspect_isclass
+from pickle import (
+    HIGHEST_PROTOCOL as PKL_HIGHEST_PROTOCOL,
+    dumps as pkl_dumps,
+    loads as pkl_loads,
+)
+from pickletools import optimize as pklt_optimize
 from typing import (
     Any,
     TypeVar,
@@ -29,7 +36,7 @@ from ..._lib.data.physical_store cimport PhysicalStore
 from ..._lib.data.scalar cimport Scalar
 from ..._lib.operation.task cimport AutoTask
 from ..._lib.task.task_context cimport TaskContext
-from ..._lib.type.type_info cimport Type
+from ..._lib.type.type_info cimport Type, binary_type
 from .type cimport (
     ConstraintSet,
     InputArray,
@@ -120,6 +127,11 @@ cdef tuple[
         tuple(reductions),
         tuple(scalars),
     )
+
+cdef inline bytes _serialize_object(object value):
+    return pklt_optimize(pkl_dumps(value, protocol=PKL_HIGHEST_PROTOCOL))
+
+cdef bytes LEGATE_PICKLE_HEADER = b"__legate_pickled_arg__"
 
 
 cdef class VariantInvoker:
@@ -280,9 +292,21 @@ cdef class VariantInvoker:
         elif issubclass(expected_ty, Scalar):
             task.add_scalar_arg(user_param)
         else:
-            task.add_scalar_arg(
-                user_param, dtype=Type.from_python_type(type(user_param))
-            )
+            try:
+                dtype = Type.from_py_object(user_param)
+            except NotImplementedError:
+                warnings.warn(
+                    f"Argument type: {type(user_param)} not natively "
+                    "supported by type inference, falling back to pickling "
+                    "(which may incur a slight performance penalty). Consider "
+                    "opening a bug report at "
+                    "https://github.com/nv-legate/legate.core."
+                )
+                user_param = (
+                    LEGATE_PICKLE_HEADER + _serialize_object(user_param)
+                )
+                dtype = binary_type(len(user_param))
+            task.add_scalar_arg(user_param, dtype=dtype)
 
         param_tup.value = user_param
 
@@ -492,7 +516,16 @@ cdef class VariantInvoker:
         ) -> object | Scalar:
             if issubclass(arg_ty, Scalar):
                 return arg
-            return arg.value()
+            val = arg.value()
+            if (
+                isinstance(val, memoryview)
+                and val[:len(LEGATE_PICKLE_HEADER)] == LEGATE_PICKLE_HEADER
+            ):
+                # we pickled the object, unpickle it transparently
+                return pkl_loads(val[len(LEGATE_PICKLE_HEADER):])
+            if isinstance(val, arg_ty):
+                return val
+            return arg_ty(val)
 
         def unpack_args(
             names: tuple[str, ...],

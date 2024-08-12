@@ -15,6 +15,7 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/buffer_builder.h"
 #include "core/utilities/detail/enumerate.h"
+#include "core/utilities/detail/type_traits.h"
 #include "core/utilities/detail/zstring_view.h"
 
 #include <algorithm>
@@ -439,22 +440,20 @@ InternalSharedPtr<Type> binary_type(std::uint32_t size)
 
 InternalSharedPtr<Type> fixed_array_type(InternalSharedPtr<Type> element_type, std::uint32_t N)
 {
-  if (N == 0) {
-    throw std::out_of_range{"Size of array must be greater than 0"};
-  }
   // We use UIDs of the following format for "common" fixed array types
   //    1B            1B
   // +--------+-------------------+
   // | length | element type code |
   // +--------+-------------------+
-  auto uid = [&N](const Type& elem_type) {
+  const auto uid = [&] {
     constexpr auto MAX_ELEMENTS = 0xFFU;
 
-    if (!elem_type.is_primitive() || N > MAX_ELEMENTS) {
+    if (!element_type->is_primitive() || N > MAX_ELEMENTS) {
       return get_next_uid();
     }
-    return static_cast<std::int32_t>(elem_type.code) | (N << TYPE_CODE_OFFSET);
-  }(*element_type);
+    return static_cast<std::uint32_t>(traits::detail::to_underlying(element_type->code)) |
+           (N << TYPE_CODE_OFFSET);
+  }();
   return make_internal_shared<FixedArrayType>(uid, std::move(element_type), N);
 }
 

@@ -15,6 +15,28 @@ import numpy as np
 
 from ..utilities.typedefs import GlobalRedopID
 
+class TypeCode(IntEnum):
+    NIL: int
+    BOOL: int
+    INT8: int
+    INT16: int
+    INT32: int
+    INT64: int
+    UINT8: int
+    UINT16: int
+    UINT32: int
+    UINT64: int
+    FLOAT16: int
+    FLOAT32: int
+    FLOAT64: int
+    COMPLEX64: int
+    COMPLEX128: int
+    BINARY: int
+    FIXED_ARRAY: int
+    STRUCT: int
+    STRING: int
+    LIST: int
+
 class ReductionOpKind(IntEnum):
     ADD: int
     MUL: int

@@ -13,7 +13,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
+import numpy as np
 import pytest
+from numpy.typing import NDArray
 
 from legate.core import Scalar, Type, types as ty
 from legate.core.task import task
@@ -57,6 +59,44 @@ class TestScalarTask:
         scal_value = scal.value()
         foo(scal_value)
 
+    @pytest.mark.parametrize("tup", ((1,), (1, 2, 3)))
+    def test_tuple(self, tup: tuple[int, ...]) -> None:
+        @task(throws_exception=True)
+        def tuple_task(x: tuple[int, ...]) -> None:
+            assert_isinstance(x, tuple)
+            assert x == tup
+
+        tuple_task(tup)
+
+    @pytest.mark.parametrize("lst", ([400.0], [1.0, 2.0, 3.0]))
+    def test_list(self, lst: list[float]) -> None:
+        @task
+        def list_task(x: list[float]) -> None:
+            assert_isinstance(x, list)
+            assert x == lst
+
+        list_task(lst)
+
+    def test_np_array(self) -> None:
+        arr = np.array((1, 2, 3, 4), dtype=np.int64)
+
+        @task
+        def np_array_task(x: NDArray[np.int64]) -> None:
+            assert_isinstance(x, np.ndarray)
+            assert x.dtype == arr.dtype
+            np.testing.assert_array_equal(x, arr)
+
+        np_array_task(arr)
+
+
+def NOT_NATIVELY_SUPPORTED_WARNING(obj: Any) -> str:
+    return re.escape(
+        f"Argument type: {type(obj)} not natively supported by type "
+        "inference, falling back to pickling (which may incur a slight "
+        "performance penalty). Consider opening a bug report at "
+        "https://github.com/nv-legate/legate.core."
+    )
+
 
 class TestScalarTaskBad:
     def test_mismatched_type_hint_call_scalar(self) -> None:
@@ -88,6 +128,39 @@ class TestScalarTaskBad:
             # The callsite must match the type-hint exactly for Scalar
             # parameters
             foo(1)
+
+    def test_empty_tuple(self) -> None:
+        tup: tuple[int, ...] = tuple()
+
+        @task
+        def tuple_task(x: tuple[int, ...]) -> None:
+            assert_isinstance(x, tuple)
+            assert x == tup
+
+        with pytest.warns(
+            UserWarning, match=NOT_NATIVELY_SUPPORTED_WARNING(tup)
+        ):
+            tuple_task(tup)
+
+    @pytest.mark.parametrize(
+        "d",
+        (
+            {1: 1},
+            {"foo": 1, 1.3: (1, 2, 4)},
+            {frozenset((1, 2, 3)): {"hello": "goodbye"}},
+        ),
+    )
+    def test_dict(self, d: dict[Any, Any]) -> None:
+
+        @task
+        def dict_task(x: dict[Any, Any]) -> None:
+            assert_isinstance(x, dict)
+            assert x == d
+
+        with pytest.warns(
+            UserWarning, match=NOT_NATIVELY_SUPPORTED_WARNING(d)
+        ):
+            dict_task(d)
 
 
 if __name__ == "__main__":

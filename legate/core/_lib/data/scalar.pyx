@@ -9,6 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from cpython.buffer cimport PyBUF_READ
+from cpython.memoryview cimport PyMemoryView_FromMemory
 from libc.stdint cimport (
     int8_t,
     int16_t,
@@ -22,11 +24,13 @@ from libc.stdint cimport (
 )
 from libcpp cimport bool as cpp_bool
 from libcpp.complex cimport complex as std_complex
-from libcpp.string cimport string as std_string
 
 from ..._ext.cython_libcpp.string_view cimport (
+    str_from_string_view,
+    string_view as std_string_view,
     string_view_from_py as std_string_view_from_py,
 )
+from ..type.type_info cimport Type
 
 from typing import Any
 
@@ -53,13 +57,7 @@ cdef void from_buffer(Scalar scalar, object value, Type dtype):
         arr = np.asarray(value, dtype=dtype.to_numpy_dtype())
         value = arr.tobytes()
 
-    if len(value) != dtype.size:
-        raise ValueError(
-            f"Type {dtype} expects a value of size {dtype.size}, "
-            f"but the size of value is {len(value)}"
-        )
-    scalar._handle = _Scalar(dtype._handle, <const char*>value, True)
-
+    from_binary(scalar, value, dtype)
 
 cpdef void from_bool(Scalar scalar, object value, Type dtype):
     if isinstance(value, bool):
@@ -172,12 +170,7 @@ cpdef void from_array(Scalar scalar, object value, Type dtype):
         arr = np.asarray(value, dtype=elem_type)
         value = arr.tobytes()
 
-    if len(value) != dtype.size:
-        raise ValueError(
-            f"Type {dtype} expects a value of size {dtype.size}, "
-            f"but the size of value is {len(value)}"
-        )
-    scalar._handle = _Scalar(dtype._handle, <const char*>value, True)
+    from_binary(scalar, value, dtype)
 
 
 cpdef void from_struct(Scalar scalar, object value, Type dtype):
@@ -190,17 +183,19 @@ cpdef void from_struct(Scalar scalar, object value, Type dtype):
         arr = np.asarray(value, dtype=dtype.to_numpy_dtype())
         value = arr.tobytes()
 
+    from_binary(scalar, value, dtype)
+
+cpdef void from_string(Scalar scalar, str value, Type _):
+    scalar._handle = _Scalar(std_string_view_from_py(value))
+
+
+cpdef void from_binary(Scalar scalar, bytes value, Type dtype):
     if len(value) != dtype.size:
         raise ValueError(
             f"Type {dtype} expects a value of size {dtype.size}, "
             f"but the size of value is {len(value)}"
         )
     scalar._handle = _Scalar(dtype._handle, <const char*>value, True)
-
-
-cpdef void from_string(Scalar scalar, str value, Type _):
-    scalar._handle = _Scalar(std_string_view_from_py(value))
-
 
 cdef dict _CONSTRUCTORS = {
     _Type.Code.NIL  : from_null,
@@ -221,6 +216,7 @@ cdef dict _CONSTRUCTORS = {
     _Type.Code.FIXED_ARRAY: from_array,
     _Type.Code.STRUCT: from_struct,
     _Type.Code.STRING: from_string,
+    _Type.Code.BINARY: from_binary,
 }
 
 
@@ -269,11 +265,13 @@ cdef dict _GETTERS = {
     ),
     _Type.Code.FIXED_ARRAY: np.asarray,
     _Type.Code.STRUCT: to_struct,
-    _Type.Code.STRING : lambda Scalar result: (
-        result._handle.value[std_string]().decode()
+    _Type.Code.STRING : lambda Scalar result: str_from_string_view(
+        result._handle.value[std_string_view]()
+    ),
+    _Type.Code.BINARY: lambda Scalar result: PyMemoryView_FromMemory(
+        <char*>(result._handle.ptr()), result._handle.size(), PyBUF_READ
     )
 }
-
 
 cdef class Scalar:
     @staticmethod
@@ -282,7 +280,9 @@ cdef class Scalar:
         result._handle = handle
         return result
 
-    def __init__(self, value: Any, Type dtype) -> None:
+    def __init__(self, value: Any, dtype: Type | None = None) -> None:
+        if dtype is None:
+            dtype = Type.from_py_object(value)
         ctor = _CONSTRUCTORS.get(dtype.code)
         if ctor is None:
             raise TypeError(f"unhandled type {dtype}")

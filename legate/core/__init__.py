@@ -63,6 +63,7 @@ from ._lib.task.task_info import TaskInfo
 from .types import (
     ReductionOpKind,
     Type,
+    TypeCode,
     array_type,
     binary_type,
     bool_,

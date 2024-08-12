@@ -44,8 +44,8 @@ cdef extern from "core/utilities/typedefs.h" namespace "legate" nogil:
 # __pyx_t_3 = __Pyx_PyInt_From_legate_3a__3a_Type_3a__3a_Code(__pyx_e_4Type_INT8);  # noqa E501
 #
 # because cython mangles the name of the enum
-cdef extern from "core/type/type_info.h" namespace "legate::Type" nogil:
-    cdef enum class Code:
+cdef extern from "core/type/type_info.h" namespace "legate" nogil:
+    cpdef enum class TypeCode "legate::Type::Code":
         NIL
         BOOL
         INT8
@@ -79,7 +79,7 @@ cdef extern from "core/type/type_info.h" namespace "legate" nogil:
         XOR
 
     cdef cppclass _Type "legate::Type":
-        ctypedef Code Code
+        ctypedef TypeCode Code
         _Type.Code code()
         uint32_t size() except+
         uint32_t alignment()
@@ -150,7 +150,7 @@ cdef class Type:
     cpdef object to_numpy_dtype(self)
 
     @staticmethod
-    cdef Type from_python_type(type ty)
+    cdef Type from_py_object(object py_object)
 
 cdef class FixedArrayType(Type):
     cpdef object to_numpy_dtype(self)

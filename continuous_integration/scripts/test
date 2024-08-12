@@ -77,8 +77,12 @@ run_test_or_analysis() {
               echo "See impls for GCC above"
               return 1
             else
-              pytest tests/unit
-              pytest tests/integration
+              # pytest doesn't truncate output if "CI" is defined in the env:
+              # https://doc.pytest.org/en/latest/explanation/ci.html
+              export CI=1
+
+              pytest --color=yes tests/unit
+              pytest --color=yes tests/integration
             fi
 
             ;;

@@ -438,15 +438,6 @@ class TestAutoTaskErrors:
         with pytest.raises(ValueError, match=msg):
             auto_task.add_input(Scalar(1, ty.int8))  # type: ignore
 
-    def test_add_scalar_arg_without_type(self) -> None:
-        runtime = get_legate_runtime()
-        auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.basic_task.task_id
-        )
-        msg = "Data type must be given if the value is not a Scalar object"
-        with pytest.raises(ValueError, match=msg):
-            auto_task.add_scalar_arg(123)
-
     @pytest.mark.parametrize(
         "dtype", [(ty.int32, ty.int64), (np.int32,)], ids=str
     )

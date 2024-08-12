@@ -255,9 +255,7 @@ TEST_F(TypeUnit, FixedArrayType)
   }
 
   // N = 0
-  {
-    EXPECT_THROW((void)legate::fixed_array_type(legate::int64(), 0), std::out_of_range);
-  }
+  EXPECT_NO_THROW((void)legate::fixed_array_type(legate::int64(), 0));
 
   // element type has variable size
   EXPECT_THROW((void)legate::fixed_array_type(legate::string_type(), 10), std::invalid_argument);

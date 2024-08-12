@@ -171,9 +171,10 @@ def linux_load_sibling_sets() -> set[tuple[int, ...]]:
 
     sibling_sets: set[tuple[int, ...]] = set()
     for i in range(N):
-        line = open(
+        with open(
             f"/sys/devices/system/cpu/cpu{i}/topology/thread_siblings_list"
-        ).read()
+        ) as fd:
+            line = fd.read()
         sibling_sets.add(extract_values(line.strip()))
 
     return sibling_sets

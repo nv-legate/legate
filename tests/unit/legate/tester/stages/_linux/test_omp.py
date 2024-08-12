@@ -59,6 +59,9 @@ def test_cpu_pin_strict_zero_computed_workers() -> None:
         m.OMP(c, s)
 
 
+@pytest.mark.filterwarnings(
+    r"ignore:\d+ detected core\(s\) not enough for.*running anyway"
+)
 def test_cpu_pin_nonstrict_zero_computed_workers() -> None:
     c = Config(["test.py", "--omps", "16"])
     s = FakeSystem(cpus=12)

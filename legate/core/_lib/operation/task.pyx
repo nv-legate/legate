@@ -44,18 +44,17 @@ from ..utilities.tuple cimport _tuple
 cdef Type sanitized_scalar_arg_type(
     object value, dtype: Type | tuple[Type, ...]
 ):
-    cdef Type sanitized
+    if isinstance(dtype, Type):
+        return dtype
+
     if isinstance(dtype, tuple):
         if not (len(dtype) == 1 and isinstance(dtype[0], Type)):
             raise TypeError(f"Unsupported type: {dtype}")
-        sanitized = (
+        return (
             null_type if len(value) == 0 else array_type(dtype[0], len(value))
         )
-    elif isinstance(dtype, Type):
-        sanitized = dtype
-    else:
-        raise TypeError(f"Unsupported type: {dtype}")
-    return sanitized
+
+    raise TypeError(f"Unsupported type: {dtype}")
 
 
 cdef class AutoTask(Unconstructable):
@@ -223,12 +222,15 @@ cdef class AutoTask(Unconstructable):
         if isinstance(value, Scalar):
             self._handle.add_scalar_arg((<Scalar> value)._handle)
             return
+
+        cdef Scalar scalar
+
         if dtype is None:
-            raise ValueError(
-                "Data type must be given if the value is not a Scalar object"
+            scalar = Scalar(value)
+        else:
+            scalar = Scalar(
+                value, dtype=sanitized_scalar_arg_type(value, dtype)
             )
-        sanitized = sanitized_scalar_arg_type(value, dtype)
-        cdef Scalar scalar = Scalar(value, sanitized)
         self._handle.add_scalar_arg(scalar._handle)
 
     cpdef void add_constraint(self, Constraint constraint):
@@ -463,12 +465,16 @@ cdef class ManualTask(Unconstructable):
         if isinstance(value, Scalar):
             self._handle.add_scalar_arg((<Scalar> value)._handle)
             return
+
+        cdef Scalar scalar
+
         if dtype is None:
-            raise ValueError(
-                "Data type must be given if the value is not a Scalar object"
+            scalar = Scalar(value)
+        else:
+            scalar = Scalar(
+                value, dtype=sanitized_scalar_arg_type(value, dtype)
             )
-        sanitized = sanitized_scalar_arg_type(value, dtype)
-        cdef Scalar scalar = Scalar(value, sanitized)
+
         self._handle.add_scalar_arg(scalar._handle)
 
     cpdef str provenance(self):
