@@ -1272,6 +1272,19 @@ TEST_F(PhysicalStoreUnit, BoundStoreInlineAllocation)
   ASSERT_EQ(inline_alloc.strides.at(1), sizeof(std::uint32_t));
 }
 
+TEST_F(PhysicalStoreUnit, Valid)
+{
+  auto runtime       = legate::Runtime::get_runtime();
+  auto logical_store = runtime->create_store({0, 5}, legate::uint64());
+  auto store         = logical_store.get_physical_store();
+  ASSERT_TRUE(store.valid());
+  auto moved_store = std::move(store);
+  // NOLINTBEGIN(bugprone-use-after-move,clang-analyzer-cplusplus.Move)
+  ASSERT_FALSE(store.valid());
+  // NOLINTEND(bugprone-use-after-move,clang-analyzer-cplusplus.Move)
+  ASSERT_TRUE(moved_store.valid());
+}
+
 // NOLINTEND(readability-magic-numbers)
 
 }  // namespace physical_store_test

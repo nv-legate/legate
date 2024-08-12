@@ -616,6 +616,51 @@ void test_unbound_string_array(bool nullable)
   runtime->submit(std::move(task));
 }
 
+void test_bound_struct_array(bool nullable)
+{
+  auto runtime       = legate::Runtime::get_runtime();
+  auto logical_array = runtime->create_array(
+    {1, 10}, legate::struct_type(true, legate::int64(), legate::float32()), nullable);
+  auto array                        = logical_array.get_physical_array();
+  static constexpr std::int32_t DIM = 2;
+  ASSERT_EQ(array.nullable(), nullable);
+  ASSERT_EQ(array.dim(), DIM);
+  ASSERT_EQ(array.type().code(), legate::Type::Code::STRUCT);
+  ASSERT_TRUE(array.nested());
+  ASSERT_EQ(array.shape<DIM>(), (legate::Rect<2>{{0, 0}, {0, 9}}));
+  ASSERT_EQ((array.domain().bounds<DIM, std::int64_t>()), (legate::Rect<DIM>{{0, 0}, {0, 9}}));
+
+  ASSERT_THROW(static_cast<void>(array.data()), std::invalid_argument);
+
+  if (!nullable) {
+    ASSERT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+  } else {
+    auto null_mask = array.null_mask();
+    ASSERT_EQ(null_mask.shape<2>(), array.shape<2>());
+    ASSERT_EQ(null_mask.domain(), array.domain());
+    ASSERT_EQ(null_mask.type(), legate::bool_());
+    ASSERT_EQ(null_mask.dim(), array.dim());
+  }
+  auto field_subarray1 = array.child(0);
+  ASSERT_FALSE(field_subarray1.nullable());
+  ASSERT_EQ(field_subarray1.dim(), DIM);
+  ASSERT_EQ(field_subarray1.type(), legate::int64());
+  ASSERT_EQ((field_subarray1.domain().bounds<DIM, std::int64_t>()),
+            (legate::Rect<2>{{0, 0}, {0, 9}}));
+
+  auto field_subarray2 = array.child(1);
+  ASSERT_FALSE(field_subarray2.nullable());
+  ASSERT_EQ(field_subarray2.dim(), DIM);
+  ASSERT_EQ(field_subarray2.type(), legate::float32());
+  ASSERT_EQ((field_subarray2.domain().bounds<DIM, std::int64_t>()),
+            (legate::Rect<2>{{0, 0}, {0, 9}}));
+
+  ASSERT_THROW(static_cast<void>(array.child(2)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(array.child(-1)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(array.as_list_array()), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(array.as_string_array()), std::invalid_argument);
+}
+
 void test_primitive_array(bool nullable)
 {
   test_bound_array(nullable);
@@ -832,6 +877,10 @@ TEST_F(PhysicalArrayUnit, CreateListNullable) { test_list_array(true); }
 TEST_F(PhysicalArrayUnit, CreateStringNonNullable) { test_string_array(false); }
 
 TEST_F(PhysicalArrayUnit, CreateStringNullable) { test_string_array(true); }
+
+TEST_F(PhysicalArrayUnit, CreateBoundStructNonNullable) { test_bound_struct_array(false); }
+
+TEST_F(PhysicalArrayUnit, CreateBoundStructNullable) { test_bound_struct_array(true); }
 
 TEST_F(PhysicalArrayUnit, FillPrimitiveNonNullable) { test_fill_primitive(false); }
 
