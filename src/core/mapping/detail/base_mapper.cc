@@ -18,6 +18,7 @@
 #include "core/mapping/detail/store.h"
 #include "core/mapping/operation.h"
 #include "core/runtime/detail/projection.h"
+#include "core/runtime/detail/runtime.h"
 #include "core/runtime/detail/shard.h"
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/enumerate.h"
@@ -41,6 +42,33 @@
 namespace legate::mapping::detail {
 
 namespace {
+
+class AutoReentrantLock {
+ public:
+  AutoReentrantLock(const Legion::Mapping::MapperRuntime& runtime,
+                    const Legion::Mapping::MapperContext& ctx);
+
+  AutoReentrantLock()                                    = delete;
+  AutoReentrantLock(const AutoReentrantLock&)            = delete;
+  AutoReentrantLock& operator=(const AutoReentrantLock&) = delete;
+
+  ~AutoReentrantLock();
+
+ private:
+  const Legion::Mapping::MapperRuntime& runtime_;
+  const Legion::Mapping::MapperContext& ctx_;
+};
+
+AutoReentrantLock::AutoReentrantLock(const Legion::Mapping::MapperRuntime& runtime,
+                                     const Legion::Mapping::MapperContext& ctx)
+  : runtime_{runtime}, ctx_{ctx}
+{
+  runtime_.disable_reentrant(ctx_);
+}
+
+AutoReentrantLock::~AutoReentrantLock() { runtime_.enable_reentrant(ctx_); }
+
+// ==========================================================================================
 
 const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind)
 {
@@ -91,8 +119,8 @@ BaseMapper::BaseMapper(mapping::Mapper* legate_mapper,
     legion_machine{Legion::Machine::get_machine()},
     library{_library},
     logger{create_logger_name_()},
-    local_instances_{InstanceManager::get_instance_manager()},
-    reduction_instances_{ReductionInstanceManager::get_instance_manager()},
+    local_instances_{legate::detail::Runtime::get_runtime()->get_instance_manager()},
+    reduction_instances_{legate::detail::Runtime::get_runtime()->get_reduction_instance_manager()},
     mapper_name_{fmt::format("{} on Node {}", library->get_library_name(), local_machine_.node_id)}
 {
   legate_mapper_->set_machine(this);
@@ -560,13 +588,20 @@ void BaseMapper::map_legate_stores_(Legion::Mapping::MapperContext ctx,
           logger.debug() << log_mappable(mappable) << ": failed to acquire instance " << result
                          << " for reqs:" << reqs_ss.str();
         }
-        if ((*reqs.begin())->redop != 0) {
-          const Legion::Mapping::AutoLock lock(ctx, reduction_instances_->manager_lock());
-          reduction_instances_->erase(result);
+
+        if ((*reqs.begin())->redop == 0) {
+          const Legion::Mapping::AutoLock lock{ctx, local_instances_->manager_lock()};
+
+          static_cast<void>(local_instances_->erase(result));
         } else {
-          const Legion::Mapping::AutoLock lock(ctx, local_instances_->manager_lock());
-          local_instances_->erase(result);
+          const Legion::Mapping::AutoLock lock{ctx, reduction_instances_->manager_lock()};
+
+          static_cast<void>(reduction_instances_->erase(result));
         }
+
+        // We have deleted this instance from our caches, no need to stay subscribed
+        runtime->unsubscribe(ctx, result);
+        creating_operation_.erase(result);
         result = NO_INST;
       }
       instances.push_back(result);
@@ -686,9 +721,8 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
     // We need to hold the instance manager lock as we're about to try
     // to find an instance
     const Legion::Mapping::AutoLock reduction_lock{ctx, reduction_instances_->manager_lock()};
-
     // This whole process has to appear atomic
-    runtime->disable_reentrant(ctx);
+    const AutoReentrantLock lock{*runtime, ctx};
 
     // reuse reductions only for GPU tasks:
     if (target_proc.kind() == Processor::TOC_PROC) {
@@ -704,7 +738,6 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
                            << regions.front();
           }
           result = *std::move(ret);
-          runtime->enable_reentrant(ctx);
           // Needs acquire to keep the runtime happy
           return true;
         }
@@ -733,76 +766,123 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
         }
         msg << " (size: " << footprint << " bytes, memory: " << target_memory << ")";
       }
-      if (target_proc.kind() == Processor::TOC_PROC) {
+      if (target_proc.kind() == Processor::TOC_PROC && fields.size() == 1 && regions.size() == 1) {
         // store reduction instance
-        if (fields.size() == 1 && regions.size() == 1) {
-          auto fid = fields.front();
-          reduction_instances_->record_instance(redop, regions.front(), fid, result, policy);
-        }
+        reduction_instances_->record_instance(
+          redop, regions.front(), fields.front(), result, policy);
+        runtime->subscribe(ctx, result);
       }
-      runtime->enable_reentrant(ctx);
       // Record the operation that created this instance
       if (const auto provenance = mappable.get_provenance_string(); !provenance.empty()) {
         creating_operation_[result] = std::string{provenance};
+        // Also subscribe here (multiple subscriptions are idempotent), since we will want to
+        // remove the instance from the creating_operation_ cache on deletion as well
+        runtime->subscribe(ctx, result);
       }
       // We already did the acquire
       return false;
     }
-    runtime->enable_reentrant(ctx);
     if (!can_fail) {
       report_failed_mapping_(ctx, mappable, mapping, target_memory, redop, footprint);
     }
     return true;
   }
 
-  const Legion::Mapping::AutoLock lock{ctx, local_instances_->manager_lock()};
-  runtime->disable_reentrant(ctx);
-
-  auto has_collective_write = [](const auto& to_check) {
-    return std::any_of(to_check.begin(), to_check.end(), [](const auto& req) {
-      return ((req->privilege & LEGION_WRITE_PRIV) != 0) &&
-             ((req->prop & LEGION_COLLECTIVE_MASK) != 0);
-    });
-  };
+  constexpr auto has_collective_write =
+    [](const std::set<const Legion::RegionRequirement*>& to_check) {
+      return std::any_of(
+        to_check.begin(), to_check.end(), [](const Legion::RegionRequirement* req) {
+          return ((req->privilege & LEGION_WRITE_PRIV) != 0) &&
+                 ((req->prop & LEGION_COLLECTIVE_MASK) != 0);
+        });
+    };
   const auto alloc_policy = must_alloc_collective_writes && has_collective_write(reqs)
                               ? AllocPolicy::MUST_ALLOC
                               : policy.allocation;
-
+  const auto can_search_cache =
+    fields.size() == 1 && regions.size() == 1 && alloc_policy != AllocPolicy::MUST_ALLOC;
   // See if we already have it in our local instances
-  if (fields.size() == 1 && regions.size() == 1 && alloc_policy != AllocPolicy::MUST_ALLOC) {
-    auto ret =
+  const auto found_in_cache = [&] {
+    auto cached =
       local_instances_->find_instance(regions.front(), fields.front(), target_memory, policy);
+    const auto found = cached.has_value();
 
-    if (ret.has_value()) {
-      result = *std::move(ret);
+    if (found) {
+      result = *std::move(cached);
       if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
         logger.debug() << "Operation " << mappable.get_unique_id() << ": reused cached instance "
                        << result << " for " << regions.front();
       }
-      runtime->enable_reentrant(ctx);
-      // Needs acquire to keep the runtime happy
+    }
+    return found;
+  };
+
+  if (can_search_cache) {
+    const Legion::Mapping::AutoLock lock{ctx, local_instances_->manager_lock()};
+    const AutoReentrantLock rlock{*runtime, ctx};
+
+    if (found_in_cache()) {
+      // Needs acquire if found to keep the runtime happy
       return true;
     }
   }
 
+  const auto domain = [&]() -> std::optional<Domain> {
+    if (fields.size() == 1 && regions.size() == 1) {
+      // When the client mapper didn't request colocation and also didn't want the instance
+      // to be exact, we can do an interesting optimization here to try to reduce unnecessary
+      // inter-memory copies. For logical regions that are overlapping we try
+      // to accumulate as many as possible into one physical instance and use
+      // that instance for all the tasks for the different regions.
+      // First we have to see if there is anything we overlap with
+      auto is = regions.front().get_index_space();
+
+      if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+        logger.debug() << "Operation " << mappable.get_unique_id()
+                       << ": waiting on index space domain for " << is << " for "
+                       << regions.front();
+      }
+      return runtime->get_index_space_domain(ctx, std::move(is));
+    }
+    return std::nullopt;
+  }();
+
+  // Positioning of these locks exactly here is critical. The above call to
+  // get_index_space_domain() may depend on an as-of-yet unfinished task. If we disable
+  // reentrancy _before_ that call, then we can find ourselves in a deadlock:
+  //
+  // 1. The mapper (i.e. us, right here) disables reentrancy.
+  // 2. And then calls into Legion, requesting an index space that an as-of-yet unfinished
+  //    task will produce.
+  // 3. So the current mapping task (us) sits and waits (patiently).
+  // 4. The producer task now runs, and in the task post-amble as it's finalizing the output
+  //    region, it invalidates a PhysicalInstance.
+  // 5. And then tries to notify subscribers.
+  // 6. Which in turn requires a mapper call.
+  // 7. And now we are stuck.
+  const Legion::Mapping::AutoLock lock{ctx, local_instances_->manager_lock()};
+  const AutoReentrantLock rlock{*runtime, ctx};
+
   InternalSharedPtr<RegionGroup> group{nullptr};
 
-  // Haven't made this instance before, so make it now
-  if (fields.size() == 1 && regions.size() == 1) {
-    // When the client mapper didn't request colocation and also didn't want the instance
-    // to be exact, we can do an interesting optimization here to try to reduce unnecessary
-    // inter-memory copies. For logical regions that are overlapping we try
-    // to accumulate as many as possible into one physical instance and use
-    // that instance for all the tasks for the different regions.
-    // First we have to see if there is anything we overlap with
-    auto fid            = fields.front();
-    auto is             = regions.front().get_index_space();
-    const Domain domain = runtime->get_index_space_domain(ctx, is);
-    group               = local_instances_->find_region_group(
-      regions.front(), domain, fid, target_memory, policy.exact);
+  if (domain.has_value()) {
+    // We needed to temporarily release the locks above in order to allow the
+    // get_index_space_domain() call to complete. In that time, it is possible (though
+    // unlikely) that another mapping task pre-empted us and deposited a matching region into
+    // the cache.
+    //
+    // So we need to search the cache again, because otherwise we might end up with 2 instances
+    // covering the same region in the cache.
+    if (can_search_cache && found_in_cache()) {
+      // Needs acquire if found to keep the runtime happy
+      return true;
+    }
+    group = local_instances_->find_region_group(
+      regions.front(), *domain, fields.front(), target_memory, policy.exact);
     regions = group->get_regions();
   }
 
+  // Haven't made this instance before, so make it now
   bool created          = true;
   bool success          = false;
   std::size_t footprint = 0;
@@ -852,19 +932,20 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
     // Only save the result for future use if it is not an external instance
     if (!result.is_external_instance() && group != nullptr) {
       LEGATE_CHECK(fields.size() == 1);
-      auto fid = fields.front();
-      local_instances_->record_instance(group, fid, result, policy);
+      local_instances_->record_instance(group, fields.front(), result, policy);
+      runtime->subscribe(ctx, result);
     }
-    runtime->enable_reentrant(ctx);
     // Record the operation that created this instance
     if (const auto provenance = mappable.get_provenance_string(); !provenance.empty()) {
       creating_operation_[result] = std::string{provenance};
+      // Also subscribe here (multiple subscriptions are idempotent), since we will want to
+      // remove the instance from the creating_operation_ cache on deletion as well
+      runtime->subscribe(ctx, result);
     }
     // We made it so no need for an acquire
     return false;
   }
   // Done with the atomic part
-  runtime->enable_reentrant(ctx);
 
   // If we make it here then we failed entirely
   if (!can_fail) {
@@ -1588,6 +1669,30 @@ void BaseMapper::handle_task_result(Legion::Mapping::MapperContext /*ctx*/,
                                     const MapperTaskResult& /*result*/)
 {
   LEGATE_ABORT("Nothing to do since we should never get one of these");
+}
+
+void BaseMapper::handle_instance_collection(Legion::Mapping::MapperContext ctx,
+                                            const Legion::Mapping::PhysicalInstance& inst)
+{
+  const auto try_erase = [&](auto* instance_mngr) {
+    const auto _  = Legion::Mapping::AutoLock{ctx, (*instance_mngr)->manager_lock()};
+    const auto _1 = AutoReentrantLock{*runtime, ctx};
+
+    return (*instance_mngr)->erase(inst);
+  };
+
+  if (!try_erase(&local_instances_)) {
+    try_erase(&reduction_instances_);
+    // It's OK if neither erase succeeds. This indicates that the instance was deleted in an
+    // earlier call to record_instance() in which several instances were combined.
+    //
+    // Probably we should provide some mechanism to allow unsubscription in that case, but
+    // that would be complicated to implement.
+  }
+
+  // Can be reentrant for this one I guess, since we're not making any runtime calls, which is
+  // the only point where we could be preempted.
+  creating_operation_.erase(inst);
 }
 
 std::string_view BaseMapper::retrieve_alloc_info_(Legion::Mapping::MapperContext ctx,

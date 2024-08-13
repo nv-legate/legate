@@ -41,6 +41,8 @@ inline InstanceSet::InstanceSpec::InstanceSpec(Legion::Mapping::PhysicalInstance
 {
 }
 
+inline std::size_t InstanceSet::size() const { return instances_.size(); }
+
 // ==========================================================================================
 
 inline ReductionInstanceSet::ReductionInstanceSpec::ReductionInstanceSpec(
@@ -48,6 +50,8 @@ inline ReductionInstanceSet::ReductionInstanceSpec::ReductionInstanceSpec(
   : redop{op}, instance{std::move(inst)}, policy{std::move(po)}
 {
 }
+
+inline std::size_t ReductionInstanceSet::size() const { return instances_.size(); }
 
 // ==========================================================================================
 
@@ -69,13 +73,5 @@ inline std::size_t BaseInstanceManager::FieldMemInfo::hash() const noexcept
 }
 
 inline Legion::Mapping::LocalLock& BaseInstanceManager::manager_lock() { return manager_lock_; }
-
-// ==========================================================================================
-
-inline void InstanceManager::destroy() { instance_sets_.clear(); }
-
-// ==========================================================================================
-
-inline void ReductionInstanceManager::destroy() { instance_sets_.clear(); }
 
 }  // namespace legate::mapping::detail

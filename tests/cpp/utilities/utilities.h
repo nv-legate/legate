@@ -40,7 +40,7 @@ class RegisterOnceFixture : public DefaultFixture {
  public:
   void SetUp() override
   {
-    ::testing::Test::SetUp();
+    DefaultFixture::SetUp();
     auto runtime = legate::Runtime::get_runtime();
     auto created = false;
     auto library = runtime->find_or_create_library(

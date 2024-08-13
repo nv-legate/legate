@@ -244,6 +244,8 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   void handle_message(Legion::Mapping::MapperContext ctx, const MapperMessage& message) override;
   void handle_task_result(Legion::Mapping::MapperContext ctx,
                           const MapperTaskResult& result) override;
+  void handle_instance_collection(Legion::Mapping::MapperContext ctx,
+                                  const Legion::Mapping::PhysicalInstance& inst) override;
 
  protected:
   using OutputMap = std::unordered_map<const Legion::RegionRequirement*,
@@ -307,10 +309,10 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   std::unordered_map<VariantCacheKey, std::optional<Legion::VariantID>, hasher<VariantCacheKey>>
     variants_{};
 
-  InstanceManager* local_instances_{};
-  ReductionInstanceManager* reduction_instances_{};
-  // TODO(mpapadakis): Cannot use unordered_map because PhysicalInstance doesn't define a hasher
-  std::map<Legion::Mapping::PhysicalInstance, std::string> creating_operation_{};
+  InternalSharedPtr<InstanceManager> local_instances_{};
+  InternalSharedPtr<ReductionInstanceManager> reduction_instances_{};
+
+  std::unordered_map<Legion::Mapping::PhysicalInstance, std::string> creating_operation_{};
   LocalMachine local_machine_{};
 
  private:

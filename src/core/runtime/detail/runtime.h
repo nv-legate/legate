@@ -16,6 +16,7 @@
 #include "core/data/detail/shape.h"
 #include "core/data/external_allocation.h"
 #include "core/data/logical_store.h"
+#include "core/mapping/detail/instance_manager.h"
 #include "core/mapping/machine.h"
 #include "core/operation/detail/operation.h"
 #include "core/runtime/detail/communicator_manager.h"
@@ -322,6 +323,10 @@ class Runtime {
                                                 Legion::ProjectionID proj_id);
 
   [[nodiscard]] Processor get_executing_processor() const;
+  [[nodiscard]] const InternalSharedPtr<mapping::detail::InstanceManager>& get_instance_manager()
+    const;
+  [[nodiscard]] const InternalSharedPtr<mapping::detail::ReductionInstanceManager>&
+  get_reduction_instance_manager() const;
 
  private:
   static void schedule_(std::vector<InternalSharedPtr<Operation>>&& operations);
@@ -390,6 +395,9 @@ class Runtime {
     reduction_ops_{};
 
   std::vector<Legion::Future> pending_exceptions_{};
+
+  InternalSharedPtr<mapping::detail::InstanceManager> instance_manager_{};
+  InternalSharedPtr<mapping::detail::ReductionInstanceManager> reduction_instance_manager_{};
 };
 
 [[nodiscard]] bool has_started();

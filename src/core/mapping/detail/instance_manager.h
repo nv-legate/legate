@@ -78,7 +78,9 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
                        Legion::Mapping::PhysicalInstance instance,
                        InstanceMappingPolicy policy);
 
-  bool erase(const Legion::Mapping::PhysicalInstance& inst);
+  [[nodiscard]] std::size_t size() const;
+
+  [[nodiscard]] bool erase(const Legion::Mapping::PhysicalInstance& inst);
 
   [[nodiscard]] std::size_t get_instance_size() const;
 
@@ -113,7 +115,9 @@ class ReductionInstanceSet {
                        Legion::Mapping::PhysicalInstance instance,
                        InstanceMappingPolicy policy);
 
-  bool erase(const Legion::Mapping::PhysicalInstance& inst);
+  [[nodiscard]] std::size_t size() const;
+
+  [[nodiscard]] bool erase(const Legion::Mapping::PhysicalInstance& inst);
 
  private:
   std::unordered_map<Legion::LogicalRegion, ReductionInstanceSpec> instances_{};
@@ -134,6 +138,12 @@ class BaseInstanceManager {
   };
 
   [[nodiscard]] Legion::Mapping::LocalLock& manager_lock();
+
+ protected:
+  template <typename T>
+  [[nodiscard]] static bool do_erase_(
+    std::unordered_map<FieldMemInfo, T, hasher<FieldMemInfo>>* instance_sets,
+    const Legion::Mapping::PhysicalInstance& inst);
 
  private:
   Legion::Mapping::LocalLock manager_lock_{};
@@ -157,11 +167,7 @@ class InstanceManager : public BaseInstanceManager {
                        Legion::Mapping::PhysicalInstance instance,
                        InstanceMappingPolicy policy = {});
 
-  void erase(const Legion::Mapping::PhysicalInstance& inst);
-
-  void destroy();
-
-  [[nodiscard]] static InstanceManager* get_instance_manager();
+  [[nodiscard]] bool erase(const Legion::Mapping::PhysicalInstance& inst);
 
   [[nodiscard]] std::map<Memory, std::size_t> aggregate_instance_sizes() const;
 
@@ -184,11 +190,7 @@ class ReductionInstanceManager : public BaseInstanceManager {
                        Legion::Mapping::PhysicalInstance instance,
                        InstanceMappingPolicy policy = {});
 
-  void erase(const Legion::Mapping::PhysicalInstance& inst);
-
-  void destroy();
-
-  [[nodiscard]] static ReductionInstanceManager* get_instance_manager();
+  [[nodiscard]] bool erase(const Legion::Mapping::PhysicalInstance& inst);
 
  private:
   std::unordered_map<FieldMemInfo, ReductionInstanceSet, hasher<FieldMemInfo>> instance_sets_{};

@@ -107,7 +107,9 @@ Runtime::Runtime()
     field_reuse_freq_{
       LEGATE_FIELD_REUSE_FREQ.get(LEGATE_FIELD_REUSE_FREQ_DEFAULT, LEGATE_FIELD_REUSE_FREQ_TEST)},
     field_reuse_size_{local_machine().calculate_field_reuse_size()},
-    force_consensus_match_{LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST)}
+    force_consensus_match_{LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST)},
+    instance_manager_{make_internal_shared<mapping::detail::InstanceManager>()},
+    reduction_instance_manager_{make_internal_shared<mapping::detail::ReductionInstanceManager>()}
 {
 }
 
@@ -1908,8 +1910,8 @@ std::int32_t Runtime::finish()
   // We're about to deallocate objects below, so let's block on all outstanding Legion operations
   issue_execution_fence(true);
 
-  mapping::detail::InstanceManager::get_instance_manager()->destroy();
-  mapping::detail::ReductionInstanceManager::get_instance_manager()->destroy();
+  instance_manager_.reset();
+  reduction_instance_manager_.reset();
 
   // Any STL containers holding Legion handles need to be cleared here, otherwise they cause
   // trouble when they get destroyed in the Legate runtime's destructor

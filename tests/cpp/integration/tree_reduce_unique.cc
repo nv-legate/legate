@@ -34,6 +34,7 @@ struct FillTask : public legate::LegateTask<FillTask> {
     auto rect   = output.shape<1>();
     auto volume = static_cast<std::int64_t>(rect.volume());
     auto out    = output.write_accessor<std::int64_t, 1>(rect);
+
     for (std::int64_t idx = 0; idx < volume; ++idx) {
       out[idx] = idx / 2;
     }

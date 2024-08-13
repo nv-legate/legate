@@ -12,6 +12,7 @@
 
 #include "core/mapping/detail/instance_manager.h"
 
+#include "core/runtime/detail/runtime.h"
 #include "core/utilities/dispatch.h"
 #include "core/utilities/internal_shared_ptr.h"
 
@@ -235,16 +236,19 @@ void InstanceSet::record_instance(const InternalSharedPtr<RegionGroup>& group,
 
 bool InstanceSet::erase(const Legion::Mapping::PhysicalInstance& inst)
 {
-  std::set<RegionGroup*> filtered_groups;
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_instmgr().debug() << "===== before erasing an instance " << inst << " =====";
   }
   dump_and_sanity_check_();
 
+  std::set<RegionGroup*> filtered_groups;
+  auto did_erase = false;
+
   for (auto it = instances_.begin(); it != instances_.end(); /*nothing*/) {
     if (it->second.instance == inst) {
       filtered_groups.insert(it->first);
-      it = instances_.erase(it);
+      it        = instances_.erase(it);
+      did_erase = true;
     } else {
       ++it;
     }
@@ -252,14 +256,15 @@ bool InstanceSet::erase(const Legion::Mapping::PhysicalInstance& inst)
 
   std::set<Legion::LogicalRegion> filtered_regions;
   for (const RegionGroup* group : filtered_groups) {
-    for (auto&& region : group->regions) {
-      if (groups_.at(region).get() == group) {
-        // We have to do this in two steps; we don't want to remove the last shared_ptr to a group
-        // while iterating over the same group's regions
-        filtered_regions.insert(region);
-      }
-    }
+    // We have to do this in two steps; we don't want to remove the last shared_ptr to a group
+    // while iterating over the same group's regions
+    std::copy_if(
+      group->regions.cbegin(),
+      group->regions.cend(),
+      std::inserter(filtered_regions, filtered_regions.begin()),
+      [&](const Legion::LogicalRegion& region) { return groups_.at(region).get() == group; });
   }
+
   for (auto&& region : filtered_regions) {
     groups_.erase(region);
   }
@@ -269,7 +274,7 @@ bool InstanceSet::erase(const Legion::Mapping::PhysicalInstance& inst)
   }
   dump_and_sanity_check_();
 
-  return instances_.empty();
+  return did_erase;
 }
 
 std::size_t InstanceSet::get_instance_size() const
@@ -331,15 +336,52 @@ void ReductionInstanceSet::record_instance(GlobalRedopID redop,
 
 bool ReductionInstanceSet::erase(const Legion::Mapping::PhysicalInstance& inst)
 {
+  auto did_erase = false;
+
   for (auto it = instances_.begin(); it != instances_.end(); /*nothing*/) {
     if (it->second.instance == inst) {
-      it = instances_.erase(it);
+      it        = instances_.erase(it);
+      did_erase = true;
     } else {
       ++it;
     }
   }
-  return instances_.empty();
+  return did_erase;
 }
+
+// ==========================================================================================
+
+template <typename T>
+bool BaseInstanceManager::do_erase_(
+  std::unordered_map<FieldMemInfo, T, hasher<FieldMemInfo>>* instance_sets,
+  const Legion::Mapping::PhysicalInstance& inst)
+{
+  const auto mem = inst.get_location();
+  const auto tid = inst.get_tree_id();
+  auto did_erase = false;
+
+  for (auto fit = instance_sets->begin(); fit != instance_sets->end(); /*nothing*/) {
+    if ((fit->first.memory != mem) || (fit->first.tid != tid)) {
+      ++fit;
+      continue;
+    }
+
+    T& sub_inst = fit->second;
+
+    if (sub_inst.erase(inst)) {
+      did_erase = true;
+    }
+
+    if (sub_inst.size() == 0) {
+      fit = instance_sets->erase(fit);
+    } else {
+      ++fit;
+    }
+  }
+  return did_erase;
+}
+
+// ==========================================================================================
 
 std::optional<Legion::Mapping::PhysicalInstance> InstanceManager::find_instance(
   const Legion::LogicalRegion& region,
@@ -394,23 +436,9 @@ void InstanceManager::record_instance(const InternalSharedPtr<RegionGroup>& grou
   instance_sets_[std::move(key)].record_instance(group, std::move(instance), std::move(policy));
 }
 
-void InstanceManager::erase(const Legion::Mapping::PhysicalInstance& inst)
+bool InstanceManager::erase(const Legion::Mapping::PhysicalInstance& inst)
 {
-  const auto mem = inst.get_location();
-  const auto tid = inst.get_tree_id();
-
-  for (auto fit = instance_sets_.begin(); fit != instance_sets_.end(); /*nothing*/) {
-    if ((fit->first.memory != mem) || (fit->first.tid != tid)) {
-      ++fit;
-      continue;
-    }
-
-    if (fit->second.erase(inst)) {
-      fit = instance_sets_.erase(fit);
-    } else {
-      ++fit;
-    }
-  }
+  return do_erase_(&instance_sets_, inst);
 }
 
 std::map<Memory, std::size_t> InstanceManager::aggregate_instance_sizes() const
@@ -421,12 +449,6 @@ std::map<Memory, std::size_t> InstanceManager::aggregate_instance_sizes() const
     result[field_mem_info.memory] += instance_set.get_instance_size();
   }
   return result;
-}
-
-/*static*/ InstanceManager* InstanceManager::get_instance_manager()
-{
-  static InstanceManager manager{};
-  return &manager;
 }
 
 std::optional<Legion::Mapping::PhysicalInstance> ReductionInstanceManager::find_instance(
@@ -461,28 +483,9 @@ void ReductionInstanceManager::record_instance(GlobalRedopID redop,
     redop, region, std::move(instance), std::move(policy));
 }
 
-void ReductionInstanceManager::erase(const Legion::Mapping::PhysicalInstance& inst)
+bool ReductionInstanceManager::erase(const Legion::Mapping::PhysicalInstance& inst)
 {
-  const auto mem = inst.get_location();
-  const auto tid = inst.get_tree_id();
-
-  for (auto fit = instance_sets_.begin(); fit != instance_sets_.end(); /*nothing*/) {
-    if ((fit->first.memory != mem) || (fit->first.tid != tid)) {
-      ++fit;
-      continue;
-    }
-    if (fit->second.erase(inst)) {
-      fit = instance_sets_.erase(fit);
-    } else {
-      ++fit;
-    }
-  }
-}
-
-/*static*/ ReductionInstanceManager* ReductionInstanceManager::get_instance_manager()
-{
-  static ReductionInstanceManager manager{};
-  return &manager;
+  return do_erase_(&instance_sets_, inst);
 }
 
 }  // namespace legate::mapping::detail
