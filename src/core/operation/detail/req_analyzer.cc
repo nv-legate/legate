@@ -12,7 +12,6 @@
 
 #include "core/operation/detail/req_analyzer.h"
 
-#include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/enumerate.h"
 
 namespace legate::detail {
@@ -89,7 +88,7 @@ void FieldSet::coalesce()
 
 namespace {
 
-template <class Launcher>
+template <typename Launcher>
 constexpr bool is_single_v = false;
 template <>
 constexpr bool is_single_v<Legion::TaskLauncher> = true;
@@ -98,13 +97,14 @@ constexpr bool is_single_v<Legion::IndexTaskLauncher> = false;
 
 }  // namespace
 
-template <class Launcher>
-void FieldSet::populate_launcher(Launcher& task, const Legion::LogicalRegion& region) const
+template <typename Launcher>
+void FieldSet::populate_launcher(Launcher* task, const Legion::LogicalRegion& region) const
 {
+  task->region_requirements.reserve(coalesced_.size());
   for (auto&& [key, entry] : coalesced_) {
-    auto& [fields, is_key]        = entry;
-    auto& [privilege, store_proj] = key;
-    auto& requirement = task.region_requirements.emplace_back(Legion::RegionRequirement{});
+    auto&& [fields, is_key]        = entry;
+    auto&& [privilege, store_proj] = key;
+    auto&& requirement = task->region_requirements.emplace_back(Legion::RegionRequirement{});
 
     store_proj.template populate_requirement<is_single_v<Launcher>>(
       requirement, region, fields, privilege, is_key);
@@ -128,9 +128,9 @@ std::uint32_t RequirementAnalyzer::get_requirement_index(const Legion::LogicalRe
                                                          const StoreProjection& store_proj,
                                                          Legion::FieldID field_id) const
 {
-  auto finder = field_sets_.find(region);
+  const auto finder = field_sets_.find(region);
   LEGATE_ASSERT(finder != field_sets_.end());
-  auto& [field_set, req_offset] = finder->second;
+  const auto& [field_set, req_offset] = finder->second;
   return req_offset + field_set.get_requirement_index(privilege, store_proj, field_id);
 }
 
@@ -147,16 +147,16 @@ void RequirementAnalyzer::analyze_requirements()
 
 void RequirementAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const
 {
-  populate_launcher_(task);
+  populate_launcher_(&task);
 }
 
 void RequirementAnalyzer::populate_launcher(Legion::TaskLauncher& task) const
 {
-  populate_launcher_(task);
+  populate_launcher_(&task);
 }
 
-template <class Launcher>
-void RequirementAnalyzer::populate_launcher_(Launcher& task) const
+template <typename Launcher>
+void RequirementAnalyzer::populate_launcher_(Launcher* task) const
 {
   for (auto&& [region, entry] : field_sets_) {
     entry.first.populate_launcher(task, region);
@@ -198,8 +198,9 @@ void OutputRequirementAnalyzer::analyze_requirements()
 void OutputRequirementAnalyzer::populate_output_requirements(
   std::vector<Legion::OutputRequirement>& out_reqs) const
 {
+  out_reqs.reserve(field_groups_.size());
   for (auto&& [field_space, fields] : field_groups_) {
-    auto& [dim, _] = req_infos_.at(field_space);
+    auto&& [dim, _] = req_infos_.at(field_space);
 
     out_reqs.emplace_back(field_space, fields, dim, true /*global_indexing*/);
   }
@@ -209,40 +210,114 @@ void OutputRequirementAnalyzer::populate_output_requirements(
 // FutureAnalyzer
 /////////////////
 
+void FutureAnalyzer::insert(Legion::Future future) { futures_.emplace_back(std::move(future)); }
+
+void FutureAnalyzer::insert(Legion::FutureMap future_map)
+{
+  future_maps_.emplace_back(std::move(future_map));
+}
+
+std::int32_t FutureAnalyzer::get_index(const Legion::Future& future) const
+{
+  return future_indices_.at(future);
+}
+
+std::int32_t FutureAnalyzer::get_index(const Legion::FutureMap& future_map) const
+{
+  return future_map_indices_.at(future_map);
+}
+
 void FutureAnalyzer::analyze_futures()
 {
   std::int32_t index = 0;
   for (auto&& future : futures_) {
-    if (future_indices_.find(future) != future_indices_.end()) {
-      continue;
+    if (const auto [it, inserted] = future_indices_.try_emplace(future); inserted) {
+      it->second = index++;
+      coalesced_futures_.emplace_back(future);
     }
-    future_indices_[future] = index++;
-    coalesced_futures_.emplace_back(future);
   }
   for (auto&& future_map : future_maps_) {
-    if (future_map_indices_.find(future_map) != future_map_indices_.end()) {
-      continue;
+    if (const auto [it, inserted] = future_map_indices_.try_emplace(future_map); inserted) {
+      it->second = index++;
+      coalesced_future_maps_.emplace_back(future_map);
     }
-    future_map_indices_[future_map] = index++;
-    coalesced_future_maps_.emplace_back(future_map);
   }
 }
 
+namespace {
+
+template <typename T, typename U = T>
+void append_to_vec(std::vector<T>* dest, const std::vector<U>& src)
+{
+  dest->insert(dest->end(), src.begin(), src.end());
+}
+
+}  // namespace
+
 void FutureAnalyzer::populate_launcher(Legion::IndexTaskLauncher& task) const
 {
-  for (auto&& future : coalesced_futures_) {
-    task.add_future(future);
-  }
-  task.point_futures.insert(
-    task.point_futures.end(), coalesced_future_maps_.begin(), coalesced_future_maps_.end());
+  append_to_vec(&task.futures, coalesced_futures_);
+  append_to_vec(&task.point_futures, coalesced_future_maps_);
 }
 
 void FutureAnalyzer::populate_launcher(Legion::TaskLauncher& task) const
 {
   LEGATE_ASSERT(coalesced_future_maps_.empty());
-  for (auto&& future : coalesced_futures_) {
-    task.add_future(future);
-  }
+  append_to_vec(&task.futures, coalesced_futures_);
+}
+
+// ==========================================================================================
+
+void StoreAnalyzer::insert(const InternalSharedPtr<LogicalRegionField>& region_field,
+                           Legion::PrivilegeMode privilege,
+                           const StoreProjection& store_proj)
+{
+  req_analyzer_.insert(region_field->region(), region_field->field_id(), privilege, store_proj);
+}
+
+void StoreAnalyzer::insert(std::uint32_t dim,
+                           const Legion::FieldSpace& field_space,
+                           Legion::FieldID field_id)
+{
+  out_analyzer_.insert(dim, field_space, field_id);
+}
+
+void StoreAnalyzer::insert(Legion::Future future) { fut_analyzer_.insert(std::move(future)); }
+
+void StoreAnalyzer::insert(Legion::FutureMap future_map)
+{
+  fut_analyzer_.insert(std::move(future_map));
+}
+
+void StoreAnalyzer::analyze()
+{
+  req_analyzer_.analyze_requirements();
+  out_analyzer_.analyze_requirements();
+  fut_analyzer_.analyze_futures();
+}
+
+std::uint32_t StoreAnalyzer::get_index(const Legion::LogicalRegion& region,
+                                       Legion::PrivilegeMode privilege,
+                                       const StoreProjection& store_proj,
+                                       Legion::FieldID field_id) const
+{
+  return req_analyzer_.get_requirement_index(region, privilege, store_proj, field_id);
+}
+
+std::uint32_t StoreAnalyzer::get_index(const Legion::FieldSpace& field_space,
+                                       Legion::FieldID field_id) const
+{
+  return out_analyzer_.get_requirement_index(field_space, field_id);
+}
+
+std::int32_t StoreAnalyzer::get_index(const Legion::Future& future) const
+{
+  return fut_analyzer_.get_index(future);
+}
+
+std::int32_t StoreAnalyzer::get_index(const Legion::FutureMap& future_map) const
+{
+  return fut_analyzer_.get_index(future_map);
 }
 
 }  // namespace legate::detail
