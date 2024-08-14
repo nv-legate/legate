@@ -93,9 +93,6 @@ constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
   if (log_path.empty()) {
     log_path = fs::current_path();  // cwd
   }
-  // += (not /=) is intentional, will result in directory separator being appended
-  // verbatim
-  log_path += fs::path::preferred_separator;
   return log_path;
 }
 
@@ -1704,9 +1701,7 @@ void handle_legate_args(std::string_view legate_config)
   }
 
   if (log_to_file) {
-    args_ss << "-logfile ";
-    args_ss << log_path;
-    args_ss << "legate_%.log -errlevel 4 ";
+    args_ss << "-logfile " << log_path / "legate_%.log" << " -errlevel 4 ";
   }
 
   if (const auto existing_default_args = LEGION_DEFAULT_ARGS.get();
