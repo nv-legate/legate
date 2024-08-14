@@ -12,9 +12,9 @@
 
 #include "core/data/detail/attachment.h"
 
-#include "core/runtime/detail/runtime.h"
-
 #include "legate_defines.h"
+
+#include "core/runtime/detail/runtime.h"
 
 namespace legate::detail {
 

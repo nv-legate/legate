@@ -12,6 +12,8 @@
 
 #include "core/comm/detail/comm_cpu.h"
 
+#include "legate_defines.h"
+
 #include "core/comm/coll_comm.h"
 #include "core/comm/detail/backend_network.h"
 #include "core/comm/detail/comm_local.h"
@@ -19,8 +21,6 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/library.h"
 #include "core/utilities/macros.h"
-
-#include "legate_defines.h"
 
 #include <stdexcept>
 

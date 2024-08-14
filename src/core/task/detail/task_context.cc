@@ -12,6 +12,8 @@
 
 #include "core/task/detail/task_context.h"
 
+#include "legate_defines.h"
+
 #include "core/cuda/cuda.h"
 #include "core/data/detail/physical_store.h"
 #include "core/runtime/detail/config.h"
@@ -19,8 +21,6 @@
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/deserializer.h"
 #include "core/utilities/macros.h"
-
-#include "legate_defines.h"
 
 #include <algorithm>
 #include <iterator>

@@ -12,8 +12,9 @@
 
 #pragma once
 
-#include <cstdint>
 #include <legion/legion_types.h>
+
+#include <cstdint>
 #include <type_traits>
 
 namespace legate {

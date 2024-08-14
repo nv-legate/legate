@@ -12,14 +12,14 @@
 
 #include "core/comm/detail/comm.h"
 
+#include "legate_defines.h"
+
 #include "core/comm/detail/comm_cal.h"
 #include "core/comm/detail/comm_cpu.h"
 #include "core/comm/detail/comm_nccl.h"
 #include "core/utilities/detail/env.h"
 #include "core/utilities/detail/env_defaults.h"
 #include "core/utilities/macros.h"
-
-#include "legate_defines.h"
 
 namespace legate::detail::comm {
 

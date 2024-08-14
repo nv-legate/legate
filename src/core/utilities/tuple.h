@@ -12,10 +12,10 @@
 
 #pragma once
 
+#include "legate_defines.h"
+
 #include "core/utilities/detail/type_traits.h"
 #include "core/utilities/hash.h"
-
-#include "legate_defines.h"
 
 #include <cstdint>
 #include <initializer_list>

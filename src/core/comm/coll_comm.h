@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "core/utilities/macros.h"
-
 #include "legate_defines.h"
+
+#include "core/utilities/macros.h"
 
 #include <cstdint>
 

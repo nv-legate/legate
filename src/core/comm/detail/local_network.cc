@@ -12,12 +12,12 @@
 
 #include "core/comm/detail/local_network.h"
 
+#include "legate_defines.h"
+
 #include "core/comm/coll.h"
 #include "core/comm/detail/logger.h"
 #include "core/utilities/assert.h"
 #include "core/utilities/macros.h"
-
-#include "legate_defines.h"
 
 #include <cstdio>
 #include <cstdlib>

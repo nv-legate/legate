@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/utilities/macros.h"
+#pragma once
 
 #include "legate_defines.h"
 
-#pragma once
+#include "core/utilities/macros.h"
 
 extern "C" {
 

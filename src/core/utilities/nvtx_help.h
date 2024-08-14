@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "core/utilities/macros.h"
-
 #include "legate_defines.h"
+
+#include "core/utilities/macros.h"
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
 #include <nvtx3/nvToolsExt.h>

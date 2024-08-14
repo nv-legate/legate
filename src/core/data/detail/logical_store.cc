@@ -12,6 +12,8 @@
 
 #include "core/data/detail/logical_store.h"
 
+#include "legate_defines.h"
+
 #include "core/data/detail/physical_store.h"
 #include "core/data/detail/transform.h"
 #include "core/operation/detail/launcher_arg.h"
@@ -25,8 +27,6 @@
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/tuple.h"
-
-#include "legate_defines.h"
 
 #include <algorithm>
 #include <fmt/format.h>

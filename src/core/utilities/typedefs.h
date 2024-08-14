@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legion.h"
-
 #include "legate_defines.h"
+
+#include "legion.h"
 
 #include <cstddef>
 #include <cstdint>

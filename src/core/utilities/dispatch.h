@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "core/type/type_info.h"
-
 #include "legate_defines.h"
+
+#include "core/type/type_info.h"
 
 #include <stdexcept>
 #include <utility>

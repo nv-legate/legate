@@ -12,10 +12,11 @@
 
 #include "core/data/external_allocation.h"
 
+#include "legate_defines.h"
+
 #include "core/data/detail/external_allocation.h"
 #include "core/runtime/detail/runtime.h"
 
-#include "legate_defines.h"
 #include "realm/instance.h"
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)

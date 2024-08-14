@@ -12,14 +12,14 @@
 
 #include "core/comm/detail/mpi_network.h"
 
+#include "legate_defines.h"
+
 #include "core/comm/detail/logger.h"
 #include "core/comm/detail/mpi_interface.h"
 #include "core/utilities/macros.h"
 #include "core/utilities/scope_guard.h"
 #include "core/utilities/span.h"
 #include "core/utilities/typedefs.h"
-
-#include "legate_defines.h"
 
 #include <algorithm>
 #include <cstddef>

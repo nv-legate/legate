@@ -11,6 +11,7 @@
  */
 
 #include "legate_defines.h"
+
 #include "utilities/sanitizer_options.h"
 #include "utilities/utilities.h"
 

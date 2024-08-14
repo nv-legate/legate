@@ -12,10 +12,10 @@
 
 #pragma once
 
+#include "legate_defines.h"
+
 #include "core/type/type_info.h"
 #include "core/utilities/macros.h"
-
-#include "legate_defines.h"
 
 #include <climits>
 #include <cstdint>

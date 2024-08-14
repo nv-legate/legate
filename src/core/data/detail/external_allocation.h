@@ -15,7 +15,6 @@
 #include "core/mapping/mapping.h"
 
 #include "legion.h"
-
 #include "realm/instance.h"
 
 #include <memory>

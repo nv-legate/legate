@@ -12,13 +12,13 @@
 
 #include "core/comm/detail/comm_local.h"
 
+#include "legate_defines.h"
+
 #include "core/comm/coll.h"
 #include "core/comm/detail/comm_cpu_factory.h"
 #include "core/task/detail/legion_task.h"
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/macros.h"
-
-#include "legate_defines.h"
 
 #include <cstddef>
 #include <memory>

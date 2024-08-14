@@ -53,13 +53,13 @@
 
 #include "realm/cmdline.h"
 #include "realm/network.h"
+#include <realm/cuda/cuda_module.h>
 
 #include <cstdlib>
 #include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <limits>
-#include <realm/cuda/cuda_module.h>
 #include <regex>
 #include <set>
 #include <stdexcept>

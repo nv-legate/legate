@@ -61,14 +61,16 @@ FixNamespaceComments: true
 ForEachMacros:
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^"core/.*\.h"'
+  - Regex:           '^("|<)legate_defines\.h("|>)'
     Priority:        1
-  - Regex:           '^"stl/.*\.h"'
+  - Regex:           '^("|<)core/.*\.h("|>)'
     Priority:        2
-  - Regex:           '^"legion.*'
+  - Regex:           '^("|<)stl/.*\.h("|>)'
     Priority:        3
-  - Regex:           '^".*'
+  - Regex:           '^("|<)(legion|realm).*'
     Priority:        4
+  - Regex:           '^".*'
+    Priority:        5
   - Regex:           '^<.*'
     Priority:        99
 IncludeIsMainRegex: '([-_](test|unittest))?$'
