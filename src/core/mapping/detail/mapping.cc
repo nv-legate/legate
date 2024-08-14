@@ -12,6 +12,11 @@
 
 #include "core/mapping/detail/mapping.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <set>
 #include <unordered_set>
 
 namespace legate::mapping::detail {
@@ -78,21 +83,24 @@ void DimOrdering::populate_dimension_ordering(std::uint32_t ndim,
   // TODO(wonchanl): We need to implement the relative dimension ordering
   switch (kind) {
     case Kind::C: {
-      for (std::int32_t dim = static_cast<std::int32_t>(ndim) - 1; dim >= 0; --dim) {
-        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + dim));
+      LEGATE_ASSERT(ndim > 0);
+      ordering.reserve(ordering.size() + ndim);
+      for (auto dim = static_cast<std::int32_t>(ndim) - 1; dim >= 0; --dim) {
+        ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
       }
       break;
     }
     case Kind::FORTRAN: {
+      ordering.reserve(ordering.size() + ndim);
       for (std::uint32_t dim = 0; dim < ndim; ++dim) {
-        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + dim));
+        ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
       }
       break;
     }
     case Kind::CUSTOM: {
       ordering.reserve(ordering.size() + dims.size());
       for (auto dim : dims) {
-        ordering.push_back(static_cast<Legion::DimensionKind>(DIM_X + dim));
+        ordering.push_back(static_cast<Legion::DimensionKind>(LEGION_DIM_X + dim));
       }
       break;
     }
@@ -101,42 +109,39 @@ void DimOrdering::populate_dimension_ordering(std::uint32_t ndim,
 
 bool StoreMapping::for_future() const
 {
-  for (auto&& store : stores) {
-    return store->is_future();
-  }
-  return false;
+  return std::any_of(
+    stores.begin(), stores.end(), [](const Store* store) { return store->is_future(); });
 }
 
 bool StoreMapping::for_unbound_store() const
 {
-  for (auto&& store : stores) {
-    return store->unbound();
-  }
-  return false;
+  return std::any_of(
+    stores.begin(), stores.end(), [](const Store* store) { return store->unbound(); });
 }
 
 const Store* StoreMapping::store() const { return stores.front(); }
 
 std::uint32_t StoreMapping::requirement_index() const
 {
+  static constexpr std::uint32_t INVALID = -1U;
+
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    std::uint32_t result = -1U;
+    std::uint32_t result = INVALID;
 
     LEGATE_ASSERT(!stores.empty());
-    for (auto&& store : stores) {
-      auto idx = store->requirement_index();
+    for (const auto* store : stores) {
+      const auto idx = store->requirement_index();
 
-      LEGATE_ASSERT(result == -1U || result == idx);
+      LEGATE_ASSERT(result == INVALID || result == idx);
       result = idx;
     }
     return result;
   }
 
-  static constexpr std::uint32_t invalid = -1U;
   if (stores.empty()) {
-    return invalid;
+    return INVALID;
   }
-  return stores.front()->requirement_index();
+  return store()->requirement_index();
 }
 
 std::set<std::uint32_t> StoreMapping::requirement_indices() const
@@ -144,10 +149,9 @@ std::set<std::uint32_t> StoreMapping::requirement_indices() const
   std::set<std::uint32_t> indices;
 
   for (auto&& store : stores) {
-    if (store->is_future()) {
-      continue;
+    if (!store->is_future()) {
+      indices.insert(store->region_field().index());
     }
-    indices.insert(store->region_field().index());
   }
   return indices;
 }
@@ -160,11 +164,10 @@ std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
     if (store->is_future()) {
       continue;
     }
-    auto* req = store->region_field().get_requirement();
-    if (!req->region.exists()) {
-      continue;
+
+    if (const auto* req = store->region_field().get_requirement(); req->region.exists()) {
+      reqs.insert(req);
     }
-    reqs.insert(req);
   }
   return reqs;
 }
@@ -172,38 +175,53 @@ std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
 void StoreMapping::populate_layout_constraints(
   Legion::LayoutConstraintSet& layout_constraints) const
 {
+  auto&& first_region_field = store()->region_field();
   std::vector<Legion::DimensionKind> dimension_ordering{};
 
+  dimension_ordering.reserve(
+    (policy.layout == InstLayout::AOS || policy.layout == InstLayout::SOA) +
+    static_cast<std::size_t>(first_region_field.dim()));
   if (policy.layout == InstLayout::AOS) {
-    dimension_ordering.push_back(DIM_F);
+    dimension_ordering.push_back(LEGION_DIM_F);
   }
-  policy.ordering.impl()->populate_dimension_ordering(stores.front()->region_field().dim(),
-                                                      dimension_ordering);
+  policy.ordering.impl()->populate_dimension_ordering(
+    static_cast<std::uint32_t>(first_region_field.dim()), dimension_ordering);
   if (policy.layout == InstLayout::SOA) {
-    dimension_ordering.push_back(DIM_F);
+    dimension_ordering.push_back(LEGION_DIM_F);
   }
-
-  layout_constraints.add_constraint(
-    Legion::OrderingConstraint(dimension_ordering, false /*contiguous*/));
-
-  layout_constraints.add_constraint(Legion::MemoryConstraint(to_kind(policy.target)));
+  // This 2-step is necessary because Legion::OrderingConstraint constructor takes the vector
+  // by const-ref. Similarly, layout_constraints.add_constraint() ALSO takes its
+  // OrderingConstraint by const-ref, meaning that if we go the usual route of
+  //
+  // layout_constraints.add_constraint(Legion::OrderingConstraint{dimension_ordering, false})
+  //
+  // ...would result in not 1, not 2, but 3 deep copies of our vector! Now it's a 0-copy
+  // operation (a move)
+  layout_constraints.ordering_constraint.ordering   = std::move(dimension_ordering);
+  layout_constraints.ordering_constraint.contiguous = false;
+  layout_constraints.add_constraint(Legion::MemoryConstraint{to_kind(policy.target)});
 
   std::vector<Legion::FieldID> fields{};
+
   if (stores.size() > 1) {
     std::unordered_set<Legion::FieldID> field_set{};
 
+    fields.reserve(stores.size());
+    field_set.reserve(stores.size());
     for (auto&& store : stores) {
-      auto field_id = store->region_field().field_id();
-      if (field_set.find(field_id) == field_set.end()) {
+      const auto field_id      = store->region_field().field_id();
+      const auto [_, inserted] = field_set.emplace(field_id);
+
+      if (inserted) {
         fields.push_back(field_id);
-        field_set.insert(field_id);
       }
     }
   } else {
-    fields.push_back(stores.front()->region_field().field_id());
+    fields.push_back(first_region_field.field_id());
   }
-  layout_constraints.add_constraint(
-    Legion::FieldConstraint{fields, false /*contiguous*/, false /*inorder*/});
+  layout_constraints.field_constraint.field_set  = std::move(fields);
+  layout_constraints.field_constraint.contiguous = false;
+  layout_constraints.field_constraint.inorder    = false;
 }
 
 /*static*/ std::unique_ptr<StoreMapping> StoreMapping::default_mapping(const Store* store,
@@ -216,7 +234,8 @@ void StoreMapping::populate_layout_constraints(
 /*static*/ std::unique_ptr<StoreMapping> StoreMapping::create(const Store* store,
                                                               InstanceMappingPolicy&& policy)
 {
-  auto mapping    = std::make_unique<detail::StoreMapping>();
+  auto mapping = std::make_unique<detail::StoreMapping>();
+
   mapping->policy = std::move(policy);
   mapping->stores.push_back(store);
   return mapping;
