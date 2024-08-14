@@ -33,7 +33,7 @@ namespace detail {
 template <typename T, template <typename...> typename SELECTOR, bool valid>
 class VariantHelper;
 
-class Runtime;
+void register_legate_core_tasks(detail::Library* core_lib);
 
 namespace cython {
 
@@ -121,7 +121,7 @@ class TaskInfo {
   class RuntimeAddVariantKey {
     RuntimeAddVariantKey() = default;
 
-    friend class detail::Runtime;
+    friend void legate::detail::register_legate_core_tasks(legate::detail::Library* core_lib);
   };
 
   // NOLINTNEXTLINE(readability-identifier-naming)

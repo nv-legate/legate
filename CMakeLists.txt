@@ -57,25 +57,22 @@ cmake_path(SET LEGATE_CORE_ARCH_DIR NORMALIZE "${LEGATE_CORE_DIR}/${LEGATE_CORE_
 # ########################################################################################
 # * C++ and CUDA standard ----------------------------------------------------
 
-set(legate_core_CXX_STANDARD 17)
-if(CMAKE_CXX_STANDARD)
-  if(NOT ${CMAKE_CXX_STANDARD} EQUAL ${legate_core_CXX_STANDARD})
-    message(WARNING "CMAKE_CXX_STANDARD set to ${CMAKE_CXX_STANDARD}. Legate.Core expects to be compiled with C++${legate_core_CXX_STANDARD}, ignoring CMAKE_CXX_STANDARD."
-    )
+function(legate_set_language_standard LANG DEFAULT)
+  if(NOT CMAKE_${LANG}_STANDARD)
+    set(CMAKE_${LANG}_STANDARD ${DEFAULT})
   endif()
-endif()
-set(CMAKE_CXX_STANDARD ${legate_core_CXX_STANDARD} CACHE STRING "" FORCE)
-set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE STRING "" FORCE)
 
-if(CMAKE_CUDA_STANDARD)
-  if(NOT ${CMAKE_CUDA_STANDARD} EQUAL ${legate_core_CXX_STANDARD})
-    message(WARNING "CMAKE_CUDA_STANDARD set to ${CMAKE_CUDA_STANDARD}. Legate.Core expects to be compiled with C++${legate_core_CXX_STANDARD}, ignoring CMAKE_CUDA_STANDARD."
-    )
+  if(NOT "${CMAKE_${LANG}_STANDARD}" STREQUAL "${DEFAULT}")
+    message(WARNING "CMAKE_${LANG}_STANDARD set to ${CMAKE_${LANG}_STANDARD}. "
+                    "Legate.Core expects to be compiled with C++${DEFAULT}")
   endif()
-endif()
-set(CMAKE_CUDA_STANDARD ${legate_core_CXX_STANDARD} CACHE STRING "" FORCE)
-set(CMAKE_CUDA_STANDARD_REQUIRED ON CACHE STRING "" FORCE)
-unset(legate_core_CXX_STANDARD) # clean up
+
+  set(CMAKE_${LANG}_STANDARD ${CMAKE_${LANG}_STANDARD} PARENT_SCOPE)
+  set(CMAKE_${LANG}_STANDARD_REQUIRED ON PARENT_SCOPE)
+endfunction()
+
+legate_set_language_standard(CXX 17)
+legate_set_language_standard(CUDA 17)
 
 # ########################################################################################
 # * Download and initialize RAPIDS CMake helpers -----------------------------

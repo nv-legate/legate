@@ -1986,13 +1986,14 @@ void extract_scalar_task(const void* args,
 }
 
 template <VariantCode variant_id>
-void register_extract_scalar_variant(Library* core_lib,
+void register_extract_scalar_variant(const TaskInfo::RuntimeAddVariantKey& key,
+                                     Library* core_lib,
                                      const std::unique_ptr<TaskInfo>& task_info,
                                      const VariantOptions* variant_options = nullptr)
 {
   // TODO(wonchanl): We could support Legion & Realm calling convensions so we don't pass nullptr
   // here. Should also remove the corresponding workaround function in TaskInfo!
-  task_info->add_variant_(TaskInfo::RuntimeAddVariantKey{},
+  task_info->add_variant_(key,
                           legate::Library{core_lib},
                           variant_id,
                           variant_options,
@@ -2003,16 +2004,17 @@ void register_extract_scalar_variant(Library* core_lib,
 
 void register_legate_core_tasks(Library* core_lib)
 {
-  auto task_info = std::make_unique<TaskInfo>("core::extract_scalar");
+  constexpr auto key = TaskInfo::RuntimeAddVariantKey{};
+  auto task_info     = std::make_unique<TaskInfo>("core::extract_scalar");
 
-  register_extract_scalar_variant<VariantCode::CPU>(core_lib, task_info);
+  register_extract_scalar_variant<VariantCode::CPU>(key, core_lib, task_info);
   if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     constexpr auto options = VariantOptions{}.with_elide_device_ctx_sync(true);
 
-    register_extract_scalar_variant<VariantCode::GPU>(core_lib, task_info, &options);
+    register_extract_scalar_variant<VariantCode::GPU>(key, core_lib, task_info, &options);
   }
   if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
-    register_extract_scalar_variant<VariantCode::OMP>(core_lib, task_info);
+    register_extract_scalar_variant<VariantCode::OMP>(key, core_lib, task_info);
   }
   core_lib->register_task(LocalTaskID{CoreTask::EXTRACT_SCALAR}, std::move(task_info));
 

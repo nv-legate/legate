@@ -137,7 +137,8 @@ class SharedPtr {
     InternalSharedPtrAccessTag() = default;
 
     friend class SharedPtr<T>;
-    friend class InternalSharedPtr<T>;
+    template <typename U>
+    friend class InternalSharedPtr;
   };
 
   [[nodiscard]] internal_ptr_type& internal_ptr(InternalSharedPtrAccessTag) noexcept;
