@@ -150,9 +150,6 @@ endif()
 # * MPI wrapper --------------------------------------------------------------
 
 if(Legion_NETWORKS)
-  # The wrapper that we compile and link against needs to have weak symbols so that the
-  # user can override them later
-  set(LEGATE_MPI_WRAPPER_WEAK_SYMBOLS ON)
   # The wrapper we build should not install anything but the library object itself,
   # because we want to install the sources (and cmake files) to a different location
   # ourselves.

@@ -20,15 +20,8 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-if(NOT DEFINED BUILD_SHARED_LIBS)
-  set(BUILD_SHARED_LIBS ON)
-endif()
+set(BUILD_SHARED_LIBS ON)
 
-# Off by default because if this is being built by the user, they should be building with
-# strong rules. So cmake -S . -B (which is what the user will run) should default to
-# strong symbols.
-option(LEGATE_MPI_WRAPPER_WEAK_SYMBOLS "Whether to compile with weak symbols" OFF)
-mark_as_advanced(LEGATE_MPI_WRAPPER_WEAK_SYMBOLS)
 # On by default because if this is being built by the user, and they install the wrapper,
 # they will likely want to have a proper cmake installation so that their downstream
 # projects can find this.
@@ -37,7 +30,6 @@ option(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES
 
 message(STATUS "Using build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Building shared library: ${BUILD_SHARED_LIBS}")
-message(STATUS "Using weak symbols: ${LEGATE_MPI_WRAPPER_WEAK_SYMBOLS}")
 message(STATUS "Generating src install rules: ${LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES}")
 
 # ==========================================================================================
@@ -49,10 +41,6 @@ find_package(MPI REQUIRED COMPONENTS CXX)
 
 add_library(mpi_wrapper src/legate_mpi_wrapper/mpi_wrapper.cc)
 add_library(legate::mpi_wrapper ALIAS mpi_wrapper)
-
-if(LEGATE_MPI_WRAPPER_WEAK_SYMBOLS)
-  target_compile_definitions(mpi_wrapper PRIVATE LEGATE_USE_WEAK=1)
-endif()
 
 target_include_directories(mpi_wrapper
                            PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>)

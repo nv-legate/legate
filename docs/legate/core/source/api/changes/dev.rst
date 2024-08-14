@@ -51,6 +51,7 @@ Changes: Latest Development Version
 - Add ``LocalRedopID`` and ``GlobalRedopID``, to describe local and global reduction
   operator ID's.
 - Remove ``partition.h`` and ``restriction.h`` from the public API
+- Add ``LEGATE_MPI_WRAPPER`` environment variable.
 
 .. rubric:: Data
 

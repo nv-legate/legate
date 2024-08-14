@@ -126,6 +126,7 @@ inline constexpr EnvironmentVariable<std::uint32_t> LEGATE_FIELD_REUSE_FREQ{
 inline constexpr EnvironmentVariable<bool> LEGATE_CONSENSUS{"LEGATE_CONSENSUS"};
 inline constexpr EnvironmentVariable<bool> LEGATE_DISABLE_MPI{"LEGATE_DISABLE_MPI"};
 inline constexpr EnvironmentVariable<std::string> LEGATE_CONFIG{"LEGATE_CONFIG"};
+inline constexpr EnvironmentVariable<std::string> LEGATE_MPI_WRAPPER{"LEGATE_MPI_WRAPPER"};
 
 }  // namespace legate::detail
 

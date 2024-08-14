@@ -92,6 +92,11 @@ class MPIInterface {
                           int recvtag,
                           MPI_Comm comm,
                           MPI_Status* status);
+
+ private:
+  class Impl;
+
+  [[nodiscard]] static const Impl& get_interface_();
 };
 
 }  // namespace legate::detail::comm::mpi::detail
