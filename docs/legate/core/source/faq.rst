@@ -74,3 +74,59 @@ What platform and library versions does Legate support?
     Legate has been tested on Linux and MacOS, although only a few flavors of Linux
     such as Ubuntu have been thoroughly tested. There is currently no support for
     Windows.
+
+.. _mpi_wrapper_faq:
+
+What is the Legate MPI wrapper and why do I need it?
+    MPI is considered "API stable", not "ABI stable"[#ABI]_. If a library is compiled on one
+    machine, with a particular flavor and version of MPI (for example, OpenMPI v4.10),
+    there is no guarantee that the same shared library will be able to link and run on
+    another machine with another MPI implementation, or even a different version
+    of the same MPI implementation.
+
+    Normally this is not a problem for open-source libraries because users can simply
+    compile the source on their local machine, with their local MPI. For closed-source
+    libraries (such as Legate) which only ship binary artifacts, this presents a large
+    problem.
+
+    There are 2 choices to address this issue:
+
+    #. Ship a pre-compiled version of the library for all supported MPI flavors and
+       versions.
+    #. "Shim" the MPI interface with a lightweight wrapper which can be compiled locally
+       on the target machine.
+
+    Solution 1 is easiest for the user, as they will -- courtesy of their package manager
+    -- automatically get a compatible version of both MPI and Legate installed on their
+    machine which are guaranteed to be compatible. However, this places an enormous
+    packaging burden on us. We would have to ship a version of our library for each MPI
+    version and regular variant (CPU, GPU, debug, etc.). If we have 3 library variants,
+    and 5 compatible MPI versions, this means that we need to ship (and test!) 15
+    different versions of our library. In practice, due to the longstanding ABI
+    instability in MPI, the true number of MPI versions/flavors that would need this
+    treatment would easily number in the 30-40 range.
+
+    Solution 2 is a compromise. In this case, we can isolate the MPI compile surface to
+    just the functions that Legate requires into a "shim" wrapper. This wrapper, once
+    compiled on the end users' machine, can then be dynamically loaded by Legate at
+    runtime to enable the interface.
+
+.. rubric:: Footnotes
+
+.. [#ABI] There are two classes of software interface stability: "API" and "ABI"
+    stability. API stability means that a given piece of software will not make backwards
+    incompatible source-level changes. This means that, if the software exports ``int
+    foo(int)``, then users can expect a function ``foo()`` with a compatible signature to
+    exist forever.
+
+    Note that a "compatible" signature does not mean that modifications to ``foo()`` are
+    forbidden!  For example, if the library is built using a language that supports
+    default arguments, they are free to modify ``foo()`` to, for example, ``int foo(int,
+    double = 1.2)``. This modification allows original callers of ``foo()``
+
+    ABI stability, on the other hand, is a super-set of API stability, and mandates that
+    not only will the library never change existing API between versions but that the
+    binary interface will also remain unchanged. Note, the strictness of API compatibility
+    is now absolute. While previously the library could get away with extending ``foo()``
+    with, say, default parameters to keep a *compatible* API, the library is now bound to
+    export ``int foo(int)`` exactly as written in perpetuity.

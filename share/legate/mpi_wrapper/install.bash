@@ -12,13 +12,12 @@
 #=============================================================================
 set -xeou pipefail
 
-DIRNAME="${DIRNAME:-dirname}"
-READLINK="${READLINK:-readlink}"
-
-script_dir="$(${DIRNAME} "$(${READLINK} -f "${BASH_SOURCE[0]}")")"
-
-RM="${RM:-rm}"
 CMAKE="${CMAKE:-cmake}"
+
+command -v "${CMAKE}" >/dev/null 2>&1 || {
+  echo >&2 "CMake: '${CMAKE}' could not be found or is not executable. Aborting."
+  exit 1
+}
 
 if [[ "${CMAKE_INSTALL_PREFIX:-}" != "" ]]; then
   prefix="${CMAKE_INSTALL_PREFIX}"
@@ -30,16 +29,29 @@ else
   prefix=""
 fi
 
-cmake_args=()
+declare -a cmake_configure_args
+cmake_configure_args=("${CMAKE_CONFIGURE_ARGS:-${CMAKE_ARGS:-}}")
+
 if [[ "${prefix}" != "" ]]; then
-  cmake_args+=("-DCMAKE_INSTALL_PREFIX=${prefix}")
+  cmake_configure_args+=("-DCMAKE_INSTALL_PREFIX=${prefix}")
   # Export the same value as all 3
-  export CMAKE_INSTALL_REFIX="${prefix}"
+  export CMAKE_INSTALL_PREFIX="${prefix}"
   export DESTDIR="${prefix}"
   export PREFIX="${prefix}"
 fi
 
-${RM} -rf "${script_dir}/build" && \
-  ${CMAKE} -S "${script_dir}" -B "${script_dir}/build" "${cmake_args[@]}" && \
-  ${CMAKE} --build "${script_dir}/build" && \
-  ${CMAKE} --install "${scipt_dir}/build"
+declare -a cmake_build_args
+cmake_build_args=("${CMAKE_BUILD_ARGS:-}")
+
+declare -a cmake_install_args
+cmake_install_args=("${CMAKE_INSTALL_ARGS:-}")
+
+DIRNAME="${DIRNAME:-dirname}"
+READLINK="${READLINK:-readlink}"
+
+script_dir="$(${DIRNAME} "$(${READLINK} -f "${BASH_SOURCE[0]}")")"
+
+${CMAKE} -E rm -rf "${script_dir}/build" && \
+  ${CMAKE} -S "${script_dir}" -B "${script_dir}/build" "${cmake_configure_args[@]}" && \
+  ${CMAKE} --build "${script_dir}/build" "${cmake_build_args[@]}" && \
+  ${CMAKE} --install "${scipt_dir}/build" "${cmake_install_args[@]}"

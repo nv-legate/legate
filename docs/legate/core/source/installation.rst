@@ -36,6 +36,51 @@ package by requesting it as follows:
 
     conda ... legate-core=*=*_cpu
 
+Installation of the Legate MPI wrapper
+--------------------------------------
+
+If you encounter runtime failures such as
+
+.. code-block:: sh
+
+   failed to load MPI wrapper: 'some/path/to/liblgcore_mpi_wrapper.so' ...
+
+Or if you want to use Legate in combination with a different MPI library than the one it
+was compiled against (see the dependencies on the Legate package), e.g. you are on an HPC
+cluster and want to use the vendor's MPI library, then you will need to compile and
+install the Legate MPI wrapper locally on your machine. See :ref:`mpi_wrapper_faq<FAQ>`
+for more information on why this is needed.
+
+Assuming Legate is installed to a directory called ``INSTALL_PREFIX``, to build and
+install the wrappers simply run the following:
+
+.. code-block:: sh
+
+   $ INSTALL_PREFIX/share/legate/mpi_wrapper/install.bash
+
+This command will build and install the MPI wrappers to the default installation
+prefix. In order to build and install the wrappers you will need to have:
+
+- CMake (at least version 3.0).
+- A C++ compiler.
+- A local installation of MPI.
+- Write access to the installation prefix.
+
+There are several influential environment variables that users may set in order to control
+the build and installation process:
+
+- ``CMAKE``: name or path to the ``cmake`` executable.
+- ``CMAKE_INSTALL_PREFIX``, ``PREFIX``, or ``DESTDIR``: path to which the MPI wrappers
+  should be installed. If one or more of these variables is set and not empty, they are
+  preferred in the order listed. That is, ``CMAKE_INSTALL_PREFIX`` will be preferred over
+  ``PREFIX``, which is preferred over ``DESTDIR``.
+- ``CMAKE_ARGS`` or ``CMAKE_CONFIGURE_ARGS``: if set, arguments to be passed to the
+  initial CMake configure command. If both are set, ``CMAKE_CONFIGURE_ARGS`` is preferred
+  over ``CMAKE_ARGS``.
+- ``CMAKE_BUILD_ARGS``: if set, arguments to be passed to the CMake build command.
+- ``CMAKE_INSTALL_ARGS``: if set, arguments to be passed to the CMake install command.
+
+
 Installation of the Legate IPython Kernel
 -----------------------------------------
 
