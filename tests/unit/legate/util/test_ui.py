@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from shlex import quote
 from typing import Any, TypeAlias
 
 import pytest
@@ -123,7 +124,8 @@ class Test_kvtable:
     def test_default(self, items: dict[str, Any]) -> None:
         N = max(len(m.key(k)) for k in items)
         assert m.kvtable(items) == "\n".join(
-            f"{m.key(k): <{N}} : {m.value(str(items[k]))}" for k in items
+            f"{m.key(k): <{N}} : {m.value(quote(str(items[k])))}"
+            for k in items
         )
 
     @pytest.mark.parametrize("items", (ONE, TWO, THREE))
@@ -132,7 +134,7 @@ class Test_kvtable:
     ) -> None:
         N = max(len(k) for k in items)
         assert m.kvtable(items) == "\n".join(
-            f"{k: <{N}} : {items[k]}" for k in items
+            f"{k: <{N}} : {quote(str(items[k]))}" for k in items
         )
 
     @pytest.mark.skipif(colorama is None, reason="colorama required")
@@ -140,7 +142,7 @@ class Test_kvtable:
     def test_delim(self, items: dict[str, Any]) -> None:
         N = max(len(m.key(k)) for k in items)
         assert m.kvtable(items, delim="/") == "\n".join(
-            f"{m.key(k): <{N}}/{m.value(str(items[k]))}" for k in items
+            f"{m.key(k): <{N}}/{m.value(quote(str(items[k])))}" for k in items
         )
 
     @pytest.mark.parametrize("items", (ONE, TWO, THREE))
@@ -149,14 +151,14 @@ class Test_kvtable:
     ) -> None:
         N = max(len(k) for k in items)
         assert m.kvtable(items, delim="/") == "\n".join(
-            f"{k: <{N}}/{items[k]}" for k in items
+            f"{k: <{N}}/{quote(str(items[k]))}" for k in items
         )
 
     @pytest.mark.skipif(colorama is None, reason="colorama required")
     @pytest.mark.parametrize("items", (ONE, TWO, THREE))
     def test_align_False(self, items: dict[str, Any]) -> None:
         assert m.kvtable(items, align=False) == "\n".join(
-            f"{m.key(k)} : {m.value(str(items[k]))}" for k in items
+            f"{m.key(k)} : {m.value(quote(str(items[k])))}" for k in items
         )
 
     @pytest.mark.parametrize("items", (ONE, TWO, THREE))
@@ -164,7 +166,7 @@ class Test_kvtable:
         self, use_plain_text: UsePlainTextFixture, items: dict[str, Any]
     ) -> None:
         assert m.kvtable(items, align=False) == "\n".join(
-            f"{k} : {items[k]}" for k in items
+            f"{k} : {quote(str(items[k]))}" for k in items
         )
 
     @pytest.mark.skipif(colorama is None, reason="colorama required")

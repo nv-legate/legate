@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import timedelta
+from shlex import quote
 from typing import Any, TypeAlias
 
 from .colors import bright, cyan, dim, green, magenta, red, white, yellow
@@ -217,6 +218,8 @@ def kvtable(
 ) -> str:
     """Format a dictionay as a table of key-value pairs.
 
+    Values are passed to shlex.quote before printing.
+
     Parameters
     ----------
     items : dict[str, Any]
@@ -243,7 +246,7 @@ def kvtable(
     keys = items.keys() if keys is None else keys
 
     return "\n".join(
-        f"{key(k): <{N}}{delim}{value(str(items[k]))}" for k in keys
+        f"{key(k): <{N}}{delim}{value(quote(str(items[k])))}" for k in keys
     )
 
 

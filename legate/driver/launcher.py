@@ -33,6 +33,7 @@ RANK_ENV_VARS = (
 
 LAUNCHER_VAR_PREFIXES = (
     "CONDA_",
+    "CUTENSOR_",
     "LEGATE_",
     "LEGION_",
     "LG_",
@@ -304,7 +305,11 @@ class MPILauncher(Launcher):
         cmd += ["--bind-to", "none"]
         cmd += ["--mca", "mpi_warn_on_fork", "0"]
 
-        for var in self.env:
+        # hack: the launcher.env does not know about what the driver does with
+        # LEGATE_CONFIG, but we do need to make sure it gets forwarded
+        vars = set(self.env).union({"LEGATE_CONFIG"})
+
+        for var in sorted(vars):
             if self.is_launcher_var(var):
                 cmd += ["-x", var]
 

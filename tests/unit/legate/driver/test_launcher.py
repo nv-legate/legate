@@ -38,6 +38,7 @@ def test_RANK_ENV_VARS() -> None:
 def test_LAUNCHER_VAR_PREFIXES() -> None:
     assert m.LAUNCHER_VAR_PREFIXES == (
         "CONDA_",
+        "CUTENSOR_",
         "LEGATE_",
         "LEGION_",
         "LG_",
@@ -410,7 +411,7 @@ class TestMPILauncher:
 
         assert launcher.detected_rank_id == "0"
 
-        # TODO (bv) -x env args currnetly too fragile to test
+        # TODO (bv) -x env args currently too fragile to test
         assert launcher.cmd[:10] == (
             ("mpirun",)
             + ("-n", "1", "--npernode", "1", "--bind-to", "none")
@@ -418,6 +419,10 @@ class TestMPILauncher:
             # + self.XARGS1
             # + self.XARGS2
         )
+
+        # at least make sure LEGATE_CONFIG is forwarded
+        assert "LEGATE_CONFIG" in launcher.cmd
+        assert launcher.cmd[launcher.cmd.index("LEGATE_CONFIG") - 1] == "-x"
 
     def test_single_rank_launcher_extra(self, genconfig: GenConfig) -> None:
         config = genconfig(
@@ -445,6 +450,10 @@ class TestMPILauncher:
             # + ("foo", "bar")
         )
 
+        # at least make sure LEGATE_CONFIG is forwarded
+        assert "LEGATE_CONFIG" in launcher.cmd
+        assert launcher.cmd[launcher.cmd.index("LEGATE_CONFIG") - 1] == "-x"
+
     @pytest.mark.parametrize("rank_var", m.RANK_ENV_VARS)
     def test_multi_rank(
         self,
@@ -462,7 +471,7 @@ class TestMPILauncher:
 
         assert launcher.detected_rank_id == "123"
 
-        # TODO (bv) -x env args currnetly too fragile to test
+        # TODO (bv) -x env args currently too fragile to test
         assert launcher.cmd[:10] == (
             ("mpirun",)
             + ("-n", "200", "--npernode", "2", "--bind-to", "none")
@@ -471,6 +480,10 @@ class TestMPILauncher:
             # + ("-x", "LEGATE_NEED_NETWORK")
             # + self.XARGS2
         )
+
+        # at least make sure LEGATE_CONFIG is forwarded
+        assert "LEGATE_CONFIG" in launcher.cmd
+        assert launcher.cmd[launcher.cmd.index("LEGATE_CONFIG") - 1] == "-x"
 
     @pytest.mark.parametrize("rank_var", m.RANK_ENV_VARS)
     def test_multi_rank_launcher_extra(
@@ -499,7 +512,7 @@ class TestMPILauncher:
 
         assert launcher.detected_rank_id == "123"
 
-        # TODO (bv) -x env args currnetly too fragile to test
+        # TODO (bv) -x env args currently too fragile to test
         assert launcher.cmd[:10] == (
             ("mpirun",)
             + ("-n", "200", "--npernode", "2", "--bind-to", "none")
@@ -509,6 +522,10 @@ class TestMPILauncher:
             # + self.XARGS2
             # + ("foo", "bar")
         )
+
+        # at least make sure LEGATE_CONFIG is forwarded
+        assert "LEGATE_CONFIG" in launcher.cmd
+        assert launcher.cmd[launcher.cmd.index("LEGATE_CONFIG") - 1] == "-x"
 
 
 class TestJSRunLauncher:

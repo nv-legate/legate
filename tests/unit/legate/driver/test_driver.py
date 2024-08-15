@@ -212,6 +212,6 @@ class Test_format_verbose:
 
         assert "Customized Environment:" in out
         for k in driver.custom_env_vars:
-            assert f"{k}={driver.env[k]}" in out
+            assert f"{k}={quote(driver.env[k])}" in out
 
         assert out.endswith(f"\n{'-':-<80}")

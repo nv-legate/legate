@@ -76,9 +76,10 @@ class LegateDriver:
         """The system environment that should be used when starting Legate."""
         env = dict(self.launcher.env)
 
-        env.setdefault("LEGATE_CONFIG", "")
+        LEGATE_CONFIG = env.get("LEGATE_CONFIG", "") + " "
         legate_parts = (part(self.config) for part in ENV_PARTS_LEGATE)
-        env["LEGATE_CONFIG"] += " " + " ".join(sum(legate_parts, ()))
+        LEGATE_CONFIG += " ".join(sum(legate_parts, ()))
+        env["LEGATE_CONFIG"] = LEGATE_CONFIG.strip()
 
         return env
 
