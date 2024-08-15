@@ -258,11 +258,14 @@ bool InstanceSet::erase(const Legion::Mapping::PhysicalInstance& inst)
   for (const RegionGroup* group : filtered_groups) {
     // We have to do this in two steps; we don't want to remove the last shared_ptr to a group
     // while iterating over the same group's regions
-    std::copy_if(
-      group->regions.cbegin(),
-      group->regions.cend(),
-      std::inserter(filtered_regions, filtered_regions.begin()),
-      [&](const Legion::LogicalRegion& region) { return groups_.at(region).get() == group; });
+    std::copy_if(group->regions.cbegin(),
+                 group->regions.cend(),
+                 std::inserter(filtered_regions, filtered_regions.begin()),
+                 [&](const Legion::LogicalRegion& region) {
+                   const auto finder = groups_.find(region);
+
+                   return finder != groups_.end() && finder->second.get() == group;
+                 });
   }
 
   for (auto&& region : filtered_regions) {

@@ -22,23 +22,9 @@ inline const SharedPtr<detail::Type>& Type::impl() const { return impl_; }
 
 // ==========================================================================================
 
-inline FixedArrayType::FixedArrayType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)}
-{
-}
-
-// ==========================================================================================
-
-inline StructType::StructType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)} {}
-
-// ==========================================================================================
-
-inline ListType::ListType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)} {}
-
-// ==========================================================================================
-
 template <typename... Args>
-std::enable_if_t<std::conjunction_v<std::is_same<std::decay_t<Args>, Type>...>, Type> struct_type(
-  bool align, Args&&... field_types)
+std::enable_if_t<std::conjunction_v<std::is_convertible<std::decay_t<Args>, Type>...>, StructType>
+struct_type(bool align, Args&&... field_types)
 {
   std::vector<Type> vec_field_types;
 

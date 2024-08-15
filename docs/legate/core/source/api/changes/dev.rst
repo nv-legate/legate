@@ -92,6 +92,19 @@ Changes: Latest Development Version
   are combined in an arbitrary order; since division and subtraction are neither
   commutative nor associative, it is impossible to use these reliably as reduction
   operators.
+- Change the return type of ``legate::array_type`` from ``legate::Type`` to
+  ``legate::FixedArrayType``.
+- Change the return type of ``legate::struct_type`` from ``legate::Type`` to
+  ``legate::StructType``.
+- Change the return type of ``legate::list_type`` from ``legate::Type`` to
+  ``legate::ListType``.
+- Change the return type of ``legate::point_type`` from ``legate::Type`` to
+  ``legate::FixedArrayType``. ``legate.core.types.point_type`` now returns
+  ``legate.core.types.FixedArrayType`` instead of ``legate.core.types.Type``.
+- Change the return type of ``legate::rect_type`` from ``legate::Type`` to ``legate::StructType``.
+  ``legate.core.types.rect_type`` now returns ``legate.core.types.StructType`` instead of
+  ``legate.core.types.Type``.
+
 
 .. rubric:: Runtime
 

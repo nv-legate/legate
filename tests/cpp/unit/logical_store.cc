@@ -44,9 +44,10 @@ void test_unbound_store(std::int32_t dim)
 
   const auto TYPES = {
     legate::binary_type(10),
-    legate::fixed_array_type(legate::bool_(), dim),
-    legate::struct_type(false, legate::bool_(), legate::uint32()),
-    legate::struct_type(true, legate::int16(), legate::bool_(), legate::uint32())};
+    static_cast<legate::Type>(legate::fixed_array_type(legate::bool_(), dim)),
+    static_cast<legate::Type>(legate::struct_type(false, legate::bool_(), legate::uint32())),
+    static_cast<legate::Type>(
+      legate::struct_type(true, legate::int16(), legate::bool_(), legate::uint32()))};
 
   for (const auto& type : TYPES) {
     auto store = runtime->create_store(type, dim);

@@ -124,9 +124,9 @@ cdef extern from "core/type/type_info.h" namespace "legate" nogil:
     cdef _Type _complex64 "legate::complex64" ()
     cdef _Type _complex128 "legate::complex128" ()
 
-    cdef _Type _point_type "legate::point_type"(uint32_t ndim)
+    cdef _FixedArrayType _point_type "legate::point_type"(uint32_t ndim)
 
-    cdef _Type _rect_type "legate::rect_type"(uint32_t ndim)
+    cdef _StructType _rect_type "legate::rect_type"(uint32_t ndim)
 
     cdef _Type _fixed_array_type "legate::fixed_array_type" (
         _Type element_type, uint32_t N
@@ -162,5 +162,5 @@ cdef class StructType(Type):
 cpdef Type binary_type(uint32_t size)
 cpdef FixedArrayType array_type(Type element_type, uint32_t N)
 cpdef StructType struct_type(list field_types, bool align = *)
-cpdef Type point_type(int32_t ndim)
-cpdef Type rect_type(int32_t ndim)
+cpdef FixedArrayType point_type(int32_t ndim)
+cpdef StructType rect_type(int32_t ndim)

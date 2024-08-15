@@ -438,7 +438,8 @@ InternalSharedPtr<Type> binary_type(std::uint32_t size)
   return make_internal_shared<BinaryType>(uid, size);
 }
 
-InternalSharedPtr<Type> fixed_array_type(InternalSharedPtr<Type> element_type, std::uint32_t N)
+InternalSharedPtr<FixedArrayType> fixed_array_type(InternalSharedPtr<Type> element_type,
+                                                   std::uint32_t N)
 {
   // We use UIDs of the following format for "common" fixed array types
   //    1B            1B
@@ -457,12 +458,13 @@ InternalSharedPtr<Type> fixed_array_type(InternalSharedPtr<Type> element_type, s
   return make_internal_shared<FixedArrayType>(uid, std::move(element_type), N);
 }
 
-InternalSharedPtr<Type> struct_type(std::vector<InternalSharedPtr<Type>> field_types, bool align)
+InternalSharedPtr<StructType> struct_type(std::vector<InternalSharedPtr<Type>> field_types,
+                                          bool align)
 {
   return make_internal_shared<StructType>(get_next_uid(), std::move(field_types), align);
 }
 
-InternalSharedPtr<Type> list_type(InternalSharedPtr<Type> element_type)
+InternalSharedPtr<ListType> list_type(InternalSharedPtr<Type> element_type)
 {
   return make_internal_shared<ListType>(get_next_uid(), std::move(element_type));
 }
@@ -551,9 +553,9 @@ InternalSharedPtr<Type> complex128()
   return result;
 }
 
-InternalSharedPtr<Type> point_type(std::uint32_t ndim)
+InternalSharedPtr<FixedArrayType> point_type(std::uint32_t ndim)
 {
-  static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
+  static InternalSharedPtr<FixedArrayType> cache[LEGATE_MAX_DIM + 1];
 
   if (0 == ndim || ndim > LEGATE_MAX_DIM) {
     throw std::out_of_range{fmt::format("{} is not a supported number of dimensions", ndim)};
@@ -565,9 +567,9 @@ InternalSharedPtr<Type> point_type(std::uint32_t ndim)
   return cache[ndim];
 }
 
-InternalSharedPtr<Type> rect_type(std::uint32_t ndim)
+InternalSharedPtr<StructType> rect_type(std::uint32_t ndim)
 {
-  static InternalSharedPtr<Type> cache[LEGATE_MAX_DIM + 1];
+  static InternalSharedPtr<StructType> cache[LEGATE_MAX_DIM + 1];
 
   if (0 == ndim || ndim > LEGATE_MAX_DIM) {
     throw std::out_of_range{fmt::format("{} is not a supported number of dimensions", ndim)};

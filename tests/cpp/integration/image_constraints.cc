@@ -309,7 +309,8 @@ void test_image(const ImageTestSpec& spec)
   static_cast<void>(context);
 
   auto tgt_dim    = static_cast<std::int32_t>(spec.range_extents.size());
-  auto image_type = spec.is_rect ? legate::rect_type(tgt_dim) : legate::point_type(tgt_dim);
+  auto image_type = spec.is_rect ? static_cast<legate::Type>(legate::rect_type(tgt_dim))
+                                 : static_cast<legate::Type>(legate::point_type(tgt_dim));
   auto func       = runtime->create_store(legate::Shape{spec.domain_extents}, image_type);
   auto range      = runtime->create_store(legate::Shape{spec.range_extents}, legate::int64());
 

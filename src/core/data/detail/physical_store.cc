@@ -101,12 +101,12 @@ InlineAllocation PhysicalStore::get_inline_allocation() const
     if (is_future()) {
       return future_.get_inline_allocation(domain());
     }
-    return region_field_.get_inline_allocation(type()->size(), domain(), get_inverse_transform_());
+    return region_field_.get_inline_allocation(domain(), get_inverse_transform_());
   }
   if (is_future()) {
     return future_.get_inline_allocation();
   }
-  return region_field_.get_inline_allocation(type()->size());
+  return region_field_.get_inline_allocation();
 }
 
 mapping::StoreTarget PhysicalStore::target() const

@@ -223,7 +223,8 @@ ListLogicalArray Runtime::create_list_array(const LogicalArray& descriptor,
                                             const LogicalArray& vardata,
                                             std::optional<Type> ty /*=std::nullopt*/)
 {
-  auto type = ty ? ty->impl() : detail::list_type(vardata.type().impl());
+  auto type =
+    ty ? ty->impl() : static_pointer_cast<detail::Type>(detail::list_type(vardata.type().impl()));
   return LogicalArray{impl_->create_list_array(std::move(type), descriptor.impl(), vardata.impl())}
     .as_list_array();
 }

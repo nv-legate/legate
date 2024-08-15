@@ -34,6 +34,13 @@ bool RegionField::valid() const
 namespace {
 
 class GetInlineAllocFn {
+  template <std::int32_t DIM>
+  using UnsafeAccessor =
+    Legion::UnsafeFieldAccessor<std::int8_t,
+                                DIM,
+                                coord_t,
+                                Realm::AffineAccessor<std::int8_t, DIM, coord_t>>;
+
  public:
   template <typename Rect, typename Acc>
   [[nodiscard]] InlineAllocation create(std::int32_t DIM, const Rect& rect, Acc&& acc)
@@ -46,30 +53,21 @@ class GetInlineAllocFn {
   }
 
   template <std::int32_t DIM>
-  [[nodiscard]] InlineAllocation operator()(const Legion::PhysicalRegion& pr,
-                                            Legion::FieldID fid,
-                                            std::size_t field_size)
+  [[nodiscard]] InlineAllocation operator()(const Legion::PhysicalRegion& pr, Legion::FieldID fid)
   {
     const Rect<DIM> rect{pr};
-    return create(
-      DIM,
-      rect,
-      AccessorRO<std::int8_t, DIM>{pr, fid, rect, field_size, false /*check_field_size*/});
+    return create(DIM, rect, UnsafeAccessor<DIM>{pr, fid, rect});
   }
 
   template <std::int32_t M, std::int32_t N>
   [[nodiscard]] InlineAllocation operator()(const Legion::PhysicalRegion& pr,
                                             Legion::FieldID fid,
                                             const Domain& domain,
-                                            const Legion::AffineTransform<M, N>& transform,
-                                            std::size_t field_size)
+                                            const Legion::AffineTransform<M, N>& transform)
   {
     const Rect<N> rect =
       domain.dim > 0 ? Rect<N>{domain} : Rect<N>{Point<N>::ZEROES(), Point<N>::ZEROES()};
-    return create(
-      N,
-      rect,
-      AccessorRO<std::int8_t, N>{pr, fid, transform, rect, field_size, false /*check_field_size*/});
+    return create(N, rect, UnsafeAccessor<N>{pr, fid, transform, rect});
   }
 };
 
@@ -80,15 +78,13 @@ Domain RegionField::domain() const
   return Legion::Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
 }
 
-InlineAllocation RegionField::get_inline_allocation(std::uint32_t field_size) const
+InlineAllocation RegionField::get_inline_allocation() const
 {
-  return dim_dispatch(dim(), GetInlineAllocFn{}, get_physical_region(), get_field_id(), field_size);
+  return dim_dispatch(dim(), GetInlineAllocFn{}, get_physical_region(), get_field_id());
 }
 
 InlineAllocation RegionField::get_inline_allocation(
-  std::uint32_t field_size,
-  const Domain& domain,
-  const Legion::DomainAffineTransform& transform) const
+  const Domain& domain, const Legion::DomainAffineTransform& transform) const
 {
   return double_dispatch(transform.transform.m,
                          transform.transform.n,
@@ -96,8 +92,7 @@ InlineAllocation RegionField::get_inline_allocation(
                          get_physical_region(),
                          get_field_id(),
                          domain,
-                         transform,
-                         field_size);
+                         transform);
 }
 
 mapping::StoreTarget RegionField::target() const

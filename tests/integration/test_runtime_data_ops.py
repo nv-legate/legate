@@ -34,22 +34,25 @@ class TestStoreOps:
         self, shape: tuple[int, ...], dtype: ty.Type
     ) -> None:
         runtime = get_legate_runtime()
-        arr_np, store = utils.create_np_array_and_store(dtype, shape)
-        out_np, out = utils.zero_array_and_store(dtype, shape=shape)
+        arr_np, store = utils.create_np_array_and_store(
+            dtype, shape=shape, func=np.ones
+        )
+        out_np, out = utils.create_np_array_and_store(
+            dtype, shape=shape, func=np.zeros
+        )
         runtime.issue_copy(out, store)
         np.testing.assert_allclose(out_np, arr_np)
 
-    @pytest.mark.xfail(reason="issue-818: SIGSEGV", run=False)
     @pytest.mark.parametrize("shape", [(2, 1, 3), (2, 1024, 3)], ids=str)
     def test_issue_copy_from_point_type(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         dtype = ty.point_type(LEGATE_MAX_DIM)
-        arr_np, store = utils.create_np_array_and_store(dtype, shape)
-        out_np, out = utils.zero_array_and_store(dtype, shape=shape)
-        # issue-818: SEGV during issue_copy
-        # if the store has a rather small size like (2, 1, 3) it can pass
-        # from time to time, but the test suite will get SIGSEGV at random
-        # places
+        arr_np, store = utils.create_np_array_and_store(
+            dtype, shape=shape, func=np.ones
+        )
+        out_np, out = utils.create_np_array_and_store(
+            dtype, shape=shape, func=np.zeros
+        )
         runtime.issue_copy(out, store)
         np.testing.assert_allclose(out_np, arr_np)
 
@@ -57,23 +60,23 @@ class TestStoreOps:
         shape = (1, 3, 1)
         dtype = ty.float64
         runtime = get_legate_runtime()
-        arr_np, store = utils.random_array_and_store(shape)
-        out_np, out = utils.zero_array_and_store(dtype, shape=shape)
+        arr_np, store = utils.create_np_array_and_store(
+            dtype, shape=shape, func=np.ones
+        )
+        out_np, out = utils.create_np_array_and_store(
+            dtype, shape=shape, func=np.zeros
+        )
         exp_np = arr_np + out_np
         runtime.issue_copy(out, store, ty.ReductionOpKind.ADD)
         np.testing.assert_allclose(out_np, exp_np)
 
-    @pytest.mark.xfail(run=False, reason="issue-733: hangs or segfaults")
     @pytest.mark.parametrize("np_size", [9.0, 9], ids=str)
     def test_copy_with_redop_mixed_buffer_shape(self, np_size: float) -> None:
         shape = (3, 3)
 
         runtime = get_legate_runtime()
-        # issue-733: test process hangs or segfaults when arr_np has a
-        # different dtype to store. When np_size == 9.0 this passes but will
-        # still dump traces during free()
-        arr_np = np.arange(np_size).reshape(shape)
-        out_np = np.arange(3.0)
+        arr_np = np.arange(np_size).reshape(shape).astype(np.float64)
+        out_np = np.arange(np_size).astype(np.float64)
         store = runtime.create_store_from_buffer(
             ty.float64, shape, arr_np, False
         )
@@ -95,29 +98,32 @@ class TestStoreOps:
         runtime = get_legate_runtime()
         arr_np, store = utils.random_array_and_store(src_shape)
         out_np, out = utils.zero_array_and_store(ty.float64, tgt_shape)
-        ndim = len(src_shape)
-        ind = runtime.create_store(ty.point_type(ndim), tgt_shape)
-        runtime.issue_fill(ind, Scalar((0,) * ndim, ty.point_type(ndim)))
+        # The same point appearing multiple times in the indirection store
+        # causes no non-determinism in gather copies, as they only do indirect
+        # read accesses.
+        ind_np, ind = utils.create_random_points(
+            tgt_shape, src_shape, no_duplicates=False
+        )
         runtime.issue_gather(out, store, ind)
-        assert (
-            np.isin(out_np, arr_np).ravel()[: min(len(out_np), len(arr_np))]
-        ).all()
+        np.testing.assert_allclose(arr_np[ind_np].reshape(tgt_shape), out_np)
 
-    @pytest.mark.parametrize("src_shape, tgt_shape", BROADCAST_SHAPES, ids=str)
+    @pytest.mark.parametrize("tgt_shape, src_shape", BROADCAST_SHAPES, ids=str)
     def test_issue_scatter(
-        self, src_shape: tuple[int, ...], tgt_shape: tuple[int, ...]
+        self,
+        tgt_shape: tuple[int, ...],
+        src_shape: tuple[int, ...],
     ) -> None:
         runtime = get_legate_runtime()
         arr_np, store = utils.random_array_and_store(src_shape)
         out_np, out = utils.zero_array_and_store(ty.float64, tgt_shape)
 
-        ndim = len(tgt_shape)
-        ind = runtime.create_store(ty.point_type(ndim), src_shape)
-        runtime.issue_fill(ind, Scalar((0,) * ndim, ty.point_type(ndim)))
+        ind_np, ind = utils.create_random_points(
+            src_shape, tgt_shape, no_duplicates=True
+        )
         runtime.issue_scatter(out, ind, store)
-        assert np.isin(out_np, arr_np).ravel()[0]
+        np.testing.assert_allclose(arr_np, out_np[ind_np].reshape(src_shape))
 
-    @pytest.mark.parametrize("src_shape, tgt_shape", BROADCAST_SHAPES, ids=str)
+    @pytest.mark.parametrize("tgt_shape, src_shape", BROADCAST_SHAPES, ids=str)
     def test_issue_scatter_gather(
         self, src_shape: tuple[int, ...], tgt_shape: tuple[int, ...]
     ) -> None:
@@ -125,21 +131,14 @@ class TestStoreOps:
         arr_np, store = utils.random_array_and_store(src_shape)
         out_np, out = utils.zero_array_and_store(ty.float64, tgt_shape)
 
-        src_ndim = len(src_shape)
-        tgt_ndim = len(tgt_shape)
-
-        src_ind = utils.create_initialized_store(
-            ty.point_type(src_ndim),
-            tgt_shape,
-            Scalar((0,) * src_ndim, ty.point_type(src_ndim)),
+        src_ind_np, src_ind = utils.create_random_points(
+            tgt_shape, src_shape, no_duplicates=False
         )
-        tgt_ind = utils.create_initialized_store(
-            ty.point_type(tgt_ndim),
-            tgt_shape,
-            Scalar((0,) * tgt_ndim, ty.point_type(tgt_ndim)),
+        tgt_ind_np, tgt_ind = utils.create_random_points(
+            tgt_shape, tgt_shape, no_duplicates=True
         )
         runtime.issue_scatter_gather(out, tgt_ind, store, src_ind)
-        assert np.isin(out_np, arr_np).ravel()[0]
+        np.testing.assert_allclose(arr_np[src_ind_np], out_np[tgt_ind_np])
 
     @pytest.mark.parametrize(
         "dtype, val", zip(ARRAY_TYPES, SCALAR_VALS), ids=str

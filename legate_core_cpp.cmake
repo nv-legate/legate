@@ -760,22 +760,24 @@ list(REMOVE_ITEM languages NONE)
 
 message(STATUS "Enabled languages: ${languages}")
 
+# FIXME(wonchanl): Passing LANGUAGES triggers a bug in rapids-cmake. Put it back once we
+# bump the rapids-cmake version.
 rapids_export(INSTALL legate_core
               EXPORT_SET legate-core-exports
               GLOBAL_TARGETS core
               NAMESPACE legate::
               DOCUMENTATION doc_string
-              FINAL_CODE_BLOCK code_string
-              LANGUAGES ${languages})
+              FINAL_CODE_BLOCK code_string)
 
 # build export targets
+# FIXME(wonchanl): Passing LANGUAGES triggers a bug in rapids-cmake. Put it back once we
+# bump the rapids-cmake version.
 rapids_export(BUILD legate_core
               EXPORT_SET legate-core-exports
               GLOBAL_TARGETS core
               NAMESPACE legate::
               DOCUMENTATION doc_string
-              FINAL_CODE_BLOCK code_string
-              LANGUAGES ${languages})
+              FINAL_CODE_BLOCK code_string)
 
 # Symlink the module directory into the binary dir, so that the helper functions in
 # legate_core-config.cmake can be used even if the project is not installed.

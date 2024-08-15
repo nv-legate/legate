@@ -43,7 +43,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   void* ptr,
   std::size_t size,
   bool read_only /*=true*/,
-  std::optional<Deleter> deleter /*=std::nullopt*/)
+  std::optional<Deleter> deleter /*=std::nullopt*/)  // NOLINT(performance-unnecessary-value-param)
 {
   auto realm_resource = std::make_unique<Realm::ExternalMemoryResource>(
     reinterpret_cast<std::uintptr_t>(ptr), size, read_only);
@@ -57,7 +57,10 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
 }
 
 /*static*/ ExternalAllocation ExternalAllocation::create_zcmem(
-  void* ptr, std::size_t size, bool read_only, std::optional<Deleter> deleter /*=std::nullopt*/)
+  void* ptr,
+  std::size_t size,
+  bool read_only,
+  std::optional<Deleter> deleter /*=std::nullopt*/)  // NOLINT(performance-unnecessary-value-param)
 {
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
   auto realm_resource = std::make_unique<Realm::ExternalCudaPinnedHostResource>(
@@ -84,7 +87,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   void* ptr,
   std::size_t size,
   bool read_only,
-  std::optional<Deleter> deleter /*=std::nullopt*/)
+  std::optional<Deleter> deleter /*=std::nullopt*/)  // NOLINT(performance-unnecessary-value-param)
 {
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
   auto& local_gpus = detail::Runtime::get_runtime()->local_machine().gpus();

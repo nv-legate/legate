@@ -313,9 +313,9 @@ cpdef StructType struct_type(list field_types, bool align = True):
     )
 
 
-cpdef Type point_type(int32_t ndim):
-    return Type.from_handle(_point_type(ndim))
+cpdef FixedArrayType point_type(int32_t ndim):
+    return FixedArrayType.from_handle(_point_type(ndim))
 
 
-cpdef Type rect_type(int32_t ndim):
-    return Type.from_handle(_rect_type(ndim))
+cpdef StructType rect_type(int32_t ndim):
+    return StructType.from_handle(_rect_type(ndim))

@@ -37,11 +37,9 @@ class RegionField {
 
   [[nodiscard]] Domain domain() const;
   void set_logical_region(const Legion::LogicalRegion& lr);
-  [[nodiscard]] InlineAllocation get_inline_allocation(std::uint32_t field_size) const;
+  [[nodiscard]] InlineAllocation get_inline_allocation() const;
   [[nodiscard]] InlineAllocation get_inline_allocation(
-    std::uint32_t field_size,
-    const Domain& domain,
-    const Legion::DomainAffineTransform& transform) const;
+    const Domain& domain, const Legion::DomainAffineTransform& transform) const;
   [[nodiscard]] mapping::StoreTarget target() const;
 
   [[nodiscard]] bool is_readable() const;

@@ -183,13 +183,13 @@ class ListType final : public ExtensionType {
 
 [[nodiscard]] InternalSharedPtr<Type> binary_type(std::uint32_t size);
 
-[[nodiscard]] InternalSharedPtr<Type> fixed_array_type(InternalSharedPtr<Type> element_type,
-                                                       std::uint32_t N);
+[[nodiscard]] InternalSharedPtr<FixedArrayType> fixed_array_type(
+  InternalSharedPtr<Type> element_type, std::uint32_t N);
 
-[[nodiscard]] InternalSharedPtr<Type> struct_type(std::vector<InternalSharedPtr<Type>> field_types,
-                                                  bool align);
+[[nodiscard]] InternalSharedPtr<StructType> struct_type(
+  std::vector<InternalSharedPtr<Type>> field_types, bool align);
 
-[[nodiscard]] InternalSharedPtr<Type> list_type(InternalSharedPtr<Type> element_type);
+[[nodiscard]] InternalSharedPtr<ListType> list_type(InternalSharedPtr<Type> element_type);
 
 [[nodiscard]] InternalSharedPtr<Type> bool_();  // NOLINT(readability-identifier-naming)
 [[nodiscard]] InternalSharedPtr<Type> int8();
@@ -205,8 +205,8 @@ class ListType final : public ExtensionType {
 [[nodiscard]] InternalSharedPtr<Type> float64();
 [[nodiscard]] InternalSharedPtr<Type> complex64();
 [[nodiscard]] InternalSharedPtr<Type> complex128();
-[[nodiscard]] InternalSharedPtr<Type> point_type(std::uint32_t ndim);
-[[nodiscard]] InternalSharedPtr<Type> rect_type(std::uint32_t ndim);
+[[nodiscard]] InternalSharedPtr<FixedArrayType> point_type(std::uint32_t ndim);
+[[nodiscard]] InternalSharedPtr<StructType> rect_type(std::uint32_t ndim);
 [[nodiscard]] InternalSharedPtr<Type> domain_type();
 [[nodiscard]] InternalSharedPtr<Type> null_type();
 [[nodiscard]] bool is_point_type(const InternalSharedPtr<Type>& type);

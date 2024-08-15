@@ -16,7 +16,8 @@ from ..mapping.mapping cimport TaskTarget
 
 
 cdef extern from "core/data/external_allocation.h" namespace "legate" nogil:
-    ctypedef void (*Deleter)(void*)
+    cdef cppclass _Deleter "legate::ExternalAllocation::Deleter":
+        pass
 
     cdef cppclass _ExternalAllocation "legate::ExternalAllocation":
         _ExternalAllocation()
@@ -27,7 +28,7 @@ cdef extern from "core/data/external_allocation.h" namespace "legate" nogil:
 
         @staticmethod
         _ExternalAllocation create_sysmem(
-            void*, size_t, bool, std_optional[Deleter]
+            void*, size_t, bool, std_optional[_Deleter]
         )
 
 

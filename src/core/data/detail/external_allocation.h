@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "core/data/external_allocation.h"
 #include "core/mapping/mapping.h"
 
 #include "legion.h"
@@ -24,7 +25,7 @@ namespace legate::detail {
 
 class ExternalAllocation {
  public:
-  using Deleter = void (*)(void*) noexcept;
+  using Deleter = legate::ExternalAllocation::Deleter;
 
   ExternalAllocation(bool read_only,
                      mapping::StoreTarget target,

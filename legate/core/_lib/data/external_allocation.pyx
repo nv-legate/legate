@@ -10,15 +10,17 @@
 # its affiliates is strictly prohibited.
 
 
-cimport cython
 from cpython.buffer cimport (
     Py_buffer,
     PyBUF_CONTIG,
     PyBUF_CONTIG_RO,
     PyObject_GetBuffer,
 )
-from libc.stdlib cimport free as std_free, malloc as std_malloc
-from libcpp.optional cimport optional as std_optional
+from libcpp.memory cimport (
+    make_unique as std_make_unique,
+    unique_ptr as std_unique_ptr,
+)
+from libcpp.optional cimport make_optional as std_make_optional
 
 
 cdef extern from * namespace "legate::detail":
@@ -27,77 +29,74 @@ cdef extern from * namespace "legate::detail":
     #include "core/data/detail/external_allocation.h"
     #include "core/utilities/typedefs.h"
 
-    #include <cstdlib>
-    #include <optional>
-    #include <unordered_map>
-
     namespace legate::detail {
 
     namespace {
 
-    struct PyBufferInfo {
-      PyBufferInfo(Py_buffer* buf) : buffer{buf} {}
-      Py_buffer* buffer{};
-      size_t count{1};
-    };
-    std::unordered_map<void*, PyBufferInfo> exported_buffers{};
-
-    void register_python_buffer(Py_buffer* buffer) {
-      const auto finder = exported_buffers.find(buffer->buf);
-      if (exported_buffers.end() == finder) {
-        exported_buffers.try_emplace(buffer->buf, buffer);
-      } else {
-        ++finder->second.count;
+    class PyBufferDeleter {
+     public:
+      PyBufferDeleter(Py_buffer* buffer) : buffer_{buffer}
+      {
       }
-    }
+      void operator()(void* ptr) noexcept
+      {
+        if (ptr != buffer_->buf) {
+          LEGATE_ABORT(
+            "The buffer being freed does not match with the Py_buffer object "
+            "in the deleter"
+          );
+        }
 
-    void delete_python_buffer(void* ptr) noexcept {
-      const auto finder = exported_buffers.find(ptr);
-      if (exported_buffers.end() == finder) {
-        LEGATE_ABORT(
-          "Failed to find a Python object mapped to pointer " << ptr
-        );
-      }
-      if (--finder->second.count == 0) {
         // Hold the GIL before we mutate the Python object state
         PyGILState_STATE gstate = PyGILState_Ensure();
 
-        PyBuffer_Release(finder->second.buffer);
+        PyBuffer_Release(buffer_);
 
         PyGILState_Release(gstate);
 
-        std::free(finder->second.buffer);
-        exported_buffers.erase(finder);
+        std::unique_ptr<Py_buffer>{buffer_}.reset();
       }
-    }
 
-    std::optional<ExternalAllocation::Deleter> get_python_buffer_deleter() {
-        static auto deleter = std::make_optional(delete_python_buffer);
-        return deleter;
+     private:
+      Py_buffer* buffer_{};
+    };
+
+    legate::ExternalAllocation::Deleter get_python_buffer_deleter(
+      Py_buffer* buffer)
+    {
+        return PyBufferDeleter{buffer};
     }
 
     }  // namespace
 
     }  // namespace legate::detail
     """
-    cdef void register_python_buffer(Py_buffer*)
-    cdef std_optional[Deleter] get_python_buffer_deleter()
+    cdef _Deleter get_python_buffer_deleter(Py_buffer*)
 
 cdef _ExternalAllocation create_from_buffer(
     object obj, size_t size, bool read_only
 ):
-    cdef Py_buffer* buffer = <Py_buffer*> std_malloc(cython.sizeof(Py_buffer))
+    cdef std_unique_ptr[Py_buffer] buffer = std_make_unique[Py_buffer]()
     cdef int return_code = PyObject_GetBuffer(
-        obj, buffer, PyBUF_CONTIG_RO if read_only else PyBUF_CONTIG
+        obj, buffer.get(), PyBUF_CONTIG_RO if read_only else PyBUF_CONTIG
     )
     if return_code == -1:
-        std_free(buffer)
         raise BufferError(
             f"{type(obj)} does not support the Python buffer protocol"
         )
 
-    register_python_buffer(buffer)
+    if size > buffer.get().len:
+        raise BufferError(
+            f"Size of the buffer ({buffer.get().len}) is smaller than "
+            f"the required size ({size})"
+        )
 
+    cdef void* p_buf = buffer.get().buf
     return _ExternalAllocation.create_sysmem(
-        buffer.buf, size, read_only, get_python_buffer_deleter()
+        p_buf,
+        size,
+        read_only,
+        std_make_optional[_Deleter](
+            get_python_buffer_deleter(buffer.release())
+        )
     )

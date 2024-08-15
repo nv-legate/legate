@@ -111,7 +111,8 @@ void test_sysmem(void* ptr,
                  bool read_only                                             = true,
                  std::optional<legate::ExternalAllocation::Deleter> deleter = std::nullopt)
 {
-  auto ext_alloc = legate::ExternalAllocation::create_sysmem(ptr, bytes, read_only, deleter);
+  auto ext_alloc =
+    legate::ExternalAllocation::create_sysmem(ptr, bytes, read_only, std::move(deleter));
 
   EXPECT_EQ(ext_alloc.size(), bytes);
   EXPECT_EQ(ext_alloc.read_only(), read_only);
@@ -175,8 +176,8 @@ TEST_F(IndexAttach, GPU)
   auto deleter = [](void* ptr) noexcept { LEGATE_CHECK_CUDA(cudaFree(ptr)); };
   auto alloc1 =
     legate::ExternalAllocation::create_fbmem(0, d_alloc1, BYTES, true /*read_only*/, deleter);
-  auto alloc2 =
-    legate::ExternalAllocation::create_fbmem(0, d_alloc2, BYTES, true /*read_only*/, deleter);
+  auto alloc2 = legate::ExternalAllocation::create_fbmem(
+    0, d_alloc2, BYTES, true /*read_only*/, std::move(deleter));
   auto runtime = legate::Runtime::get_runtime();
 
   auto [store, _] =
@@ -281,7 +282,7 @@ TEST_F(IndexAttach, MutuableSysmemAccessByTask)
 
   EXPECT_NE(buffer, nullptr);
   std::memset(buffer, 0, BYTES);
-  test_sysmem<std::uint64_t>(buffer, 0, BYTES, false, deleter);
+  test_sysmem<std::uint64_t>(buffer, 0, BYTES, false, std::move(deleter));
 }
 
 void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
@@ -312,11 +313,13 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
   legate::ExternalAllocation ext_alloc;
   switch (store_target) {
     case legate::mapping::StoreTarget::FBMEM: {
-      ext_alloc = legate::ExternalAllocation::create_fbmem(0, d_alloc, BYTES, false, deleter);
+      ext_alloc =
+        legate::ExternalAllocation::create_fbmem(0, d_alloc, BYTES, false, std::move(deleter));
       break;
     }
     case legate::mapping::StoreTarget::ZCMEM: {
-      ext_alloc = legate::ExternalAllocation::create_zcmem(d_alloc, BYTES, false, deleter);
+      ext_alloc =
+        legate::ExternalAllocation::create_zcmem(d_alloc, BYTES, false, std::move(deleter));
       break;
     }
     default: {

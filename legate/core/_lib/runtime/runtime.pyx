@@ -561,9 +561,16 @@ cdef class Runtime(Unconstructable):
         undefined behavior in the presence of partial aliasing.
         """
         cdef _Shape cpp_shape = Shape.from_shape_like(shape)
-        cdef _ExternalAllocation alloc = create_from_buffer(
-            data, cpp_shape.volume() * dtype.size, read_only
-        )
+        cdef _ExternalAllocation alloc
+        try:
+            alloc = create_from_buffer(
+                data, cpp_shape.volume() * dtype.size, read_only
+            )
+        except BufferError as exn:
+            raise ValueError(
+                f"Passed buffer is too small for a store of shape {shape} and "
+                f"type {dtype}"
+            ) from exn
         cdef _LogicalStore _handle
 
         with nogil:

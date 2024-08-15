@@ -251,8 +251,6 @@ class FixedArrayType : public Type {
    */
   [[nodiscard]] Type element_type() const;
 
- private:
-  friend class Type;
   explicit FixedArrayType(InternalSharedPtr<detail::Type> type);
 };
 
@@ -290,8 +288,6 @@ class StructType : public Type {
    */
   [[nodiscard]] std::vector<std::uint32_t> offsets() const;
 
- private:
-  friend class Type;
   explicit StructType(InternalSharedPtr<detail::Type> type);
 };
 
@@ -308,8 +304,6 @@ class ListType : public Type {
    */
   [[nodiscard]] Type element_type() const;
 
- private:
-  friend class Type;
   explicit ListType(InternalSharedPtr<detail::Type> type);
 };
 
@@ -348,9 +342,9 @@ class ListType : public Type {
  * @param element_type Type of the array elements
  * @param N Size of the array
  *
- * @return Type object
+ * @return FixedArrayType object
  */
-[[nodiscard]] Type fixed_array_type(const Type& element_type, std::uint32_t N);
+[[nodiscard]] FixedArrayType fixed_array_type(const Type& element_type, std::uint32_t N);
 
 /**
  * @ingroup types
@@ -359,9 +353,9 @@ class ListType : public Type {
  * @param field_types A vector of field types
  * @param align If true, fields in the struct are aligned
  *
- * @return Type object
+ * @return StructType object
  */
-[[nodiscard]] Type struct_type(const std::vector<Type>& field_types, bool align = false);
+[[nodiscard]] StructType struct_type(const std::vector<Type>& field_types, bool align = false);
 
 /**
  * @ingroup types
@@ -369,9 +363,9 @@ class ListType : public Type {
  *
  * @param element_type Type of the list elements
  *
- * @return Type object
+ * @return ListType object
  */
-[[nodiscard]] Type list_type(const Type& element_type);
+[[nodiscard]] ListType list_type(const Type& element_type);
 
 /**
  * @ingroup types
@@ -380,10 +374,11 @@ class ListType : public Type {
  * @param align If true, fields in the struct are aligned
  * @param field_types Field types
  *
- * @return Type object
+ * @return StructType object
  */
 template <typename... Args>
-[[nodiscard]] std::enable_if_t<std::conjunction_v<std::is_same<std::decay_t<Args>, Type>...>, Type>
+[[nodiscard]] std::enable_if_t<std::conjunction_v<std::is_convertible<std::decay_t<Args>, Type>...>,
+                               StructType>
 struct_type(bool align, Args&&... field_types);
 
 std::ostream& operator<<(std::ostream&, const Type::Code&);
@@ -508,9 +503,9 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @param ndim Number of dimensions
  *
- * @return Type object
+ * @return FixedArrayType object
  */
-[[nodiscard]] Type point_type(std::uint32_t ndim);
+[[nodiscard]] FixedArrayType point_type(std::uint32_t ndim);
 
 /**
  * @ingroup types
@@ -518,9 +513,9 @@ std::ostream& operator<<(std::ostream&, const Type&);
  *
  * @param ndim Number of dimensions
  *
- * @return Type object
+ * @return StructType object
  */
-[[nodiscard]] Type rect_type(std::uint32_t ndim);
+[[nodiscard]] StructType rect_type(std::uint32_t ndim);
 
 /**
  * @ingroup types

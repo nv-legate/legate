@@ -16,6 +16,7 @@
 #include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 
+#include <functional>
 #include <optional>
 
 /**
@@ -69,7 +70,7 @@ class ExternalAllocation {
   /**
    * @brief Signature for user-supplied deletion function.
    */
-  using Deleter = void (*)(void*) noexcept;
+  using Deleter = std::function<void(void*)>;
 
   explicit ExternalAllocation(InternalSharedPtr<detail::ExternalAllocation>&& impl);
 

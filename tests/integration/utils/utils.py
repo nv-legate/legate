@@ -29,8 +29,15 @@ def create_np_array_and_store(
     runtime = get_legate_runtime()
     dtype = legate_dtype.to_numpy_dtype()
     arr = func(shape, dtype)
+    # Legate converts its fixed array types into array types in NumPy, which
+    # then flattens the types and instead add another dimension to the arrays
+    store_dtype = (
+        legate_dtype.element_type
+        if isinstance(legate_dtype, ty.FixedArrayType)
+        else legate_dtype
+    )
     store = runtime.create_store_from_buffer(
-        legate_dtype, arr.shape, arr, read_only=read_only
+        store_dtype, arr.shape, arr, read_only=read_only
     )
     return arr, store
 
@@ -69,3 +76,39 @@ def create_initialized_store(
     store = runtime.create_store(dtype, shape)
     runtime.issue_fill(store, val)
     return store
+
+
+def create_random_points(
+    shape: tuple[int, ...],
+    dimensions: tuple[int, ...],
+    no_duplicates: bool,
+) -> tuple[np.ndarray[Any, Any], LogicalStore]:
+    store_vol = np.prod(shape)
+    tgt_vol = np.prod(dimensions)
+    ndim = len(dimensions)
+    # When the volume of the store to create is bigger than the volume of the
+    # domain, the store must contain the same point more than once, which leads
+    # to non-deterministic behavior for scatter copies; i.e., the scatter copy
+    # would essentially do `arr[ind] = val` for more than one `val` in
+    # parallel and thus the semantics is ill-defined.
+    if no_duplicates and store_vol > tgt_vol:
+        raise ValueError(
+            "The volume of the store must be smaller than the target volume"
+        )
+
+    points = np.stack(np.indices(dimensions), axis=-1).reshape(tgt_vol, ndim)
+    to_select = np.random.permutation(store_vol) % tgt_vol
+    shuffled = points[to_select, :]
+
+    store = get_legate_runtime().create_store_from_buffer(
+        ty.point_type(ndim),
+        shape,
+        shuffled,
+        read_only=True,
+    )
+
+    coords = tuple(
+        coord.squeeze()
+        for coord in np.split(shuffled.reshape(shape + (ndim,)), ndim, axis=-1)
+    )
+    return coords, store
