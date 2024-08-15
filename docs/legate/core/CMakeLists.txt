@@ -76,7 +76,7 @@ file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/switcher.json"
 
 add_custom_target(Sphinx
                   COMMAND "${SPHINX_EXECUTABLE}" -b html
-                          -Dbreathe_projects.legate_core="${DOXYGEN_OUTPUT_DIR}/xml"
+                          -Dbreathe_projects.legate_core="${DOXYGEN_OUTPUT_DIR}/xml" -W
                           "${SPHINX_SOURCE}" "${SPHINX_BUILD}/legate/latest"
                   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
                   COMMENT "Generating documentation with Sphinx")

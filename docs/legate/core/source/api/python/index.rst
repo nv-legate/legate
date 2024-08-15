@@ -9,4 +9,5 @@ Python API Reference
 
    routines
    classes
+   tasks
    settings

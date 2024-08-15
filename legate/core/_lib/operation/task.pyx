@@ -75,7 +75,7 @@ cdef class AutoTask(Unconstructable):
         -----
         This prevents any additional modification of the inputs, outputs,
         reductions, or scalar arguments to this particular AutoTask. This is
-        usually the final action performed by a `PyTask`.
+        usually the final action performed by a ``PyTask``.
         """
         self._locked = True
 
@@ -96,7 +96,7 @@ cdef class AutoTask(Unconstructable):
         Raises
         ------
         RuntimeError
-            If the AutoTask has been previously locked by a `PyTask`.
+            If the AutoTask has been previously locked by a ``PyTask``.
         """
         if self._locked:
             raise RuntimeError(

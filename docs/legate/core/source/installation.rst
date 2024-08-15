@@ -48,7 +48,7 @@ If you encounter runtime failures such as
 Or if you want to use Legate in combination with a different MPI library than the one it
 was compiled against (see the dependencies on the Legate package), e.g. you are on an HPC
 cluster and want to use the vendor's MPI library, then you will need to compile and
-install the Legate MPI wrapper locally on your machine. See :ref:`mpi_wrapper_faq<FAQ>`
+install the Legate MPI wrapper locally on your machine. See :ref:`FAQ<mpi_wrapper_faq>`
 for more information on why this is needed.
 
 Assuming Legate is installed to a directory called ``INSTALL_PREFIX``, to build and

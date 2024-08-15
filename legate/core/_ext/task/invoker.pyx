@@ -158,7 +158,9 @@ cdef class VariantInvoker:
 
         All user functions must return exactly ``None``, and all arguments
         must be fully type-hinted. Furthermore, all arguments must be
-        positional or keyword arguments, *args and **kwargs are not allowed.
+        positional or keyword arguments, ``*args`` and ``**kwargs`` are not
+        allowed.
+
         Default arguments are not yet supported either.
         """
         signature = VariantInvoker._get_signature(func)
@@ -180,7 +182,8 @@ cdef class VariantInvoker:
 
     @property
     def inputs(self) -> ParamList:
-        r"""Return the derived input parameters for a user variant function.
+        r"""
+        Return the derived input parameters for a user variant function.
 
         Returns
         -------

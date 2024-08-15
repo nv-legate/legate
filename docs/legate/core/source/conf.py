@@ -42,13 +42,14 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
+    "sphinx.ext.doctest",
     "sphinx_copybutton",
     "myst_parser",
     "legate._sphinxext.settings",
 ]
 
 suppress_warnings = ["ref.myst"]
-
+exclude_patterns = ["BUILD.md"]
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
 # -- Options for HTML output -------------------------------------------------
