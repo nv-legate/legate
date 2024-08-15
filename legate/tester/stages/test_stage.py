@@ -14,6 +14,7 @@ from __future__ import annotations
 import multiprocessing
 import queue
 from datetime import datetime
+from pathlib import Path
 from typing import Any, NoReturn, Protocol
 
 from ...util.colors import yellow
@@ -294,16 +295,32 @@ class TestStage(Protocol):
 
         assert not config.other.gdb
 
+        # make sure we get any updated values from downstream test scripts
+        import legate.tester as lt
+
+        custom_paths_map = {Path(x.file): x for x in lt.CUSTOM_FILES}
+
         specs = self.runner.test_specs(config)
+
+        sharded_specs = (s for s in specs if s.path not in custom_paths_map)
         jobs = [
             pool.apply_async(self._run, (spec, config, system))
-            for spec in specs
+            for spec in sharded_specs
         ]
         pool.close()
 
         sharded_results = [job.get() for job in jobs]
 
-        return sharded_results
+        unsharded_specs = [s for s in specs if s.path in custom_paths_map]
+        unsharded_results = []
+        for spec in unsharded_specs:
+            kind = custom_paths_map[spec.path].kind or lt.FEATURES
+            args = custom_paths_map[spec.path].args or []
+            if self.kind == kind or self.kind in kind:
+                result = self._run(spec, config, system, custom_args=args)
+                unsharded_results.append(result)
+
+        return sharded_results + unsharded_results
 
     def _launch_gdb_and_exit(
         self, config: Config, system: TestSystem

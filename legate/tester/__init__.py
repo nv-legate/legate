@@ -49,8 +49,8 @@ PER_FILE_ARGS: dict[str, ArgList] = {}
 @dataclass
 class CustomTest:
     file: str
-    kind: FeatureType
-    args: ArgList
+    args: ArgList | None = None
+    kind: FeatureType | list[FeatureType] | None = None
 
 
 #: Customized configurations for specific test files. Each entry will result
