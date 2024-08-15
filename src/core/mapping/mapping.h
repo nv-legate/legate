@@ -421,10 +421,18 @@ class StoreMapping {
 
   StoreMapping() = default;
 
+  class ReleaseKey {
+    ReleaseKey() = default;
+
+    friend class detail::BaseMapper;
+    friend StoreMapping;
+  };
+
+  // NOLINTNEXTLINE(readability-identifier-naming)
+  [[nodiscard]] detail::StoreMapping* release_(ReleaseKey) noexcept;
+
  private:
   friend class detail::BaseMapper;
-
-  [[nodiscard]] detail::StoreMapping* release_() noexcept;
 
   explicit StoreMapping(detail::StoreMapping* impl) noexcept;
 

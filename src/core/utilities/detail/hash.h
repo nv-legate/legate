@@ -18,6 +18,7 @@
 #include "legion.h"
 
 #include <functional>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -28,6 +29,15 @@ struct hasher<std::pair<T1, T2>> {
   [[nodiscard]] std::size_t operator()(const std::pair<T1, T2>& v) const noexcept
   {
     return hash_all(v.first, v.second);
+  }
+};
+
+// Must be at least 1 item in the tuple
+template <typename T, typename... U>
+struct hasher<std::tuple<T, U...>> {
+  [[nodiscard]] std::size_t operator()(const std::tuple<T, U...>& v) const noexcept
+  {
+    return std::apply(hash_all<T, U...>, v);
   }
 };
 

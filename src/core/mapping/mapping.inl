@@ -128,6 +128,6 @@ inline void InstanceMappingPolicy::set_exact(bool _exact) { exact = _exact; }
 
 inline const detail::StoreMapping* StoreMapping::impl() const noexcept { return impl_.get(); }
 
-inline detail::StoreMapping* StoreMapping::release_() noexcept { return impl_.release(); }
+inline detail::StoreMapping* StoreMapping::release_(ReleaseKey) noexcept { return impl_.release(); }
 
 }  // namespace legate::mapping

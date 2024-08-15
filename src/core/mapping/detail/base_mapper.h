@@ -258,6 +258,30 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                           bool overdecomposed = false);
   void tighten_write_policies_(const Legion::Mappable& mappable,
                                const std::vector<std::unique_ptr<StoreMapping>>& mappings);
+  [[nodiscard]] bool map_reduction_instance_(const Legion::Mapping::MapperContext& ctx,
+                                             const Legion::Mappable& mappable,
+                                             const Processor& target_proc,
+                                             const std::vector<Legion::FieldID>& fields,
+                                             const std::vector<Legion::LogicalRegion>& regions,
+                                             const InstanceMappingPolicy& policy,
+                                             Memory target_memory,
+                                             GlobalRedopID redop,
+                                             Legion::LayoutConstraintSet* layout_constraints,
+                                             Legion::Mapping::PhysicalInstance* result,
+                                             bool* need_acquire,
+                                             std::size_t* footprint);
+  [[nodiscard]] bool map_regular_instance_(const Legion::Mapping::MapperContext& ctx,
+                                           const Legion::Mappable& mappable,
+                                           const std::set<const Legion::RegionRequirement*>& reqs,
+                                           const InstanceMappingPolicy& policy,
+                                           const std::vector<Legion::FieldID>& fields,
+                                           const Legion::LayoutConstraintSet& layout_constraints,
+                                           Memory target_memory,
+                                           bool must_alloc_collective_writes,
+                                           std::vector<Legion::LogicalRegion>&& regions,
+                                           Legion::Mapping::PhysicalInstance* result,
+                                           bool* need_acquire,
+                                           std::size_t* footprint);
   bool map_legate_store_(Legion::Mapping::MapperContext ctx,
                          const Legion::Mappable& mappable,
                          const StoreMapping& mapping,
@@ -316,6 +340,10 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   LocalMachine local_machine_{};
 
  private:
+  [[nodiscard]] Legion::VariantID select_task_variant_(Legion::Mapping::MapperContext ctx,
+                                                       const Legion::Task& task,
+                                                       const Processor& proc);
+
   std::string mapper_name_{};
 };
 
