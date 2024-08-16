@@ -26,10 +26,12 @@ const InternalSharedPtr<Store>& Array::data() const
   return ptr;
 }
 
+// ==========================================================================================
+
 bool BaseArray::unbound() const
 {
-  LEGATE_ASSERT(!nullable() || data_->unbound() == null_mask_->unbound());
-  return data_->unbound();
+  LEGATE_ASSERT(!nullable() || data()->unbound() == null_mask()->unbound());
+  return data()->unbound();
 }
 
 const InternalSharedPtr<Store>& BaseArray::null_mask() const
@@ -48,23 +50,25 @@ InternalSharedPtr<Array> BaseArray::child(std::uint32_t /*index*/) const
 
 void BaseArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
-  result.push_back(data_);
+  result.push_back(data());
   if (nullable()) {
-    result.push_back(null_mask_);
+    result.push_back(null_mask());
   }
 }
 
-Domain BaseArray::domain() const { return data_->domain(); }
+Domain BaseArray::domain() const { return data()->domain(); }
 
-std::int32_t ListArray::dim() const { return descriptor_->dim(); }
+// ==========================================================================================
 
-bool ListArray::unbound() const { return descriptor_->unbound() || vardata_->unbound(); }
+std::int32_t ListArray::dim() const { return descriptor()->dim(); }
+
+bool ListArray::unbound() const { return descriptor()->unbound() || vardata()->unbound(); }
 
 InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
 {
   switch (index) {
-    case 0: return descriptor_;
-    case 1: return vardata_;
+    case 0: return descriptor();
+    case 1: return vardata();
     default: {
       throw std::out_of_range{fmt::format("List array does not have child {}", index)};
       break;
@@ -75,17 +79,20 @@ InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
 
 void ListArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
-  descriptor_->populate_stores(result);
-  vardata_->populate_stores(result);
+  descriptor()->populate_stores(result);
+  vardata()->populate_stores(result);
 }
 
-Domain ListArray::domain() const { return descriptor_->domain(); }
+Domain ListArray::domain() const { return descriptor()->domain(); }
+
+// ==========================================================================================
 
 std::int32_t StructArray::dim() const { return fields_.front()->dim(); }
 
 bool StructArray::unbound() const
 {
-  return std::any_of(fields_.begin(), fields_.end(), [](auto& field) { return field->unbound(); });
+  return std::any_of(
+    fields_.cbegin(), fields_.cend(), [](const auto& field) { return field->unbound(); });
 }
 
 const InternalSharedPtr<Store>& StructArray::null_mask() const
@@ -100,8 +107,9 @@ InternalSharedPtr<Array> StructArray::child(std::uint32_t index) const { return 
 
 void StructArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
-  std::for_each(
-    fields_.begin(), fields_.end(), [&result](auto& field) { field->populate_stores(result); });
+  for (auto&& field : fields_) {
+    field->populate_stores(result);
+  }
 }
 
 Domain StructArray::domain() const { return fields_.front()->domain(); }

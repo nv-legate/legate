@@ -80,8 +80,8 @@ class ListArray final : public Array {
   [[nodiscard]] const InternalSharedPtr<Store>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<Array> child(std::uint32_t index) const override;
   void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const override;
-  [[nodiscard]] InternalSharedPtr<Array> descriptor() const;
-  [[nodiscard]] InternalSharedPtr<Array> vardata() const;
+  [[nodiscard]] const InternalSharedPtr<BaseArray>& descriptor() const;
+  [[nodiscard]] const InternalSharedPtr<Array>& vardata() const;
   [[nodiscard]] Domain domain() const override;
 
  private:

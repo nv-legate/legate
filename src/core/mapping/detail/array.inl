@@ -30,13 +30,13 @@ inline BaseArray::BaseArray(InternalSharedPtr<Store> data, InternalSharedPtr<Sto
 
 // ==========================================================================================
 
-inline std::int32_t BaseArray::dim() const { return data_->dim(); }
+inline std::int32_t BaseArray::dim() const { return data()->dim(); }
 
 inline legate::detail::ArrayKind BaseArray::kind() const { return legate::detail::ArrayKind::BASE; }
 
 inline const InternalSharedPtr<legate::detail::Type>& BaseArray::type() const
 {
-  return data_->type();
+  return data()->type();
 }
 
 inline bool BaseArray::nullable() const { return null_mask_ != nullptr; }
@@ -58,18 +58,18 @@ inline legate::detail::ArrayKind ListArray::kind() const { return legate::detail
 
 inline const InternalSharedPtr<legate::detail::Type>& ListArray::type() const { return type_; }
 
-inline bool ListArray::nullable() const { return descriptor_->nullable(); }
+inline bool ListArray::nullable() const { return descriptor()->nullable(); }
 
 inline bool ListArray::nested() const { return true; }
 
 inline const InternalSharedPtr<Store>& ListArray::null_mask() const
 {
-  return descriptor_->null_mask();
+  return descriptor()->null_mask();
 }
 
-inline InternalSharedPtr<Array> ListArray::descriptor() const { return descriptor_; }
+inline const InternalSharedPtr<BaseArray>& ListArray::descriptor() const { return descriptor_; }
 
-inline InternalSharedPtr<Array> ListArray::vardata() const { return vardata_; }
+inline const InternalSharedPtr<Array>& ListArray::vardata() const { return vardata_; }
 
 // ==========================================================================================
 
