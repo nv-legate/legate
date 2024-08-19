@@ -20,6 +20,7 @@
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/deserializer.h"
+#include "core/utilities/detail/store_iterator_cache.h"
 #include "core/utilities/macros.h"
 
 #include <algorithm>
@@ -51,19 +52,11 @@ TaskContext::TaskContext(const Legion::Task* task,
   reductions_ = dez.unpack_arrays();
   scalars_    = dez.unpack_scalars();
 
-  // Make copies of stores that we need to postprocess, as clients might move the stores
-  // away. Use a temporary vector here to amortize the push-backs from each populate_stores()
-  // call.
-  std::vector<InternalSharedPtr<PhysicalStore>> stores_cache;
-  const auto get_stores = [&](InternalSharedPtr<PhysicalArray>& phys_array)
-    -> std::vector<InternalSharedPtr<PhysicalStore>>& {
-    stores_cache.clear();
-    phys_array->populate_stores(stores_cache);
-    return stores_cache;
-  };
+  auto get_stores = StoreIteratorCache<InternalSharedPtr<PhysicalStore>>{};
 
+  // Make copies of stores that we need to postprocess, as clients might move the stores away.
   for (auto&& output : outputs_) {
-    for (auto&& store : get_stores(output)) {
+    for (auto&& store : get_stores(*output)) {
       if (store->is_unbound_store()) {
         unbound_stores_.push_back(std::move(store));
       } else if (store->is_future()) {
@@ -72,7 +65,7 @@ TaskContext::TaskContext(const Legion::Task* task,
     }
   }
   for (auto&& reduction : reductions_) {
-    auto&& stores = get_stores(reduction);
+    auto&& stores = get_stores(*reduction);
 
     std::copy_if(std::make_move_iterator(stores.begin()),
                  std::make_move_iterator(stores.end()),

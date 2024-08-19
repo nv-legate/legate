@@ -24,6 +24,7 @@
 #include "core/utilities/detail/enumerate.h"
 #include "core/utilities/detail/env.h"
 #include "core/utilities/detail/formatters.h"
+#include "core/utilities/detail/store_iterator_cache.h"
 #include "core/utilities/detail/type_traits.h"
 #include "core/utilities/detail/zip.h"
 #include "core/utilities/linearize.h"
@@ -169,18 +170,18 @@ std::string BaseMapper::create_logger_name_() const
 
 namespace {
 
-template <typename F>
-void populate_input_collective_regions(const Legion::Task& legion_task,
-                                       const Task& legate_task,
-                                       std::set<unsigned>* check_collective_regions,
-                                       F&& get_stores)
+void populate_input_collective_regions(
+  const Legion::Task& legion_task,
+  const Task& legate_task,
+  const legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>& get_stores,
+  std::set<unsigned>* check_collective_regions)
 {
   const auto hi          = legion_task.index_domain.hi();
   const auto lo          = legion_task.index_domain.lo();
   const auto task_volume = legion_task.index_domain.get_volume();
 
   for (auto&& array : legate_task.inputs()) {
-    for (auto&& store : get_stores(array)) {
+    for (auto&& store : get_stores(*array)) {
       if (store->is_future()) {
         continue;
       }
@@ -203,14 +204,14 @@ void populate_input_collective_regions(const Legion::Task& legion_task,
   }
 }
 
-template <typename F>
-void populate_reduction_collective_regions(const Legion::Task& legion_task,
-                                           const Task& legate_task,
-                                           std::set<unsigned>* check_collective_regions,
-                                           F&& get_stores)
+void populate_reduction_collective_regions(
+  const Legion::Task& legion_task,
+  const Task& legate_task,
+  const legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>& get_stores,
+  std::set<unsigned>* check_collective_regions)
 {
   for (auto&& array : legate_task.reductions()) {
-    for (auto&& store : get_stores(array)) {
+    for (auto&& store : get_stores(*array)) {
       if (store->is_future()) {
         continue;
       }
@@ -237,18 +238,12 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
   Task legate_task{&task, library, runtime, ctx};
 
   {
-    auto get_stores = [cache = std::vector<InternalSharedPtr<Store>>{}](
-                        const InternalSharedPtr<detail::Array>& array) mutable
-      -> std::vector<InternalSharedPtr<Store>>& {
-      cache.clear();
-      array->populate_stores(cache);
-      return cache;
-    };
+    auto get_stores = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
 
     populate_input_collective_regions(
-      task, legate_task, &output.check_collective_regions, get_stores);
+      task, legate_task, get_stores, &output.check_collective_regions);
     populate_reduction_collective_regions(
-      task, legate_task, &output.check_collective_regions, get_stores);
+      task, legate_task, get_stores, &output.check_collective_regions);
   }
 
   auto&& machine_desc = legate_task.machine();
@@ -490,16 +485,10 @@ void generate_default_mappings(
   std::vector<std::unique_ptr<StoreMapping>>* for_unbound_stores,
   std::vector<std::unique_ptr<StoreMapping>>* for_stores)
 {
-  auto get_stores = [stores_cache = std::vector<InternalSharedPtr<Store>>{}](
-                      const InternalSharedPtr<Array>& array) mutable
-    -> const std::vector<InternalSharedPtr<Store>>& {
-    stores_cache.clear();
-    array->populate_stores(stores_cache);
-    return stores_cache;
-  };
+  const auto get_stores = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
 
   for (auto&& array : arrays) {
-    for (auto&& store : get_stores(array)) {
+    for (auto&& store : get_stores(*array)) {
       if (store->is_future()) {
         const auto fut_idx = store->future_index();
         // Only need to map Future-backed Stores corresponding to inputs (i.e. one of
