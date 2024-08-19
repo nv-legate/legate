@@ -15,7 +15,7 @@ jobs:
   build-docs:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@move_param_dependencies_workflow
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.10
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
