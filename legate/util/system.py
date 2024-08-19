@@ -36,7 +36,7 @@ class System:
 
         Returns
         -------
-            LegionPaths
+            LegatePaths
 
         """
         return get_legate_paths()

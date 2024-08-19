@@ -21,7 +21,7 @@ single sequential CPU on their laptop or desktop. Parallelism, data
 distribution, and synchronization must be implicit. The cloud or a
 supercomputer should appear as nothing more than a super-powerful CPU core.
 
-**Composibility**
+**Composability**
 
 Software must be compositional and not merely interoperable. Libraries
 developed in the Legate ecosystem must be able to exchange partitioned

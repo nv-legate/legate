@@ -26,14 +26,13 @@ see the [Legate overview](https://docs.nvidia.com/legate/latest/overview.html).
 Legate Core is available from [conda](https://docs.conda.io/projects/conda/en/latest/index.html)
 on the [legate channel](https://anaconda.org/legate/legate-core).
 See https://docs.nvidia.com/legate/latest/installation.html for details about different
-install configurations, or [BUILD.md](BUILD.md) for instructions on building Legate Core
-from source.
+install configurations.
 
 ## Documentation
 
 A complete list of available features and APIs can be found in the [Legate Core
 documentation](https://docs.nvidia.com/legate/latest/).
 
-## Next Steps
+## Contact
 
 If you have questions, please contact us at legate(at)nvidia.com.

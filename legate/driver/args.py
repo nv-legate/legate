@@ -312,7 +312,7 @@ profiling.add_argument(
     dest="profile",
     action="store_true",
     required=False,
-    help="profile Legate execution",
+    help="Profile Legate execution",
 )
 
 
@@ -321,7 +321,7 @@ profiling.add_argument(
     dest="cprofile",
     action="store_true",
     required=False,
-    help="profile Python execution with the cprofile module "
+    help="Profile Python execution with the cprofile module "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -331,7 +331,7 @@ profiling.add_argument(
     dest="nvprof",
     action="store_true",
     required=False,
-    help="run Legate with nvprof "
+    help="Run Legate with nvprof "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -341,7 +341,7 @@ profiling.add_argument(
     dest="nsys",
     action="store_true",
     required=False,
-    help="run Legate with Nsight Systems "
+    help="Run Legate with Nsight Systems "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -376,7 +376,7 @@ logging.add_argument(
     type=str,
     default=None,
     dest="user_logging_levels",
-    help="extra loggers to turn on",
+    help="Extra loggers to turn on",
 )
 
 logging.add_argument(
@@ -394,7 +394,7 @@ logging.add_argument(
     dest="log_to_file",
     action="store_true",
     required=False,
-    help="redirect logging output to a file inside --logdir",
+    help="Redirect logging output to a file inside --logdir",
 )
 
 
@@ -406,7 +406,7 @@ debugging.add_argument(
     dest="gdb",
     action="store_true",
     required=False,
-    help="run Legate inside gdb "
+    help="Run Legate inside gdb "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -416,7 +416,7 @@ debugging.add_argument(
     dest="cuda_gdb",
     action="store_true",
     required=False,
-    help="run Legate inside cuda-gdb "
+    help="Run Legate inside cuda-gdb "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -426,7 +426,7 @@ debugging.add_argument(
     dest="memcheck",
     action="store_true",
     required=False,
-    help="run Legate with cuda-memcheck "
+    help="Run Legate with cuda-memcheck "
     "[legate-only, not supported with standard Python invocation]",
 )
 debugging.add_argument(
@@ -434,7 +434,7 @@ debugging.add_argument(
     dest="valgrind",
     action="store_true",
     required=False,
-    help="run Legate with valgrind "
+    help="Run Legate with valgrind "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -444,7 +444,7 @@ debugging.add_argument(
     dest="freeze_on_error",
     action="store_true",
     required=False,
-    help="if the program crashes, freeze execution right before exit so a "
+    help="If the program crashes, freeze execution right before exit so a "
     "debugger can be attached",
 )
 
@@ -455,8 +455,9 @@ debugging.add_argument(
     action="store_true",
     default=False,
     required=False,
-    help="enable GASNet tracing (assumes GASNet was configured with "
-    "--enable-trace)",
+    help="Enable GASNet tracing (assumes GASNet was configured with "
+    "--enable-trace) "
+    "[legate-only, not supported with standard Python invocation]",
 )
 
 
@@ -477,7 +478,8 @@ info.add_argument(
     dest="verbose",
     action="store_true",
     required=False,
-    help="print out each shell command before running it",
+    help="Print out each shell command before running it "
+    "[legate-only, not supported with standard Python invocation]",
 )
 
 
@@ -486,7 +488,7 @@ info.add_argument(
     dest="bind_detail",
     action="store_true",
     required=False,
-    help="print out the final invocation run by bind.sh "
+    help="Print out the final invocation run by bind.sh "
     "[legate-only, not supported with standard Python invocation]",
 )
 
@@ -552,7 +554,8 @@ other.add_argument(
     action="store_true",
     required=False,
     help="Print the full command line invocation that would be "
-    "executed, without executing it",
+    "executed, without executing it "
+    "[legate-only, not supported with standard Python invocation]",
 )
 
 
@@ -561,7 +564,8 @@ other.add_argument(
     dest="color",
     action="store_true",
     required=False,
-    help="Whether to use color terminal output (if colorama is installed)",
+    help="Whether to use color terminal output (if colorama is installed) "
+    "[legate-only, not supported with standard Python invocation]",
 )
 
 other.add_argument(
@@ -574,5 +578,6 @@ other.add_argument(
     "--info",
     action=InfoAction,
     help="Print information about the capabilities of this build of legate "
-    "and immediately exit.",
+    "and immediately exit. "
+    "[legate-only, not supported with standard Python invocation]",
 )

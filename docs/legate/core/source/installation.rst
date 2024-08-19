@@ -13,7 +13,6 @@ on the `legate channel <https://anaconda.org/legate/legate-core>`_.
 Please make sure you have at least conda version 24.1 installed, then create
 a new environment containing Legate Core:
 
-
 .. code-block:: sh
 
     conda create -n myenv -c conda-forge -c legate legate-core
@@ -24,17 +23,63 @@ or install it into an existing environment:
 
     conda install -c conda-forge -c legate legate-core
 
-Only linux-64 packages are available at the moment.
+Packages with GPU support are available, and will be chosen automatically by
+``conda install`` on systems with GPUs.
 
-The default package contains GPU support, and is compatible with CUDA >= 12.0
-(CUDA driver version >= r520), and Volta or later GPU architectures. There are
-also CPU-only packages available, and will be automatically selected when
-installing on a machine without GPUs. You can force installation of a CPU-only
-package by requesting it as follows:
+In an environment without GPUs available, ``conda install`` will by default
+choose a CPU-only package. To install a version with GPU support in such an
+environment, use environment variable ``CONDA_OVERRIDE_CUDA``:
 
 .. code-block:: sh
 
-    conda ... legate-core=*=*_cpu
+    CONDA_OVERRIDE_CUDA="12.2" \
+      conda install -c conda-forge -c legate legate-core
+
+.. _support_matrix:
+
+Support Matrix
+--------------
+
+The following table lists Legate's minimum supported versions of major dependencies.
+
+"Full support" means that the corresponding versions (and all later ones) are
+being tested with some regularity, and are expected to work. Please report any
+incompatibility you find against a fully-supported version by opening a bug.
+
+"Best-effort support" means that the corresponding versions are not actively
+tested, but Legate should be compatible with them. We will not actively work to
+fix any incompatibilities discovered under these versions, but we accept
+contributions that fix such incompatibilities.
+
+.. list-table:: Support Matrix
+   :header-rows: 1
+
+   * - Dependency
+     - Full support (min version)
+     - Best-effort support (min version)
+   * - CPU architecture
+     - x86-64 (Haswell), aarch64
+     - older x86-64
+   * - OS
+     - RHEL 8, Ubuntu 20.04
+     - other Linux
+   * - GPU architecture
+     - Volta
+     - Pascal
+   * - CUDA toolkit
+     - 12.2
+     - 11.0
+   * - Python
+     - 3.10
+     -
+   * - NumPy
+     - 1.22
+     -
+
+Legate is tested and guaranteed to be compatible with Volta and later GPU
+architectures. You can use Legate with Pascal GPUs as well, but there could
+be issues due to lack of independent thread scheduling. Please report any such
+issues by opening a bug.
 
 Installation of the Legate MPI wrapper
 --------------------------------------
