@@ -824,7 +824,6 @@ bool BaseMapper::map_reduction_instance_(const Legion::Mapping::MapperContext& c
   // to find an instance
   const Legion::Mapping::AutoLock reduction_lock{ctx, reduction_instances_->manager_lock()};
   // This whole process has to appear atomic
-  const AutoReentrantLock lock{*runtime, ctx};
 
   // reuse reductions only for GPU tasks:
   if (target_proc.kind() == Processor::TOC_PROC && fields.size() == 1 && regions.size() == 1) {
@@ -931,7 +930,6 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
 
   if (can_search_cache) {
     const Legion::Mapping::AutoLock lock{ctx, local_instances_->manager_lock()};
-    const AutoReentrantLock rlock{*runtime, ctx};
 
     if (found_in_cache()) {
       // Needs acquire if found to keep the runtime happy
@@ -974,7 +972,6 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
   // 6. Which in turn requires a mapper call.
   // 7. And now we are stuck.
   const Legion::Mapping::AutoLock lock{ctx, local_instances_->manager_lock()};
-  const AutoReentrantLock rlock{*runtime, ctx};
 
   InternalSharedPtr<RegionGroup> group{nullptr};
 
@@ -1878,20 +1875,28 @@ void BaseMapper::handle_task_result(Legion::Mapping::MapperContext /*ctx*/,
 void BaseMapper::handle_instance_collection(Legion::Mapping::MapperContext ctx,
                                             const Legion::Mapping::PhysicalInstance& inst)
 {
-  const auto try_erase = [&](auto* instance_mngr) {
-    const auto _  = Legion::Mapping::AutoLock{ctx, (*instance_mngr)->manager_lock()};
-    const auto _1 = AutoReentrantLock{*runtime, ctx};
+  // TODO(mpapadakis): We want to clear inst from our caches, but these are shared between mappers
+  // from different libraries, so we need to use AutoLocks to guard them, and we may get called
+  // recursively from [find_or]create_physical_instance in map_*_instance_, which also needs to be
+  // done under AutoLock, causing deadlock. See
+  // https://github.com/nv-legate/legate.core.internal/issues/1122
+  // NOLINTNEXTLINE(readability-simplify-boolean-expr)
+  if (false) {
+    const auto try_erase = [&](auto* instance_mngr) {
+      const auto _  = Legion::Mapping::AutoLock{ctx, (*instance_mngr)->manager_lock()};
+      const auto _1 = AutoReentrantLock{*runtime, ctx};
 
-    return (*instance_mngr)->erase(inst);
-  };
+      return (*instance_mngr)->erase(inst);
+    };
 
-  if (!try_erase(&local_instances_)) {
-    try_erase(&reduction_instances_);
-    // It's OK if neither erase succeeds. This indicates that the instance was deleted in an
-    // earlier call to record_instance() in which several instances were combined.
-    //
-    // Probably we should provide some mechanism to allow unsubscription in that case, but
-    // that would be complicated to implement.
+    if (!try_erase(&local_instances_)) {
+      try_erase(&reduction_instances_);
+      // It's OK if neither erase succeeds. This indicates that the instance was deleted in an
+      // earlier call to record_instance() in which several instances were combined.
+      //
+      // Probably we should provide some mechanism to allow unsubscription in that case, but
+      // that would be complicated to implement.
+    }
   }
 
   // Can be reentrant for this one I guess, since we're not making any runtime calls, which is

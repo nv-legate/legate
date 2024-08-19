@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 
 from libc.stdint cimport uint32_t
+from libcpp cimport bool
 from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
@@ -35,6 +36,7 @@ cdef extern from "core/task/task_context.h" namespace "legate" nogil:
         size_t num_reductions() const
         const std_vector[_Scalar]& scalars() except +
         size_t num_scalars() const
+        bool can_raise_exception() const
 
 
 cdef class TaskContext(Unconstructable):
@@ -52,3 +54,4 @@ cdef class TaskContext(Unconstructable):
     cpdef _GlobalTaskID get_task_id(self)
     cpdef VariantCode get_variant_kind(self)
     cpdef void set_exception(self, Exception) except *
+    cpdef bool can_raise_exception(self)

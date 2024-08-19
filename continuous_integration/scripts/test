@@ -81,8 +81,8 @@ run_test_or_analysis() {
               # https://doc.pytest.org/en/latest/explanation/ci.html
               export CI=1
 
-              pytest --color=yes tests/unit
-              pytest --color=yes tests/integration
+              pytest --color=yes tests/unit -s
+              pytest --color=yes tests/integration -s
             fi
 
             ;;

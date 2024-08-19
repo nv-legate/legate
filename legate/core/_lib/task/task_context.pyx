@@ -93,3 +93,6 @@ cdef class TaskContext(Unconstructable):
                 buf, length
             )
         )
+
+    cpdef bool can_raise_exception(self):
+        return self._handle.can_raise_exception()
