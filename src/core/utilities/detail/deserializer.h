@@ -37,12 +37,6 @@
 
 namespace legate::detail {
 
-template <typename T>
-std::pair<void*, std::size_t> align_for_unpack(void* ptr,
-                                               std::size_t capacity,
-                                               std::size_t bytes = sizeof(T),
-                                               std::size_t align = alignof(T));
-
 template <typename Deserializer>
 class BaseDeserializer {
  public:

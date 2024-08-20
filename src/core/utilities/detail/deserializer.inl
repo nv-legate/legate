@@ -18,31 +18,23 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <fmt/format.h>
-#include <stdexcept>
 
 namespace legate::detail {
 
-template <typename T>
-std::pair<void*, std::size_t> align_for_unpack(void* ptr,
-                                               std::size_t capacity,
-                                               std::size_t bytes,
-                                               std::size_t align)
-{
-  const auto orig_avail_space = std::min(bytes + align - 1, capacity);
-  auto avail_space            = orig_avail_space;
+[[nodiscard]] std::pair<void*, std::size_t> align_for_unpack_impl(void* ptr,
+                                                                  std::size_t capacity,
+                                                                  std::size_t bytes,
+                                                                  std::size_t align);
 
-  if (!std::align(align, bytes, ptr, avail_space)) {
-    // If we get here, it means that someone did not pack the value correctly, likely without
-    // first aligning the pointer!
-    throw std::runtime_error{fmt::format(
-      "Failed to align buffer {} (of size: {}) to {}-byte alignment (remaining capacity: {})",
-      ptr,
-      bytes,
-      align,
-      capacity)};
-  }
-  return {ptr, orig_avail_space - avail_space};
+template <typename T>
+[[nodiscard]] std::pair<void*, std::size_t> align_for_unpack(
+  void* ptr,
+  std::size_t capacity,
+  // It's OK if T is a pointer. We trust that the caller knows what they are doing
+  std::size_t bytes = sizeof(T),  // NOLINT(bugprone-sizeof-expression)
+  std::size_t align = alignof(T))
+{
+  return align_for_unpack_impl(ptr, capacity, bytes, align);
 }
 
 template <typename Deserializer>
