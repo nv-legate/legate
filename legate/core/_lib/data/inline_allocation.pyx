@@ -36,14 +36,40 @@ cdef class InlineAllocation:
 
     @property
     def ptr(self) -> uintptr_t:
-        return <long>(self._handle.ptr)
+        r"""
+        Access the raw pointer to the allocation.
+
+        Returns
+        -------
+        int
+            The raw pointer to the allocation.
+        """
+        return <uintptr_t>(self._handle.ptr)
 
     @property
     def strides(self) -> tuple[size_t, ...]:
+        r"""
+        Retrieve the strides of the allocation.
+
+        If the allocation has dimension 0, an empty tuple is returned.
+
+        Returns
+        -------
+        tuple[int, ...]
+            The strides of the allocation.
+        """
         return () if self._store.ndim == 0 else tuple(self._handle.strides)
 
     @property
     def shape(self) -> tuple[size_t, ...]:
+        r"""
+        Retrieve the shape of the allocation.
+
+        Returns
+        -------
+        tuple[int, ...]
+            The shape of the allocation.
+        """
         if self._store.ndim == 0:
             return ()
 
@@ -80,6 +106,19 @@ cdef class InlineAllocation:
 
     @property
     def __array_interface__(self):
+        r"""
+        Retrieve the numpy-compatible array representation of the allocation.
+
+        Returns
+        -------
+        dict
+            The numpy array interface dict.
+
+        Raises
+        ------
+        ValueError
+            If the allocation is allocated on the GPU.
+        """
         if self._store.target == StoreTarget.FBMEM:
             raise ValueError(
                 "Physical store in a framebuffer memory does not support "
@@ -89,6 +128,19 @@ cdef class InlineAllocation:
 
     @property
     def __cuda_array_interface__(self):
+        r"""
+        Retrieve the cupy-compatible array representation of the allocation.
+
+        Returns
+        -------
+        dict
+            The cupy array interface dict.
+
+        Raises
+        ------
+        ValueError
+            If the array is in host-only memory
+        """
         if self._store.target not in (StoreTarget.FBMEM, StoreTarget.ZCMEM):
             raise ValueError(
                 "Physical store in a host-only memory does not support "
@@ -99,7 +151,23 @@ cdef class InlineAllocation:
         return self._get_array_interface()
 
     def __str__(self) -> str:
+        r"""
+        Return a human-readable string representation of the allocation.
+
+        Returns
+        -------
+        str
+            The string representation.
+        """
         return f"InlineAllocation({self.ptr}, {self.strides})"
 
     def __repr__(self) -> str:
+        r"""
+        Return a human-readable string representation of the allocation.
+
+        Returns
+        -------
+        str
+            The string representation.
+        """
         return str(self)
