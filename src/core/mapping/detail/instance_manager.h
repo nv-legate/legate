@@ -27,18 +27,16 @@
 namespace legate::mapping::detail {
 
 // This class represents a set of regions that colocate in an instance
-class RegionGroup {
+class RegionGroup : public EnableSharedFromThis<RegionGroup> {
  public:
   RegionGroup() = default;
 
   RegionGroup(std::set<Legion::LogicalRegion> regions, const Domain& bounding_box);
 
   [[nodiscard]] std::vector<Legion::LogicalRegion> get_regions() const;
-  [[nodiscard]] bool subsumes(const RegionGroup* other);
 
   std::set<Legion::LogicalRegion> regions{};
   Domain bounding_box{};
-  std::unordered_map<const RegionGroup*, bool> subsumption_cache{};
 };
 
 std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group);
@@ -71,12 +69,15 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
 
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
     const Legion::LogicalRegion& region, const InstanceMappingPolicy& policy) const;
-  [[nodiscard]] InternalSharedPtr<RegionGroup> construct_overlapping_region_group(
+  [[nodiscard]] InternalSharedPtr<RegionGroup> find_or_create_region_group(
     const Legion::LogicalRegion& region, const Domain& domain, bool exact) const;
 
-  void record_instance(const InternalSharedPtr<RegionGroup>& group,
+  void record_instance(const Legion::LogicalRegion& region,
+                       const InternalSharedPtr<RegionGroup>& group,
                        Legion::Mapping::PhysicalInstance instance,
                        InstanceMappingPolicy policy);
+  void record_pending_instance_creation(InternalSharedPtr<RegionGroup> group);
+  void remove_pending_instance(const InternalSharedPtr<RegionGroup>& group);
 
   [[nodiscard]] std::size_t size() const;
 
@@ -88,6 +89,7 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
   void dump_and_sanity_check_() const;
 
   std::unordered_map<RegionGroup*, InstanceSpec> instances_{};
+  std::unordered_map<InternalSharedPtr<RegionGroup>, std::uint64_t> pending_instances_{};
   std::unordered_map<Legion::LogicalRegion, InternalSharedPtr<RegionGroup>> groups_{};
 };
 
@@ -162,10 +164,15 @@ class InstanceManager : public BaseInstanceManager {
     Legion::FieldID field_id,
     Memory memory,
     bool exact = false);
-  void record_instance(const InternalSharedPtr<RegionGroup>& group,
+  void record_instance(const Legion::LogicalRegion& region,
+                       const InternalSharedPtr<RegionGroup>& group,
                        Legion::FieldID field_id,
                        Legion::Mapping::PhysicalInstance instance,
                        InstanceMappingPolicy policy = {});
+  void remove_pending_instance(const Legion::LogicalRegion& region,
+                               const InternalSharedPtr<RegionGroup>& group,
+                               Legion::FieldID field_id,
+                               const Memory& memory);
 
   [[nodiscard]] bool erase(const Legion::Mapping::PhysicalInstance& inst);
 

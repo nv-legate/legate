@@ -33,29 +33,6 @@ namespace {
 
 }  // namespace
 
-bool RegionGroup::subsumes(const RegionGroup* other)
-{
-  if (regions.size() < other->regions.size()) {
-    return false;
-  }
-  if (other->regions.size() == 1) {
-    return regions.find(*other->regions.begin()) != regions.end();
-  }
-
-  if (const auto it = subsumption_cache.find(other); it != subsumption_cache.end()) {
-    return it->second;
-  }
-  for (auto&& region : other->regions) {
-    if (regions.find(region) == regions.end()) {
-      subsumption_cache[other] = false;
-      return false;
-    }
-  }
-
-  subsumption_cache[other] = true;
-  return true;
-}
-
 std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group)
 {
   os << "RegionGroup(" << region_group.bounding_box << ": {";
@@ -93,103 +70,178 @@ std::optional<Legion::Mapping::PhysicalInstance> InstanceSet::find_instance(
 namespace {
 
 // We define "too big" as the size of the "unused" points being bigger than the intersection
-bool too_big(std::size_t union_volume,
-             std::size_t my_volume,
-             std::size_t group_volume,
-             std::size_t intersect_volume)
+[[nodiscard]] bool bloat_too_big(std::size_t union_volume,
+                                 std::size_t my_volume,
+                                 std::size_t group_volume,
+                                 std::size_t intersect_volume)
 {
   return (union_volume - (my_volume + group_volume - intersect_volume)) > intersect_volume;
+}
+
+// When the two rects can be combined, the last two arguments will be updated with a union of the
+// two box and the total volume, respectively
+template <std::int32_t DIM>
+[[nodiscard]] bool can_combine(const Rect<DIM>& next,
+                               Rect<DIM>* current,
+                               std::size_t* current_volume)
+{
+  const auto intersect = current->intersection(next);
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    log_instmgr().debug() << "  check intersection with " << next;
+  }
+  if (intersect.empty()) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      log_instmgr().debug() << "    no intersection";
+    }
+    return false;
+  }
+
+  // Only allow merging if the bloating isn't "too big"
+  const auto union_bbox       = current->union_bbox(next);
+  const auto union_volume     = union_bbox.volume();
+  const auto next_volume      = next.volume();
+  const auto intersect_volume = intersect.volume();
+  if (bloat_too_big(union_volume, *current_volume, next_volume, intersect_volume)) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      log_instmgr().debug() << "    too big a bloat to merge (current:" << *current
+                            << ",next:" << next << ",union:" << union_bbox
+                            << ",current_volume:" << *current_volume
+                            << ",union_volume:" << union_volume
+                            << ",intersect_volume:" << intersect_volume << ")";
+    }
+    return false;
+  }
+
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    log_instmgr().debug() << "    bbox updated: " << *current << " ~> " << union_bbox;
+  }
+
+  *current        = union_bbox;
+  *current_volume = union_volume;
+  return true;
+}
+
+[[nodiscard]] InternalSharedPtr<RegionGroup> create_initial_region_group(
+  Legion::LogicalRegion region, const Domain& domain)
+{
+  // TODO(wonchanl): a slice prefetching logic will be added here
+  return make_internal_shared<RegionGroup>(std::set<Legion::LogicalRegion>{std::move(region)},
+                                           domain);
 }
 
 class ConstructOverlappingRegionGroupFn {
  public:
   template <std::int32_t DIM>
-  InternalSharedPtr<RegionGroup> operator()(
-    const Legion::LogicalRegion& region,
-    const Domain& domain,
-    const std::unordered_map<RegionGroup*, InstanceSet::InstanceSpec>& instances)
+  [[nodiscard]] InternalSharedPtr<RegionGroup> operator()(
+    InternalSharedPtr<RegionGroup> group,
+    const std::unordered_map<RegionGroup*, InstanceSet::InstanceSpec>& instances,
+    const std::unordered_map<InternalSharedPtr<RegionGroup>, std::uint64_t>& pending_instances)
   {
-    auto bound            = domain.bounds<DIM, coord_t>();
-    std::size_t bound_vol = bound.volume();
-    std::set<Legion::LogicalRegion> regions{region};
-
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      log_instmgr().debug() << "construct_overlapping_region_group( " << region << "," << domain
-                            << ")";
+      log_instmgr().debug() << " construct_overlapping_region_group( " << *group << ")";
     }
 
-    for (const auto& pair : instances) {
-      auto& group = pair.first;
+    auto bbox     = group->bounding_box.template bounds<DIM, coord_t>();
+    auto bbox_vol = bbox.volume();
+    std::vector<RegionGroup*> to_combine{};
 
-      const Rect<DIM> group_bbox = group->bounding_box.bounds<DIM, coord_t>();
+    const auto combine_new_region_group = [&](auto&& new_group) {
+      // Avoid self-comparison
+      if (new_group == group.get()) {
+        return;
+      }
+      if (can_combine(new_group->bounding_box.template bounds<DIM, coord_t>(), &bbox, &bbox_vol)) {
+        to_combine.push_back(new_group);
+      }
+    };
+
+    // Find all the overlapping groups that are worth combining with the current group
+    for (auto&& [next_group, _] : instances) {
+      combine_new_region_group(next_group);
+    }
+
+    for (auto&& [next_group, _] : pending_instances) {
+      combine_new_region_group(next_group.get());
+    }
+
+    if (to_combine.empty()) {
       if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-        log_instmgr().debug() << "  check intersection with " << group_bbox;
+        log_instmgr().debug() << " ~> " << *group << " (nothing to combine)";
       }
-      auto intersect = bound.intersection(group_bbox);
-      if (intersect.empty()) {
-        if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-          log_instmgr().debug() << "    no intersection";
-        }
-        continue;
-      }
+      return group;
+    }
 
-      // Only allow merging if the bloating isn't "too big"
-      auto union_bbox                 = bound.union_bbox(group_bbox);
-      const std::size_t union_vol     = union_bbox.volume();
-      const std::size_t group_vol     = group_bbox.volume();
-      const std::size_t intersect_vol = intersect.volume();
-      if (too_big(union_vol, bound_vol, group_vol, intersect_vol)) {
-        if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-          log_instmgr().debug() << "    too big to merge (union:" << union_bbox
-                                << ",bound:" << bound_vol << ",group:" << group_vol
-                                << ",intersect:" << intersect_vol << ")";
-        }
-        continue;
-      }
-
+    // Copy is intentional, as we're about to create a new group
+    auto all_regions = group->regions;
+    for (auto&& next_group : to_combine) {
       // NOTE: It is critical that we maintain the invariant that if at least one region is mapped
       // to a group in the instances_ table, that group is still present on the groups_ table, and
       // thus there's at least one shared_ptr remaining that points to it. Otherwise we run the risk
       // that a group pointer stored on the instances_ table points to a group that's been collected
-      regions.insert(group->regions.begin(), group->regions.end());
-      if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-        log_instmgr().debug() << "    bounds updated: " << bound << " ~> " << union_bbox;
-      }
-
-      bound     = union_bbox;
-      bound_vol = union_vol;
+      all_regions.insert(next_group->regions.begin(), next_group->regions.end());
     }
 
-    return make_internal_shared<RegionGroup>(std::move(regions), Domain(bound));
+    // If there's no change to the set of regions, then we deduplicate the group
+    if (all_regions.size() == group->regions.size()) {
+      if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+        log_instmgr().debug() << " ~> " << *group << " (deduplicated)";
+      }
+      return group;
+    }
+    for (auto&& next_group : to_combine) {
+      if (all_regions.size() == next_group->regions.size()) {
+        if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+          log_instmgr().debug() << " ~> " << *next_group << " (deduplicated)";
+        }
+        return next_group->shared_from_this();
+      }
+    }
+
+    auto new_group = make_internal_shared<RegionGroup>(std::move(all_regions), Domain{bbox});
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      log_instmgr().debug() << " ~> " << *new_group << " (created)";
+    }
+    return new_group;
   }
 };
 
 }  // namespace
 
-InternalSharedPtr<RegionGroup> InstanceSet::construct_overlapping_region_group(
+InternalSharedPtr<RegionGroup> InstanceSet::find_or_create_region_group(
   const Legion::LogicalRegion& region, const Domain& domain, bool exact) const
 {
   auto finder = groups_.find(region);
-  if (finder == groups_.end()) {
-    return dim_dispatch(
-      domain.get_dim(), ConstructOverlappingRegionGroupFn{}, region, domain, instances_);
+
+  // Handle the exact case separately to make the code clear
+  if (exact) {
+    if (finder != groups_.end() && finder->second->regions.size() == 1) {
+      return finder->second;
+    }
+    return make_internal_shared<RegionGroup>(std::set<Legion::LogicalRegion>{region}, domain);
   }
 
-  if (!exact || finder->second->regions.size() == 1) {
-    return finder->second;
-  }
-  return make_internal_shared<RegionGroup>(std::set<Legion::LogicalRegion>{region}, domain);
+  auto group =
+    finder != groups_.end() ? finder->second : create_initial_region_group(region, domain);
+  return dim_dispatch(domain.get_dim(),
+                      ConstructOverlappingRegionGroupFn{},
+                      std::move(group),
+                      instances_,
+                      pending_instances_);
 }
 
-void InstanceSet::record_instance(const InternalSharedPtr<RegionGroup>& group,
+void InstanceSet::record_instance(const Legion::LogicalRegion& region,
+                                  const InternalSharedPtr<RegionGroup>& group,
                                   Legion::Mapping::PhysicalInstance instance,
                                   InstanceMappingPolicy policy)
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_instmgr().debug() << "===== before adding an entry " << *group << " ~> " << instance
-                          << " =====";
+    log_instmgr().debug() << "===== before record_instance(" << region << ", " << *group << ",  "
+                          << instance << ") =====";
+    dump_and_sanity_check_();
   }
-  dump_and_sanity_check_();
+
+  // If this is the last pending request of a region group, we should remove it from the map
+  remove_pending_instance(group);
 
   const auto& inst =
     instances_.insert_or_assign(group.get(), InstanceSpec{std::move(instance), std::move(policy)})
@@ -200,8 +252,8 @@ void InstanceSet::record_instance(const InternalSharedPtr<RegionGroup>& group,
   // it from our instances_...
   std::unordered_set<InternalSharedPtr<RegionGroup>> removed_groups;
 
-  for (auto&& region : group->regions) {
-    const auto [it, inserted] = groups_.try_emplace(region, group);
+  for (auto&& rgn : group->regions) {
+    const auto [it, inserted] = groups_.try_emplace(rgn, group);
     auto& old_group           = it->second;
 
     if (!inserted && (old_group != group)) {
@@ -229,8 +281,34 @@ void InstanceSet::record_instance(const InternalSharedPtr<RegionGroup>& group,
   }
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_instmgr().debug() << "===== after adding an entry " << *group << " ~> " << inst << " =====";
+    log_instmgr().debug() << "===== after record_instance(" << region << ", " << *group << ",  "
+                          << inst << ") =====";
     dump_and_sanity_check_();
+  }
+}
+
+void InstanceSet::record_pending_instance_creation(InternalSharedPtr<RegionGroup> group)
+{
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    log_instmgr().debug() << "===== before record_pending_instance_creation(" << *group
+                          << ") =====";
+    dump_and_sanity_check_();
+  }
+
+  // Increment the pending instance counter
+  auto&& [grp, counter] = *pending_instances_.try_emplace(std::move(group)).first;
+  ++counter;
+
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    log_instmgr().debug() << "===== after record_pending_instance_creation(" << *grp << ") =====";
+    dump_and_sanity_check_();
+  }
+}
+
+void InstanceSet::remove_pending_instance(const InternalSharedPtr<RegionGroup>& group)
+{
+  if (const auto it = pending_instances_.find(group); --it->second == 0) {
+    pending_instances_.erase(it);
   }
 }
 
@@ -238,8 +316,8 @@ bool InstanceSet::erase(const Legion::Mapping::PhysicalInstance& inst)
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_instmgr().debug() << "===== before erasing an instance " << inst << " =====";
+    dump_and_sanity_check_();
   }
-  dump_and_sanity_check_();
 
   std::set<RegionGroup*> filtered_groups;
   auto did_erase = false;
@@ -274,8 +352,8 @@ bool InstanceSet::erase(const Legion::Mapping::PhysicalInstance& inst)
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_instmgr().debug() << "===== after erasing an instance " << inst << " =====";
+    dump_and_sanity_check_();
   }
-  dump_and_sanity_check_();
 
   return did_erase;
 }
@@ -291,22 +369,30 @@ std::size_t InstanceSet::get_instance_size() const
 
 void InstanceSet::dump_and_sanity_check_() const
 {
-#ifdef DEBUG_INSTANCE_MANAGER
-  for (auto&& entry : groups_) {
-    log_instmgr().debug() << "  " << entry.first << " ~> " << *entry.second;
+  log_instmgr().debug() << " REGION GROUPS";
+  for (auto&& [region, group] : groups_) {
+    log_instmgr().debug() << "  " << region << " ~> " << *group;
   }
-  for (auto&& entry : instances_) {
-    log_instmgr().debug() << "  " << *entry.first << " ~> " << entry.second.instance;
+  log_instmgr().debug() << " INSTANCES";
+  for (auto&& [group, instance_spec] : instances_) {
+    log_instmgr().debug() << "  " << *group << " ~> " << instance_spec.instance;
   }
-#endif
+  log_instmgr().debug() << " PENDING INSTANCES";
+  for (auto&& [group, count] : pending_instances_) {
+    log_instmgr().debug() << "  " << *group << " ~> " << count;
+  }
+
   std::unordered_set<RegionGroup*> found_groups;
-  for (auto&& entry : groups_) {
-    found_groups.insert(entry.second.get());
-    LEGATE_CHECK(instances_.count(entry.second.get()) > 0);
-    LEGATE_CHECK(entry.second->regions.count(entry.first) > 0);
+  for (auto&& [region, group] : groups_) {
+    LEGATE_CHECK(group->regions.count(region) > 0);
+    LEGATE_CHECK(instances_.count(group.get()) > 0);
+    found_groups.insert(group.get());
   }
-  for (auto&& entry : instances_) {
-    LEGATE_CHECK(found_groups.count(entry.first) > 0);
+  for (auto&& [group, _] : instances_) {
+    if (found_groups.count(group) == 0) {
+      log_instmgr().debug() << "  " << *group << " is dangling";
+      LEGATE_CHECK(false);
+    }
   }
 }
 
@@ -392,9 +478,8 @@ std::optional<Legion::Mapping::PhysicalInstance> InstanceManager::find_instance(
   Memory memory,
   const InstanceMappingPolicy& policy)
 {
-  if (policy.allocation == AllocPolicy::MUST_ALLOC) {
-    return std::nullopt;
-  }
+  // MUST_ALLOC should never reach here
+  LEGATE_ASSERT(policy.allocation != AllocPolicy::MUST_ALLOC);
 
   const auto it = instance_sets_.find({region.get_tree_id(), field_id, memory});
 
@@ -413,30 +498,54 @@ InternalSharedPtr<RegionGroup> InstanceManager::find_region_group(
   bool exact /*=false*/)
 {
   InternalSharedPtr<RegionGroup> result = [&] {
-    const auto it = instance_sets_.find({region.get_tree_id(), field_id, memory});
+    auto&& [_, instance_set] =
+      *instance_sets_.try_emplace({region.get_tree_id(), field_id, memory}).first;
 
-    if (it == instance_sets_.end() || exact) {
-      return make_internal_shared<RegionGroup>(std::set<Legion::LogicalRegion>{region}, domain);
-    }
-    return it->second.construct_overlapping_region_group(region, domain, exact);
+    auto group = instance_set.find_or_create_region_group(region, domain, exact);
+
+    // When the whole cached instance creation was done atomically, we had a nice property that
+    // region groups are monotonically increasing. For example, if we have regions R, S1, and S2,
+    // and they all overlap with each other to a degree that `find_or_create_region_group` would put
+    // them in the same group, in the old days, the progression of region groups for these regions
+    // would have been either {R, S1} -> {R, S1, S2} or {R, S2} -> {R, S2, S1}. In the new world
+    // where the cache retrieval, instance creation, and cache update are performed separately, R,
+    // S1, and S2 would no longer go through the same progression, but they can form two overlapping
+    // region groups {R, S1} and {R, S2}.  This is problematic because each group will get mapped to
+    // a separate instance and the two instances will need to constantly fetch updates from the
+    // other for the overlapping portion.  We can maintain monotonicity by recording the newly
+    // region group early here.
+    instance_set.record_pending_instance_creation(group);
+    return group;
   }();
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_instmgr().debug() << "find_region_group(" << region << "," << domain << "," << field_id
+    log_instmgr().debug() << " find_region_group(" << region << "," << domain << "," << field_id
                           << "," << memory << "," << exact << ") ~> " << *result;
   }
 
   return result;
 }
 
-void InstanceManager::record_instance(const InternalSharedPtr<RegionGroup>& group,
+void InstanceManager::record_instance(const Legion::LogicalRegion& region,
+                                      const InternalSharedPtr<RegionGroup>& group,
                                       Legion::FieldID field_id,
                                       Legion::Mapping::PhysicalInstance instance,
                                       InstanceMappingPolicy policy)
 {
   FieldMemInfo key{instance.get_tree_id(), field_id, instance.get_location()};
 
-  instance_sets_[std::move(key)].record_instance(group, std::move(instance), std::move(policy));
+  instance_sets_[std::move(key)].record_instance(
+    region, group, std::move(instance), std::move(policy));
+}
+
+void InstanceManager::remove_pending_instance(const Legion::LogicalRegion& region,
+                                              const InternalSharedPtr<RegionGroup>& group,
+                                              Legion::FieldID field_id,
+                                              const Memory& memory)
+{
+  FieldMemInfo key{region.get_tree_id(), field_id, memory};
+
+  instance_sets_[std::move(key)].remove_pending_instance(group);
 }
 
 bool InstanceManager::erase(const Legion::Mapping::PhysicalInstance& inst)
@@ -461,9 +570,8 @@ std::optional<Legion::Mapping::PhysicalInstance> ReductionInstanceManager::find_
   Memory memory,
   const InstanceMappingPolicy& policy)
 {
-  if (policy.allocation == AllocPolicy::MUST_ALLOC) {
-    return std::nullopt;
-  }
+  // MUST_ALLOC should never reach here
+  LEGATE_ASSERT(policy.allocation != AllocPolicy::MUST_ALLOC);
 
   const auto it = instance_sets_.find({region.get_tree_id(), field_id, memory});
 
