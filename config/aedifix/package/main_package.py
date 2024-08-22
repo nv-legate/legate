@@ -44,6 +44,8 @@ _DEFAULT_BUILD_TYPE: Final = os.environ.get(
 _CMAKE_BUILD_TYPE_MAP: Final = {
     "debug": "Debug",
     "release": "Release",
+    "release-debug": "RelWithDebInfo",
+    # An alias for release-debug
     "relwithdebinfo": "RelWithDebInfo",
     # This still maps to Debug because we don't want to invent a new build type
     # for it. Specifically, we want the main package to be both debug and

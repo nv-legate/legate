@@ -90,12 +90,10 @@ run_test_or_analysis() {
             echo "Running C++ unit tests..."
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil
 
-            WORKERS=""
 
             set +eou pipefail
             mamba install -y -n "${CONDA_ENV}" ucx openmpi openssh
             set -eou pipefail
-            WORKERS="-j 1"
 
             cd "${LEGATE_CORE_DIR}"
 
@@ -107,13 +105,13 @@ run_test_or_analysis() {
               sysctl vm.mmap_rnd_bits=28
             fi
             export EXTRA_ARGS
-            export WORKERS
 
             function run_legate_tests()
             {
               local gtest_file="${1}"
               local proc_type="${2}"
               local proc_count="${3}"
+              local worker_count="${4:-2}"
               python3 "${LEGATE_CORE_DIR}/test.py" \
                       --gtest-file "${gtest_file}" \
                       --verbose \
@@ -121,7 +119,7 @@ run_test_or_analysis() {
                       --timeout 90 \
                       --"${proc_type}" "${proc_count}" \
                       --sysmem 100 \
-                      ${WORKERS} \
+                      -j "${worker_count}" \
                       ${EXTRA_ARGS}
             }
 

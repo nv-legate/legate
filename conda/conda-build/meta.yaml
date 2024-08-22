@@ -98,6 +98,7 @@ build:
     - ARTIFACTS_DIR
     - LEGATE_CI
     - BUILD_MARCH
+    - LEGATE_CORE_BUILD_MODE
 {% if not gpu_enabled_bool %}
     - CPU_ONLY=1
   # The CPU-only packages having more track_features than the GPU builds helps

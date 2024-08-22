@@ -25,7 +25,7 @@ if [[ "${LEGATE_CI:-0}" == '0' ]]; then
     "${command[@]}"
   }
 else
-  LEGATE_CI_GOUP=1
+  export LEGATE_CI_GROUP=0
   export PYTHONUNBUFFERED=1
 fi
 
@@ -55,9 +55,12 @@ function preamble()
   fi
 
   # We rely on an environment variable to determine if we need to make a debug build.
-  if [[ -n "$DEBUG_BUILD" ]]; then
+  if [[ "${LEGATE_CORE_BUILD_MODE:-}" != '' ]]; then
+    configure_args+=(--build-type="${LEGATE_CORE_BUILD_MODE}")
+  elif [[ -n ${DEBUG_BUILD} ]]; then
     configure_args+=(--build-type=debug)
   else
+    # default to release if debug build not set
     configure_args+=(--build-type=release)
   fi
 
@@ -66,7 +69,7 @@ function preamble()
   export CUDAHOSTCXX="${CXX}"
   export OPENSSL_DIR="${PREFIX}"
   export CUDAFLAGS="-isystem ${PREFIX}/include -L${PREFIX}/lib"
-  LEGATE_CORE_DIR="$(${PYTHON} ./scripts/get_legate_core_dir.py)"
+  export LEGATE_CORE_DIR="$(${PYTHON} ./scripts/get_legate_core_dir.py)"
   export LEGATE_CORE_DIR
   export LEGATE_CORE_ARCH='arch-conda'
 }
@@ -90,6 +93,14 @@ function configure_legate()
   if [[ "${ret}" != '0' ]]; then
     cat configure.log
     return ${ret}
+  fi
+  if [[ "${LEGATE_CORE_BUILD_MODE:-}" != '' ]]; then
+    found="$(grep -c -e "--build-type=${LEGATE_CORE_BUILD_MODE}" configure.log || true)"
+    if [[ "${found}" == '0' ]]; then
+      echo "FAILED TO PROPERLY SET BUILD TYPE:"
+      echo "- expected to find --build-type=${LEGATE_CORE_BUILD_MODE} in configure.log"
+      return 1
+    fi
   fi
   return 0
 }
