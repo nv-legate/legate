@@ -101,13 +101,15 @@ class MPIInterface {
 
 }  // namespace legate::detail::comm::mpi::detail
 
-#define LEGATE_CHECK_MPI(...)                                                                     \
-  do {                                                                                            \
-    const int lgcore_check_mpi_result_ = __VA_ARGS__;                                             \
-    if (LEGATE_UNLIKELY(lgcore_check_mpi_result_ !=                                               \
-                        legate::detail::comm::mpi::detail::MPIInterface::MPI_SUCCESS())) {        \
-      LEGATE_ABORT("Internal MPI failure with error code "                                        \
-                   << lgcore_check_mpi_result_ << " in " << __FILE__ << ":" << __LINE__ << " in " \
-                   << __func__ << "(): " << LEGATE_STRINGIZE(__VA_ARGS__));                       \
-    }                                                                                             \
+#define LEGATE_CHECK_MPI(...)                                                               \
+  do {                                                                                      \
+    const int lgcore_check_mpi_result_ = __VA_ARGS__;                                       \
+    if (LEGATE_UNLIKELY(lgcore_check_mpi_result_ !=                                         \
+                        legate::detail::comm::mpi::detail::MPIInterface::MPI_SUCCESS())) {  \
+      LEGATE_ABORT("Internal MPI failure with error code ",                                 \
+                   lgcore_check_mpi_result_,                                                \
+                   " in " LEGATE_STRINGIZE(__FILE__) ":" LEGATE_STRINGIZE(__LINE__) " in ", \
+                   __func__,                                                                \
+                   "(): " LEGATE_STRINGIZE(__VA_ARGS__));                                   \
+    }                                                                                       \
   } while (0)

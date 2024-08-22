@@ -61,8 +61,8 @@ const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind)
     }
     default: break;
   }
-  LEGATE_ABORT("Could not find ProcessorKind " << static_cast<int>(kind)
-                                               << " in default store targets");
+  LEGATE_ABORT(
+    "Could not find ProcessorKind ", static_cast<int>(kind), " in default store targets");
 }
 
 std::string log_mappable(const Legion::Mappable& mappable, bool prefix_only = false)
@@ -228,9 +228,12 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
                 targets.end());
 
   if (targets.empty()) {
-    LEGATE_ABORT("Task " << task.get_task_name() << "[" << task.get_provenance_string()
-                         << "] does not have a valid variant "
-                         << "for this resource configuration: " << machine_desc);
+    LEGATE_ABORT("Task ",
+                 task.get_task_name(),
+                 "[",
+                 task.get_provenance_string(),
+                 "] does not have a valid variant for this resource configuration: ",
+                 machine_desc);
   }
 
   const auto target = legate_mapper_->task_target(mapping::Task{&legate_task}, targets);
@@ -335,7 +338,7 @@ std::optional<Legion::VariantID> BaseMapper::find_variant_(Legion::Mapping::Mapp
       case VariantCode::CPU: [[fallthrough]];
       case VariantCode::OMP: [[fallthrough]];
       case VariantCode::GPU: ret = vid; break;
-      default: LEGATE_ABORT("Unhandled variant kind " << vid);  // unhandled variant kind
+      default: LEGATE_ABORT("Unhandled variant kind ", vid);  // unhandled variant kind
     }
   }
   return variants_.emplace(key, std::move(ret)).first->second;
@@ -357,7 +360,7 @@ void validate_colocation(const std::vector<mapping::StoreMapping>& client_mappin
       return !store->can_colocate_with(first_store);
     };
     if (std::any_of(stores.cbegin() + 1, stores.cend(), cant_colocate)) {
-      LEGATE_ABORT("Mapper " << mapper_name << " tried to colocate stores that cannot colocate");
+      LEGATE_ABORT("Mapper ", mapper_name, " tried to colocate stores that cannot colocate");
     }
   }
 }  // namespace
@@ -395,7 +398,7 @@ struct MappingData {
       if (inserted) {
         ret.for_futures.emplace_back(client_mapping.release_(key));
       } else if (it->second->policy != mapping->policy) {
-        LEGATE_ABORT("Mapper " << mapper_name << " returned duplicate store mappings");
+        LEGATE_ABORT("Mapper ", mapper_name, " returned duplicate store mappings");
       }
     } else if (mapping->for_unbound_store()) {
       ret.mapped_regions.insert(mapping->store()->unique_region_field_id());
@@ -423,7 +426,7 @@ void validate_policies(const std::vector<std::unique_ptr<StoreMapping>>& for_sto
       const auto [it, inserted] = policies.try_emplace(key, policy);
 
       if (!inserted && (policy != it->second)) {
-        LEGATE_ABORT("Mapper " << mapper_name << " returned inconsistent store mappings");
+        LEGATE_ABORT("Mapper ", mapper_name, " returned inconsistent store mappings");
       }
     }
   }

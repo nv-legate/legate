@@ -41,7 +41,7 @@ void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtim
       case Processor::TOC_PROC: return "GPU";
       case Processor::OMP_PROC: return "OpenMP";
       default:
-        LEGATE_ABORT("Unhandled processor kind: " << legate::traits::detail::to_underlying(kind));
+        LEGATE_ABORT("Unhandled processor kind: ", legate::traits::detail::to_underlying(kind));
         break;
     }
     return "";
@@ -117,11 +117,12 @@ void task_wrapper(VariantImpl variant_impl,
       } else {
         // If a Legate exception is thrown by a task that does not declare any exception,
         // this is a bug in the library that needs to be reported to the developer
-        LEGATE_ABORT("Task " << get_task_name()
-                             << " threw an exception \""
-                             // TODO(jfaibussowit): need to extract the actual error message here
-                             << "Unknown Python exception"
-                             << "\", but the task did not declare any exception.");
+        LEGATE_ABORT("Task ",
+                     get_task_name(),
+                     " threw an exception \""
+                     // TODO(jfaibussowit): need to extract the actual error message here
+                     ,
+                     "Unknown Python exception\", but the task did not declare any exception.");
       }
     } else {
       return_values = context.pack_return_values();
@@ -136,8 +137,11 @@ void task_wrapper(VariantImpl variant_impl,
     } else {
       // If a Legate exception is thrown by a task that does not declare any exception,
       // this is a bug in the library that needs to be reported to the developer
-      LEGATE_ABORT("Task " << get_task_name() << " threw an exception \"" << e.what()
-                           << "\", but the task did not declare any exception.");
+      LEGATE_ABORT("Task ",
+                   get_task_name(),
+                   " threw an exception \"",
+                   e.what(),
+                   "\", but the task did not declare any exception.");
     }
   }
 

@@ -21,9 +21,7 @@ constexpr std::int32_t TEST_MAX_DIM = 3;
 
 // Instantiate only the cases exercised in copy tests
 template <typename Functor, typename... Fnargs>
-constexpr decltype(auto) type_dispatch_for_test(legate::Type::Code code,
-                                                Functor f,
-                                                Fnargs&&... args)
+decltype(auto) type_dispatch_for_test(legate::Type::Code code, Functor f, Fnargs&&... args)
 {
   switch (code) {
     case legate::Type::Code::INT64: {

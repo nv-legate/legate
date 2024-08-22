@@ -14,19 +14,51 @@
 
 #include "core/utilities/compiler.h"
 #include "core/utilities/macros.h"
-#include "core/utilities/typedefs.h"  // for log_legate()
 
 #include <cassert>
-#include <cstdlib>  // for std::abort()
 #include <nv/target>
+#include <sstream>
+#include <string_view>
 
-namespace legate::comm::coll {
+namespace legate::detail {
 
-// This is part of the public API, so we cannot change it (even though we probably should)
-// NOLINTNEXTLINE(readability-identifier-naming,readability-redundant-declaration)
-void collAbort() noexcept;
+[[noreturn]] void abort_handler(std::string_view file,
+                                std::string_view func,
+                                int line,
+                                std::stringstream* ss);
 
-}  // namespace legate::comm::coll
+#ifndef __has_cpp_attribute
+#define __has_cpp_attribute(x) 0
+#endif
+
+// The abort handler *really* does not need to optimized for speed in any way, shape, or
+// form. The only thing it should be optimized for is compile-time and instruction
+// footprint. We already extract the true abort handler to a .cc, but we still need to convert
+// all the arguments to string and unfortunately, std::stringstream has a tendency to explode
+// (instruction wise) when optimizations are enabled.
+#if __has_cpp_attribute(clang::minsize)
+#define LEGATE_OPT_MINSIZE [[clang::minsize]]
+#elif __has_cpp_attribute(gnu::optimize)
+#define LEGATE_OPT_MINSIZE [[gnu::optimize("Os")]]
+#else
+#define LEGATE_OPT_MINSIZE
+#endif
+
+template <typename... T>
+[[noreturn]] LEGATE_OPT_MINSIZE void abort_handler_tpl(std::string_view file,
+                                                       std::string_view func,
+                                                       int line,
+                                                       T&&... args)
+{
+  std::stringstream ss;
+
+  (ss << ... << args);
+  legate::detail::abort_handler(file, func, line, &ss);
+}
+
+#undef LEGATE_OPT_MINSIZE
+
+}  // namespace legate::detail
 
 // Some implementations of assert() don't macro-expand their arguments before stringizing, so
 // we enforce that they are via this extra indirection
@@ -36,23 +68,11 @@ void collAbort() noexcept;
   do {                                                                                        \
     LEGATE_PRAGMA_PUSH();                                                                     \
     LEGATE_PRAGMA_CLANG_IGNORE("-Wgnu-zero-variadic-macro-arguments");                        \
-    NV_IF_TARGET(                                                                           \
-      NV_IS_HOST,                                                                           \
-      (                                                                                     \
-        legate::detail::log_legate().error()                                                \
-        << "Legate called abort at "  __FILE__  ":" LEGATE_STRINGIZE(__LINE__)  " in "       \
-        << __func__ << "(): " << __VA_ARGS__;                                               \
-        /* if the collective library has a bespoke abort function, call that first */       \
-        legate::comm::coll::collAbort();                                                    \
-        /* if we are here, then either the comm library has not been initialized, or it */  \
-        /* didn't have an abort mechanism. Either way, we abort normally now. */            \
-        std::abort();                                                                       \
-      ),                                                                                    \
-      (                                                                                     \
-        LEGATE_DEVICE_ASSERT_PRIVATE(                                                       \
-          0 && "Legate called abort at " __FILE__ ":" LEGATE_STRINGIZE(__LINE__)             \
-          " in <unknown device function>: " LEGATE_STRINGIZE(__VA_ARGS__));                  \
-      )                                                                                     \
-    ) \
+    NV_IF_TARGET(                                                                             \
+      NV_IS_HOST,                                                                             \
+      (legate::detail::abort_handler_tpl(__FILE__, __func__, __LINE__, __VA_ARGS__);),        \
+      (LEGATE_DEVICE_ASSERT_PRIVATE(                                                          \
+         0 && "Legate called abort at " __FILE__ ":" LEGATE_STRINGIZE(                        \
+                __LINE__) " in <unknown device function>: " LEGATE_STRINGIZE(__VA_ARGS__));)) \
     LEGATE_PRAGMA_POP();                                                                      \
   } while (0)

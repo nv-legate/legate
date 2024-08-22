@@ -170,7 +170,7 @@ std::unique_ptr<Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
         // do not add a default clause! compilers will warn about missing enum values if there is
         // ever a new value added to Type::Code. We want to catch that!
     }
-    LEGATE_ABORT("unhandled type code: " << legate::traits::detail::to_underlying(ty->code));
+    LEGATE_ABORT("unhandled type code: ", legate::traits::detail::to_underlying(ty->code));
     return {nullptr, 0};
   };
 
@@ -272,7 +272,7 @@ InternalSharedPtr<TransformStack> BaseDeserializer<Deserializer>::unpack_transfo
         std::make_unique<Delinearize>(dim, std::move(sizes)), std::move(parent));
     }
   }
-  LEGATE_ABORT("Unhandled transform code: " << traits::detail::to_underlying(code));
+  LEGATE_ABORT("Unhandled transform code: ", traits::detail::to_underlying(code));
   return nullptr;
 }
 
@@ -362,7 +362,7 @@ InternalSharedPtr<Type> BaseDeserializer<Deserializer>::unpack_type_()
     }
     default: break;
   }
-  LEGATE_ABORT("unhandled type code: " << legate::traits::detail::to_underlying(code));
+  LEGATE_ABORT("unhandled type code: ", legate::traits::detail::to_underlying(code));
   return {};
 }
 

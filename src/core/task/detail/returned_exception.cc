@@ -100,7 +100,7 @@ void ReturnedException::throw_exception()
     case ExceptionKind::PYTHON:
       return construct_specific_from_buffer_<ReturnedPythonException>(buf);
   }
-  LEGATE_ABORT("Unhandled exception kind: " << traits::detail::to_underlying(kind));
+  LEGATE_ABORT("Unhandled exception kind: ", traits::detail::to_underlying(kind));
   LEGATE_UNREACHABLE();
 }
 

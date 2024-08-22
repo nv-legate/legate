@@ -14,6 +14,7 @@
 
 #include "core/utilities/abort.h"
 #include "core/utilities/macros.h"
+#include "core/utilities/typedefs.h"
 
 #include <cerrno>
 #include <cstring>  // std::strerror
@@ -34,17 +35,21 @@
     }                                                                                  \
   } while (0)
 
-#define CHECK_PTHREAD_CALL_V(...)                                                                  \
-  do {                                                                                             \
-    const int cpc_ret_ = __VA_ARGS__;                                                              \
-    if (cpc_ret_) {                                                                                \
-      if (!errno) {                                                                                \
-        errno = cpc_ret_;                                                                          \
-      }                                                                                            \
-      LEGATE_ABORT(std::strerror(errno)                                                            \
-                   << " at "                                                                       \
-                   << __FILE__ ":" LEGATE_STRINGIZE(__LINE__) ": " LEGATE_STRINGIZE(__VA_ARGS__)); \
-    }                                                                                              \
+#define CHECK_PTHREAD_CALL_V(...)                  \
+  do {                                             \
+    const int cpc_ret_ = __VA_ARGS__;              \
+    if (cpc_ret_) {                                \
+      if (!errno) {                                \
+        errno = cpc_ret_;                          \
+      }                                            \
+      LEGATE_ABORT(std::strerror(errno),           \
+                   " at ",                         \
+                   __FILE__,                       \
+                   ":",                            \
+                   LEGATE_STRINGIZE(__LINE__),     \
+                   ": ",                           \
+                   LEGATE_STRINGIZE(__VA_ARGS__)); \
+    }                                              \
   } while (0)
 
 #if !defined(_POSIX_BARRIERS) || (_POSIX_BARRIERS < 0)

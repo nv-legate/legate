@@ -45,9 +45,7 @@ void collInit(int argc, char* argv[]);
 
 void collFinalize();
 
-// this is forward declared in src/core/utilities/abort.h (for LEGATE_ABORT()), because we don't
-// want to include this entire header
-void collAbort() noexcept;  // NOLINT(readability-redundant-declaration)
+void collAbort() noexcept;
 
 [[nodiscard]] int collInitComm();
 // NOLINTEND(readability-identifier-naming)

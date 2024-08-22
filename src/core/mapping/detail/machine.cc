@@ -423,7 +423,7 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
     case StoreTarget::FBMEM: return frame_buffers().at(proc);
     case StoreTarget::ZCMEM: return zerocopy_memory();
     case StoreTarget::SOCKETMEM: return socket_memories().at(proc);
-    default: LEGATE_ABORT("invalid StoreTarget: " << legate::traits::detail::to_underlying(target));
+    default: LEGATE_ABORT("invalid StoreTarget: ", legate::traits::detail::to_underlying(target));
   }
   return Legion::Memory::NO_MEMORY;
 }

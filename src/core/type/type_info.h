@@ -14,6 +14,7 @@
 
 #include "core/utilities/compiler.h"
 #include "core/utilities/shared_ptr.h"
+#include "core/utilities/typedefs.h"
 
 #include "legion/legion_config.h"
 

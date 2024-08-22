@@ -365,12 +365,12 @@ void TaskLauncher::post_process_unbound_stores_(
 void TaskLauncher::report_interfering_stores_() const
 {
   LEGATE_ABORT(
-    "Task "
-    << library_->get_task_name(task_id_)
-    << " has interfering store arguments. This means the task tries to access the same store"
-       "via multiplepartitions in mixed modes, which is illegal in Legate. Make sure to make a "
-       "copy "
-       "of the store so there would be no interference.");
+    "Task ",
+    library_->get_task_name(task_id_),
+    " has interfering store arguments. This means the task tries to access the same store"
+    "via multiplepartitions in mixed modes, which is illegal in Legate. Make sure to make a "
+    "copy "
+    "of the store so there would be no interference.");
 }
 
 }  // namespace legate::detail

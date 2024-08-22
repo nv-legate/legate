@@ -59,6 +59,7 @@
 #include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <iostream>
 #include <limits>
 #include <regex>
 #include <set>
@@ -1753,7 +1754,9 @@ void initialize_core_library_callback(
     try {
       handle_realm_default_args();
     } catch (const std::exception& e) {
-      log_legate().error() << "failed to handle realm arguments: " << e.what();
+      // Cannot use log_legate() since Legion loggers silently swallow the messages if Legion
+      // has not yet been set up.
+      std::cerr << "failed to handle realm arguments: " << e.what();
       return 1;
     }
 
@@ -1762,7 +1765,9 @@ void initialize_core_library_callback(
       try {
         handle_legate_args(*legate_config_env);
       } catch (const std::exception& e) {
-        log_legate().error() << "failed to handle legate arguments: " << e.what();
+        // Cannot use log_legate() since Legion loggers silently swallow the messages if Legion
+        // has not yet been set up.
+        std::cerr << "failed to handle legate arguments: " << e.what();
         return 1;
       }
     }
