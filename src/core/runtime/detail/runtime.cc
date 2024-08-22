@@ -1670,9 +1670,7 @@ void handle_legate_args(std::string_view legate_config)
   args_ss << "-lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0 ";
 
   if (profile) {
-    args_ss << "-lg:prof 1 ";
-    args_ss << "-lg:prof_logfile ";
-    args_ss << log_path;
+    args_ss << "-lg:prof 1 -lg:prof_logfile " << log_path / "legate_%.prof" << " ";
     if (log_levels.empty()) {
       log_levels = "legion_prof=2";
     } else {
