@@ -94,16 +94,19 @@ void test_non_point_types_failure()
   auto runtime = legate::Runtime::get_runtime();
 
   auto shape  = legate::Shape{10, 10};
-  auto store1 = runtime->create_store(shape, legate::int32());
-  auto store2 = runtime->create_store(shape, legate::int32());
-  auto store3 = runtime->create_store(shape, legate::int32());
-  auto store4 = runtime->create_store(shape, legate::int32());
+  auto source = runtime->create_store(shape, legate::int32());
+  auto target = runtime->create_store(shape, legate::int32());
 
-  EXPECT_THROW(runtime->issue_gather(store3, store2, store1), std::invalid_argument);
+  auto indirect_non_point = runtime->create_store(shape, legate::int32());
+  auto indirect_point     = runtime->create_store(shape, legate::point_type(2));
 
-  EXPECT_THROW(runtime->issue_scatter(store3, store2, store1), std::invalid_argument);
+  ASSERT_THROW(runtime->issue_gather(target, source, indirect_non_point), std::invalid_argument);
 
-  EXPECT_THROW(runtime->issue_scatter_gather(store4, store3, store2, store1),
+  ASSERT_THROW(runtime->issue_scatter(target, indirect_non_point, source), std::invalid_argument);
+
+  ASSERT_THROW(runtime->issue_scatter_gather(target, indirect_non_point, source, indirect_point),
+               std::invalid_argument);
+  ASSERT_THROW(runtime->issue_scatter_gather(target, indirect_point, source, indirect_non_point),
                std::invalid_argument);
 }
 
@@ -125,6 +128,27 @@ void test_dimension_mismatch_failure()
                std::invalid_argument);
 }
 
+void test_kind_mismatch_failure()
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto source = runtime->create_store(legate::Shape{1}, legate::int64());
+  auto target = runtime->create_store(legate::Scalar{std::int64_t{1}});
+
+  ASSERT_THROW(runtime->issue_copy(target, source), std::runtime_error);
+}
+
+void test_unsupported_kind_failure()
+{
+  auto runtime = legate::Runtime::get_runtime();
+
+  auto source = runtime->create_store(legate::Scalar{1});
+  auto target = runtime->create_store(legate::Scalar{2});
+  constexpr legate::ReductionOpKind redop{legate::ReductionOpKind::ADD};
+
+  ASSERT_THROW(runtime->issue_copy(target, source, redop), std::runtime_error);
+}
+
 TEST_F(InvalidCopy, InvalidStores) { test_invalid_stores(); }
 
 TEST_F(InvalidCopy, DifferentTypes) { test_type_check_failure(); }
@@ -134,6 +158,10 @@ TEST_F(InvalidCopy, DifferentShapes) { test_shape_check_failure(); }
 TEST_F(InvalidCopy, NonPointTypes) { test_non_point_types_failure(); }
 
 TEST_F(InvalidCopy, DimensionMismatch) { test_dimension_mismatch_failure(); }
+
+TEST_F(InvalidCopy, KindMismatch) { test_kind_mismatch_failure(); }
+
+TEST_F(InvalidCopy, UnsupportedKind) { test_unsupported_kind_failure(); }
 
 // NOLINTEND(readability-magic-numbers)
 
