@@ -315,7 +315,7 @@ void TaskDeserializer::unpack_impl(RegionField& value, bool unbound)
 }
 
 CopyDeserializer::CopyDeserializer(const Legion::Copy* copy,
-                                   std::vector<ReqsRef>&& all_requirements,
+                                   Span<const ReqsRef> all_requirements,
                                    Legion::Mapping::MapperRuntime* runtime,
                                    Legion::Mapping::MapperContext context)
   : BaseDeserializer{copy->mapper_data, copy->mapper_data_size},

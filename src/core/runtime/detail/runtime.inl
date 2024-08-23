@@ -98,16 +98,4 @@ inline Processor Runtime::get_executing_processor() const
   return legion_runtime_->get_executing_processor(Legion::Runtime::get_context());
 }
 
-inline const InternalSharedPtr<mapping::detail::InstanceManager>& Runtime::get_instance_manager()
-  const
-{
-  return instance_manager_;
-}
-
-inline const InternalSharedPtr<mapping::detail::ReductionInstanceManager>&
-Runtime::get_reduction_instance_manager() const
-{
-  return reduction_instance_manager_;
-}
-
 }  // namespace legate::detail

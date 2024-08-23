@@ -40,7 +40,6 @@ class TaskLauncher {
                Legion::MappingTagID tag = 0);
 
   [[nodiscard]] GlobalTaskID legion_task_id() const;
-  [[nodiscard]] std::int64_t legion_mapper_id() const;
 
   void add_input(std::unique_ptr<Analyzable> arg);
   void add_output(std::unique_ptr<Analyzable> arg);

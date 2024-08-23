@@ -12,41 +12,51 @@
 
 #include "core/runtime/detail/library.h"
 
-#include "core/mapping/detail/base_mapper.h"
 #include "core/mapping/mapping.h"
-#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/runtime/runtime.h"
 #include "core/utilities/detail/type_traits.h"
-#include "core/utilities/scope_guard.h"
-
-#include "mappers/logging_wrapper.h"
 
 #include <exception>
 #include <fmt/format.h>
 
 namespace legate::detail {
 
-Library::Library(ConstructKey,
-                 std::string library_name,
+Library::Library(std::string library_name,
                  const ResourceConfig& config,
-                 std::map<VariantCode, VariantOptions> default_options)
-  : runtime_{Legion::Runtime::get_runtime()},
-    library_name_{std::move(library_name)},
-    task_scope_{runtime_->generate_library_task_ids(library_name_.c_str(), config.max_tasks),
+                 std::unique_ptr<mapping::Mapper> mapper,
+                 std::map<VariantCode, VariantOptions> default_options,
+                 Legion::Runtime* runtime)
+  : library_name_{std::move(library_name)},
+    task_scope_{runtime->generate_library_task_ids(library_name_.c_str(), config.max_tasks),
                 config.max_tasks,
                 config.max_dyn_tasks},
     redop_scope_{
-      runtime_->generate_library_reduction_ids(library_name_.c_str(), config.max_reduction_ops),
+      runtime->generate_library_reduction_ids(library_name_.c_str(), config.max_reduction_ops),
       config.max_reduction_ops},
     proj_scope_{
-      runtime_->generate_library_projection_ids(library_name_.c_str(), config.max_projections),
+      runtime->generate_library_projection_ids(library_name_.c_str(), config.max_projections),
       config.max_projections},
     shard_scope_{
-      runtime_->generate_library_sharding_ids(library_name_.c_str(), config.max_shardings),
+      runtime->generate_library_sharding_ids(library_name_.c_str(), config.max_shardings),
       config.max_shardings},
-    mapper_id_{runtime_->generate_library_mapper_ids(library_name_.c_str(), 1)},
+    mapper_{std::move(mapper)},
     default_options_{std::move(default_options)}
+{
+}
+
+// ==========================================================================================
+
+Library::Library(ConstructKey,
+                 std::string library_name,
+                 const ResourceConfig& config,
+                 std::unique_ptr<mapping::Mapper> mapper,
+                 std::map<VariantCode, VariantOptions> default_options)
+  : Library{std::move(library_name),
+            config,
+            std::move(mapper),
+            std::move(default_options),
+            Legion::Runtime::get_runtime()}
 {
 }
 
@@ -128,7 +138,7 @@ std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
   if (type->variable_size()) {
     throw std::invalid_argument{"Tunable variables must have fixed-size types"};
   }
-  auto result         = Runtime::get_runtime()->get_tunable(mapper_id_, tunable_id);
+  auto result         = Runtime::get_runtime()->get_tunable(*this, tunable_id);
   std::size_t extents = 0;
   const void* buffer  = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
   if (extents != type->size()) {
@@ -136,44 +146,6 @@ std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
       fmt::format("Size mismatch: expected {} bytes but got {} bytes", type->size(), extents)};
   }
   return std::make_unique<Scalar>(std::move(type), buffer, true);
-}
-
-void register_mapper_callback(const Legion::RegistrationCallbackArgs& args)
-{
-  // Yes it's a trivial move *now* clang-tidy, but it might not always be!
-  // NOLINTNEXTLINE(misc-const-correctness)
-  std::string_view library_name{static_cast<const char*>(args.buffer.get_ptr()),
-                                args.buffer.get_size() - 1};
-
-  auto* library = Runtime::get_runtime()->find_library(std::move(library_name), false /*can_fail*/);
-  auto* legion_mapper = library->get_legion_mapper();
-  LEGATE_ASSERT(legion_mapper != nullptr);
-  Legion::Runtime::get_runtime()->add_mapper(library->get_mapper_id(), legion_mapper);
-}
-
-void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback)
-{
-  // Hold the pointer to the mapper to keep it alive
-  mapper_ = std::move(mapper);
-
-  const auto base_mapper =
-    new mapping::detail::BaseMapper{mapper_.get(), runtime_->get_mapper_runtime(), this};
-
-  if (Config::log_mapping_decisions) {
-    LEGATE_SCOPE_FAIL(delete base_mapper);
-    legion_mapper_ = new Legion::Mapping::LoggingWrapper{base_mapper, &base_mapper->logger};
-  } else {
-    legion_mapper_ = base_mapper;
-  }
-  LEGATE_SCOPE_FAIL(delete legion_mapper_);
-
-  if (in_callback) {
-    Legion::Runtime::get_runtime()->add_mapper(get_mapper_id(), legion_mapper_);
-  } else {
-    const Legion::UntypedBuffer args{library_name_.c_str(), library_name_.size() + 1};
-    Legion::Runtime::perform_registration_callback(
-      register_mapper_callback, args, false /*global*/, false /*duplicate*/);
-  }
 }
 
 void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info)

@@ -29,8 +29,6 @@ namespace legate::detail {
 
 class Runtime;
 
-void register_mapper_callback(const Legion::RegistrationCallbackArgs& args);
-
 class Library {
   class ResourceIdScope {
    public:
@@ -62,6 +60,7 @@ class Library {
   Library(ConstructKey,
           std::string library_name,
           const ResourceConfig& config,
+          std::unique_ptr<mapping::Mapper> mapper,
           std::map<VariantCode, VariantOptions> default_options);
 
   Library(const Library&) = delete;
@@ -70,7 +69,6 @@ class Library {
   [[nodiscard]] ZStringView get_library_name() const;
 
   [[nodiscard]] GlobalTaskID get_task_id(LocalTaskID local_task_id) const;
-  [[nodiscard]] Legion::MapperID get_mapper_id() const;
   [[nodiscard]] GlobalRedopID get_reduction_op_id(LocalRedopID local_redop_id) const;
   [[nodiscard]] Legion::ProjectionID get_projection_id(std::int64_t local_proj_id) const;
   [[nodiscard]] Legion::ShardingID get_sharding_id(std::int64_t local_shard_id) const;
@@ -90,25 +88,29 @@ class Library {
   [[nodiscard]] std::string_view get_task_name(LocalTaskID local_task_id) const;
   [[nodiscard]] std::unique_ptr<Scalar> get_tunable(std::int64_t tunable_id,
                                                     InternalSharedPtr<Type> type) const;
-  void register_mapper(std::unique_ptr<mapping::Mapper> mapper, bool in_callback);
-  [[nodiscard]] Legion::Mapping::Mapper* get_legion_mapper() const;
 
   void register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
   [[nodiscard]] const TaskInfo* find_task(LocalTaskID local_task_id) const;
 
   [[nodiscard]] const std::map<VariantCode, VariantOptions>& get_default_variant_options() const;
 
+  [[nodiscard]] const mapping::Mapper* get_mapper() const;
+  [[nodiscard]] mapping::Mapper* get_mapper();
+
  private:
-  Legion::Runtime* runtime_{};
+  Library(std::string library_name,
+          const ResourceConfig& config,
+          std::unique_ptr<mapping::Mapper> mapper,
+          std::map<VariantCode, VariantOptions> default_options,
+          Legion::Runtime* runtime);
+
   std::string library_name_{};
   ResourceIdScope task_scope_{};
   ResourceIdScope redop_scope_{};
   ResourceIdScope proj_scope_{};
   ResourceIdScope shard_scope_{};
 
-  Legion::MapperID mapper_id_{};
   std::unique_ptr<mapping::Mapper> mapper_{};
-  Legion::Mapping::Mapper* legion_mapper_{};
   std::unordered_map<LocalTaskID, std::unique_ptr<TaskInfo>> tasks_{};
   std::map<VariantCode, VariantOptions> default_options_{};
 };

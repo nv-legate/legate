@@ -31,8 +31,6 @@ namespace legate::detail {
 
 GlobalTaskID TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
 
-std::int64_t TaskLauncher::legion_mapper_id() const { return library_->get_mapper_id(); }
-
 void TaskLauncher::add_input(std::unique_ptr<Analyzable> arg) { inputs_.push_back(std::move(arg)); }
 
 void TaskLauncher::add_output(std::unique_ptr<Analyzable> arg)
@@ -130,13 +128,15 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   pack_mapper_arg_(mapper_arg);
 
+  const auto runtime = Runtime::get_runtime();
+
   Legion::IndexTaskLauncher index_task{static_cast<Legion::TaskID>(legion_task_id()),
                                        launch_domain,
                                        task_arg.to_legion_buffer(),
                                        Legion::ArgumentMap(),
                                        Legion::Predicate::TRUE_PRED,
                                        false /*must*/,
-                                       static_cast<Legion::MapperID>(legion_mapper_id()),
+                                       runtime->mapper_id(),
                                        tag_,
                                        mapper_arg.to_legion_buffer(),
                                        provenance().data()};
@@ -144,8 +144,6 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   std::vector<Legion::OutputRequirement> output_requirements;
 
   analyzer.populate(index_task, output_requirements);
-
-  const auto runtime = Runtime::get_runtime();
 
   if (insert_barrier_) {
     const auto num_tasks                 = launch_domain.get_volume();
@@ -205,10 +203,12 @@ Legion::Future TaskLauncher::execute_single()
 
   pack_mapper_arg_(mapper_arg);
 
+  const auto runtime = Runtime::get_runtime();
+
   Legion::TaskLauncher single_task{static_cast<Legion::TaskID>(legion_task_id()),
                                    task_arg.to_legion_buffer(),
                                    Legion::Predicate::TRUE_PRED,
-                                   static_cast<Legion::MapperID>(legion_mapper_id()),
+                                   runtime->mapper_id(),
                                    tag_,
                                    mapper_arg.to_legion_buffer(),
                                    provenance().data()};
@@ -219,7 +219,7 @@ Legion::Future TaskLauncher::execute_single()
 
   single_task.local_function_task = !has_side_effect_ && analyzer.can_be_local_function_task();
 
-  auto result = Runtime::get_runtime()->dispatch(single_task, output_requirements);
+  auto result = runtime->dispatch(single_task, output_requirements);
   post_process_unbound_stores_(output_requirements);
   for (auto&& arg : outputs_) {
     arg->perform_invalidations();
@@ -253,6 +253,7 @@ void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
   }
   buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, *key_proj_id));
   buffer.pack(priority_);
+  buffer.pack(library_);
 }
 
 void TaskLauncher::import_output_regions_(

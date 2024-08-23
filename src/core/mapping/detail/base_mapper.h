@@ -12,10 +12,9 @@
 
 #pragma once
 
-#include "core/data/scalar.h"
+#include "core/mapping/detail/instance_manager.h"
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/mapping.h"
-#include "core/runtime/detail/library.h"
 #include "core/utilities/detail/hash.h"
 #include "core/utilities/typedefs.h"
 
@@ -30,25 +29,20 @@
 
 namespace legate::mapping::detail {
 
-class InstanceManager;
-class ReductionInstanceManager;
-
 class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInterface {
  public:
-  BaseMapper(mapping::Mapper* legate_mapper,
-             Legion::Mapping::MapperRuntime* mapper_runtime,
-             const legate::detail::Library* library);
+  static constexpr std::string_view LOGGER_NAME = "legate.mapper";
+
+  BaseMapper();
 
   ~BaseMapper() override;
 
   BaseMapper(const BaseMapper& rhs)            = delete;
   BaseMapper& operator=(const BaseMapper& rhs) = delete;
 
- protected:
-  // Start-up methods
-  [[nodiscard]] std::string create_logger_name_() const;
+  [[nodiscard]] Legion::Logger& logger();
+  [[nodiscard]] const Legion::Logger& logger() const;
 
- public:
   // MachineQueryInterface
   [[nodiscard]] const std::vector<Processor>& cpus() const override;
   [[nodiscard]] const std::vector<Processor>& gpus() const override;
@@ -247,7 +241,7 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   void handle_instance_collection(Legion::Mapping::MapperContext ctx,
                                   const Legion::Mapping::PhysicalInstance& inst) override;
 
- protected:
+ private:
   using OutputMap = std::unordered_map<const Legion::RegionRequirement*,
                                        std::vector<Legion::Mapping::PhysicalInstance>*>;
   void map_legate_stores_(Legion::Mapping::MapperContext ctx,
@@ -315,31 +309,23 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   [[nodiscard]] Legion::ShardingID find_sharding_functor_by_key_store_projection_(
     const std::vector<Legion::RegionRequirement>& requirements);
 
- private:
   [[nodiscard]] std::string_view retrieve_alloc_info_(Legion::Mapping::MapperContext ctx,
                                                       Legion::FieldSpace fs,
                                                       Legion::FieldID fid);
 
-  mapping::Mapper* legate_mapper_{};
+  Legion::Machine legion_machine_{Legion::Machine::get_machine()};
+  Legion::Logger logger_{std::string{LOGGER_NAME}};
 
- public:
-  Legion::Mapping::MapperRuntime* const mapper_runtime{};  // NOLINT(readability-identifier-naming)
-  const Legion::Machine legion_machine;                    // NOLINT(readability-identifier-naming)
-  const legate::detail::Library* library{};
-  Legion::Logger logger;
-
- protected:
   using VariantCacheKey = std::pair<Legion::TaskID, Processor::Kind>;
   std::unordered_map<VariantCacheKey, std::optional<Legion::VariantID>, hasher<VariantCacheKey>>
     variants_{};
 
-  InternalSharedPtr<InstanceManager> local_instances_{};
-  InternalSharedPtr<ReductionInstanceManager> reduction_instances_{};
+  InstanceManager local_instances_{};
+  ReductionInstanceManager reduction_instances_{};
 
   std::unordered_map<Legion::Mapping::PhysicalInstance, std::string> creating_operation_{};
   LocalMachine local_machine_{};
 
- private:
   [[nodiscard]] Legion::VariantID select_task_variant_(Legion::Mapping::MapperContext ctx,
                                                        const Legion::Task& task,
                                                        const Processor& proc);

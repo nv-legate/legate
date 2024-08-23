@@ -12,31 +12,10 @@
 
 #pragma once
 
-// Useful for IDEs
-#include "core/utilities/detail/buffer_builder.h"
+#include "core/runtime/detail/mapper_manager.h"
 
 namespace legate::detail {
 
-template <typename T>
-void BufferBuilder::pack(const T& value)
-{
-  pack_buffer(reinterpret_cast<const int8_t*>(std::addressof(value)),
-              sizeof(T),  // NOLINT(bugprone-sizeof-expression)
-              alignof(T));
-}
-
-template <typename T>
-void BufferBuilder::pack(const std::vector<T>& values)
-{
-  const std::uint32_t size = values.size();
-  pack(size);
-  pack_buffer(values.data(), size * sizeof(T), alignof(T));
-}
-
-template <typename T>
-void BufferBuilder::pack(const tuple<T>& values)
-{
-  pack(values.data());
-}
+inline Legion::MapperID MapperManager::mapper_id() const { return mapper_id_; }
 
 }  // namespace legate::detail

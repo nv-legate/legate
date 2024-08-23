@@ -17,6 +17,7 @@
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/runtime.h"
 #include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/zip.h"
 
 namespace legate::detail {
 
@@ -100,14 +101,13 @@ void CopyLauncher::execute(const Legion::Domain& launch_domain)
 
   pack_args(mapper_arg);
 
-  const auto runtime     = Runtime::get_runtime();
-  const auto& provenance = runtime->get_provenance();
-  auto index_copy        = Legion::IndexCopyLauncher{launch_domain,
+  const auto runtime = Runtime::get_runtime();
+  auto index_copy    = Legion::IndexCopyLauncher{launch_domain,
                                               Legion::Predicate::TRUE_PRED,
-                                              runtime->core_library()->get_mapper_id(),
+                                              runtime->mapper_id(),
                                               static_cast<Legion::MappingTagID>(tag_),
-                                              mapper_arg.to_legion_buffer(),
-                                              provenance.data()};
+                                              mapper_arg.to_legion_buffer()};
+
   populate_copy_(index_copy);
   runtime->dispatch(index_copy);
 }
@@ -118,13 +118,12 @@ void CopyLauncher::execute_single()
 
   pack_args(mapper_arg);
 
-  const auto runtime     = Runtime::get_runtime();
-  const auto& provenance = runtime->get_provenance();
-  auto single_copy       = Legion::CopyLauncher{Legion::Predicate::TRUE_PRED,
-                                          runtime->core_library()->get_mapper_id(),
+  const auto runtime = Runtime::get_runtime();
+  auto single_copy   = Legion::CopyLauncher{Legion::Predicate::TRUE_PRED,
+                                          runtime->mapper_id(),
                                           static_cast<Legion::MappingTagID>(tag_),
-                                          mapper_arg.to_legion_buffer(),
-                                          provenance.data()};
+                                          mapper_arg.to_legion_buffer()};
+
   populate_copy_(single_copy);
   runtime->dispatch(single_copy);
 }
@@ -139,6 +138,7 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
   machine_.pack(buffer);
   pack_sharding_functor_id(buffer);
   buffer.pack(priority_);
+  buffer.pack(Runtime::get_runtime()->core_library());
 
   auto pack_args = [&buffer](const std::vector<CopyArg>& args) {
     buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
@@ -154,26 +154,24 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
 
 namespace {
 
-template <class Launcher>
+template <typename Launcher>
 constexpr bool is_single_v = false;
 template <>
 constexpr bool is_single_v<Legion::CopyLauncher> = true;
-template <>
-constexpr bool is_single_v<Legion::IndexCopyLauncher> = false;
 
 }  // namespace
 
 template <typename Launcher>
 void CopyLauncher::populate_copy_(Launcher& launcher)
 {
-  auto populate_requirements = [&](auto& args, auto& requirements) {
+  constexpr auto populate_requirements = [](std::vector<CopyArg>& args, auto& requirements) {
     requirements.resize(args.size());
-    for (std::uint32_t idx = 0; idx < args.size(); ++idx) {
-      auto& req = requirements[idx];
-      auto& arg = args[idx];
+    for (auto&& [arg, req] : detail::zip_equal(args, requirements)) {
       arg.template populate_requirement<is_single_v<Launcher>>(req);
     }
   };
+
+  launcher.provenance = Runtime::get_runtime()->get_provenance().as_string_view();
 
   populate_requirements(inputs_, launcher.src_requirements);
   populate_requirements(outputs_, launcher.dst_requirements);

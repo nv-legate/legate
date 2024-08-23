@@ -27,6 +27,10 @@ inline std::uint32_t Mappable::sharding_id() const { return sharding_id_; }
 
 inline std::int32_t Mappable::priority() const { return priority_; }
 
+inline legate::detail::Library* Mappable::library() { return library_; }
+
+inline const legate::detail::Library* Mappable::library() const { return library_; }
+
 // ==========================================================================================
 
 inline const std::vector<InternalSharedPtr<Array>>& Task::inputs() const { return inputs_; }
@@ -37,7 +41,7 @@ inline const std::vector<InternalSharedPtr<Array>>& Task::reductions() const { r
 
 inline const std::vector<Scalar>& Task::scalars() const { return scalars_; }
 
-inline DomainPoint Task::point() const { return task_->index_point; }
+inline const DomainPoint& Task::point() const { return task_->index_point; }
 
 // ==========================================================================================
 
@@ -49,6 +53,6 @@ inline const std::vector<Store>& Copy::input_indirections() const { return input
 
 inline const std::vector<Store>& Copy::output_indirections() const { return output_indirections_; }
 
-inline DomainPoint Copy::point() const { return copy_->index_point; }
+inline const DomainPoint& Copy::point() const { return copy_->index_point; }
 
 }  // namespace legate::mapping::detail

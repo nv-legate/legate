@@ -31,9 +31,12 @@ class Config {
   static inline std::int64_t num_omp_threads       = 0;
 
   static void parse();
+  static bool parsed() noexcept;
 
  private:
   static void reset_() noexcept;
+
+  static inline bool parsed_ = false;
 };
 
 }  // namespace legate::detail

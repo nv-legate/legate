@@ -30,10 +30,6 @@ namespace legate::detail {
 class Library;
 }  // namespace legate::detail
 
-namespace legate::mapping {
-class Mapper;
-}  // namespace legate::mapping
-
 namespace legate {
 
 class TaskInfo;
@@ -53,7 +49,6 @@ class Library {
   [[nodiscard]] std::string_view get_library_name() const;
 
   [[nodiscard]] GlobalTaskID get_task_id(LocalTaskID local_task_id) const;
-  [[nodiscard]] Legion::MapperID get_mapper_id() const;
   [[nodiscard]] GlobalRedopID get_reduction_op_id(LocalRedopID local_redop_id) const;
   [[nodiscard]] Legion::ProjectionID get_projection_id(std::int64_t local_proj_id) const;
   [[nodiscard]] Legion::ShardingID get_sharding_id(std::int64_t local_shard_id) const;
@@ -149,12 +144,6 @@ class Library {
    */
   template <typename REDOP>
   [[nodiscard]] GlobalRedopID register_reduction_operator(LocalRedopID redop_id);
-  /**
-   * @brief Registers a library mapper. Replaces the existing mapper if there already is one.
-   *
-   * @param mapper A Legate mapper to register for the library
-   */
-  void register_mapper(std::unique_ptr<mapping::Mapper> mapper);
 
   void register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
   [[nodiscard]] const TaskInfo* find_task(LocalTaskID local_task_id) const;

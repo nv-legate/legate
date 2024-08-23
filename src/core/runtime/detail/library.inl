@@ -64,8 +64,6 @@ inline std::int64_t Library::ResourceIdScope::size() const { return size_; }
 
 inline ZStringView Library::get_library_name() const { return library_name_; }
 
-inline Legion::MapperID Library::get_mapper_id() const { return mapper_id_; }
-
 inline LocalTaskID Library::get_new_task_id()
 {
   static_assert(
@@ -73,11 +71,13 @@ inline LocalTaskID Library::get_new_task_id()
   return static_cast<LocalTaskID>(task_scope_.generate_id());
 }
 
-inline Legion::Mapping::Mapper* Library::get_legion_mapper() const { return legion_mapper_; }
-
 inline const std::map<VariantCode, VariantOptions>& Library::get_default_variant_options() const
 {
   return default_options_;
 }
+
+inline const mapping::Mapper* Library::get_mapper() const { return mapper_.get(); }
+
+inline mapping::Mapper* Library::get_mapper() { return mapper_.get(); }
 
 }  // namespace legate::detail

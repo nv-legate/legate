@@ -93,6 +93,12 @@ struct type_code_of<std::complex<double>>
   : std::integral_constant<Type::Code, Type::Code::COMPLEX128> {};
 #endif
 
+template <typename T>
+struct type_code_of<T*> : std::integral_constant<Type::Code, Type::Code::UINT64> {
+  static_assert(sizeof(T*) == sizeof(std::uint64_t));
+  static_assert(alignof(T*) == alignof(std::uint64_t));
+};
+
 }  // namespace type_code_of_detail
 
 /**

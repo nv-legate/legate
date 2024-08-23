@@ -12,14 +12,17 @@
 
 #pragma once
 
-#include "core/data/detail/scalar.h"
+#include "core/data/scalar.h"
 #include "core/mapping/detail/array.h"
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/store.h"
+#include "core/mapping/mapping.h"
 #include "core/utilities/detail/core_ids.h"
 #include "core/utilities/detail/deserializer.h"
 #include "core/utilities/internal_shared_ptr.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 
 namespace legate::detail {
@@ -35,6 +38,8 @@ class Mappable {
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] std::uint32_t sharding_id() const;
   [[nodiscard]] std::int32_t priority() const;
+  [[nodiscard]] legate::detail::Library* library();
+  [[nodiscard]] const legate::detail::Library* library() const;
 
  protected:
   Mappable() = default;
@@ -42,6 +47,7 @@ class Mappable {
   mapping::detail::Machine machine_{};
   std::uint32_t sharding_id_{};
   std::int32_t priority_{static_cast<std::int32_t>(legate::detail::TaskPriority::DEFAULT)};
+  legate::detail::Library* library_{};
 
  private:
   struct private_tag {};
@@ -52,7 +58,6 @@ class Mappable {
 class Task : public Mappable {
  public:
   Task(const Legion::Task* task,
-       const legate::detail::Library* library,
        Legion::Mapping::MapperRuntime* runtime,
        Legion::Mapping::MapperContext context);
 
@@ -63,18 +68,17 @@ class Task : public Mappable {
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& reductions() const;
   [[nodiscard]] const std::vector<Scalar>& scalars() const;
 
-  [[nodiscard]] DomainPoint point() const;
+  [[nodiscard]] const DomainPoint& point() const;
 
   [[nodiscard]] TaskTarget target() const;
 
  private:
-  const legate::detail::Library* library_;
-  const Legion::Task* task_;
+  const Legion::Task* task_{};
 
-  std::vector<InternalSharedPtr<Array>> inputs_;
-  std::vector<InternalSharedPtr<Array>> outputs_;
-  std::vector<InternalSharedPtr<Array>> reductions_;
-  std::vector<Scalar> scalars_;
+  std::vector<InternalSharedPtr<Array>> inputs_{};
+  std::vector<InternalSharedPtr<Array>> outputs_{};
+  std::vector<InternalSharedPtr<Array>> reductions_{};
+  std::vector<Scalar> scalars_{};
 };
 
 class Copy : public Mappable {
@@ -88,15 +92,15 @@ class Copy : public Mappable {
   [[nodiscard]] const std::vector<Store>& input_indirections() const;
   [[nodiscard]] const std::vector<Store>& output_indirections() const;
 
-  [[nodiscard]] DomainPoint point() const;
+  [[nodiscard]] const DomainPoint& point() const;
 
  private:
-  const Legion::Copy* copy_;
+  const Legion::Copy* copy_{};
 
-  std::vector<Store> inputs_;
-  std::vector<Store> outputs_;
-  std::vector<Store> input_indirections_;
-  std::vector<Store> output_indirections_;
+  std::vector<Store> inputs_{};
+  std::vector<Store> outputs_{};
+  std::vector<Store> input_indirections_{};
+  std::vector<Store> output_indirections_{};
 };
 
 }  // namespace legate::mapping::detail

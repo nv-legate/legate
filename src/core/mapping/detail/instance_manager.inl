@@ -72,6 +72,4 @@ inline std::size_t BaseInstanceManager::FieldMemInfo::hash() const noexcept
   return hash_all(tid, fid, memory.id);
 }
 
-inline Legion::Mapping::LocalLock& BaseInstanceManager::manager_lock() { return manager_lock_; }
-
 }  // namespace legate::mapping::detail

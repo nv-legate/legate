@@ -259,6 +259,7 @@ list(APPEND
      src/core/runtime/detail/runtime.cc
      src/core/runtime/detail/shard.cc
      src/core/runtime/detail/config.cc
+     src/core/runtime/detail/mapper_manager.cc
      src/core/task/registrar.cc
      src/core/task/task.cc
      src/core/task/task_context.cc

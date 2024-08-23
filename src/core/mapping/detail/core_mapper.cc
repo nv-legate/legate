@@ -13,6 +13,7 @@
 #include "core/mapping/detail/core_mapper.h"
 
 #include <cstdlib>
+#include <memory>
 #include <vector>
 
 namespace legate::mapping::detail {
@@ -22,7 +23,6 @@ namespace legate::mapping::detail {
 // should be overriding this mapper so we burry it in here
 class CoreMapper final : public Mapper {
  public:
-  void set_machine(const legate::mapping::MachineQueryInterface* machine) override;
   [[nodiscard]] legate::mapping::TaskTarget task_target(
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::TaskTarget>& options) override;
@@ -31,8 +31,6 @@ class CoreMapper final : public Mapper {
     const std::vector<legate::mapping::StoreTarget>& options) override;
   [[nodiscard]] legate::Scalar tunable_value(legate::TunableID tunable_id) override;
 };
-
-void CoreMapper::set_machine(const legate::mapping::MachineQueryInterface* /*m*/) {}
 
 TaskTarget CoreMapper::task_target(const legate::mapping::Task&,
                                    const std::vector<TaskTarget>& options)

@@ -12,7 +12,6 @@
 
 #include "core/runtime/library.h"
 
-#include "core/mapping/mapping.h"
 #include "core/runtime/detail/library.h"
 
 namespace legate {
@@ -26,8 +25,6 @@ GlobalTaskID Library::get_task_id(LocalTaskID local_task_id) const
 {
   return impl()->get_task_id(local_task_id);
 }
-
-Legion::MapperID Library::get_mapper_id() const { return impl()->get_mapper_id(); }
 
 GlobalRedopID Library::get_reduction_op_id(LocalRedopID local_redop_id) const
 {
@@ -91,11 +88,6 @@ std::string_view Library::get_task_name(LocalTaskID local_task_id) const
 Scalar Library::get_tunable(std::int64_t tunable_id, const Type& type)
 {
   return Scalar{impl()->get_tunable(tunable_id, type.impl())};
-}
-
-void Library::register_mapper(std::unique_ptr<mapping::Mapper> mapper)
-{
-  impl()->register_mapper(std::move(mapper), false /*in_callback*/);
 }
 
 void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info)

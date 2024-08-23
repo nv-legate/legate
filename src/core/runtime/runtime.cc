@@ -43,11 +43,8 @@ Library Runtime::create_library(std::string_view library_name,
                                 std::unique_ptr<mapping::Mapper> mapper,
                                 std::map<VariantCode, VariantOptions> default_options)
 {
-  return Library{impl_->create_library(std::move(library_name),
-                                       config,
-                                       std::move(mapper),
-                                       std::move(default_options),
-                                       false /*in_callback*/)};
+  return Library{impl_->create_library(
+    std::move(library_name), config, std::move(mapper), std::move(default_options))};
 }
 
 Library Runtime::find_or_create_library(
@@ -57,12 +54,8 @@ Library Runtime::find_or_create_library(
   const std::map<VariantCode, VariantOptions>& default_options,
   bool* created)
 {
-  return Library{impl_->find_or_create_library(std::move(library_name),
-                                               config,
-                                               std::move(mapper),
-                                               default_options,
-                                               created,
-                                               false /*in_callback*/)};
+  return Library{impl_->find_or_create_library(
+    std::move(library_name), config, std::move(mapper), default_options, created)};
 }
 
 AutoTask Runtime::create_task(Library library, LocalTaskID task_id)

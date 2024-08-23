@@ -16,13 +16,13 @@
 #include "core/data/detail/shape.h"
 #include "core/data/external_allocation.h"
 #include "core/data/logical_store.h"
-#include "core/mapping/detail/instance_manager.h"
 #include "core/mapping/machine.h"
 #include "core/operation/detail/operation.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/consensus_match_result.h"
 #include "core/runtime/detail/field_manager.h"
 #include "core/runtime/detail/library.h"
+#include "core/runtime/detail/mapper_manager.h"
 #include "core/runtime/detail/partition_manager.h"
 #include "core/runtime/detail/projection.h"
 #include "core/runtime/detail/region_manager.h"
@@ -48,6 +48,12 @@
 
 struct CUstream_st;
 
+namespace legate::mapping {
+
+class Mapper;
+
+}  // namespace legate::mapping
+
 namespace legate::detail {
 
 class AutoTask;
@@ -65,8 +71,7 @@ class Runtime {
   [[nodiscard]] Library* create_library(std::string_view library_name,
                                         const ResourceConfig& config,
                                         std::unique_ptr<mapping::Mapper> mapper,
-                                        std::map<VariantCode, VariantOptions> default_options,
-                                        bool in_callback);
+                                        std::map<VariantCode, VariantOptions> default_options);
   [[nodiscard]] const Library* find_library(std::string_view library_name, bool can_fail) const;
   [[nodiscard]] Library* find_library(std::string_view library_name, bool can_fail);
   [[nodiscard]] Library* find_or_create_library(
@@ -74,8 +79,7 @@ class Runtime {
     const ResourceConfig& config,
     std::unique_ptr<mapping::Mapper> mapper,
     const std::map<VariantCode, VariantOptions>& default_options,
-    bool* created,
-    bool in_callback);
+    bool* created);
 
   void record_reduction_operator(std::uint32_t type_uid,
                                  std::int32_t op_kind,
@@ -262,7 +266,7 @@ class Runtime {
     std::size_t num_tasks);
   void destroy_barrier(Legion::PhaseBarrier barrier);
 
-  [[nodiscard]] Legion::Future get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id);
+  [[nodiscard]] Legion::Future get_tunable(const Library& library, std::int64_t tunable_id);
 
   [[nodiscard]] Legion::Future dispatch(
     Legion::TaskLauncher& launcher, std::vector<Legion::OutputRequirement>& output_requirements);
@@ -306,7 +310,7 @@ class Runtime {
   void begin_trace(std::uint32_t trace_id);
   void end_trace(std::uint32_t trace_id);
 
-  InternalSharedPtr<mapping::detail::Machine> create_toplevel_machine();
+  [[nodiscard]] InternalSharedPtr<mapping::detail::Machine> create_toplevel_machine();
   [[nodiscard]] const mapping::detail::Machine& get_machine() const;
   [[nodiscard]] ZStringView get_provenance() const;
   [[nodiscard]] const mapping::detail::LocalMachine& local_machine() const;
@@ -323,10 +327,8 @@ class Runtime {
                                                 Legion::ProjectionID proj_id);
 
   [[nodiscard]] Processor get_executing_processor() const;
-  [[nodiscard]] const InternalSharedPtr<mapping::detail::InstanceManager>& get_instance_manager()
-    const;
-  [[nodiscard]] const InternalSharedPtr<mapping::detail::ReductionInstanceManager>&
-  get_reduction_instance_manager() const;
+
+  [[nodiscard]] Legion::MapperID mapper_id() const;
 
  private:
   static void schedule_(std::vector<InternalSharedPtr<Operation>>&& operations);
@@ -342,6 +344,13 @@ class Runtime {
   [[nodiscard]] CUstream_st* get_cuda_stream() const;
 
  private:
+  static void initialize_core_library_callback_(
+    Legion::Machine,  // NOLINT(performance-unnecessary-value-param)
+    Legion::Runtime*,
+    const std::set<Processor>&);
+
+  [[nodiscard]] const MapperManager& get_mapper_manager_() const;
+
   bool initialized_{};
   Legion::Runtime* legion_runtime_{};
   Legion::Context legion_context_{};
@@ -396,8 +405,7 @@ class Runtime {
 
   std::vector<Legion::Future> pending_exceptions_{};
 
-  InternalSharedPtr<mapping::detail::InstanceManager> instance_manager_{};
-  InternalSharedPtr<mapping::detail::ReductionInstanceManager> reduction_instance_manager_{};
+  std::optional<MapperManager> mapper_manager_{};
 };
 
 [[nodiscard]] bool has_started();

@@ -40,7 +40,6 @@ constexpr std::string_view LIBRARY_NAME = "test_tunable";
 }  // namespace
 
 class LibraryMapper : public legate::mapping::Mapper {
-  void set_machine(const legate::mapping::MachineQueryInterface* /*machine*/) override {}
   legate::mapping::TaskTarget task_target(
     const legate::mapping::Task& /*task*/,
     const std::vector<legate::mapping::TaskTarget>& options) override

@@ -498,13 +498,6 @@ class Mapper {
  public:
   virtual ~Mapper() = default;
   /**
-   * @brief Sets a machine query interface. This call gives the mapper a chance
-   * to cache the machine query interface.
-   *
-   * @param machine Machine query interface
-   */
-  virtual void set_machine(const MachineQueryInterface* machine) = 0;
-  /**
    * @brief Picks the target processor type for the task
    *
    * @param task Task to map

@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int64_t, uint32_t
+from libc.stdint cimport int64_t
 
 from ..data.scalar cimport Scalar
 from ..task.task_info cimport _TaskInfo
@@ -30,9 +30,6 @@ cdef class Library(Unconstructable):
 
     cpdef _GlobalTaskID get_task_id(self, _LocalTaskID local_task_id):
         return self._handle.get_task_id(local_task_id)
-
-    cpdef uint32_t get_mapper_id(self):
-        return self._handle.get_mapper_id()
 
     cpdef _GlobalRedopID get_reduction_op_id(
         self, _LocalRedopID local_redop_id

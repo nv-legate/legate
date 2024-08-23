@@ -19,11 +19,12 @@
 #include "core/data/detail/logical_array.h"
 #include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/logical_store.h"
+#include "core/mapping/detail/base_mapper.h"
 #include "core/mapping/detail/core_mapper.h"
 #include "core/mapping/detail/default_mapper.h"
-#include "core/mapping/detail/instance_manager.h"
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/mapping.h"
+#include "core/mapping/mapping.h"
 #include "core/operation/detail/copy.h"
 #include "core/operation/detail/fill.h"
 #include "core/operation/detail/gather.h"
@@ -61,6 +62,7 @@
 #include <fmt/ranges.h>
 #include <iostream>
 #include <limits>
+#include <mappers/logging_wrapper.h>
 #include <regex>
 #include <set>
 #include <stdexcept>
@@ -105,9 +107,7 @@ Runtime::Runtime()
     field_reuse_freq_{
       LEGATE_FIELD_REUSE_FREQ.get(LEGATE_FIELD_REUSE_FREQ_DEFAULT, LEGATE_FIELD_REUSE_FREQ_TEST)},
     field_reuse_size_{local_machine().calculate_field_reuse_size()},
-    force_consensus_match_{LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST)},
-    instance_manager_{make_internal_shared<mapping::detail::InstanceManager>()},
-    reduction_instance_manager_{make_internal_shared<mapping::detail::ReductionInstanceManager>()}
+    force_consensus_match_{LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST)}
 {
 }
 
@@ -126,8 +126,7 @@ Library* Runtime::create_library(
   // because we first check that the key does not yet exist.
   //
   // NOLINTNEXTLINE(performance-unnecessary-value-param)
-  std::map<VariantCode, VariantOptions> default_options,
-  bool in_callback)
+  std::map<VariantCode, VariantOptions> default_options)
 {
   if (libraries_.find(library_name) != libraries_.end()) {
     throw std::invalid_argument{fmt::format("Library {} already exists", library_name)};
@@ -138,16 +137,14 @@ Library* Runtime::create_library(
     mapper = std::make_unique<mapping::detail::DefaultMapper>();
   }
 
-  auto* ptr = &libraries_
-                 .try_emplace(std::string{library_name},
-                              Library::ConstructKey{},
-                              std::string{library_name},
-                              config,
-                              std::move(default_options))
-                 .first->second;
-
-  ptr->register_mapper(std::move(mapper), in_callback);
-  return ptr;
+  return &libraries_
+            .try_emplace(std::string{library_name},
+                         Library::ConstructKey{},
+                         std::string{library_name},
+                         config,
+                         std::move(mapper),
+                         std::move(default_options))
+            .first->second;
 }
 
 namespace {
@@ -186,8 +183,7 @@ Library* Runtime::find_or_create_library(
   const ResourceConfig& config,
   std::unique_ptr<mapping::Mapper> mapper,
   const std::map<VariantCode, VariantOptions>& default_options,
-  bool* created,
-  bool in_callback)
+  bool* created)
 {
   auto result = find_library(library_name, true /*can_fail*/);
 
@@ -197,8 +193,7 @@ Library* Runtime::find_or_create_library(
     }
     return result;
   }
-  result = create_library(
-    std::move(library_name), config, std::move(mapper), default_options, in_callback);
+  result = create_library(std::move(library_name), config, std::move(mapper), default_options);
   if (created != nullptr) {
     *created = true;
   }
@@ -267,16 +262,14 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
   initialized_ = true;
   legate::comm::coll::collInit(argc, argv);
   legion_context_ = std::move(legion_context);
-  core_library_   = find_library(CORE_LIBRARY_NAME, false /*can_fail*/);
-
-  field_manager_ = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
-                                              : std::make_unique<FieldManager>();
+  field_manager_  = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
+                                               : std::make_unique<FieldManager>();
   communicator_manager_.emplace();
   partition_manager_.emplace();
   static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
 
   Config::has_socket_mem = local_machine_.has_socket_memory();
-  comm::register_builtin_communicator_factories(core_library_);
+  comm::register_builtin_communicator_factories(core_library());
 }
 
 mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
@@ -644,7 +637,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
 {
   if (type->size() == 0) {
     throw std::invalid_argument{"Null type or zero-size types cannot be used for stores"};
-  }
+  }  // namespace
   check_dimensionality_(dim);
   auto storage = make_internal_shared<detail::Storage>(make_internal_shared<Shape>(dim),
                                                        std::move(type),
@@ -899,7 +892,7 @@ Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
   req.add_field(field_id);
 
   // TODO(wonchanl): We need to pass the metadata about logical store
-  Legion::InlineLauncher launcher{req, core_library_->get_mapper_id()};
+  Legion::InlineLauncher launcher{req, mapper_id()};
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");
   launcher.provenance = get_provenance().to_string();
@@ -1028,7 +1021,7 @@ Legion::IndexPartition Runtime::create_image_partition(
                                                             color_space,
                                                             LEGION_COMPUTE_KIND,
                                                             LEGION_AUTO_GENERATE_ID,
-                                                            core_library_->get_mapper_id(),
+                                                            mapper_id(),
                                                             0,
                                                             buffer.to_legion_buffer());
   }
@@ -1040,7 +1033,7 @@ Legion::IndexPartition Runtime::create_image_partition(
                                                     color_space,
                                                     LEGION_COMPUTE_KIND,
                                                     LEGION_AUTO_GENERATE_ID,
-                                                    core_library_->get_mapper_id(),
+                                                    mapper_id(),
                                                     0,
                                                     buffer.to_legion_buffer());
 }
@@ -1055,7 +1048,7 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
   auto&& launch_domain = partition->launch_domain();
   auto output          = create_store(domain_type(), 1, true);
   auto task            = create_task(
-    core_library_,
+    core_library(),
     LocalTaskID{sorted ? CoreTask::FIND_BOUNDING_BOX_SORTED : CoreTask::FIND_BOUNDING_BOX},
     launch_domain);
 
@@ -1182,9 +1175,16 @@ void Runtime::destroy_barrier(Legion::PhaseBarrier barrier)
   legion_runtime_->destroy_phase_barrier(legion_context_, std::move(barrier));
 }
 
-Legion::Future Runtime::get_tunable(Legion::MapperID mapper_id, std::int64_t tunable_id)
+Legion::Future Runtime::get_tunable(const Library& library, std::int64_t tunable_id)
 {
-  const Legion::TunableLauncher launcher{static_cast<Legion::TunableID>(tunable_id), mapper_id, 0};
+  auto launcher =
+    Legion::TunableLauncher{static_cast<Legion::TunableID>(tunable_id), mapper_id(), 0};
+  const auto* mapper = library.get_mapper();
+
+  launcher.arg = Legion::UntypedBuffer{
+    mapper,
+    sizeof(mapper)  // NOLINT(bugprone-sizeof-expression)
+  };
   return legion_runtime_->select_tunable_value(legion_context_, launcher);
 }
 
@@ -1235,7 +1235,7 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result,
   auto variant =
     static_cast<Legion::MappingTagID>(mapping::detail::to_variant_code(machine.preferred_target()));
   auto launcher = TaskLauncher{
-    core_library_, machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
+    core_library(), machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
 
   launcher.add_future(result);
   launcher.add_scalar(make_internal_shared<Scalar>(offset));
@@ -1253,7 +1253,7 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
   auto variant =
     static_cast<Legion::MappingTagID>(mapping::detail::to_variant_code(machine.preferred_target()));
   auto launcher = TaskLauncher{
-    core_library_, machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
+    core_library(), machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
 
   launcher.add_future_map(result);
   launcher.add_scalar(make_internal_shared<Scalar>(offset));
@@ -1269,7 +1269,7 @@ Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
                                             future_map,
                                             static_cast<Legion::ReductionOpID>(reduction_op),
                                             false /*deterministic*/,
-                                            core_library_->get_mapper_id(),
+                                            mapper_id(),
                                             0 /*tag*/,
                                             nullptr /*provenance*/,
                                             init_value);
@@ -1277,14 +1277,15 @@ Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
 
 Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map) const
 {
-  auto reduction_op =
-    core_library_->get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
+  const auto reduction_op =
+    core_library()->get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
+
   return legion_runtime_->reduce_future_map(
     legion_context_,
     future_map,
     static_cast<Legion::ReductionOpID>(reduction_op),
     false /*deterministic*/,
-    core_library_->get_mapper_id(),
+    mapper_id(),
     static_cast<Legion::MappingTagID>(CoreMappingTag::JOIN_EXCEPTION));
 }
 
@@ -1309,8 +1310,7 @@ void Runtime::issue_execution_fence(bool block /*=false*/)
 {
   flush_scheduling_window();
   // FIXME: This needs to be a Legate operation
-  auto future = legion_runtime_->issue_execution_fence(legion_context_);
-  if (block) {
+  if (const auto future = legion_runtime_->issue_execution_fence(legion_context_); block) {
     future.wait();
   }
 }
@@ -1371,7 +1371,7 @@ Legion::ProjectionID Runtime::get_affine_projection(std::uint32_t src_ndim,
     return finder->second;
   }
 
-  auto proj_id = core_library_->get_projection_id(next_projection_id_++);
+  auto proj_id = core_library()->get_projection_id(next_projection_id_++);
 
   register_affine_projection_functor(src_ndim, point, proj_id);
   affine_projections_[key] = proj_id;
@@ -1396,7 +1396,7 @@ Legion::ProjectionID Runtime::get_delinearizing_projection(const tuple<std::uint
     return finder->second;
   }
 
-  auto proj_id = core_library_->get_projection_id(next_projection_id_++);
+  auto proj_id = core_library()->get_projection_id(next_projection_id_++);
 
   register_delinearizing_projection_functor(color_shape, proj_id);
   delinearizing_projections_[color_shape] = proj_id;
@@ -1423,7 +1423,7 @@ Legion::ProjectionID Runtime::get_compound_projection(const tuple<std::uint64_t>
     return finder->second;
   }
 
-  auto proj_id = core_library_->get_projection_id(next_projection_id_++);
+  auto proj_id = core_library()->get_projection_id(next_projection_id_++);
 
   register_compound_projection_functor(color_shape, point, proj_id);
   compound_projections_[key] = proj_id;
@@ -1462,7 +1462,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
     return finder->second;
   }
 
-  auto sharding_id = core_library_->get_sharding_id(next_sharding_id_++);
+  auto sharding_id = core_library()->get_sharding_id(next_sharding_id_++);
   registered_shardings_.insert({std::move(key), sharding_id});
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -1670,22 +1670,26 @@ void handle_legate_args(std::string_view legate_config)
   // some values have to be passed via env var
   args_ss << "-lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0 ";
 
+  const auto add_logger = [&](std::string_view item) {
+    if (!log_levels.empty()) {
+      log_levels += ',';
+    }
+    log_levels += item;
+  };
+
+  LEGATE_ASSERT(Config::parsed());
+  if (Config::log_mapping_decisions) {
+    add_logger(fmt::format("{}=2", mapping::detail::BaseMapper::LOGGER_NAME));
+  }
+
   if (profile) {
     args_ss << "-lg:prof 1 -lg:prof_logfile " << log_path / "legate_%.prof" << " ";
-    if (log_levels.empty()) {
-      log_levels = "legion_prof=2";
-    } else {
-      log_levels += ",legion_prof=2";
-    }
+    add_logger("legion_prof=2");
   }
 
   if (spy) {
     args_ss << "-lg:spy ";
-    if (log_levels.empty()) {
-      log_levels = "legion_spy=2";
-    } else {
-      log_levels += ",legion_spy=2";
-    }
+    add_logger("legion_spy=2");
   }
 
   if (freeze_on_error) {
@@ -1743,13 +1747,10 @@ void handle_realm_default_args()
 
 }  // namespace
 
-void initialize_core_library_callback(
-  Legion::Machine,  // NOLINT(performance-unnecessary-value-param)
-  Legion::Runtime*,
-  const std::set<Processor>&);
-
 /*static*/ std::int32_t Runtime::start(std::int32_t argc, char** argv)
 {
+  // Must populate this before we handle Legate args as it expects to read its values.
+  Config::parse();
   if (!Legion::Runtime::has_runtime()) {
     try {
       handle_realm_default_args();
@@ -1791,7 +1792,8 @@ void initialize_core_library_callback(
       "\"--with-gasnet\")"};
   }
 
-  Legion::Runtime::perform_registration_callback(initialize_core_library_callback, true /*global*/);
+  Legion::Runtime::perform_registration_callback(initialize_core_library_callback_,
+                                                 true /*global*/);
 
   if (!Legion::Runtime::has_runtime()) {
     if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true); result != 0) {
@@ -1851,7 +1853,7 @@ Runtime* RuntimeManager::get()
       throw std::runtime_error{
         "Legate runtime has been finalized, and cannot be re-initialized without restarting the "
         "program."};
-    }
+    }  // namespace
     rt_.emplace();
     state_ = State::INITIALIZED;
   }
@@ -1908,15 +1910,10 @@ std::int32_t Runtime::finish()
   // We're about to deallocate objects below, so let's block on all outstanding Legion operations
   issue_execution_fence(true);
 
-  instance_manager_.reset();
-  reduction_instance_manager_.reset();
-
   // Any STL containers holding Legion handles need to be cleared here, otherwise they cause
   // trouble when they get destroyed in the Legate runtime's destructor
-  pending_exceptions_.clear();
 
   // We finally deallocate managers
-  libraries_.clear();
   region_managers_.clear();
   field_manager_.reset();
 
@@ -1925,15 +1922,22 @@ std::int32_t Runtime::finish()
   scope_        = Scope{};
   core_library_ = nullptr;
   legate::comm::coll::collFinalize();
+  // Mappers get raw pointers to Libraries, so just in case any of the above launched residual
+  // cleanup tasks, we issue another fence here before we clear the Libraries.
+  issue_execution_fence(true);
+  mapper_manager_.reset();
+  libraries_.clear();
+  // This should be empty at this point, since the execution fence will ensure they are all
+  // raised, but just in case, clear them. There is no hope of properly handling them now.
+  pending_exceptions_.clear();
   initialized_ = false;
 
   // Mark that we are done excecuting the top-level task
   // After this call the context is no longer valid
-  Legion::Runtime::get_runtime()->finish_implicit_task(std::exchange(legion_context_, nullptr));
-
+  legion_runtime_->finish_implicit_task(std::exchange(legion_context_, nullptr));
   // The previous call is asynchronous so we still need to
   // wait for the shutdown of the runtime to complete
-  auto ret = Legion::Runtime::wait_for_shutdown();
+  const auto ret = Legion::Runtime::wait_for_shutdown();
   // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
   // circumstances.
   //
@@ -2080,13 +2084,11 @@ void register_builtin_reduction_ops()
 
 extern void register_exception_reduction_op(const Library* context);
 
-void initialize_core_library_callback(
+/*static*/ void Runtime::initialize_core_library_callback_(
   Legion::Machine,  // NOLINT(performance-unnecessary-value-param)
   Legion::Runtime*,
   const std::set<Processor>&)
 {
-  Config::parse();
-
   ResourceConfig config;
   config.max_tasks       = CoreTask::MAX_TASK;
   config.max_dyn_tasks   = config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
@@ -2095,8 +2097,14 @@ void initialize_core_library_callback(
   config.max_shardings     = traits::detail::to_underlying(CoreShardID::MAX_FUNCTOR);
   config.max_reduction_ops = traits::detail::to_underlying(CoreReductionOp::MAX_REDUCTION);
 
-  auto core_lib = Runtime::get_runtime()->create_library(
-    CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), {}, true /*in_callback*/);
+  auto* runtime = Runtime::get_runtime();
+
+  auto* const core_lib =
+    runtime->create_library(CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), {});
+  // Order is deliberate. core_library_() must be set here, because the core mapper and mapper
+  // manager expect to call get_runtime()->core_library().
+  runtime->core_library_ = core_lib;
+  runtime->mapper_manager_.emplace();
 
   register_legate_core_tasks(core_lib);
 
@@ -2116,6 +2124,19 @@ CUstream_st* Runtime::get_cuda_stream() const
   }
   return nullptr;
 }
+
+const MapperManager& Runtime::get_mapper_manager_() const
+{
+  // We want this to throw in debug mode
+  // NOLINTBEGIN(bugprone-unchecked-optional-access)
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    return mapper_manager_.value();
+  }
+  return *mapper_manager_;
+  // NOLINTEND(bugprone-unchecked-optional-access)
+}
+
+Legion::MapperID Runtime::mapper_id() const { return get_mapper_manager_().mapper_id(); }
 
 bool has_started() { return the_runtime.state() == RuntimeManager::State::INITIALIZED; }
 

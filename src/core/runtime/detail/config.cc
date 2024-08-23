@@ -12,12 +12,14 @@
 
 #include "core/runtime/detail/config.h"
 
+#include "core/utilities/assert.h"
 #include "core/utilities/detail/env.h"
 
 namespace legate::detail {
 
 /*static*/ void Config::reset_() noexcept
 {
+  Config::parsed_                    = false;
   Config::show_progress_requested    = false;
   Config::use_empty_task             = false;
   Config::synchronize_stream_view    = false;
@@ -30,6 +32,7 @@ namespace legate::detail {
 
 /*static*/ void Config::parse()
 {
+  LEGATE_CHECK(!parsed());
   try {
     Config::show_progress_requested    = LEGATE_SHOW_PROGRESS.get(/* default_value = */ false);
     Config::use_empty_task             = LEGATE_EMPTY_TASK.get(/* default_value = */ false);
@@ -41,6 +44,9 @@ namespace legate::detail {
     Config::reset_();
     throw;
   }
+  Config::parsed_ = true;
 }
+
+/*static*/ bool Config::parsed() noexcept { return Config::parsed_; }
 
 }  // namespace legate::detail

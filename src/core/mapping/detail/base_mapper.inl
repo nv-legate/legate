@@ -16,6 +16,10 @@
 
 namespace legate::mapping::detail {
 
+inline Legion::Logger& BaseMapper::logger() { return logger_; }
+
+inline const Legion::Logger& BaseMapper::logger() const { return logger_; }
+
 inline const std::vector<Processor>& BaseMapper::cpus() const { return local_machine_.cpus(); }
 
 inline const std::vector<Processor>& BaseMapper::gpus() const { return local_machine_.gpus(); }

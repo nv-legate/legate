@@ -23,8 +23,6 @@
 namespace test_library {
 
 class LibraryMapper : public legate::mapping::Mapper {
-  void set_machine(const legate::mapping::MachineQueryInterface* /*machine*/) override {}
-
   legate::mapping::TaskTarget task_target(
     const legate::mapping::Task& /*task*/,
     const std::vector<legate::mapping::TaskTarget>& options) override
@@ -130,22 +128,6 @@ TEST_F(Library, RegisterReductionOP)
 
   ASSERT_TRUE(lib.valid_reduction_op_id(id));
   ASSERT_EQ(lib.get_local_reduction_op_id(id), local_id);
-}
-
-TEST_F(Library, RegisterMapper)
-{
-  constexpr std::string_view LIBNAME = "test_library.libF";
-
-  auto* runtime      = legate::Runtime::get_runtime();
-  auto lib           = runtime->create_library(LIBNAME);
-  auto* mapper_old   = lib.impl()->get_legion_mapper();
-  auto mapper_id_old = lib.get_mapper_id();
-  auto mapper        = std::make_unique<LibraryMapper>();
-  lib.register_mapper(std::move(mapper));
-  auto* mapper_new   = lib.impl()->get_legion_mapper();
-  auto mapper_id_new = lib.get_mapper_id();
-  ASSERT_EQ(mapper_id_old, mapper_id_new);
-  ASSERT_NE(mapper_old, mapper_new);
 }
 
 TEST_F(Library, TaskID)

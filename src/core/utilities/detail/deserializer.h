@@ -141,7 +141,7 @@ class CopyDeserializer : public legate::detail::BaseDeserializer<CopyDeserialize
 
  public:
   CopyDeserializer(const Legion::Copy* copy,
-                   std::vector<ReqsRef>&& all_requirements,
+                   Span<const ReqsRef> all_requirements,
                    Legion::Mapping::MapperRuntime* runtime,
                    Legion::Mapping::MapperContext context);
 
@@ -153,8 +153,8 @@ class CopyDeserializer : public legate::detail::BaseDeserializer<CopyDeserialize
   void unpack_impl(RegionField& value);
 
  private:
-  std::vector<ReqsRef> all_reqs_{};
-  std::vector<ReqsRef>::iterator curr_reqs_{};
+  Span<const ReqsRef> all_reqs_{};
+  const ReqsRef* curr_reqs_{};
   Legion::Mapping::MapperRuntime* runtime_{};
   Legion::Mapping::MapperContext context_{};
   std::uint32_t req_index_offset_{};

@@ -58,6 +58,7 @@ Changes: Latest Development Version
 .. rubric:: Mapping
 
 - Add ``NodeRange::hash()``.
+- Remove ``mapping::Mapper::set_machine()``.
 
 .. rubric:: Partitioning
 
@@ -116,6 +117,10 @@ Changes: Latest Development Version
   variant options.
 - Add ``Runtime::issue_mapping_fence()`` to issue a mapping fence that prevents
   all the downstream tasks from being mapped ahead of the fence.
+- Remove ``Library::get_mapper_id()``. All libraries share the same (internal) underlying
+  Legion mapper, so this method is pointless.
+- Remove ``Library::register_mapper()``. The mapper should be passed when the library is
+  created, and can no longer be changed after the fact.
 
 .. rubric:: Utilities
 

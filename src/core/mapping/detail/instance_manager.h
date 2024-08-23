@@ -139,19 +139,14 @@ class BaseInstanceManager {
     Memory memory{};
   };
 
-  [[nodiscard]] Legion::Mapping::LocalLock& manager_lock();
-
  protected:
   template <typename T>
   [[nodiscard]] static bool do_erase_(
     std::unordered_map<FieldMemInfo, T, hasher<FieldMemInfo>>* instance_sets,
     const Legion::Mapping::PhysicalInstance& inst);
-
- private:
-  Legion::Mapping::LocalLock manager_lock_{};
 };
 
-class InstanceManager : public BaseInstanceManager {
+class InstanceManager final : public BaseInstanceManager {
  public:
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
     const Legion::LogicalRegion& region,
@@ -182,7 +177,7 @@ class InstanceManager : public BaseInstanceManager {
   std::unordered_map<FieldMemInfo, InstanceSet, hasher<FieldMemInfo>> instance_sets_{};
 };
 
-class ReductionInstanceManager : public BaseInstanceManager {
+class ReductionInstanceManager final : public BaseInstanceManager {
  public:
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
     GlobalRedopID redop,

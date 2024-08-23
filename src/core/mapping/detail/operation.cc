@@ -23,17 +23,18 @@ namespace legate::mapping::detail {
 Mappable::Mappable(private_tag, MapperDataDeserializer dez)
   : machine_{dez.unpack<Machine>()},
     sharding_id_{dez.unpack<std::uint32_t>()},
-    priority_{dez.unpack<std::int32_t>()}
+    priority_{dez.unpack<std::int32_t>()},
+    library_{dez.unpack<legate::detail::Library*>()}
 {
 }
 
 Task::Task(const Legion::Task* task,
-           const legate::detail::Library* library,
            Legion::Mapping::MapperRuntime* runtime,
            Legion::Mapping::MapperContext context)
-  : Mappable{task}, library_{library}, task_{task}
+  : Mappable{task}, task_{task}
 {
   TaskDeserializer dez{task, runtime, context};
+
   inputs_     = dez.unpack_arrays();
   outputs_    = dez.unpack_arrays();
   reductions_ = dez.unpack_arrays();
@@ -42,7 +43,7 @@ Task::Task(const Legion::Task* task,
 
 LocalTaskID Task::task_id() const
 {
-  return library_->get_local_task_id(static_cast<GlobalTaskID>(task_->task_id));
+  return library()->get_local_task_id(static_cast<GlobalTaskID>(task_->task_id));
 }
 
 TaskTarget Task::target() const
@@ -61,17 +62,25 @@ Copy::Copy(const Legion::Copy* copy,
            Legion::Mapping::MapperContext context)
   : copy_{copy}
 {
-  CopyDeserializer dez{copy,
-                       {copy->src_requirements,
-                        copy->dst_requirements,
-                        copy->src_indirect_requirements,
-                        copy->dst_indirect_requirements},
-                       runtime,
-                       context};
+  const auto reqs = {std::cref(copy->src_requirements),
+                     std::cref(copy->dst_requirements),
+                     std::cref(copy->src_indirect_requirements),
+                     std::cref(copy->dst_indirect_requirements)};
+  CopyDeserializer dez{copy, {reqs.begin(), reqs.end()}, runtime, context};
+
+  // Mappable
+  //
+  // Cannot use Mappable ctor here because both the Mappable and Copy data live in the same
+  // serdez buffer. So when Mappable() unpacks its stuff CopyDeserializer doesn't know that the
+  // buffer should be advanced. And we cannot advance the pointer ourselves because the
+  // incoming Legion::Copy is const.
   machine_     = dez.unpack<Machine>();
   sharding_id_ = dez.unpack<std::uint32_t>();
   priority_    = dez.unpack<std::int32_t>();
-  inputs_      = dez.unpack<std::vector<Store>>();
+  library_     = dez.unpack<legate::detail::Library*>();
+
+  // Copy
+  inputs_ = dez.unpack<std::vector<Store>>();
   dez.next_requirement_list();
   outputs_ = dez.unpack<std::vector<Store>>();
   dez.next_requirement_list();

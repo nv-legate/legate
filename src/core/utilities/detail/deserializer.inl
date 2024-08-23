@@ -82,7 +82,7 @@ void BaseDeserializer<Deserializer>::unpack_impl(T& value)
   //
   // Note align_offset may be zero if vptr was already properly aligned.
   value = *static_cast<const T*>(ptr);
-  args_ = args_.subspan(align_offset + sizeof(T));
+  args_ = args_.subspan(align_offset + sizeof(T));  // NOLINT(bugprone-sizeof-expression)
 }
 
 template <typename Deserializer>

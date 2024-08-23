@@ -12,31 +12,32 @@
 
 #pragma once
 
-// Useful for IDEs
-#include "core/utilities/detail/buffer_builder.h"
+#include "core/utilities/detail/zstring_view.h"
+
+#include <legion.h>
+#include <legion/legion_mapping.h>
+#include <legion/legion_types.h>
+
+namespace legate::mapping::detail {
+
+class BaseMapper;
+
+}  // namespace legate::mapping::detail
 
 namespace legate::detail {
 
-template <typename T>
-void BufferBuilder::pack(const T& value)
-{
-  pack_buffer(reinterpret_cast<const int8_t*>(std::addressof(value)),
-              sizeof(T),  // NOLINT(bugprone-sizeof-expression)
-              alignof(T));
-}
+class MapperManager {
+ public:
+  MapperManager();
 
-template <typename T>
-void BufferBuilder::pack(const std::vector<T>& values)
-{
-  const std::uint32_t size = values.size();
-  pack(size);
-  pack_buffer(values.data(), size * sizeof(T), alignof(T));
-}
+  [[nodiscard]] Legion::MapperID mapper_id() const;
 
-template <typename T>
-void BufferBuilder::pack(const tuple<T>& values)
-{
-  pack(values.data());
-}
+ private:
+  explicit MapperManager(Legion::Runtime* legion_runtime);
+
+  Legion::MapperID mapper_id_{};
+};
 
 }  // namespace legate::detail
+
+#include "core/runtime/detail/mapper_manager.inl"

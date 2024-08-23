@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int64_t, uint32_t
+from libc.stdint cimport int64_t
 from libcpp.memory cimport unique_ptr as std_unique_ptr
 
 from ..data.scalar cimport Scalar, _Scalar
@@ -30,7 +30,6 @@ cdef extern from "core/runtime/library.h" namespace "legate" nogil:
         _Library(const _Library&)
         _LocalTaskID get_new_task_id()
         _GlobalTaskID get_task_id(_LocalTaskID)
-        uint32_t get_mapper_id()
         _GlobalRedopID get_reduction_op_id(_LocalRedopID)
         _Scalar get_tunable(int64_t, _Type)
         void register_task(_LocalTaskID, std_unique_ptr[_TaskInfo])
@@ -44,7 +43,6 @@ cdef class Library(Unconstructable):
 
     cpdef _LocalTaskID get_new_task_id(self)
     cpdef _GlobalTaskID get_task_id(self, _LocalTaskID local_task_id)
-    cpdef uint32_t get_mapper_id(self)
     cpdef _GlobalRedopID get_reduction_op_id(
         self, _LocalRedopID local_redop_id
     )
