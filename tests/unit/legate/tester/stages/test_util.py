@@ -29,11 +29,12 @@ def test_StageResult() -> None:
     procs = [ProcessResult(f"run{i}", f"test{i}") for i in range(10)]
     procs[2].returncode = 10
     procs[7].returncode = -2
+    procs[8].timeout = True
 
     result = m.StageResult(procs=procs, time=timedelta(0))
 
     assert result.total == 10
-    assert result.passed == 8
+    assert result.passed == 7
 
 
 class Test_adjust_workers:

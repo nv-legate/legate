@@ -74,7 +74,7 @@ class StageResult:
     @property
     def passed(self) -> int:
         """The number of tests in this stage that passed."""
-        return sum(p.returncode == 0 for p in self.procs)
+        return sum(p.passed for p in self.procs)
 
 
 def adjust_workers(
