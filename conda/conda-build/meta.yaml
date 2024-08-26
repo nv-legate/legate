@@ -50,9 +50,9 @@
 {% endif %}
 
 {% if not gpu_enabled_bool %}
-{% set cpu_tag='_cpu' %}
+{% set dev_tag='_cpu' %}
 {% else %}
-{% set cpu_tag='' %}
+{% set dev_tag='_gpu' %}
 {% endif %}
 
 {% if debug_build_bool %}
@@ -86,7 +86,7 @@ build:
   missing_dso_whitelist:
     -  '*libcuda.so*'
 
-  string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ ucx_tag }}{{ cpu_tag }}{{ debug_tag }}"
+  string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ ucx_tag }}{{ dev_tag }}{{ debug_tag }}"
 
   script_env:
     - SCCACHE_BUCKET
@@ -112,7 +112,7 @@ build:
 {% if not gpu_enabled_bool %}
     - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }} =*_cpu
 {% else %}
-    - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }}
+    - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }} =*_gpu
 {% endif %}
 {% if gpu_enabled_bool %}
 # prevent nccl from pulling in cudatoolkit
