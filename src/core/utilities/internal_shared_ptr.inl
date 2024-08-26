@@ -224,7 +224,14 @@ void InternalSharedPtr<T>::maybe_destroy_() noexcept
   if constexpr (detail::shared_from_this_enabled_v<element_type>) {
     ctrl_->strong_deref();
   }
-  LEGATE_ASSERT(!use_count());
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && (use_count() > 0)) {
+    LEGATE_ABORT(
+      "Use-count of shared pointer: ",
+      static_cast<void*>(this),
+      " has increased during its destructor, effectively reviving the dead object. "
+      "This is usually due to a call to shared_from_this(), or stashing the object in "
+      "some external cache inside its (or some related object's) destructor. This is not allowed.");
+  }
   // Do NOT delete, move, re-order, or otherwise modify the following lines under ANY
   // circumstances.
   //
