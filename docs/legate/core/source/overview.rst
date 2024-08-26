@@ -319,3 +319,9 @@ your local machine (depending on your browser).
 We recommend that you do not mix debugging and profiling in the same run as
 some of the logging for the debugging features requires significant file I/O
 that can adversely effect the performance of the application.
+
+Contact
+~~~~~~~
+
+For technical questions about Legate and Legate-based tools, please visit
+the `community discussion forum <https://github.com/nv-legate/discussion>`_.

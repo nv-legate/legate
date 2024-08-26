@@ -34,6 +34,10 @@ Does Legate interoperate with X?
     on the `Legion github issue tracker <https://github.com/StanfordLegion/legion/issues>`_
     as it will be almost entirely orthogonal to how you use Legate.
 
+Where can I go with technical questions?
+    For technical questions about Legate and Legate-based tools, please visit
+    the `community discussion forum <https://github.com/nv-legate/discussion>`_.
+
 .. _mpi_wrapper_faq:
 
 What is the Legate MPI wrapper and why do I need it?
