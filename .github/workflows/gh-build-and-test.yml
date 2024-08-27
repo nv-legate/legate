@@ -29,7 +29,7 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "move_param_dependencies_workflow"
+      legate-gh-ci-tag: "v1.10"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
     secrets: inherit
@@ -46,7 +46,7 @@ jobs:
       name: uploadToURM
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "move_param_dependencies_workflow"
+      legate-gh-ci-tag: "v1.10"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
       upload-action: "upload-package"
@@ -113,7 +113,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "move_param_dependencies_workflow"
+      legate-gh-ci-tag: "v1.10"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
     secrets: inherit
@@ -141,7 +141,7 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "move_param_dependencies_workflow"
+      legate-gh-ci-tag: "v1.10"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
     secrets: inherit
@@ -158,7 +158,7 @@ jobs:
       name: UpdateTestStatus
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "move_param_dependencies_workflow"
+      legate-gh-ci-tag: "v1.10"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: true
       upload-action: "update-test-status"

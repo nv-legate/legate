@@ -24,7 +24,7 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "move_param_dependencies_workflow"
+      legate-gh-ci-tag: "v1.10"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: false
     secrets: inherit
