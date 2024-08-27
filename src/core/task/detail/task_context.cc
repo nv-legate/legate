@@ -47,6 +47,8 @@ TaskContext::TaskContext(const Legion::Task* task,
   }
 
   TaskDeserializer dez{task, regions_};
+
+  static_cast<void>(dez.unpack<detail::Library*>());
   inputs_     = dez.unpack_arrays();
   outputs_    = dez.unpack_arrays();
   reductions_ = dez.unpack_arrays();

@@ -138,7 +138,6 @@ void CopyLauncher::pack_args(BufferBuilder& buffer)
   machine_.pack(buffer);
   pack_sharding_functor_id(buffer);
   buffer.pack(priority_);
-  buffer.pack(Runtime::get_runtime()->core_library());
 
   auto pack_args = [&buffer](const std::vector<CopyArg>& args) {
     buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));

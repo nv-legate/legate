@@ -38,8 +38,6 @@ class Mappable {
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] std::uint32_t sharding_id() const;
   [[nodiscard]] std::int32_t priority() const;
-  [[nodiscard]] legate::detail::Library* library();
-  [[nodiscard]] const legate::detail::Library* library() const;
 
  protected:
   Mappable() = default;
@@ -47,7 +45,6 @@ class Mappable {
   mapping::detail::Machine machine_{};
   std::uint32_t sharding_id_{};
   std::int32_t priority_{static_cast<std::int32_t>(legate::detail::TaskPriority::DEFAULT)};
-  legate::detail::Library* library_{};
 
  private:
   struct private_tag {};
@@ -62,6 +59,8 @@ class Task : public Mappable {
        Legion::Mapping::MapperContext context);
 
   [[nodiscard]] LocalTaskID task_id() const;
+  [[nodiscard]] legate::detail::Library* library();
+  [[nodiscard]] const legate::detail::Library* library() const;
 
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& inputs() const;
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& outputs() const;
@@ -74,6 +73,7 @@ class Task : public Mappable {
 
  private:
   const Legion::Task* task_{};
+  legate::detail::Library* library_{};
 
   std::vector<InternalSharedPtr<Array>> inputs_{};
   std::vector<InternalSharedPtr<Array>> outputs_{};

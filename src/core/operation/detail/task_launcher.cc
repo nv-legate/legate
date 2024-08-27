@@ -115,6 +115,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   BufferBuilder task_arg;
 
+  task_arg.pack(library_);
   pack_args(task_arg, analyzer, inputs_);
   pack_args(task_arg, analyzer, outputs_);
   pack_args(task_arg, analyzer, reductions_);
@@ -188,6 +189,7 @@ Legion::Future TaskLauncher::execute_single()
 
   BufferBuilder task_arg;
 
+  task_arg.pack(library_);
   pack_args(task_arg, analyzer, inputs_);
   pack_args(task_arg, analyzer, outputs_);
   pack_args(task_arg, analyzer, reductions_);
@@ -253,7 +255,6 @@ void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
   }
   buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, *key_proj_id));
   buffer.pack(priority_);
-  buffer.pack(library_);
 }
 
 void TaskLauncher::import_output_regions_(

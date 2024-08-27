@@ -27,11 +27,11 @@ inline std::uint32_t Mappable::sharding_id() const { return sharding_id_; }
 
 inline std::int32_t Mappable::priority() const { return priority_; }
 
-inline legate::detail::Library* Mappable::library() { return library_; }
-
-inline const legate::detail::Library* Mappable::library() const { return library_; }
-
 // ==========================================================================================
+
+inline legate::detail::Library* Task::library() { return library_; }
+
+inline const legate::detail::Library* Task::library() const { return library_; }
 
 inline const std::vector<InternalSharedPtr<Array>>& Task::inputs() const { return inputs_; }
 
