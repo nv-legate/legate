@@ -80,6 +80,8 @@ build_legate() {
     activate_conda_env;
     conda_info;
 
+    git config --global --add safe.directory "$REPO_DIR/.git"
+
     case "$BUILD_TYPE" in
         ci) build_legate_ci && copy_ci_artifacts;;
         release) build_legate_release && copy_release_artifacts;;
