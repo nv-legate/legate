@@ -231,9 +231,9 @@ class TestManualTaskErrors:
             runtime.core_library, tasks.basic_task.task_id, (1, 2, 3)
         )
         msg = "Expected .* but got .*"
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             manual_task.add_output("foo")  # type: ignore
-        with pytest.raises(ValueError, match=msg):
+        with pytest.raises(TypeError, match=msg):
             manual_task.add_input(Scalar(1, ty.int8))  # type: ignore
 
     @pytest.mark.parametrize(

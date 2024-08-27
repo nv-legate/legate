@@ -74,7 +74,16 @@ cdef extern from "core/operation/task.h" namespace "legate" nogil:
 
 cdef class AutoTask(Unconstructable):
     cdef _AutoTask _handle
-    cdef list[type] _exception_types
+    # This is not really a dict, we only use it for the keys. We want to
+    # preserve 2 properties for the registered exception types:
+    #
+    # 1. Registering the same exception type twice should be a no-op
+    # 2. The types need to be stored in the order they were registered
+    #
+    # So what we really want is an ordered set, but set is famously still
+    # unordered in Python (as of 3.12), so what we do instead is (ab)use the
+    # dict keys and set every value to None.
+    cdef dict[type, None] _exception_types
     cdef bool _locked
 
     @staticmethod
@@ -110,7 +119,8 @@ cdef class AutoTask(Unconstructable):
 
 cdef class ManualTask(Unconstructable):
     cdef _ManualTask _handle
-    cdef list[type] _exception_types
+    # See AutoTask _exception_types on why this is the way it is
+    cdef dict[type, None] _exception_types
 
     @staticmethod
     cdef ManualTask from_handle(_ManualTask)

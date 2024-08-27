@@ -62,7 +62,7 @@ cdef class AutoTask(Unconstructable):
     cdef AutoTask from_handle(_AutoTask handle):
         cdef AutoTask result = AutoTask.__new__(AutoTask)
         result._handle = std_move(handle)
-        result._exception_types = []
+        result._exception_types = dict()
         result._locked = False
         return result
 
@@ -234,41 +234,138 @@ cdef class AutoTask(Unconstructable):
         self._handle.add_scalar_arg(scalar._handle)
 
     cpdef void add_constraint(self, Constraint constraint):
+        r"""
+        Add a partitioning constraint to the task.
+
+        Parameters
+        ----------
+        constraint : Constraint
+            The partitioning constraint to add.
+        """
         self._handle.add_constraint(constraint._handle)
 
     cpdef Variable find_or_declare_partition(self, LogicalArray array):
+        r"""
+        Finds or creates a partition symbol for the given array.
+
+        Parameters
+        ----------
+        array : LogicalArray
+            The array for which to look for.
+
+        Returns
+        -------
+        Variable
+            The partition symbol.
+        """
         return Variable.from_handle(
             self._handle.find_or_declare_partition(array._handle)
         )
 
     cpdef Variable declare_partition(self):
+        r"""
+        Declare a partition symbol for this task.
+
+        Returns
+        -------
+        Variable
+            The partition symbol.
+
+        Notes
+        -----
+        As opposed to `find_or_declare_partition()`, this routine always
+        returns a new `Variable`.
+        """
         return Variable.from_handle(self._handle.declare_partition())
 
     cpdef str provenance(self):
+        r"""
+        Returns the provenance of this task.
+
+        Returns
+        -------
+        str
+            The provenance.
+        """
         return str_from_string_view(self._handle.provenance())
 
     cpdef void set_concurrent(self, bool concurrent):
+        r"""
+        Set whether a task requires a concurrent task launch.
+
+        Any task with at least one communicator will implicitly use concurrent
+        task launch, so this method is to be used when the task needs a
+        concurrent task launch for a reason unknown to Legate.
+
+        All tasks -- unless specified by this routine, or by the implicit
+        condition above -- default to non-concurrent task launch.
+
+        Parameters
+        ----------
+        concurrent : bool
+            `True` if the task should be concurrent, `False` otherwise.
+        """
         self._handle.set_concurrent(concurrent)
 
     cpdef void set_side_effect(self, bool has_side_effect):
+        r"""
+        Set whether a task has side effects.
+
+        A task is assumed to be free of side effects by default if the task
+        only has scalar arguments.
+
+        Parameters
+        ----------
+        has_side_effect : bool
+            `True` if the task has side effects, `False` otherwise.
+        """
         self._handle.set_side_effect(has_side_effect)
 
     cpdef void throws_exception(self, type exception_type):
+        r"""
+        Set which exception is thrown by the task.
+
+        This routine may be called multiple times to indicate that the task
+        throws multiple exceptions. Each exception is added to the set of
+        thrown exceptions. The exception types are deduplicated.
+
+        Parameters
+        ----------
+        exception_type : type
+            The type of exception thrown by the task.
+        """
         self._handle.throws_exception(True)
-        self._exception_types.append(exception_type)
+        self._exception_types[exception_type] = None
 
     @property
-    def exception_types(self) -> tuple[type]:
-        return tuple(self._exception_types)
+    def exception_types(self) -> tuple[type, ...]:
+        r"""
+        Get the exception types thrown by the task.
+
+        Returns
+        -------
+        tuple[type, ...]
+            The types of exceptions thrown by the task.
+        """
+        return tuple(self._exception_types.keys())
 
     cpdef void add_communicator(self, str name):
+        r"""
+        Add a communicator to the task
+
+        Parameters
+        ----------
+        name : str
+            The name of the communicator to add.
+        """
         self._handle.add_communicator(std_string_view_from_py(name))
 
     cpdef void execute(self):
         """
-        Submits the operation to the runtime. There is no guarantee that the
-        operation will start the execution right upon the return of this
-        method.
+        Submits the operation to the runtime.
+
+        There is no guarantee of when the runtime will start the execution of
+        the task.
         """
         get_legate_runtime().submit(self)
 
@@ -368,6 +465,11 @@ cdef class AutoTask(Unconstructable):
     def raw_handle(self) -> uintptr_t:
         """
         Get the raw C++ pointer to the underlying class instance as an integer
+
+        Returns
+        -------
+        int
+            The pointer to the C++ `AutoTask`.
         """
         return <uintptr_t> &self._handle
 
@@ -388,7 +490,7 @@ cdef class ManualTask(Unconstructable):
     cdef ManualTask from_handle(_ManualTask handle):
         cdef ManualTask result = ManualTask.__new__(ManualTask)
         result._handle = std_move(handle)
-        result._exception_types = []
+        result._exception_types = dict()
         return result
 
     cpdef void add_input(
@@ -396,6 +498,23 @@ cdef class ManualTask(Unconstructable):
         arg: LogicalStore | LogicalStorePartition,
         projection: tuple[SymbolicExpr, ...] | None = None,
     ):
+        r"""
+        Adds an input to the task.
+
+        Parameters
+        ----------
+        arg : LogicalStore | LogicalStorePartition
+            `LogicalStore` or `LogicalStorePartition` to pass as input.
+        projection : tuple[SymbolicExpr, ...] | None
+            The projection for the partition (if `arg` is a
+            `LogicalStorePartition`). If `arg` is a `LogicalStore`, then
+            argument is ignored.
+
+        Raises
+        ------
+        TypeError
+            If `arg` is neither a `LogicalStore` or `LogicalStorePartition`.
+        """
         if isinstance(arg, LogicalStore):
             self._handle.add_input((<LogicalStore> arg)._handle)
         elif isinstance(arg, LogicalStorePartition):
@@ -404,7 +523,7 @@ cdef class ManualTask(Unconstructable):
                 to_cpp_projection(projection),
             )
         else:
-            raise ValueError(
+            raise TypeError(
                 "Expected a logical store or store partition "
                 "but got {type(arg)}"
             )
@@ -414,6 +533,23 @@ cdef class ManualTask(Unconstructable):
         arg: LogicalStore | LogicalStorePartition,
         projection: tuple[SymbolicExpr, ...] | None = None,
     ):
+        r"""
+        Adds an output to the task.
+
+        Parameters
+        ----------
+        arg : LogicalStore | LogicalStorePartition
+            `LogicalStore` or `LogicalStorePartition` to pass as output.
+        projection : tuple[SymbolicExpr, ...] | None
+            The projection for the partition (if `arg` is a
+            `LogicalStorePartition`). If `arg` is a `LogicalStore`, then
+            argument is ignored.
+
+        Raises
+        ------
+        TypeError
+            If `arg` is neither a `LogicalStore` or `LogicalStorePartition`.
+        """
         if isinstance(arg, LogicalStore):
             self._handle.add_output((<LogicalStore> arg)._handle)
         elif isinstance(arg, LogicalStorePartition):
@@ -422,7 +558,7 @@ cdef class ManualTask(Unconstructable):
                 to_cpp_projection(projection),
             )
         else:
-            raise ValueError(
+            raise TypeError(
                 "Expected a logical store or store partition "
                 "but got {type(arg)}"
             )
@@ -478,30 +614,93 @@ cdef class ManualTask(Unconstructable):
         self._handle.add_scalar_arg(scalar._handle)
 
     cpdef str provenance(self):
+        r"""
+        Returns the provenance of this task.
+
+        Returns
+        -------
+        str
+            The provenance.
+        """
         return str_from_string_view(self._handle.provenance())
 
     cpdef void set_concurrent(self, bool concurrent):
+        r"""
+        Set whether a task requires a concurrent task launch.
+
+        Any task with at least one communicator will implicitly use concurrent
+        task launch, so this method is to be used when the task needs a
+        concurrent task launch for a reason unknown to Legate.
+
+        All tasks -- unless specified by this routine, or by the implicit
+        condition above -- default to non-concurrent task launch.
+
+        Parameters
+        ----------
+        concurrent : bool
+            `True` if the task should be concurrent, `False` otherwise.
+        """
         self._handle.set_concurrent(concurrent)
 
     cpdef void set_side_effect(self, bool has_side_effect):
+        r"""
+        Set whether a task has side effects.
+
+        A task is assumed to be free of side effects by default if the task
+        only has scalar arguments.
+
+        Parameters
+        ----------
+        has_side_effect : bool
+            `True` if the task has side effects, `False` otherwise.
+        """
         self._handle.set_side_effect(has_side_effect)
 
     cpdef void throws_exception(self, type exception_type):
+        r"""
+        Set which exception is thrown by the task.
+
+        This routine may be called multiple times to indicate that the task
+        throws multiple exceptions. Each exception is added to the set of
+        thrown exceptions. The exception types are deduplicated.
+
+        Parameters
+        ----------
+        exception_type : type
+            The type of exception thrown by the task.
+        """
         self._handle.throws_exception(True)
-        self._exception_types.append(exception_type)
+        self._exception_types[exception_type] = None
 
     @property
     def exception_types(self) -> tuple[type]:
-        return tuple(self._exception_types)
+        r"""
+        Get the exception types thrown by the task.
+
+        Returns
+        -------
+        tuple[type, ...]
+            The types of exceptions thrown by the task.
+        """
+        return tuple(self._exception_types.keys())
 
     cpdef void add_communicator(self, str name):
+        r"""
+        Add a communicator to the task
+
+        Parameters
+        ----------
+        name : str
+            The name of the communicator to add.
+        """
         self._handle.add_communicator(std_string_view_from_py(name))
 
     cpdef void execute(self):
         """
-        Submits the operation to the runtime. There is no guarantee that the
-        operation will start the execution right upon the return of this
-        method.
+        Submits the operation to the runtime.
+
+        There is no guarantee when the runtime will start the execution of this
+        task.
         """
         get_legate_runtime().submit(self)
 
@@ -526,6 +725,11 @@ cdef class ManualTask(Unconstructable):
     @property
     def raw_handle(self) -> uintptr_t:
         """
-        Get the raw C++ pointer to the underlying class instance as an integer
+        Get the raw C++ pointer to the underlying class instance as an integer.
+
+        Returns
+        -------
+        int
+            The raw pointer to the C++ `ManualTask`.
         """
         return <uintptr_t> &self._handle

@@ -24,34 +24,114 @@ cdef class SymbolicExpr(Unconstructable):
 
     @property
     def dim(self) -> int:
+        r"""
+        Get the dimension index of this expression.
+
+        Returns
+        -------
+        int
+            The dimension.
+        """
         return self._handle.dim()
 
     @property
     def weight(self) -> int:
+        r"""
+        Get the weight for the coordinates.
+
+        Returns
+        -------
+        int
+            The weight.
+        """
         return self._handle.weight()
 
     @property
     def offset(self) -> int:
+        r"""
+        Get the offset of the expression.
+
+        Returns
+        -------
+        int
+            The offset.
+        """
         return self._handle.offset()
 
     cpdef bool is_identity(self, int32_t dim):
+        r"""
+        For a given dimension, return whether the expression is an identity
+        mapping.
+
+        Parameters
+        ----------
+        dim : int
+            The dimension to check
+
+        Returns
+        -------
+        bool
+            `True` if the expression is the identity, `False` otherwise.
+        """
         return self._handle.is_identity(dim)
 
     def __eq__(self, object other) -> bool:
-        if not isinstance(other, SymbolicExpr):
-            return False
-        return self._handle == (<SymbolicExpr> other)._handle
+        if isinstance(other, SymbolicExpr):
+            return self._handle == (<SymbolicExpr> other)._handle
+        return NotImplemented
 
     def __mul__(self, int32_t other) -> SymbolicExpr:
+        r"""
+        Multiply an expression by a scaling factor.
+
+        Parameters
+        ----------
+        other : int
+            The scaling factor.
+
+        Returns
+        -------
+        SymbolicExpr
+            The result of the multiplication.
+        """
         return SymbolicExpr.from_handle(self._handle * other)
 
     def __add__(self, int32_t other) -> SymbolicExpr:
+        r"""
+        Shift an expression by a scaling factor.
+
+        Parameters
+        ----------
+        other : int
+            The scaling factor.
+
+        Returns
+        -------
+        SymbolicExpr
+            The result of the shift.
+        """
         return SymbolicExpr.from_handle(self._handle + other)
 
     def __str__(self) -> str:
+        r"""
+        Return a human-readable representation of the expression.
+
+        Returns
+        -------
+        str
+            The human readable representation of the expression.
+        """
         return self._handle.to_string().decode()
 
     def __repr__(self) -> str:
+        r"""
+        Return a human-readable representation of the expression.
+
+        Returns
+        -------
+        str
+            The human readable representation of the expression.
+        """
         return str(self)
 
 
