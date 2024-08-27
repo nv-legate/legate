@@ -186,7 +186,8 @@ cdef extern from *:
 
 cdef class TaskInfo(Unconstructable):
     cdef void _assert_valid(self):
-        assert self.valid, "TaskInfo object is in an invalid state"
+        if not self.valid:
+            raise RuntimeError("TaskInfo object is in an invalid state")
 
     @staticmethod
     cdef TaskInfo from_handle(
@@ -234,6 +235,14 @@ cdef class TaskInfo(Unconstructable):
         return
 
     def __repr__(self) -> str:
+        r"""
+        Return a human-readable string representation of the `TaskInfo`.
+
+        Returns
+        -------
+        str
+            The string representation.
+        """
         # must regular import here to get the python enum version
         from ..utilities.typedefs import VariantCode as py_VariantCode
 
@@ -252,6 +261,23 @@ cdef class TaskInfo(Unconstructable):
         str name,
         list[tuple[VariantCode, object]] variants
     ) -> TaskInfo:
+        r"""
+        Construct a `TaskInfo` from a list of variants.
+
+        Parameters
+        ----------
+        local_task_id : LocalTaskID
+            The local task ID of the task.
+        name : str
+            The name of the task.
+        variants : list[tuple[VariantCode, VariantFunction]]
+            The variants to register.
+
+        Returns
+        -------
+        TaskInfo
+            The created `TaskInfo` object.
+        """
         if not variants:
             raise ValueError(
                 "Cannot construct task info "
@@ -274,18 +300,84 @@ cdef class TaskInfo(Unconstructable):
 
     @property
     def valid(self) -> bool:
+        r"""
+        Get whether this `TaskInfo` object is still valid.
+
+        When a `TaskInfo` object is registered with a `Library`, the task info
+        object is "moved" into the library, and relinquishes its internal
+        handle to the `Library`, thereby rendering it "invalid". But Python has
+        no move semantics, so this validity must be manually queried.
+
+        Returns
+        -------
+        bool
+            `True` if the object is valid, `False` otherwise.
+        """
         return self._handle != NULL
 
     @property
     def name(self) -> str:
+        r"""
+        Get the name of the task.
+
+        Returns
+        -------
+        str
+            The task name.
+
+        Raises
+        ------
+        RuntimeError
+            If the task info object is in an invalid state.
+        """
         self._assert_valid()
         return str_from_string_view(self._handle.name())
 
     cpdef bool has_variant(self, VariantCode variant_id):
+        r"""
+        Get whether a `TaskInfo` object has a particular variant.
+
+        Parameters
+        ----------
+        variant_id : VariantCode
+            The variant kind to query.
+
+        Returns
+        -------
+        bool
+            `True` if the variant exists, `False` otherwise.
+
+        Raises
+        ------
+        RuntimeError
+            If the task info object is in an invalid state.
+        """
         self._assert_valid()
         return self._handle.find_variant(variant_id).has_value()
 
     cpdef void add_variant(self, VariantCode variant_kind, object fn):
+        r"""
+        Register a variant to a `TaskInfo`.
+
+        Parameters
+        ----------
+        variant_kind : VariantCode
+            The variant kind to add.
+        fn : VariantFunction
+            The variant to add.
+
+        Raises
+        ------
+        RuntimeError
+            If the task info object is in an invalid state.
+        TypeError
+            If `fn` is not callable.
+        ValueError
+            If `variant_kind` is an unknown variant kind.
+        RuntimeError
+            If the task info object has already registered a variant for
+            `variant_kind`.
+        """
         self._assert_valid()
         if not callable(fn):
             raise TypeError(

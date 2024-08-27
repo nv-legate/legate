@@ -33,13 +33,37 @@ cdef class TaskContext(Unconstructable):
         return result
 
     cpdef _GlobalTaskID get_task_id(self):
+        r"""
+        Get the global task ID.
+
+        Returns
+        -------
+        GlobalTaskID
+            The global task ID for this task.
+        """
         return self._handle.task_id()
 
     cpdef VariantCode get_variant_kind(self):
+        r"""
+        Get the `VariantCode` for this task.
+
+        Returns
+        -------
+        VariantCode
+            The variant code for this task.
+        """
         return self._handle.variant_kind()
 
     @property
     def inputs(self) -> tuple[PhysicalArray, ...]:
+        r"""
+        Get the input arguments to the task.
+
+        Returns
+        -------
+        tuple[PhysicalArray, ...]
+            The input arguments to the task.
+        """
         cdef int i
 
         if self._inputs is None:
@@ -51,6 +75,14 @@ cdef class TaskContext(Unconstructable):
 
     @property
     def outputs(self) -> tuple[PhysicalArray, ...]:
+        r"""
+        Get the output arguments to the task.
+
+        Returns
+        -------
+        tuple[PhysicalArray, ...]
+            The output arguments to the task.
+        """
         cdef int i
 
         if self._outputs is None:
@@ -62,6 +94,14 @@ cdef class TaskContext(Unconstructable):
 
     @property
     def reductions(self) -> tuple[PhysicalArray, ...]:
+        r"""
+        Get the reduction arguments to the task.
+
+        Returns
+        -------
+        tuple[PhysicalArray, ...]
+            The reduction arguments to the task.
+        """
         cdef int i
 
         if self._reductions is None:
@@ -73,6 +113,14 @@ cdef class TaskContext(Unconstructable):
 
     @property
     def scalars(self) -> tuple[Scalar, ...]:
+        r"""
+        Get the scalar arguments to the task.
+
+        Returns
+        -------
+        tuple[Scalar, ...]
+            The scalar arguments to the task.
+        """
         cdef int i
 
         if self._scalars is None:
@@ -82,6 +130,7 @@ cdef class TaskContext(Unconstructable):
             )
         return self._scalars
 
+    # Not documented on purpose, this is a private function
     cpdef void set_exception(self, Exception excn) except *:
         cdef Py_ssize_t length = 0
         cdef char *buf = NULL
@@ -95,4 +144,15 @@ cdef class TaskContext(Unconstructable):
         )
 
     cpdef bool can_raise_exception(self):
+        r"""
+        Get whether a task is allowed to raise exceptions.
+
+        If a task for which this routine returns `False` raises an exception,
+        the runtime will print the exception and promptly abort.
+
+        Returns
+        -------
+        bool
+            `True` if this task may raise exceptions, `False` otherwise.
+        """
         return self._handle.can_raise_exception()
