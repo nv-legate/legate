@@ -45,10 +45,39 @@ cdef class ProcessorRange:
     def create(
             uint32_t low, uint32_t high, uint32_t per_node_count
     ) -> ProcessorRange:
+        r"""
+        Construct a `ProcessorRange`.
+
+        Parameters
+        ----------
+        low : int
+            The starting processor ID.
+        high : int
+            The end processor ID.
+        per_node_count : int
+            The number of per-node processors.
+
+        Returns
+        -------
+        ProcessorRange
+            The constructed `ProcessorRange`
+        """
         return ProcessorRange(low, high, per_node_count)
 
     @staticmethod
     def create_empty() -> ProcessorRange:
+        r"""
+        Create an empty `ProcessorRange`.
+
+        Returns
+        -------
+        ProcessorRange
+            The empty range.
+
+        Notes
+        -----
+        Equivalent to `ProcessorRange()` (i.e. an empty constructor).
+        """
         return ProcessorRange()
 
     @staticmethod
@@ -63,6 +92,18 @@ cdef class ProcessorRange:
         uint32_t high = 0,
         uint32_t per_node_count = 0,
     ) -> None:
+        r"""
+        Construct a `ProcessorRange`.
+
+        Parameters
+        ----------
+        low : int
+            The starting processor ID.
+        high : int
+            The end processor ID.
+        per_node_count : int
+            The number of per-node processors.
+        """
         self._handle = _ProcessorRange(low, high, per_node_count)
 
     @property
@@ -192,9 +233,25 @@ cdef class ProcessorRange:
         return (result.low, result.high)
 
     def __str__(self) -> str:
+        r"""
+        Return a human-readable representation of the range.
+
+        Returns
+        -------
+        str
+            The human readable representation of the range.
+        """
         return self._handle.to_string().decode()
 
     def __repr__(self) -> str:
+        r"""
+        Return a human-readable representation of the range.
+
+        Returns
+        -------
+        str
+            The human readable representation of the range.
+        """
         return str(self)
 
     def __and__(self, other: ProcessorRange) -> ProcessorRange:
@@ -214,13 +271,17 @@ cdef class ProcessorRange:
         return ProcessorRange.from_handle(self._handle & other._handle)
 
     def __eq__(self, other: ProcessorRange) -> bool:
-        return self._handle == other._handle
+        if isinstance(other, ProcessorRange):
+            return self._handle == other._handle
+        return NotImplemented
 
     def __ne__(self, other: ProcessorRange) -> bool:
-        return self._handle != other._handle
+        return not (self._handle == other._handle)
 
     def __lt__(self, other: ProcessorRange) -> bool:
-        return self._handle < other._handle
+        if isinstance(other, ProcessorRange):
+            return self._handle < other._handle
+        return NotImplemented
 
 
 cdef class Machine:
@@ -232,6 +293,23 @@ cdef class Machine:
         return result
 
     def __cinit__(self, ranges: dict | None = None) -> None:
+        r"""
+        Construct a `Machine`.
+
+        Parameters
+        ----------
+        ranges : dict[TaskTarget, ProcessorRange] | None
+            A mapping of the avaible processors per target for the machine.
+
+        Raises
+        ------
+        ValueError
+            If `ranges` is neither `None` nor a `dict`.
+        ValueError
+            If a key in `ranges` is not a `TaskTarget`.
+        ValueError
+            If a value in `ranges` is not a `ProcessorRange`.
+        """
         if ranges is None:
             ranges = dict()
 
@@ -447,10 +525,12 @@ cdef class Machine:
         raise KeyError(f"Invalid slicing key: {key}")
 
     def __eq__(self, other: Machine) -> bool:
-        return self._handle == other._handle
+        if isinstance(other, Machine):
+            return self._handle == other._handle
+        return NotImplemented
 
     def __ne__(self, other: Machine) -> bool:
-        return self._handle != other._handle
+        return not self._handle == other._handle
 
     def __and__(self, other: Machine) -> Machine:
         """
@@ -469,9 +549,25 @@ cdef class Machine:
         return Machine.from_handle(self._handle & other._handle)
 
     def __str__(self) -> str:
+        r"""
+        Return a human-readable representation of the `Machine`.
+
+        Returns
+        -------
+        str
+            The human readable representation of the `Machine`.
+        """
         return self._handle.to_string().decode()
 
     def __repr__(self) -> str:
+        r"""
+        Return a human-readable representation of the `Machine`.
+
+        Returns
+        -------
+        str
+            The human readable representation of the `Machine`.
+        """
         return str(self)
 
     def __enter__(self) -> None:
