@@ -1731,7 +1731,12 @@ class Runtime:
         fill.execute()
 
     def tree_reduce(
-        self, context: Context, task_id: int, store: Store, radix: int = 4
+        self,
+        context: Context,
+        task_id: int,
+        store: Store,
+        radix: int = 4,
+        scalar_args: list[tuple[Any, ty.Dtype]] = [],
     ) -> Store:
         """
         Performs a user-defined reduction by building a tree of reduction
@@ -1780,6 +1785,8 @@ class Runtime:
         )
         task.add_input(store)
         task.add_output(result)
+        for scalar_arg in scalar_args:
+            task.add_scalar_arg(scalar_arg[0], scalar_arg[1])
         task.execute()
         return result
 
