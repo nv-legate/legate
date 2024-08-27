@@ -9,10 +9,10 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Collection, Iterator
 
 class Shape:
-    def __init__(self, value: Shape | Iterable[int]) -> None: ...
+    def __init__(self, value: Shape | Collection[int]) -> None: ...
     @property
     def extents(self) -> tuple[int, ...]: ...
     @property

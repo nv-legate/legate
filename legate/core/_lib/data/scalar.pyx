@@ -281,6 +281,22 @@ cdef class Scalar:
         return result
 
     def __init__(self, value: Any, dtype: Type | None = None) -> None:
+        r"""
+        Construct a `Scalar`.
+
+        Parameters
+        ----------
+        value : Any
+            The value to fill the scalar with.
+        dtype : Type | None
+            The `Type` of the value. If it is `None`, the type will be
+            deduced.
+
+        Raises
+        ------
+        NotImplementedError
+            If the type could not be deduced from the object.
+        """
         if dtype is None:
             dtype = Type.from_py_object(value)
         ctor = _CONSTRUCTORS.get(dtype.code)
@@ -289,6 +305,19 @@ cdef class Scalar:
         ctor(self, value, dtype)
 
     cpdef object value(self):
+        r"""
+        Get the value of the object contained by the `Scalar`.
+
+        Returns
+        -------
+        Any
+            The contained value.
+
+        Raises
+        ------
+        RuntimeError
+            If the contained value could not be reconstructed.
+        """
         cdef _Type.Code code = self._handle.type().code()
         try:
             return _GETTERS[code](self)
@@ -296,13 +325,43 @@ cdef class Scalar:
             raise RuntimeError(f"unhandled type {code}") from ke
 
     def __str__(self) -> str:
+        r"""
+        Return a human-readable representation of the scalar.
+
+        Returns
+        -------
+        str
+            The human readable representation of the scalar.
+        """
         return f"Scalar({self.value()}, {self.type})"
 
     def __repr__(self) -> str:
+        r"""
+        Return a human-readable representation of the scalar.
+
+        Returns
+        -------
+        str
+            The human readable representation of the scalar.
+        """
         return str(self)
 
     @property
-    def __array_interface__(self):
+    def __array_interface__(self) -> dict[str, Any]:
+        r"""
+        Retrieve the numpy-compatible array representation of the scalar.
+
+        Returns
+        -------
+        interface : dict[str, Any]
+            The numpy array interface dict.
+
+        Raises
+        ------
+        ValueError
+            If the type of the value in the scalar is variably sized (e.g. a
+            list).
+        """
         cdef Type ty = self.type
         if ty.variable_size:
             raise ValueError(
@@ -318,28 +377,63 @@ cdef class Scalar:
                 "typestr": numpy_type.str,
                 "data": (<uintptr_t> self._handle.ptr(), True),
             }
-        else:
-            numpy_type = ty.to_numpy_dtype()
-            return {
-                "version": 3,
-                "shape": (),
-                "typestr": numpy_type.str,
-                "data": (<uintptr_t> self._handle.ptr(), True),
-                "descr": numpy_type.descr,
-            }
+        numpy_type = ty.to_numpy_dtype()
+        return {
+            "version": 3,
+            "shape": (),
+            "typestr": numpy_type.str,
+            "data": (<uintptr_t> self._handle.ptr(), True),
+            "descr": numpy_type.descr,
+        }
 
     @property
     def type(self) -> Type:
+        r"""
+        Get the type of the scalar.
+
+        Returns
+        -------
+        Type
+            The type of the scalar.
+        """
         return Type.from_handle(self._handle.type())
 
     @property
     def ptr(self) -> uintptr_t:
+        r"""
+        Get the raw pointer to the backing allocation.
+
+        Returns
+        -------
+        int
+            The pointer to the `Scalar`'s data.
+        """
         return <uintptr_t> self._handle.ptr()
 
     @property
     def raw_handle(self) -> uintptr_t:
+        r"""
+        Get the pointer to the C++ `Scalar` object.
+
+        Returns
+        -------
+        int
+            The pointer to the C++ `Scalar` object.
+        """
         return <uintptr_t> &self._handle
 
     @staticmethod
     def null() -> Scalar:
+        r"""
+        Construct a nullary `Scalar`.
+
+        A null scalar holds no value, and has the special "null" `Type`. It
+        is akin to `None` in Python. It can be passed to tasks, and compared
+        against, but its value cannot be obtained.
+
+        Returns
+        -------
+        Scalar
+            A null scalar.
+        """
         return Scalar(None, null_type)

@@ -12,7 +12,7 @@
 from libc.stdint cimport int64_t, uint32_t, uint64_t
 from libcpp.utility cimport move as std_move
 
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator
 
 from ..utilities.utils cimport uint64_tuple_from_iterable
 
@@ -31,7 +31,15 @@ cdef class Shape:
             return (<Shape> obj)._handle
         return _Shape(std_move(uint64_tuple_from_iterable(obj)))
 
-    def __init__(self, object obj) -> None:
+    def __init__(self, obj: Shape | Collection[int]) -> None:
+        r"""
+        Construct a `Shape`.
+
+        Parameters
+        ----------
+        obj : Shape | Collection[int]
+            An iterable from which to construct the new shape from.
+        """
         self._handle = Shape.from_shape_like(obj)
 
     @property
@@ -113,6 +121,19 @@ cdef class Shape:
         return self.extents[idx]
 
     def __eq__(self, object other) -> bool:
+        r"""
+        Return whether two shapes are equal.
+
+        Parameters
+        ----------
+        other : Any
+            The rhs to compare against.
+
+        Returns
+        -------
+        bool
+            `True` if this shape is equal to `other`, `False` otherwise.
+        """
         cdef _Shape other_shape
         try:
             other_shape = Shape.from_shape_like(other)
@@ -136,10 +157,34 @@ cdef class Shape:
         return self.ndim
 
     def __iter__(self) -> Iterator[int]:
+        r"""
+        Retrun an iterator to the shapes extents.
+
+        Returns
+        -------
+        Iterator[int]
+            An iterator to the shapes extents.
+        """
         return iter(self.extents)
 
     def __str__(self) -> str:
+        r"""
+        Return a human-readable representation of the shape.
+
+        Returns
+        -------
+        str
+            The human readable representation of the shape.
+        """
         return self._handle.to_string().decode()
 
     def __repr__(self) -> str:
+        r"""
+        Return a human-readable representation of the shape.
+
+        Returns
+        -------
+        str
+            The human readable representation of the shape.
+        """
         return str(self)

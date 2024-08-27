@@ -37,45 +37,145 @@ cdef class LogicalStore(Unconstructable):
 
     @property
     def shape(self) -> Shape:
+        r"""
+        Get the stores shape.
+
+        Returns
+        -------
+        Shape
+            The shape of the store.
+        """
         return Shape.from_handle(self._handle.shape())
 
     @property
     def ndim(self) -> int32_t:
+        r"""
+        Get the number of dimensions of the store.
+
+        Returns
+        -------
+        int
+            The number of dimensions.
+        """
         return self._handle.dim()
 
     @property
     def has_scalar_storage(self) -> bool:
+        r"""
+        Get whether this store has been optimized for scalars.
+
+        Returns
+        -------
+        bool
+            `True` if this store is backed by scalar storage, `False`
+             otherwise.
+        """
         return self._handle.has_scalar_storage()
 
     cpdef bool overlaps(self, LogicalStore other):
+        r"""
+        Compute whether this store overlaps with another.
+
+        Parameters
+        ----------
+        other : LogicalStore
+            The store to compare against.
+
+        Returns
+        -------
+        bool
+            `True` if this store overlaps with `other`, `False` otherwise.
+        """
         return self._handle.overlaps(other._handle)
 
     @property
     def type(self) -> Type:
+        r"""
+        Get the type of the store.
+
+        Returns
+        -------
+        Type
+            The type of the store.
+        """
         return Type.from_handle(self._handle.type())
 
     @property
-    def extents(self) -> list:
+    def extents(self) -> tuple[int, ...]:
+        r"""
+        Get the extents of the store.
+
+        This call may block if the store is unbound.
+
+        Returns
+        -------
+        tuple[int, ...]
+            The extents of the store.
+        """
         return self._handle.extents().data()
 
     @property
     def volume(self) -> size_t:
+        r"""
+        Get the total number of elements in the store.
+
+        This call may block if the store is unbound.
+
+        Returns
+        -------
+        int
+            The number of elements in the store.
+        """
         return self._handle.volume()
 
     @property
     def size(self) -> size_t:
+        r"""
+        Get the total number of elements in the store.
+
+        This property is an alias to `volume()`.
+
+        Returns
+        -------
+        int
+            The number of elements in the store.
+        """
         return self.volume
 
     @property
     def unbound(self) -> bool:
+        r"""
+        Get whether the store is unbound.
+
+        Returns
+        -------
+        bool
+            `True` if the store is unbound, `False` otherwise.
+        """
         return self._handle.unbound()
 
     @property
     def transformed(self) -> bool:
+        r"""
+        Get whether the store is transformed.
+
+        Returns
+        -------
+        bool
+            `True` if the store is transformed, `False` otherwise.
+        """
         return self._handle.transformed()
 
     @property
     def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+        r"""
+        Get the Legate array data interface.
+
+        Returns
+        -------
+        LegateDataInterfaceItem
+            The array interface.
+        """
         array = LogicalArray.from_store(self)
         result: LegateDataInterfaceItem = {
             "version": 1,
@@ -84,14 +184,57 @@ cdef class LogicalStore(Unconstructable):
         return result
 
     def __str__(self) -> str:
+        r"""
+        Return a human-readable representation of the store.
+
+        Returns
+        -------
+        str
+            The human readable representation of the store.
+        """
         return self._handle.to_string().decode()
 
     def __repr__(self) -> str:
+        r"""
+        Return a human-readable representation of the store.
+
+        Returns
+        -------
+        str
+            The human readable representation of the store.
+        """
         return str(self)
 
     def __getitem__(
         self, indices: int64_t | slice | tuple[int64_t | slice, ...],
     ) -> LogicalStore:
+        r"""
+        Get a sliced, projected, or promoted sub-store.
+
+        Parameters
+        ----------
+        indices : int | slice | None | tuple[int | slice | None, ...]
+            The indices to slice the current store with.
+
+        Returns
+        -------
+        LogicalStore
+            The transformed store.
+
+        Notes
+        -----
+        For each value in `indices`, the store is transformed in the
+        following manner:
+
+        If `indices[i]` is a `slice`, the store is sliced:
+        `store = store.slice(i, indices[i])`.
+
+        If `indices[i]` is `None`, the store is promoted:
+        `store = store.promote(i, 1)`.
+
+        Otherwise, the store is projected:
+        `store = store.project(i, indices[i])`.
+        """
         cdef LogicalStore result = self
 
         if not isinstance(indices, tuple):
@@ -413,16 +556,68 @@ cdef class LogicalStore(Unconstructable):
         )
 
     cpdef PhysicalStore get_physical_store(self):
+        r"""
+        Get a `PhysicalStore` over this stores' data.
+
+        Returns
+        -------
+        PhysicalStore
+            The `PhysicalStore` spanning this stores' data.
+        """
         return PhysicalStore.from_handle(self._handle.get_physical_store())
 
     cpdef void detach(self):
+        r"""
+        Detach a store from its attached memory.
+
+        This call will wait for all operations that use the store (or any
+        sub-store) to complete.
+
+        After this call returns, it is safe to deallocate the attached
+        external allocation. If the allocation was mutable, the contents
+        would be up-to-date upon the return. The contents of the store are
+        invalid after that point.
+        """
         self._handle.detach()
 
     cpdef bool equal_storage(self, LogicalStore other):
+        r"""
+        Determine whether two stores refer to the same memory.
+
+        This routine can be used to determine whether two seemingly unrelated
+        stores refer to the same logical memory region, including through
+        possible transformations in either `self` or `other`.
+
+        The user should note that some transformations *do* modify the
+        underlying storage. For example, the store produced by slicing will
+        *not* share the same storage as its parent, and this routine will
+        return false for it.
+
+        Transposed stores, on the other hand, still share the same storage,
+        and hence this routine will return true for them.
+
+        Parameters
+        ----------
+        other : LogicalStore
+            The `LogicalStore` against which to compare.
+
+        Returns
+        -------
+        bool
+            `True` if this store overlaps with `other`, `False` otherwise.
+        """
         return self._handle.equal_storage(other._handle)
 
     @property
     def raw_handle(self) -> uintptr_t:
+        r"""
+        Get a pointer to the raw C++ `LogicalStore` object.
+
+        Returns
+        -------
+        int
+            The pointer to the raw C++ `LogicalStore` object.
+        """
         return <uintptr_t> &self._handle
 
 
@@ -436,13 +631,42 @@ cdef class LogicalStorePartition:
         return result
 
     cpdef LogicalStore store(self):
+        r"""
+        Get the `LogicalStore` to which this partition refers to.
+
+        Returns
+        -------
+        LogicalStore
+            The `LogicalStore`.
+        """
         return LogicalStore.from_handle(self._handle.store())
 
     @property
-    def color_shape(self) -> list:
+    def color_shape(self) -> tuple[int, ...]:
+        r"""
+        Get the color shape for this partition.
+
+        Returns
+        -------
+        tuple[int, ...]
+            The color shape for this partition.
+        """
         return self._handle.color_shape().data()
 
     def get_child_store(self, *color) -> LogicalStore:
+        r"""
+        Get a child store from this partition.
+
+        Parameters
+        ----------
+        *color : int
+            The colors of the child stores to get.
+
+        Returns
+        -------
+        LogicalStore
+            The `LogicalStore` comprising the selected children.
+        """
         cdef _tuple[uint64_t] cpp_color
 
         cpp_color.reserve(len(color))

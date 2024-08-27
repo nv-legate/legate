@@ -105,7 +105,7 @@ cdef class InlineAllocation:
         }
 
     @property
-    def __array_interface__(self):
+    def __array_interface__(self) -> dict[str, Any]:
         r"""
         Retrieve the numpy-compatible array representation of the allocation.
 
@@ -127,7 +127,7 @@ cdef class InlineAllocation:
         return self._get_array_interface()
 
     @property
-    def __cuda_array_interface__(self):
+    def __cuda_array_interface__(self) -> dict[str, Any]:
         r"""
         Retrieve the cupy-compatible array representation of the allocation.
 

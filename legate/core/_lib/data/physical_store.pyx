@@ -18,6 +18,8 @@ from ..utilities.unconstructable cimport Unconstructable
 from .inline_allocation cimport InlineAllocation
 from .physical_store cimport _PhysicalStore
 
+from typing import Any
+
 
 cdef class PhysicalStore(Unconstructable):
     @staticmethod
@@ -28,21 +30,61 @@ cdef class PhysicalStore(Unconstructable):
 
     @property
     def ndim(self) -> int32_t:
+        r"""
+        Get the number of dimensions in the store
+
+        Returns
+        -------
+        int
+            The number of dimensions in the store.
+        """
         return self._handle.dim()
 
     @property
     def type(self) -> Type:
+        r"""
+        Get the type of the store.
+
+        Returns
+        -------
+        Type
+            The type of the store.
+        """
         return Type.from_handle(self._handle.type())
 
     @property
     def domain(self) -> Domain:
+        r"""
+        Get the `Domain` of the store.
+
+        Returns
+        -------
+        Domain
+            The domain of the store.
+        """
         return Domain.from_handle(self._handle.domain())
 
     @property
     def target(self) -> StoreTarget:
+        r"""
+        Get the kind of memory in which this store resides.
+
+        Returns
+        -------
+        StoreTarget
+            The memory kind.
+        """
         return self._handle.target()
 
     cpdef InlineAllocation get_inline_allocation(self):
+        r"""
+        Get the `InlineAllocation` for this store.
+
+        Returns
+        -------
+        InlineAllocation
+            The inline allocation object holding the raw pointer and strides.
+        """
         return InlineAllocation.create(
             self,
             self._handle.get_inline_allocation()
@@ -50,8 +92,28 @@ cdef class PhysicalStore(Unconstructable):
 
     @property
     def __array_interface__(self) -> dict[str, Any]:
+        r"""
+        Retrieve the numpy-compatible array representation of the allocation.
+
+        Equivalent to `get_inline_allocation().__array_interface__`.
+
+        Returns
+        -------
+        interface : dict[str, Any]
+            The numpy array interface dict.
+        """
         return self.get_inline_allocation().__array_interface__
 
     @property
     def __cuda_array_interface__(self) -> dict[str, Any]:
+        r"""
+        Retrieve the cupy-compatible array representation of the allocation.
+
+        Equivalent to `get_inline_allocation().__cuda_array_interface__`.
+
+        Returns
+        -------
+        interface : dict[str, Any]
+            The cupy array interface dict.
+        """
         return self.get_inline_allocation().__cuda_array_interface__
