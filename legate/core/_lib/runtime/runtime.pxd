@@ -274,7 +274,9 @@ cdef class Runtime(Unconstructable):
         bool optimize_scalar = *,
         object ndim = *,
     )
-    cpdef LogicalArray create_array_like(self, LogicalArray array, Type dtype)
+    cpdef LogicalArray create_array_like(
+        self, LogicalArray array, Type dtype = *
+    )
     cpdef LogicalStore create_store(
         self,
         Type dtype,

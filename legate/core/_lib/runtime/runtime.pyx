@@ -25,7 +25,7 @@ import gc
 import inspect
 import pickle
 import sys
-from collections.abc import Iterable
+from collections.abc import Collection
 from typing import Any
 
 
@@ -117,6 +117,24 @@ cdef class Runtime(Unconstructable):
         return result
 
     cpdef Library find_library(self, str library_name):
+        r"""
+        Find a `Library`.
+
+        Parameters
+        ----------
+        library_name : str
+            The name of the library.
+
+        Returns
+        -------
+        Library
+            The library.
+
+        Raises
+        ------
+        ValueError
+            If the library could not be found.
+        """
         cdef std_string_view _library_name = std_string_view_from_py(
             library_name
         )
@@ -127,12 +145,20 @@ cdef class Runtime(Unconstructable):
 
     @property
     def core_library(self) -> Library:
+        r"""
+        Get the core library.
+
+        Returns
+        -------
+        Library
+            The core library.
+        """
         return self.find_library("legate.core")
 
     cpdef AutoTask create_auto_task(
         self, Library library, _LocalTaskID task_id
     ):
-        """
+        r"""
         Creates an auto task.
 
         Parameters
@@ -162,7 +188,7 @@ cdef class Runtime(Unconstructable):
         object launch_shape,
         object lower_bounds = None,
     ):
-        """
+        r"""
         Creates a manual task.
 
         When ``lower_bounds`` is None, the task's launch domain is ``[0,
@@ -227,6 +253,26 @@ cdef class Runtime(Unconstructable):
         LogicalStore source,
         redop: int | None = None,
     ):
+        r"""
+        Issue a copy between two stores.
+
+        `source` and `target` must have the same shape.
+
+        Parameters
+        ----------
+        target : LogicalStore
+            The target.
+        source : LogicalStore
+            The source.
+        redop : int (optional)
+            The reduction operator to use. If none is given, no reductions take
+            place. The stores type must support the operator.
+
+        Raises
+        ------
+        ValueError
+            If the store's type doesn't support `redop`.
+        """
         cdef int32_t _redop
 
         if redop is None:
@@ -245,6 +291,29 @@ cdef class Runtime(Unconstructable):
         LogicalStore source_indirect,
         redop: int | None = None,
     ):
+        r"""
+        Issue a gather copy between stores.
+
+        `source_indirect` and the `target` must have the same shape.
+
+        Parameters
+        ----------
+        target : LogicalStore
+            The target store.
+        source : LogicalStore
+            The source store.
+        source_indirect : LogicalStore
+            The source indirection store.
+        redop : int (optional)
+            ID of the reduction operator to use (optional). If none is given,
+            no reductions take place. The store's type must support the
+            operator.
+
+        Raises
+        ------
+        ValueError
+            If the store's type doesn't support `redop`.
+        """
         cdef int32_t _redop
 
         if redop is None:
@@ -272,6 +341,29 @@ cdef class Runtime(Unconstructable):
         LogicalStore source,
         redop: int | None = None,
     ):
+        r"""
+        Issue a scatter copy between stores.
+
+        `target_indirect` and the `source` must have the same shape.
+
+        Parameters
+        ----------
+        target : LogicalStore
+            The target store.
+        target_indirect : LogicalStore
+            The target indirection store.
+        source : LogicalStore
+            The source store.
+        redop : int (optional)
+            ID of the reduction operator to use (optional). If none is given,
+            no reductions take place. The store's type must support the
+            operator.
+
+        Raises
+        ------
+        ValueError
+            If the store's type doesn't support `redop`.
+        """
         cdef int32_t _redop
 
         if redop is None:
@@ -300,6 +392,31 @@ cdef class Runtime(Unconstructable):
         LogicalStore source_indirect,
         redop: int | None = None,
     ):
+        r"""
+        Issue a scatter-gather copy between stores.
+
+        `target_indirect` and the `source_indirect` must have the same shape.
+
+        Parameters
+        ----------
+        target : LogicalStore
+            The target store.
+        target_indirect : LogicalStore
+            The target indirection store.
+        source : LogicalStore
+            The source store.
+        source_indirect : LogicalStore
+            The source indirection store.
+        redop : int (optional)
+            ID of the reduction operator to use (optional). If none is given,
+            no reductions take place. The store's type must support the
+            operator.
+
+        Raises
+        ------
+        ValueError
+            If the store's type doesn't support `redop`.
+        """
         cdef int32_t _redop
 
         if redop is None:
@@ -323,7 +440,7 @@ cdef class Runtime(Unconstructable):
                 )
 
     cpdef void issue_fill(self, object array_or_store, object value):
-        """
+        r"""
         Fills the array or store with a constant value.
 
         Parameters
@@ -369,7 +486,7 @@ cdef class Runtime(Unconstructable):
         LogicalStore store,
         int64_t radix = 4,
     ):
-        """
+        r"""
         Performs a user-defined reduction by building a tree of reduction
         tasks. At each step, the reducer task gets up to ``radix`` input stores
         and is supposed to produce outputs in a single unbound store.
@@ -404,6 +521,34 @@ cdef class Runtime(Unconstructable):
         return LogicalStore.from_handle(_handle)
 
     cpdef void submit(self, object op):
+        r"""
+        Submit a task for execution.
+
+        Each submitted operation goes through multiple pipeline steps to
+        eventually get scheduled for execution. It's not guaranteed that the
+        submitted operation starts executing immediately.
+
+        The exception to this rule is if the task indicates that it throws an
+        exception. In this case, the scheduling pipeline is first flushed, then
+        the task is executed. This routine does not return until the task has
+        finished executing.
+
+        If the task does *not* indicate that it throws an exception but throws
+        one anyway, the runtime will catch and report the exception traceback
+        then promptly abort the program.
+
+        Parameters
+        ----------
+        op : AutoTask | ManualTask
+            The task to submit.
+
+        Raises
+        ------
+        Any
+            If thrown, the exception raised by the task.
+        TypeError
+            If the operation is neither an `AutoTask` or `ManualTask`
+        """
         if isinstance(op, AutoTask):
             try:
                 with nogil:
@@ -419,16 +564,47 @@ cdef class Runtime(Unconstructable):
             except Exception as e:
                 _maybe_reraise_legate_exception(e, op.exception_types)
 
-        raise RuntimeError(f"Unknown type of operation: {type(op)}")
+        raise TypeError(f"Unknown type of operation: {type(op)}")
 
     cpdef LogicalArray create_array(
         self,
         Type dtype,
-        shape: Shape | Iterable[int] | None = None,
+        shape: Shape | Collection[int] | None = None,
         bool nullable = False,
         bool optimize_scalar = False,
         ndim: int | None = None,
     ):
+        r"""
+        Create a `LogicalArray`.
+
+        If `shape` is `None`, the returned array is unbound, otherwise the
+        array is bound.
+
+        If not `None`, this call does not block on the value of `shape`.
+
+        Parameters
+        ----------
+        dtype : Type
+            The type of the array elements.
+        shape : Shape | Collection[int] | None (optional)
+            The shape of the array.
+        nullable : bool (`False`)
+            Whether the array is nullable.
+        optimize_scalar : bool (`False`)
+            Whether to optimize the array for scalar storage.
+        ndim : int | None (optional)
+            Number of dimensions.
+
+        Returns
+        -------
+        LogicalArray
+            The newly created array.
+
+        Raises
+        ------
+        ValueError
+            If both `ndim` and `shape` are simultaneously not `None`.
+        """
         if ndim is not None and shape is not None:
             raise ValueError("ndim cannot be used with shape")
 
@@ -458,8 +634,29 @@ cdef class Runtime(Unconstructable):
 
         return LogicalArray.from_handle(_handle)
 
-    cpdef LogicalArray create_array_like(self, LogicalArray array, Type dtype):
+    cpdef LogicalArray create_array_like(
+        self, LogicalArray array, Type dtype = None
+    ):
+        r"""
+        Create an array isomorphic to a given array.
+
+        Parameters
+        ----------
+        array : LogicalArray
+            The array to model the new array from.
+        dtype : Type (optional)
+            The type of the resulting array. If given, must be compatible with
+            `array`s type. If not given, `array`s type is used.
+
+        Returns
+        -------
+        LogicalArray
+            The new array.
+        """
         cdef _LogicalArray _handle
+
+        if dtype is None:
+            dtype = array.type
 
         with nogil:
             _handle = self._handle.create_array_like(
@@ -470,10 +667,39 @@ cdef class Runtime(Unconstructable):
     cpdef LogicalStore create_store(
         self,
         Type dtype,
-        shape: Shape | Iterable[int] | None = None,
+        shape: Shape | Collection[int] | None = None,
         bool optimize_scalar = False,
         ndim: int | None = None,
     ):
+        r"""
+        Create a `LogicalStore`.
+
+        If `shape` is `None`, the created store is unbound, otherwise it is
+        bound.
+
+        If `shape` is not `None`, this call does not block on the shape.
+
+        Parameters
+        ----------
+        dtype : Type
+            The element type of the store.
+        shape : Shape | Collection[int] | None (optional)
+            The shape of the store.
+        optimize_scalar : bool (`False`)
+            Whether to optimize the store for scalar storage.
+        ndim : int | None (optional, `1`)
+            The number of dimensions for the store.
+
+        Returns
+        -------
+        LogicalStore
+            The newly created store.
+
+        Raises
+        ------
+        ValueError
+            If both `ndim` and `shape` are not `None`.
+        """
         if ndim is not None and shape is not None:
             raise ValueError("ndim cannot be used with shape")
 
@@ -497,8 +723,26 @@ cdef class Runtime(Unconstructable):
     cpdef LogicalStore create_store_from_scalar(
         self,
         Scalar scalar,
-        shape: Shape | Iterable[int] | None = None,
+        shape: Shape | Collection[int] | None = None,
     ):
+        r"""
+        Create a store from a `Scalar`.
+
+        If `shape` is not `None`, its volume bust be `1`. The call does not
+        block on the shape.
+
+        Parameters
+        ----------
+        scalar : Scalar
+            The scalar to create the store from.
+        shape : Shape | Collection[int] | None (optional)
+            The shape of the store.
+
+        Returns
+        -------
+        LogicalStore
+            The newly created store.
+        """
         cdef _LogicalStore _handle
         cdef _Shape _shape
 
@@ -518,11 +762,11 @@ cdef class Runtime(Unconstructable):
     cpdef LogicalStore create_store_from_buffer(
         self,
         Type dtype,
-        shape: Shape | Iterable[int],
+        shape: Shape | Collection[int],
         object data,
         bool read_only,
     ):
-        """
+        r"""
         Creates a Legate store from a Python object implementing the Python
         buffer protocol.
 
@@ -531,7 +775,7 @@ cdef class Runtime(Unconstructable):
         dtype: Type
             Type of the store's elements
 
-        shape : Shape or Iterable[int]
+        shape : Shape | Collection[int]
             Shape of the store
 
         data : object
@@ -580,10 +824,51 @@ cdef class Runtime(Unconstructable):
         return LogicalStore.from_handle(_handle)
 
     cpdef void issue_mapping_fence(self):
+        r"""
+        Issue a mapping fence.
+
+        A mapping fence, when issued, blocks mapping of all downstream
+        operations before those preceding the fence get mapped. An
+        `issue_mapping_fence()` call returns immediately after the request is
+        submitted to the runtime, and the fence asynchronously goes through the
+        runtime analysis pipeline just like any other Legate operations. The
+        call also flushes the scheduling window for batched execution.
+
+        Mapping fences only affect how the operations are mapped and do not
+        change their execution order, so they are semantically
+        no-op. Nevertheless, they are sometimes useful when the user wants to
+        control how the resource is consumed by independent tasks. Consider a
+        program with two independent tasks `A` and `B`, both of which discard
+        their stores right after their execution.  If the stores are too big to
+        be allocated all at once, mapping A and B in parallel (which can happen
+        because `A` and `B` are independent and thus nothing stops them from
+        getting mapped concurrently) can lead to a failure. If a mapping fence
+        exists between the two, the runtime serializes their mapping and can
+        reclaim the memory space from stores that would be discarded after
+        `A`'s execution to create allocations for `B`.
+        """
         with nogil:
             self._handle.issue_mapping_fence()
 
     cpdef void issue_execution_fence(self, bool block = False):
+        r"""
+        Issue an execution fence.
+
+        An execution fence is a join point in the task graph. All operations
+        prior to a fence must finish before any of the subsequent operations
+        start.
+
+        All execution fences are mapping fences by definition; i.e., an
+        execution fence not only prevents the downstream operations from being
+        mapped ahead of itself but also precedes their execution.
+
+        Parameters
+        ----------
+        block : bool (`False`)
+            Whether to block control code on the fence. If `True`, this routine
+            does not return until the scheduling pipeline has been fully
+            flushed, and all tasks on it have finished executing.
+        """
         with nogil:
             # Must release the GIL in case we have in-flight python tasks,
             # since those can't run if we are stuck here holding the bag.
@@ -591,26 +876,89 @@ cdef class Runtime(Unconstructable):
 
     @property
     def node_count(self) -> uint32_t:
+        r"""
+        Get the total number of nodes.
+
+        Returns
+        -------
+        int
+            The total number of nodes.
+        """
         return self._handle.node_count()
 
     @property
     def node_id(self) -> uint32_t:
+        r"""
+        Get the current rank.
+
+        Returns
+        -------
+        int
+            The current node rank.
+        """
         return self._handle.node_id()
 
     cpdef Machine get_machine(self):
+        r"""
+        Get the current machine.
+
+        Returns
+        -------
+        Machine
+            The machine of the current scope.
+        """
         return Machine.from_handle(self._handle.get_machine())
 
     @property
     def machine(self) -> Machine:
+        r"""
+        An alias for `get_machine()`.
+
+        Returns
+        -------
+        Machine
+            The current machine.
+        """
         return get_machine()
 
     cpdef void finish(self):
+        r"""
+        Finish a Legate program.
+
+        This routine:
+
+        #. Performs all shutdown callbacks.
+        #. Flushes the remaining scheduling pipeline.
+        #. Issues a blocking execution fence.
+        #. Tears down the runtime.
+
+        It does not return until all steps above have completed.
+        """
         global _shutdown_manager
         _shutdown_manager.perform_callbacks()
         with nogil:
             finish()
 
     cpdef void add_shutdown_callback(self, callback: ShutdownCallback):
+        r"""
+        Add a shutdown callback to be executed on Legate program finalization.
+
+        Shutdown callbacks are only executed during normal program shutdown,
+        and will not run if e.g. the program ends by exception or abort.
+
+        Shutdown callbacks are executed in LIFO order. Callbacks may themselves
+        register additional shutdown callbacks during their execution, though
+        given the LIFO order, this means that the very next callback will be
+        the function that was just registered.
+
+        It is possible to register the same callback multiple times. No attempt
+        is made to deduplicate these.
+
+        Parameters
+        ----------
+        callback : ShutdownCallback
+            The callback to register.
+        """
         global _shutdown_manager
         _shutdown_manager.add_shutdown_callback(callback)
 
@@ -681,24 +1029,26 @@ cdef void raise_pending_exception():
         _maybe_reraise_legate_exception(e)
 
 cpdef Runtime get_legate_runtime():
-    """
-    Returns the Legate runtime
+    r"""
+    Returns the Legate runtime.
 
     Returns
     -------
-        Legate runtime object
+    Runtime
+        Legate runtime object.
     """
     global _runtime
     return _runtime
 
 
 cpdef Machine get_machine():
-    """
-    Returns the machine of the current scope
+    r"""
+    Returns the machine of the current scope.
 
     Returns
     -------
-        Machine object
+    Machine
+        Machine object.
     """
     return get_legate_runtime().get_machine()
 
@@ -713,13 +1063,13 @@ cdef str caller_frameinfo():
 def track_provenance(
     bool nested = False
 ) -> Callable[[AnyCallable], AnyCallable]:
-    """
+    r"""
     Decorator that adds provenance tracking to functions. Provenance of each
     operation issued within the wrapped function will be tracked automatically.
 
     Parameters
     ----------
-    nested : bool
+    nested : bool (`False`)
         If ``True``, each invocation to a wrapped function within another
         wrapped function updates the provenance string. Otherwise, the
         provenance is tracked only for the outermost wrapped function.
@@ -753,6 +1103,14 @@ def track_provenance(
 
 
 cpdef bool is_running_in_task():
+    r"""
+    Determine whether the current control code is running inside a Legate task.
+
+    Returns
+    -------
+    bool
+        `True` if currently inside a Legate task, `False` otherwise.
+    """
     return _is_running_in_task()
 
 

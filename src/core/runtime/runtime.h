@@ -459,7 +459,6 @@ class Runtime {
    * @param scalar Value of the scalar to create a store with
    * @param shape Shape of the store. The volume must be 1. The call does not block on this shape.
    *
-   *
    * @return Logical store
    */
   [[nodiscard]] LogicalStore create_store(const Scalar& scalar, const Shape& shape = Shape{1});

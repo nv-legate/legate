@@ -15,16 +15,51 @@ from libc.stdint cimport int64_t
 cdef class ResourceConfig:
     @property
     def max_tasks(self) -> int64_t:
+        r"""
+        Get the maximum number of tasks a library can register.
+
+        Returns
+        -------
+        int
+            The maximum number of tasks.
+        """
         return self._handle.max_tasks
 
     @max_tasks.setter
     def max_tasks(self, int64_t max_tasks):
+        r"""
+        Set the maximum number of tasks a library can register.
+
+        Parameters
+        ----------
+        max_tasks : int
+            The maximum number of tasks.
+        """
         self._handle.max_tasks = max_tasks
 
     @property
     def max_reduction_ops(self) -> int64_t:
+        r"""
+        Get the maximum number of reduction operators a library can register.
+
+        Returns
+        -------
+        int
+            The maximum number of reduction operators.
+        """
         return self._handle.max_reduction_ops
 
     @max_reduction_ops.setter
     def max_reduction_ops(self, int64_t max_reduction_ops):
+        r"""
+        Set the maximum number of reduction operators a library can register.
+
+        When the library is created, `max_reduction_ops` must not exceed
+        `max_tasks`.
+
+        Parameters
+        ----------
+        max_reduction_ops : int
+            The maximum number of reduction operators.
+        """
         self._handle.max_reduction_ops = max_reduction_ops

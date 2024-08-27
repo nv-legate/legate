@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Collection
 from typing import Any
 
 from ...utils import AnyCallable, ShutdownCallback
@@ -39,8 +39,8 @@ class Runtime(Unconstructable):
         self,
         library: Library,
         task_id: LocalTaskID | int,
-        launch_shape: Iterable[int],
-        lower_bounds: Iterable[int] | None = None,
+        launch_shape: Collection[int],
+        lower_bounds: Collection[int] | None = None,
     ) -> ManualTask: ...
     def issue_copy(
         self,
@@ -86,30 +86,30 @@ class Runtime(Unconstructable):
     def create_array(
         self,
         dtype: Type,
-        shape: Shape | Iterable[int] | None = None,
+        shape: Shape | Collection[int] | None = None,
         nullable: bool = False,
         optimize_scalar: bool = False,
         ndim: int | None = None,
     ) -> LogicalArray: ...
     def create_array_like(
-        self, array: LogicalArray, dtype: Type
+        self, array: LogicalArray, dtype: Type | None = None
     ) -> LogicalArray: ...
     def create_store(
         self,
         dtype: Type,
-        shape: Shape | Iterable[int] | None = None,
+        shape: Shape | Collection[int] | None = None,
         optimize_scalar: bool = False,
         ndim: int | None = None,
     ) -> LogicalStore: ...
     def create_store_from_scalar(
         self,
         scalar: Scalar,
-        shape: Shape | Iterable[int] | None = None,
+        shape: Shape | Collection[int] | None = None,
     ) -> LogicalStore: ...
     def create_store_from_buffer(
         self,
         dtype: Type,
-        shape: Shape | Iterable[int],
+        shape: Shape | Collection[int],
         data: object,
         read_only: bool,
     ) -> LogicalStore: ...
