@@ -16,6 +16,19 @@ from .detail.tuple cimport to_domain_point
 
 
 cpdef bool is_iterable(object obj):
+    r"""
+    Determine whether an object is iterable.
+
+    Parameters
+    ----------
+    obj : Any
+        The object to check.
+
+    Returns
+    -------
+    bool
+        `True` if `obj` is iterable, `False` otherwise.
+    """
     try:
         iter(obj)
         return True

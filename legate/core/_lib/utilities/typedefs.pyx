@@ -28,16 +28,50 @@ cdef class DomainPoint:
         return result
 
     def __init__(self):
+        r"""
+        Construct an empty `DomainPoint`.
+        """
         self._handle = _DomainPoint()
 
     @property
     def dim(self) -> int32_t:
+        r"""
+        Get the number of dimensions of the domain point.
+
+        Returns
+        -------
+        int
+            The dimension of the point.
+        """
         return self._handle.get_dim()
 
     def __getitem__(self, int32_t idx) -> int64_t:
+        r"""
+        Get a value in the domain point.
+
+        Parameters
+        ----------
+        idx : int
+            The index to get from.
+
+        Returns
+        -------
+        int
+            The value.
+        """
         return self._handle[idx]
 
     def __setitem__(self, int32_t idx, int64_t coord) -> None:
+        r"""
+        Set a value in the domain point.
+
+        Parameters
+        ----------
+        idx : int
+            The index to set at.
+        coord : int
+            The value to set.
+        """
         self._handle[idx] = coord
 
     def __eq__(self, other: object) -> bool:
@@ -47,6 +81,14 @@ cdef class DomainPoint:
         return self._handle == (<DomainPoint> other)._handle
 
     def __str__(self) -> str:
+        r"""
+        Get a human-readable string representation of the domain point.
+
+        Returns
+        -------
+        str
+            The string representation.
+        """
         cdef int i
         cdef str tmp = ",".join(str(self[i]) for i in range(self.dim))
         return f"<{tmp}>"
@@ -60,18 +102,45 @@ cdef class Domain:
         return result
 
     def __init__(self):
+        r"""
+        Construct an empty `Domain`.
+        """
         self._handle = _Domain()
 
     @property
     def dim(self) -> int32_t:
+        r"""
+        Get the number of dimensions of the domain.
+
+        Returns
+        -------
+        int
+            The dimension of the domain.
+        """
         return self._handle.get_dim()
 
     @property
     def lo(self) -> DomainPoint:
+        r"""
+        Get the smallest point in the domain.
+
+        Returns
+        -------
+        DomainPoint
+            The point.
+        """
         return DomainPoint.from_handle(self._handle.lo())
 
     @property
     def hi(self) -> DomainPoint:
+        r"""
+        Get the largest point in the domain.
+
+        Returns
+        -------
+        DomainPoint
+            The point.
+        """
         return DomainPoint.from_handle(self._handle.hi())
 
     def __eq__(self, other: object) -> bool:
@@ -81,4 +150,12 @@ cdef class Domain:
         return self._handle == (<Domain> other)._handle
 
     def __str__(self) -> str:
+        r"""
+        Get a human-readable string representation of the domain point.
+
+        Returns
+        -------
+        str
+            The string representation.
+        """
         return f"[{self.lo} ... {self.hi}]"
