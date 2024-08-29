@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/operation/detail/task.h"
+#include "core/runtime/detail/config.h"
 
 namespace legate::detail {
 
@@ -40,6 +41,25 @@ inline const Library* Task::library() const { return library_; }
 
 inline LocalTaskID Task::local_task_id() const { return task_id_; }
 
+inline const std::vector<InternalSharedPtr<Scalar>>& Task::scalars() const { return scalars_; }
+
+inline const std::vector<Task::ArrayArg>& Task::inputs() const { return inputs_; }
+
+inline const std::vector<Task::ArrayArg>& Task::outputs() const { return outputs_; }
+
+inline const std::vector<Task::ArrayArg>& Task::reductions() const { return reductions_; }
+
+inline const std::vector<InternalSharedPtr<LogicalStore>>& Task::scalar_outputs() const
+{
+  return scalar_outputs_;
+}
+
+inline const std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>&
+Task::scalar_reductions() const
+{
+  return scalar_reductions_;
+}
+
 // ==========================================================================================
 
 inline AutoTask::AutoTask(const Library* library,
@@ -47,7 +67,12 @@ inline AutoTask::AutoTask(const Library* library,
                           std::uint64_t unique_id,
                           std::int32_t priority,
                           mapping::detail::Machine machine)
-  : Task{library, task_id, unique_id, priority, std::move(machine)}
+  : Task{library,
+         task_id,
+         unique_id,
+         priority,
+         std::move(machine),
+         /* can_inline_launch */ Config::enable_inline_task_launch}
 {
 }
 

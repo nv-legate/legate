@@ -228,7 +228,7 @@ class LogicalStore {
     const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape);
 
  public:
-  [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store();
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(bool ignore_future_mutability);
   [[nodiscard]] bool is_mapped() const;
   [[nodiscard]] bool needs_flush() const;
   void detach();

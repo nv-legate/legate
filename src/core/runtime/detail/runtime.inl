@@ -98,4 +98,14 @@ inline Processor Runtime::get_executing_processor() const
   return legion_runtime_->get_executing_processor(Legion::Runtime::get_context());
 }
 
+inline bool Runtime::executing_inline_task() const noexcept { return executing_inline_task_; }
+
+inline void Runtime::inline_task_start() noexcept { executing_inline_task_ = true; }
+
+inline void Runtime::inline_task_end() noexcept
+{
+  LEGATE_ASSERT(executing_inline_task_);
+  executing_inline_task_ = false;
+}
+
 }  // namespace legate::detail

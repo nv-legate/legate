@@ -371,10 +371,17 @@ bool is_running_in_task()
 {
   // Make sure Legion runtime has been started and that we are not running in a user-thread
   // without a Legion context
-  if (Legion::Runtime::has_runtime() && Legion::Runtime::has_context()) {
-    return Legion::Runtime::get_context_task(Legion::Runtime::get_context())->has_parent_task();
-  }
-  return false;
+  constexpr auto is_running_in_inline_task = [] {
+    return has_started() && detail::Runtime::get_runtime()->executing_inline_task();
+  };
+  constexpr auto is_running_in_legion_task = [] {
+    if (Legion::Runtime::has_runtime() && Legion::Runtime::has_context()) {
+      return Legion::Runtime::get_context_task(Legion::Runtime::get_context())->has_parent_task();
+    }
+    return false;
+  };
+
+  return is_running_in_inline_task() || is_running_in_legion_task();
 }
 
 }  // namespace legate

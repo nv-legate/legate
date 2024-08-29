@@ -101,13 +101,13 @@ class TaskContext {
    *
    * @return Scalar
    */
-  [[nodiscard]] const Scalar& scalar(std::uint32_t index) const;
+  [[nodiscard]] Scalar scalar(std::uint32_t index) const;
   /**
    * @brief Returns by-value arguments of the task
    *
    * @return Vector of scalars
    */
-  [[nodiscard]] const std::vector<Scalar>& scalars() const;
+  [[nodiscard]] std::vector<Scalar> scalars() const;
   /**
    * @brief Returns a communicator of the task
    *

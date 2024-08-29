@@ -92,17 +92,19 @@ const InternalSharedPtr<LogicalStore>& BaseLogicalArray::null_mask() const
   return null_mask_;
 }
 
-InternalSharedPtr<PhysicalArray> BaseLogicalArray::get_physical_array() const
+InternalSharedPtr<PhysicalArray> BaseLogicalArray::get_physical_array(
+  bool ignore_future_mutability) const
 {
-  return get_base_physical_array();
+  return get_base_physical_array(ignore_future_mutability);
 }
 
-InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array() const
+InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array(
+  bool ignore_future_mutability) const
 {
-  auto data_store = data_->get_physical_store();
+  auto data_store = data_->get_physical_store(ignore_future_mutability);
   InternalSharedPtr<PhysicalStore> null_mask_store{};
   if (null_mask_ != nullptr) {
-    null_mask_store = null_mask_->get_physical_store();
+    null_mask_store = null_mask_->get_physical_store(ignore_future_mutability);
   }
   return make_internal_shared<BasePhysicalArray>(std::move(data_store), std::move(null_mask_store));
 }
@@ -225,10 +227,11 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
   return {};
 }
 
-InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array() const
+InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array(
+  bool ignore_future_mutability) const
 {
-  auto desc_arr    = descriptor_->get_base_physical_array();
-  auto vardata_arr = vardata_->get_physical_array();
+  auto desc_arr    = descriptor_->get_base_physical_array(ignore_future_mutability);
+  auto vardata_arr = vardata_->get_physical_array(ignore_future_mutability);
   return make_internal_shared<ListPhysicalArray>(
     type_, std::move(desc_arr), std::move(vardata_arr));
 }
@@ -413,15 +416,16 @@ const InternalSharedPtr<LogicalStore>& StructLogicalArray::null_mask() const
   return null_mask_;
 }
 
-InternalSharedPtr<PhysicalArray> StructLogicalArray::get_physical_array() const
+InternalSharedPtr<PhysicalArray> StructLogicalArray::get_physical_array(
+  bool ignore_future_mutability) const
 {
   InternalSharedPtr<PhysicalStore> null_mask_store = nullptr;
   if (null_mask_ != nullptr) {
-    null_mask_store = null_mask_->get_physical_store();
+    null_mask_store = null_mask_->get_physical_store(ignore_future_mutability);
   }
 
   auto field_arrays = make_array_from_op<InternalSharedPtr<PhysicalArray>>(
-    fields_, [&](auto& field) { return field->get_physical_array(); });
+    fields_, [&](auto& field) { return field->get_physical_array(ignore_future_mutability); });
 
   return make_internal_shared<StructPhysicalArray>(
     type_, std::move(null_mask_store), std::move(field_arrays));

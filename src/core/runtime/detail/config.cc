@@ -27,6 +27,7 @@ namespace legate::detail {
   Config::log_partitioning_decisions = false;
   Config::has_socket_mem             = false;
   Config::warmup_nccl                = false;
+  Config::enable_inline_task_launch  = false;
   Config::num_omp_threads            = 0;
 }
 
@@ -40,6 +41,8 @@ namespace legate::detail {
     Config::log_mapping_decisions      = LEGATE_LOG_MAPPING.get(/* default_value = */ false);
     Config::log_partitioning_decisions = LEGATE_LOG_PARTITIONING.get(/* default_value = */ false);
     Config::warmup_nccl                = LEGATE_WARMUP_NCCL.get(/* default_value = */ false);
+    Config::enable_inline_task_launch =
+      experimental::LEGATE_INLINE_TASK_LAUNCH.get(/* default_value = */ false);
   } catch (...) {
     Config::reset_();
     throw;

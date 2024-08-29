@@ -39,7 +39,10 @@ inline const std::vector<InternalSharedPtr<Array>>& Task::outputs() const { retu
 
 inline const std::vector<InternalSharedPtr<Array>>& Task::reductions() const { return reductions_; }
 
-inline const std::vector<Scalar>& Task::scalars() const { return scalars_; }
+inline const std::vector<InternalSharedPtr<legate::detail::Scalar>>& Task::scalars() const
+{
+  return scalars_;
+}
 
 inline const DomainPoint& Task::point() const { return task_->index_point; }
 

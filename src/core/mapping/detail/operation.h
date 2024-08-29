@@ -65,7 +65,7 @@ class Task : public Mappable {
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& inputs() const;
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& outputs() const;
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& reductions() const;
-  [[nodiscard]] const std::vector<Scalar>& scalars() const;
+  [[nodiscard]] const std::vector<InternalSharedPtr<legate::detail::Scalar>>& scalars() const;
 
   [[nodiscard]] const DomainPoint& point() const;
 
@@ -78,7 +78,7 @@ class Task : public Mappable {
   std::vector<InternalSharedPtr<Array>> inputs_{};
   std::vector<InternalSharedPtr<Array>> outputs_{};
   std::vector<InternalSharedPtr<Array>> reductions_{};
-  std::vector<Scalar> scalars_{};
+  std::vector<InternalSharedPtr<legate::detail::Scalar>> scalars_{};
 };
 
 class Copy : public Mappable {

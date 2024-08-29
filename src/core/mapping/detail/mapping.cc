@@ -12,6 +12,8 @@
 
 #include "core/mapping/detail/mapping.h"
 
+#include "core/utilities/detail/type_traits.h"
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -26,7 +28,12 @@ TaskTarget to_target(Processor::Kind kind)
   switch (kind) {
     case Processor::Kind::TOC_PROC: return TaskTarget::GPU;
     case Processor::Kind::OMP_PROC: return TaskTarget::OMP;
-    case Processor::Kind::LOC_PROC: return TaskTarget::CPU;
+    case Processor::Kind::LOC_PROC:
+      [[fallthrough]];
+      // Note, returning TaskTarget::CPU for Processor::Kind::PY_PROC isn't technically
+      // correct. This is "safe" to do because the only caller that might pass PY_PROC is the
+      // inline task launch.
+    case Processor::Kind::PY_PROC: return TaskTarget::CPU;
     default: LEGATE_ABORT("Unhandled Processor::Kind ", traits::detail::to_underlying(kind));
   }
   return TaskTarget::CPU;

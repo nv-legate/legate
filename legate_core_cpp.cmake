@@ -270,6 +270,9 @@ list(APPEND
      src/core/task/detail/returned_cpp_exception.cc
      src/core/task/detail/returned_python_exception.cc
      src/core/task/detail/task_context.cc
+     src/core/task/detail/inline_task_body.cc
+     src/core/task/detail/legion_task_body.cc
+     src/core/task/detail/task.cc
      src/core/task/detail/task_return.cc
      src/core/task/detail/task_return_layout.cc
      src/core/type/type_info.cc
@@ -812,6 +815,10 @@ endif()
 
 if(legate_core_BUILD_EXAMPLES)
   add_subdirectory(examples)
+endif()
+
+if(legate_core_BUILD_BENCHMARKS)
+  add_subdirectory(${LEGATE_CORE_DIR}/benchmarks)
 endif()
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/clang_tidy.cmake)

@@ -57,8 +57,8 @@ class BaseDeserializer {
   template <typename T1, typename T2>
   void unpack_impl(std::pair<T1, T2>& values);
 
-  [[nodiscard]] std::vector<legate::Scalar> unpack_scalars();
-  [[nodiscard]] std::unique_ptr<Scalar> unpack_scalar();
+  [[nodiscard]] std::vector<InternalSharedPtr<detail::Scalar>> unpack_scalars();
+  [[nodiscard]] InternalSharedPtr<detail::Scalar> unpack_scalar();
   void unpack_impl(mapping::TaskTarget& value);
   void unpack_impl(mapping::ProcessorRange& value);
   void unpack_impl(mapping::detail::Machine& value);

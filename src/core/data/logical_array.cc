@@ -69,7 +69,7 @@ LogicalArray LogicalArray::child(std::uint32_t index) const
 
 PhysicalArray LogicalArray::get_physical_array() const
 {
-  return PhysicalArray{impl_->get_physical_array()};
+  return PhysicalArray{impl_->get_physical_array(false)};
 }
 
 ListLogicalArray LogicalArray::as_list_array() const

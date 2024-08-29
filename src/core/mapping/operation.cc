@@ -41,7 +41,12 @@ std::vector<Array> Task::outputs() const { return convert_arrays(impl_()->output
 
 std::vector<Array> Task::reductions() const { return convert_arrays(impl_()->reductions()); }
 
-const std::vector<Scalar>& Task::scalars() const { return impl_()->scalars(); }
+std::vector<Scalar> Task::scalars() const
+{
+  auto&& scals = impl_()->scalars();
+
+  return {scals.begin(), scals.end()};
+}
 
 Array Task::input(std::uint32_t index) const { return Array{impl_()->inputs().at(index).get()}; }
 
@@ -51,6 +56,8 @@ Array Task::reduction(std::uint32_t index) const
 {
   return Array{impl_()->reductions().at(index).get()};
 }
+
+Scalar Task::scalar(std::uint32_t index) const { return Scalar{impl_()->scalars().at(index)}; }
 
 std::size_t Task::num_inputs() const { return impl_()->inputs().size(); }
 

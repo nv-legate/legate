@@ -52,6 +52,11 @@ Changes: Latest Development Version
   operator ID's.
 - Remove ``partition.h`` and ``restriction.h`` from the public API
 - Add ``LEGATE_MPI_WRAPPER`` environment variable.
+- Add ``LEGATE_INLINE_TASK_LAUNCH`` environment variable to request inline task
+  launch. When enabled, this instructs Legate to forgo the usual Legion task calling
+  convention in favor of launching the task immediately on the submitting thread. This
+  feature is currently considered *experimental* as it is not always profitable when it
+  should be.
 
 .. rubric:: Data
 

@@ -201,4 +201,30 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGION_DEFAULT_ARGS);
  */
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_MPI_WRAPPER);
 
+/**
+ * @var LEGATE_INLINE_TASK_LAUNCH
+ *
+ * @brief Instructs Legate to launch tasks "inline" whenever possible. Possible values: 0, 1.
+ *
+ * Normally, when a task is launched, Legate goes through the "Legion calling convention" which
+ * involves serialization of all arguments, and packaging up the task such that it may be
+ * handed off to Legion for later execution. Crucially, this later execution may happen on
+ * another thread, possibly on another node.
+ *
+ * However, for single-processor runs, this process is both overly costly and largely
+ * unnecessary. For example, there is no need to perform any partitioning analysis, as -- by
+ * virtue of being single-processor -- the data will be used in full. In such cases it may be
+ * profitable to launch the tasks directly on the same processor/thread which submitted them,
+ * i.e. "inline".
+ *
+ * Note that enabling this mode will constrain execution to a single processor, even if more
+ * are available.
+ *
+ * This feature is currently marked experimental, and should not be relied upon. The current
+ * implementation is not guaranteed to always be profitable. It may offer dramatic speedup in
+ * some circumstances, but it may also lead to large slowdowns in others. Future improvements
+ * will seek to improve this, at which point it will be moved to the normal Legate namespace.
+ */
+LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_INLINE_TASK_LAUNCH);
+
 #undef LEGATE_CHECK_ENV_VAR_DOCS

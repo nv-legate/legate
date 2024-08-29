@@ -12,8 +12,7 @@
 
 #pragma once
 
-#include "core/runtime/detail/runtime.h"
-#include "core/runtime/runtime.h"
+#include "core/utilities/detail/env.h"
 
 #include "legate.h"
 

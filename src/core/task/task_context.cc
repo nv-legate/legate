@@ -65,15 +65,16 @@ std::vector<PhysicalArray> TaskContext::reductions() const
   return to_arrays(impl()->reductions());
 }
 
-const Scalar& TaskContext::scalar(std::uint32_t index) const
+Scalar TaskContext::scalar(std::uint32_t index) const
 {
-  // Revert back to using impl()->scalars() if scalars() ever returns a non-ref. No point in
-  // creating a whole temporary vector just to peek at one of them :)
-  static_assert(std::is_lvalue_reference_v<decltype(scalars())>);
-  return scalars().at(index);
+  return Scalar{impl()->scalars().at(index)};
 }
 
-const std::vector<Scalar>& TaskContext::scalars() const { return impl()->scalars(); }
+std::vector<Scalar> TaskContext::scalars() const
+{
+  auto&& scals = impl()->scalars();
+  return {scals.begin(), scals.end()};
+}
 
 const comm::Communicator& TaskContext::communicator(std::uint32_t index) const
 {
@@ -108,8 +109,8 @@ std::size_t TaskContext::num_reductions() const
 
 std::size_t TaskContext::num_scalars() const
 {
-  static_assert(std::is_lvalue_reference_v<decltype(scalars())>);
-  return scalars().size();
+  CHECK_IF_CAN_USE_MEMBER_FUNCTION(scalars);
+  return impl()->scalars().size();
 }
 
 std::size_t TaskContext::num_communicators() const

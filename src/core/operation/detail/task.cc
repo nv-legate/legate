@@ -12,6 +12,7 @@
 
 #include "core/operation/detail/task.h"
 
+#include "core/mapping/detail/mapping.h"
 #include "core/operation/detail/launcher_arg.h"
 #include "core/operation/detail/task_launcher.h"
 #include "core/partitioning/detail/constraint_solver.h"
@@ -20,6 +21,7 @@
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/region_manager.h"
 #include "core/runtime/detail/runtime.h"
+#include "core/task/detail/inline_task_body.h"
 #include "core/task/detail/task_return_layout.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/core_ids.h"
@@ -38,7 +40,8 @@ Task::Task(const Library* library,
            LocalTaskID task_id,
            std::uint64_t unique_id,
            std::int32_t priority,
-           mapping::detail::Machine machine)
+           mapping::detail::Machine machine,
+           bool can_inline_launch)
   : Operation{unique_id, priority, std::move(machine)},
     library_{library},
     task_id_{task_id},
@@ -47,7 +50,8 @@ Task::Task(const Library* library,
         this->library()->find_task(local_task_id())->find_variant(VariantCode::GPU);
 
       return variant.has_value() && variant->get().options.elide_device_ctx_sync;
-    }()}
+    }()},
+    can_inline_launch_{can_inline_launch}
 {
 }
 
@@ -87,9 +91,24 @@ void Task::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
   scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
 }
 
-void Task::launch_task_(Strategy* p_strategy)
+void Task::inline_launch_() const
 {
-  auto& strategy       = *p_strategy;
+  const auto processor_kind = Runtime::get_runtime()->get_executing_processor().kind();
+  const auto variant_code   = mapping::detail::to_variant_code(processor_kind);
+  const auto* task_info     = library()->find_task(local_task_id());
+  const auto body           = [&] {
+    const auto variant = task_info->find_variant(variant_code);
+
+    LEGATE_ASSERT(variant.has_value());
+    return variant->get().body;  // NOLINT(bugprone-unchecked-optional-access)
+  }();
+
+  inline_task_body(*this, task_info->name(), variant_code, body);
+}
+
+void Task::legion_launch_(Strategy* strategy_ptr)
+{
+  auto& strategy       = *strategy_ptr;
   auto launcher        = detail::TaskLauncher{library_, machine_, provenance(), local_task_id()};
   auto&& launch_domain = strategy.launch_domain(this);
 
@@ -162,6 +181,26 @@ void Task::launch_task_(Strategy* p_strategy)
     auto result = launcher.execute_single();
 
     demux_scalar_stores_(result);
+  }
+}
+
+void Task::launch_task_(Strategy* strategy)
+{
+  auto launch_fast = can_inline_launch_;
+
+  if (launch_fast) {
+    // TODO(jfaibussowit)
+    // Inline launch not yet supported for unbound arrays. Not yet clear what to do to
+    // materialize the buffers (as sizes aren't yet known).
+    launch_fast = std::none_of(outputs_.begin(), outputs_.end(), [](const ArrayArg& array_arg) {
+      return array_arg.array->unbound();
+    });
+  }
+
+  if (launch_fast) {
+    inline_launch_();
+  } else {
+    legion_launch_(strategy);
   }
 }
 
@@ -442,7 +481,7 @@ ManualTask::ManualTask(const Library* library,
                        std::uint64_t unique_id,
                        std::int32_t priority,
                        mapping::detail::Machine machine)
-  : Task{library, task_id, unique_id, priority, std::move(machine)},
+  : Task{library, task_id, unique_id, priority, std::move(machine), /* can_inline_launch */ false},
     strategy_{std::make_unique<detail::Strategy>()}
 {
   strategy_->set_launch_domain(this, launch_domain);

@@ -128,6 +128,13 @@ inline constexpr EnvironmentVariable<bool> LEGATE_DISABLE_MPI{"LEGATE_DISABLE_MP
 inline constexpr EnvironmentVariable<std::string> LEGATE_CONFIG{"LEGATE_CONFIG"};
 inline constexpr EnvironmentVariable<std::string> LEGATE_MPI_WRAPPER{"LEGATE_MPI_WRAPPER"};
 
+inline namespace experimental {
+
+inline constexpr detail::EnvironmentVariable<bool> LEGATE_INLINE_TASK_LAUNCH{
+  "LEGATE_INLINE_TASK_LAUNCH"};
+
+}  // namespace experimental
+
 }  // namespace legate::detail
 
 #undef LEGATE_CHECK_ENV_VAR_DOCS

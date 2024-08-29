@@ -105,9 +105,9 @@ void BaseDeserializer<Deserializer>::unpack_impl(std::pair<T1, T2>& values)
 }
 
 template <typename Deserializer>
-std::vector<legate::Scalar> BaseDeserializer<Deserializer>::unpack_scalars()
+std::vector<InternalSharedPtr<detail::Scalar>> BaseDeserializer<Deserializer>::unpack_scalars()
 {
-  std::vector<legate::Scalar> values;
+  std::vector<InternalSharedPtr<detail::Scalar>> values;
   auto size = unpack<std::uint32_t>();
 
   values.reserve(size);
@@ -118,7 +118,7 @@ std::vector<legate::Scalar> BaseDeserializer<Deserializer>::unpack_scalars()
 }
 
 template <typename Deserializer>
-std::unique_ptr<Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
+InternalSharedPtr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
 {
   // this unpack_type call must be in a separate line from the following one because they both
   // read and update the buffer location.
@@ -175,7 +175,7 @@ std::unique_ptr<Scalar> BaseDeserializer<Deserializer>::unpack_scalar()
   };
 
   auto [ptr, align_offset] = unpack_scalar_value(type, args_.ptr(), args_.size());
-  auto result              = std::make_unique<Scalar>(type, ptr, false /*copy*/);
+  auto result              = make_internal_shared<detail::Scalar>(type, ptr, false /*copy*/);
 
   args_ = args_.subspan(align_offset + result->size());
   return result;

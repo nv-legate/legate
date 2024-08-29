@@ -20,6 +20,8 @@
 
 namespace legate {
 
+Scalar::Scalar(InternalSharedPtr<detail::Scalar> impl) : impl_{std::move(impl)} {}
+
 Scalar::Scalar(std::unique_ptr<detail::Scalar> impl) : impl_{std::move(impl)} {}
 
 Scalar::Scalar() : Scalar{create_impl_(null_type(), nullptr, false), private_tag{}} {}

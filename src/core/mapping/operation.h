@@ -66,7 +66,7 @@ class Task {
    *
    * @return Vector of `Scalar` objects
    */
-  [[nodiscard]] const std::vector<Scalar>& scalars() const;
+  [[nodiscard]] std::vector<Scalar> scalars() const;
 
   /**
    * @brief Returns metadata for the task's input array
@@ -92,6 +92,14 @@ class Task {
    * @return Array metadata object
    */
   [[nodiscard]] Array reduction(std::uint32_t index) const;
+  /**
+   * @brief Returns metadata for the task's scalars
+   *
+   * @param index Index of the scalar array
+   *
+   * @return Scalar metadata object
+   */
+  [[nodiscard]] Scalar scalar(std::uint32_t index) const;
 
   /**
    * @brief Returns the number of task's inputs

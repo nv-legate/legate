@@ -26,7 +26,15 @@ struct Initializer : public legate::LegateTask<Initializer> {
 
 struct Checker : public legate::LegateTask<Checker> {
   static constexpr auto TASK_ID = legate::LocalTaskID{1};
-  static void cpu_variant(legate::TaskContext context) { EXPECT_FALSE(context.is_single_task()); }
+
+  static void cpu_variant(legate::TaskContext context)
+  {
+    // Does not work with inline task launch, since no tasks are ever parallelized in that
+    // mode.
+    if (!legate::detail::experimental::LEGATE_INLINE_TASK_LAUNCH.get(false)) {
+      EXPECT_FALSE(context.is_single_task());
+    }
+  }
 };
 
 class Config {

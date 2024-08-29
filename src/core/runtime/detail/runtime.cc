@@ -39,7 +39,9 @@
 #include "core/runtime/detail/library.h"
 #include "core/runtime/detail/shard.h"
 #include "core/runtime/runtime.h"
-#include "core/task/detail/task_context.h"
+#include "core/task/detail/legion_task_body.h"
+#include "core/task/detail/task.h"
+#include "core/task/task_context.h"
 #include "core/task/variant_options.h"
 #include "core/type/detail/type_info.h"
 #include "core/utilities/detail/enumerate.h"
@@ -77,8 +79,6 @@ Logger& log_legate()
 
   return log;
 }
-
-void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime);
 
 namespace {
 
@@ -815,15 +815,38 @@ void Runtime::check_dimensionality_(std::uint32_t dim)
   }
 }
 
+namespace {
+
+class ExtractExceptionFn {
+ public:
+  [[nodiscard]] std::optional<ReturnedException> operator()(
+    const Legion::Future& fut) const noexcept
+  {
+    if (auto exn = fut.get_result<ReturnedException>(); exn.raised()) {
+      return {std::move(exn)};
+    }
+    return std::nullopt;
+  }
+
+  [[nodiscard]] std::optional<ReturnedException> operator()(
+    ReturnedException& pending) const noexcept
+  {
+    if (pending.raised()) {
+      return {std::move(pending)};
+    }
+    return std::nullopt;
+  }  // namespace
+};
+
+}  // namespace
+
 void Runtime::raise_pending_exception()
 {
   std::optional<ReturnedException> found{};
 
   for (auto&& pending_exception : pending_exceptions_) {
-    auto&& exn = pending_exception.get_result<ReturnedException>();
-
-    if (exn.raised()) {
-      found = std::move(exn);
+    found = std::visit(ExtractExceptionFn{}, pending_exception);
+    if (found.has_value()) {
       break;
     }
   }
@@ -839,16 +862,30 @@ void Runtime::record_pending_exception(Legion::Future pending_exception)
   switch (scope().exception_mode()) {
     case ExceptionMode::IGNORED: return;
     case ExceptionMode::DEFERRED: {
-      pending_exceptions_.push_back(std::move(pending_exception));
+      pending_exceptions_.emplace_back(std::move(pending_exception));
       break;
     }
     case ExceptionMode::IMMEDIATE: {
-      auto&& exn = pending_exception.get_result<ReturnedException>();
-      if (exn.raised()) {
+      if (auto&& exn = pending_exception.get_result<ReturnedException>(); exn.raised()) {
         exn.throw_exception();
       }
       break;
     }
+  }
+}
+
+void Runtime::record_pending_exception(ReturnedException pending_exception)
+{
+  switch (scope().exception_mode()) {
+    case ExceptionMode::IGNORED: return;
+    case ExceptionMode::DEFERRED:
+      pending_exceptions_.emplace_back(std::move(pending_exception));
+      break;
+    case ExceptionMode::IMMEDIATE:
+      if (pending_exception.raised()) {
+        pending_exception.throw_exception();
+      }
+      break;
   }
 }
 
@@ -887,12 +924,13 @@ void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
 Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
                                                  Legion::FieldID field_id)
 {
-  Legion::RegionRequirement req{region, LEGION_READ_WRITE, EXCLUSIVE, region};
+  Legion::RegionRequirement req{region, LEGION_READ_WRITE, LEGION_EXCLUSIVE, region};
 
   req.add_field(field_id);
 
   // TODO(wonchanl): We need to pass the metadata about logical store
   Legion::InlineLauncher launcher{req, mapper_id()};
+
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");
   launcher.provenance = get_provenance().to_string();
@@ -1960,7 +1998,8 @@ void extract_scalar_task(const void* args,
                          std::size_t /*userlen*/,
                          Legion::Processor p)
 {
-  // Legion preamble
+  // TODO(jfaibussowit)
+  // This task should really be going through the proper channels instead of this Frankenstein.
   const Legion::Task* task;
   const std::vector<Legion::PhysicalRegion>* regions;
   Legion::Context legion_context;
@@ -1969,9 +2008,10 @@ void extract_scalar_task(const void* args,
 
   show_progress(task, legion_context, runtime);
 
-  const detail::TaskContext context{task, variant_kind, *regions};
-  auto offset = context.scalars()[0].value<std::size_t>();
-  auto size   = context.scalars()[1].value<std::size_t>();
+  auto legion_task_context = LegionTaskContext{task, variant_kind, *regions};
+  const auto context       = legate::TaskContext{&legion_task_context};
+  auto offset              = context.scalar(0).value<std::size_t>();
+  auto size                = context.scalar(1).value<std::size_t>();
 
   const auto& future = task->futures[0];
   size               = std::min(size, future.get_untyped_size() - offset);

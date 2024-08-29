@@ -16,10 +16,7 @@
 
 #include "core/cuda/cuda.h"
 #include "core/data/detail/physical_store.h"
-#include "core/runtime/detail/config.h"
 #include "core/runtime/detail/runtime.h"
-#include "core/utilities/detail/core_ids.h"
-#include "core/utilities/detail/deserializer.h"
 #include "core/utilities/detail/store_iterator_cache.h"
 #include "core/utilities/macros.h"
 
@@ -27,33 +24,30 @@
 #include <iterator>
 
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
+#include "core/runtime/detail/config.h"
+
 #include <omp.h>
 #else
 // Still needs a definition to get the code compiled without OpenMP
 // (which is safe as the call to this function is guarded by a if-constexpr)
-extern void omp_set_num_threads(std::int32_t);
+// NOLINTNEXTLINE
+#define omp_set_num_threads(...) \
+  do {                           \
+  } while (0)
 #endif
 
 namespace legate::detail {
 
-TaskContext::TaskContext(const Legion::Task* task,
-                         VariantCode variant_kind,
-                         const std::vector<Legion::PhysicalRegion>& regions)
-  : task_{task}, variant_kind_{variant_kind}, regions_{regions}
+TaskContext::TaskContext(CtorArgs&& args)
+  : variant_kind_{args.variant_kind},
+    inputs_{std::move(args.inputs)},
+    outputs_{std::move(args.outputs)},
+    reductions_{std::move(args.reductions)},
+    scalars_{std::move(args.scalars)},
+    comms_{std::move(args.comms)},
+    can_raise_exception_{args.can_raise_exception},
+    can_elide_device_ctx_sync_{args.can_elide_device_ctx_sync}
 {
-  {
-    mapping::detail::MapperDataDeserializer dez{task};
-    machine_ = dez.unpack<mapping::detail::Machine>();
-  }
-
-  TaskDeserializer dez{task, regions_};
-
-  static_cast<void>(dez.unpack<detail::Library*>());
-  inputs_     = dez.unpack_arrays();
-  outputs_    = dez.unpack_arrays();
-  reductions_ = dez.unpack_arrays();
-  scalars_    = dez.unpack_scalars();
-
   auto get_stores = StoreIteratorCache<InternalSharedPtr<PhysicalStore>>{};
 
   // Make copies of stores that we need to postprocess, as clients might move the stores away.
@@ -66,6 +60,7 @@ TaskContext::TaskContext(const Legion::Task* task,
       }
     }
   }
+
   for (auto&& reduction : reductions_) {
     auto&& stores = get_stores(*reduction);
 
@@ -73,55 +68,6 @@ TaskContext::TaskContext(const Legion::Task* task,
                  std::make_move_iterator(stores.end()),
                  std::back_inserter(scalar_stores_),
                  [](const InternalSharedPtr<PhysicalStore>& store) { return store->is_future(); });
-  }
-
-  can_raise_exception_       = dez.unpack<bool>();
-  can_elide_device_ctx_sync_ = dez.unpack<bool>();
-
-  bool insert_barrier = false;
-  Legion::PhaseBarrier arrival, wait;
-  if (task->is_index_space) {
-    insert_barrier = dez.unpack<bool>();
-    if (insert_barrier) {
-      arrival = dez.unpack<Legion::PhaseBarrier>();
-      wait    = dez.unpack<Legion::PhaseBarrier>();
-    }
-    comms_ = dez.unpack<std::vector<legate::comm::Communicator>>();
-  }
-
-  // For reduction tree cases, some input stores may be mapped to NO_REGION
-  // when the number of subregions isn't a multiple of the chosen radix.
-  // To simplify the programming mode, we filter out those "invalid" stores out.
-  if (task_->tag == static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)) {
-    std::vector<InternalSharedPtr<PhysicalArray>> inputs;
-    for (auto&& input : inputs_) {
-      if (input->valid()) {
-        inputs.push_back(std::move(input));
-      }
-    }
-    inputs_.swap(inputs);
-  }
-
-  // CUDA drivers < 520 have a bug that causes deadlock under certain circumstances
-  // if the application has multiple threads that launch blocking kernels, such as
-  // NCCL all-reduce kernels. This barrier prevents such deadlock by making sure
-  // all CUDA driver calls from Realm are done before any of the GPU tasks starts
-  // making progress.
-  if (insert_barrier) {
-    arrival.arrive();
-    wait.wait();
-  }
-
-  // If the task is running on a GPU and there is at least one scalar store for reduction,
-  // we need to wait for all the host-to-device copies for initialization to finish
-  if (LEGATE_DEFINED(LEGATE_USE_CUDA) && variant_kind_ == VariantCode::GPU) {
-    for (auto&& reduction : reductions_) {
-      auto reduction_store = reduction->data();
-      if (reduction_store->is_future()) {
-        LEGATE_CHECK_CUDA(cudaDeviceSynchronize());
-        break;
-      }
-    }
   }
 
   if constexpr (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
@@ -133,52 +79,9 @@ TaskContext::TaskContext(const Legion::Task* task,
 
 void TaskContext::make_all_unbound_stores_empty()
 {
-  for (auto&& store : unbound_stores_) {
+  for (auto&& store : get_unbound_stores_()) {
     store->bind_empty_data();
   }
-}
-
-TaskReturn TaskContext::pack_return_values() const
-{
-  auto return_values = get_return_values_();
-  if (can_raise_exception()) {
-    const ReturnedCppException exn{};
-
-    return_values.push_back(exn.pack());
-  }
-  return TaskReturn{std::move(return_values)};
-}
-
-TaskReturn TaskContext::pack_return_values_with_exception(const ReturnedException& exn) const
-{
-  auto return_values = get_return_values_();
-  if (can_raise_exception()) {
-    return_values.push_back(exn.pack());
-  }
-  return TaskReturn{std::move(return_values)};
-}
-
-std::vector<ReturnValue> TaskContext::get_return_values_() const
-{
-  std::vector<ReturnValue> return_values;
-
-  return_values.reserve(unbound_stores_.size() + scalar_stores_.size() + can_raise_exception());
-  for (auto&& store : unbound_stores_) {
-    return_values.push_back(store->pack_weight());
-  }
-  for (auto&& store : scalar_stores_) {
-    return_values.push_back(store->pack());
-  }
-
-  // If this is a reduction task, we do sanity checks on the invariants
-  // the Python code relies on.
-  if (task_->tag == static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)) {
-    if (return_values.size() != 1 || unbound_stores_.size() != 1) {
-      LEGATE_ABORT("Reduction tasks must have only one unbound output and no others");
-    }
-  }
-
-  return return_values;
 }
 
 CUstream_st* TaskContext::get_task_stream() const

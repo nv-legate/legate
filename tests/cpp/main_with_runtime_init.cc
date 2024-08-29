@@ -22,6 +22,8 @@ int main(int argc, char** argv)
   ::testing::InitGoogleTest(&argc, argv);
   GTEST_FLAG_SET(death_test_style, "threadsafe");
 
+  EXPECT_NO_THROW(
+    legate::detail::experimental::LEGATE_INLINE_TASK_LAUNCH.set(true, /* overwrite */ false));
   if (auto result = legate::start(argc, argv); result != 0) {
     [&result] { FAIL() << "Legate failed to start: " << result; }();
     return result;

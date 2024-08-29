@@ -10,6 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "core/utilities/detail/env.h"
+
 #include "legate.h"
 #include "utilities/utilities.h"
 
@@ -100,6 +102,10 @@ TEST_F(OomMessageDeathTest, Simple)
 
   if (runtime->get_machine().count() > 1) {
     GTEST_SKIP() << "Test requires exactly 1 processor";
+  }
+
+  if (legate::detail::experimental::LEGATE_INLINE_TASK_LAUNCH.get(/* default_value =*/false)) {
+    GTEST_SKIP() << "Test requires Legion task launch";
   }
 
   EXPECT_DEATH(

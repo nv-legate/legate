@@ -54,6 +54,13 @@ class LegateCore(MainPackage):
         spec=ArgSpec(dest="with_examples", type=bool, help="Build examples"),
         cmake_var=CMAKE_VARIABLE("legate_core_BUILD_EXAMPLES", CMakeBool),
     )
+    legate_core_BUILD_BENCHMARKS: Final = ConfigArgument(
+        name="--with-benchmarks",
+        spec=ArgSpec(
+            dest="with_benchmarks", type=bool, help="Build benchmarks"
+        ),
+        cmake_var=CMAKE_VARIABLE("legate_core_BUILD_BENCHMARKS", CMakeBool),
+    )
     legate_core_CXX_FLAGS: Final = ConfigArgument(
         name="--legate-core-cxx-flags",
         spec=ArgSpec(
@@ -337,6 +344,9 @@ class LegateCore(MainPackage):
         )
         self.set_flag_if_user_set(
             self.legate_core_BUILD_EXAMPLES, self.cl_args.with_examples
+        )
+        self.set_flag_if_user_set(
+            self.legate_core_BUILD_BENCHMARKS, self.cl_args.with_benchmarks
         )
         self.set_flag_if_user_set(self.BUILD_MARCH, self.cl_args.build_march)
         build_type = self.cl_args.build_type

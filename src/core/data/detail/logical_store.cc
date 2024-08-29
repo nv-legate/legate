@@ -698,7 +698,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   return create_partition_(self, std::move(partition), true);
 }
 
-InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
+InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(bool ignore_future_mutability)
 {
   if (unbound()) {
     throw std::invalid_argument{"Unbound store cannot be inlined mapped"};
@@ -717,9 +717,26 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store()
   if (storage->kind() == Storage::Kind::FUTURE ||
       (storage->kind() == Storage::Kind::FUTURE_MAP && storage->replicated())) {
     // TODO(wonchanl): future wrappers from inline mappings are read-only for now
-    auto domain = to_domain(storage->shape()->extents());
-    auto future =
-      FutureWrapper{true, type()->size(), storage->scalar_offset(), domain, storage->get_future()};
+    auto domain = [&]() -> Domain {
+      auto&& extents = storage->extents();
+
+      // Workaround needed for the inline-task fast-path. When empty domains are serialized,
+      // they come out as (0-ed out), 0D Domains when deserialized. However, to_domain() will
+      // produce a {0, 0} domain, i.e. still 0-ed out, but this this time it is 1D. So to match
+      // the serialization case, we return a empty 0D domain here.
+      if (extents.empty()) {
+        return {};
+      }
+      return to_domain(extents);
+    }();
+
+    // If we ignore the mutability of the future, then this future is writable. Needed by the
+    // inline-task fast-path
+    auto future = FutureWrapper{/* read_only */ !ignore_future_mutability,
+                                type()->size(),
+                                storage->scalar_offset(),
+                                domain,
+                                storage->get_future()};
     // Physical stores for future-backed stores shouldn't be cached, as they are not automatically
     // remapped to reflect changes by the runtime.
     return make_internal_shared<PhysicalStore>(

@@ -102,7 +102,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
   {
     auto source = legate::PhysicalStore{context.input(0)};
     auto target = legate::PhysicalStore{context.input(1)};
-    auto& seed  = context.scalar(0);
+    auto seed   = context.scalar(0);
     auto shape  = target.shape<DIM>();
 
     if (shape.empty()) {

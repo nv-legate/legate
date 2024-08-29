@@ -40,6 +40,14 @@ class Runtime;
 
 class Task : public Operation {
  protected:
+  Task(const Library* library,
+       LocalTaskID task_id,
+       std::uint64_t unique_id,
+       std::int32_t priority,
+       mapping::detail::Machine machine,
+       bool can_inline_launch);
+
+ public:
   class ArrayArg {
    public:
     explicit ArrayArg(InternalSharedPtr<LogicalArray> _array);
@@ -51,13 +59,6 @@ class Task : public Operation {
     std::optional<SymbolicPoint> projection{};
   };
 
-  Task(const Library* library,
-       LocalTaskID task_id,
-       std::uint64_t unique_id,
-       std::int32_t priority,
-       mapping::detail::Machine machine);
-
- public:
   void add_scalar_arg(InternalSharedPtr<Scalar> scalar);
   void set_concurrent(bool concurrent);
   void set_side_effect(bool has_side_effect);
@@ -73,6 +74,9 @@ class Task : public Operation {
   void launch_task_(Strategy* strategy);
 
  private:
+  void inline_launch_() const;
+  void legion_launch_(Strategy* strategy);
+
   void demux_scalar_stores_(const Legion::Future& result);
   void demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain);
 
@@ -82,6 +86,15 @@ class Task : public Operation {
   [[nodiscard]] bool supports_replicated_write() const override;
   [[nodiscard]] bool can_throw_exception() const;
   [[nodiscard]] bool can_elide_device_ctx_sync() const;
+
+  [[nodiscard]] const std::vector<InternalSharedPtr<Scalar>>& scalars() const;
+  [[nodiscard]] const std::vector<ArrayArg>& inputs() const;
+  [[nodiscard]] const std::vector<ArrayArg>& outputs() const;
+  [[nodiscard]] const std::vector<ArrayArg>& reductions() const;
+  [[nodiscard]] const std::vector<InternalSharedPtr<LogicalStore>>& scalar_outputs() const;
+  [[nodiscard]] const std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>&
+  scalar_reductions() const;
+
   [[nodiscard]] const Library* library() const;
   [[nodiscard]] LocalTaskID local_task_id() const;
 
@@ -101,6 +114,7 @@ class Task : public Operation {
   std::vector<InternalSharedPtr<LogicalStore>> scalar_outputs_{};
   std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>> scalar_reductions_{};
   std::vector<CommunicatorFactory*> communicator_factories_{};
+  bool can_inline_launch_{};
 };
 
 class AutoTask final : public Task {

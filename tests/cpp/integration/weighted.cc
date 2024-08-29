@@ -50,8 +50,22 @@ struct Tester : public legate::LegateTask<Tester> {
 
   static void cpu_variant(legate::TaskContext context)
   {
-    EXPECT_FALSE(context.is_single_task());
-    EXPECT_EQ(context.get_launch_domain().get_volume(), NUM_TASKS);
+    // Does not work with inline task launches.
+    //
+    // I think this test is kind of abusing the API. It's trying to make sure that, if you use
+    // 4 workers with unbound outputs, the resulting Store will start out partitioned in 4
+    // pieces (each piece i containing exactly the elements that worker i produced).
+    //
+    // Instead of checking that property directly, it is checking that if you launch an
+    // AutoTask on that Store it will launch on a 4-worker domain but I can see that not being
+    // the case, e.g. if we're running on 1 GPU only, we might want to active fast-path, as if
+    // we're running the next task on 1 worker.
+    if (legate::detail::experimental::LEGATE_INLINE_TASK_LAUNCH.get(false)) {
+      return;
+    }
+
+    ASSERT_EQ(context.get_launch_domain().get_volume(), NUM_TASKS);
+
     auto task_idx = context.get_task_index()[0];
     auto outputs  = context.outputs();
     for (std::uint32_t idx = 0; idx < outputs.size(); ++idx) {

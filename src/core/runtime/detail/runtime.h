@@ -44,6 +44,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 struct CUstream_st;
@@ -181,6 +182,7 @@ class Runtime {
   void raise_pending_exception();
   [[nodiscard]] std::optional<ReturnedException> check_pending_task_exception();
   void record_pending_exception(Legion::Future pending_exception);
+  void record_pending_exception(ReturnedException pending_exception);
 
   [[nodiscard]] std::uint64_t get_unique_store_id();
   [[nodiscard]] std::uint64_t get_unique_storage_id();
@@ -330,6 +332,10 @@ class Runtime {
 
   [[nodiscard]] Legion::MapperID mapper_id() const;
 
+  [[nodiscard]] bool executing_inline_task() const noexcept;
+  void inline_task_start() noexcept;
+  void inline_task_end() noexcept;
+
  private:
   static void schedule_(std::vector<InternalSharedPtr<Operation>>&& operations);
 
@@ -403,7 +409,8 @@ class Runtime {
   std::unordered_map<ReductionOpTableKey, GlobalRedopID, hasher<ReductionOpTableKey>>
     reduction_ops_{};
 
-  std::vector<Legion::Future> pending_exceptions_{};
+  std::vector<std::variant<Legion::Future, ReturnedException>> pending_exceptions_{};
+  bool executing_inline_task_{};
 
   std::optional<MapperManager> mapper_manager_{};
 };

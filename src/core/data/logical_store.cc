@@ -69,7 +69,7 @@ LogicalStore LogicalStore::delinearize(std::int32_t dim, std::vector<std::uint64
 
 PhysicalStore LogicalStore::get_physical_store() const
 {
-  return PhysicalStore{impl_->get_physical_store()};
+  return PhysicalStore{impl_->get_physical_store(/* ignore_future_mutability */ false)};
 }
 
 bool LogicalStore::equal_storage(const LogicalStore& other) const

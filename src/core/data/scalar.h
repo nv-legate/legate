@@ -13,6 +13,7 @@
 #pragma once
 
 #include "core/type/type_traits.h"
+#include "core/utilities/internal_shared_ptr.h"
 #include "core/utilities/shared_ptr.h"
 #include "core/utilities/span.h"
 #include "core/utilities/tuple.h"
@@ -49,6 +50,7 @@ class Runtime;
  */
 class Scalar {
  public:
+  explicit Scalar(InternalSharedPtr<detail::Scalar> impl);
   explicit Scalar(std::unique_ptr<detail::Scalar> impl);
 
   // Define these so that the template constructor below is not selected for them
@@ -84,8 +86,9 @@ class Scalar {
   template <typename T,
             // Note the SFINAE, we want std::string (or thereto convertible types) to use the
             // string_view ctor.
-            typename = std::enable_if_t<!std::is_convertible_v<T, std::string> &&
-                                        !std::is_same_v<std::decay_t<T>, Scalar>>>
+            typename =
+              std::enable_if_t<!std::is_convertible_v<T, std::string> &&
+                               !std::is_same_v<std::decay_t<T>, InternalSharedPtr<detail::Scalar>>>>
   explicit Scalar(T value);
 
   /**
