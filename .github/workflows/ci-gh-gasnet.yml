@@ -1,0 +1,93 @@
+name: Build Gasnet Wrapper Package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  Build_GasNet_Wrapper:
+    name: Build Gasnet wrapper
+    strategy:
+      fail-fast: false
+    runs-on: linux-amd64-gpu-v100-earliest-1
+    defaults:
+      run:
+        shell: bash
+    container:
+      options: -u root
+      image: condaforge/miniforge3:latest
+      env:
+        CONDA_ROOT: "/tmp/conda-croot/gasnet-wrapper"
+        CONDA_OUTPUT: "/tmp/gasnet/output"
+        ARTIFACT_SERVER: "https://urm.nvidia.com/artifactory"
+        ARTIFACT_REPOS: "sw-legate-conda-local"
+        TARGET_PLATFORM: "linux-64"
+        PKG_DIR: "gex/noarch"
+
+    steps:
+    - name: Set environment variables
+      shell: bash --noprofile --norc -xeuo pipefail {0}
+      run: |
+        echo "ARTIFACT_NAME=Gasnet-Wrapper-Artifact-${GITHUB_SHA}" >> ${GITHUB_ENV}
+        echo "ARTIFACT_PATH=${CONDA_OUTPUT}" >> ${GITHUB_ENV}
+        echo "BUILD_DATE=$(date +%Y%m%d)" >> ${GITHUB_ENV}
+
+    - name: Display environment variables
+      shell: bash --noprofile --norc -xeuo pipefail {0}
+      run: |
+        uname -a
+        echo "CONDA_ROOT=${CONDA_ROOT}"
+        echo "CONDA_OUTPUT=${CONDA_ROOT}"
+        echo "ARTIFACT_NAME=${ARTIFACT_NAME}"
+        echo "ARTIFACT_PATH=${ARTIFACT_PATH}"
+        echo "BUILD_DATE=${BUILD_DATE}"
+
+    - name: Checkout ${{ github.event.repository.name }} (= this repo)
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Cleanup/Create related folders
+      run: |
+        rm -rf "${CONDA_ROOT}" "${CONDA_OUTPUT}"
+        mkdir -p "${CONDA_ROOT}" "${CONDA_OUTPUT}"
+
+    - name: Run conda build
+      run: |
+        conda_build_args=();
+        conda_build_args+=(--croot "${CONDA_ROOT}");
+        conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
+
+        mamba install conda-build
+        conda-build "${conda_build_args[@]}" conda/gasnet_wrapper
+
+    - name: Display output files
+      run: |
+        ls -lAhR "${CONDA_OUTPUT}"
+
+    - name: Upload gasnet wrapper artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: ${{ env.ARTIFACT_PATH }}
+
+    - name: Install pre-requisites to upload package
+      shell: bash --noprofile --norc -xeuo pipefail {0}
+      run: |
+        echo "Install pre-requisites"
+        apt-get update
+        apt-get install -y curl jq
+
+    - name: Upload Package to URM server
+      shell: bash --noprofile --norc -xeuo pipefail {0}
+      run: |
+        echo "Upload gasnet wrapper package"
+        for f in $(find ${ARTIFACT_PATH}/${TARGET_PLATFORM}/. -name "realm-gex-wrapper"'*.tar.bz2'); do
+          fname="$(basename "${f}")"
+          packageFound=$(curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -X POST  -H "content-type: text/plain" "${ARTIFACT_SERVER}/api/search/aql" -d 'items.find({"name":"'"${fname}"'"})' | jq -r .results[].name)
+          if [ -z ${packageFound} ]; then
+            echo "Uploading the package: ${fname}"
+            curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -T ${f} "${ARTIFACT_SERVER}/${ARTIFACT_REPOS}/${PKG_DIR}/${fname};buildDate=${BUILD_DATE};sha=${{ github.sha }}"
+          else
+            echo "The package: ${fname} already exists on the server..skipping upload"
+          fi
+        done

@@ -10,7 +10,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 #=============================================================================
-set -xeou pipefail
+set -eou pipefail
 
 CMAKE="${CMAKE:-cmake}"
 
@@ -29,8 +29,22 @@ else
   prefix=""
 fi
 
+DIRNAME="${DIRNAME:-dirname}"
+READLINK="${READLINK:-readlink}"
+
+script_dir="$(${DIRNAME} "$(${READLINK} -f "${BASH_SOURCE[0]}")")"
+
 declare -a cmake_configure_args
-cmake_configure_args=("${CMAKE_CONFIGURE_ARGS:-${CMAKE_ARGS:-}}")
+cmake_configure_args=(-S "${script_dir}" -B "${script_dir}/build")
+[[ -n "${CMAKE_CONFIGURE_ARGS:-${CMAKE_ARGS:-}}" ]] && cmake_configure_args+=("${CMAKE_CONFIGURE_ARGS:-${CMAKE_ARGS:-}}")
+
+declare -a cmake_build_args
+cmake_build_args=(--build "${script_dir}/build")
+[[ -n "${CMAKE_BUILD_ARGS:-}" ]] && cmake_build_args+=("${CMAKE_BUILD_ARGS}")
+
+declare -a cmake_install_args
+cmake_install_args=(--install "${script_dir}/build")
+[[ -n "${CMAKE_INSTALL_ARGS:-}" ]] && cmake_build_args+=("${CMAKE_INSTALL_ARGS}")
 
 if [[ "${prefix}" != "" ]]; then
   cmake_configure_args+=("-DCMAKE_INSTALL_PREFIX=${prefix}")
@@ -40,18 +54,7 @@ if [[ "${prefix}" != "" ]]; then
   export PREFIX="${prefix}"
 fi
 
-declare -a cmake_build_args
-cmake_build_args=("${CMAKE_BUILD_ARGS:-}")
-
-declare -a cmake_install_args
-cmake_install_args=("${CMAKE_INSTALL_ARGS:-}")
-
-DIRNAME="${DIRNAME:-dirname}"
-READLINK="${READLINK:-readlink}"
-
-script_dir="$(${DIRNAME} "$(${READLINK} -f "${BASH_SOURCE[0]}")")"
-
-${CMAKE} -E rm -rf "${script_dir}/build" && \
-  ${CMAKE} -S "${script_dir}" -B "${script_dir}/build" "${cmake_configure_args[@]}" && \
-  ${CMAKE} --build "${script_dir}/build" "${cmake_build_args[@]}" && \
-  ${CMAKE} --install "${scipt_dir}/build" "${cmake_install_args[@]}"
+${CMAKE} -E rm -rf "${script_dir}/build"
+${CMAKE} "${cmake_configure_args[@]}"
+${CMAKE} "${cmake_build_args[@]}"
+${CMAKE} "${cmake_install_args[@]}"
