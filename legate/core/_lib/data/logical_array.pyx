@@ -73,10 +73,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the shape of the array.
 
-        Returns
-        -------
-        Shape
-            The shape of the array.
+        :returns: The shape of the array.
+        :rtype: Shape
         """
         return Shape.from_handle(self._handle.shape())
 
@@ -85,10 +83,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the dimension of the array.
 
-        Returns
-        -------
-        int
-            The dimension of the array.
+        :returns: The dimension of the array.
+        :rtype: int
         """
         return self._handle.dim()
 
@@ -97,10 +93,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the type of the array.
 
-        Returns
-        -------
-        Type
-            The `Type` of the array.
+        :returns: The `Type` of the array.
+        :rtype: Type
         """
         return Type.from_handle(self._handle.type())
 
@@ -109,10 +103,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the extents of the array.
 
-        Returns
-        -------
-        tuple[int, ...]
-            The extents of the array.
+        :returns: The extents of the array.
+        :rtype: tuple[int, ...]
         """
         return self._handle.extents().data()
 
@@ -121,10 +113,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the volume of the array.
 
-        Returns
-        -------
-        int
-            The volume of the array.
+        :returns: The volume of the array.
+        :rtype: int
         """
         return self._handle.volume()
 
@@ -133,10 +123,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the size of the array. This method is an alias of `volume()`.
 
-        Returns
-        -------
-        int
-            The size of the array.
+        :returns: The size of the array.
+        :rtype: int
         """
         return self.volume
 
@@ -145,10 +133,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Return whether the store is unbound or not.
 
-        Returns
-        -------
-        bool
-            `True` if the array is unbound, `False` otherwise.
+        :returns: `True` if the array is unbound, `False` otherwise.
+        :rtype: bool
         """
         return self._handle.unbound()
 
@@ -157,10 +143,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get whether this array is nullable.
 
-        Returns
-        -------
-        bool
-            `True` if this array is nullable, `False` otherwise.
+        :returns: `True` if this array is nullable, `False` otherwise.
+        :rtype: bool
         """
         return self._handle.nullable()
 
@@ -169,10 +153,9 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get whether this array is nested
 
-        Returns
-        -------
-        bool
-            `True` if this array has nested stores, `False` otherwise.
+        :returns: ``True`` if this array has nested stores, ``False``
+                  otherwise.
+        :rtype: bool
         """
         return self._handle.nested()
 
@@ -181,10 +164,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the number of child stores of this array.
 
-        Returns
-        -------
-        int
-            The number of child stores of the array.
+        :returns: The number of child stores of the array.
+        :rtype: int
         """
         return self._handle.num_children()
 
@@ -193,10 +174,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the legate data interface of the array.
 
-        Returns
-        -------
-        LegateDataInterfaceItem
-            The interface to the array.
+        :returns: The interface to the array.
+        :rtype: LegateDataInterfaceItem
         """
         result: LegateDataInterfaceItem = {
             "version": 1,
@@ -374,10 +353,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the `LogicalStore` of this array.
 
-        Returns
-        -------
-        LogicalStore
-            The `LogicalStore` of this array.
+        :returns: The `LogicalStore` of this array.
+        :rtype: LogicalStore
         """
         return LogicalStore.from_handle(self._handle.data())
 
@@ -386,10 +363,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the null mask of this array.
 
-        Returns
-        -------
-        LogicalStore
-            The null mask of this array.
+        :returns: The null mask of this array.
+        :rtype: LogicalStore
         """
         return LogicalStore.from_handle(self._handle.null_mask())
 
@@ -429,10 +404,8 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get a pointer to the C++ `LogicalArray` object.
 
-        Returns
-        -------
-        int
-            The pointer to the C++ `LogicalArray` object.
+        :returns: The pointer to the C++ `LogicalArray` object.
+        :rtype: int
         """
         return <uintptr_t> &self._handle
 

@@ -197,6 +197,7 @@ PyTask
 
 .. autosummary::
    :toctree: generated/
+   :template: class.rst
 
    PyTask
 
@@ -206,5 +207,6 @@ Variant Invoker
 
 .. autosummary::
    :toctree: generated/
+   :template: class.rst
 
    VariantInvoker

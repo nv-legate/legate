@@ -351,16 +351,11 @@ cdef class Scalar:
         r"""
         Retrieve the numpy-compatible array representation of the scalar.
 
-        Returns
-        -------
-        interface : dict[str, Any]
-            The numpy array interface dict.
+        :returns: The numpy array interface dict.
+        :rtype: dict[str, Any]
 
-        Raises
-        ------
-        ValueError
-            If the type of the value in the scalar is variably sized (e.g. a
-            list).
+        :raises ValueError: If the type of the value in the scalar is
+        variably sized (e.g. a list).
         """
         cdef Type ty = self.type
         if ty.variable_size:
@@ -391,10 +386,8 @@ cdef class Scalar:
         r"""
         Get the type of the scalar.
 
-        Returns
-        -------
-        Type
-            The type of the scalar.
+        :returns: The type of the scalar.
+        :rtype: Type
         """
         return Type.from_handle(self._handle.type())
 
@@ -403,10 +396,8 @@ cdef class Scalar:
         r"""
         Get the raw pointer to the backing allocation.
 
-        Returns
-        -------
-        int
-            The pointer to the `Scalar`'s data.
+        :returns: The pointer to the `Scalar`'s data.
+        :rtype: int
         """
         return <uintptr_t> self._handle.ptr()
 
@@ -415,10 +406,8 @@ cdef class Scalar:
         r"""
         Get the pointer to the C++ `Scalar` object.
 
-        Returns
-        -------
-        int
-            The pointer to the C++ `Scalar` object.
+        :returns: The pointer to the C++ `Scalar` object.
+        :rtype: int
         """
         return <uintptr_t> &self._handle
 

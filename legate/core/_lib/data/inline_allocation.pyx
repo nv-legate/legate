@@ -39,10 +39,8 @@ cdef class InlineAllocation:
         r"""
         Access the raw pointer to the allocation.
 
-        Returns
-        -------
-        int
-            The raw pointer to the allocation.
+        :returns: The raw pointer to the allocation.
+        :rtype: int
         """
         return <uintptr_t>(self._handle.ptr)
 
@@ -53,10 +51,8 @@ cdef class InlineAllocation:
 
         If the allocation has dimension 0, an empty tuple is returned.
 
-        Returns
-        -------
-        tuple[int, ...]
-            The strides of the allocation.
+        :returns: The strides of the allocation.
+        :rtype: tuple[int, ...]
         """
         return () if self._store.ndim == 0 else tuple(self._handle.strides)
 
@@ -65,10 +61,8 @@ cdef class InlineAllocation:
         r"""
         Retrieve the shape of the allocation.
 
-        Returns
-        -------
-        tuple[int, ...]
-            The shape of the allocation.
+        :returns: The shape of the allocation.
+        :rtype: tuple[int, ...]
         """
         if self._store.ndim == 0:
             return ()
@@ -109,15 +103,10 @@ cdef class InlineAllocation:
         r"""
         Retrieve the numpy-compatible array representation of the allocation.
 
-        Returns
-        -------
-        dict
-            The numpy array interface dict.
+        :returns: The numpy array interface dict.
+        :rtype: dict[str, Any]
 
-        Raises
-        ------
-        ValueError
-            If the allocation is allocated on the GPU.
+        :raises ValueError: If the allocation is allocated on the GPU.
         """
         if self._store.target == StoreTarget.FBMEM:
             raise ValueError(
@@ -131,15 +120,10 @@ cdef class InlineAllocation:
         r"""
         Retrieve the cupy-compatible array representation of the allocation.
 
-        Returns
-        -------
-        dict
-            The cupy array interface dict.
+        :returns: The cupy array interface dict.
+        :rtype: dict[str, Any]
 
-        Raises
-        ------
-        ValueError
-            If the array is in host-only memory
+        :raises ValueError: If the array is in host-only memory
         """
         if self._store.target not in (StoreTarget.FBMEM, StoreTarget.ZCMEM):
             raise ValueError(

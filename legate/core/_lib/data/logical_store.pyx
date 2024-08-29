@@ -40,10 +40,8 @@ cdef class LogicalStore(Unconstructable):
         r"""
         Get the stores shape.
 
-        Returns
-        -------
-        Shape
-            The shape of the store.
+        :returns: The shape of the store.
+        :rtype: Shape
         """
         return Shape.from_handle(self._handle.shape())
 
@@ -52,10 +50,8 @@ cdef class LogicalStore(Unconstructable):
         r"""
         Get the number of dimensions of the store.
 
-        Returns
-        -------
-        int
-            The number of dimensions.
+        :returns: The number of dimensions.
+        :rtype: int
         """
         return self._handle.dim()
 
@@ -64,11 +60,9 @@ cdef class LogicalStore(Unconstructable):
         r"""
         Get whether this store has been optimized for scalars.
 
-        Returns
-        -------
-        bool
-            `True` if this store is backed by scalar storage, `False`
-             otherwise.
+        :returns: `True` if this store is backed by scalar storage, `False`
+                 otherwise.
+        :rtype: bool
         """
         return self._handle.has_scalar_storage()
 
@@ -93,10 +87,8 @@ cdef class LogicalStore(Unconstructable):
         r"""
         Get the type of the store.
 
-        Returns
-        -------
-        Type
-            The type of the store.
+        :rtype: Type
+        :returns: The type of the store.
         """
         return Type.from_handle(self._handle.type())
 
@@ -107,10 +99,8 @@ cdef class LogicalStore(Unconstructable):
 
         This call may block if the store is unbound.
 
-        Returns
-        -------
-        tuple[int, ...]
-            The extents of the store.
+        :returns: The extents of the store.
+        :rtype: tuple[int, ...]
         """
         return self._handle.extents().data()
 
@@ -121,10 +111,8 @@ cdef class LogicalStore(Unconstructable):
 
         This call may block if the store is unbound.
 
-        Returns
-        -------
-        int
-            The number of elements in the store.
+        :returns: The number of elements in the store.
+        :rtype: int
         """
         return self._handle.volume()
 
@@ -135,10 +123,8 @@ cdef class LogicalStore(Unconstructable):
 
         This property is an alias to `volume()`.
 
-        Returns
-        -------
-        int
-            The number of elements in the store.
+        :returns: The number of elements in the store.
+        :rtype: int
         """
         return self.volume
 
@@ -147,10 +133,8 @@ cdef class LogicalStore(Unconstructable):
         r"""
         Get whether the store is unbound.
 
-        Returns
-        -------
-        bool
-            `True` if the store is unbound, `False` otherwise.
+        :returns: `True` if the store is unbound, `False` otherwise.
+        :rtype: bool
         """
         return self._handle.unbound()
 
@@ -159,10 +143,8 @@ cdef class LogicalStore(Unconstructable):
         r"""
         Get whether the store is transformed.
 
-        Returns
-        -------
-        bool
-            `True` if the store is transformed, `False` otherwise.
+        :returns: `True` if the store is transformed, `False` otherwise.
+        :rtype: bool
         """
         return self._handle.transformed()
 
@@ -171,10 +153,8 @@ cdef class LogicalStore(Unconstructable):
         r"""
         Get the Legate array data interface.
 
-        Returns
-        -------
-        LegateDataInterfaceItem
-            The array interface.
+        :returns: The array interface.
+        :rtype: LegateDataInterfaceItem
         """
         array = LogicalArray.from_store(self)
         result: LegateDataInterfaceItem = {
@@ -613,10 +593,8 @@ cdef class LogicalStore(Unconstructable):
         r"""
         Get a pointer to the raw C++ `LogicalStore` object.
 
-        Returns
-        -------
-        int
-            The pointer to the raw C++ `LogicalStore` object.
+        :returns: The pointer to the raw C++ `LogicalStore` object.
+        :rtype: int
         """
         return <uintptr_t> &self._handle
 
@@ -646,10 +624,8 @@ cdef class LogicalStorePartition:
         r"""
         Get the color shape for this partition.
 
-        Returns
-        -------
-        tuple[int, ...]
-            The color shape for this partition.
+        :returns: The color shape for this partition.
+        :rtype: tuple[int, ...]
         """
         return self._handle.color_shape().data()
 

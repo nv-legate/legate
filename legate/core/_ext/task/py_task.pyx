@@ -45,24 +45,24 @@ cdef class PyTask:
 
         Parameters
         ----------
-        func : UserFunction
+        func
             The base user function to invoke in the task.
-        variants : VariantList
+        variants
             The list of variants for which ``func`` is applicable.
-        constraints : Sequence[ConstraintProxy], optional
+        constraints
             The list of constraints which are to be applied to the arguments of
             ``func``, if any. Defaults to no constraints.
-        throws_exception : bool, False
+        throws_exception
             True if any variants of ``func`` throws an exception, False
             otherwise.
-        invoker : VariantInvoker, optional
+        invoker
             The invoker used to store the signature and marshall arguments to
             and manage invoking the user variants. Defaults to constructing the
             invoker from ``func``.
-        library : Library, optional
+        library
             The library context under which to register the new task. Defaults
             to the core context.
-        register : bool, True
+        register
             Whether to immediately register the task with ``context``. If
             ``False``, the user must manually register the task (via
             ``PyTask.complete_registration()``) before use.
@@ -124,26 +124,19 @@ cdef class PyTask:
     def registered(self) -> bool:
         r"""Query whether a ``PyTask`` has completed registration.
 
-        Returns
-        -------
-        registered : bool
-            ``True`` if ``self`` is registered, ``False`` otherwise.
+        :return: ``True`` if ``self`` is registered, ``False`` otherwise.
+        :rtype: bool
         """
         return self._task_id != self.UNREGISTERED_ID
 
     @property
-    def task_id(self) -> int64_t:
+    def task_id(self) -> _LocalTaskID:
         r"""Return the context-local task ID for this task.
 
-        Returns
-        -------
-        task_id : int
-            The local task ID.
+        :return: The local task ID of the task.
+        :rtype: LocalTaskID
 
-        Raises
-        ------
-        RuntimeError
-            If the task has not completed registration.
+        :raises RuntimeError: If the task has not completed registration.
         """
         if not self.registered:
             raise RuntimeError(
@@ -164,7 +157,7 @@ cdef class PyTask:
 
         Returns
         -------
-        task : AutoTask
+        AutoTask
             The configured task instance.
 
         Raises
@@ -234,7 +227,7 @@ cdef class PyTask:
 
         Returns
         -------
-        task_id : int
+        LocalTaskID
             The (context-local) task ID for the task.
 
         Raises

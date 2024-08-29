@@ -44,13 +44,11 @@ cdef class Shape:
 
     @property
     def extents(self) -> tuple[uint64_t, ...]:
-        """
+        r"""
         Returns the shape's extents
 
-        Returns
-        -------
-        tuple[int, ...]
-            Dimension extents
+        :returns: Dimension extents
+        :rtype: tuple[int, ...]
 
         Notes
         -----
@@ -66,10 +64,8 @@ cdef class Shape:
         """
         Returns the shape's volume
 
-        Returns
-        -------
-        int
-            Volume of the shape
+        :returns: Volume of the shape
+        :rtype: int
 
         Notes
         -----
@@ -83,10 +79,8 @@ cdef class Shape:
         """
         Returns the number of dimensions of this shape
 
-        Returns
-        -------
-        int
-            Number of dimensions
+        :returns: Number of dimensions
+        :rtype: int
 
         Notes
         -----

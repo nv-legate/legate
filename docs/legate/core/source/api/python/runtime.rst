@@ -10,13 +10,9 @@ other kinds of operations.
 
 .. autosummary::
    :toctree: generated/
+   :template: class.rst
 
-   Runtime.create_store
-   Runtime.create_manual_task
-   Runtime.create_auto_task
-   Runtime.issue_fill
-   Runtime.issue_execution_fence
-   Runtime.tree_reduce
+   Runtime
 
 
 Annotation

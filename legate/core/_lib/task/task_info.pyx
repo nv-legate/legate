@@ -308,10 +308,8 @@ cdef class TaskInfo(Unconstructable):
         handle to the `Library`, thereby rendering it "invalid". But Python has
         no move semantics, so this validity must be manually queried.
 
-        Returns
-        -------
-        bool
-            `True` if the object is valid, `False` otherwise.
+        :returns: `True` if the object is valid, `False` otherwise.
+        :rtype: bool
         """
         return self._handle != NULL
 
@@ -320,15 +318,10 @@ cdef class TaskInfo(Unconstructable):
         r"""
         Get the name of the task.
 
-        Returns
-        -------
-        str
-            The task name.
+        :returns: The task name.
+        :rtype: str
 
-        Raises
-        ------
-        RuntimeError
-            If the task info object is in an invalid state.
+        :raises RuntimeError: If the task info object is in an invalid state.
         """
         self._assert_valid()
         return str_from_string_view(self._handle.name())

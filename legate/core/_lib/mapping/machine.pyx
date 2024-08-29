@@ -111,10 +111,8 @@ cdef class ProcessorRange:
         """
         Returns the lower bound of the processor range
 
-        Returns
-        -------
-        int
-            Lower bound (inclusive)
+        :returns: Lower bound (inclusive)
+        :rtype: int
         """
         return self._handle.low
 
@@ -123,10 +121,8 @@ cdef class ProcessorRange:
         """
         Returns the upper bound of the processor range
 
-        Returns
-        -------
-        int
-            Upper bound (exclusive)
+        :returns: Upper bound (exclusive)
+        :rtype: int
         """
         return self._handle.high
 
@@ -135,10 +131,8 @@ cdef class ProcessorRange:
         """
         Returns the number of processors per node
 
-        Returns
-        -------
-        int
-            Per-node processor count
+        :returns: Per-node processor count
+        :rtype: int
         """
         return self._handle.per_node_count
 
@@ -147,10 +141,8 @@ cdef class ProcessorRange:
         """
         Returns the number of processors in the range
 
-        Returns
-        -------
-        int
-            Processor count
+        :returns: Processor count
+        :rtype: int
         """
         return self._handle.count()
 
@@ -158,10 +150,8 @@ cdef class ProcessorRange:
         """
         Returns the number of processors in the range
 
-        Returns
-        -------
-        int
-            Processor count
+        :returns: Processor count
+        :rtype: int
         """
         return self.count
 
@@ -170,10 +160,8 @@ cdef class ProcessorRange:
         """
         Indicates if the processor range is empty
 
-        Returns
-        -------
-        bool
-            ``True`` if the machine is empty, ``False`` otherwise.
+        :returns: ``True`` if the machine is empty, ``False`` otherwise.
+        :rtype: bool
         """
         return self._handle.empty()
 
@@ -343,10 +331,8 @@ cdef class Machine:
         """
         Returns the preferred kind of processors for mapping tasks
 
-        Returns
-        -------
-        TaskTarget
-            Processor kind
+        :returns: Processor kind
+        :rtype: TaskTarget
         """
         return self._handle.preferred_target()
 
@@ -393,10 +379,8 @@ cdef class Machine:
         """
         Returns the kinds of processors available in this machine
 
-        Returns
-        -------
-        tuple[TaskTarget, ...]
-            Processor kinds
+        :returns: Processor kinds
+        :rtype: tuple[TaskTarget, ...]
         """
         return tuple(self._handle.valid_targets())
 
@@ -424,16 +408,14 @@ cdef class Machine:
 
     @property
     def empty(self):
-        """
+        r"""
         Indicates if the machine is empty
 
         An empty machine is a machine with all its processor ranges being
         empty.
 
-        Returns
-        -------
-        bool
-            ``True`` if the machine is empty, ``False`` otherwise.
+        :returns: ``True`` if the machine is empty, ``False`` otherwise.
+        :rtype: bool
         """
         return self._handle.empty()
 

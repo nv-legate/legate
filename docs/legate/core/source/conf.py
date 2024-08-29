@@ -16,7 +16,9 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import inspect
 from os import getenv
+from typing import Any
 
 import legate
 
@@ -90,6 +92,8 @@ else:
 # -- Options for extensions --------------------------------------------------
 
 autosummary_generate = True
+templates_path = ["_templates"]
+napoleon_include_special_with_doc = True
 
 breathe_default_project = "legate_core"
 breathe_default_members = ("members", "protected-members")
@@ -108,5 +112,56 @@ pygments_style = "sphinx"
 myst_heading_anchors = 3
 
 
+def dont_skip_documented_dunders(
+    app: Any,
+    what: str,
+    name: str,
+    obj: Any,
+    skip: bool,
+    options: dict[str, Any],
+) -> bool | None:
+    SKIP = True  # definitely skip the value (does not show up in docs)
+    KEEP = False  # definitely do NOT skip the value (will show up in docs)
+    LET_AUTODOC_DECIDE = None  # fall back to autodoc (might show up in docs)
+
+    if not name.startswith("_"):
+        # Not a dunder, defer to default autodoc-skip-member
+        return LET_AUTODOC_DECIDE
+    if obj is getattr(object, name, None):
+        # The function is actually object.__foo__, which, obviously we did not
+        # write. Defer to autodoc.
+        return LET_AUTODOC_DECIDE
+    if inspect.isbuiltin(obj):
+        # Some object.__foo__ methods aren't caught by the above, but they are
+        # caught by this.
+        return LET_AUTODOC_DECIDE
+    if not hasattr(obj, "__doc__"):
+        return LET_AUTODOC_DECIDE
+
+    if "pyx_vtable" in name or "_cython_" in repr(obj):
+        # Cython implementation details, we never want these
+        return SKIP
+
+    if any(
+        item in name
+        for item in (
+            "array_interface",
+            "legate_data_interface",
+            "__init__",
+            "__doc__",
+        )
+    ):
+        # We always want these
+        return KEEP
+
+    match what:
+        case "method":
+            return KEEP
+        case _:
+            print(f"====== LET AUTODOC DECIDE ({what})", name, "->", obj)
+            return LET_AUTODOC_DECIDE
+
+
 def setup(app):
     app.add_css_file("params.css")
+    app.connect("autodoc-skip-member", dont_skip_documented_dunders)

@@ -156,10 +156,8 @@ cdef class Type:
         r"""
         Get the type code of the type.
 
-        Returns
-        -------
-        TypeCode
-            The type code.
+        :returns: The type code.
+        :rtype: TypeCode
         """
         return self._handle.code()
 
@@ -168,10 +166,8 @@ cdef class Type:
         r"""
         Get the size (in bytes) of the data type.
 
-        Returns
-        -------
-        int
-            The size of the data type.
+        :returns: The size of the data type.
+        :rtype: int
         """
         return self._handle.size()
 
@@ -180,10 +176,8 @@ cdef class Type:
         r"""
         Get the alignmenent (in bytes) of the data type.
 
-        Returns
-        -------
-        int
-            The alignment of the data type.
+        :returns: The alignment of the data type.
+        :rtype: int
         """
         return self._handle.alignment()
 
@@ -194,10 +188,8 @@ cdef class Type:
 
         All types which share a UID are guaranteed to be equal.
 
-        Returns
-        -------
-        int
-            The UID of the type.
+        :returns: The UID of the type.
+        :rtype: int
         """
         return self._handle.uid()
 
@@ -206,10 +198,8 @@ cdef class Type:
         r"""
         Get whether the data type is variably sized.
 
-        Returns
-        -------
-        bool
-            `True` if the type is variable size, `False` otherwise.
+        :returns: `True` if the type is variable size, `False` otherwise.
+        :rtype: bool
         """
         return self._handle.variable_size()
 
@@ -222,10 +212,8 @@ cdef class Type:
         `int32_t`, `uin64_t`, `float`, `double`, `int`, etc. Struct types, list
         types, and other such compound types are not primitive.
 
-        Returns
-        -------
-        bool
-            `True` if the type is primitive, `False` otherwise.
+        :returns: `True` if the type is primitive, `False` otherwise.
+        :rtype: bool
         """
         return self._handle.is_primitive()
 
@@ -304,10 +292,8 @@ cdef class Type:
         r"""
         Get a raw pointer to the C++ `Type` object.
 
-        Returns
-        -------
-        int
-            The pointer to the C++ object.
+        :returns: The pointer to the C++ object.
+        :rtype: int
         """
         return <uintptr_t>(&self._handle)
 
@@ -315,10 +301,8 @@ cdef class Type:
         r"""
         Compute the hash of the type.
 
-        Returns
-        -------
-        int
-            The hash.
+        :returns: The hash.
+        :rtype: int
         """
         return self.uid
 
@@ -382,10 +366,8 @@ cdef class FixedArrayType(Type):
         ```
         this function would return `2`, not `4`.
 
-        Returns
-        -------
-        int
-            The number of elements.
+        :returns: The number of elements.
+        :rtype: int
         """
         return self._handle.as_fixed_array_type().num_elements()
 
@@ -394,10 +376,8 @@ cdef class FixedArrayType(Type):
         r"""
         Get the element type of the array type.
 
-        Returns
-        -------
-        Type
-            The element type.
+        :returns: The element type.
+        :rtype: Type
         """
         return Type.from_handle(
             self._handle.as_fixed_array_type().element_type()
@@ -449,10 +429,8 @@ cdef class StructType(Type):
         ```
         this function would return `2`, not `4` or `1`.
 
-        Returns
-        -------
-        int
-            The number of fields in the struct type.
+        :returns: The number of fields in the struct type.
+        :rtype: int
         """
         return self._handle.as_struct_type().num_fields()
 
@@ -479,10 +457,8 @@ cdef class StructType(Type):
         r"""
         Get whether the fields are aligned in memory.
 
-        Returns
-        -------
-        bool
-            `True` if the fields are aligned, `False` otherwise.
+        :returns: `True` if the fields are aligned, `False` otherwise.
+        :rtype: bool
         """
         return self._handle.as_struct_type().aligned()
 
@@ -491,10 +467,8 @@ cdef class StructType(Type):
         r"""
         Get the memory offsets (in bytes) for each field in the struct.
 
-        Returns
-        -------
-        tuple[int, ...]
-            The offsets of the fields.
+        :returns: The offsets of the fields.
+        :rtype: tuple[int, ...]
         """
         return tuple(self._handle.as_struct_type().offsets())
 

@@ -27,10 +27,8 @@ cdef class SymbolicExpr(Unconstructable):
         r"""
         Get the dimension index of this expression.
 
-        Returns
-        -------
-        int
-            The dimension.
+        :returns: The dimension.
+        :rtype: int
         """
         return self._handle.dim()
 
@@ -39,10 +37,8 @@ cdef class SymbolicExpr(Unconstructable):
         r"""
         Get the weight for the coordinates.
 
-        Returns
-        -------
-        int
-            The weight.
+        :returns: The weight.
+        :rtype: int
         """
         return self._handle.weight()
 
@@ -51,10 +47,8 @@ cdef class SymbolicExpr(Unconstructable):
         r"""
         Get the offset of the expression.
 
-        Returns
-        -------
-        int
-            The offset.
+        :returns: The offset.
+        :rtype: int
         """
         return self._handle.offset()
 

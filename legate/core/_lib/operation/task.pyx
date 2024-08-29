@@ -342,10 +342,8 @@ cdef class AutoTask(Unconstructable):
         r"""
         Get the exception types thrown by the task.
 
-        Returns
-        -------
-        tuple[type, ...]
-            The types of exceptions thrown by the task.
+        :returns: The types of exceptions thrown by the task.
+        :rtype: tuple[type, ...]
         """
         return tuple(self._exception_types.keys())
 
@@ -463,13 +461,11 @@ cdef class AutoTask(Unconstructable):
 
     @property
     def raw_handle(self) -> uintptr_t:
-        """
+        r"""
         Get the raw C++ pointer to the underlying class instance as an integer
 
-        Returns
-        -------
-        int
-            The pointer to the C++ `AutoTask`.
+        :returns: The pointer to the C++ `AutoTask`.
+        :rtype: int
         """
         return <uintptr_t> &self._handle
 
@@ -677,10 +673,8 @@ cdef class ManualTask(Unconstructable):
         r"""
         Get the exception types thrown by the task.
 
-        Returns
-        -------
-        tuple[type, ...]
-            The types of exceptions thrown by the task.
+        :returns: The types of exceptions thrown by the task.
+        :rtype: tuple[type, ...]
         """
         return tuple(self._exception_types.keys())
 
@@ -724,12 +718,10 @@ cdef class ManualTask(Unconstructable):
 
     @property
     def raw_handle(self) -> uintptr_t:
-        """
+        r"""
         Get the raw C++ pointer to the underlying class instance as an integer.
 
-        Returns
-        -------
-        int
-            The raw pointer to the C++ `ManualTask`.
+        :returns: The raw pointer to the C++ `ManualTask`.
+        :rtype: int
         """
         return <uintptr_t> &self._handle

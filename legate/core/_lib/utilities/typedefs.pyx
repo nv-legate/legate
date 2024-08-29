@@ -38,10 +38,8 @@ cdef class DomainPoint:
         r"""
         Get the number of dimensions of the domain point.
 
-        Returns
-        -------
-        int
-            The dimension of the point.
+        :returns: The dimension of the point.
+        :rtype: int
         """
         return self._handle.get_dim()
 
@@ -112,10 +110,8 @@ cdef class Domain:
         r"""
         Get the number of dimensions of the domain.
 
-        Returns
-        -------
-        int
-            The dimension of the domain.
+        :returns: The dimension of the domain.
+        :rtype: int
         """
         return self._handle.get_dim()
 
@@ -124,10 +120,8 @@ cdef class Domain:
         r"""
         Get the smallest point in the domain.
 
-        Returns
-        -------
-        DomainPoint
-            The point.
+        :returns: The point.
+        :rtype: DomainPoint
         """
         return DomainPoint.from_handle(self._handle.lo())
 
@@ -136,10 +130,8 @@ cdef class Domain:
         r"""
         Get the largest point in the domain.
 
-        Returns
-        -------
-        DomainPoint
-            The point.
+        :returns: The point.
+        :rtype: DomainPoint
         """
         return DomainPoint.from_handle(self._handle.hi())
 

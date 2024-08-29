@@ -185,46 +185,36 @@ cdef class VariantInvoker:
         r"""
         Return the derived input parameters for a user variant function.
 
-        Returns
-        -------
-        inputs : ParamList
-            The list of paramater names determined to be inputs.
+        :returns: The list of paramater names determined to be inputs.
+        :rtype: ParamList
         """
         return self._inputs
 
     @property
     def outputs(self) -> ParamList:
-        r"""Return the derived output parameters for a user variant
-        function.
+        r"""Return the derived output parameters for a user variant function.
 
-        Returns
-        -------
-        outputs : ParamList
-            The list of paramater names determined to be outputs.
+        :returns: The list of paramater names determined to be outputs.
+        :rtype: ParamList
         """
         return self._outputs
 
     @property
     def reductions(self) -> ParamList:
-        r"""Return the derived reduction parameters for a user variant
-        function.
+        r"""
+        Return the derived reduction parameters for a user variant function.
 
-        Returns
-        -------
-        reductions : ParamList
-            The list of paramater names determined to be reductions.
+        :returns: The list of paramater names determined to be reductions.
+        :rtype: ParamList
         """
         return self._reductions
 
     @property
     def scalars(self) -> ParamList:
-        r"""Return the derived scalar parameters for a user variant
-        function.
+        r"""Return the derived scalar parameters for a user variant function.
 
-        Returns
-        -------
-        scalars : ParamList
-            The list of paramater names determined to be scalars.
+        :returns: The list of paramater names determined to be scalars.
+        :rtype: ParamList
         """
         return self._scalars
 
@@ -232,10 +222,9 @@ cdef class VariantInvoker:
     def signature(self) -> Signature:
         r"""Return the signature of the user function.
 
-        Returns
-        -------
-        signature : Signature
-            The signature object which describes the user variant function.
+        :returns: The signature object which describes the user variant
+                  function.
+        :rtype: inspect.Signature
         """
         return self._signature
 
@@ -568,7 +557,7 @@ cdef class VariantInvoker:
 
         Returns
         -------
-        valid : bool
+        bool
             ``True`` if the signature of ``func`` matches this
             ``VariantInvoker``s signature, ``False`` otherwise.
         """

@@ -59,10 +59,8 @@ cdef class TaskContext(Unconstructable):
         r"""
         Get the input arguments to the task.
 
-        Returns
-        -------
-        tuple[PhysicalArray, ...]
-            The input arguments to the task.
+        :returns: The input arguments to the task.
+        :rtype: tuple[PhysicalArray, ...]
         """
         cdef int i
 
@@ -78,10 +76,8 @@ cdef class TaskContext(Unconstructable):
         r"""
         Get the output arguments to the task.
 
-        Returns
-        -------
-        tuple[PhysicalArray, ...]
-            The output arguments to the task.
+        :returns: The output arguments to the task.
+        :rtype: tuple[PhysicalArray, ...]
         """
         cdef int i
 
@@ -97,10 +93,8 @@ cdef class TaskContext(Unconstructable):
         r"""
         Get the reduction arguments to the task.
 
-        Returns
-        -------
-        tuple[PhysicalArray, ...]
-            The reduction arguments to the task.
+        :returns: The reduction arguments to the task.
+        :rtype: tuple[PhysicalArray, ...]
         """
         cdef int i
 
@@ -116,10 +110,8 @@ cdef class TaskContext(Unconstructable):
         r"""
         Get the scalar arguments to the task.
 
-        Returns
-        -------
-        tuple[Scalar, ...]
-            The scalar arguments to the task.
+        :returns: The scalar arguments to the task.
+        :rtype: tuple[Scalar, ...]
         """
         cdef int i
 

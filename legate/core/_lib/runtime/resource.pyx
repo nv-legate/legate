@@ -18,10 +18,8 @@ cdef class ResourceConfig:
         r"""
         Get the maximum number of tasks a library can register.
 
-        Returns
-        -------
-        int
-            The maximum number of tasks.
+        :returns: The maximum number of tasks.
+        :rtype: int
         """
         return self._handle.max_tasks
 
@@ -42,10 +40,8 @@ cdef class ResourceConfig:
         r"""
         Get the maximum number of reduction operators a library can register.
 
-        Returns
-        -------
-        int
-            The maximum number of reduction operators.
+        :returns: The maximum number of reduction operators.
+        :rtype: int
         """
         return self._handle.max_reduction_ops
 

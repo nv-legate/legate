@@ -33,10 +33,8 @@ cdef class PhysicalStore(Unconstructable):
         r"""
         Get the number of dimensions in the store
 
-        Returns
-        -------
-        int
-            The number of dimensions in the store.
+        :returns: The number of dimensions in the store.
+        :rtype: int
         """
         return self._handle.dim()
 
@@ -45,10 +43,8 @@ cdef class PhysicalStore(Unconstructable):
         r"""
         Get the type of the store.
 
-        Returns
-        -------
-        Type
-            The type of the store.
+        :returns: The type of the store.
+        :rtype: Type
         """
         return Type.from_handle(self._handle.type())
 
@@ -57,10 +53,8 @@ cdef class PhysicalStore(Unconstructable):
         r"""
         Get the `Domain` of the store.
 
-        Returns
-        -------
-        Domain
-            The domain of the store.
+        :returns: The domain of the store.
+        :rtype: Domain
         """
         return Domain.from_handle(self._handle.domain())
 
@@ -69,10 +63,8 @@ cdef class PhysicalStore(Unconstructable):
         r"""
         Get the kind of memory in which this store resides.
 
-        Returns
-        -------
-        StoreTarget
-            The memory kind.
+        :returns: The memory kind.
+        :rtype: StoreTarget
         """
         return self._handle.target()
 
@@ -97,10 +89,8 @@ cdef class PhysicalStore(Unconstructable):
 
         Equivalent to `get_inline_allocation().__array_interface__`.
 
-        Returns
-        -------
-        interface : dict[str, Any]
-            The numpy array interface dict.
+        :returns: The numpy array interface dict.
+        :rtype: dict[str, Any]
         """
         return self.get_inline_allocation().__array_interface__
 
@@ -111,9 +101,7 @@ cdef class PhysicalStore(Unconstructable):
 
         Equivalent to `get_inline_allocation().__cuda_array_interface__`.
 
-        Returns
-        -------
-        interface : dict[str, Any]
-            The cupy array interface dict.
+        :returns: The cupy array interface dict.
+        :rtype: dict[str, Any]
         """
         return self.get_inline_allocation().__cuda_array_interface__

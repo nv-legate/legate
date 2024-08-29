@@ -28,10 +28,8 @@ cdef class PhysicalArray(Unconstructable):
         r"""
         Get whether this array is nullable.
 
-        Returns
-        -------
-        bool
-            `True` if the array is nullable, `False` otherwise.
+        :returns: `True` if the array is nullable, `False` otherwise.
+        :rtype: bool
         """
         return self._handle.nullable()
 
@@ -40,10 +38,8 @@ cdef class PhysicalArray(Unconstructable):
         r"""
         Get the number of dimensions in the array.
 
-        Returns
-        -------
-        int
-            The number of dimensions in the array.
+        :returns: The number of dimensions in the array.
+        :rtype: int
         """
         return self._handle.dim()
 
@@ -52,10 +48,8 @@ cdef class PhysicalArray(Unconstructable):
         r"""
         Get the type of the array.
 
-        Returns
-        -------
-        Type
-            The type of the array.
+        :returns: The type of the array.
+        :rtype: Type
         """
         return Type.from_handle(self._handle.type())
 
@@ -64,10 +58,8 @@ cdef class PhysicalArray(Unconstructable):
         r"""
         Get whether this array has child arrays.
 
-        Returns
-        -------
-        bool
-            `True` if this array has children, `False` otherwise.
+        :returns: `True` if this array has children, `False` otherwise.
+        :rtype: bool
         """
         return self._handle.nested()
 
@@ -125,15 +117,10 @@ cdef class PhysicalArray(Unconstructable):
         r"""
         Retrieve the numpy-compatible array representation of the allocation.
 
-        Returns
-        -------
-        interface : dict[str, Any]
-            The numpy array interface dict.
+        :returns: The numpy array interface dict.
+        :rtype: dict[str, Any]
 
-        Raises
-        ------
-        ValueError
-            If the array is nullable or nested.
+        :raises ValueError: If the array is nullable or nested.
         """
         if self.nullable or self.nested:
             raise ValueError(
@@ -147,15 +134,10 @@ cdef class PhysicalArray(Unconstructable):
         r"""
         Retrieve the cupy-compatible array representation of the allocation.
 
-        Returns
-        -------
-        interface : dict[str, Any]
-            The cupy array interface dict.
+        :returns: The cupy array interface dict.
+        :rtype: dict[str, Any]
 
-        Raises
-        ------
-        ValueError
-            If the array is nullable or nested.
+        :raises ValueError: If the array is nullable or nested.
         """
         if self.nullable or self.nested:
             raise ValueError(

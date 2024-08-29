@@ -148,10 +148,8 @@ cdef class Runtime(Unconstructable):
         r"""
         Get the core library.
 
-        Returns
-        -------
-        Library
-            The core library.
+        :returns: The core library.
+        :rtype: Library
         """
         return self.find_library("legate.core")
 
@@ -646,7 +644,7 @@ cdef class Runtime(Unconstructable):
             The array to model the new array from.
         dtype : Type (optional)
             The type of the resulting array. If given, must be compatible with
-            `array`s type. If not given, `array`s type is used.
+            ``array``'s type. If not given, ``array``'s type is used.
 
         Returns
         -------
@@ -879,10 +877,8 @@ cdef class Runtime(Unconstructable):
         r"""
         Get the total number of nodes.
 
-        Returns
-        -------
-        int
-            The total number of nodes.
+        :returns: The total number of nodes.
+        :rtype: int
         """
         return self._handle.node_count()
 
@@ -891,10 +887,8 @@ cdef class Runtime(Unconstructable):
         r"""
         Get the current rank.
 
-        Returns
-        -------
-        int
-            The current node rank.
+        :returns: The current node rank.
+        :rtype: int
         """
         return self._handle.node_id()
 
@@ -914,10 +908,8 @@ cdef class Runtime(Unconstructable):
         r"""
         An alias for `get_machine()`.
 
-        Returns
-        -------
-        Machine
-            The current machine.
+        :returns: The current machine.
+        :rtype: Machine
         """
         return get_machine()
 
