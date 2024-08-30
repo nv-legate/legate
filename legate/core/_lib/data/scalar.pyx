@@ -24,6 +24,7 @@ from libc.stdint cimport (
 )
 from libcpp cimport bool as cpp_bool
 from libcpp.complex cimport complex as std_complex
+from libcpp.utility cimport move as std_move
 
 from ..._ext.cython_libcpp.string_view cimport (
     str_from_string_view,
@@ -277,7 +278,7 @@ cdef class Scalar:
     @staticmethod
     cdef Scalar from_handle(_Scalar handle):
         cdef Scalar result = Scalar.__new__(Scalar)
-        result._handle = handle
+        result._handle = std_move(handle)
         return result
 
     def __init__(self, value: Any, dtype: Type | None = None) -> None:
@@ -318,7 +319,10 @@ cdef class Scalar:
         RuntimeError
             If the contained value could not be reconstructed.
         """
-        cdef _Type.Code code = self._handle.type().code()
+        cdef _Type.Code code
+
+        with nogil:
+            code = self._handle.type().code()
         try:
             return _GETTERS[code](self)
         except KeyError as ke:
@@ -370,14 +374,14 @@ cdef class Scalar:
                 "version": 3,
                 "shape": shape,
                 "typestr": numpy_type.str,
-                "data": (<uintptr_t> self._handle.ptr(), True),
+                "data": (self.ptr, True),
             }
         numpy_type = ty.to_numpy_dtype()
         return {
             "version": 3,
             "shape": (),
             "typestr": numpy_type.str,
-            "data": (<uintptr_t> self._handle.ptr(), True),
+            "data": (self.ptr, True),
             "descr": numpy_type.descr,
         }
 
@@ -389,7 +393,11 @@ cdef class Scalar:
         :returns: The type of the scalar.
         :rtype: Type
         """
-        return Type.from_handle(self._handle.type())
+        cdef _Type handle
+
+        with nogil:
+            handle = self._handle.type()
+        return Type.from_handle(std_move(handle))
 
     @property
     def ptr(self) -> uintptr_t:
@@ -399,7 +407,11 @@ cdef class Scalar:
         :returns: The pointer to the `Scalar`'s data.
         :rtype: int
         """
-        return <uintptr_t> self._handle.ptr()
+        cdef uintptr_t p
+
+        with nogil:
+            p = <uintptr_t>self._handle.ptr()
+        return p
 
     @property
     def raw_handle(self) -> uintptr_t:

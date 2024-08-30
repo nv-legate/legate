@@ -11,6 +11,7 @@
 
 from libc.stdint cimport int64_t, uint32_t, uint64_t
 from libcpp.utility cimport move as std_move
+from libcpp.vector cimport vector as std_vector
 
 from collections.abc import Collection, Iterator
 
@@ -21,7 +22,7 @@ cdef class Shape:
     @staticmethod
     cdef Shape from_handle(_Shape handle):
         cdef Shape result = Shape.__new__(Shape)
-        result._handle = handle
+        result._handle = std_move(handle)
         result._extents = None
         return result
 
@@ -55,13 +56,17 @@ cdef class Shape:
         If the shape is of an unbound array or store, the call blocks the
         execution until the shape becomes ready.
         """
+        cdef const std_vector[uint64_t]* v = NULL
+
         if self._extents is None:
-            self._extents = tuple(self._handle.extents().data())
+            with nogil:
+                v = &self._handle.extents().data()
+            self._extents = tuple(v[0])
         return self._extents
 
     @property
     def volume(self) -> uint64_t:
-        """
+        r"""
         Returns the shape's volume
 
         :returns: Volume of the shape
@@ -72,11 +77,15 @@ cdef class Shape:
         If the shape is of an unbound array or store, the call blocks the
         execution until the shape becomes ready.
         """
-        return self._handle.volume()
+        cdef uint64_t ret = 0
+
+        with nogil:
+            ret = self._handle.volume()
+        return ret
 
     @property
     def ndim(self) -> uint32_t:
-        """
+        r"""
         Returns the number of dimensions of this shape
 
         :returns: Number of dimensions
@@ -86,10 +95,14 @@ cdef class Shape:
         -----
         Unlike other shape-related queries, this call is non-blocking
         """
-        return self._handle.ndim()
+        cdef uint32_t ret = 0
+
+        with nogil:
+            ret = self._handle.ndim()
+        return ret
 
     def __getitem__(self, int64_t idx) -> uint64_t:
-        """
+        r"""
         Returns the extent of a given dimension
 
         Parameters
@@ -133,10 +146,15 @@ cdef class Shape:
             other_shape = Shape.from_shape_like(other)
         except ValueError:
             return NotImplemented
-        return self._handle == other_shape
+
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle == other_shape
+        return ret
 
     def __len__(self) -> uint64_t:
-        """
+        r"""
         Returns the number of dimensions of this shape
 
         Returns

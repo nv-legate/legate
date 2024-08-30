@@ -83,7 +83,7 @@ cdef class ProcessorRange:
     @staticmethod
     cdef ProcessorRange from_handle(_ProcessorRange handle):
         cdef ProcessorRange result = ProcessorRange.__new__(ProcessorRange)
-        result._handle = handle
+        result._handle = std_move(handle)
         return result
 
     def __cinit__(
@@ -107,8 +107,8 @@ cdef class ProcessorRange:
         self._handle = _ProcessorRange(low, high, per_node_count)
 
     @property
-    def low(self):
-        """
+    def low(self) -> uint32_t:
+        r"""
         Returns the lower bound of the processor range
 
         :returns: Lower bound (inclusive)
@@ -117,8 +117,8 @@ cdef class ProcessorRange:
         return self._handle.low
 
     @property
-    def high(self):
-        """
+    def high(self) -> uint32_t:
+        r"""
         Returns the upper bound of the processor range
 
         :returns: Upper bound (exclusive)
@@ -127,8 +127,8 @@ cdef class ProcessorRange:
         return self._handle.high
 
     @property
-    def per_node_count(self):
-        """
+    def per_node_count(self) -> uint32_t:
+        r"""
         Returns the number of processors per node
 
         :returns: Per-node processor count
@@ -137,8 +137,8 @@ cdef class ProcessorRange:
         return self._handle.per_node_count
 
     @property
-    def count(self):
-        """
+    def count(self) -> uint32_t:
+        r"""
         Returns the number of processors in the range
 
         :returns: Processor count
@@ -147,7 +147,7 @@ cdef class ProcessorRange:
         return self._handle.count()
 
     def __len__(self) -> uint32_t:
-        """
+        r"""
         Returns the number of processors in the range
 
         :returns: Processor count
@@ -156,8 +156,8 @@ cdef class ProcessorRange:
         return self.count
 
     @property
-    def empty(self):
-        """
+    def empty(self) -> bool:
+        r"""
         Indicates if the processor range is empty
 
         :returns: ``True`` if the machine is empty, ``False`` otherwise.
@@ -166,7 +166,7 @@ cdef class ProcessorRange:
         return self._handle.empty()
 
     cpdef ProcessorRange slice(self, slice sl):
-        """
+        r"""
         Slices the processor range by a given ``slice``
 
         Parameters
@@ -186,7 +186,7 @@ cdef class ProcessorRange:
         return ProcessorRange.from_handle(self._handle.slice(start, stop))
 
     def __getitem__(self, key: PROC_RANGE_KEY) -> ProcessorRange:
-        """
+        r"""
         Slices the processor range with a given slicer
 
         Parameters
@@ -209,7 +209,7 @@ cdef class ProcessorRange:
         raise KeyError(f"Invalid slicing key: {key}")
 
     cpdef tuple get_node_range(self):
-        """
+        r"""
         Returns the range of node IDs for this processor range
 
         Returns
@@ -243,7 +243,7 @@ cdef class ProcessorRange:
         return str(self)
 
     def __and__(self, other: ProcessorRange) -> ProcessorRange:
-        """
+        r"""
         Computes an intersection with a given processor range
 
         Parameters
@@ -276,7 +276,7 @@ cdef class Machine:
     @staticmethod
     cdef Machine from_handle(_Machine handle):
         cdef Machine result = Machine.__new__(Machine)
-        result._handle = handle
+        result._handle = std_move(handle)
         result._scope = None
         return result
 
@@ -316,7 +316,7 @@ cdef class Machine:
         self._scope = None
 
     def __len__(self) -> uint32_t:
-        """
+        r"""
         Returns the number of preferred processors
 
         Returns
@@ -327,19 +327,23 @@ cdef class Machine:
         return self.count()
 
     @property
-    def preferred_target(self):
-        """
+    def preferred_target(self) -> TaskTarget:
+        r"""
         Returns the preferred kind of processors for mapping tasks
 
         :returns: Processor kind
         :rtype: TaskTarget
         """
-        return self._handle.preferred_target()
+        cdef TaskTarget ret
+
+        with nogil:
+            ret = self._handle.preferred_target()
+        return ret
 
     cpdef ProcessorRange get_processor_range(
         self, target: PyTaskTarget | None = None
     ):
-        """
+        r"""
         Returns the processor range of a given task target.
 
         Parameters
@@ -359,7 +363,7 @@ cdef class Machine:
         )
 
     cpdef tuple get_node_range(self, target: PyTaskTarget | None = None):
-        """
+        r"""
         Returns the node range for processor of a given task target.
 
         Parameters
@@ -375,19 +379,23 @@ cdef class Machine:
         return self.get_processor_range(target).get_node_range()
 
     @property
-    def valid_targets(self):
-        """
+    def valid_targets(self) -> tuple[TaskTarget, ...]:
+        r"""
         Returns the kinds of processors available in this machine
 
         :returns: Processor kinds
         :rtype: tuple[TaskTarget, ...]
         """
-        return tuple(self._handle.valid_targets())
+        cdef const std_vector[TaskTarget] *v = NULL
+
+        with nogil:
+            v = &self._handle.valid_targets()
+        return tuple(v[0])
 
     cpdef int count(
         self, target: PyTaskTarget | None = None
     ):
-        """
+        r"""
         Returns the number of processors of a given task target
 
         Parameters
@@ -400,14 +408,20 @@ cdef class Machine:
         int
             Processor count
         """
-        return (
-            self._handle.count()
-            if target is None
-            else self._handle.count(<TaskTarget> target)
-        )
+        cdef int ret
+        cdef TaskTarget tgt
+
+        if target is None:
+            with nogil:
+                ret = self._handle.count()
+        else:
+            tgt = <TaskTarget> target
+            with nogil:
+                ret = self._handle.count(tgt)
+        return ret
 
     @property
-    def empty(self):
+    def empty(self) -> bool:
         r"""
         Indicates if the machine is empty
 
@@ -417,12 +431,16 @@ cdef class Machine:
         :returns: ``True`` if the machine is empty, ``False`` otherwise.
         :rtype: bool
         """
-        return self._handle.empty()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.empty()
+        return ret
 
     cpdef Machine only(
         self, targets: Iterable[TaskTarget] | TaskTarget
     ):
-        """
+        r"""
         Returns a machine that contains only the processors of given kinds
 
         Parameters
@@ -442,12 +460,17 @@ cdef class Machine:
         cpp_targets.reserve(len(targets))
         for target in targets:
             cpp_targets.push_back(<TaskTarget> target)
-        return Machine.from_handle(self._handle.only(std_move(cpp_targets)))
+
+        cdef _Machine handle
+
+        with nogil:
+            handle = self._handle.only(std_move(cpp_targets))
+        return Machine.from_handle(std_move(handle))
 
     cpdef Machine slice(
         self, slice sl, target: PyTaskTarget | None = None
     ):
-        """
+        r"""
         Slices the machine by a given slice and a task target
 
         Parameters
@@ -470,7 +493,7 @@ cdef class Machine:
         return Machine({target: self.get_processor_range(target).slice(sl)})
 
     def __getitem__(self, key: MACHINE_KEY) -> Machine:
-        """
+        r"""
         Slices the machine with a given slicer
 
         Parameters
@@ -507,15 +530,19 @@ cdef class Machine:
         raise KeyError(f"Invalid slicing key: {key}")
 
     def __eq__(self, other: Machine) -> bool:
+        cdef bool ret
+
         if isinstance(other, Machine):
-            return self._handle == other._handle
+            with nogil:
+                ret = self._handle == other._handle
+            return ret
         return NotImplemented
 
     def __ne__(self, other: Machine) -> bool:
-        return not self._handle == other._handle
+        return not self == other
 
     def __and__(self, other: Machine) -> Machine:
-        """
+        r"""
         Computes an intersection with a given machine
 
         Parameters
@@ -528,7 +555,11 @@ cdef class Machine:
         Machine
             Intersection result
         """
-        return Machine.from_handle(self._handle & other._handle)
+        cdef _Machine handle
+
+        with nogil:
+            handle = self._handle & other._handle
+        return Machine.from_handle(std_move(handle))
 
     def __str__(self) -> str:
         r"""

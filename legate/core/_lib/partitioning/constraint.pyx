@@ -53,7 +53,7 @@ cdef class Constraint(Unconstructable):
     @staticmethod
     cdef Constraint from_handle(_Constraint handle):
         cdef Constraint result = Constraint.__new__(Constraint)
-        result._handle = handle
+        result._handle = std_move(handle)
         return result
 
     def __str__(self) -> str:
@@ -133,8 +133,12 @@ cpdef object align(VariableOrStr lhs, VariableOrStr rhs):
     Constraint
         The alignment constraint.
     """
+    cdef _Constraint handle
+
     if VariableOrStr is Variable:
-        return Constraint.from_handle(_align(lhs._handle, rhs._handle))
+        with nogil:
+            handle = _align(lhs._handle, rhs._handle)
+        return Constraint.from_handle(std_move(handle))
     # I don't know why cython complains that this is unreachable. It is, just
     # not for every version of this function (and that's the point!!)
     return ConstraintProxy(align, lhs, rhs)
@@ -177,17 +181,22 @@ cpdef object broadcast(
     if VariableOrStr is str:
         return ConstraintProxy(broadcast, variable, axes)
 
+    cdef _Constraint handle
+
     if len(axes) == 0:
-        return Constraint.from_handle(_broadcast(variable._handle))
+        with nogil:
+            handle = _broadcast(variable._handle)
+        return Constraint.from_handle(std_move(handle))
 
     cdef _tuple[uint32_t] cpp_axes
 
     cpp_axes.reserve(len(axes))
     for axis in axes:
         cpp_axes.append_inplace(<uint32_t> axis)
-    return Constraint.from_handle(
-        _broadcast(variable._handle, std_move(cpp_axes))
-    )
+
+    with nogil:
+        handle = _broadcast(variable._handle, std_move(cpp_axes))
+    return Constraint.from_handle(std_move(handle))
 
 
 cpdef object image(
@@ -234,10 +243,11 @@ cpdef object image(
     Constraint
         The image constraint.
     """
+    cdef _Constraint handle
     if VariableOrStr is Variable:
-        return Constraint.from_handle(
-            _image(var_function._handle, var_range._handle, hint)
-        )
+        with nogil:
+            handle = _image(var_function._handle, var_range._handle, hint)
+        return Constraint.from_handle(std_move(handle))
     return ConstraintProxy(image, var_function, var_range, hint)
 
 
@@ -286,14 +296,16 @@ cpdef object scale(
     Constraint
         The scaling constraint.
     """
+    cdef _Constraint handle
+    cdef _tuple[uint64_t] tup
+
     if VariableOrStr is Variable:
-        return Constraint.from_handle(
-            _scale(
-                std_move(uint64_tuple_from_iterable(factors)),
-                var_smaller._handle,
-                var_bigger._handle,
+        tup = uint64_tuple_from_iterable(factors)
+        with nogil:
+            handle = _scale(
+                std_move(tup), var_smaller._handle, var_bigger._handle,
             )
-        )
+        return Constraint.from_handle(std_move(handle))
     return ConstraintProxy(
         scale, factors, var_smaller, var_bigger
     )
@@ -347,15 +359,22 @@ cpdef object bloat(
     Constraint
         The bloat constraint.
     """
+    cdef _Constraint handle
+    cdef _tuple[uint64_t] tup_lo
+    cdef _tuple[uint64_t] tup_hi
+
     if VariableOrStr is Variable:
-        return Constraint.from_handle(
-            _bloat(
+        tup_lo = uint64_tuple_from_iterable(low_offsets)
+        tup_hi = uint64_tuple_from_iterable(high_offsets)
+
+        with nogil:
+            handle = _bloat(
                 var_source._handle,
                 var_bloat._handle,
-                std_move(uint64_tuple_from_iterable(low_offsets)),
-                std_move(uint64_tuple_from_iterable(high_offsets)),
+                std_move(tup_lo),
+                std_move(tup_hi),
             )
-        )
+        return Constraint.from_handle(std_move(handle))
     return ConstraintProxy(
         bloat,
         var_source,

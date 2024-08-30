@@ -20,7 +20,7 @@ from ..runtime.runtime cimport get_legate_runtime
 from ..type.type_info cimport Type
 from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport is_iterable
-from .logical_store cimport LogicalStore
+from .logical_store cimport LogicalStore, _LogicalStore
 from .shape cimport Shape
 from .slice cimport from_python_slice
 
@@ -29,7 +29,7 @@ cdef class LogicalArray(Unconstructable):
     @staticmethod
     cdef LogicalArray from_handle(_LogicalArray handle):
         cdef LogicalArray result = LogicalArray.__new__(LogicalArray)
-        result._handle = handle
+        result._handle = std_move(handle)
         return result
 
     @staticmethod
@@ -47,7 +47,11 @@ cdef class LogicalArray(Unconstructable):
         LogicalArray
             The newly created `LogicalArray`.
         """
-        return LogicalArray.from_handle(_LogicalArray(store._handle))
+        cdef _LogicalArray handle
+
+        with nogil:
+            handle = _LogicalArray(store._handle)
+        return LogicalArray.from_handle(std_move(handle))
 
     @staticmethod
     def from_raw_handle(uintptr_t raw_handle):
@@ -76,7 +80,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: The shape of the array.
         :rtype: Shape
         """
-        return Shape.from_handle(self._handle.shape())
+        cdef _Shape handle
+
+        with nogil:
+            handle = self._handle.shape()
+        return Shape.from_handle(std_move(handle))
 
     @property
     def ndim(self) -> int32_t:
@@ -86,7 +94,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: The dimension of the array.
         :rtype: int
         """
-        return self._handle.dim()
+        cdef int32_t ret
+
+        with nogil:
+            ret = self._handle.dim()
+        return ret
 
     @property
     def type(self) -> Type:
@@ -96,7 +108,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: The `Type` of the array.
         :rtype: Type
         """
-        return Type.from_handle(self._handle.type())
+        cdef _Type handle
+
+        with nogil:
+            handle = self._handle.type()
+        return Type.from_handle(std_move(handle))
 
     @property
     def extents(self) -> tuple[uint64_t, ...]:
@@ -106,7 +122,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: The extents of the array.
         :rtype: tuple[int, ...]
         """
-        return self._handle.extents().data()
+        cdef const std_vector[uint64_t] *v = NULL
+
+        with nogil:
+            v = &self._handle.extents().data()
+        return tuple(v[0])
 
     @property
     def volume(self) -> size_t:
@@ -116,7 +136,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: The volume of the array.
         :rtype: int
         """
-        return self._handle.volume()
+        cdef size_t ret
+
+        with nogil:
+            ret = self._handle.volume()
+        return ret
 
     @property
     def size(self) -> size_t:
@@ -136,7 +160,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: `True` if the array is unbound, `False` otherwise.
         :rtype: bool
         """
-        return self._handle.unbound()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.unbound()
+        return ret
 
     @property
     def nullable(self) -> bool:
@@ -146,7 +174,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: `True` if this array is nullable, `False` otherwise.
         :rtype: bool
         """
-        return self._handle.nullable()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.nullable()
+        return ret
 
     @property
     def nested(self) -> bool:
@@ -157,7 +189,11 @@ cdef class LogicalArray(Unconstructable):
                   otherwise.
         :rtype: bool
         """
-        return self._handle.nested()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.nested()
+        return ret
 
     @property
     def num_children(self) -> uint32_t:
@@ -167,7 +203,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: The number of child stores of the array.
         :rtype: int
         """
-        return self._handle.num_children()
+        cdef uint32_t ret
+
+        with nogil:
+            ret = self._handle.num_children()
+        return ret
 
     @property
     def __legate_data_interface__(self) -> LegateDataInterfaceItem:
@@ -228,9 +268,11 @@ cdef class LogicalArray(Unconstructable):
         LogicalArray
             The promoted array.
         """
-        return LogicalArray.from_handle(
-            self._handle.promote(extra_dim, dim_size)
-        )
+        cdef _LogicalArray handle
+
+        with nogil:
+            handle = self._handle.promote(extra_dim, dim_size)
+        return LogicalArray.from_handle(std_move(handle))
 
     cpdef LogicalArray project(self, int32_t dim, int64_t index):
         r"""
@@ -249,7 +291,11 @@ cdef class LogicalArray(Unconstructable):
         LogicalArray
             The array with the projected-out dimension.
         """
-        return LogicalArray.from_handle(self._handle.project(dim, index))
+        cdef _LogicalArray handle
+
+        with nogil:
+            handle = self._handle.project(dim, index)
+        return LogicalArray.from_handle(std_move(handle))
 
     cpdef LogicalArray slice(self, int32_t dim, slice sl):
         r"""
@@ -268,9 +314,12 @@ cdef class LogicalArray(Unconstructable):
         LogicalArray
             The array comprising the sliced section.
         """
-        return LogicalArray.from_handle(
-            self._handle.slice(dim, from_python_slice(sl))
-        )
+        cdef _LogicalArray handle
+        cdef _Slice cpp_slice = from_python_slice(sl)
+
+        with nogil:
+            handle = self._handle.slice(dim, std_move(cpp_slice))
+        return LogicalArray.from_handle(std_move(handle))
 
     cpdef LogicalArray transpose(self, object axes):
         r"""
@@ -300,9 +349,12 @@ cdef class LogicalArray(Unconstructable):
         cpp_axes.reserve(len(axes))
         for axis in axes:
             cpp_axes.push_back(axis)
-        return LogicalArray.from_handle(
-            self._handle.transpose(std_move(cpp_axes))
-        )
+
+        cdef _LogicalArray handle
+
+        with nogil:
+            handle = self._handle.transpose(std_move(cpp_axes))
+        return LogicalArray.from_handle(std_move(handle))
 
     cpdef LogicalArray delinearize(self, int32_t dim, object shape):
         r"""
@@ -333,9 +385,12 @@ cdef class LogicalArray(Unconstructable):
         sizes.reserve(len(shape))
         for value in shape:
             sizes.push_back(value)
-        return LogicalArray.from_handle(
-            self._handle.delinearize(dim, std_move(sizes))
-        )
+
+        cdef _LogicalArray handle
+
+        with nogil:
+            handle = self._handle.delinearize(dim, std_move(sizes))
+        return LogicalArray.from_handle(std_move(handle))
 
     cpdef void fill(self, object value):
         r"""
@@ -356,7 +411,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: The `LogicalStore` of this array.
         :rtype: LogicalStore
         """
-        return LogicalStore.from_handle(self._handle.data())
+        cdef _LogicalStore handle
+
+        with nogil:
+            handle = self._handle.data()
+        return LogicalStore.from_handle(std_move(handle))
 
     @property
     def null_mask(self) -> LogicalStore:
@@ -366,7 +425,11 @@ cdef class LogicalArray(Unconstructable):
         :returns: The null mask of this array.
         :rtype: LogicalStore
         """
-        return LogicalStore.from_handle(self._handle.null_mask())
+        cdef _LogicalStore handle
+
+        with nogil:
+            handle = self._handle.null_mask()
+        return LogicalStore.from_handle(std_move(handle))
 
     cpdef LogicalArray child(self, uint32_t index):
         r"""
@@ -382,7 +445,11 @@ cdef class LogicalArray(Unconstructable):
         LogicalArray
             The sub array.
         """
-        return LogicalArray.from_handle(self._handle.child(index))
+        cdef _LogicalArray handle
+
+        with nogil:
+            handle = self._handle.child(index)
+        return LogicalArray.from_handle(std_move(handle))
 
     cpdef PhysicalArray get_physical_array(self):
         r"""
@@ -394,9 +461,9 @@ cdef class LogicalArray(Unconstructable):
             The physical array.
         """
         cdef _PhysicalArray array
+
         with nogil:
             array = self._handle.get_physical_array()
-
         return PhysicalArray.from_handle(array)
 
     @property

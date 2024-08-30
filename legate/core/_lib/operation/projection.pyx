@@ -30,7 +30,11 @@ cdef class SymbolicExpr(Unconstructable):
         :returns: The dimension.
         :rtype: int
         """
-        return self._handle.dim()
+        cdef int ret
+
+        with nogil:
+            ret = self._handle.dim()
+        return ret
 
     @property
     def weight(self) -> int:
@@ -40,7 +44,11 @@ cdef class SymbolicExpr(Unconstructable):
         :returns: The weight.
         :rtype: int
         """
-        return self._handle.weight()
+        cdef int ret
+
+        with nogil:
+            ret = self._handle.weight()
+        return ret
 
     @property
     def offset(self) -> int:
@@ -50,7 +58,11 @@ cdef class SymbolicExpr(Unconstructable):
         :returns: The offset.
         :rtype: int
         """
-        return self._handle.offset()
+        cdef int ret
+
+        with nogil:
+            ret = self._handle.offset()
+        return ret
 
     cpdef bool is_identity(self, int32_t dim):
         r"""
@@ -67,7 +79,11 @@ cdef class SymbolicExpr(Unconstructable):
         bool
             `True` if the expression is the identity, `False` otherwise.
         """
-        return self._handle.is_identity(dim)
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.is_identity(dim)
+        return ret
 
     def __eq__(self, object other) -> bool:
         if isinstance(other, SymbolicExpr):
@@ -88,7 +104,11 @@ cdef class SymbolicExpr(Unconstructable):
         SymbolicExpr
             The result of the multiplication.
         """
-        return SymbolicExpr.from_handle(self._handle * other)
+        cdef _SymbolicExpr handle
+
+        with nogil:
+            handle = self._handle * other
+        return SymbolicExpr.from_handle(std_move(handle))
 
     def __add__(self, int32_t other) -> SymbolicExpr:
         r"""
@@ -104,7 +124,11 @@ cdef class SymbolicExpr(Unconstructable):
         SymbolicExpr
             The result of the shift.
         """
-        return SymbolicExpr.from_handle(self._handle + other)
+        cdef _SymbolicExpr handle
+
+        with nogil:
+            handle = self._handle + other
+        return SymbolicExpr.from_handle(std_move(handle))
 
     def __str__(self) -> str:
         r"""
@@ -130,7 +154,7 @@ cdef class SymbolicExpr(Unconstructable):
 
 
 cpdef SymbolicExpr dimension(int32_t dim):
-    """
+    r"""
     Constructs a ``SymbolicExpr`` representing coordinates of a dimension
 
     Parameters
@@ -143,11 +167,15 @@ cpdef SymbolicExpr dimension(int32_t dim):
     SymbolicExpr
         A symbolic expression for the given dimension
     """
-    return SymbolicExpr.from_handle(_dimension(dim))
+    cdef _SymbolicExpr handle
+
+    with nogil:
+        handle = _dimension(dim)
+    return SymbolicExpr.from_handle(std_move(handle))
 
 
 cpdef SymbolicExpr constant(int32_t value):
-    """
+    r"""
     Constructs a ``SymbolicExpr`` representing a constant value
 
     Parameters
@@ -160,4 +188,8 @@ cpdef SymbolicExpr constant(int32_t value):
     SymbolicExpr
         A symbolic expression for the given constant
     """
-    return SymbolicExpr.from_handle(_constant(value))
+    cdef _SymbolicExpr handle
+
+    with nogil:
+        handle = _constant(value)
+    return SymbolicExpr.from_handle(std_move(handle))

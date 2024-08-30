@@ -30,9 +30,10 @@ cdef class LogicalStore(Unconstructable):
     @staticmethod
     cdef LogicalStore from_handle(_LogicalStore handle):
         cdef LogicalStore result = LogicalStore.__new__(LogicalStore)
-        result._handle = handle
+        result._handle = std_move(handle)
         # Enable out-of-order destruction, as we're in a GC language
-        handle.impl().get().allow_out_of_order_destruction()
+        with nogil:
+            result._handle.impl().get().allow_out_of_order_destruction()
         return result
 
     @property
@@ -43,7 +44,11 @@ cdef class LogicalStore(Unconstructable):
         :returns: The shape of the store.
         :rtype: Shape
         """
-        return Shape.from_handle(self._handle.shape())
+        cdef _Shape handle
+
+        with nogil:
+            handle = self._handle.shape()
+        return Shape.from_handle(std_move(handle))
 
     @property
     def ndim(self) -> int32_t:
@@ -53,7 +58,11 @@ cdef class LogicalStore(Unconstructable):
         :returns: The number of dimensions.
         :rtype: int
         """
-        return self._handle.dim()
+        cdef int32_t ret
+
+        with nogil:
+            ret = self._handle.dim()
+        return ret
 
     @property
     def has_scalar_storage(self) -> bool:
@@ -64,7 +73,11 @@ cdef class LogicalStore(Unconstructable):
                  otherwise.
         :rtype: bool
         """
-        return self._handle.has_scalar_storage()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.has_scalar_storage()
+        return ret
 
     cpdef bool overlaps(self, LogicalStore other):
         r"""
@@ -80,7 +93,11 @@ cdef class LogicalStore(Unconstructable):
         bool
             `True` if this store overlaps with `other`, `False` otherwise.
         """
-        return self._handle.overlaps(other._handle)
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.overlaps(other._handle)
+        return ret
 
     @property
     def type(self) -> Type:
@@ -90,7 +107,11 @@ cdef class LogicalStore(Unconstructable):
         :rtype: Type
         :returns: The type of the store.
         """
-        return Type.from_handle(self._handle.type())
+        cdef _Type handle
+
+        with nogil:
+            handle = self._handle.type()
+        return Type.from_handle(std_move(handle))
 
     @property
     def extents(self) -> tuple[int, ...]:
@@ -102,7 +123,11 @@ cdef class LogicalStore(Unconstructable):
         :returns: The extents of the store.
         :rtype: tuple[int, ...]
         """
-        return self._handle.extents().data()
+        cdef const std_vector[uint64_t] *ext = NULL
+
+        with nogil:
+            ext = &self._handle.extents().data()
+        return tuple(ext[0])
 
     @property
     def volume(self) -> size_t:
@@ -114,7 +139,11 @@ cdef class LogicalStore(Unconstructable):
         :returns: The number of elements in the store.
         :rtype: int
         """
-        return self._handle.volume()
+        cdef size_t ret
+
+        with nogil:
+            ret = self._handle.volume()
+        return ret
 
     @property
     def size(self) -> size_t:
@@ -136,7 +165,11 @@ cdef class LogicalStore(Unconstructable):
         :returns: `True` if the store is unbound, `False` otherwise.
         :rtype: bool
         """
-        return self._handle.unbound()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.unbound()
+        return ret
 
     @property
     def transformed(self) -> bool:
@@ -146,7 +179,11 @@ cdef class LogicalStore(Unconstructable):
         :returns: `True` if the store is transformed, `False` otherwise.
         :rtype: bool
         """
-        return self._handle.transformed()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.transformed()
+        return ret
 
     @property
     def __legate_data_interface__(self) -> LegateDataInterfaceItem:
@@ -233,7 +270,7 @@ cdef class LogicalStore(Unconstructable):
         return result
 
     cpdef LogicalStore promote(self, int32_t extra_dim, size_t dim_size):
-        """
+        r"""
         Adds an extra dimension to the store. Value of ``extra_dim`` decides
         where a new dimension should be added, and each dimension `i`, where
         `i` >= ``extra_dim``, is mapped to dimension `i+1` in a returned store.
@@ -275,12 +312,15 @@ cdef class LogicalStore(Unconstructable):
         """
         if extra_dim < 0:
             extra_dim += self.ndim
-        return LogicalStore.from_handle(
-            self._handle.promote(extra_dim, dim_size)
-        )
+
+        cdef _LogicalStore handle
+
+        with nogil:
+            handle = self._handle.promote(extra_dim, dim_size)
+        return LogicalStore.from_handle(std_move(handle))
 
     cpdef LogicalStore project(self, int32_t dim, int64_t index):
-        """
+        r"""
         Projects out a dimension of the store. Each dimension `i`, where
         `i` > ``dim``, is mapped to dimension `i-1` in a returned store.
         A returned store provides a view to the input store where the values
@@ -310,10 +350,15 @@ cdef class LogicalStore(Unconstructable):
         """
         if dim < 0:
             dim += self.ndim
-        return LogicalStore.from_handle(self._handle.project(dim, index))
+
+        cdef _LogicalStore handle
+
+        with nogil:
+            handle = self._handle.project(dim, index)
+        return LogicalStore.from_handle(std_move(handle))
 
     cpdef LogicalStore slice(self, int32_t dim, slice sl):
-        """
+        r"""
         Slices a contiguous sub-section of the store.
 
         For example, consider a 2D store ``A``
@@ -377,12 +422,17 @@ cdef class LogicalStore(Unconstructable):
         """
         if dim < 0:
             dim += self.ndim
-        return LogicalStore.from_handle(
-            self._handle.slice(dim, from_python_slice(sl))
-        )
+
+        cdef _LogicalStore handle
+        cdef _Slice cpp_slice = from_python_slice(sl)
+
+        with nogil:
+            handle = self._handle.slice(dim, std_move(cpp_slice))
+
+        return LogicalStore.from_handle(std_move(handle))
 
     cpdef LogicalStore transpose(self, object axes):
-        """
+        r"""
         Reorders dimensions of the store. Dimension ``i`` of the resulting
         store is mapped to dimension ``axes[i]`` of the input store.
 
@@ -443,12 +493,15 @@ cdef class LogicalStore(Unconstructable):
         cpp_axes.reserve(len(axes))
         for axis in axes:
             cpp_axes.push_back(axis)
-        return LogicalStore.from_handle(
-            self._handle.transpose(std_move(cpp_axes))
-        )
+
+        cdef _LogicalStore handle
+
+        with nogil:
+            handle = self._handle.transpose(std_move(cpp_axes))
+        return LogicalStore.from_handle(std_move(handle))
 
     cpdef LogicalStore delinearize(self, int32_t dim, tuple shape):
-        """
+        r"""
         Delinearizes a dimension into multiple dimensions. Each dimension
         `i` of the store, where `i` > ``dim``, will be mapped to dimension
         `i+N` of the resulting store, where `N` is the length of ``shape``.
@@ -503,15 +556,18 @@ cdef class LogicalStore(Unconstructable):
         sizes.reserve(len(shape))
         for value in shape:
             sizes.push_back(value)
-        return LogicalStore.from_handle(
-            self._handle.delinearize(dim, std_move(sizes))
-        )
+
+        cdef _LogicalStore handle
+
+        with nogil:
+            handle = self._handle.delinearize(dim, std_move(sizes))
+        return LogicalStore.from_handle(std_move(handle))
 
     cpdef void fill(self, object value):
         get_legate_runtime().issue_fill(self, value)
 
     cpdef LogicalStorePartition partition_by_tiling(self, object shape):
-        """
+        r"""
         Creates a tiled partition of the store
 
         Parameters
@@ -531,9 +587,13 @@ cdef class LogicalStore(Unconstructable):
         tile_shape.reserve(len(shape))
         for value in shape:
             tile_shape.push_back(value)
-        return LogicalStorePartition.from_handle(
-            self._handle.partition_by_tiling(std_move(tile_shape))
-        )
+
+        cdef _LogicalStorePartition handle
+
+        with nogil:
+            handle = self._handle.partition_by_tiling(std_move(tile_shape))
+
+        return LogicalStorePartition.from_handle(std_move(handle))
 
     cpdef PhysicalStore get_physical_store(self):
         r"""
@@ -544,7 +604,11 @@ cdef class LogicalStore(Unconstructable):
         PhysicalStore
             The `PhysicalStore` spanning this stores' data.
         """
-        return PhysicalStore.from_handle(self._handle.get_physical_store())
+        cdef _PhysicalStore handle
+
+        with nogil:
+            handle = self._handle.get_physical_store()
+        return PhysicalStore.from_handle(std_move(handle))
 
     cpdef void detach(self):
         r"""
@@ -558,7 +622,8 @@ cdef class LogicalStore(Unconstructable):
         would be up-to-date upon the return. The contents of the store are
         invalid after that point.
         """
-        self._handle.detach()
+        with nogil:
+            self._handle.detach()
 
     cpdef bool equal_storage(self, LogicalStore other):
         r"""
@@ -586,7 +651,11 @@ cdef class LogicalStore(Unconstructable):
         bool
             `True` if this store overlaps with `other`, `False` otherwise.
         """
-        return self._handle.equal_storage(other._handle)
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.equal_storage(other._handle)
+        return ret
 
     @property
     def raw_handle(self) -> uintptr_t:
@@ -605,7 +674,7 @@ cdef class LogicalStorePartition:
         cdef LogicalStorePartition result = LogicalStorePartition.__new__(
             LogicalStorePartition
         )
-        result._handle = handle
+        result._handle = std_move(handle)
         return result
 
     cpdef LogicalStore store(self):
@@ -617,7 +686,11 @@ cdef class LogicalStorePartition:
         LogicalStore
             The `LogicalStore`.
         """
-        return LogicalStore.from_handle(self._handle.store())
+        cdef _LogicalStore handle
+
+        with nogil:
+            handle = self._handle.store()
+        return LogicalStore.from_handle(std_move(handle))
 
     @property
     def color_shape(self) -> tuple[int, ...]:
@@ -627,7 +700,11 @@ cdef class LogicalStorePartition:
         :returns: The color shape for this partition.
         :rtype: tuple[int, ...]
         """
-        return self._handle.color_shape().data()
+        cdef const std_vector[uint64_t] *v = NULL
+
+        with nogil:
+            v = &self._handle.color_shape().data()
+        return tuple(v[0])
 
     def get_child_store(self, *color) -> LogicalStore:
         r"""
@@ -648,6 +725,9 @@ cdef class LogicalStorePartition:
         cpp_color.reserve(len(color))
         for coord in color:
             cpp_color.append_inplace(<uint64_t> coord)
-        return LogicalStore.from_handle(
-            self._handle.get_child_store(cpp_color)
-        )
+
+        cdef _LogicalStore handle
+
+        with nogil:
+            handle = self._handle.get_child_store(std_move(cpp_color))
+        return LogicalStore.from_handle(std_move(handle))

@@ -82,7 +82,7 @@ cdef class AutoTask(Unconstructable):
     cpdef Variable add_input(
         self, object array_or_store, partition: Variable | None = None
     ):
-        """
+        r"""
         Adds a logical array/store as input to the task
 
         Parameters
@@ -105,19 +105,25 @@ cdef class AutoTask(Unconstructable):
             )
 
         cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
+        cdef _Variable handle
+
         if partition is None:
-            return Variable.from_handle(self._handle.add_input(array))
+            with nogil:
+                handle = self._handle.add_input(array)
+            return Variable.from_handle(std_move(handle))
         elif isinstance(partition, Variable):
-            return Variable.from_handle(
-                self._handle.add_input(array, (<Variable> partition)._handle)
-            )
+            with nogil:
+                handle = self._handle.add_input(
+                    array, (<Variable> partition)._handle
+                )
+            return Variable.from_handle(std_move(handle))
         else:
             raise ValueError("Invalid partition symbol")
 
     cpdef Variable add_output(
         self, object array_or_store, partition: Variable | None = None
     ):
-        """
+        r"""
         Adds a logical array/store as output to the task
 
         Parameters
@@ -140,14 +146,20 @@ cdef class AutoTask(Unconstructable):
             )
 
         cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
+        cdef _Variable handle
+
         if partition is None:
-            return Variable.from_handle(self._handle.add_output(array))
+            with nogil:
+                handle = self._handle.add_output(array)
         elif isinstance(partition, Variable):
-            return Variable.from_handle(
-                self._handle.add_output(array, (<Variable> partition)._handle)
-            )
+            with nogil:
+                handle = self._handle.add_output(
+                    array, (<Variable> partition)._handle
+                )
         else:
             raise ValueError("Invalid partition symbol")
+
+        return Variable.from_handle(std_move(handle))
 
     cpdef Variable add_reduction(
         self,
@@ -155,7 +167,7 @@ cdef class AutoTask(Unconstructable):
         int32_t redop,
         partition: Variable | None = None
     ):
-        """
+        r"""
         Adds a logical array/store to the task for reduction
 
         Parameters
@@ -180,23 +192,25 @@ cdef class AutoTask(Unconstructable):
             )
 
         cdef _LogicalArray array = to_cpp_logical_array(array_or_store)
+        cdef _Variable handle
+
         if partition is None:
-            return Variable.from_handle(
-                self._handle.add_reduction(array, redop)
-            )
+            with nogil:
+                handle = self._handle.add_reduction(array, redop)
         elif isinstance(partition, Variable):
-            return Variable.from_handle(
-                self._handle.add_reduction(
+            with nogil:
+                handle = self._handle.add_reduction(
                     array, redop, (<Variable> partition)._handle
                 )
-            )
         else:
             raise ValueError("Invalid partition symbol")
+
+        return Variable.from_handle(std_move(handle))
 
     cpdef void add_scalar_arg(
         self, value: Any, dtype: Type | tuple[Type, ...] | None = None
     ):
-        """
+        r"""
         Adds a by-value argument to the task
 
         Parameters
@@ -220,7 +234,8 @@ cdef class AutoTask(Unconstructable):
             )
 
         if isinstance(value, Scalar):
-            self._handle.add_scalar_arg((<Scalar> value)._handle)
+            with nogil:
+                self._handle.add_scalar_arg((<Scalar> value)._handle)
             return
 
         cdef Scalar scalar
@@ -231,7 +246,8 @@ cdef class AutoTask(Unconstructable):
             scalar = Scalar(
                 value, dtype=sanitized_scalar_arg_type(value, dtype)
             )
-        self._handle.add_scalar_arg(scalar._handle)
+        with nogil:
+            self._handle.add_scalar_arg(scalar._handle)
 
     cpdef void add_constraint(self, Constraint constraint):
         r"""
@@ -242,7 +258,8 @@ cdef class AutoTask(Unconstructable):
         constraint : Constraint
             The partitioning constraint to add.
         """
-        self._handle.add_constraint(constraint._handle)
+        with nogil:
+            self._handle.add_constraint(constraint._handle)
 
     cpdef Variable find_or_declare_partition(self, LogicalArray array):
         r"""
@@ -258,9 +275,11 @@ cdef class AutoTask(Unconstructable):
         Variable
             The partition symbol.
         """
-        return Variable.from_handle(
-            self._handle.find_or_declare_partition(array._handle)
-        )
+        cdef _Variable handle
+
+        with nogil:
+            handle = self._handle.find_or_declare_partition(array._handle)
+        return Variable.from_handle(std_move(handle))
 
     cpdef Variable declare_partition(self):
         r"""
@@ -276,7 +295,11 @@ cdef class AutoTask(Unconstructable):
         As opposed to `find_or_declare_partition()`, this routine always
         returns a new `Variable`.
         """
-        return Variable.from_handle(self._handle.declare_partition())
+        cdef _Variable handle
+
+        with nogil:
+            handle = self._handle.declare_partition()
+        return Variable.from_handle(std_move(handle))
 
     cpdef str provenance(self):
         r"""
@@ -305,7 +328,8 @@ cdef class AutoTask(Unconstructable):
         concurrent : bool
             `True` if the task should be concurrent, `False` otherwise.
         """
-        self._handle.set_concurrent(concurrent)
+        with nogil:
+            self._handle.set_concurrent(concurrent)
 
     cpdef void set_side_effect(self, bool has_side_effect):
         r"""
@@ -319,7 +343,8 @@ cdef class AutoTask(Unconstructable):
         has_side_effect : bool
             `True` if the task has side effects, `False` otherwise.
         """
-        self._handle.set_side_effect(has_side_effect)
+        with nogil:
+            self._handle.set_side_effect(has_side_effect)
 
     cpdef void throws_exception(self, type exception_type):
         r"""
@@ -334,7 +359,8 @@ cdef class AutoTask(Unconstructable):
         exception_type : type
             The type of exception thrown by the task.
         """
-        self._handle.throws_exception(True)
+        with nogil:
+            self._handle.throws_exception(True)
         self._exception_types[exception_type] = None
 
     @property
@@ -359,7 +385,7 @@ cdef class AutoTask(Unconstructable):
         self._handle.add_communicator(std_string_view_from_py(name))
 
     cpdef void execute(self):
-        """
+        r"""
         Submits the operation to the runtime.
 
         There is no guarantee of when the runtime will start the execution of
@@ -372,7 +398,7 @@ cdef class AutoTask(Unconstructable):
         object array_or_store1,
         object array_or_store2,
     ):
-        """
+        r"""
         Sets an alignment between stores. Equivalent to the following code:
 
         ::
@@ -394,16 +420,17 @@ cdef class AutoTask(Unconstructable):
         """
         array1 = to_cpp_logical_array(array_or_store1)
         array2 = to_cpp_logical_array(array_or_store2)
-        part1 = self._handle.find_or_declare_partition(array1)
-        part2 = self._handle.find_or_declare_partition(array2)
-        self._handle.add_constraint(_align(part1, part2))
+        with nogil:
+            part1 = self._handle.find_or_declare_partition(array1)
+            part2 = self._handle.find_or_declare_partition(array2)
+            self._handle.add_constraint(_align(part1, part2))
 
     cpdef void add_broadcast(
         self,
         object array_or_store,
         axes: int | Iterable[int] | None = None,
     ):
-        """
+        r"""
         Sets a broadcasting constraint on the logical_array. Equivalent to the
         following code:
 
@@ -424,7 +451,8 @@ cdef class AutoTask(Unconstructable):
         part = self._handle.find_or_declare_partition(array)
 
         if axes is None:
-            self._handle.add_constraint(_broadcast(part))
+            with nogil:
+                self._handle.add_constraint(_broadcast(part))
             return
 
         if not (isinstance(axes, int) or is_iterable(axes)):
@@ -432,29 +460,31 @@ cdef class AutoTask(Unconstructable):
 
         sanitized = (axes,) if isinstance(axes, int) else axes
         if len(sanitized) == 0:
-            self._handle.add_constraint(_broadcast(part))
+            with nogil:
+                self._handle.add_constraint(_broadcast(part))
             return
 
         cdef _tuple[uint32_t] cpp_axes
         cpp_axes.reserve(len(sanitized))
         for axis in sanitized:
             cpp_axes.append_inplace(axis)
-        self._handle.add_constraint(_broadcast(part, std_move(cpp_axes)))
+        with nogil:
+            self._handle.add_constraint(_broadcast(part, std_move(cpp_axes)))
 
     cpdef void add_nccl_communicator(self):
-        """
+        r"""
         Adds a NCCL communicator to the task
         """
         self.add_communicator("nccl")
 
     cpdef void add_cpu_communicator(self):
-        """
+        r"""
         Adds a CPU communicator to the task
         """
         self.add_communicator("cpu")
 
     cpdef void add_cal_communicator(self):
-        """
+        r"""
         Adds a CAL communicator to the task
         """
         self.add_communicator("cal")
@@ -511,13 +541,18 @@ cdef class ManualTask(Unconstructable):
         TypeError
             If `arg` is neither a `LogicalStore` or `LogicalStorePartition`.
         """
+        cdef std_optional[_SymbolicPoint] proj
+
         if isinstance(arg, LogicalStore):
-            self._handle.add_input((<LogicalStore> arg)._handle)
+            with nogil:
+                self._handle.add_input((<LogicalStore> arg)._handle)
         elif isinstance(arg, LogicalStorePartition):
-            self._handle.add_input(
-                (<LogicalStorePartition> arg)._handle,
-                to_cpp_projection(projection),
-            )
+            proj = to_cpp_projection(projection)
+            with nogil:
+                self._handle.add_input(
+                    (<LogicalStorePartition> arg)._handle,
+                    std_move(proj),
+                )
         else:
             raise TypeError(
                 "Expected a logical store or store partition "
@@ -546,13 +581,18 @@ cdef class ManualTask(Unconstructable):
         TypeError
             If `arg` is neither a `LogicalStore` or `LogicalStorePartition`.
         """
+        cdef std_optional[_SymbolicPoint] proj
+
         if isinstance(arg, LogicalStore):
-            self._handle.add_output((<LogicalStore> arg)._handle)
+            with nogil:
+                self._handle.add_output((<LogicalStore> arg)._handle)
         elif isinstance(arg, LogicalStorePartition):
-            self._handle.add_output(
-                (<LogicalStorePartition> arg)._handle,
-                to_cpp_projection(projection),
-            )
+            proj = to_cpp_projection(projection)
+            with nogil:
+                self._handle.add_output(
+                    (<LogicalStorePartition> arg)._handle,
+                    std_move(proj),
+                )
         else:
             raise TypeError(
                 "Expected a logical store or store partition "
@@ -565,14 +605,19 @@ cdef class ManualTask(Unconstructable):
         int32_t redop,
         projection: tuple[SymbolicExpr, ...] | None = None,
     ):
+        cdef std_optional[_SymbolicPoint] proj
+
         if isinstance(arg, LogicalStore):
-            self._handle.add_reduction((<LogicalStore> arg)._handle, redop)
+            with nogil:
+                self._handle.add_reduction((<LogicalStore> arg)._handle, redop)
         elif isinstance(arg, LogicalStorePartition):
-            self._handle.add_reduction(
-                (<LogicalStorePartition> arg)._handle,
-                redop,
-                to_cpp_projection(projection),
-            )
+            proj = to_cpp_projection(projection)
+            with nogil:
+                self._handle.add_reduction(
+                    (<LogicalStorePartition> arg)._handle,
+                    redop,
+                    std_move(proj)
+                )
         else:
             raise ValueError(
                 "Expected a logical store or store partition "
@@ -582,7 +627,7 @@ cdef class ManualTask(Unconstructable):
     cpdef void add_scalar_arg(
         self, value: Any, dtype: Type | tuple[Type, ...] | None = None
     ):
-        """
+        r"""
         Adds a by-value argument to the task
 
         Parameters
@@ -595,7 +640,8 @@ cdef class ManualTask(Unconstructable):
             equivalent to ``array_type(T, len(value))``).
         """
         if isinstance(value, Scalar):
-            self._handle.add_scalar_arg((<Scalar> value)._handle)
+            with nogil:
+                self._handle.add_scalar_arg((<Scalar> value)._handle)
             return
 
         cdef Scalar scalar
@@ -607,7 +653,8 @@ cdef class ManualTask(Unconstructable):
                 value, dtype=sanitized_scalar_arg_type(value, dtype)
             )
 
-        self._handle.add_scalar_arg(scalar._handle)
+        with nogil:
+            self._handle.add_scalar_arg(scalar._handle)
 
     cpdef str provenance(self):
         r"""
@@ -636,7 +683,8 @@ cdef class ManualTask(Unconstructable):
         concurrent : bool
             `True` if the task should be concurrent, `False` otherwise.
         """
-        self._handle.set_concurrent(concurrent)
+        with nogil:
+            self._handle.set_concurrent(concurrent)
 
     cpdef void set_side_effect(self, bool has_side_effect):
         r"""
@@ -650,7 +698,8 @@ cdef class ManualTask(Unconstructable):
         has_side_effect : bool
             `True` if the task has side effects, `False` otherwise.
         """
-        self._handle.set_side_effect(has_side_effect)
+        with nogil:
+            self._handle.set_side_effect(has_side_effect)
 
     cpdef void throws_exception(self, type exception_type):
         r"""
@@ -665,7 +714,8 @@ cdef class ManualTask(Unconstructable):
         exception_type : type
             The type of exception thrown by the task.
         """
-        self._handle.throws_exception(True)
+        with nogil:
+            self._handle.throws_exception(True)
         self._exception_types[exception_type] = None
 
     @property
@@ -690,7 +740,7 @@ cdef class ManualTask(Unconstructable):
         self._handle.add_communicator(std_string_view_from_py(name))
 
     cpdef void execute(self):
-        """
+        r"""
         Submits the operation to the runtime.
 
         There is no guarantee when the runtime will start the execution of this
@@ -699,19 +749,19 @@ cdef class ManualTask(Unconstructable):
         get_legate_runtime().submit(self)
 
     cpdef void add_nccl_communicator(self):
-        """
+        r"""
         Adds a NCCL communicator to the task
         """
         self.add_communicator("nccl")
 
     cpdef void add_cpu_communicator(self):
-        """
+        r"""
         Adds a CPU communicator to the task
         """
         self.add_communicator("cpu")
 
     cpdef void add_cal_communicator(self):
-        """
+        r"""
         Adds a CAL communicator to the task
         """
         self.add_communicator("cal")

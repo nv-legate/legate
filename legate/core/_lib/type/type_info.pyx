@@ -142,7 +142,7 @@ cdef class Type:
             result = StructType.__new__(StructType)
         else:
             result = Type.__new__(Type)
-        result._handle = ty
+        result._handle = std_move(ty)
         return result
 
     def __init__(self) -> None:
@@ -159,7 +159,11 @@ cdef class Type:
         :returns: The type code.
         :rtype: TypeCode
         """
-        return self._handle.code()
+        cdef TypeCode ret
+
+        with nogil:
+            ret = self._handle.code()
+        return ret
 
     @property
     def size(self) -> uint32_t:
@@ -169,7 +173,11 @@ cdef class Type:
         :returns: The size of the data type.
         :rtype: int
         """
-        return self._handle.size()
+        cdef uint32_t ret
+
+        with nogil:
+            ret = self._handle.size()
+        return ret
 
     @property
     def alignment(self) -> uint32_t:
@@ -179,7 +187,11 @@ cdef class Type:
         :returns: The alignment of the data type.
         :rtype: int
         """
-        return self._handle.alignment()
+        cdef uint32_t ret
+
+        with nogil:
+            ret = self._handle.alignment()
+        return ret
 
     @property
     def uid(self) -> int32_t:
@@ -191,7 +203,11 @@ cdef class Type:
         :returns: The UID of the type.
         :rtype: int
         """
-        return self._handle.uid()
+        cdef int32_t ret
+
+        with nogil:
+            ret = self._handle.uid()
+        return ret
 
     @property
     def variable_size(self) -> bool:
@@ -201,7 +217,11 @@ cdef class Type:
         :returns: `True` if the type is variable size, `False` otherwise.
         :rtype: bool
         """
-        return self._handle.variable_size()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.variable_size()
+        return ret
 
     @property
     def is_primitive(self) -> bool:
@@ -215,7 +235,11 @@ cdef class Type:
         :returns: `True` if the type is primitive, `False` otherwise.
         :rtype: bool
         """
-        return self._handle.is_primitive()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.is_primitive()
+        return ret
 
     cpdef void record_reduction_op(
         self, int32_t op_kind, _GlobalRedopID reduction_op_id
@@ -233,7 +257,8 @@ cdef class Type:
         reduction_op_id : GlobalRedopID
             The global reduction ID.
         """
-        self._handle.record_reduction_operator(op_kind, reduction_op_id)
+        with nogil:
+            self._handle.record_reduction_operator(op_kind, reduction_op_id)
 
     cpdef _GlobalRedopID reduction_op_id(self, int32_t op_kind):
         r"""
@@ -254,7 +279,8 @@ cdef class Type:
         ValueError
             If `op_kind` does not exist for this type.
         """
-        return self._handle.find_reduction_operator(op_kind)
+        with nogil:
+            return self._handle.find_reduction_operator(op_kind)
 
     def __repr__(self) -> str:
         r"""
@@ -369,7 +395,11 @@ cdef class FixedArrayType(Type):
         :returns: The number of elements.
         :rtype: int
         """
-        return self._handle.as_fixed_array_type().num_elements()
+        cdef uint32_t ret
+
+        with nogil:
+            ret = self._handle.as_fixed_array_type().num_elements()
+        return ret
 
     @property
     def element_type(self) -> Type:
@@ -379,9 +409,11 @@ cdef class FixedArrayType(Type):
         :returns: The element type.
         :rtype: Type
         """
-        return Type.from_handle(
-            self._handle.as_fixed_array_type().element_type()
-        )
+        cdef _Type handle
+
+        with nogil:
+            handle = self._handle.as_fixed_array_type().element_type()
+        return Type.from_handle(std_move(handle))
 
     cpdef object to_numpy_dtype(self):
         r"""
@@ -432,7 +464,11 @@ cdef class StructType(Type):
         :returns: The number of fields in the struct type.
         :rtype: int
         """
-        return self._handle.as_struct_type().num_fields()
+        cdef uint32_t ret
+
+        with nogil:
+            ret = self._handle.as_struct_type().num_fields()
+        return ret
 
     cpdef Type field_type(self, uint32_t field_idx):
         r"""
@@ -448,9 +484,11 @@ cdef class StructType(Type):
         Type
             The field type.
         """
-        return Type.from_handle(
-            self._handle.as_struct_type().field_type(field_idx)
-        )
+        cdef _Type handle
+
+        with nogil:
+            handle = self._handle.as_struct_type().field_type(field_idx)
+        return Type.from_handle(std_move(handle))
 
     @property
     def aligned(self) -> bool:
@@ -460,7 +498,11 @@ cdef class StructType(Type):
         :returns: `True` if the fields are aligned, `False` otherwise.
         :rtype: bool
         """
-        return self._handle.as_struct_type().aligned()
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.as_struct_type().aligned()
+        return ret
 
     @property
     def offsets(self) -> tuple[uint32_t, ...]:
@@ -470,7 +512,11 @@ cdef class StructType(Type):
         :returns: The offsets of the fields.
         :rtype: tuple[int, ...]
         """
-        return tuple(self._handle.as_struct_type().offsets())
+        cdef std_vector[uint32_t] v
+
+        with nogil:
+            v = self._handle.as_struct_type().offsets()
+        return tuple(v)
 
     cpdef object to_numpy_dtype(self):
         r"""

@@ -182,7 +182,7 @@ cdef extern from *:
             VariantCode,
             VariantImpl,
             TaskFuncPtr
-        )
+        ) nogil
 
 cdef class TaskInfo(Unconstructable):
     cdef void _assert_valid(self):
@@ -346,7 +346,12 @@ cdef class TaskInfo(Unconstructable):
             If the task info object is in an invalid state.
         """
         self._assert_valid()
-        return self._handle.find_variant(variant_id).has_value()
+
+        cdef bool ret
+
+        with nogil:
+            ret = self._handle.find_variant(variant_id).has_value()
+        return ret
 
     cpdef void add_variant(self, VariantCode variant_kind, object fn):
         r"""
@@ -399,13 +404,14 @@ cdef class TaskInfo(Unconstructable):
         # not able to deduce the return type. So we need to spell it out here
         cdef Library core_lib = get_legate_runtime().core_library
 
-        cytaskinfo_add_variant(
-            self._handle,
-            &core_lib._handle,
-            variant_kind,
-            _py_variant,
-            callback
-        )
+        with nogil:
+            cytaskinfo_add_variant(
+                self._handle,
+                &core_lib._handle,
+                variant_kind,
+                _py_variant,
+                callback
+            )
         # do this last to preserve strong exception guarantee
         self._registered_variants[variant_kind] = fn
         return

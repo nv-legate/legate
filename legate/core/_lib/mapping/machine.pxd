@@ -51,7 +51,7 @@ cdef extern from "core/mapping/machine.h" namespace "legate::mapping" nogil:
         TaskTarget preferred_target() const
         _ProcessorRange processor_range() const
         _ProcessorRange processor_range(TaskTarget target) const
-        std_vector[TaskTarget] valid_targets() const
+        const std_vector[TaskTarget]& valid_targets() const
         std_vector[TaskTarget] valid_targets_except(
             const std_set[TaskTarget]&
         ) const
