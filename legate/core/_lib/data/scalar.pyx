@@ -166,7 +166,9 @@ cpdef void from_array(Scalar scalar, object value, Type dtype):
             "Expected bytes, NumPy ndarray, or iterable, "
             f"but got {type(value)}"
         )
-    if not isinstance(value, bytes):
+    if isinstance(value, np.ndarray):
+        value = value.tobytes()
+    elif not isinstance(value, bytes):
         elem_type = dtype.element_type.to_numpy_dtype()
         arr = np.asarray(value, dtype=elem_type)
         value = arr.tobytes()
@@ -234,6 +236,13 @@ cpdef tuple to_struct(Scalar scalar):
         if name.startswith("_"):
             result.append(v[idx])
     return tuple(result)
+
+cdef inline tuple to_array_interface(Type ty, tuple shape):
+    cdef Type elem_ty = ty.element_type
+    shape += (ty.num_elements,)
+    if elem_ty.code != _Type.Code.FIXED_ARRAY:
+        return (elem_ty.to_numpy_dtype().str, shape)
+    return to_array_interface(elem_ty, shape)
 
 
 cdef dict _GETTERS = {
@@ -367,13 +376,14 @@ cdef class Scalar:
                 "Scalars with variable size types don't support "
                 "array interface"
             )
+        cdef str dtype_str
+        cdef tuple shape
         if ty.code == _Type.Code.FIXED_ARRAY:
-            shape = (ty.num_elements,)
-            numpy_type = ty.element_type.to_numpy_dtype()
+            dtype_str, shape = to_array_interface(ty, tuple())
             return {
                 "version": 3,
                 "shape": shape,
-                "typestr": numpy_type.str,
+                "typestr": dtype_str,
                 "data": (self.ptr, True),
             }
         numpy_type = ty.to_numpy_dtype()

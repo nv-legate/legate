@@ -15,15 +15,16 @@ import re
 from typing import ParamSpec
 
 import numpy as np
-import numpy.testing
 import pytest
 
 import legate.core as lg
 from legate.core import (
     PhysicalStore,
+    Scalar,
     VariantCode,
     get_legate_runtime,
     task as lct,
+    types as ty,
 )
 from legate.core.task import (
     ADD,
@@ -318,14 +319,17 @@ class TestTask(BaseTest):
         (CustomException, ValueError, TypeError, RuntimeError, IndexError),
     )
     def test_raised_exception(self, ExnType: type) -> None:
+        msg = "There is no peace but the Pax Romana"
+
         @lct.task(throws_exception=True)
         def raises_exception() -> None:
-            raise ExnType("There is no peace but the Pax Romana")
+            raise ExnType(msg)
 
-        with pytest.raises(
-            ExnType, match=r"There is no peace but the Pax Romana"
-        ):
+        with pytest.raises(ExnType, match=msg):
             raises_exception()
+        auto_task = raises_exception.prepare_call()
+        with pytest.raises(ExnType, match=msg):
+            auto_task.execute()
 
     @pytest.mark.parametrize(
         "ExnType",
@@ -353,6 +357,34 @@ class TestTask(BaseTest):
 
         with lg.Scope(exception_mode=lg.ExceptionMode.IGNORED):
             raises_exception()
+
+    def test_legate_exception_handling(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int64, (1,))
+
+        @lct.task(constraints=(lg.broadcast("store", (1,)),))
+        def task_func(store: OutputStore) -> None:
+            assert False, "should never get here"
+
+        msg = "Invalid broadcasting dimension"
+        with pytest.raises(ValueError, match=msg):
+            task_func(store)
+        runtime.issue_execution_fence(block=True)
+
+    def test_mixed_exception_declaration(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int64, (1,))
+
+        msg = "foo"
+
+        @lct.task(throws_exception=False)
+        def task_func(store: OutputStore) -> None:
+            raise RuntimeError(msg)
+
+        auto_task = task_func.prepare_call(store)
+        auto_task.throws_exception(RuntimeError)
+        with pytest.raises(RuntimeError, match=msg):
+            runtime.submit(auto_task)
 
     def test_align_constraint(self) -> None:
         @lct.task(constraints=(lg.align("x", "y"), lg.align("y", "z")))
@@ -463,6 +495,17 @@ class TestTask(BaseTest):
 
         x = make_input_store()
         foo(x)
+
+    def test_scalar_arg_mismatching_dtype(self) -> None:
+        @lct.task(throws_exception=True)
+        def foo(scalar: Scalar) -> None:
+            assert False, "should never get here"
+
+        msg = "Task expected a value of type.*Scalar.*but got.*"
+        with pytest.raises(TypeError, match=msg):
+            foo(1.5)
+        with pytest.raises(TypeError, match=msg):
+            foo.prepare_call("foo")
 
 
 class TestVariantInvoker(BaseTest):

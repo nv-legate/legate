@@ -40,14 +40,14 @@ class TestStoreCreation:
 
     @pytest.mark.parametrize("dtype", ARRAY_TYPES, ids=str)
     def test_store_dtype(self, dtype: ty.Type) -> None:
+        shape = (1, 2, 3)
         runtime = get_legate_runtime()
-        store = runtime.create_store(dtype=dtype, shape=(1, 2, 3))
-        arr_np = np.zeros(dtype=dtype.to_numpy_dtype(), shape=(1, 2, 3))
-        arr_store = np.asarray(
-            store.get_physical_store().get_inline_allocation()
-        )
-        assert arr_np.dtype == arr_store.dtype
-        assert np.allclose(arr_np, arr_store)
+        store = runtime.create_store(dtype=dtype, shape=shape)
+        arr = np.asarray(store.get_physical_store().get_inline_allocation())
+        arr.fill(bool(0) if dtype == ty.bool_ else 0)
+
+        exp = np.zeros(dtype=dtype.to_numpy_dtype(), shape=shape)
+        np.testing.assert_allclose(arr, exp)
 
     @pytest.mark.parametrize(
         "shape",

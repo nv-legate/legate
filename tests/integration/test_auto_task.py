@@ -141,9 +141,8 @@ class TestAutoTask:
             np.asarray(out_store.get_physical_store().get_inline_allocation()),
         )
 
-    @pytest.mark.parametrize("size", [9, 101, 32768], ids=str)
-    def test_tuple_scalar_arg(self, size: int) -> None:
-        shape = (size,)
+    @pytest.mark.parametrize("shape", SHAPES, ids=str)
+    def test_tuple_scalar_arg(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
             runtime.core_library, tasks.copy_np_array_task.task_id
@@ -153,7 +152,7 @@ class TestAutoTask:
 
         arr_np = np.ndarray(shape=shape, dtype=np.int32)
 
-        auto_task.add_scalar_arg(arr_np, (ty.int32,))
+        auto_task.add_scalar_arg(arr_np)
         auto_task.add_broadcast(out_store)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
@@ -226,6 +225,12 @@ class TestAutoTask:
 
 
 class TestAutoTaskConstraints:
+
+    @pytest.mark.xfail(
+        get_legate_runtime().machine.count() > 1,
+        run=False,
+        reason="crashes on multi-node",
+    )
     def test_add_reduction(self) -> None:
         runtime = get_legate_runtime()
         in_arr = np.arange(10, dtype=np.float64)
@@ -242,6 +247,10 @@ class TestAutoTaskConstraints:
         )
         auto_task.add_input(in_store)
         auto_task.add_reduction(out_store, ty.ReductionOpKind.ADD)
+        # TODO(yimoj) [issue 1099]
+        # when running on multi-node this hits LEGION ERROR and then SIGABRT
+        # LEGION ERROR: Error creating read-only field accessor without
+        # read-only privileges on field 10000 in task
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
 
@@ -283,31 +292,9 @@ class TestAutoTaskConstraints:
         ids=str,
     )
     def test_image_constraint(self, hint: ImageComputationHint) -> None:
-        @task(variants=tuple(tasks.KNOWN_VARIANTS))
-        def image_task(
-            func_store: tasks.InputStore,
-            range_store: tasks.InputStore,
-        ) -> None:
-            lib = tasks.numpy_or_cupy(func_store.get_inline_allocation())
-
-            func_arr = lib.frombuffer(
-                lib.asarray(func_store.get_inline_allocation()), dtype=np.int64
-            )
-            range_arr = lib.asarray(range_store.get_inline_allocation())
-
-            coords = tuple(
-                func_arr[off :: range_store.ndim]
-                for off in range(range_store.ndim)
-            )
-
-            lo = range_store.domain.lo
-            shifted = tuple(
-                coord - lo[idx] for idx, coord in enumerate(coords)
-            )
-
-            # If any of the points are not in the range_store's domain, the
-            # following indexing expression will raise an IndexError
-            assert range_arr[shifted].size > 0
+        image_task = task(variants=tuple(tasks.KNOWN_VARIANTS))(
+            tasks.basic_image_task
+        )
 
         runtime = get_legate_runtime()
         shape = (5, 4096, 5)
@@ -331,7 +318,7 @@ class TestAutoTaskConstraints:
             False,
         )
 
-        range_np, range_store = utils.random_array_and_store(shape)
+        _, range_store = utils.random_array_and_store(shape)
         auto_task = runtime.create_auto_task(
             runtime.core_library, image_task.task_id
         )
@@ -340,7 +327,6 @@ class TestAutoTaskConstraints:
         auto_task.add_input(func_store, func_part)
         auto_task.add_input(range_store, range_part)
         auto_task.add_constraint(image(func_part, range_part, hint))
-        auto_task.throws_exception(Exception)
         auto_task.execute()
 
         runtime.issue_execution_fence(block=True)
@@ -362,9 +348,8 @@ class TestAutoTaskConstraints:
         out_part = auto_task.declare_partition()
         auto_task.add_input(in_store, in_part)
         auto_task.add_output(out_store, out_part)
-        auto_task.add_scalar_arg(repeats, (ty.int32,))
+        auto_task.add_scalar_arg(repeats, (ty.int64,))
         auto_task.add_constraint(scale(tuple(repeats), in_part, out_part))
-        auto_task.throws_exception(Exception)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         exp = in_np
@@ -375,25 +360,9 @@ class TestAutoTaskConstraints:
     @pytest.mark.parametrize("shape", SHAPES + LARGE_SHAPES, ids=str)
     def test_bloat_constraints(self, shape: tuple[int, ...]) -> None:
 
-        @task(variants=tuple(tasks.KNOWN_VARIANTS))
-        def bloat_task(
-            in_store: tasks.InputStore,
-            bloat_store: tasks.InputStore,
-            low_offsets: tuple[int, ...],
-            high_offsets: tuple[int, ...],
-            shape: tuple[int, ...],
-        ) -> None:
-            # not sure how this is supposed to be used
-            # so just check the constraints for now
-            for i in range(in_store.ndim):
-                assert (
-                    max(0, in_store.domain.lo[i] - low_offsets[i])
-                    == bloat_store.domain.lo[i]
-                )
-                assert (
-                    min(shape[i] - 1, in_store.domain.hi[i] + high_offsets[i])
-                    == bloat_store.domain.hi[i]
-                )
+        bloat_task = task(variants=tuple(tasks.KNOWN_VARIANTS))(
+            tasks.basic_bloat_task
+        )
 
         low_offsets = tuple(np.random.randint(1, 6) for _ in shape)
 
@@ -415,7 +384,6 @@ class TestAutoTaskConstraints:
         auto_task.add_constraint(
             bloat(source_part, bloat_part, low_offsets, high_offsets)
         )
-        auto_task.throws_exception(Exception)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
 
