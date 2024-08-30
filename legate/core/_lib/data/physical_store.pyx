@@ -15,7 +15,7 @@ from libc.stdint cimport int32_t
 from ..type.type_info cimport Type
 from ..utilities.typedefs cimport Domain
 from ..utilities.unconstructable cimport Unconstructable
-from .inline_allocation cimport InlineAllocation
+from .inline_allocation cimport InlineAllocation, _InlineAllocation
 from .physical_store cimport _PhysicalStore
 
 from typing import Any
@@ -77,10 +77,11 @@ cdef class PhysicalStore(Unconstructable):
         InlineAllocation
             The inline allocation object holding the raw pointer and strides.
         """
-        return InlineAllocation.create(
-            self,
-            self._handle.get_inline_allocation()
-        )
+        cdef _InlineAllocation handle
+        with nogil:
+            handle = self._handle.get_inline_allocation()
+
+        return InlineAllocation.create(self, handle)
 
     @property
     def __array_interface__(self) -> dict[str, Any]:
