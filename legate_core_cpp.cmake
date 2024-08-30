@@ -226,11 +226,16 @@ list(APPEND
      src/core/mapping/detail/store.cc
      src/core/operation/projection.cc
      src/core/operation/task.cc
+     src/core/operation/detail/attach.cc
      src/core/operation/detail/copy.cc
      src/core/operation/detail/copy_launcher.cc
+     src/core/operation/detail/discard.cc
+     src/core/operation/detail/execution_fence.cc
      src/core/operation/detail/fill.cc
      src/core/operation/detail/fill_launcher.cc
      src/core/operation/detail/gather.cc
+     src/core/operation/detail/index_attach.cc
+     src/core/operation/detail/mapping_fence.cc
      src/core/operation/detail/launcher_arg.cc
      src/core/operation/detail/operation.cc
      src/core/operation/detail/store_projection.cc
@@ -240,6 +245,8 @@ list(APPEND
      src/core/operation/detail/scatter_gather.cc
      src/core/operation/detail/task.cc
      src/core/operation/detail/task_launcher.cc
+     src/core/operation/detail/timing.cc
+     src/core/operation/detail/unmap_and_detach.cc
      src/core/partitioning/constraint.cc
      src/core/partitioning/detail/constraint.cc
      src/core/partitioning/detail/constraint_solver.cc

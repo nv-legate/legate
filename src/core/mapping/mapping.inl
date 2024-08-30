@@ -16,7 +16,7 @@
 
 namespace legate::mapping {
 
-inline const detail::DimOrdering* DimOrdering::impl() const noexcept { return impl_.get(); }
+inline const SharedPtr<detail::DimOrdering>& DimOrdering::impl() const noexcept { return impl_; }
 
 inline DimOrdering::DimOrdering(InternalSharedPtr<detail::DimOrdering> impl)
   : impl_{std::move(impl)}

@@ -14,9 +14,8 @@
 
 #include "core/data/detail/attachment.h"
 #include "core/data/detail/external_allocation.h"
-#include "core/data/detail/physical_store.h"
+#include "core/data/detail/region_field.h"
 #include "core/data/shape.h"
-#include "core/runtime/detail/field_manager.h"
 #include "core/utilities/internal_shared_ptr.h"
 
 #include "legion.h"
@@ -30,15 +29,69 @@ namespace legate::detail {
 class Partition;
 class Tiling;
 
+/**
+ * A `LogicalRegionField` is in essence a pair of a logical region and a field backing a
+ * `LogicalStore` and its aliases created via store transformations. A `LogicalRegionField` also
+ * stores its physical state in a `PhysicalState` object, in case it has been constructed from an
+ * external allocation or has an inline mapping created for it.
+ *
+ * Because Legate tasks are scheduled in a deferred manner via scheduling window, any changes to the
+ * physical state also needs to be deferred so that the tasks can see those changes in the right
+ * order. The following summarizes how attaching, unmapping, and detaching are performed:
+ *
+ *  (1) At the time an `ExternalAllocation` is attached to a `LogicalRegionField`, the runtime sets
+ *  `true` to `LogicalRegionField::attached_` to indicate that there's a pending
+ *  `Attach`/`IndexAttach` operation for this `LogicalRegionField`. This bookkeeping allows the
+ *  subsequent operations accessing this `LogicalRegionField` to know the pending attachment wihtout
+ *  examining the scheduling window. The issued operation then performs the actual attachment by
+ *  updating `physical_state_.attachment_` of the `LogicalRegionField`.
+ *
+ *  (2) When a given `LogicalRegionField` loses all user references, the runtime frees its logical
+ *  region and field and adds them to the list of free region fields, while the outstanding
+ *  operations that use the region field are still sitting in the scheduling window.  The runtime
+ *  safely performs the unmapping and detachment for the `LogicalRegionField` by issuing an
+ *  `UnmapAndDetach` operation that unmaps the physical region and detaches the attachment only
+ *  after all the precending tasks using the `LogicalRegionField` are launched.
+ *
+ * Note that the inline mapping is performed immediately, as it always flushes the scheduling
+ * window.
+ */
 class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionField> {
  public:
+  class PhysicalState {
+   public:
+    [[nodiscard]] const Legion::PhysicalRegion& ensure_mapping(const Legion::LogicalRegion& region,
+                                                               Legion::FieldID field_id);
+    void set_physical_region(Legion::PhysicalRegion physical_region);
+    void set_attachment(Attachment attachment);
+    void set_has_pending_detach(bool has_pending_detach);
+    void add_callback(std::function<void()> callback);
+
+    void unmap_and_detach(bool unordered);
+    void invoke_callbacks();
+    void deallocate_attachment();
+
+    [[nodiscard]] bool has_attachment() const;
+
+    [[nodiscard]] const Legion::PhysicalRegion& physical_region() const;
+    [[nodiscard]] const Attachment& attachment() const;
+
+    void intentionally_leak_physical_region();
+
+   private:
+    bool has_pending_detach_{};
+    Legion::PhysicalRegion physical_region_{};
+    Attachment attachment_{};
+    std::vector<std::function<void()>> callbacks_{};
+  };
+
   LogicalRegionField(InternalSharedPtr<Shape> shape,
                      std::uint32_t field_size,
                      Legion::LogicalRegion lr,
                      Legion::FieldID fid,
                      InternalSharedPtr<LogicalRegionField> parent = nullptr);
 
-  ~LogicalRegionField();
+  ~LogicalRegionField() noexcept;
 
   [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] const Legion::LogicalRegion& region() const;
@@ -51,10 +104,12 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   [[nodiscard]] RegionField map();
   void attach(Legion::PhysicalRegion physical_region,
               InternalSharedPtr<ExternalAllocation> allocation);
-  void attach(const Legion::ExternalResources& external_resources,
+  void attach(Legion::ExternalResources external_resources,
               std::vector<InternalSharedPtr<ExternalAllocation>> allocations);
+  void mark_attached();
   void detach();
   void allow_out_of_order_destruction();
+  void release_region_field() noexcept;
 
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child(const Tiling* tiling,
                                                                 const tuple<std::uint64_t>& color,
@@ -62,9 +117,8 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   [[nodiscard]] Legion::LogicalPartition get_legion_partition(const Partition* partition,
                                                               bool complete);
 
-  template <typename T>
-  void add_invalidation_callback(T&& callback);
-  void perform_invalidation_callbacks() noexcept;
+  void add_invalidation_callback(std::function<void()> callback);
+  void perform_invalidation_callbacks();
 
   // Should never copy or move raw logical region field objects
   LogicalRegionField(const LogicalRegionField&)            = delete;
@@ -73,17 +127,20 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   LogicalRegionField& operator=(LogicalRegionField&&)      = delete;
 
  private:
-  void add_invalidation_callback_(std::function<void()> callback);
-
   InternalSharedPtr<Shape> shape_{};
   std::uint32_t field_size_{};
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{};
   InternalSharedPtr<LogicalRegionField> parent_{};
-  Legion::PhysicalRegion pr_{};
-  std::unique_ptr<Attachment> attachment_{};
+
+  // These are flags that are updated immediately following the control flow
+  bool released_{};
+  bool mapped_{};
+  bool attached_{};
   bool destroyed_out_of_order_{};
-  std::vector<std::function<void()>> callbacks_{};
+
+  // This object is updated in a deferred manner by an UnmapAndDetach operation
+  InternalSharedPtr<PhysicalState> physical_state_{};
 };
 
 }  // namespace legate::detail

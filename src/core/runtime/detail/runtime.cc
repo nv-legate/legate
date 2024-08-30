@@ -25,14 +25,20 @@
 #include "core/mapping/detail/machine.h"
 #include "core/mapping/detail/mapping.h"
 #include "core/mapping/mapping.h"
+#include "core/operation/detail/attach.h"
 #include "core/operation/detail/copy.h"
+#include "core/operation/detail/discard.h"
+#include "core/operation/detail/execution_fence.h"
 #include "core/operation/detail/fill.h"
 #include "core/operation/detail/gather.h"
+#include "core/operation/detail/index_attach.h"
+#include "core/operation/detail/mapping_fence.h"
 #include "core/operation/detail/reduce.h"
 #include "core/operation/detail/scatter.h"
 #include "core/operation/detail/scatter_gather.h"
 #include "core/operation/detail/task.h"
 #include "core/operation/detail/task_launcher.h"
+#include "core/operation/detail/unmap_and_detach.h"
 #include "core/partitioning/detail/partitioner.h"
 #include "core/partitioning/detail/partitioning_tasks.h"
 #include "core/runtime/detail/config.h"
@@ -241,7 +247,7 @@ GlobalRedopID Runtime::find_reduction_operator(std::uint32_t type_uid, std::int3
 void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char** argv)
 {
   if (initialized()) {
-    if (legion_context_ == legion_context) {
+    if (get_legion_context() == legion_context) {
       static_assert(std::is_pointer_v<Legion::Context>);
       LEGATE_CHECK(legion_context != nullptr);
       // OK to call initialize twice if it's the same context.
@@ -480,6 +486,19 @@ void Runtime::flush_scheduling_window()
 
 void Runtime::submit(InternalSharedPtr<Operation> op)
 {
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    log_legate().debug() << op->to_string() << " submitted";
+  }
+
+  // Special case for internal operations
+  if (op->is_internal()) {
+    operations_.emplace_back(std::move(op));
+    if (operations_.size() >= window_size_) {
+      flush_scheduling_window();
+    }
+    return;
+  }
+
   op->validate();
   auto& submitted = operations_.emplace_back(std::move(op));
   if (submitted->needs_flush() || operations_.size() >= window_size_) {
@@ -493,6 +512,15 @@ void Runtime::schedule_(std::vector<InternalSharedPtr<Operation>>&& operations)
   const auto ops = std::move(operations);
 
   for (auto it = ops.begin(); it != ops.end(); ++it) {
+    if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      log_legate().debug() << (*it)->to_string() << " launched";
+    }
+
+    if (!(*it)->needs_partitioning()) {
+      (*it)->launch();
+      continue;
+    }
+
     // TODO(wonchanl): We need the side effect from the launch calls to get key partitions set
     // correctly. In the future, the partitioner should manage key partitions.
     const auto strategy = Partitioner{{it, it + 1}}.partition_stores();
@@ -688,7 +716,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
   const InternalSharedPtr<Shape>& shape,
   InternalSharedPtr<Type> type,
   InternalSharedPtr<ExternalAllocation> allocation,
-  const mapping::detail::DimOrdering* ordering)
+  InternalSharedPtr<mapping::detail::DimOrdering> ordering)
 {
   validate_store_shape(shape, type);
   LEGATE_CHECK(allocation->ptr());
@@ -700,32 +728,14 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
       *type)};
   }
 
-  InternalSharedPtr<LogicalStore> store =
-    create_store(shape, std::move(type), false /*optimize_scalar*/);
-  const InternalSharedPtr<LogicalRegionField> rf = store->get_region_field();
+  auto store = create_store(shape, std::move(type), false /*optimize_scalar*/);
 
-  Legion::AttachLauncher launcher{LEGION_EXTERNAL_INSTANCE,
-                                  rf->region(),
-                                  rf->region(),
-                                  false /*restricted*/,
-                                  !allocation->read_only() /*mapped*/};
-  launcher.collective = true;  // each shard will attach a full local copy of the entire buffer
-  static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
-                "Don't use to_string() below");
-  launcher.provenance = get_provenance().to_string();
-  launcher.constraints.ordering_constraint.ordering.clear();
-  ordering->populate_dimension_ordering(store->dim(),
-                                        launcher.constraints.ordering_constraint.ordering);
-  launcher.constraints.ordering_constraint.ordering.push_back(DIM_F);
-  launcher.constraints.field_constraint =
-    Legion::FieldConstraint{std::vector<Legion::FieldID>{rf->field_id()}, false, false};
-  launcher.privilege_fields.insert(rf->field_id());
-  launcher.external_resource = allocation->resource();
-
-  auto pr = legion_runtime_->attach_external_resource(legion_context_, launcher);
-  // no need to wait on the returned PhysicalRegion, since we're not inline-mapping
-  // but we can keep it around and remap it later if the user asks
-  rf->attach(std::move(pr), std::move(allocation));
+  submit(make_internal_shared<Attach>(current_op_id_(),
+                                      store->get_region_field(),
+                                      store->dim(),
+                                      std::move(allocation),
+                                      std::move(ordering)));
+  increment_op_id_();
 
   return store;
 }
@@ -735,7 +745,7 @@ Runtime::IndexAttachResult Runtime::create_store(
   const tuple<std::uint64_t>& tile_shape,
   InternalSharedPtr<Type> type,
   const std::vector<std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>>& allocations,
-  const mapping::detail::DimOrdering* ordering)
+  InternalSharedPtr<mapping::detail::DimOrdering> ordering)
 {
   validate_store_shape(shape, type);
 
@@ -743,16 +753,14 @@ Runtime::IndexAttachResult Runtime::create_store(
   auto store     = create_store(shape, std::move(type), false /*optimize_scalar*/);
   auto partition = partition_store_by_tiling(store, tile_shape);
 
-  auto rf = store->get_region_field();
-
-  Legion::IndexAttachLauncher launcher{
-    LEGION_EXTERNAL_INSTANCE, rf->region(), false /*restricted*/};
-
+  std::vector<Legion::LogicalRegion> subregions;
   std::vector<InternalSharedPtr<ExternalAllocation>> allocs;
   std::unordered_set<std::uint64_t> visited;
   const hasher<tuple<std::uint64_t>> hash_color{};
-  visited.reserve(allocations.size());
+  subregions.reserve(allocations.size());
   allocs.reserve(allocations.size());
+  visited.reserve(allocations.size());
+
   for (auto&& [idx, spec] : enumerate(allocations)) {
     auto&& [allocation, color] = spec;
     const auto color_hash      = hash_color(color);
@@ -786,21 +794,16 @@ Runtime::IndexAttachResult Runtime::create_store(
                     alloc->size())};
     }
 
-    launcher.add_external_resource(substore->get_region_field()->region(), alloc->resource());
+    subregions.push_back(substore->get_region_field()->region());
   }
-  static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
-                "Don't use to_string() below");
-  launcher.provenance = get_provenance().to_string();
-  launcher.constraints.ordering_constraint.ordering.clear();
-  ordering->populate_dimension_ordering(store->dim(),
-                                        launcher.constraints.ordering_constraint.ordering);
-  launcher.constraints.ordering_constraint.ordering.push_back(DIM_F);
-  launcher.constraints.field_constraint =
-    Legion::FieldConstraint{std::vector<Legion::FieldID>{rf->field_id()}, false, false};
-  launcher.privilege_fields.insert(rf->field_id());
 
-  auto external_resources = legion_runtime_->attach_external_resources(legion_context_, launcher);
-  rf->attach(external_resources, std::move(allocs));
+  submit(make_internal_shared<IndexAttach>(current_op_id_(),
+                                           store->get_region_field(),
+                                           store->dim(),
+                                           std::move(subregions),
+                                           std::move(allocs),
+                                           std::move(ordering)));
+  increment_op_id_();
 
   return {std::move(store), std::move(partition)};
 }
@@ -912,7 +915,7 @@ void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
   if (provenance.empty()) {
     return;
   }
-  legion_runtime_->attach_semantic_information(
+  get_legion_runtime()->attach_semantic_information(
     rf->region().get_field_space(),
     rf->field_id(),
     static_cast<Legion::SemanticTag>(CoreSemanticTag::ALLOC_INFO),
@@ -934,12 +937,12 @@ Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");
   launcher.provenance = get_provenance().to_string();
-  return legion_runtime_->map_region(legion_context_, launcher);
+  return get_legion_runtime()->map_region(get_legion_context(), launcher);
 }
 
 void Runtime::remap_physical_region(Legion::PhysicalRegion pr)
 {
-  legion_runtime_->remap_region(legion_context_, std::move(pr), get_provenance().data());
+  get_legion_runtime()->remap_region(get_legion_context(), std::move(pr), get_provenance().data());
 }
 
 void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
@@ -949,7 +952,7 @@ void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
     pr.get_fields(fields);
     LEGATE_CHECK(fields.size() == 1);
   }
-  legion_runtime_->unmap_region(legion_context_, std::move(pr));
+  get_legion_runtime()->unmap_region(get_legion_context(), std::move(pr));
 }
 
 Legion::Future Runtime::detach(const Legion::PhysicalRegion& physical_region,
@@ -957,8 +960,8 @@ Legion::Future Runtime::detach(const Legion::PhysicalRegion& physical_region,
                                bool unordered)
 {
   LEGATE_CHECK(physical_region.exists() && !physical_region.is_mapped());
-  return legion_runtime_->detach_external_resource(
-    legion_context_, physical_region, flush, unordered, get_provenance().data());
+  return get_legion_runtime()->detach_external_resource(
+    get_legion_context(), physical_region, flush, unordered, get_provenance().data());
 }
 
 Legion::Future Runtime::detach(const Legion::ExternalResources& external_resources,
@@ -966,8 +969,8 @@ Legion::Future Runtime::detach(const Legion::ExternalResources& external_resourc
                                bool unordered)
 {
   LEGATE_CHECK(external_resources.exists());
-  return legion_runtime_->detach_external_resources(
-    legion_context_, external_resources, flush, unordered, get_provenance().data());
+  return get_legion_runtime()->detach_external_resources(
+    get_legion_context(), external_resources, flush, unordered, get_provenance().data());
 }
 
 bool Runtime::consensus_match_required() const
@@ -975,9 +978,9 @@ bool Runtime::consensus_match_required() const
   return force_consensus_match_ || Legion::Machine::get_machine().get_address_space_count() > 1;
 }
 
-void Runtime::progress_unordered_operations() const
+void Runtime::progress_unordered_operations()
 {
-  legion_runtime_->progress_unordered_operations(legion_context_);
+  get_legion_runtime()->progress_unordered_operations(get_legion_context());
 }
 
 RegionManager* Runtime::find_or_create_region_manager(const Legion::IndexSpace& index_space)
@@ -999,14 +1002,14 @@ const Legion::IndexSpace& Runtime::find_or_create_index_space(const tuple<std::u
 
 const Legion::IndexSpace& Runtime::find_or_create_index_space(const Domain& domain)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
+  LEGATE_CHECK(nullptr != get_legion_context());
   auto finder = cached_index_spaces_.find(domain);
   if (finder != cached_index_spaces_.end()) {
     return finder->second;
   }
 
   auto [it, _] = cached_index_spaces_.emplace(
-    domain, legion_runtime_->create_index_space(legion_context_, domain));
+    domain, get_legion_runtime()->create_index_space(get_legion_context(), domain));
   return it->second;
 }
 
@@ -1017,16 +1020,16 @@ Legion::IndexPartition Runtime::create_restricted_partition(
   const Legion::DomainTransform& transform,
   const Domain& extent)
 {
-  return legion_runtime_->create_partition_by_restriction(
-    legion_context_, index_space, color_space, transform, extent, kind);
+  return get_legion_runtime()->create_partition_by_restriction(
+    get_legion_context(), index_space, color_space, transform, extent, kind);
 }
 
 Legion::IndexPartition Runtime::create_weighted_partition(const Legion::IndexSpace& index_space,
                                                           const Legion::IndexSpace& color_space,
                                                           const Legion::FutureMap& weights)
 {
-  return legion_runtime_->create_partition_by_weights(
-    legion_context_, index_space, weights, color_space);
+  return get_legion_runtime()->create_partition_by_weights(
+    get_legion_context(), index_space, weights, color_space);
 }
 
 Legion::IndexPartition Runtime::create_image_partition(
@@ -1051,29 +1054,29 @@ Legion::IndexPartition Runtime::create_image_partition(
   buffer.pack<std::int32_t>(scope().priority());
 
   if (is_range) {
-    return legion_runtime_->create_partition_by_image_range(legion_context_,
-                                                            index_space,
-                                                            func_partition,
-                                                            func_region,
-                                                            func_field_id,
-                                                            color_space,
-                                                            LEGION_COMPUTE_KIND,
-                                                            LEGION_AUTO_GENERATE_ID,
-                                                            mapper_id(),
-                                                            0,
-                                                            buffer.to_legion_buffer());
+    return get_legion_runtime()->create_partition_by_image_range(get_legion_context(),
+                                                                 index_space,
+                                                                 func_partition,
+                                                                 func_region,
+                                                                 func_field_id,
+                                                                 color_space,
+                                                                 LEGION_COMPUTE_KIND,
+                                                                 LEGION_AUTO_GENERATE_ID,
+                                                                 mapper_id(),
+                                                                 0,
+                                                                 buffer.to_legion_buffer());
   }
-  return legion_runtime_->create_partition_by_image(legion_context_,
-                                                    index_space,
-                                                    func_partition,
-                                                    func_region,
-                                                    func_field_id,
-                                                    color_space,
-                                                    LEGION_COMPUTE_KIND,
-                                                    LEGION_AUTO_GENERATE_ID,
-                                                    mapper_id(),
-                                                    0,
-                                                    buffer.to_legion_buffer());
+  return get_legion_runtime()->create_partition_by_image(get_legion_context(),
+                                                         index_space,
+                                                         func_partition,
+                                                         func_region,
+                                                         func_field_id,
+                                                         color_space,
+                                                         LEGION_COMPUTE_KIND,
+                                                         LEGION_AUTO_GENERATE_ID,
+                                                         mapper_id(),
+                                                         0,
+                                                         buffer.to_legion_buffer());
 }
 
 Legion::IndexPartition Runtime::create_approximate_image_partition(
@@ -1096,49 +1099,53 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
 
   auto domains     = output->get_future_map();
   auto color_space = find_or_create_index_space(launch_domain);
-  return legion_runtime_->create_partition_by_domain(
-    legion_context_, index_space, domains, color_space);
+  return get_legion_runtime()->create_partition_by_domain(
+    get_legion_context(), index_space, domains, color_space);
 }
 
 Legion::FieldSpace Runtime::create_field_space()
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  return legion_runtime_->create_field_space(legion_context_);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  return get_legion_runtime()->create_field_space(get_legion_context());
 }
 
 Legion::LogicalRegion Runtime::create_region(const Legion::IndexSpace& index_space,
                                              const Legion::FieldSpace& field_space)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  return legion_runtime_->create_logical_region(legion_context_, index_space, field_space);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  return get_legion_runtime()->create_logical_region(
+    get_legion_context(), index_space, field_space);
 }
 
 void Runtime::destroy_region(const Legion::LogicalRegion& logical_region, bool unordered)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  legion_runtime_->destroy_logical_region(legion_context_, logical_region, unordered);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  get_legion_runtime()->destroy_logical_region(get_legion_context(), logical_region, unordered);
 }
 
 Legion::LogicalPartition Runtime::create_logical_partition(
   const Legion::LogicalRegion& logical_region, const Legion::IndexPartition& index_partition)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  return legion_runtime_->get_logical_partition(legion_context_, logical_region, index_partition);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  return get_legion_runtime()->get_logical_partition(
+    get_legion_context(), logical_region, index_partition);
 }
 
 Legion::LogicalRegion Runtime::get_subregion(const Legion::LogicalPartition& partition,
                                              const Legion::DomainPoint& color)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  return legion_runtime_->get_logical_subregion_by_color(legion_context_, partition, color);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  return get_legion_runtime()->get_logical_subregion_by_color(
+    get_legion_context(), partition, color);
 }
 
 Legion::LogicalRegion Runtime::find_parent_region(const Legion::LogicalRegion& region)
 {
   auto result = region;
-  while (legion_runtime_->has_parent_logical_partition(legion_context_, result)) {
-    auto partition = legion_runtime_->get_parent_logical_partition(legion_context_, result);
-    result         = legion_runtime_->get_parent_logical_region(legion_context_, partition);
+  while (get_legion_runtime()->has_parent_logical_partition(get_legion_context(), result)) {
+    auto partition =
+      get_legion_runtime()->get_parent_logical_partition(get_legion_context(), result);
+    result = get_legion_runtime()->get_parent_logical_region(get_legion_context(), partition);
   }
   return result;
 }
@@ -1147,15 +1154,14 @@ Legion::FieldID Runtime::allocate_field(const Legion::FieldSpace& field_space,
                                         Legion::FieldID field_id,
                                         std::size_t field_size)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  auto allocator = legion_runtime_->create_field_allocator(legion_context_, field_space);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  auto allocator = get_legion_runtime()->create_field_allocator(get_legion_context(), field_space);
   return allocator.allocate_field(field_size, field_id);
 }
 
-Domain Runtime::get_index_space_domain(const Legion::IndexSpace& index_space) const
+Domain Runtime::get_index_space_domain(const Legion::IndexSpace& index_space)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  return legion_runtime_->get_index_space_domain(legion_context_, index_space);
+  return get_legion_runtime()->get_index_space_domain(get_legion_context(), index_space);
 }
 
 namespace {
@@ -1187,30 +1193,34 @@ namespace {
 Legion::FutureMap Runtime::delinearize_future_map(const Legion::FutureMap& future_map,
                                                   const Domain& new_domain)
 {
-  return legion_runtime_->transform_future_map(legion_context_,
-                                               future_map,
-                                               find_or_create_index_space(new_domain),
-                                               delinearize_future_map_impl);
+  return get_legion_runtime()->transform_future_map(get_legion_context(),
+                                                    future_map,
+                                                    find_or_create_index_space(new_domain),
+                                                    delinearize_future_map_impl);
 }
 
 Legion::FutureMap Runtime::reshape_future_map(const Legion::FutureMap& future_map,
                                               const Legion::Domain& new_domain)
 {
-  return legion_runtime_->transform_future_map(
-    legion_context_, future_map, find_or_create_index_space(new_domain), reshape_future_map_impl);
+  return get_legion_runtime()->transform_future_map(get_legion_context(),
+                                                    future_map,
+                                                    find_or_create_index_space(new_domain),
+                                                    reshape_future_map_impl);
 }
 
 std::pair<Legion::PhaseBarrier, Legion::PhaseBarrier> Runtime::create_barriers(
   std::size_t num_tasks)
 {
-  auto arrival_barrier = legion_runtime_->create_phase_barrier(legion_context_, num_tasks);
-  auto wait_barrier    = legion_runtime_->advance_phase_barrier(legion_context_, arrival_barrier);
+  auto arrival_barrier =
+    get_legion_runtime()->create_phase_barrier(get_legion_context(), num_tasks);
+  auto wait_barrier =
+    get_legion_runtime()->advance_phase_barrier(get_legion_context(), arrival_barrier);
   return {arrival_barrier, wait_barrier};
 }
 
 void Runtime::destroy_barrier(Legion::PhaseBarrier barrier)
 {
-  legion_runtime_->destroy_phase_barrier(legion_context_, std::move(barrier));
+  get_legion_runtime()->destroy_phase_barrier(get_legion_context(), std::move(barrier));
 }
 
 Legion::Future Runtime::get_tunable(const Library& library, std::int64_t tunable_id)
@@ -1223,45 +1233,46 @@ Legion::Future Runtime::get_tunable(const Library& library, std::int64_t tunable
     mapper,
     sizeof(mapper)  // NOLINT(bugprone-sizeof-expression)
   };
-  return legion_runtime_->select_tunable_value(legion_context_, launcher);
+  return get_legion_runtime()->select_tunable_value(get_legion_context(), launcher);
 }
 
 Legion::Future Runtime::dispatch(Legion::TaskLauncher& launcher,
                                  std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  return legion_runtime_->execute_task(legion_context_, launcher, &output_requirements);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  return get_legion_runtime()->execute_task(get_legion_context(), launcher, &output_requirements);
 }
 
 Legion::FutureMap Runtime::dispatch(Legion::IndexTaskLauncher& launcher,
                                     std::vector<Legion::OutputRequirement>& output_requirements)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  return legion_runtime_->execute_index_space(legion_context_, launcher, &output_requirements);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  return get_legion_runtime()->execute_index_space(
+    get_legion_context(), launcher, &output_requirements);
 }
 
 void Runtime::dispatch(const Legion::CopyLauncher& launcher)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  legion_runtime_->issue_copy_operation(legion_context_, launcher);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  get_legion_runtime()->issue_copy_operation(get_legion_context(), launcher);
 }
 
 void Runtime::dispatch(const Legion::IndexCopyLauncher& launcher)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  legion_runtime_->issue_copy_operation(legion_context_, launcher);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  get_legion_runtime()->issue_copy_operation(get_legion_context(), launcher);
 }
 
 void Runtime::dispatch(const Legion::FillLauncher& launcher)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  legion_runtime_->fill_fields(legion_context_, launcher);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  get_legion_runtime()->fill_fields(get_legion_context(), launcher);
 }
 
 void Runtime::dispatch(const Legion::IndexFillLauncher& launcher)
 {
-  LEGATE_CHECK(nullptr != legion_context_);
-  legion_runtime_->fill_fields(legion_context_, launcher);
+  LEGATE_CHECK(nullptr != get_legion_context());
+  get_legion_runtime()->fill_fields(get_legion_context(), launcher);
 }
 
 Legion::Future Runtime::extract_scalar(const Legion::Future& result,
@@ -1301,25 +1312,25 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
 
 Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
                                           GlobalRedopID reduction_op,
-                                          const Legion::Future& init_value) const
+                                          const Legion::Future& init_value)
 {
-  return legion_runtime_->reduce_future_map(legion_context_,
-                                            future_map,
-                                            static_cast<Legion::ReductionOpID>(reduction_op),
-                                            false /*deterministic*/,
-                                            mapper_id(),
-                                            0 /*tag*/,
-                                            nullptr /*provenance*/,
-                                            init_value);
+  return get_legion_runtime()->reduce_future_map(get_legion_context(),
+                                                 future_map,
+                                                 static_cast<Legion::ReductionOpID>(reduction_op),
+                                                 false /*deterministic*/,
+                                                 mapper_id(),
+                                                 0 /*tag*/,
+                                                 nullptr /*provenance*/,
+                                                 init_value);
 }
 
-Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map) const
+Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map)
 {
   const auto reduction_op =
     core_library()->get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
 
-  return legion_runtime_->reduce_future_map(
-    legion_context_,
+  return get_legion_runtime()->reduce_future_map(
+    get_legion_context(),
     future_map,
     static_cast<Legion::ReductionOpID>(reduction_op),
     false /*deterministic*/,
@@ -1327,42 +1338,56 @@ Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& fut
     static_cast<Legion::MappingTagID>(CoreMappingTag::JOIN_EXCEPTION));
 }
 
-void Runtime::discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id)
+void Runtime::issue_unmap_and_detach(
+  InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state, bool unordered)
 {
-  Legion::DiscardLauncher launcher{region, region};
+  submit(
+    make_internal_shared<UnmapAndDetach>(current_op_id_(), std::move(physical_state), unordered));
+  increment_op_id_();
+}
 
-  launcher.add_field(field_id);
-  static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
-                "Don't use to_string() below");
-  launcher.provenance = get_provenance().to_string();
-  legion_runtime_->discard_fields(legion_context_, launcher);
+void Runtime::issue_discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id)
+{
+  submit(make_internal_shared<Discard>(current_op_id_(), region, field_id));
+  increment_op_id_();
 }
 
 void Runtime::issue_mapping_fence()
 {
-  flush_scheduling_window();
-  legion_runtime_->issue_mapping_fence(legion_context_);
+  submit(make_internal_shared<MappingFence>(current_op_id_()));
+  increment_op_id_();
 }
 
 void Runtime::issue_execution_fence(bool block /*=false*/)
 {
-  flush_scheduling_window();
   // FIXME: This needs to be a Legate operation
-  if (const auto future = legion_runtime_->issue_execution_fence(legion_context_); block) {
-    future.wait();
+  submit(make_internal_shared<ExecutionFence>(current_op_id_(), block));
+  increment_op_id_();
+  if (block) {
+    // This will block on the execution fence
+    flush_scheduling_window();
   }
+}
+
+InternalSharedPtr<LogicalStore> Runtime::get_timestamp(Timing::Precision precision)
+{
+  static auto empty_shape = make_internal_shared<Shape>(tuple<std::uint64_t>{});
+  auto timestamp          = create_store(empty_shape, int64(), true /* optimize_scalar */);
+  submit(make_internal_shared<Timing>(current_op_id_(), precision, timestamp));
+  increment_op_id_();
+  return timestamp;
 }
 
 void Runtime::begin_trace(std::uint32_t trace_id)
 {
   flush_scheduling_window();
-  legion_runtime_->begin_trace(legion_context_, trace_id);
+  get_legion_runtime()->begin_trace(get_legion_context(), trace_id);
 }
 
 void Runtime::end_trace(std::uint32_t trace_id)
 {
   flush_scheduling_window();
-  legion_runtime_->end_trace(legion_context_, trace_id);
+  get_legion_runtime()->end_trace(get_legion_context(), trace_id);
 }
 
 InternalSharedPtr<mapping::detail::Machine> Runtime::create_toplevel_machine()
@@ -1941,7 +1966,8 @@ std::int32_t Runtime::finish()
     region_manager.destroy(true /*unordered*/);
   }
   for (auto&& [_, index_space] : cached_index_spaces_) {
-    legion_runtime_->destroy_index_space(legion_context_, index_space, true /*unordered*/);
+    get_legion_runtime()->destroy_index_space(
+      get_legion_context(), index_space, true /*unordered*/);
   }
   cached_index_spaces_.clear();
 
@@ -1972,7 +1998,7 @@ std::int32_t Runtime::finish()
 
   // Mark that we are done excecuting the top-level task
   // After this call the context is no longer valid
-  legion_runtime_->finish_implicit_task(std::exchange(legion_context_, nullptr));
+  get_legion_runtime()->finish_implicit_task(std::exchange(legion_context_, nullptr));
   // The previous call is asynchronous so we still need to
   // wait for the shutdown of the runtime to complete
   const auto ret = Legion::Runtime::wait_for_shutdown();

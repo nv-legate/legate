@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "core/utilities/shared_ptr.h"
+
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -42,8 +44,8 @@ class Time {
 
  private:
   class Impl;
-  explicit Time(std::shared_ptr<Impl> impl) : impl_{std::move(impl)} {}
-  std::shared_ptr<Impl> impl_{};
+  explicit Time(SharedPtr<Impl> impl) : impl_{std::move(impl)} {}
+  SharedPtr<Impl> impl_{};
 
   friend Time measure_microseconds();
   friend Time measure_nanoseconds();

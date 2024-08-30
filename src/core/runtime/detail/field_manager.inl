@@ -20,14 +20,12 @@ inline FreeFieldInfo::FreeFieldInfo(InternalSharedPtr<Shape> shape_,
                                     std::uint32_t field_size_,
                                     Legion::LogicalRegion region_,
                                     Legion::FieldID field_id_,
-                                    Legion::Future can_dealloc_,
-                                    std::unique_ptr<Attachment> attachment_)
+                                    InternalSharedPtr<LogicalRegionField::PhysicalState> state_)
   : shape{std::move(shape_)},
     field_size{field_size_},
     region{std::move(region_)},
     field_id{std::move(field_id_)},
-    can_dealloc{std::move(can_dealloc_)},
-    attachment{std::move(attachment_)}
+    state{std::move(state_)}
 {
 }
 

@@ -41,30 +41,49 @@ class Operation {
     const Variable* variable{};
   };
 
+  explicit Operation(std::uint64_t unique_id);
   Operation(std::uint64_t unique_id, std::int32_t priority, mapping::detail::Machine machine);
 
  public:
   enum class Kind : std::uint8_t {
+    ATTACH,
     AUTO_TASK,
     COPY,
+    DISCARD,
+    EXECUTION_FENCE,
     FILL,
     GATHER,
+    INDEX_ATTACH,
     MANUAL_TASK,
+    MAPPING_FENCE,
     REDUCE,
     SCATTER,
     SCATTER_GATHER,
+    TIMING,
+    UNMAP_AND_DETACH,
   };
 
   virtual ~Operation() = default;
 
-  virtual void validate()                              = 0;
-  virtual void add_to_solver(ConstraintSolver& solver) = 0;
-  virtual void launch(Strategy* strategy)              = 0;
+  // These methods do nothing by default. Concrete operation types can optionally implement logic
+  // specific to them
+  virtual void validate();
+  virtual void add_to_solver(ConstraintSolver& solver);
+  // Though these aren't pure virtual methods, concrete operation types must implement at least one
+  // of them and also add themselves to the switch statement in `needs_partitioning()` such that the
+  // function would return `true`/`false` if the operation implemented the
+  // `launch(Strategy*)`/`launch()` override.
+  virtual void launch();
+  virtual void launch(Strategy* strategy);
 
   [[nodiscard]] virtual Kind kind() const = 0;
   [[nodiscard]] virtual std::string to_string() const;
-  [[nodiscard]] virtual bool needs_flush() const = 0;
+  [[nodiscard]] virtual bool needs_flush() const;
   [[nodiscard]] virtual bool supports_replicated_write() const;
+  // When `is_internal()` returns `true` on an operation, the runtime skips validation and the flush
+  // check on the operation.
+  [[nodiscard]] bool is_internal() const;
+  [[nodiscard]] bool needs_partitioning() const;
 
   [[nodiscard]] const Variable* find_or_declare_partition(
     const InternalSharedPtr<LogicalStore>& store);

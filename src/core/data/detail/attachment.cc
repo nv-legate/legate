@@ -16,48 +16,76 @@
 
 #include "core/runtime/detail/runtime.h"
 
+#include <exception>
+#include <memory>
+#include <type_traits>
+
 namespace legate::detail {
 
-Legion::Future SingleAttachment::detach(bool unordered) const
+Attachment::~Attachment() noexcept
 {
-  LEGATE_ASSERT(allocation_);
-  LEGATE_ASSERT(physical_region_);
-  return Runtime::get_runtime()->detach(*physical_region_, !allocation_->read_only(), unordered);
-}
-
-void SingleAttachment::maybe_deallocate() noexcept
-{
-  if (!allocation_) {
+  if (has_started()) {
+    maybe_deallocate();
     return;
   }
-  allocation_->maybe_deallocate();
-  allocation_.reset();
-}
 
-// ==========================================================================================
+  try {
+    if (can_dealloc_.has_value() && can_dealloc_->exists()) {
+      // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
+      // this would be collected by the Legion runtime
+      // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
+      static_cast<void>(std::make_unique<Legion::Future>(*std::move(can_dealloc_)).release());
+    }
 
-// Leak is intentional
-// NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
-IndexAttachment::~IndexAttachment()
-{
-  maybe_deallocate();
-  // FIXME: Leak the ExternalResources handle if the runtime has already shut down, as
-  // there's no hope that this would be collected by the Legion runtime
-  if (!has_started() && external_resources_.exists()) {
-    static_cast<void>(std::make_unique<Legion::ExternalResources>(std::move(external_resources_))
-                        .release());  // NOLINT(bugprone-unused-return-value)
+    std::visit(  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+      [&](auto&& handle) {
+        if (!handle.exists()) {
+          return;
+        }
+        // FIXME: Leak the Legion handle if the runtime has already shut down, as there's no hope
+        // that this would be collected by the Legion runtime
+        static_cast<void>(
+          std::make_unique<std::decay_t<decltype(handle)>>(std::forward<decltype(handle)>(handle))
+            .release());
+      },  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+      handle_);
+  } catch (const std::exception& exn) {
+    LEGATE_ABORT(exn.what());
   }
 }
-// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
-Legion::Future IndexAttachment::detach(bool unordered) const
+void Attachment::detach(bool unordered)
 {
-  // Index attachments are always read-only, so no need to flush
-  return Runtime::get_runtime()->detach(external_resources_, false /*flush*/, unordered);
+  if (!exists()) {
+    return;
+  }
+
+  can_dealloc_.emplace(std::visit(
+    [&](auto&& handle) {
+      using T = std::decay_t<decltype(handle)>;
+      if constexpr (std::is_same_v<T, Legion::PhysicalRegion>) {
+        LEGATE_ASSERT(allocations_.size() == 1);
+        return Runtime::get_runtime()->detach(
+          handle, !allocations_.front()->read_only(), unordered);
+      }
+      if constexpr (std::is_same_v<T, Legion::ExternalResources>) {
+        return Runtime::get_runtime()->detach(handle, false /*flush*/, unordered);
+      }
+    },
+    handle_));
 }
 
-void IndexAttachment::maybe_deallocate() noexcept
+void Attachment::maybe_deallocate() noexcept
 {
+  if (!exists()) {
+    return;
+  }
+
+  if (can_dealloc_.has_value() && can_dealloc_->exists()) {
+    can_dealloc_->wait();
+    can_dealloc_.reset();
+  }
+
   for (auto&& allocation : allocations_) {
     allocation->maybe_deallocate();
   }

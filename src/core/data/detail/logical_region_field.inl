@@ -18,6 +18,44 @@
 
 namespace legate::detail {
 
+inline void LogicalRegionField::PhysicalState::set_physical_region(
+  Legion::PhysicalRegion physical_region)
+{
+  physical_region_ = std::move(physical_region);
+}
+
+inline void LogicalRegionField::PhysicalState::set_attachment(Attachment attachment)
+{
+  attachment_ = std::move(attachment);
+}
+
+inline void LogicalRegionField::PhysicalState::set_has_pending_detach(bool has_pending_detach)
+{
+  has_pending_detach_ = has_pending_detach;
+}
+
+inline void LogicalRegionField::PhysicalState::add_callback(std::function<void()> callback)
+{
+  callbacks_.push_back(std::move(callback));
+}
+
+inline bool LogicalRegionField::PhysicalState::has_attachment() const
+{
+  return attachment().exists();
+}
+
+inline const Legion::PhysicalRegion& LogicalRegionField::PhysicalState::physical_region() const
+{
+  return physical_region_;
+}
+
+inline const Attachment& LogicalRegionField::PhysicalState::attachment() const
+{
+  return attachment_;
+}
+
+// ==========================================================================================
+
 inline LogicalRegionField::LogicalRegionField(InternalSharedPtr<Shape> shape,
                                               std::uint32_t field_size,
                                               Legion::LogicalRegion lr,
@@ -27,7 +65,8 @@ inline LogicalRegionField::LogicalRegionField(InternalSharedPtr<Shape> shape,
     field_size_{field_size},
     lr_{std::move(lr)},
     fid_{fid},
-    parent_{std::move(parent)}
+    parent_{std::move(parent)},
+    physical_state_{make_internal_shared<PhysicalState>()}
 {
 }
 
@@ -40,11 +79,6 @@ inline const InternalSharedPtr<LogicalRegionField>& LogicalRegionField::parent()
   return parent_;
 }
 
-template <typename T>
-void LogicalRegionField::add_invalidation_callback(T&& callback)
-{
-  static_assert(std::is_nothrow_invocable_v<T>);
-  add_invalidation_callback_(std::forward<T>(callback));
-}
+inline void LogicalRegionField::mark_attached() { attached_ = true; }
 
 }  // namespace legate::detail

@@ -25,10 +25,7 @@ FieldManager::~FieldManager()
   // waiting on the detachments to finish.
   for (auto&& [_, queue] : ordered_free_fields_) {
     for (; !queue.empty(); queue.pop()) {
-      auto&& info = queue.front();
-      if (info.attachment) {
-        info.attachment->maybe_deallocate();
-      }
+      queue.front().state->deallocate_attachment();
     }
   }
 }
@@ -58,7 +55,7 @@ void FieldManager::free_field(FreeFieldInfo info, bool /*unordered*/)
     log_legate().debug() << "Field " << info.field_id << " on region " << info.region
                          << " freed in-order";
   }
-  Runtime::get_runtime()->discard_field(info.region, info.field_id);
+  Runtime::get_runtime()->issue_discard_field(info.region, info.field_id);
   if (info.shape->ready()) {
     auto& queue = ordered_free_fields_[OrderedQueueKey{info.shape->index_space(), info.field_size}];
     queue.emplace(std::move(info));
@@ -86,11 +83,7 @@ InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field_(
     return nullptr;
   }
   const auto& info = queue.front();
-  if (info.attachment) {
-    // Wait for any detachments remaining from the field's previous life.
-    info.can_dealloc.get_void_result(true /*silence_warnings*/);
-    info.attachment->maybe_deallocate();
-  }
+  info.state->deallocate_attachment();
   auto rf = make_internal_shared<LogicalRegionField>(shape, field_size, info.region, info.field_id);
   if (log_legate().want_debug()) {
     log_legate().debug() << "Field " << info.field_id << " on region " << info.region
@@ -120,14 +113,10 @@ ConsensusMatchingFieldManager::~ConsensusMatchingFieldManager()
   // We are shutting down, so just free all the buffer copies we've made to attach to, without
   // waiting on the detachments to finish.
   for (auto&& [_, info] : info_for_match_items_) {
-    if (info.attachment) {
-      info.attachment->maybe_deallocate();
-    }
+    info.state->deallocate_attachment();
   }
   for (auto&& info : unordered_free_fields_) {
-    if (info.attachment) {
-      info.attachment->maybe_deallocate();
-    }
+    info.state->deallocate_attachment();
   }
 }
 

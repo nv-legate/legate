@@ -97,9 +97,7 @@ inline bool LogicalStore::transformed() const { return !transform_->identity(); 
 
 inline std::uint64_t LogicalStore::id() const { return store_id_; }
 
-inline Storage* LogicalStore::get_storage() { return storage_.get(); }
-
-inline const Storage* LogicalStore::get_storage() const { return storage_.get(); }
+inline const InternalSharedPtr<Storage>& LogicalStore::get_storage() const { return storage_; }
 
 inline const InternalSharedPtr<LogicalRegionField>& LogicalStore::get_region_field() const
 {
@@ -149,6 +147,21 @@ inline const InternalSharedPtr<StoragePartition>& LogicalStorePartition::storage
 inline const InternalSharedPtr<LogicalStore>& LogicalStorePartition::store() const
 {
   return store_;
+}
+
+inline InternalSharedPtr<StoragePartition> create_storage_partition(
+  const InternalSharedPtr<Storage>& self,
+  InternalSharedPtr<Partition> partition,
+  std::optional<bool> complete)
+{
+  return self->create_partition(self, std::move(partition), std::move(complete));
+}
+
+inline InternalSharedPtr<Storage> slice_storage(const InternalSharedPtr<Storage>& self,
+                                                tuple<std::uint64_t> tile_shape,
+                                                const tuple<std::uint64_t>& offsets)
+{
+  return self->slice(self, std::move(tile_shape), offsets);
 }
 
 inline InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<LogicalStore>& self,

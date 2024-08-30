@@ -12,12 +12,16 @@
 
 #pragma once
 
+#include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/scalar.h"
 #include "core/data/detail/shape.h"
 #include "core/data/external_allocation.h"
 #include "core/data/logical_store.h"
+#include "core/mapping/detail/instance_manager.h"
+#include "core/mapping/detail/mapping.h"
 #include "core/mapping/machine.h"
 #include "core/operation/detail/operation.h"
+#include "core/operation/detail/timing.h"
 #include "core/runtime/detail/communicator_manager.h"
 #include "core/runtime/detail/consensus_match_result.h"
 #include "core/runtime/detail/field_manager.h"
@@ -61,7 +65,6 @@ class AutoTask;
 class BaseLogicalArray;
 class Library;
 class LogicalArray;
-class LogicalRegionField;
 class ManualTask;
 class StructLogicalArray;
 
@@ -163,7 +166,7 @@ class Runtime {
     const InternalSharedPtr<Shape>& shape,
     InternalSharedPtr<Type> type,
     InternalSharedPtr<ExternalAllocation> allocation,
-    const mapping::detail::DimOrdering* ordering);
+    InternalSharedPtr<mapping::detail::DimOrdering> ordering);
   using IndexAttachResult =
     std::pair<InternalSharedPtr<LogicalStore>, InternalSharedPtr<LogicalStorePartition>>;
   [[nodiscard]] IndexAttachResult create_store(
@@ -171,7 +174,7 @@ class Runtime {
     const tuple<std::uint64_t>& tile_shape,
     InternalSharedPtr<Type> type,
     const std::vector<std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>>& allocations,
-    const mapping::detail::DimOrdering* ordering);
+    InternalSharedPtr<mapping::detail::DimOrdering> ordering);
 
  private:
   static void check_dimensionality_(std::uint32_t dim);
@@ -209,7 +212,7 @@ class Runtime {
   [[nodiscard]] std::uint32_t field_reuse_freq() const;
   [[nodiscard]] std::size_t field_reuse_size() const;
   [[nodiscard]] bool consensus_match_required() const;
-  void progress_unordered_operations() const;
+  void progress_unordered_operations();
 
   [[nodiscard]] RegionManager* find_or_create_region_manager(const Legion::IndexSpace& index_space);
   [[nodiscard]] FieldManager* field_manager();
@@ -258,7 +261,7 @@ class Runtime {
   [[nodiscard]] Legion::FieldID allocate_field(const Legion::FieldSpace& field_space,
                                                Legion::FieldID field_id,
                                                std::size_t field_size);
-  [[nodiscard]] Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space) const;
+  [[nodiscard]] Legion::Domain get_index_space_domain(const Legion::IndexSpace& index_space);
   [[nodiscard]] Legion::FutureMap delinearize_future_map(const Legion::FutureMap& future_map,
                                                          const Domain& new_domain);
   [[nodiscard]] Legion::FutureMap reshape_future_map(const Legion::FutureMap& future_map,
@@ -291,13 +294,16 @@ class Runtime {
   [[nodiscard]] Legion::Future reduce_future_map(
     const Legion::FutureMap& future_map,
     GlobalRedopID reduction_op,
-    const Legion::Future& init_value = Legion::Future{}) const;
-  [[nodiscard]] Legion::Future reduce_exception_future_map(
-    const Legion::FutureMap& future_map) const;
+    const Legion::Future& init_value = Legion::Future{});
+  [[nodiscard]] Legion::Future reduce_exception_future_map(const Legion::FutureMap& future_map);
 
+  void issue_unmap_and_detach(InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state,
+                              bool unordered);
+  void issue_discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
   void discard_field(const Legion::LogicalRegion& region, Legion::FieldID field_id);
   void issue_mapping_fence();
   void issue_execution_fence(bool block = false);
+  [[nodiscard]] InternalSharedPtr<LogicalStore> get_timestamp(Timing::Precision precision);
   // NOTE: If the type T contains any padding bits, make sure the entries *in the vector* are
   // deterministically zero'd out on all shards, e.g. by doing the initialization as follows:
   //   struct Fred { bool flag; int number; };
@@ -348,6 +354,9 @@ class Runtime {
   [[nodiscard]] const Library* core_library() const;
 
   [[nodiscard]] CUstream_st* get_cuda_stream() const;
+
+  [[nodiscard]] Legion::Runtime* get_legion_runtime();
+  [[nodiscard]] Legion::Context get_legion_context();
 
  private:
   static void initialize_core_library_callback_(

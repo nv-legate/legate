@@ -40,7 +40,7 @@ class StoragePartition;
 class PhysicalStore;
 class Variable;
 
-class Storage : public legate::EnableSharedFromThis<Storage> {
+class Storage {
  public:
   enum class Kind : std::uint8_t {
     REGION_FIELD,
@@ -48,7 +48,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
     FUTURE_MAP,
   };
 
-  // Create a RegionField-backed or a Future-backed storage. Initialized lazily.
+  // Create a RegionField-backed or a Future-backed storage.
   Storage(InternalSharedPtr<Shape> shape,
           InternalSharedPtr<Type> type,
           bool optimize_scalar,
@@ -58,7 +58,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
           InternalSharedPtr<Type> type,
           Legion::Future future,
           std::string_view provenance);
-  // Create a RegionField-backed sub-storage. Initialized lazily.
+  // Create a RegionField-backed sub-storage.
   Storage(tuple<std::uint64_t> extents,
           InternalSharedPtr<Type> type,
           InternalSharedPtr<StoragePartition> parent,
@@ -85,12 +85,16 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   [[nodiscard]] std::string_view provenance() const;
   [[nodiscard]] bool is_mapped() const;
 
-  [[nodiscard]] InternalSharedPtr<Storage> slice(tuple<std::uint64_t> tile_shape,
+  [[nodiscard]] InternalSharedPtr<Storage> slice(const InternalSharedPtr<Storage>& self,
+                                                 tuple<std::uint64_t> tile_shape,
                                                  const tuple<std::uint64_t>& offsets);
-  [[nodiscard]] InternalSharedPtr<const Storage> get_root() const;
-  [[nodiscard]] InternalSharedPtr<Storage> get_root();
+  [[nodiscard]] const Storage* get_root() const;
+  [[nodiscard]] Storage* get_root();
+  [[nodiscard]] InternalSharedPtr<const Storage> get_root(
+    const InternalSharedPtr<const Storage>& self) const;
+  [[nodiscard]] InternalSharedPtr<Storage> get_root(const InternalSharedPtr<Storage>& self);
 
-  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const;
+  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const noexcept;
   [[nodiscard]] Legion::Future get_future() const;
   [[nodiscard]] Legion::FutureMap get_future_map() const;
   [[nodiscard]] std::variant<Legion::Future, Legion::FutureMap> get_future_or_future_map(
@@ -102,6 +106,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
 
   [[nodiscard]] RegionField map();
   void allow_out_of_order_destruction();
+  void free_early() noexcept;
 
   [[nodiscard]] Restrictions compute_restrictions() const;
   [[nodiscard]] Partition* find_key_partition(const mapping::detail::Machine& machine,
@@ -111,7 +116,9 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   void reset_key_partition() noexcept;
 
   [[nodiscard]] InternalSharedPtr<StoragePartition> create_partition(
-    InternalSharedPtr<Partition> partition, std::optional<bool> complete = std::nullopt);
+    const InternalSharedPtr<Storage>& self,
+    InternalSharedPtr<Partition> partition,
+    std::optional<bool> complete = std::nullopt);
 
   [[nodiscard]] std::string to_string() const;
 
@@ -123,11 +130,7 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   InternalSharedPtr<Shape> shape_{};
   InternalSharedPtr<Type> type_{};
   Kind kind_{Kind::REGION_FIELD};
-
-  std::size_t scalar_offset_{};
-  mutable InternalSharedPtr<LogicalRegionField> region_field_{};
-  std::optional<Legion::Future> future_{};
-  std::optional<Legion::FutureMap> future_map_{};
+  std::string_view provenance_{};  // only relevant on the root Storage
 
   std::int32_t level_{};
   InternalSharedPtr<StoragePartition> parent_{};
@@ -135,7 +138,11 @@ class Storage : public legate::EnableSharedFromThis<Storage> {
   // Unlike offsets in a tiling, these offsets can never be negative, as a slicing always selects a
   // sub-rectangle of its parent
   tuple<std::uint64_t> offsets_{};
-  std::string_view provenance_{};  // only relevant on the root Storage
+
+  std::size_t scalar_offset_{};
+  InternalSharedPtr<LogicalRegionField> region_field_{};
+  std::optional<Legion::Future> future_{};
+  std::optional<Legion::FutureMap> future_map_{};
 
   std::uint32_t num_pieces_{};
   std::unique_ptr<Partition> key_partition_{};
@@ -148,8 +155,11 @@ class StoragePartition : public legate::EnableSharedFromThis<StoragePartition> {
                    bool complete);
 
   [[nodiscard]] const InternalSharedPtr<Partition>& partition() const;
-  [[nodiscard]] InternalSharedPtr<const Storage> get_root() const;
-  [[nodiscard]] InternalSharedPtr<Storage> get_root();
+  [[nodiscard]] const Storage* get_root() const;
+  [[nodiscard]] Storage* get_root();
+  [[nodiscard]] InternalSharedPtr<const Storage> get_root(
+    const InternalSharedPtr<const StoragePartition>&) const;
+  [[nodiscard]] InternalSharedPtr<Storage> get_root(const InternalSharedPtr<StoragePartition>&);
   [[nodiscard]] InternalSharedPtr<Storage> get_child_storage(tuple<std::uint64_t> color);
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child_data(
     const tuple<std::uint64_t>& color);
@@ -195,8 +205,7 @@ class LogicalStore {
   [[nodiscard]] bool transformed() const;
   [[nodiscard]] std::uint64_t id() const;
 
-  [[nodiscard]] Storage* get_storage();
-  [[nodiscard]] const Storage* get_storage() const;
+  [[nodiscard]] const InternalSharedPtr<Storage>& get_storage() const;
   [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& get_region_field() const;
   [[nodiscard]] Legion::Future get_future() const;
   [[nodiscard]] Legion::FutureMap get_future_map() const;
@@ -354,6 +363,15 @@ class LogicalStorePartition {
   InternalSharedPtr<StoragePartition> storage_partition_{};
   InternalSharedPtr<LogicalStore> store_{};
 };
+
+[[nodiscard]] InternalSharedPtr<StoragePartition> create_storage_partition(
+  const InternalSharedPtr<Storage>& self,
+  InternalSharedPtr<Partition> partition,
+  std::optional<bool> complete);
+
+[[nodiscard]] InternalSharedPtr<Storage> slice_storage(const InternalSharedPtr<Storage>& self,
+                                                       tuple<std::uint64_t> tile_shape,
+                                                       const tuple<std::uint64_t>& offsets);
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(
   const InternalSharedPtr<LogicalStore>& self, std::int32_t dim, Slice sl);

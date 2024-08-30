@@ -27,20 +27,32 @@ namespace {
 [[nodiscard]] ZStringView OP_NAME(Operation::Kind kind)
 {
   switch (kind) {
+    case Operation::Kind::ATTACH: return "Attach";
     case Operation::Kind::AUTO_TASK: return "AutoTask";
     case Operation::Kind::COPY: return "Copy";
+    case Operation::Kind::DISCARD: return "Discard";
+    case Operation::Kind::EXECUTION_FENCE: return "ExecutionFence";
     case Operation::Kind::FILL: return "Fill";
     case Operation::Kind::GATHER: return "Gather";
+    case Operation::Kind::INDEX_ATTACH: return "IndexAttach";
     case Operation::Kind::MANUAL_TASK: return "ManualTask";
+    case Operation::Kind::MAPPING_FENCE: return "MappingFence";
     case Operation::Kind::REDUCE: return "Reduce";
     case Operation::Kind::SCATTER: return "Scatter";
     case Operation::Kind::SCATTER_GATHER: return "ScatterGather";
+    case Operation::Kind::TIMING: return "Timing";
+    case Operation::Kind::UNMAP_AND_DETACH: return "UnmapAndDetach";
   }
 
   throw std::invalid_argument{"invalid operation kind"};
 }
 
 }  // namespace
+
+Operation::Operation(std::uint64_t unique_id)
+  : unique_id_{unique_id}, provenance_{Runtime::get_runtime()->get_provenance().to_string()}
+{
+}
 
 Operation::Operation(std::uint64_t unique_id,
                      std::int32_t priority,
@@ -52,6 +64,62 @@ Operation::Operation(std::uint64_t unique_id,
 {
 }
 
+bool Operation::is_internal() const
+{
+  switch (kind()) {
+    case Kind::ATTACH: [[fallthrough]];
+    case Kind::DISCARD: [[fallthrough]];
+    case Kind::EXECUTION_FENCE: [[fallthrough]];
+    case Kind::INDEX_ATTACH: [[fallthrough]];
+    case Kind::MAPPING_FENCE: [[fallthrough]];
+    case Kind::TIMING: [[fallthrough]];
+    case Kind::UNMAP_AND_DETACH: {
+      return true;
+    }
+
+    case Kind::AUTO_TASK: [[fallthrough]];
+    case Kind::COPY: [[fallthrough]];
+    case Kind::FILL: [[fallthrough]];
+    case Kind::GATHER: [[fallthrough]];
+    case Kind::MANUAL_TASK: [[fallthrough]];
+    case Kind::REDUCE: [[fallthrough]];
+    case Kind::SCATTER: [[fallthrough]];
+    case Kind::SCATTER_GATHER: {
+      return false;
+    }
+  }
+
+  throw std::invalid_argument{"invalid operation kind"};
+}
+
+bool Operation::needs_partitioning() const
+{
+  switch (kind()) {
+    case Kind::AUTO_TASK: [[fallthrough]];
+    case Kind::COPY: [[fallthrough]];
+    case Kind::FILL: [[fallthrough]];
+    case Kind::GATHER: [[fallthrough]];
+    case Kind::REDUCE: [[fallthrough]];
+    case Kind::SCATTER: [[fallthrough]];
+    case Kind::SCATTER_GATHER: {
+      return true;
+    }
+
+    case Kind::ATTACH: [[fallthrough]];
+    case Kind::DISCARD: [[fallthrough]];
+    case Kind::EXECUTION_FENCE: [[fallthrough]];
+    case Kind::INDEX_ATTACH: [[fallthrough]];
+    case Kind::MANUAL_TASK: [[fallthrough]];
+    case Kind::MAPPING_FENCE: [[fallthrough]];
+    case Kind::TIMING: [[fallthrough]];
+    case Kind::UNMAP_AND_DETACH: {
+      return false;
+    }
+  }
+
+  throw std::invalid_argument{"invalid operation kind"};
+}
+
 std::string Operation::to_string() const
 {
   auto result = fmt::format("{}:{}", kind(), unique_id_);
@@ -60,6 +128,12 @@ std::string Operation::to_string() const
     fmt::format_to(std::back_inserter(result), "[{}]", provenance());
   }
   return result;
+}
+
+bool Operation::needs_flush() const
+{
+  LEGATE_ABORT("This method should have been overriden");
+  return false;
 }
 
 const Variable* Operation::find_or_declare_partition(const InternalSharedPtr<LogicalStore>& store)

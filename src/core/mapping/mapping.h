@@ -198,7 +198,7 @@ class DimOrdering {
   bool operator==(const DimOrdering&) const;
   bool operator!=(const DimOrdering&) const;
 
-  [[nodiscard]] const detail::DimOrdering* impl() const noexcept;
+  [[nodiscard]] const SharedPtr<detail::DimOrdering>& impl() const noexcept;
 
   DimOrdering()                                  = default;
   DimOrdering(const DimOrdering&)                = default;

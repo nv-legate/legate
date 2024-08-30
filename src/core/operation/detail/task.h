@@ -36,7 +36,6 @@ class CommunicatorFactory;
 class ConstraintSolver;
 class Library;
 class Strategy;
-class Runtime;
 
 class Task : public Operation {
  protected:
@@ -182,12 +181,9 @@ class ManualTask final : public Task {
 
  public:
   void validate() override;
-  void launch(Strategy* /*strategy*/) override;
-  void launch();
+  void launch() override;
 
   [[nodiscard]] Kind kind() const override;
-
-  void add_to_solver(ConstraintSolver& solver) override;
 
  private:
   std::unique_ptr<Strategy> strategy_{};

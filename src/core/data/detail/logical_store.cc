@@ -50,8 +50,8 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
     unbound_{shape->unbound()},
     shape_{std::move(shape)},
     type_{std::move(type)},
-    offsets_{legate::full(dim(), uint64_t{0})},
-    provenance_{std::move(provenance)}
+    provenance_{std::move(provenance)},
+    offsets_{legate::full(dim(), uint64_t{0})}
 {
   // We should not blindly check the shape volume as it would flush the scheduling window
   if (optimize_scalar) {
@@ -61,6 +61,13 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
       kind_ = Kind::FUTURE;
     }
   }
+
+  if (kind_ == Kind::REGION_FIELD && !unbound()) {
+    auto* runtime = Runtime::get_runtime();
+    region_field_ = runtime->create_region_field(this->shape(), this->type()->size());
+    runtime->attach_alloc_info(get_region_field(), this->provenance());
+  }
+
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
@@ -74,9 +81,9 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
     shape_{std::move(shape)},
     type_{std::move(type)},
     kind_{Kind::FUTURE},
-    future_{std::move(future)},
+    provenance_{std::move(provenance)},
     offsets_{legate::full(dim(), uint64_t{0})},
-    provenance_{std::move(provenance)}
+    future_{std::move(future)}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -94,7 +101,8 @@ Storage::Storage(tuple<std::uint64_t> extents,
     level_{parent->level() + 1},
     parent_{std::move(parent)},
     color_{std::move(color)},
-    offsets_{std::move(offsets)}
+    offsets_{std::move(offsets)},
+    region_field_{parent_->get_child_data(color_)}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -165,14 +173,17 @@ bool Storage::is_mapped() const
   return !unbound() && kind() == Kind::REGION_FIELD && get_region_field()->is_mapped();
 }
 
-InternalSharedPtr<Storage> Storage::slice(tuple<std::uint64_t> tile_shape,
+InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self,
+                                          tuple<std::uint64_t> tile_shape,
                                           const tuple<std::uint64_t>& offsets)
 {
-  if (Kind::FUTURE == kind_) {
-    return shared_from_this();
+  LEGATE_ASSERT(self.get() == this);
+
+  if (Kind::FUTURE == kind()) {
+    return self;
   }
 
-  const auto root   = get_root();
+  const auto root   = get_root(self);
   const auto& shape = root->extents();
   const auto can_tile_completely =
     (shape % tile_shape).sum() == 0 && (offsets % tile_shape).sum() == 0 &&
@@ -192,36 +203,31 @@ InternalSharedPtr<Storage> Storage::slice(tuple<std::uint64_t> tile_shape,
 
   auto tiling =
     create_tiling(std::move(tile_shape), std::move(color_shape), std::move(signed_offsets));
-  auto storage_partition = root->create_partition(std::move(tiling), can_tile_completely);
+  auto storage_partition = root->create_partition(root, std::move(tiling), can_tile_completely);
   return storage_partition->get_child_storage(std::move(color));
 }
 
-InternalSharedPtr<const Storage> Storage::get_root() const
+const Storage* Storage::get_root() const { return parent_ ? parent_->get_root() : this; }
+
+Storage* Storage::get_root() { return parent_ ? parent_->get_root() : this; }
+
+InternalSharedPtr<const Storage> Storage::get_root(
+  const InternalSharedPtr<const Storage>& self) const
 {
-  return parent_ ? parent_->get_root() : shared_from_this();
+  LEGATE_ASSERT(self.get() == this);
+  return parent_ ? parent_->get_root(parent_) : self;
 }
 
-InternalSharedPtr<Storage> Storage::get_root()
+InternalSharedPtr<Storage> Storage::get_root(const InternalSharedPtr<Storage>& self)
 {
-  return parent_ ? parent_->get_root() : shared_from_this();
+  LEGATE_ASSERT(self.get() == this);
+  return parent_ ? parent_->get_root(parent_) : self;
 }
 
-const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field() const
+const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field() const noexcept
 {
   LEGATE_CHECK(kind_ == Kind::REGION_FIELD);
-  if (region_field_) {
-    return region_field_;
-  }
-
-  if (nullptr == parent_) {
-    region_field_ = Runtime::get_runtime()->create_region_field(shape_, type_->size());
-    if (destroyed_out_of_order_) {
-      region_field_->allow_out_of_order_destruction();
-    }
-    Runtime::get_runtime()->attach_alloc_info(region_field_, provenance());
-  } else {
-    region_field_ = parent_->get_child_data(color_);
-  }
+  LEGATE_CHECK(region_field_);
   return region_field_;
 }
 
@@ -346,6 +352,14 @@ void Storage::allow_out_of_order_destruction()
   }
 }
 
+void Storage::free_early() noexcept
+{
+  if (kind_ != Kind::REGION_FIELD || unbound()) {
+    return;
+  }
+  get_region_field()->release_region_field();
+}
+
 Restrictions Storage::compute_restrictions() const
 {
   return legate::full<Restriction>(dim(), Restriction::ALLOW);
@@ -376,13 +390,15 @@ void Storage::set_key_partition(const mapping::detail::Machine& machine,
 void Storage::reset_key_partition() noexcept { key_partition_.reset(); }
 
 InternalSharedPtr<StoragePartition> Storage::create_partition(
-  InternalSharedPtr<Partition> partition, std::optional<bool> complete)
+  const InternalSharedPtr<Storage>& self,
+  InternalSharedPtr<Partition> partition,
+  std::optional<bool> complete)
 {
+  LEGATE_ASSERT(self.get() == this);
   if (!complete.has_value()) {
     complete = partition->is_complete_for(this);
   }
-  return make_internal_shared<StoragePartition>(
-    shared_from_this(), std::move(partition), complete.value());
+  return make_internal_shared<StoragePartition>(self, std::move(partition), complete.value());
 }
 
 std::string Storage::to_string() const
@@ -408,9 +424,20 @@ std::string Storage::to_string() const
 // legate::detail::StoragePartition
 ////////////////////////////////////////////////////
 
-InternalSharedPtr<const Storage> StoragePartition::get_root() const { return parent_->get_root(); }
+const Storage* StoragePartition::get_root() const { return parent_->get_root(); }
 
-InternalSharedPtr<Storage> StoragePartition::get_root() { return parent_->get_root(); }
+Storage* StoragePartition::get_root() { return parent_->get_root(); }
+
+InternalSharedPtr<const Storage> StoragePartition::get_root(
+  const InternalSharedPtr<const StoragePartition>&) const
+{
+  return parent_->get_root(parent_);
+}
+
+InternalSharedPtr<Storage> StoragePartition::get_root(const InternalSharedPtr<StoragePartition>&)
+{
+  return parent_->get_root(parent_);
+}
 
 InternalSharedPtr<Storage> StoragePartition::get_child_storage(tuple<std::uint64_t> color)
 {
@@ -461,7 +488,7 @@ bool StoragePartition::is_disjoint_for(const Domain& launch_domain) const
 
 namespace {
 
-void assert_fixed_storage_size(const Storage* storage)
+void assert_fixed_storage_size(const InternalSharedPtr<Storage>& storage)
 {
   if (storage->type()->variable_size()) {
     throw std::invalid_argument{
@@ -505,6 +532,7 @@ LogicalStore::LogicalStore(tuple<std::uint64_t> extents,
   }
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField> region_field)
 {
   LEGATE_ASSERT(!has_scalar_storage());
@@ -514,12 +542,14 @@ void LogicalStore::set_region_field(InternalSharedPtr<LogicalRegionField> region
   get_storage()->set_region_field(std::move(region_field));
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::set_future(Legion::Future future, std::size_t scalar_offset)
 {
   LEGATE_ASSERT(has_scalar_storage());
   get_storage()->set_future(std::move(future), scalar_offset);
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset)
 {
   LEGATE_ASSERT(has_scalar_storage());
@@ -555,8 +585,9 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
   auto new_extents = old_extents.remove(d);
   auto transform   = stack(transform_, std::make_unique<Project>(d, index));
   auto substorage =
-    volume() == 0 ? storage_
-                  : storage_->slice(
+    volume() == 0
+      ? storage_
+      : slice_storage(storage_,
                       transform->invert_extents(new_extents),
                       transform->invert_point(legate::full<std::uint64_t>(new_extents.size(), 0)));
   return make_internal_shared<LogicalStore>(
@@ -612,8 +643,9 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
   auto substorage =
     volume() == 0
       ? storage_
-      : storage_->slice(transform->invert_extents(exts),
-                        transform->invert_point(legate::full<std::uint64_t>(exts.size(), 0)));
+      : slice_storage(storage_,
+                      transform->invert_extents(exts),
+                      transform->invert_point(legate::full<std::uint64_t>(exts.size(), 0)));
   return make_internal_shared<LogicalStore>(
     std::move(exts), std::move(substorage), std::move(transform));
 }
@@ -703,6 +735,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(bool ignore_fu
   if (unbound()) {
     throw std::invalid_argument{"Unbound store cannot be inlined mapped"};
   }
+
   // If there's already a physical store for this logical store, just return the cached one.
   // Any operations using this logical store will immediately flush the scheduling window.
   if (mapped_) {
@@ -713,7 +746,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(bool ignore_fu
   // so we need to make sure all outstanding operations are launched
   Runtime::get_runtime()->flush_scheduling_window();
 
-  auto* storage = get_storage();
+  auto&& storage = get_storage();
   if (storage->kind() == Storage::Kind::FUTURE ||
       (storage->kind() == Storage::Kind::FUTURE_MAP && storage->replicated())) {
     // TODO(wonchanl): future wrappers from inline mappings are read-only for now
@@ -764,6 +797,7 @@ void LogicalStore::detach()
   get_region_field()->detach();
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::allow_out_of_order_destruction()
 {
   if (Runtime::get_runtime()->consensus_match_required()) {
@@ -909,8 +943,8 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
   if (unbound()) {
     throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
   }
-  auto storage_partition =
-    get_storage()->create_partition(transform_->invert(partition.get()), std::move(complete));
+  auto storage_partition = create_storage_partition(
+    get_storage(), transform_->invert(partition.get()), std::move(complete));
   return make_internal_shared<LogicalStorePartition>(
     std::move(partition), std::move(storage_partition), self);
 }

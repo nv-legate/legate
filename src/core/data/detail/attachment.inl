@@ -16,21 +16,20 @@
 
 namespace legate::detail {
 
-inline SingleAttachment::SingleAttachment(Legion::PhysicalRegion* physical_region,
-                                          InternalSharedPtr<ExternalAllocation> allocation)
-  : physical_region_{physical_region}, allocation_{std::move(allocation)}
+inline Attachment::Attachment(Legion::PhysicalRegion physical_region,
+                              InternalSharedPtr<ExternalAllocation> allocation)
+  : handle_{std::move(physical_region)}, allocations_{{std::move(allocation)}}
 {
 }
-
-inline SingleAttachment::~SingleAttachment() { maybe_deallocate(); }
 
 // ==========================================================================================
 
-inline IndexAttachment::IndexAttachment(
-  Legion::ExternalResources external_resources,
-  std::vector<InternalSharedPtr<ExternalAllocation>> allocations)
-  : external_resources_{std::move(external_resources)}, allocations_{std::move(allocations)}
+inline Attachment::Attachment(Legion::ExternalResources external_resources,
+                              std::vector<InternalSharedPtr<ExternalAllocation>> allocations)
+  : handle_{std::move(external_resources)}, allocations_{std::move(allocations)}
 {
 }
+
+inline bool Attachment::exists() const noexcept { return !allocations_.empty(); }
 
 }  // namespace legate::detail

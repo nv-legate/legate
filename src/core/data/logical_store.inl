@@ -16,11 +16,6 @@
 
 namespace legate {
 
-inline LogicalStore::LogicalStore(InternalSharedPtr<detail::LogicalStore> impl)
-  : impl_{std::move(impl)}
-{
-}
-
 inline const SharedPtr<detail::LogicalStore>& LogicalStore::impl() const { return impl_; }
 
 inline const tuple<std::uint64_t>& LogicalStore::extents() const { return shape().extents(); }

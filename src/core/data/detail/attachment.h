@@ -18,45 +18,38 @@
 #include "legion.h"
 
 #include <memory>
+#include <optional>
+#include <variant>
 #include <vector>
 
 namespace legate::detail {
 
 class Attachment {
  public:
-  Attachment()                                                      = default;
-  virtual ~Attachment()                                             = default;
-  Attachment(const Attachment&)                                     = delete;
-  Attachment& operator=(const Attachment&)                          = delete;
-  [[nodiscard]] virtual Legion::Future detach(bool unordered) const = 0;
-  virtual void maybe_deallocate() noexcept                          = 0;
-};
+  Attachment() = default;
+  // Single attach case
+  Attachment(Legion::PhysicalRegion physical_region,
+             InternalSharedPtr<ExternalAllocation> allocation);
+  // Index attach case
+  Attachment(Legion::ExternalResources external_resources,
+             std::vector<InternalSharedPtr<ExternalAllocation>> allocations);
 
-class SingleAttachment final : public Attachment {
- public:
-  SingleAttachment(Legion::PhysicalRegion* physical_region,
-                   InternalSharedPtr<ExternalAllocation> allocation);
-  ~SingleAttachment() final;
-  [[nodiscard]] Legion::Future detach(bool unordered) const override;
-  void maybe_deallocate() noexcept override;
+  ~Attachment() noexcept;
+  Attachment(const Attachment&)            = delete;
+  Attachment& operator=(const Attachment&) = delete;
+  Attachment(Attachment&&)                 = default;
+  Attachment& operator=(Attachment&&)      = default;
+  void detach(bool unordered);
+  // This function block-waits until the outstanding detach operation is finished. This function
+  // however does not flush the scheduling window and it's the caller's responsibility to make sure
+  // the deferred detach operation for this attachment is scheduled by calling
+  // `Runtime::flush_scheduling_window`.
+  void maybe_deallocate() noexcept;
+  [[nodiscard]] bool exists() const noexcept;
 
- private:
-  // This physical region is owned by the logical region field embedding this attachment
-  Legion::PhysicalRegion* physical_region_{};
-  InternalSharedPtr<ExternalAllocation> allocation_{};
-};
-
-class IndexAttachment final : public Attachment {
- public:
-  IndexAttachment(Legion::ExternalResources external_resources,
-                  std::vector<InternalSharedPtr<ExternalAllocation>> allocations);
-  ~IndexAttachment() final;
-  [[nodiscard]] Legion::Future detach(bool unordered) const override;
-  void maybe_deallocate() noexcept override;
-
- private:
-  // Unlike the single attachment, the index attachment owns this ExternalResources object
-  Legion::ExternalResources external_resources_{};
+ protected:
+  std::optional<Legion::Future> can_dealloc_{};
+  std::variant<Legion::PhysicalRegion, Legion::ExternalResources> handle_{};
   std::vector<InternalSharedPtr<ExternalAllocation>> allocations_{};
 };
 

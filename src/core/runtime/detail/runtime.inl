@@ -32,6 +32,10 @@ inline void Runtime::register_shutdown_callback(ShutdownCallback callback)
 
 inline const Library* Runtime::core_library() const { return core_library_; }
 
+inline Legion::Runtime* Runtime::get_legion_runtime() { return legion_runtime_; }
+
+inline Legion::Context Runtime::get_legion_context() { return legion_context_; }
+
 inline std::uint64_t Runtime::current_op_id_() const { return cur_op_id_; }
 
 inline void Runtime::increment_op_id_() { ++cur_op_id_; }

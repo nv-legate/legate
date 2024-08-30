@@ -17,6 +17,14 @@
 
 namespace legate {
 
+LogicalStore::LogicalStore(InternalSharedPtr<detail::LogicalStore> impl)
+  : impl_{std::move(impl)}, storage_{[&] {
+      auto&& storage = this->impl()->get_storage();
+      return storage->get_root(storage).as_user_ptr();
+    }()}
+{
+}
+
 std::uint32_t LogicalStore::dim() const { return impl_->dim(); }
 
 Type LogicalStore::type() const { return Type{impl_->type()}; }
@@ -81,7 +89,12 @@ std::string LogicalStore::to_string() const { return impl_->to_string(); }
 
 void LogicalStore::detach() { impl_->detach(); }
 
-LogicalStore::~LogicalStore() noexcept = default;
+LogicalStore::~LogicalStore() noexcept
+{
+  if (impl() && impl()->get_storage().user_ref_count() == 1) {
+    storage_->free_early();
+  }
+}
 
 LogicalStore LogicalStorePartition::store() const { return LogicalStore{impl_->store()}; }
 

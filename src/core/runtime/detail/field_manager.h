@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/data/detail/attachment.h"
+#include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/shape.h"
 #include "core/runtime/detail/consensus_match_result.h"
 #include "core/utilities/detail/hash.h"
@@ -30,10 +30,6 @@
 
 namespace legate::detail {
 
-class LogicalRegionField;
-class RegionManager;
-class Runtime;
-
 class FreeFieldInfo {
  public:
   FreeFieldInfo() = default;
@@ -41,15 +37,13 @@ class FreeFieldInfo {
                 std::uint32_t field_size_,
                 Legion::LogicalRegion region,
                 Legion::FieldID field_id,
-                Legion::Future can_dealloc,
-                std::unique_ptr<Attachment> attachment);
+                InternalSharedPtr<LogicalRegionField::PhysicalState> state);
 
   InternalSharedPtr<Shape> shape{};
   std::uint32_t field_size{};
   Legion::LogicalRegion region{};
   Legion::FieldID field_id{};
-  Legion::Future can_dealloc{};
-  std::unique_ptr<Attachment> attachment{};
+  InternalSharedPtr<LogicalRegionField::PhysicalState> state{};
 };
 
 class FieldManager {

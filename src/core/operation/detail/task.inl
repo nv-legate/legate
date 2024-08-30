@@ -80,13 +80,10 @@ inline Operation::Kind AutoTask::kind() const { return Kind::AUTO_TASK; }
 
 // ==========================================================================================
 
+// TODO(wonchanl): Needs to validate interfering store accesses in this method
 inline void ManualTask::validate() {}
 
-inline void ManualTask::launch(Strategy* /*strategy*/) { launch(); }
-
 inline void ManualTask::launch() { launch_task_(strategy_.get()); }
-
-inline void ManualTask::add_to_solver(ConstraintSolver& /*solver*/) {}
 
 inline Operation::Kind ManualTask::kind() const { return Kind::MANUAL_TASK; }
 

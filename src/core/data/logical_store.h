@@ -33,6 +33,7 @@ namespace legate::detail {
 class LogicalArray;
 class LogicalStore;
 class LogicalStorePartition;
+class Storage;
 }  // namespace legate::detail
 
 namespace legate {
@@ -413,6 +414,7 @@ class LogicalStore {
 
  private:
   SharedPtr<detail::LogicalStore> impl_{};
+  SharedPtr<detail::Storage> storage_{};
 };
 
 class LogicalStorePartition {

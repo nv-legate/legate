@@ -31,8 +31,9 @@
 #define LEGATE_MIN_OMP_CHUNK_DEFAULT 131072
 #define LEGATE_MIN_OMP_CHUNK_TEST 2
 
-#define LEGATE_WINDOW_SIZE_DEFAULT 64
-#define LEGATE_WINDOW_SIZE_TEST 64
+// Have a reasonably big window so internal ops wouldn't make the window flush undesirably frequent
+#define LEGATE_WINDOW_SIZE_DEFAULT 1024
+#define LEGATE_WINDOW_SIZE_TEST 1024
 
 #define LEGATE_FIELD_REUSE_FRAC_DEFAULT 256
 #define LEGATE_FIELD_REUSE_FRAC_TEST 1

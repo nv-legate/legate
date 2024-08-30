@@ -18,6 +18,19 @@ namespace legate::detail {
 
 inline bool Operation::StoreArg::needs_flush() const { return store->needs_flush(); }
 
+// ==========================================================================================
+
+inline void Operation::validate() {}
+
+inline void Operation::add_to_solver(ConstraintSolver& /*solver*/) {}
+
+inline void Operation::launch() { LEGATE_ABORT("This method should have been overriden"); }
+
+inline void Operation::launch(Strategy* /*strategy*/)
+{
+  LEGATE_ABORT("This method should have been overriden");
+}
+
 inline bool Operation::supports_replicated_write() const { return false; }
 
 inline std::int32_t Operation::priority() const { return priority_; }
