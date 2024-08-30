@@ -101,6 +101,19 @@ const void* Scalar::ptr() const { return impl_->data(); }
     "Size of the scalar is {}, but the requested type has size {}", type_size, size_of_T)};
 }
 
+/*static*/ void Scalar::throw_invalid_type_exception_(Type::Code code,
+                                                      std::string_view kind,
+                                                      std::size_t expected,
+                                                      std::size_t actual)
+{
+  throw std::invalid_argument{fmt::format(
+    "{} scalar can only be converted into a span of a type whose {} is {} bytes (have {})",
+    code,
+    kind,
+    expected,
+    actual)};
+}
+
 Scalar::Scalar(detail::Scalar* impl, private_tag) : impl_{impl} {}
 
 }  // namespace legate

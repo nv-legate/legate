@@ -213,6 +213,11 @@ class Scalar {
   [[noreturn]] static void throw_invalid_size_exception_(std::size_t type_size,
                                                          std::size_t size_of_T);
 
+  [[noreturn]] static void throw_invalid_type_exception_(Type::Code code,
+                                                         std::string_view kind,
+                                                         std::size_t expected,
+                                                         std::size_t actual);
+
   struct private_tag {};
 
   Scalar(detail::Scalar* impl, private_tag);

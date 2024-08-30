@@ -144,10 +144,18 @@ Span<const VAL> Scalar::values() const
   }
 
   if (ty.code() == Type::Code::STRING) {
-    if (sizeof(VAL) != 1) {
-      throw std::invalid_argument{
-        "String scalar can only be converted into a span of a type whose size is 1 byte"};
+    using char_type = typename type_of_t<Type::Code::STRING>::value_type;
+
+    if constexpr (std::is_same_v<VAL, bool>) {
+      throw std::invalid_argument{"Conversion from string to Span<bool> not allowed"};
     }
+    if constexpr (sizeof(VAL) != sizeof(char_type)) {
+      throw_invalid_type_exception_(ty.code(), "size", sizeof(char_type), sizeof(VAL));
+    }
+    if constexpr (alignof(VAL) != alignof(char_type)) {
+      throw_invalid_type_exception_(ty.code(), "alignment", alignof(char_type), alignof(VAL));
+    }
+
     auto data         = ptr();
     auto len          = *static_cast<const uint32_t*>(data);
     const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
