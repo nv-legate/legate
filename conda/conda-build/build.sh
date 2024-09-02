@@ -43,7 +43,7 @@ function preamble()
     configure_args+=(--with-openmp)
   fi
 
-  if [[ "${UPLOAD_ENABLED:-0}" == '0' ]]; then
+  if [[ "${upload_enabled:-false}" == 'false' ]]; then
     configure_args+=(--with-tests)
   fi
 
@@ -57,7 +57,7 @@ function preamble()
   # We rely on an environment variable to determine if we need to make a debug build.
   if [[ "${LEGATE_CORE_BUILD_MODE:-}" != '' ]]; then
     configure_args+=(--build-type="${LEGATE_CORE_BUILD_MODE}")
-  elif [[ -n ${DEBUG_BUILD} ]]; then
+  elif [[ "${debug_build,,}" == "true" ]]; then
     configure_args+=(--build-type=debug)
   else
     # default to release if debug build not set
