@@ -54,17 +54,22 @@ function preamble()
     configure_args+=(--with-cuda=0)
   fi
 
-  # We rely on an environment variable to determine if we need to make a debug build.
-  if [[ "${LEGATE_CORE_BUILD_MODE:-}" != '' ]]; then
-    configure_args+=(--build-type="${LEGATE_CORE_BUILD_MODE}")
-  elif [[ "${debug_build,,}" == "true" ]]; then
-    configure_args+=(--build-type=debug)
-  else
-    # default to release if debug build not set
-    configure_args+=(--build-type=release)
-  fi
+  configure_args+=(--build-type="${LEGATE_BUILD_MODE}")
 
-  configure_args+=(--with-ucx)
+case "${LEGATE_NETWORK}" in
+  "ucx")
+    configure_args+=(--with-ucx)
+    ;;
+  "gex")
+    configure_args+=(--with-gasnet)
+    configure_args+=(--)
+    configure_args+=(-DLegion_USE_GASNETEX_WRAPPER=ON)
+    ;;
+  *)
+    echo "${LEGATE_NETWORK} is not a valid choice for the network interface"
+    exit 1
+    ;;
+esac
 
   export CUDAHOSTCXX="${CXX}"
   export OPENSSL_DIR="${PREFIX}"
@@ -94,11 +99,11 @@ function configure_legate()
     cat configure.log
     return ${ret}
   fi
-  if [[ "${LEGATE_CORE_BUILD_MODE:-}" != '' ]]; then
-    found="$(grep -c -e "--build-type=${LEGATE_CORE_BUILD_MODE}" configure.log || true)"
+  if [[ "${LEGATE_BUILD_MODE:-}" != '' ]]; then
+    found="$(grep -c -e "--build-type=${LEGATE_BUILD_MODE}" configure.log || true)"
     if [[ "${found}" == '0' ]]; then
       echo "FAILED TO PROPERLY SET BUILD TYPE:"
-      echo "- expected to find --build-type=${LEGATE_CORE_BUILD_MODE} in configure.log"
+      echo "- expected to find --build-type=${LEGATE_BUILD_MODE} in configure.log"
       return 1
     fi
   fi

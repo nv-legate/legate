@@ -7,14 +7,6 @@
   {# We need to have a default value for the initial pass over the recipe #}
   {% set gpu_enabled_bool = false %}
 {% endif %}
-{% if debug_enabled == "true" %}
-  {% set debug_build_bool = true %}
-{% elif debug_enabled == "false" %}
-  {% set debug_build_bool = false %}
-{% else %}
-  {# We need to have a default value for the initial pass over the recipe #}
-  {% set debug_build_bool = false %}
-{% endif %}
 {% if upload_enabled == "true" %}
   {% set upload_enabled_bool = true %}
 {% elif upload_enabled == "false" %}
@@ -55,15 +47,25 @@
 {% set cpu_gpu_tag='_gpu' %}
 {% endif %}
 
-{% if debug_build_bool %}
-{% set debug_tag='_'+ build_mode_str %}
-{% else %}
+{% if build_mode_str == 'release' %}
 {% set debug_tag='' %}
+{% else %}
+{% set sanitized_build_mode_str = build_mode_str | replace('-', '_') %}
+{% set debug_tag='_' + sanitized_build_mode_str %}
+{% endif %}
+
+{% set sanitizer_build_bool = false %}  # Default to false
+{% if 'sanitizer' in build_mode_str %}
+   {% set sanitizer_build_bool = true %}
 {% endif %}
 
 {% set upload_tag='' if upload_enabled_bool else '_with_tests' %}
 
-{% set ucx_tag='_ucx' %}
+{% if network is not defined %}
+# network must be defined. Let's fail if it is not.
+invalid_yaml: {{ network }}
+{% endif %}
+{% set network_tag='_'+network %}
 
 package:
   name: {{ name|lower }}
@@ -84,7 +86,7 @@ build:
   missing_dso_whitelist:
     -  '*libcuda.so*'
 
-  string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ ucx_tag }}{{ cpu_gpu_tag }}{{ debug_tag }}{{ upload_tag }}"
+  string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ network_tag }}{{ cpu_gpu_tag }}{{ debug_tag }}{{ upload_tag }}"
   script_env:
     - SCCACHE_BUCKET
     - SCCACHE_REGION
@@ -98,7 +100,11 @@ build:
     - ARTIFACTS_DIR
     - LEGATE_CI
     - BUILD_MARCH
-    - LEGATE_CORE_BUILD_MODE
+    - LEGATE_BUILD_MODE={{ build_mode_str }}
+    - LEGATE_NETWORK={{ network }}
+{% if upload_enabled_bool %}
+    - UPLOAD_ENABLED=1
+{% endif %}
 {% if not gpu_enabled_bool %}
     - CPU_ONLY=1
   # The CPU-only packages having more track_features than the GPU builds helps
@@ -156,7 +162,7 @@ requirements:
     - scikit-build
     - elfutils # [linux]
     - libhwloc =* =*default*
-{% if debug_build_bool %}
+{% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
 {% if gpu_enabled_bool %}
@@ -172,7 +178,9 @@ requirements:
     - libcurand-dev
     - libcusolver-dev
 {% endif %}
+{% if network == 'ucx' %}
     - ucx >=1.16
+{% endif %}
     - openmpi <5
 
   # Runtime python dependencies
@@ -183,7 +191,7 @@ requirements:
     - typing_extensions
     - elfutils # [linux]
     - libhwloc =* =*default*
-{% if debug_build_bool %}
+{% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
 {% if gpu_enabled_bool %}
@@ -200,7 +208,9 @@ requirements:
     - cuda-cudart
     - nccl
 {% endif %}
+{% if network == 'ucx' %}
     - ucx >=1.16
+{% endif %}
     - openmpi <5
 
   run_constrained:

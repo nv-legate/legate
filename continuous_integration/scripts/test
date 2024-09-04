@@ -27,7 +27,7 @@ run_test_or_analysis() {
     # it here.
     if [[ -z "${LEGATE_CORE_ARCH:-}" ]]; then
         local locase_uname="$(uname | tr '[:upper:]' '[:lower:]')"
-        LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_CORE_BUILD_MODE%-gcc}"
+        LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_BUILD_MODE%-gcc}"
 
         export LEGATE_CORE_ARCH
     fi

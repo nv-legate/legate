@@ -14,7 +14,7 @@ setup_legate_core_env() {
         case "${BUILD_TYPE}" in
             ci|release)
                 local locase_uname="$(uname | tr '[:upper:]' '[:lower:]')"
-                LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_CORE_BUILD_MODE%-gcc}"
+                LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_BUILD_MODE%-gcc}"
                 ;;
             docs)
                 LEGATE_CORE_ARCH='arch-ci-linux-docs'
@@ -55,16 +55,7 @@ build_legate_release() {
     UPLOAD_BUILD=true
     [ "${UPLOAD_ENABLED:-}" = "OFF" ] && UPLOAD_BUILD=false
 
-    if [[ ${LEGATE_CORE_BUILD_MODE} == *debug* ]]; then
-      debug_enabled=true
-    else
-      debug_enabled=false
-    fi
-
-    # convert '-' to '_' for meta.yaml to accept.
-    build_mode_str=$(echo ${LEGATE_CORE_BUILD_MODE} | sed -r 's/-/_/g')
-
-    variantOpts=$(printf "{\"debug_enabled\": [$debug_enabled], \"debug_build\": [$debug_enabled], \"build_mode_str\": [$build_mode_str], \"gpu_enabled\": [$GPU_ENABLED], \"upload_enabled\": [$UPLOAD_BUILD], \"python\": [$PYTHON_VERSION]}")
+    variantOpts=$(printf "{\"build_mode_str\": [$LEGATE_BUILD_MODE], \"gpu_enabled\": [$GPU_ENABLED], \"upload_enabled\": [$UPLOAD_BUILD], \"network\": [${LEGATE_NETWORK}], \"python\": [$PYTHON_VERSION]}")
     conda_build_args+=(--variants "$variantOpts")
 
     # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to

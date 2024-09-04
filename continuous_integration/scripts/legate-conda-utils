@@ -34,7 +34,7 @@ generate_yaml_file() {
     $SED -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
     echo "  - boa" >> "${yaml_file}";
 
-    if [[ $LEGATE_CORE_BUILD_MODE == *sanitizer* ]]; then
+    if [[ $LEGATE_BUILD_MODE == *sanitizer* ]]; then
         echo "  - libsanitizer <=${MAX_LIBSANITIZER_VERSION}" >> "${yaml_file}";
     fi
 

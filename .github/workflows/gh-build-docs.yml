@@ -15,7 +15,7 @@ jobs:
   build-docs:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.10
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.11
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
@@ -24,7 +24,8 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v1.10"
+      legate-gh-ci-tag: "v1.11"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: false
+      network: "ucx"
     secrets: inherit

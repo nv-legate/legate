@@ -21,6 +21,9 @@ jobs:
           - debug-sanitizer
           - release
           - release-debug
+        network:
+          - ucx
+          - gex
         upload-enabled:
           - true
           - false
@@ -32,4 +35,5 @@ jobs:
       build-mode: ${{ matrix.build-mode }}
       build-type: release
       upload-enabled: ${{ matrix.upload-enabled }}
+      network: ${{ matrix.network }}
     secrets: inherit

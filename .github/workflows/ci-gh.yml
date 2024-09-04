@@ -13,7 +13,6 @@ on:
 
 jobs:
   build-and-test:
-    name: Build and test (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.build-mode }}, ucx enabled)
     strategy:
       fail-fast: false
       matrix:
@@ -30,6 +29,8 @@ jobs:
           - release-debug
         upload-enabled:
           - false
+        network:
+          - ucx
         exclude:
           - platform: linux-aarch64
             target-device: gpu
@@ -41,4 +42,5 @@ jobs:
       build-mode: ${{ matrix.build-mode }}
       build-type: release
       upload-enabled: ${{ matrix.upload-enabled }}
+      network: ${{ matrix.network }}
     secrets: inherit
