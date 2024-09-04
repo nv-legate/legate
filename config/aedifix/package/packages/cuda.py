@@ -194,6 +194,11 @@ class CUDA(Package):
             cc = self.cl_args.CUDAC.value
 
         ret.append(("Executable", cc))
+
+        version = self.log_execute_command([cc, "--version"]).stdout
+
+        ret.append(("Version", version))
+
         ccflags: str | None | list[str] | tuple[str, ...]
         try:
             ccflags = self.manager.read_cmake_variable(self.CMAKE_CUDA_FLAGS)

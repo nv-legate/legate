@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import enum
 import shlex
+import textwrap
 from argparse import ArgumentParser, _ArgumentGroup as ArgumentGroup
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -455,6 +456,27 @@ class Package(Configurable):
             title = self.name
 
         max_len = max(map(len, (name for name, _ in extra_lines))) + 1
+
+        def fixup_extra_lines(
+            lines: Sequence[tuple[str, Any]]
+        ) -> list[tuple[str, str]]:
+            # We want to align any overflow with the start of the text, so
+            #
+            # foo: some text
+            # bar: some ....
+            #      very long text
+            #      ^^^^^^^^^^^^^^ aligned to "some"
+            #
+            indent = " " * (max_len + len(":  "))
+            ret = []
+            for name, value in lines:
+                str_v = str(value).strip()
+                if "\n" in str_v:
+                    str_v = textwrap.indent(str_v, indent).lstrip()
+                ret.append((name, str_v))
+            return ret
+
+        extra_lines = fixup_extra_lines(extra_lines)
         return "\n".join(
             [f"{title}:"]
             + [

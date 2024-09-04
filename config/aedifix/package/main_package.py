@@ -648,6 +648,8 @@ class MainPackage(Package, ABC):
             except ValueError:
                 cc = getattr(self.cl_args, compiler_attr_name).value
 
+            version = self.log_execute_command([cc, "--version"]).stdout
+
             ccflags: str | None | list[str] | tuple[str, ...]
             try:
                 ccflags = self.manager.read_cmake_variable(cmake_flags_var)
@@ -660,7 +662,11 @@ class MainPackage(Package, ABC):
                 ccflags = "[]"
 
             return self.create_package_summary(
-                [("Executable", cc), (f"Global {name} Flags", ccflags)],
+                [
+                    ("Executable", cc),
+                    ("Version", version),
+                    (f"Global {name} Flags", ccflags),
+                ],
                 title=f"{name} Compiler",
             )
 
