@@ -64,6 +64,10 @@ Changes: Latest Development Version
 
 - Add ``NodeRange::hash()``.
 - Remove ``mapping::Mapper::set_machine()``.
+- Add ``mapping::InstanceMappingPolicy::redundant`` that forces eager collection of freshly created
+  redundant copies. Add ``mapping::InstanceMappingPolicy::with_redundant()`` and
+  ``mapping::InstanceMappingPolicy::set_redundant()`` to allow mappers to set new values to the
+  flag.
 
 .. rubric:: Partitioning
 

@@ -622,6 +622,19 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                      task.target_proc,
                      output_map,
                      legate_task.machine().count() < task.index_domain.get_volume());
+
+  for (auto&& mapping : for_stores) {
+    if (!mapping->policy.redundant) {
+      continue;
+    }
+
+    for (auto req_idx : mapping->requirement_indices()) {
+      if (task.regions[req_idx].privilege != LEGION_READ_ONLY) {
+        continue;
+      }
+      output.untracked_valid_regions.insert(req_idx);
+    }
+  }
 }
 
 void BaseMapper::replicate_task(Legion::Mapping::MapperContext /*ctx*/,
@@ -914,8 +927,11 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
   const auto alloc_policy = must_alloc_collective_writes && has_collective_write(reqs)
                               ? AllocPolicy::MUST_ALLOC
                               : policy.allocation;
-  const auto can_cache =
-    fields.size() == 1 && regions.size() == 1 && alloc_policy != AllocPolicy::MUST_ALLOC;
+  const auto can_cache    = fields.size() == 1 && regions.size() == 1 &&
+                         alloc_policy != AllocPolicy::MUST_ALLOC &&
+                         // Redundant copies get invalidated immediately after this operation so
+                         // they shouldn't be cached
+                         !policy.redundant;
 
   const auto found_in_cache = [&] {
     auto cached =
@@ -1039,8 +1055,8 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
            << print_group();
     } else {
       mess << "Operation " << mappable.get_unique_id() << ": created instance " << *result
-           << " for " << print_group() << " (size: " << footprint
-           << " bytes, memory: " << target_memory << ")";
+           << " for " << print_group() << " (size: " << std::dec << *footprint
+           << " bytes, memory: " << std::hex << target_memory << ")";
     }
   }
   if (group != nullptr) {

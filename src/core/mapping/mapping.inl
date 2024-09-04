@@ -108,6 +108,22 @@ inline InstanceMappingPolicy&& InstanceMappingPolicy::with_exact(bool _exact) &&
   return std::move(with_exact(_exact));
 }
 
+inline InstanceMappingPolicy& InstanceMappingPolicy::with_redundant(bool _redundant) &
+{
+  set_redundant(_redundant);
+  return *this;
+}
+
+inline InstanceMappingPolicy InstanceMappingPolicy::with_redundant(bool _redundant) const&
+{
+  return InstanceMappingPolicy{*this}.with_redundant(_redundant);
+}
+
+inline InstanceMappingPolicy&& InstanceMappingPolicy::with_redundant(bool _redundant) &&
+{
+  return std::move(with_redundant(_redundant));
+}
+
 inline void InstanceMappingPolicy::set_target(StoreTarget _target) { target = _target; }
 
 inline void InstanceMappingPolicy::set_allocation_policy(AllocPolicy _allocation)
@@ -123,6 +139,8 @@ inline void InstanceMappingPolicy::set_ordering(DimOrdering _ordering)
 }
 
 inline void InstanceMappingPolicy::set_exact(bool _exact) { exact = _exact; }
+
+inline void InstanceMappingPolicy::set_redundant(bool _redundant) { redundant = _redundant; }
 
 // ==========================================================================================
 

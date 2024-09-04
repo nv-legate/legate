@@ -99,7 +99,7 @@ DimOrdering::~DimOrdering() noexcept = default;
 
 bool InstanceMappingPolicy::subsumes(const InstanceMappingPolicy& other) const
 {
-  // the allocation policy doesn't concern the instance layout
+  // the allocation policy and the `redundant` flag don't concern the instance layout
   return target == other.target && layout == other.layout && ordering == other.ordering &&
          (exact || !other.exact);
 }
@@ -107,7 +107,7 @@ bool InstanceMappingPolicy::subsumes(const InstanceMappingPolicy& other) const
 bool InstanceMappingPolicy::operator==(const InstanceMappingPolicy& other) const
 {
   return target == other.target && allocation == other.allocation && layout == other.layout &&
-         exact == other.exact && ordering == other.ordering;
+         exact == other.exact && redundant == other.redundant && ordering == other.ordering;
 }
 
 bool InstanceMappingPolicy::operator!=(const InstanceMappingPolicy& other) const

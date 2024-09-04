@@ -240,6 +240,16 @@ class InstanceMappingPolicy {
    * must not have any extra elements not included in the store(s).
    */
   bool exact{false};
+  /**
+   * @brief If true, the runtime treats the instance as a redundant copy and marks it as collectible
+   * as soon as the consumer task is done using it. In case where the program makes access to a
+   * store through several different partitions, setting this flag will help reduce the memory
+   * footprint by allowing the runtime to collect redundant instances eagerly.
+   *
+   * This flag has no effect when the instance is not freshly created for the task or is used for
+   * updates.
+   */
+  bool redundant{false};
 
   /**
    * @brief Changes the store target
@@ -297,6 +307,17 @@ class InstanceMappingPolicy {
   [[nodiscard]] InstanceMappingPolicy&& with_exact(bool exact) &&;
 
   /**
+   * @brief Changes the value of `redundant`
+   *
+   * @param redundant A new value for the `redundant` field
+   *
+   * @return This instance mapping policy
+   */
+  [[nodiscard]] InstanceMappingPolicy& with_redundant(bool redundant) &;
+  [[nodiscard]] InstanceMappingPolicy with_redundant(bool redundant) const&;
+  [[nodiscard]] InstanceMappingPolicy&& with_redundant(bool redundant) &&;
+
+  /**
    * @brief Changes the store target
    *
    * @param target A new store target
@@ -326,6 +347,12 @@ class InstanceMappingPolicy {
    * @param exact A new value for the `exact` field
    */
   void set_exact(bool exact);
+  /**
+   * @brief Changes the value of `redundant`
+   *
+   * @param redundant A new value for the `redundant` field
+   */
+  void set_redundant(bool redundant);
 
   /**
    * @brief Indicates whether this policy subsumes a given policy
