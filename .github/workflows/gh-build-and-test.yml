@@ -16,6 +16,9 @@ on:
       upload-enabled:
         type: boolean
         required: true
+      python-version:
+        type: string
+        required: false
       network:
         type: string
         required: true
@@ -35,6 +38,7 @@ jobs:
       legate-gh-ci-tag: "v1.11"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
+      python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
     secrets: inherit
 
@@ -57,6 +61,7 @@ jobs:
       upload-action: "upload-package"
       pkgSubString: "legate-core"
       repos-Root: "legate_core"
+      python-version: ${{ inputs.python-version }}
     secrets: inherit
 
   setup-test:
@@ -121,6 +126,7 @@ jobs:
       legate-gh-ci-tag: "v1.11"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
+      python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
     secrets: inherit
 
@@ -150,6 +156,7 @@ jobs:
       legate-gh-ci-tag: "vnetwork_input"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
+      python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
     secrets: inherit
 
@@ -171,5 +178,6 @@ jobs:
       upload-action: "update-test-status"
       pkgSubString: "legate-core"
       repos-Root: "legate_core"
+      python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
     secrets: inherit
