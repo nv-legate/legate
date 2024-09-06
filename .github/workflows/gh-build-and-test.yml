@@ -22,6 +22,9 @@ on:
       network:
         type: string
         required: true
+      nightly:
+        type: boolean
+        required: true
 jobs:
   build:
     if: ${{ github.repository_owner == 'nv-legate' }}
@@ -66,7 +69,8 @@ jobs:
 
   setup-test:
     name: Setup test
-    if: inputs.upload-enabled == false
+    # Don't run GPU tests on linux-aarch64. We don't have enough test machines for this.
+    if: inputs.upload-enabled == false && (inputs.nightly || inputs.target-device != 'gpu' || inputs.platform != 'linux-aarch64')
     needs:
       - build
     runs-on: linux-amd64-cpu4

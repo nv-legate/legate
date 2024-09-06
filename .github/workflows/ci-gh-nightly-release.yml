@@ -46,4 +46,5 @@ jobs:
       upload-enabled: ${{ matrix.upload-enabled }}
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
+      nightly: true
     secrets: inherit
