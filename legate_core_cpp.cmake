@@ -163,8 +163,6 @@ endif()
 
 legate_core_find_or_configure(PACKAGE span)
 
-# find_or_configure_span()
-
 # ########################################################################################
 # * std::mdspan --------------------------------------------------------------
 
@@ -177,6 +175,37 @@ legate_core_find_or_configure(PACKAGE fmt)
 
 # ########################################################################################
 # * legate.core --------------------------------------------------------------
+
+include(cmake/Modules/generate_sanitizer_options.cmake)
+
+legate_generate_sanitizer_options(
+  SRC share/legate/sanitizers/asan_default_options.txt
+  DELIM [[:]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/core/asan_default_options.h"
+)
+
+legate_generate_sanitizer_options(
+  SRC share/legate/sanitizers/lsan_suppressions.txt
+  DELIM [[\n]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/core/lsan_suppressions.h"
+)
+
+legate_generate_sanitizer_options(
+  SRC share/legate/sanitizers/ubsan_default_options.txt
+  DELIM [[:]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/core/ubsan_default_options.h"
+)
+
+legate_generate_sanitizer_options(
+  SRC share/legate/sanitizers/tsan_suppressions.txt
+  DELIM [[\n]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/core/tsan_suppressions.h"
+)
+legate_generate_sanitizer_options(
+  SRC share/legate/sanitizers/tsan_default_options.txt
+  DELIM [[:]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/core/tsan_default_options.h"
+)
 
 list(APPEND
      legate_core_SOURCES
@@ -298,6 +327,10 @@ list(APPEND
      src/timing/timing.cc
      # stl
      src/core/experimental/stl/detail/clang_tidy_dummy.cpp)
+
+if(legate_core_ENABLE_SANITIZERS)
+  list(APPEND legate_core_SOURCES src/core/utilities/detail/sanitizer_defaults.cc)
+endif()
 
 if(Legion_NETWORKS)
   list(APPEND legate_core_SOURCES src/core/comm/detail/mpi_network.cc
@@ -705,6 +738,13 @@ install(FILES share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper.cc
               share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper_types.h
         DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper/src/legate_mpi_wrapper"
 )
+
+install(FILES share/legate/sanitizers/asan_default_options.txt
+              share/legate/sanitizers/lsan_suppressions.txt
+              share/legate/sanitizers/tsan_default_options.txt
+              share/legate/sanitizers/tsan_suppressions.txt
+              share/legate/sanitizers/ubsan_default_options.txt
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/sanitizers")
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 

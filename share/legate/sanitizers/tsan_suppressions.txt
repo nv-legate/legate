@@ -1,0 +1,2 @@
+race:Legion::Internal::MemoryManager::create_eager_instance
+race:Legion::Internal::Operation::perform_registration

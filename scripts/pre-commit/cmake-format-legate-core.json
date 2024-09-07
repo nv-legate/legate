@@ -28,6 +28,13 @@
                     "nargs": "2"
                 }
             },
+            "legate_generate_sanitizer_options": {
+                "kwargs": {
+                    "DELIM": 1,
+                    "DEST": 1,
+                    "SRC": 1
+                }
+            },
             "rapids_cmake_build_type": {
                 "pargs": {
                     "nargs": 1

@@ -12,7 +12,6 @@
 
 #include "core/experimental/stl/detail/registrar.hpp"
 #include "legate.h"
-#include "utilities/sanitizer_options.h"
 #include "utilities/utilities.h"
 
 #include <gtest/gtest.h>

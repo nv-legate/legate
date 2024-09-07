@@ -33,7 +33,7 @@ include(${rapids-cmake-dir}/cpm/gtest.cmake)
 # BUILD_EXPORT_SET and INSTALL_EXPORT_SET are crucial, otherwise gtest does not get
 # installed
 rapids_cpm_gtest(BUILD_EXPORT_SET legate-core-exports
-                 INSTALL_EXPORT_SET legate-core-exports)
+                 INSTALL_EXPORT_SET legate-core-exports CPM_ARGS SYSTEM TRUE)
 
 include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 

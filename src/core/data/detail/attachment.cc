@@ -22,6 +22,18 @@
 
 namespace legate::detail {
 
+namespace {
+
+// NOLINTBEGIN(clang-analyzer-cplusplus.NewDeleteLeaks)
+template <typename T>
+void intentionally_leak_handle(T&& handle)
+{
+  static_cast<void>(std::make_unique<T>(std::forward<T>(handle)).release());
+}
+// NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
+
+}  // namespace
+
 Attachment::~Attachment() noexcept
 {
   if (has_started()) {
@@ -33,21 +45,21 @@ Attachment::~Attachment() noexcept
     if (can_dealloc_.has_value() && can_dealloc_->exists()) {
       // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
       // this would be collected by the Legion runtime
-      // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
-      static_cast<void>(std::make_unique<Legion::Future>(*std::move(can_dealloc_)).release());
+      intentionally_leak_handle(*std::move(can_dealloc_));
     }
 
-    std::visit(  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+    std::visit(
       [&](auto&& handle) {
         if (!handle.exists()) {
           return;
         }
         // FIXME: Leak the Legion handle if the runtime has already shut down, as there's no hope
         // that this would be collected by the Legion runtime
-        static_cast<void>(
-          std::make_unique<std::decay_t<decltype(handle)>>(std::forward<decltype(handle)>(handle))
-            .release());
-      },  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+        //
+        // We explicitly want to move out of the variant here, so moving an lvalue is desired.
+        // NOLINTNEXTLINE(bugprone-move-forwarding-reference)
+        intentionally_leak_handle(std::move(handle));
+      },
       handle_);
   } catch (const std::exception& exn) {
     LEGATE_ABORT(exn.what());

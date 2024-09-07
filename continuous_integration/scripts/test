@@ -37,14 +37,6 @@ run_test_or_analysis() {
     case "$1" in
         "python")
             echo "Executing python tests..."
-            if [[ ${LEGATE_CORE_ARCH} == *sanitizer* ]]; then
-              echo "============================================================================"
-              echo "x ------------------------------------------------------------------------ x"
-              echo "Cannot yet handle running Python tests using Address Sanitizer, bailing!"
-              echo "x ------------------------------------------------------------------------ x"
-              echo "============================================================================"
-              return 0
-            fi
 
             ucx_libs=ucx\ openmpi\ openssh
 
@@ -52,11 +44,7 @@ run_test_or_analysis() {
             mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client ${ucx_libs}
             set -eou pipefail
 
-            cd $LEGATE_CORE_DIR
-            # Leaving this here in case we ever decide to enable this. If we don't do
-            # this, we get
-            # ImportError: could not load libasan.6.so
-            # when loading the Cython extension libs.
+            cd "${LEGATE_CORE_DIR}"
             if [[ ${LEGATE_CORE_ARCH} == *gcc-*-sanitizer* ]]; then
               # Trying to reproduce this on macOS? See
               # https://stackoverflow.com/questions/47619097/address-sanitizing-boost-python-modules
@@ -70,21 +58,48 @@ run_test_or_analysis() {
               # DYLD_INSERT_LIBRARIES=$asan_lib PYTHONPATH=$py_paths
               # /opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python
               # /path/to/your/file.py
-              GCC_ASAN_PRELOAD=$(gcc -print-file-name=libasan.so)
-              LD_PRELOAD="${GCC_ASAN_PRELOAD}" pytest tests/unit
+              local libasan_path="${CONDA_PREFIX}/lib/libasan.so"
+
+              if [[ ! -f "${libasan_path}" ]]; then
+                echo "Sanitizer libraries not found."
+                echo "Expected to find ${libasan_path} but this seemingly does not exist"
+                return 1
+              fi
+
+              export LD_PRELOAD="${libasan_path}"
+
+              local asan_opts=()
+              asan_opts+=("check_initialization_order=1")
+              asan_opts+=("alloc_dealloc_mismatch=1")
+              asan_opts+=("abort_on_error=1")
+              asan_opts+=("strict_string_checks=1")
+              asan_opts+=("color=always")
+              asan_opts+=("detect_odr_violation=2")
+              [[ -f ${CONDA_PREFIX}/bin/tests_with_gpus ]] && {
+                # GPU build
+                asan_opts+=("protect_shadow_gap=0")
+              }
+              asan_opts+=("symbolize=1")
+
+              # Note trailing ':' on this! This is deliberate so we can do
+              # ASAN_OPTIONS+='foo:bar:baz'
+              #                                                      v~~ trailing ':' here
+              export ASAN_OPTIONS="$(IFS=':'; echo "${asan_opts[*]}"):"
+              export UBSAN_OPTIONS="include=${LEGATE_CORE_DIR}/share/legate/sanitizers/ubsan_default_options.txt"
+              export LSAN_OPTIONS="suppressions=${LEGATE_CORE_DIR}/share/legate/sanitizers/lsan_suppressions.txt"
+              export TSAN_OPTIONS="include=${LEGATE_CORE_DIR}/share/legate/sanitizers/tsan_default_options.txt:suppressions=${LEGATE_CORE_DIR}/share/legate/sanitizers/tsan_suppressions.txt"
+
             elif [[ ${LEGATE_CORE_ARCH} == *clang-*-sanitizer* ]]; then
               echo "Must properly implement Address sanitizer lib injection for Clang-based presets!"
               echo "See impls for GCC above"
               return 1
-            else
-              # pytest doesn't truncate output if "CI" is defined in the env:
-              # https://doc.pytest.org/en/latest/explanation/ci.html
-              export CI=1
-
-              pytest --color=yes tests/unit -s
-              pytest --color=yes tests/integration -s
             fi
+            # pytest doesn't truncate output if "CI" is defined in the env:
+            # https://doc.pytest.org/en/latest/explanation/ci.html
+            export CI=1
 
+            pytest --color=yes tests/unit -s
+            pytest --color=yes tests/integration -s
             ;;
         "cpp")
             echo "Running C++ unit tests..."
