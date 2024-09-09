@@ -1,30 +1,32 @@
 # The only true leaks in Legate
 leak:intentionally_leak*
 # Legion and Realm leak like faucets
-leak:librealm.*
 leak:liblegion.*
+leak:librealm.*
 # Because we didn't build python with ASAN (in fact, we don't build python at all), these
 # raise a bunch of (possibly) false positives related to interned Python strings and
 # Python module initialization. Maybe they are real errors, maybe not, but in any case
 # these are totally out of our control.
-leak:PyObject_Malloc
-leak:PyObject_Calloc
-leak:PyObject_Realloc
-leak:PyBytes_Resize
-leak:PyMem_RawMalloc
-leak:PyMem_RawCalloc
-leak:PyMem_RawRealloc
-leak:PyThread_allocate
+leak:CRYPTO_malloc
 leak:Py_initialize
 leak:Py_InitializeFromConfig
+leak:PyBytes_Resize
+leak:PyMem_RawCalloc
+leak:PyMem_RawMalloc
+leak:PyMem_RawRealloc
+leak:PyObject_Calloc
+leak:PyObject_GC_Resize
+leak:PyObject_Malloc
+leak:PyObject_Realloc
+leak:PyThread_allocate
 # numpy
 leak:_multiarray_umath.*
 leak:numpy
 # Cython
-leak:__Pyx_CyFunction_Vectorcall*
 leak:__Pyx_CyFunction_Vectorcall_FASTCALL_KEYWORDS
+leak:__Pyx_CyFunction_Vectorcall*
 leak:PyObject_Vectorcall
 # #ifdef __APPLE__
-leak:libobjc.*
 leak:CoreFoundation
+leak:libobjc.*
 # #endif
