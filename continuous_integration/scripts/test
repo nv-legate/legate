@@ -34,6 +34,12 @@ run_test_or_analysis() {
 
     cd "$LEGATE_CORE_DIR"
 
+    if [[ ${LEGATE_CORE_ARCH} == *sanitizer* ]]; then
+      # Needed to fix AddressSanitizer:DEADLYSIGNAL bug in GCC libsanitizer.
+      # See https://stackoverflow.com/questions/77894856/possible-bug-in-gcc-sanitizers
+      sysctl vm.mmap_rnd_bits=28
+    fi
+
     case "$1" in
         "python")
             echo "Executing python tests..."
@@ -94,6 +100,7 @@ run_test_or_analysis() {
               echo "See impls for GCC above"
               return 1
             fi
+
             # pytest doesn't truncate output if "CI" is defined in the env:
             # https://doc.pytest.org/en/latest/explanation/ci.html
             export CI=1
@@ -117,7 +124,6 @@ run_test_or_analysis() {
             # user-level threading, so we turn it off for sanitizer-enabled tests
             if [[ ${LEGATE_CORE_ARCH} == *sanitizer* ]]; then
               EXTRA_ARGS="-ll:force_kthreads"
-              sysctl vm.mmap_rnd_bits=28
             fi
             export EXTRA_ARGS
 
