@@ -296,9 +296,25 @@ class Config:
         if args.gtest_filter is not None:
             list_command.append(f"--gtest_filter={args.gtest_filter}")
 
+        env = os.environ.copy()
+        # LSAN prints the suppressions that were applied at the end of the run
+        # by default, e.g.
+        #
+        # -----------------------------------------------------
+        # Suppressions used:
+        #   count      bytes template
+        #   3             50 librealm.*
+        # -----------------------------------------------------
+        #
+        # Which trips up our parsing of the tests because we incorrectly label
+        # "Suppressions used" as a test group, and "count bytes template", "3
+        # 50 librealm" as a test.
+        env["LSAN_OPTIONS"] = (
+            env.get("LSAN_OPTIONS", "") + ":print_suppressions=0:"
+        )
         try:
             cmd_out = subprocess.check_output(
-                list_command, stderr=subprocess.STDOUT
+                list_command, stderr=subprocess.STDOUT, env=env
             )
         except subprocess.CalledProcessError as cpe:
             print("Failed to fetch GTest tests")
