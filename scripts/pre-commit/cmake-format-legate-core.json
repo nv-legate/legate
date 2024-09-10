@@ -35,6 +35,11 @@
                     "SRC": 1
                 }
             },
+            "legate_uninstall_target": {
+                "kwargs": {
+                    "TARGET": "1"
+                }
+            },
             "rapids_cmake_build_type": {
                 "pargs": {
                     "nargs": 1

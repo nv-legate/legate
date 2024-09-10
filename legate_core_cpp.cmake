@@ -905,4 +905,8 @@ if(NOT Legion_USE_CUDA)
   list(APPEND legate_core_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_RELEASE}")
 endif()
 
+include(cmake/Modules/uninstall.cmake)
+
+legate_uninstall_target(TARGET uninstall)
+
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

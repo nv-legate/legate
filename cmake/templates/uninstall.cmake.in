@@ -1,0 +1,45 @@
+#=============================================================================
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+#=============================================================================
+
+if(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
+  message(FATAL_ERROR "Cannot find install manifest: @CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
+endif()
+
+function(prune_directory path)
+  if(NOT EXISTS "${path}")
+    # A previous call has already deleted the directory
+    return()
+  endif()
+
+  file(GLOB dir_contents LIST_DIRECTORIES TRUE "${path}/*")
+  list(LENGTH dir_contents len)
+  if(len EQUAL 0)
+    # Do this before we delete the directory
+    cmake_path(GET path PARENT_PATH parent)
+
+    message(STATUS "uninstalling  (dir): ${path}")
+    file(REMOVE_RECURSE "${path}")
+
+    prune_directory("${parent}")
+  endif()
+endfunction()
+
+file(STRINGS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt" files)
+
+foreach(file IN LISTS files)
+  cmake_path(SET file NORMALIZE "${file}")
+  cmake_path(GET file PARENT_PATH parent)
+
+  message(STATUS "uninstalling (file): ${file}")
+  file(REMOVE "${file}")
+  prune_directory("${parent}")
+endforeach()
