@@ -143,6 +143,29 @@ cdef class Runtime(Unconstructable):
             handle = self._handle.find_library(_library_name)
         return Library.from_handle(handle)
 
+    cpdef Library create_library(self, str library_name):
+        r"""
+        Create a ``Library``.
+
+        Parameters
+        ----------
+        library_name : str
+            The name of the library to create.
+
+        Returns
+        -------
+        Library
+            The library.
+        """
+        cdef std_string_view lib_name = std_string_view_from_py(
+            library_name
+        )
+        cdef _Library handle
+
+        with nogil:
+            handle = self._handle.create_library(lib_name)
+        return Library.from_handle(std_move(handle))
+
     @property
     def core_library(self) -> Library:
         r"""

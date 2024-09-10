@@ -1,0 +1,7 @@
+[build-system]
+requires = ["scikit-build-core>=0.3.3", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "hello_world_pybind11"
+version = "1.0.0"

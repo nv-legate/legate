@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uintptr_t
 
 from ..data.scalar cimport Scalar
 from ..task.task_info cimport _TaskInfo
@@ -123,3 +123,13 @@ cdef class Library(Unconstructable):
 
         task_info.register_global_variant_callbacks(global_task_id)
         return global_task_id
+
+    @property
+    def raw_handle(self) -> uintptr_t:
+        r"""
+        Get the raw pointer to C++ ``Library`` object.
+
+        :returns: The pointer to the C++ ``Library`` object.
+        :rtype: int
+        """
+        return <uintptr_t> &self._handle

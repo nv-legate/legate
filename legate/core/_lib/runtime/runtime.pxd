@@ -150,6 +150,7 @@ cdef extern from *:
 cdef extern from "core/runtime/runtime.h" namespace "legate" nogil:
     cdef cppclass _Runtime "legate::Runtime":
         _Library find_library(std_string_view) except+
+        _Library create_library(std_string_view) except+
         _AutoTask create_task(_Library, _LocalTaskID) except+
         _ManualTask create_task(
             _Library, _LocalTaskID, const _tuple[uint64_t]&
@@ -219,6 +220,7 @@ cdef class Runtime(Unconstructable):
     cdef Runtime from_handle(_Runtime*)
 
     cpdef Library find_library(self, str library_name)
+    cpdef Library create_library(self, str library_name)
     cpdef AutoTask create_auto_task(
         self, Library library, _LocalTaskID task_id)
 

@@ -35,6 +35,14 @@
                     "SRC": 1
                 }
             },
+            "legate_install_from_tree": {
+                "kwargs": {
+                    "COMMON_PATH": "1",
+                    "DEST_ROOT": "1",
+                    "FILES": "+",
+                    "SRC_ROOT": "1"
+                }
+            },
             "legate_uninstall_target": {
                 "kwargs": {
                     "TARGET": "1"

@@ -1,0 +1,7 @@
+[build-system]
+requires = ["scikit-build-core", "cython"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "hello_world_cython"
+version = "1.0"

@@ -752,6 +752,24 @@ install(FILES share/legate/sanitizers/asan_default_options.txt
               share/legate/sanitizers/ubsan_default_options.txt
         DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/sanitizers")
 
+include(cmake/Modules/utilities.cmake)
+
+legate_install_from_tree(SRC_ROOT share COMMON_PATH legate/examples/binding/manual
+                         DEST_ROOT "${CMAKE_INSTALL_DATAROOTDIR}"
+                         FILES CMakeLists.txt hello_world.cc hello_world.py)
+
+legate_install_from_tree(SRC_ROOT share
+                         COMMON_PATH legate/examples/binding/cython
+                         DEST_ROOT "${CMAKE_INSTALL_DATAROOTDIR}"
+                         FILES hello_world.cc hello_world.h hello_world_cython.pyx
+                               hello_world.py pyproject.toml CMakeLists.txt)
+
+legate_install_from_tree(SRC_ROOT share
+                         COMMON_PATH legate/examples/binding/pybind11
+                         DEST_ROOT "${CMAKE_INSTALL_DATAROOTDIR}"
+                         FILES hello_world.cc hello_world.py pyproject.toml
+                               CMakeLists.txt)
+
 include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
 
 legate_core_debug_syms(legate_core INSTALL_DIR ${lib_dir})
@@ -851,19 +869,6 @@ if(legate_core_BUILD_TESTS)
   include(CTest)
 
   add_subdirectory(tests/cpp)
-endif()
-
-if(legate_core_BUILD_INTEGRATION)
-  # TODO: This is broken!
-  #
-  # CMake Error at build/test-build/legate_core-config.cmake:196 (include): include could
-  # not find requested file:
-  #
-  # /path/to/legate.core.internal/build/test-build/Modules/include_rapids.cmake Call Stack
-  # (most recent call first): cmake/legate_helper_functions.cmake:265
-  # (legate_default_cpp_install) tests/integration/collective/CMakeLists.txt:32
-  # (legate_add_cpp_subdirectory)
-  add_subdirectory(tests/integration)
 endif()
 
 if(legate_core_BUILD_EXAMPLES)
