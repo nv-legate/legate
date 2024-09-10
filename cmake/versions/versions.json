@@ -1,5 +1,11 @@
 {
     "packages": {
+        "argparse": {
+            "git_shallow": true,
+            "git_tag": "fd13c2859131ab463e617a5a8abcc69eb7e1d897",
+            "git_url": "https://github.com/nv-legate/argparse.git",
+            "version": "3.1"
+        },
         "mdspan": {
             "git_shallow": false,
             "git_tag": "b885a2c60ad42f9e1aaa0d317a38105b950cbed0",

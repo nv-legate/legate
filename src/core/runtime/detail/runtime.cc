@@ -19,7 +19,6 @@
 #include "core/data/detail/logical_array.h"
 #include "core/data/detail/logical_region_field.h"
 #include "core/data/detail/logical_store.h"
-#include "core/mapping/detail/base_mapper.h"
 #include "core/mapping/detail/core_mapper.h"
 #include "core/mapping/detail/default_mapper.h"
 #include "core/mapping/detail/machine.h"
@@ -60,16 +59,13 @@
 #include "core/utilities/machine.h"
 #include "core/utilities/scope_guard.h"
 
-#include "realm/cmdline.h"
 #include "realm/network.h"
 #include <realm/cuda/cuda_module.h>
 
 #include <cstdlib>
-#include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <iostream>
-#include <limits>
 #include <mappers/logging_wrapper.h>
 #include <regex>
 #include <set>
@@ -92,18 +88,6 @@ namespace {
 // generate IDs
 constexpr std::string_view CORE_LIBRARY_NAME = "legate.core";
 constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
-
-[[nodiscard]] std::filesystem::path normalize_log_dir(std::string log_dir)
-{
-  namespace fs = std::filesystem;
-
-  auto log_path = fs::path{std::move(log_dir)};
-
-  if (log_path.empty()) {
-    log_path = fs::current_path();  // cwd
-  }
-  return log_path;
-}
 
 }  // namespace
 
@@ -1539,245 +1523,6 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
 
 namespace {
 
-[[nodiscard]] std::vector<std::string> split_in_args(std::string_view command)
-{
-  const auto len = command.length();
-  std::vector<std::string> qargs;
-  std::size_t i;
-  std::size_t start;
-  std::size_t arglen;
-  const auto handle_quoted = [&](char quote) {
-    ++i;
-    ++start;
-    while (i < len && command[i] != quote) {
-      ++i;
-    }
-    return i++ - start;
-  };
-
-  for (i = 0; i < len; i++) {
-    start = i;
-    switch (command[i]) {
-      case '\"': [[fallthrough]];
-      case '\'': arglen = handle_quoted(command[i]); break;
-      default:
-        while (i < len && command[i] != ' ') {
-          ++i;
-        }
-        arglen = i - start;
-        break;
-    }  // namespace
-    qargs.emplace_back(command.substr(start, arglen));
-  }
-  return qargs;
-}
-
-// Simple wrapper for variables with default values
-template <auto DEFAULT, auto SCALE = decltype(DEFAULT){1}, typename VAL = decltype(DEFAULT)>
-class VarWithDefault {
- public:
-  [[nodiscard]] VAL value() const { return (has_value() ? value_ : DEFAULT) * SCALE; }
-  [[nodiscard]] bool has_value() const { return value_ != UNSET; }
-  [[nodiscard]] VAL& ref() { return value_; }
-
- private:
-  static constexpr VAL UNSET{std::numeric_limits<VAL>::max()};
-  VAL value_{UNSET};
-};
-
-template <typename Runtime, typename Value, Value DEFAULT, Value SCALE>
-void try_set_property(Runtime& runtime,
-                      const std::string& module_name,
-                      const std::string& property_name,
-                      const VarWithDefault<DEFAULT, SCALE, Value>& var,
-                      ZStringView error_msg)
-{
-  auto value = var.value();
-  if (value < 0) {
-    throw std::invalid_argument{error_msg.data()};
-  }
-  auto config = runtime.get_module_config(module_name);
-  if (nullptr == config) {
-    // If the variable doesn't have a value, we don't care if the module is nonexistent
-    if (!var.has_value()) {
-      return;
-    }
-
-    throw std::runtime_error{
-      fmt::format("{} (the {} module is not available)", error_msg, module_name)};
-  }
-  auto success = config->set_property(property_name, value);
-  if (!success) {
-    throw std::runtime_error{error_msg.data()};
-  }
-}
-
-void handle_legate_args(std::string_view legate_config)
-{
-  constexpr int DEFAULT_CPUS                         = 1;
-  constexpr int DEFAULT_GPUS                         = 0;
-  constexpr int DEFAULT_OMPS                         = 0;
-  constexpr std::int64_t DEFAULT_OMPTHREADS          = 2;
-  constexpr int DEFAULT_UTILITY                      = 1;
-  constexpr std::int64_t DEFAULT_SYSMEM              = 4000;  // MB
-  constexpr std::int64_t DEFAULT_NUMAMEM             = 0;     // MB
-  constexpr std::int64_t DEFAULT_FBMEM               = 4000;  // MB
-  constexpr std::int64_t DEFAULT_ZCMEM               = 32;    // MB
-  constexpr std::int64_t DEFAULT_REGMEM              = 0;     // MB
-  constexpr std::int64_t DEFAULT_EAGER_ALLOC_PERCENT = 50;
-  constexpr std::int64_t MB                          = 1024 * 1024;
-
-  // Realm uses ints rather than unsigned ints
-  VarWithDefault<DEFAULT_CPUS> cpus;
-  VarWithDefault<DEFAULT_GPUS> gpus;
-  VarWithDefault<DEFAULT_OMPS> omps;
-  VarWithDefault<DEFAULT_OMPTHREADS> ompthreads;
-  VarWithDefault<DEFAULT_UTILITY> util;
-  VarWithDefault<DEFAULT_SYSMEM, MB> sysmem;
-  VarWithDefault<DEFAULT_NUMAMEM, MB> numamem;
-  VarWithDefault<DEFAULT_FBMEM, MB> fbmem;
-  VarWithDefault<DEFAULT_ZCMEM, MB> zcmem;
-  VarWithDefault<DEFAULT_REGMEM, MB> regmem;
-  VarWithDefault<DEFAULT_EAGER_ALLOC_PERCENT> eager_alloc_percent;
-
-  std::string log_levels{};
-  std::string log_dir{};
-  bool log_to_file     = false;
-  bool profile         = false;
-  bool spy             = false;
-  bool freeze_on_error = false;
-
-  Realm::CommandLineParser cp;
-  auto args          = split_in_args(legate_config);
-  const bool success = cp.add_option_int("--cpus", cpus.ref())
-                         .add_option_int("--gpus", gpus.ref())
-                         .add_option_int("--omps", omps.ref())
-                         .add_option_int("--ompthreads", ompthreads.ref())
-                         .add_option_int("--utility", util.ref())
-                         .add_option_int("--sysmem", sysmem.ref())
-                         .add_option_int("--numamem", numamem.ref())
-                         .add_option_int("--fbmem", fbmem.ref())
-                         .add_option_int("--zcmem", zcmem.ref())
-                         .add_option_int("--regmem", regmem.ref())
-                         .add_option_int("--eager-alloc-percentage", eager_alloc_percent.ref())
-                         .add_option_bool("--profile", profile)
-                         .add_option_bool("--spy", spy)
-                         .add_option_string("--logging", log_levels)
-                         .add_option_string("--logdir", log_dir)
-                         .add_option_bool("--log-to-file", log_to_file)
-                         .add_option_bool("--freeze-on-error", freeze_on_error)
-                         .parse_command_line(args);
-
-  if (!success) {
-    LEGATE_ABORT("error parsing arguments from LEGATE_CONFIG");
-  }
-
-  auto rt = Realm::Runtime::get_runtime();
-
-  // ensure core module
-  if (!rt.get_module_config("core")) {
-    throw std::runtime_error{"core module config is missing"};
-  }
-
-  // ensure sensible utility
-  if (const auto nutil = util.value(); nutil < 1) {
-    throw std::invalid_argument{fmt::format("--utility must be at least 1 (have {})", nutil)};
-  }
-
-  // Set core configuration properties
-  try_set_property(rt, "core", "cpu", cpus, "unable to set --cpus");
-  try_set_property(rt, "core", "util", util, "unable to set --utility");
-  try_set_property(rt, "core", "sysmem", sysmem, "unable to set --sysmem");
-  try_set_property(rt, "core", "regmem", regmem, "unable to set --regmem");
-
-  // Set CUDA configuration properties
-  try {
-    try_set_property(rt, "cuda", "gpu", gpus, "unable to set --gpus");
-    try_set_property(rt, "cuda", "fbmem", fbmem, "unable to set --fbmem");
-    try_set_property(rt, "cuda", "zcmem", zcmem, "unable to set --zcmem");
-  } catch (...) {
-    if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
-      throw;
-    }
-  }
-
-  if (gpus.value() > 0) {
-    LEGATE_NEED_CUDA.set(true);
-  }
-
-  // Set OpenMP configuration properties
-  if (omps.value() > 0) {
-    if (ompthreads.value() <= 0) {
-      throw std::invalid_argument{"--omps configured with zero threads"};
-    }
-    LEGATE_NEED_OPENMP.set(true);
-    Config::num_omp_threads = ompthreads.value();
-  }
-  try {
-    try_set_property(rt, "openmp", "ocpu", omps, "unable to set --omps");
-    try_set_property(rt, "openmp", "othr", ompthreads, "unable to set --ompthreads");
-  } catch (...) {
-    // If we have OpenMP, but failed above, then rethrow, otherwise silently gobble the error
-    if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
-      throw;
-    }
-  }
-
-  // Set NUMA configuration properties
-  try_set_property(rt, "numa", "numamem", numamem, "unable to set --numamem");
-
-  auto log_path = normalize_log_dir(std::move(log_dir));
-
-  std::stringstream args_ss;
-
-  // some values have to be passed via env var
-  args_ss << "-lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0 ";
-
-  const auto add_logger = [&](std::string_view item) {
-    if (!log_levels.empty()) {
-      log_levels += ',';
-    }
-    log_levels += item;
-  };
-
-  LEGATE_ASSERT(Config::parsed());
-  if (Config::log_mapping_decisions) {
-    add_logger(fmt::format("{}=2", mapping::detail::BaseMapper::LOGGER_NAME));
-  }
-
-  if (profile) {
-    args_ss << "-lg:prof 1 -lg:prof_logfile " << log_path / "legate_%.prof" << " ";
-    add_logger("legion_prof=2");
-  }
-
-  if (spy) {
-    args_ss << "-lg:spy ";
-    add_logger("legion_spy=2");
-  }
-
-  if (freeze_on_error) {
-    args_ss << "-ll:force_kthreads ";
-    constexpr detail::EnvironmentVariable<std::uint32_t> LEGION_FREEZE_ON_ERROR{
-      "LEGION_FREEZE_ON_ERROR"};
-    LEGION_FREEZE_ON_ERROR.set(1);
-  }
-
-  if (!log_levels.empty()) {
-    args_ss << "-level " << log_levels << " ";
-  }
-
-  if (log_to_file) {
-    args_ss << "-logfile " << log_path / "legate_%.log" << " -errlevel 4 ";
-  }
-
-  if (const auto existing_default_args = LEGION_DEFAULT_ARGS.get();
-      existing_default_args.has_value()) {
-    args_ss << *existing_default_args;
-  }
-
-  LEGION_DEFAULT_ARGS.set(args_ss.str());
-}
-
 void handle_realm_default_args()
 {
   constexpr EnvironmentVariable<std::uint32_t> OMPI_COMM_WORLD_SIZE{"OMPI_COMM_WORLD_SIZE"};
@@ -1809,6 +1554,8 @@ void handle_realm_default_args()
 }
 
 }  // namespace
+
+extern void handle_legate_args(std::string_view legate_config);
 
 /*static*/ std::int32_t Runtime::start(std::int32_t argc, char** argv)
 {

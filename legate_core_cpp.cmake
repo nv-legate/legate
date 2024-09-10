@@ -174,6 +174,11 @@ legate_core_find_or_configure(PACKAGE mdspan)
 legate_core_find_or_configure(PACKAGE fmt)
 
 # ########################################################################################
+# * argparse::argparse --------------------------------------------------------------
+
+legate_core_find_or_configure(PACKAGE argparse)
+
+# ########################################################################################
 # * legate.core --------------------------------------------------------------
 
 include(cmake/Modules/generate_sanitizer_options.cmake)
@@ -296,6 +301,7 @@ list(APPEND
      src/core/runtime/detail/shard.cc
      src/core/runtime/detail/config.cc
      src/core/runtime/detail/mapper_manager.cc
+     src/core/runtime/detail/argument_parsing.cc
      src/core/task/registrar.cc
      src/core/task/task.cc
      src/core/task/task_context.cc
@@ -447,7 +453,7 @@ target_link_libraries(legate_core
                              $<TARGET_NAME_IF_EXISTS:std::mdspan>
                              $<TARGET_NAME_IF_EXISTS:std::span>
                       PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL> fmt::fmt
-                              $<TARGET_NAME_IF_EXISTS:conda_env>)
+                              argparse::argparse $<TARGET_NAME_IF_EXISTS:conda_env>)
 
 if(Legion_USE_CUDA)
   if(legate_core_STATIC_CUDA_RUNTIME)
