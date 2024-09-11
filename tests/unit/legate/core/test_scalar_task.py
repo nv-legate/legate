@@ -17,10 +17,19 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from legate.core import Scalar, Type, types as ty
+from legate.core import Scalar, Type, get_legate_runtime, types as ty
 from legate.core.task import task
 
 from .util.task_util import assert_isinstance
+
+
+def NOT_NATIVELY_SUPPORTED_WARNING(obj: Any) -> str:
+    return re.escape(
+        f"Argument type: {type(obj)} not natively supported by type "
+        "inference, falling back to pickling (which may incur a slight "
+        "performance penalty). Consider opening a bug report at "
+        "https://github.com/nv-legate/legate.core."
+    )
 
 
 class TestScalarTask:
@@ -88,14 +97,57 @@ class TestScalarTask:
 
         np_array_task(arr)
 
+    def test_default_args(self) -> None:
+        @task
+        def default_args(x_default: int, x: int = 1) -> None:
+            assert_isinstance(x, int)
+            assert_isinstance(x_default, int)
+            assert x == x_default
 
-def NOT_NATIVELY_SUPPORTED_WARNING(obj: Any) -> str:
-    return re.escape(
-        f"Argument type: {type(obj)} not natively supported by type "
-        "inference, falling back to pickling (which may incur a slight "
-        "performance penalty). Consider opening a bug report at "
-        "https://github.com/nv-legate/legate.core."
-    )
+        default_args(1)
+        get_legate_runtime().issue_execution_fence(block=True)
+        default_args(10, 10)
+        get_legate_runtime().issue_execution_fence(block=True)
+        default_args(10, x=10)
+        get_legate_runtime().issue_execution_fence(block=True)
+        default_args(x_default=10, x=10)
+        get_legate_runtime().issue_execution_fence(block=True)
+
+    def test_default_args_complex_type(self) -> None:
+        @task
+        def default_args_dict(
+            x_default: dict[str, float],
+            x: dict[str, float] = {"foo": 1.2},
+        ) -> None:
+            assert_isinstance(x, dict)
+            assert_isinstance(x_default, dict)
+            assert x == x_default
+
+        d: dict[str, float] = {}
+        with pytest.warns(
+            UserWarning, match=NOT_NATIVELY_SUPPORTED_WARNING(d)
+        ):
+            default_args_dict({"foo": 1.2})
+        get_legate_runtime().issue_execution_fence(block=True)
+
+        x_same = {"bar": 5.5}
+        with pytest.warns(
+            UserWarning, match=NOT_NATIVELY_SUPPORTED_WARNING(x_same)
+        ):
+            default_args_dict(x_same, x_same)
+        get_legate_runtime().issue_execution_fence(block=True)
+
+        with pytest.warns(
+            UserWarning, match=NOT_NATIVELY_SUPPORTED_WARNING(x_same)
+        ):
+            default_args_dict(x_same, x=x_same)
+        get_legate_runtime().issue_execution_fence(block=True)
+
+        with pytest.warns(
+            UserWarning, match=NOT_NATIVELY_SUPPORTED_WARNING(x_same)
+        ):
+            default_args_dict(x_default=x_same, x=x_same)
+        get_legate_runtime().issue_execution_fence(block=True)
 
 
 class TestScalarTaskBad:

@@ -98,12 +98,16 @@ cdef tuple[
                 "not yet allowed in parameter list"
             )
 
-        if param_descr.default is not Parameter.empty:
+        default_var = param_descr.default
+        if (default_var is not Parameter.empty) and (
+            isinstance(default_var, _BASE_TYPES)
+        ):
             raise NotImplementedError(
                 f"Default values for {annotation} not yet supported"
             )
 
         ty = _unpack_generic_type(annotation)
+
         if issubclass(ty, _INPUT_TYPES):
             inputs.append(name)
         elif issubclass(ty, _OUTPUT_TYPES):
@@ -353,11 +357,25 @@ cdef class VariantInvoker:
                 f"Task does not have keyword argument(s): {error_str}"
             )
 
-        cdef list missing_params
+        cdef list missing_params = []
         cdef SeenObjTuple tup
-        if missing_params := [
-            params[name] for name, tup in param_mapping.items() if not tup.seen
-        ]:
+
+        # Handle any missing parameters. This is also where we handle default
+        # arguments.
+        for name, tup in param_mapping.items():
+            if tup.seen:
+                continue
+
+            param = params[name]
+            if (default_val := param.default) is not Parameter.empty:
+                VariantInvoker._handle_param(
+                    task, param_mapping, param, default_val
+                )
+                tup.seen = True
+            else:
+                missing_params.append(param)
+
+        if missing_params:
             error_str = ", ".join(map(str, missing_params))
             raise TypeError(
                 f"missing {len(missing_params)} required argument(s): "

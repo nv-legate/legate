@@ -28,9 +28,12 @@ from legate.core import (
 )
 from legate.core.task import (
     ADD,
+    InputArray,
     InputStore,
+    OutputArray,
     OutputStore,
     PyTask,
+    ReductionArray,
     ReductionStore,
     VariantInvoker,
 )
@@ -46,6 +49,7 @@ from .util.task_util import (
     FakeTaskContext,
     TestFunction,
     assert_isinstance,
+    make_input_array,
     make_input_store,
     make_output_store,
     multi_input,
@@ -506,6 +510,108 @@ class TestTask(BaseTest):
             foo(1.5)
         with pytest.raises(TypeError, match=msg):
             foo.prepare_call("foo")
+
+    def test_default_arguments(self) -> None:
+        x_val = 1
+        y_val = 2
+
+        @lct.task
+        def task_with_default_args(
+            x: InputStore,
+            y: OutputStore,
+            z_val: complex,
+            z: complex = complex(1, 3),
+        ) -> None:
+            assert_isinstance(x, PhysicalStore)
+            x_arr = np.asarray(x)
+            np.testing.assert_allclose(
+                x_arr, np.full(shape=tuple(x_arr.shape), fill_value=x_val)
+            )
+
+            assert_isinstance(y, PhysicalStore)
+            y_arr = np.asarray(y)
+            np.testing.assert_allclose(
+                y_arr, np.full(shape=tuple(y_arr.shape), fill_value=y_val)
+            )
+
+            assert_isinstance(z_val, complex)
+            assert_isinstance(z, complex)
+            assert z == z_val
+
+        x = make_input_store(value=x_val)
+        y = make_input_store(value=y_val, shape=tuple(x.shape))
+        # This line only exists to make the runtime actually issue the fill. y
+        # is used as an output in the task (purely in order to test that
+        # default values are properly ordered in the face of both inputs and
+        # outputs), so normally the runtime would just skip the fill (because
+        # the test is ostensibly writing to the task).
+        #
+        # Getting the physical store makes the runtime think we are about to
+        # read the values, so it needs to materialize them.
+        y.get_physical_store()
+        task_with_default_args(x, y, complex(1, 3), complex(1, 3))
+        get_legate_runtime().issue_execution_fence(block=True)
+
+    def test_default_arguments_bad(self) -> None:
+        # Have to do it like this because PhysicalStore() and PhysicalArray()
+        # are not default-constructable (which is what default arguments
+        # normally would be). But this test exist to make sure that some
+        # determined user cannot get around this by constructing those default
+        # objects elsewhere.
+        phys_store = make_input_store().get_physical_store()
+        phys_arr = make_input_array().get_physical_array()
+
+        def foo(
+            x: InputStore = phys_store,  # type: ignore[assignment]
+        ) -> None:
+            pass
+
+        def foo1(x: InputArray = phys_arr) -> None:  # type: ignore[assignment]
+            pass
+
+        def foo2(
+            x: OutputStore = phys_store,  # type: ignore[assignment]
+        ) -> None:
+            pass
+
+        def foo3(
+            x: OutputArray = phys_arr,  # type: ignore[assignment]
+        ) -> None:
+            pass
+
+        functions = [foo, foo1, foo2, foo3]
+        types = ["InputStore", "InputArray", "OutputStore", "OutputArray"]
+        assert len(functions) == len(types)
+        for fn, name in zip(functions, types):
+            msg = re.escape(
+                "Default values for "
+                f"<class 'legate.core._ext.task.type.{name}'> "
+                "not yet supported"
+            )
+            with pytest.raises(NotImplementedError, match=msg):
+                lct.task(fn)  # type: ignore[call-overload]
+
+        def foo4(
+            x: ReductionStore[ADD] = phys_store,  # type: ignore[assignment]
+        ) -> None:
+            pass
+
+        def foo5(
+            x: ReductionArray[ADD] = phys_arr,  # type: ignore[assignment]
+        ) -> None:
+            pass
+
+        functions = [foo4, foo5]
+        types = ["ReductionStore", "ReductionArray"]
+        assert len(functions) == len(types)
+        for fn, name in zip(functions, types):
+            msg = re.escape(
+                "Default values for "
+                f"legate.core._ext.task.type.{name}[<ReductionOpKind.ADD: 0>] "
+                "not yet supported"
+            )
+            with pytest.raises(NotImplementedError, match=msg):
+                lct.task(fn)  # type: ignore[call-overload]
 
 
 class TestVariantInvoker(BaseTest):
