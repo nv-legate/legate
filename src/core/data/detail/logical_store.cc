@@ -204,7 +204,7 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self
   auto tiling =
     create_tiling(std::move(tile_shape), std::move(color_shape), std::move(signed_offsets));
   auto storage_partition = root->create_partition(root, std::move(tiling), can_tile_completely);
-  return storage_partition->get_child_storage(std::move(color));
+  return storage_partition->get_child_storage(storage_partition, std::move(color));
 }
 
 const Storage* Storage::get_root() const { return parent_ ? parent_->get_root() : this; }
@@ -439,8 +439,11 @@ InternalSharedPtr<Storage> StoragePartition::get_root(const InternalSharedPtr<St
   return parent_->get_root(parent_);
 }
 
-InternalSharedPtr<Storage> StoragePartition::get_child_storage(tuple<std::uint64_t> color)
+InternalSharedPtr<Storage> StoragePartition::get_child_storage(
+  const InternalSharedPtr<StoragePartition>& self, tuple<std::uint64_t> color)
 {
+  LEGATE_ASSERT(self.get() == this);
+
   if (partition_->kind() != Partition::Kind::TILING) {
     throw std::runtime_error{"Sub-storage is implemented only for tiling"};
   }
@@ -448,11 +451,8 @@ InternalSharedPtr<Storage> StoragePartition::get_child_storage(tuple<std::uint64
   auto tiling        = static_cast<Tiling*>(partition_.get());
   auto child_extents = tiling->get_child_extents(parent_->extents(), color);
   auto child_offsets = tiling->get_child_offsets(color);
-  return make_internal_shared<Storage>(std::move(child_extents),
-                                       parent_->type(),
-                                       shared_from_this(),
-                                       std::move(color),
-                                       std::move(child_offsets));
+  return make_internal_shared<Storage>(
+    std::move(child_extents), parent_->type(), self, std::move(color), std::move(child_offsets));
 }
 
 InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(
@@ -1175,7 +1175,7 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
   // TODO(jfaibussowit)
   // Can move color here
   auto inverted_color = transform->invert_color(color);
-  auto child_storage  = storage_partition_->get_child_storage(inverted_color);
+  auto child_storage  = storage_partition_->get_child_storage(storage_partition_, inverted_color);
 
   auto child_extents = tiling->get_child_extents(store_->extents(), inverted_color);
   auto child_offsets = tiling->get_child_offsets(inverted_color);

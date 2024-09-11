@@ -148,7 +148,7 @@ class Storage {
   std::unique_ptr<Partition> key_partition_{};
 };
 
-class StoragePartition : public legate::EnableSharedFromThis<StoragePartition> {
+class StoragePartition {
  public:
   StoragePartition(InternalSharedPtr<Storage> parent,
                    InternalSharedPtr<Partition> partition,
@@ -160,7 +160,8 @@ class StoragePartition : public legate::EnableSharedFromThis<StoragePartition> {
   [[nodiscard]] InternalSharedPtr<const Storage> get_root(
     const InternalSharedPtr<const StoragePartition>&) const;
   [[nodiscard]] InternalSharedPtr<Storage> get_root(const InternalSharedPtr<StoragePartition>&);
-  [[nodiscard]] InternalSharedPtr<Storage> get_child_storage(tuple<std::uint64_t> color);
+  [[nodiscard]] InternalSharedPtr<Storage> get_child_storage(
+    const InternalSharedPtr<StoragePartition>& self, tuple<std::uint64_t> color);
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child_data(
     const tuple<std::uint64_t>& color);
 

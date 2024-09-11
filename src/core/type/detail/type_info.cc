@@ -639,6 +639,46 @@ std::int32_t ndim_rect_type(const InternalSharedPtr<Type>& type)
   return static_cast<std::int32_t>(type->uid() - BASE_RECT_TYPE_UID);
 }
 
+namespace {
+
+std::int32_t statically_initialize_types() noexcept
+{
+  try {
+    // The following functions cache type objects in function-local static variables to avoid
+    // dynamic allocations for types that are used frequently in programs. Despite the C++ standard
+    // guaranteeing that concurrent initializations for those cached objects are safe, these
+    // functions aren't actually thread safe when their static variables are uninitialized, because
+    // they internally call the `primitive_type()` function that doesn't guard its cache stored in
+    // an `unordered_map`. A fix for cases like this usually involves adding a lock to the shared
+    // data structures to protect it from concurrent accesses. In this case, however, we know that
+    // the cache would be populated only by the primitive types and need to be initialized only
+    // once, so we instead just initialize the caches by calling these functions statically when the
+    // library gets loaded for the first time.
+    static_cast<void>(bool_());
+    static_cast<void>(int8());
+    static_cast<void>(int16());
+    static_cast<void>(int32());
+    static_cast<void>(int64());
+    static_cast<void>(uint8());
+    static_cast<void>(uint16());
+    static_cast<void>(uint32());
+    static_cast<void>(uint64());
+    static_cast<void>(float16());
+    static_cast<void>(float32());
+    static_cast<void>(float64());
+    static_cast<void>(complex64());
+    static_cast<void>(complex128());
+    static_cast<void>(null_type());
+  } catch (const std::exception& exn) {
+    LEGATE_ABORT(exn.what());
+  }
+  return 0;
+};
+
+const std::int32_t STATICALLY_INITIALIZE_TYPES = statically_initialize_types();
+
+}  // namespace
+
 }  // namespace legate::detail
 
 namespace fmt {
