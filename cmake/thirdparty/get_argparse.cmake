@@ -18,9 +18,10 @@ function(find_or_configure_argparse)
   legate_core_parse_versions_json(PACKAGE argparse VERSION version GIT_URL git_url
                                   GIT_SHALLOW git_shallow GIT_TAG git_tag)
 
+  # We don't add this package to BUILD_EXPORT_SET or INSTALL_EXPORT_SET because it is used
+  # as a private, header-only dependency, and therefore no other package should need to
+  # see any trace of it in cmake.
   rapids_cpm_find(argparse "${version}"
-                  BUILD_EXPORT_SET legate-core-exports
-                  INSTALL_EXPORT_SET legate-core-exports
                   CPM_ARGS
                   GIT_REPOSITORY "${git_url}"
                   GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
