@@ -15,7 +15,7 @@ from libcpp cimport bool
 import inspect
 import warnings
 from collections.abc import Callable
-from inspect import Parameter, Signature, isclass as inspect_isclass
+from inspect import Parameter, Signature
 from pickle import (
     HIGHEST_PROTOCOL as PKL_HIGHEST_PROTOCOL,
     dumps as pkl_dumps,
@@ -60,12 +60,19 @@ cdef tuple[type, ...] _OUTPUT_TYPES = (OutputStore, OutputArray)
 cdef tuple[type, ...] _REDUCTION_TYPES = (ReductionStore, ReductionArray)
 
 cdef inline type _unpack_generic_type(object annotation):
-    if inspect_isclass(annotation):
-        return annotation
+    origin_type = typing_get_origin(annotation)
 
-    cdef type ret = typing_get_origin(annotation)
-    assert ret is not None, f"Unknown annotation type: {annotation}"
-    return ret
+    if origin_type is None:
+        # typing.get_origin() "returns None if the type is not supported". In
+        # practice this just means that the annotation was not a generic. In
+        # this case we hope that it's some kind of type, otherwise Cython will
+        # balk when it tries to convert.
+        assert isinstance(annotation, type), (
+            f"Unhandled type annotation: {annotation}, expected this to be a "
+            f"type, got {type(annotation)} instead"
+        )
+        return annotation
+    return origin_type
 
 cdef tuple[
     tuple[str], tuple[str], tuple[str], tuple[str]

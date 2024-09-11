@@ -28,8 +28,7 @@ jobs:
           - true
           - false
         python-version:
-          # Python 3.10 builds fail: https://github.com/nv-legate/legate.core.internal/issues/1195
-          # - "3.10"
+          - "3.10"
           - "3.11"
           - "3.12"
     uses:
