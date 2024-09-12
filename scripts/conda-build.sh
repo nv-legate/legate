@@ -1,11 +1,11 @@
 #! /usr/bin/env bash
 
-# mamba create -n legate_core_build python=$PYTHON_VERSION boa git
+# mamba create -n legate_build python=$PYTHON_VERSION boa git
 
 cd $(dirname "$(realpath "$0")")/..
 
-mkdir -p /tmp/conda-build/legate_core
-rm -rf /tmp/conda-build/legate_core/*
+mkdir -p /tmp/conda-build/legate
+rm -rf /tmp/conda-build/legate/*
 
 PYTHON_VERSION="${PYTHON_VERSION:-3.10}"
 
@@ -15,7 +15,7 @@ conda mambabuild \
     --python $PYTHON_VERSION \
     --override-channels \
     -c conda-forge \
-    --croot /tmp/conda-build/legate_core \
+    --croot /tmp/conda-build/legate \
     --no-test \
     --no-verify \
     --no-build-id \

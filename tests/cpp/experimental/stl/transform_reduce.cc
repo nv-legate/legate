@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/experimental/stl.hpp"
+#include "legate/experimental/stl.hpp"
 #include "utilities/utilities.h"
 
 #include <functional>

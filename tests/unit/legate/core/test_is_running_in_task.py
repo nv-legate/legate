@@ -14,8 +14,8 @@ import sys
 
 import pytest
 
-import legate.core as lg
-from legate.core.task import task
+import legate as lg
+from legate.task import task
 
 
 class TestIsRunningInTask:

@@ -295,15 +295,15 @@ class MainPackage(Package, ABC):
         manager : ConfigurationManager
             The configuration manager that will manage the main package.
         name : str
-            The name of the main package, e.g. 'Legate.Core'.
+            The name of the main package, e.g. 'Legate'.
         argv : Sequence[str]
             The command line options.
         arch_name : str
-            The name of the arch value, e.g. 'LEGATE_CORE_ARCH'.
+            The name of the arch value, e.g. 'LEGATE_ARCH'.
         project_dir_name : str
-            The name of the project dir variable, e.g. 'LEGATE_CORE_DIR'.
+            The name of the project dir variable, e.g. 'LEGATE_DIR'.
         project_dir_value : Path
-            The value of the project dir, e.g. /path/to/legate.core.internal.
+            The value of the project dir, e.g. /path/to/legate.internal.
 
         Raises
         ------
@@ -348,7 +348,7 @@ class MainPackage(Package, ABC):
         Returns
         -------
         arch_name : str
-            The arch name of the main package, e.g. 'LEGATE_CORE_ARCH'.
+            The arch name of the main package, e.g. 'LEGATE_ARCH'.
         """
         return self._arch_name
 
@@ -381,7 +381,7 @@ class MainPackage(Package, ABC):
         Returns
         -------
         proj_dir_name : str
-            The name of the project dir variable, e.g. 'LEGATE_CORE_DIR'.
+            The name of the project dir variable, e.g. 'LEGATE_DIR'.
         """
         return self._proj_dir_name
 
@@ -393,7 +393,7 @@ class MainPackage(Package, ABC):
         -------
         proj_dir_value : Path
             The value of the project dir variable,
-            e.g. /path/to/legate.core.internal.
+            e.g. /path/to/legate.internal.
         """
         return self._proj_dir_value
 

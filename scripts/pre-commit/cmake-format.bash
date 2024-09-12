@@ -20,19 +20,19 @@
 set -ou pipefail
 
 if [[ $# -eq 0 ]]; then
-  echo "usage: [LEGATE_CORE_DIR=/absolute/path] [LEGATE_CORE_CMAKE_FORMAT_FILE=/absolute/path] $0 cmake-format|cmake-lint file1 [file2 ... fileN]" >&2
+  echo "usage: [LEGATE_DIR=/absolute/path] [LEGATE_CMAKE_FORMAT_FILE=/absolute/path] $0 cmake-format|cmake-lint file1 [file2 ... fileN]" >&2
   exit 2
 fi
 
-if [[ "${LEGATE_CORE_DIR:-}" == '' ]]; then
+if [[ "${LEGATE_DIR:-}" == '' ]]; then
   set -e
   script_dir="$(dirname $(readlink -f $0))"
-  export LEGATE_CORE_DIR="$(${script_dir}/../get_legate_core_dir.py)"
+  export LEGATE_DIR="$(${script_dir}/../get_legate_dir.py)"
   set +e
 fi
 
-if [[ "${LEGATE_CORE_CMAKE_FORMAT_FILE:-}" == '' ]]; then
-  LEGATE_CORE_CMAKE_FORMAT_FILE="${LEGATE_CORE_DIR}/scripts/pre-commit/cmake-format-legate-core.json"
+if [[ "${LEGATE_CMAKE_FORMAT_FILE:-}" == '' ]]; then
+  LEGATE_CMAKE_FORMAT_FILE="${LEGATE_DIR}/scripts/pre-commit/cmake-format-legate.json"
 fi
 
 retcode=0
@@ -45,8 +45,8 @@ case "${1}" in
         --in-place \
         --first-comment-is-literal \
         --config-files \
-          "${LEGATE_CORE_CMAKE_FORMAT_FILE}" \
-          "${LEGATE_CORE_DIR}/scripts/pre-commit/cmake_config_format.json" \
+          "${LEGATE_CMAKE_FORMAT_FILE}" \
+          "${LEGATE_DIR}/scripts/pre-commit/cmake_config_format.json" \
         -- \
         "${cmake_file}"
       status=$?
@@ -64,9 +64,9 @@ case "${1}" in
     # shellcheck disable=SC2068
     output=$(cmake-lint \
                --config-files \
-                 "${LEGATE_CORE_CMAKE_FORMAT_FILE}" \
-                 "${LEGATE_CORE_DIR}/scripts/pre-commit/cmake_config_format.json" \
-                 "${LEGATE_CORE_DIR}/scripts/pre-commit/cmake_config_lint.json" \
+                 "${LEGATE_CMAKE_FORMAT_FILE}" \
+                 "${LEGATE_DIR}/scripts/pre-commit/cmake_config_format.json" \
+                 "${LEGATE_DIR}/scripts/pre-commit/cmake_config_lint.json" \
                -- \
                ${@:2})
     retcode=$?

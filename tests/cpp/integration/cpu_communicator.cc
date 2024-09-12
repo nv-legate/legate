@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/comm/coll.h"
+#include "legate/comm/coll.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

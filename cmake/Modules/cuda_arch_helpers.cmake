@@ -81,7 +81,7 @@ function(add_cuda_architecture_defines)
   set(multiValueArgs ARCHS)
   cmake_parse_arguments(cuda "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  message(VERBOSE "legate.core: CUDA_ARCHITECTURES=${cuda_ARCHS}")
+  message(VERBOSE "legate: CUDA_ARCHITECTURES=${cuda_ARCHS}")
 
   set(_defs ${${cuda_DEFS}})
 

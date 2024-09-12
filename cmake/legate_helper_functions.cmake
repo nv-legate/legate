@@ -33,7 +33,7 @@ function(legate_default_cpp_install target)
 
   include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/debug_symbols.cmake")
 
-  legate_core_debug_syms(${target} INSTALL_DIR ${lib_dir})
+  legate_debug_syms(${target} INSTALL_DIR ${lib_dir})
 
   set(final_code_block "set(${target}_BUILD_LIBDIR ${CMAKE_BINARY_DIR}/legate_${target})")
 
@@ -175,7 +175,7 @@ function(legate_default_python_install target)
   if(SKBUILD)
     add_library(${target}_python INTERFACE)
     add_library(legate::${target}_python ALIAS ${target}_python)
-    target_link_libraries(${target}_python INTERFACE legate::core legate::${target})
+    target_link_libraries(${target}_python INTERFACE legate::legate legate::${target})
 
     install(TARGETS ${target}_python DESTINATION ${lib_dir} EXPORT ${LEGATE_OPT_EXPORT})
 
@@ -204,18 +204,17 @@ function(legate_add_cpp_subdirectory dir)
     message(FATAL_ERROR "Need TARGET name for Legate package")
   endif()
 
-  set(legate_core_version)
+  set(legate_version)
   if(LEGATE_OPT_VERSION)
-    set(legate_core_version ${LEGATE_OPT_VERSION})
+    set(legate_version ${LEGATE_OPT_VERSION})
   else()
-    if((PROJECT_NAME STREQUAL "legate_core") OR (PROJECT_NAME STREQUAL
-                                                 "legate_core_python"))
+    if((PROJECT_NAME STREQUAL "legate") OR (PROJECT_NAME STREQUAL "legate_python"))
       # called directly by our own cmake lists
-      set(legate_core_version "${PROJECT_VERSION}")
-    elseif((CMAKE_PROJECT_NAME STREQUAL "legate_core") OR (CMAKE_PROJECT_NAME STREQUAL
-                                                           "legate_core_python"))
+      set(legate_version "${PROJECT_VERSION}")
+    elseif((CMAKE_PROJECT_NAME STREQUAL "legate") OR (CMAKE_PROJECT_NAME STREQUAL
+                                                      "legate_python"))
       # our cmake lists are top-level
-      set(legate_core_version "${CMAKE_PROJECT_VERSION}")
+      set(legate_version "${CMAKE_PROJECT_VERSION}")
     endif()
   endif()
 
@@ -226,7 +225,7 @@ function(legate_add_cpp_subdirectory dir)
 
   legate_include_rapids()
 
-  rapids_find_package(legate_core CONFIG GLOBAL_TARGETS legate::core
+  rapids_find_package(legate CONFIG GLOBAL_TARGETS legate::legate
                       BUILD_EXPORT_SET ${LEGATE_OPT_EXPORT}
                       INSTALL_EXPORT_SET ${LEGATE_OPT_EXPORT})
 
@@ -371,7 +370,7 @@ function(legate_python_library_template py_path)
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from legate.core import (
+from legate import (
     get_legate_runtime,
 )
 import os

@@ -6,11 +6,11 @@ cd $(dirname "$(realpath "$0")")/..
 source ./scripts/util/build-caching.sh
 # Use consistent C[XX]FLAGS
 source ./scripts/util/compiler-flags.sh
-# Uninstall existing globally-installed Legion and legate_core (if installed)
-source ./scripts/util/uninstall-global-legion-and-legate-core.sh
+# Uninstall existing globally-installed Legion and Legate_(if installed)
+source ./scripts/util/uninstall-global-legion-and-legate.sh
 
 # Remove existing build artifacts
-rm -rf ./{build,_skbuild,dist,legate_core.egg-info}
+rm -rf ./{build,_skbuild,dist,legate.egg-info}
 
 # Define CMake configuration arguments
 cmake_args="${CMAKE_ARGS:-}"
@@ -28,7 +28,7 @@ cmake_args+="
 # Use all but 2 threads to compile
 ninja_args="-j$(nproc --ignore=2)"
 
-# Build legion_core + legion_core_python and install into the current Python environment
+# Build legion + legion_python and install into the current Python environment
 SKBUILD_BUILD_OPTIONS="$ninja_args"       \
 CMAKE_ARGS="$cmake_args"                  \
     python -m pip install                 \

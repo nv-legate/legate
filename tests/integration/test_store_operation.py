@@ -15,7 +15,7 @@ from typing import Any
 import numpy as np
 import pytest
 
-from legate.core import LEGATE_MAX_DIM, get_legate_runtime, types as ty
+from legate import LEGATE_MAX_DIM, get_legate_runtime, types as ty
 
 
 class TestLogicalStoreOperation:

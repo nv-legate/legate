@@ -7,12 +7,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from config.aedifix.main import basic_configure  # noqa: E402
-from config.legate_core_internal.main_package import LegateCore  # noqa: E402
+from config.legate_internal.main_package import Legate  # noqa: E402
 
 
 def main() -> int:
     argv = [
-        f"--LEGATE_CORE_ARCH={Path(__file__).stem}",
+        f"--LEGATE_ARCH={Path(__file__).stem}",
         "--with-cc=clang",
         "--with-cxx=clang++",
         "--build-type=release",
@@ -20,7 +20,7 @@ def main() -> int:
         "--CXXFLAGS=-O3",
         "--with-python",
     ] + sys.argv[1:]
-    return basic_configure(tuple(argv), LegateCore)
+    return basic_configure(tuple(argv), Legate)
 
 
 if __name__ == "__main__":

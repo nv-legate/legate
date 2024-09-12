@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/utilities/detail/tuple.h"
+#include "legate/utilities/detail/tuple.h"
 
 #include "utilities/utilities.h"
 

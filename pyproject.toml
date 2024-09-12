@@ -25,10 +25,10 @@ build-backend = "setuptools.build_meta:__legacy__"
 python-requires = ">=3.10"
 
 [project]
-name = "legate-core"
+name = "legate"
 authors = [{name = "NVIDIA Corporation"}]
 license = {text = "Proprietary"}
-description = "legate.core - The Foundation for All Legate Libraries"
+description = "legate - The Foundation for All Legate Libraries"
 classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Database",
@@ -60,7 +60,7 @@ test = [
 ]
 
 [project.urls]
-homepage = "https://github.com/nv-legate/legate.core"
+homepage = "https://github.com/nv-legate/legate"
 
 [project.scripts]
 legate = "legate.driver:main"
@@ -183,17 +183,12 @@ force_grid_wrap = 0
 combine_as_imports = true
 order_by_type = true
 known_third_party = ["numpy"]
-known_legion = [
-    "legion_cffi",
-    "legion_top"
-]
-known_first_party = ["legate.core"]
+known_first_party = ["legate"]
 default_section = "THIRDPARTY"
 sections = [
     "FUTURE",
     "STDLIB",
     "THIRDPARTY",
-    "LEGION",
     "FIRSTPARTY",
     "LOCALFOLDER"
 ]
@@ -210,6 +205,5 @@ skip = [
     "__init__.py"
 ]
 skip_glob = [
-   "legion/*",
    "install/*"
 ]

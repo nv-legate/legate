@@ -12,7 +12,7 @@
 
 include_guard(GLOBAL)
 
-function(legate_core_export_compile_commands)
+function(legate_export_compile_commands)
   list(APPEND CMAKE_MESSAGE_CONTEXT "export_compile_commands")
 
   if(NOT DEFINED CMAKE_EXPORT_COMPILE_COMMANDS)

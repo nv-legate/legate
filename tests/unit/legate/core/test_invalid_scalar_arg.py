@@ -12,7 +12,7 @@
 
 import pytest
 
-from legate.core import LocalTaskID, get_legate_runtime, types as ty
+from legate import LocalTaskID, get_legate_runtime, types as ty
 
 
 class Test_scalar_arg:

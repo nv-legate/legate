@@ -11,10 +11,10 @@
 
 from libc.stdint cimport int64_t
 
-from ...core._lib.utilities.unconstructable cimport Unconstructable
+from ..._lib.utilities.unconstructable cimport Unconstructable
 
 
-cdef extern from "timing/timing.h" namespace "legate::timing" nogil:
+cdef extern from "legate/timing/timing.h" namespace "legate::timing" nogil:
     cdef cppclass Time:
         int64_t value()
 

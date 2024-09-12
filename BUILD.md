@@ -21,14 +21,14 @@ specific cluster is not covered, you may be able to adapt an existing workflow.
 
 ### Getting dependencies through conda
 
-The primary method of retrieving dependencies for Legate Core and downstream
+The primary method of retrieving dependencies for Legate and downstream
 libraries is through [conda](https://docs.conda.io/en/latest/). You will need
 an installation of conda to follow the instructions below. We suggest using
 the [miniforge](https://github.com/conda-forge/miniforge) distribution of conda.
 
 Please use the `scripts/generate-conda-envs.py` script to create a conda
 environment file listing all the packages that are required to build, run and
-test Legate Core and all downstream libraries. For example:
+test Legate and all downstream libraries. For example:
 
 ```shell
 $ ./scripts/generate-conda-envs.py --ctk 12.2.2 --os linux --ucx
@@ -62,7 +62,7 @@ conda activate legate
 
 ### Building from source
 
-Build and install basic C++ core:
+Build and install basic C++ runtime:
 
 ```shell
 $ ./configure
@@ -70,14 +70,14 @@ $ make
 $ make install
 ```
 
-Build and install C++ core and Python bindings:
+Build and install C++ runtime and Python bindings:
 
 ```shell
 $ ./configure --with-python
 $ pip install .
 ```
 
-Build and install basic C++ core with CUDA and HDF5 support, while disabling ZLIB, and
+Build and install basic C++ runtime with CUDA and HDF5 support, while disabling ZLIB, and
 explicitly specifying a pre-built UCX directory. Specifying the UCX directory implies
 enabling UCX support. Additionally, we also install the library to a custom prefix:
 
@@ -165,7 +165,7 @@ version of CUDA installed system-wide, by specifying it to
 
 Only necessary if you wish to run with Nvidia GPUs.
 
-The following additional CUDA libraries are required, for use by legate.core or
+The following additional CUDA libraries are required, for use by legate or
 downstream libraries. Unless noted otherwise, these are included in the conda
 environment file.
 

@@ -17,7 +17,7 @@ include(CheckLinkerFlag)
 
 include(${CMAKE_CURRENT_LIST_DIR}/utilities.cmake)
 
-function(legate_core_set_default_flags_impl)
+function(legate_set_default_flags_impl)
   list(APPEND CMAKE_MESSAGE_CONTEXT "set_default_flags")
 
   set(options SET_CACHE IS_LINKER)
@@ -78,7 +78,7 @@ endfunction()
 # Too many statements 51/50
 #
 # cmake-lint: disable=R0915
-function(legate_core_configure_default_compiler_flags)
+function(legate_configure_default_compiler_flags)
   set(default_warning_flags
       "-Wall"
       "-Wextra"
@@ -116,21 +116,21 @@ function(legate_core_configure_default_compiler_flags)
     list(APPEND default_cxx_flags "${default_cxx_flags_relwithdebinfo}")
   endif()
 
-  if(legate_core_ENABLE_SANITIZERS)
+  if(legate_ENABLE_SANITIZERS)
     list(APPEND default_cxx_flags "${default_cxx_flags_sanitizer}")
   endif()
 
-  if(NOT legate_core_CXX_FLAGS)
-    legate_core_set_default_flags_impl(SET_CACHE LANG CXX DEST_VAR legate_core_CXX_FLAGS
-                                       FLAGS ${default_cxx_flags})
-    set(legate_core_CXX_FLAGS "${legate_core_CXX_FLAGS}" PARENT_SCOPE)
+  if(NOT legate_CXX_FLAGS)
+    legate_set_default_flags_impl(SET_CACHE LANG CXX DEST_VAR legate_CXX_FLAGS FLAGS
+                                  ${default_cxx_flags})
+    set(legate_CXX_FLAGS "${legate_CXX_FLAGS}" PARENT_SCOPE)
   endif()
 
-  if(legate_core_ENABLE_SANITIZERS)
+  if(legate_ENABLE_SANITIZERS)
     set(cmake_cxx_flags_tmp)
     # Don't set cache because we still need to de-listify the result first
-    legate_core_set_default_flags_impl(LANG CXX DEST_VAR cmake_cxx_flags_tmp FLAGS
-                                       ${default_cxx_flags_sanitizer})
+    legate_set_default_flags_impl(LANG CXX DEST_VAR cmake_cxx_flags_tmp FLAGS
+                                  ${default_cxx_flags_sanitizer})
 
     list(JOIN cmake_cxx_flags_tmp " " cmake_cxx_flags_tmp)
     # Don't assign this blindly, first, check if CMAKE_CXX_FLAGS ends with exactly the
@@ -142,8 +142,8 @@ function(legate_core_configure_default_compiler_flags)
     #
     # This plays havoc with compiler caches like ccache, which treat each such variant as
     # different, and hence causes a full (uncached!) recompilation of all dependencies.
-    legate_core_string_ends_with(SRC "${CMAKE_CXX_FLAGS}"
-                                 ENDS_WITH "${cmake_cxx_flags_tmp}" RESULT_VAR found)
+    legate_string_ends_with(SRC "${CMAKE_CXX_FLAGS}" ENDS_WITH "${cmake_cxx_flags_tmp}"
+                            RESULT_VAR found)
 
     if(found)
       message(STATUS "CMAKE_CXX_FLAGS already ends with sanitizer flags, not adding them")
@@ -156,8 +156,8 @@ function(legate_core_configure_default_compiler_flags)
     endif()
   endif()
 
-  if(NOT legate_core_CUDA_FLAGS)
-    set(cuda_flags "${legate_core_CXX_FLAGS}")
+  if(NOT legate_CUDA_FLAGS)
+    set(cuda_flags "${legate_CXX_FLAGS}")
     list(REMOVE_ITEM cuda_flags "-pedantic")
     list(REMOVE_ITEM cuda_flags "-Wpedantic")
 
@@ -176,24 +176,23 @@ function(legate_core_configure_default_compiler_flags)
       list(APPEND default_cuda_flags "-g" "-lineinfo")
     endif()
 
-    legate_core_set_default_flags_impl(SET_CACHE LANG CUDA DEST_VAR
-                                       legate_core_CUDA_FLAGS FLAGS ${default_cuda_flags})
-    set(legate_core_CUDA_FLAGS "${legate_core_CUDA_FLAGS}" PARENT_SCOPE)
+    legate_set_default_flags_impl(SET_CACHE LANG CUDA DEST_VAR legate_CUDA_FLAGS FLAGS
+                                  ${default_cuda_flags})
+    set(legate_CUDA_FLAGS "${legate_CUDA_FLAGS}" PARENT_SCOPE)
   endif()
 endfunction()
 
-function(legate_core_configure_default_linker_flags)
+function(legate_configure_default_linker_flags)
   # There are no default linker flags currently.
   set(default_linker_flags)
-  if(legate_core_ENABLE_SANITIZERS)
+  if(legate_ENABLE_SANITIZERS)
     list(APPEND default_linker_flags "-fsanitize=address,undefined,bounds"
          "-fno-sanitize-recover=undefined")
   endif()
 
-  if(NOT legate_core_LINKER_FLAGS)
-    legate_core_set_default_flags_impl(
-      SET_CACHE IS_LINKER LANG CXX DEST_VAR legate_core_LINKER_FLAGS FLAGS
-      ${default_linker_flags})
-    set(legate_core_LINKER_FLAGS "${legate_core_LINKER_FLAGS}" PARENT_SCOPE)
+  if(NOT legate_LINKER_FLAGS)
+    legate_set_default_flags_impl(SET_CACHE IS_LINKER LANG CXX DEST_VAR
+                                  legate_LINKER_FLAGS FLAGS ${default_linker_flags})
+    set(legate_LINKER_FLAGS "${legate_LINKER_FLAGS}" PARENT_SCOPE)
   endif()
 endfunction()

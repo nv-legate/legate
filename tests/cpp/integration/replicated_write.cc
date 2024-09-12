@@ -15,7 +15,7 @@
 
 #include <gtest/gtest.h>
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include "core/cuda/cuda.h"
+#include "legate/cuda/cuda.h"
 
 #include <cuda_runtime.h>
 #endif

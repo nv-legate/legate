@@ -74,9 +74,9 @@ esac
   export CUDAHOSTCXX="${CXX}"
   export OPENSSL_DIR="${PREFIX}"
   export CUDAFLAGS="-isystem ${PREFIX}/include -L${PREFIX}/lib"
-  export LEGATE_CORE_DIR="$(${PYTHON} ./scripts/get_legate_core_dir.py)"
-  export LEGATE_CORE_DIR
-  export LEGATE_CORE_ARCH='arch-conda'
+  export LEGATE_DIR="$(${PYTHON} ./scripts/get_legate_dir.py)"
+  export LEGATE_DIR
+  export LEGATE_ARCH='arch-conda'
 }
 
 function configure_legate()
@@ -85,7 +85,7 @@ function configure_legate()
   set +e
 
   ./configure \
-    --LEGATE_CORE_ARCH="${LEGATE_CORE_ARCH}" \
+    --LEGATE_ARCH="${LEGATE_ARCH}" \
     --CUDAFLAGS="${CUDAFLAGS}" \
     --with-python \
     --with-cc="${CC}" \
@@ -124,12 +124,12 @@ function pip_install_legate()
                        -vv
 
   # Legion leaves an egg-info file which will confuse conda trying to pick up the information
-  # Remove it so the legate-core is the only egg-info file added
+  # Remove it so the legate is the only egg-info file added
   rm -rf "${SP_DIR}"/legion*egg-info
 }
 
 echo "Build starting on $(date)"
 run_command 'Preamble' preamble
-run_command 'Configure Legate.Core' configure_legate
-run_command 'pip install Legate.Core' pip_install_legate
+run_command 'Configure Legate' configure_legate
+run_command 'pip install Legate' pip_install_legate
 echo "Build ending on $(date)"

@@ -9,7 +9,7 @@
  * without an express license agreement from NVIDIA CORPORATION or
  * its affiliates is strictly prohibited.
  */
-#include "core/utilities/detail/strtoll.h"
+#include "legate/utilities/detail/strtoll.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

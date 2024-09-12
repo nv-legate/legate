@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/cuda/cuda.h"
+#include "legate/cuda/cuda.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

@@ -41,11 +41,11 @@ import os  # noqa E402
 sys.path.insert(0, os.path.abspath("config"))
 
 from config.aedifix.main import basic_configure  # noqa E402
-from config.legate_core_internal.main_package import LegateCore  # noqa E402
+from config.legate_internal.main_package import Legate  # noqa E402
 
 
 def main():
-    return basic_configure(tuple(sys.argv[1:]), LegateCore)
+    return basic_configure(tuple(sys.argv[1:]), Legate)
 
 
 if __name__ == "__main__":

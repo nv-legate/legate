@@ -10,8 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/utilities/detail/env.h"
-#include "core/utilities/detail/zstring_view.h"
+#include "legate/utilities/detail/env.h"
+#include "legate/utilities/detail/zstring_view.h"
 
 #include "utilities/utilities.h"
 

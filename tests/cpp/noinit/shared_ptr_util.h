@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/utilities/memory.h"
+#include "legate/utilities/memory.h"
 
 #include "utilities/utilities.h"
 

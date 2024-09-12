@@ -10,15 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/data/detail/logical_store.h"
-#include "core/data/external_allocation.h"
-#include "core/mapping/mapping.h"
+#include "legate/data/detail/logical_store.h"
+#include "legate/data/external_allocation.h"
+#include "legate/mapping/mapping.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include "core/cuda/cuda.h"
+#include "legate/cuda/cuda.h"
 
 #include <cuda_runtime.h>
 #endif

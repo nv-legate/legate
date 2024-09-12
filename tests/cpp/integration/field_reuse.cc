@@ -10,8 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/data/detail/logical_store.h"
-#include "core/runtime/detail/runtime.h"
+#include "legate/data/detail/logical_store.h"
+#include "legate/runtime/detail/runtime.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

@@ -10,8 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/experimental/stl/detail/registrar.hpp"
 #include "legate.h"
+#include "legate/experimental/stl/detail/registrar.hpp"
 #include "utilities/utilities.h"
 
 #include <gtest/gtest.h>

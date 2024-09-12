@@ -69,14 +69,14 @@ get_yaml_and_make_conda_env() {
     make_conda_env_from_yaml;
 }
 
-install_legate_core_with_war() {
+install_legate_with_war() {
     set -x;
-    # WAR: legate-core depends on a different version of numpy than what is already installed.
-    # The correct version will be installed when legate-core is installed below.
+    # WAR: legate depends on a different version of numpy than what is already installed.
+    # The correct version will be installed when legate is installed below.
     # See github issue: https://github.com/nv-legate/legate.core/issues/812
     mamba uninstall -q -y -n "${CONDA_ENV}" numpy;
 
-    mamba install -y -n "${CONDA_ENV}" -c conda-forge -c "$ARTIFACTS_DIR/conda-build/legate_core" legate-core;
+    mamba install -y -n "${CONDA_ENV}" -c conda-forge -c "$ARTIFACTS_DIR/conda-build/legate" legate;
 }
 
 make_release_env() {

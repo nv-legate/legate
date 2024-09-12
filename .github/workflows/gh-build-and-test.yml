@@ -62,8 +62,8 @@ jobs:
       upload-enabled: ${{ inputs.upload-enabled }}
       network: ${{ inputs.network }}
       upload-action: "upload-package"
-      pkgSubString: "legate-core"
-      repos-Root: "legate_core"
+      pkgSubString: "legate"
+      repos-Root: "legate"
       python-version: ${{ inputs.python-version }}
     secrets: inherit
 
@@ -180,8 +180,8 @@ jobs:
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: true
       upload-action: "update-test-status"
-      pkgSubString: "legate-core"
-      repos-Root: "legate_core"
+      pkgSubString: "legate"
+      repos-Root: "legate"
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
     secrets: inherit

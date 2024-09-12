@@ -305,8 +305,8 @@ other = parser.add_argument_group("Other options")
 
 other.add_argument(
     "--legate",
-    dest="legate_dir",
-    metavar="LEGATE_DIR",
+    dest="legate_install_dir",
+    metavar="LEGATE_INSTALL_DIR",
     action="store",
     default=None,
     required=False,

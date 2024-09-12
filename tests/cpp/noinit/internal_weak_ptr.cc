@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/utilities/internal_shared_ptr.h"
+#include "legate/utilities/internal_shared_ptr.h"
 
 #include "utilities/utilities.h"
 

@@ -11,5 +11,5 @@
 #=============================================================================
 
 set(libpath "")
-configure_file("${LEGATE_CORE_DIR}/legate/install_info.py.in"
-               "${LEGATE_CORE_DIR}/legate/install_info.py" @ONLY)
+configure_file("${LEGATE_DIR}/legate/install_info.py.in"
+               "${LEGATE_DIR}/legate/install_info.py" @ONLY)

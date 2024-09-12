@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from legate.core import LEGATE_MAX_DIM, types as ty
+from legate import LEGATE_MAX_DIM, types as ty
 
 ARRAY_TYPES = (
     ty.bool_,

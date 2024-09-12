@@ -75,7 +75,7 @@ class TestConfig:
         assert c.other.cov_bin is None
         assert c.other.cov_args == "run -a --branch"
         assert c.other.cov_src_path is None
-        assert c.other.legate_dir is None
+        assert c.other.legate_install_dir is None
 
         assert c.extra_args == []
         assert c.root_dir == PurePath(os.getcwd())
@@ -168,27 +168,27 @@ class TestConfig:
         c = m.Config(["test.py", arg, "some/path"])
         assert c.test_root == "some/path"
 
-    def test_legate_dir(self) -> None:
+    def test_legate_install_dir(self) -> None:
         c = m.Config([])
-        assert c.other.legate_dir is None
+        assert c.other.legate_install_dir is None
         assert c.legate_path == shutil.which("legate")
         assert c._legate_source == "install"
 
-    def test_cmd_legate_dir_good(self) -> None:
-        legate_dir = Path("/usr/local")
-        c = m.Config(["test.py", "--legate", str(legate_dir)])
-        assert c.other.legate_dir == legate_dir
-        assert c.legate_path == str(legate_dir / "bin" / "legate")
+    def test_cmd_legate_install_dir_good(self) -> None:
+        legate_install_dir = Path("/usr/local")
+        c = m.Config(["test.py", "--legate", str(legate_install_dir)])
+        assert c.other.legate_install_dir == legate_install_dir
+        assert c.legate_path == str(legate_install_dir / "bin" / "legate")
         assert c._legate_source == "cmd"
 
-    def test_env_legate_dir_good(
+    def test_env_legate_install_dir_good(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        legate_dir = Path("/usr/local")
-        monkeypatch.setenv("LEGATE_DIR", str(legate_dir))
+        legate_install_dir = Path("/usr/local")
+        monkeypatch.setenv("LEGATE_INSTALL_DIR", str(legate_install_dir))
         c = m.Config([])
-        assert c.other.legate_dir == legate_dir
-        assert c.legate_path == str(legate_dir / "bin" / "legate")
+        assert c.other.legate_install_dir == legate_install_dir
+        assert c.legate_path == str(legate_install_dir / "bin" / "legate")
         assert c._legate_source == "env"
 
     def test_extra_args(self) -> None:

@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/utilities/detail/zip.h"
+#include "legate/utilities/detail/zip.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

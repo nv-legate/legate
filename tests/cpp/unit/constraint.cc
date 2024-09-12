@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/partitioning/detail/constraint.h"
+#include "legate/partitioning/detail/constraint.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

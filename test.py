@@ -18,7 +18,7 @@ from pathlib import Path
 
 # Since this file sits top-level, a simple "import legate" would ALWAYS import
 # pwd/legate/__init__.py. This behavior is not desirable/surprising if the user
-# has already legate.core.
+# has already legate.
 #
 # To get around this, we move the current directory to the end of the module
 # search path. That way the global modules are searched first, and the legate
@@ -49,14 +49,14 @@ def main() -> int:
 
 
 def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
-    if not (LEGATE_CORE_ARCH := os.environ.get("LEGATE_CORE_ARCH")):
+    if not (LEGATE_ARCH := os.environ.get("LEGATE_ARCH")):
         return None, None
 
-    from scripts.get_legate_core_dir import get_legate_core_dir
+    from scripts.get_legate_dir import get_legate_dir
 
-    LEGATE_CORE_DIR = Path(get_legate_core_dir())
+    LEGATE_DIR = Path(get_legate_dir())
 
-    lg_arch_dir = LEGATE_CORE_DIR / LEGATE_CORE_ARCH
+    lg_arch_dir = LEGATE_DIR / LEGATE_ARCH
 
     def make_test_dir(prefix: Path) -> Path:
         return prefix / "tests" / "cpp"
@@ -94,9 +94,7 @@ def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
         except FileNotFoundError:
             # skbuild_base does not exist
             return None
-        py_lib = make_test_dir(
-            skbuild_base / "cmake-build" / "legate-core-cpp"
-        )
+        py_lib = make_test_dir(skbuild_base / "cmake-build" / "legate-cpp")
         py_bin = make_test_bin(py_lib)
         if all(p.exists() for p in py_bin):
             return py_lib, py_bin

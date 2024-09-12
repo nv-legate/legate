@@ -1,32 +1,32 @@
 #!/usr/bin/env bash
 . pretty_printing.bash
 
-setup_legate_core_env() {
+setup_legate_env() {
     set -eou pipefail
 
     # rename REPO_DIR
-    export LEGATE_CORE_DIR="${REPO_DIR}"
+    export LEGATE_DIR="${REPO_DIR}"
 
     # HACK: this should be done much better, and in a much more transparent manner... but
     # alas, we no longer have any control of the setup phases in github ci, so we must do
     # it here.
-    if [[ -z "${LEGATE_CORE_ARCH:-}" ]]; then
+    if [[ -z "${LEGATE_ARCH:-}" ]]; then
         case "${BUILD_TYPE}" in
             ci|release)
                 local locase_uname="$(uname | tr '[:upper:]' '[:lower:]')"
-                LEGATE_CORE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_BUILD_MODE%-gcc}"
+                LEGATE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_BUILD_MODE%-gcc}"
                 ;;
             docs)
-                LEGATE_CORE_ARCH='arch-ci-linux-docs'
+                LEGATE_ARCH='arch-ci-linux-docs'
                 ;;
             *) return 1;;
         esac
-        export LEGATE_CORE_ARCH
+        export LEGATE_ARCH
     fi
-    echo "export LEGATE_CORE_DIR=${LEGATE_CORE_DIR}"
-    echo "export LEGATE_CORE_ARCH=${LEGATE_CORE_ARCH}"
+    echo "export LEGATE_DIR=${LEGATE_DIR}"
+    echo "export LEGATE_ARCH=${LEGATE_ARCH}"
 
-    mkdir -p "${ARTIFACTS_DIR}/${LEGATE_CORE_ARCH}"
+    mkdir -p "${ARTIFACTS_DIR}/${LEGATE_ARCH}"
 }
 
 build_legate_release() {
@@ -39,7 +39,7 @@ build_legate_release() {
 
     conda_build_args+=(-c conda-forge);
 
-    conda_build_args+=(--croot /tmp/conda-croot/legate_core);
+    conda_build_args+=(--croot /tmp/conda-croot/legate);
     conda_build_args+=(--numpy 1.22);
     conda_build_args+=(--no-test);
     conda_build_args+=(--no-verify);
@@ -47,7 +47,7 @@ build_legate_release() {
     conda_build_args+=("--build-id-pat=''");
     conda_build_args+=(--no-include-recipe);
     conda_build_args+=(--no-anaconda-upload);
-    conda_build_args+=(--output-folder /tmp/conda-build/legate_core);
+    conda_build_args+=(--output-folder /tmp/conda-build/legate);
 
     GPU_ENABLED=true
     [ "${USE_CUDA:-}" = "OFF" ] && GPU_ENABLED=false
@@ -79,20 +79,20 @@ copy_release_artifacts() {
 copy_docs_artifacts() {
     set -x
     echo Copying artifacts
-    cp -r "${LEGATE_CORE_DIR}"/"${LEGATE_CORE_ARCH}"/cmake_build/docs/legate/core/sphinx/* "$ARTIFACTS_DIR/."
+    cp -r "${LEGATE_DIR}"/"${LEGATE_ARCH}"/cmake_build/docs/legate/sphinx/* "$ARTIFACTS_DIR/."
 }
 
 build_docs() {
     set -eou pipefail
 
-    cd "${LEGATE_CORE_DIR}"
+    cd "${LEGATE_DIR}"
     set +u
     run_command 'Activate Conda' conda activate legate
     run_command 'List conda env' conda list
     set -u
-    run_command 'Dump configure.py' cat "./config/examples/${LEGATE_CORE_ARCH}.py"
-    run_command 'Configure Legate' "./config/examples/${LEGATE_CORE_ARCH}.py"
-    # Install Legate.Core Python bindings so the Python docs build works
+    run_command 'Dump configure.py' cat "./config/examples/${LEGATE_ARCH}.py"
+    run_command 'Configure Legate' "./config/examples/${LEGATE_ARCH}.py"
+    # Install Legate Python bindings so the Python docs build works
     run_command 'pip install Legate' python3 -m pip install . -vv
     run_command 'Build Documentation' make docs
     run_command 'Copy Artifacts' copy_docs_artifacts
@@ -106,7 +106,7 @@ build_project() {
     export PYTHONUNBUFFERED=1
     run_command "Source setup-util" . setup-utils;
     run_command "Init build environment" init_build_env "$@";
-    run_command "Setup Legate.Core Env" setup_legate_core_env
+    run_command "Setup Legate Env" setup_legate_env
 
     git config --global --add safe.directory "$REPO_DIR/.git"
 

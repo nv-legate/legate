@@ -23,33 +23,33 @@ add_compile_options(-w)
 
 include(../cmake/Modules/find_or_configure.cmake)
 
-legate_core_find_or_configure(PACKAGE fmt)
+legate_find_or_configure(PACKAGE fmt)
 
-function(legate_core_create_cython_modules)
+function(legate_create_cython_modules)
   list(APPEND CMAKE_MESSAGE_CONTEXT "create_cython_modules")
 
   set(options)
   set(one_value_args)
   set(multi_value_keywords SOURCES)
-  cmake_parse_arguments(_LEGATE_CORE_CYTHON "${options}" "${one_value_args}"
+  cmake_parse_arguments(_LEGATE_CYTHON "${options}" "${one_value_args}"
                         "${multi_value_keywords}" ${ARGN})
 
-  if(NOT _LEGATE_CORE_CYTHON_SOURCES)
+  if(NOT _LEGATE_CYTHON_SOURCES)
     message(FATAL_ERROR "Must pass SOURCES source1.pyx [source2.pyx ... sourceN.pyx]")
   endif()
 
-  rapids_cython_create_modules(CXX ASSOCIATED_TARGETS legate::core
-                               SOURCE_FILES "${_LEGATE_CORE_CYTHON_SOURCES}"
-                               LINKED_LIBRARIES legate::core
+  rapids_cython_create_modules(CXX ASSOCIATED_TARGETS legate::legate
+                               SOURCE_FILES "${_LEGATE_CYTHON_SOURCES}"
+                               LINKED_LIBRARIES legate::legate
                                                 Python3::Module
                                                 # Some Cython modules require delving into
-                                                # the private headers of legate.core,
-                                                # which may contain fmt headers. As a
-                                                # result, we also need to add the fmt
-                                                # include paths etc. This is not done
-                                                # automatically for us, since fmt is a
-                                                # PRIVATE dependency of legate.core (as it
-                                                # is not found in any public includes).
+                                                # the private headers of legate, which may
+                                                # contain fmt headers. As a result, we
+                                                # also need to add the fmt include paths
+                                                # etc. This is not done automatically for
+                                                # us, since fmt is a PRIVATE dependency of
+                                                # legate (as it is not found in any public
+                                                # includes).
                                                 fmt::fmt)
 
   foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
@@ -61,6 +61,7 @@ function(legate_core_create_cython_modules)
 endfunction()
 
 add_subdirectory(timing)
-add_subdirectory(core)
+add_subdirectory(_lib)
+add_subdirectory(_ext)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

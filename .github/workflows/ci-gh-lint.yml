@@ -1,4 +1,4 @@
-name: Lint legate.core on GH
+name: Lint legate on GH
 
 concurrency:
   group: ci-lint-on-${{ github.event_name }}-from-${{ github.ref_name }}
@@ -45,9 +45,9 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Set LEGATE_CORE_DIR
+      - name: Set LEGATE_DIR
         run: |
-          echo "LEGATE_CORE_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+          echo "LEGATE_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
       - name: run pre-commit
         uses: pre-commit/action@v3.0.1
@@ -55,7 +55,7 @@ jobs:
 
   test-configure:
     env:
-      LEGATE_CORE_ARCH: arch-ci-test-lint
+      LEGATE_ARCH: arch-ci-test-lint
     runs-on: 'ubuntu-latest'
     strategy:
       fail-fast: true
@@ -92,7 +92,7 @@ jobs:
 
   tidy:
     env:
-      LEGATE_CORE_ARCH: arch-ci-lint
+      LEGATE_ARCH: arch-ci-lint
     runs-on: 'linux-amd64-cpu16'
     strategy:
       fail-fast: true
@@ -152,18 +152,18 @@ jobs:
         run: |
           clang-tidy --version
 
-      - name: Configure legate.core
+      - name: Configure legate
         shell: bash -el {0}
         # CMake Error: CMake was unable to find a build program corresponding to "Ninja".
         # CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build
         # tool.
         run: |
           ./configure --with-tests
-          echo "LEGATE_CORE_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+          echo "LEGATE_DIR=${{ github.workspace }}" >> $GITHUB_ENV
 
       - name: Run clang-tidy
         run: |
           # "-- -k" tells the underlying build tool to not stop on first error. We want
           # CI to unearth all clang-tidy errors in one go, otherwise the dev needs to play
           # whack-a-mole with each additional error.
-          LEGATE_CORE_CMAKE_ARGS="-- --keep-going" make tidy -j 14
+          LEGATE_CMAKE_ARGS="-- --keep-going" make tidy -j 14

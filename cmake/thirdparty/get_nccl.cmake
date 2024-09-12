@@ -20,11 +20,11 @@ function(find_or_configure_nccl)
   endif()
 
   rapids_find_generate_module(NCCL HEADER_NAMES nccl.h LIBRARY_NAMES nccl
-                              BUILD_EXPORT_SET legate-core-exports)
+                              BUILD_EXPORT_SET legate-exports)
 
   # Currently NCCL has no CMake build-system so we require it built and installed on the
   # machine already
-  rapids_find_package(NCCL BUILD_EXPORT_SET legate-core-exports)
+  rapids_find_package(NCCL BUILD_EXPORT_SET legate-exports)
   if(TARGET NCCL::NCCL)
     return()
   endif()
@@ -37,7 +37,7 @@ function(find_or_configure_nccl)
     # above without changing anything), so better to fail with a more useful error message
     # instead.
     message(VERBOSE "CMAKE_LIBRARY_ARCHITECTURE is set: ${CMAKE_LIBRARY_ARCHITECTURE}")
-    message(FATAL_ERROR "Could not find NCCL on your system. It's possible that you have it installed in a location that CMake does not know to search for automatically. Please report this case to Legate Core maintainers."
+    message(FATAL_ERROR "Could not find NCCL on your system. It's possible that you have it installed in a location that CMake does not know to search for automatically. Please report this case to Legate maintainers."
     )
   endif()
 
@@ -53,10 +53,10 @@ function(find_or_configure_nccl)
   endif()
 
   if(NOT CMAKE_LIBRARY_ARCHITECTURE)
-    message(FATAL_ERROR "Could not auto-deduce CMAKE_LIBRARY_ARCHITECTURE while trying to locate NCCL. It's possible that you have NCCL installed in a location that CMake does not know to search for automatically (which we tried to remedy by deducing CMAKE_LIBRARY_ARCHITECTURE). Please report this case to Legate Core maintainers."
+    message(FATAL_ERROR "Could not auto-deduce CMAKE_LIBRARY_ARCHITECTURE while trying to locate NCCL. It's possible that you have NCCL installed in a location that CMake does not know to search for automatically (which we tried to remedy by deducing CMAKE_LIBRARY_ARCHITECTURE). Please report this case to Legate maintainers."
     )
   endif()
 
   message(VERBOSE "CMAKE_LIBRARY_ARCHITECTURE is set: ${CMAKE_LIBRARY_ARCHITECTURE}")
-  rapids_find_package(NCCL REQUIRED BUILD_EXPORT_SET legate-core-exports)
+  rapids_find_package(NCCL REQUIRED BUILD_EXPORT_SET legate-exports)
 endfunction()

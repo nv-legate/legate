@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-import legate.core.types as ty
+import legate.types as ty
 
 from .util.types import _PRIMITIVES
 

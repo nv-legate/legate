@@ -13,7 +13,6 @@
 #pragma once
 
 #include "core/mapping/mapping.h"
-
 #include "legate.h"
 
 namespace task {

@@ -12,7 +12,7 @@
 
 include_guard(GLOBAL)
 
-function(legate_core_generate_legate_defines)
+function(legate_generate_legate_defines)
   list(APPEND CMAKE_MESSAGE_CONTEXT "generate_legate_defines")
 
   # Must set these all to exactly 1 so that the configure file is correctly generated

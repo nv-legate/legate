@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/type/type_info.h"
+#include "legate/type/type_info.h"
 
 #include "copy_util.inl"
 #include "legate.h"

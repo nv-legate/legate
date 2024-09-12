@@ -29,7 +29,7 @@ body:
         Platform    :  Linux-5.14.0-1042-oem-x86_64-with-glibc2.31
         Legion      :  v23.11.00.dev-16-g2499f878
         Legate      :  23.11.00.dev+17.gb7b50313
-        Cunumeric   :  (ImportError: cannot import name 'LogicalArray' from 'legate.core')
+        Cunumeric   :  (ImportError: cannot import name 'LogicalArray' from 'legate')
         Numpy       :  1.24.4
         Scipy       :  1.10.1
         Numba       :  (not installed)

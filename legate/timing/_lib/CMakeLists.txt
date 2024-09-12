@@ -14,4 +14,4 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "_lib")
 
 set(cython_sources timing.pyx)
 
-legate_core_create_cython_modules(SOURCES "${cython_sources}")
+legate_create_cython_modules(SOURCES "${cython_sources}")

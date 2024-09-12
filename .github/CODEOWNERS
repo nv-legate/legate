@@ -3,7 +3,7 @@
 * @Jacobfaib
 
 # Python
-legate/core @magnatelee
+legate @magnatelee
 legate/timing @magnatelee
 legate/driver @bryevdv
 legate/tester @bryevdv
@@ -22,8 +22,6 @@ scripts/ @trxcllnt @sandeepd-nv @mag1cp1n @m3vaz @marcinz
 
 # cpp
 src/ @magnatelee @Jacobfaib
-src/core/utilities/*shared_ptr.* @Jacobfaib
-src/core/utilities/compressed_pair.h @Jacobfaib
 
 # docs
-docs/ @magnatelee
+docs/ @bryevdv @magnatelee

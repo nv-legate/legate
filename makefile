@@ -1,10 +1,10 @@
 # -*- mode: makefile-gmake -*-
-ifndef LEGATE_CORE_DIR
-export LEGATE_CORE_DIR := $(shell ./scripts/get_legate_core_dir.py)
+ifndef LEGATE_DIR
+export LEGATE_DIR := $(shell ./scripts/get_legate_dir.py)
 endif
 
-ifndef LEGATE_CORE_ARCH
-$(error LEGATE_CORE_ARCH not defined)
+ifndef LEGATE_ARCH
+$(error LEGATE_ARCH not defined)
 endif
 
 .SUFFIXES:
@@ -38,7 +38,7 @@ ifeq ($(strip $(JOBS)),)
 endif
 export CMAKE_BUILD_PARALLEL_LEVEL ?= $(JOBS)
 
-include $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/gmakevariables
+include $(LEGATE_DIR)/$(LEGATE_ARCH)/gmakevariables
 
 ifeq ($(strip $(V)),1)
 export VERBOSE ?= 1
@@ -67,8 +67,8 @@ endif
 ##
 ## - VERBOSE=0|1                    - Whether to enable verbose output.
 ## - V=0|1                          - Alias for VERBOSE.
-## - LEGATE_CORE_DIR=/absolute/path - Override (or set) the root directory for Legate.Core.
-## - LEGATE_CORE_ARCH=directory     - Override (or set) the current arch directory. The
+## - LEGATE_DIR=/absolute/path      - Override (or set) the root directory for Legate.
+## - LEGATE_ARCH=directory          - Override (or set) the current arch directory. The
 ##                                    arch directory must exist.
 
 ## Print this help message.
@@ -79,7 +79,7 @@ help: default_help
 ## Build the library.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: all
 all: default_all
@@ -87,12 +87,12 @@ all: default_all
 ## Remove build artifacts.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: clean
 clean: default_clean
-	@$(CMAKE) -E rm -rf -- $(LEGATE_CORE_DIR)/legate_core.egg-info
-	@$(CMAKE) -E rm -rf -- $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/_skbuild
+	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/legate.egg-info
+	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/$(LEGATE_ARCH)/_skbuild
 
 
 .PHONY: install_private
@@ -102,7 +102,7 @@ install_private: all
 ## Install the C++ library.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...'   - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...'   - Any additional arguments to pass to the cmake command.
 ## - PREFIX=/any/path               - Set installation prefix of the final install.
 ## - DESTDIR=/any/path              - Alias for PREFIX.
 ## - CMAKE_INSTALL_PREFIX=/any/path - If cmake version >= 29, alias for PREFIX,
@@ -142,7 +142,7 @@ package_private: all
 ## Create an installable package of the library.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: package
 package: package_private
@@ -150,11 +150,11 @@ package: package_private
 ## Run clang-tidy over the repository.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: tidy
 tidy:
-	@$(LEGATE_CORE_BUILD_COMMAND) --target tidy $(LEGATE_CORE_CMAKE_ARGS)
+	@$(LEGATE_BUILD_COMMAND) --target tidy $(LEGATE_CMAKE_ARGS)
 
 ## Run clang-tidy only over the files which have been changed by your branch.
 ##
@@ -165,35 +165,35 @@ tidy:
 ## files. Buyer beware.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: tidy-diff
 tidy-diff:
-	@$(LEGATE_CORE_BUILD_COMMAND) --target tidy-diff $(LEGATE_CORE_CMAKE_ARGS)
+	@$(LEGATE_BUILD_COMMAND) --target tidy-diff $(LEGATE_CMAKE_ARGS)
 
 ## Generate raw doxygen output.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: doxygen
 doxygen:
-	@$(LEGATE_CORE_BUILD_COMMAND) --target Doxygen $(LEGATE_CORE_CMAKE_ARGS)
+	@$(LEGATE_BUILD_COMMAND) --target Doxygen $(LEGATE_CMAKE_ARGS)
 
 ## Build combined Sphinx documentation.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: docs
 docs: doxygen
-	@$(LEGATE_CORE_BUILD_COMMAND) --target Sphinx $(LEGATE_CORE_CMAKE_ARGS)
+	@$(LEGATE_BUILD_COMMAND) --target Sphinx $(LEGATE_CMAKE_ARGS)
 
 ## Serve combined Sphinx documentation.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: docserve
 docserve:
-	@$(PYTHON) -m http.server -d $(LEGATE_CORE_DIR)/$(LEGATE_CORE_ARCH)/cmake_build/docs/legate/core/sphinx
+	@$(PYTHON) -m http.server -d $(LEGATE_DIR)/$(LEGATE_ARCH)/cmake_build/docs/legate/core/sphinx

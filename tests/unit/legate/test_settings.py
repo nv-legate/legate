@@ -36,7 +36,7 @@ _expected_settings = (
 ENV_HEADER = (
     Path(__file__).parents[3]
     / "src"
-    / "core"
+    / "legate"
     / "utilities"
     / "detail"
     / "env_defaults.h"

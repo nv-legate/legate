@@ -12,11 +12,11 @@
 
 cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
-project(legate_core_tests VERSION 0.1 LANGUAGES C CXX)
+project(legate_tests VERSION 0.1 LANGUAGES C CXX)
 
 if(PROJECT_IS_TOP_LEVEL)
   # To catch people trying to build the tests from within tests/cpp instead of top-level
-  message(FATAL_ERROR "Error: Tests can only be built as part of the main library build. Please re-run cmake from top-level directory (\${LEGATE_CORE_DIR}) with -Dlegate_core_BUILD_TESTS=ON"
+  message(FATAL_ERROR "Error: Tests can only be built as part of the main library build. Please re-run cmake from top-level directory (\${LEGATE_DIR}) with -Dlegate_BUILD_TESTS=ON"
   )
 endif()
 
@@ -32,12 +32,12 @@ include(${rapids-cmake-dir}/cpm/gtest.cmake)
 
 # BUILD_EXPORT_SET and INSTALL_EXPORT_SET are crucial, otherwise gtest does not get
 # installed
-rapids_cpm_gtest(BUILD_EXPORT_SET legate-core-exports
-                 INSTALL_EXPORT_SET legate-core-exports CPM_ARGS SYSTEM TRUE)
+rapids_cpm_gtest(BUILD_EXPORT_SET legate-exports INSTALL_EXPORT_SET legate-exports
+                                                                    CPM_ARGS SYSTEM TRUE)
 
-include(${LEGATE_CORE_DIR}/cmake/Modules/debug_symbols.cmake)
+include(${LEGATE_DIR}/cmake/Modules/debug_symbols.cmake)
 
-function(legate_core_configure_test CMAKE_TEST_NAME)
+function(legate_configure_test CMAKE_TEST_NAME)
   set(options)
   set(one_value GPUS PERCENT)
   set(multi_value SOURCES)
@@ -58,8 +58,7 @@ function(legate_core_configure_test CMAKE_TEST_NAME)
                                    BUILD_RPATH_USE_ORIGIN TRUE
                                    # Don't use CMAKE_INSTALL_LIBDIR since we want the
                                    # rpath to be relative
-                                   INSTALL_RPATH
-                                   "${LEGATE_CORE_PLATFORM_RPATH_ORIGIN}/../lib"
+                                   INSTALL_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}/../lib"
                                    INSTALL_RPATH_USE_LINK_PATH TRUE
                                    CXX_STANDARD ${CMAKE_CXX_STANDARD}
                                    CXX_STANDARD_REQUIRED ON
@@ -70,15 +69,15 @@ function(legate_core_configure_test CMAKE_TEST_NAME)
   target_include_directories(${CMAKE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
 
   target_link_libraries(${CMAKE_TEST_NAME}
-                        PRIVATE legate::core
+                        PRIVATE legate::legate
                                 GTest::gtest
                                 GTest::gmock
                                 # Some test modules require delving into the private
-                                # headers of legate.core, which may contain fmt headers.
-                                # As a result, we also need to add the fmt include paths
-                                # etc. This is not done automatically for us, since fmt is
-                                # a PRIVATE dependency of legate.core (as it is not found
-                                # in any public includes).
+                                # headers of legate, which may contain fmt headers. As a
+                                # result, we also need to add the fmt include paths etc.
+                                # This is not done automatically for us, since fmt is a
+                                # PRIVATE dependency of legate (as it is not found in any
+                                # public includes).
                                 fmt::fmt)
 
   if(Legion_USE_CUDA)
@@ -89,17 +88,13 @@ function(legate_core_configure_test CMAKE_TEST_NAME)
     target_link_libraries(${CMAKE_TEST_NAME} PRIVATE NCCL::NCCL)
   endif()
 
-  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE
-                                        legate_core_CXX_OPTIONS)
-  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE
-                                        legate_core_CUDA_OPTIONS)
+  legate_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE legate_CXX_OPTIONS)
+  legate_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE legate_CUDA_OPTIONS)
 
-  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE
-                                        legate_core_CXX_FLAGS)
-  legate_core_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE
-                                        legate_core_CUDA_FLAGS)
+  legate_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE legate_CXX_FLAGS)
+  legate_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE legate_CUDA_FLAGS)
 
-  legate_core_add_target_link_option(${CMAKE_TEST_NAME} PRIVATE legate_core_LINKER_FLAGS)
+  legate_add_target_link_option(${CMAKE_TEST_NAME} PRIVATE legate_LINKER_FLAGS)
 
   rapids_test_add(NAME ${CMAKE_TEST_NAME}
                   COMMAND ${CMAKE_TEST_NAME}
@@ -107,14 +102,14 @@ function(legate_core_configure_test CMAKE_TEST_NAME)
                   PERCENT ${_LEGATE_TEST_PERCENT}
                   INSTALL_COMPONENT_SET testing)
 
-  legate_core_debug_syms(${CMAKE_TEST_NAME} INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+  legate_debug_syms(${CMAKE_TEST_NAME} INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 
-  list(APPEND LEGATE_CORE_CONFIGURED_TESTS ${CMAKE_TEST_NAME})
+  list(APPEND LEGATE_CONFIGURED_TESTS ${CMAKE_TEST_NAME})
   # propagate the updated list upwards
-  set(LEGATE_CORE_CONFIGURED_TESTS ${LEGATE_CORE_CONFIGURED_TESTS} PARENT_SCOPE)
+  set(LEGATE_CONFIGURED_TESTS ${LEGATE_CONFIGURED_TESTS} PARENT_SCOPE)
 
-  list(APPEND legate_core_TIDY_SOURCES ${_LEGATE_TEST_SOURCES})
-  set(legate_core_TIDY_SOURCES ${legate_core_TIDY_SOURCES} PARENT_SCOPE)
+  list(APPEND legate_TIDY_SOURCES ${_LEGATE_TEST_SOURCES})
+  set(legate_TIDY_SOURCES ${legate_TIDY_SOURCES} PARENT_SCOPE)
 endfunction()
 
 if(Legion_USE_CUDA)
@@ -150,18 +145,17 @@ endif()
   install(CODE "${code_string}")
 endif()
 
-legate_core_configure_test(tests_with_runtime SOURCES ${main_with_runtime_init_SRC}
-                           ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC}
-                           ${experimental_SRC} ${stl_SRC})
-legate_core_configure_test(tests_wo_runtime SOURCES ${main_wo_runtime_init_SRC}
-                           ${noinit_SRC})
-legate_core_configure_test(tests_non_reentrant SOURCES ${main_with_runtime_init_SRC}
-                           ${non_reentrant_SRC})
+legate_configure_test(tests_with_runtime SOURCES ${main_with_runtime_init_SRC} ${bug_SRC}
+                      ${tasks_SRC} ${integration_SRC} ${unit_SRC} ${experimental_SRC}
+                      ${stl_SRC})
+legate_configure_test(tests_wo_runtime SOURCES ${main_wo_runtime_init_SRC} ${noinit_SRC})
+legate_configure_test(tests_non_reentrant SOURCES ${main_with_runtime_init_SRC}
+                      ${non_reentrant_SRC})
 
 if(integration_GPU_SRC)
-  legate_core_configure_test(tests_with_gpus SOURCES ${main_with_runtime_init_SRC}
-                             ${tasks_SRC} ${integration_SRC} ${integration_GPU_SRC} GPUS
-                             1 PERCENT 30)
+  legate_configure_test(tests_with_gpus SOURCES ${main_with_runtime_init_SRC}
+                        ${tasks_SRC} ${integration_SRC} ${integration_GPU_SRC} GPUS 1
+                        PERCENT 30)
 endif()
 
 rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing
@@ -169,7 +163,7 @@ rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing
 
 # Add a dummy target whose only job it is to depend on the tests being built.
 add_custom_target(build_tests COMMENT "Building tests")
-add_dependencies(build_tests ${LEGATE_CORE_CONFIGURED_TESTS})
+add_dependencies(build_tests ${LEGATE_CONFIGURED_TESTS})
 
 # propagate to main CMakeLists.txt
-set(legate_core_TIDY_SOURCES ${legate_core_TIDY_SOURCES} PARENT_SCOPE)
+set(legate_TIDY_SOURCES ${legate_TIDY_SOURCES} PARENT_SCOPE)

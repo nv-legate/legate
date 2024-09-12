@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import legate.core.types as ty
+import legate.types as ty
 
 _PRIMITIVES = [
     ty.bool_,

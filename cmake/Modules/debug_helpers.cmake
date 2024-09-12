@@ -11,20 +11,20 @@
 
 include_guard(GLOBAL)
 
-if(NOT _LEGATE_CORE_CMAKE_PROPERTY_LIST)
+if(NOT _LEGATE_CMAKE_PROPERTY_LIST)
   execute_process(COMMAND ${CMAKE_COMMAND} --help-property-list
-                  OUTPUT_VARIABLE _LEGATE_CORE_CMAKE_PROPERTY_LIST)
+                  OUTPUT_VARIABLE _LEGATE_CMAKE_PROPERTY_LIST)
 
   # Convert command output into a CMake list
-  string(REGEX REPLACE ";" "\\\\;" _LEGATE_CORE_CMAKE_PROPERTY_LIST
-                       "${_LEGATE_CORE_CMAKE_PROPERTY_LIST}")
-  string(REGEX REPLACE "\n" ";" _LEGATE_CORE_CMAKE_PROPERTY_LIST
-                       "${_LEGATE_CORE_CMAKE_PROPERTY_LIST}")
-  list(REMOVE_DUPLICATES _LEGATE_CORE_CMAKE_PROPERTY_LIST)
+  string(REGEX REPLACE ";" "\\\\;" _LEGATE_CMAKE_PROPERTY_LIST
+                       "${_LEGATE_CMAKE_PROPERTY_LIST}")
+  string(REGEX REPLACE "\n" ";" _LEGATE_CMAKE_PROPERTY_LIST
+                       "${_LEGATE_CMAKE_PROPERTY_LIST}")
+  list(REMOVE_DUPLICATES _LEGATE_CMAKE_PROPERTY_LIST)
 endif()
 
 function(print_all_properties)
-  message(STATUS "CMAKE_PROPERTY_LIST = ${_LEGATE_CORE_CMAKE_PROPERTY_LIST}")
+  message(STATUS "CMAKE_PROPERTY_LIST = ${_LEGATE_CMAKE_PROPERTY_LIST}")
 endfunction()
 
 function(print_target_properties)
@@ -38,7 +38,7 @@ function(print_target_properties)
     message(FATAL_ERROR "There is no target named '${_LEGATE_TARGET}'")
   endif()
 
-  foreach(property ${_LEGATE_CORE_CMAKE_PROPERTY_LIST})
+  foreach(property ${_LEGATE_CMAKE_PROPERTY_LIST})
     string(REPLACE "<CONFIG>" "${CMAKE_BUILD_TYPE}" property ${property})
     get_property(was_set TARGET ${_LEGATE_TARGET} PROPERTY ${property} SET)
     if(was_set OR _LEGATE_SHOW_UNSET)

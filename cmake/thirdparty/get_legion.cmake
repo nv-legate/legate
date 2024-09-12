@@ -12,7 +12,7 @@
 
 include_guard(GLOBAL)
 
-function(legate_core_maybe_override_legion user_repository user_branch)
+function(legate_maybe_override_legion user_repository user_branch)
   # CPM_ARGS GIT_TAG and GIT_REPOSITORY don't do anything if you have already overridden
   # those options via a rapids_cpm_package_override() call. So we have to conditionally
   # override the defaults (by creating a temporary json file in build dir) only if the
@@ -57,7 +57,7 @@ function(find_or_configure_legion_impl)
   set(multiValueArgs)
   cmake_parse_arguments(PKG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-  legate_core_maybe_override_legion("${PKG_REPOSITORY}" "${PKG_BRANCH}")
+  legate_maybe_override_legion("${PKG_REPOSITORY}" "${PKG_BRANCH}")
 
   include("${rapids-cmake-dir}/export/detail/parse_version.cmake")
   rapids_export_parse_version(${PKG_VERSION} Legion PKG_VERSION)
@@ -76,8 +76,8 @@ function(find_or_configure_legion_impl)
   set(exclude_from_all ${PKG_EXCLUDE_FROM_ALL})
   set(FIND_PKG_ARGS
       GLOBAL_TARGETS Legion::Realm Legion::Regent Legion::Legion Legion::RealmRuntime
-      Legion::LegionRuntime BUILD_EXPORT_SET legate-core-exports INSTALL_EXPORT_SET
-      legate-core-exports)
+      Legion::LegionRuntime BUILD_EXPORT_SET legate-exports INSTALL_EXPORT_SET
+      legate-exports)
 
   # This guard is extremely important! See cmake/Modules/find_or_configure.cmake
   if((NOT CPM_Legion_SOURCE) AND (NOT CPM_DOWNLOAD_Legion))
@@ -129,7 +129,7 @@ function(find_or_configure_legion_impl)
 
       list(APPEND _legion_cuda_options "CMAKE_CUDA_STANDARD ${_cuda_std}")
 
-      if(legate_core_STATIC_CUDA_RUNTIME)
+      if(legate_STATIC_CUDA_RUNTIME)
         list(APPEND _legion_cuda_options "CMAKE_CUDA_RUNTIME_LIBRARY STATIC")
       else()
         list(APPEND _legion_cuda_options "CMAKE_CUDA_RUNTIME_LIBRARY SHARED")
@@ -149,10 +149,10 @@ function(find_or_configure_legion_impl)
     set(Legion_DEFAULT_LOCAL_FIELDS ${Legion_DEFAULT_LOCAL_FIELDS}
         CACHE STRING "Number of local fields for Legion" FORCE)
 
-    message(VERBOSE "legate.core: Legion version: ${version}")
-    message(VERBOSE "legate.core: Legion git_repo: ${git_repo}")
-    message(VERBOSE "legate.core: Legion git_branch: ${git_branch}")
-    message(VERBOSE "legate.core: Legion exclude_from_all: ${exclude_from_all}")
+    message(VERBOSE "legate: Legion version: ${version}")
+    message(VERBOSE "legate: Legion git_repo: ${git_repo}")
+    message(VERBOSE "legate: Legion git_branch: ${git_branch}")
+    message(VERBOSE "legate: Legion exclude_from_all: ${exclude_from_all}")
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
       set(Legion_BACKTRACE_USE_LIBDW ON)
@@ -160,15 +160,14 @@ function(find_or_configure_legion_impl)
       set(Legion_BACKTRACE_USE_LIBDW OFF)
     endif()
 
-    include(${LEGATE_CORE_DIR}/cmake/Modules/apply_patch.cmake)
+    include(${LEGATE_DIR}/cmake/Modules/apply_patch.cmake)
 
-    legate_core_generate_patch_command(
-      SOURCE
-      ${CMAKE_BINARY_DIR}/_deps/legion-src/bindings/python/CMakeLists.txt
-      PATCH_FILE
-      ${LEGATE_CORE_DIR}/cmake/patches/Legion_bindings_python_CMakeLists.txt.diff
-      DEST_VAR
-      patch_command)
+    legate_generate_patch_command(SOURCE
+                                  ${CMAKE_BINARY_DIR}/_deps/legion-src/bindings/python/CMakeLists.txt
+                                  PATCH_FILE
+                                  ${LEGATE_DIR}/cmake/patches/Legion_bindings_python_CMakeLists.txt.diff
+                                  DEST_VAR
+                                  patch_command)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Legion_CXX_FLAGS}")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${Legion_CUDA_FLAGS}")
@@ -221,36 +220,34 @@ endfunction()
 function(find_or_configure_legion)
   list(APPEND CMAKE_MESSAGE_CONTEXT "legion")
 
-  foreach(_var IN
-          ITEMS "legate_core_LEGION_VERSION" "legate_core_LEGION_BRANCH"
-                "legate_core_LEGION_REPOSITORY" "legate_core_EXCLUDE_LEGION_FROM_ALL")
+  foreach(_var IN ITEMS "legate_LEGION_VERSION" "legate_LEGION_BRANCH"
+                        "legate_LEGION_REPOSITORY" "legate_EXCLUDE_LEGION_FROM_ALL")
     if(DEFINED ${_var})
-      # Create a legate_core_LEGION_BRANCH variable in the current scope either from the
+      # Create a legate_LEGION_BRANCH variable in the current scope either from the
       # existing current-scope variable, or the cache variable.
       set(${_var} "${${_var}}")
       set(${_var} "${${_var}}" PARENT_SCOPE)
-      # Remove legate_core_LEGION_BRANCH from the CMakeCache.txt. This ensures
-      # reconfiguring the same build dir without passing `-Dlegate_core_LEGION_BRANCH=`
-      # reverts to the value in versions.json instead of reusing the previous
-      # `-Dlegate_core_LEGION_BRANCH=` value.
+      # Remove legate_LEGION_BRANCH from the CMakeCache.txt. This ensures reconfiguring
+      # the same build dir without passing `-Dlegate_LEGION_BRANCH=` reverts to the value
+      # in versions.json instead of reusing the previous `-Dlegate_LEGION_BRANCH=` value.
       unset(${_var} CACHE)
     endif()
   endforeach()
 
-  if(NOT DEFINED legate_core_LEGION_VERSION)
-    set(legate_core_LEGION_VERSION "${legate_core_VERSION}")
+  if(NOT DEFINED legate_LEGION_VERSION)
+    set(legate_LEGION_VERSION "${legate_VERSION}")
   endif()
 
   find_or_configure_legion_impl(VERSION
-                                ${legate_core_LEGION_VERSION}
+                                ${legate_LEGION_VERSION}
                                 REPOSITORY
-                                ${legate_core_LEGION_REPOSITORY}
+                                ${legate_LEGION_REPOSITORY}
                                 BRANCH
-                                ${legate_core_LEGION_BRANCH}
+                                ${legate_LEGION_BRANCH}
                                 EXCLUDE_FROM_ALL
-                                ${legate_core_EXCLUDE_LEGION_FROM_ALL})
+                                ${legate_EXCLUDE_LEGION_FROM_ALL})
 
-  set(legate_core_LEGION_VERSION "${legate_core_LEGION_VERSION}" PARENT_SCOPE)
+  set(legate_LEGION_VERSION "${legate_LEGION_VERSION}" PARENT_SCOPE)
   set(Legion_USE_CUDA ${Legion_USE_CUDA} PARENT_SCOPE)
   set(Legion_USE_OpenMP ${Legion_USE_OpenMP} PARENT_SCOPE)
   set(Legion_USE_Python ${Legion_USE_Python} PARENT_SCOPE)

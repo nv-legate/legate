@@ -480,7 +480,7 @@ class ConfigurationManager:
         Returns
         -------
         name : str
-            The name of the current main project, e.g. "Legate.Core".
+            The name of the current main project, e.g. "Legate".
         """
         return self._main_package.name
 
@@ -504,7 +504,7 @@ class ConfigurationManager:
         -------
         flag_name : str
             The name of the current main project arch flag,
-            e.g. "LEGATE_CORE_ARCH".
+            e.g. "LEGATE_ARCH".
         """
         return self._main_package.arch_name
 
@@ -516,7 +516,7 @@ class ConfigurationManager:
         -------
         dir : Path
             The full path to the current project root directory, e.g.
-            `/path/to/legate.core.internal`.
+            `/path/to/legate.internal`.
         """
         return self._main_package.project_dir_value
 
@@ -528,7 +528,7 @@ class ConfigurationManager:
         -------
         dir_name : Path
             The name of the current project root directory,
-            e.g. "LEGATE_CORE_DIR".
+            e.g. "LEGATE_DIR".
         """
         return self._main_package.project_dir_name
 
@@ -540,7 +540,7 @@ class ConfigurationManager:
         -------
         arch_dir : Path
             The full path to the current project arch directory,
-            e.g. `/path/to/legate.core.internal/arch-darwin-debug`.
+            e.g. `/path/to/legate.internal/arch-darwin-debug`.
         """
         return self.project_dir / self.project_arch
 
@@ -552,7 +552,7 @@ class ConfigurationManager:
         -------
         cmake_dir : Path
             The full path to the current project cmake directory.
-            e.g. `/path/to/legate.core.internal/arch-darwin-debug/cmake_build`.
+            e.g. `/path/to/legate.internal/arch-darwin-debug/cmake_build`.
         """
         return self.project_arch_dir / "cmake_build"
 

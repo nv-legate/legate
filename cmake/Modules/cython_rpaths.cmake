@@ -12,7 +12,7 @@
 
 include_guard(GLOBAL)
 
-function(legate_core_handle_imported_target_rpaths_ ret_val target)
+function(legate_handle_imported_target_rpaths_ ret_val target)
   if(NOT TARGET ${target})
     message(FATAL_ERROR "${target} is not a target")
   endif()
@@ -34,7 +34,7 @@ function(legate_core_handle_imported_target_rpaths_ ret_val target)
   set(${ret_val} "${${ret_val}}" PARENT_SCOPE)
 endfunction()
 
-function(legate_core_handle_normal_target_rpaths_ ret_val target)
+function(legate_handle_normal_target_rpaths_ ret_val target)
   # If the target is "regular", i.e. we will build it ourselves, then it suffices to check
   # the library output directory for it, since that will be the location of the libs after
   # we have built them
@@ -63,17 +63,17 @@ function(legate_core_handle_normal_target_rpaths_ ret_val target)
   set(${ret_val} "${${ret_val}}" PARENT_SCOPE)
 endfunction()
 
-function(legate_core_populate_dependency_rpaths_editable ret_val)
+function(legate_populate_dependency_rpaths_editable ret_val)
   list(APPEND CMAKE_MESSAGE_CONTEXT "editable")
 
   set(legate_cython_rpaths)
   # Handle "normal" dependencies which set LIBRARY_OUTPUT_DIRECTORY
-  foreach(target legate::core Legion::LegionRuntime Legion::RealmRuntime)
+  foreach(target legate::legate Legion::LegionRuntime Legion::RealmRuntime)
     get_target_property(imported ${target} IMPORTED)
     if(imported)
-      legate_core_handle_imported_target_rpaths_(legate_cython_rpaths ${target})
+      legate_handle_imported_target_rpaths_(legate_cython_rpaths ${target})
     else()
-      legate_core_handle_normal_target_rpaths_(legate_cython_rpaths ${target})
+      legate_handle_normal_target_rpaths_(legate_cython_rpaths ${target})
     endif()
   endforeach()
 
@@ -81,7 +81,7 @@ function(legate_core_populate_dependency_rpaths_editable ret_val)
   # place its libraries at BINARY_DIR
   get_target_property(imported fmt::fmt IMPORTED)
   if(imported)
-    legate_core_handle_imported_target_rpaths_(legate_cython_rpaths fmt::fmt)
+    legate_handle_imported_target_rpaths_(legate_cython_rpaths fmt::fmt)
   else()
     get_target_property(fmt_bin_dir fmt::fmt BINARY_DIR)
     if(NOT fmt_bin_dir)
@@ -100,19 +100,19 @@ function(legate_core_populate_dependency_rpaths_editable ret_val)
   set(${ret_val} "${legate_cython_rpaths}" PARENT_SCOPE)
 endfunction()
 
-function(legate_core_populate_cython_dependency_rpaths)
+function(legate_populate_cython_dependency_rpaths)
   list(APPEND CMAKE_MESSAGE_CONTEXT "populate_cython_dependency_rpaths")
 
   set(options)
   set(one_value_args RESULT_VAR)
   set(multi_value_args)
-  cmake_parse_arguments(_LEGATE_CORE "${options}" "${one_value_args}"
-                        "${multi_value_args}" ${ARGN})
+  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
 
-  if(legate_core_SETUP_PY_MODE STREQUAL "develop")
+  if(legate_SETUP_PY_MODE STREQUAL "develop")
     # If we are doing an editable install, then the cython rpaths need to point back to
     # the original (uninstalled) legate libs, since otherwise it cannot find them.
-    legate_core_populate_dependency_rpaths_editable(legate_cython_rpaths)
+    legate_populate_dependency_rpaths_editable(legate_cython_rpaths)
   else()
     # This somehow sets the rpath correctly for regular installs.
     # rapids_cython_add_rpath_entries() mentions that:
@@ -134,5 +134,5 @@ function(legate_core_populate_cython_dependency_rpaths)
   endif()
 
   message(STATUS "legate_cython_rpaths='${legate_cython_rpaths}'")
-  set(${_LEGATE_CORE_RESULT_VAR} "${legate_cython_rpaths}" PARENT_SCOPE)
+  set(${_LEGATE_RESULT_VAR} "${legate_cython_rpaths}" PARENT_SCOPE)
 endfunction()

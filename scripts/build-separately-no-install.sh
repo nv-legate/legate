@@ -8,7 +8,7 @@ source ./scripts/util/build-caching.sh
 source ./scripts/util/compiler-flags.sh
 
 # Remove existing build artifacts
-rm -rf ./{build,_skbuild,dist,legate_core.egg-info}
+rm -rf ./{build,_skbuild,dist,legate.egg-info}
 
 # Define CMake configuration arguments
 cmake_args="${CMAKE_ARGS:-}"
@@ -28,10 +28,10 @@ cmake_args+="
 # Use all but 2 threads to compile
 ninja_args="-j$(nproc --ignore=2)"
 
-# Configure legate_core C++
+# Configure legate C++
 cmake -S . -B build ${cmake_args}
 
-# Build legate_core C++
+# Build legate C++
 cmake --build build ${ninja_args}
 
 # Pretend to install Legion because Legion's CMakeLists only generates the Legion CFFI bindings at install time
@@ -42,11 +42,11 @@ cmake --build build ${ninja_args}
 )
 
 cmake_args+="
--D FIND_LEGATE_CORE_CPP=ON
--D legate_core_ROOT=$(pwd)/build
+-D FIND_LEGATE_CPP=ON
+-D legate_ROOT=$(pwd)/build
 "
 
-# Build legion_core_python and perform an "editable" install
+# Build legion_python and perform an "editable" install
 SKBUILD_BUILD_OPTIONS="$ninja_args"       \
 CMAKE_ARGS="$cmake_args"                  \
 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" \

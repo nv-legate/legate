@@ -63,7 +63,7 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex:           '^("|<)legate_defines\.h("|>)'
     Priority:        1
-  - Regex:           '^("|<)core/.*\.h("|>)'
+  - Regex:           '^("|<)legate/.*\.h("|>)'
     Priority:        2
   - Regex:           '^("|<)stl/.*\.h("|>)'
     Priority:        3

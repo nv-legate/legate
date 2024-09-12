@@ -10,7 +10,7 @@ source ./scripts/util/compiler-flags.sh
 source ./scripts/util/read-legion-root.sh "$0"
 
 # Remove existing build artifacts
-rm -rf ./{build,_skbuild,dist,legate_core.egg-info}
+rm -rf ./{build,_skbuild,dist,legate.egg-info}
 
 # Use all but 2 threads to compile
 ninja_args="-j$(nproc --ignore=2)"
@@ -39,7 +39,7 @@ cmake_args+="
 -D Legion_ROOT:STRING=\"$Legion_ROOT\"
 ";
 
-# Build legion_core + legion_core_python and perform an "editable" install
+# Build legion + legion_python and perform an "editable" install
 SKBUILD_BUILD_OPTIONS="$ninja_args"       \
 CMAKE_ARGS="$cmake_args"                  \
 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" \

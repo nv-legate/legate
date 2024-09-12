@@ -12,17 +12,17 @@
 
 include_guard(GLOBAL)
 
-function(_legate_core_debug_syms_macos target install_dir)
+function(_legate_debug_syms_macos target install_dir)
   list(APPEND CMAKE_MESSAGE_CONTEXT "macos")
 
   # Both clang and gcc will automatically generate a <TARGET>.dSYM directory (the debug
   # symbols) when creating single executables, but refuse to do so when creating
   # libraries. So we must do this ourselves...
-  find_program(LEGATE_CORE_DSYMUTIL dsymutil)
-  if(LEGATE_CORE_DSYMUTIL)
+  find_program(LEGATE_DSYMUTIL dsymutil)
+  if(LEGATE_DSYMUTIL)
     add_custom_command(TARGET ${target}
                        POST_BUILD
-                       COMMAND "${LEGATE_CORE_DSYMUTIL}" "$<TARGET_FILE_NAME:${target}>"
+                       COMMAND "${LEGATE_DSYMUTIL}" "$<TARGET_FILE_NAME:${target}>"
                        WORKING_DIRECTORY "$<TARGET_FILE_DIR:${target}>"
                        DEPENDS ${target}
                        COMMENT "Generating debug info")
@@ -37,7 +37,7 @@ function(_legate_core_debug_syms_macos target install_dir)
   endif()
 endfunction()
 
-function(legate_core_debug_syms target)
+function(legate_debug_syms target)
   list(APPEND CMAKE_MESSAGE_CONTEXT "debug_syms")
 
   set(options)
@@ -51,7 +51,7 @@ function(legate_core_debug_syms target)
   endif()
   if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-      _legate_core_debug_syms_macos(${target} ${_DEBUG_SYMS_INSTALL_DIR})
+      _legate_debug_syms_macos(${target} ${_DEBUG_SYMS_INSTALL_DIR})
     endif()
     # nothing to do for other OS's for now
   endif()

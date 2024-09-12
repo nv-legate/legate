@@ -24,12 +24,12 @@ function(find_or_configure_mdspan)
     endif()
   endif()
 
-  legate_core_parse_versions_json(PACKAGE mdspan VERSION version GIT_URL git_url
-                                  GIT_SHALLOW git_shallow GIT_TAG git_tag)
+  legate_parse_versions_json(PACKAGE mdspan VERSION version GIT_URL git_url GIT_SHALLOW
+                             git_shallow GIT_TAG git_tag)
 
   rapids_cpm_find(mdspan "${version}"
-                  BUILD_EXPORT_SET legate-core-exports
-                  INSTALL_EXPORT_SET legate-core-exports
+                  BUILD_EXPORT_SET legate-exports
+                  INSTALL_EXPORT_SET legate-exports
                   CPM_ARGS
                   GIT_REPOSITORY "${git_url}"
                   GIT_SHALLOW "${git_shallow}" SYSTEM TRUE

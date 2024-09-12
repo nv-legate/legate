@@ -15,7 +15,7 @@ from typing import Any, Type
 import numpy as np
 import pytest
 
-from legate.core import (
+from legate import (
     ImageComputationHint,
     LogicalArray,
     Scalar,
@@ -24,8 +24,8 @@ from legate.core import (
     image,
     types as ty,
 )
-from legate.core._lib.partitioning.constraint import scale
-from legate.core.task import OutputStore, task
+from legate._lib.partitioning.constraint import scale
+from legate.task import OutputStore, task
 
 from .utils import tasks, utils
 from .utils.data import ARRAY_TYPES, LARGE_SHAPES, SCALAR_VALS, SHAPES
@@ -88,9 +88,9 @@ class TestPyTask:
         partition = store.partition_by_tiling(tile)
         out_arr, out_store = utils.zero_array_and_store(ty.float64, tile)
         # TypeError: Argument: 'partition' expected one of
-        # (<class 'legate.core._lib.data.logical_store.LogicalStore'>,
-        # <class 'legate.core._lib.data.logical_array.LogicalArray'>), got
-        # <class 'legate.core._lib.data.logical_store.LogicalStorePartition'>
+        # (<class 'legate._lib.data.logical_store.LogicalStore'>,
+        # <class 'legate._lib.data.logical_array.LogicalArray'>), got
+        # <class 'legate._lib.data.logical_store.LogicalStorePartition'>
         tasks.partition_to_store_task(partition, out_store)
         np.testing.assert_allclose(out_arr, arr)
 

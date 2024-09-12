@@ -17,8 +17,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from legate.core import Scalar, Type, get_legate_runtime, types as ty
-from legate.core.task import task
+from legate import Scalar, Type, get_legate_runtime, types as ty
+from legate.task import task
 
 from .util.task_util import assert_isinstance
 
@@ -159,7 +159,7 @@ class TestScalarTaskBad:
         scal = Scalar(1, ty.int64)
         msg = re.escape(
             "Task expected a value of type <class 'int'> for parameter x, but "
-            "got <class 'legate.core._lib.data.scalar.Scalar'>"
+            "got <class 'legate._lib.data.scalar.Scalar'>"
         )
         with pytest.raises(TypeError, match=msg):
             # The callsite type must match the type-hint exactly for Scalar
@@ -173,7 +173,7 @@ class TestScalarTaskBad:
 
         msg = re.escape(
             "Task expected a value of type <class "
-            "'legate.core._lib.data.scalar.Scalar'> for parameter x, but got "
+            "'legate._lib.data.scalar.Scalar'> for parameter x, but got "
             "<class 'int'>"
         )
         with pytest.raises(TypeError, match=msg):

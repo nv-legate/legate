@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "timing/timing.h"
+#include "legate/timing/timing.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

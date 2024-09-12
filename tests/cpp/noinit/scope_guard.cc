@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/utilities/scope_guard.h"
+#include "legate/utilities/scope_guard.h"
 
 #include "utilities/utilities.h"
 

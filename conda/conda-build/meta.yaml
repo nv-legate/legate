@@ -1,4 +1,4 @@
-{% set name = "legate-core" %}
+{% set name = "legate" %}
 {% if gpu_enabled == "true" %}
   {% set gpu_enabled_bool = true %}
 {% elif gpu_enabled == "false" %}
@@ -222,7 +222,7 @@ test:
     - legate
 
 about:
-  home: https://github.com/nv-legate/legate.core
+  home: https://github.com/nv-legate/legate
   license: NVIDIA Proprietary
   license_file: LICENSE
   summary: 'Scalable Computational Code'
@@ -231,8 +231,8 @@ about:
     making it possible for all programmers to leverage the power
     of large clusters of CPUs and GPUs by running the same code
     that runs on a desktop or a laptop at scale.
-  doc_url: https://github.com/nv-legate/legate.core
-  dev_url: https://github.com/nv-legate/legate.core
+  doc_url: https://github.com/nv-legate/legate
+  dev_url: https://github.com/nv-legate/legate
 
 extra:
   recipe-maintainers:

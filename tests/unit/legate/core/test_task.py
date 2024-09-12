@@ -17,8 +17,8 @@ from typing import ParamSpec
 import numpy as np
 import pytest
 
-import legate.core as lg
-from legate.core import (
+import legate as lg
+from legate import (
     PhysicalStore,
     Scalar,
     VariantCode,
@@ -26,7 +26,7 @@ from legate.core import (
     task as lct,
     types as ty,
 )
-from legate.core.task import (
+from legate.task import (
     ADD,
     InputArray,
     InputStore,
@@ -585,7 +585,7 @@ class TestTask(BaseTest):
         for fn, name in zip(functions, types):
             msg = re.escape(
                 "Default values for "
-                f"<class 'legate.core._ext.task.type.{name}'> "
+                f"<class 'legate._ext.task.type.{name}'> "
                 "not yet supported"
             )
             with pytest.raises(NotImplementedError, match=msg):
@@ -607,7 +607,7 @@ class TestTask(BaseTest):
         for fn, name in zip(functions, types):
             msg = re.escape(
                 "Default values for "
-                f"legate.core._ext.task.type.{name}[<ReductionOpKind.ADD: 0>] "
+                f"legate._ext.task.type.{name}[<ReductionOpKind.ADD: 0>] "
                 "not yet supported"
             )
             with pytest.raises(NotImplementedError, match=msg):

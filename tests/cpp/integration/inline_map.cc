@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/runtime/detail/runtime.h"
+#include "legate/runtime/detail/runtime.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

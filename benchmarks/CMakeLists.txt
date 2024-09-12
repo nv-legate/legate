@@ -15,4 +15,4 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "benchmarks")
 add_subdirectory(cpp)
 
 # propagate to main CMakeLists.txt
-set(legate_core_TIDY_SOURCES ${legate_core_TIDY_SOURCES} PARENT_SCOPE)
+set(legate_TIDY_SOURCES ${legate_TIDY_SOURCES} PARENT_SCOPE)

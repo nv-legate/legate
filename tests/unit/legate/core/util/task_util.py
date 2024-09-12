@@ -22,7 +22,7 @@ from typing import (
     cast as TYPE_CAST,
 )
 
-from legate.core import (
+from legate import (
     AutoTask,
     LogicalArray,
     LogicalStore,
@@ -33,7 +33,7 @@ from legate.core import (
     get_legate_runtime,
     types as ty,
 )
-from legate.core.task import InputArray, InputStore, OutputArray, OutputStore
+from legate.task import InputArray, InputStore, OutputArray, OutputStore
 
 _T = TypeVar("_T")
 _P = ParamSpec("_P")

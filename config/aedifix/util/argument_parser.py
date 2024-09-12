@@ -19,9 +19,8 @@ from dataclasses import dataclass, replace as dataclasses_replace
 from typing import TYPE_CHECKING, Any
 
 # This is imported here to re-export it
-from legate.util.args import ArgSpec  # noqa: F401
-from legate.util.args import Argument, Unset, entries
-
+from .args import ArgSpec  # noqa: F401
+from .args import Argument, Unset, entries
 from .exception import LengthError
 
 if TYPE_CHECKING:

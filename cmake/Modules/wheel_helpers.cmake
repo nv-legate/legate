@@ -19,36 +19,35 @@ function(install_imported_rt_deps)
   set(options)
   set(one_value_args TARGET RT_DEPS RUNTIME_DESTINATION LIBRARY_DESTINATION)
   set(multi_value_args)
-  cmake_parse_arguments(LG_CORE "${options}" "${one_value_args}" "${multi_value_args}"
+  cmake_parse_arguments(LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
                         ${ARGN})
 
-  if(NOT LG_CORE_TARGET)
+  if(NOT LEGATE_TARGET)
     message(FATAL_ERROR "Must supply TARGET")
   endif()
-  if(NOT TARGET ${LG_CORE_TARGET})
-    message(FATAL_ERROR "LG_CORE_TARGET must be a TARGET")
+  if(NOT TARGET ${LEGATE_TARGET})
+    message(FATAL_ERROR "LEGATE_TARGET must be a TARGET")
   endif()
 
-  if(NOT LG_CORE_RT_DEPS)
+  if(NOT LEGATE_RT_DEPS)
     message(FATAL_ERROR "Must supply RT_DEPS")
   endif()
 
-  if((NOT LG_CORE_LIBRARY_DESTINATION) AND (NOT LG_CORE_RUNTIME_DESTINATION))
-    message(FATAL_ERROR "Must supply either LIBRARY_DESTINATION or RUNTIME_DESTINATION: ${LG_CORE_RUNTIME_DESTINATION}, ${LG_CORE_LIBRARY_DESTINATION}"
+  if((NOT LEGATE_LIBRARY_DESTINATION) AND (NOT LEGATE_RUNTIME_DESTINATION))
+    message(FATAL_ERROR "Must supply either LIBRARY_DESTINATION or RUNTIME_DESTINATION: ${LEGATE_RUNTIME_DESTINATION}, ${LEGATE_LIBRARY_DESTINATION}"
     )
   endif()
 
-  if(LG_CORE_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Unhandled extra arguments found: '${LG_CORE_UNPARSED_ARGUMENTS}'"
-    )
+  if(LEGATE_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Unhandled extra arguments found: '${LEGATE_UNPARSED_ARGUMENTS}'")
   endif()
 
   set(destination_args)
-  if(LG_CORE_LIBRARY_DESTINATION)
-    set(destination_args LIBRARY DESTINATION ${LG_CORE_LIBRARY_DESTINATION})
+  if(LEGATE_LIBRARY_DESTINATION)
+    set(destination_args LIBRARY DESTINATION ${LEGATE_LIBRARY_DESTINATION})
   endif()
-  if(LG_CORE_RUNTIME_DESTINATION)
-    set(destination_args RUNTIME DESTINATION ${LG_CORE_RUNTIME_DESTINATION})
+  if(LEGATE_RUNTIME_DESTINATION)
+    set(destination_args RUNTIME DESTINATION ${LEGATE_RUNTIME_DESTINATION})
   endif()
 
   # HACK HACK HACK
@@ -59,8 +58,8 @@ function(install_imported_rt_deps)
   # We currently can't because the Legion python bindings require installing not just
   # libraries, but also binaries and the cuDF function
   # (install_aliased_imported_targets()) only handles libraries.
-  install(IMPORTED_RUNTIME_ARTIFACTS ${LG_CORE_TARGET} RUNTIME_DEPENDENCY_SET
-          ${LG_CORE_RT_DEPS})
+  install(IMPORTED_RUNTIME_ARTIFACTS ${LEGATE_TARGET} RUNTIME_DEPENDENCY_SET
+          ${LEGATE_RT_DEPS})
 
   macro(escape_re_chars some_list)
     # Escapes all special regex characters detailed at
@@ -135,6 +134,6 @@ function(install_imported_rt_deps)
   list(TRANSFORM prefix_path_excl APPEND ".*")
   message(STATUS "Excluding the following paths: ${prefix_path_excl}")
 
-  install(RUNTIME_DEPENDENCY_SET ${LG_CORE_RT_DEPS} PRE_EXCLUDE_REGEXES ${lib_excl}
+  install(RUNTIME_DEPENDENCY_SET ${LEGATE_RT_DEPS} PRE_EXCLUDE_REGEXES ${lib_excl}
           POST_EXCLUDE_REGEXES ${prefix_path_excl} ${destination_args})
 endfunction()

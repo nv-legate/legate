@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/utilities/detail/enumerate.h"
+#include "legate/utilities/detail/enumerate.h"
 
 #include "utilities/utilities.h"
 

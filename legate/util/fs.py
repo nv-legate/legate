@@ -101,18 +101,18 @@ def get_legate_build_dir(legate_dir: Path) -> Path | None:
 
     """
 
-    def get_legate_core_arch() -> str | None:
+    def get_legate_arch() -> str | None:
         # We might be calling this from the driver (i.e. legate) in which case
         # we don't want to require the user to have this set.
-        if legate_core_arch := os.environ.get("LEGATE_CORE_ARCH", "").strip():
-            return legate_core_arch
+        if legate_arch := os.environ.get("LEGATE_ARCH", "").strip():
+            return legate_arch
 
         from importlib.metadata import PackageNotFoundError, distribution
 
         try:
-            dist = distribution("legate-core")
+            dist = distribution("legate")
         except PackageNotFoundError:
-            # not installed at all, without a LEGATE_CORE_ARCH there is nothing
+            # not installed at all, without a LEGATE_ARCH there is nothing
             # we can really do.
             return None
 
@@ -139,11 +139,11 @@ def get_legate_build_dir(legate_dir: Path) -> Path | None:
 
     # If using a local non-scikit-build CMake build dir, read
     # Legion_BINARY_DIR and Legion_SOURCE_DIR from CMakeCache.txt
-    legate_core_arch = get_legate_core_arch()
-    if legate_core_arch is None:
+    legate_arch = get_legate_arch()
+    if legate_arch is None:
         return None
 
-    legate_arch_dir = legate_dir / legate_core_arch
+    legate_arch_dir = legate_dir / legate_arch
     skbuild_dir = legate_arch_dir / "_skbuild"
     if not skbuild_dir.exists():
         cmake_build_dir = legate_arch_dir / "cmake_build"
@@ -165,32 +165,30 @@ def get_legate_build_dir(legate_dir: Path) -> Path | None:
             continue
 
         try:
-            # Test whether _legate_core_FOUND_METHOD is set to
-            # SELF_BUILT. If it is, then we built legate_core C++ as a
-            # side-effect of building legate_core_python.
+            # Test whether _legate_FOUND_METHOD is set to
+            # SELF_BUILT. If it is, then we built legate C++ as a
+            # side-effect of building legate_python.
             read_cmake_cache_value(
                 cmake_cache_txt,
-                "_legate_core_FOUND_METHOD:INTERNAL=SELF_BUILT",
+                "_legate_FOUND_METHOD:INTERNAL=SELF_BUILT",
             )
         except Exception:
-            # _legate_core_FOUND_METHOD is either PRE_BUILT or INSTALLED,
-            # so check to see if legate_core_DIR is a valid path. If it is,
-            # check whether legate_core_DIR is a path to a legate_core
-            # build dir i.e.  `-D legate_core_ROOT=/legate.core/build`
-            legate_core_dir = Path(
-                read_cmake_cache_value(
-                    cmake_cache_txt, "legate_core_DIR:PATH="
-                )
+            # _legate_FOUND_METHOD is either PRE_BUILT or INSTALLED,
+            # so check to see if legate_DIR is a valid path. If it is,
+            # check whether legate_DIR is a path to a legate
+            # build dir i.e.  `-D legate_ROOT=/legate/build`
+            legate_dir = Path(
+                read_cmake_cache_value(cmake_cache_txt, "legate_DIR:PATH=")
             )
 
-            # If legate_core_dir doesn't have a CMakeCache.txt, CMake's
-            # find_package found a system legate_core installation.
+            # If legate_dir doesn't have a CMakeCache.txt, CMake's
+            # find_package found a system legate installation.
             # Return the installation paths.
-            cmake_cache_txt = legate_core_dir / "CMakeCache.txt"
+            cmake_cache_txt = legate_dir / "CMakeCache.txt"
             if cmake_cache_txt.exists():
                 return Path(
                     read_cmake_cache_value(
-                        cmake_cache_txt, "legate_core_BINARY_DIR:STATIC="
+                        cmake_cache_txt, "legate_BINARY_DIR:STATIC="
                     )
                 )
             return None
@@ -243,15 +241,11 @@ def get_legate_paths() -> LegatePaths:
     cmake_cache_txt = legate_build_dir / "CMakeCache.txt"
 
     legate_source_dir = Path(
-        read_cmake_cache_value(
-            cmake_cache_txt, "legate_core_SOURCE_DIR:STATIC="
-        )
+        read_cmake_cache_value(cmake_cache_txt, "legate_SOURCE_DIR:STATIC=")
     )
 
     legate_binary_dir = Path(
-        read_cmake_cache_value(
-            cmake_cache_txt, "legate_core_BINARY_DIR:STATIC="
-        )
+        read_cmake_cache_value(cmake_cache_txt, "legate_BINARY_DIR:STATIC=")
     )
 
     return LegatePaths(
@@ -277,27 +271,27 @@ def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
     """
 
     # Construct and return paths needed to interact with legion, accounting
-    # for multiple ways Legion and legate_core may be configured or installed.
+    # for multiple ways Legion and legate may be configured or installed.
     #
     # 1. Legion was found in a standard system location (/usr, $CONDA_PREFIX)
-    # 2. Legion was built as a side-effect of building legate_core:
+    # 2. Legion was built as a side-effect of building legate:
     #    ```
     #    CMAKE_ARGS="" python -m pip install .
     #    ```
-    # 3. Legion was built in a separate directory independent of legate_core
+    # 3. Legion was built in a separate directory independent of legate
     #    and the path to its build directory was given when configuring
-    #    legate_core:
+    #    legate:
     #    ```
     #    CMAKE_ARGS="-D Legion_ROOT=/legion/build" \
     #        python -m pip install .
     #    ```
     #
-    # Additionally, legate_core has multiple run modes:
+    # Additionally, legate has multiple run modes:
     #
     # 1. As an installed Python module (`python -m pip install .`)
     # 2. As an "editable" install (`python -m pip install --editable .`)
     #
-    # When determining locations of Legion and legate_core paths, prioritize
+    # When determining locations of Legion and legate paths, prioritize
     # local builds over global installations. This allows devs to work in the
     # source tree and re-run without overwriting existing installations.
 
@@ -337,14 +331,14 @@ def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
     # `Legion_BINARY_DIR` from in CMakeCache.txt, return paths into the source
     # and build dirs. This allows devs to quickly rebuild inplace and use the
     # most up-to-date versions without needing to install Legion and
-    # legate_core globally.
+    # legate globally.
 
     cmake_cache_txt = legate_build_dir / "CMakeCache.txt"
 
     try:
         try:
             # Test whether Legion_DIR is set. If it isn't, then we built
-            # Legion as a side-effect of building legate_core
+            # Legion as a side-effect of building legate
             read_cmake_cache_value(
                 cmake_cache_txt, "Legion_DIR:PATH=Legion_DIR-NOTFOUND"
             )
@@ -361,7 +355,7 @@ def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
         # valid Legion_SOURCE_DIR and Legion_BINARY_DIR
         try:
             # If Legion_SOURCE_DIR and Legion_BINARY_DIR are in CMakeCache.txt,
-            # return the paths to Legion in the legate_core build dir.
+            # return the paths to Legion in the legate build dir.
             legion_source_dir = Path(
                 read_cmake_cache_value(
                     cmake_cache_txt, "Legion_SOURCE_DIR:STATIC="

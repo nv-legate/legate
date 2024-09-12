@@ -16,20 +16,20 @@ from collections.abc import Collection
 
 import pytest
 
-import legate.core as lc
-from legate.core import (
+import legate as lg
+from legate import (
     AutoTask,
     LogicalStore,
     Scalar,
     get_legate_runtime,
     types as ty,
 )
-from legate.core._lib.partitioning.constraint import (
+from legate._lib.partitioning.constraint import (
     Constraint,
     ConstraintProxy,
     Variable,
 )
-from legate.core.task import InputStore, task
+from legate.task import InputStore, task
 
 
 @pytest.fixture
@@ -72,18 +72,18 @@ def variable_y(dummy_task: AutoTask, input_store_y: LogicalStore) -> Variable:
 
 class TestAlign:
     def test_create_from_str(self) -> None:
-        constraint = lc.align("x", "y")
+        constraint = lg.align("x", "y")
         assert isinstance(constraint, ConstraintProxy)
         assert hasattr(constraint, "func")
         assert callable(constraint.func)
-        assert constraint.func == lc.align
+        assert constraint.func == lg.align
         assert hasattr(constraint, "args")
         assert constraint.args == ("x", "y")
 
     def test_create_from_variable(
         self, variable_x: Variable, variable_y: Variable
     ) -> None:
-        constraint = lc.align(variable_x, variable_y)
+        constraint = lg.align(variable_x, variable_y)
         assert isinstance(constraint, Constraint)
         # Currently the only exposed python methods to check...
         expected_re = re.compile(
@@ -97,19 +97,19 @@ class TestAlign:
             TypeError,
             match=re.escape(
                 "Argument 'rhs' has incorrect type (expected "
-                "legate.core._lib.partitioning.constraint.Variable, got str)"
+                "legate._lib.partitioning.constraint.Variable, got str)"
             ),
         ):
-            lc.align(variable_x, "asdasd")  # type: ignore[call-overload]
+            lg.align(variable_x, "asdasd")  # type: ignore[call-overload]
 
         with pytest.raises(
             TypeError,
             match=re.escape(
                 "Argument 'rhs' has incorrect type (expected str, got "
-                "legate.core._lib.partitioning.constraint.Variable)"
+                "legate._lib.partitioning.constraint.Variable)"
             ),
         ):
-            lc.align("asdasd", variable_x)  # type: ignore[call-overload]
+            lg.align("asdasd", variable_x)  # type: ignore[call-overload]
 
 
 AXES: tuple[Collection[int], ...] = (
@@ -125,11 +125,11 @@ AXES: tuple[Collection[int], ...] = (
 class TestBroadcast:
     @pytest.mark.parametrize("axes", AXES)
     def test_create_from_str(self, axes: Collection[int]) -> None:
-        constraint = lc.broadcast("x", axes=axes)
+        constraint = lg.broadcast("x", axes=axes)
         assert isinstance(constraint, ConstraintProxy)
         assert hasattr(constraint, "func")
         assert callable(constraint.func)
-        assert constraint.func == lc.broadcast
+        assert constraint.func == lg.broadcast
         assert hasattr(constraint, "args")
         assert constraint.args == ("x", axes)
 
@@ -137,7 +137,7 @@ class TestBroadcast:
     def test_create_from_variable(
         self, variable_x: Variable, axes: Collection[int]
     ) -> None:
-        constraint = lc.broadcast(variable_x, axes=axes)
+        constraint = lg.broadcast(variable_x, axes=axes)
         assert isinstance(constraint, Constraint)
         # Currently the only exposed python methods to check...
         if axes is None or not len(axes):
@@ -155,41 +155,41 @@ class TestBroadcast:
             ValueError, match=re.escape("axes must be iterable")
         ):
             # Thanks for the warning mypy, but thats the point!
-            lc.broadcast(variable_x, 1)  # type: ignore[call-overload]
+            lg.broadcast(variable_x, 1)  # type: ignore[call-overload]
 
         with pytest.raises(
             ValueError, match=re.escape("axes must be iterable")
         ):
-            lc.broadcast("x", 1)  # type: ignore[call-overload]
+            lg.broadcast("x", 1)  # type: ignore[call-overload]
 
 
 class TestImage:
     def test_create_from_str(self) -> None:
-        constraint = lc.image("x", "y")
+        constraint = lg.image("x", "y")
         assert isinstance(constraint, ConstraintProxy)
         assert hasattr(constraint, "func")
         assert callable(constraint.func)
-        assert constraint.func == lc.image
+        assert constraint.func == lg.image
         assert hasattr(constraint, "args")
-        assert constraint.args == ("x", "y", lc.ImageComputationHint.NO_HINT)
+        assert constraint.args == ("x", "y", lg.ImageComputationHint.NO_HINT)
 
     def test_create_from_str_with_hint(self) -> None:
-        constraint = lc.image("x", "y", lc.ImageComputationHint.FIRST_LAST)
+        constraint = lg.image("x", "y", lg.ImageComputationHint.FIRST_LAST)
         assert isinstance(constraint, ConstraintProxy)
         assert hasattr(constraint, "func")
         assert callable(constraint.func)
-        assert constraint.func == lc.image
+        assert constraint.func == lg.image
         assert hasattr(constraint, "args")
         assert constraint.args == (
             "x",
             "y",
-            lc.ImageComputationHint.FIRST_LAST,
+            lg.ImageComputationHint.FIRST_LAST,
         )
 
     def test_create_from_variable(
         self, variable_x: Variable, variable_y: Variable
     ) -> None:
-        constraint = lc.image(variable_x, variable_y)
+        constraint = lg.image(variable_x, variable_y)
         assert isinstance(constraint, Constraint)
         # Currently the only exposed python methods to check...
         expected_re = re.compile(
@@ -203,19 +203,19 @@ class TestImage:
             TypeError,
             match=re.escape(
                 "Argument 'var_range' has incorrect type (expected "
-                "legate.core._lib.partitioning.constraint.Variable, got str)"
+                "legate._lib.partitioning.constraint.Variable, got str)"
             ),
         ):
-            lc.image(variable_x, "asdasd")  # type: ignore[call-overload]
+            lg.image(variable_x, "asdasd")  # type: ignore[call-overload]
 
         with pytest.raises(
             TypeError,
             match=re.escape(
                 "Argument 'var_range' has incorrect type (expected str, got "
-                "legate.core._lib.partitioning.constraint.Variable)"
+                "legate._lib.partitioning.constraint.Variable)"
             ),
         ):
-            lc.image("asdasd", variable_x)  # type: ignore[call-overload]
+            lg.image("asdasd", variable_x)  # type: ignore[call-overload]
 
 
 FACTORS: tuple[tuple[int, ...], ...] = (tuple(), (1,), (2, 3, 4))
@@ -224,11 +224,11 @@ FACTORS: tuple[tuple[int, ...], ...] = (tuple(), (1,), (2, 3, 4))
 class TestScale:
     @pytest.mark.parametrize("factors", FACTORS)
     def test_create_from_str(self, factors: tuple[int, ...]) -> None:
-        constraint = lc.scale(factors, "x", "y")
+        constraint = lg.scale(factors, "x", "y")
         assert isinstance(constraint, ConstraintProxy)
         assert hasattr(constraint, "func")
         assert callable(constraint.func)
-        assert constraint.func == lc.scale
+        assert constraint.func == lg.scale
         assert hasattr(constraint, "args")
         assert constraint.args == (factors, "x", "y")
 
@@ -239,7 +239,7 @@ class TestScale:
         variable_x: Variable,
         variable_y: Variable,
     ) -> None:
-        constraint = lc.scale(factors, variable_x, variable_y)
+        constraint = lg.scale(factors, variable_x, variable_y)
         assert isinstance(constraint, Constraint)
         # Currently the only exposed python methods to check...
         factor_str = ", ".join(map(str, factors))
@@ -258,10 +258,10 @@ class TestScale:
             TypeError,
             match=re.escape(
                 "Argument 'var_bigger' has incorrect type (expected "
-                "legate.core._lib.partitioning.constraint.Variable, got str)"
+                "legate._lib.partitioning.constraint.Variable, got str)"
             ),
         ):
-            lc.scale(
+            lg.scale(
                 factors, variable_x, "asdasd"  # type: ignore[call-overload]
             )
 
@@ -269,10 +269,10 @@ class TestScale:
             TypeError,
             match=re.escape(
                 "Argument 'var_bigger' has incorrect type (expected str, got "
-                "legate.core._lib.partitioning.constraint.Variable)"
+                "legate._lib.partitioning.constraint.Variable)"
             ),
         ):
-            lc.scale(
+            lg.scale(
                 factors, "asdasd", variable_x  # type: ignore[call-overload]
             )
 
@@ -286,11 +286,11 @@ class TestBloat:
     def test_create_from_str(
         self, lo_offsets: tuple[int, ...], hi_offsets: tuple[int, ...]
     ) -> None:
-        constraint = lc.bloat("x", "y", lo_offsets, hi_offsets)
+        constraint = lg.bloat("x", "y", lo_offsets, hi_offsets)
         assert isinstance(constraint, ConstraintProxy)
         assert hasattr(constraint, "func")
         assert callable(constraint.func)
-        assert constraint.func == lc.bloat
+        assert constraint.func == lg.bloat
         assert hasattr(constraint, "args")
         assert constraint.args == ("x", "y", lo_offsets, hi_offsets)
 
@@ -303,7 +303,7 @@ class TestBloat:
         lo_offsets: tuple[int, ...],
         hi_offsets: tuple[int, ...],
     ) -> None:
-        constraint = lc.bloat(variable_x, variable_y, lo_offsets, hi_offsets)
+        constraint = lg.bloat(variable_x, variable_y, lo_offsets, hi_offsets)
         assert isinstance(constraint, Constraint)
         # Currently the only exposed python methods to check...
         lo_str = ", ".join(map(str, lo_offsets))
@@ -328,10 +328,10 @@ class TestBloat:
             TypeError,
             match=re.escape(
                 "Argument 'var_bloat' has incorrect type (expected "
-                "legate.core._lib.partitioning.constraint.Variable, got str)"
+                "legate._lib.partitioning.constraint.Variable, got str)"
             ),
         ):
-            lc.bloat(  # type: ignore[call-overload]
+            lg.bloat(  # type: ignore[call-overload]
                 variable_x, "asdasd", lo_offsets, hi_offsets
             )
 
@@ -339,10 +339,10 @@ class TestBloat:
             TypeError,
             match=re.escape(
                 "Argument 'var_bloat' has incorrect type (expected str, got "
-                "legate.core._lib.partitioning.constraint.Variable)"
+                "legate._lib.partitioning.constraint.Variable)"
             ),
         ):
-            lc.bloat(  # type: ignore[call-overload]
+            lg.bloat(  # type: ignore[call-overload]
                 "asdasd", variable_x, lo_offsets, hi_offsets
             )
 

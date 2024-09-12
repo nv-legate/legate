@@ -17,6 +17,6 @@ function(find_or_configure_fmt)
 
   include(${rapids-cmake-dir}/cpm/fmt.cmake)
 
-  rapids_cpm_fmt(BUILD_EXPORT_SET legate-core-exports
-                 INSTALL_EXPORT_SET legate-core-exports CPM_ARGS SYSTEM TRUE)
+  rapids_cpm_fmt(BUILD_EXPORT_SET legate-exports INSTALL_EXPORT_SET legate-exports
+                                                                    CPM_ARGS SYSTEM TRUE)
 endfunction()

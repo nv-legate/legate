@@ -7,13 +7,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from config.aedifix.main import basic_configure  # noqa: E402
-from config.legate_core_internal.main_package import LegateCore  # noqa: E402
+from config.legate_internal.main_package import Legate  # noqa: E402
 
 
 def main() -> int:
     argv = [
-        # core args
-        f"--LEGATE_CORE_ARCH={Path(__file__).stem}",
+        # legate args
+        f"--LEGATE_ARCH={Path(__file__).stem}",
         "--build-type=debug",
         "--cmake-generator=Ninja",
         # common options
@@ -21,7 +21,7 @@ def main() -> int:
         "--with-python",
         "--with-docs",
     ] + sys.argv[1:]
-    return basic_configure(tuple(argv), LegateCore)
+    return basic_configure(tuple(argv), Legate)
 
 
 if __name__ == "__main__":

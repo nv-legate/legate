@@ -24,7 +24,7 @@ see the [Legate overview](https://docs.nvidia.com/legate/latest/overview.html).
 ## Installation
 
 Legate Core is available from [conda](https://docs.conda.io/projects/conda/en/latest/index.html)
-on the [legate channel](https://anaconda.org/legate/legate-core).
+on the [legate channel](https://anaconda.org/legate/legate).
 See https://docs.nvidia.com/legate/latest/installation.html for details about different
 install configurations.
 

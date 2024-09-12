@@ -35,7 +35,7 @@
 static_assert(
   sizeof(MPI_Status) <= LEGATE_MPI_STATUS_THUNK_SIZE,
   "Size of thunk too small to hold MPI_Status. Please report this to Legate developers by opening "
-  "an issue at https://github.com/nv-legate/legate.core and/or sending an email to "
+  "an issue at https://github.com/nv-legate/legate and/or sending an email to "
   "legate@nvidia.com.");
 #endif
 

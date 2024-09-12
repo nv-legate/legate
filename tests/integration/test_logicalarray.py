@@ -13,8 +13,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-import legate.core.types as ty
-from legate.core import LEGATE_MAX_DIM, LogicalArray, get_legate_runtime
+import legate.types as ty
+from legate import LEGATE_MAX_DIM, LogicalArray, get_legate_runtime
 
 from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SHAPES
 from .utils.utils import random_array_and_store

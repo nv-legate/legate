@@ -14,7 +14,7 @@ from typing import Any, Callable
 
 import numpy as np
 
-from legate.core import LogicalStore, get_legate_runtime, types as ty
+from legate import LogicalStore, get_legate_runtime, types as ty
 
 
 def create_np_array_and_store(

@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/runtime/detail/library.h"
+#include "legate/runtime/detail/library.h"
 
-#include "core/utilities/detail/strtoll.h"
+#include "legate/utilities/detail/strtoll.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

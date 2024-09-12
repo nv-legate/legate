@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/runtime/detail/region_manager.h"
+#include "legate/runtime/detail/region_manager.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

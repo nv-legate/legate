@@ -11,7 +11,6 @@
  */
 
 #include "core/mapping/mapping.h"
-
 #include "legate.h"
 #include "scoping_cffi.h"
 

@@ -54,7 +54,7 @@ endif()
 
 target_link_libraries(mpi_wrapper PUBLIC MPI::MPI_CXX)
 
-set(lib_name "lgcore_mpi_wrapper")
+set(lib_name "legate_mpi_wrapper")
 
 set_target_properties(mpi_wrapper
                       PROPERTIES LIBRARY_OUTPUT_NAME "${lib_name}"

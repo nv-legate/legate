@@ -11,7 +11,6 @@
  */
 
 #include "core/utilities/dispatch.h"
-
 #include "legate_library.h"
 #include "reduction_cffi.h"
 

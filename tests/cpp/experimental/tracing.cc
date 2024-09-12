@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/experimental/trace.h"
+#include "legate/experimental/trace.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

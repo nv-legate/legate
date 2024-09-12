@@ -101,7 +101,7 @@ class Other(DataclassMixin):
     cov_src_path: str | None
 
     # not frozen because we have to update this manually
-    legate_dir: Path | None
+    legate_install_dir: Path | None
 
 
 class Config:
@@ -134,7 +134,7 @@ class Config:
         self.execution = object_to_dataclass(args, Execution)
         self.info = object_to_dataclass(args, Info)
         self.other = object_to_dataclass(args, Other)
-        self.other.legate_dir = self._compute_legate_dir(args)
+        self.other.legate_install_dir = self._compute_legate_install_dir(args)
 
         # test selection
         self.examples = False if args.cov_bin else True
@@ -233,8 +233,10 @@ class Config:
         if not hasattr(self, "legate_path_"):
 
             def compute_legate_path() -> str:
-                if self.other.legate_dir is not None:
-                    return str(self.other.legate_dir / "bin" / "legate")
+                if self.other.legate_install_dir is not None:
+                    return str(
+                        self.other.legate_install_dir / "bin" / "legate"
+                    )
 
                 if legate_bin := shutil.which("legate"):
                     return legate_bin
@@ -264,14 +266,14 @@ class Config:
 
         return tuple(computed)
 
-    def _compute_legate_dir(self, args: Namespace) -> Path | None:
+    def _compute_legate_install_dir(self, args: Namespace) -> Path | None:
         # self._legate_source below is purely for testing
-        if args.legate_dir:
+        if args.legate_install_dir:
             self._legate_source = "cmd"
-            return Path(args.legate_dir)
-        elif "LEGATE_DIR" in os.environ:
+            return Path(args.legate_install_dir)
+        elif "LEGATE_INSTALL_DIR" in os.environ:
             self._legate_source = "env"
-            return Path(os.environ["LEGATE_DIR"])
+            return Path(os.environ["LEGATE_INSTALL_DIR"])
         self._legate_source = "install"
         return None
 

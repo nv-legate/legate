@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "core/utilities/detail/env.h"
+#include "legate/utilities/detail/env.h"
 
 #include "legate.h"
 

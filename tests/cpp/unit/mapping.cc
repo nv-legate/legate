@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/mapping/detail/mapping.h"
+#include "legate/mapping/detail/mapping.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

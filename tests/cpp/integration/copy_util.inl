@@ -10,8 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/data/detail/logical_store.h"
-#include "core/utilities/detail/tuple.h"
+#include "legate/data/detail/logical_store.h"
+#include "legate/utilities/detail/tuple.h"
 
 #include "legate.h"
 

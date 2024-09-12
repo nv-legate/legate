@@ -14,45 +14,43 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/policies.cmake NO_POLICY_SCOPE)
 
-list(APPEND CMAKE_MESSAGE_CONTEXT "legate.core")
+list(APPEND CMAKE_MESSAGE_CONTEXT "legate")
 
 # ########################################################################################
-# * Setup LEGATE_CORE_DIR and LEGATE_CORE_ARCH -------------------------------
+# * Setup LEGATE_DIR and LEGATE_ARCH -------------------------------
 
-if(NOT DEFINED LEGATE_CORE_DIR)
+if(NOT DEFINED LEGATE_DIR)
   # this one we can figure out on our own
-  execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/scripts/get_legate_core_dir.py
-                  OUTPUT_VARIABLE LEGATE_CORE_DIR COMMAND_ERROR_IS_FATAL ANY)
+  execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/scripts/get_legate_dir.py
+                  OUTPUT_VARIABLE LEGATE_DIR COMMAND_ERROR_IS_FATAL ANY)
 endif()
 
-cmake_path(SET LEGATE_CORE_DIR NORMALIZE "${LEGATE_CORE_DIR}")
+cmake_path(SET LEGATE_DIR NORMALIZE "${LEGATE_DIR}")
 # push it to cache
-set(LEGATE_CORE_DIR "${LEGATE_CORE_DIR}"
-    CACHE PATH "Full path to the legate.core root directory" FORCE)
+set(LEGATE_DIR "${LEGATE_DIR}" CACHE PATH "Full path to the legate root directory" FORCE)
 
-if(NOT DEFINED LEGATE_CORE_ARCH)
+if(NOT DEFINED LEGATE_ARCH)
   set(bin_dir ${CMAKE_CURRENT_BINARY_DIR})
   if("$ENV{AEDIFIX}" STREQUAL "1")
     # We are being driven by Aedifix, that must mean our current binary path is
-    # $LEGATE_CORE_DIR/<arch-name>/cmake_build. That being said, this path should never be
+    # $LEGATE_DIR/<arch-name>/cmake_build. That being said, this path should never be
     # exercised, because aedifix should be setting this value for us!
     if(NOT "${bin_dir}" MATCHES "cmake_build$")
-      message(FATAL_ERROR "Could not locate LEGATE_CORE_ARCH directory, expected binary dir to end "
+      message(FATAL_ERROR "Could not locate LEGATE_ARCH directory, expected binary dir to end "
                           "with 'cmake_build', but it is ${bin_dir}. Expected this directory structure "
                           "because environment variable: AEDIFIX=1. Likely this indicates this environment "
                           "variable is wrongly set.")
     endif()
     cmake_path(GET bin_dir PARENT_PATH bin_dir)
   endif()
-  cmake_path(GET bin_dir STEM LEGATE_CORE_ARCH)
+  cmake_path(GET bin_dir STEM LEGATE_ARCH)
   unset(bin_dir)
 endif()
 
 # push it to cache
-set(LEGATE_CORE_ARCH "${LEGATE_CORE_ARCH}"
-    CACHE STRING "Name of the legate.core arch directory" FORCE)
+set(LEGATE_ARCH "${LEGATE_ARCH}" CACHE STRING "Name of the legate arch directory" FORCE)
 
-cmake_path(SET LEGATE_CORE_ARCH_DIR NORMALIZE "${LEGATE_CORE_DIR}/${LEGATE_CORE_ARCH}")
+cmake_path(SET LEGATE_ARCH_DIR NORMALIZE "${LEGATE_DIR}/${LEGATE_ARCH}")
 
 # ########################################################################################
 # * C++ and CUDA standard ----------------------------------------------------
@@ -64,7 +62,7 @@ function(legate_set_language_standard LANG DEFAULT)
 
   if(NOT "${CMAKE_${LANG}_STANDARD}" STREQUAL "${DEFAULT}")
     message(WARNING "CMAKE_${LANG}_STANDARD set to ${CMAKE_${LANG}_STANDARD}. "
-                    "Legate.Core expects to be compiled with C++${DEFAULT}")
+                    "Legate expects to be compiled with C++${DEFAULT}")
   endif()
 
   set(CMAKE_${LANG}_STANDARD ${CMAKE_${LANG}_STANDARD} PARENT_SCOPE)
@@ -118,43 +116,43 @@ set_property(DIRECTORY
                       cmake/patches/mdspan_cpp_lib_span_layout_stride.diff
                       cmake/patches/span_proper_cmake_project.diff)
 
-set(legate_core_version 24.09.00)
+set(legate_version 24.09.00)
 
 if(SKBUILD)
-  project(legate_core_python
-          VERSION ${legate_core_version}
+  project(legate_python
+          VERSION ${legate_version}
           LANGUAGES # TODO: Building Python extension modules via the
                     # python_extension_module requires the C language to be enabled here.
                     # The test project that is built in scikit-build to verify various
                     # linking options for the python library is hardcoded to build with C,
                     # so until that is fixed we need to keep C.
                     C CXX)
-  include(${CMAKE_CURRENT_SOURCE_DIR}/legate_core_python.cmake)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/legate_python.cmake)
 else()
-  project(legate_core VERSION ${legate_core_version} LANGUAGES C CXX)
-  include(${CMAKE_CURRENT_SOURCE_DIR}/legate_core_cpp.cmake)
+  project(legate VERSION ${legate_version} LANGUAGES C CXX)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/legate_cpp.cmake)
 endif()
 
 if(CMAKE_GENERATOR STREQUAL "Ninja")
-  function(add_touch_legate_core_ninja_build_target)
+  function(add_touch_legate_ninja_build_target)
     if(SKBUILD)
       set(_suf "_python")
     else()
       set(_suf)
     endif()
-    add_custom_target("touch_legate_core${_suf}_ninja_build" ALL
+    add_custom_target("touch_legate${_suf}_ninja_build" ALL
                       COMMAND ${CMAKE_COMMAND} -E touch_nocreate
                               "${CMAKE_CURRENT_BINARY_DIR}/build.ninja"
                       COMMENT "touch build.ninja so ninja doesn't re-run CMake on rebuild"
                       VERBATIM)
-    foreach(_dep IN ITEMS legate_core legate_core_python Legion LegionRuntime Realm
-                          RealmRuntime Regent)
+    foreach(_dep IN ITEMS legate legate_python Legion LegionRuntime Realm RealmRuntime
+                          Regent)
       if(TARGET ${_dep})
-        add_dependencies("touch_legate_core${_suf}_ninja_build" ${_dep})
+        add_dependencies("touch_legate${_suf}_ninja_build" ${_dep})
       endif()
     endforeach()
   endfunction()
-  add_touch_legate_core_ninja_build_target()
+  add_touch_legate_ninja_build_target()
 endif()
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

@@ -11,7 +11,6 @@
  */
 
 #include "core/utilities/span.h"
-
 #include "legate_library.h"
 #include "legateio.h"
 #include "util.h"

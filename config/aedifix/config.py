@@ -82,7 +82,7 @@ class ConfigFile(Configurable):
         Parameters
         ----------
         PROJ_NAME : str
-            The uppercase project name, i.e. 'LEGATE_CORE'.
+            The uppercase project name, i.e. 'LEGATE'.
         """
         assert PROJ_NAME.isupper()
         self.add_rule(
@@ -163,9 +163,9 @@ class ConfigFile(Configurable):
         Parameters
         ----------
         PROJ_ARCH_NAME : str
-            The uppercase project name, i.e. 'LEGATE_CORE_ARCH'.
+            The uppercase project name, i.e. 'LEGATE_ARCH'.
         PROJ_NAME : str
-            The uppercase project name, sans the 'ARCH' i.e. 'LEGATE_CORE'.
+            The uppercase project name, sans the 'ARCH' i.e. 'LEGATE'.
         """
         assert PROJ_ARCH_NAME.isupper()
         assert PROJ_NAME.isupper()

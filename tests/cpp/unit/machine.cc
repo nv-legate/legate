@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "core/mapping/detail/machine.h"
+#include "legate/mapping/detail/machine.h"
 
-#include "core/mapping/machine.h"
-#include "core/utilities/detail/buffer_builder.h"
-#include "core/utilities/detail/deserializer.h"
+#include "legate/mapping/machine.h"
+#include "legate/utilities/detail/buffer_builder.h"
+#include "legate/utilities/detail/deserializer.h"
 
 #include "legate.h"
 #include "utilities/utilities.h"

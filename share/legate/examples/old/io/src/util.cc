@@ -14,7 +14,6 @@
 
 #include "core/type/type_traits.h"
 #include "core/utilities/dispatch.h"
-
 #include "legateio.h"
 
 #include <fstream>
