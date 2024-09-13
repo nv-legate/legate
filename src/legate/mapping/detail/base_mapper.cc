@@ -879,7 +879,7 @@ bool BaseMapper::map_reduction_instance_(const Legion::Mapping::MapperContext& c
       for (auto&& r : regions) {
         msg << " " << r;
       }
-      msg << " (size: " << footprint << " bytes, memory: " << target_memory << ")";
+      msg << " (size: " << *footprint << " bytes, memory: " << target_memory << ")";
     }
   }
 

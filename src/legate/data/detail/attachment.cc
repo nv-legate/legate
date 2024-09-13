@@ -37,7 +37,7 @@ void intentionally_leak_handle(T&& handle)
 Attachment::~Attachment() noexcept
 {
   if (has_started()) {
-    maybe_deallocate();
+    maybe_deallocate(true);
     return;
   }
 
@@ -87,16 +87,16 @@ void Attachment::detach(bool unordered)
     handle_));
 }
 
-void Attachment::maybe_deallocate() noexcept
+void Attachment::maybe_deallocate(bool wait_on_detach) noexcept
 {
   if (!exists()) {
     return;
   }
 
-  if (can_dealloc_.has_value() && can_dealloc_->exists()) {
+  if (can_dealloc_.has_value() && can_dealloc_->exists() && wait_on_detach) {
     can_dealloc_->wait();
-    can_dealloc_.reset();
   }
+  can_dealloc_.reset();
 
   for (auto&& allocation : allocations_) {
     allocation->maybe_deallocate();

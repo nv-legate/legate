@@ -69,7 +69,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
 
     void unmap_and_detach(bool unordered);
     void invoke_callbacks();
-    void deallocate_attachment();
+    void deallocate_attachment(bool wait_on_detach = true);
 
     [[nodiscard]] bool has_attachment() const;
 

@@ -461,7 +461,7 @@ bool BaseInstanceManager::do_erase_(
       did_erase = true;
     }
 
-    if (sub_inst.size() == 0) {
+    if (sub_inst.empty()) {
       fit = instance_sets->erase(fit);
     } else {
       ++fit;
@@ -543,9 +543,13 @@ void InstanceManager::remove_pending_instance(const Legion::LogicalRegion& regio
                                               Legion::FieldID field_id,
                                               const Memory& memory)
 {
-  FieldMemInfo key{region.get_tree_id(), field_id, memory};
-
-  instance_sets_[std::move(key)].remove_pending_instance(group);
+  auto finder = instance_sets_.find(FieldMemInfo{region.get_tree_id(), field_id, memory});
+  LEGATE_ASSERT(finder != instance_sets_.end());
+  auto&& instance_set = finder->second;
+  instance_set.remove_pending_instance(group);
+  if (instance_set.empty()) {
+    instance_sets_.erase(finder);
+  }
 }
 
 bool InstanceManager::erase(const Legion::Mapping::PhysicalInstance& inst)

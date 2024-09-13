@@ -41,7 +41,7 @@ inline InstanceSet::InstanceSpec::InstanceSpec(Legion::Mapping::PhysicalInstance
 {
 }
 
-inline std::size_t InstanceSet::size() const { return instances_.size(); }
+inline bool InstanceSet::empty() const { return instances_.empty() && pending_instances_.empty(); }
 
 // ==========================================================================================
 
@@ -51,7 +51,7 @@ inline ReductionInstanceSet::ReductionInstanceSpec::ReductionInstanceSpec(
 {
 }
 
-inline std::size_t ReductionInstanceSet::size() const { return instances_.size(); }
+inline bool ReductionInstanceSet::empty() const { return instances_.empty(); }
 
 // ==========================================================================================
 

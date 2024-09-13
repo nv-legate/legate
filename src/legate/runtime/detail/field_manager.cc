@@ -113,10 +113,10 @@ ConsensusMatchingFieldManager::~ConsensusMatchingFieldManager()
   // We are shutting down, so just free all the buffer copies we've made to attach to, without
   // waiting on the detachments to finish.
   for (auto&& [_, info] : info_for_match_items_) {
-    info.state->deallocate_attachment();
+    info.state->deallocate_attachment(false);
   }
   for (auto&& info : unordered_free_fields_) {
-    info.state->deallocate_attachment();
+    info.state->deallocate_attachment(false);
   }
 }
 

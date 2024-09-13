@@ -79,7 +79,7 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
   void record_pending_instance_creation(InternalSharedPtr<RegionGroup> group);
   void remove_pending_instance(const InternalSharedPtr<RegionGroup>& group);
 
-  [[nodiscard]] std::size_t size() const;
+  [[nodiscard]] bool empty() const;
 
   [[nodiscard]] bool erase(const Legion::Mapping::PhysicalInstance& inst);
 
@@ -117,7 +117,7 @@ class ReductionInstanceSet {
                        Legion::Mapping::PhysicalInstance instance,
                        InstanceMappingPolicy policy);
 
-  [[nodiscard]] std::size_t size() const;
+  [[nodiscard]] bool empty() const;
 
   [[nodiscard]] bool erase(const Legion::Mapping::PhysicalInstance& inst);
 

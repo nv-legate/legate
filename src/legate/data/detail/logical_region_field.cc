@@ -66,7 +66,7 @@ void LogicalRegionField::PhysicalState::invoke_callbacks()
   callbacks_.clear();
 }
 
-void LogicalRegionField::PhysicalState::deallocate_attachment()
+void LogicalRegionField::PhysicalState::deallocate_attachment(bool wait_on_detach)
 {
   if (has_pending_detach_) {
     // Needs to flush pending detach operations from the field's previous life.
@@ -74,7 +74,7 @@ void LogicalRegionField::PhysicalState::deallocate_attachment()
     LEGATE_ASSERT(!has_pending_detach_);
   }
   // Then, wait until the detach operations are done
-  attachment_.maybe_deallocate();
+  attachment_.maybe_deallocate(wait_on_detach);
 }
 
 void LogicalRegionField::PhysicalState::intentionally_leak_physical_region()

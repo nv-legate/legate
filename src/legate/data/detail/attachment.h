@@ -44,7 +44,7 @@ class Attachment {
   // however does not flush the scheduling window and it's the caller's responsibility to make sure
   // the deferred detach operation for this attachment is scheduled by calling
   // `Runtime::flush_scheduling_window`.
-  void maybe_deallocate() noexcept;
+  void maybe_deallocate(bool wait_on_detach) noexcept;
   [[nodiscard]] bool exists() const noexcept;
 
  protected:
