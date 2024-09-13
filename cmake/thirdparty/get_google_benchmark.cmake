@@ -27,7 +27,7 @@ function(find_or_configure_google_benchmark)
 
   include(${rapids-cmake-dir}/cpm/gbench.cmake)
 
-  rapids_cpm_gbench(BUILD_EXPORT_SET legate-core-exports
-                    INSTALL_EXPORT_SET legate-core-exports CPM_ARGS OPTIONS
-                                                           "BENCHMARK_ENABLE_TESTING OFF")
+  rapids_cpm_gbench(BUILD_EXPORT_SET legate-exports
+                    INSTALL_EXPORT_SET legate-exports CPM_ARGS OPTIONS
+                                                      "BENCHMARK_ENABLE_TESTING OFF")
 endfunction()

@@ -114,7 +114,7 @@ install: install_private
 ## Uninstall the C++ library.
 ##
 ## Options:
-## - LEGATE_CORE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 ## This command is best-effort. CMake by default does not provide an uninstall command
 ## (for what reason, nobody knows), and so this command is synthesized by parsing the
@@ -133,7 +133,7 @@ install: install_private
 ##
 .PHONY: uninstall
 uninstall:
-	@$(LEGATE_CORE_BUILD_COMMAND) --target uninstall $(LEGATE_CORE_CMAKE_ARGS)
+	@$(LEGATE_BUILD_COMMAND) --target uninstall $(LEGATE_CMAKE_ARGS)
 
 .PHONY: package_private
 package_private: all
@@ -196,4 +196,4 @@ docs: doxygen
 ##
 .PHONY: docserve
 docserve:
-	@$(PYTHON) -m http.server -d $(LEGATE_DIR)/$(LEGATE_ARCH)/cmake_build/docs/legate/core/sphinx
+	@$(PYTHON) -m http.server -d $(LEGATE_DIR)/$(LEGATE_ARCH)/cmake_build/docs/legate/sphinx

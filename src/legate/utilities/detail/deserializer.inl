@@ -133,26 +133,26 @@ InternalSharedPtr<detail::Scalar> BaseDeserializer<Deserializer>::unpack_scalar(
       case Type::Code::NIL:
         return {nullptr, 0};
 
-#define LEGATE_CORE_CASE_TYPE_CODE(CODE) \
-  case Type::Code::CODE:                 \
+#define LEGATE_CASE_TYPE_CODE(CODE) \
+  case Type::Code::CODE:            \
     return align_for_unpack<type_of_t<Type::Code::CODE>>(ptr, capacity, ty->size(), ty->alignment())
 
-        LEGATE_CORE_CASE_TYPE_CODE(BOOL);
-        LEGATE_CORE_CASE_TYPE_CODE(INT8);
-        LEGATE_CORE_CASE_TYPE_CODE(INT16);
-        LEGATE_CORE_CASE_TYPE_CODE(INT32);
-        LEGATE_CORE_CASE_TYPE_CODE(INT64);
-        LEGATE_CORE_CASE_TYPE_CODE(UINT8);
-        LEGATE_CORE_CASE_TYPE_CODE(UINT16);
-        LEGATE_CORE_CASE_TYPE_CODE(UINT32);
-        LEGATE_CORE_CASE_TYPE_CODE(UINT64);
-        LEGATE_CORE_CASE_TYPE_CODE(FLOAT16);
-        LEGATE_CORE_CASE_TYPE_CODE(FLOAT32);
-        LEGATE_CORE_CASE_TYPE_CODE(FLOAT64);
-        LEGATE_CORE_CASE_TYPE_CODE(COMPLEX64);
-        LEGATE_CORE_CASE_TYPE_CODE(COMPLEX128);
+        LEGATE_CASE_TYPE_CODE(BOOL);
+        LEGATE_CASE_TYPE_CODE(INT8);
+        LEGATE_CASE_TYPE_CODE(INT16);
+        LEGATE_CASE_TYPE_CODE(INT32);
+        LEGATE_CASE_TYPE_CODE(INT64);
+        LEGATE_CASE_TYPE_CODE(UINT8);
+        LEGATE_CASE_TYPE_CODE(UINT16);
+        LEGATE_CASE_TYPE_CODE(UINT32);
+        LEGATE_CASE_TYPE_CODE(UINT64);
+        LEGATE_CASE_TYPE_CODE(FLOAT16);
+        LEGATE_CASE_TYPE_CODE(FLOAT32);
+        LEGATE_CASE_TYPE_CODE(FLOAT64);
+        LEGATE_CASE_TYPE_CODE(COMPLEX64);
+        LEGATE_CASE_TYPE_CODE(COMPLEX128);
 
-#undef LEGATE_CORE_CASE_TYPE_CODE
+#undef LEGATE_CASE_TYPE_CODE
 
       case Type::Code::BINARY:       // fall-through
       case Type::Code::FIXED_ARRAY:  // fall-through

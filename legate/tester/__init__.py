@@ -64,10 +64,10 @@ CUSTOM_FILES: list[CustomTest] = []
 
 def _compute_last_failed_filename() -> str:
     base_name = ".legate-test-last-failed"
-    if (legate_core_dir := os.environ.get("LEGATE_CORE_DIR", "")) and (
-        legate_core_arch := os.environ.get("LEGATE_CORE_ARCH", "")
+    if (legate_dir := os.environ.get("LEGATE_DIR", "")) and (
+        legate_arch := os.environ.get("LEGATE_ARCH", "")
     ):
-        arch_dir = os.path.join(legate_core_dir, legate_core_arch)
+        arch_dir = os.path.join(legate_dir, legate_arch)
         if os.path.exists(arch_dir):
             return os.path.join(arch_dir, base_name)
 

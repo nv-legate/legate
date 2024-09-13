@@ -525,7 +525,7 @@ cdef class VariantInvoker:
             # this is a bug
             raise TypeError(
                 f"Unhandled argument type '{arg_ty}' during unpacking, "
-                "this is a bug in legate.core!"
+                "this is a bug in legate!"
             )
 
         def unpack_scalar(

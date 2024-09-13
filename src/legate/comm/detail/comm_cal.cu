@@ -21,6 +21,7 @@
 #include "legate/runtime/runtime.h"
 #include "legate/task/detail/legion_task.h"
 #include "legate/utilities/assert.h"
+#include "legate/utilities/detail/core_ids.h"
 #include "legate/utilities/nvtx_help.h"
 #include "legate/utilities/typedefs.h"
 
@@ -101,7 +102,7 @@ void check_cal(calError_t error, const char* file, int line)
 
 class Init : public detail::LegionTask<Init> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{LEGATE_CORE_INIT_CAL_TASK_ID};
+  static constexpr auto TASK_ID = legate::LocalTaskID{CoreTask::INIT_CAL};
 
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
@@ -110,7 +111,7 @@ class Init : public detail::LegionTask<Init> {
                                 Legion::Context context,
                                 Legion::Runtime* runtime)
   {
-    legate::nvtx::Range auto_range{"core::comm::cal::init"};
+    legate::nvtx::Range auto_range{"comm::cal::init"};
 
     legate::detail::show_progress(task, context, runtime);
 
@@ -142,7 +143,7 @@ class Init : public detail::LegionTask<Init> {
 
 class Finalize : public detail::LegionTask<Finalize> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{LEGATE_CORE_FINALIZE_CAL_TASK_ID};
+  static constexpr auto TASK_ID = legate::LocalTaskID{CoreTask::FINALIZE_CAL};
 
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
@@ -151,7 +152,7 @@ class Finalize : public detail::LegionTask<Finalize> {
                           Legion::Context context,
                           Legion::Runtime* runtime)
   {
-    legate::nvtx::Range auto_range{"core::comm::cal::finalize"};
+    legate::nvtx::Range auto_range{"comm::cal::finalize"};
 
     legate::detail::show_progress(task, context, runtime);
 

@@ -23,7 +23,7 @@ ctypedef tuple[str, ...] ParamList
 ctypedef tuple[VariantCode, ...] VariantList
 # Would use UserFunction | None below, but get:
 #
-# legate.core.internal/legate/core/_ext/task/type.pxd:26:39: Compiler crash in
+# legate.core.internal/legate/_ext/task/type.pxd:26:39: Compiler crash in
 # OptimizeBuiltinCalls
 #
 #     ModuleNode.body = StatListNode(type.pxd:11:0)

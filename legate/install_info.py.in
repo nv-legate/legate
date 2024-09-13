@@ -53,7 +53,7 @@ def get_libpath(lib_base_name: str, full_lib_name: str) -> str:
     )
 
 
-libpath: str = get_libpath("@legate_core_LIB_NAME@", "@legate_core_FULL_LIB_NAME@")
+libpath: str = get_libpath("@legate_LIB_NAME@", "@legate_FULL_LIB_NAME@")
 
 networks: list[str] = "@Legion_NETWORKS@".split()
 

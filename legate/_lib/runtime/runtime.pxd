@@ -45,10 +45,10 @@ cdef extern from *:
     void create_legate_task_exceptions()
     {
       _LegateTaskException =
-        PyErr_NewException("legate.core.LegateTaskException", NULL, NULL);
+        PyErr_NewException("legate.LegateTaskException", NULL, NULL);
       assert(_LegateTaskException);
       _LegatePyTaskException =
-        PyErr_NewException("legate.core.LegatePyTaskException", NULL, NULL);
+        PyErr_NewException("legate.LegatePyTaskException", NULL, NULL);
       assert(_LegatePyTaskException);
     }
 

@@ -203,8 +203,8 @@ template <typename F>
  *
  * @ingroup util
  */
-#define LEGATE_SCOPE_GUARD(...)                                    \
-  const auto LEGATE_CONCAT(__legate_core_scope_guard_, __LINE__) = \
+#define LEGATE_SCOPE_GUARD(...)                               \
+  const auto LEGATE_CONCAT(__legate_scope_guard_, __LINE__) = \
     ::legate::make_scope_guard([&]() noexcept { __VA_ARGS__; })
 
 /**
@@ -298,8 +298,8 @@ template <typename F>
  *
  * @ingroup util
  */
-#define LEGATE_SCOPE_FAIL(...)                                    \
-  const auto LEGATE_CONCAT(__legate_core_scope_fail_, __LINE__) = \
+#define LEGATE_SCOPE_FAIL(...)                               \
+  const auto LEGATE_CONCAT(__legate_scope_fail_, __LINE__) = \
     ::legate::make_scope_fail([&]() noexcept { __VA_ARGS__; })
 
 }  // namespace legate
