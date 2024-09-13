@@ -45,6 +45,7 @@ function preamble()
 
   if [[ "${upload_enabled:-false}" == 'false' ]]; then
     configure_args+=(--with-tests)
+    configure_args+=(--with-benchmarks)
   fi
 
   # We rely on an environment variable to determine if we need to build cpu-only bits

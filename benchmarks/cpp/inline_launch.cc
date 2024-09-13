@@ -23,14 +23,9 @@ constexpr std::string_view LIBNAME = "bench";
 
 class EmptyTask : public legate::LegateTask<EmptyTask> {
  public:
-  static constexpr std::int32_t TASK_ID = 0;
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
   static void cpu_variant(legate::TaskContext) {}
-
-  static void initialize()
-  {
-    register_variants(legate::Runtime::get_runtime()->find_or_create_library(LIBNAME));
-  }
 };
 
 class TaskLaunchFixture : public benchmark::Fixture {
@@ -39,18 +34,7 @@ class TaskLaunchFixture : public benchmark::Fixture {
 
   void SetUp(benchmark::State& state) override
   {
-    shape_ = [] {
-      auto extents = legate::tuple<std::uint64_t>{};
-
-      extents.reserve(LEGATE_MAX_DIM);
-      for (std::uint64_t i = 1; i <= LEGATE_MAX_DIM; ++i) {
-        extents.append_inplace(i);
-      }
-      return extents;
-    }();
-    type_ = legate::primitive_type(legate::type_code_of<std::int32_t>);
-
-    for (auto dest : {&saved_inputs_, &saved_outputs_}) {
+    for (auto* dest : {&saved_inputs_, &saved_outputs_}) {
       dest->reserve(static_cast<std::size_t>(state.range(0)));
       for (std::int64_t i = 0; i < state.range(0); ++i) {
         dest->emplace_back(make_store_());
@@ -60,7 +44,6 @@ class TaskLaunchFixture : public benchmark::Fixture {
 
   void TearDown(benchmark::State&) override
   {
-    type_ = legate::Type{nullptr};
     saved_inputs_.clear();
     saved_outputs_.clear();
   }
@@ -91,12 +74,24 @@ class TaskLaunchFixture : public benchmark::Fixture {
     const auto runtime = legate::Runtime::get_runtime();
     auto store         = runtime->create_store(shape_, type_);
 
+    LEGATE_CHECK(type_.code() == legate::Type::Code::INT32);
     runtime->issue_fill(store, legate::Scalar{std::int32_t{0}});
     return store;
   }
 
-  legate::Shape shape_{};
-  legate::Type type_{nullptr};
+  [[nodiscard]] static legate::Shape make_shape_()
+  {
+    auto extents = legate::tuple<std::uint64_t>{};
+
+    extents.reserve(LEGATE_MAX_DIM);
+    for (std::uint64_t i = 1; i <= LEGATE_MAX_DIM; ++i) {
+      extents.append_inplace(i);
+    }
+    return legate::Shape{extents};
+  }
+
+  legate::Shape shape_{make_shape_()};
+  legate::Type type_{legate::int32()};
   std::vector<legate::LogicalStore> saved_inputs_{};
   std::vector<legate::LogicalStore> saved_outputs_{};
 };

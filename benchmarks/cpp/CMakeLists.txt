@@ -16,6 +16,8 @@ include(${LEGATE_DIR}/cmake/Modules/debug_symbols.cmake)
 
 legate_find_or_configure(PACKAGE google_benchmark)
 
+include(GNUInstallDirs)
+
 function(configure_benchmark)
   set(options)
   set(one_value TARGET)
@@ -28,15 +30,16 @@ function(configure_benchmark)
                         PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
                                    BUILD_RPATH_USE_ORIGIN TRUE
-                                   # Don't use CMAKE_INSTALL_LIBDIR since we want the
-                                   # rpath to be relative
-                                   INSTALL_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}/../lib"
                                    INSTALL_RPATH_USE_LINK_PATH TRUE
                                    CXX_STANDARD ${CMAKE_CXX_STANDARD}
                                    CXX_STANDARD_REQUIRED ON
                                    # For std:: support of __int128_t. Can be removed once
                                    # using cuda::std
                                    CXX_EXTENSIONS ON)
+
+  set_property(TARGET ${_LEGATE_BM_TARGET} APPEND
+               PROPERTY INSTALL_RPATH
+                        "${LEGATE_PLATFORM_RPATH_ORIGIN}/../${CMAKE_INSTALL_LIBDIR}")
 
   target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE legate::legate benchmark::benchmark)
 
@@ -56,13 +59,11 @@ function(configure_benchmark)
 
   legate_add_target_link_option(${_LEGATE_BM_TARGET} PRIVATE legate_LINKER_FLAGS)
 
-  legate_debug_syms(${_LEGATE_BM_TARGET} INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+  legate_debug_syms(${_LEGATE_BM_TARGET} INSTALL_DIR "${CMAKE_INSTALL_BINDIR}")
 
-  list(APPEND legate_TIDY_SOURCES ${_LEGATE_TEST_SOURCES})
+  list(APPEND legate_TIDY_SOURCES ${_LEGATE_BM_SOURCES})
   set(legate_TIDY_SOURCES ${legate_TIDY_SOURCES} PARENT_SCOPE)
 endfunction()
-
-include(GNUInstallDirs)
 
 configure_benchmark(TARGET inline_launch SOURCES inline_launch.cc)
 

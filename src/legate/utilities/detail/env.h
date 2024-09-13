@@ -103,37 +103,39 @@ class EnvironmentVariable<std::string> : public EnvironmentVariableBase {
 
 // ==========================================================================================
 
-inline constexpr EnvironmentVariable<bool> LEGATE_TEST{"LEGATE_TEST"};
-inline constexpr EnvironmentVariable<bool> LEGATE_SHOW_USAGE{"LEGATE_SHOW_USAGE"};
-inline constexpr EnvironmentVariable<bool> LEGATE_NEED_CUDA{"LEGATE_NEED_CUDA"};
-inline constexpr EnvironmentVariable<bool> LEGATE_NEED_OPENMP{"LEGATE_NEED_OPENMP"};
-inline constexpr EnvironmentVariable<bool> LEGATE_NEED_NETWORK{"LEGATE_NEED_NETWORK"};
-inline constexpr EnvironmentVariable<bool> LEGATE_SHOW_PROGRESS{"LEGATE_SHOW_PROGRESS"};
-inline constexpr EnvironmentVariable<bool> LEGATE_EMPTY_TASK{"LEGATE_EMPTY_TASK"};
-inline constexpr EnvironmentVariable<bool> LEGATE_SYNC_STREAM_VIEW{"LEGATE_SYNC_STREAM_VIEW"};
-inline constexpr EnvironmentVariable<bool> LEGATE_LOG_MAPPING{"LEGATE_LOG_MAPPING"};
-inline constexpr EnvironmentVariable<bool> LEGATE_LOG_PARTITIONING{"LEGATE_LOG_PARTITIONING"};
-inline constexpr EnvironmentVariable<bool> LEGATE_WARMUP_NCCL{"LEGATE_WARMUP_NCCL"};
-inline constexpr EnvironmentVariable<std::string> LEGION_DEFAULT_ARGS{"LEGION_DEFAULT_ARGS"};
-inline constexpr EnvironmentVariable<std::int64_t> LEGATE_MIN_CPU_CHUNK{"LEGATE_MIN_CPU_CHUNK"};
-inline constexpr EnvironmentVariable<std::int64_t> LEGATE_MIN_GPU_CHUNK{"LEGATE_MIN_GPU_CHUNK"};
-inline constexpr EnvironmentVariable<std::int64_t> LEGATE_MIN_OMP_CHUNK{"LEGATE_MIN_OMP_CHUNK"};
-inline constexpr EnvironmentVariable<std::uint32_t> LEGATE_WINDOW_SIZE{"LEGATE_WINDOW_SIZE"};
-inline constexpr EnvironmentVariable<std::uint32_t> LEGATE_FIELD_REUSE_FRAC{
-  "LEGATE_FIELD_REUSE_FRAC"};
-inline constexpr EnvironmentVariable<std::uint32_t> LEGATE_FIELD_REUSE_FREQ{
-  "LEGATE_FIELD_REUSE_FREQ"};
-inline constexpr EnvironmentVariable<bool> LEGATE_CONSENSUS{"LEGATE_CONSENSUS"};
-inline constexpr EnvironmentVariable<bool> LEGATE_DISABLE_MPI{"LEGATE_DISABLE_MPI"};
-inline constexpr EnvironmentVariable<std::string> LEGATE_CONFIG{"LEGATE_CONFIG"};
-inline constexpr EnvironmentVariable<std::string> LEGATE_MPI_WRAPPER{"LEGATE_MPI_WRAPPER"};
+#define LEGATE_DEFINE_ENV_VAR(type, NAME) \
+  inline constexpr EnvironmentVariable<type> NAME { #NAME }
+
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_TEST);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_SHOW_USAGE);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_NEED_CUDA);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_NEED_OPENMP);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_NEED_NETWORK);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_SHOW_PROGRESS);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_EMPTY_TASK);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_SYNC_STREAM_VIEW);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_LOG_MAPPING);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_LOG_PARTITIONING);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_WARMUP_NCCL);
+LEGATE_DEFINE_ENV_VAR(std::string, LEGION_DEFAULT_ARGS);
+LEGATE_DEFINE_ENV_VAR(std::int64_t, LEGATE_MIN_CPU_CHUNK);
+LEGATE_DEFINE_ENV_VAR(std::int64_t, LEGATE_MIN_GPU_CHUNK);
+LEGATE_DEFINE_ENV_VAR(std::int64_t, LEGATE_MIN_OMP_CHUNK);
+LEGATE_DEFINE_ENV_VAR(std::uint32_t, LEGATE_WINDOW_SIZE);
+LEGATE_DEFINE_ENV_VAR(std::uint32_t, LEGATE_FIELD_REUSE_FRAC);
+LEGATE_DEFINE_ENV_VAR(std::uint32_t, LEGATE_FIELD_REUSE_FREQ);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_CONSENSUS);
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_DISABLE_MPI);
+LEGATE_DEFINE_ENV_VAR(std::string, LEGATE_CONFIG);
+LEGATE_DEFINE_ENV_VAR(std::string, LEGATE_MPI_WRAPPER);
 
 inline namespace experimental {
 
-inline constexpr detail::EnvironmentVariable<bool> LEGATE_INLINE_TASK_LAUNCH{
-  "LEGATE_INLINE_TASK_LAUNCH"};
+LEGATE_DEFINE_ENV_VAR(bool, LEGATE_INLINE_TASK_LAUNCH);
 
 }  // namespace experimental
+
+#undef LEGATE_DEFINE_ENV_VAR
 
 }  // namespace legate::detail
 

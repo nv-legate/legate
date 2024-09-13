@@ -33,6 +33,9 @@
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_TEST
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_TEST);
 
 /**
@@ -43,6 +46,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_TEST);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_SHOW_USAGE
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SHOW_USAGE);
 
 /**
@@ -56,6 +62,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SHOW_USAGE);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_NEED_CUDA
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_CUDA);
 
 /**
@@ -69,6 +78,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_CUDA);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_NEED_OPENMP
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_OPENMP);
 
 /**
@@ -81,6 +93,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_OPENMP);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_NEED_NETWORK
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_NETWORK);
 
 /**
@@ -94,6 +109,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_NETWORK);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_SHOW_PROGRESS
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SHOW_PROGRESS);
 
 /**
@@ -107,6 +125,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SHOW_PROGRESS);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_EMPTY_TASK
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_EMPTY_TASK);
 
 /**
@@ -121,6 +142,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_EMPTY_TASK);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_SYNC_STREAM_VIEW
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SYNC_STREAM_VIEW);
 
 /**
@@ -130,6 +154,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SYNC_STREAM_VIEW);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_LOG_MAPPING
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_LOG_MAPPING);
 
 /**
@@ -139,6 +166,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_LOG_MAPPING);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_LOG_PARTITIONING
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_LOG_PARTITIONING);
 
 /**
@@ -152,6 +182,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_LOG_PARTITIONING);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_WARMUP_NCCL
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_WARMUP_NCCL);
 
 /**
@@ -163,6 +196,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_WARMUP_NCCL);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGION_DEFAULT_ARGS
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGION_DEFAULT_ARGS);
 
 /**
@@ -199,6 +235,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGION_DEFAULT_ARGS);
  *
  * @ingroup env
  */
+#ifdef DOXYGEN
+#define LEGATE_MPI_WRAPPER
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_MPI_WRAPPER);
 
 /**
@@ -225,6 +264,9 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_MPI_WRAPPER);
  * some circumstances, but it may also lead to large slowdowns in others. Future improvements
  * will seek to improve this, at which point it will be moved to the normal Legate namespace.
  */
+#ifdef DOXYGEN
+#define LEGATE_INLINE_TASK_LAUNCH
+#endif
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_INLINE_TASK_LAUNCH);
 
 #undef LEGATE_CHECK_ENV_VAR_DOCS

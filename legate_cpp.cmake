@@ -871,7 +871,7 @@ if(legate_BUILD_EXAMPLES)
 endif()
 
 if(legate_BUILD_BENCHMARKS)
-  add_subdirectory(${LEGATE_DIR}/benchmarks)
+  add_subdirectory(benchmarks)
 endif()
 
 include(cmake/Modules/clang_tidy.cmake)
