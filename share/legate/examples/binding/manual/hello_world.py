@@ -20,7 +20,7 @@ from pathlib import Path
 def main(lib_path: Path) -> None:
     # Deliberately in main() so that the user can run --help on the program
     # without needing to build the .so (or setup legate) first.
-    from legate.core import get_legate_runtime
+    from legate import get_legate_runtime
 
     libhello_world = CDLL(lib_path)
 

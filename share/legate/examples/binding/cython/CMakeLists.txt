@@ -38,16 +38,16 @@ set_target_properties(hello_world
                                                               "${CMAKE_INSTALL_LIBDIR}"
                                  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}")
 
-find_package(legate_core QUIET)
+find_package(legate QUIET)
 
-if(NOT legate_core_FOUND)
-  if(DEFINED ENV{LEGATE_CORE_DIR} AND DEFINED ENV{LEGATE_CORE_ARCH})
-    set(legate_core_DIR "$ENV{LEGATE_CORE_DIR}/$ENV{LEGATE_CORE_ARCH}/cmake_build")
+if(NOT legate_FOUND)
+  if(DEFINED ENV{LEGATE_DIR} AND DEFINED ENV{LEGATE_ARCH})
+    set(legate_DIR "$ENV{LEGATE_DIR}/$ENV{LEGATE_ARCH}/cmake_build")
   endif()
-  find_package(legate_core REQUIRED QUIET)
+  find_package(legate REQUIRED QUIET)
 endif()
 
-target_link_libraries(hello_world PUBLIC legate::core)
+target_link_libraries(hello_world PUBLIC legate::legate)
 
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 
@@ -61,7 +61,7 @@ add_custom_command(OUTPUT hello_world_cython.cpp
 
 python_add_library(hello_world_cython MODULE hello_world_cython.cpp WITH_SOABI)
 
-target_link_libraries(hello_world_cython PUBLIC legate::core hello_world)
+target_link_libraries(hello_world_cython PUBLIC legate::legate hello_world)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(platform_rpath_origin "\$ORIGIN")

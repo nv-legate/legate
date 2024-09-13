@@ -24,13 +24,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(BUILD_SHARED_LIBS ON)
 
-find_package(legate_core QUIET)
+find_package(legate QUIET)
 
-if(NOT legate_core_FOUND)
-  if(DEFINED ENV{LEGATE_CORE_DIR} AND DEFINED ENV{LEGATE_CORE_ARCH})
-    set(legate_core_DIR "$ENV{LEGATE_CORE_DIR}/$ENV{LEGATE_CORE_ARCH}/cmake_build")
+if(NOT legate_FOUND)
+  if(DEFINED ENV{LEGATE_DIR} AND DEFINED ENV{LEGATE_ARCH})
+    set(legate_DIR "$ENV{LEGATE_DIR}/$ENV{LEGATE_ARCH}/cmake_build")
   endif()
-  find_package(legate_core REQUIRED QUIET)
+  find_package(legate REQUIRED QUIET)
 endif()
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
@@ -38,7 +38,8 @@ find_package(pybind11 CONFIG REQUIRED)
 
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
 python_add_library(hello_world_pybind11 MODULE hello_world.cc WITH_SOABI)
-target_link_libraries(hello_world_pybind11 PUBLIC legate::core PRIVATE pybind11::headers)
+target_link_libraries(hello_world_pybind11 PUBLIC legate::legate
+                      PRIVATE pybind11::headers)
 
 # This is passing in the version as a define just as an example
 target_compile_definitions(hello_world_pybind11 PRIVATE VERSION_INFO=${PROJECT_VERSION})

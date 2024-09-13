@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from hello_world_cython import HelloWorld
 
-from legate.core import get_legate_runtime
+from legate import get_legate_runtime
 
 
 def main() -> None:
