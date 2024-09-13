@@ -139,6 +139,15 @@ run_test_or_analysis() {
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
+              "${gtest_file}" --"${proc_type}" "${proc_count}" ${EXTRA_ARGS}
+            }
+
+            function run_legate_tests_with_driver()
+            {
+              local gtest_file="${1}"
+              local proc_type="${2}"
+              local proc_count="${3}"
+              local worker_count="${4:-2}"
               python3 "${LEGATE_DIR}/test.py" \
                       --gtest-file "${gtest_file}" \
                       --verbose \
@@ -153,7 +162,7 @@ run_test_or_analysis() {
             function run_sequential_tests()
             {
               run_legate_tests "${CONDA_PREFIX}/bin/tests_wo_runtime" cpus 1
-              run_legate_tests "${CONDA_PREFIX}/bin/tests_non_reentrant" cpus 1
+              run_legate_tests_with_driver "${CONDA_PREFIX}/bin/tests_non_reentrant" cpus 1
             }
 
             function run_cpp_tests()
