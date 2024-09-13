@@ -20,7 +20,7 @@ jobs:
         CONDA_OUTPUT: "/tmp/gasnet/output"
         ARTIFACT_SERVER: "https://urm.nvidia.com/artifactory"
         ARTIFACT_REPOS: "sw-legate-conda-local"
-        TARGET_PLATFORM: "linux-64"
+        TARGET_PLATFORM: "noarch"
         PKG_DIR: "gex/noarch"
 
     steps:
