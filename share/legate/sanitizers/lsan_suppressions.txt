@@ -19,6 +19,10 @@ leak:PyObject_GC_Resize
 leak:PyObject_Malloc
 leak:PyObject_Realloc
 leak:PyThread_allocate
+leak:_PyUnicodeWriter_Finish
+leak:list_resize
+leak:resize_buffer
+leak:unicode_resize
 # numpy
 leak:_multiarray_umath.*
 leak:numpy

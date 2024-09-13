@@ -82,7 +82,9 @@ class TestConfig:
         assert c.dry_run is False
         assert c.legate_path == shutil.which("legate")
 
-    def test_color_arg(self) -> None:
+    def test_color_arg(self, mocker: MockerFixture) -> None:
+        mocker.patch.object(colors, "ENABLED")
+
         m.Config(["test.py", "--color"])
 
         assert colors.ENABLED is True

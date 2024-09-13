@@ -14,13 +14,11 @@
 """
 from __future__ import annotations
 
-import sys
 from argparse import ArgumentParser
 from pathlib import Path
 from typing import Literal, TypeAlias
 
 from ..util.args import ExtendAction, MultipleChoices
-from ..util.colors import HAVE_COLOR
 from . import FEATURES, defaults
 
 PinOptionsType: TypeAlias = Literal["partial", "none", "strict"]
@@ -355,7 +353,7 @@ other.add_argument(
     "--color",
     dest="color",
     action="store_true",
-    default=HAVE_COLOR and sys.stdout.isatty(),
+    default=False,
     required=False,
     help="Whether to use color terminal output (if colorama is installed)",
 )

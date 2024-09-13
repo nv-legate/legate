@@ -112,7 +112,9 @@ class TestConfig:
             dry_run=False,
         )
 
-    def test_color_arg(self) -> None:
+    def test_color_arg(self, mocker: MockerFixture) -> None:
+        mocker.patch.object(colors, "ENABLED")
+
         m.Config(["legate-jupyter", "--color"])
 
         assert colors.ENABLED is True
