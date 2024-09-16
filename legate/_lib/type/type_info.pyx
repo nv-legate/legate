@@ -366,6 +366,8 @@ cdef class Type:
             return deduce_array_type_(py_object)
         if isinstance(py_object, np.generic):
             return deduce_numpy_type_(py_object.dtype)
+        if py_object is None:
+            return null_type
         raise NotImplementedError(f"unsupported type: {py_object!r}")
 
 

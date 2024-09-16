@@ -142,6 +142,11 @@ class TestScalar:
             assert value.null().value() is None
             assert value.null().type == ty.null_type
 
+    def test_null_construction(self) -> None:
+        scal = Scalar(None)
+        assert scal.type == ty.null_type
+        assert scal.value() is None
+
     def test_raw_handle(
         self, scalar_i_list: list[tuple[int | float, ty.Type]]
     ) -> None:
