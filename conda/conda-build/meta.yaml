@@ -113,11 +113,15 @@ build:
   track_features:
     - cpu_only
 {% endif %}
+  # These expressions force any downstream packages to
+  # 1) Lock to the exact version (but not variant) that was used to compile it
+  # 2) Force recompilation if this package is updated in order to use the new package
   run_exports:
+    strong:
 {% if not gpu_enabled_bool %}
-    - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }} =*_cpu*
+      - {{ name|lower }} ={{ version }} =*_cpu*
 {% else %}
-    - {{ pin_subpackage(name, min_pin="x.x.x", max_pin="x.x.x") }} =*_gpu*
+      - {{ name|lower }} ={{ version }} =*_gpu*
 {% endif %}
 {% if gpu_enabled_bool %}
 # prevent nccl from pulling in cudatoolkit
