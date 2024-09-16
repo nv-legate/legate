@@ -989,7 +989,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
     }
     group = local_instances_.find_region_group(
       regions.front(), *domain, fields.front(), target_memory, policy.exact);
-    regions = group->get_regions();
+    regions.assign(group->regions.begin(), group->regions.end());
   }
 
   // Haven't made this instance before, so make it now

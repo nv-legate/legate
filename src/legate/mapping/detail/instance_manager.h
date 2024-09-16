@@ -22,7 +22,6 @@
 #include <optional>
 #include <set>
 #include <unordered_map>
-#include <vector>
 
 namespace legate::mapping::detail {
 
@@ -32,8 +31,6 @@ class RegionGroup : public EnableSharedFromThis<RegionGroup> {
   RegionGroup() = default;
 
   RegionGroup(std::set<Legion::LogicalRegion> regions, const Domain& bounding_box);
-
-  [[nodiscard]] std::vector<Legion::LogicalRegion> get_regions() const;
 
   std::set<Legion::LogicalRegion> regions{};
   Domain bounding_box{};

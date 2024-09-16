@@ -28,11 +28,6 @@ inline RegionGroup::RegionGroup(std::set<Legion::LogicalRegion> regions_,
 {
 }
 
-inline std::vector<Legion::LogicalRegion> RegionGroup::get_regions() const
-{
-  return {regions.begin(), regions.end()};
-}
-
 // ==========================================================================================
 
 inline InstanceSet::InstanceSpec::InstanceSpec(Legion::Mapping::PhysicalInstance inst,
