@@ -10,6 +10,8 @@ without an express license agreement from NVIDIA CORPORATION or
 its affiliates is strictly prohibited.
 -->
 
+[![Build conda Nightly release package](https://github.com/nv-legate/legate.core.internal/actions/workflows/ci-gh-nightly-release.yml/badge.svg?event=schedule)](https://github.com/nv-legate/legate.core.internal/actions/workflows/ci-gh-nightly-release.yml)
+
 # Legate
 
 The Legate project makes it easier for programmers to leverage the
