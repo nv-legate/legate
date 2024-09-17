@@ -26,8 +26,9 @@ fi
 
 if [[ "${LEGATE_DIR:-}" == '' ]]; then
   set -e
-  script_dir="$(dirname $(readlink -f $0))"
-  export LEGATE_DIR="$(${script_dir}/../get_legate_dir.py)"
+  script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+  LEGATE_DIR="$("${script_dir}"/../get_legate_dir.py)"
+  export LEGATE_DIR
   set +e
 fi
 
@@ -81,4 +82,4 @@ case "${1}" in
     retcode=1
     ;;
 esac
-exit ${retcode}
+exit "${retcode}"

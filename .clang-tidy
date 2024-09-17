@@ -15,8 +15,8 @@ Checks:
   - 'google*'
   - 'cppcoreguidelines-pro-type-cstyle-cast'
   # then disable the stuff we don't want
-  - '-cert-dcl21-cpp' # returning non-const from operator-- or operator++
-  - '-cert-dcl50-cpp' # allow c-style variadics
+  - '-cert-dcl21-cpp'  # returning non-const from operator-- or operator++
+  - '-cert-dcl50-cpp'  # allow c-style variadics
   # no reserved identifiers, both of these are aliased to bugprone-reserved-identifier,
   # which we do enable. Leaving these enabled however, leads to needing to specify all
   # three (bugprone-reserved-identifier, cert-dcl51-cpp, and cert-dcl37-c) in NOLINT lines

@@ -2,6 +2,7 @@
 echo -e "\n\n--------------------- CONDA/GASNET_WRAPPER/ACTIVATE.SH -----------------------\n"
 
 set -eo pipefail
+# shellcheck disable=SC2154
 wrapper_file=$(find "${CONDA_PREFIX}/gex-wrapper" \( -name "librealm_gex_wrapper.so" -o -name "librealm_gex_wrapper.dylib" \) -print -quit)
 export REALM_GASNETEX_WRAPPER="${wrapper_file}"
 # WAR for:

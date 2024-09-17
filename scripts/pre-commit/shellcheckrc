@@ -1,0 +1,5 @@
+enable=all
+color=always
+external-sources=true
+severity=style
+disable=SC1091,SC1090

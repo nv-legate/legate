@@ -6,9 +6,21 @@ set -xeo pipefail
 
 # LICENSE, README.md, conda/, and configure are guaranteed to always be at the root
 # directory. If we can't find them, then probably we are not in the root directory.
-if [ ! -f LICENSE ] || [ ! -f README.md ] || [ ! -d conda ] || [ ! -f configure ]; then
+if [[ ! -f LICENSE ]] || [[ ! -f README.md ]] || [[ ! -d conda ]] || [[ ! -f configure ]]; then
   echo "Must run this script from the root directory"
   exit 1
+fi
+
+# If run through CI, BUILD_MARCH is set externally. If it is not set, try to set it.
+ARCH=$(uname -m)
+if [[ -z "${BUILD_MARCH}" ]]; then
+    if [[ "${ARCH}" = "aarch64" ]]; then
+        # Use the gcc march value used by aarch64 Ubuntu.
+        BUILD_MARCH=armv8-a
+    else
+        # Use uname -m otherwise
+        BUILD_MARCH=$(uname -m | tr '_' '-')
+    fi
 fi
 
 . continuous_integration/scripts/pretty_printing.bash
@@ -34,7 +46,7 @@ function preamble()
   set -xeo pipefail
   # Rewrite conda's -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY to
   #                 -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH
-  CMAKE_ARGS="$(echo "${CMAKE_ARGS}" | ${SED} -r "s@_INCLUDE=ONLY@_INCLUDE=BOTH@g")"
+  CMAKE_ARGS="${CMAKE_ARGS//_INCLUDE=ONLY/_INCLUDE=BOTH}"
 
   configure_args=()
   if [[ "${USE_OPENMP:-OFF}" == 'OFF' ]]; then
@@ -57,6 +69,7 @@ function preamble()
 
   configure_args+=(--build-type="${LEGATE_BUILD_MODE}")
 
+# shellcheck disable=SC2154
 case "${LEGATE_NETWORK}" in
   "ucx")
     configure_args+=(--with-ucx)
@@ -72,10 +85,15 @@ case "${LEGATE_NETWORK}" in
     ;;
 esac
 
+  # ${CXX} is set by conda compiler package. Disable shellcheck warning.
+  # shellcheck disable=SC2154
   export CUDAHOSTCXX="${CXX}"
+  # ${PREFIX} is set by conda build. Ignore shellcheck warning.
+  # shellcheck disable=SC2154
   export OPENSSL_DIR="${PREFIX}"
   export CUDAFLAGS="-isystem ${PREFIX}/include -L${PREFIX}/lib"
-  export LEGATE_DIR="$(${PYTHON} ./scripts/get_legate_dir.py)"
+  # shellcheck disable=SC2154
+  LEGATE_DIR="$(${PYTHON} ./scripts/get_legate_dir.py)"
   export LEGATE_DIR
   export LEGATE_ARCH='arch-conda'
 }
@@ -85,6 +103,8 @@ function configure_legate()
   set -xou pipefail
   set +e
 
+  # ${CC} is set by the conda compiler package. Disable shellcheck.
+  # shellcheck disable=SC2154
   ./configure \
     --LEGATE_ARCH="${LEGATE_ARCH}" \
     --CUDAFLAGS="${CUDAFLAGS}" \
@@ -98,7 +118,7 @@ function configure_legate()
   set -e
   if [[ "${ret}" != '0' ]]; then
     cat configure.log
-    return ${ret}
+    return "${ret}"
   fi
   if [[ "${LEGATE_BUILD_MODE:-}" != '' ]]; then
     found="$(grep -c -e "--build-type=${LEGATE_BUILD_MODE}" configure.log || true)"
@@ -114,6 +134,8 @@ function configure_legate()
 function pip_install_legate()
 {
   set -xeo pipefail
+  # CPU_COUNT and PIP_CACHE_DIR are set by the build. Disable shellcheck.
+  # shellcheck disable=SC2154
   SKBUILD_BUILD_OPTIONS="-j${CPU_COUNT} VERBOSE=1" "${PYTHON}" -m pip install \
                        --root / \
                        --no-deps \
@@ -126,11 +148,15 @@ function pip_install_legate()
 
   # Legion leaves an egg-info file which will confuse conda trying to pick up the information
   # Remove it so the legate is the only egg-info file added
+  # SP_DIR is set by conda build. Disable shellcheck.
+  # shellcheck disable=SC2154
   rm -rf "${SP_DIR}"/legion*egg-info
 }
 
-echo "Build starting on $(date)"
+build_start=$(date)
+echo "Build starting on ${build_start}"
 run_command 'Preamble' preamble
 run_command 'Configure Legate' configure_legate
 run_command 'pip install Legate' pip_install_legate
-echo "Build ending on $(date)"
+build_end=$(date)
+echo "Build ending on ${build_end}"

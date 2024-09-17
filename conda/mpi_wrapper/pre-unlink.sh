@@ -3,5 +3,6 @@ echo -e "\n\n--------------------- CONDA/MPI_WRAPPER/PREUNLINK.SH --------------
 
 set -eo pipefail
 echo "Remove the built artifacts"
+# shellcheck disable=SC2154
 MPI_WRAPPER_DIR="${CONDA_PREFIX}/mpi-wrapper"
 rm -rf "${MPI_WRAPPER_DIR}/include" "${MPI_WRAPPER_DIR}/lib*"

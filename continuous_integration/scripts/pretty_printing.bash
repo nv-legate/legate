@@ -50,7 +50,7 @@ function end_group()
 
   if [[ "${build_status}" != '0' ]]; then
     echo -e "::error::\e[${red}m ${name} - Failed (⬆️ click above for full log ⬆️)\e[0m"
-    exit ${build_status}
+    exit "${build_status}"
   fi
 }
 export -f end_group
@@ -60,7 +60,8 @@ export -f end_group
 # Usage: run_command "Group Name" command [arguments...]
 function run_command()
 {
-  local old_opts=$(set +o)
+  local old_opts
+  old_opts=$(set +o)
   { set +x; } 2>/dev/null;
   set +e
 
@@ -70,17 +71,20 @@ function run_command()
   local status
 
   begin_group "${group_name}"
-  local start_time=$(date +%s)
+  local start_time
+  start_time=$(date +%s)
   echo "Running command: " "${command[@]}"
   "${command[@]}"
   status=$?
   # In case the command enables either of these, we want to disable them so that we can
   # finish up here -- we will be restoring the old options at function end anyways.
   { set +xe; } 2>/dev/null;
-  local end_time=$(date +%s)
-  local duration=$((end_time - start_time))
+  local end_time
+  end_time=$(date +%s)
+  local duration
+  duration=$((end_time - start_time))
   end_group "${group_name}" "${status}" "${duration}"
   eval "${old_opts}"
-  return ${status}
+  return "${status}"
 }
 export -f run_command

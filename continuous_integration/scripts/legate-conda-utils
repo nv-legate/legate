@@ -1,40 +1,50 @@
 #!/usr/bin/env bash
 
+set -o pipefail
+
 . conda-utils
 
 make_conda_env_from_yaml() {
+    # shellcheck disable=SC2154
     mamba env create -q -n "${CONDA_ENV}" -f "${yaml_file}";
 }
 
 generate_yaml_file() {
-    if [[ "$USE_CUDA" == "OFF" ]]; then
-        yaml_file=$(\
-            "$REPO_DIR"/scripts/generate-conda-envs.py \
-                --os "$OS_SHORT_NAME" \
-                --compilers                         \
-                --openmpi                           \
-                --ucx                               \
-            | head -n1 | cut -d' ' -f3              \
-        )
-    else
-        yaml_file=$(         \
-            "$REPO_DIR"/scripts/generate-conda-envs.py \
-                --os "$OS_SHORT_NAME"               \
-                --compilers                         \
-                --ctk "${CUDA_VERSION}"             \
-                --openmpi                           \
-                --ucx                               \
-            | head -n1 | cut -d' ' -f3              \
-        )
-    fi
+# shellcheck disable=SC2154
+if [[ "${USE_CUDA}" == "OFF" ]]; then
+    # shellcheck disable=SC2154
+    output=$("${REPO_DIR}/scripts/generate-conda-envs.py" \
+        --os "${OS_SHORT_NAME}" \
+        --compilers             \
+        --openmpi               \
+        --ucx)
+
+    yaml_output=$(echo "${output}" | head -n1)
+    yaml_file=$(echo "${yaml_output}" | cut -d' ' -f3)
+else
+    # shellcheck disable=SC2154
+    output=$("${REPO_DIR}/scripts/generate-conda-envs.py" \
+        --os "${OS_SHORT_NAME}" \
+        --compilers             \
+        --ctk "${CUDA_VERSION}" \
+        --openmpi               \
+        --ucx)
+
+    yaml_output=$(echo "${output}" | head -n1)
+    yaml_file=$(echo "${yaml_output}" | cut -d' ' -f3)
+fi
+
 
     echo Dumping: "${yaml_file}"
     cat "${yaml_file}";
 
-    $SED -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
+    # shellcheck disable=SC2154
+    ${SED} -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
     echo "  - boa" >> "${yaml_file}";
 
-    if [[ $LEGATE_BUILD_MODE == *sanitizer* ]]; then
+    # shellcheck disable=SC2154
+    if [[ ${LEGATE_BUILD_MODE} == *sanitizer* ]]; then
+        # shellcheck disable=SC2154
         echo "  - libsanitizer <=${MAX_LIBSANITIZER_VERSION}" >> "${yaml_file}";
     fi
 
@@ -76,7 +86,8 @@ install_legate_with_war() {
     # See github issue: https://github.com/nv-legate/legate.core/issues/812
     mamba uninstall -q -y -n "${CONDA_ENV}" numpy;
 
-    mamba install -y -n "${CONDA_ENV}" -c conda-forge -c "$ARTIFACTS_DIR/conda-build/legate" legate;
+    # shellcheck disable=SC2154
+    mamba install -y -n "${CONDA_ENV}" -c conda-forge -c "${ARTIFACTS_DIR}/conda-build/legate" legate;
 }
 
 make_release_env() {

@@ -1,3 +1,4 @@
+---
 build_mode_str:
   - debug
   - debug-sanitizer

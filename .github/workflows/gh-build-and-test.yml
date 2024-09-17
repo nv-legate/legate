@@ -1,3 +1,4 @@
+---
 on:
   workflow_call:
     inputs:
@@ -25,6 +26,11 @@ on:
       upload-enabled:
         required: true
         type: boolean
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -xeuo pipefail {0}
+
 jobs:
   build:
     if: ${{ github.repository_owner == 'nv-legate' }}
@@ -79,31 +85,30 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          set -xeuo pipefail
           MATRIX_JSON='{"include": ['
           RUNNERS=('linux-amd64-gpu-v100-latest-1:gpu:linux' 'linux-amd64-2gpu:gpu:linux' 'linux-amd64-cpu8:cpu:linux' 'macos-latest:cpu:mac' 'linux-arm64-cpu16:cpu:linux-aarch64' 'linux-aarch64-2gpu:gpu:linux-aarch64')
           TEST_CONFIGS=('Python Unit Tests:python' 'C++ Unit Tests:cpp')
 
           for RUNNER in "${RUNNERS[@]}"; do
-            IFS=':' read -ra RUNNER_INFO <<< "$RUNNER"
+            IFS=':' read -ra RUNNER_INFO <<< "${RUNNER}"
             RUNNER_NAME=${RUNNER_INFO[0]}
             TARGET_DEVICE=${RUNNER_INFO[1]}
             RUNNER_PLATFORM=${RUNNER_INFO[2]}
 
-            if [[ "$TARGET_DEVICE" == "${{ inputs.target-device }}" && "$RUNNER_PLATFORM" == "${{ inputs.platform }}" ]]; then
+            if [[ "${TARGET_DEVICE}" == "${{ inputs.target-device }}" && "${RUNNER_PLATFORM}" == "${{ inputs.platform }}" ]]; then
               for TEST_CONFIG in "${TEST_CONFIGS[@]}"; do
-                IFS=':' read -ra CONFIG_INFO <<< "$TEST_CONFIG"
+                IFS=':' read -ra CONFIG_INFO <<< "${TEST_CONFIG}"
                 CONFIG_NAME=${CONFIG_INFO[0]}
                 CONFIG_SCOPE=${CONFIG_INFO[1]}
 
-                MATRIX_JSON+="{\"runner\": {\"name\": \"$RUNNER_NAME\", \"type\": \"$TARGET_DEVICE\", \"platform\": \"$RUNNER_PLATFORM\"}, \"test-config\": {\"name\": \"$CONFIG_NAME\", \"test-scope\": \"$CONFIG_SCOPE\"}},"
+                MATRIX_JSON+="{\"runner\": {\"name\": \"${RUNNER_NAME}\", \"type\": \"${TARGET_DEVICE}\", \"platform\": \"${RUNNER_PLATFORM}\"}, \"test-config\": {\"name\": \"${CONFIG_NAME}\", \"test-scope\": \"${CONFIG_SCOPE}\"}},"
               done
             fi
           done
 
-          MATRIX_JSON=$(echo "$MATRIX_JSON" | sed 's/,$//') # Remove the trailing comma
+          MATRIX_JSON=${MATRIX_JSON%,} # Remove the trailing comma
           MATRIX_JSON+=']}'
-          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+          echo "matrix=${MATRIX_JSON}" >> "${GITHUB_OUTPUT}"
 
   test-within-container:
     if: github.repository_owner == 'nv-legate' && (inputs.platform == 'linux' || inputs.platform == 'linux-aarch64')

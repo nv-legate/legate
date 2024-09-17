@@ -41,11 +41,15 @@ while getopts ":hc:s:" opt; do
       gex_wrapper_help
       exit 1
       ;;
+    *)
+      echo "Invalid option: -${OPTARG}" >&2
+      exit 1
+      ;;
   esac
 done
 
 # Check if CONDA_PREFIX is set
-if [ -z "${CONDA_PREFIX}" ]; then
+if [[ -z "${CONDA_PREFIX}" ]]; then
   echo "Please activate the environment in which to build the wrapper:"
   echo "\$ conda activate <your-env-name-here>"
   echo ""
@@ -73,4 +77,5 @@ echo
 echo "Reactivate the conda environment to set the necessary environment variables:"
 echo ""
 echo "\$ conda deactivate"
+# shellcheck disable=SC2154
 echo "\$ conda activate ${CONDA_DEFAULT_ENV}"

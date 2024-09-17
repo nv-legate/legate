@@ -1,3 +1,4 @@
+---
 {% set name = "legate" %}
 {% if gpu_enabled == "true" %}
   {% set gpu_enabled_bool = true %}
@@ -81,10 +82,10 @@ source:
 {% endif %}
 
 build:
-  skip: true # [not (linux or osx)]
+  skip: true  # [not (linux or osx)]
   number: {{ build_number }}
   missing_dso_whitelist:
-    -  '*libcuda.so*'
+    - '*libcuda.so*'
 
   string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ network_tag }}{{ cpu_gpu_tag }}{{ debug_tag }}{{ upload_tag }}"
   script_env:
@@ -95,7 +96,6 @@ build:
     - SCCACHE_S3_KEY_PREFIX
     - AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY
-    - SED
     - USE_OPENMP
     - ARTIFACTS_DIR
     - LEGATE_CI
@@ -124,7 +124,7 @@ build:
       - {{ name|lower }} ={{ version }} =*_gpu*
 {% endif %}
 {% if gpu_enabled_bool %}
-# prevent nccl from pulling in cudatoolkit
+  # prevent nccl from pulling in cudatoolkit
   ignore_run_exports:
     - cudatoolkit
   ignore_run_exports_from:
@@ -147,8 +147,8 @@ requirements:
     - rust
     - ninja
     - cmake {{ cmake_version }}
-    - {{ compiler('c') }} ={{ compiler_version }}   # [linux]
-    - {{ compiler('cxx') }} ={{ compiler_version }} # [linux]
+    - {{ compiler('c') }} ={{ compiler_version }}    # [linux]
+    - {{ compiler('cxx') }} ={{ compiler_version }}  # [linux]
     - {{ compiler('c') }}         # [osx]
     - {{ compiler('cxx') }}       # [osx]
     - libhwloc =* =*default*
@@ -164,7 +164,7 @@ requirements:
     - cython >=3.0.1
     - llvm-openmp
     - scikit-build
-    - elfutils # [linux]
+    - elfutils  # [linux]
     - libhwloc =* =*default*
 {% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
@@ -193,7 +193,7 @@ requirements:
     - llvm-openmp
     - numpy {{ numpy_version }}
     - typing_extensions
-    - elfutils # [linux]
+    - elfutils  # [linux]
     - libhwloc =* =*default*
 {% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}

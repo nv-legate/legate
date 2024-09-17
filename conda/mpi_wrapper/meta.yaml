@@ -1,3 +1,4 @@
+---
 {% set name = "legate-mpi-wrapper" %}
 {% set major_version = (version|string).split(".")[0] %}
 {% set minor_version = (version|string).split(".")[1] %}
@@ -11,12 +12,12 @@ source:
   git_url: ../../
 
 build:
-  include_recipe: False
-  number: 15
+  include_recipe: false
+  number: 16
   skip: true  # [not linux]
   noarch: generic
   script_env:
-        - PKG_NAME={{ name }}
+    - PKG_NAME={{ name }}
 
 extra:
   recipe-maintainers:

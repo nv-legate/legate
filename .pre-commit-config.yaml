@@ -1,115 +1,140 @@
+---
 repos:
-    - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.6.0
-      hooks:
-        - id: check-json # checks that all json files have proper syntax
-        - id: check-toml # checks that all toml files have proper syntax
-        - id: debug-statements # check for debug statements
-          exclude: '^config/aedifix/main.py$' # intentional
-        - id: end-of-file-fixer # check all files end in a newline
-          # handled by clang-format
-          exclude_types: [c, c++, cuda]
-        - id: pretty-format-json
-          args: ['--autofix', '--indent=4']
-        - id: trailing-whitespace # remove trailing whitespace
-          # part of the diff
-          exclude: '^cmake/patches/span_proper_cmake_project.diff$'
-          # handled by clang-format
-          exclude_types: [c, c++, cuda]
-    - repo: https://github.com/PyCQA/isort
-      rev: 5.13.2
-      hooks:
-            - id: isort
-    - repo: https://github.com/psf/black
-      rev: 24.4.2
-      hooks:
-            - id: black
-    - repo: https://github.com/PyCQA/flake8
-      rev: 7.1.0
-      hooks:
-            - id: flake8
-    - repo: https://github.com/pre-commit/mirrors-clang-format
-      rev: 'v18.1.8'
-      hooks:
-        - id: clang-format
-          files: \.(cu|cuh|h|hpp|cc|inl)$
-          types_or: []
-    - repo: https://github.com/pre-commit/mirrors-mypy
-      rev: 'v1.11.0'
-      hooks:
-        - id: mypy
-          pass_filenames: false
-          args: ['legate', 'tests', 'config', 'test.py']
-          additional_dependencies: [numpy,pytest,pytest_mock,types-psutil]
-    - repo: https://github.com/MarcoGorelli/cython-lint
-      rev: v0.16.2
-      hooks:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-json  # checks that all json files have proper syntax
+      - id: check-toml  # checks that all toml files have proper syntax
+      - id: debug-statements  # check for debug statements
+        exclude: '^config/aedifix/main.py$'  # intentional
+      - id: end-of-file-fixer  # check all files end in a newline
+        # handled by clang-format
+        exclude_types: [c, c++, cuda]
+      - id: pretty-format-json
+        args: ['--autofix', '--indent=4']
+      - id: trailing-whitespace  # remove trailing whitespace
+        # part of the diff
+        exclude: '^cmake/patches/span_proper_cmake_project.diff$'
+        # handled by clang-format
+        exclude_types: [c, c++, cuda]
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: 'v18.1.8'
+    hooks:
+      - id: clang-format
+        files: \.(cu|cuh|h|hpp|cc|inl)$
+        types_or: []
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v1.11.2'
+    hooks:
+      - id: mypy
+        pass_filenames: false
+        args: ['legate', 'tests', 'config', 'test.py']
+        additional_dependencies: [numpy, pytest, pytest_mock, types-psutil]
+  - repo: https://github.com/MarcoGorelli/cython-lint
+    rev: v0.16.2
+    hooks:
       - id: cython-lint
       - id: double-quote-cython-strings
-    - repo: https://github.com/netromdk/vermin
-      rev: 'v1.6.0'
-      hooks:
+  - repo: https://github.com/netromdk/vermin
+    rev: 'v1.6.0'
+    hooks:
       - id: vermin
         args: ['--config-file', './setup.cfg']
-    - repo: https://github.com/jumanjihouse/pre-commit-hooks
-      rev: '3.0.0'
-      hooks:
-        - id: shellcheck
-          args: ['--enable=all', '--color=always', '-x', '--severity=error']
-    - repo: local
-      hooks:
-        -   id: legate-defined
-            name: legate-defined
-            description: 'Find uses of ifdef LEGATE_ that should be using LegateDefined()'
-            entry: ./scripts/pre-commit/legate_defined.sh
-            language: script
-            'types_or': [c++, c, cuda]
-            require_serial: false
-            stages: [pre-commit]
-            exclude: '^(src/legate/experimental/stl/detail/config\.hpp|src/legate/utilities/compiler\.h|share/legate/mpi_wrapper/.*|src/legate/utilities/env.h)$'
-        -   id: legate-assert
-            name: legate-assert
-            description: 'Find uses of assert() that should be using LegateAssert()'
-            entry: ./scripts/pre-commit/legate_assert.py
-            language: python
-            'types_or': [c++, c, cuda]
-            require_serial: false
-            stages: [pre-commit]
-            exclude: '^(src/legate/utilities/assert\.h|src/legate/utilities/abort.h)$'
-        -   id: c-begone
-            name: c-begone
-            description: 'Convert C standard library functions and types to C++ equivalent'
-            entry: ./scripts/pre-commit/c_begone.py
-            language: python
-            'types_or': [c++, c, cuda]
-            require_serial: false
-            stages: [pre-commit]
-            exclude: '^(src/legate/utilities/abort.h|share/legate/mpi_wrapper/.*)$'
-        -   id: cmake-format
-            name: cmake-format
-            entry: ./scripts/pre-commit/cmake-format.bash cmake-format
-            language: python
-            types: [cmake]
-            # Note that pre-commit autoupdate does not update the versions
-            # of dependencies, so we'll have to update this manually.
-            additional_dependencies:
-              - cmakelang==0.6.13
-            verbose: true
-            require_serial: true
-        -   id: cmake-lint
-            name: cmake-lint
-            entry: ./scripts/pre-commit/cmake-format.bash cmake-lint
-            language: python
-            types: [cmake]
-            # Note that pre-commit autoupdate does not update the versions
-            # of dependencies, so we'll have to update this manually.
-            additional_dependencies:
-              - cmakelang==0.6.13
-            verbose: true
-            require_serial: true
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: '3.0.0'
+    hooks:
+      - id: shellcheck
+        args: ['--rcfile', './scripts/pre-commit/shellcheckrc']
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        types: [yaml]
+        args: ['-c', './scripts/pre-commit/yamllint.yml']
+        exclude: 'meta\.yaml$'
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.1
+    hooks:
+      - id: actionlint
+        types: [yaml]
+        files: ^\.github/workflows/
+        args: [-config-file=scripts/pre-commit/actionlint.yml]
+        entry: env SHELLCHECK_OPTS="--enable=all --severity=style" actionlint
+  - repo: local
+    hooks:
+      - id: legate-defined
+        name: legate-defined
+        description: 'Find uses of ifdef LEGATE_ that should be using LegateDefined()'
+        entry: ./scripts/pre-commit/legate_defined.sh
+        language: script
+        'types_or': [c++, c, cuda]
+        require_serial: false
+        stages: [pre-commit]
+        exclude: '^(src/legate/experimental/stl/detail/config\.hpp|src/legate/utilities/compiler\.h|share/legate/mpi_wrapper/.*|src/legate/utilities/env.h)$'
+      - id: legate-assert
+        name: legate-assert
+        description: 'Find uses of assert() that should be using LegateAssert()'
+        entry: ./scripts/pre-commit/legate_assert.py
+        language: python
+        'types_or': [c++, c, cuda]
+        require_serial: false
+        stages: [pre-commit]
+        exclude: '^(src/legate/utilities/assert\.h|src/legate/utilities/abort.h)$'
+      - id: c-begone
+        name: c-begone
+        description: 'Convert C standard library functions and types to C++ equivalent'
+        entry: ./scripts/pre-commit/c_begone.py
+        language: python
+        'types_or': [c++, c, cuda]
+        require_serial: false
+        stages: [pre-commit]
+        exclude: '^(src/legate/utilities/abort.h|share/legate/mpi_wrapper/.*)$'
+      - id: cmake-format
+        name: cmake-format
+        entry: ./scripts/pre-commit/cmake-format.bash cmake-format
+        language: python
+        types: [cmake]
+        # Note that pre-commit autoupdate does not update the versions
+        # of dependencies, so we'll have to update this manually.
+        additional_dependencies:
+          - cmakelang==0.6.13
+        verbose: true
+        require_serial: true
+      - id: cmake-lint
+        name: cmake-lint
+        entry: ./scripts/pre-commit/cmake-format.bash cmake-lint
+        language: python
+        types: [cmake]
+        # Note that pre-commit autoupdate does not update the versions
+        # of dependencies, so we'll have to update this manually.
+        additional_dependencies:
+          - cmakelang==0.6.13
+        verbose: true
+        require_serial: true
+      - id: dej2lint
+        name: dej2lint
+        description: 'Run yamllint on meta.yaml files, removing Jinja2 directives'
+        entry: python scripts/pre-commit/dej2lint.py
+        language: python
+        files: meta\.yaml$
+        require_serial: true
+        args: ['-c', './scripts/pre-commit/yamllint.yml']
+        additional_dependencies: ['yamllint']
 
 ci:
-    autoupdate_schedule: quarterly
+  autoupdate_schedule: quarterly
 
 default_language_version:
-    python: python3
+  python: python3

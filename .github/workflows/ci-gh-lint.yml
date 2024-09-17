@@ -1,3 +1,4 @@
+---
 name: Lint legate on GH
 
 concurrency:
@@ -11,19 +12,22 @@ on:
       - "*branch-*"
       - "main"
 
+defaults:
+  run:
+    shell: bash -el {0}
+
 jobs:
   pre-commit:
     runs-on: 'linux-amd64-cpu4'
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        config:
-          - {jobName: '(must pass) pre-commit python-3.10', canFail: false, version: '3.10'}
-          - {jobName: '(continue on error) pre-commit python-3.11', canFail: true, version: '3.11'}
-          - {jobName: '(continue on error) pre-commit python-3.12', canFail: true,version: '3.12'}
+        version: ['3.10', '3.11', '3.12']
     if: ${{ github.repository_owner == 'nv-legate' }}
     permissions:
       contents: read  # This is required for actions/checkout
+
+    name: "pre-commit python-${{ matrix.version }}"
 
     steps:
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
@@ -38,7 +42,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.config.version }}
+          python-version: ${{ matrix.version }}
           cache: 'pip'
 
       - name: Install dependencies
@@ -47,44 +51,68 @@ jobs:
 
       - name: Set LEGATE_DIR
         run: |
-          echo "LEGATE_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+          echo "LEGATE_DIR=${{ github.workspace }}" >> "${GITHUB_ENV}"
 
       - name: run pre-commit
         uses: pre-commit/action@v3.0.1
-        continue-on-error: ${{ matrix.config.canFail }}
 
   test-configure:
     env:
       LEGATE_ARCH: arch-ci-test-lint
-    runs-on: 'ubuntu-latest'
+    runs-on: 'linux-amd64-cpu4'
     strategy:
-      fail-fast: true
+      fail-fast: false
+      matrix:
+        version: ['3.10', '3.11', '3.12']
+        generator: [ninja, make]
     if: ${{ github.repository_owner == 'nv-legate' }}
     permissions:
       contents: read  # This is required for actions/checkout
 
+    name: "test-configure, Python ${{ matrix.version }}, Generator ${{ matrix.generator }}"
+
     steps:
       - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Generate requirements.txt
-        run: |
-          rm -f requirements.txt
-          echo pytest >> requirements.txt
-          echo pytest-mock >> requirements.txt
-          echo typing_extensions >> requirements.txt
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Setup Mambaforge
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: ${{ matrix.config.version }}
-          cache: 'pip'
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: legate
+          use-mamba: true
 
-      - name: Install dependencies
+      - name: Get Week Number
+        id: get-week-hash
         run: |
-          pip install -r requirements.txt
+          WEEK="$(/bin/date -u '+%Y%W')"
+          echo "week=${WEEK}" >> "${GITHUB_OUTPUT}"
+
+      - name: Cache Conda env
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CONDA }}/envs
+          key:
+            ci-gh-lint-test-configure--"${{ matrix.generator }}"--${{
+            runner.os }}--${{ runner.arch }}--${{ matrix.version }}--${{
+            steps.get-week-hash.outputs.week }}-${{ env.CACHE_NUMBER }}
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 6
+        id: cache
+
+      - name: Update environment
+        run: |
+          mamba create -n legate cmake clangxx compiler-rt pytest pytest-mock typing_extensions "${{ matrix.generator }}"
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: List Conda packages and info
+        run: |
+          conda info
+          conda list
 
       - name: Run tests
         run: |
@@ -114,27 +142,27 @@ jobs:
       - name: Setup Mambaforge
         uses: conda-incubator/setup-miniconda@v3
         with:
-          miniforge-variant: Mambaforge
+          miniforge-variant: Miniforge3
           miniforge-version: latest
           activate-environment: legate
           use-mamba: true
 
-      - name: Get Date
-        id: get-date-hash
+      - name: Get Week Number
+        id: get-week-hash
         run: |
-          echo "today=$(/bin/date -u '+%Y%m%d')" >> ${GITHUB_OUTPUT}
-        shell: bash
+          WEEK="$(/bin/date -u '+%Y%W')"
+          echo "week=${WEEK}" >> "${GITHUB_OUTPUT}"
 
       - name: Cache Conda env
         uses: actions/cache@v4
         with:
           path: ${{ env.CONDA }}/envs
           key:
-            conda-${{ runner.os }}--${{ runner.arch }}--${{
-            steps.get-date-hash.outputs.today }}-${{ env.CACHE_NUMBER }}
+            ci-gh-lint-tidy-${{ runner.os }}--${{ runner.arch }}--${{
+            steps.get-week-hash.outputs.week }}-${{ env.CACHE_NUMBER }}
         env:
           # Increase this value to reset cache if etc/example-environment.yml has not changed
-          CACHE_NUMBER: 5
+          CACHE_NUMBER: 6
         id: cache
 
       - name: Update environment
@@ -148,18 +176,16 @@ jobs:
           conda list
 
       - name: List clang-tidy version
-        shell: bash -el {0}
         run: |
           clang-tidy --version
 
       - name: Configure legate
-        shell: bash -el {0}
         # CMake Error: CMake was unable to find a build program corresponding to "Ninja".
         # CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build
         # tool.
         run: |
           ./configure --with-tests
-          echo "LEGATE_DIR=${{ github.workspace }}" >> $GITHUB_ENV
+          echo "LEGATE_DIR=${{ github.workspace }}" >> "${GITHUB_ENV}"
 
       - name: Run clang-tidy
         run: |

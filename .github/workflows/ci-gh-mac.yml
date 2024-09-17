@@ -1,3 +1,4 @@
+---
 name: Mac build and test
 
 concurrency:
@@ -19,7 +20,9 @@ jobs:
     with:
       platform: mac
       target-device: cpu
-      cmake-preset: release
       build-type: release
+      build-mode: release
       upload-enabled: false
+      nightly: false
+      network: ucx
     secrets: inherit

@@ -1,3 +1,4 @@
+---
 {% set name = "realm-gex-wrapper" %}
 {% set major_version = (version|string).split(".")[0] %}
 {% set minor_version = (version|string).split(".")[1] %}
@@ -11,12 +12,12 @@ source:
   git_url: https://gitlab.com/StanfordLegion/legion.git
 
 build:
-  include_recipe: False
-  number: 12
+  include_recipe: false
+  number: 13
   skip: true  # [not linux]
   noarch: generic
   script_env:
-        - PKG_NAME={{ name }}
+    - PKG_NAME={{ name }}
 
 extra:
   recipe-maintainers:

@@ -29,10 +29,7 @@ else
   prefix=""
 fi
 
-DIRNAME="${DIRNAME:-dirname}"
-READLINK="${READLINK:-readlink}"
-
-script_dir="$(${DIRNAME} "$(${READLINK} -f "${BASH_SOURCE[0]}")")"
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 declare -a cmake_configure_args
 cmake_configure_args=(-S "${script_dir}" -B "${script_dir}/build")
