@@ -13,6 +13,7 @@
 #pragma once
 
 #include "legate/utilities/assert.h"
+#include "legate/utilities/compiler.h"
 #include "legate/utilities/detail/shared_ptr_control_block.h"
 
 #include <memory>
@@ -27,11 +28,42 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::load_refcount
   return refcount.load(std::memory_order_relaxed);
 }
 
+// GCC 13.2 generates error for -Wstringop-overflow in release build. Most likely a
+// bug in GCC.  Detail: GCC thinks that the control block ptr for InternalSharedPtr
+// can be null , and in error logs, legate::InternalSharedPtr<T>::maybe_destroy_()
+// seems to be at the root, however all calls to maybe_destroy_() are from inside
+// an `if (ctrl) {...}`, which should allow the compiler to deduce that `ctrl` is
+// never null when calling maybe_destroy_()
+//
+// Sample error log below:
+// In member function ‘std::__atomic_base<_IntTp>::__int_type
+// std::__atomic_base<_IntTp>::fetch_add(__int_type, std::memory_order) [with _ITp
+// = unsigned int]’,
+// inlined from ‘static legate::detail::ControlBlockBase::ref_count_type
+// legate::detail::ControlBlockBase::increment_refcount_(std::atomic<unsigned
+// int>*)’ at
+// /path/to/legate/utilities/detail/shared_ptr_control_block.inl:33:29,
+// ...
+// /usr/include/c++/13/bits/atomic_base.h:635:34: error: ‘unsigned int
+// __atomic_add_fetch_4(volatile void*, unsigned int, int)’ writing 4 bytes into a
+// region of size 0 overflows the destination [-Werror=stringop-overflow=]
+// 635 |       { return __atomic_fetch_add(&_M_i, __i, int(__m)); }
+// | ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+// In function ‘void legate::InternalSharedPtr<T>::init_shared_from_this_(const
+// legate::EnableSharedFromThis<U>*, V*) [with U =
+// legate::detail::LogicalRegionField; V = legate::detail::LogicalRegionField; T =
+// legate::detail::LogicalRegionField]’:
+//
+// cc1plus: note: destination object is likely at address zero
+//
+LEGATE_PRAGMA_PUSH();
+LEGATE_PRAGMA_GCC_IGNORE("-Wstringop-overflow");
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::increment_refcount_(
   std::atomic<ref_count_type>* refcount) noexcept
 {
   return refcount->fetch_add(1, std::memory_order_relaxed) + 1;
 }
+LEGATE_PRAGMA_POP();
 
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::decrement_refcount_(
   std::atomic<ref_count_type>* refcount) noexcept
