@@ -184,7 +184,7 @@ jobs:
         # CMAKE_MAKE_PROGRAM is not set.  You probably need to select a different build
         # tool.
         run: |
-          ./configure --with-tests
+          ./configure --with-tests --with-benchmarks
           echo "LEGATE_DIR=${{ github.workspace }}" >> "${GITHUB_ENV}"
 
       - name: Run clang-tidy

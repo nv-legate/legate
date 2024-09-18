@@ -53,7 +53,7 @@ inline FieldManager* Runtime::field_manager() { return field_manager_.get(); }
 inline PartitionManager* Runtime::partition_manager()
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    return &partition_manager_.value();
+    return &partition_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
   }
   return &*partition_manager_;  // NOLINT(bugprone-unchecked-optional-access)
 }
@@ -61,7 +61,7 @@ inline PartitionManager* Runtime::partition_manager()
 inline const PartitionManager* Runtime::partition_manager() const
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    return &partition_manager_.value();
+    return &partition_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
   }
   return &*partition_manager_;  // NOLINT(bugprone-unchecked-optional-access)
 }
@@ -69,7 +69,7 @@ inline const PartitionManager* Runtime::partition_manager() const
 inline CommunicatorManager* Runtime::communicator_manager()
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    return &communicator_manager_.value();
+    return &communicator_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
   }
   return &*communicator_manager_;  // NOLINT(bugprone-unchecked-optional-access)
 }
@@ -77,7 +77,7 @@ inline CommunicatorManager* Runtime::communicator_manager()
 inline const CommunicatorManager* Runtime::communicator_manager() const
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    return &communicator_manager_.value();
+    return &communicator_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
   }
   return &*communicator_manager_;  // NOLINT(bugprone-unchecked-optional-access)
 }

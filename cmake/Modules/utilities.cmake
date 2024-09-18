@@ -56,84 +56,27 @@ function(legate_string_ends_with)
   endif()
 endfunction()
 
-#[=======================================================================[
-legate_install_from_tree
-------------------------
-
-.. code-block:: cmake
-
-  legate_install_from_tree( SRC_ROOT <dirname-or-path>
-                            COMMON_PATH <path>
-                            DEST_ROOT <dirname-or-path>
-                            FILES <files...>)
-
-Generate the installation rules for a set of files that share a common source and
-installation directory. This helps avoid mistakes in recreating that directory
-hierarchy. For example given
-
-::
-
-    share/some/long/path/a.txt
-    share/some/long/path/b.txt
-    share/some/long/path/c.txt
-
-
-That needs to be installed at
-
-::
-
-    ${CMAKE_DATAROOT_DIR}/some/long/path/a.txt
-    ${CMAKE_DATAROOT_DIR}/some/long/path/b.txt
-    ${CMAKE_DATAROOT_DIR}/some/long/path/c.txt
-
-
-can be done via
-
-::
-
-    legate_install_from_tree(
-      SRC_ROOT share
-      COMMON_PATH some/long/path
-      DEST_ROOT ${CMAKE_DATAROOT_DIR}
-      FILES a.txt b.txt c.txt
-    )
-
-
-Notes
-^^^^^
-The input files must be found by
-``${SRC_ROOT}/${COMMON_PATH}/${SOME_FILE_NAME}``. ``DEST_ROOT`` may be absolute, but per
-CMake guidance, it is better to have it be relative to install dir.
-#]=======================================================================]
-function(legate_install_from_tree)
-  list(APPEND CMAKE_MESSAGE_CONTEXT "install_from_tree")
+function(legate_find_program VARIABLE_NAME PROGRAM_NAME)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "find_program")
 
   set(options)
-  set(one_value_args SRC_ROOT DEST_ROOT COMMON_PATH)
-  set(multi_value_args FILES)
+  set(one_value_args)
+  set(multi_value_args FIND_PROGRAM_ARGS)
 
   cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
                         ${ARGN})
 
-  if(NOT _LEGATE_SRC_ROOT)
-    message(FATAL_ERROR "Must pass SRC_ROOT")
+  message(CHECK_START "Searching for ${PROGRAM_NAME}")
+
+  if(${VARIABLE_NAME})
+    message(CHECK_PASS "using pre-found: ${${VARIABLE_NAME}}")
+    return()
   endif()
 
-  if(NOT _LEGATE_DEST_ROOT)
-    message(FATAL_ERROR "Must pass DEST_ROOT")
+  find_program(${VARIABLE_NAME} ${PROGRAM_NAME} ${_LEGATE_FIND_PROGRAM_ARGS})
+  if(${VARIABLE_NAME})
+    message(CHECK_PASS "found: ${${VARIABLE_NAME}}")
+  else()
+    message(CHECK_FAIL "not found")
   endif()
-
-  if(NOT _LEGATE_COMMON_PATH)
-    message(FATAL_ERROR "Must pass COMMON_PATH")
-  endif()
-
-  if(NOT _LEGATE_FILES)
-    message(FATAL_ERROR "Must pass FILES")
-  endif()
-
-  cmake_path(SET src_path NORMALIZE "${_LEGATE_SRC_ROOT}/${_LEGATE_COMMON_PATH}")
-  cmake_path(SET dest_path NORMALIZE "${_LEGATE_DEST_ROOT}/${_LEGATE_COMMON_PATH}")
-
-  list(TRANSFORM _LEGATE_FILES PREPEND "${src_path}/")
-  install(FILES ${_LEGATE_FILES} DESTINATION "${dest_path}")
 endfunction()

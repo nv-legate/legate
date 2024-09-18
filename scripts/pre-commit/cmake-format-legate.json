@@ -1,14 +1,33 @@
 {
     "parse": {
         "additional_commands": {
+            "legate_add_tidy_diff_target": {
+                "kwargs": {},
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "legate_add_tidy_target": {
                 "kwargs": {
-                    "SOURCES": "+"
+                    "SOURCE": "1"
+                }
+            },
+            "legate_export_compile_commands": {
+                "kwargs": {
+                    "DEST_DIR": "1"
                 }
             },
             "legate_find_or_configure": {
                 "kwargs": {
                     "PACKAGE": "1"
+                }
+            },
+            "legate_find_program": {
+                "kwargs": {
+                    "FIND_PROGRAM_ARGS": "*"
+                },
+                "pargs": {
+                    "nargs": 2
                 }
             },
             "legate_generate_sanitizer_options": {

@@ -87,7 +87,7 @@ copy_release_artifacts() {
 copy_docs_artifacts() {
     set -x
     echo Copying artifacts
-    cp -r "${LEGATE_DIR}"/"${LEGATE_ARCH}"/cmake_build/docs/legate/sphinx/* "${ARTIFACTS_DIR}/."
+    cp -r "${LEGATE_DIR}"/"${LEGATE_ARCH}"/cmake_build/src/cpp/docs/legate/sphinx/* "${ARTIFACTS_DIR}/."
 }
 
 build_docs() {

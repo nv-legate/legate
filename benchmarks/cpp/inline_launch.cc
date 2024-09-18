@@ -101,7 +101,7 @@ void benchmark_body(TaskLaunchFixture& fixt, benchmark::State& state)
   auto runtime = legate::Runtime::get_runtime();
   auto lib     = runtime->find_library(LIBNAME);
 
-  for (auto _ : state) {
+  for (auto _ : state) {  // NOLINT(clang-analyzer-deadcode.DeadStores)
     state.PauseTiming();
     auto task = runtime->create_task(lib, EmptyTask::TASK_ID);
     for (std::size_t i = 0; i < TaskLaunchFixture::NUM_INPUTS_OUTPUTS; ++i) {

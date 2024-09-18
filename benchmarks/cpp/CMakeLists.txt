@@ -13,12 +13,13 @@
 list(APPEND CMAKE_MESSAGE_CONTEXT "cpp")
 
 include(${LEGATE_DIR}/cmake/Modules/debug_symbols.cmake)
+include(${LEGATE_DIR}/cmake/Modules/clang_tidy.cmake)
 
 legate_find_or_configure(PACKAGE google_benchmark)
 
 include(GNUInstallDirs)
 
-function(configure_benchmark)
+function(legate_configure_benchmark)
   set(options)
   set(one_value TARGET)
   set(multi_value SOURCES)
@@ -61,11 +62,9 @@ function(configure_benchmark)
 
   legate_debug_syms(${_LEGATE_BM_TARGET} INSTALL_DIR "${CMAKE_INSTALL_BINDIR}")
 
-  list(APPEND legate_TIDY_SOURCES ${_LEGATE_BM_SOURCES})
-  set(legate_TIDY_SOURCES ${legate_TIDY_SOURCES} PARENT_SCOPE)
+  foreach(src IN LISTS _LEGATE_BM_SOURCES)
+    legate_add_tidy_target(SOURCE "${src}")
+  endforeach()
 endfunction()
 
-configure_benchmark(TARGET inline_launch SOURCES inline_launch.cc)
-
-# propagate to main CMakeLists.txt
-set(legate_TIDY_SOURCES ${legate_TIDY_SOURCES} PARENT_SCOPE)
+legate_configure_benchmark(TARGET inline_launch SOURCES inline_launch.cc)

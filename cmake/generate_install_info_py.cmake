@@ -11,5 +11,5 @@
 #=============================================================================
 
 set(libpath "")
-configure_file("${LEGATE_DIR}/legate/install_info.py.in"
-               "${LEGATE_DIR}/legate/install_info.py" @ONLY)
+configure_file("${LEGATE_DIR}/cmake/templates/install_info.py.in"
+               "${LEGATE_DIR}/src/python/legate/install_info.py" @ONLY)

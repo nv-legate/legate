@@ -34,13 +34,14 @@ _expected_settings = (
 )
 
 ENV_HEADER = (
-    Path(__file__).parents[3]
+    Path(__file__).parents[4]
     / "src"
+    / "cpp"
     / "legate"
     / "utilities"
     / "detail"
     / "env_defaults.h"
-).resolve()
+).resolve(strict=True)
 
 
 class TestSettings:

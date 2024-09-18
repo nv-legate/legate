@@ -20,7 +20,7 @@
 // legate does not have the right include paths set up for it.
 //
 // So to be general, we just include the specific location directly.
-#include <../share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper_types.h>
+#include <../../share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper_types.h>
 #include <cstddef>
 
 namespace legate::detail::comm::mpi::detail {

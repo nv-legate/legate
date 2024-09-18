@@ -72,9 +72,10 @@ lgpatch = "legate.lgpatch:main"
 zip-safe = false
 include-package-data = true
 script-files = ["bind.sh"]
+package-dir = {"" = "src/python"}
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src/python"]
 include = [
     "legate",
     "legate.*"
@@ -114,7 +115,7 @@ max-line-length = 79
 
 [tool.mypy]
 python_version = "3.10"
-mypy_path = "typings/"
+mypy_path = "./src/python/typings/"
 cache_dir = "./.cache/mypy"
 
 pretty = true
@@ -154,8 +155,7 @@ implicit_reexport = true
 strict_equality = true
 
 warn_unused_configs = true
-
-exclude = ['tests/examples', 'tests/integration', 'tests/cpp']
+exclude = ["tests/python/integration", "tests/cpp"]
 
 [[tool.mypy.overrides]]
 # ignore certain auto-generated and utility files

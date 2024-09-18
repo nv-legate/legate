@@ -40,7 +40,7 @@ repos:
     hooks:
       - id: mypy
         pass_filenames: false
-        args: ['legate', 'tests', 'config', 'test.py']
+        args: ['src', 'tests', 'config', 'test.py']
         additional_dependencies: [numpy, pytest, pytest_mock, types-psutil]
   - repo: https://github.com/MarcoGorelli/cython-lint
     rev: v0.16.2
@@ -82,7 +82,7 @@ repos:
         'types_or': [c++, c, cuda]
         require_serial: false
         stages: [pre-commit]
-        exclude: '^(src/legate/experimental/stl/detail/config\.hpp|src/legate/utilities/compiler\.h|share/legate/mpi_wrapper/.*|src/legate/utilities/env.h)$'
+        exclude: '^(src/cpp/legate/experimental/stl/detail/config\.hpp|src/cpp/legate/utilities/compiler\.h|share/legate/mpi_wrapper/.*|src/cpp/legate/utilities/env.h)$'
       - id: legate-assert
         name: legate-assert
         description: 'Find uses of assert() that should be using LegateAssert()'
@@ -91,7 +91,7 @@ repos:
         'types_or': [c++, c, cuda]
         require_serial: false
         stages: [pre-commit]
-        exclude: '^(src/legate/utilities/assert\.h|src/legate/utilities/abort.h)$'
+        exclude: '^(src/cpp/legate/utilities/assert\.h|src/cpp/legate/utilities/abort.h)$'
       - id: c-begone
         name: c-begone
         description: 'Convert C standard library functions and types to C++ equivalent'
@@ -100,7 +100,7 @@ repos:
         'types_or': [c++, c, cuda]
         require_serial: false
         stages: [pre-commit]
-        exclude: '^(src/legate/utilities/abort.h|share/legate/mpi_wrapper/.*)$'
+        exclude: '^(src/cpp/legate/utilities/abort.h|share/legate/mpi_wrapper/.*)$'
       - id: cmake-format
         name: cmake-format
         entry: ./scripts/pre-commit/cmake-format.bash cmake-format

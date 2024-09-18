@@ -118,8 +118,7 @@ run_test_or_analysis() {
 
             set_ld_preload
 
-            pytest --color=yes tests/unit -s
-            pytest --color=yes tests/integration -s
+            pytest --color=yes tests/python -s
             ;;
         "cpp")
             echo "Running C++ unit tests..."

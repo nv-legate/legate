@@ -12,42 +12,56 @@
 
 include_guard(GLOBAL)
 
-function(legate_search_for_program VARIABLE_NAME PROGRAM_NAME)
-  message(CHECK_START "Searching for ${PROGRAM_NAME}")
+include(${CMAKE_CURRENT_LIST_DIR}/utilities.cmake)
 
-  if(${VARIABLE_NAME})
-    message(CHECK_PASS "using pre-found: ${${VARIABLE_NAME}}")
+legate_find_program(LEGATE_CLANG_TIDY clang-tidy)
+legate_find_program(LEGATE_SED sed)
+legate_find_program(LEGATE_CLANG_TIDY_DIFF clang-tidy-diff.py)
+if(NOT LEGATE_CLANG_TIDY_DIFF)
+  # Sometimes this is not installed under the usual [s]bin directories, but instead under
+  # share/clang, so try that as well
+  legate_find_program(LEGATE_CLANG_TIDY_DIFF clang-tidy-diff.py
+                      FIND_PROGRAM_ARGS PATH_SUFFIXES "share/clang")
+endif()
+
+function(legate_add_tidy_target)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "add_tidy_target")
+
+  set(options)
+  set(one_value_args SOURCE)
+  set(multi_value_args)
+  cmake_parse_arguments(_TIDY "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
+
+  if(NOT _TIDY_SOURCE)
+    message(FATAL_ERROR "Must provide SOURCE option")
+  endif()
+
+  if(LEGATE_CLANG_TIDY)
+    if(NOT TARGET tidy)
+      add_custom_target(tidy COMMENT "running clang-tidy")
+    endif()
+
+    cmake_path(SET src NORMALIZE "${_TIDY_SOURCE}")
+    string(MAKE_C_IDENTIFIER "${src}_tidy" tidy_target)
+
+    if(NOT IS_ABSOLUTE "${src}")
+      cmake_path(SET src NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
+    endif()
+    cmake_path(RELATIVE_PATH src BASE_DIRECTORY "${LEGATE_DIR}" OUTPUT_VARIABLE rel_src)
+
+    add_custom_target("${tidy_target}"
+                      COMMAND "${LEGATE_CLANG_TIDY}"
+                              --config-file="${LEGATE_DIR}/.clang-tidy" -p
+                              "${CMAKE_BINARY_DIR}" --use-color --quiet
+                              --extra-arg=-Wno-error=unused-command-line-argument "${src}"
+                      COMMENT "clang-tidy ${rel_src}")
+
+    add_dependencies(tidy "${tidy_target}")
     return()
   endif()
 
-  find_program(${VARIABLE_NAME} ${PROGRAM_NAME} ${ARGN})
-  if(${VARIABLE_NAME})
-    message(CHECK_PASS "found: ${${VARIABLE_NAME}}")
-  else()
-    message(CHECK_FAIL "not found")
-  endif()
-endfunction()
-
-function(_legate_add_tidy_target_impl CLANG_TIDY SOURCES_VAR)
-  if(CLANG_TIDY)
-    list(REMOVE_DUPLICATES ${SOURCES_VAR})
-    foreach(src IN LISTS ${SOURCES_VAR})
-      string(MAKE_C_IDENTIFIER "${src}_tidy" src_tidy)
-      add_custom_target("${src_tidy}"
-                        COMMAND "${CLANG_TIDY}"
-                                --config-file="${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy" -p
-                                "${CMAKE_BINARY_DIR}" --use-color --quiet
-                                --extra-arg=-Wno-error=unused-command-line-argument
-                                "${src}"
-                        COMMENT "clang-tidy ${src}"
-                        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-      list(APPEND tidy_targets "${src_tidy}")
-    endforeach()
-    add_custom_target(tidy COMMENT "running clang-tidy")
-    if(tidy_targets) # in case it's empty
-      add_dependencies(tidy ${tidy_targets})
-    endif()
-  else()
+  if(NOT TARGET tidy)
     # cmake-format: off
     add_custom_target(
       tidy
@@ -73,17 +87,16 @@ function(_legate_add_tidy_target_impl CLANG_TIDY SOURCES_VAR)
   endif()
 endfunction()
 
-function(_legate_add_tidy_diff_target_impl CLANG_TIDY)
-  legate_search_for_program(LEGATE_SED sed)
-  legate_search_for_program(LEGATE_CLANG_TIDY_DIFF clang-tidy-diff.py)
-  if(NOT LEGATE_CLANG_TIDY_DIFF)
-    # Sometimes this is not installed under the usual [s]bin directories, but instead
-    # under share/clang, so try that as well
-    legate_search_for_program(LEGATE_CLANG_TIDY_DIFF clang-tidy-diff.py PATH_SUFFIXES
-                              "share/clang")
-  endif()
-  find_package(Git)
+function(legate_add_tidy_diff_target)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "add_tidy_diff_target")
 
+  set(options)
+  set(one_value_args)
+  set(multi_value_args)
+  cmake_parse_arguments(_TIDY "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
+
+  find_package(Git)
   if(LEGATE_CLANG_TIDY_DIFF AND CLANG_TIDY AND LEGATE_SED AND Git_FOUND)
     include(ProcessorCount)
 
@@ -106,7 +119,7 @@ function(_legate_add_tidy_diff_target_impl CLANG_TIDY)
         -quiet
         -extra-arg=-Wno-error=unused-command-line-argument
         ${TIDY_PARALLEL_FLAGS}
-      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+      WORKING_DIRECTORY "${LEGATE_DIR}"
     )
     # cmake-format: on
   else()
@@ -134,23 +147,4 @@ function(_legate_add_tidy_diff_target_impl CLANG_TIDY)
     )
     # cmake-format: on
   endif()
-endfunction()
-
-function(legate_add_tidy_target)
-  list(APPEND CMAKE_MESSAGE_CONTEXT "add_tidy_target")
-
-  set(options)
-  set(one_value_args)
-  set(multi_value_args SOURCES)
-  cmake_parse_arguments(_TIDY "${options}" "${one_value_args}" "${multi_value_args}"
-                        ${ARGN})
-
-  if(NOT _TIDY_SOURCES)
-    message(FATAL_ERROR "Must provide SOURCES option")
-  endif()
-
-  legate_search_for_program(LEGATE_CLANG_TIDY clang-tidy)
-
-  _legate_add_tidy_target_impl(${LEGATE_CLANG_TIDY} _TIDY_SOURCES)
-  _legate_add_tidy_diff_target_impl(${LEGATE_CLANG_TIDY})
 endfunction()

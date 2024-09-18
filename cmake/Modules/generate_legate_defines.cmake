@@ -12,6 +12,8 @@
 
 include_guard(GLOBAL)
 
+include(GNUInstallDirs)
+
 function(legate_generate_legate_defines)
   list(APPEND CMAKE_MESSAGE_CONTEXT "generate_legate_defines")
 
@@ -36,6 +38,7 @@ function(legate_generate_legate_defines)
     set(LEGATE_USE_CAL 1)
   endif()
 
-  configure_file(src/legate_defines.h.in
-                 "${CMAKE_CURRENT_BINARY_DIR}/include/legate/legate_defines.h" @ONLY)
+  configure_file(${LEGATE_DIR}/cmake/templates/legate_defines.h.in
+                 "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate_defines.h"
+                 @ONLY)
 endfunction()

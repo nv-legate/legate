@@ -24,8 +24,9 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import skbuild
 from setuptools import find_packages
-from skbuild import constants as sk_constants, setup
+from skbuild import setup
 
 try:
     # Currently skbuild does not have a develop wrapper, but try them first in
@@ -43,16 +44,16 @@ from versioneer import (
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-    from typing import Any
+    from typing import Any, Final
 
 
-def verbose_print(*args: Any, **kwargs: Any) -> None:
-    print("x-- legate.internal:setup.py:", *args, **kwargs)
-
-
-BANNER = f"xxx-- {80 * '='} --xxx"
-ERROR_BANNER = f"XXX== {80 * '='} ==XXX"
+BANNER: Final = f"xxx-- {80 * '='} --xxx"
+MINI_BANNER: Final = len(BANNER) * "-"
+ERROR_BANNER: Final = f"XXX== {80 * '='} ==XXX"
 BUILD_MODE = "UNKNOWN" if len(sys.argv) <= 1 else sys.argv[1]
+
+if BUILD_MODE.startswith("-"):
+    BUILD_MODE = "UNKNOWN"
 
 if BUILD_MODE == "editable_wheel":
     # HACK: scikit-build does not properly support PEP 660
@@ -69,22 +70,36 @@ if BUILD_MODE == "editable_wheel":
     if "legacy-editable" not in os.environ.get(
         "SETUPTOOLS_ENABLE_FEATURES", ""
     ):
-        raise RuntimeError(
-            f"\n{ERROR_BANNER}\n"
+        mess = (
+            "\n"
+            f"{ERROR_BANNER}"
+            "\n"
             "PEP 660 editable installs are not yet fully "
             "supported by scikit-build. Chances are this will crash during "
             "installation, or not properly install the libraries. You must "
             'define SETUPTOOLS_ENABLE_FEATURES="legacy-editable" in your '
-            "environment before running pip install. I.e.\n\n"
+            "environment before running pip install. I.e."
+            "\n"
+            "\n"
             '$ SETUPTOOLS_ENABLE_FEATURES="legacy-editable" python3 -m pip '
-            "install --editable . --your --other ---args\n\nor\n\n"
-            '$ export SETPTOOLS_ENABLE_FEATURES="legacy-editable"\n'
-            "$ python3 -m pip install --editable . --your --other ---args\n"
+            "install --editable . --your --other ---args"
+            "\n"
+            "\n"
+            "or"
+            "\n"
+            "\n"
+            '$ export SETPTOOLS_ENABLE_FEATURES="legacy-editable"'
+            "\n"
+            "$ python3 -m pip install --editable . --your --other ---args"
+            "\n"
             f"{ERROR_BANNER}"
         )
+        raise RuntimeError(mess)
 
-if BUILD_MODE.startswith("-"):
-    BUILD_MODE = "UNKNOWN"
+
+def verbose_print(*args: Any, **kwargs: Any) -> None:
+    print("x-- legate.internal:setup.py:", *args, **kwargs)
+
 
 try:
     legate_dir = os.environ["LEGATE_DIR"]
@@ -93,17 +108,24 @@ except KeyError:
 
     legate_dir = get_legate_dir()
 
-LEGATE_DIR = Path(legate_dir).resolve(strict=True)
+LEGATE_DIR: Final = Path(legate_dir).resolve(strict=True)
 
 try:
-    LEGATE_ARCH = os.environ["LEGATE_ARCH"]
+    LEGATE_ARCH: Final = os.environ["LEGATE_ARCH"].strip()
+    if not LEGATE_ARCH:
+        raise KeyError("empty arch")
 except KeyError as ke:
     raise RuntimeError(
-        "ERROR: must export LEGATE_ARCH in environment before continuing"
+        "\n"
+        f"{ERROR_BANNER}"
+        "\n"
+        "Must export LEGATE_ARCH in environment before continuing"
+        "\n"
+        f"{ERROR_BANNER}"
     ) from ke
 
-LEGATE_ARCH_DIR = LEGATE_DIR / LEGATE_ARCH
-LEGATE_CMAKE_DIR = LEGATE_ARCH_DIR / "cmake_build"
+LEGATE_ARCH_DIR: Final = LEGATE_DIR / LEGATE_ARCH
+LEGATE_CMAKE_DIR: Final = LEGATE_ARCH_DIR / "cmake_build"
 
 if not LEGATE_ARCH_DIR.exists() or not LEGATE_CMAKE_DIR.exists():
     if not (
@@ -141,12 +163,14 @@ def monkey_patch_skbuild() -> None:
     find) of changing where that directory is, so we have to resort to
     monkey-patching it ourselves.
     """
-    arch_skbuild_dir = os.path.join(LEGATE_ARCH, sk_constants.SKBUILD_DIR())
+    arch_skbuild_dir = os.path.join(
+        LEGATE_ARCH, skbuild.constants.SKBUILD_DIR()
+    )
 
     def new_skbuild_dir() -> str:
         return arch_skbuild_dir
 
-    sk_constants.SKBUILD_DIR = new_skbuild_dir
+    skbuild.constants.SKBUILD_DIR = new_skbuild_dir
 
 
 def read_cmake_cache_value(pattern: str, cache_dir: Path | None = None) -> str:
@@ -171,7 +195,7 @@ def read_cmake_cache_value(pattern: str, cache_dir: Path | None = None) -> str:
         If the cache variable is not found
     """
     if cache_dir is None:
-        cache_dir = LEGATE_DIR / sk_constants.CMAKE_BUILD_DIR()
+        cache_dir = LEGATE_DIR / skbuild.constants.CMAKE_BUILD_DIR()
     file_path = cache_dir / "CMakeCache.txt"
     re_pat = re.compile(pattern)
     with file_path.open() as fd:
@@ -191,6 +215,8 @@ def inject_sys_argv() -> None:
     function serves to inject these arguments into sys.argv before we reach
     the setup() call.
     """
+    import multiprocessing as mp
+
     try:
         CMAKE_EXE = read_cmake_cache_value(
             "CMAKE_COMMAND", cache_dir=LEGATE_CMAKE_DIR
@@ -198,7 +224,7 @@ def inject_sys_argv() -> None:
     except RuntimeError:
         CMAKE_EXE = "cmake"
 
-    extra_args = ["--cmake-executable", CMAKE_EXE]
+    extra_args = ["--cmake-executable", CMAKE_EXE, "-j", str(mp.cpu_count())]
 
     try:
         # not sure how this could fail, but I suppose it could?
@@ -210,6 +236,7 @@ def inject_sys_argv() -> None:
 
     if CMAKE_GENERATOR:
         extra_args.extend(["--skip-generator-test", "-G", CMAKE_GENERATOR])
+
     # Insert the extra args in a very specific place:
     #
     # sys.argv[0] = program name
@@ -235,7 +262,9 @@ def create_log_file() -> Path:
     This does not create the log file, but does ensure that any leading paths
     are created. That is, ``log_file.open()`` should return without error.
     """
-    log_file = LEGATE_DIR / sk_constants.SKBUILD_DIR() / f"{BUILD_MODE}.log"
+    log_file = (
+        LEGATE_DIR / skbuild.constants.SKBUILD_DIR() / f"{BUILD_MODE}.log"
+    )
     log_file.parent.mkdir(parents=True, exist_ok=True)
     return log_file
 
@@ -373,7 +402,7 @@ def was_built_with_build_isolation() -> bool:
     positive, it could be a false negative, but it hasn't failed us yet!
     """
     skbuild_cache_file = (
-        LEGATE_DIR / sk_constants.CMAKE_BUILD_DIR() / "CMakeCache.txt"
+        LEGATE_DIR / skbuild.constants.CMAKE_BUILD_DIR() / "CMakeCache.txt"
     )
     return (
         skbuild_cache_file.exists()
@@ -452,6 +481,9 @@ def get_original_python_executable() -> tuple[str, dict[str, str]]:
 
 def clean_skbuild_dir() -> None:
     r"""Reduce the scikit-build directory to smithereens."""
+    # Need to get the original python executable, because by the time this
+    # function is called, we will already be in the fake temporary directory
+    # made by pip, which technically does not have legate installed.
     python_exe, env = get_original_python_executable()
 
     uninstall_cmd = [
@@ -469,8 +501,8 @@ def clean_skbuild_dir() -> None:
     )
     subprocess_check_call(uninstall_cmd, env=env)
     for path in (
-        LEGATE_DIR / sk_constants.CMAKE_INSTALL_DIR(),
-        LEGATE_DIR / sk_constants.SETUPTOOLS_INSTALL_DIR(),
+        LEGATE_DIR / skbuild.constants.CMAKE_INSTALL_DIR(),
+        LEGATE_DIR / skbuild.constants.SETUPTOOLS_INSTALL_DIR(),
         LEGATE_DIR / "legate.egg-info",
     ):
         verbose_print(f"Removing {path}")
@@ -546,17 +578,22 @@ def do_setup_impl() -> None:
         arg for arg in spec_cmake_cmds if "CMAKE_INSTALL_PREFIX" not in arg
     )
 
-    MINI_BANNER = len(BANNER) * "-"
     print(BANNER)
     print(MINI_BANNER)
     print(f"sys.argv = {sys.argv}")
     version = versioneer_get_version()
     print(f"Using version: {version}")
-    packages = find_packages(where=".", include=["legate", "legate.*"])
+    packages = find_packages(
+        where="src/python", include=["legate", "legate.*"]
+    )
     package_data = {pack: ["py.typed", "*.pyi", "*.so"] for pack in packages}
     print("Using package data:")
     for pack, data in package_data.items():
         print(f"{pack} = {data}")
+    package_dir = {"": "src/python"}
+    print("Using package dir:")
+    for dirname, redirect in package_dir.items():
+        print("dir:", repr(dirname), "->", redirect)
     print("Using command class:")
     cmd_class = versioneer_get_cmdclass(
         {"develop": develop, "bdist_wheel": bdist_wheel}
@@ -571,17 +608,18 @@ def do_setup_impl() -> None:
 
     setup(
         version=version,
-        # have to duplicate this from pyproject.toml because scikit-build
-        # expects to modify its contents...
-        packages=packages,
         cmdclass=cmd_class,
         cmake_args=cmake_args,
         cmake_languages=languages,
-        include_package_data=True,
         cmake_process_manifest_hook=fixup_manifest,
-        # Need to specify this twice (both here and in pyproject.toml) because
-        # scikit-build does not read it from there.
+        # have to duplicate this from pyproject.toml because scikit-build
+        # expects to modify its contents...
+        packages=packages,
+        # Need to specify these twice (both here and in pyproject.toml) because
+        # scikit-build does not read pyproject.toml
         package_data=package_data,
+        include_package_data=True,
+        package_dir=package_dir,
     )
 
 
@@ -594,13 +632,11 @@ def do_setup() -> None:
     try:
         with setup_tee(log_file) as tee_impl:
             print(BANNER)
-            print(
-                f"Starting {BUILD_MODE} run at "
-                f"{time.strftime('%a, %d %b %Y %H:%M:%S %z')}",
-            )
+            rn = time.strftime("%a, %d %b %Y %H:%M:%S %z")
+            print(f"Starting {BUILD_MODE} run at {rn}")
             print("System info:")
             print(platform.uname())
-            print(f"Using '{tee_impl}' as log tee-ing implementation")
+            print(f"Using {tee_impl!r} as log tee-ing implementation")
             print(BANNER)
 
             do_setup_impl()

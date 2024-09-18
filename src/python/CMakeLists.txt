@@ -10,8 +10,6 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-include_guard(GLOBAL)
-
 list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
 # ########################################################################################
@@ -38,7 +36,7 @@ endif()
 # ########################################################################################
 # * Find or build the C++ -----------------------------------------------
 
-include(cmake/Modules/find_legate_cpp.cmake)
+include(${LEGATE_DIR}/cmake/Modules/find_legate_cpp.cmake)
 
 find_legate_cpp(VERSION ${legate_version} BUILD_EXPORT_SET legate-python-exports
                 INSTALL_EXPORT_SET legate-python-exports)
@@ -75,11 +73,12 @@ target_link_libraries(legate_python INTERFACE legate::legate)
 
 add_subdirectory(legate)
 
-include(cmake/Modules/cython_rpaths.cmake)
+include(${LEGATE_DIR}/cmake/Modules/cython_rpaths.cmake)
 
 legate_populate_cython_dependency_rpaths(RESULT_VAR legate_cython_rpaths)
 
-rapids_cython_add_rpath_entries(TARGET legate::legate PATHS ${legate_cython_rpaths})
+rapids_cython_add_rpath_entries(TARGET legate::legate PATHS ${legate_cython_rpaths}
+                                ROOT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # ########################################################################################
 # * install targets-----------------------------------------------------------
@@ -113,15 +112,6 @@ execute_process(COMMAND
 )
 ]=])
   install(CODE "${code_string}")
-  # NOTE: currently not used since we forcibly install everything, but perhaps this might
-  # be useful down the line.
-  #
-  # If we found the library via pre-built libs then we also need to install them (and any
-  # libs they depend on). include(cmake/Modules/wheel_helpers.cmake)
-
-  # install_imported_rt_deps( TARGET              legate::legate RT_DEPS
-  # legate-python-rt-deps LIBRARY_DESTINATION ${lib_dir} RUNTIME_DESTINATION
-  # ${CMAKE_INSTALL_BINDIR} )
 endif()
 
 # ########################################################################################

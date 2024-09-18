@@ -26,7 +26,7 @@ namespace zip_iterator_common {
 
 template <typename ZipFunction>
 class ZipTester {
-  static inline constexpr ZipFunction ZIPPER_FN{};
+  static constexpr ZipFunction ZIPPER_FN{};
 
   template <typename T>
   [[nodiscard]] static std::

@@ -13,7 +13,6 @@
 list(APPEND CMAKE_MESSAGE_CONTEXT "options")
 
 option(legate_BUILD_TESTS "Whether to build the C++ tests")
-option(legate_BUILD_INTEGRATION "Whether to build the C++ integration tests")
 option(legate_BUILD_EXAMPLES "Whether to build the C++/python examples")
 option(BUILD_SHARED_LIBS "Build legate.shared libraries" ON)
 

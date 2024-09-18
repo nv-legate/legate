@@ -36,12 +36,20 @@ rapids_cpm_gtest(BUILD_EXPORT_SET legate-exports INSTALL_EXPORT_SET legate-expor
                                                                     CPM_ARGS SYSTEM TRUE)
 
 include(${LEGATE_DIR}/cmake/Modules/debug_symbols.cmake)
+include(${LEGATE_DIR}/cmake/Modules/clang_tidy.cmake)
 
-function(legate_configure_test CMAKE_TEST_NAME)
+set(unique_src "")
+
+function(legate_configure_test)
   set(options)
-  set(one_value GPUS PERCENT)
+  set(one_value NAME GPUS PERCENT)
   set(multi_value SOURCES)
   cmake_parse_arguments(_LEGATE_TEST "${options}" "${one_value}" "${multi_value}" ${ARGN})
+
+  if(NOT _LEGATE_TEST_NAME)
+    message(FATAL_ERROR "Must pass NAME")
+  endif()
+
   if(NOT DEFINED _LEGATE_TEST_GPUS AND NOT DEFINED _LEGATE_TEST_PERCENT)
     set(_LEGATE_TEST_GPUS 0)
     set(_LEGATE_TEST_PERCENT 1)
@@ -51,8 +59,8 @@ function(legate_configure_test CMAKE_TEST_NAME)
     set(_LEGATE_TEST_PERCENT 1)
   endif()
 
-  add_executable(${CMAKE_TEST_NAME} ${_LEGATE_TEST_SOURCES})
-  set_target_properties(${CMAKE_TEST_NAME}
+  add_executable(${_LEGATE_TEST_NAME} ${_LEGATE_TEST_SOURCES})
+  set_target_properties(${_LEGATE_TEST_NAME}
                         PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
                                    BUILD_RPATH_USE_ORIGIN TRUE
@@ -66,9 +74,9 @@ function(legate_configure_test CMAKE_TEST_NAME)
                                    # using cuda::std
                                    CXX_EXTENSIONS ON)
 
-  target_include_directories(${CMAKE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
+  target_include_directories(${_LEGATE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
 
-  target_link_libraries(${CMAKE_TEST_NAME}
+  target_link_libraries(${_LEGATE_TEST_NAME}
                         PRIVATE legate::legate
                                 GTest::gtest
                                 GTest::gmock
@@ -81,35 +89,60 @@ function(legate_configure_test CMAKE_TEST_NAME)
                                 fmt::fmt)
 
   if(Legion_USE_CUDA)
-    set_target_properties(${CMAKE_TEST_NAME}
+    set_target_properties(${_LEGATE_TEST_NAME}
                           PROPERTIES CUDA_ARCHITECTURES ${Legion_CUDA_ARCH}
                                      CUDA_STANDARD ${CMAKE_CUDA_STANDARD}
                                      CUDA_STANDARD_REQUIRED ON)
-    target_link_libraries(${CMAKE_TEST_NAME} PRIVATE NCCL::NCCL)
+    target_link_libraries(${_LEGATE_TEST_NAME} PRIVATE NCCL::NCCL)
   endif()
 
-  legate_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE legate_CXX_OPTIONS)
-  legate_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE legate_CUDA_OPTIONS)
+  legate_add_target_compile_option(${_LEGATE_TEST_NAME} CXX PRIVATE legate_CXX_OPTIONS)
+  legate_add_target_compile_option(${_LEGATE_TEST_NAME} CUDA PRIVATE legate_CUDA_OPTIONS)
 
-  legate_add_target_compile_option(${CMAKE_TEST_NAME} CXX PRIVATE legate_CXX_FLAGS)
-  legate_add_target_compile_option(${CMAKE_TEST_NAME} CUDA PRIVATE legate_CUDA_FLAGS)
+  legate_add_target_compile_option(${_LEGATE_TEST_NAME} CXX PRIVATE legate_CXX_FLAGS)
+  legate_add_target_compile_option(${_LEGATE_TEST_NAME} CUDA PRIVATE legate_CUDA_FLAGS)
 
-  legate_add_target_link_option(${CMAKE_TEST_NAME} PRIVATE legate_LINKER_FLAGS)
+  legate_add_target_link_option(${_LEGATE_TEST_NAME} PRIVATE legate_LINKER_FLAGS)
 
-  rapids_test_add(NAME ${CMAKE_TEST_NAME}
-                  COMMAND ${CMAKE_TEST_NAME}
+  rapids_test_add(NAME ${_LEGATE_TEST_NAME}
+                  COMMAND ${_LEGATE_TEST_NAME}
                   GPUS ${_LEGATE_TEST_GPUS}
                   PERCENT ${_LEGATE_TEST_PERCENT}
                   INSTALL_COMPONENT_SET testing)
 
-  legate_debug_syms(${CMAKE_TEST_NAME} INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+  # TODO(jfaibussowit): We need to use DISCOVERY_MODE PRE_TEST (as described below), but
+  # CMake has a bug in their implementation. See
+  # https://gitlab.kitware.com/cmake/cmake/-/issues/26294
+  #
+  # cmake-format: off
+  # gtest_discover_tests(${_LEGATE_TEST_NAME}
+  #                      PROPERTIES ENVIRONMENT
+  #                                 LEGATE_TEST=1
+  #                                 # Cannot discover tests at build time because CI splits
+  #                                 # build and run into 2 separate phase. The build phase
+  #                                 # does not necessarily have the required libs to run the
+  #                                 # execute.
+  #                                 DISCOVERY_MODE
+  #                                 PRE_TEST)
+  # cmake-format: on
 
-  list(APPEND LEGATE_CONFIGURED_TESTS ${CMAKE_TEST_NAME})
+  legate_debug_syms(${_LEGATE_TEST_NAME} INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+
+  list(APPEND LEGATE_CONFIGURED_TESTS ${_LEGATE_TEST_NAME})
   # propagate the updated list upwards
   set(LEGATE_CONFIGURED_TESTS ${LEGATE_CONFIGURED_TESTS} PARENT_SCOPE)
 
-  list(APPEND legate_TIDY_SOURCES ${_LEGATE_TEST_SOURCES})
-  set(legate_TIDY_SOURCES ${legate_TIDY_SOURCES} PARENT_SCOPE)
+  foreach(src IN LISTS _LEGATE_TEST_SOURCES)
+    # Because each of the tests share a common main src file, we need to make sure we
+    # don't add a tidy target for it twice
+    list(FIND unique_src "${src}" idx)
+    if(idx EQUAL -1)
+      # not found
+      legate_add_tidy_target(SOURCE "${src}")
+      list(APPEND unique_src "${src}")
+    endif()
+  endforeach()
+  set(unique_src "${unique_src}" PARENT_SCOPE)
 endfunction()
 
 if(Legion_USE_CUDA)
@@ -145,15 +178,16 @@ endif()
   install(CODE "${code_string}")
 endif()
 
-legate_configure_test(tests_with_runtime SOURCES ${main_with_runtime_init_SRC} ${bug_SRC}
-                      ${tasks_SRC} ${integration_SRC} ${unit_SRC} ${experimental_SRC}
-                      ${stl_SRC})
-legate_configure_test(tests_wo_runtime SOURCES ${main_wo_runtime_init_SRC} ${noinit_SRC})
-legate_configure_test(tests_non_reentrant SOURCES ${main_with_runtime_init_SRC}
+legate_configure_test(NAME tests_with_runtime SOURCES ${main_with_runtime_init_SRC}
+                      ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC}
+                      ${experimental_SRC} ${stl_SRC})
+legate_configure_test(NAME tests_wo_runtime SOURCES ${main_wo_runtime_init_SRC}
+                      ${noinit_SRC})
+legate_configure_test(NAME tests_non_reentrant SOURCES ${main_with_runtime_init_SRC}
                       ${non_reentrant_SRC})
 
 if(integration_GPU_SRC)
-  legate_configure_test(tests_with_gpus SOURCES ${main_with_runtime_init_SRC}
+  legate_configure_test(NAME tests_with_gpus SOURCES ${main_with_runtime_init_SRC}
                         ${tasks_SRC} ${integration_SRC} ${integration_GPU_SRC} GPUS 1
                         PERCENT 30)
 endif()
@@ -164,6 +198,3 @@ rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing
 # Add a dummy target whose only job it is to depend on the tests being built.
 add_custom_target(build_tests COMMENT "Building tests")
 add_dependencies(build_tests ${LEGATE_CONFIGURED_TESTS})
-
-# propagate to main CMakeLists.txt
-set(legate_TIDY_SOURCES ${legate_TIDY_SOURCES} PARENT_SCOPE)

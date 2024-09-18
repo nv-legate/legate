@@ -12,9 +12,9 @@
 
 cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/policies.cmake NO_POLICY_SCOPE)
-
 list(APPEND CMAKE_MESSAGE_CONTEXT "legate")
+
+include(cmake/policies.cmake NO_POLICY_SCOPE)
 
 # ########################################################################################
 # * Setup LEGATE_DIR and LEGATE_ARCH -------------------------------
@@ -23,6 +23,7 @@ if(NOT DEFINED LEGATE_DIR)
   # this one we can figure out on our own
   execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/scripts/get_legate_dir.py
                   OUTPUT_VARIABLE LEGATE_DIR COMMAND_ERROR_IS_FATAL ANY)
+  string(STRIP "${LEGATE_DIR}" LEGATE_DIR)
 endif()
 
 cmake_path(SET LEGATE_DIR NORMALIZE "${LEGATE_DIR}")
@@ -114,7 +115,10 @@ set_property(DIRECTORY
                       cmake/patches/mdspan_cpp_lib_span_dynamic_extent.diff
                       cmake/patches/mdspan_cpp_lib_span_extents.diff
                       cmake/patches/mdspan_cpp_lib_span_layout_stride.diff
-                      cmake/patches/span_proper_cmake_project.diff)
+                      cmake/patches/span_proper_cmake_project.diff
+                      cmake/templates/install_info.py.in
+                      cmake/templates/uninstall.cmake.in
+                      cmake/templates/legate_defines.h.in)
 
 set(legate_version 24.09.00)
 
@@ -127,10 +131,10 @@ if(SKBUILD)
                     # linking options for the python library is hardcoded to build with C,
                     # so until that is fixed we need to keep C.
                     C CXX)
-  include(${CMAKE_CURRENT_SOURCE_DIR}/legate_python.cmake)
+  add_subdirectory(src/python)
 else()
   project(legate VERSION ${legate_version} LANGUAGES C CXX)
-  include(${CMAKE_CURRENT_SOURCE_DIR}/legate_cpp.cmake)
+  add_subdirectory(src/cpp)
 endif()
 
 if(CMAKE_GENERATOR STREQUAL "Ninja")

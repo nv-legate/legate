@@ -16,28 +16,17 @@ import os
 import sys
 from pathlib import Path
 
-# Since this file sits top-level, a simple "import legate" would ALWAYS import
-# pwd/legate/__init__.py. This behavior is not desirable/surprising if the user
-# has already legate.
-#
-# To get around this, we move the current directory to the end of the module
-# search path. That way the global modules are searched first, and the legate
-# directory does not shadow the installed version.
-del sys.path[0]
-sys.path.append("")
-
-# These are all still "top of file", but flake8 is feeling feisty about it
-from legate.tester.args import parser  # noqa E402
-from legate.tester.config import Config  # noqa E402
-from legate.tester.test_plan import TestPlan  # noqa E402
-from legate.tester.test_system import TestSystem  # noqa E402
+from legate.tester.args import parser
+from legate.tester.config import Config
+from legate.tester.test_plan import TestPlan
+from legate.tester.test_system import TestSystem
 
 
 def main() -> int:
     parser.set_defaults(
         gtest_files=GTEST_TESTS_BIN,
         mpi_output_filename=(
-            GTESTS_TEST_DIR / "mpi_result" if GTESTS_TEST_DIR else None
+            GTEST_TESTS_DIR / "mpi_result" if GTEST_TESTS_DIR else None
         ),
     )
 
@@ -59,7 +48,7 @@ def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
     lg_arch_dir = LEGATE_DIR / LEGATE_ARCH
 
     def make_test_dir(prefix: Path) -> Path:
-        return prefix / "tests" / "cpp"
+        return prefix / "tests"
 
     def make_test_bin(prefix: Path) -> list[Path]:
         return [
@@ -69,7 +58,7 @@ def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
         ]
 
     def get_cpp_lib_dir() -> tuple[Path, list[Path]] | None:
-        cpp_lib = make_test_dir(lg_arch_dir / "cmake_build")
+        cpp_lib = make_test_dir(lg_arch_dir / "cmake_build" / "src" / "cpp")
         cpp_bin = make_test_bin(cpp_lib)
         if all(p.exists() for p in cpp_bin):
             return cpp_lib, cpp_bin
@@ -94,7 +83,15 @@ def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
         except FileNotFoundError:
             # skbuild_base does not exist
             return None
-        py_lib = make_test_dir(skbuild_base / "cmake-build" / "legate-cpp")
+        py_lib = make_test_dir(
+            skbuild_base
+            / "cmake-build"
+            / "src"
+            / "python"
+            / "legate_cpp"
+            / "src"
+            / "cpp"
+        )
         py_bin = make_test_bin(py_lib)
         if all(p.exists() for p in py_bin):
             return py_lib, py_bin
@@ -112,14 +109,14 @@ def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
         ):
             return cpp_lib_dir, cpp_bin
         return py_lib_dir, py_bin
-    elif cpp_exists:
+    if cpp_exists:
         return cpp_lib_dir, cpp_bin
-    elif py_exists:
+    if py_exists:
         return py_lib_dir, py_bin
     return None, None
 
 
-GTESTS_TEST_DIR, GTEST_TESTS_BIN = _find_latest_cpp_test_dir()
+GTEST_TESTS_DIR, GTEST_TESTS_BIN = _find_latest_cpp_test_dir()
 
 if __name__ == "__main__":
     sys.exit(main())

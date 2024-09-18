@@ -92,12 +92,8 @@ all: default_all
 .PHONY: clean
 clean: default_clean
 	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/legate.egg-info
+	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/src/python/legate.egg-info
 	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/$(LEGATE_ARCH)/_skbuild
-
-
-.PHONY: install_private
-install_private: all
-	@$(MAKE) --no-print-directory default_install
 
 ## Install the C++ library.
 ##
@@ -109,7 +105,8 @@ install_private: all
 ##                                    otherwise has no effect.
 ##
 .PHONY: install
-install: install_private
+install: all
+	@$(MAKE) --no-print-directory default_install
 
 ## Uninstall the C++ library.
 ##
@@ -135,17 +132,14 @@ install: install_private
 uninstall:
 	@$(LEGATE_BUILD_COMMAND) --target uninstall $(LEGATE_CMAKE_ARGS)
 
-.PHONY: package_private
-package_private: all
-	@$(MAKE) --no-print-directory default_package
-
 ## Create an installable package of the library.
 ##
 ## Options:
 ## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: package
-package: package_private
+package: all
+	@$(MAKE) --no-print-directory default_package
 
 ## Run clang-tidy over the repository.
 ##

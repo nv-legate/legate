@@ -19,37 +19,13 @@ find_package(Sphinx REQUIRED)
 
 file(GLOB_RECURSE legate_headers "${legate_LOCAL_INCLUDE_DIR}/*.h*")
 
+# Only set "dynamic" settings here. Any settings which would have a hard-coded value
+# should just be directly set in the Doxyfile.in
 set(DOXYGEN_INPUT_DIR "${legate_LOCAL_INCLUDE_DIR}")
 set(DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/doxygen")
 set(DOXYGEN_INDEX_FILE "${DOXYGEN_OUTPUT_DIR}/xml/index.html")
-set(DOXYGEN_PROJECT_NAME "Legate")
-set(DOXYGEN_FULL_PATH_NAMES NO)
-set(DOXYGEN_GENERATE_HTML YES)
-set(DOXYGEN_GENERATE_LATEX NO)
-set(DOXYGEN_EXTENSION_MAPPING "cu=C++ cuh=C++")
-set(DOXYGEN_HIDE_UNDOC_MEMBERS YES)
-set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
-set(DOXYGEN_USE_MATHJAX YES)
-set(DOXYGEN_MATHJAX_VERSION MathJax_3)
-set(DOXYGEN_STRIP_FROM_INC_PATH "${LEGATE_DIR}/src")
-set(DOXYGEN_EXAMPLE_PATH "\"${LEGATE_DIR}/tests/cpp\" \"${LEGATE_DIR}/src\"")
-set(DOXYGEN_QUIET YES)
-set(DOXYGEN_PREDEFINED
-    [=[
-  "DOXYGEN" \
-  "LEGATE_DOXYGEN=1" \
-  "LEGATE_HOST_DEVICE" \
-  "LEGATE_USE_CUDA=1" \
-  "LEGATE_USE_OPENMP=1" \
-  "LEGATE_STL_REQUIRES=requires" \
-  "LEGATE_DEFINED(X)=defined(X) && X" \
-  "LEGATE_STL_UNSPECIFIED(...)=unspecified"
-  ]=])
-set(DOXYGEN_EXPAND_AS_DEFINED [=[
-  ]=])
-set(DOXYGEN_WARN_AS_ERROR FAIL_ON_WARNINGS)
-set(DOXYGEN_BUILTIN_STL_SUPPORT YES)
-set(DOXYGEN_INLINE_INFO NO)
+set(DOXYGEN_STRIP_FROM_INC_PATH "${LEGATE_DIR}/src/cpp")
+set(DOXYGEN_EXAMPLE_PATH "\"${LEGATE_DIR}/tests/cpp\" \"${LEGATE_DIR}/src/cpp\"")
 
 set(DOXYFILE_IN "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in")
 set(DOXYFILE_OUT "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile")
