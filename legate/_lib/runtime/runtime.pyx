@@ -23,6 +23,7 @@ from ..._ext.cython_libcpp.string_view cimport (
 
 import gc
 import inspect
+import json
 import pickle
 import sys
 from collections.abc import Collection
@@ -1071,11 +1072,23 @@ cpdef Machine get_machine():
     return get_legate_runtime().get_machine()
 
 
-cdef str caller_frameinfo():
+cdef tuple _caller_frameinfo():
     frame = inspect.currentframe()
     if frame is None:
-        return "<unknown>"
-    return f"{frame.f_code.co_filename}:{frame.f_lineno}"
+        return ()
+    return (frame.f_code.co_filename, frame.f_lineno)
+
+
+def _assemble_provenance(human: str, **machine: Any) -> str:
+    return json.dumps([human, machine], indent=None)
+
+
+cdef str _provenance_from_frameinfo(info: tuple[str, int]):
+    if info == ():
+        return _assemble_provenance("<unknown>", file="<unknown>")
+
+    fname, lineno = info
+    return _assemble_provenance(f"{fname}:{lineno}", file=fname, line=lineno)
 
 
 def track_provenance(
@@ -1106,13 +1119,17 @@ def track_provenance(
     def decorator(func: AnyCallable) -> AnyCallable:
         if nested:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
-                with Scope(provenance=caller_frameinfo()):
+                cdef tuple info = _caller_frameinfo()
+                cdef str provenance = _provenance_from_frameinfo(info)
+                with Scope(provenance=provenance):
                     return func(*args, **kwargs)
         else:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 if len(Scope.provenance()) > 0:
                     return func(*args, **kwargs)
-                with Scope(provenance=caller_frameinfo()):
+                cdef tuple info = _caller_frameinfo()
+                cdef str provenance = _provenance_from_frameinfo(info)
+                with Scope(provenance=provenance):
                     return func(*args, **kwargs)
 
         return wrapper

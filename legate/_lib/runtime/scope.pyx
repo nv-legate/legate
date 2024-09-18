@@ -42,7 +42,7 @@ cdef class Scope:
     def __enter__(self) -> None:
         if self._handle.has_value():
             raise ValueError(
-                "Each Scope object can be used only once as a conetxt manager"
+                "Each Scope object can be used only once as a context manager"
             )
 
         self._handle = _Scope()
