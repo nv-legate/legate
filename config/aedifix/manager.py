@@ -48,6 +48,7 @@ from .util.exception import (
 from .util.types import copy_method_signature
 from .util.utility import (
     ValueProvenance,
+    dest_to_flag,
     partition_argv,
     subprocess_capture_output_live,
 )
@@ -294,14 +295,8 @@ class ConfigurationManager:
         )
         environ[dir_name] = str(dir_value)
 
-    def _setup_arch_dir(self, clean_first: bool) -> None:
+    def _setup_arch_dir(self) -> None:
         r"""Ensure the creation and validity of the project arch directory.
-
-        Parameters
-        ----------
-        clean_first : bool
-            `True` if the arch directory should be cleared first, `False`
-            otherwise.
 
         Raises
         ------
@@ -310,11 +305,14 @@ class ConfigurationManager:
         """
         arch_dir = self.project_arch_dir
         proj_name = self.project_name
-        if clean_first:
+        with_clean = self.cl_args.with_clean
+        with_clean_val = with_clean.value
+        if with_clean_val:
             self.log_warning(
-                f"{self._main_package.WITH_CLEAN.name} specified, deleting "
+                f"{dest_to_flag(with_clean.name)} specified, deleting "
                 f"contents of {arch_dir}!"
             )
+
         if arch_dir.exists():
             self.log(f"{proj_name} arch exists: {arch_dir}")
             if not arch_dir.is_dir():
@@ -324,7 +322,7 @@ class ConfigurationManager:
                     "directory. Please delete move or delete this file "
                     "before re-running configure!"
                 )
-            if not clean_first:
+            if not with_clean_val:
                 reconfigure_file = self._reconfigure.reconfigure_file
                 if Path(sys.argv[0]).resolve() == reconfigure_file:
                     # The user is following our advice below and reconfiguring,
@@ -345,6 +343,14 @@ class ConfigurationManager:
                     )
                     return
 
+                force = self.cl_args.force
+                if force.value:
+                    self.log(
+                        "User is forcing configuration, ignoring existing "
+                        "arch dir"
+                    )
+                    return
+
                 raise UnsatisfiableConfigurationError(
                     f"{proj_name} arch directory {arch_dir} already exists and"
                     " would be overwritten by this configure command. If you:"
@@ -359,7 +365,11 @@ class ConfigurationManager:
                     "\n"
                     f"  3. Meant to redo the current arch ({arch_dir.name!r}) "
                     "from scratch, re-run configure with "
-                    f"{self._main_package.WITH_CLEAN.name} option"
+                    f"{dest_to_flag(with_clean.name)} option."
+                    "\n"
+                    "   4. Know what you are doing, and just want configure to"
+                    " do as it is told, re-run the current configure command "
+                    f"with {dest_to_flag(force.name)}"
                     "\n\n"
                 )
 
@@ -959,9 +969,7 @@ class ConfigurationManager:
         # do this after parsing args because args might have --help (in which
         # case we do not want to clobber the arch directory)
         self.log_execute_func(self._setup_environ)
-        self.log_execute_func(
-            self._setup_arch_dir, self.cl_args.with_clean.value
-        )
+        self.log_execute_func(self._setup_arch_dir)
         # This call re-shuffles the modules
         self.log_execute_func(self._setup_dependencies)
         self.log_execute_func(self._config.setup)

@@ -126,6 +126,8 @@ def _guess_cxx_compiler() -> str | None:
     return None
 
 
+WITH_CLEAN_FLAG: Final = "--with-clean"
+FORCE_FLAG: Final = "--force"
 ON_ERROR_DEBUGGER_FLAG: Final = "--on-error-debugger"
 DEBUG_CONFIGURE_FLAG: Final = "--debug-configure"
 
@@ -164,11 +166,24 @@ class MainPackage(Package, ABC):
         ephemeral=True,
     )
     WITH_CLEAN: Final = ConfigArgument(
-        name="--with-clean",
+        name=WITH_CLEAN_FLAG,
         spec=ArgSpec(
-            dest="with_clean",
+            dest=flag_to_dest(WITH_CLEAN_FLAG),
             type=bool,
             help="Discard all existing configuration and start fresh",
+        ),
+        ephemeral=True,
+    )
+    FORCE: Final = ConfigArgument(
+        name=FORCE_FLAG,
+        spec=ArgSpec(
+            dest=flag_to_dest(FORCE_FLAG),
+            type=bool,
+            help=(
+                "Tell configure that you know what you are doing and force "
+                "it to proceed, even if configure believes that doing so "
+                "would be erroneous"
+            ),
         ),
         ephemeral=True,
     )
@@ -258,6 +273,7 @@ class MainPackage(Package, ABC):
         "DEBUG_CONFIGURE",
         "ON_ERROR_DEBUGGER",
         "WITH_CLEAN",
+        "FORCE",
         "CMAKE_BUILD_PARALLEL_LEVEL",
         "CMAKE_BUILD_TYPE",
         "BUILD_SHARED_LIBS",
