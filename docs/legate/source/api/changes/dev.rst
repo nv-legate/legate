@@ -17,6 +17,18 @@ Changes: Latest Development Version
 - Rename the library from ``legate.core`` to ``legate``. With the renaming, the runtime does not
   automatically start with ``import legate`` anymore. Downstream libraries are now responsible to
   call ``legate.get_legate_runtime()`` before they register themselves through a C++ callback.
+- Add ``LEGATE_INLINE_TASK_LAUNCH`` environment variable to request inline task
+  launch. When enabled, this instructs Legate to forgo the usual Legion task calling
+  convention in favor of launching the task immediately on the submitting thread. This
+  feature is currently considered *experimental* as it is not always profitable when it
+  should be.
+
+
+C++
+---
+
+.. rubric:: General
+
 - Remove ``legate_c.h`` and all macros defined therein.
 - Remove ``legate_preamble.h``.
 - Deprecate ``LEGATE_NO_VARIANT``, ``LEGATE_CPU_VARIANT``, ``LEGATE_GPU_VARIANT``, and
@@ -55,11 +67,6 @@ Changes: Latest Development Version
   operator ID's.
 - Remove ``partition.h`` and ``restriction.h`` from the public API
 - Add ``LEGATE_MPI_WRAPPER`` environment variable.
-- Add ``LEGATE_INLINE_TASK_LAUNCH`` environment variable to request inline task
-  launch. When enabled, this instructs Legate to forgo the usual Legion task calling
-  convention in favor of launching the task immediately on the submitting thread. This
-  feature is currently considered *experimental* as it is not always profitable when it
-  should be.
 
 .. rubric:: Data
 
@@ -140,3 +147,23 @@ Changes: Latest Development Version
   ``TaskContext::get_task_stream()`` instead within tasks.
 - Deprecate ``legate::cuda::StreamView``. Users should implement their own version of this
   class.
+
+
+Python
+------
+
+.. rubric:: General
+
+.. rubric:: Data
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+.. rubric:: Tasks
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+.. rubric:: Utilities
