@@ -77,7 +77,7 @@ bool check_alignment(const void* buffer, std::size_t alignment)
   }
   ASSERT_TRUE(check_alignment(buffer, alignment));
   ASSERT_NO_THROW(allocator.deallocate(buffer));
-  ASSERT_THROW(allocator.deallocate(buffer), std::runtime_error);
+  ASSERT_THROW(allocator.deallocate(buffer), std::invalid_argument);
 }
 
 /*static*/ void InvalidAllocateTask::cpu_variant(legate::TaskContext context)
@@ -96,7 +96,7 @@ bool check_alignment(const void* buffer, std::size_t alignment)
   }
   ASSERT_TRUE(check_alignment(buffer, alignment));
   ASSERT_THROW(allocator.deallocate(static_cast<void*>(static_cast<std::int8_t*>(buffer) + 1)),
-               std::runtime_error);
+               std::invalid_argument);
 }
 
 class Config {
@@ -123,7 +123,7 @@ INSTANTIATE_TEST_SUITE_P(
   ScopedAllocatorUnit,
   ScopedAllocatorTask,
   ::testing::Combine(::testing::Values(0, ALLOCATE_BYTES),
-                     ::testing::Values(0, 1, alignof(std::max_align_t), OVER_ALIGNMENT),
+                     ::testing::Values(1, alignof(std::max_align_t), OVER_ALIGNMENT),
                      ::testing::Values(legate::Memory::NO_MEMKIND, legate::Memory::SYSTEM_MEM)));
 // TODO(joyshennv): issue #1189
 //  legate::Memory::GLOBAL_MEM,
@@ -185,7 +185,7 @@ TEST_F(ScopedAllocatorUnit, InvalidDeallocateTopLevel)
   auto allocator                  = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM, true};
   std::vector<std::uint64_t> data = {1, 2, 3};
 
-  ASSERT_THROW(allocator.deallocate(data.data()), std::runtime_error);
+  ASSERT_THROW(allocator.deallocate(data.data()), std::invalid_argument);
 }
 
 TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
@@ -203,13 +203,34 @@ TEST_F(ScopedAllocatorUnit, EmptyAllocate)
   void* ptr      = allocator.allocate(0);
 
   ASSERT_EQ(ptr, nullptr);
+  ASSERT_NO_THROW(allocator.deallocate(ptr));
 }
 
-TEST_F(ScopedAllocatorUnit, Negative)
+TEST_F(ScopedAllocatorUnit, BadAlignment)
 {
-  // #issue 1170
-  // ASSERT_THROW(static_cast<void>(legate::ScopedAllocator(legate::Memory::SYSTEM_MEM, true, -1)),
-  // std::invalid_argument);
+  // -1 is not a power of 2
+  ASSERT_THROW(
+    static_cast<void>(legate::ScopedAllocator{legate::Memory::SYSTEM_MEM,
+                                              true,
+                                              /* alignment */ static_cast<std::size_t>(-1)}),
+    std::domain_error);
+  // Not a power of 2
+  ASSERT_THROW(static_cast<void>(legate::ScopedAllocator{legate::Memory::SYSTEM_MEM,
+                                                         true,
+                                                         /* alignment */ 3}),
+               std::domain_error);
+  // Cannot be 0
+  ASSERT_THROW(static_cast<void>(legate::ScopedAllocator{legate::Memory::SYSTEM_MEM,
+                                                         true,
+                                                         /* alignment */ 0}),
+               std::domain_error);
+}
+
+TEST_F(ScopedAllocatorUnit, DeallocateNull)
+{
+  auto alloc = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM};
+
+  ASSERT_NO_THROW(alloc.deallocate(nullptr));
 }
 
 }  // namespace scoped_allocator_test

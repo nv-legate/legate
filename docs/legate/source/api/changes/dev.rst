@@ -70,6 +70,17 @@ C++
 
 .. rubric:: Data
 
+- Improve ``ScopedAllocator::ScopeAllocator()`` alignment validation. The alignment is now
+  required to be a strictly positive power of 2. This was technically always the case, but
+  previous versions did not check this, leading to silent failures down the line. The
+  constructor will now validate the alignment and throw an exception if it is improper.
+- Change passing ``nullptr`` to ``ScopedAllocator::deallocate()``. This is now a no-op
+  (previously this threw a ``std::invalid_argument`` exception).
+- Clarify that ``ScopedAllocator::allocate(0)`` will return a ``nullptr``. It always did
+  this, but this behavior is now explicitly documented. Coupled with the change above, it
+  means that all pointers returned from ``allocate()`` are safe to pass to
+  ``deallocate()``.
+
 .. rubric:: Mapping
 
 - Add ``NodeRange::hash()``.

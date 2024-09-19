@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <fmt/format.h>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -43,6 +44,14 @@ class ScopedAllocator::Impl {
 ScopedAllocator::Impl::Impl(Memory::Kind kind, bool scoped, std::size_t alignment)
   : target_kind_{kind}, scoped_{scoped}, alignment_{alignment}
 {
+  constexpr auto is_power_of_2 = [](std::size_t n) { return (n & (n - 1)) == 0; };
+
+  if (alignment == 0) {
+    throw std::domain_error{"alignment cannot be 0"};
+  }
+  if (!is_power_of_2(alignment)) {
+    throw std::domain_error{fmt::format("invalid alignment {}, must be a power of 2", alignment)};
+  }
 }
 
 ScopedAllocator::Impl::~Impl() noexcept
@@ -62,7 +71,7 @@ void* ScopedAllocator::Impl::allocate(std::size_t bytes)
   }
 
   auto buffer = create_buffer<std::int8_t>(bytes, target_kind_, alignment_);
-  auto ptr    = buffer.ptr(0);
+  auto* ptr   = buffer.ptr(0);
 
   try {
     buffers_[ptr] = std::move(buffer);
@@ -75,17 +84,22 @@ void* ScopedAllocator::Impl::allocate(std::size_t bytes)
 
 void ScopedAllocator::Impl::deallocate(void* ptr)
 {
-  auto finder = buffers_.find(ptr);
-  if (finder == buffers_.end()) {
-    throw std::runtime_error{"Invalid address for deallocation"};
+  if (!ptr) {
+    return;
   }
 
-  finder->second.destroy();
-  buffers_.erase(finder);
+  const auto it = buffers_.find(ptr);
+
+  if (it == buffers_.end()) {
+    throw std::invalid_argument{fmt::format("Invalid address {} for deallocation", ptr)};
+  }
+
+  it->second.destroy();
+  buffers_.erase(it);
 }
 
 ScopedAllocator::ScopedAllocator(Memory::Kind kind, bool scoped, std::size_t alignment)
-  : impl_{new Impl{kind, scoped, alignment}}
+  : impl_{std::make_unique<Impl>(kind, scoped, alignment)}
 {
 }
 
@@ -93,6 +107,6 @@ void* ScopedAllocator::allocate(std::size_t bytes) { return impl_->allocate(byte
 
 void ScopedAllocator::deallocate(void* ptr) { impl_->deallocate(ptr); }
 
-void ScopedAllocator::ImplDeleter::operator()(Impl* ptr) const noexcept { delete ptr; }
+ScopedAllocator::~ScopedAllocator() noexcept = default;
 
 }  // namespace legate

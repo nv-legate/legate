@@ -45,16 +45,20 @@ class ScopedAllocator {
    * the allocator's lifetime. Otherwise, the allocations are alive until the task finishes
    * (and unless explicitly deallocated).
    * @param alignment Alignment for the allocations
+   *
+   * @throws std::domain_error If `alignment` is 0, or not a power of 2.
    */
   explicit ScopedAllocator(Memory::Kind kind,
                            bool scoped           = true,
                            std::size_t alignment = DEFAULT_ALIGNMENT);
 
+  ~ScopedAllocator() noexcept;
+
   /**
    * @brief Allocates a contiguous buffer of the given `Memory::Kind`
    *
    * When the allocator runs out of memory, the runtime will fail with an error message.
-   * Otherwise, the function returns a valid pointer.
+   * Otherwise, the function returns a valid pointer. If `bytes` is `0`, returns `nullptr`.
    *
    * @param bytes Size of the allocation in bytes
    *
@@ -65,10 +69,14 @@ class ScopedAllocator {
   [[nodiscard]] void* allocate(std::size_t bytes);
 
   /**
-   * @brief Deallocates an allocation. The input pointer must be one that was previously
-   * returned by an `allocate()` call, otherwise the code will fail with an error message.
+   * @brief Deallocates an allocation.
    *
    * @param ptr Pointer to the allocation to deallocate
+   *
+   * @throws std::invalid_argument If `ptr` was not allocated by this allocator.
+   *
+   * The input pointer must be one that was previously returned by an `allocate()` call. If
+   * `ptr` is `nullptr`, this call does nothing.
    *
    * @see allocate
    */
@@ -77,13 +85,7 @@ class ScopedAllocator {
  private:
   class Impl;
 
-  // See StoreMapping::StoreMappingImplDeleter for why this this exists
-  class ImplDeleter {
-   public:
-    void operator()(Impl* ptr) const noexcept;
-  };
-
-  std::unique_ptr<Impl, ImplDeleter> impl_{};
+  std::unique_ptr<Impl> impl_{};
 };
 
 }  // namespace legate
