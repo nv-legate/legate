@@ -173,6 +173,12 @@ Python
 
 .. rubric:: Tasks
 
+- Add support for default values on scalar arguments in Python tasks.
+- Add support for ``= None`` as a default argument for store-type arguments in Python
+  tasks. ``None`` is currently the only allowed default value for stores. Users may use
+  any of the supported "optional" type hint variants (``x | None``, ``Union[x, None]``,
+  ``Optional[x]``) to inform the runtime that a store argument may be ``None``.
+
 .. rubric:: Types
 
 .. rubric:: Runtime

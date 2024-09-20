@@ -22,12 +22,16 @@ from pickle import (
     loads as pkl_loads,
 )
 from pickletools import optimize as pklt_optimize
+from types import NoneType, UnionType
 from typing import (
     Any,
     TypeVar,
+    _UnionGenericAlias,
     get_args as typing_get_args,
     get_origin as typing_get_origin,
 )
+
+import numpy as np
 
 from ..._lib.data.logical_array cimport LogicalArray
 from ..._lib.data.logical_store cimport LogicalStore
@@ -35,8 +39,9 @@ from ..._lib.data.physical_array cimport PhysicalArray
 from ..._lib.data.physical_store cimport PhysicalStore
 from ..._lib.data.scalar cimport Scalar
 from ..._lib.operation.task cimport AutoTask
+from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
-from ..._lib.type.type_info cimport Type, binary_type
+from ..._lib.type.type_info cimport Type, TypeCode, binary_type
 from .type cimport (
     ConstraintSet,
     InputArray,
@@ -74,6 +79,69 @@ cdef inline type _unpack_generic_type(object annotation):
         return annotation
     return origin_type
 
+cdef inline type _unpack_union_type(object annotation):
+    cdef tuple[type, ...] sub_types = typing_get_args(annotation)
+
+    if len(sub_types) != 2:
+        raise NotImplementedError(
+            "Arbitrary union types not yet supported. Union types may "
+            "only be 'SomeType | None' (order doesn't matter), "
+            "'Union[SomeType, None]' (order doesn't matter), or "
+            f"'Optional[SomeType]'. Found '{annotation}'."
+        )
+
+    cdef type ty
+    cdef type ret = None
+
+    # Want to find the first (read: the only) non-None type in the list.
+    for ty in sub_types:
+        if not issubclass(ty, NoneType):
+            if ret is not None:
+                # Been here before, means the union type has multiple non-None
+                # types
+                raise NotImplementedError(
+                    "Arbitrary union types not yet supported. Union types may "
+                    "only be 'SomeType | None' (order doesn't matter), "
+                    "'Union[SomeType, None]' (order doesn't matter), or "
+                    f"'Optional[SomeType]'. Found '{annotation}' "
+                    f"(found '{ty}', previous non-None type '{ret}')."
+                )
+            # Check above would break if ty is None
+            assert ty is not None
+            ret = ty
+
+    return ret
+
+
+cdef void _assert_union_types_are_what_we_expect():
+    import builtins
+    from typing import Optional, Union
+
+    # Use builtins module here to make triply sure that Cython isn't
+    # transforming any of these types, and that they are pure python
+    # types. Cannot use builtins.None because None is a keyword, so we have to
+    # getattr it.
+    x = builtins.int | getattr(builtins, "None")
+    assert isinstance(x, UnionType)
+    x = Optional[builtins.int]
+    assert isinstance(x, _UnionGenericAlias)
+    x = Union[builtins.int, getattr(builtins, "None")]
+    assert isinstance(x, _UnionGenericAlias)
+
+
+_assert_union_types_are_what_we_expect()
+
+cdef inline type _unpack_type(object annotation):
+    if isinstance(annotation, (UnionType, _UnionGenericAlias)):
+        # _UnionGenericAlias is needed to catch all 3 of the "union" variants:
+        #
+        # 1. 'x | y' -> UnionType
+        # 2. 'Optional[x]' -> _UnionGenericAlias
+        # 3. 'Union[x, y]' -> _UnionGenericAlias
+        return _unpack_union_type(annotation)
+    return _unpack_generic_type(annotation)
+
+
 cdef tuple[
     tuple[str], tuple[str], tuple[str], tuple[str]
 ] _parse_signature(object signature):
@@ -106,7 +174,7 @@ cdef tuple[
                 f"Default values for {annotation} not yet supported"
             )
 
-        ty = _unpack_generic_type(annotation)
+        ty = _unpack_type(annotation)
 
         if issubclass(ty, _INPUT_TYPES):
             inputs.append(name)
@@ -143,7 +211,7 @@ cdef inline bytes _serialize_object(object value):
     return pklt_optimize(pkl_dumps(value, protocol=PKL_HIGHEST_PROTOCOL))
 
 cdef bytes LEGATE_PICKLE_HEADER = b"__legate_pickled_arg__"
-
+cdef object LEGATE_PICKLE_HEADER_NP = np.array(LEGATE_PICKLE_HEADER)
 
 cdef class VariantInvoker:
     r"""Encapsulate the calling conventions between a user-supplied task
@@ -240,31 +308,40 @@ cdef class VariantInvoker:
         return self._signature
 
     @staticmethod
-    cdef void _handle_param(
+    cdef object _handle_param(
         task: AutoTask,
-        param_mapping: ParamMapping,
         expected_param: Parameter,
         user_param: Any
     ):
-        cdef str param_name = expected_param.name
-        # this lookup never fails
-        cdef SeenObjTuple param_tup = param_mapping[param_name]
-        if param_tup.seen:
-            raise ValueError(
-                f"Got multiple values for argument {param_name}"
-            )
-        param_tup.seen = True
-
         annotation = expected_param.annotation
 
-        cdef type expected_ty = _unpack_generic_type(annotation)
+        cdef type expected_ty = _unpack_type(annotation)
 
         # Note issubclass(), expected_ty is the class itself, not
         # an instance of it!
         if issubclass(expected_ty, _BASE_PHYSICAL_TYPES):
+            if user_param is None:
+                # Special case for None. We cannot just pass None to the
+                # add_input/output functions below, they expect a valid store
+                # object. Furthermore, we also need something to fill the
+                # "hole" that this store would occupy in the list of
+                # inputs/outputs that we get when inside the task body.
+                #
+                # So we create a dummy store that contains a marker value which
+                # we can check for in the un-marshalling step in __call__().
+                #
+                # Another alternative would be to create an empty, unbound
+                # store (which is preferred as it occupies the least space and
+                # is cheapest to construct), and attach some kind of "this is a
+                # dummy object" metadata tag to it. But at the time of writing,
+                # metadata on stores does not yet exist.
+                user_param = get_legate_runtime().create_store_from_scalar(
+                    Scalar(LEGATE_PICKLE_HEADER)
+                )
+
             if not isinstance(user_param, _BASE_LOGICAL_TYPES):
                 raise TypeError(
-                    f"Argument: '{param_name}' "
+                    f"Argument: '{expected_param.name}' "
                     f"expected one of {_BASE_LOGICAL_TYPES}, "
                     f"got {type(user_param)}"
                 )
@@ -290,7 +367,7 @@ cdef class VariantInvoker:
         elif not isinstance(user_param, expected_ty):
             raise TypeError(
                 f"Task expected a value of type {expected_ty} for "
-                f"parameter {param_name}, but got {type(user_param)}"
+                f"parameter {expected_param.name}, but got {type(user_param)}"
             )
         elif issubclass(expected_ty, Scalar):
             task.add_scalar_arg(user_param)
@@ -310,76 +387,24 @@ cdef class VariantInvoker:
                 )
                 dtype = binary_type(len(user_param))
             task.add_scalar_arg(user_param, dtype=dtype)
-
-        param_tup.value = user_param
+        return user_param
 
     cdef ParamMapping _prepare_params(
         self, AutoTask task, tuple[Any, ...] args, dict[str, Any] kwargs
     ):
-        params = self.signature.parameters
+        signature = self.signature
 
-        if len(params.values()) < len(args):
-            raise TypeError(
-                f"Task expects {len(params.values())} parameters, "
-                f"but {len(args)} were passed"
-            )
+        bound_params = signature.bind(*args, **kwargs)
+        bound_params.apply_defaults()
 
-        cdef str param_name
-        cdef ParamMapping param_mapping = {
-            param_name: SeenObjTuple(seen=False, value=None)
-            for param_name in params.keys()
-        }
-
-        # Handle positional arguments
-        for expected_param, pos_param in zip(params.values(), args):
-            VariantInvoker._handle_param(
-                task, param_mapping, expected_param, pos_param
-            )
-
-        # Handle kwargs
-        cdef set[str] unhandled_kwargs = set(kwargs.keys())
+        cdef ParamMapping param_mapping = bound_params.arguments
         cdef str name
-
-        for name, sig in params.items():
-            try:
-                param = kwargs[name]
-            except KeyError:
-                continue
-
-            unhandled_kwargs.remove(name)
-            VariantInvoker._handle_param(task, param_mapping, sig, param)
-
-        cdef str error_str
-
-        if unhandled_kwargs:
-            error_str = ", ".join(map(str, unhandled_kwargs))
-            raise TypeError(
-                f"Task does not have keyword argument(s): {error_str}"
-            )
-
-        cdef list missing_params = []
-        cdef SeenObjTuple tup
-
-        # Handle any missing parameters. This is also where we handle default
-        # arguments.
-        for name, tup in param_mapping.items():
-            if tup.seen:
-                continue
-
-            param = params[name]
-            if (default_val := param.default) is not Parameter.empty:
-                VariantInvoker._handle_param(
-                    task, param_mapping, param, default_val
-                )
-                tup.seen = True
-            else:
-                missing_params.append(param)
-
-        if missing_params:
-            error_str = ", ".join(map(str, missing_params))
-            raise TypeError(
-                f"missing {len(missing_params)} required argument(s): "
-                f"{error_str}"
+        # Traversal of the arguments using params is deliberate. We need to
+        # keep the relative ordering of the inputs, outputs, etc in the same
+        # order in which they were declared in the signature.
+        for name, sig in signature.parameters.items():
+            param_mapping[name] = VariantInvoker._handle_param(
+                task, sig, param_mapping[name]
             )
         return param_mapping
 
@@ -400,23 +425,17 @@ cdef class VariantInvoker:
         """
         cdef ConstraintProxy constraint
         cdef list sanitized_args
-        cdef SeenObjTuple tup
 
         for constraint in constraints:
             sanitized_args = []
             for arg in constraint.args:
                 if isinstance(arg, str):
-                    # Also, we need to use this temporary (and type it above)
-                    # in order for Cython to realize that param_mapping[arg]
-                    # does in fact hold SeenObjTuple. I guess Cython does not
-                    # read the type hint about what a dict _maps_ to...
-                    tup = param_mapping[arg]
-                    arg_value = tup.value
+                    arg_value = param_mapping[arg]
                     if isinstance(arg_value, LogicalStore):
                         arg_value = LogicalArray.from_store(arg_value)
                     else:
                         assert isinstance(arg_value, LogicalArray), (
-                            "Parameter constraint argument of unexpect type "
+                            "Parameter constraint argument of unexpected type "
                             f"{type(arg_value)}. Expected LogicalArray or "
                             "LogicalStore."
                         )
@@ -516,20 +535,41 @@ cdef class VariantInvoker:
         params = self.signature.parameters
 
         def maybe_unpack_array(
-            arg_ty: type, name: str, arg: PhysicalArray
-        ) -> PhysicalArray | PhysicalStore:
+            default_val: Any, arg_ty: type, arg: PhysicalArray,
+        ) -> PhysicalArray | PhysicalStore | None:
+            cdef object ret
+
             if issubclass(arg_ty, PhysicalArray):
-                return arg
-            if issubclass(arg_ty, PhysicalStore):
-                return arg.data()
-            # this is a bug
-            raise TypeError(
-                f"Unhandled argument type '{arg_ty}' during unpacking, "
-                "this is a bug in legate!"
-            )
+                ret = arg
+            elif issubclass(arg_ty, PhysicalStore):
+                ret = arg.data()
+            else:
+                # this is a bug
+                raise TypeError(
+                    f"Unhandled argument type '{arg_ty}' during unpacking, "
+                    "this is a bug in legate!"
+                )
+
+            if default_val is Parameter.empty:
+                return ret
+
+            cdef Type ret_ty = ret.type
+            # At this point we could just do
+            #
+            # np.array(ret) == LEGATE_PICKLE_HEADER_NP
+            #
+            # But constructing that numpy array is potentially expensive if we
+            # get it wrong. So we do these cheaper checks beforehand.
+            if (
+                ret_ty.code == TypeCode.BINARY and
+                ret_ty.size == len(LEGATE_PICKLE_HEADER) and
+                np.array(ret) == LEGATE_PICKLE_HEADER_NP
+            ):
+                return default_val
+            return ret
 
         def unpack_scalar(
-            arg_ty: type, name: str, arg: Scalar
+            default_val: Any, arg_ty: type, arg: Scalar
         ) -> object | Scalar:
             if issubclass(arg_ty, Scalar):
                 return arg
@@ -558,8 +598,9 @@ cdef class VariantInvoker:
             cdef type arg_ty
 
             for name, val in zip(names, vals):
-                arg_ty = _unpack_generic_type(params[name].annotation)
-                kw[name] = unpacker(arg_ty, name, val)
+                sig = params[name]
+                arg_ty = _unpack_type(sig.annotation)
+                kw[name] = unpacker(sig.default, arg_ty, val)
 
         unpack_args(self.inputs, ctx.inputs, maybe_unpack_array)
         unpack_args(self.outputs, ctx.outputs, maybe_unpack_array)

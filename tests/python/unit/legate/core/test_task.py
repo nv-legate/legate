@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import random
 import re
-from typing import ParamSpec
+from typing import Optional, ParamSpec, Union
 
 import numpy as np
 import pytest
@@ -260,9 +260,7 @@ class TestTask(BaseTest):
         self.check_valid_registered_task(task)
         # arguments correct, but we have an extra kwarg
 
-        kwargs_excn_re = re.compile(
-            r"Task does not have keyword argument\(s\): .*"
-        )
+        kwargs_excn_re = re.compile(r"got an unexpected keyword argument '.*'")
         with pytest.raises(TypeError, match=kwargs_excn_re):
             task(
                 *func_args.args(),
@@ -276,10 +274,7 @@ class TestTask(BaseTest):
                 *func_args.args(),
             )
 
-        with pytest.raises(
-            TypeError,
-            match=r"Task expects (\d+) parameters, but (\d+) were passed",
-        ):
+        with pytest.raises(TypeError, match=r"too many positional arguments"):
             # We also test the "default value" scalar functions, and I am too
             # lazy to do a special-case test for them, so pass far too many
             # arguments so we cover them all.
@@ -552,6 +547,18 @@ class TestTask(BaseTest):
         task_with_default_args(x, y, complex(1, 3), complex(1, 3))
         get_legate_runtime().issue_execution_fence(block=True)
 
+    def test_default_arguments_mixed(self) -> None:
+        @lct.task
+        def foo(x: int = 2, y: float = 4.5) -> None:
+            assert_isinstance(x, int)
+            assert x == 2
+            assert_isinstance(y, float)
+            assert y == 12.3
+
+        # test that x isn't clobbered
+        foo(y=12.3)
+        get_legate_runtime().issue_execution_fence(block=True)
+
     def test_default_arguments_bad(self) -> None:
         # Have to do it like this because PhysicalStore() and PhysicalArray()
         # are not default-constructable (which is what default arguments
@@ -612,6 +619,64 @@ class TestTask(BaseTest):
             )
             with pytest.raises(NotImplementedError, match=msg):
                 lct.task(fn)  # type: ignore[call-overload]
+
+    def test_store_default_args(self) -> None:
+        @lct.task
+        def foo_or_none(x: InputStore | None = None) -> None:
+            assert x is None
+
+        foo_or_none()
+        foo_or_none(None)
+
+        @lct.task
+        def foo_or_none_reversed(x: None | InputStore = None) -> None:
+            assert x is None
+
+        foo_or_none_reversed()
+        foo_or_none_reversed(None)
+
+        @lct.task
+        def foo_optional(x: Optional[InputStore] = None) -> None:
+            assert x is None
+
+        foo_optional()
+        foo_optional(None)
+
+        @lct.task
+        def foo_union(x: Union[InputStore, None] = None) -> None:
+            assert x is None
+
+        foo_union()
+        foo_union(None)
+
+    def test_array_default_args(self) -> None:
+        @lct.task
+        def foo_or_none(x: InputArray | None = None) -> None:
+            assert x is None
+
+        foo_or_none()
+        foo_or_none(None)
+
+        @lct.task
+        def foo_or_none_reversed(x: None | InputArray = None) -> None:
+            assert x is None
+
+        foo_or_none_reversed()
+        foo_or_none_reversed(None)
+
+        @lct.task
+        def foo_optional(x: Optional[InputArray] = None) -> None:
+            assert x is None
+
+        foo_optional()
+        foo_optional(None)
+
+        @lct.task
+        def foo_union(x: Union[InputArray, None] = None) -> None:
+            assert x is None
+
+        foo_union()
+        foo_union(None)
 
 
 class TestVariantInvoker(BaseTest):
@@ -680,8 +745,9 @@ class TestVariantInvoker(BaseTest):
             )
 
         input_store = make_input_store()
-        with pytest.raises(ValueError):
-            # duplicate values for 'a'
+        with pytest.raises(
+            TypeError, match=r"multiple values for argument 'a'"
+        ):
             invoker.prepare_call(
                 fake_auto_task, (input_store,), {"a": input_store}
             )

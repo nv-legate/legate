@@ -34,7 +34,11 @@ cdef dict _TO_NUMPY_DTYPES = {
     _Type.Code.FLOAT64 : np.dtype(np.float64),
     _Type.Code.COMPLEX64 : np.dtype(np.complex64),
     _Type.Code.COMPLEX128 : np.dtype(np.complex128),
-    _Type.Code.STRING : np.dtype(np.str_),
+}
+
+cdef dict _TO_SIZED_NUMPY_DTYPES = {
+    _Type.Code.STRING : lambda int size: np.dtype((np.str_, size)),
+    _Type.Code.BINARY : lambda int size: np.dtype((np.bytes_, size)),
 }
 
 null_type = Type.from_handle(_null_type())
@@ -72,11 +76,26 @@ cdef dict _FROM_NUMPY_DTYPES = {
     np.dtype(np.str_) : string_type,
 }
 
+cdef dict _FROM_SIZED_NUMPY_DTYPES = {
+    np.dtype(np.str_) : lambda int size: string_type,
+    np.dtype(np.bytes_) : lambda int size: binary_type(size)
+}
+
 cdef inline Type deduce_numpy_type_(object py_object):
     try:
         return _FROM_NUMPY_DTYPES[py_object]
     except KeyError:
-        raise NotImplementedError(f"Unhandled numpy data type: {py_object}")
+        pass
+
+    base_obj = py_object.base
+    obj_size = <int>(base_obj.str.lstrip(base_obj.char + "<=>"))
+    try:
+        return _FROM_SIZED_NUMPY_DTYPES[base_obj](obj_size)
+    except KeyError:
+        # Either lookup or py_object.base failed
+        pass
+
+    raise NotImplementedError(f"Unhandled numpy data type: {py_object}")
 
 cdef inline Type deduce_sized_scalar_type_(object py_object):
     # numpys conversion algorithm is overly pessimistic for floating point
@@ -308,10 +327,18 @@ cdef class Type:
             If the equivalent numpy `dtype` could not be determined.
         """
         cdef _Type.Code code = self.code
+
         try:
             return _TO_NUMPY_DTYPES[code]
         except KeyError:
-            raise ValueError(f"Invalid type code: {code}")
+            pass
+
+        try:
+            return _TO_SIZED_NUMPY_DTYPES[code](self.size)
+        except KeyError:
+            pass
+
+        raise ValueError(f"Invalid type code: {code}")
 
     @property
     def raw_ptr(self) -> uintptr_t:
@@ -366,6 +393,8 @@ cdef class Type:
             return deduce_array_type_(py_object)
         if isinstance(py_object, np.generic):
             return deduce_numpy_type_(py_object.dtype)
+        if isinstance(py_object, (bytes, memoryview)):
+            return binary_type(len(py_object))
         if py_object is None:
             return null_type
         raise NotImplementedError(f"unsupported type: {py_object!r}")
