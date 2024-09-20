@@ -135,7 +135,9 @@ class ConfigurationManager:
         self.log_divider()
         self.log(
             "Environment Variables:\n"
-            + "\n".join(f"{key} = {val}" for key, val in os.environ.items())
+            + "\n".join(
+                f"{key} = {val}" for key, val in sorted(os.environ.items())
+            )
         )
         self.log_divider()
 
