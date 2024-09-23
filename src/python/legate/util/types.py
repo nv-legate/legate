@@ -126,7 +126,7 @@ def object_to_dataclass(obj: object, typ: type[T]) -> T:
 class LegatePaths(DataclassMixin):
     """Collect all the filesystem paths relevant for Legate."""
 
-    legate_dir: Path
+    legate_dir: Path  # directory containing the "legate" module
     legate_build_dir: Path | None
     bind_sh_path: Path
     legate_lib_path: Path

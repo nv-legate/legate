@@ -85,20 +85,42 @@ def read_cmake_cache_value(file_path: Path, pattern: str) -> str:
     raise RuntimeError(f"Could not find value for {pattern} in {file_path}")
 
 
-def get_legate_build_dir(legate_dir: Path) -> Path | None:
+def is_legate_path_in_src_tree(path: Path) -> bool:
+    r"""Determine whether ``path`` is the path to the in-source legate module.
+
+    Parameters
+    ----------
+    path : Path
+        The path to check.
+
+    Returns
+    -------
+    bool
+        True if path is the in-source legate module, False otherwise.
+    """
+    ret = path.parts[-3:] == ("src", "python", "legate")
+    if ret:
+        assert (path / "CMakeLists.txt").exists()
+        assert (path.parent / "CMakeLists.txt").exists()
+        assert (path.parent.parent / "cpp" / "CMakeLists.txt").exists()
+    return ret
+
+
+def get_legate_build_dir(legate_parent_dir: Path) -> Path | None:
     """Determine the location of the Legate build directory.
 
     If the build directory cannot be found, None is returned.
 
     Parameters
     ----------
-        legate_dir : Path
-            Directory containing a Legate executable
+    legate_parent_dir : Path
+        Directory containing the legate Python module, i.e. if given
+        '/path/to/legate/__init__.py', legate_dir is '/path/to'.
 
 
     Returns
-        Path or None
-
+    -------
+    Path or None
     """
 
     def get_legate_arch() -> str | None:
@@ -137,13 +159,30 @@ def get_legate_build_dir(legate_dir: Path) -> Path | None:
                 return path_parts[0]
         return None
 
-    # If using a local non-scikit-build CMake build dir, read
-    # Legion_BINARY_DIR and Legion_SOURCE_DIR from CMakeCache.txt
     legate_arch = get_legate_arch()
     if legate_arch is None:
-        return None
+        from ..install_info import LEGATE_ARCH
 
-    legate_arch_dir = legate_dir / legate_arch
+        legate_arch = LEGATE_ARCH
+        import legate
+
+        # User has LEGATE_ARCH undefined, but we may yet still be an editable
+        # installation.
+        if not is_legate_path_in_src_tree(legate_parent_dir / legate.__name__):
+            # not an editable install
+            return None
+
+        # We have an editable install, only now is it safe to consult the
+        # variable. We cannot do it above because we needed to make sure we
+        # weren't in fully-installed-mode
+        from ..install_info import LEGATE_ARCH
+
+        legate_arch = LEGATE_ARCH
+
+    # legate_parent_dir is either <PREFIX>/lib/python<version>/site-packages or
+    # $LEGATE_DIR/src/python. If the latter, then the arch dir will be up 2 and
+    # into legate_arch.
+    legate_arch_dir = legate_parent_dir.parents[1] / legate_arch
     skbuild_dir = legate_arch_dir / "_skbuild"
     if not skbuild_dir.exists():
         cmake_build_dir = legate_arch_dir / "cmake_build"
@@ -203,41 +242,64 @@ def get_legate_paths() -> LegatePaths:
 
     Returns
     -------
-        LegatePaths
+    LegatePaths
 
+    Notes
+    -----
+    This function may be called in 1 of 3 scenarios:
+    1. The python libraries are not installed, and this is called
+       (transitively) from e.g. test.py.
+    2. The python libraries are regularly installed.
+    3. The python libraries are installed 'editable' mode.
     """
     import legate
 
-    legate_dir = Path(legate.__path__[0]).parent
-    legate_build_dir = get_legate_build_dir(legate_dir)
+    legate_mod_dir = Path(legate.__path__[0])
+    legate_mod_parent = legate_mod_dir.parent
+    legate_build_dir = get_legate_build_dir(legate_mod_parent)
 
     if legate_build_dir is None:
-        if (legate_dir / ".git").exists():
-            # we are in the source repository, but have neither configured nor
-            # installed the libraries. Most of these paths are meaningless, but
-            # let's at least fill out the right bind_sh_path.
-            bind_sh_path = legate_dir / "bind.sh"
+        import sysconfig
+
+        # If legate_build_dir is None, then we are either dealing with an
+        # installed version of legate or we may have been called from
+        # test.py. legate_mod_dir is either
+        # <PREFIX>/lib/python<version>/site-packages/legate, or
+        # $LEGATE_DIR/src/python/legate.
+        site_package_dir_name = Path(sysconfig.get_paths()["purelib"]).name
+        if is_legate_path_in_src_tree(legate_mod_dir):
+            # we are in the source repository, and legate_mod_dir =
+            # src/python/legate, but have neither configured nor installed the
+            # libraries. Most of these paths are meaningless, but let's at
+            # least fill out the right bind_sh_path.
+            bind_sh_path = legate_mod_dir.parents[2] / "bind.sh"
             legate_lib_path = Path("this_path_does_not_exist")
             assert not legate_lib_path.exists()
-        else:
+        elif legate_mod_parent.name == site_package_dir_name:
             # It's possible we are in an installed library, in which case
-            # legate_dir is probably
+            # legate_mod_dir is probably
             # <PREFIX>/lib/python<version>/site-packages/legate. In this case,
             # bind.sh and the libs are under <PREFIX>/bin/bind.sh and
             # <PREFIX>/lib respectively.
-            prefix_dir = legate_dir.parents[2]
+            prefix_dir = legate_mod_dir.parents[3]
             bind_sh_path = prefix_dir / "bin" / "bind.sh"
             legate_lib_path = prefix_dir / "lib"
             assert legate_lib_path.exists() and legate_lib_path.is_dir()
+        else:
+            raise RuntimeError(
+                f"Unhandled legate module install location: {legate_mod_dir}"
+            )
 
         assert bind_sh_path.exists() and bind_sh_path.is_file()
         return LegatePaths(
-            legate_dir=legate_dir,
+            legate_dir=legate_mod_dir,
             legate_build_dir=legate_build_dir,
             bind_sh_path=bind_sh_path,
             legate_lib_path=legate_lib_path,
         )
 
+    # If build_dir is not None, then we almost certainly have an editable
+    # install, or are being called by test.py
     cmake_cache_txt = legate_build_dir / "CMakeCache.txt"
 
     legate_source_dir = Path(
@@ -249,10 +311,10 @@ def get_legate_paths() -> LegatePaths:
     )
 
     return LegatePaths(
-        legate_dir=legate_dir,
+        legate_dir=legate_mod_dir,
         legate_build_dir=legate_build_dir,
         bind_sh_path=legate_source_dir / "bind.sh",
-        legate_lib_path=legate_binary_dir / "lib",
+        legate_lib_path=legate_binary_dir / "src" / "cpp" / "lib",
     )
 
 
@@ -321,11 +383,11 @@ def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
         )
 
     if (legate_build_dir := legate_paths.legate_build_dir) is None:
-        legate_build_dir = get_legate_build_dir(legate_paths.legate_dir)
+        legate_build_dir = get_legate_build_dir(legate_paths.legate_dir.parent)
 
     # If no local build dir found, assume legate installed into the python env
     if legate_build_dir is None:
-        return installed_legion_paths(legate_paths.legate_dir.parents[2])
+        return installed_legion_paths(legate_paths.legate_dir.parents[3])
 
     # If a legate build dir was found, read `Legion_SOURCE_DIR` and
     # `Legion_BINARY_DIR` from in CMakeCache.txt, return paths into the source

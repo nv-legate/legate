@@ -875,7 +875,8 @@ if(NOT Legion_NETWORKS)
 endif()
 
 add_custom_target(generate_install_info_py ALL
-                  COMMAND ${CMAKE_COMMAND} -DLegion_NETWORKS="${Legion_NETWORKS}"
+                  COMMAND ${CMAKE_COMMAND} -DLEGATE_ARCH="${LEGATE_ARCH}"
+                          -DLegion_NETWORKS="${Legion_NETWORKS}"
                           -DGASNet_CONDUIT="${GASNet_CONDUIT}"
                           -DLegion_USE_CUDA="${Legion_USE_CUDA}"
                           -DLegion_USE_OpenMP="${Legion_USE_OpenMP}"

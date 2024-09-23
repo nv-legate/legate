@@ -11,6 +11,8 @@
 
 def get_libpath(lib_base_name: str, full_lib_name: str) -> str: ...
 
+LEGATE_ARCH: str
+
 libpath: str
 
 networks: list[str]
