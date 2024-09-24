@@ -214,13 +214,16 @@ void handle_return_values(const Task& task,
                                      const Legion::UntypedDeferredValue& buf) {
     const auto size = scal->storage_size();
     auto* ptr       = AccessorRO<std::int8_t, 1>{buf, size}.ptr(0);
-    auto fut =
-      Legion::Future::from_untyped_pointer(ptr,
-                                           size,
-                                           // Don't take ownership because Legion already "owns" the
-                                           // deferred value, we wouldn't want to double-free it.
-                                           false,
-                                           task.provenance().data());
+    auto fut        = Legion::Future::from_untyped_pointer(
+      ptr,
+      size,
+      // Don't take ownership because Legion already "owns" the
+      // deferred value, we wouldn't want to double-free it.
+      false,
+      // task.provenance() is a ZStringView
+      task.provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
+    );
+    static_assert(std::is_same_v<std::decay_t<decltype(task.provenance())>, ZStringView>);
 
     scal->set_future(std::move(fut));
   };

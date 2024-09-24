@@ -253,7 +253,9 @@ class InternalSharedPtr {
             typename D = detail::SharedPtrDefaultDelete<T, U>,
             typename A = std::allocator<U>,
             typename   = std::enable_if_t<traits::detail::is_ptr_compat_v<U, element_type>>>
-  void reset(U* ptr, D deleter = D{}, A allocator = A{});
+  void reset(U* ptr,
+             D deleter   = D{},
+             A allocator = A{});  // NOLINT(performance-unnecessary-value-param)
 
   // Observers
   [[nodiscard]] element_type& operator[](std::ptrdiff_t idx) noexcept;
@@ -405,9 +407,18 @@ bool operator>=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept;
 template <typename T>
 class EnableSharedFromThis {
  protected:
+  // clang-tidy considers any class which takes a template parameter and does not directly do
+  // anythng with it to be a CRTP class. And a common idiom for CRTP base classes is that they
+  // should not be constructible on their own, so clang-tidy warns that we should make the ctor
+  // private and friend the derived class. But we already limit the constructibility of this
+  // class by making it protected, and we don't want to friend derived and give it access to
+  // weak_this_.
+  //
+  // NOLINTBEGIN(bugprone-crtp-constructor-accessibility)
   constexpr EnableSharedFromThis() noexcept = default;
   constexpr EnableSharedFromThis(const EnableSharedFromThis&) noexcept;
   constexpr EnableSharedFromThis& operator=(const EnableSharedFromThis&) noexcept;
+  // NOLINTEND(bugprone-crtp-constructor-accessibility)
 
  public:
   using weak_type         = InternalWeakPtr<T>;

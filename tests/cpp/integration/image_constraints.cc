@@ -21,13 +21,13 @@ namespace image_constraints {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 class Config {
  public:
   static constexpr std::string_view LIBRARY_NAME = "test_image_constraints";
   static void registration_callback(legate::Library library);
 };
-
-namespace {
 
 constexpr std::int32_t TEST_MAX_DIM = 3;
 
@@ -38,11 +38,9 @@ constexpr std::int32_t TEST_MAX_DIM = 3;
   return log;
 }
 
-}  // namespace
-
 enum TaskIDs : std::uint8_t {
   INIT_FUNC    = 0,
-  IMAGE_TESTER = INIT_FUNC + TEST_MAX_DIM * 2,
+  IMAGE_TESTER = INIT_FUNC + (TEST_MAX_DIM * 2),
 };
 
 template <std::int32_t DIM>
@@ -60,7 +58,7 @@ legate::Point<DIM> delinearize(std::size_t index,
 template <std::int32_t DIM, bool RECT>
 struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RECT>> {
   static constexpr std::int32_t TASK_ID =
-    INIT_FUNC + static_cast<std::int32_t>(RECT) * TEST_MAX_DIM + DIM;
+    INIT_FUNC + (static_cast<std::int32_t>(RECT) * TEST_MAX_DIM) + DIM;
 
   struct InitializeRects {
     template <std::int32_t TGT_DIM>
@@ -144,7 +142,7 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
 template <std::int32_t DIM, bool RECT>
 struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
   static constexpr std::int32_t TASK_ID =
-    IMAGE_TESTER + static_cast<std::int32_t>(RECT) * TEST_MAX_DIM + DIM;
+    IMAGE_TESTER + (static_cast<std::int32_t>(RECT) * TEST_MAX_DIM) + DIM;
 
   struct CheckRects {
     template <std::int32_t TGT_DIM>
@@ -260,7 +258,7 @@ void initialize_function(const legate::LogicalStore& func,
   auto task    = runtime->create_task(
     context,
     legate::LocalTaskID{static_cast<std::int64_t>(INIT_FUNC) +
-                        static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim()});
+                        (static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM) + func.dim()});
   auto part = task.declare_partition();
   task.add_output(func, part);
   task.add_scalar_arg(legate::Scalar{range_extents});
@@ -282,7 +280,7 @@ void check_image(const legate::LogicalStore& func,
   auto task    = runtime->create_task(
     context,
     legate::LocalTaskID{static_cast<std::int64_t>(IMAGE_TESTER) +
-                        static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM + func.dim()});
+                        (static_cast<std::int32_t>(is_rect) * TEST_MAX_DIM) + func.dim()});
   auto part_domain = task.declare_partition();
   auto part_range  = task.declare_partition();
 
@@ -326,7 +324,7 @@ void test_invalid()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto create_task = [&](auto func, auto range) {
+  auto create_task = [&](auto&& func, auto&& range) {
     auto task = runtime->create_task(
       context, legate::LocalTaskID{static_cast<std::int64_t>(IMAGE_TESTER) + func.dim()});
     auto part_domain = task.declare_partition();
@@ -353,6 +351,8 @@ void test_invalid()
     EXPECT_THROW(runtime->submit(std::move(task)), std::runtime_error);
   }
 }
+
+}  // namespace
 
 TEST_P(Valid, 1D)
 {

@@ -26,8 +26,6 @@ namespace {
 
 constexpr std::string_view LIBRARY_NAME = "field_reuse";
 
-}  // namespace
-
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -43,6 +41,8 @@ void check_field_is_new(Legion::FieldID fid)
   unique_fields.insert(fid);
   EXPECT_EQ(unique_fields.size(), prev_size + 1);
 }
+
+}  // namespace
 
 TEST_F(Integration, FieldReuse)
 {

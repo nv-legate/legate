@@ -25,8 +25,6 @@ namespace {
 
 constexpr std::string_view EXN_MSG = "This must be caught on the caller side";
 
-}  // namespace
-
 // NOLINTBEGIN(readability-magic-numbers)
 
 class WriteFn {
@@ -333,9 +331,18 @@ std::vector<legate::Scalar> generate_reduction_results()
 class CreateZeroFn {
  public:
   template <legate::Type::Code CODE>
-  legate::Scalar operator()()
+  legate::Scalar operator()() const
   {
-    return legate::Scalar{legate::type_of_t<CODE>{0}};
+    // clang-tidy bug:
+    //
+    // error: C-style casts are discouraged; use static_cast
+    // [google-readability-casting,-warnings-as-errors]
+    // 336 |     return legate::Scalar{legate::type_of_t<CODE>{0}};
+    //     |                                             ^
+    //     |                                             static_cast<>( )
+    //
+    // Clearly there is no C-style cast here...
+    return legate::Scalar{legate::type_of_t<CODE>{0}};  // NOLINT(google-readability-casting)
   }
 };
 
@@ -352,7 +359,7 @@ std::vector<legate::LogicalStore> create_stores(const std::vector<legate::Scalar
   result.reserve(scalars.size());
 
   for (auto&& [idx, scalar] : legate::detail::enumerate(scalars)) {
-    auto store = runtime->create_store(legate::Shape{legate::full(idx % 3 + 1, uint64_t{1})},
+    auto store = runtime->create_store(legate::Shape{legate::full((idx % 3) + 1, uint64_t{1})},
                                        scalar.type(),
                                        true /*optimize_scalar*/);
     runtime->issue_fill(store, create_zero(scalar.type()));
@@ -361,6 +368,8 @@ std::vector<legate::LogicalStore> create_stores(const std::vector<legate::Scalar
 
   return result;
 }
+
+}  // namespace
 
 TEST_F(MultiScalarOut, WriteAuto)
 {

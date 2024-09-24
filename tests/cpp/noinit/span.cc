@@ -19,6 +19,8 @@ namespace span_test {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 using SpanUnit = DefaultFixture;
 
 constexpr bool BOOL_VALUE            = true;
@@ -48,7 +50,7 @@ const complex<double> COMPLEX_DOUBLE_VALUE3{10, 11};
 constexpr std::uint32_t DATA_SIZE = 3;
 
 template <typename T>
-void create(T value1, T value2, T value3)
+void create(const T& value1, const T& value2, const T& value3)
 {
   const auto data = std::array<T, DATA_SIZE>{value1, value2, value3};
   const auto span = legate::Span<const T>{data.data(), DATA_SIZE};
@@ -64,6 +66,8 @@ void create(T value1, T value2, T value3)
   EXPECT_EQ(span[0], value1);
   EXPECT_EQ(span[DATA_SIZE - 1], value3);
 }
+
+}  // namespace
 
 TEST_F(SpanUnit, Create)
 {

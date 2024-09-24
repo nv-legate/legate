@@ -19,9 +19,11 @@ namespace delinearize {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 enum TaskIDs : std::uint8_t {
-  ARANGE = 0,
-  COPY   = 1,
+  ARANGE,
+  COPY,
 };
 
 struct Arange : public legate::LegateTask<Arange> {
@@ -94,9 +96,11 @@ void test_delinearize()
   auto shape = p_out.shape<3>();
   for (legate::PointInRectIterator<3> it{shape}; it.valid(); ++it) {
     auto p = *it;
-    EXPECT_EQ(acc[p], 2 * p[1] + p[2]);
+    EXPECT_EQ(acc[p], (2 * p[1]) + p[2]);
   }
 }
+
+}  // namespace
 
 TEST_F(Delinearize, All) { test_delinearize(); }
 

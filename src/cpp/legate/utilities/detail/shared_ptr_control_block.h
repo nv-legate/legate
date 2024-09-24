@@ -77,6 +77,7 @@ class SeparateControlBlock final : public ControlBlockBase {
 
   SeparateControlBlock() = delete;
 
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   SeparateControlBlock(value_type* ptr, deleter_type deleter, allocator_type allocator) noexcept;
 
   void destroy_object() noexcept override;
@@ -126,6 +127,7 @@ class InplaceControlBlock final : public ControlBlockBase {
   InplaceControlBlock() = delete;
 
   template <typename... Args>
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   explicit InplaceControlBlock(allocator_type allocator, Args&&... args);
 
   void destroy_object() noexcept override;

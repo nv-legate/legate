@@ -19,6 +19,8 @@ namespace req_analyzer {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 struct Tester : public legate::LegateTask<Tester> {
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
@@ -78,6 +80,8 @@ void test_isomorphic_transformed_stores()
   task.add_output(promoted2);
   runtime->submit(std::move(task));
 }
+
+}  // namespace
 
 TEST_F(ReqAnalyzer, InoutStore) { test_inout_store(); }
 

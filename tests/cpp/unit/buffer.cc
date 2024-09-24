@@ -23,8 +23,6 @@ namespace {
 
 constexpr auto MAX_ALIGNMENT = 16;
 
-}  // namespace
-
 struct BufferParams {
   std::int32_t dim;
   std::uint64_t bytes;
@@ -106,6 +104,8 @@ void test_buffer(std::int32_t dim,
                      true, legate::int32(), legate::uint64(), legate::uint64(), legate::uint64())});
   runtime->submit(std::move(task));
 }
+
+}  // namespace
 
 TEST_F(BufferUnit, CreateBuffer)
 {

@@ -176,7 +176,7 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool co
     transform.matrix[idx] = 0;
   }
   for (std::int32_t idx = 0; idx < ndim; ++idx) {
-    transform.matrix[ndim * idx + idx] = static_cast<Legion::coord_t>(strides_[idx]);
+    transform.matrix[(ndim * idx) + idx] = static_cast<Legion::coord_t>(strides_[idx]);
   }
 
   auto extent = detail::to_domain(tile_shape_);

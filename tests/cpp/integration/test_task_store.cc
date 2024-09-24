@@ -24,6 +24,8 @@ namespace test_task_store {
 //
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 enum class StoreType : std::uint8_t {
   NORMAL_STORE  = 0,
   UNBOUND_STORE = 1,
@@ -35,8 +37,6 @@ enum class TaskDataMode : std::uint8_t {
   OUTPUT    = 1,
   REDUCTION = 2,
 };
-
-namespace {
 
 constexpr std::int32_t INT_VALUE1  = 123;
 constexpr std::int32_t INT_VALUE2  = 20;
@@ -73,8 +73,6 @@ constexpr std::int32_t SIMPLE_TASK = 0;
 
   return map;
 }
-
-}  // namespace
 
 template <std::int32_t DIM>
 class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
@@ -513,7 +511,7 @@ void manual_task_normal_reduction(const legate::LogicalStore& store,
   runtime->submit(std::move(task));
 
   auto multiple       = red_part_flag ? 1 : launch_shape.volume();
-  auto expected_value = in_value1 + in_value2 * multiple;
+  auto expected_value = in_value1 + (in_value2 * multiple);
   dim_dispatch(
     static_cast<int>(store.dim()), VerifyOutputBody{}, store.get_physical_store(), expected_value);
 }
@@ -690,10 +688,12 @@ void manual_task_scalar_reduction(const legate::LogicalStore& store,
 
   runtime->submit(std::move(task));
 
-  auto expected_value = in_value1 + in_value2 * launch_shape.volume();
+  auto expected_value = in_value1 + (in_value2 * launch_shape.volume());
   dim_dispatch(
     static_cast<int>(store.dim()), VerifyOutputBody{}, store.get_physical_store(), expected_value);
 }
+
+}  // namespace
 
 class AutoTaskNormal
   : public TaskStoreTests,

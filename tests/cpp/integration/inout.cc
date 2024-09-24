@@ -23,8 +23,6 @@ namespace {
 
 constexpr std::string_view LIBRARY_NAME = "test_inout";
 
-}  // namespace
-
 class TesterMapper : public legate::mapping::Mapper {
   legate::mapping::TaskTarget task_target(
     const legate::mapping::Task& /*task*/,
@@ -119,10 +117,12 @@ void test_inout()
     auto shape = p_out.shape<2>();
     for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
       auto p = *it;
-      EXPECT_EQ(acc[p], (p[0] + 1) + (p[1] + 1) * 1000);
+      EXPECT_EQ(acc[p], (p[0] + 1) + ((p[1] + 1) * 1000));
     }
   }
 }
+
+}  // namespace
 
 TEST_F(InOut, All) { test_inout(); }
 

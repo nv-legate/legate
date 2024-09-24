@@ -36,8 +36,6 @@ namespace {
 constexpr std::size_t TILE_SIZE    = 5;
 constexpr std::uint64_t INIT_VALUE = 10;
 
-}  // namespace
-
 class AccessStoreFn {
  public:
   template <legate::Type::Code CODE>
@@ -121,6 +119,8 @@ void test_sysmem(void* ptr,
   test_access_by_task<T>(ext_alloc, value);
 }
 
+}  // namespace
+
 TEST_F(IndexAttach, CPU)
 {
   constexpr std::int64_t VAL1 = 42;
@@ -133,12 +133,12 @@ TEST_F(IndexAttach, CPU)
   auto ext_alloc1 = legate::ExternalAllocation::create_sysmem(alloc1.data(), BYTES);
   auto ext_alloc2 = legate::ExternalAllocation::create_sysmem(alloc2.data(), BYTES);
 
-  auto [store, _] =
-    runtime->create_store(legate::Shape{TILE_SIZE * 2 * runtime->node_count()},
-                          legate::tuple<std::uint64_t>{TILE_SIZE},
-                          legate::int64(),
-                          {{ext_alloc1, legate::tuple<std::uint64_t>{runtime->node_id() * 2}},
-                           {ext_alloc2, legate::tuple<std::uint64_t>{runtime->node_id() * 2 + 1}}});
+  auto [store, _] = runtime->create_store(
+    legate::Shape{TILE_SIZE * 2 * runtime->node_count()},
+    legate::tuple<std::uint64_t>{TILE_SIZE},
+    legate::int64(),
+    {{ext_alloc1, legate::tuple<std::uint64_t>{runtime->node_id() * 2}},
+     {ext_alloc2, legate::tuple<std::uint64_t>{(runtime->node_id() * 2) + 1}}});
 
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<std::int64_t, 1>();
@@ -248,6 +248,8 @@ TEST_F(IndexAttach, NegativeAttach)
   }
 }
 
+namespace {
+
 template <typename T>
 void do_test(T value)
 {
@@ -256,6 +258,8 @@ void do_test(T value)
 
   test_sysmem<T>(alloc.data(), value, BYTES, false);
 }
+
+}  // namespace
 
 TEST_F(IndexAttach, SysmemAccessByTask)
 {
@@ -284,6 +288,8 @@ TEST_F(IndexAttach, MutuableSysmemAccessByTask)
   std::memset(buffer, 0, BYTES);
   test_sysmem<std::uint64_t>(buffer, 0, BYTES, false, std::move(deleter));
 }
+
+namespace {
 
 void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
 {
@@ -354,6 +360,8 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
   store.detach();
 #endif
 }
+
+}  // namespace
 
 TEST_F(IndexAttach, MutableFbmemAccess)
 {

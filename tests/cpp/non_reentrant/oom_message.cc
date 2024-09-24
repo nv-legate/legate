@@ -20,6 +20,8 @@
 
 namespace oom_message {
 
+namespace {
+
 constexpr auto SMALL_SIZE    = 100;
 constexpr auto HUGE_EXPONENT = 50;
 constexpr auto HUGE_SIZE     = static_cast<std::uint64_t>(1) << HUGE_EXPONENT;  // 1 PiB
@@ -95,6 +97,8 @@ void test_oom_message()
     runtime->issue_execution_fence(/*block=*/true);
   }
 }
+
+}  // namespace
 
 TEST_F(OomMessageDeathTest, Simple)
 {

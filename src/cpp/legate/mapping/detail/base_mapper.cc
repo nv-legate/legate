@@ -281,7 +281,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   for (Domain::DomainPointIterator itr{input.domain}; itr; ++itr) {
     const auto p = key_functor->project_point(itr.p);
     const auto idx =
-      linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count + start_proc_id;
+      (linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) + start_proc_id;
 
     output.slices.emplace_back(Domain{itr.p, itr.p},
                                local_range[static_cast<std::uint32_t>(idx)],
@@ -1523,7 +1523,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     const std::uint32_t start_proc_id     = machine_desc.processor_range().low;
     const std::uint32_t total_tasks_count = linearize(lo, hi, hi) + 1;
     auto idx =
-      linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count + start_proc_id;
+      (linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) + start_proc_id;
     target_proc = local_range[idx];
   } else {
     target_proc = local_range.first();

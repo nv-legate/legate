@@ -19,6 +19,8 @@ namespace alignment_constraints {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 enum TaskIDs : std::uint8_t {
   ALIGNMENT_TESTER           = 0,
   ALIGNMENT_BROADCAST_TESTER = 3,
@@ -165,7 +167,7 @@ void test_alignment_transformed()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto launch_tester = [&](auto store1, auto store2) {
+  auto launch_tester = [&](auto&& store1, auto&& store2) {
     auto task = runtime->create_task(
       context, legate::LocalTaskID{static_cast<std::int64_t>(TRANSFORMED_TESTER) + store1.dim()});
     auto part1 = task.add_input(store1);
@@ -242,6 +244,8 @@ void test_invalid_alignment()
   task.add_constraint(legate::align(part1, part2));
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
+
+}  // namespace
 
 TEST_F(Alignment, Basic) { test_alignment(); }
 

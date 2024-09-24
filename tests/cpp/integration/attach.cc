@@ -35,8 +35,6 @@ namespace {
   return shape;
 }
 
-}  // namespace
-
 void increment_physical_store(const legate::PhysicalStore& store, std::int32_t dim)
 {
   if (dim == 1) {
@@ -145,9 +143,9 @@ int64_t* make_buffer(std::int32_t dim, bool fortran)
     for (std::size_t i = 0; i < SHAPE_2D()[0]; ++i) {
       for (std::size_t j = 0; j < SHAPE_2D()[1]; ++j) {
         if (fortran) {
-          buffer[j * SHAPE_2D()[0] + i] = counter++;
+          buffer[(j * SHAPE_2D()[0]) + i] = counter++;
         } else {
-          buffer[i * SHAPE_2D()[1] + j] = counter++;
+          buffer[(i * SHAPE_2D()[1]) + j] = counter++;
         }
       }
     }
@@ -165,9 +163,9 @@ void check_buffer(int64_t* buffer, std::int32_t dim, bool fortran, std::int64_t 
     for (std::size_t i = 0; i < SHAPE_2D()[0]; ++i) {
       for (std::size_t j = 0; j < SHAPE_2D()[1]; ++j) {
         if (fortran) {
-          EXPECT_EQ(buffer[j * SHAPE_2D()[0] + i], counter);
+          EXPECT_EQ(buffer[(j * SHAPE_2D()[0]) + i], counter);
         } else {
-          EXPECT_EQ(buffer[i * SHAPE_2D()[1] + j], counter);
+          EXPECT_EQ(buffer[(i * SHAPE_2D()[1]) + j], counter);
         }
         ++counter;
       }
@@ -228,6 +226,8 @@ void test_body(
   // after they are detached from the stores
   delete[] buffer;
 }
+
+}  // namespace
 
 TEST_P(Positive, Test)
 {

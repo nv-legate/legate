@@ -20,6 +20,7 @@
 namespace tracing_test {
 
 // NOLINTBEGIN(readability-magic-numbers)
+namespace {
 
 struct DummyTask : public legate::LegateTask<DummyTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
@@ -57,6 +58,8 @@ void launch_tasks(legate::LogicalArray& array)
 
 constexpr std::uint32_t NUM_ITER = 10;
 constexpr std::uint32_t TRACE_ID = 42;
+
+}  // namespace
 
 TEST_F(Tracing, RAII)
 {

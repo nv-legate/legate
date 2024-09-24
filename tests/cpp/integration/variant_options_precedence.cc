@@ -23,8 +23,6 @@ constexpr std::size_t REG_RETURN_SIZE         = 12;
 constexpr std::size_t DECL_RETURN_SIZE        = 34;
 constexpr std::size_t LIB_DEFAULT_RETURN_SIZE = 56;
 
-}  // namespace
-
 struct HasDeclOptions : public legate::LegateTask<HasDeclOptions> {
   static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static constexpr auto CPU_VARIANT_OPTIONS =
@@ -58,6 +56,8 @@ void check_return_size(const legate::Library& library,
 }
 
 using VariantOptionsPrecedence = DefaultFixture;
+
+}  // namespace
 
 TEST_F(VariantOptionsPrecedence, RegOptions)
 {

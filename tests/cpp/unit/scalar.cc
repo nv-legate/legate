@@ -21,6 +21,8 @@
 
 namespace scalar_test {
 
+namespace {
+
 using ScalarUnit = DefaultFixture;
 
 constexpr bool BOOL_VALUE            = true;
@@ -103,7 +105,7 @@ ScalarUnitTestDeserializer::ScalarUnitTestDeserializer(const void* args, std::si
 }
 
 template <typename T>
-void check_type(T value, legate::Type type)
+void check_type(T value, const legate::Type& type)
 {
   {
     const legate::Scalar scalar{value};
@@ -255,8 +257,7 @@ void check_pack(const legate::Scalar& scalar)
 
   ASSERT_NE(legion_buffer.get_ptr(), nullptr);
 
-  legate::detail::BaseDeserializer<ScalarUnitTestDeserializer> deserializer{
-    legion_buffer.get_ptr(), legion_buffer.get_size()};
+  ScalarUnitTestDeserializer deserializer{legion_buffer.get_ptr(), legion_buffer.get_size()};
   auto scalar_unpack = deserializer.unpack_scalar();
 
   ASSERT_EQ(scalar_unpack->type()->code, scalar.type().code());
@@ -291,6 +292,8 @@ void check_string_scalar_values()
   ASSERT_EQ(actual_values.size(), actual_value.size());
   ASSERT_EQ(*actual_values.begin(), actual_value[0]);
 }
+
+}  // namespace
 
 TEST_F(ScalarUnit, CreateWithObject)
 {
@@ -393,7 +396,7 @@ TEST_F(ScalarUnit, CreateWithString)
 
   ASSERT_EQ(scalar.type().code(), legate::Type::Code::STRING);
 
-  auto expected_size = sizeof(std::uint32_t) + sizeof(char) * input_string.size();
+  auto expected_size = sizeof(std::uint32_t) + (sizeof(char) * input_string.size());
 
   ASSERT_EQ(scalar.size(), expected_size);
   ASSERT_NE(scalar.ptr(), input_string.data());

@@ -94,7 +94,7 @@ class ElementwiseReduction : public Reduction {
 
   // This function expects to be passed mdspan objects
   template <typename State, typename Value>
-  void operator()(State state, Value value) const
+  void operator()(State&& state, Value&& value) const
   {
     LEGATE_ASSERT(state.extents() == value.extents());
 

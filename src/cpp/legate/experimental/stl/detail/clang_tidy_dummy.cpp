@@ -29,7 +29,7 @@
 // check them for us
 namespace legate::experimental::stl::detail::clang_tidy_dummy {
 
-void internal_private_do_not_call_or_you_will_be_fired() {}
+void internal_private_do_not_call_or_you_will_be_fired() {}  // NOLINT(misc-use-internal-linkage)
 
 }  // namespace legate::experimental::stl::detail::clang_tidy_dummy
 

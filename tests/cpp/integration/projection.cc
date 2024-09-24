@@ -23,8 +23,6 @@ constexpr std::uint64_t BIGGER_EXTENT = 200;
 constexpr std::uint64_t BIG_EXTENT    = 100;
 constexpr std::uint64_t SMALL_EXTENT  = 2;
 
-}  // namespace
-
 struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> {
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
@@ -115,6 +113,8 @@ void test_delinearization(const legate::LogicalArray& arr1)
   task.add_output(arr2);
   runtime->submit(std::move(task));
 }
+
+}  // namespace
 
 TEST_F(ProjectionTest, ExtraProjection1)
 {

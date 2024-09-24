@@ -24,6 +24,8 @@ namespace replicated_write_test {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 class WriterTask : public legate::LegateTask<WriterTask> {
  public:
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
@@ -268,6 +270,8 @@ void test_manual_task_with_reductions(legate::Library library,
     validate_output_inline(out_store);
   }
 }
+
+}  // namespace
 
 TEST_F(ReplicatedWrite, AutoNonScalarSingle)
 {

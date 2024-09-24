@@ -26,8 +26,6 @@ namespace {
 
 constexpr std::string_view LIBRARY_NAME = "consensus_match";
 
-}  // namespace
-
 void register_tasks()
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -40,6 +38,8 @@ struct Thing {
   std::int32_t number;
   bool operator==(const Thing& other) const { return flag == other.flag && number == other.number; }
 };
+
+}  // namespace
 
 TEST_F(Integration, ConsensusMatch)
 {

@@ -20,6 +20,8 @@
 
 namespace logicalstore_unit {
 
+namespace {
+
 using LogicalStoreUnit = DefaultFixture;
 
 // NOLINTBEGIN(readability-magic-numbers)
@@ -106,6 +108,8 @@ void test_scalar_store(T value)
     EXPECT_TRUE(temp_store.has_scalar_storage());
   }
 }
+
+}  // namespace
 
 TEST_F(LogicalStoreUnit, UnboundStoreCreation)
 {

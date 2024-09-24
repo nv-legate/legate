@@ -21,8 +21,6 @@ namespace {
 
 constexpr std::int32_t SCL_VAL = 42;
 
-}  // namespace
-
 class NormalTask : public legate::LegateTask<NormalTask> {
  public:
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
@@ -103,6 +101,8 @@ void test_manual_exception_unbound()
   auto task = create_manual_exception_unbound();
   legate::Runtime::get_runtime()->submit(std::move(task));
 }
+
+}  // namespace
 
 TEST_F(TaskMiscTest, AutoScalarOutRed) { test_auto_scalar_out_red(); }
 

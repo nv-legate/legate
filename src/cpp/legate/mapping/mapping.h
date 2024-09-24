@@ -55,16 +55,18 @@ enum class TaskTarget : std::uint8_t {
   /**
    * @brief Indicates the task be mapped to a GPU
    */
-  GPU = 1,
+  GPU,
   /**
    * @brief Indicates the task be mapped to an OpenMP processor
    */
-  OMP = 2,
+  OMP,
   /**
    * @brief Indicates the task be mapped to a CPU
    */
-  CPU = 3,
+  CPU,
 };
+static_assert(TaskTarget::GPU < TaskTarget::OMP);
+static_assert(TaskTarget::OMP < TaskTarget::CPU);
 
 std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
 
@@ -76,19 +78,19 @@ enum class StoreTarget : std::uint8_t {
   /**
    * @brief Indicates the store be mapped to the system memory (host memory)
    */
-  SYSMEM = 1,
+  SYSMEM,
   /**
    * @brief Indicates the store be mapped to the GPU framebuffer
    */
-  FBMEM = 2,
+  FBMEM,
   /**
    * @brief Indicates the store be mapped to the pinned memory for zero-copy GPU accesses
    */
-  ZCMEM = 3,
+  ZCMEM,
   /**
    * @brief Indicates the store be mapped to the host memory closest to the target CPU
    */
-  SOCKETMEM = 4,
+  SOCKETMEM,
 };
 
 std::ostream& operator<<(std::ostream& stream, const StoreTarget& target);
@@ -101,11 +103,11 @@ enum class AllocPolicy : std::uint8_t {
   /**
    * @brief Indicates the store can reuse an existing instance
    */
-  MAY_ALLOC = 1,
+  MAY_ALLOC,
   /**
    * @brief Indicates the store must be mapped to a fresh instance
    */
-  MUST_ALLOC = 2,
+  MUST_ALLOC,
 };
 
 /**
@@ -116,12 +118,12 @@ enum class InstLayout : std::uint8_t {
   /**
    * @brief Indicates the store must be mapped to an SOA instance
    */
-  SOA = 1,
+  SOA,
   /**
    * @brief Indicates the store must be mapped to an AOS instance. No different than `SOA` in a
    * store mapping for a single store
    */
-  AOS = 2,
+  AOS,
 };
 
 /**
@@ -138,16 +140,16 @@ class DimOrdering {
      * @brief Indicates the instance have C layout (i.e., the last dimension is the leading
      * dimension in the instance)
      */
-    C = 1,
+    C,
     /**
      * @brief Indicates the instance have Fortran layout (i.e., the first dimension is the leading
      * dimension instance)
      */
-    FORTRAN = 2,
+    FORTRAN,
     /**
      * @brief Indicates the order of dimensions of the instance is manually specified
      */
-    CUSTOM = 3,
+    CUSTOM,
   };
 
   /**

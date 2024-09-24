@@ -23,8 +23,6 @@ namespace {
 
 constexpr std::uint32_t NUM_TASKS = 4;
 
-}  // namespace
-
 enum TaskIDs : std::uint8_t {
   INIT  = 0,
   CHECK = 3,
@@ -39,8 +37,8 @@ struct Initializer : public legate::LegateTask<Initializer> {
     auto outputs  = context.outputs();
     for (std::uint32_t idx = 0; idx < outputs.size(); ++idx) {
       auto output = outputs.at(idx).data();
-      static_cast<void>(
-        output.create_output_buffer<int32_t, 1>(legate::Point<1>{task_idx + 10 * (idx + 1)}, true));
+      static_cast<void>(output.create_output_buffer<int32_t, 1>(
+        legate::Point<1>{task_idx + (10 * (idx + 1))}, true));
     }
   }
 };
@@ -70,7 +68,7 @@ struct Tester : public legate::LegateTask<Tester> {
     auto outputs  = context.outputs();
     for (std::uint32_t idx = 0; idx < outputs.size(); ++idx) {
       auto volume = outputs.at(idx).shape<1>().volume();
-      EXPECT_EQ(volume, task_idx + 10 * (idx + 1));
+      EXPECT_EQ(volume, task_idx + (10 * (idx + 1)));
     }
   }
 };
@@ -122,12 +120,16 @@ void test_weighted(std::uint32_t num_stores)
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   std::vector<legate::LogicalStore> stores;
+
+  stores.reserve(num_stores);
   for (std::uint32_t idx = 0; idx < num_stores; ++idx) {
     stores.push_back(runtime->create_store(legate::int32()));
   }
   initialize(runtime, library, stores);
   check(runtime, library, stores);
 }
+
+}  // namespace
 
 // Test case with single unbound store
 TEST_F(Weighted, Single) { test_weighted(1); }

@@ -19,6 +19,8 @@ namespace scalarout {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 struct Copy : public legate::LegateTask<Copy> {
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
@@ -68,6 +70,8 @@ void test_scalar_out()
   auto acc   = p_out.read_accessor<int64_t, 1>();
   EXPECT_EQ(acc[0], 123);
 }
+
+}  // namespace
 
 TEST_F(ScalarOut, All) { test_scalar_out(); }
 

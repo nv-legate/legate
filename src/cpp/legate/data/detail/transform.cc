@@ -242,7 +242,7 @@ Legion::DomainAffineTransform Shift::inverse_transform(std::int32_t in_dim) cons
   result.transform.n = in_dim;
   for (std::int32_t i = 0; i < out_dim; ++i) {
     for (std::int32_t j = 0; j < in_dim; ++j) {
-      result.transform.matrix[i * in_dim + j] = static_cast<coord_t>(i == j);
+      result.transform.matrix[(i * in_dim) + j] = static_cast<coord_t>(i == j);
     }
   }
 
@@ -335,14 +335,14 @@ Legion::DomainAffineTransform Promote::inverse_transform(std::int32_t in_dim) co
   result.transform.n = in_dim;
   for (std::int32_t i = 0; i < result.transform.m; ++i) {
     for (std::int32_t j = 0; j < result.transform.n; ++j) {
-      result.transform.matrix[i * in_dim + j] = 0;
+      result.transform.matrix[(i * in_dim) + j] = 0;
     }
   }
 
   if (out_dim > 0) {
     for (std::int32_t j = 0, i = 0; j < result.transform.n; ++j) {
       if (j != extra_dim_) {
-        result.transform.matrix[i++ * in_dim + j] = 1;
+        result.transform.matrix[(i++ * in_dim) + j] = 1;
       }
     }
   }
@@ -473,13 +473,13 @@ Legion::DomainAffineTransform Project::inverse_transform(std::int32_t in_dim) co
     result.transform.n = in_dim;
     for (std::int32_t i = 0; i < out_dim; ++i) {
       for (std::int32_t j = 0; j < in_dim; ++j) {
-        result.transform.matrix[i * in_dim + j] = 0;
+        result.transform.matrix[(i * in_dim) + j] = 0;
       }
     }
 
     for (std::int32_t i = 0, j = 0; i < out_dim; ++i) {
       if (i != dim_) {
-        result.transform.matrix[i * in_dim + j++] = 1;
+        result.transform.matrix[(i * in_dim) + j++] = 1;
       }
     }
   }
@@ -626,12 +626,12 @@ Legion::DomainAffineTransform Transpose::inverse_transform(std::int32_t in_dim) 
   result.transform.n = in_dim;
   for (std::int32_t i = 0; i < in_dim; ++i) {
     for (std::int32_t j = 0; j < in_dim; ++j) {
-      result.transform.matrix[i * in_dim + j] = 0;
+      result.transform.matrix[(i * in_dim) + j] = 0;
     }
   }
 
   for (std::int32_t j = 0; j < in_dim; ++j) {
-    result.transform.matrix[axes_[j] * in_dim + j] = 1;
+    result.transform.matrix[(axes_[j] * in_dim) + j] = 1;
   }
 
   result.offset.dim = in_dim;
@@ -806,17 +806,17 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(std::int32_t in_dim
   result.transform.n = in_dim;
   for (std::int32_t i = 0; i < out_dim; ++i) {
     for (std::int32_t j = 0; j < in_dim; ++j) {
-      result.transform.matrix[i * in_dim + j] = 0;
+      result.transform.matrix[(i * in_dim) + j] = 0;
     }
   }
 
   for (std::int32_t i = 0, j = 0; i < out_dim; ++i) {
     if (i == dim_) {
       for (auto stride : strides_) {
-        result.transform.matrix[i * in_dim + j++] = static_cast<coord_t>(stride);
+        result.transform.matrix[(i * in_dim) + j++] = static_cast<coord_t>(stride);
       }
     } else {
-      result.transform.matrix[i * in_dim + j++] = 1;
+      result.transform.matrix[(i * in_dim) + j++] = 1;
     }
   }
 

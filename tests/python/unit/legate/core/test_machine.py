@@ -27,7 +27,12 @@ class TestTaskTargetKind:
         assert set(k.name for k in TaskTarget) == {"GPU", "OMP", "CPU"}
 
     def test_values(self) -> None:
-        assert list(TaskTarget) == [1, 2, 3]
+        # Relative order is important, must match machine.h, GPU -> OMP -> CPU
+        assert list(TaskTarget) == [
+            TaskTarget.GPU,
+            TaskTarget.OMP,
+            TaskTarget.CPU,
+        ]
 
 
 class TestProcessorRange:
@@ -191,6 +196,7 @@ class TestMachine:
         assert m.only(gpu).only(gpu) == m.only(gpu)
         assert len(m.only(gpu).get_processor_range(cpu)) == 0
         assert m.only(gpu).get_processor_range(gpu) == GPU_RANGE
+        assert m.preferred_target == TaskTarget.GPU
         assert len(m.only([gpu, cpu])) == len(GPU_RANGE)
         assert len(m.only([gpu, cpu]).only(gpu)) == len(GPU_RANGE)
         assert len(m.only([gpu, cpu]).only(cpu)) == len(CPU_RANGE)

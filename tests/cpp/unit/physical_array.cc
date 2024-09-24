@@ -19,6 +19,8 @@ namespace physical_array_unit_test {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 enum class ArrayType : std::uint8_t {
   PRIMITIVE_ARRAY = 0,
   LIST_ARRAY      = 1,
@@ -865,6 +867,8 @@ void test_fill_string(bool nullable)
   test_fill_bound_string_array(nullable);
   test_fill_unbound_string_array(nullable);
 }
+
+}  // namespace
 
 TEST_F(PhysicalArrayUnit, CreatePrimitiveNonNullable) { test_primitive_array(false); }
 

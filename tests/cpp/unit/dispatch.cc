@@ -91,7 +91,7 @@ TEST_F(DispatchTest, DoubleDispatch)
 {
   for (std::size_t idx = 0; idx < PRIMITIVE_TYPE_CODE.size(); ++idx) {
     auto code               = PRIMITIVE_TYPE_CODE.at(idx);
-    auto dim                = static_cast<std::int32_t>(idx % LEGATE_MAX_DIM + 1);
+    auto dim                = static_cast<std::int32_t>((idx % LEGATE_MAX_DIM) + 1);
     DoubleDispatchData data = {static_cast<std::int32_t>(code), dim};
     legate::double_dispatch(dim, code, DoubleDispatchFn{}, data);
   }

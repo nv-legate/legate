@@ -21,11 +21,15 @@ namespace death_example {
 
 using ExampleDeathTest = DefaultFixture;
 
+namespace {
+
 void kill_process()
 {
   (void)legate::start(0, nullptr);
   std::abort();
 }
+
+}  // namespace
 
 TEST_F(ExampleDeathTest, Simple)
 {

@@ -51,6 +51,7 @@ namespace legate::detail {
 // these are caught and cannot silently produce wrong results.
 namespace CoreTask {  // NOLINT(readability-identifier-naming)
 
+// NOLINTBEGIN(readability-enum-initial-value)
 enum CoreTask : std::underlying_type_t<LocalTaskID> {  // NOLINT(performance-enum-size)
   TOPLEVEL,
   EXTRACT_SCALAR,
@@ -74,16 +75,20 @@ enum CoreTask : std::underlying_type_t<LocalTaskID> {  // NOLINT(performance-enu
   // enough so that there's enough slack.
   MAX_TASK = 512,  // must be last
 };
+// NOLINTEND(readability-enum-initial-value)
 
 }  // namespace CoreTask
 
+// NOLINTBEGIN(readability-enum-initial-value)
 enum class CoreProjectionOp : std::int32_t {
   // local id 0 always maps to the identity projection (global id 0)
   DELINEARIZE           = 2,
   FIRST_DYNAMIC_FUNCTOR = 10,
   MAX_FUNCTOR           = 3000000,
 };
+// NOLINTEND(readability-enum-initial-value)
 
+// NOLINTBEGIN(readability-enum-initial-value)
 enum class CoreShardID : std::underlying_type_t<CoreProjectionOp> {
   TOPLEVEL_TASK,
   LINEARIZE,
@@ -93,6 +98,7 @@ enum class CoreShardID : std::underlying_type_t<CoreProjectionOp> {
   MAX_FUNCTOR =
     static_cast<std::underlying_type_t<CoreProjectionOp>>(CoreProjectionOp::MAX_FUNCTOR),
 };
+// NOLINTEND(readability-enum-initial-value)
 
 namespace CoreReductionOp {  // NOLINT(readability-identifier-naming)
 
@@ -108,6 +114,7 @@ enum class CoreSemanticTag : Legion::SemanticTag {  // NOLINT(performance-enum-s
   ALLOC_INFO = 1,
 };
 
+// NOLINTBEGIN(readability-enum-initial-value)
 enum class CoreTransform : std::int8_t {
   INVALID = -1,
   SHIFT   = 100,
@@ -116,6 +123,7 @@ enum class CoreTransform : std::int8_t {
   TRANSPOSE,
   DELINEARIZE,
 };
+// NOLINTEND(readability-enum-initial-value)
 
 enum class CoreMappingTag : Legion::MappingTagID {  // NOLINT(performance-enum-size)
   // 0 is reserved
@@ -125,6 +133,6 @@ enum class CoreMappingTag : Legion::MappingTagID {  // NOLINT(performance-enum-s
   JOIN_EXCEPTION,
 };
 
-enum class TaskPriority : std::int8_t { DEFAULT = 0 };
+enum class TaskPriority : std::int8_t { DEFAULT };
 
 }  // namespace legate::detail

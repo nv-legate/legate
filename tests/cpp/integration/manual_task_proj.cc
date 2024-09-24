@@ -22,25 +22,23 @@ namespace {
 constexpr const std::size_t DIM_EXTENT      = 32;
 constexpr const std::size_t N_TILES_PER_DIM = 2;
 
-}  // namespace
-
 struct ProjTesterTask : public legate::LegateTask<ProjTesterTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{1};
   static void cpu_variant(legate::TaskContext context)
   {
-    auto task_index = context.get_task_index();
-    auto row_wise   = context.input(0).shape<2>();
-    auto col_wise   = context.input(1).shape<2>();
+    auto&& task_index = context.get_task_index();
+    auto row_wise     = context.input(0).shape<2>();
+    auto col_wise     = context.input(1).shape<2>();
 
     EXPECT_EQ(row_wise.lo[0], DIM_EXTENT / N_TILES_PER_DIM * task_index[0]);
-    EXPECT_EQ(row_wise.hi[0], DIM_EXTENT / N_TILES_PER_DIM * (task_index[0] + 1) - 1);
+    EXPECT_EQ(row_wise.hi[0], (DIM_EXTENT / N_TILES_PER_DIM * (task_index[0] + 1)) - 1);
     EXPECT_EQ(row_wise.lo[1], int64_t{0});
     EXPECT_EQ(row_wise.hi[1], int64_t{DIM_EXTENT - 1});
 
     EXPECT_EQ(col_wise.lo[0], int64_t{0});
     EXPECT_EQ(col_wise.hi[0], int64_t{DIM_EXTENT - 1});
     EXPECT_EQ(col_wise.lo[1], DIM_EXTENT / N_TILES_PER_DIM * task_index[1]);
-    EXPECT_EQ(col_wise.hi[1], DIM_EXTENT / N_TILES_PER_DIM * (task_index[1] + 1) - 1);
+    EXPECT_EQ(col_wise.hi[1], (DIM_EXTENT / N_TILES_PER_DIM * (task_index[1] + 1)) - 1);
   }
 };
 
@@ -54,6 +52,8 @@ class Config {
 };
 
 class ManualTaskWithProj : public RegisterOnceFixture<Config> {};
+
+}  // namespace
 
 TEST_F(ManualTaskWithProj, All)
 {

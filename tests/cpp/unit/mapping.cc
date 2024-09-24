@@ -19,6 +19,8 @@
 
 namespace unit {
 
+namespace {
+
 using DimOrderingTest              = DefaultFixture;
 using InstanceMappingPolicyTest    = DefaultFixture;
 using InstanceMappingPolicySubsume = DefaultFixture;
@@ -86,6 +88,8 @@ void check_subsume(const legate::mapping::InstanceMappingPolicy& policy_a,
 
   ASSERT_EQ(policy_a.subsumes(policy_b), expect_result);
 }
+
+}  // namespace
 
 TEST_F(DimOrderingTest, Create)
 {

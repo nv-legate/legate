@@ -40,6 +40,7 @@
 #include "legate/operation/detail/unmap_and_detach.h"
 #include "legate/partitioning/detail/partitioner.h"
 #include "legate/partitioning/detail/partitioning_tasks.h"
+#include "legate/runtime/detail/argument_parsing.h"
 #include "legate/runtime/detail/config.h"
 #include "legate/runtime/detail/library.h"
 #include "legate/runtime/detail/shard.h"
@@ -926,7 +927,12 @@ Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
 
 void Runtime::remap_physical_region(Legion::PhysicalRegion pr)
 {
-  get_legion_runtime()->remap_region(get_legion_context(), std::move(pr), get_provenance().data());
+  get_legion_runtime()->remap_region(
+    get_legion_context(),
+    std::move(pr),
+    get_provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
+  );
+  static_assert(std::is_same_v<decltype(get_provenance()), ZStringView>);
 }
 
 void Runtime::unmap_physical_region(Legion::PhysicalRegion pr)
@@ -945,7 +951,13 @@ Legion::Future Runtime::detach(const Legion::PhysicalRegion& physical_region,
 {
   LEGATE_CHECK(physical_region.exists() && !physical_region.is_mapped());
   return get_legion_runtime()->detach_external_resource(
-    get_legion_context(), physical_region, flush, unordered, get_provenance().data());
+    get_legion_context(),
+    physical_region,
+    flush,
+    unordered,
+    get_provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
+  );
+  static_assert(std::is_same_v<decltype(get_provenance()), ZStringView>);
 }
 
 Legion::Future Runtime::detach(const Legion::ExternalResources& external_resources,
@@ -954,7 +966,13 @@ Legion::Future Runtime::detach(const Legion::ExternalResources& external_resourc
 {
   LEGATE_CHECK(external_resources.exists());
   return get_legion_runtime()->detach_external_resources(
-    get_legion_context(), external_resources, flush, unordered, get_provenance().data());
+    get_legion_context(),
+    external_resources,
+    flush,
+    unordered,
+    get_provenance().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
+  );
+  static_assert(std::is_same_v<decltype(get_provenance()), ZStringView>);
 }
 
 bool Runtime::consensus_match_required() const
@@ -1555,8 +1573,6 @@ void handle_realm_default_args()
 
 }  // namespace
 
-extern void handle_legate_args(std::string_view legate_config);
-
 /*static*/ std::int32_t Runtime::start(std::int32_t argc, char** argv)
 {
   // Must populate this before we handle Legate args as it expects to read its values.
@@ -1838,9 +1854,11 @@ void register_legate_core_tasks(Library* core_lib)
   comm::register_tasks(core_lib);
 }
 
-#define BUILTIN_REDOP_ID(OP, TYPE_CODE)                                          \
-  static_cast<GlobalRedopID>(LEGION_REDOP_BASE +                                 \
-                             static_cast<std::int64_t>(OP) * LEGION_TYPE_TOTAL + \
+namespace {
+
+#define BUILTIN_REDOP_ID(OP, TYPE_CODE)                                            \
+  static_cast<GlobalRedopID>(LEGION_REDOP_BASE +                                   \
+                             (static_cast<std::int64_t>(OP) * LEGION_TYPE_TOTAL) + \
                              static_cast<std::int64_t>(TYPE_CODE))
 
 #define RECORD(OP, TYPE_CODE)                           \
@@ -1894,6 +1912,8 @@ void register_builtin_reduction_ops()
 #undef RECORD_INT
 #undef RECORD
 #undef BUILTIN_REDOP_ID
+
+}  // namespace
 
 extern void register_exception_reduction_op(const Library* context);
 

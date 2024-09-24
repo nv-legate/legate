@@ -39,9 +39,11 @@ namespace legate::detail {
 
 template <typename Deserializer>
 class BaseDeserializer {
- public:
   BaseDeserializer(const void* args, std::size_t arglen);
 
+  friend Deserializer;
+
+ public:
   template <typename T>
   [[nodiscard]] T unpack();
 

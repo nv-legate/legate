@@ -74,7 +74,7 @@ namespace legate {
  *
  */
 template <typename T>
-class LegateTask {
+class LegateTask {  // NOLINT(bugprone-crtp-constructor-accessibility)
  public:
   // Exports the base class so we can access it via subclass T
   using BASE = LegateTask<T>;

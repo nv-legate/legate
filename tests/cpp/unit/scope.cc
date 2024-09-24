@@ -30,12 +30,12 @@ constexpr legate::ExceptionMode MODE2 = legate::ExceptionMode::IGNORED;
 constexpr std::string_view MAGIC_PROVENANCE1 = "42";
 constexpr std::string_view MAGIC_PROVENANCE2 = "43";
 
-}  // namespace
-
 legate::mapping::Machine remove_last_proc(const legate::mapping::Machine& machine)
 {
   return machine.slice(0, std::max(std::uint32_t{1}, machine.count() - 1));
 }
+
+}  // namespace
 
 TEST_F(ScopeTest, BasicPriority)
 {

@@ -25,8 +25,6 @@ namespace {
 
 constexpr std::size_t SIZE = 10;
 
-}  // namespace
-
 struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> {
   static constexpr auto TASK_ID = legate::LocalTaskID{};
 
@@ -105,6 +103,8 @@ void test_cpu_communicator_manual(std::int32_t ndim)
   task.add_communicator("cpu");
   runtime->submit(std::move(task));
 }
+
+}  // namespace
 
 // Test case with single unbound store
 // TODO(jfaibussowit)

@@ -86,9 +86,19 @@ class Scalar {
   template <typename T,
             // Note the SFINAE, we want std::string (or thereto convertible types) to use the
             // string_view ctor.
-            typename =
-              std::enable_if_t<!std::is_convertible_v<T, std::string> &&
-                               !std::is_same_v<std::decay_t<T>, InternalSharedPtr<detail::Scalar>>>>
+            typename = std::enable_if_t<
+              // clang-tidy bug:
+              //
+              // error: use c++14 style type templates [modernize-type-traits,-warnings-as-errors]
+              // 90 |               std::enable_if_t<!std::is_convertible_v<T, std::string> &&
+              //    |                                                       ^
+              //    |                                                       _t
+              //
+              // Clearly we already do this.
+              !std::is_convertible_v<T, std::string> &&  // NOLINT(modernize-type-traits)
+              !std::is_same_v<std::decay_t<T>,           // NOLINT(modernize-type-traits
+                              InternalSharedPtr<detail::Scalar>>>>
+
   explicit Scalar(T value);
 
   /**

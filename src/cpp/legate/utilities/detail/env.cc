@@ -46,8 +46,9 @@ template <typename T>
     throw std::invalid_argument{"Environment variable name is empty"};
   }
 
-  const auto _      = ENVIRONMENT_LOCK();
-  const char* value = std::getenv(variable.data());
+  const auto _ = ENVIRONMENT_LOCK();
+  const char* value =
+    std::getenv(variable.data());  // NOLINT(bugprone-suspicious-stringview-data-usage)
 
   if (!value) {
     return std::nullopt;
@@ -149,7 +150,9 @@ void EnvironmentVariableBase::set_(std::string_view value, bool overwrite) const
 
     // Reset this here so that we make sure any modification originates from setenv()
     errno = 0;
-    return ::setenv(data(), value.data(), overwrite ? 1 : 0);
+    return ::setenv(data(),
+                    value.data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
+                    overwrite ? 1 : 0);
   }();
   if (LEGATE_UNLIKELY(ret)) {
     throw std::runtime_error{fmt::format("setenv({}, {}) failed with exit code: {}: {}",

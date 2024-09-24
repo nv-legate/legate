@@ -10,6 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "legate/utilities/abort.h"
+
 #include "legate/comm/coll.h"
 #include "legate/utilities/typedefs.h"
 

@@ -20,9 +20,10 @@
 namespace scale_constraints {
 
 // NOLINTBEGIN(readability-magic-numbers)
+namespace {
 
 enum TaskIDs : std::uint8_t {
-  SCALE_TESTER = 0,
+  SCALE_TESTER,
 };
 
 template <std::int32_t DIM>
@@ -122,6 +123,8 @@ void test_invalid()
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
 }
+
+}  // namespace
 
 TEST_F(ScaleConstraint, 1D) { test_scale({{3}, {10}, {29}}); }
 

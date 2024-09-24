@@ -40,7 +40,9 @@ class SharedPtr {
             typename Deleter,
             typename Alloc = std::allocator<U>,
             typename       = std::enable_if_t<traits::detail::is_ptr_compat_v<U, element_type>>>
-  SharedPtr(U* ptr, Deleter deleter, Alloc allocator = Alloc{});
+  SharedPtr(U* ptr,
+            Deleter deleter,
+            Alloc allocator = Alloc{});  // NOLINT(performance-unnecessary-value-param)
   template <typename U,
             typename = std::enable_if_t<traits::detail::is_ptr_compat_v<U, element_type>>>
   explicit SharedPtr(U* ptr);
@@ -121,7 +123,9 @@ class SharedPtr {
             typename D = detail::SharedPtrDefaultDelete<T, U>,
             typename A = std::allocator<U>,
             typename   = std::enable_if_t<traits::detail::is_ptr_compat_v<U, element_type>>>
-  void reset(U* ptr, D deleter = D{}, A allocator = A{});
+  void reset(U* ptr,
+             D deleter   = D{},
+             A allocator = A{});  // NOLINT(performance-unnecessary-value-param)
 
   // Observers
   [[nodiscard]] element_type& operator[](std::ptrdiff_t idx) noexcept;

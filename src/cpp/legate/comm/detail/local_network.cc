@@ -120,9 +120,9 @@ void LocalNetwork::all_to_all_v(const void* sendbuf,
     // NOLINTEND(bugprone-casting-through-void)
     const int* displs = loc_displs[recvfrom_global_rank];
     const auto* src   = static_cast<const void*>(
-      src_base + static_cast<std::ptrdiff_t>(displs[recvfrom_seg_id]) * type_extent);
+      src_base + (static_cast<std::ptrdiff_t>(displs[recvfrom_seg_id]) * type_extent));
     auto* dst = static_cast<char*>(recvbuf) +
-                static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent;
+                (static_cast<std::ptrdiff_t>(rdispls[recvfrom_global_rank]) * type_extent);
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       logger().debug() << "AlltoallvLocal i: " << i << " === global_rank " << global_rank
                        << ", dtype " << type_extent << ", copy rank " << recvfrom_global_rank
@@ -163,9 +163,9 @@ void LocalNetwork::all_to_all(const void* sendbuf,
     src_base = buffers[recvfrom_global_rank];
     const auto* src =
       static_cast<const void*>(static_cast<const char*>(src_base) +
-                               static_cast<std::ptrdiff_t>(recvfrom_seg_id) * num_bytes);
+                               (static_cast<std::ptrdiff_t>(recvfrom_seg_id) * num_bytes));
     auto* dst =
-      static_cast<char*>(recvbuf) + static_cast<std::ptrdiff_t>(recvfrom_global_rank) * num_bytes;
+      static_cast<char*>(recvbuf) + (static_cast<std::ptrdiff_t>(recvfrom_global_rank) * num_bytes);
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       logger().debug() << "AlltoallLocal i: " << i << " === global_rank " << global_rank
                        << ", dtype " << type_extent << ", copy rank " << recvfrom_global_rank
@@ -205,7 +205,7 @@ void LocalNetwork::all_gather(const void* sendbuf,
     while (buffers[recvfrom_global_rank] == nullptr) {}
     const void* src = buffers[recvfrom_global_rank];
     char* dst =
-      static_cast<char*>(recvbuf) + static_cast<std::ptrdiff_t>(recvfrom_global_rank) * num_bytes;
+      static_cast<char*>(recvbuf) + (static_cast<std::ptrdiff_t>(recvfrom_global_rank) * num_bytes);
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       logger().debug() << "AllgatherLocal i: " << recvfrom_global_rank << " === global_rank "
                        << global_rank << ", dtype " << type_extent << ", copy rank "

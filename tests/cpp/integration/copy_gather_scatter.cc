@@ -22,9 +22,8 @@ namespace copy_gather_scatter {
 
 namespace {
 
-constexpr std::int32_t CHECK_GATHER_SCATTER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
-
-}  // namespace
+constexpr std::int32_t CHECK_GATHER_SCATTER_TASK =
+  FILL_INDIRECT_TASK + (TEST_MAX_DIM * TEST_MAX_DIM);
 
 template <std::int32_t SRC_DIM, std::int32_t IND_DIM, std::int32_t TGT_DIM>
 struct CheckGatherScatterTask
@@ -79,8 +78,8 @@ struct CheckGatherScatterTask
   };
 
   static constexpr std::int32_t TASK_ID = CHECK_GATHER_SCATTER_TASK +
-                                          SRC_DIM * TEST_MAX_DIM * TEST_MAX_DIM +
-                                          IND_DIM * TEST_MAX_DIM + TGT_DIM;
+                                          (SRC_DIM * TEST_MAX_DIM * TEST_MAX_DIM) +
+                                          (IND_DIM * TEST_MAX_DIM) + TGT_DIM;
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -153,8 +152,8 @@ void check_gather_scatter_output(legate::Library library,
   auto machine = runtime->get_machine();
 
   const auto task_id = static_cast<legate::LocalTaskID>(CHECK_GATHER_SCATTER_TASK +
-                                                        src.dim() * TEST_MAX_DIM * TEST_MAX_DIM +
-                                                        src_ind.dim() * TEST_MAX_DIM + tgt.dim());
+                                                        (src.dim() * TEST_MAX_DIM * TEST_MAX_DIM) +
+                                                        (src_ind.dim() * TEST_MAX_DIM) + tgt.dim());
 
   auto task = runtime->create_task(library, task_id);
 
@@ -219,6 +218,8 @@ void test_gather_scatter_reduction_int32(const GatherScatterReductionSpec<std::i
 {
   test_gather_scatter_impl<std::int32_t>(spec, spec.redop);
 }
+
+}  // namespace
 
 TEST_F(ScatterGatherCopy, 1Dto3Dvia2D)
 {

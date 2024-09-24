@@ -74,6 +74,10 @@ Checks:
   # again. It is easier to just follow the rule of "always explicitly default initialize
   # members" than to remember to change 2 places at once.
   - '-readability-redundant-member-init'
+  # Alias for readability-enum-initial-value, disable this one because the readability-
+  # name is easier to understand, and we don't want to silence 2 things for the same
+  # warning.
+  - '-cert-int09-c'
 WarningsAsErrors: '*'
 HeaderFileExtensions:
   - ''
@@ -162,4 +166,5 @@ CheckOptions:
   readability-identifier-naming.PublicMethodCase: 'lower_case'
   readability-identifier-naming.ScopedEnumCase: 'CamelCase'
   readability-identifier-naming.ScopedEnumConstantCase: 'UPPER_CASE'
+  bugprone-suspicious-stringview-data-usage.AllowedCallees: 'legate::detail::ZStringView'
 ...

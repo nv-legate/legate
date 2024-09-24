@@ -21,6 +21,8 @@ namespace inline_map {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 struct AdderTask : public legate::LegateTask<AdderTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
@@ -87,6 +89,8 @@ void test_inline_map_and_task()
   auto acc     = p_store.read_accessor<int64_t, 1>();
   EXPECT_EQ(acc[2], 43);
 }
+
+}  // namespace
 
 TEST_F(InlineMap, Future) { test_inline_map_future(); }
 

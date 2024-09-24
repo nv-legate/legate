@@ -10,6 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "legate/runtime/detail/argument_parsing.h"
+
 #include "legate_defines.h"
 
 #include "legate/mapping/detail/base_mapper.h"

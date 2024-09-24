@@ -23,8 +23,6 @@ constexpr std::int32_t EXN_IDX   = 42;
 constexpr std::uint32_t NUM_EXN  = 3;
 constexpr std::uint32_t NUM_NORM = 7;
 
-}  // namespace
-
 struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext context)
@@ -130,6 +128,8 @@ void test_deferred_or_ignored(legate::ExceptionMode exception_mode)
     EXPECT_EQ(exn.index(), EXN_IDX);
   }
 }
+
+}  // namespace
 
 TEST_F(Exception, ImmediateSingle) { test_immediate_single(); }
 

@@ -124,7 +124,7 @@ class LegateShardingFunctor final : public Legion::ShardingFunctor {
     auto hi             = proj_fn_->project_point(launch_space.hi());
     auto point          = proj_fn_->project_point(p);
     auto task_count     = linearize(lo, hi, hi) + 1;
-    auto global_proc_id = (linearize(lo, hi, point) * range_.count()) / task_count + range_.low;
+    auto global_proc_id = ((linearize(lo, hi, point) * range_.count()) / task_count) + range_.low;
     auto shard_id       = global_proc_id / range_.per_node_count;
     LEGATE_ASSERT(shard_id < total_shards);
     return static_cast<Legion::ShardID>(shard_id);

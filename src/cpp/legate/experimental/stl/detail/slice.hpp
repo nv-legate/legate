@@ -119,7 +119,7 @@ class ProjectionPolicy {
 
       template <std::size_t... Is>
       LEGATE_HOST_DEVICE [[nodiscard]] static auto read_impl(std::index_sequence<Is...>,
-                                                             Mdspan span,
+                                                             const Mdspan& span,
                                                              cursor cursor)
       {
         auto extents = span.extents();

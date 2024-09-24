@@ -22,9 +22,7 @@ namespace copy_gather {
 
 namespace {
 
-constexpr std::int32_t CHECK_GATHER_TASK = FILL_INDIRECT_TASK + TEST_MAX_DIM * TEST_MAX_DIM;
-
-}  // namespace
+constexpr std::int32_t CHECK_GATHER_TASK = FILL_INDIRECT_TASK + (TEST_MAX_DIM * TEST_MAX_DIM);
 
 template <std::int32_t IND_DIM, std::int32_t SRC_DIM>
 struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_DIM>> {
@@ -56,7 +54,7 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
   };
 
   static constexpr auto TASK_ID =
-    legate::LocalTaskID{CHECK_GATHER_TASK + IND_DIM * TEST_MAX_DIM + SRC_DIM};
+    legate::LocalTaskID{CHECK_GATHER_TASK + (IND_DIM * TEST_MAX_DIM) + SRC_DIM};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -107,7 +105,7 @@ void check_gather_output(legate::Library library,
   auto runtime = legate::Runtime::get_runtime();
   auto machine = runtime->get_machine();
   const auto task_id =
-    legate::LocalTaskID{CHECK_GATHER_TASK + ind.dim() * TEST_MAX_DIM + src.dim()};
+    legate::LocalTaskID{CHECK_GATHER_TASK + (ind.dim() * TEST_MAX_DIM) + src.dim()};
   auto task     = runtime->create_task(library, task_id);
   auto src_part = task.declare_partition();
   auto tgt_part = task.declare_partition();
@@ -178,6 +176,8 @@ void test_gather_reduction_int32(const GatherReductionSpec<std::int32_t>& spec)
 {
   test_gather_impl<std::int32_t>(spec, spec.redop);
 }
+
+}  // namespace
 
 TEST_F(GatherCopy, 2Dto1D)
 {

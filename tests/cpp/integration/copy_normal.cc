@@ -35,8 +35,6 @@ constexpr std::int32_t TEST_MAX_DIM              = 3;
 constexpr std::int32_t CHECK_COPY_TASK           = FILL_TASK + TEST_MAX_DIM;
 constexpr std::int32_t CHECK_COPY_REDUCTION_TASK = CHECK_COPY_TASK + TEST_MAX_DIM;
 
-}  // namespace
-
 template <std::int32_t DIM>
 struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
   struct CheckCopyTaskBody {
@@ -221,6 +219,8 @@ void test_normal_copy_reduction(const NormalCopyReductionSpec<T>& spec)
   // check the result of copy reduction
   check_copy_reduction_output(library, input, output, seed);
 }
+
+}  // namespace
 
 TEST_F(NormalCopy, Single)
 {

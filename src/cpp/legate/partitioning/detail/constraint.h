@@ -54,11 +54,11 @@ class Variable {
 class Constraint {
  public:
   enum class Kind : std::uint8_t {
-    ALIGNMENT = 0,
-    BROADCAST = 1,
-    IMAGE     = 2,
-    SCALE     = 3,
-    BLOAT     = 4,
+    ALIGNMENT,
+    BROADCAST,
+    IMAGE,
+    SCALE,
+    BLOAT,
   };
 
   virtual ~Constraint() = default;

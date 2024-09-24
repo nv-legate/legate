@@ -46,7 +46,7 @@ TEST_F(ChildStore, Simple)
       auto acc     = p_child.write_accessor<int64_t, 2>();
       for (std::int64_t i = 0; i < static_cast<std::int64_t>(extents[0]); ++i) {
         for (std::int64_t j = 0; j < static_cast<std::int64_t>(extents[1]); ++j) {
-          acc[{i, j}] = static_cast<legate::coord_t>(dim0 * FACTOR + dim1);
+          acc[{i, j}] = static_cast<legate::coord_t>((dim0 * FACTOR) + dim1);
         }
       }
     }
@@ -57,7 +57,7 @@ TEST_F(ChildStore, Simple)
 
   for (std::int64_t i = 0; i < static_cast<std::int64_t>(EXTENT); ++i) {
     for (std::int64_t j = 0; j < static_cast<std::int64_t>(EXTENT); ++j) {
-      auto expected_value = (i / TILE_SIZE) * FACTOR + (j / TILE_SIZE);
+      auto expected_value = ((i / TILE_SIZE) * FACTOR) + (j / TILE_SIZE);
       EXPECT_EQ((acc[{i, j}]), expected_value);
     }
   }

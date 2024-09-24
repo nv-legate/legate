@@ -439,6 +439,16 @@ TEST_F(MachineTest, ToString)
   ASSERT_EQ(machine.to_string(), machine_str);
 }
 
+class MachineUnitTestDeserializer
+  : public legate::detail::BaseDeserializer<MachineUnitTestDeserializer> {
+ public:
+  MachineUnitTestDeserializer(const void* args, std::size_t arglen) : BaseDeserializer{args, arglen}
+  {
+  }
+
+  using BaseDeserializer::unpack_impl;
+};
+
 TEST_F(MachineTest, Pack)
 {
   legate::detail::BufferBuilder buf;
@@ -449,8 +459,8 @@ TEST_F(MachineTest, Pack)
   const auto orig_machine_copy = machine;
   machine.pack(buf);
   auto legion_buffer = buf.to_legion_buffer();
-  legate::detail::BaseDeserializer<legate::mapping::detail::MapperDataDeserializer> dez{
-    legion_buffer.get_ptr(), legion_buffer.get_size()};
+  MachineUnitTestDeserializer dez{legion_buffer.get_ptr(), legion_buffer.get_size()};
+
   auto machine_unpack = dez.unpack<legate::mapping::detail::Machine>();
 
   ASSERT_EQ(machine_unpack, orig_machine_copy);

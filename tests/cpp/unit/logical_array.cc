@@ -17,6 +17,8 @@
 
 namespace logical_array_test {
 
+namespace {
+
 using LogicalArrayUnit = DefaultFixture;
 
 // NOLINTBEGIN(readability-magic-numbers)
@@ -847,6 +849,8 @@ void test_delinearize(bool nullable)
     EXPECT_THROW(static_cast<void>(unbound_array.delinearize(0, {1, 1})), std::invalid_argument);
   }
 }
+
+}  // namespace
 
 TEST_F(LogicalArrayUnit, CreatePrimitiveNonNullable) { test_primitive_array(false); }
 

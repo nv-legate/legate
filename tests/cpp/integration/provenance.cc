@@ -20,6 +20,8 @@
 
 namespace provenance {
 
+namespace {
+
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
@@ -55,7 +57,7 @@ void test_provenance_auto(legate::Library library)
   // auto task
   auto task = runtime->create_task(library, ProvenanceTask::TASK_ID);
   task.add_scalar_arg(legate::Scalar{provenance});
-  ASSERT_STREQ(task.provenance().data(), provenance.data());
+  ASSERT_EQ(task.provenance(), provenance);
 
   runtime->submit(std::move(task));
 }
@@ -69,7 +71,7 @@ void test_provenance_manual(legate::Library library)
   auto task =
     runtime->create_task(library, ProvenanceTask::TASK_ID, legate::tuple<std::uint64_t>{4, 2});
   task.add_scalar_arg(legate::Scalar{provenance});
-  ASSERT_STREQ(task.provenance().data(), provenance.data());
+  ASSERT_EQ(task.provenance(), provenance);
 
   runtime->submit(std::move(task));
 }
@@ -83,10 +85,12 @@ void test_nested_provenance_auto(legate::Library library)
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(library, ProvenanceTask::TASK_ID);
   task.add_scalar_arg(legate::Scalar{provenance});
-  ASSERT_STREQ(task.provenance().data(), provenance.data());
+  ASSERT_EQ(task.provenance(), provenance);
 
   runtime->submit(std::move(task));
 }
+
+}  // namespace
 
 TEST_F(ProvenanceTest, All)
 {

@@ -27,6 +27,8 @@
 
 namespace environment_variable_test {
 
+namespace {
+
 namespace detail {
 
 class Environment {
@@ -214,6 +216,8 @@ class Environ : public DefaultFixture {
 
   mutable std::deque<std::string> env_vars_{};
 };
+
+}  // namespace
 
 TYPED_TEST_SUITE(Environ, EnvironTypeList, NameGenerator);
 

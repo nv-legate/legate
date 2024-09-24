@@ -17,6 +17,8 @@
 
 namespace machine_scope {
 
+namespace {
+
 // NOLINTBEGIN(readability-magic-numbers)
 
 enum TaskIDs : std::uint8_t { MULTI_VARIANT, CPU_VARIANT };
@@ -138,6 +140,8 @@ void test_cpu_only(legate::Library library)
                  std::invalid_argument);
   }
 }
+
+}  // namespace
 
 TEST_F(MachineScope, All)
 {

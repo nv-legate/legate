@@ -19,6 +19,8 @@ namespace copy_failure {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 using InvalidCopy = DefaultFixture;
 
 void test_invalid_stores()
@@ -148,6 +150,8 @@ void test_unsupported_kind_failure()
 
   ASSERT_THROW(runtime->issue_copy(target, source, redop), std::runtime_error);
 }
+
+}  // namespace
 
 TEST_F(InvalidCopy, InvalidStores) { test_invalid_stores(); }
 

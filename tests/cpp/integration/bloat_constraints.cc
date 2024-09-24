@@ -23,8 +23,6 @@ namespace {
 
 constexpr std::int64_t BLOAT_TESTER = 0;
 
-}  // namespace
-
 template <std::int32_t DIM>
 struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
   static constexpr auto TASK_ID = legate::LocalTaskID{BLOAT_TESTER + DIM};
@@ -149,6 +147,8 @@ void test_invalid()
     EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
   }
 }
+
+}  // namespace
 
 TEST_F(BloatConstraint, 1D)
 {

@@ -33,8 +33,6 @@ namespace {
 constexpr std::string_view LIBRARY_NAME = "test_redundant";
 constexpr std::uint64_t EXT             = 1 << 10;
 
-}  // namespace
-
 struct Tester : public legate::LegateTask<Tester> {
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
@@ -96,6 +94,8 @@ void launch_task(const legate::LogicalStorePartition& part, bool read_only)
   }
   runtime->submit(std::move(task));
 }
+
+}  // namespace
 
 TEST_F(Redundant, Test)
 {

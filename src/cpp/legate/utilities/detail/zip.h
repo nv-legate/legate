@@ -66,6 +66,9 @@ struct ZiperatorSelector<It, ObjTupleT, std::index_sequence<Idx...>, true> {
   using type = It<decltype(std::cbegin(std::get<Idx>(std::declval<const ObjTupleT&>())))...>;
 };
 
+template <template <typename...> typename ZiperatorType, typename... T>
+class Zipper;
+
 // A Zip-Iterator, A.K.A. ziperator
 template <typename Derived, typename... T>
 class ZiperatorBase {
@@ -73,6 +76,14 @@ class ZiperatorBase {
   using derived_type    = Derived;
   using iter_tuple_type = std::tuple<T...>;
   using sequence        = std::index_sequence_for<T...>;
+
+ private:
+  explicit ZiperatorBase(T&&... its);
+
+  friend Derived;
+
+  template <template <typename...> typename ZiperatorType, typename... U>
+  friend class Zipper;
 
  public:
   using iterator_category =
@@ -82,8 +93,6 @@ class ZiperatorBase {
   using pointer         = value_type*;
   using reference       = value_type&;
   using const_reference = const value_type&;
-
-  explicit ZiperatorBase(T&&... its);
 
   [[nodiscard]] value_type operator*() const;
 
@@ -164,7 +173,7 @@ class ZiperatorEqual : public ZiperatorBase<ZiperatorEqual<T...>, T...> {
 
 // The "dispatcher" class for the zip operation. It must hold a tuple of references to the
 // objects themselves, so that they don't go out of scope
-template <template <typename...> class ZiperatorType, typename... T>
+template <template <typename...> typename ZiperatorType, typename... T>
 class Zipper {
   std::tuple<T...> objs_;
   using sequence = std::index_sequence_for<T...>;

@@ -89,6 +89,10 @@ C++
   redundant copies. Add ``mapping::InstanceMappingPolicy::with_redundant()`` and
   ``mapping::InstanceMappingPolicy::set_redundant()`` to allow mappers to set new values to the
   flag.
+- Change enum values for ``mapping::TaskTarget``, ``mapping::StoreTarget``,
+  ``mapping::AllocPolicy``, ``mapping::InstLayout``, and
+  ``mapping::DimOrdering::Kind``. Users should only consider the names of enums (and their
+  members) to be stable, and should not depend on the values themselves.
 
 .. rubric:: Partitioning
 

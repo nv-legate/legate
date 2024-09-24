@@ -26,7 +26,7 @@
 
 namespace legate::detail {
 
-void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime);
+extern void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime);
 
 }  // namespace legate::detail
 

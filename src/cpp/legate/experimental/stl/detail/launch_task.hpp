@@ -493,7 +493,7 @@ class MakeInputs {
     const std::vector<LogicalStore>& /*outputs*/,
     const LogicalStore& /*reduction*/) const
   {
-    return inputs;
+    return inputs;  // NOLINT(bugprone-return-const-ref-from-parameter)
   }
 };
 
@@ -518,7 +518,7 @@ class MakeOutputs {
     const std::vector<LogicalStore>& outputs,
     const LogicalStore& /*reduction*/) const
   {
-    return outputs;
+    return outputs;  // NOLINT(bugprone-return-const-ref-from-parameter)
   }
 };
 
@@ -613,7 +613,7 @@ class MakeAlign {
 namespace cpu_detail {
 
 template <typename Fn, typename... Views>
-void cpu_for_each(Fn fn, Views... views)
+void cpu_for_each(Fn fn, Views... views)  // NOLINT(performance-unnecessary-value-param)
 {
   auto&& input0 = front_of(views...);
   auto&& begin  = input0.begin();
@@ -812,7 +812,7 @@ template <typename Op, std::int32_t Dim, bool Exclusive = false>
 namespace cpu_detail {
 
 template <typename Function, typename InOut, typename Input>
-void cpu_reduce(Function fn, InOut inout, Input input)
+void cpu_reduce(Function&& fn, InOut&& inout, Input&& input)
 {
   // These need to be at least multi-pass
   static_assert_iterator_category<std::forward_iterator_tag>(inout.begin());
@@ -1036,7 +1036,7 @@ inline constexpr bool is_which_v<Which, Which<Args...>> = true;
 template <template <typename...> typename Which, typename... Ts, typename... Tail>
 [[nodiscard]] inline const Which<Ts...>& get_arg(const Which<Ts...>& head, const Tail&...)
 {
-  return head;
+  return head;  // NOLINT(bugprone-return-const-ref-from-parameter)
 }
 
 template <template <typename...> typename Which,
@@ -1095,11 +1095,17 @@ class LaunchTask {
             typename Outputs,
             typename Scalars,
             typename Constraints>
-  static void make_iteration_task_(
-    Function function, Inputs inputs, Outputs outputs, Scalars scalars, Constraints constraints)
+  static void make_iteration_task_(Function&& function,
+                                   Inputs&& inputs,
+                                   Outputs&& outputs,
+                                   Scalars&& scalars,
+                                   Constraints&& constraints)
   {
-    auto&& [task, runtime] =
-      make_task_<IterationOperation<Function, Inputs, Outputs, Scalars, Constraints>>();
+    auto&& [task, runtime] = make_task_<IterationOperation<std::decay_t<Function>,
+                                                           std::decay_t<Inputs>,
+                                                           std::decay_t<Outputs>,
+                                                           std::decay_t<Scalars>,
+                                                           std::decay_t<Constraints>>>();
 
     inputs(task, iteration_kind{});
     outputs(task, iteration_kind{});
@@ -1132,11 +1138,17 @@ class LaunchTask {
             typename Outputs,
             typename Scalars,
             typename Constraints>
-  static void make_reduction_task_(
-    Reduction reduction, Inputs inputs, Outputs outputs, Scalars scalars, Constraints constraints)
+  static void make_reduction_task_(Reduction&& reduction,
+                                   Inputs&& inputs,
+                                   Outputs&& outputs,
+                                   Scalars&& scalars,
+                                   Constraints&& constraints)
   {
-    auto&& [task, runtime] =
-      make_task_<ReductionOperation<Reduction, Inputs, Outputs, Scalars, Constraints>>();
+    auto&& [task, runtime] = make_task_<ReductionOperation<std::decay_t<Reduction>,
+                                                           std::decay_t<Inputs>,
+                                                           std::decay_t<Outputs>,
+                                                           std::decay_t<Scalars>,
+                                                           std::decay_t<Constraints>>>();
 
     inputs(task, reduction_kind{});
     outputs(task, reduction_kind{});
@@ -1161,7 +1173,7 @@ class LaunchTask {
    * @ingroup stl-utilities
    */
   template <typename... Ts>
-  void operator()(Ts... args) const
+  void operator()(Ts&&... args) const
   {
     // TODO(ericniebler) these could also be made constexpr if we defined the inputs<> template
     // directly.

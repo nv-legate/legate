@@ -17,6 +17,8 @@
 
 namespace scoped_allocator_test {
 
+namespace {
+
 constexpr std::uint64_t ALLOCATE_BYTES = 100;
 constexpr std::uint64_t OVER_ALIGNMENT = 128;
 
@@ -158,6 +160,8 @@ void test_deallocate(legate::LocalTaskID task_id,
   task.add_scalar_arg(legate::Scalar{bytes});
   runtime->submit(std::move(task));
 }
+
+}  // namespace
 
 TEST_P(ScopedAllocatorTask, Scoped)
 {

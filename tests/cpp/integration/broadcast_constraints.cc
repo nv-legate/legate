@@ -24,8 +24,6 @@ namespace {
 constexpr std::size_t EXT_SMALL = 10;
 constexpr std::size_t EXT_LARGE = 100;
 
-}  // namespace
-
 struct TesterTask : public legate::LegateTask<TesterTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
@@ -101,7 +99,7 @@ void test_promoted_store()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto initialize = [&](auto store) {
+  auto initialize = [&](auto&& store) {
     auto task = runtime->create_task(context, Initializer::TASK_ID);
 
     task.add_output(store);
@@ -139,6 +137,8 @@ void test_invalid_broadcast()
   task.add_constraint(legate::broadcast(part, legate::tuple<std::uint32_t>{1}));
   EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
 }
+
+}  // namespace
 
 TEST_F(Broadcast, Basic) { test_normal_store(); }
 

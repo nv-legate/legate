@@ -26,8 +26,6 @@ namespace {
 
 constexpr std::size_t SIZE = 10;
 
-}  // namespace
-
 enum TaskIDs : std::uint8_t {
   CHECK_TASK         = 0,
   CHECK_SLICE_TASK   = 3,
@@ -270,6 +268,8 @@ void test_invalid()
   // Nulliyfing a non-nullable array
   EXPECT_THROW(runtime->issue_fill(array, legate::Scalar{}), std::invalid_argument);
 }
+
+}  // namespace
 
 TEST_P(Whole, Index)
 {

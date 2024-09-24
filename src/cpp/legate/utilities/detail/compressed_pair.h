@@ -73,6 +73,7 @@ class compressed_pair_impl<T, U, 1> : T {
 
   compressed_pair_impl() = default;
 
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   compressed_pair_impl(first_type x, second_type y) : base_type{std::move(x)}, second_{std::move(y)}
   {
   }
@@ -134,6 +135,7 @@ class compressed_pair_impl<T, U, 3> : T, U {
 
   compressed_pair_impl() = default;
 
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   compressed_pair_impl(first_type x, second_type y)
     : first_type{std::move(x)}, second_type{std::move(y)}
   {

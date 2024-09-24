@@ -65,8 +65,10 @@ enum class ReductionOpKind : std::int32_t {
  */
 class Type {
  public:
-  // We silence this warning for the same reason we silence it for ReductionOpKind.
-  // NOLINTBEGIN(performance-enum-size)
+  // We silence performance-enum-size for the same reason we silence it for
+  // ReductionOpKind. Also silence readability-enum-initial-value because we need the first few
+  // values to map to Legion kinds exactly, but we don't care what the others are.
+  // NOLINTBEGIN(performance-enum-size, readability-enum-initial-value)
   /**
    * @ingroup types
    * @brief Enum for type codes
@@ -93,7 +95,7 @@ class Type {
     STRING,                              /*!< String type */
     LIST,                                /*!< List type */
   };
-  // NOLINTEND(performance-enum-size)
+  // NOLINTEND(performance-enum-size, readability-enum-initial-value)
 
   /**
    * @brief Code of the type

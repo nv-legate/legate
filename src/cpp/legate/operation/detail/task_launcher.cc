@@ -139,8 +139,9 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
                                        false /*must*/,
                                        runtime->mapper_id(),
                                        tag_,
-                                       mapper_arg.to_legion_buffer(),
-                                       provenance().data()};
+                                       mapper_arg.to_legion_buffer()};
+
+  index_task.provenance = provenance().as_string_view();
 
   std::vector<Legion::OutputRequirement> output_requirements;
 
@@ -212,8 +213,9 @@ Legion::Future TaskLauncher::execute_single()
                                    Legion::Predicate::TRUE_PRED,
                                    runtime->mapper_id(),
                                    tag_,
-                                   mapper_arg.to_legion_buffer(),
-                                   provenance().data()};
+                                   mapper_arg.to_legion_buffer()};
+
+  single_task.provenance = provenance().as_string_view();
 
   std::vector<Legion::OutputRequirement> output_requirements;
 

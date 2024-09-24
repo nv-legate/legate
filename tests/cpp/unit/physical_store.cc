@@ -25,8 +25,6 @@ constexpr std::uint64_t UINT64_VALUE          = 1;
 constexpr std::uint32_t BOUND_STORE_EXTENTS   = 0;
 constexpr std::uint32_t UNBOUND_STORE_EXTENTS = 9;
 
-}  // namespace
-
 enum class UnboundStoreOpCode : std::uint8_t {
   BIND_EMPTY,
   BIND_CREATED_BUFFER,
@@ -38,26 +36,26 @@ enum class UnboundStoreOpCode : std::uint8_t {
 };
 
 enum class AccessorCode : std::uint8_t {
-  READ       = 0,
-  WRITE      = 1,
-  READ_WRITE = 2,
-  REDUCE     = 3,
+  READ,
+  WRITE,
+  READ_WRITE,
+  REDUCE,
 };
 
 enum class ArrayType : std::uint8_t {
-  PRIMITIVE_ARRAY = 0,
-  LIST_ARRAY      = 1,
-  STRING_ARRAY    = 2,
-  STRUCT_ARRAY    = 3,
+  PRIMITIVE_ARRAY,
+  LIST_ARRAY,
+  STRING_ARRAY,
+  STRUCT_ARRAY,
 };
 
 enum StoreTaskID : std::int8_t {
-  UNBOUND_STORE_TASK_ID         = 0,
-  ACCESSOR_TASK_ID              = 1,
-  PRIMITIVE_ARRAY_STORE_TASK_ID = 2,
-  LIST_ARRAY_STORE_TASK_ID      = 3,
-  STRING_ARRAY_STORE_TASK_ID    = 4,
-  FUTURE_STORE_TASK_ID          = 5,
+  UNBOUND_STORE_TASK_ID,
+  ACCESSOR_TASK_ID,
+  PRIMITIVE_ARRAY_STORE_TASK_ID,
+  LIST_ARRAY_STORE_TASK_ID,
+  STRING_ARRAY_STORE_TASK_ID,
+  FUTURE_STORE_TASK_ID,
 };
 
 template <typename T, std::int32_t DIM>
@@ -73,13 +71,13 @@ void test_array_store(legate::LogicalArray& logical_array, legate::LocalTaskID i
 legate::Shape get_shape(std::int32_t dim);
 // clang-tidy complains that "RO", "WO", "RW", "RD" are not lower case, but that's OK.
 // NOLINTBEGIN(readability-identifier-naming)
+template <typename T>
 void test_RO_accessor(legate::LogicalStore& logical_store);
 void test_WO_accessor(legate::LogicalStore& logical_store);
 void test_RW_accessor(legate::LogicalStore& logical_store);
 void test_RD_accessor(legate::LogicalStore& logical_store);
 // NOLINTEND(readability-identifier-naming)
 template <std::int32_t DIM>
-void test_accessors_normal_store(bool transform);
 void test_accessors_normal_store(bool transform, std::vector<std::int32_t> axes = {});
 void test_accessor_future_store(bool transform);
 void test_invalid_accessor();
@@ -127,7 +125,7 @@ struct UnboundStoreFn {
         break;
       }
       case UnboundStoreOpCode::INVALID_DIM: {
-        constexpr std::int32_t INVALID_DIM = DIM % LEGATE_MAX_DIM + 1;
+        constexpr std::int32_t INVALID_DIM = (DIM % LEGATE_MAX_DIM) + 1;
         EXPECT_THROW(static_cast<void>(
                        store.create_output_buffer<T>(legate::Point<INVALID_DIM>::ONES(), true)),
                      std::invalid_argument);
@@ -540,7 +538,7 @@ void test_RD_accessor(legate::LogicalStore& logical_store)
 }
 
 template <std::int32_t DIM>
-void test_accessors_normal_store(bool transform, std::vector<std::int32_t> axes = {})
+void test_accessors_normal_store(bool transform, std::vector<std::int32_t> axes)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto extents       = get_shape(DIM);
@@ -843,6 +841,8 @@ void test_array_store(legate::LogicalArray& logical_array, legate::LocalTaskID i
   task.add_output(logical_array, part);
   runtime->submit(std::move(task));
 }
+
+}  // namespace
 
 TEST_F(PhysicalStoreUnit, FutureStoreCreation)
 {

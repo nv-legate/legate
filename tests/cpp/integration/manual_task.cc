@@ -20,6 +20,8 @@ namespace manual_task_test {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
+namespace {
+
 using ManualTask = DefaultFixture;
 
 void test_auto_task(legate::Library library, const legate::LogicalStore& store)
@@ -50,9 +52,11 @@ void validate_store(const legate::LogicalStore& store)
   auto shape   = p_store.shape<2>();
   for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
     auto p = *it;
-    EXPECT_EQ(acc[p], p[0] + p[1] * 1000);
+    EXPECT_EQ(acc[p], p[0] + (p[1] * 1000));
   }
 }
+
+}  // namespace
 
 TEST_F(ManualTask, Simple)
 {

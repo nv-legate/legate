@@ -88,13 +88,20 @@ void TaskInfo::Impl::register_task(GlobalTaskID task_id) const
 {
   const auto runtime = Legion::Runtime::get_runtime();
 
-  runtime->attach_name(
-    static_cast<Legion::TaskID>(task_id), name().data(), false /*mutable*/, true /*local_only*/);
+  static_assert(std::is_same_v<std::decay_t<decltype(name())>, detail::ZStringView>);
+  runtime->attach_name(static_cast<Legion::TaskID>(task_id),
+                       name().data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
+                       false /*mutable*/,
+                       true /*local_only*/);
   for (auto&& [vcode, vinfo] : variants()) {
     const auto vid = traits::detail::to_underlying(vcode);
     auto&& options = vinfo.options;
     Legion::TaskVariantRegistrar registrar{
-      static_cast<Legion::TaskID>(task_id), false /*global*/, VARIANT_NAMES[vid].data()};
+      static_cast<Legion::TaskID>(task_id),
+      false /*global*/,
+      VARIANT_NAMES[vid].data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
+    };
+    static_assert(std::is_same_v<std::decay_t<decltype(VARIANT_NAMES[vid])>, detail::ZStringView>);
 
     registrar.add_constraint(Legion::ProcessorConstraint{VARIANT_PROC_KINDS[vid]});
     options.populate_registrar(registrar);
@@ -180,6 +187,8 @@ bool TaskInfo::has_variant(VariantCode vid) const { return find_variant(vid).has
 
 void TaskInfo::register_task(GlobalTaskID task_id) { impl_->register_task(task_id); }
 
+namespace {
+
 std::ostream& operator<<(std::ostream& os, const VariantInfo& info)
 {
   std::stringstream ss;
@@ -191,6 +200,8 @@ std::ostream& operator<<(std::ostream& os, const VariantInfo& info)
   os << std::move(ss).str();
   return os;
 }
+
+}  // namespace
 
 std::ostream& operator<<(std::ostream& os, const TaskInfo& info)
 {

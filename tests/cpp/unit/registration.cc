@@ -15,9 +15,11 @@
 
 #include <gtest/gtest.h>
 
+namespace test_registration {
+
 using Registration = DefaultFixture;
 
-namespace test_registration {
+namespace {
 
 template <std::int32_t ID>
 struct CPUVariantTask : public legate::LegateTask<CPUVariantTask<ID>> {
@@ -30,8 +32,6 @@ struct GPUVariantTask : public legate::LegateTask<GPUVariantTask<ID>> {
   static constexpr auto TASK_ID = legate::LocalTaskID{ID};
   static void gpu_variant(legate::TaskContext /*context*/) {}
 };
-
-}  // namespace test_registration
 
 void test_duplicates()
 {
@@ -52,6 +52,10 @@ void test_out_of_bounds_task_id()
   EXPECT_THROW(test_registration::CPUVariantTask<1>::register_variants(library), std::out_of_range);
 }
 
+}  // namespace
+
 TEST_F(Registration, Duplicate) { test_duplicates(); }
 
 TEST_F(Registration, TaskIDOutOfBounds) { test_out_of_bounds_task_id(); }
+
+}  // namespace test_registration

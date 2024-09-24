@@ -28,17 +28,15 @@ using RegisterVariants = DefaultFixture;
 namespace {
 
 enum TaskID : std::uint8_t {
-  HELLO  = 0,
-  HELLO1 = 1,
-  HELLO2 = 2,
-  HELLO3 = 3,
-  HELLO4 = 4,
-  HELLO5 = 5,
+  HELLO,
+  HELLO1,
+  HELLO2,
+  HELLO3,
+  HELLO4,
+  HELLO5,
 };
 
 constexpr std::array<TaskID, 6> TASK_IDS = {HELLO, HELLO1, HELLO2, HELLO3, HELLO4, HELLO5};
-
-}  // namespace
 
 struct Registry {
   [[nodiscard]] static legate::TaskRegistrar& get_registrar();
@@ -66,6 +64,10 @@ void hello_cpu_variant(legate::TaskContext& context)
   }
 }
 
+}  // namespace
+
+// Do not put these in the anon namespace, we have a test which checks their name, and anon
+// namespaces have implementation-defined names.
 template <std::int32_t TID>
 struct BaseTask : public legate::LegateTask<BaseTask<TID>> {
   using Registrar               = Registry;
@@ -76,6 +78,8 @@ struct BaseTask : public legate::LegateTask<BaseTask<TID>> {
 struct BaseTask2 : public legate::LegateTask<BaseTask2> {
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
+
+namespace {
 
 void test_register_tasks(legate::Library& context)
 {
@@ -138,9 +142,11 @@ void validate_store(const legate::LogicalStore& store)
   auto acc     = p_store.read_accessor<int64_t, 2>();
   auto shape   = p_store.shape<2>();
   for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], (*it)[0] + (*it)[1] * 1000);
+    EXPECT_EQ(acc[*it], (*it)[0] + ((*it)[1] * 1000));
   }
 }
+
+}  // namespace
 
 TEST_F(RegisterVariants, All)
 {
@@ -159,7 +165,7 @@ TEST_F(RegisterVariants, All)
     const std::string task_name =
       task_id >= HELLO4 ? "register_variants::BaseTask2"
                         : fmt::format("register_variants::BaseTask<{}>", fmt::underlying(task_id));
-    EXPECT_STREQ(context.get_task_name(legate::LocalTaskID{task_id}).data(), task_name.c_str());
+    EXPECT_EQ(context.get_task_name(legate::LocalTaskID{task_id}), task_name);
   }
 
   auto store = runtime->create_store(legate::Shape{5, 5}, legate::int64());

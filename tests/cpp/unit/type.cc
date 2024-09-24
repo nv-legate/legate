@@ -18,6 +18,8 @@
 
 namespace type_test {
 
+namespace {
+
 using TypeUnit = DefaultFixture;
 
 // NOLINTBEGIN(readability-magic-numbers)
@@ -174,6 +176,8 @@ void test_reduction_op(const legate::Type& type)
                  static_cast<std::int32_t>(legate::ReductionOpKind::ADD), GLOBAL_OP_ID),
                std::invalid_argument);
 }
+
+}  // namespace
 
 TEST_F(TypeUnit, PrimitiveType)
 {
@@ -446,7 +450,7 @@ TEST_F(TypeUnit, Uid)
     EXPECT_NE(array_of_array_type1.uid(), array_of_array_type2.uid());
 
     // array of point types
-    const auto dim            = N % LEGATE_MAX_DIM + 1;
+    const auto dim            = (N % LEGATE_MAX_DIM) + 1;
     auto array_of_point_type1 = legate::fixed_array_type(legate::point_type(dim), N);
     auto array_of_point_type2 = legate::fixed_array_type(legate::point_type(dim), N);
     EXPECT_NE(array_of_point_type1.uid(), array_of_point_type2.uid());

@@ -37,8 +37,6 @@ constexpr std::string_view LIBRARY_NAME = "test_tunable";
   return tunables;
 }
 
-}  // namespace
-
 class LibraryMapper : public legate::mapping::Mapper {
   legate::mapping::TaskTarget task_target(
     const legate::mapping::Task& /*task*/,
@@ -79,6 +77,8 @@ class ScalarEqFn {
     return lhs.value<VAL>() == rhs.value<VAL>();
   }
 };
+
+}  // namespace
 
 TEST_F(Tunable, Valid)
 {

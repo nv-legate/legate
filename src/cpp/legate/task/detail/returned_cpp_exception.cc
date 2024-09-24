@@ -57,7 +57,13 @@ void ReturnedCppException::legion_serialize(void* buffer) const
   if (raised()) {
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, index());
     std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, size());
-    std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, size(), message().data());
+    std::tie(buffer, rem_cap) =
+      pack_buffer(buffer,
+                  rem_cap,
+                  size(),
+                  // We pass the size
+                  message().data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
+      );
   }
 }
 
