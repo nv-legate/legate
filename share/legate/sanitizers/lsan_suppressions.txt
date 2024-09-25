@@ -22,7 +22,9 @@ leak:PyThread_allocate
 leak:_PyUnicodeWriter_Finish
 leak:list_resize
 leak:resize_buffer
+leak:resize_compact
 leak:unicode_resize
+leak:_PyList_AppendTakeRefListResize
 # numpy
 leak:_multiarray_umath.*
 leak:numpy
