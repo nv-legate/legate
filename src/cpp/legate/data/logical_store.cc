@@ -96,6 +96,21 @@ LogicalStore::~LogicalStore() noexcept
   }
 }
 
+// ==========================================================================================
+
+LogicalStorePartition::LogicalStorePartition(
+  InternalSharedPtr<detail::LogicalStorePartition>&& impl)
+  // We need to keep a user reference to the storage in each logical store partition. Otherwise, the
+  // program may lose all user references to its logical stores but still have some live store
+  // partitions, which would lead to incorrect aliasing of storages within the stores of those live
+  // store partitions.
+  : impl_{std::move(impl)}, storage_{[&] {
+      auto&& storage = this->impl()->store()->get_storage();
+      return storage->get_root(storage).as_user_ptr();
+    }()}
+{
+}
+
 LogicalStore LogicalStorePartition::store() const { return LogicalStore{impl_->store()}; }
 
 const tuple<std::uint64_t>& LogicalStorePartition::color_shape() const
@@ -108,6 +123,11 @@ LogicalStore LogicalStorePartition::get_child_store(const tuple<std::uint64_t>& 
   return LogicalStore{impl_->get_child_store(color)};
 }
 
-LogicalStorePartition::~LogicalStorePartition() noexcept = default;
+LogicalStorePartition::~LogicalStorePartition() noexcept
+{
+  if (impl() && impl()->store()->get_storage().user_ref_count() == 1) {
+    storage_->free_early();
+  }
+}
 
 }  // namespace legate

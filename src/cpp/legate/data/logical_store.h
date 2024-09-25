@@ -436,6 +436,7 @@ class LogicalStorePartition {
 
  private:
   SharedPtr<detail::LogicalStorePartition> impl_{};
+  SharedPtr<detail::Storage> storage_{};
 };
 
 }  // namespace legate

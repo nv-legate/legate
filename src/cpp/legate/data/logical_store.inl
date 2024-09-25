@@ -22,12 +22,6 @@ inline const tuple<std::uint64_t>& LogicalStore::extents() const { return shape(
 
 // ==========================================================================================
 
-inline LogicalStorePartition::LogicalStorePartition(
-  InternalSharedPtr<detail::LogicalStorePartition>&& impl)
-  : impl_{std::move(impl)}
-{
-}
-
 inline const SharedPtr<detail::LogicalStorePartition>& LogicalStorePartition::impl() const
 {
   return impl_;
