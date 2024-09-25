@@ -31,7 +31,22 @@ void kill_process()
 
 }  // namespace
 
+// __has_feature(address_sanitizer) is available only on Clang, so we unify it to
+// __SANITIZE_ADDRESS__ that GCC sets
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define __SANITIZE_ADDRESS__
+#endif
+#endif
+
+// FIXME(wonchanl): this test hangs on aarch64 when the sanitizer is enabled. Since issues like this
+// can easily take really long to figure out and this test doesn't benefit from the sanitizer, we
+// disable it for now.
+#if LEGATE_DEFINED(__aarch64__) && LEGATE_DEFINED(__SANITIZE_ADDRESS__)
+TEST_F(ExampleDeathTest, DISABLED_Simple)
+#else
 TEST_F(ExampleDeathTest, Simple)
+#endif
 {
   const auto value           = std::getenv("REALM_BACKTRACE");
   const bool realm_backtrace = value != nullptr && legate::detail::safe_strtoll(value) != 0;

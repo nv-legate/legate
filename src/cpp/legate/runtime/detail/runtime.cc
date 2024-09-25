@@ -915,6 +915,7 @@ Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
   Legion::RegionRequirement req{region, LEGION_READ_WRITE, LEGION_EXCLUSIVE, region};
 
   req.add_field(field_id);
+  req.flags = LEGION_SUPPRESS_WARNINGS_FLAG;
 
   // TODO(wonchanl): We need to pass the metadata about logical store
   Legion::InlineLauncher launcher{req, mapper_id()};
