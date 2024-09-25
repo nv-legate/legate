@@ -26,6 +26,7 @@
 #include "legate/runtime/detail/runtime.h"
 #include "legate/type/detail/type_info.h"
 #include "legate/utilities/detail/enumerate.h"
+#include "legate/utilities/detail/formatters.h"
 #include "legate/utilities/detail/tuple.h"
 
 #include <algorithm>
@@ -412,12 +413,21 @@ std::string Storage::to_string() const
     LEGATE_UNREACHABLE();
   }();
 
-  return fmt::format("Storage({}) {{{}, kind: {}, type: {}, level: {}}}",
-                     storage_id_,
-                     *shape_,
-                     kind_str,
-                     *type_,
-                     level_);
+  auto result =
+    fmt::format("Storage({}) {{kind: {}, type: {}, level: {}", id(), kind_str, *type(), level());
+
+  if (kind() == Kind::REGION_FIELD) {
+    if (unbound()) {
+      result += ", region: unbound";
+    } else {
+      fmt::format_to(std::back_inserter(result),
+                     ", region: {}, field: {}",
+                     *get_region_field(),
+                     get_region_field()->field_id());
+    }
+  }
+  result += '}';
+  return result;
 }
 
 ////////////////////////////////////////////////////
@@ -1117,7 +1127,7 @@ std::string LogicalStore::to_string() const
   if (!transform_->identity()) {
     fmt::format_to(std::back_inserter(result), ", transform: {}", fmt::streamed(*transform_));
   }
-  fmt::format_to(std::back_inserter(result), ", storage: {}}}", get_storage()->id());
+  fmt::format_to(std::back_inserter(result), ", storage: {}}}", *get_storage());
   return result;
 }
 

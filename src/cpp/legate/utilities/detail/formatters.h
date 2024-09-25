@@ -34,6 +34,8 @@ class Operation;
 class Shape;
 class Constraint;
 class Variable;
+class LogicalRegionField;
+class Storage;
 
 template <typename CharT, typename TraitsT>
 class BasicZStringView;
@@ -107,6 +109,17 @@ struct formatter<legate::GlobalRedopID> : formatter<std::underlying_type_t<legat
 template <>
 struct formatter<legate::detail::ZStringView> : formatter<string_view> {
   format_context::iterator format(const legate::detail::ZStringView& sv, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::detail::LogicalRegionField> : formatter<std::string> {
+  format_context::iterator format(const legate::detail::LogicalRegionField& lrf,
+                                  format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::detail::Storage> : formatter<std::string> {
+  format_context::iterator format(const legate::detail::Storage& s, format_context& ctx) const;
 };
 
 #ifndef DOXYGEN

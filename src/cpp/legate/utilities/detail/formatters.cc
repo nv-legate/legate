@@ -12,6 +12,8 @@
 
 #include "legate/utilities/detail/formatters.h"
 
+#include "legate/data/detail/logical_region_field.h"
+#include "legate/data/detail/logical_store.h"
 #include "legate/data/detail/shape.h"
 #include "legate/operation/detail/operation.h"
 #include "legate/partitioning/detail/constraint.h"
@@ -99,6 +101,18 @@ format_context::iterator formatter<legate::detail::ZStringView>::format(
   const legate::detail::ZStringView& sv, format_context& ctx) const
 {
   return formatter<string_view>::format(sv.as_string_view(), ctx);
+}
+
+format_context::iterator formatter<legate::detail::LogicalRegionField>::format(
+  const legate::detail::LogicalRegionField& lrf, format_context& ctx) const
+{
+  return formatter<std::string>::format(lrf.to_string(), ctx);
+}
+
+format_context::iterator formatter<legate::detail::Storage>::format(
+  const legate::detail::Storage& s, format_context& ctx) const
+{
+  return formatter<std::string>::format(s.to_string(), ctx);
 }
 
 }  // namespace fmt

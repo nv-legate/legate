@@ -17,6 +17,8 @@
 #include "legate/runtime/detail/runtime.h"
 #include "legate/utilities/detail/tuple.h"
 
+#include <fmt/format.h>
+
 namespace legate::detail {
 
 [[nodiscard]] const Legion::PhysicalRegion& LogicalRegionField::PhysicalState::ensure_mapping(
@@ -245,6 +247,15 @@ void LogicalRegionField::perform_invalidation_callbacks()
   } else {
     physical_state_->invoke_callbacks();
   }
+}
+
+std::string LogicalRegionField::to_string() const
+{
+  return fmt::format("({}, ({}, {}), {})",
+                     region().get_tree_id(),
+                     region().get_index_space().get_id(),
+                     region().get_index_space().get_tree_id(),
+                     region().get_field_space().get_id());
 }
 
 }  // namespace legate::detail

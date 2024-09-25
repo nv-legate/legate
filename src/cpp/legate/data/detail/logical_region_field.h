@@ -22,6 +22,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace legate::detail {
@@ -125,6 +126,8 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   LogicalRegionField& operator=(const LogicalRegionField&) = delete;
   LogicalRegionField(LogicalRegionField&&)                 = delete;
   LogicalRegionField& operator=(LogicalRegionField&&)      = delete;
+
+  [[nodiscard]] std::string to_string() const;
 
  private:
   InternalSharedPtr<Shape> shape_{};
