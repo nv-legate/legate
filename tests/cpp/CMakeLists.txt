@@ -188,8 +188,8 @@ legate_configure_test(NAME tests_non_reentrant SOURCES ${main_with_runtime_init_
 
 if(integration_GPU_SRC)
   legate_configure_test(NAME tests_with_gpus SOURCES ${main_with_runtime_init_SRC}
-                        ${tasks_SRC} ${integration_SRC} ${integration_GPU_SRC} GPUS 1
-                        PERCENT 30)
+                        ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC}
+                        ${experimental_SRC} ${stl_SRC} GPUS 1 PERCENT 30)
 endif()
 
 rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing
