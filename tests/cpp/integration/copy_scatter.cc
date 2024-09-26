@@ -18,8 +18,6 @@
 
 namespace copy_scatter {
 
-// NOLINTBEGIN(readability-magic-numbers)
-
 namespace {
 
 class Config {
@@ -29,13 +27,6 @@ class Config {
 };
 
 constexpr std::int32_t CHECK_SCATTER_TASK = FILL_INDIRECT_TASK + (TEST_MAX_DIM * TEST_MAX_DIM);
-
-[[nodiscard]] legate::Logger& logger()
-{
-  static legate::Logger log{std::string{Config::LIBRARY_NAME}};
-
-  return log;
-}
 
 template <std::int32_t IND_DIM, std::int32_t TGT_DIM>
 struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TGT_DIM>> {
@@ -73,7 +64,7 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
         auto p      = ind_acc[*it];
         auto copy   = tgt_acc[p];
         auto source = src_acc[*it];
-        EXPECT_EQ(copy, source);
+        ASSERT_EQ(copy, source);
         mask[p] = true;
       }
 
@@ -82,7 +73,7 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
         if (mask[p]) {
           continue;
         }
-        EXPECT_EQ(tgt_acc[p], init);
+        ASSERT_EQ(tgt_acc[p], init);
       }
     }
   };
@@ -124,28 +115,6 @@ struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TG
 
 class ScatterCopy : public RegisterOnceFixture<Config> {};
 
-struct ScatterSpec {
-  std::vector<std::uint64_t> ind_shape;
-  std::vector<std::uint64_t> data_shape;
-  legate::Scalar seed;
-  legate::Scalar init;
-
-  [[nodiscard]] std::string to_string() const
-  {
-    std::stringstream ss;
-
-    ss << "indirection/source shape: " << ::to_string(ind_shape)
-       << ", target shape: " << ::to_string(data_shape);
-    ss << ", data type: " << seed.type().to_string();
-    return std::move(ss).str();
-  }
-};
-
-template <typename T>
-struct ScatterReductionSpec : ScatterSpec {
-  T redop;
-};
-
 void check_scatter_output(legate::Library library,
                           const legate::LogicalStore& src,
                           const legate::LogicalStore& tgt,
@@ -175,43 +144,52 @@ void check_scatter_output(legate::Library library,
   runtime->submit(std::move(task));
 }
 
-template <typename T>
-void test_scatter_impl(const ScatterSpec& spec, std::optional<T> redop = std::nullopt)
+void test_scatter(const std::vector<std::uint64_t>& ind_shape,
+                  const std::vector<std::uint64_t>& tgt_shape,
+                  const legate::Scalar& seed,
+                  const legate::Scalar& init)
 {
-  LEGATE_ASSERT(spec.seed.type() == spec.init.type());
-  logger().print() << "Scatter Copy: " << spec.to_string();
+  LEGATE_ASSERT(seed.type() == init.type());
 
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto type = spec.seed.type();
-  auto src  = runtime->create_store(legate::Shape{spec.ind_shape}, type);
-  auto tgt  = runtime->create_store(legate::Shape{spec.data_shape}, type);
-  auto ind  = runtime->create_store(legate::Shape{spec.ind_shape},
-                                   legate::point_type(spec.data_shape.size()));
+  auto type = seed.type();
+  auto src  = runtime->create_store(legate::Shape{ind_shape}, type);
+  auto tgt  = runtime->create_store(legate::Shape{tgt_shape}, type);
+  auto ind  = runtime->create_store(legate::Shape{ind_shape}, legate::point_type(tgt_shape.size()));
 
-  fill_input(library, src, spec.seed);
+  fill_input(library, src, seed);
   fill_indirect(library, ind, tgt);
-  runtime->issue_fill(tgt, spec.init);
-  if (redop == std::nullopt) {
-    runtime->issue_scatter(tgt, ind, src);
-  } else {
-    runtime->issue_scatter(tgt, ind, src, redop);
-  }
+  runtime->issue_fill(tgt, init);
+  runtime->issue_scatter(tgt, ind, src);
 
-  check_scatter_output(library, src, tgt, ind, spec.init);
+  check_scatter_output(library, src, tgt, ind, init);
 }
 
-void test_scatter(const ScatterSpec& spec) { test_scatter_impl<std::int32_t>(spec); }
-
-void test_gather_reduction(const ScatterReductionSpec<legate::ReductionOpKind>& spec)
+template <typename T>
+void test_scatter_reduction(const std::vector<std::uint64_t>& ind_shape,
+                            const std::vector<std::uint64_t>& tgt_shape,
+                            const legate::Scalar& seed,
+                            const legate::Scalar& init,
+                            T redop)
 {
-  test_scatter_impl<legate::ReductionOpKind>(spec, spec.redop);
-}
+  LEGATE_ASSERT(seed.type() == init.type());
 
-void test_gather_reduction_int32(const ScatterReductionSpec<std::int32_t>& spec)
-{
-  test_scatter_impl<std::int32_t>(spec, spec.redop);
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
+  auto type = seed.type();
+  auto src  = runtime->create_store(legate::Shape{ind_shape}, type);
+  auto tgt  = runtime->create_store(legate::Shape{tgt_shape}, type);
+  auto ind  = runtime->create_store(legate::Shape{ind_shape}, legate::point_type(tgt_shape.size()));
+
+  fill_input(library, src, seed);
+  fill_indirect(library, ind, tgt);
+  runtime->issue_fill(tgt, init);
+  runtime->issue_scatter(tgt, ind, src, redop);
+
+  check_scatter_output(library, src, tgt, ind, init);
 }
 
 }  // namespace
@@ -220,59 +198,67 @@ void test_gather_reduction_int32(const ScatterReductionSpec<std::int32_t>& spec)
 // duplicate updates on the same element, whose semantics is undefined.
 TEST_F(ScatterCopy, 1Dto2D)
 {
-  const std::vector<std::uint64_t> shape1d{5};
-  test_scatter(
-    ScatterSpec{shape1d, {7, 11}, legate::Scalar{int64_t{123}}, legate::Scalar{int64_t{42}}});
+  const std::vector<std::uint64_t> ind_shape{5};
+  const std::vector<std::uint64_t> tgt_shape{7, 11};
+  const legate::Scalar seed{std::int64_t{123}};
+  const legate::Scalar init{std::int64_t{42}};
+
+  test_scatter(ind_shape, tgt_shape, seed, init);
 }
 
 TEST_F(ScatterCopy, 2Dto3D)
 {
-  test_scatter(
-    ScatterSpec{{3, 7}, {3, 6, 5}, legate::Scalar{uint32_t{456}}, legate::Scalar{uint32_t{42}}});
+  const std::vector<std::uint64_t> ind_shape{3, 7};
+  const std::vector<std::uint64_t> tgt_shape{3, 6, 5};
+  const legate::Scalar seed{std::uint32_t{456}};
+  const legate::Scalar init{std::uint32_t{42}};
+
+  test_scatter(ind_shape, tgt_shape, seed, init);
 }
 
 TEST_F(ScatterCopy, 2Dto2D)
 {
-  test_scatter(
-    ScatterSpec{{4, 5}, {10, 11}, legate::Scalar{int64_t{12}}, legate::Scalar{int64_t{42}}});
+  const std::vector<std::uint64_t> ind_shape{4, 5};
+  const std::vector<std::uint64_t> tgt_shape{10, 11};
+  const legate::Scalar seed{std::int64_t{12}};
+  const legate::Scalar init{std::int64_t{42}};
+
+  test_scatter(ind_shape, tgt_shape, seed, init);
 }
 
 TEST_F(ScatterCopy, 3Dto2D)
 {
-  test_scatter(
-    ScatterSpec{{10, 10, 10}, {200, 200}, legate::Scalar{int64_t{1}}, legate::Scalar{int64_t{42}}});
+  const std::vector<std::uint64_t> ind_shape{10, 10, 10};
+  const std::vector<std::uint64_t> tgt_shape{200, 200};
+  const legate::Scalar seed{std::int64_t{1}};
+  const legate::Scalar init{std::int64_t{42}};
+
+  test_scatter(ind_shape, tgt_shape, seed, init);
 }
 
 TEST_F(ScatterCopy, ReductionEnum2Dto2D)
 {
-  const std::vector<std::uint64_t> shape{10, 11};
   const std::vector<std::uint64_t> ind_shape{0, 0};
+  const std::vector<std::uint64_t> tgt_shape{10, 11};
   const legate::Scalar seed{std::int64_t{12}};
   const legate::Scalar init{std::int64_t{42}};
-  const legate::ReductionOpKind redop{legate::ReductionOpKind::MAX};
+  constexpr legate::ReductionOpKind redop{legate::ReductionOpKind::MAX};
 
-  // Test with redop as ReductionOpKind
-  test_gather_reduction(
-    ScatterReductionSpec<legate::ReductionOpKind>{{ind_shape, shape, seed, init}, redop});
+  test_scatter_reduction(ind_shape, tgt_shape, seed, init, redop);
 }
 
 TEST_F(ScatterCopy, ReductionInt322Dto2D)
 {
-  const std::vector<std::uint64_t> shape{10, 11};
   const std::vector<std::uint64_t> ind_shape{0, 0};
+  const std::vector<std::uint64_t> tgt_shape{10, 11};
   const legate::Scalar seed{std::int64_t{12}};
   const legate::Scalar init{std::int64_t{42}};
-  // ReductionOpKind::MAX
-  const std::int32_t redop{4};
+  constexpr std::int32_t redop{4};
 
   static_assert(redop == static_cast<std::int32_t>(legate::ReductionOpKind::MAX));
   static_assert(std::is_same_v<std::int32_t, std::underlying_type_t<legate::ReductionOpKind>>);
 
-  // Test with redop as int32
-  test_gather_reduction_int32(
-    ScatterReductionSpec<std::int32_t>{{ind_shape, shape, seed, init}, redop});
+  test_scatter_reduction(ind_shape, tgt_shape, seed, init, redop);
 }
-
-// NOLINTEND(readability-magic-numbers)
 
 }  // namespace copy_scatter

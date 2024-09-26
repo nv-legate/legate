@@ -27,8 +27,6 @@ extern void silence_unused_function_warnings()
 
 namespace copy_normal {
 
-// NOLINTBEGIN(readability-magic-numbers)
-
 namespace {
 
 constexpr std::int32_t TEST_MAX_DIM              = 3;
@@ -47,7 +45,7 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
       auto src  = source.read_accessor<VAL, DIM>(shape);
       auto tgt  = target.read_accessor<VAL, DIM>(shape);
       for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-        EXPECT_EQ(src[*it], tgt[*it]);
+        ASSERT_EQ(src[*it], tgt[*it]);
       }
     }
   };
@@ -81,7 +79,7 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
       auto tgt      = target.read_accessor<VAL, DIM>(shape);
       std::size_t i = 1;
       for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it, ++i) {
-        EXPECT_EQ(src[*it] + i * seed.value<VAL>(), tgt[*it]);
+        ASSERT_EQ(src[*it] + i * seed.value<VAL>(), tgt[*it]);
       }
     }
     template <legate::Type::Code CODE, std::enable_if_t<!legate::is_integral<CODE>::value, int> = 0>
@@ -130,6 +128,17 @@ class Config {
 
 class NormalCopy : public RegisterOnceFixture<Config> {};
 
+class Input2D
+  : public RegisterOnceFixture<Config>,
+    public ::testing::WithParamInterface<std::tuple<std::vector<std::uint64_t>, legate::Scalar>> {};
+
+INSTANTIATE_TEST_SUITE_P(NormalCopy,
+                         Input2D,
+                         ::testing::Values(std::make_tuple(std::vector<std::uint64_t>{4, 7},
+                                                           legate::Scalar{std::int64_t{12}}),
+                                           std::make_tuple(std::vector<std::uint64_t>{1000, 100},
+                                                           legate::Scalar{std::int64_t{3}})));
+
 void check_copy_output(legate::Library library,
                        const legate::LogicalStore& src,
                        const legate::LogicalStore& tgt)
@@ -170,27 +179,12 @@ void check_copy_reduction_output(legate::Library library,
   runtime->submit(std::move(task));
 }
 
-struct NormalCopySpec {
-  std::vector<std::uint64_t> shape;
-  legate::Type type;
-  legate::Scalar seed;
-};
-
-template <typename T>
-struct NormalCopyReductionSpec {
-  std::vector<std::uint64_t> shape;
-  legate::Type type;
-  legate::Scalar seed;
-  T redop;
-};
-
-void test_normal_copy(const NormalCopySpec& spec)
+void test_normal_copy(const std::vector<std::uint64_t>& shape, const legate::Scalar& seed)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto& [shape, type, seed] = spec;
-
+  auto type   = seed.type();
   auto input  = runtime->create_store(legate::Shape{shape}, type, true /*optimize_scalar*/);
   auto output = runtime->create_store(legate::Shape{shape}, type, true /*optimize_scalar*/);
 
@@ -202,13 +196,14 @@ void test_normal_copy(const NormalCopySpec& spec)
 }
 
 template <typename T>
-void test_normal_copy_reduction(const NormalCopyReductionSpec<T>& spec)
+void test_normal_copy_reduction(const std::vector<std::uint64_t>& shape,
+                                const legate::Scalar& seed,
+                                T redop)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto& [shape, type, seed, redop] = spec;
-
+  auto type   = seed.type();
   auto input  = runtime->create_store(legate::Shape{shape}, type);
   auto output = runtime->create_store(legate::Shape{shape}, type);
 
@@ -222,51 +217,38 @@ void test_normal_copy_reduction(const NormalCopyReductionSpec<T>& spec)
 
 }  // namespace
 
-TEST_F(NormalCopy, Single)
+TEST_F(NormalCopy, Single1D)
 {
-  test_normal_copy({{4, 7}, legate::int64(), legate::Scalar{std::int64_t{12}}});
-  test_normal_copy({{1000, 100}, legate::uint32(), legate::Scalar{std::uint32_t{3}}});
-  test_normal_copy({{1}, legate::int64(), legate::Scalar{std::int64_t{12}}});
+  const std::vector<std::uint64_t> shape{1};
+  const legate::Scalar seed{std::int64_t{12}};
+
+  test_normal_copy(shape, seed);
 }
 
-TEST_F(NormalCopy, SingleReduction)
+TEST_P(Input2D, Single)
 {
-  const std::vector<std::uint64_t> shape1{4, 7};
-  const legate::Type type1{legate::int64()};
-  const legate::Scalar seed1{std::int64_t{12}};
-  const std::vector<std::uint64_t> shape2{1000, 100};
-  const legate::Type type2{legate::uint32()};
-  const legate::Scalar seed2{std::uint32_t{3}};
-  const legate::ReductionOpKind redop{legate::ReductionOpKind::ADD};
+  auto& [shape, seed] = GetParam();
 
-  // Test with redop as ReductionOpKind
-  test_normal_copy_reduction<legate::ReductionOpKind>(
-    NormalCopyReductionSpec<legate::ReductionOpKind>{shape1, type1, seed1, redop});
-  test_normal_copy_reduction<legate::ReductionOpKind>(
-    NormalCopyReductionSpec<legate::ReductionOpKind>{shape2, type2, seed2, redop});
+  test_normal_copy(shape, seed);
 }
 
-TEST_F(NormalCopy, SingleReductionInt32)
+TEST_P(Input2D, SingleReduction)
 {
-  const std::vector<std::uint64_t> shape1{4, 7};
-  const legate::Type type1{legate::int64()};
-  const legate::Scalar seed1{std::int64_t{12}};
-  const std::vector<std::uint64_t> shape2{1000, 100};
-  const legate::Type type2{legate::uint32()};
-  const legate::Scalar seed2{std::uint32_t{3}};
-  // ReductionOpKind::ADD
-  const std::int32_t redop{0};
+  constexpr legate::ReductionOpKind redop{legate::ReductionOpKind::ADD};
+  auto& [shape, seed] = GetParam();
 
+  test_normal_copy_reduction(shape, seed, redop);
+}
+
+TEST_P(Input2D, SingleReductionInt32)
+{
+  constexpr std::int32_t redop{0};
   static_assert(redop == static_cast<std::int32_t>(legate::ReductionOpKind::ADD));
   static_assert(std::is_same_v<std::int32_t, std::underlying_type_t<legate::ReductionOpKind>>);
 
-  // Test with redop as int32
-  test_normal_copy_reduction<std::int32_t>(
-    NormalCopyReductionSpec<std::int32_t>{shape1, type1, seed1, redop});
-  test_normal_copy_reduction<std::int32_t>(
-    NormalCopyReductionSpec<std::int32_t>{shape2, type2, seed2, redop});
-}
+  auto& [shape, seed] = GetParam();
 
-// NOLINTEND(readability-magic-numbers)
+  test_normal_copy_reduction(shape, seed, redop);
+}
 
 }  // namespace copy_normal
