@@ -4,7 +4,7 @@ export LEGATE_DIR := $(shell ./scripts/get_legate_dir.py)
 endif
 
 ifndef LEGATE_ARCH
-$(error LEGATE_ARCH not defined)
+export LEGATE_ARCH := $(shell ./scripts/get_legate_arch.py)
 endif
 
 .SUFFIXES:

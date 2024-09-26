@@ -38,8 +38,16 @@ def main() -> int:
 
 
 def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
-    if not (LEGATE_ARCH := os.environ.get("LEGATE_ARCH")):
-        return None, None
+    if not (LEGATE_ARCH := os.environ.get("LEGATE_ARCH", "").strip()):
+        try:
+            from scripts.get_legate_arch import (  # type: ignore[import-not-found, unused-ignore] # noqa E501
+                get_legate_arch,
+            )
+        except ModuleNotFoundError:
+            # User hasn't run configure yet, can't do anything
+            return None, None
+
+        LEGATE_ARCH = get_legate_arch()
 
     from scripts.get_legate_dir import get_legate_dir
 

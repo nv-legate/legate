@@ -50,3 +50,4 @@ configure.log
 reconfigure-*
 *-arch
 *_venv
+scripts/get_legate_arch\.py

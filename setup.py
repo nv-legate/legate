@@ -115,14 +115,24 @@ try:
     if not LEGATE_ARCH:
         raise KeyError("empty arch")
 except KeyError as ke:
-    raise RuntimeError(
-        "\n"
-        f"{ERROR_BANNER}"
-        "\n"
-        "Must export LEGATE_ARCH in environment before continuing"
-        "\n"
-        f"{ERROR_BANNER}"
-    ) from ke
+    try:
+        from scripts.get_legate_arch import (  # type: ignore[import-not-found,unused-ignore] # noqa: E501
+            get_legate_arch,
+        )
+    except ModuleNotFoundError:
+        # User has not run configure yet
+        raise RuntimeError(
+            "\n"
+            f"{ERROR_BANNER}"
+            "\n"
+            "Must export LEGATE_ARCH in environment before continuing "
+            " and/or run configure"
+            "\n"
+            f"{ERROR_BANNER}"
+        ) from ke
+
+    LEGATE_ARCH = get_legate_arch()
+
 
 LEGATE_ARCH_DIR: Final = LEGATE_DIR / LEGATE_ARCH
 LEGATE_CMAKE_DIR: Final = LEGATE_ARCH_DIR / "cmake_build"

@@ -454,6 +454,37 @@ class ConfigurationManager:
 
         return self._modules[ret_idx]  # should should never fail
 
+    def _emit_summary(self) -> None:
+        def gen_summary() -> Iterator[str]:
+            summary = defaultdict(list)
+            summary[self._main_package.name].append(
+                self.log_execute_func(self._main_package.summarize_main)
+            )
+            for conf_obj in self._modules:
+                if ret := self.log_execute_func(conf_obj.summarize):
+                    summary[conf_obj.name].append(ret)
+
+            for val_list in summary.values():
+                yield from val_list
+
+        summary = "\n".join(gen_summary())
+        self.log_divider(tee=True)
+        self.log(summary, tee=True, caller_context=False)
+        install_mess = [
+            "Please set the following:",
+            "",
+            f"export {self.project_arch_name}='{self.project_arch}'",
+            f"export {self.project_dir_name}='{self.project_dir}'",
+            "",
+            "Then build libraries:",
+            "$ make",
+        ]
+        if self._get_package("python").state.enabled():
+            install_mess.extend(
+                ("And install Python bindings:", "$ pip install .")
+            )
+        self.log_boxed("\n".join(install_mess), title="Configuration Complete")
+
     # Member variable access
     @property
     def argv(self) -> tuple[str, ...]:
@@ -1007,34 +1038,6 @@ class ConfigurationManager:
             ephemeral_args=self._ephemeral_args,
             extra_argv=self._extra_argv,
         )
-
-        def gen_summary() -> Iterator[str]:
-            summary = defaultdict(list)
-            summary[self._main_package.name].append(
-                self.log_execute_func(self._main_package.summarize_main)
-            )
-            for conf_obj in self._modules:
-                if ret := self.log_execute_func(conf_obj.summarize):
-                    summary[conf_obj.name].append(ret)
-
-            for val_list in summary.values():
-                yield from val_list
-
-        summary = "\n".join(gen_summary())
-        self.log_divider(tee=True)
-        self.log(summary, tee=True, caller_context=False)
-        install_mess = [
-            "Please set the following:",
-            "",
-            f"export {self.project_arch_name}='{self.project_arch}'",
-            f"export {self.project_dir_name}='{self.project_dir}'",
-            "",
-            "Then build libraries:",
-            "$ make",
-        ]
-        if self._get_package("python").state.enabled():
-            install_mess.extend(
-                ("And install Python bindings:", "$ pip install .")
-            )
-        self.log_boxed("\n".join(install_mess), title="Configuration Complete")
+        self.log_execute_func(self._main_package.post_finalize)
+        self.log_execute_func(self._emit_summary)
         self._logger.copy_log(self.project_arch_dir / "configure.log")

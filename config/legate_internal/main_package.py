@@ -150,13 +150,17 @@ class Legate(MainPackage):
         """
         from scripts.get_legate_dir import get_legate_dir
 
+        legate_dir = Path(get_legate_dir())
         super().__init__(
             manager=manager,
             argv=argv,
             name="Legate",
             arch_name="LEGATE_ARCH",
             project_dir_name="LEGATE_DIR",
-            project_dir_value=Path(get_legate_dir()),
+            project_dir_value=legate_dir,
+            default_arch_file_path=legate_dir
+            / "scripts"
+            / "get_legate_arch.py",
         )
 
     @classmethod
