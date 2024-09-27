@@ -35,7 +35,6 @@ if TYPE_CHECKING:
     from .cuda import CUDA
     from .gasnet import GASNet
     from .hdf5 import HDF5
-    from .llvm import LLVM
     from .mpi import MPI
     from .openmp import OpenMP
     from .python import Python
@@ -142,7 +141,6 @@ class Legion(Package):
     Legion_USE_CUDA: Final = CMAKE_VARIABLE("Legion_USE_CUDA", CMakeBool)
     Legion_USE_OpenMP: Final = CMAKE_VARIABLE("Legion_USE_OpenMP", CMakeBool)
     Legion_USE_HDF5: Final = CMAKE_VARIABLE("Legion_USE_HDF5", CMakeBool)
-    Legion_USE_LLVM: Final = CMAKE_VARIABLE("Legion_USE_LLVM", CMakeBool)
     Legion_USE_Python: Final = CMAKE_VARIABLE("Legion_USE_Python", CMakeBool)
     Legion_USE_ZLIB: Final = CMAKE_VARIABLE("Legion_USE_ZLIB", CMakeBool)
     Legion_Python_Version: Final = CMAKE_VARIABLE(
@@ -191,7 +189,6 @@ class Legion(Package):
         self.gasnet: GASNet = TYPE_CAST(Any, self.require("gasnet"))
         self.openmp: OpenMP = TYPE_CAST(Any, self.require("openmp"))
         self.hdf5: HDF5 = TYPE_CAST(Any, self.require("hdf5"))
-        self.llvm: LLVM = TYPE_CAST(Any, self.require("llvm"))
         self.python: Python = TYPE_CAST(Any, self.require("python"))
         self.mpi: MPI = TYPE_CAST(Any, self.require("mpi"))
         self.ucx: UCX = TYPE_CAST(Any, self.require("ucx"))
@@ -305,15 +302,6 @@ class Legion(Package):
         elif self.hdf5.state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_USE_HDF5, False)
 
-    def configure_llvm(self) -> None:
-        r"""Configure Legion to use LLVM. Does nothing if LLVM is not
-        enabled.
-        """
-        if self.llvm.state.enabled():
-            self.manager.set_cmake_variable(self.Legion_USE_LLVM, True)
-        elif self.llvm.state.explicitly_disabled():
-            self.manager.set_cmake_variable(self.Legion_USE_LLVM, False)
-
     def configure_python(self) -> None:
         r"""Configure Legion to use Python. Does nothing if Python is not
         enabled.
@@ -373,7 +361,6 @@ class Legion(Package):
         self.log_execute_func(self.configure_gasnet)
         self.log_execute_func(self.configure_openmp)
         self.log_execute_func(self.configure_hdf5)
-        self.log_execute_func(self.configure_llvm)
         self.log_execute_func(self.configure_python)
         self.log_execute_func(self.configure_zlib)
         self.log_execute_func(self.configure_networks)
