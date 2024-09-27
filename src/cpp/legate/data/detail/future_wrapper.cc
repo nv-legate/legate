@@ -30,8 +30,7 @@ namespace {
 [[nodiscard]] Legion::UntypedDeferredValue untyped_deferred_value_from_future(
   const Legion::Future& fut, std::size_t field_size, std::size_t field_offset)
 {
-  const auto mem_kind =
-    find_memory_kind_for_executing_processor(LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB));
+  const auto mem_kind = find_memory_kind_for_executing_processor(false /*host_accessible*/);
 
   if (!fut.valid()) {
     return Legion::UntypedDeferredValue{field_size, mem_kind};
@@ -152,7 +151,7 @@ mapping::StoreTarget FutureWrapper::target() const
   // for futures, but instead would move the data wherever it's requested. Until Legate gets
   // access to that information, we potentially give inaccurate answers
   return mapping::detail::to_target(
-    find_memory_kind_for_executing_processor(LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB)));
+    find_memory_kind_for_executing_processor(false /*host_accessible*/));
 }
 
 // Initializing isn't a const operation, even if all member functions are used const-ly
