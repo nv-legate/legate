@@ -97,9 +97,7 @@ function(legate_configure_default_compiler_flags)
       "-Warray-bounds-pointer-arithmetic"
       "-Wassign-enum"
       "-Wformat-pedantic")
-  set(default_cxx_flags_debug
-      ${default_warning_flags} "-g" "-O0" "-fstack-protector"
-      "-D_LIBCPP_ENABLE_ASSERTIONS=1" "-D_LIBCPP_ENABLE_NODISCARD=1")
+  set(default_cxx_flags_debug ${default_warning_flags} "-g" "-O0" "-fstack-protector")
   set(default_cxx_flags_sanitizer
       "-fsanitize=address,undefined,bounds" "-fno-sanitize-recover=undefined"
       "-fno-omit-frame-pointer" "-g")
