@@ -178,18 +178,22 @@ endif()
   install(CODE "${code_string}")
 endif()
 
-legate_configure_test(NAME tests_with_runtime SOURCES ${main_with_runtime_init_SRC}
-                      ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC}
-                      ${experimental_SRC} ${stl_SRC})
+legate_configure_test(NAME tests_with_runtime
+                      SOURCES ${main_with_runtime_init_SRC} ${bug_SRC} ${tasks_SRC}
+                              ${integration_SRC} ${unit_SRC} ${experimental_SRC}
+                              ${stl_SRC})
 legate_configure_test(NAME tests_wo_runtime SOURCES ${main_wo_runtime_init_SRC}
-                      ${noinit_SRC})
+                                                    ${noinit_SRC})
 legate_configure_test(NAME tests_non_reentrant SOURCES ${main_with_runtime_init_SRC}
-                      ${non_reentrant_SRC})
+                                                       ${non_reentrant_SRC})
 
 if(integration_GPU_SRC)
-  legate_configure_test(NAME tests_with_gpus SOURCES ${main_with_runtime_init_SRC}
-                        ${bug_SRC} ${tasks_SRC} ${integration_SRC} ${unit_SRC}
-                        ${experimental_SRC} ${stl_SRC} GPUS 1 PERCENT 30)
+  legate_configure_test(NAME tests_with_gpus
+                        SOURCES ${main_with_runtime_init_SRC} ${bug_SRC} ${tasks_SRC}
+                                ${integration_SRC} ${unit_SRC} ${experimental_SRC}
+                                ${stl_SRC}
+                        GPUS 1
+                        PERCENT 30)
 endif()
 
 rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing

@@ -121,16 +121,16 @@ function(legate_configure_default_compiler_flags)
   endif()
 
   if(NOT legate_CXX_FLAGS)
-    legate_set_default_flags_impl(SET_CACHE LANG CXX DEST_VAR legate_CXX_FLAGS FLAGS
-                                  ${default_cxx_flags})
+    legate_set_default_flags_impl(SET_CACHE LANG CXX DEST_VAR legate_CXX_FLAGS
+                                  FLAGS ${default_cxx_flags})
     set(legate_CXX_FLAGS "${legate_CXX_FLAGS}" PARENT_SCOPE)
   endif()
 
   if(legate_ENABLE_SANITIZERS)
     set(cmake_cxx_flags_tmp)
     # Don't set cache because we still need to de-listify the result first
-    legate_set_default_flags_impl(LANG CXX DEST_VAR cmake_cxx_flags_tmp FLAGS
-                                  ${default_cxx_flags_sanitizer})
+    legate_set_default_flags_impl(LANG CXX DEST_VAR cmake_cxx_flags_tmp
+                                  FLAGS ${default_cxx_flags_sanitizer})
 
     list(JOIN cmake_cxx_flags_tmp " " cmake_cxx_flags_tmp)
     # Don't assign this blindly, first, check if CMAKE_CXX_FLAGS ends with exactly the
@@ -176,8 +176,8 @@ function(legate_configure_default_compiler_flags)
       list(APPEND default_cuda_flags "-g" "-lineinfo")
     endif()
 
-    legate_set_default_flags_impl(SET_CACHE LANG CUDA DEST_VAR legate_CUDA_FLAGS FLAGS
-                                  ${default_cuda_flags})
+    legate_set_default_flags_impl(SET_CACHE LANG CUDA DEST_VAR legate_CUDA_FLAGS
+                                  FLAGS ${default_cuda_flags})
     set(legate_CUDA_FLAGS "${legate_CUDA_FLAGS}" PARENT_SCOPE)
   endif()
 endfunction()
@@ -191,8 +191,9 @@ function(legate_configure_default_linker_flags)
   endif()
 
   if(NOT legate_LINKER_FLAGS)
-    legate_set_default_flags_impl(SET_CACHE IS_LINKER LANG CXX DEST_VAR
-                                  legate_LINKER_FLAGS FLAGS ${default_linker_flags})
+    legate_set_default_flags_impl(SET_CACHE IS_LINKER LANG CXX
+                                  DEST_VAR legate_LINKER_FLAGS
+                                  FLAGS ${default_linker_flags})
     set(legate_LINKER_FLAGS "${legate_LINKER_FLAGS}" PARENT_SCOPE)
   endif()
 endfunction()

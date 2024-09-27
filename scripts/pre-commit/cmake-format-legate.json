@@ -1,33 +1,282 @@
 {
     "parse": {
         "additional_commands": {
-            "legate_add_tidy_diff_target": {
-                "kwargs": {},
+            "add_cuda_architecture_defines": {
+                "kwargs": {
+                    "ARCHS": "+",
+                    "DEFS": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "add_def_if_arch_enabled": {
+                "pargs": {
+                    "nargs": 2
+                }
+            },
+            "add_touch_legate_ninja_build_target": {
                 "pargs": {
                     "nargs": 0
                 }
             },
+            "check_nvcc_pedantic_flags": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_legate_cpp": {
+                "kwargs": {
+                    "BUILD_EXPORT_SET": 1,
+                    "INSTALL_EXPORT_SET": 1,
+                    "VERSION": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "find_legate_cpp_impl": {
+                "pargs": {
+                    "nargs": 3
+                }
+            },
+            "find_or_configure_argparse": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_cccl": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_fmt": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_google_benchmark": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_legion": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_legion_impl": {
+                "kwargs": {
+                    "BRANCH": 1,
+                    "EXCLUDE_FROM_ALL": 1,
+                    "REPOSITORY": 1,
+                    "VERSION": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "find_or_configure_mdspan": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_nccl": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_span": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "get_cpm_git_args": {
+                "kwargs": {
+                    "BRANCH": 1,
+                    "REPOSITORY": 1,
+                    "SHALLOW": 1,
+                    "TAG": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "1+"
+                }
+            },
+            "legate_add_cffi": {
+                "kwargs": {
+                    "PY_PATH": 1,
+                    "TARGET": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "1+"
+                }
+            },
+            "legate_add_cpp_subdirectory": {
+                "kwargs": {
+                    "EXPORT": 1,
+                    "TARGET": 1,
+                    "VERSION": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "1+"
+                }
+            },
+            "legate_add_target_compile_option": {
+                "pargs": {
+                    "nargs": 4
+                }
+            },
+            "legate_add_target_link_option": {
+                "pargs": {
+                    "nargs": 3
+                }
+            },
+            "legate_add_tidy_diff_target": {
+                "kwargs": {},
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
             "legate_add_tidy_target": {
                 "kwargs": {
-                    "SOURCE": "1"
+                    "SOURCE": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "legate_apply_patch": {
+                "kwargs": {
+                    "PATCH_FILE": 1,
+                    "SOURCE": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "legate_configure_benchmark": {
+                "kwargs": {
+                    "SOURCES": "+",
+                    "TARGET": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "legate_configure_default_compiler_flags": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "legate_configure_default_linker_flags": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "legate_configure_test": {
+                "kwargs": {
+                    "GPUS": 1,
+                    "NAME": 1,
+                    "PERCENT": 1,
+                    "SOURCES": "+"
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "legate_cpp_library_template": {
+                "pargs": {
+                    "nargs": 2
+                }
+            },
+            "legate_create_cython_modules": {
+                "kwargs": {
+                    "SOURCES": "+"
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "legate_debug_syms": {
+                "kwargs": {
+                    "INSTALL_DIR": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "1+"
+                }
+            },
+            "legate_default_cpp_install": {
+                "kwargs": {
+                    "EXPORT": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "1+"
+                }
+            },
+            "legate_default_python_install": {
+                "kwargs": {
+                    "EXPORT": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "1+"
                 }
             },
             "legate_export_compile_commands": {
                 "kwargs": {
-                    "DEST_DIR": "1"
+                    "DEST_DIR": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
                 }
             },
             "legate_find_or_configure": {
                 "kwargs": {
-                    "PACKAGE": "1"
+                    "PACKAGE": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
                 }
             },
             "legate_find_program": {
                 "kwargs": {
-                    "FIND_PROGRAM_ARGS": "*"
+                    "FIND_PROGRAM_ARGS": "+"
                 },
                 "pargs": {
-                    "nargs": 2
+                    "flags": [],
+                    "nargs": "2+"
+                }
+            },
+            "legate_generate_legate_defines": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "legate_generate_patch_command": {
+                "kwargs": {
+                    "DEST_VAR": 1,
+                    "PATCH_FILE": 1,
+                    "SOURCE": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
                 }
             },
             "legate_generate_sanitizer_options": {
@@ -35,6 +284,25 @@
                     "DELIM": 1,
                     "DEST": 1,
                     "SRC": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "legate_handle_imported_target_rpaths_": {
+                "pargs": {
+                    "nargs": 2
+                }
+            },
+            "legate_handle_normal_target_rpaths_": {
+                "pargs": {
+                    "nargs": 2
+                }
+            },
+            "legate_include_rapids": {
+                "pargs": {
+                    "nargs": 0
                 }
             },
             "legate_install_from_tree": {
@@ -47,24 +315,114 @@
             },
             "legate_list_escape_re_chars": {
                 "pargs": {
-                    "nargs": "2"
+                    "nargs": 2
+                }
+            },
+            "legate_maybe_override_legion": {
+                "pargs": {
+                    "nargs": 2
+                }
+            },
+            "legate_parse_versions_json": {
+                "kwargs": {
+                    "GIT_SHALLOW": 1,
+                    "GIT_TAG": 1,
+                    "GIT_URL": 1,
+                    "PACKAGE": 1,
+                    "VERSION": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "legate_populate_cython_dependency_rpaths": {
+                "kwargs": {
+                    "RESULT_VAR": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "legate_populate_dependency_rpaths_editable": {
+                "pargs": {
+                    "nargs": 1
+                }
+            },
+            "legate_python_library_template": {
+                "kwargs": {
+                    "PY_IMPORT_PATH": 1,
+                    "TARGET": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "1+"
+                }
+            },
+            "legate_rapids_find_legate": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "legate_set_default_flags_impl": {
+                "kwargs": {
+                    "DEST_VAR": 1,
+                    "FLAGS": "+",
+                    "LANG": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "SET_CACHE",
+                        "IS_LINKER"
+                    ],
+                    "nargs": "*"
+                }
+            },
+            "legate_set_language_standard": {
+                "pargs": {
+                    "nargs": 2
                 }
             },
             "legate_string_ends_with": {
                 "kwargs": {
-                    "ENDS_WITH": "1",
-                    "RESULT_VAR": "1",
-                    "SRC": "1"
+                    "ENDS_WITH": 1,
+                    "RESULT_VAR": 1,
+                    "SRC": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
                 }
             },
             "legate_string_escape_re_chars": {
                 "pargs": {
-                    "nargs": "2"
+                    "nargs": 2
                 }
             },
             "legate_uninstall_target": {
                 "kwargs": {
-                    "TARGET": "1"
+                    "TARGET": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "print_all_properties": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "print_target_properties": {
+                "kwargs": {
+                    "TARGET": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "SHOW_UNSET"
+                    ],
+                    "nargs": "*"
                 }
             },
             "rapids_cmake_build_type": {
@@ -482,6 +840,31 @@
                         "INCLUDE_IN_ALL"
                     ],
                     "nargs": "0"
+                }
+            },
+            "set_cpu_arch_flags": {
+                "pargs": {
+                    "nargs": 1
+                }
+            },
+            "set_cpu_arch_flags_impl": {
+                "pargs": {
+                    "nargs": 3
+                }
+            },
+            "set_cuda_arch_from_names": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "set_ifndef": {
+                "pargs": {
+                    "nargs": 2
+                }
+            },
+            "set_or_default": {
+                "pargs": {
+                    "nargs": 2
                 }
             }
         }

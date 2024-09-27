@@ -162,12 +162,9 @@ function(find_or_configure_legion_impl)
 
     include(${LEGATE_DIR}/cmake/Modules/apply_patch.cmake)
 
-    legate_generate_patch_command(SOURCE
-                                  ${CMAKE_BINARY_DIR}/_deps/legion-src/bindings/python/CMakeLists.txt
-                                  PATCH_FILE
-                                  ${LEGATE_DIR}/cmake/patches/Legion_bindings_python_CMakeLists.txt.diff
-                                  DEST_VAR
-                                  patch_command)
+    legate_generate_patch_command(SOURCE ${CMAKE_BINARY_DIR}/_deps/legion-src/bindings/python/CMakeLists.txt
+                                  PATCH_FILE ${LEGATE_DIR}/cmake/patches/Legion_bindings_python_CMakeLists.txt.diff
+                                  DEST_VAR patch_command)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Legion_CXX_FLAGS}")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${Legion_CUDA_FLAGS}")
@@ -238,14 +235,10 @@ function(find_or_configure_legion)
     set(legate_LEGION_VERSION "${legate_VERSION}")
   endif()
 
-  find_or_configure_legion_impl(VERSION
-                                ${legate_LEGION_VERSION}
-                                REPOSITORY
-                                ${legate_LEGION_REPOSITORY}
-                                BRANCH
-                                ${legate_LEGION_BRANCH}
-                                EXCLUDE_FROM_ALL
-                                ${legate_EXCLUDE_LEGION_FROM_ALL})
+  find_or_configure_legion_impl(VERSION ${legate_LEGION_VERSION}
+                                REPOSITORY ${legate_LEGION_REPOSITORY}
+                                BRANCH ${legate_LEGION_BRANCH}
+                                EXCLUDE_FROM_ALL ${legate_EXCLUDE_LEGION_FROM_ALL})
 
   set(legate_LEGION_VERSION "${legate_LEGION_VERSION}" PARENT_SCOPE)
   set(Legion_USE_CUDA ${Legion_USE_CUDA} PARENT_SCOPE)

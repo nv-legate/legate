@@ -37,7 +37,10 @@ jobs:
 
       - name: Generate requirements.txt
         run: |
-          echo "shellcheck-py" > requirements.txt
+          {
+            echo "shellcheck-py"
+            echo "cmakelang"
+          } > requirements.txt
 
       - name: Setup Python
         uses: actions/setup-python@v5

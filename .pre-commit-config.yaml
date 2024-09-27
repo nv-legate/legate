@@ -132,6 +132,14 @@ repos:
         require_serial: true
         args: ['-c', './scripts/pre-commit/yamllint.yml']
         additional_dependencies: ['yamllint']
+      - id: check_cmake_format
+        name: check_cmake_format
+        description: 'Check that cmake-format.json is properly filled out with function signatures'
+        entry: ./scripts/pre-commit/check_cmake_format.py
+        args: ['--input-file', './scripts/pre-commit/cmake-format-legate.json']
+        language: python
+        types: [cmake]
+        require_serial: true
 
 ci:
   autoupdate_schedule: quarterly

@@ -27,6 +27,6 @@ include(${LEGATE_CORE_DIR}/cmake/legate_helper_functions.cmake)
 
 legate_add_cpp_subdirectory(src TARGET region_manager EXPORT region_manager-export)
 
-legate_add_cffi(${CMAKE_CURRENT_SOURCE_DIR}/src/region_manager_cffi.h TARGET
-                region_manager)
+legate_add_cffi(${CMAKE_CURRENT_SOURCE_DIR}/src/region_manager_cffi.h
+                TARGET region_manager)
 legate_default_python_install(region_manager EXPORT region_manager-export)

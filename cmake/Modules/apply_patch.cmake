@@ -53,8 +53,9 @@ function(legate_apply_patch)
   cmake_parse_arguments(_LEGATE_PATCH "${options}" "${one_value_args}"
                         "${multi_value_keywords}" ${ARGN})
 
-  legate_generate_patch_command(SOURCE ${_LEGATE_PATCH_SOURCE} PATCH_FILE
-                                ${_LEGATE_PATCH_PATCH_FILE} DEST_VAR patch_command)
+  legate_generate_patch_command(SOURCE ${_LEGATE_PATCH_SOURCE}
+                                PATCH_FILE ${_LEGATE_PATCH_PATCH_FILE}
+                                DEST_VAR patch_command)
 
   message(STATUS "Patching ${_LEGATE_PATCH_SOURCE}")
 
