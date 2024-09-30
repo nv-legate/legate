@@ -106,7 +106,7 @@ export LEGATE_LOCAL_RANK="${local_rank}"
 export LEGATE_GLOBAL_RANK="${global_rank}"
 
 if [[ -n "${cpus+x}" ]]; then
-  cpus=("${cpus//\// }")
+  IFS='/' read -r -a cpus <<< "${cpus}"
   if [[ "${local_rank}" -ge "${#cpus[@]}" ]]; then
       echo "Error: Incomplete CPU binding specification" 1>&2
       exit 1
@@ -114,7 +114,7 @@ if [[ -n "${cpus+x}" ]]; then
 fi
 
 if [[ -n "${gpus+x}" ]]; then
-  gpus=("${gpus//\// }")
+  IFS='/' read -r -a gpus <<< "${gpus}"
   if [[ "${local_rank}" -ge "${#gpus[@]}" ]]; then
       echo "Error: Incomplete GPU binding specification" 1>&2
       exit 1
@@ -123,7 +123,7 @@ if [[ -n "${gpus+x}" ]]; then
 fi
 
 if [[ -n "${mems+x}" ]]; then
-  mems=("${mems//\// }")
+  IFS='/' read -r -a mems <<< "${mems}"
   if [[ "${local_rank}" -ge "${#mems[@]}" ]]; then
       echo "Error: Incomplete MEM binding specification" 1>&2
       exit 1
@@ -131,7 +131,7 @@ if [[ -n "${mems+x}" ]]; then
 fi
 
 if [[ -n "${nics+x}" ]]; then
-  nics=("${nics//\// }")
+  IFS='/' read -r -a nics <<< "${nics}"
   if [[ "${local_rank}" -ge "${#nics[@]}" ]]; then
       echo "Error: Incomplete NIC binding specification" 1>&2
       exit 1
