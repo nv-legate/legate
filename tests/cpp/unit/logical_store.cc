@@ -810,21 +810,21 @@ TEST_F(LogicalStoreUnit, ToString)
   ASSERT_THAT(
     bound_store.to_string(),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \[1\], storage: Storage\([0-9]+\) \{kind: Future, type: \w+, level: [0-9]+\}\})"));
+      R"(Store\([0-9]+\) \{shape: \[1\], storage: Storage\([0-9]+\) \{kind: Future, type: int32, level: [0-9]+\}\})"));
 
   const auto promoted = bound_store.promote(0, 5);
 
   ASSERT_THAT(
     promoted.to_string(),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \[5, 1\], transform: Promote\(extra_dim: 0, dim_size: 5\), storage: Storage\([0-9]+\) \{kind: Future, type: \w+, level: [0-9]+\}\})"));
+      R"(Store\([0-9]+\) \{shape: \[5, 1\], transform: Promote\(extra_dim: 0, dim_size: 5\), storage: Storage\([0-9]+\) \{kind: Future, type: int32, level: [0-9]+\}\})"));
 
   const auto unbound_store = runtime->create_store(legate::int64());
 
   ASSERT_THAT(
     unbound_store.to_string(),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \(unbound\), storage: Storage\([0-9]+\) \{kind: \w+, type: \w+, level: [0-9]+, region: unbound\}\})"));
+      R"(Store\([0-9]+\) \{shape: \(unbound\), storage: Storage\([0-9]+\) \{kind: Region, type: int64, level: [0-9]+, region: unbound\}\})"));
 }
 
 // NOLINTEND(readability-magic-numbers)

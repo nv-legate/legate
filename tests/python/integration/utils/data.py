@@ -12,6 +12,25 @@ from __future__ import annotations
 
 from legate import LEGATE_MAX_DIM, types as ty
 
+SCALAR_VALS = (
+    True,  # bool
+    complex(1, 5),  # complex128
+    complex(5, 1),  # complex64
+    12.5,  # float16
+    3.1415,  # float32
+    0.7777777,  # float64
+    10,  # int16
+    1024,  # int32
+    4096,  # int64
+    -1,  # int8
+    65535,  # uint16
+    4294967295,  # uint32
+    101010,  # uint64
+    123,  # uint8
+    b"abcdefghijklmnopqrstuvwxyz",  # binary_type
+    # None, null_type
+)
+
 ARRAY_TYPES = (
     ty.bool_,
     ty.complex128,
@@ -27,23 +46,10 @@ ARRAY_TYPES = (
     ty.uint32,
     ty.uint64,
     ty.uint8,
+    ty.binary_type(len(SCALAR_VALS[-1])),
+    # ty.null_type
 )
 
-SCALAR_VALS = (
-    True,
-    complex(1, 5),
-    complex(5, 1),
-    12.5,
-    3.1415,
-    0.7777777,
-    10,
-    1024,
-    4096,
-    -1,
-    65535,
-    4294967295,
-    101010,
-)
 
 SHAPES = (
     (1, 3, 1),

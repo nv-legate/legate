@@ -14,7 +14,9 @@ from libcpp cimport bool
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
+
 import builtins
+from typing import Any
 
 import numpy as np
 
@@ -34,6 +36,7 @@ cdef dict _TO_NUMPY_DTYPES = {
     _Type.Code.FLOAT64 : np.dtype(np.float64),
     _Type.Code.COMPLEX64 : np.dtype(np.complex64),
     _Type.Code.COMPLEX128 : np.dtype(np.complex128),
+    _Type.Code.NIL : np.dtype(object),
 }
 
 cdef dict _TO_SIZED_NUMPY_DTYPES = {
@@ -74,6 +77,10 @@ cdef dict _FROM_NUMPY_DTYPES = {
     np.dtype(np.complex64) : complex64,
     np.dtype(np.complex128) : complex128,
     np.dtype(np.str_) : string_type,
+    # None-arrays are all np.object but np.object could be literally *anything*
+    # (including ragged arrays), so the mapping is not bijective. Hence we
+    # cannot do the "backwards" mapping.
+    # np.dtype(object) : null_type
 }
 
 cdef dict _FROM_SIZED_NUMPY_DTYPES = {
@@ -87,10 +94,13 @@ cdef inline Type deduce_numpy_type_(object py_object):
     except KeyError:
         pass
 
-    base_obj = py_object.base
-    obj_size = <int>(base_obj.str.lstrip(base_obj.char + "<=>"))
+    cdef int obj_size = int(
+        <str>(py_object.str).lstrip(<str>(py_object.char) + "<=>|")
+    )
+    base_dtype = np.dtype(py_object.base.type)
+
     try:
-        return _FROM_SIZED_NUMPY_DTYPES[base_obj](obj_size)
+        return _FROM_SIZED_NUMPY_DTYPES[base_dtype](obj_size)
     except KeyError:
         # Either lookup or py_object.base failed
         pass
@@ -119,7 +129,21 @@ cdef inline Type deduce_sized_scalar_type_(object py_object):
     return deduce_numpy_type_(np.min_scalar_type(py_object))
 
 cdef inline Type deduce_array_type_(object py_object):
-    cdef uint32_t n_sub = len(py_object)
+    cdef uint32_t n_sub = 0
+
+    try:
+        n_sub = len(py_object)
+    except TypeError:
+        # If we have a numpy array, then we may be also dealing with a scalar
+        # numpy array. Scalar numpy arrays of *unsized* objects (like bytes,
+        # void pointers etc.) will error with "TypeError len() of unsized
+        # object" if you try to take their length. We will handle that
+        # correctly later, so it suffices to just take the length of the
+        # top-level shape.
+        if py_object.ndim == 0 and py_object.size > 0:
+            # We have a numpy scalar
+            py_object = py_object.reshape(py_object.size)
+            n_sub = len(py_object)
 
     if n_sub == 0:
         # We _should_ be able to do this if we know the type-hint that this
@@ -398,6 +422,31 @@ cdef class Type:
         if py_object is None:
             return null_type
         raise NotImplementedError(f"unsupported type: {py_object!r}")
+
+    # Have to do it this way because @staticmethod is not yet supported on
+    # cpdef functions. And I don't want to lose type information for cdef
+    # functions by making from_py_object() into a full-blown def.
+    @staticmethod
+    def from_python_object(py_object: Any) -> Type:
+        r"""Construct a ``Type`` object by deducing the type of a python
+        object.
+
+        Parameters
+        ----------
+        py_object : Any
+            The python object to type-deduce.
+
+        Returns
+        -------
+        Type
+            The deduced type.
+
+        Raises
+        ------
+        NotImplementedError
+            If the type deduction fails.
+        """
+        return Type.from_py_object(py_object)
 
 
 cdef class FixedArrayType(Type):

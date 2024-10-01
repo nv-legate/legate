@@ -140,7 +140,6 @@ C++
   ``legate.core.types.rect_type`` now returns ``legate.core.types.StructType`` instead of
   ``legate.core.types.Type``.
 
-
 .. rubric:: Runtime
 
 - Add optional ``default_options`` argument to ``Runtime::create_library()`` to specify
@@ -155,6 +154,8 @@ C++
   Legion mapper, so this method is pointless.
 - Remove ``Library::register_mapper()``. The mapper should be passed when the library is
   created, and can no longer be changed after the fact.
+- Remove restriction on stores with zero-sized types. It is now possible to create a
+  ``LogicalStore`` of type ``Type::Code::NIL`` and, for example, empty binary types.
 
 .. rubric:: Utilities
 
@@ -184,6 +185,9 @@ Python
   ``Optional[x]``) to inform the runtime that a store argument may be ``None``.
 
 .. rubric:: Types
+
+- Add ``Type.from_python_object()`` to allow automatic type deduction at runtime. Make
+  ``type`` parameters more optional in several cases as a result.
 
 .. rubric:: Runtime
 

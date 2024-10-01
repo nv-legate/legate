@@ -31,8 +31,6 @@ from typing import (
     get_origin as typing_get_origin,
 )
 
-import numpy as np
-
 from ..._lib.data.logical_array cimport LogicalArray
 from ..._lib.data.logical_store cimport LogicalStore
 from ..._lib.data.physical_array cimport PhysicalArray
@@ -211,7 +209,6 @@ cdef inline bytes _serialize_object(object value):
     return pklt_optimize(pkl_dumps(value, protocol=PKL_HIGHEST_PROTOCOL))
 
 cdef bytes LEGATE_PICKLE_HEADER = b"__legate_pickled_arg__"
-cdef object LEGATE_PICKLE_HEADER_NP = np.array(LEGATE_PICKLE_HEADER)
 
 cdef class VariantInvoker:
     r"""Encapsulate the calling conventions between a user-supplied task
@@ -336,7 +333,7 @@ cdef class VariantInvoker:
                 # dummy object" metadata tag to it. But at the time of writing,
                 # metadata on stores does not yet exist.
                 user_param = get_legate_runtime().create_store_from_scalar(
-                    Scalar(LEGATE_PICKLE_HEADER)
+                    Scalar(None)
                 )
 
             if not isinstance(user_param, _BASE_LOGICAL_TYPES):
@@ -554,18 +551,10 @@ cdef class VariantInvoker:
                 return ret
 
             cdef Type ret_ty = ret.type
-            # At this point we could just do
-            #
-            # np.array(ret) == LEGATE_PICKLE_HEADER_NP
-            #
-            # But constructing that numpy array is potentially expensive if we
-            # get it wrong. So we do these cheaper checks beforehand.
-            if (
-                ret_ty.code == TypeCode.BINARY and
-                ret_ty.size == len(LEGATE_PICKLE_HEADER) and
-                np.array(ret) == LEGATE_PICKLE_HEADER_NP
-            ):
-                return default_val
+
+            assert default_val is None
+            if ret_ty.code == TypeCode.NIL:
+                return None
             return ret
 
         def unpack_scalar(

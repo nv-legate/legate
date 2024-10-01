@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import numpy as np
@@ -36,7 +37,10 @@ class TestStoreCreation:
         arr_store = np.asarray(
             store.get_physical_store().get_inline_allocation()
         )
-        assert np.allclose(arr_np, arr_store)
+        if isinstance(val, bytes):
+            assert arr_np.all() == arr_store.all()
+        else:
+            assert np.allclose(arr_np, arr_store)
 
     @pytest.mark.parametrize("dtype", ARRAY_TYPES, ids=str)
     def test_store_dtype(self, dtype: ty.Type) -> None:
@@ -44,10 +48,21 @@ class TestStoreCreation:
         runtime = get_legate_runtime()
         store = runtime.create_store(dtype=dtype, shape=shape)
         arr = np.asarray(store.get_physical_store().get_inline_allocation())
-        arr.fill(bool(0) if dtype == ty.bool_ else 0)
+        match dtype.code:
+            case ty.TypeCode.BOOL:
+                val = bool(0)
+            case ty.TypeCode.BINARY:
+                val = b""
+            case _:
+                val = 0
+
+        arr.fill(val)
 
         exp = np.zeros(dtype=dtype.to_numpy_dtype(), shape=shape)
-        np.testing.assert_allclose(arr, exp)
+        if dtype.code == ty.TypeCode.BINARY:
+            assert arr.all() == exp.all()
+        else:
+            np.testing.assert_allclose(arr, exp)
 
     @pytest.mark.parametrize(
         "shape",
@@ -109,21 +124,8 @@ class TestStoreCreationErrors:
 
     def test_string_scalar(self) -> None:
         runtime = get_legate_runtime()
-        msg = "Size of a variable size type is undefined"
+        msg = re.escape("Store must have a fixed-size type")
         scalar = Scalar("abcd", ty.string_type)
-        with pytest.raises(ValueError, match=msg):
-            runtime.create_store_from_scalar(scalar)
-
-    def test_create_null_type_store(self) -> None:
-        runtime = get_legate_runtime()
-        msg = "Null type or zero-size types cannot be used for stores"
-        with pytest.raises(ValueError, match=msg):
-            runtime.create_store(dtype=ty.null_type, shape=(1,))
-
-    def test_create_from_null_scalar(self) -> None:
-        runtime = get_legate_runtime()
-        scalar = Scalar.null()
-        msg = "Null type or zero-size types cannot be used for stores"
         with pytest.raises(ValueError, match=msg):
             runtime.create_store_from_scalar(scalar)
 

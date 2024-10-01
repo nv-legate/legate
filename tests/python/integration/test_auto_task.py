@@ -130,16 +130,22 @@ class TestAutoTask:
         )
         out_store = runtime.create_store(dtype, shape)
         auto_task.add_output(out_store)
-
         arr_np = np.full(shape, val, dtype=dtype_np)
 
         auto_task.add_scalar_arg(Scalar(val, dtype))
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
-        np.testing.assert_allclose(
-            arr_np,
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+        out_arr_np = np.asarray(
+            out_store.get_physical_store().get_inline_allocation()
         )
+        if val is None or isinstance(val, bytes):
+            # if val is None, numpy complains that there is no operator-() for
+            # NoneType for allclose. If val is bytes, then numpy complains that
+            # it cannot be promoted to float. In either case, we can just
+            # directly compare the objects.
+            assert arr_np.all() == out_arr_np.all()
+        else:
+            np.testing.assert_allclose(arr_np, out_arr_np)
 
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     def test_tuple_scalar_arg(self, shape: tuple[int, ...]) -> None:

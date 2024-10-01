@@ -192,13 +192,16 @@ cpdef void from_string(Scalar scalar, str value, Type _):
     scalar._handle = _Scalar(std_string_view_from_py(value))
 
 
-cpdef void from_binary(Scalar scalar, bytes value, Type dtype):
+cpdef void from_binary(Scalar scalar, object value, Type dtype):
+    if isinstance(value, np.ndarray):
+        value = value.tobytes()
     if len(value) != dtype.size:
         raise ValueError(
             f"Type {dtype} expects a value of size {dtype.size}, "
             f"but the size of value is {len(value)}"
         )
-    scalar._handle = _Scalar(dtype._handle, <const char*>value, True)
+    assert isinstance(value, bytes)
+    scalar._handle = _Scalar(dtype._handle, <const char*>(<bytes>value), True)
 
 cdef dict _CONSTRUCTORS = {
     _Type.Code.NIL  : from_null,
@@ -309,8 +312,9 @@ cdef class Scalar:
         """
         if dtype is None:
             dtype = Type.from_py_object(value)
-        ctor = _CONSTRUCTORS.get(dtype.code)
-        if ctor is None:
+        try:
+            ctor = _CONSTRUCTORS[dtype.code]
+        except KeyError:
             raise TypeError(f"unhandled type {dtype}")
         ctor(self, value, dtype)
 

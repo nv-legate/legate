@@ -648,9 +648,6 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
                                                       std::uint32_t dim,
                                                       bool optimize_scalar)
 {
-  if (type->size() == 0) {
-    throw std::invalid_argument{"Null type or zero-size types cannot be used for stores"};
-  }  // namespace
   check_dimensionality_(dim);
   auto storage = make_internal_shared<detail::Storage>(make_internal_shared<Shape>(dim),
                                                        std::move(type),
@@ -667,9 +664,6 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> s
                                                       InternalSharedPtr<Type> type,
                                                       bool optimize_scalar /*=false*/)
 {
-  if (type->size() == 0) {
-    throw std::invalid_argument{"Null type or zero-size types cannot be used for stores"};
-  }
   if (type->variable_size()) {
     throw std::invalid_argument{"Store must have a fixed-size type"};
   }
@@ -684,9 +678,6 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> s
 InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
                                                       InternalSharedPtr<Shape> shape)
 {
-  if (scalar.type()->size() == 0) {
-    throw std::invalid_argument{"Null type or zero-size types cannot be used for stores"};
-  }
   validate_store_shape(shape, scalar.type());
   if (shape->volume() != 1) {
     throw std::invalid_argument{"Scalar stores must have a shape of volume 1"};

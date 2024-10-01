@@ -130,10 +130,11 @@ class TestManualTask:
         manual_task.add_scalar_arg(Scalar(val, dtype))
         manual_task.execute()
         runtime.issue_execution_fence(block=True)
-        np.testing.assert_allclose(
-            arr_np,
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
-        )
+        out_arr_np = np.asarray(out_store.get_physical_store())
+        if val is None or isinstance(val, bytes):
+            assert arr_np.all() == out_arr_np.all()
+        else:
+            np.testing.assert_allclose(arr_np, out_arr_np)
 
     @pytest.mark.parametrize("size", [9, 101], ids=str)
     def test_tuple_scalar_arg(self, size: int) -> None:

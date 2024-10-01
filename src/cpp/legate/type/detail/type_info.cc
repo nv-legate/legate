@@ -427,14 +427,13 @@ InternalSharedPtr<Type> string_type()
 
 InternalSharedPtr<Type> binary_type(std::uint32_t size)
 {
-  if (size == 0) {
-    throw std::out_of_range{"Size for an opaque binary type must be greater than 0"};
-  }
   if (size > MAX_BINARY_TYPE_SIZE) {
     throw std::out_of_range{
       fmt::format("Maximum size for opaque binary types is {}", MAX_BINARY_TYPE_SIZE)};
   }
-  auto uid = static_cast<std::int32_t>(Type::Code::BINARY) | (size << TYPE_CODE_OFFSET);
+  // size + 1 to account for size = 0
+  const auto uid = static_cast<std::int32_t>(Type::Code::BINARY) | ((size + 1) << TYPE_CODE_OFFSET);
+
   return make_internal_shared<BinaryType>(uid, size);
 }
 

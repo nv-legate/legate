@@ -223,12 +223,17 @@ TEST_F(TypeUnit, PrimitiveType)
 
 TEST_F(TypeUnit, StringType) { test_string_type(legate::string_type()); }
 
-TEST_F(TypeUnit, BinaryType)
-{
-  test_binary_type(legate::binary_type(123), 123);
-  test_binary_type(legate::binary_type(45), 45);
+class Binary : public DefaultFixture, public ::testing::WithParamInterface<std::uint32_t> {};
 
-  EXPECT_THROW((void)legate::binary_type(0), std::out_of_range);
+INSTANTIATE_TEST_SUITE_P(TypeUnit,
+                         Binary,
+                         ::testing::Values(123, 45, 0, 0xFFFFF),
+                         ::testing::PrintToStringParamName{});
+
+TEST_P(Binary, Basic) { test_binary_type(legate::binary_type(GetParam()), GetParam()); }
+
+TEST_F(TypeUnit, BinaryTypeBad)
+{
   EXPECT_THROW((void)legate::binary_type(0xFFFFF + 1), std::out_of_range);
 }
 
