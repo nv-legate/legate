@@ -488,7 +488,7 @@ info.add_argument(
     dest="bind_detail",
     action="store_true",
     required=False,
-    help="Print out the final invocation run by bind.sh "
+    help="Print out the final invocation run by legate-bind.sh "
     "[legate-only, not supported with standard Python invocation]",
 )
 

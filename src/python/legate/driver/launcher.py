@@ -275,9 +275,9 @@ class SimpleLauncher(Launcher):
     def __init__(self, config: ConfigProtocol, system: System) -> None:
         super().__init__(config, system)
 
-        # bind.sh handles computing local and global rank id, even in the
-        # simple case, just for consistency. But we do still check the known
-        # rank env vars below in order to issue RANK_ERR_MSG if needed
+        # legate-bind.sh handles computing local and global rank id, even in
+        # the simple case, just for consistency. But we do still check the
+        # known rank env vars below in order to issue RANK_ERR_MSG if needed
         if config.multi_node.ranks > 1 and self.detected_rank_id is None:
             raise RuntimeError(RANK_ERR_MSG)
 

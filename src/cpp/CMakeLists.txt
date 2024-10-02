@@ -536,6 +536,11 @@ legate_add_target_compile_option(legate CUDA PRIVATE legate_CUDA_FLAGS)
 
 legate_add_target_link_option(legate PUBLIC legate_LINKER_FLAGS)
 
+if(APPLE)
+  # See https://github.com/NVIDIA/cccl/pull/2444
+  target_compile_definitions(legate PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
+endif()
+
 include(${LEGATE_DIR}/cmake/Modules/generate_legate_defines.cmake)
 
 legate_generate_legate_defines()
@@ -686,7 +691,9 @@ install(FILES legate/utilities/detail/compressed_pair.h
               legate/utilities/detail/zstring_view.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail)
 
-# Legate STL headers
+# ########################################################################################
+# * install Legate STL -----------------------------------------------------------
+
 install(FILES legate/experimental/stl.hpp
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental)
 
@@ -715,7 +722,9 @@ install(FILES legate/experimental/stl/detail/for_each.hpp
               legate/experimental/stl/detail/fill.hpp
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/experimental/stl/detail)
 
-# Legate timing header
+# ########################################################################################
+# * install Legate timing -----------------------------------------------------------
+
 install(FILES legate/timing/timing.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/timing)
 
@@ -723,7 +732,8 @@ install(DIRECTORY ${LEGATE_DIR}/cmake/Modules/
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate" FILES_MATCHING
         PATTERN "*.cmake")
 
-# MPI Wrapper
+# ########################################################################################
+# * install Legate MPI Wrapper -----------------------------------------------------------
 #
 # We want to install the entire CMake project for the wrapper as-is into the share folder
 # in the install path. That way -- once installed -- the user can build the wrapper
@@ -747,7 +757,9 @@ install(FILES ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
               ${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt
         DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/sanitizers")
 
-# Examples
+# ########################################################################################
+# * install Legate examples -----------------------------------------------------------
+
 install(FILES ${LEGATE_DIR}/share/legate/examples/binding/manual/CMakeLists.txt
               ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.cc
               ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.py
@@ -766,6 +778,14 @@ install(FILES ${LEGATE_DIR}/share/legate/examples/binding/pybind11/hello_world.c
               ${LEGATE_DIR}/share/legate/examples/binding/pybind11/pyproject.toml
               ${LEGATE_DIR}/share/legate/examples/binding/pybind11/CMakeLists.txt
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/pybind11)
+
+# ########################################################################################
+# * install Legate debug symbols  --------------------------------------------------------
+
+install(PROGRAMS ${LEGATE_DIR}/legate-bind.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# ########################################################################################
+# * install Legate debug symbols ---------------------------------------------------------
 
 include(${LEGATE_DIR}/cmake/Modules/debug_symbols.cmake)
 

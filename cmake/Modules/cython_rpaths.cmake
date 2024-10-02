@@ -104,12 +104,21 @@ function(legate_populate_cython_dependency_rpaths)
   list(APPEND CMAKE_MESSAGE_CONTEXT "populate_cython_dependency_rpaths")
 
   set(options)
-  set(one_value_args RESULT_VAR)
+  set(one_value_args RAPIDS_ASSOCIATED_TARGET ROOT_DIRECTORY)
   set(multi_value_args)
   cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
                         ${ARGN})
 
-  if(legate_SETUP_PY_MODE STREQUAL "develop")
+  if(NOT _LEGATE_RAPIDS_ASSOCIATED_TARGET)
+    message(FATAL_ERROR "Must pass RAPIDS_ASSOCIATED_TARGET")
+  endif()
+
+  if(NOT TARGET ${_LEGATE_RAPIDS_ASSOCIATED_TARGET})
+    message(FATAL_ERROR "RAPIDS_ASSOCIATED_TARGET '${_LEGATE_RAPIDS_ASSOCIATED_TARGET}' is not a valid target"
+    )
+  endif()
+
+  if(SKBUILD_STATE STREQUAL "editable")
     # If we are doing an editable install, then the cython rpaths need to point back to
     # the original (uninstalled) legate libs, since otherwise it cannot find them.
     legate_populate_dependency_rpaths_editable(legate_cython_rpaths)
@@ -134,5 +143,31 @@ function(legate_populate_cython_dependency_rpaths)
   endif()
 
   message(STATUS "legate_cython_rpaths='${legate_cython_rpaths}'")
-  set(${_LEGATE_RESULT_VAR} "${legate_cython_rpaths}" PARENT_SCOPE)
+  if(_LEGATE_ROOT_DIRECTORY)
+    set(root_dir_opts ROOT_DIRECTORY "${_LEGATE_ROOT_DIRECTORY}")
+  else()
+    set(root_dir_opts)
+  endif()
+
+  rapids_cython_add_rpath_entries(TARGET "${_LEGATE_RAPIDS_ASSOCIATED_TARGET}"
+                                  PATHS ${legate_cython_rpaths} ${root_dir_opts})
+
+  if(SKBUILD_STATE STREQUAL "editable")
+    # In editable mode we do not install the libraries into the wheel, and hence the
+    # relative rpaths that are computed by rapids_cython_add_rpath_entries() won't work.
+    # What we actually want is to point the rpaths back to the original uninstalled
+    # directories
+    foreach(path IN LISTS legate_cython_rpaths)
+      if(NOT IS_ABSOLUTE "${path}")
+        message(FATAL_ERROR "Non-absolute path in editable install: ${path}")
+      endif()
+    endforeach()
+
+    get_property(cython_targets GLOBAL PROPERTY LEGATE_CYTHON_TARGETS)
+    foreach(cy_target IN LISTS cython_targets)
+      foreach(path IN LISTS legate_cython_rpaths)
+        set_property(TARGET "${cy_target}" APPEND PROPERTY INSTALL_RPATH "${path}")
+      endforeach()
+    endforeach()
+  endif()
 endfunction()

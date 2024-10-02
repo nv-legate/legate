@@ -14,6 +14,7 @@
 #include "legate.h"
 #include "utilities/utilities.h"
 
+#include <cstdlib>
 #include <gtest/gtest.h>
 #include <unistd.h>
 

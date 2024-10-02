@@ -25,6 +25,32 @@ include(${LEGATE_DIR}/cmake/Modules/find_or_configure.cmake)
 
 legate_find_or_configure(PACKAGE fmt)
 
+# More tomfoolery required because of scikit-build-core. scikit-build-core has a "wheel
+# dir" with special directories that map to different things at install time:
+#
+# cmake-format: off
+# lib/ -> $prefix/lib/python-3.12/site-packages/lib
+# include/ -> $prefix/lib/python-3.12/site-packages/include
+# platlib/ -> $prefix/lib/python-3.12/site-packages
+# data/ -> $prefix
+# bin/ -> $prefix/lib/python-3.12/site-packages/bin
+# cmake-format: on
+#
+# This is all fine and dandy, but the problem is that our C++ cmake files just want to
+# install to $prefix/lib. So the only way to do that is to set scikit-build-core's install
+# prefix to point to the "data/" directory. But hold on, our Cython .so's here want to
+# live under site-packages, so we need to move them back into the "platlib" directory.
+# Hence we need to do this to back out from data/ and into platlib/.
+#
+# Why on earth scikit-build-core is being foisted on us, when it is so clearly worse than
+# its predecessor I do not know...
+cmake_path(RELATIVE_PATH SKBUILD_PLATLIB_DIR BASE_DIRECTORY "${SKBUILD_DATA_DIR}"
+           OUTPUT_VARIABLE skbuild_platlib_relpath)
+message(STATUS "Using scikit-build-core data-to-platlib directory redirect: ${skbuild_platlib_relpath}"
+)
+
+define_property(GLOBAL PROPERTY LEGATE_CYTHON_TARGETS BRIEF_DOCS "Legate cython targets")
+
 function(legate_create_cython_modules)
   list(APPEND CMAKE_MESSAGE_CONTEXT "create_cython_modules")
 
@@ -38,6 +64,18 @@ function(legate_create_cython_modules)
     message(FATAL_ERROR "Must pass SOURCES source1.pyx [source2.pyx ... sourceN.pyx]")
   endif()
 
+  # rapids_cython_create_modules() docs state that:
+  #
+  # INSTALL_DIR: The path relative to the installation prefix so that it can be converted
+  # to an absolute path in a relocatable way. If not provided, defaults to the path to
+  # CMAKE_CURRENT_SOURCE_DIR relative to PROJECT_SOURCE_DIR.
+  #
+  # Since we live under src/python/legate/foo/bar, but want to eventually install under
+  # legate/foo/bar, we need to manually set the install directory. rel_path in this case
+  # will be legate/foo/bar.
+  cmake_path(RELATIVE_PATH CMAKE_CURRENT_LIST_DIR BASE_DIRECTORY
+             "${LEGATE_PYTHON_PKG_ROOT}" OUTPUT_VARIABLE rel_path)
+
   rapids_cython_create_modules(CXX ASSOCIATED_TARGETS legate::legate
                                SOURCE_FILES "${_LEGATE_CYTHON_SOURCES}"
                                LINKED_LIBRARIES legate::legate
@@ -50,7 +88,8 @@ function(legate_create_cython_modules)
                                                 # us, since fmt is a PRIVATE dependency of
                                                 # legate (as it is not found in any public
                                                 # includes).
-                                                fmt::fmt)
+                                                fmt::fmt
+                               INSTALL_DIR "${skbuild_platlib_relpath}/${rel_path}")
 
   foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
     target_compile_features(${target} PRIVATE cxx_std_${CMAKE_CXX_STANDARD})
@@ -58,6 +97,8 @@ function(legate_create_cython_modules)
     # the python headers to trigger them)
     target_include_directories(${target} SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
   endforeach()
+  set_property(GLOBAL APPEND PROPERTY LEGATE_CYTHON_TARGETS
+                                      ${RAPIDS_CYTHON_CREATED_TARGETS})
 endfunction()
 
 add_subdirectory(timing)

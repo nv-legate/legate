@@ -136,15 +136,18 @@ function pip_install_legate()
   set -xeo pipefail
   # CPU_COUNT and PIP_CACHE_DIR are set by the build. Disable shellcheck.
   # shellcheck disable=SC2154
-  SKBUILD_BUILD_OPTIONS="-j${CPU_COUNT} VERBOSE=1" "${PYTHON}" -m pip install \
-                       --root / \
-                       --no-deps \
-                       --prefix "${PREFIX}" \
-                       --no-build-isolation \
-                       --cache-dir "${PIP_CACHE_DIR}" \
-                       --disable-pip-version-check \
-                       . \
-                       -vv
+  export CMAKE_BUILD_PARALLEL_LEVEL="${CPU_COUNT}"
+  # shellcheck disable=SC2154
+  local cache_dir="${PIP_CACHE_DIR}"
+  "${PYTHON}" -m pip install \
+              --root / \
+              --no-deps \
+              --prefix "${PREFIX}" \
+              --no-build-isolation \
+              --cache-dir "${cache_dir}" \
+              --disable-pip-version-check \
+              . \
+              -vv
 
   # Legion leaves an egg-info file which will confuse conda trying to pick up the information
   # Remove it so the legate is the only egg-info file added

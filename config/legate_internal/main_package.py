@@ -396,6 +396,10 @@ class Legate(MainPackage):
         self.set_flag_if_user_set(
             self.legate_LEGION_BRANCH, self.cl_args.legion_branch
         )
+        if self.python.state.enabled():
+            self.manager.set_cmake_variable(
+                self.legion.Legion_BUILD_BINDINGS, False
+            )
 
     def configure_clang_tidy(self) -> None:
         r"""Configure clang-tidy variables."""
@@ -416,7 +420,7 @@ class Legate(MainPackage):
         super().finalize()
         self.manager.add_gmake_variable(
             "LEGATE_USE_PYTHON",
-            "1" if self.python.state.value else "0",
+            "1" if self.python.state.enabled() else "0",
             override_ok=False,
         )
 
@@ -439,7 +443,7 @@ class Legate(MainPackage):
 
     def _summarize_python(self) -> list[tuple[str, Any]]:
         python = self.python
-        py_enabled = python.state.value
+        py_enabled = python.state.enabled()
         lines: list[tuple[str, Any]] = [("Python bindings", py_enabled)]
         if py_enabled:
             try:

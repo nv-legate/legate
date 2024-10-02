@@ -163,7 +163,9 @@ requirements:
     - python
     - cython >=3.0.1
     - llvm-openmp
-    - scikit-build
+    - rich
+    - scikit-build-core
+    - setuptools_scm
     - elfutils  # [linux]
     - libhwloc =* =*default*
 {% if sanitizer_build_bool %}

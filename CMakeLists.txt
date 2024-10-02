@@ -111,7 +111,6 @@ set_property(DIRECTORY
              PROPERTY CMAKE_CONFIGURE_DEPENDS
                       cmake/versions/versions.json
                       cmake/versions/legion_version.json
-                      cmake/patches/Legion_bindings_python_CMakeLists.txt.diff
                       cmake/patches/mdspan_cpp_lib_span_dynamic_extent.diff
                       cmake/patches/mdspan_cpp_lib_span_extents.diff
                       cmake/patches/mdspan_cpp_lib_span_layout_stride.diff

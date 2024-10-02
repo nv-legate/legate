@@ -338,7 +338,8 @@
             },
             "legate_populate_cython_dependency_rpaths": {
                 "kwargs": {
-                    "RESULT_VAR": 1
+                    "RAPIDS_ASSOCIATED_TARGET": 1,
+                    "ROOT_DIRECTORY": 1
                 },
                 "pargs": {
                     "flags": [],

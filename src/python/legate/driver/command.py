@@ -27,7 +27,8 @@ if TYPE_CHECKING:
 __all__ = ("CMD_PARTS_EXEC", "CMD_PARTS_PYTHON")
 
 
-# this will be replaced by bind.sh with the actual computed rank at runtime
+# this will be replaced by legate-bind.sh with the actual computed rank at
+# runtime
 LEGATE_GLOBAL_RANK_SUBSTITUTION = "%%LEGATE_GLOBAL_RANK%%"
 
 

@@ -10,18 +10,16 @@
 
 [build-system]
 requires = [
-    "cmake>=3.22.1,!=3.23.0,!=3.25.0",
+    "scikit-build-core",
     "cython>=3.0.1",
-    "ninja",
-    "scikit-build",
-    "setuptools>=61",
-    "wheel",
-    # pip needs to be listed here so that legion can call "pip install" during its cmake
+    "rich",
+    # pip needs to be listed here so that we can uninstall legate before running our own
     # install. If we don't list pip here, then it is not found when using the "build
     # isolation" (read: everything is installed using a temp venv) feature of pip.
     "pip",
 ]
-build-backend = "setuptools.build_meta:__legacy__"
+build-backend = "build_legate"
+backend-path = ["src/python"]
 python-requires = ">=3.10"
 
 [project]
@@ -29,6 +27,8 @@ name = "legate"
 authors = [{name = "NVIDIA Corporation"}]
 license = {text = "Proprietary"}
 description = "legate - The Foundation for All Legate Libraries"
+documentation = "https://docs.nvidia.com/legate/latest/"
+changelog = "https://docs.nvidia.com/legate/latest/api/changes/index.html"
 classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Database",
@@ -39,15 +39,11 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12"
 ]
-dependencies = [
-  "cffi",
-  "numpy!=2.1.0",
-]
+dependencies = ["numpy!=2.1.0"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
 test = [
-    "numpy",
     "colorama",
     "coverage",
     "mock",
@@ -56,7 +52,8 @@ test = [
     "pytest-cov",
     "pytest",
     "pytest-mock",
-    "jupyter_client"
+    "jupyter_client",
+    "psutil"
 ]
 
 [project.urls]
@@ -68,22 +65,37 @@ legate-issue = "legate.issue:main"
 legate-jupyter = "legate.jupyter:main"
 lgpatch = "legate.lgpatch:main"
 
-[tool.setuptools]
-zip-safe = false
-include-package-data = true
-script-files = ["bind.sh"]
-package-dir = {"" = "src/python"}
+[tool.scikit-build.cmake]
+version = ">=3.22.1,!=3.23.0,!=3.25.0"
 
-[tool.setuptools.packages.find]
-where = ["src/python"]
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.setuptools_scm"
+
+[tool.scikit-build.sdist]
 include = [
-    "legate",
-    "legate.*"
+    "src/python/legate/_version.py",
+    "src/python/legate/install_info.py",
 ]
-namespaces = false
 
-[tool.setuptools.package-data]
-"*" = ["py.typed", "*.pyi", "*.so"]
+[tool.setuptools_scm]
+write_to = "src/python/legate/_version.py"
+
+[tool.scikit-build.build]
+verbose = true
+
+[tool.scikit-build.logging]
+level = "DEBUG"
+
+[tool.scikit-build.wheel]
+exclude = ["**.pyx", "**CMakeLists.txt", "**.pxd"]
+platlib = true
+install-dir = "/data"
+
+[tool.scikit-build]
+experimental = true  # needed for install-dir = "/data"
+
+[tool.scikit-build.wheel.packages]
+"legate" = "src/python/legate"
 
 [tool.black]
 line-length = 79
@@ -99,7 +111,10 @@ exclude = '''
     _build |
     buck-out |
     build |
-    dist
+    dist |
+    arch-.* |
+    .*-arch |
+    .*venv
 )/
 '''
 
@@ -174,7 +189,6 @@ markers = [
 ]
 filterwarnings = ["error"]
 
-
 [tool.isort]
 line_length = 79
 multi_line_output = 3
@@ -199,11 +213,14 @@ skip = [
     ".tox",
     ".venv",
     "_build",
-    "_skbuild",
     "build",
     "dist",
     "__init__.py"
 ]
 skip_glob = [
-   "install/*"
+   "install/*",
+   "arch-*",
+   "venv*",
+   "*-arch",
+   "*venv",
 ]

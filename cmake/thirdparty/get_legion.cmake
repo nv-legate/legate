@@ -160,12 +160,6 @@ function(find_or_configure_legion_impl)
       set(Legion_BACKTRACE_USE_LIBDW OFF)
     endif()
 
-    include(${LEGATE_DIR}/cmake/Modules/apply_patch.cmake)
-
-    legate_generate_patch_command(SOURCE ${CMAKE_BINARY_DIR}/_deps/legion-src/bindings/python/CMakeLists.txt
-                                  PATCH_FILE ${LEGATE_DIR}/cmake/patches/Legion_bindings_python_CMakeLists.txt.diff
-                                  DEST_VAR patch_command)
-
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Legion_CXX_FLAGS}")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${Legion_CUDA_FLAGS}")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${Legion_LINKER_FLAGS}")
@@ -187,11 +181,9 @@ function(find_or_configure_legion_impl)
                              SYSTEM
                              TRUE
                     EXCLUDE_FROM_ALL ${exclude_from_all}
-                    PATCH_COMMAND ${patch_command} -d ./bindings/python --verbose
                     OPTIONS ${_legion_cuda_options}
                             "CMAKE_CXX_STANDARD ${_cxx_std}"
                             "Legion_VERSION ${version}"
-                            "Legion_BUILD_BINDINGS ON"
                             "Legion_REDOP_HALF ON"
                             "Legion_REDOP_COMPLEX ON"
                             "Legion_UCX_DYNAMIC_LOAD ON"

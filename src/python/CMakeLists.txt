@@ -12,6 +12,12 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
+set(LEGATE_PYTHON_PKG_ROOT "${CMAKE_CURRENT_LIST_DIR}")
+
+if(SKBUILD_STATE STREQUAL "editable")
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
+endif()
+
 # ########################################################################################
 # * conda environment --------------------------------------------------------
 
@@ -28,10 +34,6 @@ if(TARGET conda_env)
 endif()
 
 rapids_cmake_install_lib_dir(lib_dir)
-
-if(legate_SETUP_PY_MODE STREQUAL "develop")
-  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
-endif()
 
 # ########################################################################################
 # * Find or build the C++ -----------------------------------------------
@@ -52,20 +54,9 @@ rapids_find_package(Python3
                     REQUIRED
                     COMPONENTS Development)
 
-# For scikit-build. They use some deprecated FindPython() modules that are removed by
-# default in cmake 3.28. Setting this policy to OLD restores them.
-if(POLICY CMP0148)
-  cmake_policy(PUSH)
-  cmake_policy(SET CMP0148 OLD)
-endif()
-
-include(rapids-cython)
+include(rapids-cython-core)
 
 rapids_cython_init()
-
-if(POLICY CMP0148)
-  cmake_policy(POP)
-endif()
 
 add_library(legate_python INTERFACE)
 add_library(legate::legate_python ALIAS legate_python)
@@ -75,10 +66,8 @@ add_subdirectory(legate)
 
 include(${LEGATE_DIR}/cmake/Modules/cython_rpaths.cmake)
 
-legate_populate_cython_dependency_rpaths(RESULT_VAR legate_cython_rpaths)
-
-rapids_cython_add_rpath_entries(TARGET legate::legate PATHS ${legate_cython_rpaths}
-                                ROOT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+legate_populate_cython_dependency_rpaths(RAPIDS_ASSOCIATED_TARGET legate::legate
+                                         ROOT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # ########################################################################################
 # * install targets-----------------------------------------------------------

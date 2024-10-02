@@ -93,7 +93,7 @@ all: default_all
 clean: default_clean
 	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/legate.egg-info
 	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/src/python/legate.egg-info
-	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/$(LEGATE_ARCH)/_skbuild
+	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/$(LEGATE_ARCH)/skbuild_core
 
 ## Install the C++ library.
 ##

@@ -17,8 +17,8 @@ macro(legate_include_rapids)
 
   if(NOT rapids-cmake-version)
     # default
-    set(rapids-cmake-version 24.06)
-    set(rapids-cmake-sha "365322aca32fd6ecd7027f5d7ec7be50b7f3cc2a")
+    set(rapids-cmake-version 24.08)
+    set(rapids-cmake-sha "3cc764f287a6f3caeee5dd1c96c24b1710d4cdf1")
   endif()
   if(NOT _LEGATE_HAS_RAPIDS)
     if(NOT EXISTS ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)

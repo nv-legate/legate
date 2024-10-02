@@ -22,7 +22,7 @@ Changes: Latest Development Version
   convention in favor of launching the task immediately on the submitting thread. This
   feature is currently considered *experimental* as it is not always profitable when it
   should be.
-
+- Rename ``bind.sh`` to ``legate-bind.sh``.
 
 C++
 ---

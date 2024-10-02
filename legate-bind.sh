@@ -14,7 +14,7 @@ set -euo pipefail
 
 help() {
   cat 1>&2 <<EOM
-Usage: bind.sh [OPTIONS]... -- APP...
+Usage: legate-bind.sh [OPTIONS]... -- APP...
 
 Options:
   --launcher {mpirun|srun|jrun|auto|local}
@@ -32,7 +32,7 @@ Options:
 SPEC specifies the resources to bind each node-local rank to, with ranks
 separated by /, e.g. '0,1/2,3/4,5/6,7' for 4 ranks per node.
 
-APP is the application that will be executed by bind.sh, as well as any
+APP is the application that will be executed by legate-bind.sh, as well as any
 arguments for it.
 
 If --cpus or --mems is specified, then APP will be invoked with numactl.
@@ -179,7 +179,7 @@ done
 set -- "${updated[@]}"
 
 if [[ "${debug}" == "1" ]]; then
-  echo -n "bind.sh:"
+  echo -n "legate-bind.sh:"
   for TOK in "$@"; do printf " %q" "${TOK}"; done
   echo
 fi
