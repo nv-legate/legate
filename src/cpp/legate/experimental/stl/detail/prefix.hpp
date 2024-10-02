@@ -16,6 +16,7 @@
 //
 // INCLUDE GUARDS ARE NOT NEEDED IN THIS HEADER
 
+#include "legate/utilities/compiler.h"
 #include "legate/utilities/macros.h"
 
 #if !LEGATE_DEFINED(LEGATE_STL_DETAIL_CONFIG_INCLUDED)
@@ -38,11 +39,11 @@
 #define requires LEGATE_STL_REQUIRES  // NOLINT
 #endif
 
-LEGATE_PRAGMA_PUSH()
-LEGATE_PRAGMA_EDG_IGNORE(737)    // using-declaration ignored; it refers to the current namespace
-LEGATE_PRAGMA_EDG_IGNORE(20011)  // calling a __host__ function [...] from a __host__
-                                 // __device__ function is not allowed
-LEGATE_PRAGMA_EDG_IGNORE(20012)  // __host__ annotation is ignored on a function[...] that is
-                                 // explicitly defaulted on its first declaration
-LEGATE_PRAGMA_EDG_IGNORE(20014)  // calling a __host__ function [...] from a __host__
-                                 // __device__ function is not allowed
+LEGATE_PRAGMA_PUSH();
+LEGATE_PRAGMA_EDG_IGNORE(737);    // using-declaration ignored; it refers to the current namespace
+LEGATE_PRAGMA_EDG_IGNORE(20011);  // calling a __host__ function [...] from a __host__
+                                  // __device__ function is not allowed
+LEGATE_PRAGMA_EDG_IGNORE(20012);  // __host__ annotation is ignored on a function[...] that is
+                                  // explicitly defaulted on its first declaration
+LEGATE_PRAGMA_EDG_IGNORE(20014);  // calling a __host__ function [...] from a __host__
+                                  // __device__ function is not allowed

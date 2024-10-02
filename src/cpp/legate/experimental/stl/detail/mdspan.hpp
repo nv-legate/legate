@@ -31,14 +31,14 @@
 
 #else
 
-LEGATE_PRAGMA_PUSH()
+LEGATE_PRAGMA_PUSH();
 LEGATE_PRAGMA_EDG_IGNORE(
   737,
   useless_using_declaration,  // using-declaration ignored -- it refers to the current namespace
   20011,
-  20040,  // a __host__ function [...] redeclared with __host__ __device__
-  20014)  // calling a __host__ function [...] from a __host__ __device__
-          // function is not allowed
+  20040,   // a __host__ function [...] redeclared with __host__ __device__
+  20014);  // calling a __host__ function [...] from a __host__ __device__
+           // function is not allowed
 
 #include "span.hpp"  // this header must come before mdspan.hpp
 
@@ -61,7 +61,7 @@ namespace std {
 using namespace mdspan_experimental;
 }  // namespace std
 
-LEGATE_PRAGMA_POP()
+LEGATE_PRAGMA_POP();
 
 #endif  // LEGATE_STL_HAS_STD_MDSPAN
 
@@ -215,11 +215,11 @@ class MDSpanAccessor {
   //   198 |     : __members(other.__ptr_ref(), __map_acc_pair_t(other.__mapping_ref(),
   //   other.__accessor_ref()))
   //       |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-  LEGATE_PRAGMA_PUSH()
-  LEGATE_PRAGMA_GCC_IGNORE("-Wmaybe-uninitialized")
+  LEGATE_PRAGMA_PUSH();
+  LEGATE_PRAGMA_GCC_IGNORE("-Wmaybe-uninitialized");
   LEGATE_HOST_DEVICE MDSpanAccessor(MDSpanAccessor&& other) noexcept = default;
   LEGATE_HOST_DEVICE MDSpanAccessor(const MDSpanAccessor& other)     = default;
-  LEGATE_PRAGMA_POP()
+  LEGATE_PRAGMA_POP();
 
   LEGATE_HOST_DEVICE MDSpanAccessor& operator=(MDSpanAccessor&& other) noexcept
   {
