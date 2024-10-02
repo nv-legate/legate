@@ -175,22 +175,23 @@ bool Strategy::is_key_partition(const Variable* partition_symbol) const
 
 void Strategy::dump() const
 {
-  log_legate().debug("===== Solution =====");
+  log_legate_partitioning().print() << "===== Solution =====";
   for (const auto& [symbol, part] : assignments_) {
-    log_legate().debug() << symbol.to_string() << ": " << part->to_string();
+    log_legate_partitioning().print() << symbol.to_string() << ": " << part->to_string();
   }
   for (const auto& [symbol, field] : fields_for_unbound_stores_) {
     const auto& [field_space, field_id] = field;
-    log_legate().debug() << symbol.to_string() << ": (" << field_space << "," << field_id << ")";
+    log_legate_partitioning().print()
+      << symbol.to_string() << ": (" << field_space << "," << field_id << ")";
   }
   for (const auto& [op, domain] : launch_domains_) {
     if (!domain.is_valid()) {
-      log_legate().debug() << op->to_string() << ": (sequential)";
+      log_legate_partitioning().print() << op->to_string() << ": (sequential)";
     } else {
-      log_legate().debug() << op->to_string() << ": " << domain;
+      log_legate_partitioning().print() << op->to_string() << ": " << domain;
     }
   }
-  log_legate().debug("====================");
+  log_legate_partitioning().print() << "====================";
 }
 
 void Strategy::compute_launch_domains_(const ConstraintSolver& solver)

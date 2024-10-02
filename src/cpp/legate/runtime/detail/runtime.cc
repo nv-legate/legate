@@ -83,6 +83,13 @@ Logger& log_legate()
   return log;
 }
 
+Logger& log_legate_partitioning()
+{
+  static Logger log{"legate.partitioning"};
+
+  return log;
+}
+
 namespace {
 
 // This is the unique string name for our library which can be used from both C++ and Python to
