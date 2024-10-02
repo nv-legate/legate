@@ -140,6 +140,8 @@ repos:
         language: python
         types: [cmake]
         require_serial: true
+        additional_dependencies:
+          - cmakelang
 
 ci:
   autoupdate_schedule: quarterly
