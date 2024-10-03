@@ -13,6 +13,9 @@
 function(legate_default_cpp_install target)
   list(APPEND CMAKE_MESSAGE_CONTEXT "default_cpp_install")
 
+  message(DEPRECATION "${CMAKE_CURRENT_FUNCTION} is deprecated and will be removed in a future release."
+                      "Please roll your own version of this function.")
+
   set(options)
   set(one_value_args EXPORT)
   set(multi_value_args)
@@ -54,6 +57,9 @@ endfunction()
 
 function(legate_add_cffi header)
   list(APPEND CMAKE_MESSAGE_CONTEXT "add_cffi")
+
+  message(DEPRECATION "${CMAKE_CURRENT_FUNCTION} is deprecated and will be removed in a future release."
+                      "Please roll your own version of this function.")
 
   if(NOT DEFINED CMAKE_C_COMPILER)
     message(FATAL_ERROR "Must enable C language to build Legate projects")
@@ -162,6 +168,9 @@ endfunction()
 function(legate_default_python_install target)
   list(APPEND CMAKE_MESSAGE_CONTEXT "default_python_install")
 
+  message(DEPRECATION "${CMAKE_CURRENT_FUNCTION} is deprecated and will be removed in a future release."
+                      "Please roll your own version of this function.")
+
   set(options)
   set(one_value_args EXPORT)
   set(multi_value_args)
@@ -189,6 +198,9 @@ endfunction()
 
 function(legate_add_cpp_subdirectory dir)
   list(APPEND CMAKE_MESSAGE_CONTEXT "add_cpp_subdirectory")
+
+  message(DEPRECATION "${CMAKE_CURRENT_FUNCTION} is deprecated and will be removed in a future release."
+                      "Please roll your own version of this function.")
 
   set(options)
   set(one_value_args EXPORT TARGET VERSION)
@@ -250,6 +262,9 @@ function(legate_add_cpp_subdirectory dir)
 endfunction()
 
 function(legate_cpp_library_template target output_sources_variable)
+  message(DEPRECATION "${CMAKE_CURRENT_FUNCTION} is deprecated and will be removed in a future release."
+                      "Please roll your own version of this function.")
+
   set(file_template
       [=[
 /*
@@ -338,6 +353,9 @@ void @target@_perform_registration(void)
 endfunction()
 
 function(legate_python_library_template py_path)
+  message(DEPRECATION "${CMAKE_CURRENT_FUNCTION} is deprecated and will be removed in a future release."
+                      "Please roll your own version of this function.")
+
   set(options)
   set(one_value_args TARGET PY_IMPORT_PATH)
   set(multi_value_args)
