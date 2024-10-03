@@ -299,21 +299,23 @@ class Legate(MainPackage):
             def version_parse(  # type: ignore[misc]
                 version: str,
             ) -> tuple[int, ...]:
-                return tuple(map(int, version.split(".")))
+                args = (a.strip() for a in version.split("."))
+                return tuple(int(a) for a in args if a)
 
         min_ver_re = re.compile(
-            r"cmake_minimum_required\(.*VERSION\s+([^\s]+)"
+            r"cmake_minimum_required\(.*VERSION\s+([\d\.]+)"
         )
         cmakelists_txt = self.project_dir / "CMakeLists.txt"
-        for line in cmakelists_txt.open():
-            if re_match := min_ver_re.search(line):
-                min_ver = re_match.group(1)
-                break
-        else:
-            raise RuntimeError(
-                "Failed to parse minimum required CMake version from"
-                f" {cmakelists_txt}"
-            )
+        with cmakelists_txt.open() as fd:
+            for line in fd:
+                if re_match := min_ver_re.search(line):
+                    min_ver = re_match.group(1)
+                    break
+            else:
+                raise RuntimeError(
+                    "Failed to parse minimum required CMake version from"
+                    f" {cmakelists_txt}"
+                )
 
         self.log(f"Minimum cmake version required: {min_ver}")
         if version_parse(self.cmake.version) < version_parse(min_ver):

@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.26.4)
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "legate")
 
