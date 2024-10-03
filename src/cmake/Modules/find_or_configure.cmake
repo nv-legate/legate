@@ -79,7 +79,7 @@ macro(legate_find_or_configure)
   endif()
   string(TOLOWER "${_LEGATE_FOC_PACKAGE}" _LEGATE_FOC_PACKAGE_LOWER)
 
-  include(${LEGATE_DIR}/cmake/thirdparty/get_${_LEGATE_FOC_PACKAGE_LOWER}.cmake OPTIONAL
+  include("${LEGATE_CMAKE_DIR}/thirdparty/get_${_LEGATE_FOC_PACKAGE_LOWER}.cmake" OPTIONAL
           RESULT_VARIABLE _LEGATE_FOC_FOUND)
 
   if(NOT _LEGATE_FOC_FOUND)

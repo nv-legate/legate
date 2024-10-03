@@ -32,6 +32,8 @@ function(legate_uninstall_target)
     return()
   endif()
 
+  set(INSTALL_MANIFEST_PATH "${CMAKE_BINARY_DIR}/install_manifest.txt")
+
   configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../templates/uninstall.cmake.in"
                  "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake" @ONLY)
 

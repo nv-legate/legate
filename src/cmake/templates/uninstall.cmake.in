@@ -10,8 +10,8 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-if(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
-  message(FATAL_ERROR "Cannot find install manifest: @CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
+if(NOT EXISTS "@INSTALL_MANIFEST_PATH@")
+  message(FATAL_ERROR "Cannot find install manifest: @INSTALL_MANIFEST_PATH@")
 endif()
 
 function(prune_directory path)
@@ -33,7 +33,7 @@ function(prune_directory path)
   endif()
 endfunction()
 
-file(STRINGS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt" files)
+file(STRINGS "@INSTALL_MANIFEST_PATH@" files)
 
 foreach(file IN LISTS files)
   cmake_path(SET file NORMALIZE "${file}")

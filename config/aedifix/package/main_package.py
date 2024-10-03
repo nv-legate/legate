@@ -328,6 +328,7 @@ class MainPackage(Package, ABC):
         "_arch_value_provenance",
         "_proj_dir_name",
         "_proj_dir_value",
+        "_proj_src_dir",
         "_default_arch_file_path",
     )
 
@@ -339,6 +340,7 @@ class MainPackage(Package, ABC):
         arch_name: str,
         project_dir_name: str,
         project_dir_value: Path,
+        project_src_dir: Path | None = None,
         default_arch_file_path: Path | None = None,
     ) -> None:
         r"""Construct the MainPackage.
@@ -357,6 +359,9 @@ class MainPackage(Package, ABC):
             The name of the project dir variable, e.g. 'LEGATE_DIR'.
         project_dir_value : Path
             The value of the project dir, e.g. /path/to/legate.internal.
+        project_src_dir : Path, optional
+            The path to the projects source directory for CMake. If not
+            provided, ``project_dir_value`` is used instead.
         default_arch_file_path : Path, optional
             The location to place a file containing the default PROJECT_ARCH
             value. If not provided, or None, no file is emitted.
@@ -389,6 +394,9 @@ class MainPackage(Package, ABC):
             )
         self._proj_dir_name = project_dir_name
         self._proj_dir_value = project_dir_value.resolve(strict=True)
+        if project_src_dir is None:
+            project_src_dir = self._proj_dir_value
+        self._proj_src_dir = project_src_dir.resolve(strict=True)
         self._default_arch_file_path = default_arch_file_path
 
     @classmethod
@@ -453,6 +461,17 @@ class MainPackage(Package, ABC):
             e.g. /path/to/legate.internal.
         """
         return self._proj_dir_value
+
+    @property
+    def project_src_dir(self) -> Path:
+        r"""Get the source directory of the main package.
+
+        Returns
+        -------
+        proj_dir_value : Path
+            The project source dir e.g. /path/to/legate.internal/src.
+        """
+        return self._proj_src_dir
 
     @staticmethod
     def _preparse_value(

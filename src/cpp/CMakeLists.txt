@@ -15,7 +15,7 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "cpp")
 # ########################################################################################
 # * User Options  ------------------------------------------------------------
 
-include(${LEGATE_DIR}/cmake/Modules/legate_options.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/legate_options.cmake")
 
 # ########################################################################################
 # * Project definition -------------------------------------------------------
@@ -26,7 +26,7 @@ include(GNUInstallDirs)
 rapids_cmake_write_version_file(${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/version.h
                                 PREFIX LEGATE)
 
-include(${LEGATE_DIR}/cmake/Modules/compile_commands.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/compile_commands.cmake")
 
 legate_export_compile_commands(DEST_DIR ${LEGATE_DIR})
 
@@ -54,15 +54,15 @@ endif()
 # * Dependencies -------------------------------------------------------------
 
 # add third party dependencies using CPM
-set(legate_VERSIONS_JSON "${LEGATE_DIR}/cmake/versions/versions.json")
+set(legate_VERSIONS_JSON "${LEGATE_CMAKE_DIR}/versions/versions.json")
 rapids_cpm_init(OVERRIDE ${legate_VERSIONS_JSON})
 
-include(${LEGATE_DIR}/cmake/Modules/find_or_configure.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/find_or_configure.cmake")
 
 # ########################################################################################
 # * Default Flags -------------------------------------------------------------
 
-include(${LEGATE_DIR}/cmake/Modules/default_flags.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/default_flags.cmake")
 
 legate_configure_default_compiler_flags()
 legate_configure_default_linker_flags()
@@ -103,7 +103,7 @@ if(Legion_USE_Python)
   endif()
 endif()
 
-include(${LEGATE_DIR}/cmake/Modules/cuda_arch_helpers.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/cuda_arch_helpers.cmake")
 
 if(Legion_USE_CUDA)
   # Needs to run before find_package(Legion)
@@ -181,7 +181,7 @@ legate_find_or_configure(PACKAGE argparse)
 # ########################################################################################
 # * legate --------------------------------------------------------------
 
-include(${LEGATE_DIR}/cmake/Modules/generate_sanitizer_options.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/generate_sanitizer_options.cmake")
 
 legate_generate_sanitizer_options(
   SRC ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
@@ -365,7 +365,7 @@ set(legate_CXX_PUBLIC_OPTIONS "")
 set(legate_CUDA_PUBLIC_OPTIONS "")
 set(legate_LINKER_OPTIONS "")
 
-include(${LEGATE_DIR}/cmake/Modules/set_cpu_arch_flags.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/set_cpu_arch_flags.cmake")
 
 set_cpu_arch_flags(legate_CXX_PRIVATE_OPTIONS)
 
@@ -541,7 +541,7 @@ if(APPLE)
   target_compile_definitions(legate PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
 endif()
 
-include(${LEGATE_DIR}/cmake/Modules/generate_legate_defines.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/generate_legate_defines.cmake")
 
 legate_generate_legate_defines()
 
@@ -553,7 +553,7 @@ target_include_directories(legate
                            INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate>
 )
 
-include(${LEGATE_DIR}/cmake/Modules/clang_tidy.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
 
 legate_add_tidy_diff_target()
 
@@ -728,7 +728,7 @@ install(FILES legate/experimental/stl/detail/for_each.hpp
 install(FILES legate/timing/timing.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/timing)
 
-install(DIRECTORY ${LEGATE_DIR}/cmake/Modules/
+install(DIRECTORY ${LEGATE_CMAKE_DIR}/Modules/
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate" FILES_MATCHING
         PATTERN "*.cmake")
 
@@ -787,7 +787,7 @@ install(PROGRAMS ${LEGATE_DIR}/legate-bind.sh DESTINATION ${CMAKE_INSTALL_BINDIR
 # ########################################################################################
 # * install Legate debug symbols ---------------------------------------------------------
 
-include(${LEGATE_DIR}/cmake/Modules/debug_symbols.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/debug_symbols.cmake")
 
 legate_debug_syms(legate INSTALL_DIR ${lib_dir})
 
@@ -803,7 +803,7 @@ Imported Targets:
 
 ]=])
 
-file(READ ${LEGATE_DIR}/cmake/legate_helper_functions.cmake helper_functions)
+file(READ "${LEGATE_CMAKE_DIR}/legate_helper_functions.cmake" helper_functions)
 
 # Normally this is done transparently (via the "code_string" below, embedded in the
 # Findlegate.cmake) if the CMakeLists.txt calling this one finds the legate via a
@@ -875,7 +875,8 @@ rapids_export(BUILD legate
 # Symlink the module directory into the binary dir, so that the helper functions in
 # legate-config.cmake can be used even if the project is not installed.
 message(STATUS "Symlinking cmake module directory into ${CMAKE_CURRENT_BINARY_DIR}")
-file(CREATE_LINK ${LEGATE_DIR}/cmake/Modules ${CMAKE_CURRENT_BINARY_DIR}/Modules SYMBOLIC)
+file(CREATE_LINK "${LEGATE_CMAKE_DIR}/Modules" ${CMAKE_CURRENT_BINARY_DIR}/Modules
+     SYMBOLIC)
 
 set(legate_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -895,7 +896,8 @@ if(NOT Legion_NETWORKS)
 endif()
 
 add_custom_target(generate_install_info_py ALL
-                  COMMAND ${CMAKE_COMMAND} -DLEGATE_ARCH="${LEGATE_ARCH}"
+                  COMMAND ${CMAKE_COMMAND} -DLEGATE_CMAKE_DIR="${LEGATE_CMAKE_DIR}"
+                          -DLEGATE_ARCH="${LEGATE_ARCH}"
                           -DLegion_NETWORKS="${Legion_NETWORKS}"
                           -DGASNet_CONDUIT="${GASNet_CONDUIT}"
                           -DLegion_USE_CUDA="${Legion_USE_CUDA}"
@@ -908,8 +910,8 @@ add_custom_target(generate_install_info_py ALL
                           -DLEGATE_DIR="${LEGATE_DIR}" -DLEGATE_ARCH="${LEGATE_ARCH}"
                           -Dlegate_LIB_NAME="$<TARGET_FILE_PREFIX:legate::legate>$<TARGET_FILE_BASE_NAME:legate::legate>"
                           -Dlegate_FULL_LIB_NAME="$<TARGET_FILE_NAME:legate::legate>" -P
-                          "${LEGATE_DIR}/cmake/generate_install_info_py.cmake"
-                  DEPENDS "${LEGATE_DIR}/cmake/templates/install_info.py.in"
+                          "${LEGATE_CMAKE_DIR}/generate_install_info_py.cmake"
+                  DEPENDS "${LEGATE_CMAKE_DIR}/templates/install_info.py.in"
                   BYPRODUCTS "${LEGATE_DIR}/src/python/legate/install_info.py"
                   COMMENT "Generate install_info.py")
 
@@ -922,7 +924,7 @@ if(NOT Legion_USE_CUDA)
   list(APPEND legate_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_RELEASE}")
 endif()
 
-include(${LEGATE_DIR}/cmake/Modules/uninstall.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/uninstall.cmake")
 
 legate_uninstall_target(TARGET uninstall)
 

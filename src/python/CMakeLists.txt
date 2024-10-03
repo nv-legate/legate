@@ -38,7 +38,7 @@ rapids_cmake_install_lib_dir(lib_dir)
 # ########################################################################################
 # * Find or build the C++ -----------------------------------------------
 
-include(${LEGATE_DIR}/cmake/Modules/find_legate_cpp.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/find_legate_cpp.cmake")
 
 find_legate_cpp(VERSION ${legate_version} BUILD_EXPORT_SET legate-python-exports
                 INSTALL_EXPORT_SET legate-python-exports)
@@ -64,7 +64,7 @@ target_link_libraries(legate_python INTERFACE legate::legate)
 
 add_subdirectory(legate)
 
-include(${LEGATE_DIR}/cmake/Modules/cython_rpaths.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/cython_rpaths.cmake")
 
 legate_populate_cython_dependency_rpaths(RAPIDS_ASSOCIATED_TARGET legate::legate
                                          ROOT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")

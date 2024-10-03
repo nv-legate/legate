@@ -12,8 +12,8 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "cpp")
 
-include(${LEGATE_DIR}/cmake/Modules/debug_symbols.cmake)
-include(${LEGATE_DIR}/cmake/Modules/clang_tidy.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/debug_symbols.cmake")
+include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
 
 legate_find_or_configure(PACKAGE google_benchmark)
 

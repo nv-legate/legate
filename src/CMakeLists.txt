@@ -14,7 +14,13 @@ cmake_minimum_required(VERSION 3.26.4)
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "legate")
 
-include(cmake/policies.cmake NO_POLICY_SCOPE)
+cmake_path(SET LEGATE_CMAKE_DIR NORMALIZE "${CMAKE_CURRENT_LIST_DIR}/cmake")
+if(NOT DEFINED CACHE{LEGATE_CMAKE_DIR})
+  set(LEGATE_CMAKE_DIR # cmake-lint: disable=C0103
+      "${LEGATE_CMAKE_DIR}" CACHE INTERNAL "" FORCE)
+endif()
+
+include("${LEGATE_CMAKE_DIR}/policies.cmake" NO_POLICY_SCOPE)
 
 # ########################################################################################
 # * Setup LEGATE_DIR and LEGATE_ARCH -------------------------------
@@ -76,7 +82,7 @@ legate_set_language_standard(CUDA 17)
 # ########################################################################################
 # * Download and initialize RAPIDS CMake helpers -----------------------------
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/include_rapids.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/include_rapids.cmake")
 
 legate_include_rapids()
 
@@ -130,10 +136,10 @@ if(SKBUILD)
                     # linking options for the python library is hardcoded to build with C,
                     # so until that is fixed we need to keep C.
                     C CXX)
-  add_subdirectory(src/python)
+  add_subdirectory(python)
 else()
   project(legate VERSION ${legate_version} LANGUAGES C CXX)
-  add_subdirectory(src/cpp)
+  add_subdirectory(cpp)
 endif()
 
 if(CMAKE_GENERATOR STREQUAL "Ninja")

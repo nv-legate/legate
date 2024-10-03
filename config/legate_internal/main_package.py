@@ -158,6 +158,7 @@ class Legate(MainPackage):
             arch_name="LEGATE_ARCH",
             project_dir_name="LEGATE_DIR",
             project_dir_value=legate_dir,
+            project_src_dir=legate_dir / "src",
             default_arch_file_path=legate_dir
             / "scripts"
             / "get_legate_arch.py",
@@ -305,7 +306,7 @@ class Legate(MainPackage):
         min_ver_re = re.compile(
             r"cmake_minimum_required\(.*VERSION\s+([\d\.]+)"
         )
-        cmakelists_txt = self.project_dir / "CMakeLists.txt"
+        cmakelists_txt = self.project_src_dir / "CMakeLists.txt"
         with cmakelists_txt.open() as fd:
             for line in fd:
                 if re_match := min_ver_re.search(line):

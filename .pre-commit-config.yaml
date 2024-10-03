@@ -14,7 +14,7 @@ repos:
         args: ['--autofix', '--indent=4']
       - id: trailing-whitespace  # remove trailing whitespace
         # part of the diff
-        exclude: '^cmake/patches/span_proper_cmake_project.diff$'
+        exclude: '^src/cmake/patches/.*'
         # handled by clang-format
         exclude_types: [c, c++, cuda]
   - repo: https://github.com/PyCQA/isort

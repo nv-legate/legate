@@ -22,7 +22,7 @@ function(legate_maybe_override_legion user_repository user_branch)
   # is pretty much identical to
   # https://github.com/rapidsai/rapids-cmake/issues/575#issuecomment-2045374410.
   cmake_path(SET legion_overrides_json NORMALIZE
-             "${LEGATE_DIR}/cmake/versions/legion_version.json")
+             "${LEGATE_CMAKE_DIR}/versions/legion_version.json")
   if(user_repository OR user_branch)
     # The user has set either one of these, time to create our cludge.
     file(READ "${legion_overrides_json}" default_legion_json)
@@ -95,7 +95,7 @@ function(find_or_configure_legion_impl)
   if(Legion_FOUND)
     message(STATUS "CPM: using local package Legion@${version}")
   else()
-    include(${LEGATE_DIR}/cmake/Modules/cpm_helpers.cmake)
+    include("${LEGATE_CMAKE_DIR}/Modules/cpm_helpers.cmake")
     get_cpm_git_args(legion_cpm_git_args REPOSITORY ${git_repo} BRANCH ${git_branch}
                      SHALLOW ${shallow})
 

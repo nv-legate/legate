@@ -27,6 +27,16 @@ __all__ = (
 )
 
 
+def assert_file_exists(path: Path) -> None:
+    assert path.exists()
+    assert path.is_file()
+
+
+def assert_dir_exists(path: Path) -> None:
+    assert path.exists()
+    assert path.is_dir()
+
+
 def read_c_define(header_path: Path, name: str) -> str | None:
     """Open a C header file and read the value of a #define
 
@@ -98,11 +108,11 @@ def is_legate_path_in_src_tree(path: Path) -> bool:
     bool
         True if path is the in-source legate module, False otherwise.
     """
-    ret = path.parts[-3:] == ("src", "python", "legate")
+    ret = tuple(path.parts[-3:]) == ("src", "python", "legate")
     if ret:
-        assert (path / "CMakeLists.txt").exists()
-        assert (path.parent / "CMakeLists.txt").exists()
-        assert (path.parent.parent / "cpp" / "CMakeLists.txt").exists()
+        assert_file_exists(path / "CMakeLists.txt")
+        assert_file_exists(path.parent / "CMakeLists.txt")
+        assert_file_exists(path.parent.parent / "cpp" / "CMakeLists.txt")
     return ret
 
 
@@ -149,7 +159,7 @@ def get_legate_build_dir_from_skbuild_dir(skbuild_dir: Path) -> Path | None:
     if not skbuild_dir.exists():
         return None
 
-    assert skbuild_dir.is_dir()
+    assert_dir_exists(skbuild_dir)
     cmake_cache_txt = skbuild_dir / "CMakeCache.txt"
     if not cmake_cache_txt.exists():
         raise RuntimeError(
@@ -288,13 +298,13 @@ def get_legate_paths() -> LegatePaths:
             prefix_dir = legate_mod_dir.parents[3]
             bind_sh_path = prefix_dir / "bin" / "legate-bind.sh"
             legate_lib_path = prefix_dir / "lib"
-            assert legate_lib_path.exists() and legate_lib_path.is_dir()
+            assert_dir_exists(legate_lib_path)
         else:
             raise RuntimeError(
                 f"Unhandled legate module install location: {legate_mod_dir}"
             )
 
-        assert bind_sh_path.exists() and bind_sh_path.is_file()
+        assert_file_exists(bind_sh_path)
         return LegatePaths(
             legate_dir=legate_mod_dir,
             legate_build_dir=legate_build_dir,
@@ -306,19 +316,27 @@ def get_legate_paths() -> LegatePaths:
     # install, or are being called by test.py
     cmake_cache_txt = legate_build_dir / "CMakeCache.txt"
 
-    legate_source_dir = Path(
-        read_cmake_cache_value(cmake_cache_txt, "legate_SOURCE_DIR:STATIC=")
+    legate_dir = Path(
+        read_cmake_cache_value(cmake_cache_txt, "LEGATE_DIR:PATH=")
     )
 
     legate_binary_dir = Path(
         read_cmake_cache_value(cmake_cache_txt, "legate_BINARY_DIR:STATIC=")
     )
 
+    bind_sh_path = legate_dir / "legate-bind.sh"
+
+    legate_lib_path = legate_binary_dir / "cpp" / "lib"
+
+    assert_dir_exists(legate_mod_dir)
+    assert_dir_exists(legate_build_dir)
+    assert_file_exists(bind_sh_path)
+    assert_dir_exists(legate_lib_path)
     return LegatePaths(
         legate_dir=legate_mod_dir,
         legate_build_dir=legate_build_dir,
-        bind_sh_path=legate_source_dir / "legate-bind.sh",
-        legate_lib_path=legate_binary_dir / "src" / "cpp" / "lib",
+        bind_sh_path=bind_sh_path,
+        legate_lib_path=legate_lib_path,
     )
 
 

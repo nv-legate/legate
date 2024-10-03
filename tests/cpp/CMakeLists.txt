@@ -35,8 +35,8 @@ include(${rapids-cmake-dir}/cpm/gtest.cmake)
 rapids_cpm_gtest(BUILD_EXPORT_SET legate-exports INSTALL_EXPORT_SET legate-exports
                                                                     CPM_ARGS SYSTEM TRUE)
 
-include(${LEGATE_DIR}/cmake/Modules/debug_symbols.cmake)
-include(${LEGATE_DIR}/cmake/Modules/clang_tidy.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/debug_symbols.cmake")
+include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
 
 set(unique_src "")
 

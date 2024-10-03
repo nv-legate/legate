@@ -21,7 +21,7 @@ endif()
 # the day it will be an arms race we cannot win.
 add_compile_options(-w)
 
-include(${LEGATE_DIR}/cmake/Modules/find_or_configure.cmake)
+include("${LEGATE_CMAKE_DIR}/Modules/find_or_configure.cmake")
 
 legate_find_or_configure(PACKAGE fmt)
 

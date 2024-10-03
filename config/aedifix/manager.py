@@ -564,6 +564,18 @@ class ConfigurationManager:
         return self._main_package.project_dir_value
 
     @property
+    def project_src_dir(self) -> Path:
+        r"""Get the current main project source directory.
+
+        Returns
+        -------
+        dir : Path
+            The full path to the current project source directory, e.g.
+            `/path/to/legate.internal/src`.
+        """
+        return self._main_package.project_src_dir
+
+    @property
     def project_dir_name(self) -> str:
         r"""Get the name of the current main project root directory.
 
@@ -1026,7 +1038,7 @@ class ConfigurationManager:
         self.log_execute_func(
             self._cmaker.finalize,
             self,
-            self.project_dir,
+            self.project_src_dir,
             self.project_cmake_dir,
             extra_argv=self._extra_argv,
         )

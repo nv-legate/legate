@@ -54,13 +54,16 @@ macro(find_legate_cpp_impl legate_version build_export_set install_export_set)
     # usable.
     message(STATUS "Searching ${legate_ROOT} for pre-built Legate")
     find_library(legate_cpp_lib
-                 NAMES legate liblegate "liblegate${CMAKE_SHARED_LIBRARY_SUFFIX}"
-                       "liblegate${legate_version}${CMAKE_SHARED_LIBRARY_SUFFIX}"
+                 NAMES legate
+                       "legate.${legate_version}"
+                       liblegate
+                       "${CMAKE_SHARED_LIBRARY_PREFIX}legate${CMAKE_SHARED_LIBRARY_SUFFIX}"
+                       "${CMAKE_SHARED_LIBRARY_PREFIX}legate.${legate_version}${CMAKE_SHARED_LIBRARY_SUFFIX}"
                  PATHS "${legate_ROOT}"
                        "${legate_ROOT}/${lib_dir}"
                        "${legate_ROOT}/${CMAKE_INSTALL_LIBDIR}"
-                       "${legate_ROOT}/src/cpp/${lib_dir}"
-                       "${legate_ROOT}/src/cpp/${CMAKE_INSTALL_LIBDIR}"
+                       "${legate_ROOT}/cpp/${lib_dir}"
+                       "${legate_ROOT}/cpp/${CMAKE_INSTALL_LIBDIR}"
                  NO_DEFAULT_PATH)
 
     if(EXISTS "${legate_cpp_lib}")
@@ -84,7 +87,7 @@ macro(find_legate_cpp_impl legate_version build_export_set install_export_set)
     set(Legion_USE_Python ON)
     set(msg_ctx_back "${CMAKE_MESSAGE_CONTEXT}")
     set(CMAKE_MESSAGE_CONTEXT "--")
-    add_subdirectory(${LEGATE_DIR} legate_cpp)
+    add_subdirectory("${LEGATE_DIR}/src" legate_cpp)
     set(CMAKE_MESSAGE_CONTEXT "${msg_ctx_back}")
     set(SKBUILD ON)
     set(_legate_FOUND_METHOD "SELF_BUILT")
