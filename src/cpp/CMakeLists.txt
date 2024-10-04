@@ -274,13 +274,13 @@ list(APPEND
      legate/operation/detail/operation.cc
      legate/operation/detail/store_projection.cc
      legate/operation/detail/reduce.cc
+     legate/operation/detail/release_region_field.cc
      legate/operation/detail/req_analyzer.cc
      legate/operation/detail/scatter.cc
      legate/operation/detail/scatter_gather.cc
      legate/operation/detail/task.cc
      legate/operation/detail/task_launcher.cc
      legate/operation/detail/timing.cc
-     legate/operation/detail/unmap_and_detach.cc
      legate/partitioning/constraint.cc
      legate/partitioning/detail/constraint.cc
      legate/partitioning/detail/constraint_solver.cc

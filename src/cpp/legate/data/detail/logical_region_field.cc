@@ -195,10 +195,10 @@ void LogicalRegionField::release_region_field() noexcept
 
     auto* const runtime = Runtime::get_runtime();
 
-    if (is_mapped() || attached_) {
-      physical_state_->set_has_pending_detach(attached_);
-      runtime->issue_unmap_and_detach(physical_state_, destroyed_out_of_order_);
-    }
+    physical_state_->set_has_pending_detach(attached_);
+
+    runtime->issue_release_region_field(
+      physical_state_, is_mapped() || attached_, destroyed_out_of_order_);
 
     runtime->field_manager()->free_field(
       FreeFieldInfo{shape_, field_size_, lr_, fid_, physical_state_}, destroyed_out_of_order_);

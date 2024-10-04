@@ -57,10 +57,10 @@ class Operation {
     MANUAL_TASK,
     MAPPING_FENCE,
     REDUCE,
+    RELEASE_REGION_FIELD,
     SCATTER,
     SCATTER_GATHER,
     TIMING,
-    UNMAP_AND_DETACH,
   };
 
   virtual ~Operation() = default;

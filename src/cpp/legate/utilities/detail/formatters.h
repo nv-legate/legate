@@ -25,6 +25,8 @@ enum class VariantCode : unsigned int /* A.K.A. Legion::VariantID */;
 enum class LocalRedopID : std::int64_t;
 enum class GlobalRedopID : int /* A.K.A. Legion::ReductionOpID */;
 
+enum class ImageComputationHint : std::uint8_t;
+
 }  // namespace legate
 
 namespace legate::detail {
@@ -104,6 +106,11 @@ struct formatter<legate::LocalRedopID> : formatter<std::underlying_type_t<legate
 template <>
 struct formatter<legate::GlobalRedopID> : formatter<std::underlying_type_t<legate::GlobalRedopID>> {
   format_context::iterator format(legate::GlobalRedopID id, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::ImageComputationHint> : formatter<string_view> {
+  format_context::iterator format(legate::ImageComputationHint hint, format_context& ctx) const;
 };
 
 template <>

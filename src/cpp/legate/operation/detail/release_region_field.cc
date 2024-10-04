@@ -10,20 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#pragma once
+#include "legate/operation/detail/release_region_field.h"
 
-#include "legate/operation/detail/unmap_and_detach.h"
+#include "legate/runtime/detail/runtime.h"
 
 namespace legate::detail {
 
-inline UnmapAndDetach::UnmapAndDetach(
-  std::uint64_t unique_id,
-  InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state,
-  bool unordered)
-  : Operation{unique_id}, physical_state_{std::move(physical_state)}, unordered_{unordered}
+void ReleaseRegionField::launch()
 {
+  if (unmap_) {
+    physical_state_->unmap_and_detach(unordered_);
+  }
+  physical_state_->invoke_callbacks();
 }
-
-inline Operation::Kind UnmapAndDetach::kind() const { return Kind::UNMAP_AND_DETACH; }
 
 }  // namespace legate::detail

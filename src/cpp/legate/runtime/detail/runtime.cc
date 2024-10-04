@@ -33,11 +33,11 @@
 #include "legate/operation/detail/index_attach.h"
 #include "legate/operation/detail/mapping_fence.h"
 #include "legate/operation/detail/reduce.h"
+#include "legate/operation/detail/release_region_field.h"
 #include "legate/operation/detail/scatter.h"
 #include "legate/operation/detail/scatter_gather.h"
 #include "legate/operation/detail/task.h"
 #include "legate/operation/detail/task_launcher.h"
-#include "legate/operation/detail/unmap_and_detach.h"
 #include "legate/partitioning/detail/partitioner.h"
 #include "legate/partitioning/detail/partitioning_tasks.h"
 #include "legate/runtime/detail/argument_parsing.h"
@@ -1339,11 +1339,11 @@ Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& fut
     static_cast<Legion::MappingTagID>(CoreMappingTag::JOIN_EXCEPTION));
 }
 
-void Runtime::issue_unmap_and_detach(
-  InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state, bool unordered)
+void Runtime::issue_release_region_field(
+  InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state, bool unmap, bool unordered)
 {
-  submit(
-    make_internal_shared<UnmapAndDetach>(current_op_id_(), std::move(physical_state), unordered));
+  submit(make_internal_shared<ReleaseRegionField>(
+    current_op_id_(), std::move(physical_state), unmap, unordered));
   increment_op_id_();
 }
 

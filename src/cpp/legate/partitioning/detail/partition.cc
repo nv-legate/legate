@@ -436,8 +436,10 @@ std::unique_ptr<Partition> Image::clone() const { return std::make_unique<Image>
 
 std::string Image::to_string() const
 {
-  return fmt::format(
-    "Image(func: {}, partition: {})", func_->to_string(), func_partition_->to_string());
+  return fmt::format("Image(func: {}, partition: {}, hint: {})",
+                     func_->to_string(),
+                     func_partition_->to_string(),
+                     hint_);
 }
 
 const tuple<std::uint64_t>& Image::color_shape() const { return func_partition_->color_shape(); }

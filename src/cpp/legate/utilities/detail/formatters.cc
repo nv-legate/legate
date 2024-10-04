@@ -16,9 +16,11 @@
 #include "legate/data/detail/logical_store.h"
 #include "legate/data/detail/shape.h"
 #include "legate/operation/detail/operation.h"
+#include "legate/partitioning/constraint.h"
 #include "legate/partitioning/detail/constraint.h"
 #include "legate/type/detail/type_info.h"
 #include "legate/utilities/detail/zstring_view.h"
+#include "legate/utilities/macros.h"
 #include "legate/utilities/typedefs.h"
 
 #include <fmt/format.h>
@@ -95,6 +97,22 @@ format_context::iterator formatter<legate::GlobalRedopID>::format(legate::Global
                                                                   format_context& ctx) const
 {
   return formatter<std::underlying_type_t<legate::GlobalRedopID>>::format(fmt::underlying(id), ctx);
+}
+
+format_context::iterator formatter<legate::ImageComputationHint>::format(
+  legate::ImageComputationHint hint, format_context& ctx) const
+{
+  string_view name = "(unknown)";
+  switch (hint) {
+#define LEGATE_HINT_CASE(x) \
+  case legate::ImageComputationHint::x: name = LEGATE_STRINGIZE_(x); break
+    LEGATE_HINT_CASE(NO_HINT);
+    LEGATE_HINT_CASE(MIN_MAX);
+    LEGATE_HINT_CASE(FIRST_LAST);
+#undef LEGATE_HINT_CASE
+  };
+
+  return formatter<string_view>::format(name, ctx);
 }
 
 format_context::iterator formatter<legate::detail::ZStringView>::format(

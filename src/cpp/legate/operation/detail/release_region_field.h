@@ -20,11 +20,12 @@
 
 namespace legate::detail {
 
-class UnmapAndDetach final : public Operation {
+class ReleaseRegionField final : public Operation {
  public:
-  UnmapAndDetach(std::uint64_t unique_id,
-                 InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state,
-                 bool unordered);
+  ReleaseRegionField(std::uint64_t unique_id,
+                     InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state,
+                     bool unmap,
+                     bool unordered);
 
   void launch() override;
 
@@ -32,9 +33,10 @@ class UnmapAndDetach final : public Operation {
 
  private:
   InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state_{};
+  bool unmap_{};
   bool unordered_{};
 };
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/unmap_and_detach.inl"
+#include "legate/operation/detail/release_region_field.inl"

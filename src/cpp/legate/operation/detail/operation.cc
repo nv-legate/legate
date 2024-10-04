@@ -41,7 +41,7 @@ namespace {
     case Operation::Kind::SCATTER: return "Scatter";
     case Operation::Kind::SCATTER_GATHER: return "ScatterGather";
     case Operation::Kind::TIMING: return "Timing";
-    case Operation::Kind::UNMAP_AND_DETACH: return "UnmapAndDetach";
+    case Operation::Kind::RELEASE_REGION_FIELD: return "ReleaseRegionField";
   }
 
   throw std::invalid_argument{"invalid operation kind"};
@@ -72,8 +72,8 @@ bool Operation::is_internal() const
     case Kind::EXECUTION_FENCE: [[fallthrough]];
     case Kind::INDEX_ATTACH: [[fallthrough]];
     case Kind::MAPPING_FENCE: [[fallthrough]];
-    case Kind::TIMING: [[fallthrough]];
-    case Kind::UNMAP_AND_DETACH: {
+    case Kind::RELEASE_REGION_FIELD: [[fallthrough]];
+    case Kind::TIMING: {
       return true;
     }
 
@@ -111,8 +111,8 @@ bool Operation::needs_partitioning() const
     case Kind::INDEX_ATTACH: [[fallthrough]];
     case Kind::MANUAL_TASK: [[fallthrough]];
     case Kind::MAPPING_FENCE: [[fallthrough]];
-    case Kind::TIMING: [[fallthrough]];
-    case Kind::UNMAP_AND_DETACH: {
+    case Kind::RELEASE_REGION_FIELD: [[fallthrough]];
+    case Kind::TIMING: {
       return false;
     }
   }

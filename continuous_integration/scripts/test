@@ -145,7 +145,8 @@ run_test_or_analysis() {
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
-              "${gtest_file}" --"${proc_type}" "${proc_count}" "${EXTRA_ARGS}"
+              LEGATE_TEST=1 LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 1000 --fbmem 1000 --numamem 0 --ompthreads 0 --omps 0" \
+                "${gtest_file}" "${EXTRA_ARGS}"
             }
 
             function run_legate_tests_with_driver()
