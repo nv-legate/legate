@@ -115,11 +115,13 @@
 #endif
 
 #if LEGATE_DEFINED(LEGATE_CLANG) || LEGATE_DEFINED(LEGATE_GCC)
-#define LEGATE_DEPRECATED_MACRO_(...) LEGATE_PRAGMA(GCC warning __VA_ARGS__)
+// Don't use LEGATE_PRAGMA here because we can't use LEGATE_WPEDANTIC_SEMICOLON_WORKAROUND for
+// it since this must appear after macro uses, which may happen in preprocessor statements
+#define LEGATE_DEPRECATED_MACRO_(...) _Pragma(LEGATE_STRINGIZE_(__VA_ARGS__))
 #define LEGATE_DEPRECATED_MACRO(...) \
-  LEGATE_DEPRECATED_MACRO_(This macro is deprecated : __VA_ARGS__)
+  LEGATE_DEPRECATED_MACRO_(GCC warning LEGATE_STRINGIZE_(This macro is deprecated : __VA_ARGS__))
 #else
-#define LEGATE_DEPRECATED_MACRO(...) LEGATE_WPEDANTIC_SEMICOLON_WORKAROUND()
+#define LEGATE_DEPRECATED_MACRO(...)
 #endif
 
 namespace legate::detail {
