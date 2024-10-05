@@ -11,14 +11,14 @@ legate/util @bryevdv
 legate/jupyter @eddy16112
 
 # cmake
-*.cmake @trxcllnt @jjwilke @Jacobfaib
-CMakeLists.txt @trxcllnt @jjwilke @Jacobfaib
+*.cmake @Jacobfaib
+CMakeLists.txt @Jacobfaib
 
 # CI
 .github/ @sandeepd-nv @mag1cp1n @m3vaz @marcinz
 continuous_integration @sandeepd-nv @mag1cp1n @m3vaz @marcinz
 conda @sandeepd-nv @mag1cp1n @m3vaz @marcinz
-scripts/ @trxcllnt @sandeepd-nv @mag1cp1n @m3vaz @marcinz
+scripts/ @sandeepd-nv @mag1cp1n @m3vaz @marcinz
 
 # cpp
 src/ @magnatelee @Jacobfaib
