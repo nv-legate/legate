@@ -101,12 +101,10 @@ class Shape:
         return str(self)
 
     @overload
-    def __getitem__(self, idx: int) -> int:
-        ...
+    def __getitem__(self, idx: int) -> int: ...
 
     @overload
-    def __getitem__(self, idx: slice) -> Shape:
-        ...
+    def __getitem__(self, idx: slice) -> Shape: ...
 
     def __getitem__(self, idx: Union[int, slice]) -> Union[Shape, int]:
         if isinstance(idx, slice):

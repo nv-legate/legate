@@ -176,13 +176,11 @@ class Dispatchable(Generic[T]):
         runtime: legion.legion_runtime_t,
         context: legion.legion_context_t,
         **kwargs: Any,
-    ) -> T:
-        ...
+    ) -> T: ...
 
 
 class Mappable(Protocol):
-    def set_mapper_arg(self, data: Any, size: int) -> None:
-        ...
+    def set_mapper_arg(self, data: Any, size: int) -> None: ...
 
 
 # todo: (bev) use list[...] when feasible
