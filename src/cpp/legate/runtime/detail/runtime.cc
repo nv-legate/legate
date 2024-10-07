@@ -14,6 +14,7 @@
 
 #include "legate/comm/coll.h"
 #include "legate/comm/detail/comm.h"
+#include "legate/cuda/detail/cuda_driver_api.h"
 #include "legate/data/detail/array_tasks.h"
 #include "legate/data/detail/external_allocation.h"
 #include "legate/data/detail/logical_array.h"
@@ -1955,6 +1956,14 @@ CUstream_st* Runtime::get_cuda_stream() const
     return Realm::Cuda::get_task_cuda_stream();
   }
   return nullptr;
+}
+
+const cuda::detail::CUDADriverAPI* Runtime::get_cuda_driver_api()
+{
+  if (!cu_driver_.has_value()) {
+    cu_driver_.emplace();
+  }
+  return &*cu_driver_;
 }
 
 const MapperManager& Runtime::get_mapper_manager_() const

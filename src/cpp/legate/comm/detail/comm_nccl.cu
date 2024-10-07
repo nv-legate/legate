@@ -27,7 +27,6 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <cuda.h>
 #include <memory>
 #include <nccl.h>
 #include <string>

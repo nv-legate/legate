@@ -23,6 +23,8 @@ Changes: Latest Development Version
   feature is currently considered *experimental* as it is not always profitable when it
   should be.
 - Rename ``bind.sh`` to ``legate-bind.sh``.
+- Add ``LEGATE_CUDA_DRIVER`` environment variable to optionally override the location of
+  the CUDA driver shared library. If not set, defaults to "libcuda.so.1".
 
 C++
 ---

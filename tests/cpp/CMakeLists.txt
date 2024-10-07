@@ -199,6 +199,29 @@ endif()
 rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing
                                 DESTINATION ${CMAKE_INSTALL_BINDIR} INCLUDE_IN_ALL)
 
-# Add a dummy target whose only job it is to depend on the tests being built.
-add_custom_target(build_tests COMMENT "Building tests")
-add_dependencies(build_tests ${LEGATE_CONFIGURED_TESTS})
+function(legate_create_dummy_cuda_driver)
+  add_library(legate_dummy_cuda_driver utilities/dummy_cuda_driver.cc)
+  set_target_properties(legate_dummy_cuda_driver PROPERTIES POSITION_INDEPENDENT_CODE ON
+                                                            LIBRARY_OUTPUT_DIRECTORY lib)
+  # tests_wo_runtime contains the CUDADriverAPI test which tests whether we can
+  # successfully load a shim CUDA driver module. By adding the RPATH, we can just pass
+  # "liblegate_dummy_cuda_driver.so" to the loader, and because its in the RPATH, dlopen()
+  # will find it.
+  #
+  # This works because dir structure is like so:
+  #
+  # cmake-format: off
+  # CMAKE_CURRENT_BINARY_DIR/
+  # | - bin/
+  # |   | - tests_with_runtime
+  # | - lib/
+  #     | - liblegate_dummy_cuda_driver.dylib
+  # cmake-format: on
+  #
+  # As an added bonus, CMake will also ensure this rpath gets updated when both of these
+  # get installed.
+  set_property(TARGET tests_wo_runtime APPEND
+               PROPERTY BUILD_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}/../lib")
+  install(TARGETS legate_dummy_cuda_driver DESTINATION ${lib_dir})
+endfunction()
+legate_create_dummy_cuda_driver()

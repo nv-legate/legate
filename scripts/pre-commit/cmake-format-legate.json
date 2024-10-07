@@ -209,6 +209,11 @@
                     "nargs": "*"
                 }
             },
+            "legate_create_dummy_cuda_driver": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "legate_debug_syms": {
                 "kwargs": {
                     "INSTALL_DIR": 1

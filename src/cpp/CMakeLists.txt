@@ -223,6 +223,7 @@ list(APPEND
      legate/comm/detail/logger.cc
      legate/comm/detail/thread_comm.cc
      legate/cuda/stream_pool.cc
+     legate/cuda/detail/cuda_driver_api.cc
      legate/data/allocator.cc
      legate/data/external_allocation.cc
      legate/data/logical_array.cc

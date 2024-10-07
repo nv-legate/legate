@@ -21,7 +21,7 @@ namespace legate::cuda {
 
 StreamView::~StreamView()
 {
-  if (valid_ && detail::Config::synchronize_stream_view) {
+  if (valid_ && legate::detail::Config::synchronize_stream_view) {
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       LEGATE_CHECK_CUDA_STREAM(stream_);
     } else {
@@ -51,7 +51,7 @@ StreamView StreamPool::get_stream()
 /*static*/ StreamPool& StreamPool::get_stream_pool()
 {
   static StreamPool pools[LEGION_MAX_NUM_PROCS];
-  const auto proc = detail::Runtime::get_runtime()->get_executing_processor();
+  const auto proc = legate::detail::Runtime::get_runtime()->get_executing_processor();
   auto proc_id    = proc.id & (LEGION_MAX_NUM_PROCS - 1);
   return pools[proc_id];
 }

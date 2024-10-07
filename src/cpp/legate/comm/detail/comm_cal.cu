@@ -28,7 +28,6 @@
 #include <cal.h>
 #include <cstdint>
 #include <cstdlib>
-#include <cuda.h>
 #include <memory>
 #include <vector>
 

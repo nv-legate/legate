@@ -241,6 +241,22 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGION_DEFAULT_ARGS);
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_MPI_WRAPPER);
 
 /**
+ * @var LEGATE_CUDA_DRIVER
+ *
+ * @brief Location of the CUDA driver shared library to load. Possible values: a string.
+ *
+ * If not set, defaults to "libcuda.so.1", which is looked up using the usual system library
+ * path mechanisms. The user should generally not need to set this variable, but it can be
+ * useful in case the driver needs to be interposed by a user-supplied shim.
+ *
+ * @ingroup env
+ */
+#ifdef DOXYGEN
+#define LEGATE_CUDA_DRIVER
+#endif
+LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_CUDA_DRIVER);
+
+/**
  * @var LEGATE_INLINE_TASK_LAUNCH
  *
  * @brief Instructs Legate to launch tasks "inline" whenever possible. Possible values: 0, 1.
