@@ -603,9 +603,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 legion.LEGION_NO_ACCESS,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -616,9 +618,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 legion.LEGION_NO_ACCESS,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -679,9 +683,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 legion.LEGION_READ_ONLY,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -692,9 +698,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 legion.LEGION_READ_ONLY,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -755,9 +763,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 legion.LEGION_WRITE_DISCARD,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -768,9 +778,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 legion.LEGION_WRITE_DISCARD,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -831,9 +843,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 legion.LEGION_READ_WRITE,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -844,9 +858,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 legion.LEGION_READ_WRITE,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -908,9 +924,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 redop,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -921,9 +939,11 @@ class IndexTask(Dispatchable[Union[Future, FutureMap]], Mappable):
                 projection,
                 redop,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )

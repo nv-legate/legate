@@ -795,9 +795,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                 projection,
                 legion.LEGION_READ_ONLY,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -808,9 +810,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                 projection,
                 legion.LEGION_READ_ONLY,
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 False,
             )
@@ -874,9 +878,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                     projection,
                     privilege,
                     coherence,
-                    upper_bound.get_root().handle
-                    if parent is None
-                    else parent.handle,
+                    (
+                        upper_bound.get_root().handle
+                        if parent is None
+                        else parent.handle
+                    ),
                     tag,
                     False,
                 )
@@ -887,9 +893,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                     projection,
                     redop,
                     coherence,
-                    upper_bound.get_root().handle
-                    if parent is None
-                    else parent.handle,
+                    (
+                        upper_bound.get_root().handle
+                        if parent is None
+                        else parent.handle
+                    ),
                     tag,
                     False,
                 )
@@ -901,9 +909,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                     projection,
                     privilege,
                     coherence,
-                    upper_bound.get_root().handle
-                    if parent is None
-                    else parent.handle,
+                    (
+                        upper_bound.get_root().handle
+                        if parent is None
+                        else parent.handle
+                    ),
                     tag,
                     False,
                 )
@@ -914,9 +924,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                     projection,
                     redop,
                     coherence,
-                    upper_bound.get_root().handle
-                    if parent is None
-                    else parent.handle,
+                    (
+                        upper_bound.get_root().handle
+                        if parent is None
+                        else parent.handle
+                    ),
                     tag,
                     False,
                 )
@@ -980,9 +992,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                     field.fid if isinstance(field, FieldID) else field,
                 ),
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 is_range,
                 False,
@@ -997,9 +1011,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                     field.fid if isinstance(field, FieldID) else field,
                 ),
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 is_range,
                 False,
@@ -1053,9 +1069,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                     field.fid if isinstance(field, FieldID) else field,
                 ),
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 is_range,
                 False,
@@ -1070,9 +1088,11 @@ class IndexCopy(Dispatchable[None], Mappable):
                     field.fid if isinstance(field, FieldID) else field,
                 ),
                 coherence,
-                upper_bound.get_root().handle
-                if parent is None
-                else parent.handle,
+                (
+                    upper_bound.get_root().handle
+                    if parent is None
+                    else parent.handle
+                ),
                 tag,
                 is_range,
                 False,

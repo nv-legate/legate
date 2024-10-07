@@ -31,8 +31,7 @@ class LegateDataInterfaceItem(TypedDict):
 
 class LegateDataInterface(Protocol):
     @property
-    def __legate_data_interface__(self) -> LegateDataInterfaceItem:
-        ...
+    def __legate_data_interface__(self) -> LegateDataInterfaceItem: ...
 
 
 class Field:

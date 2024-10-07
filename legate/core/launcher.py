@@ -104,13 +104,11 @@ EntryType = Tuple[Union["Broadcast", "Partition"], int, int]
 class RequirementIndexer(Protocol):
     def get_requirement_index(
         self, req: Union[RegionReq, OutputReq], field_id: int
-    ) -> int:
-        ...
+    ) -> int: ...
 
 
 class LauncherArg(Protocol):
-    def pack(self, buf: BufferBuilder) -> None:
-        ...
+    def pack(self, buf: BufferBuilder) -> None: ...
 
 
 class ScalarArg:
@@ -497,9 +495,7 @@ class ProjectionSet:
             else:
                 self._create(perm, proj_info)
 
-    def coalesce(
-        self, error_on_interference: bool
-    ) -> Union[
+    def coalesce(self, error_on_interference: bool) -> Union[
         list[tuple[Permission, Union[Broadcast, Partition], int, int]],
         list[tuple[Permission, OrderedSet[EntryType]]],
     ]:

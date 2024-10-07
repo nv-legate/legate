@@ -246,9 +246,11 @@ class OutputRegion:
                             existing.handle,
                             legion.LEGION_WRITE_DISCARD,
                             coherence,
-                            existing.get_root().handle
-                            if parent is None
-                            else parent.handle,
+                            (
+                                existing.get_root().handle
+                                if parent is None
+                                else parent.handle
+                            ),
                             tag,
                             False,
                         )
@@ -259,9 +261,11 @@ class OutputRegion:
                         proj,
                         legion.LEGION_WRITE_DISCARD,
                         coherence,
-                        existing.get_root().handle
-                        if parent is None
-                        else parent.handle,
+                        (
+                            existing.get_root().handle
+                            if parent is None
+                            else parent.handle
+                        ),
                         tag,
                         False,
                     )
@@ -287,9 +291,11 @@ class OutputRegion:
                         proj,
                         legion.LEGION_WRITE_DISCARD,
                         coherence,
-                        existing.get_root().handle
-                        if parent is None
-                        else parent.handle,
+                        (
+                            existing.get_root().handle
+                            if parent is None
+                            else parent.handle
+                        ),
                         tag,
                         False,
                     )

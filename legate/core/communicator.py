@@ -74,16 +74,13 @@ class Communicator(ABC):
         self._handles = {}
 
     @abstractproperty
-    def needs_barrier(self) -> bool:
-        ...
+    def needs_barrier(self) -> bool: ...
 
     @abstractmethod
-    def _initialize(self, volume: int) -> FutureMap:
-        ...
+    def _initialize(self, volume: int) -> FutureMap: ...
 
     @abstractmethod
-    def _finalize(self, volume: int, handle: FutureMap) -> None:
-        ...
+    def _finalize(self, volume: int, handle: FutureMap) -> None: ...
 
 
 class NCCLCommunicator(Communicator):
