@@ -20,17 +20,17 @@
                 {
                     "file": "${current_json_dir}/../patches/mdspan_cpp_lib_span_dynamic_extent.diff",
                     "fixed_in": "",
-                    "issue": "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead"
+                    "issue": "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202002L instead"
                 },
                 {
                     "file": "${current_json_dir}/../patches/mdspan_cpp_lib_span_extents.diff",
                     "fixed_in": "",
-                    "issue": "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead"
+                    "issue": "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202002L instead"
                 },
                 {
                     "file": "${current_json_dir}/../patches/mdspan_cpp_lib_span_layout_stride.diff",
                     "fixed_in": "",
-                    "issue": "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202311L instead"
+                    "issue": "mdspan includes <span> if __cpp_lib_span is defined, but since we spoof that (with value = 1), it should check that __cpp_lib_span >= 202002L instead"
                 }
             ],
             "version": "0.6"
