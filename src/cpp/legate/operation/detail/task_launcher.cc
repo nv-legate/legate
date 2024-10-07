@@ -335,7 +335,7 @@ void TaskLauncher::post_process_unbound_stores_(
       }
 
       auto partition = create_weighted(weights, launch_domain);
-      store->set_key_partition(machine, partition.get());
+      store->set_key_partition(machine, partition);
 
       const auto& index_partition = req.partition.get_index_partition();
       part_mgr->record_index_partition(req.parent.get_index_space(), *partition, index_partition);

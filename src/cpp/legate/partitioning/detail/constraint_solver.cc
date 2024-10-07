@@ -264,22 +264,21 @@ const Restrictions& ConstraintSolver::find_restrictions(const Variable* partitio
 
 void ConstraintSolver::dump()
 {
-  log_legate_partitioning().print() << "===== Constraint Graph =====";
-  log_legate_partitioning().print() << "Stores:";
+  log_legate_partitioner().print() << "===== Constraint Graph =====";
+  log_legate_partitioner().print() << "Stores:";
   for (auto&& symbol : partition_symbols_.elements()) {
     auto store = symbol->operation()->find_store(symbol);
-    log_legate_partitioning().print()
-      << "  " << symbol->to_string() << " ~> " << store->to_string();
+    log_legate_partitioner().print() << "  " << symbol->to_string() << " ~> " << store->to_string();
   }
-  log_legate_partitioning().print() << "Variables:";
+  log_legate_partitioner().print() << "Variables:";
   for (auto&& symbol : partition_symbols_.elements()) {
-    log_legate_partitioning().print() << "  " << symbol->to_string();
+    log_legate_partitioner().print() << "  " << symbol->to_string();
   }
-  log_legate_partitioning().print() << "Constraints:";
+  log_legate_partitioner().print() << "Constraints:";
   for (auto&& constraint : constraints_) {
-    log_legate_partitioning().print() << "  " << constraint->to_string();
+    log_legate_partitioner().print() << "  " << constraint->to_string();
   }
-  log_legate_partitioning().print() << "============================";
+  log_legate_partitioner().print() << "============================";
 }
 
 }  // namespace legate::detail

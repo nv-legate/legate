@@ -159,9 +159,9 @@ inline InternalSharedPtr<StoragePartition> create_storage_partition(
 
 inline InternalSharedPtr<Storage> slice_storage(const InternalSharedPtr<Storage>& self,
                                                 tuple<std::uint64_t> tile_shape,
-                                                const tuple<std::uint64_t>& offsets)
+                                                tuple<std::int64_t> offsets)
 {
-  return self->slice(self, std::move(tile_shape), offsets);
+  return self->slice(self, std::move(tile_shape), std::move(offsets));
 }
 
 inline InternalSharedPtr<LogicalStore> slice_store(const InternalSharedPtr<LogicalStore>& self,

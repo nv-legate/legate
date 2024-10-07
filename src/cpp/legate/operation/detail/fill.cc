@@ -75,14 +75,14 @@ void Fill::launch(Strategy* strategy)
   if (const auto* logical_store = std::get_if<InternalSharedPtr<LogicalStore>>(&value_)) {
     if (launch_domain.is_valid()) {
       launcher.launch(launch_domain, lhs_.get(), *lhs_proj, logical_store->get());
-      lhs_->set_key_partition(machine(), part.get());
+      lhs_->set_key_partition(machine(), part);
     } else {
       launcher.launch_single(lhs_.get(), *lhs_proj, logical_store->get());
     }
   } else {
     if (launch_domain.is_valid()) {
       launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::get<Scalar>(value_));
-      lhs_->set_key_partition(machine(), part.get());
+      lhs_->set_key_partition(machine(), part);
     } else {
       launcher.launch_single(lhs_.get(), *lhs_proj, std::get<Scalar>(value_));
     }

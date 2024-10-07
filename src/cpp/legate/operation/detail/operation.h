@@ -77,7 +77,7 @@ class Operation {
   virtual void launch(Strategy* strategy);
 
   [[nodiscard]] virtual Kind kind() const = 0;
-  [[nodiscard]] virtual std::string to_string() const;
+  [[nodiscard]] virtual std::string to_string(bool show_provenance) const;
   [[nodiscard]] virtual bool needs_flush() const;
   [[nodiscard]] virtual bool supports_replicated_write() const;
   // When `is_internal()` returns `true` on an operation, the runtime skips validation and the flush

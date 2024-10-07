@@ -303,11 +303,11 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
   }
 }
 
-std::string Task::to_string() const
+std::string Task::to_string(bool show_provenance) const
 {
   auto result = fmt::format("{}:{}", library_->get_task_name(local_task_id()), unique_id_);
 
-  if (!provenance().empty()) {
+  if (!provenance().empty() && show_provenance) {
     fmt::format_to(std::back_inserter(result), "[{}]", provenance());
   }
   return result;

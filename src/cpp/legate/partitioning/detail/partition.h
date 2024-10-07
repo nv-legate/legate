@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "legate/data/detail/transform.h"
 #include "legate/mapping/detail/machine.h"
 #include "legate/partitioning/constraint.h"
 #include "legate/partitioning/detail/restriction.h"
@@ -51,9 +52,9 @@ class Partition {
   [[nodiscard]] virtual bool satisfies_restrictions(const Restrictions& restrictions) const = 0;
   [[nodiscard]] virtual bool is_convertible() const                                         = 0;
 
-  [[nodiscard]] virtual std::unique_ptr<Partition> scale(
+  [[nodiscard]] virtual InternalSharedPtr<Partition> scale(
     const tuple<std::uint64_t>& factors) const = 0;
-  [[nodiscard]] virtual std::unique_ptr<Partition> bloat(
+  [[nodiscard]] virtual InternalSharedPtr<Partition> bloat(
     const tuple<std::uint64_t>& low_offsets, const tuple<std::uint64_t>& high_offsets) const = 0;
 
   // NOLINTNEXTLINE(google-default-arguments)
@@ -63,11 +64,14 @@ class Partition {
   [[nodiscard]] virtual bool has_launch_domain() const = 0;
   [[nodiscard]] virtual Domain launch_domain() const   = 0;
 
-  [[nodiscard]] virtual std::unique_ptr<Partition> clone() const = 0;
-
   [[nodiscard]] virtual std::string to_string() const = 0;
 
   [[nodiscard]] virtual const tuple<std::uint64_t>& color_shape() const = 0;
+
+  [[nodiscard]] virtual InternalSharedPtr<Partition> convert(
+    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const = 0;
+  [[nodiscard]] virtual InternalSharedPtr<Partition> invert(
+    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const = 0;
 };
 
 class NoPartition : public Partition {
@@ -79,9 +83,9 @@ class NoPartition : public Partition {
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& /*restrictions*/) const override;
   [[nodiscard]] bool is_convertible() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> scale(
+  [[nodiscard]] InternalSharedPtr<Partition> scale(
     const tuple<std::uint64_t>& factors) const override;
-  [[nodiscard]] std::unique_ptr<Partition> bloat(
+  [[nodiscard]] InternalSharedPtr<Partition> bloat(
     const tuple<std::uint64_t>& low_offsets,
     const tuple<std::uint64_t>& high_offsets) const override;
 
@@ -91,22 +95,25 @@ class NoPartition : public Partition {
   [[nodiscard]] bool has_launch_domain() const override;
   [[nodiscard]] Domain launch_domain() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> clone() const override;
-
   [[nodiscard]] std::string to_string() const override;
 
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
+
+  [[nodiscard]] InternalSharedPtr<Partition> convert(
+    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const override;
+  [[nodiscard]] InternalSharedPtr<Partition> invert(const InternalSharedPtr<Partition>& self,
+                                                    const TransformStack* transform) const override;
 };
 
 class Tiling : public Partition {
  public:
-  Tiling(tuple<std::uint64_t>&& tile_shape,
-         tuple<std::uint64_t>&& color_shape,
-         tuple<std::int64_t>&& offsets);
-  Tiling(tuple<std::uint64_t>&& tile_shape,
-         tuple<std::uint64_t>&& color_shape,
-         tuple<std::int64_t>&& offsets,
-         tuple<std::uint64_t>&& strides);
+  Tiling(tuple<std::uint64_t> tile_shape,
+         tuple<std::uint64_t> color_shape,
+         tuple<std::int64_t> offsets);
+  Tiling(tuple<std::uint64_t> tile_shape,
+         tuple<std::uint64_t> color_shape,
+         tuple<std::int64_t> offsets,
+         tuple<std::uint64_t> strides);
 
   bool operator==(const Tiling& other) const;
 
@@ -117,9 +124,9 @@ class Tiling : public Partition {
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
   [[nodiscard]] bool is_convertible() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> scale(
+  [[nodiscard]] InternalSharedPtr<Partition> scale(
     const tuple<std::uint64_t>& factors) const override;
-  [[nodiscard]] std::unique_ptr<Partition> bloat(
+  [[nodiscard]] InternalSharedPtr<Partition> bloat(
     const tuple<std::uint64_t>& low_offsets,
     const tuple<std::uint64_t>& high_offsets) const override;
 
@@ -129,18 +136,22 @@ class Tiling : public Partition {
   [[nodiscard]] bool has_launch_domain() const override;
   [[nodiscard]] Domain launch_domain() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> clone() const override;
-
   [[nodiscard]] std::string to_string() const override;
 
   [[nodiscard]] const tuple<std::uint64_t>& tile_shape() const;
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
+
+  [[nodiscard]] InternalSharedPtr<Partition> convert(
+    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const override;
+  [[nodiscard]] InternalSharedPtr<Partition> invert(const InternalSharedPtr<Partition>& self,
+                                                    const TransformStack* transform) const override;
+
   [[nodiscard]] const tuple<std::int64_t>& offsets() const;
   [[nodiscard]] bool has_color(const tuple<std::uint64_t>& color) const;
 
   [[nodiscard]] tuple<std::uint64_t> get_child_extents(const tuple<std::uint64_t>& extents,
                                                        const tuple<std::uint64_t>& color) const;
-  [[nodiscard]] tuple<std::uint64_t> get_child_offsets(const tuple<std::uint64_t>& color) const;
+  [[nodiscard]] tuple<std::int64_t> get_child_offsets(const tuple<std::uint64_t>& color) const;
 
   [[nodiscard]] std::size_t hash() const;
 
@@ -154,10 +165,8 @@ class Tiling : public Partition {
 
 class Weighted : public Partition {
  public:
-  Weighted(const Legion::FutureMap& weights, const Domain& color_domain);
+  Weighted(Legion::FutureMap weights, const Domain& color_domain);
   ~Weighted() override;
-
-  Weighted(const Weighted&);
 
   bool operator==(const Weighted& other) const;
   bool operator<(const Weighted& other) const;
@@ -169,9 +178,9 @@ class Weighted : public Partition {
   [[nodiscard]] bool is_convertible() const override;
   [[nodiscard]] bool is_complete_for(const detail::Storage* /*storage*/) const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> scale(
+  [[nodiscard]] InternalSharedPtr<Partition> scale(
     const tuple<std::uint64_t>& factors) const override;
-  [[nodiscard]] std::unique_ptr<Partition> bloat(
+  [[nodiscard]] InternalSharedPtr<Partition> bloat(
     const tuple<std::uint64_t>& low_offsets,
     const tuple<std::uint64_t>& high_offsets) const override;
 
@@ -181,14 +190,22 @@ class Weighted : public Partition {
   [[nodiscard]] bool has_launch_domain() const override;
   [[nodiscard]] Domain launch_domain() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> clone() const override;
-
   [[nodiscard]] std::string to_string() const override;
 
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
 
+  [[nodiscard]] InternalSharedPtr<Partition> convert(
+    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const override;
+  [[nodiscard]] InternalSharedPtr<Partition> invert(const InternalSharedPtr<Partition>& self,
+                                                    const TransformStack* transform) const override;
+
+  Weighted(const Weighted&)                = default;
+  Weighted& operator=(const Weighted&)     = default;
+  Weighted(Weighted&&) noexcept            = default;
+  Weighted& operator=(Weighted&&) noexcept = default;
+
  private:
-  std::unique_ptr<Legion::FutureMap> weights_{nullptr};
+  Legion::FutureMap weights_{};
   Domain color_domain_{};
   tuple<std::uint64_t> color_shape_{};
 };
@@ -209,9 +226,9 @@ class Image : public Partition {
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
   [[nodiscard]] bool is_convertible() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> scale(
+  [[nodiscard]] InternalSharedPtr<Partition> scale(
     const tuple<std::uint64_t>& factors) const override;
-  [[nodiscard]] std::unique_ptr<Partition> bloat(
+  [[nodiscard]] InternalSharedPtr<Partition> bloat(
     const tuple<std::uint64_t>& low_offsets,
     const tuple<std::uint64_t>& high_offsets) const override;
 
@@ -221,11 +238,14 @@ class Image : public Partition {
   [[nodiscard]] bool has_launch_domain() const override;
   [[nodiscard]] Domain launch_domain() const override;
 
-  [[nodiscard]] std::unique_ptr<Partition> clone() const override;
-
   [[nodiscard]] std::string to_string() const override;
 
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
+
+  [[nodiscard]] InternalSharedPtr<Partition> convert(
+    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const override;
+  [[nodiscard]] InternalSharedPtr<Partition> invert(const InternalSharedPtr<Partition>& self,
+                                                    const TransformStack* transform) const override;
 
  private:
   InternalSharedPtr<detail::LogicalStore> func_;
@@ -234,24 +254,24 @@ class Image : public Partition {
   ImageComputationHint hint_{};
 };
 
-[[nodiscard]] std::unique_ptr<NoPartition> create_no_partition();
+[[nodiscard]] InternalSharedPtr<NoPartition> create_no_partition();
 
-[[nodiscard]] std::unique_ptr<Tiling> create_tiling(tuple<std::uint64_t>&& tile_shape,
-                                                    tuple<std::uint64_t>&& color_shape,
-                                                    tuple<std::int64_t>&& offsets = {});
+[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(tuple<std::uint64_t> tile_shape,
+                                                      tuple<std::uint64_t> color_shape,
+                                                      tuple<std::int64_t> offsets = {});
 
-[[nodiscard]] std::unique_ptr<Tiling> create_tiling(tuple<std::uint64_t>&& tile_shape,
-                                                    tuple<std::uint64_t>&& color_shape,
-                                                    tuple<std::int64_t>&& offsets,
-                                                    tuple<std::uint64_t>&& strides);
+[[nodiscard]] InternalSharedPtr<Tiling> create_tiling(tuple<std::uint64_t> tile_shape,
+                                                      tuple<std::uint64_t> color_shape,
+                                                      tuple<std::int64_t> offsets,
+                                                      tuple<std::uint64_t> strides);
 
-[[nodiscard]] std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
-                                                        const Domain& color_domain);
+[[nodiscard]] InternalSharedPtr<Weighted> create_weighted(const Legion::FutureMap& weights,
+                                                          const Domain& color_domain);
 
-[[nodiscard]] std::unique_ptr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,
-                                                  InternalSharedPtr<Partition> func_partition,
-                                                  mapping::detail::Machine machine,
-                                                  ImageComputationHint hint);
+[[nodiscard]] InternalSharedPtr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,
+                                                    InternalSharedPtr<Partition> func_partition,
+                                                    mapping::detail::Machine machine,
+                                                    ImageComputationHint hint);
 
 std::ostream& operator<<(std::ostream& out, const Partition& partition);
 

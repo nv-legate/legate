@@ -26,8 +26,6 @@
 
 namespace legate::detail {
 
-class Partition;
-
 class NonInvertibleTransformation final : public std::exception {
  public:
   explicit NonInvertibleTransformation(std::string error_message = "Non-invertible transformation");
@@ -43,19 +41,30 @@ class Transform {
   virtual ~Transform()                                              = default;
   [[nodiscard]] virtual Domain transform(const Domain& input) const = 0;
   [[nodiscard]] virtual Legion::DomainAffineTransform inverse_transform(
-    std::int32_t in_dim) const                                                                  = 0;
-  [[nodiscard]] virtual std::unique_ptr<Partition> convert(const Partition* partition) const    = 0;
-  [[nodiscard]] virtual std::unique_ptr<Partition> invert(const Partition* partition) const     = 0;
-  [[nodiscard]] virtual proj::SymbolicPoint invert(proj::SymbolicPoint point) const             = 0;
+    std::int32_t in_dim) const = 0;
+
   [[nodiscard]] virtual Restrictions convert(Restrictions restrictions,
-                                             bool forbid_fake_dim) const                        = 0;
-  [[nodiscard]] virtual Restrictions invert(Restrictions restrictions) const                    = 0;
-  [[nodiscard]] virtual tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const     = 0;
+                                             bool forbid_fake_dim) const = 0;
+
+  [[nodiscard]] virtual tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const = 0;
+  [[nodiscard]] virtual tuple<std::uint64_t> convert_color_shape(
+    tuple<std::uint64_t> extents) const                                                    = 0;
+  [[nodiscard]] virtual tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const = 0;
+  [[nodiscard]] virtual tuple<std::uint64_t> convert_extents(
+    tuple<std::uint64_t> extents) const = 0;
+
+  [[nodiscard]] virtual proj::SymbolicPoint invert(proj::SymbolicPoint point) const = 0;
+  [[nodiscard]] virtual Restrictions invert(Restrictions restrictions) const        = 0;
+
+  [[nodiscard]] virtual tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const = 0;
+  [[nodiscard]] virtual tuple<std::uint64_t> invert_color_shape(
+    tuple<std::uint64_t> extents) const                                                         = 0;
+  [[nodiscard]] virtual tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const       = 0;
   [[nodiscard]] virtual tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const = 0;
-  [[nodiscard]] virtual tuple<std::uint64_t> invert_point(tuple<std::uint64_t> point) const     = 0;
-  [[nodiscard]] virtual bool is_convertible() const                                             = 0;
-  virtual void pack(BufferBuilder& buffer) const                                                = 0;
-  virtual void print(std::ostream& out) const                                                   = 0;
+
+  [[nodiscard]] virtual bool is_convertible() const = 0;
+  virtual void pack(BufferBuilder& buffer) const    = 0;
+  virtual void print(std::ostream& out) const       = 0;
 };
 
 class StoreTransform : public Transform {
@@ -74,15 +83,23 @@ class TransformStack final : public Transform {
 
   [[nodiscard]] Domain transform(const Domain& input) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
-  [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
+
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
+
+  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+
+  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
+
   [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
   [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_point(tuple<std::uint64_t> point) const override;
+
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -101,6 +118,12 @@ class TransformStack final : public Transform {
                  std::unique_ptr<StoreTransform>&& transform,
                  InternalSharedPtr<TransformStack> parent);
 
+  template <typename VISITOR, typename T>
+  decltype(auto) convert_(VISITOR visitor, T input) const;
+
+  template <typename VISITOR, typename T>
+  decltype(auto) invert_(VISITOR visitor, T input) const;
+
   std::unique_ptr<StoreTransform> transform_{};
   InternalSharedPtr<TransformStack> parent_{};
   bool convertible_{true};
@@ -112,15 +135,23 @@ class Shift final : public StoreTransform {
 
   [[nodiscard]] Domain transform(const Domain& input) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
-  [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
+
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
+
+  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+
+  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
+
   [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
   [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_point(tuple<std::uint64_t> point) const override;
+
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -140,15 +171,23 @@ class Promote final : public StoreTransform {
 
   [[nodiscard]] Domain transform(const Domain& input) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
-  [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
+
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
+
+  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+
+  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
+
   [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
   [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_point(tuple<std::uint64_t> point) const override;
+
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -168,15 +207,23 @@ class Project final : public StoreTransform {
 
   [[nodiscard]] Domain transform(const Domain& input) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
-  [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
+
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
+
+  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+
+  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
+
   [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
   [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_point(tuple<std::uint64_t> point) const override;
+
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -196,15 +243,23 @@ class Transpose final : public StoreTransform {
 
   [[nodiscard]] Domain transform(const Domain& domain) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
-  [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
+
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
+
+  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+
+  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
+
   [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
   [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_point(tuple<std::uint64_t> point) const override;
+
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;
@@ -224,15 +279,23 @@ class Delinearize final : public StoreTransform {
 
   [[nodiscard]] Domain transform(const Domain& domain) const override;
   [[nodiscard]] Legion::DomainAffineTransform inverse_transform(std::int32_t in_dim) const override;
-  [[nodiscard]] std::unique_ptr<Partition> convert(const Partition* partition) const override;
-  [[nodiscard]] std::unique_ptr<Partition> invert(const Partition* partition) const override;
-  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
+
   [[nodiscard]] Restrictions convert(Restrictions restrictions,
                                      bool forbid_fake_dim) const override;
+
+  [[nodiscard]] tuple<std::uint64_t> convert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> convert_point(tuple<std::int64_t> point) const override;
+  [[nodiscard]] tuple<std::uint64_t> convert_extents(tuple<std::uint64_t> extents) const override;
+
+  [[nodiscard]] proj::SymbolicPoint invert(proj::SymbolicPoint point) const override;
   [[nodiscard]] Restrictions invert(Restrictions restrictions) const override;
+
   [[nodiscard]] tuple<std::uint64_t> invert_color(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::uint64_t> invert_color_shape(tuple<std::uint64_t> color) const override;
+  [[nodiscard]] tuple<std::int64_t> invert_point(tuple<std::int64_t> point) const override;
   [[nodiscard]] tuple<std::uint64_t> invert_extents(tuple<std::uint64_t> extents) const override;
-  [[nodiscard]] tuple<std::uint64_t> invert_point(tuple<std::uint64_t> point) const override;
+
   [[nodiscard]] bool is_convertible() const override;
   void pack(BufferBuilder& buffer) const override;
   void print(std::ostream& out) const override;

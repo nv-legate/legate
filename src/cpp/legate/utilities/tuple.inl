@@ -105,61 +105,71 @@ bool tuple<T>::greater_equal(const tuple<T>& other) const
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator+(const tuple<T>& other) const
+template <typename U>
+auto tuple<T>::operator+(const tuple<U>& other) const
 {
   return apply(std::plus<>{}, *this, other);
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator+(const T& other) const
+template <typename U>
+auto tuple<T>::operator+(const U& other) const
 {
   return apply(std::plus<>{}, *this, other);
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator-(const tuple<T>& other) const
+template <typename U>
+auto tuple<T>::operator-(const tuple<U>& other) const
 {
   return apply(std::minus<>{}, *this, other);
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator-(const T& other) const
+template <typename U>
+auto tuple<T>::operator-(const U& other) const
 {
   return apply(std::minus<>{}, *this, other);
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator*(const tuple<T>& other) const
+template <typename U>
+auto tuple<T>::operator*(const tuple<U>& other) const
 {
   return apply(std::multiplies<>{}, *this, other);
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator*(const T& other) const
+template <typename U>
+auto tuple<T>::operator*(const U& other) const
 {
   return apply(std::multiplies<>{}, *this, other);
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator%(const tuple<T>& other) const
+template <typename U>
+auto tuple<T>::operator%(const tuple<U>& other) const
 {
   return apply(std::modulus<>{}, *this, other);
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator%(const T& other) const
+template <typename U>
+auto tuple<T>::operator%(const U& other) const
 {
   return apply(std::modulus<>{}, *this, other);
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator/(const tuple<T>& other) const
+template <typename U>
+auto tuple<T>::operator/(const tuple<U>& other) const
 {
   return apply(std::divides<>{}, *this, other);
 }
 
 template <typename T>
-tuple<T> tuple<T>::operator/(const T& other) const
+template <typename U>
+auto tuple<T>::operator/(const U& other) const
 {
   return apply(std::divides<>{}, *this, other);
 }

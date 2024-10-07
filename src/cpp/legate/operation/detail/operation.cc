@@ -120,11 +120,11 @@ bool Operation::needs_partitioning() const
   throw std::invalid_argument{"invalid operation kind"};
 }
 
-std::string Operation::to_string() const
+std::string Operation::to_string(bool show_provenance) const
 {
   auto result = fmt::format("{}:{}", kind(), unique_id_);
 
-  if (!provenance().empty()) {
+  if (!provenance().empty() && show_provenance) {
     fmt::format_to(std::back_inserter(result), "[{}]", provenance());
   }
   return result;

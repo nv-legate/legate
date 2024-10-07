@@ -80,7 +80,7 @@ class Task : public Operation {
   void demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain);
 
  public:
-  [[nodiscard]] std::string to_string() const override;
+  [[nodiscard]] std::string to_string(bool show_provenance) const override;
   [[nodiscard]] bool needs_flush() const override;
   [[nodiscard]] bool supports_replicated_write() const override;
   [[nodiscard]] bool can_throw_exception() const;

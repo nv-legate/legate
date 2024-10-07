@@ -52,7 +52,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
     shape_{std::move(shape)},
     type_{std::move(type)},
     provenance_{std::move(provenance)},
-    offsets_{legate::full(dim(), uint64_t{0})}
+    offsets_{legate::full(dim(), std::int64_t{0})}
 {
   // We should not blindly check the shape volume as it would flush the scheduling window
   if (optimize_scalar) {
@@ -83,7 +83,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
     type_{std::move(type)},
     kind_{Kind::FUTURE},
     provenance_{std::move(provenance)},
-    offsets_{legate::full(dim(), uint64_t{0})},
+    offsets_{legate::full(dim(), std::int64_t{0})},
     future_{std::move(future)}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -95,7 +95,7 @@ Storage::Storage(tuple<std::uint64_t> extents,
                  InternalSharedPtr<Type> type,
                  InternalSharedPtr<StoragePartition> parent,
                  tuple<std::uint64_t> color,
-                 tuple<std::uint64_t> offsets)
+                 tuple<std::int64_t> offsets)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     shape_{make_internal_shared<Shape>(std::move(extents))},
     type_{std::move(type)},
@@ -127,7 +127,7 @@ Storage::~Storage()
 }
 // NOLINTEND(clang-analyzer-cplusplus.NewDeleteLeaks)
 
-const tuple<std::uint64_t>& Storage::offsets() const
+const tuple<std::int64_t>& Storage::offsets() const
 {
   LEGATE_ASSERT(!unbound_);
   return offsets_;
@@ -154,8 +154,8 @@ bool Storage::overlaps(const InternalSharedPtr<Storage>& other) const
   auto& rexts = rhs->extents();
 
   for (std::uint32_t idx = 0; idx < dim(); ++idx) {
-    auto lext = lexts[idx];
-    auto rext = rexts[idx];
+    auto lext = static_cast<std::int64_t>(lexts[idx]);
+    auto rext = static_cast<std::int64_t>(rexts[idx]);
     auto loff = lhs->offsets_[idx];
     auto roff = rhs->offsets_[idx];
 
@@ -176,7 +176,7 @@ bool Storage::is_mapped() const
 
 InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self,
                                           tuple<std::uint64_t> tile_shape,
-                                          const tuple<std::uint64_t>& offsets)
+                                          tuple<std::int64_t> offsets)
 {
   LEGATE_ASSERT(self.get() == this);
 
@@ -191,19 +191,16 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self
     Runtime::get_runtime()->partition_manager()->use_complete_tiling(shape, tile_shape);
 
   tuple<std::uint64_t> color_shape, color;
-  tuple<std::int64_t> signed_offsets;
   if (can_tile_completely) {
-    color_shape    = shape / tile_shape;
-    color          = offsets / tile_shape;
-    signed_offsets = legate::full<std::int64_t>(shape.size(), 0);
+    color_shape = shape / tile_shape;
+    color       = offsets / tile_shape;
+    std::fill(offsets.begin(), offsets.end(), 0);
   } else {
-    color_shape    = legate::full<std::uint64_t>(shape.size(), 1);
-    color          = legate::full<std::uint64_t>(shape.size(), 0);
-    signed_offsets = apply([](auto&& v) { return static_cast<std::int64_t>(v); }, offsets);
+    color_shape = legate::full<std::uint64_t>(shape.size(), 1);
+    color       = legate::full<std::uint64_t>(shape.size(), 0);
   }
 
-  auto tiling =
-    create_tiling(std::move(tile_shape), std::move(color_shape), std::move(signed_offsets));
+  auto tiling = create_tiling(std::move(tile_shape), std::move(color_shape), std::move(offsets));
   auto storage_partition = root->create_partition(root, std::move(tiling), can_tile_completely);
   return storage_partition->get_child_storage(storage_partition, std::move(color));
 }
@@ -366,14 +363,14 @@ Restrictions Storage::compute_restrictions() const
   return legate::full<Restriction>(dim(), Restriction::ALLOW);
 }
 
-Partition* Storage::find_key_partition(const mapping::detail::Machine& machine,
-                                       const Restrictions& restrictions) const
+InternalSharedPtr<Partition> Storage::find_key_partition(const mapping::detail::Machine& machine,
+                                                         const Restrictions& restrictions) const
 {
   const auto new_num_pieces = machine.count();
 
   if ((num_pieces_ == new_num_pieces) && key_partition_ &&
       key_partition_->satisfies_restrictions(restrictions)) {
-    return key_partition_.get();
+    return key_partition_;
   }
   if (parent_) {
     return parent_->find_key_partition(machine, restrictions);
@@ -382,7 +379,7 @@ Partition* Storage::find_key_partition(const mapping::detail::Machine& machine,
 }
 
 void Storage::set_key_partition(const mapping::detail::Machine& machine,
-                                std::unique_ptr<Partition>&& key_partition)
+                                InternalSharedPtr<Partition> key_partition)
 {
   num_pieces_    = machine.count();
   key_partition_ = std::move(key_partition);
@@ -476,8 +473,8 @@ InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(
   return parent_->get_region_field()->get_child(tiling, color, complete_);
 }
 
-Partition* StoragePartition::find_key_partition(const mapping::detail::Machine& machine,
-                                                const Restrictions& restrictions) const
+InternalSharedPtr<Partition> StoragePartition::find_key_partition(
+  const mapping::detail::Machine& machine, const Restrictions& restrictions) const
 {
   return parent_->find_key_partition(machine, restrictions);
 }
@@ -599,7 +596,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
       ? storage_
       : slice_storage(storage_,
                       transform->invert_extents(new_extents),
-                      transform->invert_point(legate::full<std::uint64_t>(new_extents.size(), 0)));
+                      transform->invert_point(legate::full<std::int64_t>(new_extents.size(), 0)));
   return make_internal_shared<LogicalStore>(
     std::move(new_extents), std::move(substorage), std::move(transform));
 }
@@ -655,7 +652,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
       ? storage_
       : slice_storage(storage_,
                       transform->invert_extents(exts),
-                      transform->invert_point(legate::full<std::uint64_t>(exts.size(), 0)));
+                      transform->invert_point(legate::full<std::int64_t>(exts.size(), 0)));
   return make_internal_shared<LogicalStore>(
     std::move(exts), std::move(substorage), std::move(transform));
 }
@@ -889,13 +886,13 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
     return create_no_partition();
   }
 
-  Partition* storage_part{};
+  InternalSharedPtr<Partition> storage_part{};
 
   if (transform_->is_convertible()) {
     storage_part = get_storage()->find_key_partition(machine, transform_->invert(restrictions));
   }
 
-  std::unique_ptr<Partition> store_part{};
+  InternalSharedPtr<Partition> store_part{};
   if (nullptr == storage_part || (!transform_->identity() && !storage_part->is_convertible())) {
     auto&& exts       = extents();
     auto part_mgr     = Runtime::get_runtime()->partition_manager();
@@ -909,7 +906,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
       store_part = create_tiling(std::move(tile_shape), std::move(launch_shape));
     }
   } else {
-    store_part = transform_->convert(storage_part);
+    store_part = storage_part->convert(storage_part, transform_.get());
     LEGATE_ASSERT(store_part);
   }
   return store_part;
@@ -929,11 +926,11 @@ bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
 }
 
 void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
-                                     const Partition* partition)
+                                     InternalSharedPtr<Partition> partition)
 {
   num_pieces_ = machine.count();
-  key_partition_.reset(partition->clone().release());
-  get_storage()->set_key_partition(machine, transform_->invert(partition));
+  get_storage()->set_key_partition(machine, partition->invert(partition, transform_.get()));
+  key_partition_ = std::move(partition);
 }
 
 void LogicalStore::reset_key_partition()
@@ -954,7 +951,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
     throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
   }
   auto storage_partition = create_storage_partition(
-    get_storage(), transform_->invert(partition.get()), std::move(complete));
+    get_storage(), partition->invert(partition, transform_.get()), std::move(complete));
   return make_internal_shared<LogicalStorePartition>(
     std::move(partition), std::move(storage_partition), self);
 }
@@ -1096,7 +1093,7 @@ std::unique_ptr<Analyzable> LogicalStore::region_field_to_launcher_arg_(
   }
   if ((privilege == LEGION_WRITE_ONLY || privilege == LEGION_READ_WRITE) &&
       partition->has_launch_domain()) {
-    set_key_partition(variable->operation()->machine(), partition.get());
+    set_key_partition(variable->operation()->machine(), partition);
   }
 
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));

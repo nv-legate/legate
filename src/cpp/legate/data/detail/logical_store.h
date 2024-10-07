@@ -63,7 +63,7 @@ class Storage {
           InternalSharedPtr<Type> type,
           InternalSharedPtr<StoragePartition> parent,
           tuple<std::uint64_t> color,
-          tuple<std::uint64_t> offsets);
+          tuple<std::int64_t> offsets);
   ~Storage();
 
   Storage(Storage&&) noexcept            = default;
@@ -74,7 +74,7 @@ class Storage {
   [[nodiscard]] bool unbound() const;
   [[nodiscard]] const InternalSharedPtr<Shape>& shape() const;
   [[nodiscard]] const tuple<std::uint64_t>& extents() const;
-  [[nodiscard]] const tuple<std::uint64_t>& offsets() const;
+  [[nodiscard]] const tuple<std::int64_t>& offsets() const;
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool overlaps(const InternalSharedPtr<Storage>& other) const;
@@ -87,7 +87,7 @@ class Storage {
 
   [[nodiscard]] InternalSharedPtr<Storage> slice(const InternalSharedPtr<Storage>& self,
                                                  tuple<std::uint64_t> tile_shape,
-                                                 const tuple<std::uint64_t>& offsets);
+                                                 tuple<std::int64_t> offsets);
   [[nodiscard]] const Storage* get_root() const;
   [[nodiscard]] Storage* get_root();
   [[nodiscard]] InternalSharedPtr<const Storage> get_root(
@@ -109,10 +109,10 @@ class Storage {
   void free_early() noexcept;
 
   [[nodiscard]] Restrictions compute_restrictions() const;
-  [[nodiscard]] Partition* find_key_partition(const mapping::detail::Machine& machine,
-                                              const Restrictions& restrictions) const;
+  [[nodiscard]] InternalSharedPtr<Partition> find_key_partition(
+    const mapping::detail::Machine& machine, const Restrictions& restrictions) const;
   void set_key_partition(const mapping::detail::Machine& machine,
-                         std::unique_ptr<Partition>&& key_partition);
+                         InternalSharedPtr<Partition> key_partition);
   void reset_key_partition() noexcept;
 
   [[nodiscard]] InternalSharedPtr<StoragePartition> create_partition(
@@ -135,9 +135,7 @@ class Storage {
   std::int32_t level_{};
   InternalSharedPtr<StoragePartition> parent_{};
   tuple<std::uint64_t> color_{};
-  // Unlike offsets in a tiling, these offsets can never be negative, as a slicing always selects a
-  // sub-rectangle of its parent
-  tuple<std::uint64_t> offsets_{};
+  tuple<std::int64_t> offsets_{};
 
   std::size_t scalar_offset_{};
   InternalSharedPtr<LogicalRegionField> region_field_{};
@@ -145,7 +143,7 @@ class Storage {
   std::optional<Legion::FutureMap> future_map_{};
 
   std::uint32_t num_pieces_{};
-  std::unique_ptr<Partition> key_partition_{};
+  InternalSharedPtr<Partition> key_partition_{};
 };
 
 class StoragePartition {
@@ -165,8 +163,8 @@ class StoragePartition {
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child_data(
     const tuple<std::uint64_t>& color);
 
-  [[nodiscard]] Partition* find_key_partition(const mapping::detail::Machine& machine,
-                                              const Restrictions& restrictions) const;
+  [[nodiscard]] InternalSharedPtr<Partition> find_key_partition(
+    const mapping::detail::Machine& machine, const Restrictions& restrictions) const;
   [[nodiscard]] Legion::LogicalPartition get_legion_partition();
 
   [[nodiscard]] std::int32_t level() const;
@@ -264,7 +262,8 @@ class LogicalStore {
   [[nodiscard]] const InternalSharedPtr<Partition>& get_current_key_partition() const;
   [[nodiscard]] bool has_key_partition(const mapping::detail::Machine& machine,
                                        const Restrictions& restrictions) const;
-  void set_key_partition(const mapping::detail::Machine& machine, const Partition* partition);
+  void set_key_partition(const mapping::detail::Machine& machine,
+                         InternalSharedPtr<Partition> partition);
   void reset_key_partition();
 
  private:
@@ -372,7 +371,7 @@ class LogicalStorePartition {
 
 [[nodiscard]] InternalSharedPtr<Storage> slice_storage(const InternalSharedPtr<Storage>& self,
                                                        tuple<std::uint64_t> tile_shape,
-                                                       const tuple<std::uint64_t>& offsets);
+                                                       tuple<std::int64_t> offsets);
 
 [[nodiscard]] InternalSharedPtr<LogicalStore> slice_store(
   const InternalSharedPtr<LogicalStore>& self, std::int32_t dim, Slice sl);

@@ -84,9 +84,9 @@ Logger& log_legate()
   return log;
 }
 
-Logger& log_legate_partitioning()
+Logger& log_legate_partitioner()
 {
-  static Logger log{"legate.partitioning"};
+  static Logger log{"legate.partitioner"};
 
   return log;
 }
@@ -480,7 +480,7 @@ void Runtime::flush_scheduling_window()
 void Runtime::submit(InternalSharedPtr<Operation> op)
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << op->to_string() << " submitted";
+    log_legate().debug() << op->to_string(true /*show_provenance*/) << " submitted";
   }
 
   // Special case for internal operations
@@ -506,7 +506,7 @@ void Runtime::schedule_(std::vector<InternalSharedPtr<Operation>>&& operations)
 
   for (auto it = ops.begin(); it != ops.end(); ++it) {
     if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      log_legate().debug() << (*it)->to_string() << " launched";
+      log_legate().debug() << (*it)->to_string(true /*show_provenance*/) << " launched";
     }
 
     if (!(*it)->needs_partitioning()) {

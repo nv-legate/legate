@@ -12,7 +12,6 @@
 
 #include "legate/data/detail/transform.h"
 
-#include "legate/partitioning/detail/partition.h"
 #include "legate/utilities/detail/buffer_builder.h"
 #include "legate/utilities/detail/core_ids.h"
 
@@ -23,118 +22,103 @@
 
 namespace legate::detail {
 
-namespace {
-
-[[noreturn]] void throw_invalid_partition_kind(Partition::Kind kind)
+Restrictions TransformStack::convert(Restrictions restrictions, bool forbid_fake_dim) const
 {
-  throw std::invalid_argument{
-    fmt::format("Invalid partition kind: {}", legate::traits::detail::to_underlying(kind))};
+  return convert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->convert(std::forward<decltype(input)>(input), forbid_fake_dim);
+    },
+    std::move(restrictions));
 }
 
-}  // namespace
-
-std::unique_ptr<Partition> TransformStack::convert(const Partition* partition) const
+tuple<std::uint64_t> TransformStack::convert_color(tuple<std::uint64_t> color) const
 {
-  if (identity()) {
-    return partition->clone();
-  }
-
-  if (parent_->identity()) {
-    return transform_->convert(partition);
-  }
-
-  auto result = parent_->convert(partition);
-  return transform_->convert(result.get());
+  return convert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->convert_color(std::forward<decltype(input)>(input));
+    },
+    std::move(color));
 }
 
-std::unique_ptr<Partition> TransformStack::invert(const Partition* partition) const
+tuple<std::uint64_t> TransformStack::convert_color_shape(tuple<std::uint64_t> color_shape) const
 {
-  if (identity()) {
-    return partition->clone();
-  }
+  return convert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->convert_color_shape(std::forward<decltype(input)>(input));
+    },
+    std::move(color_shape));
+}
 
-  auto result = transform_->invert(partition);
-  if (parent_->identity()) {
-    return result;
-  }
-  return parent_->invert(result.get());
+tuple<std::int64_t> TransformStack::convert_point(tuple<std::int64_t> point) const
+{
+  return convert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->convert_point(std::forward<decltype(input)>(input));
+    },
+    std::move(point));
+}
+
+tuple<std::uint64_t> TransformStack::convert_extents(tuple<std::uint64_t> extents) const
+{
+  return convert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->convert_extents(std::forward<decltype(input)>(input));
+    },
+    std::move(extents));
 }
 
 proj::SymbolicPoint TransformStack::invert(proj::SymbolicPoint point) const
 {
-  if (identity()) {
-    return point;
-  }
-
-  auto result = transform_->invert(std::move(point));
-  if (parent_->identity()) {
-    return result;
-  }
-  return parent_->invert(std::move(result));
-}
-
-Restrictions TransformStack::convert(Restrictions restrictions, bool forbid_fake_dim) const
-{
-  if (identity()) {
-    return restrictions;
-  }
-  if (parent_->identity()) {
-    return transform_->convert(std::move(restrictions), forbid_fake_dim);
-  }
-  return transform_->convert(parent_->convert(std::move(restrictions), forbid_fake_dim),
-                             forbid_fake_dim);
+  return invert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->invert(std::forward<decltype(input)>(input));
+    },
+    std::move(point));
 }
 
 Restrictions TransformStack::invert(Restrictions restrictions) const
 {
-  if (identity()) {
-    return restrictions;
-  }
-
-  auto result = transform_->invert(std::move(restrictions));
-  if (parent_->identity()) {
-    return result;
-  }
-  return parent_->invert(std::move(result));
+  return invert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->invert(std::forward<decltype(input)>(input));
+    },
+    std::move(restrictions));
 }
 
 tuple<std::uint64_t> TransformStack::invert_color(tuple<std::uint64_t> color) const
 {
-  if (identity()) {
-    return color;
-  }
+  return invert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->invert_color(std::forward<decltype(input)>(input));
+    },
+    std::move(color));
+}
 
-  auto result = transform_->invert_color(std::move(color));
-  if (parent_->identity()) {
-    return result;
-  }
-  return parent_->invert_color(std::move(result));
+tuple<std::uint64_t> TransformStack::invert_color_shape(tuple<std::uint64_t> color_shape) const
+{
+  return invert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->invert_color_shape(std::forward<decltype(input)>(input));
+    },
+    std::move(color_shape));
+}
+
+tuple<std::int64_t> TransformStack::invert_point(tuple<std::int64_t> point) const
+{
+  return invert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->invert_point(std::forward<decltype(input)>(input));
+    },
+    std::move(point));
 }
 
 tuple<std::uint64_t> TransformStack::invert_extents(tuple<std::uint64_t> extents) const
 {
-  if (identity()) {
-    return extents;
-  }
-
-  auto result = transform_->invert_extents(std::move(extents));
-  if (parent_->identity()) {
-    return result;
-  }
-  return parent_->invert_extents(std::move(result));
-}
-
-tuple<std::uint64_t> TransformStack::invert_point(tuple<std::uint64_t> point) const
-{
-  if (identity()) {
-    return point;
-  }
-
-  auto result = transform_->invert_point(std::move(point));
-  if (parent_->identity()) {
-    return result;
-  }
-  return parent_->invert_point(std::move(result));
+  return invert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->invert_extents(std::forward<decltype(input)>(input));
+    },
+    std::move(extents));
 }
 
 void TransformStack::pack(BufferBuilder& buffer) const
@@ -224,6 +208,8 @@ std::vector<std::int32_t> TransformStack::find_imaginary_dims() const
   return dims;
 }
 
+// ==========================================================================================
+
 Domain Shift::transform(const Domain& input) const
 {
   auto result = input;
@@ -253,42 +239,13 @@ Legion::DomainAffineTransform Shift::inverse_transform(std::int32_t in_dim) cons
   return result;
 }
 
-std::unique_ptr<Partition> Shift::convert(const Partition* partition) const
+tuple<std::int64_t> Shift::convert_point(tuple<std::int64_t> point) const
 {
-  switch (const auto kind = partition->kind()) {
-    case Partition::Kind::NO_PARTITION: {
-      return create_no_partition();
-    }
-    case Partition::Kind::TILING: {
-      auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(tuple<std::uint64_t>{tiling->tile_shape()},
-                           tuple<std::uint64_t>{tiling->color_shape()},
-                           tiling->offsets().update(dim_, offset_));
-    }
-    default: throw_invalid_partition_kind(kind);
-  }
-  return {};
+  point[dim_] += offset_;
+  return point;
 }
 
-std::unique_ptr<Partition> Shift::invert(const Partition* partition) const
-{
-  switch (const auto kind = partition->kind()) {
-    case Partition::Kind::NO_PARTITION: {
-      return create_no_partition();
-    }
-    case Partition::Kind::TILING: {
-      auto tiling     = static_cast<const Tiling*>(partition);
-      auto new_offset = tiling->offsets()[dim_] - offset_;
-      return create_tiling(tuple<std::uint64_t>{tiling->tile_shape()},
-                           tuple<std::uint64_t>{tiling->color_shape()},
-                           tiling->offsets().update(dim_, new_offset));
-    }
-    default: throw_invalid_partition_kind(kind);
-  }
-  return {};
-}
-
-tuple<std::uint64_t> Shift::invert_point(tuple<std::uint64_t> point) const
+tuple<std::int64_t> Shift::invert_point(tuple<std::int64_t> point) const
 {
   point[dim_] -= offset_;
   return point;
@@ -306,6 +263,8 @@ void Shift::print(std::ostream& out) const
   out << "Shift(dim: " << dim_ << ", "
       << "offset: " << offset_ << ")";
 }
+
+// ==========================================================================================
 
 Domain Promote::transform(const Domain& input) const
 {
@@ -355,38 +314,35 @@ Legion::DomainAffineTransform Promote::inverse_transform(std::int32_t in_dim) co
   return result;
 }
 
-std::unique_ptr<Partition> Promote::convert(const Partition* partition) const
+Restrictions Promote::convert(Restrictions restrictions, bool forbid_fake_dim) const
 {
-  switch (const auto kind = partition->kind()) {
-    case Partition::Kind::NO_PARTITION: {
-      return create_no_partition();
-    }
-    case Partition::Kind::TILING: {
-      auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(tiling->tile_shape().insert(extra_dim_, dim_size_),
-                           tiling->color_shape().insert(extra_dim_, 1),
-                           tiling->offsets().insert(extra_dim_, 0));
-    }
-    default: throw_invalid_partition_kind(kind);
-  }
-  return {};
+  restrictions.insert_inplace(extra_dim_,
+                              forbid_fake_dim ? Restriction::FORBID : Restriction::AVOID);
+  return restrictions;
 }
 
-std::unique_ptr<Partition> Promote::invert(const Partition* partition) const
+tuple<std::uint64_t> Promote::convert_color(tuple<std::uint64_t> color) const
 {
-  switch (const auto kind = partition->kind()) {
-    case Partition::Kind::NO_PARTITION: {
-      return create_no_partition();
-    }
-    case Partition::Kind::TILING: {
-      auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(tiling->tile_shape().remove(extra_dim_),
-                           tiling->color_shape().remove(extra_dim_),
-                           tiling->offsets().remove(extra_dim_));
-    }
-    default: throw_invalid_partition_kind(kind);
-  }
-  return {};
+  color.insert_inplace(extra_dim_, 0);
+  return color;
+}
+
+tuple<std::uint64_t> Promote::convert_color_shape(tuple<std::uint64_t> color_shape) const
+{
+  color_shape.insert_inplace(extra_dim_, 1);
+  return color_shape;
+}
+
+tuple<std::int64_t> Promote::convert_point(tuple<std::int64_t> point) const
+{
+  point.insert_inplace(extra_dim_, 0);
+  return point;
+}
+
+tuple<std::uint64_t> Promote::convert_extents(tuple<std::uint64_t> extents) const
+{
+  extents.insert_inplace(extra_dim_, dim_size_);
+  return extents;
 }
 
 proj::SymbolicPoint Promote::invert(proj::SymbolicPoint point) const
@@ -395,29 +351,34 @@ proj::SymbolicPoint Promote::invert(proj::SymbolicPoint point) const
   return point;
 }
 
-Restrictions Promote::convert(Restrictions restrictions, bool forbid_fake_dim) const
-{
-  restrictions.insert_inplace(extra_dim_,
-                              forbid_fake_dim ? Restriction::FORBID : Restriction::AVOID);
-  return restrictions;
-}
-
 Restrictions Promote::invert(Restrictions restrictions) const
 {
   restrictions.remove_inplace(extra_dim_);
   return restrictions;
 }
 
+tuple<std::uint64_t> Promote::invert_color(tuple<std::uint64_t> color) const
+{
+  color.remove_inplace(extra_dim_);
+  return color;
+}
+
+tuple<std::uint64_t> Promote::invert_color_shape(tuple<std::uint64_t> color_shape) const
+{
+  color_shape.remove_inplace(extra_dim_);
+  return color_shape;
+}
+
+tuple<std::int64_t> Promote::invert_point(tuple<std::int64_t> point) const
+{
+  point.remove_inplace(extra_dim_);
+  return point;
+}
+
 tuple<std::uint64_t> Promote::invert_extents(tuple<std::uint64_t> extents) const
 {
   extents.remove_inplace(extra_dim_);
   return extents;
-}
-
-tuple<std::uint64_t> Promote::invert_point(tuple<std::uint64_t> point) const
-{
-  point.remove_inplace(extra_dim_);
-  return point;
 }
 
 void Promote::pack(BufferBuilder& buffer) const
@@ -443,6 +404,8 @@ void Promote::find_imaginary_dims(std::vector<std::int32_t>& dims) const
   }
   dims.push_back(extra_dim_);
 }
+
+// ==========================================================================================
 
 Domain Project::transform(const Domain& input) const
 {
@@ -492,50 +455,40 @@ Legion::DomainAffineTransform Project::inverse_transform(std::int32_t in_dim) co
   return result;
 }
 
-std::unique_ptr<Partition> Project::convert(const Partition* partition) const
+Restrictions Project::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
-  switch (const auto kind = partition->kind()) {
-    case Partition::Kind::NO_PARTITION: {
-      return create_no_partition();
-    }
-    case Partition::Kind::TILING: {
-      auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(tiling->tile_shape().remove(dim_),
-                           tiling->color_shape().remove(dim_),
-                           tiling->offsets().remove(dim_));
-    }
-    default: throw_invalid_partition_kind(kind);
-  }
-  return {};
+  restrictions.remove_inplace(dim_);
+  return restrictions;
 }
 
-std::unique_ptr<Partition> Project::invert(const Partition* partition) const
+tuple<std::uint64_t> Project::convert_color(tuple<std::uint64_t> color) const
 {
-  switch (const auto kind = partition->kind()) {
-    case Partition::Kind::NO_PARTITION: {
-      return create_no_partition();
-    }
-    case Partition::Kind::TILING: {
-      auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(tiling->tile_shape().insert(dim_, 1),
-                           tiling->color_shape().insert(dim_, 1),
-                           tiling->offsets().insert(dim_, coord_));
-    }
-    default: throw_invalid_partition_kind(kind);
-  }
-  return {};
+  color.remove_inplace(dim_);
+  return color;
+}
+
+tuple<std::uint64_t> Project::convert_color_shape(tuple<std::uint64_t> color_shape) const
+{
+  color_shape.remove_inplace(dim_);
+  return color_shape;
+}
+
+tuple<std::int64_t> Project::convert_point(tuple<std::int64_t> point) const
+{
+  point.remove_inplace(dim_);
+  return point;
+}
+
+tuple<std::uint64_t> Project::convert_extents(tuple<std::uint64_t> extents) const
+{
+  extents.remove_inplace(dim_);
+  return extents;
 }
 
 proj::SymbolicPoint Project::invert(proj::SymbolicPoint point) const
 {
   point.insert_inplace(dim_, proj::SymbolicExpr{});
   return point;
-}
-
-Restrictions Project::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
-{
-  restrictions.remove_inplace(dim_);
-  return restrictions;
 }
 
 Restrictions Project::invert(Restrictions restrictions) const
@@ -550,16 +503,22 @@ tuple<std::uint64_t> Project::invert_color(tuple<std::uint64_t> color) const
   return color;
 }
 
+tuple<std::uint64_t> Project::invert_color_shape(tuple<std::uint64_t> color_shape) const
+{
+  color_shape.insert_inplace(dim_, 1);
+  return color_shape;
+}
+
+tuple<std::int64_t> Project::invert_point(tuple<std::int64_t> point) const
+{
+  point.insert_inplace(dim_, coord_);
+  return point;
+}
+
 tuple<std::uint64_t> Project::invert_extents(tuple<std::uint64_t> extents) const
 {
   extents.insert_inplace(dim_, 1);
   return extents;
-}
-
-tuple<std::uint64_t> Project::invert_point(tuple<std::uint64_t> point) const
-{
-  point.insert_inplace(dim_, coord_);
-  return point;
 }
 
 void Project::pack(BufferBuilder& buffer) const
@@ -588,6 +547,8 @@ void Project::find_imaginary_dims(std::vector<std::int32_t>& dims) const
     }
   }
 }
+
+// ==========================================================================================
 
 Transpose::Transpose(std::vector<std::int32_t>&& axes) : axes_{std::move(axes)}
 {
@@ -642,38 +603,34 @@ Legion::DomainAffineTransform Transpose::inverse_transform(std::int32_t in_dim) 
   return result;
 }
 
-std::unique_ptr<Partition> Transpose::convert(const Partition* partition) const
+Restrictions Transpose::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
-  switch (const auto kind = partition->kind()) {
-    case Partition::Kind::NO_PARTITION: {
-      return create_no_partition();
-    }
-    case Partition::Kind::TILING: {
-      auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(tiling->tile_shape().map(axes_),
-                           tiling->color_shape().map(axes_),
-                           tiling->offsets().map(axes_));
-    }
-    default: throw_invalid_partition_kind(kind);
-  }
-  return {};
+  // No in-place available
+  return restrictions.map(axes_);
 }
 
-std::unique_ptr<Partition> Transpose::invert(const Partition* partition) const
+tuple<std::uint64_t> Transpose::convert_color(tuple<std::uint64_t> color) const
 {
-  switch (const auto kind = partition->kind()) {
-    case Partition::Kind::NO_PARTITION: {
-      return create_no_partition();
-    }
-    case Partition::Kind::TILING: {
-      auto tiling = static_cast<const Tiling*>(partition);
-      return create_tiling(tiling->tile_shape().map(inverse_),
-                           tiling->color_shape().map(inverse_),
-                           tiling->offsets().map(inverse_));
-    }
-    default: throw_invalid_partition_kind(kind);
-  }
-  return {};
+  // No in-place available
+  return color.map(axes_);
+}
+
+tuple<std::uint64_t> Transpose::convert_color_shape(tuple<std::uint64_t> color_shape) const
+{
+  // No in-place available
+  return color_shape.map(axes_);
+}
+
+tuple<std::int64_t> Transpose::convert_point(tuple<std::int64_t> point) const
+{
+  // No in-place available
+  return point.map(axes_);
+}
+
+tuple<std::uint64_t> Transpose::convert_extents(tuple<std::uint64_t> extents) const
+{
+  // No in-place available
+  return extents.map(axes_);
 }
 
 proj::SymbolicPoint Transpose::invert(proj::SymbolicPoint point) const
@@ -682,28 +639,34 @@ proj::SymbolicPoint Transpose::invert(proj::SymbolicPoint point) const
   return point.map(inverse_);
 }
 
-Restrictions Transpose::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
-{
-  // No in-place available
-  return restrictions.map(axes_);
-}
-
 Restrictions Transpose::invert(Restrictions restrictions) const
 {
   // No in-place available
   return restrictions.map(inverse_);
 }
 
+tuple<std::uint64_t> Transpose::invert_color(tuple<std::uint64_t> color) const
+{
+  // No in-place available
+  return color.map(inverse_);
+}
+
+tuple<std::uint64_t> Transpose::invert_color_shape(tuple<std::uint64_t> color_shape) const
+{
+  // No in-place available
+  return color_shape.map(inverse_);
+}
+
+tuple<std::int64_t> Transpose::invert_point(tuple<std::int64_t> point) const
+{
+  // No in-place available
+  return point.map(inverse_);
+}
+
 tuple<std::uint64_t> Transpose::invert_extents(tuple<std::uint64_t> extents) const
 {
   // No in-place available
   return extents.map(inverse_);
-}
-
-tuple<std::uint64_t> Transpose::invert_point(tuple<std::uint64_t> point) const
-{
-  // No in-place available
-  return point.map(inverse_);
 }
 
 namespace {  // anonymous
@@ -754,6 +717,8 @@ void Transpose::find_imaginary_dims(std::vector<std::int32_t>& dims) const
     promoted = static_cast<std::int32_t>(finder - axes_.begin());
   }
 }
+
+// ==========================================================================================
 
 Delinearize::Delinearize(std::int32_t dim, std::vector<std::uint64_t>&& sizes)
   : dim_{dim}, sizes_{std::move(sizes)}, strides_(sizes_.size(), 1), volume_{1}
@@ -828,78 +793,6 @@ Legion::DomainAffineTransform Delinearize::inverse_transform(std::int32_t in_dim
   return result;
 }
 
-std::unique_ptr<Partition> Delinearize::convert(const Partition* /*partition*/) const
-{
-  throw NonInvertibleTransformation{"Delinearize transform cannot be used in conversion"};
-  return {};
-}
-
-std::unique_ptr<Partition> Delinearize::invert(const Partition* partition) const
-{
-  const auto kind = partition->kind();
-
-  switch (kind) {
-    case Partition::Kind::NO_PARTITION: {
-      return create_no_partition();
-    }
-    case Partition::Kind::TILING: {
-      const auto tiling = static_cast<const Tiling*>(partition);
-      auto& tile_shape  = tiling->tile_shape();
-      auto& color_shape = tiling->color_shape();
-      auto& offsets     = tiling->offsets();
-
-      const auto invertible = [&] {
-        std::size_t volume     = 1;
-        std::size_t sum_offset = 0;
-        for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-          volume *= color_shape[dim_ + idx];
-          sum_offset += offsets[dim_ + idx];
-        }
-        return 1 == volume && 0 == sum_offset;
-      };
-
-      if (!invertible()) {
-        throw NonInvertibleTransformation{fmt::format(
-          "Delinearize transform cannot invert this partition: {}", tiling->to_string())};
-      }
-
-      auto new_tile_shape  = tile_shape;
-      auto new_color_shape = color_shape;
-      auto new_offsets     = offsets;
-
-      for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
-        new_tile_shape.remove_inplace(dim_ + 1);
-        new_color_shape.remove_inplace(dim_ + 1);
-        new_offsets.remove_inplace(dim_ + 1);
-      }
-
-      new_tile_shape[dim_] *= strides_[0];
-      new_offsets[dim_] *= static_cast<std::int64_t>(strides_[0]);
-
-      return create_tiling(
-        std::move(new_tile_shape), std::move(new_color_shape), std::move(new_offsets));
-    }
-    case Partition::Kind::WEIGHTED: [[fallthrough]];
-    case Partition::Kind::IMAGE: break;
-  }
-  throw_invalid_partition_kind(kind);
-  return {};
-}
-
-proj::SymbolicPoint Delinearize::invert(proj::SymbolicPoint point) const
-{
-  proj::SymbolicPoint exprs;
-
-  exprs.reserve(point.size() - (sizes_.size() - 1));
-  for (std::int32_t dim = 0; dim < dim_ + 1; ++dim) {
-    exprs.append_inplace(point[dim]);
-  }
-  for (auto dim = dim_ + sizes_.size(); dim < point.size(); ++dim) {
-    exprs.append_inplace(point[dim]);
-  }
-  return exprs;
-}
-
 Restrictions Delinearize::convert(Restrictions restrictions, bool /*forbid_fake_dim*/) const
 {
   Restrictions result;
@@ -917,6 +810,44 @@ Restrictions Delinearize::convert(Restrictions restrictions, bool /*forbid_fake_
   return result;
 }
 
+tuple<std::uint64_t> Delinearize::convert_color(tuple<std::uint64_t> /*color*/) const
+{
+  throw NonInvertibleTransformation{};
+  return {};
+}
+
+tuple<std::uint64_t> Delinearize::convert_color_shape(tuple<std::uint64_t> /*color_shape*/) const
+{
+  throw NonInvertibleTransformation{};
+  return {};
+}
+
+tuple<std::uint64_t> Delinearize::convert_extents(tuple<std::uint64_t> /*extents*/) const
+{
+  throw NonInvertibleTransformation{};
+  return {};
+}
+
+tuple<std::int64_t> Delinearize::convert_point(tuple<std::int64_t> /*point*/) const
+{
+  throw NonInvertibleTransformation{};
+  return {};
+}
+
+proj::SymbolicPoint Delinearize::invert(proj::SymbolicPoint point) const
+{
+  proj::SymbolicPoint exprs;
+
+  exprs.reserve(point.size() - (sizes_.size() - 1));
+  for (std::int32_t dim = 0; dim < dim_ + 1; ++dim) {
+    exprs.append_inplace(point[dim]);
+  }
+  for (auto dim = dim_ + sizes_.size(); dim < point.size(); ++dim) {
+    exprs.append_inplace(point[dim]);
+  }
+  return exprs;
+}
+
 Restrictions Delinearize::invert(Restrictions restrictions) const
 {
   Restrictions result;
@@ -932,22 +863,74 @@ Restrictions Delinearize::invert(Restrictions restrictions) const
   return result;
 }
 
-tuple<std::uint64_t> Delinearize::invert_color(tuple<std::uint64_t> /*color*/) const
+tuple<std::uint64_t> Delinearize::invert_color(tuple<std::uint64_t> color) const
 {
-  throw NonInvertibleTransformation{};
-  return {};
+  auto sum = std::uint64_t{0};
+  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+    sum += color[dim_ + idx];
+  }
+
+  if (sum != 0) {
+    throw NonInvertibleTransformation{};
+  }
+
+  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+    color.remove_inplace(dim_ + 1);
+  }
+
+  return color;
 }
 
-tuple<std::uint64_t> Delinearize::invert_extents(tuple<std::uint64_t> /*extents*/) const
+tuple<std::uint64_t> Delinearize::invert_color_shape(tuple<std::uint64_t> color_shape) const
 {
-  throw NonInvertibleTransformation{};
-  return {};
+  auto volume = std::uint64_t{1};
+  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+    volume *= color_shape[dim_ + idx];
+  }
+
+  if (volume != 1) {
+    throw NonInvertibleTransformation{};
+  }
+
+  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+    color_shape.remove_inplace(dim_ + 1);
+  }
+  return color_shape;
 }
 
-tuple<std::uint64_t> Delinearize::invert_point(tuple<std::uint64_t> /*point*/) const
+tuple<std::int64_t> Delinearize::invert_point(tuple<std::int64_t> point) const
 {
-  throw NonInvertibleTransformation{};
-  return {};
+  auto sum = std::uint64_t{0};
+  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+    sum += point[dim_ + idx];
+  }
+
+  if (sum != 0) {
+    throw NonInvertibleTransformation{};
+  }
+
+  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+    point.remove_inplace(dim_ + 1);
+  }
+  point[dim_] *= static_cast<std::int64_t>(strides_[0]);
+
+  return point;
+}
+
+tuple<std::uint64_t> Delinearize::invert_extents(tuple<std::uint64_t> extents) const
+{
+  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+    if (extents[dim_ + idx] != sizes_[idx]) {
+      throw NonInvertibleTransformation{};
+    }
+  }
+
+  for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
+    extents.remove_inplace(dim_ + 1);
+  }
+  extents[dim_] *= strides_[0];
+
+  return extents;
 }
 
 void Delinearize::pack(BufferBuilder& buffer) const

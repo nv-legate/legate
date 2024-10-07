@@ -412,7 +412,7 @@ namespace detail {
 
 [[nodiscard]] Logger& log_legate();
 
-[[nodiscard]] Logger& log_legate_partitioning();
+[[nodiscard]] Logger& log_legate_partitioner();
 
 }  // namespace detail
 

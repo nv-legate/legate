@@ -31,13 +31,13 @@ bool NoPartition::is_disjoint_for(const Domain& launch_domain) const
   return !launch_domain.is_valid() || launch_domain.get_volume() == 1;
 }
 
-std::unique_ptr<Partition> NoPartition::scale(const tuple<std::uint64_t>& /*factors*/) const
+InternalSharedPtr<Partition> NoPartition::scale(const tuple<std::uint64_t>& /*factors*/) const
 {
   return create_no_partition();
 }
 
-std::unique_ptr<Partition> NoPartition::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
-                                              const tuple<std::uint64_t>& /*high_offsets*/) const
+InternalSharedPtr<Partition> NoPartition::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
+                                                const tuple<std::uint64_t>& /*high_offsets*/) const
 {
   return create_no_partition();
 }
@@ -47,13 +47,25 @@ Legion::Domain NoPartition::launch_domain() const
   throw std::invalid_argument{"NoPartition has no launch domain"};
 }
 
-std::unique_ptr<Partition> NoPartition::clone() const { return create_no_partition(); }
-
 std::string NoPartition::to_string() const { return "NoPartition"; }
 
-Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
-               tuple<std::uint64_t>&& color_shape,
-               tuple<std::int64_t>&& offsets)
+InternalSharedPtr<Partition> NoPartition::convert(const InternalSharedPtr<Partition>& self,
+                                                  const TransformStack* /*transform*/) const
+{
+  return self;
+}
+
+InternalSharedPtr<Partition> NoPartition::invert(const InternalSharedPtr<Partition>& self,
+                                                 const TransformStack* /*transform*/) const
+{
+  return self;
+}
+
+// ==========================================================================================
+
+Tiling::Tiling(tuple<std::uint64_t> tile_shape,
+               tuple<std::uint64_t> color_shape,
+               tuple<std::int64_t> offsets)
   : tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
     offsets_{offsets.empty() ? legate::full<std::int64_t>(tile_shape_.size(), 0)
@@ -64,10 +76,10 @@ Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
 }
 
-Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
-               tuple<std::uint64_t>&& color_shape,
-               tuple<std::int64_t>&& offsets,
-               tuple<std::uint64_t>&& strides)
+Tiling::Tiling(tuple<std::uint64_t> tile_shape,
+               tuple<std::uint64_t> color_shape,
+               tuple<std::int64_t> offsets,
+               tuple<std::uint64_t> strides)
   : overlapped_{strides.less(tile_shape)},
     tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
@@ -75,9 +87,6 @@ Tiling::Tiling(tuple<std::uint64_t>&& tile_shape,
                              : std::move(offsets)},
     strides_{std::move(strides)}
 {
-  if (!overlapped_) {
-    throw std::invalid_argument{"This constructor must be called only for overlapped tiling"};
-  }
   LEGATE_CHECK(tile_shape_.size() == color_shape_.size());
   LEGATE_CHECK(tile_shape_.size() == offsets_.size());
 }
@@ -101,7 +110,7 @@ bool Tiling::is_complete_for(const detail::Storage* storage) const
   using zipper_type = std::tuple<const std::int64_t&,
                                  const std::uint64_t&,
                                  const std::uint64_t&,
-                                 const std::uint64_t&,
+                                 const std::int64_t&,
                                  const std::uint64_t&>;
   static_assert(std::is_same_v<zipper_type, decltype(*zip.begin())>);
 
@@ -131,7 +140,7 @@ bool Tiling::satisfies_restrictions(const Restrictions& restrictions) const
   return apply(satisfies_restriction, restrictions, color_shape_).all();
 }
 
-std::unique_ptr<Partition> Tiling::scale(const tuple<std::uint64_t>& factors) const
+InternalSharedPtr<Partition> Tiling::scale(const tuple<std::uint64_t>& factors) const
 {
   auto new_offsets = apply(
     [](std::int64_t off, std::size_t factor) { return off * static_cast<std::int64_t>(factor); },
@@ -141,8 +150,8 @@ std::unique_ptr<Partition> Tiling::scale(const tuple<std::uint64_t>& factors) co
     tile_shape_ * factors, tuple<std::uint64_t>{color_shape_}, std::move(new_offsets));
 }
 
-std::unique_ptr<Partition> Tiling::bloat(const tuple<std::uint64_t>& low_offsets,
-                                         const tuple<std::uint64_t>& high_offsets) const
+InternalSharedPtr<Partition> Tiling::bloat(const tuple<std::uint64_t>& low_offsets,
+                                           const tuple<std::uint64_t>& high_offsets) const
 {
   auto tile_shape = tile_shape_ + low_offsets + high_offsets;
   auto offsets =
@@ -196,8 +205,6 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool co
 
 Legion::Domain Tiling::launch_domain() const { return detail::to_domain(color_shape_); }
 
-std::unique_ptr<Partition> Tiling::clone() const { return std::make_unique<Tiling>(*this); }
-
 std::string Tiling::to_string() const
 {
   return fmt::format("Tiling(tile:{},colors:{},offset:{},strides:{})",
@@ -205,6 +212,30 @@ std::string Tiling::to_string() const
                      color_shape_,
                      offsets_,
                      strides_);
+}
+
+InternalSharedPtr<Partition> Tiling::convert(const InternalSharedPtr<Partition>& self,
+                                             const TransformStack* transform) const
+{
+  if (transform->identity()) {
+    return self;
+  }
+  return create_tiling(transform->convert_extents(tile_shape()),
+                       transform->convert_color_shape(color_shape()),
+                       transform->convert_point(offsets()),
+                       transform->convert_extents(strides_));
+}
+
+InternalSharedPtr<Partition> Tiling::invert(const InternalSharedPtr<Partition>& self,
+                                            const TransformStack* transform) const
+{
+  if (transform->identity()) {
+    return self;
+  }
+  return create_tiling(transform->invert_extents(tile_shape()),
+                       transform->invert_color_shape(color_shape()),
+                       transform->invert_point(offsets()),
+                       transform->invert_extents(strides_));
 }
 
 tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& extents,
@@ -221,20 +252,19 @@ tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& exten
     [](std::int64_t h, std::int64_t l) { return static_cast<std::uint64_t>(h - l); }, hi, lo);
 }
 
-tuple<std::uint64_t> Tiling::get_child_offsets(const tuple<std::uint64_t>& color) const
+tuple<std::int64_t> Tiling::get_child_offsets(const tuple<std::uint64_t>& color) const
 {
-  return apply(
-    [](std::uint64_t a, std::int64_t b) {
-      return static_cast<std::uint64_t>(static_cast<std::int64_t>(a) + b);
-    },
-    strides_ * color,
-    offsets_);
+  return apply([](std::uint64_t a, std::int64_t b) { return static_cast<std::int64_t>(a) + b; },
+               strides_ * color,
+               offsets_);
 }
 
 std::size_t Tiling::hash() const { return hash_all(tile_shape_, color_shape_, offsets_, strides_); }
 
-Weighted::Weighted(const Legion::FutureMap& weights, const Domain& color_domain)
-  : weights_{std::make_unique<Legion::FutureMap>(weights)},
+// ==========================================================================================
+
+Weighted::Weighted(Legion::FutureMap weights, const Domain& color_domain)
+  : weights_{std::move(weights)},
     color_domain_{color_domain},
     color_shape_{detail::from_domain(color_domain)}
 {
@@ -242,28 +272,22 @@ Weighted::Weighted(const Legion::FutureMap& weights, const Domain& color_domain)
 
 Weighted::~Weighted()
 {
-  if (!detail::has_started()) {
-    // FIXME: Leak the FutureMap handle if the runtime has already shut down, as there's no hope
-    // that this would be collected by the Legion runtime
-    static_cast<void>(weights_.release());  // NOLINT(bugprone-unused-return-value)
+  if (detail::has_started() || !weights_.exists()) {
+    return;
   }
-}
-
-Weighted::Weighted(const Weighted& other)
-  : weights_{std::make_unique<Legion::FutureMap>(*other.weights_)},
-    color_domain_{other.color_domain_},
-    color_shape_{other.color_shape_}
-{
-}
+  // FIXME: Leak the FutureMap handle if the runtime has already shut down, as there's no hope
+  // that this would be collected by the Legion runtime
+  static_cast<void>(std::make_unique<Legion::FutureMap>(std::move(weights_)).release());
+}  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 
 bool Weighted::operator==(const Weighted& other) const
 {
   // Since both color_domain_ and color_shape_ are derived from weights_, they don't need to
   // be compared
-  return *weights_ == *other.weights_;
+  return weights_ == other.weights_;
 }
 
-bool Weighted::operator<(const Weighted& other) const { return *weights_ < *other.weights_; }
+bool Weighted::operator<(const Weighted& other) const { return weights_ < other.weights_; }
 
 bool Weighted::is_disjoint_for(const Domain& launch_domain) const
 {
@@ -280,14 +304,14 @@ bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
   return apply(satisfies_restriction, restrictions, color_shape_).all();
 }
 
-std::unique_ptr<Partition> Weighted::scale(const tuple<std::uint64_t>& /*factors*/) const
+InternalSharedPtr<Partition> Weighted::scale(const tuple<std::uint64_t>& /*factors*/) const
 {
   throw std::runtime_error{"Not implemented"};
   return {};
 }
 
-std::unique_ptr<Partition> Weighted::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
-                                           const tuple<std::uint64_t>& /*high_offsets*/) const
+InternalSharedPtr<Partition> Weighted::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
+                                             const tuple<std::uint64_t>& /*high_offsets*/) const
 {
   throw std::runtime_error{"Not implemented"};
   return {};
@@ -306,14 +330,9 @@ Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool)
 
   auto&& color_space = runtime->find_or_create_index_space(color_shape_);
 
-  index_partition = runtime->create_weighted_partition(index_space, color_space, *weights_);
+  index_partition = runtime->create_weighted_partition(index_space, color_space, weights_);
   part_mgr->record_index_partition(index_space, *this, index_partition);
   return runtime->create_logical_partition(region, index_partition);
-}
-
-std::unique_ptr<Partition> Weighted::clone() const
-{
-  return create_weighted(*weights_, color_domain_);
 }
 
 std::string Weighted::to_string() const
@@ -324,11 +343,38 @@ std::string Weighted::to_string() const
     auto& p = *it;
 
     fmt::format_to(
-      std::back_inserter(result), "{}:{},", fmt::streamed(p), weights_->get_result<std::size_t>(p));
+      std::back_inserter(result), "{}:{},", fmt::streamed(p), weights_.get_result<std::size_t>(p));
   }
   result += "})";
   return result;
 }
+
+InternalSharedPtr<Partition> Weighted::convert(const InternalSharedPtr<Partition>& self,
+                                               const TransformStack* transform) const
+{
+  if (transform->identity()) {
+    return self;
+  }
+  throw NonInvertibleTransformation{};
+  return nullptr;
+}
+
+InternalSharedPtr<Partition> Weighted::invert(const InternalSharedPtr<Partition>& self,
+                                              const TransformStack* transform) const
+{
+  if (transform->identity()) {
+    return self;
+  }
+  auto color_domain = to_domain(transform->invert_color_shape(color_shape_));
+  // Weighted partitions are created only for 1D stores. So, if we're here, the 1D store to which
+  // this partition is applied would be a degenerate N-D store such that all but one dimenion are
+  // of extent 1. So, we only need to delinearize the future map holding the weights so the domain
+  // matches the color domain.
+  return create_weighted(Runtime::get_runtime()->delinearize_future_map(weights_, color_domain),
+                         color_domain);
+}
+
+// ==========================================================================================
 
 Image::Image(InternalSharedPtr<detail::LogicalStore> func,
              InternalSharedPtr<Partition> func_partition,
@@ -367,14 +413,14 @@ bool Image::satisfies_restrictions(const Restrictions& restrictions) const
   return apply(satisfies_restriction, restrictions, color_shape()).all();
 }
 
-std::unique_ptr<Partition> Image::scale(const tuple<std::uint64_t>& /*factors*/) const
+InternalSharedPtr<Partition> Image::scale(const tuple<std::uint64_t>& /*factors*/) const
 {
   throw std::runtime_error{"Not implemented"};
   return {};
 }
 
-std::unique_ptr<Partition> Image::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
-                                        const tuple<std::uint64_t>& /*high_offsets*/) const
+InternalSharedPtr<Partition> Image::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
+                                          const tuple<std::uint64_t>& /*high_offsets*/) const
 {
   throw std::runtime_error{"Not implemented"};
   return {};
@@ -432,8 +478,6 @@ bool Image::has_launch_domain() const { return func_partition_->has_launch_domai
 
 Domain Image::launch_domain() const { return func_partition_->launch_domain(); }
 
-std::unique_ptr<Partition> Image::clone() const { return std::make_unique<Image>(*this); }
-
 std::string Image::to_string() const
 {
   return fmt::format("Image(func: {}, partition: {}, hint: {})",
@@ -444,37 +488,61 @@ std::string Image::to_string() const
 
 const tuple<std::uint64_t>& Image::color_shape() const { return func_partition_->color_shape(); }
 
-std::unique_ptr<NoPartition> create_no_partition() { return std::make_unique<NoPartition>(); }
-
-std::unique_ptr<Tiling> create_tiling(tuple<std::uint64_t>&& tile_shape,
-                                      tuple<std::uint64_t>&& color_shape,
-                                      tuple<std::int64_t>&& offsets /*= {}*/)
+InternalSharedPtr<Partition> Image::convert(const InternalSharedPtr<Partition>& self,
+                                            const detail::TransformStack* transform) const
 {
-  return std::make_unique<Tiling>(
+  if (transform->identity()) {
+    return self;
+  }
+  throw NonInvertibleTransformation{};
+  return nullptr;
+}
+
+InternalSharedPtr<Partition> Image::invert(const InternalSharedPtr<Partition>& self,
+                                           const detail::TransformStack* transform) const
+{
+  if (transform->identity()) {
+    return self;
+  }
+  throw NonInvertibleTransformation{};
+  return nullptr;
+}
+
+InternalSharedPtr<NoPartition> create_no_partition()
+{
+  static auto result = make_internal_shared<NoPartition>();
+  return result;
+}
+
+InternalSharedPtr<Tiling> create_tiling(tuple<std::uint64_t> tile_shape,
+                                        tuple<std::uint64_t> color_shape,
+                                        tuple<std::int64_t> offsets /*= {}*/)
+{
+  return make_internal_shared<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets));
 }
 
-std::unique_ptr<Tiling> create_tiling(tuple<std::uint64_t>&& tile_shape,
-                                      tuple<std::uint64_t>&& color_shape,
-                                      tuple<std::int64_t>&& offsets,
-                                      tuple<std::uint64_t>&& strides)
+InternalSharedPtr<Tiling> create_tiling(tuple<std::uint64_t> tile_shape,
+                                        tuple<std::uint64_t> color_shape,
+                                        tuple<std::int64_t> offsets,
+                                        tuple<std::uint64_t> strides)
 {
-  return std::make_unique<Tiling>(
+  return make_internal_shared<Tiling>(
     std::move(tile_shape), std::move(color_shape), std::move(offsets), std::move(strides));
 }
 
-std::unique_ptr<Weighted> create_weighted(const Legion::FutureMap& weights,
-                                          const Domain& color_domain)
+InternalSharedPtr<Weighted> create_weighted(const Legion::FutureMap& weights,
+                                            const Domain& color_domain)
 {
-  return std::make_unique<Weighted>(weights, color_domain);
+  return make_internal_shared<Weighted>(weights, color_domain);
 }
 
-std::unique_ptr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,
-                                    InternalSharedPtr<Partition> func_partition,
-                                    mapping::detail::Machine machine,
-                                    ImageComputationHint hint)
+InternalSharedPtr<Image> create_image(InternalSharedPtr<detail::LogicalStore> func,
+                                      InternalSharedPtr<Partition> func_partition,
+                                      mapping::detail::Machine machine,
+                                      ImageComputationHint hint)
 {
-  return std::make_unique<Image>(
+  return make_internal_shared<Image>(
     std::move(func), std::move(func_partition), std::move(machine), hint);
 }
 

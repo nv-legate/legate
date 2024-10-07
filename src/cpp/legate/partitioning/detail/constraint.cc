@@ -27,7 +27,10 @@ void Variable::find_partition_symbols(std::vector<const Variable*>& partition_sy
   partition_symbols.push_back(this);
 }
 
-std::string Variable::to_string() const { return fmt::format("X{}{{{}}}", id(), *operation()); }
+std::string Variable::to_string() const
+{
+  return fmt::format("X{}{{{}}}", id(), operation()->to_string(false /*show_provenance*/));
+}
 
 const InternalSharedPtr<LogicalStore>& Variable::store() const { return op_->find_store(this); }
 

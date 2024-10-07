@@ -36,7 +36,7 @@ format_context::iterator formatter<legate::detail::Type>::format(const legate::d
 format_context::iterator formatter<legate::detail::Operation>::format(
   const legate::detail::Operation& op, format_context& ctx) const
 {
-  return formatter<std::string>::format(op.to_string(), ctx);
+  return formatter<std::string>::format(op.to_string(true /*show_provenance*/), ctx);
 }
 
 format_context::iterator formatter<legate::detail::Shape>::format(

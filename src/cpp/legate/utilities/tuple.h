@@ -58,16 +58,26 @@ class tuple {
   [[nodiscard]] bool less_equal(const tuple& other) const;
   [[nodiscard]] bool greater(const tuple& other) const;
   [[nodiscard]] bool greater_equal(const tuple& other) const;
-  tuple operator+(const tuple& other) const;
-  tuple operator+(const T& other) const;
-  tuple operator-(const tuple& other) const;
-  tuple operator-(const T& other) const;
-  tuple operator*(const tuple& other) const;
-  tuple operator*(const T& other) const;
-  tuple operator%(const tuple& other) const;
-  tuple operator%(const T& other) const;
-  tuple operator/(const tuple& other) const;
-  tuple operator/(const T& other) const;
+  template <typename U = T>
+  auto operator+(const tuple<U>& other) const;
+  template <typename U = T>
+  auto operator+(const U& other) const;
+  template <typename U = T>
+  auto operator-(const tuple<U>& other) const;
+  template <typename U = T>
+  auto operator-(const U& other) const;
+  template <typename U = T>
+  auto operator*(const tuple<U>& other) const;
+  template <typename U = T>
+  auto operator*(const U& other) const;
+  template <typename U = T>
+  auto operator%(const tuple<U>& other) const;
+  template <typename U = T>
+  auto operator%(const U& other) const;
+  template <typename U = T>
+  auto operator/(const tuple<U>& other) const;
+  template <typename U = T>
+  auto operator/(const U& other) const;
 
   [[nodiscard]] bool empty() const;
   [[nodiscard]] size_type size() const;

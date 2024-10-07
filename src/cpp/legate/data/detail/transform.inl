@@ -55,6 +55,32 @@ inline bool TransformStack::is_convertible() const { return convertible_; }
 
 inline bool TransformStack::identity() const { return nullptr == transform_; }
 
+template <typename VISITOR, typename T>
+decltype(auto) TransformStack::convert_(VISITOR visitor, T input) const
+{
+  if (identity()) {
+    return input;
+  }
+  if (parent_->identity()) {
+    return visitor(transform_, std::forward<T>(input));
+  }
+  return visitor(transform_, visitor(parent_, std::forward<T>(input)));
+}
+
+template <typename VISITOR, typename T>
+decltype(auto) TransformStack::invert_(VISITOR visitor, T input) const
+{
+  if (identity()) {
+    return input;
+  }
+
+  auto result = visitor(transform_, std::forward<T>(input));
+  if (parent_->identity()) {
+    return result;
+  }
+  return visitor(parent_, std::forward<T>(result));
+}
+
 // ==========================================================================================
 
 inline Shift::Shift(std::int32_t dim, std::int64_t offset) : dim_{dim}, offset_{offset} {}
@@ -67,9 +93,26 @@ inline Restrictions Shift::convert(Restrictions restrictions, bool /*forbid_fake
   return restrictions;
 }
 
+inline tuple<std::uint64_t> Shift::convert_color(tuple<std::uint64_t> color) const { return color; }
+
+inline tuple<std::uint64_t> Shift::convert_color_shape(tuple<std::uint64_t> color_shape) const
+{
+  return color_shape;
+}
+
+inline tuple<std::uint64_t> Shift::convert_extents(tuple<std::uint64_t> extents) const
+{
+  return extents;
+}
+
 inline Restrictions Shift::invert(Restrictions restrictions) const { return restrictions; }
 
 inline tuple<std::uint64_t> Shift::invert_color(tuple<std::uint64_t> color) const { return color; }
+
+inline tuple<std::uint64_t> Shift::invert_color_shape(tuple<std::uint64_t> color_shape) const
+{
+  return color_shape;
+}
 
 inline tuple<std::uint64_t> Shift::invert_extents(tuple<std::uint64_t> extents) const
 {
@@ -89,11 +132,6 @@ inline Promote::Promote(std::int32_t extra_dim, std::int64_t dim_size)
 {
 }
 
-inline tuple<std::uint64_t> Promote::invert_color(tuple<std::uint64_t> color) const
-{
-  return invert_point(std::move(color));
-}
-
 inline std::int32_t Promote::target_ndim(std::int32_t source_ndim) const { return source_ndim - 1; }
 
 inline bool Promote::is_convertible() const { return true; }
@@ -107,11 +145,6 @@ inline std::int32_t Project::target_ndim(std::int32_t source_ndim) const { retur
 inline bool Project::is_convertible() const { return true; }
 
 // ==========================================================================================
-
-inline tuple<std::uint64_t> Transpose::invert_color(tuple<std::uint64_t> color) const
-{
-  return invert_point(std::move(color));
-}
 
 inline std::int32_t Transpose::target_ndim(std::int32_t source_ndim) const { return source_ndim; }
 
