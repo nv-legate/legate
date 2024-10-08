@@ -192,7 +192,7 @@ class Legate(MainPackage):
         packages : Sequence[Package]
             The packages to inspect.
         """
-        always_enabled = {"legion": 0, "thrust": 0, "cmake": 0}
+        always_enabled = {"legion": 0, "cmake": 0}
         for pack in packages:
             pack_name = pack.name
             try:
