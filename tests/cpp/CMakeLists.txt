@@ -126,7 +126,8 @@ function(legate_configure_test)
   #                                 PRE_TEST)
   # cmake-format: on
 
-  legate_debug_syms(${_LEGATE_TEST_NAME} INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+  legate_install_debug_symbols(TARGET ${_LEGATE_TEST_NAME}
+                               INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 
   list(APPEND LEGATE_CONFIGURED_TESTS ${_LEGATE_TEST_NAME})
   # propagate the updated list upwards

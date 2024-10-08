@@ -80,3 +80,61 @@ function(legate_find_program VARIABLE_NAME PROGRAM_NAME)
     message(CHECK_FAIL "not found")
   endif()
 endfunction()
+
+function(list_add_if_not_present list elem)
+  list(FIND ${list} "${elem}" exists)
+  if(exists EQUAL -1)
+    list(APPEND ${list} "${elem}")
+    set(${list} "${${list}}" PARENT_SCOPE)
+  endif()
+endfunction()
+
+macro(_legate_target_get_linked_libraries_in _target _outlist)
+  list_add_if_not_present("${_outlist}" "${_target}")
+
+  # get libraries
+  get_target_property(target_type "${_target}" TYPE)
+  if(${target_type} STREQUAL "INTERFACE_LIBRARY")
+    get_target_property(libs "${_target}" INTERFACE_LINK_LIBRARIES)
+  else()
+    get_target_property(libs "${_target}" LINK_LIBRARIES)
+  endif()
+
+  foreach(lib IN LISTS libs)
+    if(NOT TARGET "${lib}")
+      continue()
+    endif()
+
+    list(FIND "${_outlist}" "${lib}" exists)
+    if(NOT exists EQUAL -1)
+      continue()
+    endif()
+
+    _legate_target_get_linked_libraries_in("${lib}" "${_outlist}")
+  endforeach()
+endmacro()
+
+function(legate_target_get_target_dependencies)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "target_get_target_dependencies")
+
+  set(options)
+  set(one_value_args TARGET RESULT_VAR)
+  set(multi_value_args)
+
+  cmake_parse_arguments(_LEGATE "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
+
+  foreach(var IN LISTS one_value_args)
+    if(NOT _LEGATE_${var})
+      message(FATAL_ERROR "Must pass ${var}")
+    endif()
+  endforeach()
+
+  if(NOT TARGET "${_LEGATE_TARGET}")
+    message(FATAL_ERROR "Target ${_LEGATE_TARGET} not a valid target")
+  endif()
+
+  set(out_list "")
+  _legate_target_get_linked_libraries_in("${_LEGATE_TARGET}" out_list)
+  set(${_LEGATE_RESULT_VAR} "${out_list}" PARENT_SCOPE)
+endfunction()

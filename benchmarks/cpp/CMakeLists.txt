@@ -60,7 +60,8 @@ function(legate_configure_benchmark)
 
   legate_add_target_link_option(${_LEGATE_BM_TARGET} PRIVATE legate_LINKER_FLAGS)
 
-  legate_debug_syms(${_LEGATE_BM_TARGET} INSTALL_DIR "${CMAKE_INSTALL_BINDIR}")
+  legate_install_debug_symbols(TARGET ${_LEGATE_BM_TARGET}
+                               INSTALL_DIR "${CMAKE_INSTALL_BINDIR}")
 
   foreach(src IN LISTS _LEGATE_BM_SOURCES)
     legate_add_tidy_target(SOURCE "${src}")

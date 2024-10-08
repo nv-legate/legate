@@ -62,17 +62,31 @@ include("${LEGATE_CMAKE_DIR}/Modules/find_or_configure.cmake")
 # ########################################################################################
 # * Default Flags -------------------------------------------------------------
 
+if(Legion_USE_CUDA)
+  # Must do this here since the debug symbols and default flags need to see if CUDA
+  # language support is needed. This isn't fool-proof, if someone has a pre-configured
+  # Legion then they might not pass this variable in, and hence we might not know that
+  # Legion has CUDA until after we find it (which must occur *before* we set our default
+  # flags).
+  #
+  # But 9 times out of 10, people are passing this in, because they are using configure.
+  enable_language(CUDA)
+endif()
+
 include("${LEGATE_CMAKE_DIR}/Modules/default_flags.cmake")
 
 legate_configure_default_compiler_flags()
 legate_configure_default_linker_flags()
+
+include("${LEGATE_CMAKE_DIR}/Modules/debug_symbols.cmake")
+
+legate_configure_debug_symbols()
 
 # ########################################################################################
 # * CCCL ---------------------------------------------------------------------
 
 # Pull this in before Legion, so that Legion will use the same libcu++ as Legate (the one
 # pull from CCCL)
-
 legate_find_or_configure(PACKAGE cccl)
 
 # ########################################################################################
@@ -127,7 +141,7 @@ if(Legion_USE_Python AND (NOT Python3_FOUND))
 endif()
 
 if(Legion_USE_CUDA)
-  # Enable the CUDA language
+  # Enable the CUDA language, if we didn't already
   enable_language(CUDA)
   # Must come after `enable_language(CUDA)` Use `-isystem <path>` instead of
   # `-isystem=<path>` because the former works with clangd intellisense
@@ -142,8 +156,6 @@ if(Legion_USE_CUDA)
                       CUDAToolkit 11.8...99999999.99 REQUIRED
                       BUILD_EXPORT_SET legate-exports
                       INSTALL_EXPORT_SET legate-exports)
-  # Find NCCL
-  legate_find_or_configure(PACKAGE NCCL)
 endif()
 
 # ########################################################################################
@@ -156,6 +168,13 @@ if(Legion_NETWORKS)
   set(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES OFF)
 
   add_subdirectory(${LEGATE_DIR}/share/legate/mpi_wrapper share/legate/mpi_wrapper)
+endif()
+
+# ########################################################################################
+# * NCCL ----------------------------------------------------------------
+
+if(Legion_USE_CUDA)
+  legate_find_or_configure(PACKAGE NCCL)
 endif()
 
 # ########################################################################################
@@ -781,16 +800,14 @@ install(FILES ${LEGATE_DIR}/share/legate/examples/binding/pybind11/hello_world.c
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/pybind11)
 
 # ########################################################################################
-# * install Legate debug symbols  --------------------------------------------------------
+# * install legate-bind.sh  --------------------------------------------------------
 
 install(PROGRAMS ${LEGATE_DIR}/legate-bind.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # ########################################################################################
 # * install Legate debug symbols ---------------------------------------------------------
 
-include("${LEGATE_CMAKE_DIR}/Modules/debug_symbols.cmake")
-
-legate_debug_syms(legate INSTALL_DIR ${lib_dir})
+legate_install_debug_symbols(TARGET legate INSTALL_DIR ${lib_dir} RECURSIVE)
 
 # ########################################################################################
 # * install export -----------------------------------------------------------

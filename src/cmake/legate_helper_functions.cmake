@@ -36,7 +36,8 @@ function(legate_default_cpp_install target)
 
   include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Modules/debug_symbols.cmake")
 
-  legate_debug_syms(${target} INSTALL_DIR ${lib_dir})
+  legate_configure_debug_symbols()
+  legate_install_debug_symbols(TARGET ${target} INSTALL_DIR ${lib_dir})
 
   set(final_code_block "set(${target}_BUILD_LIBDIR ${CMAKE_BINARY_DIR}/legate_${target})")
 

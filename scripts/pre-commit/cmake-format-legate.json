@@ -173,6 +173,11 @@
                     "nargs": "*"
                 }
             },
+            "legate_configure_debug_symbols": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "legate_configure_default_compiler_flags": {
                 "pargs": {
                     "nargs": 0
@@ -212,15 +217,6 @@
             "legate_create_dummy_cuda_driver": {
                 "pargs": {
                     "nargs": 0
-                }
-            },
-            "legate_debug_syms": {
-                "kwargs": {
-                    "INSTALL_DIR": 1
-                },
-                "pargs": {
-                    "flags": [],
-                    "nargs": "1+"
                 }
             },
             "legate_default_cpp_install": {
@@ -308,6 +304,18 @@
             "legate_include_rapids": {
                 "pargs": {
                     "nargs": 0
+                }
+            },
+            "legate_install_debug_symbols": {
+                "kwargs": {
+                    "INSTALL_DIR": 1,
+                    "TARGET": 1
+                },
+                "pargs": {
+                    "flags": [
+                        "RECURSIVE"
+                    ],
+                    "nargs": "*"
                 }
             },
             "legate_install_from_tree": {
@@ -406,6 +414,16 @@
                     "nargs": 2
                 }
             },
+            "legate_target_get_target_dependencies": {
+                "kwargs": {
+                    "RESULT_VAR": 1,
+                    "TARGET": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
             "legate_uninstall_target": {
                 "kwargs": {
                     "TARGET": 1
@@ -413,6 +431,11 @@
                 "pargs": {
                     "flags": [],
                     "nargs": "*"
+                }
+            },
+            "list_add_if_not_present": {
+                "pargs": {
+                    "nargs": 2
                 }
             },
             "print_all_properties": {
