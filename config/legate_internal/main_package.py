@@ -236,6 +236,14 @@ class Legate(MainPackage):
         # bar     2.4.1
         # baz     2.15.0  /path/to/baz
         # ...
+        try:
+            import pip  # noqa: F401
+        except ModuleNotFoundError as mnfe:
+            self.log(
+                f"pip does not appear to be installed: '{mnfe}'. Nothing to do"
+            )
+            return
+
         installed_packages = self.log_execute_command(
             [sys.executable, "-m", "pip", "list"]
         ).stdout.splitlines()
@@ -247,22 +255,29 @@ class Legate(MainPackage):
         found_legate = any(name.startswith("legate") for name in package_names)
         self.log(f"Have pre-existing legate installation: {found_legate}")
 
-        if self.cl_args.with_clean.value:
-            # Run the uninstall command whether it is installed or not, it does
-            # nothing (and returns 0) if the package isn't installed
-            self.log_execute_command(
-                [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "uninstall",
-                    "--yes",
-                    "legate",
-                ]
-            )
+        if not found_legate:
             return
 
-        if found_legate:
+        if self.cl_args.with_clean.value:
+            cmd = [
+                sys.executable,
+                "-m",
+                "pip",
+                "uninstall",
+                "--yes",
+                "legate",
+            ]
+            str_cmd = " ".join(cmd)
+            self.log_warning(
+                f"Running {str_cmd!r} to uninstall legate as part of a clean "
+                "build."
+            )
+            self.log_execute_command(cmd)
+        else:
+            self.log(
+                "No clean requested, leaving potentially installed legate "
+                "in place"
+            )
             self.log_warning(
                 "You appear to have previously installed Legate, which "
                 "may interfere with the current and/or future "
@@ -278,10 +293,6 @@ class Legate(MainPackage):
                 "(then retry configuration), or, re-run configuration "
                 f"with the {self.WITH_CLEAN.name} flag."
             )
-        self.log(
-            "No clean requested, leaving potentially installed legate "
-            "in place"
-        )
 
     def setup(self) -> None:
         r"""Setup Legate"""

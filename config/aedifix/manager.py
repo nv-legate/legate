@@ -17,12 +17,14 @@ import platform
 import re
 import shutil
 import sys
+import textwrap
 import time
 from argparse import (
     SUPPRESS as ARGPARSE_SUPPRESS,
     ArgumentDefaultsHelpFormatter,
     ArgumentParser,
     Namespace,
+    RawDescriptionHelpFormatter,
 )
 from collections import defaultdict
 from collections.abc import Callable, Iterator, Sequence
@@ -200,10 +202,33 @@ class ConfigurationManager:
         whether the value is as a result of a default, or whether the user
         specifically set the value.
         """
+
+        class CustomFormatter(
+            ArgumentDefaultsHelpFormatter, RawDescriptionHelpFormatter
+        ):
+            pass
+
+        descr = f"""\
+        Configure {self.project_name}.
+
+        On success, a directory {self.project_dir}/{{project arch name}} will
+        be created, containing the configured build.
+
+        Options listed below are handled directly by configure. Any options
+        following a '--' are passed verbatim to CMake. For example:
+
+        $ ./configure --with-cxx clang++ -- -DCMAKE_C_COMPILER='gcc'
+
+        will set the C++ compiler to 'clang++' and the C compiler to 'gcc'.
+        However, such manual intervention is rarely needed, and serves only
+        as an escape hatch for as-of-yet unsupported arguments.
+        """
+        descr = textwrap.dedent(descr)
+
         parser = ArgumentParser(
-            usage="%(prog)s [options...]",
-            description=f"Configure {self.project_name}",
-            formatter_class=ArgumentDefaultsHelpFormatter,
+            usage="%(prog)s [options...] [-- raw cmake options...]",
+            description=descr,
+            formatter_class=CustomFormatter,
             # This may lead to confusing errors. E.g.
             #
             # ./configure --cuda --something-else

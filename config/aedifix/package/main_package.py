@@ -581,7 +581,13 @@ class MainPackage(Package, ABC):
         base_group = self.create_argument_group(parser, title="Base Options")
         base_group.add_argument(
             f"--{self.arch_name}",
-            help=f"{self.manager.project_name} build directory",
+            help=(
+                f"{self.manager.project_name} build directory. Can be any "
+                "arbitrary string, so long as the name is unique inside "
+                f"{self.project_dir_value}. If not passed, a suitable value "
+                "is generated automatically based on influential configure "
+                "arguments."
+            ),
             default=self.manager.project_arch,
         )
         self.log_execute_func(
