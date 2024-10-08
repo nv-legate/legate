@@ -2420,12 +2420,13 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = "DOXYGEN" \
                          "LEGATE_DOXYGEN=1" \
-                         "LEGATE_HOST_DEVICE" \
+                         "LEGATE_HOST_DEVICE=__host__ __device__" \
                          "LEGATE_USE_CUDA=1" \
                          "LEGATE_USE_OPENMP=1" \
                          "LEGATE_STL_REQUIRES=requires" \
                          "LEGATE_DEFINED(X)=defined(X) && X" \
-                         "LEGATE_STL_UNSPECIFIED(...)=unspecified"
+                         "LEGATE_STL_UNSPECIFIED(...)=unspecified" \
+                         "LEGATE_CHECK_ENV_VAR_DOCS(X):=X"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
@@ -2434,7 +2435,7 @@ PREDEFINED             = "DOXYGEN" \
 # definition found in the source code.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_AS_DEFINED      =
+EXPAND_AS_DEFINED      = LEGATE_CHECK_ENV_VAR_DOCS
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES then doxygen's preprocessor will
 # remove all references to function-like macros that are alone on a line, have
