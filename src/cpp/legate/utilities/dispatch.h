@@ -27,6 +27,9 @@ namespace legate {
 
 namespace detail {
 
+[[noreturn]] void throw_unsupported_dim(std::int32_t dim);
+[[noreturn]] void throw_unsupported_type_code(legate::Type::Code code);
+
 template <int DIM>
 class InnerTypeDispatchFn {
  public:
@@ -78,9 +81,8 @@ class InnerTypeDispatchFn {
       case Type::Code::COMPLEX128: {
         return f.template operator()<Type::Code::COMPLEX128, DIM>(std::forward<Fnargs>(args)...);
       }
-      default: break;
+      default: throw_unsupported_type_code(code);
     }
-    throw std::runtime_error("Unsupported type code");
     return f.template operator()<Type::Code::BOOL, DIM>(std::forward<Fnargs>(args)...);
   }
 };
@@ -135,9 +137,8 @@ class InnerDimDispatchFn {
         return f.template operator()<DIM, 9>(std::forward<Fnargs>(args)...);
       }
 #endif
-      default: break;
+      default: throw_unsupported_dim(dim);
     }
-    throw std::runtime_error{"Unsupported number of dimensions"};
     return f.template operator()<DIM, 1>(std::forward<Fnargs>(args)...);
   }
 };
@@ -207,9 +208,8 @@ constexpr decltype(auto) double_dispatch(int dim, Type::Code code, Functor f, Fn
       return detail::InnerTypeDispatchFn<9>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
-    default: break;
+    default: detail::throw_unsupported_dim(dim);
   }
-  throw std::runtime_error{"Unsupported number of dimensions"};
   return detail::InnerTypeDispatchFn<1>{}(code, f, std::forward<Fnargs>(args)...);
 }
 
@@ -276,9 +276,8 @@ constexpr decltype(auto) double_dispatch(int dim1, int dim2, Functor f, Fnargs&&
       return detail::InnerDimDispatchFn<9>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
-    default: break;
+    default: detail::throw_unsupported_dim(dim1);
   }
-  throw std::runtime_error{"Unsupported number of dimensions"};
   return detail::InnerDimDispatchFn<1>{}(dim2, f, std::forward<Fnargs>(args)...);
 }
 
@@ -344,9 +343,8 @@ constexpr decltype(auto) dim_dispatch(int dim, Functor f, Fnargs&&... args)
       return f.template operator()<9>(std::forward<Fnargs>(args)...);
     }
 #endif
-    default: break;
+    default: detail::throw_unsupported_dim(dim);
   }
-  throw std::runtime_error{"Unsupported number of dimensions"};
   return f.template operator()<1>(std::forward<Fnargs>(args)...);
 }
 
@@ -409,9 +407,8 @@ constexpr decltype(auto) type_dispatch(Type::Code code, Functor&& f, Fnargs&&...
     case Type::Code::COMPLEX128: {
       return f.template operator()<Type::Code::COMPLEX128>(std::forward<Fnargs>(args)...);
     }
-    default: break;
+    default: detail::throw_unsupported_type_code(code);
   }
-  throw std::runtime_error{"Unsupported type code"};
   return f.template operator()<Type::Code::BOOL>(std::forward<Fnargs>(args)...);
 }
 

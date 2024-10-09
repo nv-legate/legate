@@ -345,6 +345,7 @@ list(APPEND
      legate/utilities/internal_shared_ptr.cc
      legate/utilities/compiler.cc
      legate/utilities/abort.cc
+     legate/utilities/dispatch.cc
      legate/utilities/detail/buffer_builder.cc
      legate/utilities/detail/env.cc
      legate/utilities/detail/tuple.cc
