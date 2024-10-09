@@ -24,11 +24,8 @@ function(find_or_configure_span)
     endif()
   endif()
 
-  legate_parse_versions_json(PACKAGE span
-                             VERSION version
-                             GIT_URL git_url
-                             GIT_SHALLOW git_shallow
-                             GIT_TAG git_tag)
+  include("${rapids-cmake-dir}/cpm/detail/package_details.cmake")
+  rapids_cpm_package_details(span version git_url git_tag git_shallow unused)
 
   rapids_cpm_find(span "${version}"
                   BUILD_EXPORT_SET legate-exports

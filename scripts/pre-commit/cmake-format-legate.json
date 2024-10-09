@@ -336,19 +336,6 @@
                     "nargs": 2
                 }
             },
-            "legate_parse_versions_json": {
-                "kwargs": {
-                    "GIT_SHALLOW": 1,
-                    "GIT_TAG": 1,
-                    "GIT_URL": 1,
-                    "PACKAGE": 1,
-                    "VERSION": 1
-                },
-                "pargs": {
-                    "flags": [],
-                    "nargs": "*"
-                }
-            },
             "legate_populate_cython_dependency_rpaths": {
                 "kwargs": {
                     "RAPIDS_ASSOCIATED_TARGET": 1,
@@ -629,6 +616,11 @@
                 },
                 "pargs": {
                     "nargs": 0
+                }
+            },
+            "rapids_cpm_package_details": {
+                "pargs": {
+                    "nargs": 6
                 }
             },
             "rapids_cpm_package_override": {

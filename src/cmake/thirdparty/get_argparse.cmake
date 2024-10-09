@@ -15,11 +15,8 @@ include_guard(GLOBAL)
 function(find_or_configure_argparse)
   list(APPEND CMAKE_MESSAGE_CONTEXT "argparse")
 
-  legate_parse_versions_json(PACKAGE argparse
-                             VERSION version
-                             GIT_URL git_url
-                             GIT_SHALLOW git_shallow
-                             GIT_TAG git_tag)
+  include("${rapids-cmake-dir}/cpm/detail/package_details.cmake")
+  rapids_cpm_package_details(argparse version git_url git_tag git_shallow unused)
 
   # We don't add this package to BUILD_EXPORT_SET or INSTALL_EXPORT_SET because it is used
   # as a private, header-only dependency, and therefore no other package should need to
