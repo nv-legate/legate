@@ -27,6 +27,8 @@ enum class GlobalRedopID : int /* A.K.A. Legion::ReductionOpID */;
 
 enum class ImageComputationHint : std::uint8_t;
 
+class Type;
+
 }  // namespace legate
 
 namespace legate::detail {
@@ -51,6 +53,11 @@ namespace fmt {
 template <>
 struct formatter<legate::detail::Type> : formatter<std::string> {
   format_context::iterator format(const legate::detail::Type& a, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::Type> : formatter<std::string> {
+  format_context::iterator format(const legate::Type& a, format_context& ctx) const;
 };
 
 template <>

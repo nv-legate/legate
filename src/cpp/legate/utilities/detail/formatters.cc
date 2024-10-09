@@ -19,6 +19,7 @@
 #include "legate/partitioning/constraint.h"
 #include "legate/partitioning/detail/constraint.h"
 #include "legate/type/detail/type_info.h"
+#include "legate/type/type_info.h"
 #include "legate/utilities/detail/zstring_view.h"
 #include "legate/utilities/macros.h"
 #include "legate/utilities/typedefs.h"
@@ -29,6 +30,12 @@ namespace fmt {
 
 format_context::iterator formatter<legate::detail::Type>::format(const legate::detail::Type& a,
                                                                  format_context& ctx) const
+{
+  return formatter<std::string>::format(a.to_string(), ctx);
+}
+
+format_context::iterator formatter<legate::Type>::format(const legate::Type& a,
+                                                         format_context& ctx) const
 {
   return formatter<std::string>::format(a.to_string(), ctx);
 }
