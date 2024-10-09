@@ -672,7 +672,7 @@ std::int32_t statically_initialize_types() noexcept
     LEGATE_ABORT(exn.what());
   }
   return 0;
-};
+}
 
 const std::int32_t STATICALLY_INITIALIZE_TYPES = statically_initialize_types();
 
