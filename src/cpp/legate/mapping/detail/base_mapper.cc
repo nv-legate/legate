@@ -503,8 +503,13 @@ void map_future_backed_stores(
 
   output->future_locations.resize(mapped_futures.size());
   for (auto&& mapping : for_futures) {
-    output->future_locations[mapping->store()->future_index()] =
-      local_machine.get_memory(task.target_proc, mapping->policy.target);
+    const auto fut_idx = mapping->store()->future_index();
+    StoreTarget target = mapping->policy.target;
+
+    if (LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB) && (target == StoreTarget::FBMEM)) {
+      target = StoreTarget::ZCMEM;
+    }
+    output->future_locations[fut_idx] = local_machine.get_memory(task.target_proc, target);
   }
 }
 
