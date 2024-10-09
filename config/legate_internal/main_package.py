@@ -158,10 +158,13 @@ class Legate(MainPackage):
             arch_name="LEGATE_ARCH",
             project_dir_name="LEGATE_DIR",
             project_dir_value=legate_dir,
+            project_config_file_template=(
+                Path(__file__).parent / "gmakevariables.in"
+            ),
             project_src_dir=legate_dir / "src",
-            default_arch_file_path=legate_dir
-            / "scripts"
-            / "get_legate_arch.py",
+            default_arch_file_path=(
+                legate_dir / "scripts" / "get_legate_arch.py"
+            ),
         )
 
     @classmethod
@@ -428,15 +431,6 @@ class Legate(MainPackage):
         self.log_execute_func(self.configure_legate_variables)
         self.log_execute_func(self.configure_legion)
         self.log_execute_func(self.configure_clang_tidy)
-
-    def finalize(self) -> None:
-        r"""Finalize Legate."""
-        super().finalize()
-        self.manager.add_gmake_variable(
-            "LEGATE_USE_PYTHON",
-            "1" if self.python.state.enabled() else "0",
-            override_ok=False,
-        )
 
     def _summarize_flags(self) -> list[tuple[str, Any]]:
         def make_summary(

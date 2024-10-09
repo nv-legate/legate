@@ -12,21 +12,14 @@ from __future__ import annotations
 
 import re
 import sys
-import textwrap
-from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from .base import Configurable
-from .util.exception import LengthError
+from .util.exception import UnsatisfiableConfigurationError
 
 if TYPE_CHECKING:
     from .manager import ConfigurationManager
-
-
-CMAKE_VARIABLE_RE: Final = re.compile(
-    r"(?P<name>[A-Za-z_0-9\-]+):(?P<type>[A-Z]+)\s*=\s*(?P<value>.*)"
-)
 
 
 class ConfigFile(Configurable):
@@ -38,27 +31,50 @@ class ConfigFile(Configurable):
     """
 
     __slots__ = (
-        "_project_rules",
-        "_project_search_variables",
-        "_project_variables",
-        "_raw_lines",
+        "_config_file_template",
+        "_cmake_configure_file",
+        "_default_subst",
     )
 
-    def __init__(self, manager: ConfigurationManager) -> None:
+    def __init__(
+        self,
+        manager: ConfigurationManager,
+        config_file_template: Path,
+    ) -> None:
         r"""Construct a Config.
 
         Parameters
         ----------
         manager : ConfigurationManager
             The configuration manager to manage this Config.
+        config_file_template : Path
+            The template file to read
         """
         super().__init__(manager=manager)
-        self._project_rules: dict[
-            str, tuple[bool, Sequence[str], tuple[str, ...]]
-        ] = {}
-        self._project_search_variables: dict[str, str] = {}
-        self._project_variables: dict[str, tuple[bool, str]] = {}
-        self._raw_lines: list[str] = []
+        self._config_file_template = config_file_template.resolve()
+
+        self._cmake_configure_file = (
+            Path(__file__).resolve().parent / "configure_file.cmake"
+        )
+        assert (
+            self._cmake_configure_file.exists()
+        ), f"Cmake configure file {self._cmake_configure_file} does not exist"
+        assert (
+            self._cmake_configure_file.is_file()
+        ), f"Cmake configure file {self._cmake_configure_file} is not a file"
+
+        self._default_subst = {"PYTHON_EXECUTABLE": sys.executable}
+
+    @property
+    def template_file(self) -> Path:
+        r"""Return the path to the template file.
+
+        Returns
+        -------
+        template_file : Path
+            The path to the template file, e.g. /path/to/gmakevariables.in
+        """
+        return self._config_file_template
 
     @property
     def project_variables_file(self) -> Path:
@@ -76,438 +92,129 @@ class ConfigFile(Configurable):
         """
         return self.project_arch_dir / "gmakevariables"
 
-    def _add_default_project_rules(
-        self, PROJ_ARCH_NAME: str, PROJ_NAME: str
-    ) -> None:
-        r"""Add default project rules.
-
-        Parameters
-        ----------
-        PROJ_ARCH_NAME : str
-            The uppercase project arch name, i.e. 'LEGATE_ARCH'.
-        PROJ_NAME : str
-            The uppercase project name, i.e. 'LEGATE'.
-        """
-        assert PROJ_ARCH_NAME.isupper()
-        assert PROJ_NAME.isupper()
-        self.add_rule(
-            "default_help",
-            "printf \"Usage: make [MAKE_OPTIONS] [target] (see 'make --help' "
-            'for MAKE_OPTIONS)\\n"',
-            'printf ""',
-            textwrap.dedent(
-                r"""
-    $(AWK) ' \
-    { \
-      if ($$0 ~ /^.PHONY: [a-zA-Z\-\0-9]+$$/) {	\
-        helpCommand = substr($$0, index($$0, ":") + 2);	\
-        if (helpMessage) { \
-          printf "\033[36m%-20s\033[0m %s\n", helpCommand, helpMessage; \
-          helpMessage = ""; \
-        } \
-      } else if ($$0 ~ /^[a-zA-Z\-\0-9.]+:/) { \
-        helpCommand = substr($$0, 0, index($$0, ":")); \
-        if (helpMessage) { \
-          printf "\033[36m%-20s\033[0m %s\n", helpCommand, helpMessage; \
-          helpMessage = ""; \
-        } \
-      } else if ($$0 ~ /^##/) { \
-        if (helpMessage) { \
-          helpMessage = helpMessage"\n                     "substr($$0, 3); \
-        } else { \
-          helpMessage = substr($$0, 3); \
-        } \
-      } else { \
-        if (helpMessage) { \
-          print "\n                     "helpMessage"\n"; \
-        } \
-        helpMessage = ""; \
-      } \
-    }' \
-    $(MAKEFILE_LIST)
-            """.strip()
-            ),
-        )
-        self.add_rule(
-            "default_all",
-            f"$({PROJ_NAME}_BUILD_COMMAND) $({PROJ_NAME}_CMAKE_ARGS)",
-        )
-        self.add_rule(
-            "default_clean",
-            f"$({PROJ_NAME}_BUILD_COMMAND) "
-            "--target clean "
-            f"$({PROJ_NAME}_CMAKE_ARGS)",
-        )
-        self.add_raw_lines(
-            [
-                "ifeq ($(strip $(PREFIX)),)",
-                f"{PROJ_NAME}_INSTALL_PREFIX_COMMAND = # nothing",
-                "else",
-                f"{PROJ_NAME}_INSTALL_PREFIX_COMMAND = --prefix $(PREFIX)",
-                "endif",
-            ]
-        )
-        color_cmds = [
-            "COLOR_ARCH = $(shell $(CMAKE) -E cmake_echo_color "
-            f"--switch=$(COLOR) --green $({PROJ_ARCH_NAME}))",
-            "export NINJA_STATUS ?= [%f/%t] $(COLOR_ARCH): "
-            "$(SOME_UNDEFINED_VARIABLE_TO_ADD_A_SPACE)",
-        ]
-        self.add_raw_lines(color_cmds)
-        self.add_rule(
-            "default_install",
-            f"$({PROJ_NAME}_INSTALL_COMMAND) "
-            f"$({PROJ_NAME}_INSTALL_PREFIX_COMMAND) "
-            f"$({PROJ_NAME}_CMAKE_ARGS)",
-        )
-        self.add_rule(
-            "default_package",
-            f"$({PROJ_NAME}_BUILD_COMMAND) "
-            "--target package "
-            f"$({PROJ_NAME}_CMAKE_ARGS)",
-        )
-
-    def _add_default_project_variables(
-        self, PROJ_ARCH_NAME: str, PROJ_NAME: str
-    ) -> None:
-        r"""Add default project project variables.
-
-        Parameters
-        ----------
-        PROJ_ARCH_NAME : str
-            The uppercase project name, i.e. 'LEGATE_ARCH'.
-        PROJ_NAME : str
-            The uppercase project name, sans the 'ARCH' i.e. 'LEGATE'.
-        """
-        assert PROJ_ARCH_NAME.isupper()
-        assert PROJ_NAME.isupper()
-        # unconditional variables
-        self.add_variable("PYTHON", sys.executable, override_ok=True)
-        self.add_variable("SHELL", "/bin/sh", override_ok=True)
-        self.add_variable("AWK", "awk", override_ok=True)
-        self.add_variable("CP", "cp", override_ok=True)
-        self.add_variable("MV", "mv", override_ok=True)
-        self.add_variable("CMAKE", "cmake", override_ok=True)
-        PROJ_DIR_NAME = self.project_dir_name.upper()
-        self.add_variable(
-            f"{PROJ_NAME}_BUILD_COMMAND",
-            f"$(CMAKE) "
-            f"--build $({PROJ_DIR_NAME})/$({PROJ_ARCH_NAME})/cmake_build ",
-        )
-        self.add_variable(
-            f"{PROJ_NAME}_INSTALL_COMMAND",
-            f"$(CMAKE) "
-            f"--install $({PROJ_DIR_NAME})/$({PROJ_ARCH_NAME})/cmake_build ",
-        )
-
-        # search variables
-        self.add_search_variable(
-            "Python3_EXECUTABLE", project_var_name="PYTHON"
-        )
-
-    def _finalize_project_search_variables(self, cache_file: Path) -> None:
-        r"""Search the cache file and populate the project variables from
-        search.
-
-        Parameters
-        ----------
-        cache_file : Path
-            The path to the CMakeCache.txt file to search.
-
-        Notes
-        -----
-        This fills `self._project_variables` with variables found from
-        `self._project_search_variables`.
-        """
-
-        def found_variable(
-            name: str, value: str, cmake_name: str, project_var_name: str
-        ) -> bool:
-            found = name == cmake_name
-            if found:
-                self.log(f"Found variable: {name}")
-                self.add_variable(project_var_name, value)
-            return found
-
-        self.log(f"Reading cache file: {cache_file}")
-        assert cache_file.exists(), f"{cache_file} does not exist!"
-        with cache_file.open() as fd:
-            for line in filter(None, map(str.strip, fd)):
-                if line.startswith("//") or line.startswith("#"):
-                    # ignore cmake-comment lines entirely
-                    continue
-                matched = CMAKE_VARIABLE_RE.match(line)
-                assert (
-                    matched is not None
-                ), f"Did not find cmake variable match for line: {line}"
-                name = matched.group("name")
-                value = matched.group("value")
-                for (
-                    cmake_name,
-                    project_var_name,
-                ) in self._project_search_variables.items():
-                    if found_variable(
-                        name, value, cmake_name, project_var_name
-                    ):
-                        continue
-
-    def _finalize_project_variables(self) -> list[str]:
-        r"""Finalize the project variables.
+    @property
+    def cmake_configure_file(self) -> Path:
+        r"""Return the cmake configure file to use to generate the
+        project config file.
 
         Returns
         -------
-        variables : list[str]
-            The list of variable declaration lines, to be appended to the
-            global list.
+        configure_file : Path
+            The path to the cmake configure file.
         """
-        self.log_execute_func(
-            self._finalize_project_search_variables,
-            self.project_cmake_dir / "CMakeCache.txt",
-        )
-        return [
-            f"{key.upper()} ?= {value}"
-            for key, (_, value) in self._project_variables.items()
-        ]
+        return self._cmake_configure_file
 
-    def _finalize_project_rules(self) -> list[str]:
-        r"""Finalize the project rules.
+    def _cmake_cache_to_cmd_line_args(self, cmake_cache: Path) -> list[str]:
+        r"""Read a CMakeCache.txt and convert all of the cache values to
+        CMake command-line values in the form of -DNAME=VALUE.
+
+        Parameters
+        ----------
+        cmake_cache : Path
+            The path to the CMakeCache.txt.
 
         Returns
         -------
-        rules : list[str]
-            The list of rule lines, to be appended to the global list.
+        list[str]
+            A list of CMake command line arguments.
         """
-        lines = []
-        for rule_name, (
-            phony,
-            deps,
-            rule_lines,
-        ) in self._project_rules.items():
-            lines.append("")
-            if phony:
-                lines.append(f".PHONY: {rule_name}")
-            depstr = " " + " ".join(deps)
-            lines.extend(
-                [f"{rule_name}:{depstr}", "\t@" + "\n\t@".join(rule_lines)]
+
+        def keep_line(line: str) -> bool:
+            line = line.strip()
+            if not line:
+                return False
+            if line.startswith(("//", "#")):
+                return False
+            return True
+
+        cmake_variable_re: Final = re.compile(
+            r"(?P<name>[A-Za-z_0-9\-]+):(?P<type>[A-Z]+)\s*=\s*(?P<value>.*)"
+        )
+        with cmake_cache.open() as fd:
+            line_gen = (
+                cmake_variable_re.match(line.lstrip())
+                for line in filter(keep_line, fd)
             )
+            lines = [
+                f"-D{m.group('name')}={m.group('value')}"
+                for m in line_gen
+                if m
+            ]
+
         return lines
 
-    def add_rule(
-        self,
-        rule_name: str,
-        *rule_lines: str,
-        phony: bool = True,
-        deps: Sequence[str] | None = None,
-        exist_ok: bool = False,
-    ) -> None:
-        r"""Add a project rule.
+    def _make_aedifix_substitutions(self, text: str) -> list[str]:
+        r"""Read the template file and find any aedifix-specific variable
+        subsitutions. Return a list of CMake command line arguments with the
+        requested substitution value.
 
         Parameters
         ----------
-        rule_name : str
-            The name of the project rule to add.
-        *rule_lines : str
-            The lines comprising the body of the rule.
-        phony : bool, True
-            Whether the rule is .PHONY.
-        deps : Sequence[str], optional
-            Dependencies of the rule (if any).
-        exist_ok : bool, False
-            True if the rule should be overriden, False if this is an error.
+        text : str
+            The text of to the config file to parse.
+
+        Returns
+        -------
+        list[str]
+            The list of CMake commands.
 
         Raises
         ------
-        LengthError
-            If `rule_name` is a zero length.
-        ValueError
-            If the rule exists and `exist_ok` is False.
+        UnsatisfiableConfigurationError
+            If the substitution could not be made.
         """
-        rule_name = rule_name.strip()
-        if not rule_name:
-            raise LengthError("Rule name must not be empty")
 
-        if deps is None:
-            deps = tuple()
+        def make_subst(var: str) -> str | Path:
+            try:
+                return getattr(self.manager, var.casefold())
+            except AttributeError:
+                pass
 
-        if not rule_lines and not len(deps):
-            raise ValueError("Cannot have an empty rule with empty deps!")
+            try:
+                return self._default_subst[var]
+            except KeyError:
+                pass
 
-        self.log(f"Adding config file rule: {rule_name}")
-        self.log(f"project rule '{rule_name}' deps: {deps}")
-        self.log(f"project rule '{rule_name}' lines: {rule_lines}")
-        if rule_name in self._project_rules:
-            if not exist_ok:
-                raise ValueError(f"Project rule '{rule_name}' already exists")
-            self.log(
-                f"Project rule '{rule_name}' already exists, will be "
-                f"overridden! {self._project_rules[rule_name]}"
+            raise UnsatisfiableConfigurationError(
+                f"Unknown project variable: {var!r}"
             )
-        else:
-            self.log(f"Project rule '{rule_name}' does not exist, adding it")
-        self._project_rules[rule_name] = (phony, deps, rule_lines)
 
-    def add_raw_lines(self, lines: Sequence[str]) -> None:
-        r"""Add raw text to the config file.
-
-        Parameters
-        ----------
-        lines : Sequence[str]
-            The sequence of lines to insert into the config file.
-
-        Notes
-        -----
-        There is absolutely no formatting appleid to `lines`, and hence,
-        they must be properly formatted. They are inserted after all project
-        variables are defined, but before the rules are defined.
-        """
-        line_text = "\n".join(lines)
-        self.log(f"Adding raw lines to config file:\n{line_text}")
-        self._raw_lines.extend(lines)
-
-    def add_variable(
-        self, var_name: str, value: str, override_ok: bool = False
-    ) -> None:
-        r"""Add a project variable.
-
-        Parameters
-        ----------
-        var_name : str
-            The name of the project variable.
-        value : str
-            The value of the project variable.
-        override_ok : bool, False
-            Whether the value of the variable may be overriden at a later date.
-
-        Raises
-        ------
-        LengthError
-            If `var_name` is empty.
-        ValueError
-            If the variable exist and was previously registered with
-            `override_ok` = False.
-        """
-        var_name = var_name.strip()
-        if not var_name:
-            raise LengthError("Variable name must not be empty")
-
-        try:
-            old_ovr_ok, old_val = self._project_variables[var_name]
-        except KeyError:
-            self.log(
-                f"Adding project variable: {var_name} = "
-                f"(override_ok = {override_ok}, value = {value})"
-            )
-        else:
-            if not old_ovr_ok:
-                raise ValueError(
-                    f"Project variable {var_name} already registered:"
-                    f" (old_over_ok = {old_ovr_ok}, old_val = {old_val})"
-                )
-            self.log(
-                f"project variable '{var_name}' already exists, will be "
-                f"overriden! New value = (override_ok = {override_ok}, "
-                f"value = {value})"
-            )
-        self._project_variables[var_name] = (override_ok, value)
-
-    def add_search_variable(
-        self,
-        cmake_name: str,
-        project_var_name: str | None = None,
-        exist_ok: bool = False,
-    ) -> None:
-        r"""Add a variable whose value should be searched for in the
-        cmake cache after cmake has run.
-
-        Parameters
-        ----------
-        cmake_name : str
-            The name of the variable in the CMakeCache.txt.
-        project_var_name : str, optional
-            The name the variable should have in the projectvariables file.
-            Defaults to `cmake_name` if not given.
-        exist_ok : bool, False
-            True if the variable can already exist, False if this is an error.
-
-        Raises
-        ------
-        LengthError
-            If either `cmake_name` is empty, or (if given) `project_var_name`
-            is empty.
-        ValueError
-            If the the variable exists and `exist_ok` is False.
-        """
-        cmake_name = cmake_name.strip()
-        if not cmake_name:
-            raise LengthError("CMake name must not be empty")
-
-        if project_var_name is None:
-            project_var_name = cmake_name
-        else:
-            project_var_name = project_var_name.strip()
-            if not project_var_name:
-                raise LengthError("Project variable name must not be empty")
-
-        try:
-            old_project_var_name = self._project_search_variables[cmake_name]
-        except KeyError:
-            self.log(
-                f"Adding project search variable: {cmake_name} -> "
-                f"{project_var_name}"
-            )
-        else:
-            if not exist_ok:
-                raise ValueError(
-                    f"Project search variable {cmake_name} already registered"
-                )
-            self.log(
-                f"project search variable {cmake_name} -> "
-                f"{old_project_var_name} already exists, will be overriden!"
-            )
-        self._project_search_variables[cmake_name] = project_var_name
-
-    def setup(self) -> None:
-        r"""Setup the config.
-
-        Notes
-        -----
-        This populates the config with the default rules and variables.
-        """
-        PROJ_ARCH_NAME = self.project_arch_name.upper()
-        PROJ_NAME = PROJ_ARCH_NAME.replace("_ARCH", "")
-
-        self.log_execute_func(
-            self._add_default_project_rules, PROJ_ARCH_NAME, PROJ_NAME
-        )
-        self.log_execute_func(
-            self._add_default_project_variables, PROJ_ARCH_NAME, PROJ_NAME
-        )
+        ret = []
+        aedifix_vars = set(re.findall(r"@AEDIFIX_([^\s]+?)@", text))
+        for var in aedifix_vars:
+            value = make_subst(var)
+            ret.append(f"-DAEDIFIX_{var}={value}")
+        return ret
 
     def finalize(self) -> None:
         r"""Generate and dump project variables into the project variables
         file.
-        """
-        header_lines = [
-            r"# -*- mode: makefile-gmake -*-",
-            f"# WARNING: this file was generated by {__file__}.",
-            r"# Any modifications may be lost when configure is next invoked!",
-            r"",
-            r"MAKEFLAGS += --no-builtin-rules",
-            r".NOTPARALLEL:",
-        ]
-        project_variables = self.log_execute_func(
-            self._finalize_project_variables
-        )
-        project_rules = self.log_execute_func(self._finalize_project_rules)
 
+        Raises
+        ------
+        UnsatisfiableConfigurationError
+            If the user config file contains an unknown AEDIFIX substitution.
+        """
         project_file = self.project_variables_file
+        template_file = self._config_file_template
         self.log(f"Using project file: {project_file}")
-        project_file.write_text(
-            "\n".join(
-                header_lines
-                + project_variables
-                + self._raw_lines
-                + project_rules
-            )
+        self.log(f"Using template file: {template_file}")
+
+        cmake_exe = self.manager.read_cmake_variable("CMAKE_COMMAND")
+        cache_vars = self.log_execute_func(
+            self._cmake_cache_to_cmd_line_args,
+            self.project_cmake_dir / "CMakeCache.txt",
+        )
+        aedifix_vars = self.log_execute_func(
+            self._make_aedifix_substitutions, template_file.read_text()
+        )
+        rest_vars = [
+            f"-DAEDIFIX_CONFIGURE_FILE_SRC={template_file}",
+            f"-DAEDIFIX_CONFIGURE_FILE_DEST={project_file}",
+            "-P",
+            self.cmake_configure_file,
+        ]
+        self.log_execute_command(
+            [cmake_exe] + cache_vars + aedifix_vars + rest_vars
         )
         self.log(f"Wrote to project file: {project_file}")

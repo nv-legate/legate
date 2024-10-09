@@ -47,7 +47,6 @@ from .util.exception import (
     UnsatisfiableConfigurationError,
     WrongOrderError,
 )
-from .util.types import copy_method_signature
 from .util.utility import (
     ValueProvenance,
     dest_to_flag,
@@ -108,7 +107,10 @@ class ConfigurationManager:
         self._modules: list[Package] = [main_package]
         self._logger = Logger(self.project_dir / "configure.log")
         self._cmaker = CMaker()
-        self._config = ConfigFile(manager=self)
+        self._config = ConfigFile(
+            manager=self,
+            config_file_template=main_package.project_configure_file_template,
+        )
         self._reconfigure = Reconfigure(manager=self)
         self._ephemeral_args: set[str] = set()
         # points to the directory containing the "aedifix" install
@@ -553,14 +555,25 @@ class ConfigurationManager:
         return self._main_package.name
 
     @property
+    def project_name_upper(self) -> str:
+        r"""Get the name of the current main project in all caps,
+        suitable for use as a variable.
+
+        Returns
+        -------
+        name : str
+            The name of the current main project, e.g. "LEGATE".
+        """
+        return self.project_name.replace(" ", "_").upper()
+
+    @property
     def project_arch(self) -> str:
         r"""Get the current main project arch.
 
         Returns
         -------
         arch : str
-            The arch name of the current main project,
-            e.g. "arch-darwin-debug".
+          The arch name of the current main project, e.g. "arch-darwin-debug".
         """
         return self._main_package.arch_value
 
@@ -719,31 +732,6 @@ class ConfigurationManager:
             return self.read_cmake_variable(name)
         except ValueError:
             return self.get_cmake_variable(name)
-
-    # Rules
-    @copy_method_signature(ConfigFile.add_rule)
-    def add_gmake_rule(  # type: ignore[no-untyped-def] # copied signature
-        self, *args, **kwargs
-    ) -> None:
-        self._config.add_rule(*args, **kwargs)
-
-    @copy_method_signature(ConfigFile.add_variable)
-    def add_gmake_variable(  # type: ignore[no-untyped-def] # copied signature
-        self, name: str | ConfigArgument, *args, **kwargs
-    ) -> None:
-        self._config.add_variable(self._sanitize_name(name), *args, **kwargs)
-
-    def add_gmake_search_variable(
-        self,
-        name: str | ConfigArgument,
-        project_var_name: str | None = None,
-        exist_ok: bool = False,
-    ) -> None:
-        self._config.add_search_variable(
-            cmake_name=self._sanitize_name(name),
-            project_var_name=project_var_name,
-            exist_ok=exist_ok,
-        )
 
     # Logging
     def log(

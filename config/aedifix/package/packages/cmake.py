@@ -110,19 +110,11 @@ class CMake(Package):
             self.CMAKE_GENERATOR, self.cl_args.cmake_generator.value
         )
 
-    def register_gmake_subst(self) -> None:
-        r"""Register gmake variable substitutions."""
-        self.manager.add_gmake_search_variable(
-            "CMAKE_COMMAND", project_var_name="CMAKE"
-        )
-        self.manager.add_gmake_search_variable("CMAKE_GENERATOR")
-
     def configure(self) -> None:
         r"""Configure CMake."""
         super().configure()
         self.log_execute_func(self.configure_core_cmake_variables)
         self.log_execute_func(self.configure_cmake_version)
-        self.log_execute_func(self.register_gmake_subst)
 
     def summarize(self) -> str:
         r"""Summarize CMake.

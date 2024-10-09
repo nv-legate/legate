@@ -328,6 +328,7 @@ class MainPackage(Package, ABC):
         "_arch_value_provenance",
         "_proj_dir_name",
         "_proj_dir_value",
+        "_proj_config_file_template",
         "_proj_src_dir",
         "_default_arch_file_path",
     )
@@ -340,6 +341,7 @@ class MainPackage(Package, ABC):
         arch_name: str,
         project_dir_name: str,
         project_dir_value: Path,
+        project_config_file_template: Path,
         project_src_dir: Path | None = None,
         default_arch_file_path: Path | None = None,
     ) -> None:
@@ -359,6 +361,9 @@ class MainPackage(Package, ABC):
             The name of the project dir variable, e.g. 'LEGATE_DIR'.
         project_dir_value : Path
             The value of the project dir, e.g. /path/to/legate.internal.
+        project_config_file_template: Path
+            A path to a configure file template to fill out and place under
+            PROJECT_DIR/PROJECT_ARCH on successfull configure.
         project_src_dir : Path, optional
             The path to the projects source directory for CMake. If not
             provided, ``project_dir_value`` is used instead.
@@ -380,6 +385,16 @@ class MainPackage(Package, ABC):
         assert not arch_name.endswith("_")
         assert arch_name.isupper()
         assert arch_name.endswith("ARCH")
+        if not project_config_file_template.exists():
+            raise ValueError(
+                f"Project configure file: {project_config_file_template} does "
+                "not exist"
+            )
+        if not project_config_file_template.is_file():
+            raise ValueError(
+                f"Project configure file: {project_config_file_template} is "
+                "not a file"
+            )
         self._arch_name = arch_name
         self._arch_value, self._arch_value_provenance = (
             self.preparse_arch_value(argv)
@@ -394,6 +409,9 @@ class MainPackage(Package, ABC):
             )
         self._proj_dir_name = project_dir_name
         self._proj_dir_value = project_dir_value.resolve(strict=True)
+        self._proj_config_file_template = (
+            project_config_file_template.resolve()
+        )
         if project_src_dir is None:
             project_src_dir = self._proj_dir_value
         self._proj_src_dir = project_src_dir.resolve(strict=True)
@@ -461,6 +479,18 @@ class MainPackage(Package, ABC):
             e.g. /path/to/legate.internal.
         """
         return self._proj_dir_value
+
+    @property
+    def project_configure_file_template(self) -> Path:
+        r"""Get the path to the project configure file template.
+
+        Returns
+        -------
+        proj_config_file_template : Path
+            The path to the template file, e.g.
+            /path/to/config/legate_internal/gmakevariables.in
+        """
+        return self._proj_config_file_template
 
     @property
     def project_src_dir(self) -> Path:
@@ -663,11 +693,6 @@ class MainPackage(Package, ABC):
         self.log_execute_func(self.configure_core_package_variables)
         self.log_execute_func(self.configure_c)
         self.log_execute_func(self.configure_cxx)
-
-    def finalize(self) -> None:
-        r"""Finalize the Main package."""
-        super().finalize()
-        self.manager.add_gmake_search_variable(self.CMAKE_BUILD_PARALLEL_LEVEL)
 
     def finalize_default_arch_file(self) -> None:
         r"""Emit a file containing this configuration's PROJECT_ARCH so
