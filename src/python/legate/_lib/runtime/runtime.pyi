@@ -114,6 +114,13 @@ class Runtime(Unconstructable):
         data: object,
         read_only: bool,
     ) -> LogicalStore: ...
+    def prefetch_bloated_instances(
+        self,
+        store: LogicalStore,
+        low_offsets: tuple[int, ...],
+        high_offsets: tuple[int, ...],
+        initialize: bool = False,
+    ) -> None: ...
     def issue_mapping_fence(self) -> None: ...
     def issue_execution_fence(self, block: bool = False) -> None: ...
     @property

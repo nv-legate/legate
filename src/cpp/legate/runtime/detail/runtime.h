@@ -177,6 +177,11 @@ class Runtime {
     const std::vector<std::pair<legate::ExternalAllocation, tuple<std::uint64_t>>>& allocations,
     InternalSharedPtr<mapping::detail::DimOrdering> ordering);
 
+  void prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
+                                  tuple<std::uint64_t> low_offsets,
+                                  tuple<std::uint64_t> high_offsets,
+                                  bool initialize);
+
  private:
   static void check_dimensionality_(std::uint32_t dim);
   [[nodiscard]] std::uint64_t current_op_id_() const;

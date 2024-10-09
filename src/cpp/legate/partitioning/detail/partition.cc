@@ -80,7 +80,7 @@ Tiling::Tiling(tuple<std::uint64_t> tile_shape,
                tuple<std::uint64_t> color_shape,
                tuple<std::int64_t> offsets,
                tuple<std::uint64_t> strides)
-  : overlapped_{strides.less(tile_shape)},
+  : overlapped_{!strides.greater_equal(tile_shape)},
     tile_shape_{std::move(tile_shape)},
     color_shape_{std::move(color_shape)},
     offsets_{offsets.empty() ? legate::full<std::int64_t>(tile_shape_.size(), 0)

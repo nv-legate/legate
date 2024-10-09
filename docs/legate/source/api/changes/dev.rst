@@ -158,6 +158,8 @@ C++
   created, and can no longer be changed after the fact.
 - Remove restriction on stores with zero-sized types. It is now possible to create a
   ``LogicalStore`` of type ``Type::Code::NIL`` and, for example, empty binary types.
+- Add ``Runtime::prefetch_bloated_instances()`` to prefetch instances bloated by
+  a certain amount for a given logical store.
 
 .. rubric:: Utilities
 
@@ -192,5 +194,8 @@ Python
   ``type`` parameters more optional in several cases as a result.
 
 .. rubric:: Runtime
+
+- Add ``Runtime.prefetch_bloated_instances()`` to prefetch instances bloated by
+  a certain amount for a given logical store.
 
 .. rubric:: Utilities

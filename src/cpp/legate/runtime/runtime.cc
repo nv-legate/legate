@@ -280,6 +280,15 @@ std::pair<LogicalStore, LogicalStorePartition> Runtime::create_store(
   return {LogicalStore{std::move(store)}, LogicalStorePartition{std::move(partition)}};
 }
 
+void Runtime::prefetch_bloated_instances(const LogicalStore& store,
+                                         tuple<std::uint64_t> low_offsets,
+                                         tuple<std::uint64_t> high_offsets,
+                                         bool initialize)
+{
+  impl_->prefetch_bloated_instances(
+    store.impl(), std::move(low_offsets), std::move(high_offsets), initialize);
+}
+
 void Runtime::issue_mapping_fence() { impl_->issue_mapping_fence(); }
 
 void Runtime::issue_execution_fence(bool block /*=false*/) { impl_->issue_execution_fence(block); }

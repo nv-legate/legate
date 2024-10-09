@@ -845,6 +845,78 @@ cdef class Runtime(Unconstructable):
             )
         return LogicalStore.from_handle(_handle)
 
+    cpdef void prefetch_bloated_instances(
+        self,
+        LogicalStore store,
+        tuple low_offsets,
+        tuple high_offsets,
+        bool initialize = False,
+    ):
+        r"""
+        Gives the runtime a hint that the store can benefit from bloated
+        instances.
+
+        The runtime currently does not look ahead in the task stream to
+        recognize that a given set of tasks can benefit from the ahead-of-time
+        creation of "bloated" instances encompassing multiple slices of a
+        store. This means that the runtime will construct bloated instances
+        incrementally and completely only when it sees all the slices,
+        resulting in intermediate instances that (temporarily) increases the
+        memory footprint. This function can be used to give the runtime a hint
+        ahead of time about the bloated instances, which would be reused by the
+        downstream tasks without going through the same incremental process.
+
+        For example, let's say we have a 1-D store A of size 10 and we want to
+        partition A across two GPUs. By default, A would be partitioned equally
+        and each GPU gets an instance of size 5.  Suppose we now have a task
+        that aligns two slices A[1:10] and A[:9]. The runtime would partition
+        the slices such that the task running on the first GPU gets A[1:6] and
+        A[:5], and the task running on the second GPU gets A[6:] and A[5:9].
+        Since the original instance on the first GPU does not cover the element
+        A[5] included in the first slice A[1:6], the mapper needs to create a
+        new instance for A[:6] that encompasses both of the slices, leading to
+        an extra copy.  In this case, if the code calls `prefetch(A, (0,),
+        (1,))` to pre-alloate instances that contain one extra element on the
+        right before it uses A, the extra copy can be avoided.
+
+        A couple of notes about the API:
+
+        - Unless `initialize` is `true`, the runtime assumes that the store has
+          been initialized.  Passing an uninitialized store would lead to a
+          runtime error.
+        - If the store has pre-existing instances, the runtime may combine
+          those with the bloated instances if such combination is deemed
+          desirable.
+
+        Parameters
+        ----------
+        store : LogicalStore
+            Store to create bloated instances for
+        low_offsets : tuple[int, ...]
+            Offsets to bloat towards the negative direction
+        high_offsets : tuple[int, ...]
+            Offsets to bloat towards the positive direction
+        initialize : bool, optional
+            If `True`, the runtime will issue a fill on the store to initialize
+            it. `False` by default.
+
+        Notes
+        -----
+        This API is experimental.
+        """
+
+        cdef _LogicalStore handle = store._handle
+        cdef _tuple[uint64_t] tup_lo = uint64_tuple_from_iterable(low_offsets)
+        cdef _tuple[uint64_t] tup_hi = uint64_tuple_from_iterable(high_offsets)
+
+        with nogil:
+            self._handle.prefetch_bloated_instances(
+                std_move(handle),
+                std_move(tup_lo),
+                std_move(tup_hi),
+                initialize,
+            )
+
     cpdef void issue_mapping_fence(self):
         r"""
         Issue a mapping fence.

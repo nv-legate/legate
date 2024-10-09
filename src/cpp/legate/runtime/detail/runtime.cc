@@ -39,6 +39,7 @@
 #include "legate/operation/detail/scatter_gather.h"
 #include "legate/operation/detail/task.h"
 #include "legate/operation/detail/task_launcher.h"
+#include "legate/partitioning/detail/constraint.h"
 #include "legate/partitioning/detail/partitioner.h"
 #include "legate/partitioning/detail/partitioning_tasks.h"
 #include "legate/runtime/detail/argument_parsing.h"
@@ -46,6 +47,7 @@
 #include "legate/runtime/detail/library.h"
 #include "legate/runtime/detail/shard.h"
 #include "legate/runtime/runtime.h"
+#include "legate/task/detail/legion_task.h"
 #include "legate/task/detail/legion_task_body.h"
 #include "legate/task/detail/task.h"
 #include "legate/task/task_context.h"
@@ -790,6 +792,27 @@ Runtime::IndexAttachResult Runtime::create_store(
   increment_op_id_();
 
   return {std::move(store), std::move(partition)};
+}
+
+void Runtime::prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
+                                         tuple<std::uint64_t> low_offsets,
+                                         tuple<std::uint64_t> high_offsets,
+                                         bool initialize)
+{
+  if (initialize) {
+    issue_fill(store, Scalar{store->type()});
+  }
+
+  auto arr  = LogicalArray::from_store(std::move(store));
+  auto task = create_task(core_library_, legate::LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES});
+  auto part1 = task->declare_partition();
+  auto part2 = task->declare_partition();
+  task->add_input(arr, part1);
+  task->add_input(std::move(arr), part2);
+  task->add_constraint(bloat(part2, part1, std::move(low_offsets), std::move(high_offsets)));
+  submit(std::move(task));
+
+  issue_mapping_fence();
 }
 
 void Runtime::check_dimensionality_(std::uint32_t dim)
@@ -1831,6 +1854,36 @@ void register_extract_scalar_variant(const TaskInfo::RuntimeAddVariantKey& key,
                           Legion::CodeDescriptor{extract_scalar_task<variant_id>});
 }
 
+// This task is launched for the side effect of having bloated instances created for the task and
+// intended to do nothing otherwise.
+class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
+ public:
+  static constexpr auto TASK_ID = legate::LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES};
+
+  static void cpu_variant(const Legion::Task* /*task*/,
+                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
+                          Legion::Context /*context*/,
+                          Legion::Runtime* /*runtime*/)
+  {
+  }
+#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
+  static void omp_variant(const Legion::Task* /*task*/,
+                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
+                          Legion::Context /*context*/,
+                          Legion::Runtime* /*runtime*/)
+  {
+  }
+#endif
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
+  static void gpu_variant(const Legion::Task* /*task*/,
+                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
+                          Legion::Context /*context*/,
+                          Legion::Runtime* /*runtime*/)
+  {
+  }
+#endif
+};
+
 }  // namespace
 
 void register_legate_core_tasks(Library* core_lib)
@@ -1848,6 +1901,7 @@ void register_legate_core_tasks(Library* core_lib)
     register_extract_scalar_variant<VariantCode::OMP>(key, core_lib, task_info);
   }
   core_lib->register_task(LocalTaskID{CoreTask::EXTRACT_SCALAR}, std::move(task_info));
+  PrefetchBloatedInstances::register_variants(legate::Library{core_lib});
 
   register_array_tasks(core_lib);
   register_partitioning_tasks(core_lib);
