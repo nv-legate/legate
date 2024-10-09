@@ -76,14 +76,19 @@ class ConfigFile(Configurable):
         """
         return self.project_arch_dir / "gmakevariables"
 
-    def _add_default_project_rules(self, PROJ_NAME: str) -> None:
+    def _add_default_project_rules(
+        self, PROJ_ARCH_NAME: str, PROJ_NAME: str
+    ) -> None:
         r"""Add default project rules.
 
         Parameters
         ----------
+        PROJ_ARCH_NAME : str
+            The uppercase project arch name, i.e. 'LEGATE_ARCH'.
         PROJ_NAME : str
             The uppercase project name, i.e. 'LEGATE'.
         """
+        assert PROJ_ARCH_NAME.isupper()
         assert PROJ_NAME.isupper()
         self.add_rule(
             "default_help",
@@ -142,6 +147,13 @@ class ConfigFile(Configurable):
                 "endif",
             ]
         )
+        color_cmds = [
+            "COLOR_ARCH = $(shell $(CMAKE) -E cmake_echo_color "
+            f"--switch=$(COLOR) --green $({PROJ_ARCH_NAME}))",
+            "export NINJA_STATUS ?= [%f/%t] $(COLOR_ARCH): "
+            "$(SOME_UNDEFINED_VARIABLE_TO_ADD_A_SPACE)",
+        ]
+        self.add_raw_lines(color_cmds)
         self.add_rule(
             "default_install",
             f"$({PROJ_NAME}_INSTALL_COMMAND) "
@@ -464,7 +476,9 @@ class ConfigFile(Configurable):
         PROJ_ARCH_NAME = self.project_arch_name.upper()
         PROJ_NAME = PROJ_ARCH_NAME.replace("_ARCH", "")
 
-        self.log_execute_func(self._add_default_project_rules, PROJ_NAME)
+        self.log_execute_func(
+            self._add_default_project_rules, PROJ_ARCH_NAME, PROJ_NAME
+        )
         self.log_execute_func(
             self._add_default_project_variables, PROJ_ARCH_NAME, PROJ_NAME
         )
