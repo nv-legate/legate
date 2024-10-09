@@ -27,7 +27,7 @@ include("${LEGATE_CMAKE_DIR}/policies.cmake" NO_POLICY_SCOPE)
 
 if(NOT DEFINED LEGATE_DIR)
   # this one we can figure out on our own
-  execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/scripts/get_legate_dir.py
+  execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/../scripts/get_legate_dir.py
                   OUTPUT_VARIABLE LEGATE_DIR COMMAND_ERROR_IS_FATAL ANY)
   string(STRIP "${LEGATE_DIR}" LEGATE_DIR)
 endif()

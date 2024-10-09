@@ -66,7 +66,7 @@ def fix_env() -> None:
             "CMAKE_GENERATOR", cache_dir=get_legate_config().LEGATE_CMAKE_DIR
         )
         gen_provenance = str(get_legate_config().LEGATE_CMAKE_DIR)
-    except RuntimeError:
+    except (RuntimeError, FileNotFoundError):
         gen = os.environ.get("CMAKE_GENERATOR", "")
         gen_provenance = "environ"
 
@@ -96,7 +96,7 @@ def fix_env() -> None:
             "CMAKE_BUILD_PARALLEL_LEVEL",
             cache_dir=get_legate_config().LEGATE_CMAKE_DIR,
         )
-    except RuntimeError:
+    except (RuntimeError, FileNotFoundError):
         from multiprocessing import cpu_count
 
         par = str(cpu_count())

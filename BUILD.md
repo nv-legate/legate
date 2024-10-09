@@ -14,6 +14,83 @@ its affiliates is strictly prohibited.
 
 ## Basic build
 
+### Building from source
+
+Build and install basic C++ runtime:
+
+```shell
+$ ./configure
+$ make install
+```
+
+Build and install C++ runtime and Python bindings:
+
+```shell
+$ ./configure --with-python
+$ pip install .
+```
+
+Technically, when installing Python bindings, `configure` is optional.
+It is possible to configure, build, and install Legate with python
+bindings using just:
+
+```shell
+$ pip install .
+```
+
+While this workflow is supported (in the sense that it is functional), very
+little -- if any -- effort is made to make it ergonomic. **The user is
+strongly encouraged to run configure first**.
+
+In particular, it requires the following from the user:
+
+#. Defining all CMake options manually through `CMAKE_ARGS` environment
+   variable.
+#. Defining all scikit-build options, including any that might be implicitly
+   set via `configure`, manually via appropriate environment variables.
+#. Ensuring that no prior installation of Legate, Legion, or any of its
+   dependencies exist in the environment which might otherwise influence the CMake
+   configuration.
+
+   For example, due to how CMake picks up dependencies, a prior (stale) installation of
+   Legion to a shared `conda` environment may be prioritized over downloading it from
+   scratch. `configure` automatically detects this (and sets the appropriate CMake
+   variables to guard against it) but a bare `pip install` will not do so.
+#. Other potential quality-of-life improvements made by `configure`.
+
+Build and install basic C++ runtime with CUDA and HDF5 support, while disabling ZLIB, and
+explicitly specifying a pre-built UCX directory. Specifying the UCX directory implies
+enabling UCX support. Additionally, we also install the library to a custom prefix:
+
+```shell
+$ ./configure \
+  --with-cuda \
+  --with-hdf5 \
+  --with-zlib=0 \
+  --with-ucx-dir='/path/to/ucx'
+$ make install PREFIX=/path/to/prefix
+```
+
+A full list of options available during `configure` can be found by
+running:
+
+```shell
+$ ./configure --help
+```
+
+For a list of example configurations, see the configure scripts under
+`config/examples`. These contain configuration scripts for a wide variety
+of machines. For example, to configure a debug build on a
+[DGX SuperPOD](https://www.nvidia.com/en-us/data-center/dgx-superpod/) you
+may use `config/examples/arch-dgx-superpod-debug.py`.
+
+For multi-node execution, Legate can use [UCX](https://openucx.org) (use `--with-ucx`)
+or [GASNet](https://gasnet.lbl.gov/) (use `--with-gasnet`) see [below](#dependency-listing) for more details).  .
+
+Compiling with networking support requires MPI.
+
+## Quickstart
+
 If you are building on a cluster, first check if there are specialized scripts
 available for your cluster at
 [nv-legate/quickstart](https://github.com/nv-legate/quickstart). Even if your
@@ -59,55 +136,6 @@ doing this in your shell startup script):
 ```shell
 conda activate legate
 ```
-
-### Building from source
-
-Build and install basic C++ runtime:
-
-```shell
-$ ./configure
-$ make
-$ make install
-```
-
-Build and install C++ runtime and Python bindings:
-
-```shell
-$ ./configure --with-python
-$ pip install .
-```
-
-Build and install basic C++ runtime with CUDA and HDF5 support, while disabling ZLIB, and
-explicitly specifying a pre-built UCX directory. Specifying the UCX directory implies
-enabling UCX support. Additionally, we also install the library to a custom prefix:
-
-```shell
-$ ./configure \
-  --with-cuda \
-  --with-hdf5 \
-  --with-zlib=0 \
-  --with-ucx-dir='/path/to/ucx'
-$ make
-$ make install PREFIX=/path/to/prefix
-```
-
-A full list of options available during `configure` can be found by
-running:
-
-```shell
-$ ./configure --help
-```
-
-For a list of example configurations, see the configure scripts under
-`config/examples`. These contain configuration scripts for a wide variety
-of machines. For example, to configure a debug build on a
-[DGX SuperPOD](https://www.nvidia.com/en-us/data-center/dgx-superpod/) you
-may use `config/examples/arch-dgx-superpod-debug.py`.
-
-For multi-node execution, Legate can use [UCX](https://openucx.org) (use `--with-ucx`)
-or [GASNet](https://gasnet.lbl.gov/) (use `--with-gasnet`) see [below](#dependency-listing) for more details).  .
-
-Compiling with networking support requires MPI.
 
 ## Advanced build topics
 

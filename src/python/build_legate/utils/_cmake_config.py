@@ -14,7 +14,7 @@ import json
 import os
 from typing import TypedDict
 
-from ._io import vprint
+from ._io import vprint, warning_print
 from ._legate_config import get_legate_config
 
 
@@ -32,8 +32,22 @@ class CMakeConfig:
             / "aedifix_cmake_command_spec.json"
         )
         vprint(f"Using cmake_command file: {cmd_spec_path}")
-        with cmd_spec_path.open() as fd:
-            cmake_spec: CMakeSpec = json.load(fd)
+        if cmd_spec_path.exists():
+            with cmd_spec_path.open() as fd:
+                cmake_spec: CMakeSpec = json.load(fd)
+        else:
+            # User has not run configure, and so the spec file does not
+            # exist. Default to
+            cmake_spec = {
+                "CMAKE_GENERATOR": os.environ.get(
+                    "CMAKE_GENERATOR", "Unix Makefiles"
+                ),
+                "CMAKE_COMMANDS": [],
+            }
+            warning_print(
+                "Running pip install without first configuring legate. "
+                f"Using an default-generated command spec:\n{cmake_spec}"
+            )
 
         cmake_args = self._read_cmake_args(cmake_spec)
         cmake_args, cmake_defines = self._split_out_cmake_defines(cmake_args)
