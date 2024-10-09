@@ -169,9 +169,29 @@ LogicalStore Runtime::tree_reduce(Library library,
   return out_store;
 }
 
-void Runtime::submit(AutoTask task) { impl_->submit(std::move(task.pimpl_)); }
+void Runtime::submit(AutoTask&& task)
+{
+  impl_->submit(task.release_());
+  // The following line should never be moved before the `submit()` call above, nor should it be
+  // fused with the `release_()` call, because their side effects must be ordered properly in the
+  // task stream. Logical arrays read by a task must stay alive even after they lose all user
+  // references until the task is submitted. Otherwise, their backing region fields will be
+  // initialized by discard operations as part of their deallocation even before the reader task
+  // runs, leading to an uninitialized access error.
+  task.clear_user_refs_();
+}
 
-void Runtime::submit(ManualTask task) { impl_->submit(std::move(task.pimpl_)); }
+void Runtime::submit(ManualTask&& task)
+{
+  impl_->submit(task.release_());
+  // The following line should never be moved before the `submit()` call above, nor should it be
+  // fused with the `release_()` call, because their side effects must be ordered properly in the
+  // task stream. Logical arrays read by a task must stay alive even after they lose all user
+  // references until the task is submitted. Otherwise, their backing region fields will be
+  // initialized by discard operations as part of their deallocation even before the reader task
+  // runs, leading to an uninitialized access error.
+  task.clear_user_refs_();
+}
 
 LogicalArray Runtime::create_array(const Type& type, std::uint32_t dim, bool nullable)
 {

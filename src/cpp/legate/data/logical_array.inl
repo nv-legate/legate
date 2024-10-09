@@ -16,13 +16,6 @@
 
 namespace legate {
 
-inline LogicalArray::LogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
-  : impl_(std::move(impl))
-{
-}
-
-inline const SharedPtr<detail::LogicalArray>& LogicalArray::impl() const { return impl_; }
-
 inline const tuple<std::uint64_t>& LogicalArray::extents() const { return shape().extents(); }
 
 // ==========================================================================================

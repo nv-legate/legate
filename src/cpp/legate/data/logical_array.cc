@@ -13,71 +13,88 @@
 #include "legate/data/logical_array.h"
 
 #include "legate/data/detail/logical_array.h"
+#include "legate/data/detail/user_storage_tracker.h"
+
+#include <vector>
 
 namespace legate {
 
-std::uint32_t LogicalArray::dim() const { return impl_->dim(); }
+class LogicalArray::Impl {
+ public:
+  explicit Impl(InternalSharedPtr<detail::LogicalArray> impl) : impl_{std::move(impl)}
+  {
+    this->impl()->collect_storage_trackers(trackers_);
+  }
 
-Type LogicalArray::type() const { return Type{impl_->type()}; }
+  [[nodiscard]] const SharedPtr<detail::LogicalArray>& impl() const noexcept { return impl_; }
 
-Shape LogicalArray::shape() const { return Shape{impl_->shape()}; }
+ private:
+  SharedPtr<detail::LogicalArray> impl_{};
+  std::vector<detail::UserStorageTracker> trackers_{};
+};
 
-std::size_t LogicalArray::volume() const { return impl_->volume(); }
+std::uint32_t LogicalArray::dim() const { return impl()->dim(); }
 
-bool LogicalArray::unbound() const { return impl_->unbound(); }
+Type LogicalArray::type() const { return Type{impl()->type()}; }
 
-bool LogicalArray::nullable() const { return impl_->nullable(); }
+Shape LogicalArray::shape() const { return Shape{impl()->shape()}; }
 
-bool LogicalArray::nested() const { return impl_->nested(); }
+std::size_t LogicalArray::volume() const { return impl()->volume(); }
 
-std::uint32_t LogicalArray::num_children() const { return impl_->num_children(); }
+bool LogicalArray::unbound() const { return impl()->unbound(); }
+
+bool LogicalArray::nullable() const { return impl()->nullable(); }
+
+bool LogicalArray::nested() const { return impl()->nested(); }
+
+std::uint32_t LogicalArray::num_children() const { return impl()->num_children(); }
 
 LogicalArray LogicalArray::promote(std::int32_t extra_dim, std::size_t dim_size) const
 {
-  return LogicalArray{impl_->promote(extra_dim, dim_size)};
+  return LogicalArray{impl()->promote(extra_dim, dim_size)};
 }
 
 LogicalArray LogicalArray::project(std::int32_t dim, std::int64_t index) const
 {
-  return LogicalArray{impl_->project(dim, index)};
+  return LogicalArray{impl()->project(dim, index)};
 }
 
 LogicalArray LogicalArray::slice(std::int32_t dim, Slice sl) const
 {
-  return LogicalArray{impl_->slice(dim, sl)};
+  return LogicalArray{impl()->slice(dim, sl)};
 }
 
 LogicalArray LogicalArray::transpose(const std::vector<std::int32_t>& axes) const
 {
-  return LogicalArray{impl_->transpose(axes)};
+  return LogicalArray{impl()->transpose(axes)};
 }
 
 LogicalArray LogicalArray::delinearize(std::int32_t dim,
                                        const std::vector<std::uint64_t>& sizes) const
 {
-  return LogicalArray{impl_->delinearize(dim, sizes)};
+  return LogicalArray{impl()->delinearize(dim, sizes)};
 }
 
-LogicalStore LogicalArray::data() const { return LogicalStore{impl_->data()}; }
+LogicalStore LogicalArray::data() const { return LogicalStore{impl()->data()}; }
 
-LogicalStore LogicalArray::null_mask() const { return LogicalStore{impl_->null_mask()}; }
+LogicalStore LogicalArray::null_mask() const { return LogicalStore{impl()->null_mask()}; }
 
 LogicalArray LogicalArray::child(std::uint32_t index) const
 {
-  return LogicalArray{impl_->child(index)};
+  return LogicalArray{impl()->child(index)};
 }
 
 PhysicalArray LogicalArray::get_physical_array() const
 {
-  return PhysicalArray{impl_->get_physical_array(false)};
+  return PhysicalArray{impl()->get_physical_array(false)};
 }
 
 ListLogicalArray LogicalArray::as_list_array() const
 {
-  if (impl_->kind() != detail::ArrayKind::LIST) {
+  if (impl()->kind() != detail::ArrayKind::LIST) {
     throw std::invalid_argument{"Array is not a list array"};
   }
-  return ListLogicalArray{impl_};
+  return ListLogicalArray{impl()};
 }
 
 StringLogicalArray LogicalArray::as_string_array() const
@@ -85,37 +102,50 @@ StringLogicalArray LogicalArray::as_string_array() const
   if (type().code() != Type::Code::STRING) {
     throw std::invalid_argument{"Array is not a string array"};
   }
-  return StringLogicalArray{impl_};
+  return StringLogicalArray{impl()};
 }
 
+LogicalArray::LogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
+  : impl_{make_internal_shared<Impl>(std::move(impl))}
+{
+}
+
+LogicalArray::~LogicalArray() noexcept = default;
+
 LogicalArray::LogicalArray(const LogicalStore& store)
-  : impl_{make_internal_shared<detail::BaseLogicalArray>(store.impl())}
+  : LogicalArray{make_internal_shared<detail::BaseLogicalArray>(store.impl())}
 {
 }
 
 LogicalArray::LogicalArray(const LogicalStore& store, const LogicalStore& null_mask)
-  : impl_{make_internal_shared<detail::BaseLogicalArray>(store.impl(), null_mask.impl())}
+  : LogicalArray{make_internal_shared<detail::BaseLogicalArray>(store.impl(), null_mask.impl())}
 {
 }
 
+const SharedPtr<detail::LogicalArray>& LogicalArray::impl() const { return impl_->impl(); }
+
+// ==========================================================================================
+
 LogicalArray ListLogicalArray::descriptor() const
 {
-  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl_.get())->descriptor()};
+  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl().get())->descriptor()};
 }
 
 LogicalArray ListLogicalArray::vardata() const
 {
-  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl_.get())->vardata()};
+  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl().get())->vardata()};
 }
+
+// ==========================================================================================
 
 LogicalArray StringLogicalArray::offsets() const
 {
-  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl_.get())->descriptor()};
+  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl().get())->descriptor()};
 }
 
 LogicalArray StringLogicalArray::chars() const
 {
-  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl_.get())->vardata()};
+  return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl().get())->vardata()};
 }
 
 }  // namespace legate

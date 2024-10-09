@@ -248,7 +248,7 @@ class LogicalArray {
 
   explicit LogicalArray(InternalSharedPtr<detail::LogicalArray> impl);
 
-  virtual ~LogicalArray()                      = default;
+  virtual ~LogicalArray() noexcept;
   LogicalArray(const LogicalArray&)            = default;
   LogicalArray& operator=(const LogicalArray&) = default;
   LogicalArray(LogicalArray&&)                 = default;
@@ -261,7 +261,8 @@ class LogicalArray {
   [[nodiscard]] const SharedPtr<detail::LogicalArray>& impl() const;
 
  protected:
-  SharedPtr<detail::LogicalArray> impl_{nullptr};
+  class Impl;
+  InternalSharedPtr<Impl> impl_{nullptr};
 };
 
 /**

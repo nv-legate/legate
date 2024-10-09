@@ -275,6 +275,12 @@ typename SharedPtr<T>::ref_count_type SharedPtr<T>::use_count() const noexcept
 }
 
 template <typename T>
+typename SharedPtr<T>::ref_count_type SharedPtr<T>::user_ref_count() const noexcept
+{
+  return internal_ptr({}).user_ref_count();
+}
+
+template <typename T>
 SharedPtr<T>::operator bool() const noexcept
 {
   return internal_ptr({}).operator bool();

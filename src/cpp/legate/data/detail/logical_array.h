@@ -15,6 +15,7 @@
 #include "legate/data/detail/array_kind.h"
 #include "legate/data/detail/logical_store.h"
 #include "legate/data/detail/shape.h"
+#include "legate/data/detail/user_storage_tracker.h"
 #include "legate/operation/detail/launcher_arg.h"
 #include "legate/operation/projection.h"
 #include "legate/utilities/internal_shared_ptr.h"
@@ -89,6 +90,8 @@ class LogicalArray {
   [[nodiscard]] static InternalSharedPtr<LogicalArray> from_store(
     InternalSharedPtr<LogicalStore> store);
   [[nodiscard]] bool needs_flush() const;
+
+  virtual void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const = 0;
 };
 
 class BaseLogicalArray final : public LogicalArray {
@@ -143,6 +146,8 @@ class BaseLogicalArray final : public LogicalArray {
     GlobalRedopID redop) const override;
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
+
+  void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
 
  private:
   InternalSharedPtr<LogicalStore> data_{};
@@ -202,6 +207,8 @@ class ListLogicalArray final : public LogicalArray {
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
+  void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
+
  private:
   InternalSharedPtr<Type> type_{};
   InternalSharedPtr<BaseLogicalArray> descriptor_{};
@@ -259,6 +266,8 @@ class StructLogicalArray final : public LogicalArray {
     GlobalRedopID redop) const override;
   [[nodiscard]] std::unique_ptr<Analyzable> to_launcher_arg_for_fixup(
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
+
+  void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
 
  private:
   InternalSharedPtr<Type> type_{};

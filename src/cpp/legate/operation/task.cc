@@ -20,54 +20,97 @@ namespace legate {
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-const SharedPtr<detail::AutoTask>& AutoTask::impl_() const { return pimpl_; }
+class AutoTask::Impl {
+ public:
+  explicit Impl(InternalSharedPtr<detail::AutoTask> impl) : impl_{std::move(impl)} {}
+
+  [[nodiscard]] const SharedPtr<detail::LogicalArray>& add_ref(LogicalArray array)
+  {
+    auto&& inserted = refs_.emplace_back(std::move(array));
+    return inserted.impl();
+  }
+
+  void clear_refs() { refs_.clear(); }
+
+  [[nodiscard]] const SharedPtr<detail::AutoTask>& impl() const noexcept { return impl_; }
+  [[nodiscard]] SharedPtr<detail::AutoTask>& impl() noexcept { return impl_; }
+
+ private:
+  SharedPtr<detail::AutoTask> impl_{};
+  std::vector<LogicalArray> refs_{};
+};
 
 // ==========================================================================================
 
-Variable AutoTask::add_input(const LogicalArray& array)
+const SharedPtr<detail::AutoTask>& AutoTask::impl_() const
 {
-  return Variable{impl_()->add_input(array.impl())};
+  auto&& result = pimpl_->impl();
+  if (!result) {
+    throw std::runtime_error{"Illegal to reuse task descriptors that are already submitted"};
+  }
+  return result;
 }
 
-Variable AutoTask::add_output(const LogicalArray& array)
+SharedPtr<detail::AutoTask> AutoTask::release_()
 {
-  return Variable{impl_()->add_output(array.impl())};
+  auto&& result = std::move(pimpl_->impl());
+  return result;
 }
 
-Variable AutoTask::add_reduction(const LogicalArray& array, ReductionOpKind redop_kind)
+InternalSharedPtr<detail::LogicalArray> AutoTask::record_user_ref_(LogicalArray array)
 {
-  return add_reduction(array, static_cast<std::int32_t>(redop_kind));
+  return pimpl_->add_ref(std::move(array));
 }
 
-Variable AutoTask::add_reduction(const LogicalArray& array, std::int32_t redop_kind)
+void AutoTask::clear_user_refs_() { pimpl_->clear_refs(); }
+
+// ==========================================================================================
+
+Variable AutoTask::add_input(LogicalArray array)
 {
-  return Variable{impl_()->add_reduction(array.impl(), redop_kind)};
+  return Variable{impl_()->add_input(record_user_ref_(std::move(array)))};
 }
 
-Variable AutoTask::add_input(const LogicalArray& array, Variable partition_symbol)
+Variable AutoTask::add_output(LogicalArray array)
 {
-  impl_()->add_input(array.impl(), partition_symbol.impl());
+  return Variable{impl_()->add_output(record_user_ref_(std::move(array)))};
+}
+
+Variable AutoTask::add_reduction(LogicalArray array, ReductionOpKind redop_kind)
+{
+  return add_reduction(std::move(array), static_cast<std::int32_t>(redop_kind));
+}
+
+Variable AutoTask::add_reduction(LogicalArray array, std::int32_t redop_kind)
+{
+  return Variable{impl_()->add_reduction(record_user_ref_(std::move(array)), redop_kind)};
+}
+
+Variable AutoTask::add_input(LogicalArray array, Variable partition_symbol)
+{
+  impl_()->add_input(record_user_ref_(std::move(array)), partition_symbol.impl());
   return partition_symbol;
 }
 
-Variable AutoTask::add_output(const LogicalArray& array, Variable partition_symbol)
+Variable AutoTask::add_output(LogicalArray array, Variable partition_symbol)
 {
-  impl_()->add_output(array.impl(), partition_symbol.impl());
+  impl_()->add_output(record_user_ref_(std::move(array)), partition_symbol.impl());
   return partition_symbol;
 }
 
-Variable AutoTask::add_reduction(const LogicalArray& array,
+Variable AutoTask::add_reduction(LogicalArray array,
                                  ReductionOpKind redop_kind,
                                  Variable partition_symbol)
 {
-  return add_reduction(array, static_cast<std::int32_t>(redop_kind), std::move(partition_symbol));
+  return add_reduction(
+    std::move(array), static_cast<std::int32_t>(redop_kind), std::move(partition_symbol));
 }
 
-Variable AutoTask::add_reduction(const LogicalArray& array,
+Variable AutoTask::add_reduction(LogicalArray array,
                                  std::int32_t redop_kind,
                                  Variable partition_symbol)
 {
-  impl_()->add_reduction(array.impl(), redop_kind, partition_symbol.impl());
+  impl_()->add_reduction(record_user_ref_(std::move(array)), redop_kind, partition_symbol.impl());
   return partition_symbol;
 }
 
@@ -101,7 +144,10 @@ void AutoTask::add_communicator(std::string_view name)
   impl_()->add_communicator(std::move(name));
 }
 
-AutoTask::AutoTask(InternalSharedPtr<detail::AutoTask> impl) : pimpl_{std::move(impl)} {}
+AutoTask::AutoTask(InternalSharedPtr<detail::AutoTask> impl)
+  : pimpl_{make_internal_shared<Impl>(std::move(impl))}
+{
+}
 
 AutoTask::~AutoTask() noexcept = default;
 
@@ -109,48 +155,113 @@ AutoTask::~AutoTask() noexcept = default;
 // legate::ManualTask
 ////////////////////////////////////////////////////
 
-const SharedPtr<detail::ManualTask>& ManualTask::impl_() const { return pimpl_; }
+class ManualTask::Impl {
+ public:
+  explicit Impl(InternalSharedPtr<detail::ManualTask> impl) : impl_{std::move(impl)} {}
+
+  [[nodiscard]] const SharedPtr<detail::LogicalStore>& add_ref(LogicalStore store)
+  {
+    return store_refs_.emplace_back(std::move(store)).impl();
+  }
+  [[nodiscard]] const SharedPtr<detail::LogicalStorePartition>& add_ref(
+    LogicalStorePartition store_partition)
+  {
+    return part_refs_.emplace_back(std::move(store_partition)).impl();
+  }
+
+  void clear_refs()
+  {
+    store_refs_.clear();
+    part_refs_.clear();
+  }
+
+  [[nodiscard]] const SharedPtr<detail::ManualTask>& impl() const noexcept { return impl_; }
+  [[nodiscard]] SharedPtr<detail::ManualTask>& impl() noexcept { return impl_; }
+
+ private:
+  SharedPtr<detail::ManualTask> impl_{};
+  std::vector<LogicalStore> store_refs_{};
+  std::vector<LogicalStorePartition> part_refs_{};
+};
 
 // ==========================================================================================
 
-void ManualTask::add_input(const LogicalStore& store) { impl_()->add_input(store.impl()); }
+const SharedPtr<detail::ManualTask>& ManualTask::impl_() const
+{
+  auto&& result = pimpl_->impl();
+  if (!result) {
+    throw std::runtime_error{"Illegal to reuse task descriptors that are already submitted"};
+  }
+  return result;
+}
 
-void ManualTask::add_input(const LogicalStorePartition& store_partition,
+SharedPtr<detail::ManualTask> ManualTask::release_()
+{
+  auto&& result = std::move(pimpl_->impl());
+  return result;
+}
+
+InternalSharedPtr<detail::LogicalStore> ManualTask::record_user_ref_(LogicalStore store)
+{
+  return pimpl_->add_ref(std::move(store));
+}
+
+InternalSharedPtr<detail::LogicalStorePartition> ManualTask::record_user_ref_(
+  LogicalStorePartition store_partition)
+{
+  return pimpl_->add_ref(std::move(store_partition));
+}
+
+void ManualTask::clear_user_refs_() { pimpl_->clear_refs(); }
+
+// ==========================================================================================
+
+void ManualTask::add_input(LogicalStore store)
+{
+  impl_()->add_input(record_user_ref_(std::move(store)));
+}
+
+void ManualTask::add_input(LogicalStorePartition store_partition,
                            std::optional<SymbolicPoint> projection)
 {
-  impl_()->add_input(store_partition.impl(), std::move(projection));
+  impl_()->add_input(record_user_ref_(std::move(store_partition)), std::move(projection));
 }
 
-void ManualTask::add_output(const LogicalStore& store) { impl_()->add_output(store.impl()); }
+void ManualTask::add_output(LogicalStore store)
+{
+  impl_()->add_output(record_user_ref_(std::move(store)));
+}
 
-void ManualTask::add_output(const LogicalStorePartition& store_partition,
+void ManualTask::add_output(LogicalStorePartition store_partition,
                             std::optional<SymbolicPoint> projection)
 {
-  impl_()->add_output(store_partition.impl(), std::move(projection));
+  impl_()->add_output(record_user_ref_(std::move(store_partition)), std::move(projection));
 }
 
-void ManualTask::add_reduction(const LogicalStore& store, ReductionOpKind redop_kind)
+void ManualTask::add_reduction(LogicalStore store, ReductionOpKind redop_kind)
 {
-  add_reduction(store, static_cast<std::int32_t>(redop_kind));
+  add_reduction(std::move(store), static_cast<std::int32_t>(redop_kind));
 }
 
-void ManualTask::add_reduction(const LogicalStore& store, std::int32_t redop_kind)
+void ManualTask::add_reduction(LogicalStore store, std::int32_t redop_kind)
 {
-  impl_()->add_reduction(store.impl(), redop_kind);
+  impl_()->add_reduction(record_user_ref_(std::move(store)), redop_kind);
 }
 
-void ManualTask::add_reduction(const LogicalStorePartition& store_partition,
+void ManualTask::add_reduction(LogicalStorePartition store_partition,
                                ReductionOpKind redop_kind,
                                std::optional<SymbolicPoint> projection)
 {
-  add_reduction(store_partition, static_cast<std::int32_t>(redop_kind), std::move(projection));
+  add_reduction(
+    std::move(store_partition), static_cast<std::int32_t>(redop_kind), std::move(projection));
 }
 
-void ManualTask::add_reduction(const LogicalStorePartition& store_partition,
+void ManualTask::add_reduction(LogicalStorePartition store_partition,
                                std::int32_t redop_kind,
                                std::optional<SymbolicPoint> projection)
 {
-  impl_()->add_reduction(store_partition.impl(), redop_kind, std::move(projection));
+  impl_()->add_reduction(
+    record_user_ref_(std::move(store_partition)), redop_kind, std::move(projection));
 }
 
 void ManualTask::add_scalar_arg(const Scalar& scalar) { impl_()->add_scalar_arg(scalar.impl()); }
@@ -174,7 +285,10 @@ void ManualTask::add_communicator(std::string_view name)
   impl_()->add_communicator(std::move(name));
 }
 
-ManualTask::ManualTask(InternalSharedPtr<detail::ManualTask> impl) : pimpl_{std::move(impl)} {}
+ManualTask::ManualTask(InternalSharedPtr<detail::ManualTask> impl)
+  : pimpl_{make_internal_shared<Impl>(std::move(impl))}
+{
+}
 
 ManualTask::~ManualTask() noexcept = default;
 

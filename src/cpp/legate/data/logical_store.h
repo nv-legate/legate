@@ -413,13 +413,13 @@ class LogicalStore {
   ~LogicalStore() noexcept;
 
  private:
-  SharedPtr<detail::LogicalStore> impl_{};
-  SharedPtr<detail::Storage> storage_{};
+  class Impl;
+  InternalSharedPtr<Impl> impl_{};
 };
 
 class LogicalStorePartition {
  public:
-  explicit LogicalStorePartition(InternalSharedPtr<detail::LogicalStorePartition>&& impl);
+  explicit LogicalStorePartition(InternalSharedPtr<detail::LogicalStorePartition> impl);
 
   [[nodiscard]] LogicalStore store() const;
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const;
@@ -435,8 +435,8 @@ class LogicalStorePartition {
   ~LogicalStorePartition() noexcept;
 
  private:
-  SharedPtr<detail::LogicalStorePartition> impl_{};
-  SharedPtr<detail::Storage> storage_{};
+  class Impl;
+  InternalSharedPtr<Impl> impl_{};
 };
 
 }  // namespace legate

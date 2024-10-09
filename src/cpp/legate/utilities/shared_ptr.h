@@ -135,6 +135,7 @@ class SharedPtr {
   [[nodiscard]] element_type* operator->() const noexcept;
 
   [[nodiscard]] ref_count_type use_count() const noexcept;
+  [[nodiscard]] ref_count_type user_ref_count() const noexcept;
   explicit operator bool() const noexcept;
 
   class InternalSharedPtrAccessTag {

@@ -264,6 +264,7 @@ list(APPEND
      legate/data/detail/transform.cc
      legate/data/detail/future_wrapper.cc
      legate/data/detail/region_field.cc
+     legate/data/detail/user_storage_tracker.cc
      legate/experimental/trace.cc
      legate/mapping/array.cc
      legate/mapping/machine.cc

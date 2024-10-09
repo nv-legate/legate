@@ -574,14 +574,14 @@ cdef class Runtime(Unconstructable):
         if isinstance(op, AutoTask):
             try:
                 with nogil:
-                    self._handle.submit((<AutoTask> op)._handle)
+                    self._handle.submit(std_move((<AutoTask> op)._handle))
                 return
             except Exception as e:
                 _maybe_reraise_legate_exception(e, op.exception_types)
         elif isinstance(op, ManualTask):
             try:
                 with nogil:
-                    self._handle.submit((<ManualTask> op)._handle)
+                    self._handle.submit(std_move((<ManualTask> op)._handle))
                 return
             except Exception as e:
                 _maybe_reraise_legate_exception(e, op.exception_types)

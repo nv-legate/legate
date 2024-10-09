@@ -39,6 +39,8 @@ const InternalSharedPtr<LogicalStore>& LogicalArray::data() const
   return make_internal_shared<BaseLogicalArray>(std::move(store));
 }
 
+// ==========================================================================================
+
 bool BaseLogicalArray::unbound() const
 {
   LEGATE_ASSERT(!nullable() || data_->unbound() == null_mask_->unbound());
@@ -194,6 +196,16 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg_for_fixup(
     store_to_launcher_arg_for_fixup(data_, launch_domain, privilege));
 }
 
+void BaseLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
+{
+  trackers.emplace_back(data_);
+  if (null_mask_) {
+    trackers.emplace_back(null_mask_);
+  }
+}
+
+// ==========================================================================================
+
 bool ListLogicalArray::unbound() const { return descriptor_->unbound() || vardata_->unbound(); }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::promote(int32_t, size_t) const
@@ -318,6 +330,14 @@ std::unique_ptr<Analyzable> ListLogicalArray::to_launcher_arg_for_fixup(
 
   return std::make_unique<ListArrayArg>(type(), std::move(descriptor_arg), std::move(vardata_arg));
 }
+
+void ListLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
+{
+  descriptor_->collect_storage_trackers(trackers);
+  vardata_->collect_storage_trackers(trackers);
+}
+
+// ==========================================================================================
 
 std::uint32_t StructLogicalArray::dim() const { return fields_.front()->dim(); }
 
@@ -529,6 +549,16 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg_for_fixup(
     type(), nullptr, make_array_from_op<std::unique_ptr<Analyzable>>(fields_, [&](auto& field) {
       return field->to_launcher_arg_for_fixup(launch_domain, privilege);
     }));
+}
+
+void StructLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
+{
+  if (null_mask_) {
+    trackers.emplace_back(null_mask_);
+  }
+  for (auto&& field : fields_) {
+    field->collect_storage_trackers(trackers);
+  }
 }
 
 }  // namespace legate::detail

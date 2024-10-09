@@ -335,18 +335,24 @@ class Runtime {
    * Each submitted operation goes through multiple pipeline steps to eventually get scheduled
    * for execution. It's not guaranteed that the submitted operation starts executing immediately.
    *
+   * The runtime takes the ownership of the submitted task. Once submitted, the task becomes invalid
+   * and is not reusable.
+   *
    * @param task An AutoTask to execute
    */
-  void submit(AutoTask task);
+  void submit(AutoTask&& task);
   /**
    * @brief Submits a ManualTask for execution
    *
    * Each submitted operation goes through multiple pipeline steps to eventually get scheduled
    * for execution. It's not guaranteed that the submitted operation starts executing immediately.
    *
+   * The runtime takes the ownership of the submitted task. Once submitted, the task becomes invalid
+   * and is not reusable.
+   *
    * @param task A ManualTask to execute
    */
-  void submit(ManualTask task);
+  void submit(ManualTask&& task);
 
   /**
    * @brief Creates an unbound array

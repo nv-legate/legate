@@ -52,7 +52,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_input(const LogicalArray& array);
+  Variable add_input(LogicalArray array);
   /**
    * @brief Adds an array to the task as output
    *
@@ -63,7 +63,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_output(const LogicalArray& array);
+  Variable add_output(LogicalArray array);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -76,7 +76,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(const LogicalArray& array, ReductionOpKind redop_kind);
+  Variable add_reduction(LogicalArray array, ReductionOpKind redop_kind);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -89,7 +89,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(const LogicalArray& array, std::int32_t redop_kind);
+  Variable add_reduction(LogicalArray array, std::int32_t redop_kind);
 
   /**
    * @brief Adds an array to the task as input
@@ -102,7 +102,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_input(const LogicalArray& array, Variable partition_symbol);
+  Variable add_input(LogicalArray array, Variable partition_symbol);
   /**
    * @brief Adds an array to the task as output
    *
@@ -114,7 +114,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_output(const LogicalArray& array, Variable partition_symbol);
+  Variable add_output(LogicalArray array, Variable partition_symbol);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -128,9 +128,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(const LogicalArray& array,
-                         ReductionOpKind redop_kind,
-                         Variable partition_symbol);
+  Variable add_reduction(LogicalArray array, ReductionOpKind redop_kind, Variable partition_symbol);
   /**
    * @brief Adds an array to the task for reductions
    *
@@ -144,9 +142,7 @@ class AutoTask {
    *
    * @return The partition symbol assigned to the array
    */
-  Variable add_reduction(const LogicalArray& array,
-                         std::int32_t redop_kind,
-                         Variable partition_symbol);
+  Variable add_reduction(LogicalArray array, std::int32_t redop_kind, Variable partition_symbol);
   /**
    * @brief Adds a by-value scalar argument to the task
    *
@@ -236,8 +232,12 @@ class AutoTask {
   explicit AutoTask(InternalSharedPtr<detail::AutoTask> impl);
 
   [[nodiscard]] const SharedPtr<detail::AutoTask>& impl_() const;
+  [[nodiscard]] SharedPtr<detail::AutoTask> release_();
+  [[nodiscard]] InternalSharedPtr<detail::LogicalArray> record_user_ref_(LogicalArray array);
+  void clear_user_refs_();
 
-  SharedPtr<detail::AutoTask> pimpl_{};
+  class Impl;
+  InternalSharedPtr<Impl> pimpl_{};
 };
 
 /**
@@ -253,7 +253,7 @@ class ManualTask {
    *
    * @param store A store to add to the task as input
    */
-  void add_input(const LogicalStore& store);
+  void add_input(LogicalStore store);
   /**
    * @brief Adds a store partition to the task as input
    *
@@ -261,7 +261,7 @@ class ManualTask {
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
    */
-  void add_input(const LogicalStorePartition& store_partition,
+  void add_input(LogicalStorePartition store_partition,
                  std::optional<SymbolicPoint> projection = std::nullopt);
   /**
    * @brief Adds a store to the task as output
@@ -270,7 +270,7 @@ class ManualTask {
    *
    * @param store A store to add to the task as output
    */
-  void add_output(const LogicalStore& store);
+  void add_output(LogicalStore store);
   /**
    * @brief Adds a store partition to the task as output
    *
@@ -278,7 +278,7 @@ class ManualTask {
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
    */
-  void add_output(const LogicalStorePartition& store_partition,
+  void add_output(LogicalStorePartition store_partition,
                   std::optional<SymbolicPoint> projection = std::nullopt);
   /**
    * @brief Adds a store to the task for reductions
@@ -289,7 +289,7 @@ class ManualTask {
    * @param redop_kind ID of the reduction operator to use. The store's type must support the
    * operator.
    */
-  void add_reduction(const LogicalStore& store, ReductionOpKind redop_kind);
+  void add_reduction(LogicalStore store, ReductionOpKind redop_kind);
   /**
    * @brief Adds a store to the task for reductions
    *
@@ -299,7 +299,7 @@ class ManualTask {
    * @param redop_kind ID of the reduction operator to use. The store's type must support the
    * operator.
    */
-  void add_reduction(const LogicalStore& store, std::int32_t redop_kind);
+  void add_reduction(LogicalStore store, std::int32_t redop_kind);
   /**
    * @brief Adds a store partition to the task for reductions
    *
@@ -309,7 +309,7 @@ class ManualTask {
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
    */
-  void add_reduction(const LogicalStorePartition& store_partition,
+  void add_reduction(LogicalStorePartition store_partition,
                      ReductionOpKind redop_kind,
                      std::optional<SymbolicPoint> projection = std::nullopt);
   /**
@@ -321,7 +321,7 @@ class ManualTask {
    * @param projection An optional symbolic point describing a mapping between points in the
    * launch domain and substores in the partition
    */
-  void add_reduction(const LogicalStorePartition& store_partition,
+  void add_reduction(LogicalStorePartition store_partition,
                      std::int32_t redop_kind,
                      std::optional<SymbolicPoint> projection = std::nullopt);
   /**
@@ -393,8 +393,14 @@ class ManualTask {
   explicit ManualTask(InternalSharedPtr<detail::ManualTask> impl);
 
   [[nodiscard]] const SharedPtr<detail::ManualTask>& impl_() const;
+  [[nodiscard]] SharedPtr<detail::ManualTask> release_();
+  [[nodiscard]] InternalSharedPtr<detail::LogicalStore> record_user_ref_(LogicalStore store);
+  [[nodiscard]] InternalSharedPtr<detail::LogicalStorePartition> record_user_ref_(
+    LogicalStorePartition store_partition);
+  void clear_user_refs_();
 
-  SharedPtr<detail::ManualTask> pimpl_{};
+  class Impl;
+  InternalSharedPtr<Impl> pimpl_{};
 };
 
 }  // namespace legate
