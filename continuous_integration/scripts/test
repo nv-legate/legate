@@ -106,10 +106,10 @@ run_test_or_analysis() {
 
             ucx_libs=(ucx openmpi openssh)
 
-            set +eou pipefail
+            set +u
             # shellcheck disable=SC2154
             mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client "${ucx_libs[@]}"
-            set -eou pipefail
+            set -u
 
             cd "${LEGATE_DIR}"
             # pytest doesn't truncate output if "CI" is defined in the env:
@@ -125,9 +125,9 @@ run_test_or_analysis() {
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil
 
 
-            set +eou pipefail
+            set +u
             mamba install -y -n "${CONDA_ENV}" ucx openmpi openssh
-            set -eou pipefail
+            set -u
 
             cd "${LEGATE_DIR}"
 
@@ -146,7 +146,7 @@ run_test_or_analysis() {
               local proc_count="${3}"
               local worker_count="${4:-2}"
               LEGATE_TEST=1 LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 1000 --fbmem 1000 --numamem 0 --ompthreads 0 --omps 0" \
-                "${gtest_file}" "${EXTRA_ARGS}"
+                "${gtest_file}" --gtest_color=yes "${EXTRA_ARGS}"
             }
 
             function run_legate_tests_with_driver()
@@ -159,6 +159,7 @@ run_test_or_analysis() {
                       --gtest-file "${gtest_file}" \
                       --verbose \
                       --debug \
+                      --color \
                       --timeout 90 \
                       --"${proc_type}" "${proc_count}" \
                       --sysmem 100 \
