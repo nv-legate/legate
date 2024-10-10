@@ -2,11 +2,9 @@
 name: Build Rust Profiler Package
 
 on:
-  push:
-    branches:
-      - "pull-request/[0-9]+"
-      - "cpp-branch-*"
-      - "main"
+  workflow_dispatch:
+  schedule:
+    - cron: '0 23 * * *'  # Nightly at 11:00 PM
 env:
   CONDA_ROOT: "/tmp/conda-croot/rust-profiler"
   CONDA_OUTPUT: "/tmp/rust-profiler/output"
