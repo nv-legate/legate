@@ -1222,7 +1222,18 @@ cpdef bool is_running_in_task():
 
 
 cdef void _cleanup_legate_runtime():
-    get_legate_runtime().finish()
+    global _runtime
+
+    # Don't use get_legate_runtime() here since we don't want to inadvertently
+    # (re)start the runtime
+    if _runtime is None:
+        return
+
+    # Collect before so we ensure that any dangling user references are
+    # released. We cannot guarantee that all of them are, but this should make
+    # sure we maximize our chances.
+    gc.collect()
+    _runtime.finish()
     _runtime = None
     gc.collect()
 
