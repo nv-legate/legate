@@ -17,8 +17,8 @@ from typing import Optional, ParamSpec, Union
 import numpy as np
 import pytest
 
-import legate as lg
-from legate import (
+import legate.core as lg
+from legate.core import (
     PhysicalStore,
     Scalar,
     VariantCode,
@@ -26,7 +26,7 @@ from legate import (
     task as lct,
     types as ty,
 )
-from legate.task import (
+from legate.core.task import (
     ADD,
     InputArray,
     InputStore,
@@ -587,34 +587,39 @@ class TestTask(BaseTest):
             pass
 
         functions = [foo, foo1, foo2, foo3]
-        types = ["InputStore", "InputArray", "OutputStore", "OutputArray"]
+        types = [InputStore, InputArray, OutputStore, OutputArray]
         assert len(functions) == len(types)
-        for fn, name in zip(functions, types):
-            msg = re.escape(
-                "Default values for "
-                f"<class 'legate._ext.task.type.{name}'> "
-                "not yet supported"
-            )
+        for fn, store_ty in zip(functions, types):
+            msg = re.escape(f"Default values for {store_ty} not yet supported")
             with pytest.raises(NotImplementedError, match=msg):
                 lct.task(fn)  # type: ignore[call-overload]
 
-        def foo4(
+    def test_default_reduction_arguments_bad(self) -> None:
+        # Have to do it like this because PhysicalStore() and PhysicalArray()
+        # are not default-constructable (which is what default arguments
+        # normally would be). But this test exist to make sure that some
+        # determined user cannot get around this by constructing those default
+        # objects elsewhere.
+        phys_store = make_input_store().get_physical_store()
+        phys_arr = make_input_array().get_physical_array()
+
+        def foo(
             x: ReductionStore[ADD] = phys_store,  # type: ignore[assignment]
         ) -> None:
             pass
 
-        def foo5(
+        def foo1(
             x: ReductionArray[ADD] = phys_arr,  # type: ignore[assignment]
         ) -> None:
             pass
 
-        functions = [foo4, foo5]
+        functions = [foo, foo1]
         types = ["ReductionStore", "ReductionArray"]
         assert len(functions) == len(types)
         for fn, name in zip(functions, types):
             msg = re.escape(
                 "Default values for "
-                f"legate._ext.task.type.{name}[<ReductionOpKind.ADD: 0>] "
+                f"legate.core._ext.task.type.{name}[<ReductionOpKind.ADD: 0>] "
                 "not yet supported"
             )
             with pytest.raises(NotImplementedError, match=msg):

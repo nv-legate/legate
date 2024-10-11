@@ -14,9 +14,23 @@ Changes: Latest Development Version
 
 .. rubric:: General
 
-- Rename the library from ``legate.core`` to ``legate``. With the renaming, the runtime does not
-  automatically start with ``import legate`` anymore. Downstream libraries are now responsible to
-  call ``legate.get_legate_runtime()`` before they register themselves through a C++ callback.
+- Rename the Python package from ``legate.core`` to ``legate``. Note that the layout of
+  the package itself, and the names of modules have not changed. This only affects the
+  install command. Where previously a user would write
+
+  .. code-block:: sh
+
+     $ conda install legate-core
+
+
+  They now should write
+
+  .. code-block:: sh
+
+
+     $ conda install legate
+
+
 - Add ``LEGATE_INLINE_TASK_LAUNCH`` environment variable to request inline task
   launch. When enabled, this instructs Legate to forgo the usual Legion task calling
   convention in favor of launching the task immediately on the submitting thread. This
@@ -24,7 +38,8 @@ Changes: Latest Development Version
   should be.
 - Rename ``bind.sh`` to ``legate-bind.sh``.
 - Add ``LEGATE_CUDA_DRIVER`` environment variable to optionally override the location of
-  the CUDA driver shared library. If not set, defaults to "libcuda.so.1".
+  the CUDA driver shared library. If not set, defaults to the system-default name of the
+  library (usually "libcuda.so.1").
 
 C++
 ---

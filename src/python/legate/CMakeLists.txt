@@ -101,8 +101,5 @@ function(legate_create_cython_modules)
                                       ${RAPIDS_CYTHON_CREATED_TARGETS})
 endfunction()
 
+add_subdirectory(core)
 add_subdirectory(timing)
-add_subdirectory(_lib)
-add_subdirectory(_ext)
-
-list(POP_BACK CMAKE_MESSAGE_CONTEXT)

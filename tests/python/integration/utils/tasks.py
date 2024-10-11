@@ -21,9 +21,9 @@ except ModuleNotFoundError:
 import numpy as np
 from numpy._typing import NDArray
 
-from legate import InlineAllocation, Scalar, align, broadcast
-from legate._ext.task.util import KNOWN_VARIANTS
-from legate.task import (
+from legate.core import InlineAllocation, Scalar, align, broadcast
+from legate.core._ext.task.util import KNOWN_VARIANTS
+from legate.core.task import (
     ADD,
     InputArray,
     InputStore,

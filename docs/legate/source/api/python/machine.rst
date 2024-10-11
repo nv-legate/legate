@@ -1,6 +1,6 @@
 .. _label_machine:
 
-.. currentmodule:: legate
+.. currentmodule:: legate.core
 
 Machine and Resource Scoping
 ============================

@@ -17,8 +17,8 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from legate import Scalar, Type, get_legate_runtime, types as ty
-from legate.task import task
+from legate.core import Scalar, Type, get_legate_runtime, types as ty
+from legate.core.task import task
 
 from .util.task_util import assert_isinstance
 
@@ -159,7 +159,7 @@ class TestScalarTaskBad:
         scal = Scalar(1, ty.int64)
         msg = re.escape(
             "Task expected a value of type <class 'int'> for parameter x, but "
-            "got <class 'legate._lib.data.scalar.Scalar'>"
+            f"got {type(scal)}"
         )
         with pytest.raises(TypeError, match=msg):
             # The callsite type must match the type-hint exactly for Scalar
@@ -171,15 +171,15 @@ class TestScalarTaskBad:
         def foo(x: Scalar) -> None:
             assert False, "This point should never be reached"
 
+        arg = 1
         msg = re.escape(
-            "Task expected a value of type <class "
-            "'legate._lib.data.scalar.Scalar'> for parameter x, but got "
-            "<class 'int'>"
+            f"Task expected a value of type {repr(Scalar)} for parameter x, "
+            f"but got {type(arg)}"
         )
         with pytest.raises(TypeError, match=msg):
             # The callsite must match the type-hint exactly for Scalar
             # parameters
-            foo(1)
+            foo(arg)
 
     def test_empty_tuple(self) -> None:
         tup: tuple[int, ...] = tuple()

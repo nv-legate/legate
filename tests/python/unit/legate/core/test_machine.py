@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from legate import (
+from legate.core import (
     EmptyMachineError,
     Machine,
     ProcessorRange,
@@ -237,7 +237,7 @@ class TestMachine:
         assert Machine({TaskTarget.GPU: EMPTY_RANGE}).valid_targets == tuple()
 
     def test_idempotent_scopes(self) -> None:
-        from legate import get_machine
+        from legate.core import get_machine
 
         machine = get_machine()
         with machine:
@@ -247,7 +247,7 @@ class TestMachine:
                 assert machine == get_machine()
 
     def test_empty_scope(self) -> None:
-        from legate import get_machine
+        from legate.core import get_machine
 
         machine = get_machine()
         rng = machine.get_processor_range()
@@ -260,7 +260,7 @@ class TestMachine:
                 pass
 
     def test_set_machine_twice(self) -> None:
-        from legate import get_machine
+        from legate.core import get_machine
 
         machine = get_machine()
         with machine:

@@ -16,7 +16,7 @@ from typing import Any
 import numpy as np
 import pytest
 
-from legate import Type, types as ty
+from legate.core import Type, types as ty
 
 
 class TestType:

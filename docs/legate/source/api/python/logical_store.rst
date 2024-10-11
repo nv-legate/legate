@@ -1,4 +1,4 @@
-.. currentmodule:: legate
+.. currentmodule:: legate.core
 
 Store
 =====

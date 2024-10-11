@@ -8,7 +8,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from ..._lib.utilities.unconstructable import Unconstructable
+from ...core._lib.utilities.unconstructable import Unconstructable
 
 class PyTime(Unconstructable):
     @staticmethod

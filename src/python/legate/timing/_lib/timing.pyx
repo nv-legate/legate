@@ -12,7 +12,7 @@
 from libc.stdint cimport int64_t
 from libcpp.utility cimport move as std_move
 
-from ..._lib.utilities.unconstructable cimport Unconstructable
+from ...core._lib.utilities.unconstructable cimport Unconstructable
 
 
 cdef class PyTime(Unconstructable):

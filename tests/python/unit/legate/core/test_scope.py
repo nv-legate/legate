@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from legate import ExceptionMode, Machine, Scope
+from legate.core import ExceptionMode, Machine, Scope
 
 MAGIC_PRIORITY1 = 42
 MAGIC_PRIORITY2 = 43

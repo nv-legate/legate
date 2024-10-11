@@ -15,7 +15,7 @@ from typing import Any, Type
 import numpy as np
 import pytest
 
-from legate import (
+from legate.core import (
     ImageComputationHint,
     LogicalArray,
     Scalar,
@@ -24,8 +24,8 @@ from legate import (
     image,
     types as ty,
 )
-from legate._lib.partitioning.constraint import scale
-from legate.task import OutputStore, task
+from legate.core._lib.partitioning.constraint import scale
+from legate.core.task import OutputStore, task
 
 from .utils import tasks, utils
 from .utils.data import ARRAY_TYPES, LARGE_SHAPES, SCALAR_VALS, SHAPES

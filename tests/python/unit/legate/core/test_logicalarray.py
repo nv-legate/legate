@@ -12,8 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-import legate.types as ty
-from legate import LogicalArray, get_legate_runtime
+from legate.core import LogicalArray, get_legate_runtime, types as ty
 
 from .util.types import _PRIMITIVES
 

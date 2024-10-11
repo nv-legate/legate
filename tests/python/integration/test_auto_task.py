@@ -15,7 +15,7 @@ from typing import Any, Type
 import numpy as np
 import pytest
 
-from legate import (
+from legate.core import (
     ImageComputationHint,
     LogicalArray,
     Scalar,
@@ -25,7 +25,7 @@ from legate import (
     scale,
     types as ty,
 )
-from legate.task import task
+from legate.core.task import task
 
 from .utils import tasks, utils
 from .utils.data import (

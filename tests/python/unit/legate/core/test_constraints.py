@@ -16,20 +16,20 @@ from collections.abc import Collection
 
 import pytest
 
-import legate as lg
-from legate import (
+import legate.core as lg
+from legate.core import (
     AutoTask,
     LogicalStore,
     Scalar,
     get_legate_runtime,
     types as ty,
 )
-from legate._lib.partitioning.constraint import (
+from legate.core._lib.partitioning.constraint import (
     Constraint,
     ConstraintProxy,
     Variable,
 )
-from legate.task import InputStore, task
+from legate.core.task import InputStore, task
 
 
 @pytest.fixture
@@ -70,6 +70,13 @@ def variable_y(dummy_task: AutoTask, input_store_y: LogicalStore) -> Variable:
     return dummy_task.add_input(input_store_y)
 
 
+def repr_type_without_class(obj: type) -> str:
+    # repr(SomeType) -> "<class 'legate.asdasd.SomeType'>"
+    #
+    # We just want "legate.asdasd.SomeType"
+    return repr(obj).removeprefix("<class '").removesuffix("'>")
+
+
 class TestAlign:
     def test_create_from_str(self) -> None:
         constraint = lg.align("x", "y")
@@ -93,11 +100,15 @@ class TestAlign:
         assert expected_re.match(str(constraint)) is not None
 
     def test_create_bad(self, variable_x: Variable) -> None:
+        # repr(Variable) -> "<class 'legate.asdasd.Variable'>"
+        #
+        # We just want "legate.asdasd.Variable"
+        type_str = repr_type_without_class(Variable)
         with pytest.raises(
             TypeError,
             match=re.escape(
                 "Argument 'rhs' has incorrect type (expected "
-                "legate._lib.partitioning.constraint.Variable, got str)"
+                f"{type_str}, got str)"
             ),
         ):
             lg.align(variable_x, "asdasd")  # type: ignore[call-overload]
@@ -106,7 +117,7 @@ class TestAlign:
             TypeError,
             match=re.escape(
                 "Argument 'rhs' has incorrect type (expected str, got "
-                "legate._lib.partitioning.constraint.Variable)"
+                f"{type_str})"
             ),
         ):
             lg.align("asdasd", variable_x)  # type: ignore[call-overload]
@@ -199,11 +210,15 @@ class TestImage:
         assert expected_re.match(str(constraint)) is not None
 
     def test_create_bad(self, variable_x: Variable) -> None:
+        # repr(Variable) -> "<class 'legate.asdasd.Variable'>"
+        #
+        # We just want "legate.asdasd.Variable"
+        type_str = repr_type_without_class(Variable)
         with pytest.raises(
             TypeError,
             match=re.escape(
                 "Argument 'var_range' has incorrect type (expected "
-                "legate._lib.partitioning.constraint.Variable, got str)"
+                f"{type_str}, got str)"
             ),
         ):
             lg.image(variable_x, "asdasd")  # type: ignore[call-overload]
@@ -212,7 +227,7 @@ class TestImage:
             TypeError,
             match=re.escape(
                 "Argument 'var_range' has incorrect type (expected str, got "
-                "legate._lib.partitioning.constraint.Variable)"
+                f"{type_str})"
             ),
         ):
             lg.image("asdasd", variable_x)  # type: ignore[call-overload]
@@ -254,11 +269,15 @@ class TestScale:
     def test_create_bad(
         self, factors: tuple[int, ...], variable_x: Variable
     ) -> None:
+        # repr(Variable) -> "<class 'legate.asdasd.Variable'>"
+        #
+        # We just want "legate.asdasd.Variable"
+        type_str = repr_type_without_class(Variable)
         with pytest.raises(
             TypeError,
             match=re.escape(
                 "Argument 'var_bigger' has incorrect type (expected "
-                "legate._lib.partitioning.constraint.Variable, got str)"
+                f"{type_str}, got str)"
             ),
         ):
             lg.scale(
@@ -269,7 +288,7 @@ class TestScale:
             TypeError,
             match=re.escape(
                 "Argument 'var_bigger' has incorrect type (expected str, got "
-                "legate._lib.partitioning.constraint.Variable)"
+                f"{type_str})"
             ),
         ):
             lg.scale(
@@ -324,11 +343,15 @@ class TestBloat:
         lo_offsets: tuple[int, ...],
         hi_offsets: tuple[int, ...],
     ) -> None:
+        # repr(Variable) -> "<class 'legate.asdasd.Variable'>"
+        #
+        # We just want "legate.asdasd.Variable"
+        type_str = repr_type_without_class(Variable)
         with pytest.raises(
             TypeError,
             match=re.escape(
                 "Argument 'var_bloat' has incorrect type (expected "
-                "legate._lib.partitioning.constraint.Variable, got str)"
+                f"{type_str}, got str)"
             ),
         ):
             lg.bloat(  # type: ignore[call-overload]
@@ -339,7 +362,7 @@ class TestBloat:
             TypeError,
             match=re.escape(
                 "Argument 'var_bloat' has incorrect type (expected str, got "
-                "legate._lib.partitioning.constraint.Variable)"
+                f"{type_str})"
             ),
         ):
             lg.bloat(  # type: ignore[call-overload]

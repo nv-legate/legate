@@ -1,6 +1,6 @@
 .. _label_tasks:
 
-.. currentmodule:: legate.task
+.. currentmodule:: legate.core.task
 
 Python Tasks
 ============
@@ -17,7 +17,7 @@ example:
 
 .. testcode::
 
-   from legate.task import task
+   from legate.core.task import task
 
    @task # registers the task
    def foo() -> None:
@@ -46,7 +46,7 @@ type hints:
 .. testsetup::
 
    import numpy as np
-   from legate. import get_legate_runtime, types as ty
+   from legate.core import get_legate_runtime, types as ty
 
    def make_store(init: list[int]):
        arr = np.array(init, dtype=np.int64)
@@ -56,7 +56,7 @@ type hints:
 .. testcode::
 
    import numpy as np
-   from legate.task import task, InputArray, OutputArray
+   from legate.core.task import task, InputArray, OutputArray
 
    @task
    def foo_in_out(in_store: InputArray, out_store: OutputArray) -> None:
@@ -92,7 +92,7 @@ not propagate outside the task body!
 
 .. testcode::
 
-   from legate.task import task
+   from legate.core.task import task
 
    class MyClass:
        pass
@@ -117,8 +117,8 @@ Misc. Trivia
 .. testsetup::
 
    import numpy as np
-   from legate. import get_legate_runtime, types as ty
-   from legate.task import task, InputStore, OutputStore
+   from legate.core import get_legate_runtime, types as ty
+   from legate.core.task import task, InputStore, OutputStore
 
    def make_store(*args, **kwargs):
        arr = np.array([1, 2, 3], dtype=np.int64)
@@ -147,7 +147,7 @@ Misc. Trivia
 
 .. testsetup::
 
-   from legate.task import task
+   from legate.core.task import task
 
 .. testcode::
 

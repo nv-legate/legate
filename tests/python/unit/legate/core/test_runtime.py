@@ -15,7 +15,7 @@ import json
 
 import pytest
 
-from legate import Scope, track_provenance
+from legate.core import Scope, track_provenance
 
 
 @track_provenance()

@@ -15,8 +15,8 @@ from typing import Any
 import numpy as np
 import pytest
 
-from legate import Scalar, get_legate_runtime, types as ty
-from legate.task import task
+from legate.core import Scalar, get_legate_runtime, types as ty
+from legate.core.task import task
 
 from .utils import tasks
 from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SCALAR_VALS, SHAPES

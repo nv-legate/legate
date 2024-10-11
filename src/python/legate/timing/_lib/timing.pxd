@@ -11,7 +11,7 @@
 
 from libc.stdint cimport int64_t
 
-from ..._lib.utilities.unconstructable cimport Unconstructable
+from ...core._lib.utilities.unconstructable cimport Unconstructable
 
 
 cdef extern from "legate/timing/timing.h" namespace "legate::timing" nogil:

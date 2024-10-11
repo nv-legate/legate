@@ -12,7 +12,7 @@
 
 import pytest
 
-from legate import Scalar, get_legate_runtime, types as ty
+from legate.core import Scalar, get_legate_runtime, types as ty
 
 
 class Test_store_creation:

@@ -24,13 +24,13 @@ import numpy.typing as npt
 import pytest
 from numpy._typing import NDArray
 
-from legate import (
+from legate.core import (
     InlineAllocation,
     LogicalStore,
     get_legate_runtime,
     types as ty,
 )
-from legate.task import (
+from legate.core.task import (
     ADD,
     AND,
     MAX,
@@ -83,7 +83,7 @@ class TestRedopTaskStore:
             pass
 
         msg = re.escape(
-            "Type hint '<class 'legate._ext.task.type.ReductionStore'>'"
+            "Type hint '<class 'legate.core._ext.task.type.ReductionStore'>'"
             " has an invalid number of reduction operators (0), expected 1. "
             "For example: 'x: ReductionStore[ADD]'"
         )

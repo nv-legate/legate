@@ -14,18 +14,18 @@ import sys
 
 import pytest
 
-import legate as lg
-from legate.task import task
+from legate.core import is_running_in_task
+from legate.core.task import task
 
 
 class TestIsRunningInTask:
     def test_toplevel(self) -> None:
-        assert not lg.is_running_in_task()
+        assert not is_running_in_task()
 
     def test_in_task(self) -> None:
         @task(throws_exception=True)
         def tester() -> None:
-            assert lg.is_running_in_task()
+            assert is_running_in_task()
 
         tester()
 

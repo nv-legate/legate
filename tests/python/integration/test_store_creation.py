@@ -16,7 +16,7 @@ from typing import Any
 import numpy as np
 import pytest
 
-from legate import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
+from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
 
 from .utils.data import ARRAY_TYPES, SCALAR_VALS
 

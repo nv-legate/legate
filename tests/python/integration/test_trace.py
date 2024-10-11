@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import pytest
 
-from legate import LogicalStore, Scalar, get_legate_runtime, types as ty
-from legate._lib.experimental.trace import Trace
-from legate.task import InputStore, OutputStore, task
+from legate.core import LogicalStore, Scalar, get_legate_runtime, types as ty
+from legate.core._lib.experimental.trace import Trace
+from legate.core.task import InputStore, OutputStore, task
 
 
 @task

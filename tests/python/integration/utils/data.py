@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from legate import LEGATE_MAX_DIM, types as ty
+from legate.core import LEGATE_MAX_DIM, types as ty
 
 SCALAR_VALS = (
     True,  # bool

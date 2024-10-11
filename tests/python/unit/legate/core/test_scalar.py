@@ -15,8 +15,7 @@ import ctypes
 import numpy as np
 import pytest
 
-import legate.types as ty
-from legate import Scalar
+from legate.core import Scalar, types as ty
 
 
 @pytest.fixture

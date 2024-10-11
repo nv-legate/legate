@@ -1,6 +1,6 @@
 .. _label_operation:
 
-.. currentmodule:: legate
+.. currentmodule:: legate.core
 
 Operations
 ==========

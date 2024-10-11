@@ -1,6 +1,6 @@
 .. _label_runtime:
 
-.. currentmodule:: legate
+.. currentmodule:: legate.core
 
 Legate Runtime
 ==============
