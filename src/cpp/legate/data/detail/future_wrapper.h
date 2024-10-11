@@ -29,6 +29,12 @@ class FutureWrapper {
                 std::size_t field_offset,
                 const Domain& domain,
                 Legion::Future future);
+  ~FutureWrapper() noexcept;
+
+  FutureWrapper(const FutureWrapper&)            = default;
+  FutureWrapper& operator=(const FutureWrapper&) = default;
+  FutureWrapper(FutureWrapper&&)                 = default;
+  FutureWrapper& operator=(FutureWrapper&&)      = default;
 
   [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] const Domain& domain() const;

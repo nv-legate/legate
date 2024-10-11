@@ -75,6 +75,16 @@ FutureWrapper::FutureWrapper(bool read_only,
 {
 }
 
+FutureWrapper::~FutureWrapper() noexcept
+{
+  if (has_started() || !future_.exists()) {
+    return;
+  }
+  // FIXME: Leak the Future handle if the runtime has already shut down, as there's no hope that
+  // this would be collected by the Legion runtime
+  static_cast<void>(std::make_unique<Legion::Future>(std::move(future_)).release());
+}  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+
 namespace {
 
 class GetInlineAllocFromFuture {
