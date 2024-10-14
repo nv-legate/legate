@@ -1,21 +1,21 @@
 ---
-name: Build Rust Profiler Package
+name: Build Legate Profiler Package
 
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 23 * * *'  # Nightly at 11:00 PM
 env:
-  CONDA_ROOT: "/tmp/conda-croot/rust-profiler"
-  CONDA_OUTPUT: "/tmp/rust-profiler/output"
+  CONDA_ROOT: "/tmp/conda-croot/legate-profiler"
+  CONDA_OUTPUT: "/tmp/legate-profiler/output"
   URM_ARTIFACT_SERVER: "https://urm.nvidia.com/artifactory"
   URM_ARTIFACT_REPOS: "sw-legate-conda-local"
-  URM_PKG_DIR: "rust-profiler"
-  ARTIFACT_NAME: "Rust-Profiler-Artifact-${{ github.sha }}"
+  URM_PKG_DIR: "legate-profiler"
+  ARTIFACT_NAME: "Legate-Profiler-Artifact-${{ github.sha }}"
 
 jobs:
   Build_Profiler:
-    name: Build Rust Profiler
+    name: Build Legate Profiler
     strategy:
       fail-fast: false
       matrix:
@@ -92,14 +92,14 @@ jobs:
           conda_build_args+=(--croot "${CONDA_ROOT}");
           conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
           mamba install conda-build
-          conda-build "${conda_build_args[@]}" conda/rust-profiler/dummy-legate
-          conda-build "${conda_build_args[@]}" conda/rust-profiler
+          conda-build "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
+          conda-build "${conda_build_args[@]}" conda/legate_profiler
 
       - name: Display output files
         run: |
           ls -lAhR "${CONDA_OUTPUT}"
 
-      - name: Upload rust profiler artifacts
+      - name: Upload Legate profiler artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
@@ -107,7 +107,7 @@ jobs:
 
   Upload_Profiler:
     needs: Build_Profiler
-    name: Upload Rust Profiler
+    name: Upload Legate Profiler
     strategy:
       fail-fast: false
     runs-on: linux-amd64-gpu-v100-earliest-1
@@ -136,7 +136,7 @@ jobs:
           rm -rf "${ARTIFACT_PATH}"
           mkdir -p "${ARTIFACT_PATH}"
 
-      - name: Download Rust build artifacts
+      - name: Download Legate build artifacts
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
@@ -154,8 +154,8 @@ jobs:
 
       - name: Upload Package to URM server
         run: |
-          echo "Upload rust-profiler package"
-          find "${ARTIFACT_PATH}/${TARGET_PLATFORM}/" -name "rust-profiler*.tar.bz2" | while IFS= read -r f; do
+          echo "Upload legate-profiler package"
+          find "${ARTIFACT_PATH}/${TARGET_PLATFORM}/" -name "legate-profiler*.tar.bz2" | while IFS= read -r f; do
             fname="$(basename "${f}")"
             packageFound=$(curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -X POST  -H "content-type: text/plain" "${URM_ARTIFACT_SERVER}/api/search/aql" -d 'items.find({"name":"'"${fname}"'"})' | jq -r .results[].name)
             if [[ -z "${packageFound}" ]]; then

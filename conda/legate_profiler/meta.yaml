@@ -1,5 +1,5 @@
 ---
-{% set name = "rust-profiler" %}
+{% set name = "legate-profiler" %}
 
 {% set default_env_var = '' %}
 {% set legate_version = '' %}
