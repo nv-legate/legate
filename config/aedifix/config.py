@@ -183,6 +183,13 @@ class ConfigFile(Configurable):
         aedifix_vars = set(re.findall(r"@AEDIFIX_([^\s]+?)@", text))
         for var in aedifix_vars:
             value = make_subst(var)
+            match str(value).casefold():
+                case "on" | "yes" | "true":
+                    value = "1"
+                case "off" | "no" | "false":
+                    value = "0"
+                case _:
+                    pass
             ret.append(f"-DAEDIFIX_{var}={value}")
         return ret
 
