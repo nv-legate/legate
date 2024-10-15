@@ -73,3 +73,9 @@ ON, OFF = True, False
 use_cuda: bool = @Legion_USE_CUDA@
 
 use_openmp: bool = @Legion_USE_OpenMP@
+
+legion_version: str = "@Legion_VERSION@"
+
+legion_git_branch: str = "@Legion_GIT_BRANCH@"
+
+legion_git_repo: str = "@Legion_GIT_REPO@"

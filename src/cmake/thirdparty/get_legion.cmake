@@ -94,6 +94,7 @@ function(find_or_configure_legion_impl)
 
   if(Legion_FOUND)
     message(STATUS "CPM: using local package Legion@${version}")
+    set(Legion_VERSION "${version}" PARENT_SCOPE)
   else()
     include("${LEGATE_CMAKE_DIR}/Modules/cpm_helpers.cmake")
     get_cpm_git_args(legion_cpm_git_args REPOSITORY ${git_repo} BRANCH ${git_branch}
@@ -153,6 +154,10 @@ function(find_or_configure_legion_impl)
     message(VERBOSE "legate: Legion git_repo: ${git_repo}")
     message(VERBOSE "legate: Legion git_branch: ${git_branch}")
     message(VERBOSE "legate: Legion exclude_from_all: ${exclude_from_all}")
+
+    set(Legion_VERSION "${version}" PARENT_SCOPE)
+    set(Legion_GIT_REPO "${git_repo}" PARENT_SCOPE)
+    set(Legion_GIT_BRANCH "${git_branch}" PARENT_SCOPE)
 
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
       set(Legion_BACKTRACE_USE_LIBDW ON)
@@ -231,6 +236,12 @@ function(find_or_configure_legion)
                                 REPOSITORY ${legate_LEGION_REPOSITORY}
                                 BRANCH ${legate_LEGION_BRANCH}
                                 EXCLUDE_FROM_ALL ${legate_EXCLUDE_LEGION_FROM_ALL})
+
+  foreach(_var IN ITEMS "Legion_VERSION" "Legion_GIT_REPO" "Legion_GIT_BRANCH")
+    if(DEFINED ${_var})
+      set(${_var} "${${_var}}" PARENT_SCOPE)
+    endif()
+  endforeach()
 
   set(legate_LEGION_VERSION "${legate_LEGION_VERSION}" PARENT_SCOPE)
   set(Legion_USE_CUDA ${Legion_USE_CUDA} PARENT_SCOPE)

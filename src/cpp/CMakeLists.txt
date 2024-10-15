@@ -918,6 +918,9 @@ endif()
 add_custom_target(generate_install_info_py ALL
                   COMMAND ${CMAKE_COMMAND} -DLEGATE_CMAKE_DIR="${LEGATE_CMAKE_DIR}"
                           -DLEGATE_ARCH="${LEGATE_ARCH}"
+                          -DLegion_VERSION="${Legion_VERSION}"
+                          -DLegion_GIT_BRANCH="${Legion_GIT_BRANCH}"
+                          -DLegion_GIT_REPO="${Legion_GIT_REPO}"
                           -DLegion_NETWORKS="${Legion_NETWORKS}"
                           -DGASNet_CONDUIT="${GASNet_CONDUIT}"
                           -DLegion_USE_CUDA="${Legion_USE_CUDA}"

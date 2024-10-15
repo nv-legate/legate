@@ -37,6 +37,18 @@ def try_version(module_name: str, attr: str) -> str:
         return f"(ImportError: {err})"
 
 
+def legion_version() -> str:
+    import legate.install_info as info
+
+    if (result := info.legion_version) == "":
+        return FAILED_TO_DETECT
+
+    if info.legion_git_branch:
+        result += f" (commit: {info.legion_git_branch})"
+
+    return result
+
+
 def cuda_version() -> str:
     try:
         if out := check_output("conda list cuda-version --json".split()):
@@ -75,7 +87,7 @@ def devices() -> str:
 def main() -> None:
     print(f"Python      :  {sys.version.split(NEWLINE)[0]}")
     print(f"Platform    :  {platform.platform()}")
-    print(f"Legion      :  {try_version('legion_info', '__version__')}")
+    print(f"Legion      :  {legion_version()}")
     print(f"Legate      :  {try_version('legate', '__version__')}")
     print(f"Cunumeric   :  {try_version('cunumeric', '__version__')}")
     print(f"Numpy       :  {try_version('numpy', '__version__')}")

@@ -32,3 +32,9 @@ OFF: bool
 use_cuda: bool
 
 use_openmp: bool
+
+legion_version: str
+
+legion_git_branch: str
+
+legion_git_repo: str
