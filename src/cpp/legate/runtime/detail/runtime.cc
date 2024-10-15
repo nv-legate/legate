@@ -799,6 +799,12 @@ void Runtime::prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
                                          tuple<std::uint64_t> high_offsets,
                                          bool initialize)
 {
+  if (scope().machine()->count() <= 1) {
+    log_legate().debug() << "Prefetching bloated instances is not necessary because there is only "
+                            "one processor in the "
+                            "scope";
+    return;
+  }
   if (initialize) {
     issue_fill(store, Scalar{store->type()});
   }
