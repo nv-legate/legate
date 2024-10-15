@@ -1,10 +1,11 @@
 ---
-name: Build Legate Profiler Package
-
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 23 * * *'  # Nightly at 11:00 PM
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
+
 env:
   CONDA_ROOT: "/tmp/conda-croot/legate-profiler"
   CONDA_OUTPUT: "/tmp/legate-profiler/output"
@@ -15,19 +16,10 @@ env:
 
 jobs:
   Build_Profiler:
+    if: ${{ github.repository_owner == 'nv-legate' }}
     name: Build Legate Profiler
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - linux-64
-          - linux-aarch64
-        exclude:
-          - platform: linux-aarch64
-    runs-on: ${{ (matrix.platform == 'linux-64' && 'linux-amd64-cpu16') || (matrix.platform == 'linux-aarch64' && 'linux-arm64-cpu16') }}
+    runs-on: ${{ (inputs.platform == 'linux-64' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') }}
 
-    outputs:
-      TARGET_PLATFORM: ${{ steps.set_env.outputs.target_platform }}
     defaults:
       run:
         shell: bash --noprofile --norc -xeuo pipefail {0}
@@ -40,7 +32,7 @@ jobs:
         id: set_env
         run: |
           echo "ARTIFACT_PATH=${CONDA_OUTPUT}" >> "${GITHUB_ENV}"
-          echo "target_platform=${{ matrix.platform }}" >> "${GITHUB_OUTPUT}"
+          echo "target_platform=${{ inputs.platform }}" >> "${GITHUB_OUTPUT}"
 
       - name: Display environment variables
         run: |
@@ -123,7 +115,7 @@ jobs:
         id: set_env
         run: |
           ARTIFACT_PATH="${CONDA_OUTPUT}"
-          TARGET_PLATFORM=${{ needs.Build_Profiler.outputs.TARGET_PLATFORM }}
+          TARGET_PLATFORM=${{ inputs.platform }}
           BUILD_DATE=$(date +%Y%m%d)
           {
             echo "ARTIFACT_PATH=${ARTIFACT_PATH}"

@@ -1,5 +1,5 @@
 ---
-name: Build conda Nightly release package
+name: Build conda Nightly release and legate profiler package
 
 on:
   workflow_dispatch:
@@ -43,4 +43,19 @@ jobs:
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
       nightly: true
+    secrets: inherit
+
+  build-legate-profiler:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux-64
+          - linux-aarch64
+        exclude:
+          - platform: linux-aarch64
+    uses:
+      ./.github/workflows/gh-legate-profiler.yml
+    with:
+      platform: ${{ matrix.platform }}
     secrets: inherit
