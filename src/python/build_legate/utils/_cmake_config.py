@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 from typing import TypedDict
 
 from ._io import vprint, warning_print
@@ -68,8 +69,10 @@ class CMakeConfig:
     @staticmethod
     def _read_cmake_args(cmake_spec: CMakeSpec) -> list[str]:
         def read_env_args(name: str) -> list[str]:
+            # split by semicolon and then with shlex if there are spaces
             args = (x.strip() for x in os.environ.get(name, "").split(";"))
-            return [a for a in args if a]
+            split_args = (shlex.split(x) for x in args if x)
+            return [arg for sublist in split_args for arg in sublist]
 
         cmake_args = [
             arg
@@ -94,8 +97,18 @@ class CMakeConfig:
 
         for arg in cmake_args:
             if arg.startswith("-D"):
+                if "=" not in arg:
+                    raise ValueError(
+                        f"CMake define {arg!r} not in the form '-DNAME=value'"
+                    )
                 name, _, value = arg.partition("=")
-                name = name.removeprefix("-D").rpartition(":")[0]
+                if name.count(":") > 1:
+                    raise ValueError(
+                        "Too many colons (:) in {arg!r}. This may be correct "
+                        "in principle, but the build system expects only 1."
+                    )
+                name = name.removeprefix("-D")
+                name = name.partition(":")[0]
                 cmake_defines[name] = value
             else:
                 new_cmake_args.append(arg)
