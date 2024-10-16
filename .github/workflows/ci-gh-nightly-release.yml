@@ -1,5 +1,5 @@
 ---
-name: Build conda Nightly release and legate profiler package
+name: Build conda Nightly release and legate profiler packages
 
 on:
   workflow_dispatch:
@@ -52,8 +52,6 @@ jobs:
         platform:
           - linux-64
           - linux-aarch64
-        exclude:
-          - platform: linux-aarch64
     uses:
       ./.github/workflows/gh-legate-profiler.yml
     with:

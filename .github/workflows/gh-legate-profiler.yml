@@ -11,8 +11,8 @@ env:
   CONDA_OUTPUT: "/tmp/legate-profiler/output"
   URM_ARTIFACT_SERVER: "https://urm.nvidia.com/artifactory"
   URM_ARTIFACT_REPOS: "sw-legate-conda-local"
-  URM_PKG_DIR: "legate-profiler"
-  ARTIFACT_NAME: "Legate-Profiler-Artifact-${{ github.sha }}"
+  URM_PKG_DIR: "${{ inputs.platform }}"
+  ARTIFACT_NAME: "Legate-Profiler-Artifact-${{ inputs.platform }}-${{ github.sha }}"
 
 jobs:
   Build_Profiler:
@@ -149,7 +149,7 @@ jobs:
           echo "Upload legate-profiler package"
           find "${ARTIFACT_PATH}/${TARGET_PLATFORM}/" -name "legate-profiler*.tar.bz2" | while IFS= read -r f; do
             fname="$(basename "${f}")"
-            packageFound=$(curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -X POST  -H "content-type: text/plain" "${URM_ARTIFACT_SERVER}/api/search/aql" -d 'items.find({"name":"'"${fname}"'"})' | jq -r .results[].name)
+            packageFound=$(curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -X POST -H "content-type: text/plain" "${URM_ARTIFACT_SERVER}/api/search/aql" -d "items.find({\"repo\":\"${URM_ARTIFACT_REPOS}\",\"path\": {\"\$match\":\"${URM_PKG_DIR}\"}, \"name\":{\"\$eq\":\"${fname}\"}})" | jq -r .results[].name)
             if [[ -z "${packageFound}" ]]; then
               echo "Uploading the package: ${fname}"
               curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -T "${f}" "${URM_ARTIFACT_SERVER}/${URM_ARTIFACT_REPOS}/${URM_PKG_DIR}/${fname};buildDate=${BUILD_DATE};sha=${{ github.sha }}"
