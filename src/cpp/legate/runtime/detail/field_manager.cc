@@ -228,6 +228,16 @@ void ConsensusMatchingFieldManager::process_outstanding_match_()
   if (!outstanding_match_.has_value()) {
     return;
   }
+  const auto runtime = Runtime::get_runtime();
+  // We need to flush the window before we ask the runtime to progress unordered operations, to make
+  // sure any pending ReleaseRegionField operations that actually unmap/detach fields that we're
+  // about to match on have been emitted. If we were to match on a field whose ReleaseRegionField is
+  // still in the queue, we run the risk that the field's (unordered) unmap/detach operation gets
+  // emitted later and never inserted into the Legion task stream. If we then block on this
+  // unmap/detach that has not been explicitly "progressed", the Legion runtime would hang (the
+  // runtime doesn't "reap" pending unordered items automatically). We do this here before we block
+  // on the consensus match.
+  runtime->flush_scheduling_window();
   outstanding_match_->wait();
   log_legate().debug() << "Consensus match result: " << outstanding_match_->output().size() << "/"
                        << outstanding_match_->input().size() << " fields matched";
@@ -237,7 +247,7 @@ void ConsensusMatchingFieldManager::process_outstanding_match_()
   // detachment has also been emitted on all shards. This makes it safe to later block on any of
   // those detachments, since they are all guaranteed to be in the task stream now, and will
   // eventually complete.
-  Runtime::get_runtime()->progress_unordered_operations();
+  runtime->progress_unordered_operations();
   // Put all the matched fields into the ordered queue, in the same order as the match result,
   // which is the same order that all shards will see.
   for (auto&& item : outstanding_match_->output()) {

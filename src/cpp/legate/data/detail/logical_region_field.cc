@@ -72,6 +72,8 @@ void LogicalRegionField::PhysicalState::deallocate_attachment(bool wait_on_detac
 {
   if (has_pending_detach_) {
     // Needs to flush pending detach operations from the field's previous life.
+    // Note that we don't need to progress unordered operations here, because if we're here, that
+    // means that the region field is detached in order. (let that sink in :))
     Runtime::get_runtime()->flush_scheduling_window();
     LEGATE_ASSERT(!has_pending_detach_);
   }
