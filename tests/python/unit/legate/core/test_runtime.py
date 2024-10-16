@@ -15,7 +15,7 @@ import json
 
 import pytest
 
-from legate.core import Scope, track_provenance
+from legate.core import Scope, get_legate_runtime, track_provenance
 
 
 @track_provenance()
@@ -45,6 +45,48 @@ class Test_track_provenance:
         assert "test_runtime.py" in human
         assert "test_runtime.py" in machine["file"]
         assert "line" in machine
+
+
+class TestShutdownCallback:
+    counter = 0
+
+    @classmethod
+    def increase(cls) -> None:
+        cls.counter += 1
+
+    @classmethod
+    def reset(cls) -> None:
+        cls.counter = 0
+
+    @classmethod
+    def assert_reset(cls) -> None:
+        assert cls.counter == 0
+
+    def test_basic_shutdown_callback(self) -> None:
+        count = TestShutdownCallback.counter
+        runtime = get_legate_runtime()
+        runtime.add_shutdown_callback(TestShutdownCallback.increase)
+        runtime.finish()
+        # run it another time to check callback is not lingering
+        runtime.finish()
+        assert TestShutdownCallback.counter == count + 1
+
+    def test_LIFO(self) -> None:
+        TestShutdownCallback.counter = 99
+        runtime = get_legate_runtime()
+        runtime.add_shutdown_callback(TestShutdownCallback.increase)
+        runtime.add_shutdown_callback(TestShutdownCallback.assert_reset)
+        runtime.add_shutdown_callback(TestShutdownCallback.reset)
+        runtime.finish()
+        assert TestShutdownCallback.counter == 1
+
+    def test_duplicate_callback(self) -> None:
+        count = TestShutdownCallback.counter
+        runtime = get_legate_runtime()
+        for i in range(5):
+            runtime.add_shutdown_callback(TestShutdownCallback.increase)
+        runtime.finish()
+        assert TestShutdownCallback.counter == count + 5
 
 
 if __name__ == "__main__":

@@ -65,6 +65,13 @@ class TestLogicalStoreOperation:
     )
     def test_partition_by_tiling(self, shape: tuple[int]) -> None:
         runtime = get_legate_runtime()
+        # test might crash when there are still running tasks, block until done
+        # [error 397] LEGION ERROR: Attempted an external attach operation on
+        # region (d80,3a,3a) that conflicts with previous inline mapping in
+        # task Legate Core Toplevel Task (ID 1) that would ultimately result in
+        # deadlock. Instead you receive this error message. Try unmapping the
+        # region before invoking 'attach_external_resource'.
+        runtime.issue_execution_fence(block=True)
         arr = np.random.rand(*shape)
         store = runtime.create_store_from_buffer(
             ty.float64, arr.shape, arr, False

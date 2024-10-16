@@ -10,15 +10,22 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import numpy as np
 import pytest
 
-from legate.core import Scalar, get_legate_runtime, types as ty
+from legate.core import (
+    Scalar,
+    Scope,
+    get_legate_runtime,
+    track_provenance,
+    types as ty,
+)
 from legate.core.task import task
 
-from .utils import tasks
+from .utils import tasks, utils
 from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SCALAR_VALS, SHAPES
 
 
@@ -38,6 +45,41 @@ class TestManualTask:
             (1, 2, 3),
             (0, 1, 2),
         )
+
+    def test_default_provenance(self) -> None:
+        runtime = get_legate_runtime()
+        library = runtime.core_library
+        manual_task = runtime.create_manual_task(
+            library,
+            tasks.basic_task.task_id,
+            (1, 2, 3),
+        )
+        assert manual_task.provenance() == ""
+
+    def test_scope_provenance(self) -> None:
+        runtime = get_legate_runtime()
+        library = runtime.core_library
+        provenance = "foo"
+        with Scope(provenance=provenance):
+            manual_task = runtime.create_manual_task(
+                library,
+                tasks.basic_task.task_id,
+                (1, 2, 3),
+            )
+        assert manual_task.provenance() == provenance
+
+    def test_track_provenance(self) -> None:
+        runtime = get_legate_runtime()
+        library = runtime.core_library
+        manual_task = track_provenance()(runtime.create_manual_task)(
+            library,
+            tasks.basic_task.task_id,
+            (1, 2, 3),
+        )
+        pattern = r"[^/](/[^:]+):.*"
+        match = re.search(pattern, manual_task.provenance())
+        assert match
+        assert match.groups()[0] == __file__
 
     @pytest.mark.parametrize("exc", [ValueError, AssertionError, RuntimeError])
     def test_pytask_exception_handling(self, exc: type[Exception]) -> None:
@@ -224,6 +266,47 @@ class TestManualTask:
             np.sum(in_arr),
         )
 
+    def test_concurrent(self) -> None:
+        runtime = get_legate_runtime()
+        shape = (runtime.machine.count(),)
+        manual_task = runtime.create_manual_task(
+            runtime.core_library, tasks.copy_store_task.task_id, shape
+        )
+        in_arr, in_store = utils.random_array_and_store(shape)
+        out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
+        manual_task.add_input(in_store)
+        manual_task.add_output(out_store)
+        # not sure if there's a way to confirm the effects from python side
+        # just set val and execute for now
+        manual_task.set_concurrent(True)
+        manual_task.execute()
+        runtime.issue_execution_fence(block=True)
+        np.testing.assert_allclose(out_arr, in_arr)
+
+    def test_side_effect(self) -> None:
+        class foo:
+            val = 0
+
+        def increment() -> None:
+            obj.val += 1
+
+        @task(variants=tuple(tasks.KNOWN_VARIANTS))
+        def foo_task() -> None:
+            increment()
+
+        obj = foo()
+        runtime = get_legate_runtime()
+        count = runtime.machine.count()
+        manual_task = runtime.create_manual_task(
+            runtime.core_library, foo_task.task_id, (count,)
+        )
+        # not sure how to actually check the impact from python side
+        # just set and execute for now
+        manual_task.set_side_effect(True)
+        manual_task.execute()
+        runtime.issue_execution_fence(block=True)
+        assert obj.val == count
+
 
 class TestManualTaskErrors:
     def test_add_invalid_input_output(self) -> None:
@@ -355,6 +438,23 @@ class TestManualTaskErrors:
         )
         with pytest.raises(exc, match=msg):
             task.add_communicator("foo")
+
+    @pytest.mark.xfail(run=False, reason="crashes application")
+    def test_invalid_concurrent_mapping(self) -> None:
+        runtime = get_legate_runtime()
+        shape = (runtime.machine.count() + 1,)
+        manual_task = runtime.create_manual_task(
+            runtime.core_library, tasks.basic_task.task_id, shape
+        )
+        manual_task.set_concurrent(True)
+        # TODO(yimoj) [issue 1261]
+        # [error 67] LEGION ERROR: Mapper legate.core on Node 0 performed
+        # illegal mapping of concurrent index space task foo (UID 5) by mapping
+        # multiple points to the same processor 1d00000000000002. All point
+        # tasks must be mapped to different processors for concurrent execution
+        # of index space tasks.
+        manual_task.execute()
+        runtime.issue_execution_fence(block=True)
 
 
 if __name__ == "__main__":

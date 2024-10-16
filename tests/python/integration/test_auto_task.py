@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+import re
 from typing import Any, Type
 
 import numpy as np
@@ -19,10 +20,12 @@ from legate.core import (
     ImageComputationHint,
     LogicalArray,
     Scalar,
+    Scope,
     bloat,
     get_legate_runtime,
     image,
     scale,
+    track_provenance,
     types as ty,
 )
 from legate.core.task import task
@@ -43,6 +46,33 @@ class TestAutoTask:
         runtime = get_legate_runtime()
         library = runtime.core_library
         runtime.create_auto_task(library, tasks.basic_task.task_id)
+
+    def test_default_provenance(self) -> None:
+        runtime = get_legate_runtime()
+        library = runtime.core_library
+        auto_task = runtime.create_auto_task(library, tasks.basic_task.task_id)
+        assert auto_task.provenance() == ""
+
+    def test_scope_provenance(self) -> None:
+        runtime = get_legate_runtime()
+        library = runtime.core_library
+        provenance = "foo"
+        with Scope(provenance=provenance):
+            auto_task = runtime.create_auto_task(
+                library, tasks.basic_task.task_id
+            )
+        assert auto_task.provenance() == provenance
+
+    def test_track_provenance(self) -> None:
+        runtime = get_legate_runtime()
+        library = runtime.core_library
+        auto_task = track_provenance()(runtime.create_auto_task)(
+            library, tasks.basic_task.task_id
+        )
+        pattern = r"[^/](/[^:]+):.*"
+        found = re.search(pattern, auto_task.provenance())
+        assert found
+        assert found.groups()[0] == __file__
 
     @pytest.mark.parametrize("exc", [ValueError, AssertionError, RuntimeError])
     def test_pytask_exception_handling(self, exc: Type[Exception]) -> None:
@@ -228,6 +258,47 @@ class TestAutoTask:
             np.asarray(in_store.get_physical_store().get_inline_allocation()),
             np.asarray(out_store.get_physical_store().get_inline_allocation()),
         )
+
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
+    def test_concurrent(self, shape) -> None:
+        runtime = get_legate_runtime()
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.copy_store_task.task_id
+        )
+        in_arr, in_store = utils.random_array_and_store(shape)
+        out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
+        auto_task.add_input(in_store)
+        auto_task.add_output(out_store)
+        auto_task.add_alignment(out_store, in_store)
+        # not sure if there's a way to confirm the effects from python side
+        # just set val and execute for now
+        auto_task.set_concurrent(True)
+        auto_task.execute()
+        runtime.issue_execution_fence(block=True)
+        np.testing.assert_allclose(out_arr, in_arr)
+
+    def test_side_effect(self) -> None:
+        class foo:
+            val = 0
+
+        def increment() -> None:
+            obj.val += 1
+
+        @task(variants=tuple(tasks.KNOWN_VARIANTS))
+        def foo_task() -> None:
+            increment()
+
+        obj = foo()
+        runtime = get_legate_runtime()
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, foo_task.task_id
+        )
+        # not sure how to actually check this from python side
+        # just set and execute for now
+        auto_task.set_side_effect(True)
+        auto_task.execute()
+        runtime.issue_execution_fence(block=True)
+        assert obj.val == 1
 
 
 class TestAutoTaskConstraints:
