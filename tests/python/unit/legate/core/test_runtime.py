@@ -47,6 +47,11 @@ class Test_track_provenance:
         assert "line" in machine
 
 
+# TODO(yimoj): find a way to cover this
+# terminate called after throwing an instance of 'std::runtime_error'
+# what():  Legate runtime has been finalized, and cannot be re-initialized
+# without restarting the program.
+@pytest.mark.xfail(run=False, reason="interferes with other tests")
 class TestShutdownCallback:
     counter = 0
 

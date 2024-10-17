@@ -470,7 +470,7 @@ class TestAutoTaskErrors:
         runtime = get_legate_runtime()
         msg = "does not have task"
         with pytest.raises(IndexError, match=msg):
-            runtime.create_auto_task(runtime.core_library, 111)
+            runtime.create_auto_task(runtime.core_library, -1)
 
     def test_add_invalid_input_output(self) -> None:
         runtime = get_legate_runtime()
