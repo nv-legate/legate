@@ -1,0 +1,233 @@
+diff --git a/runtime/mathtypes/half.h b/runtime/mathtypes/half.h
+index dce3249c7..d285932d0 100644
+--- a/runtime/mathtypes/half.h
++++ b/runtime/mathtypes/half.h
+@@ -16,6 +16,8 @@
+ #ifndef __HALF_H__
+ #define __HALF_H__
+
++#include <legion_defines.h>
++
+ #include <stdint.h>
+ #include <string.h> // memcpy
+ #include <cmath>
+@@ -138,202 +140,26 @@ inline float __convert_halfint_to_float(uint16_t __x)
+ #if defined(__CUDA_FP16_H__)
+ #error "This header must be included before cuda_fp16.h"
+ #endif
+-#define __CUDA_NO_HALF_OPERATORS__
+ #include <cuda_fp16.h>
+ #elif defined(LEGION_USE_HIP)
+ #ifdef __HIP_PLATFORM_NVCC__
+ #if defined(__CUDA_FP16_H__)
+ #error "This header must be included before cuda_fp16.h"
+ #endif
+-#define __CUDA_NO_HALF_OPERATORS__
+ #include <cuda_fp16.h>
+ #else
+ #if defined(HIP_INCLUDE_HIP_HIP_FP16_H)
+ #error "This header must be included before hip_fp16.h"
+ #endif
+-#define __HIP_NO_HALF_OPERATORS__
+ #include <hip/hip_fp16.h>
+ #endif
+ #endif
+
+-__CUDA_HD__
+-inline __half operator-(const __half &one)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hneg(one);
+-#else
+-  return __float2half(-__half2float(one));
++#if __has_include(<cuda/version>)
++#include <cuda/version> // CCCL_MAJOR_VERSION
+ #endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hneg(one);
+-#else
+-  return __half(-(float(one)));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline __half operator+(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hadd(one, two);
+-#else
+-  return __float2half(__half2float(one) + __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hadd(one, two);
+-#else
+-  return __half(float(one) + float(two));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline __half operator-(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hsub(one, two);
+-#else
+-  return __float2half(__half2float(one) - __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hsub(one, two);
+-#else
+-  return __half(float(one) - float(two));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline __half operator*(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hmul(one, two);
+-#else
+-  return __float2half(__half2float(one) * __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hmul(one, two);
+-#else
+-  return __half(float(one) * float(two));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline __half operator/(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ == 8
+-  return hdiv(one, two);
+-#elif __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 9
+-  return __hdiv(one, two);
+-#else
+-  return __float2half(__half2float(one) / __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hdiv(one, two);
+-#else
+-  return __half(float(one) / float(two));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline bool operator==(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __heq(one, two);
+-#else
+-  return (__half2float(one) == __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __heq(one, two);
+-#else
+-  return (float(one) == float(two));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline bool operator!=(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hne(one, two);
+-#else
+-  return (__half2float(one) != __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hne(one, two);
+-#else
+-  return (float(one) != float(two));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline bool operator<(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hlt(one, two);
+-#else
+-  return (__half2float(one) < __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hlt(one, two);
+-#else
+-  return (float(one) < float(two));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline bool operator<=(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hle(one, two);
+-#else
+-  return (__half2float(one) <= __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hle(one, two);
+-#else
+-  return (float(one) <= float(two));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline bool operator>(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hgt(one, two);
+-#else
+-  return (__half2float(one) > __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hgt(one, two);
+-#else
+-  return (float(one) > float(two));
+-#endif
+-}
+-
+-__CUDA_HD__
+-inline bool operator>=(const __half &one, const __half &two)
+-{
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hge(one, two);
+-#else
+-  return (__half2float(one) >= __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hge(one, two);
+-#else
+-  return (float(one) >= float(two));
+-#endif
+-}
+
++#if CCCL_MAJOR_VERSION < 2 || (CCCL_MAJOR_VERSION == 2 && CCCL_MINOR_VERSION < 4)
+ __CUDA_HD__
+ inline __half asin(const __half &one)
+ {
+@@ -561,9 +387,11 @@ inline __half acos(const __half &one)
+   return (__float2half(std::acos(__half2float(one))));
+ #endif
+ }
++#endif
+
+-#else // not __CUDACC__ or __HIPCC__
+-
++#elif defined(LEGION_USE_CUDA) && defined(LEGION_HAVE_CUDA_HOST_HALF)
++#include <cuda_fp16.h>
++#elif !defined(__CUDA_FP16_TYPES_EXIST__)
+ struct __half
+ {
+   uint16_t __x;

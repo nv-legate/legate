@@ -1,0 +1,40 @@
+diff --git a/runtime/CMakeLists.txt b/runtime/CMakeLists.txt
+index 70de60b25..2e5917444 100644
+--- a/runtime/CMakeLists.txt
++++ b/runtime/CMakeLists.txt
+@@ -901,6 +901,35 @@ if(Legion_USE_CUDA)
+         message(FATAL_ERROR "Legion_REDOP_COMPLEX requires CUDA >= 11.7 (found ${CUDAToolkit_VERSION}) or libcudacxx >= 1.8.0")
+       endif()
+     endif()
++    include(CheckSourceCompiles)
++    include(CMakePushCheckState)
++
++    cmake_push_check_state(RESET)
++    set(CMAKE_REQUIRED_LIBRARIES CUDA::toolkit)
++    check_source_compiles(CUDA
++      [=[
++  #include <cuda_fp16.h>
++
++  int main()
++  {
++    __half h = __half(1);
++
++    h *= h;
++    h += h;
++    h /= h;
++    h -= h;
++    h = __half(1);
++    h = h + h - h * h / h;
++    return h == h ? 0 : 1;
++  }
++  ]=] LEGION_HAVE_CUDA_HOST_HALF)
++    cmake_pop_check_state()
++
++    if(LEGION_HAVE_CUDA_HOST_HALF)
++      target_compile_definitions(LegionRuntime PUBLIC LEGION_HAVE_CUDA_HOST_HALF=1)
++      target_compile_definitions(RealmRuntime PUBLIC LEGION_HAVE_CUDA_HOST_HALF=1)
++    endif()
++
+     # complex reduction ops bring in a public dependency on cuda headers
+     target_link_libraries(LegionRuntime PUBLIC CUDA::toolkit)
+   endif()
