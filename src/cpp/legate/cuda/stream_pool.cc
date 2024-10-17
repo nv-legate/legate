@@ -21,11 +21,12 @@ namespace legate::cuda {
 
 StreamView::~StreamView()
 {
-  if (valid_ && legate::detail::Config::synchronize_stream_view) {
-    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      LEGATE_CHECK_CUDA_STREAM(stream_);
-    } else {
+  if (valid_) {
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG) || legate::detail::Config::synchronize_stream_view) {
       LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream_));
+      LEGATE_CHECK_CUDA(cudaPeekAtLastError());
+    } else {
+      LEGATE_CHECK_CUDA(cudaPeekAtLastError());
     }
   }
 }

@@ -134,7 +134,7 @@ struct cudaPointerAttributes {
     LEGATE_CHECK_CUDA(cudaPeekAtLastError());         \
   } while (false)
 #else
-#define LEGATE_CHECK_CUDA_STREAM(stream) static_cast<void>(stream)
+#define LEGATE_CHECK_CUDA_STREAM(stream) LEGATE_CHECK_CUDA(cudaPeekAtLastError())
 #endif
 // NOLINTNEXTLINE
 #define LegateCheckCUDAStream(...)                                                              \
