@@ -16,6 +16,14 @@ import os
 import sys
 from pathlib import Path
 
+try:
+    # imported for effect
+    import legate  # noqa: F401
+except ModuleNotFoundError:
+    from scripts.get_legate_dir import get_legate_dir
+
+    sys.path.insert(0, str(Path(get_legate_dir()) / "src" / "python"))
+
 from legate.tester.args import parser
 from legate.tester.config import Config
 from legate.tester.test_plan import TestPlan
@@ -23,7 +31,7 @@ from legate.tester.test_system import TestSystem
 
 
 def _find_tests(prefix: Path) -> tuple[Path, list[Path]] | None:
-    tests_dir = prefix / "src" / "cpp" / "tests"
+    tests_dir = prefix / "cpp" / "tests"
     tests_bin = [
         tests_dir / "bin" / "tests_with_runtime",
         tests_dir / "bin" / "tests_wo_runtime",
@@ -52,7 +60,7 @@ def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
 
     cpp_ret = _find_tests(legate_arch_dir / "cmake_build")
     py_ret = _find_tests(
-        legate_arch_dir / "skbuild_core" / "src" / "python" / "legate_cpp"
+        legate_arch_dir / "skbuild_core" / "python" / "legate_cpp"
     )
 
     if cpp_ret and py_ret:
