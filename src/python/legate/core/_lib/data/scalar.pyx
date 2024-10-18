@@ -41,7 +41,7 @@ from ..type.type_info cimport Type, _Type
 
 from ..type.type_info import null_type
 
-from ..utilities.typedefs cimport __half, half_to_float
+from ..utilities.typedefs cimport __convert_halfint_to_float, __half
 from ..utilities.utils cimport is_iterable
 
 
@@ -265,8 +265,8 @@ cdef dict _GETTERS = {
     #    cannot return non-Python types)
     # 2. Even though __half has a operator float() (and implicit conversion to
     #    it), Cython (3.0.3) does not yet support defining it for C++ classes.
-    _Type.Code.FLOAT16 : lambda Scalar result: half_to_float(
-        result._handle.value[__half]()
+    _Type.Code.FLOAT16 : lambda Scalar result: __convert_halfint_to_float(
+        result._handle.value[__half]().raw()
     ),
     _Type.Code.FLOAT32 : lambda Scalar result: result._handle.value[float](),
     _Type.Code.FLOAT64 : lambda Scalar result: result._handle.value[double](),

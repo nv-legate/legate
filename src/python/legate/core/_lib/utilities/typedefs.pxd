@@ -83,17 +83,3 @@ cdef class Domain:
 
     @staticmethod
     cdef Domain from_handle(_Domain)
-
-
-cdef extern from * nogil:
-    """
-    namespace {
-
-    [[nodiscard]] float half_to_float(__half h)
-    {
-      return static_cast<float>(h);
-    }
-
-    } // namespace
-    """
-    float half_to_float(__half)
