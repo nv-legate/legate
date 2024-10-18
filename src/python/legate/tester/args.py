@@ -355,5 +355,5 @@ other.add_argument(
     action="store_true",
     default=False,
     required=False,
-    help="Whether to use color terminal output (if colorama is installed)",
+    help="Whether to use color terminal output (if rich is installed)",
 )

@@ -193,6 +193,7 @@ requirements:
   run:
     - cffi
     - llvm-openmp
+    - rich
     - numpy {{ numpy_version }}
     - typing_extensions
     - elfutils  # [linux]

@@ -15,13 +15,13 @@ from shlex import quote
 
 import pytest
 from pytest_mock import MockerFixture
+from rich.console import Console
 
 import legate.driver.driver as m
 from legate import install_info
 from legate.driver.command import CMD_PARTS_PYTHON
 from legate.driver.config import Config
 from legate.driver.launcher import RANK_ENV_VARS, Launcher
-from legate.util.colors import scrub
 from legate.util.shared_args import LAUNCHERS
 from legate.util.system import System
 from legate.util.types import LauncherType
@@ -30,6 +30,8 @@ from ...util import Capsys
 from .util import GenConfig
 
 SYSTEM = System()
+
+CONSOLE = Console(color_system=None, soft_wrap=True)
 
 
 class TestDriver:
@@ -135,9 +137,13 @@ class TestDriver:
 
         driver.run()
 
-        run_out = scrub(capsys.readouterr()[0]).strip()
+        run_out = capsys.readouterr()[0].strip()
 
-        pv_out = scrub(m.format_verbose(driver.system, driver)).strip()
+        with CONSOLE.capture() as capture:
+            CONSOLE.print(
+                m.format_verbose(driver.system, driver).strip(), end=""
+            )
+        pv_out = capture.get()
 
         assert pv_out in run_out
 
@@ -163,9 +169,11 @@ class TestDriver:
 
         driver.run()
 
-        run_out = scrub(capsys.readouterr()[0]).strip()
+        run_out = capsys.readouterr()[0].strip()
 
-        pv_out = scrub(m.format_verbose(driver.system, driver)).strip()
+        with CONSOLE.capture() as capture:
+            CONSOLE.print(m.format_verbose(system, driver).strip(), end="")
+        pv_out = capture.get()
 
         assert pv_out not in run_out
 
@@ -180,38 +188,48 @@ class Test_format_verbose:
     def test_system_only(self) -> None:
         system = System()
 
-        out = scrub(m.format_verbose(system)).strip()
+        text = m.format_verbose(system).strip()
+        with CONSOLE.capture() as capture:
+            CONSOLE.print(text, end="")
+        scrubbed = capture.get()
 
-        assert out.startswith(f"{'--- Legion Python Configuration ':-<80}")
-        assert "Legate paths:" in out
-        for line in scrub(str(system.legate_paths)).split():
-            assert line in out
+        assert scrubbed.startswith(
+            f"{'--- Legion Python Configuration ':-<80}"
+        )
+        assert "Legate paths:" in scrubbed
+        for line in str(system.legate_paths).split():
+            assert line in text
 
-        assert "Legion paths:" in out
-        for line in scrub(str(system.legion_paths)).split():
-            assert line in out
+        assert "Legion paths:" in scrubbed
+        for line in str(system.legion_paths).split():
+            assert line in text
 
     def test_system_and_driver(self, capsys: Capsys) -> None:
         config = Config(["legate"])
         system = System()
         driver = m.LegateDriver(config, system)
 
-        out = scrub(m.format_verbose(system, driver)).strip()
+        text = m.format_verbose(system, driver).strip()
+        with CONSOLE.capture() as capture:
+            CONSOLE.print(text, end="")
+        scrubbed = capture.get()
 
-        assert out.startswith(f"{'--- Legion Python Configuration ':-<80}")
-        assert "Legate paths:" in out
-        for line in scrub(str(system.legate_paths)).split():
-            assert line in out
+        assert scrubbed.startswith(
+            f"{'--- Legion Python Configuration ':-<80}"
+        )
+        assert "Legate paths:" in scrubbed
+        for line in str(system.legate_paths).split():
+            assert line in text
 
-        assert "Legion paths:" in out
-        for line in scrub(str(system.legion_paths)).split():
-            assert line in out
+        assert "Legion paths:" in scrubbed
+        for line in str(system.legion_paths).split():
+            assert line in text
 
-        assert "Command:" in out
-        assert f"  {' '.join(quote(t) for t in driver.cmd)}" in out
+        assert "Command:" in scrubbed
+        assert f"{' '.join(quote(t) for t in driver.cmd)}" in scrubbed
 
-        assert "Customized Environment:" in out
+        assert "Customized Environment:" in scrubbed
         for k in driver.custom_env_vars:
-            assert f"{k}={quote(driver.env[k])}" in out
+            assert f"{k}={quote(driver.env[k])}" in scrubbed
 
-        assert out.endswith(f"\n{'-':-<80}")
+        assert scrubbed.endswith(f"\n{'-':-<80}")

@@ -21,7 +21,6 @@ from pytest_mock import MockerFixture
 
 import legate.tester.runner as m
 from legate.tester.config import Config
-from legate.util import colors
 
 
 class Runner:
@@ -297,19 +296,28 @@ class TestGTestRunner:
 
     class Test_gtest_args:
 
-        def test_colors_enabled(self, mocker: MockerFixture) -> None:
-            mocker.patch.object(colors, "ENABLED", True)
+        def test_defaults(self) -> None:
             r = m.GTestRunner()
             assert r.gtest_args(m.TestSpec(Path("foo"), "", "bar")) == [
+                "foo",
+                "--gtest_filter=bar",
+            ]
+
+        def test_colors_enabled(self) -> None:
+            r = m.GTestRunner()
+            assert r.gtest_args(
+                m.TestSpec(Path("foo"), "", "bar"), color=True
+            ) == [
                 "foo",
                 "--gtest_filter=bar",
                 "--gtest_color=yes",
             ]
 
-        def test_colors_disabled(self, mocker: MockerFixture) -> None:
-            mocker.patch.object(colors, "ENABLED", False)
+        def test_colors_disabled(self) -> None:
             r = m.GTestRunner()
-            assert r.gtest_args(m.TestSpec(Path("foo"), "", "bar")) == [
+            assert r.gtest_args(
+                m.TestSpec(Path("foo"), "", "bar"), color=False
+            ) == [
                 "foo",
                 "--gtest_filter=bar",
             ]
@@ -329,13 +337,6 @@ class TestGTestRunner:
             assert r.gtest_args(
                 m.TestSpec(Path("foo"), "", "bar"), gdb=False
             ) == [
-                "foo",
-                "--gtest_filter=bar",
-            ]
-
-        def test_gdb_default(self) -> None:
-            r = m.GTestRunner()
-            assert r.gtest_args(m.TestSpec(Path("foo"), "", "bar")) == [
                 "foo",
                 "--gtest_filter=bar",
             ]

@@ -23,7 +23,6 @@ from legate.jupyter.kernel import (
     LEGATE_JUPYTER_METADATA_KEY,
     LegateMetadata,
 )
-from legate.util.colors import scrub
 from legate.util.ui import kvtable
 
 if TYPE_CHECKING:
@@ -86,7 +85,7 @@ Memory:
 {indent(kvtable(memory_table, align=False), prefix='  ')}
 """
         # remove any text colors in notebook
-        return scrub(out)
+        return out
 
 
 @magics_class

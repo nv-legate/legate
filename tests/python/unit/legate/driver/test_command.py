@@ -19,7 +19,6 @@ import pytest
 import legate.driver.command as m
 from legate import install_info
 from legate.driver.launcher import RANK_ENV_VARS
-from legate.util.colors import scrub
 from legate.util.types import LauncherType
 
 from ...util import Capsys
@@ -254,7 +253,7 @@ class Test_cmd_gdb:
         assert result == ()
 
         out, _ = capsys.readouterr()
-        assert scrub(out).strip() == self.MULTI_RANK_WARN
+        assert out.strip() == self.MULTI_RANK_WARN
 
 
 class Test_cmd_cuda_gdb:
@@ -290,7 +289,7 @@ class Test_cmd_cuda_gdb:
         assert result == ()
 
         out, _ = capsys.readouterr()
-        assert scrub(out).strip() == self.MULTI_RANK_WARN
+        assert out.strip() == self.MULTI_RANK_WARN
 
 
 class Test_cmd_nvprof:

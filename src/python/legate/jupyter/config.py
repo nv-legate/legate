@@ -22,7 +22,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from legate.util.types import RunMode
 
-import legate.util.colors as colors
 from legate.driver.config import (
     Binding,
     Core,
@@ -67,8 +66,6 @@ class Config:
         # only saving these for help with testing
         self._args = args
 
-        colors.ENABLED = args.color
-
         if args.display_name is None:
             args.display_name = args.spec_name
 
@@ -99,7 +96,7 @@ class Config:
             False,
         )
         self.info = Info(self.verbose > 0, False)
-        self.other = Other(False, [], [], None, False)
+        self.other = Other(False, [], [], None, False, False)
 
     @cached_property
     def run_mode(self) -> RunMode:

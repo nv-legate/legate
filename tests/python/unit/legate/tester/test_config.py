@@ -23,7 +23,6 @@ from pytest_mock import MockerFixture
 
 from legate.tester import FEATURES, config as m, defaults
 from legate.tester.args import PIN_OPTIONS, PinOptionsType
-from legate.util import colors
 
 REPO_TOP = Path(__file__).parents[4]
 
@@ -31,8 +30,6 @@ REPO_TOP = Path(__file__).parents[4]
 class TestConfig:
     def test_default_init(self) -> None:
         c = m.Config([])
-
-        assert colors.ENABLED is False
 
         assert c.features == ("cpus",)
 
@@ -81,13 +78,6 @@ class TestConfig:
         assert c.root_dir == PurePath(os.getcwd())
         assert c.dry_run is False
         assert c.legate_path == shutil.which("legate")
-
-    def test_color_arg(self, mocker: MockerFixture) -> None:
-        mocker.patch.object(colors, "ENABLED")
-
-        m.Config(["test.py", "--color"])
-
-        assert colors.ENABLED is True
 
     def test_files(self) -> None:
         c = m.Config(["test.py", "--files", "a", "b", "c"])

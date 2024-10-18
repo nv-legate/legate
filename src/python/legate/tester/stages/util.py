@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TypeAlias
 
-from ...util.ui import dim, failed, passed, shell, skipped, timeout, yellow
+from ...util.ui import failed, passed, shell, skipped, timeout
 from ..config import Config
 from ..logger import LOG
 from ..test_system import ProcessResult
@@ -152,7 +152,7 @@ def format_duration(start: datetime, end: datetime) -> str:
     time = f"{duration:0.2f}s"
     start_str = start.strftime("%H:%M:%S.%f")[:-4]
     end_str = end.strftime("%H:%M:%S.%f")[:-4]
-    return f" {yellow(time)} " + dim(f"{{{start_str}, {end_str}}}")
+    return f" [yellow]{time}[/] [dim]{{{start_str}, {end_str}}}[/]"
 
 
 def log_proc(

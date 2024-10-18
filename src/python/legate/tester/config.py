@@ -24,7 +24,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ..util import colors
+from rich import reconfigure
+
 from ..util.types import (
     ArgList,
     DataclassMixin,
@@ -99,6 +100,7 @@ class Other(DataclassMixin):
     cov_bin: str | None
     cov_args: str
     cov_src_path: str | None
+    color: bool
 
     # not frozen because we have to update this manually
     legate_install_dir: Path | None
@@ -122,8 +124,6 @@ class Config:
 
         # only saving this for help with testing
         self._args = args
-
-        colors.ENABLED = args.color
 
         # feature configuration
         self.features = self._compute_features(args)
@@ -162,6 +162,9 @@ class Config:
                 "not specify a launcher. Must use --launcher to specify a "
                 "launcher."
             )
+
+        color_system = "auto" if self.other.color else None
+        reconfigure(soft_wrap=True, color_system=color_system)
 
     @property
     def dry_run(self) -> bool:

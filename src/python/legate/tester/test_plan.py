@@ -17,7 +17,6 @@ from __future__ import annotations
 from datetime import timedelta
 from itertools import chain
 
-from ..util.colors import yellow
 from ..util.ui import banner, rule, summary, warn
 from . import LAST_FAILED_FILENAME
 from .config import Config
@@ -92,9 +91,9 @@ class TestPlan:
 
         if self._config.gtest_tests:
             details = (
-                f"* Feature stages       : {', '.join(yellow(x) for x in self._config.features)}",  # noqa E501
-                f"* Test files per stage : {yellow(str(len(self._config.gtest_tests)))}",  # noqa E501
-                f"* TestSystem description   : {yellow(str(cpus) + ' cpus')} / {yellow(str(gpus) + ' gpus')}",  # noqa E501
+                f"* Feature stages       : {', '.join(x for x in self._config.features)}",  # noqa E501
+                f"* Test files per stage : {len(self._config.gtest_tests)}",
+                f"* System description   : {cpus} cpus / {gpus} gpus",
             )
             return banner(
                 f"Test Suite Configuration ({'OpenMPI' if self._config.multi_node.ranks_per_node > 1 else 'GTest'})",  # noqa E501
@@ -102,9 +101,9 @@ class TestPlan:
             )
 
         details = (
-            f"* Feature stages       : {', '.join(yellow(x) for x in self._config.features)}",  # noqa E501
-            f"* Test files per stage : {yellow(str(len(self._config.test_files)))}",  # noqa E501
-            f"* TestSystem description   : {yellow(str(cpus) + ' cpus')} / {yellow(str(gpus) + ' gpus')}",  # noqa E501
+            f"* Feature stages       : {', '.join(x for x in self._config.features)}",  # noqa E501
+            f"* Test files per stage : {len(self._config.test_files)}",
+            f"* System description   : {cpus} cpus / {gpus} gpus",
         )
         return banner("Test Suite Configuration (Python)", details=details)
 
@@ -122,9 +121,7 @@ class TestPlan:
         """
         details = [
             f"* {s.name: <6}: "
-            + yellow(
-                f"{s.result.passed} / {s.result.total} passed in {s.result.time.total_seconds():0.2f}s"  # noqa E501
-            )
+            + f"{s.result.passed} / {s.result.total} passed in {s.result.time.total_seconds():0.2f}s"  # noqa E501
             for s in self._stages
         ]
 

@@ -239,19 +239,19 @@ class TestsConfig(SectionConfig):
         return (
             "clang-tools>=8",
             "clang>=8",
-            "colorama",
             "coverage",
+            "libhwloc=*=*default*",
             "mock",
             "mypy>=0.961",
             "pre-commit",
+            "psutil",
+            "pynvml",
             "pytest-cov",
             "pytest-mock",
             "pytest",
-            "types-docutils",
-            "pynvml",
+            "rich",
             "tifffile",
-            "psutil",
-            "libhwloc=*=*default*",
+            "types-docutils",
         )
 
     @property

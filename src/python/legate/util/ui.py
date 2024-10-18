@@ -11,8 +11,8 @@
 
 """Helper functions for simple text UI output.
 
-The color functions in this module require ``colorama`` to be installed in
-order to generate color output. If ``colorama`` is not available, plain
+The color functions in this module require ``rich`` to be installed in
+order to generate color output. If ``rich`` is not available, plain
 text output (i.e. without ANSI color codes) will be generated.
 
 """
@@ -22,8 +22,6 @@ from collections.abc import Iterable
 from datetime import timedelta
 from shlex import quote
 from typing import Any, TypeAlias
-
-from .colors import bright, cyan, dim, green, magenta, red, white, yellow
 
 Details: TypeAlias = Iterable[str]
 
@@ -106,7 +104,7 @@ def error(text: str) -> str:
         str
 
     """
-    return red(f"ERROR: {text}")
+    return f"[red]ERROR: {text}[/]"
 
 
 def skipped(msg: str) -> str:
@@ -118,7 +116,7 @@ def skipped(msg: str) -> str:
         Text to display after [SKIP]
 
     """
-    return f"{cyan('[SKIP]')} {msg}"
+    return f"[cyan][SKIP][/] {msg}"
 
 
 def timeout(msg: str, *, details: Details | None = None) -> str:
@@ -133,7 +131,7 @@ def timeout(msg: str, *, details: Details | None = None) -> str:
         A sequenece of text lines to diplay below the ``msg`` line
 
     """
-    ret = f"{yellow('[TIME]')} {msg}"
+    ret = f"[yellow][TIME][/] {msg}"
     if details:
         ret += f"\n{_format_details(details)}"
     return ret
@@ -153,8 +151,8 @@ def failed(
         A sequenece of text lines to diplay below the ``msg`` line
 
     """
-    fail = f"{bright(red('[FAIL]'))}"
-    exit = f"{bright(white(f' (exit: {exit_code}) '))}" if exit_code else ""
+    fail = "[bold red][FAIL][/]"
+    exit = f" [bold white](exit: {exit_code})[/]" if exit_code else ""
     if details:
         return f"{fail} {msg}{exit}\n{_format_details(details)}"
     return f"{fail} {msg}{exit}"
@@ -172,9 +170,10 @@ def passed(msg: str, *, details: Details | None = None) -> str:
         A sequenece of text lines to diplay below the ``msg`` line
 
     """
+    passed = "[bold green][PASS][/]"
     if details:
-        return f"{bright(green('[PASS]'))} {msg}\n{_format_details(details)}"
-    return f"{bright(green('[PASS]'))} {msg}"
+        return f"{passed} {msg}\n{_format_details(details)}"
+    return f"{passed} {msg}"
 
 
 def key(text: str) -> str:
@@ -190,7 +189,7 @@ def key(text: str) -> str:
         str
 
     """
-    return dim(green(text))
+    return f"[dim green]{text}[/]"
 
 
 def value(text: str) -> str:
@@ -206,7 +205,7 @@ def value(text: str) -> str:
         str
 
     """
-    return yellow(text)
+    return f"[yellow]{text}[/]"
 
 
 def kvtable(
@@ -280,8 +279,14 @@ def rule(
     """
     width = N - pad
     if text is None:
-        return cyan(f"{char * width: >{N}}")
-    return cyan(" " * pad + char * 3 + f"{f' {text} ' :{char}<{width - 3}}")
+        return f"[cyan]{char * width: >{N}}[/]"
+    return (
+        "[cyan]"
+        + " " * pad
+        + char * 3
+        + f"{f' {text} ' :{char}<{width - 3}}"
+        + "[/]"
+    )
 
 
 def section(text: str) -> str:
@@ -297,7 +302,7 @@ def section(text: str) -> str:
         str
 
     """
-    return bright(white(text))
+    return f"[bright white]{text}[/]"
 
 
 def shell(cmd: str, *, char: str = "+") -> str:
@@ -312,7 +317,7 @@ def shell(cmd: str, *, char: str = "+") -> str:
         A character to prefix the ``cmd`` with. (default: "+")
 
     """
-    return dim(white(f"{char}{cmd}"))
+    return f"[dim white]{char}{cmd}[/]"
 
 
 def summary(
@@ -349,8 +354,8 @@ def summary(
         if total > 0
         else f"{name}: 0 tests are running, Please check"
     )
-    color = green if passed == total and total > 0 else red
-    return bright(color(f"{summary: >{UI_WIDTH}}" if justify else summary))
+    color = "green" if passed == total and total > 0 else "red"
+    return f"[bright {color}]{summary: >{UI_WIDTH}}[/]" if justify else summary
 
 
 def warn(text: str) -> str:
@@ -366,4 +371,4 @@ def warn(text: str) -> str:
         str
 
     """
-    return magenta(f"WARNING: {text}")
+    return f"[magenta]WARNING: {text}[/]"

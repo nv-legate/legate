@@ -19,6 +19,8 @@ from subprocess import run
 from textwrap import indent
 from typing import TYPE_CHECKING, Any
 
+from rich import print as rich_print
+
 from ..util.system import System
 from ..util.types import DataclassMixin
 from ..util.ui import kvtable, rule, section, value
@@ -148,7 +150,7 @@ class LegateDriver:
         launcher = self.launcher
 
         if launcher.kind != "none" or launcher.detected_rank_id == "0":
-            print(*args, **kw)
+            rich_print(*args, **kw)
 
 
 def get_versions() -> LegateVersions:

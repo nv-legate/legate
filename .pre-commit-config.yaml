@@ -41,7 +41,7 @@ repos:
       - id: mypy
         pass_filenames: false
         args: ['src', 'tests', 'config', 'test.py']
-        additional_dependencies: [numpy, pytest, pytest_mock, types-psutil]
+        additional_dependencies: [numpy, pytest, pytest_mock, types-psutil, rich]
   - repo: https://github.com/MarcoGorelli/cython-lint
     rev: v0.16.2
     hooks:

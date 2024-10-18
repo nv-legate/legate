@@ -107,5 +107,5 @@ info.add_argument(
     dest="color",
     action="store_true",
     required=False,
-    help="Whether to use color terminal output (if colorama is installed)",
+    help="Whether to use color terminal output (if rich is installed)",
 )

@@ -14,10 +14,8 @@
 """
 from __future__ import annotations
 
-import re
-
-# ref: https://stackoverflow.com/a/14693789
-_ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+from rich import print as rich_print
+from rich.console import Console
 
 
 class Log:
@@ -34,7 +32,7 @@ class Log:
         start = len(self._record)
         for line in lines:
             self._record.append(line)
-            print(line, flush=True)
+            rich_print(line, flush=True)
         return (start, len(self._record))
 
     def clear(self) -> None:
@@ -45,16 +43,12 @@ class Log:
         *,
         start: int = 0,
         end: int | None = None,
-        filter_ansi: bool = True,
     ) -> str:
+        console = Console(color_system=None, soft_wrap=True)
         lines = self._record[start:end]
-
-        if filter_ansi:
-            full_text = _ANSI_ESCAPE.sub("", "\n".join(lines))
-        else:
-            full_text = "\n".join(lines)
-
-        return full_text
+        with console.capture() as capture:
+            console.print(*lines, sep="\n", end="")
+        return capture.get()
 
     @property
     def lines(self) -> tuple[str, ...]:

@@ -21,7 +21,7 @@ from pathlib import Path
 from subprocess import PIPE, Popen
 from typing import Any, Final
 
-import rich  # type: ignore[import-not-found]
+import rich
 
 from ._legate_config import get_legate_config
 from ._types import BuildKind

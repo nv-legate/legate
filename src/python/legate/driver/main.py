@@ -14,6 +14,8 @@
 """
 from __future__ import annotations
 
+from rich import print as rich_print
+
 from . import LegateDriver
 
 __all__ = ("legate_main",)
@@ -28,21 +30,21 @@ def prepare_driver(argv: list[str]) -> LegateDriver:
     try:
         config = Config(argv)
     except Exception as e:
-        print(error("Could not configure driver:\n"))
+        rich_print(error("Could not configure driver:\n"))
         raise e
 
     try:
         system = System()
     except Exception as e:
-        print(error("Could not determine System settings: \n"))
+        rich_print(error("Could not determine System settings: \n"))
         raise e
 
     try:
         driver = LegateDriver(config, system)
     except Exception as e:
         msg = "Could not initialize driver, path config and exception follow:"  # noqa
-        print(error(msg))
-        print(format_verbose(system), flush=True)
+        rich_print(error(msg))
+        rich_print(format_verbose(system), flush=True)
         raise e
 
     return driver

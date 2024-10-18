@@ -21,7 +21,8 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any, Protocol
 
-from ..util import colors
+from rich import print as rich_print, reconfigure
+
 from ..util.types import (
     ArgList,
     DataclassMixin,
@@ -144,6 +145,7 @@ class Other(DataclassMixin):
     wrapper_inner: list[str]
     module: str | None
     dry_run: bool
+    color: bool
 
 
 class ConfigProtocol(Protocol):
@@ -188,8 +190,6 @@ class Config:
 
         args = parser.parse_args(self.argv[1:])
 
-        colors.ENABLED = args.color
-
         # only saving this for help with testing
         self._args = args
 
@@ -219,6 +219,9 @@ class Config:
                 raise RuntimeError(
                     "'exec' run mode cannot be used with --module"
                 )
+
+        color_system = "auto" if self.other.color else None
+        reconfigure(soft_wrap=True, color_system=color_system)
 
     @cached_property
     def console(self) -> bool:
@@ -250,7 +253,7 @@ class Config:
         # redirect all logging to a file, even if the user didn't ask for it.
         if args.spy:
             if args.user_logging_levels is not None and not args.log_to_file:
-                print(
+                rich_print(
                     warn(
                         "Logging output is being redirected to a "
                         f"file in directory {args.logdir}"

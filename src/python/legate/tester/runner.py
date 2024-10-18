@@ -366,7 +366,9 @@ class GTestRunner(Runner):
             for test in test_list
         )
 
-    def gtest_args(self, test_spec: TestSpec, *, gdb: bool = False) -> ArgList:
+    def gtest_args(
+        self, test_spec: TestSpec, *, gdb: bool = False, color: bool = False
+    ) -> ArgList:
         """Generate args specific to configuring gtest
 
         Parameters
@@ -382,10 +384,8 @@ class GTestRunner(Runner):
         args : ArgList
 
         """
-        from ..util import colors
-
         args = [str(test_spec.path), f"--gtest_filter={test_spec.arg}"]
-        if colors.ENABLED:
+        if color:
             args.append("--gtest_color=yes")
         if gdb:
             args.append("--gtest_catch_exceptions=0")
@@ -412,7 +412,9 @@ class GTestRunner(Runner):
 
         """
         gdb_args = ["--gdb"] if config.other.gdb else []
-        gtest_args = self.gtest_args(test_spec, gdb=config.other.gdb)
+        gtest_args = self.gtest_args(
+            test_spec, gdb=config.other.gdb, color=config.other.color
+        )
 
         cmd = (
             [sys.executable, str(config.legate_path)]
@@ -449,7 +451,7 @@ class GTestRunner(Runner):
         """
         assert not config.other.gdb
 
-        gtest_args = self.gtest_args(test_spec)
+        gtest_args = self.gtest_args(test_spec, color=config.other.color)
 
         cmd = (
             [sys.executable, str(config.legate_path)]

@@ -17,7 +17,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, NoReturn, Protocol
 
-from ...util.colors import yellow
 from ...util.types import ArgList, EnvDict
 from ...util.ui import banner, summary
 from .. import FeatureType
@@ -172,13 +171,13 @@ class TestStage(Protocol):
             f"Exiting stage: {self.name}",
             details=(
                 "* Results      : "
-                + yellow(
+                + (
                     f"{passed} / {total} files passed "  # noqa E500
                     f"({passed / total * 100:0.1f}%)"
                     if total > 0
                     else "0 tests are running, Please check "
                 ),
-                "* Elapsed time : " + yellow(f"{self.result.time}"),
+                "* Elapsed time : " + f"{self.result.time}",
             ),
         )
 

@@ -39,21 +39,23 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12"
 ]
-dependencies = ["numpy!=2.1.0"]
+dependencies = [
+    "numpy!=2.1.0",
+    "rich",
+]
 dynamic = ["version"]
 
 [project.optional-dependencies]
 test = [
-    "colorama",
     "coverage",
     "mock",
     "mypy>=0.961",
+    "psutil",
     "pynvml",
     "pytest-cov",
     "pytest",
     "pytest-mock",
     "jupyter_client",
-    "psutil"
 ]
 
 [project.urls]

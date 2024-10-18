@@ -15,6 +15,8 @@ import argparse
 import shlex
 from typing import TYPE_CHECKING
 
+from rich import print as rich_print
+
 from .. import install_info
 from ..util.ui import warn
 
@@ -86,7 +88,7 @@ def cmd_gdb(
         return ()
 
     if config.multi_node.ranks > 1:
-        print(warn("Legate does not support gdb for multi-rank runs"))
+        rich_print(warn("Legate does not support gdb for multi-rank runs"))
         return ()
 
     return ("lldb", "--") if system.os == "Darwin" else ("gdb", "--args")
@@ -99,7 +101,9 @@ def cmd_cuda_gdb(
         return ()
 
     if config.multi_node.ranks > 1:
-        print(warn("Legate does not support cuda-gdb for multi-rank runs"))
+        rich_print(
+            warn("Legate does not support cuda-gdb for multi-rank runs")
+        )
         return ()
 
     return ("cuda-gdb", "--args")

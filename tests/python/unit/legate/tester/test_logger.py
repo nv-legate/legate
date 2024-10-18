@@ -18,7 +18,14 @@ from legate.tester import logger as m
 
 TEST_LINES = (
     "line 1",
-    "\x1b[31mfoo\x1b[0m",  # ui.red("foo")
+    "[red]foo[/]",
+    "bar",
+    "last line",
+)
+
+SCRUBBED_TEST_LINES = (
+    "line 1",
+    "foo",
     "bar",
     "last line",
 )
@@ -28,19 +35,19 @@ class TestLogger:
     def test_init(self) -> None:
         log = m.Log()
         assert log.lines == ()
-        assert log.dump() == ""
+        assert log.dump() == "\n"
 
     def test_record_lines(self) -> None:
         log = m.Log()
         log.record(*TEST_LINES)
         assert log.lines == TEST_LINES
-        assert log.dump(filter_ansi=False) == "\n".join(TEST_LINES)
+        assert log.dump() == "\n".join(SCRUBBED_TEST_LINES)
 
     def test_record_line_with_newlines(self) -> None:
         log = m.Log()
         log.record("\n".join(TEST_LINES))
         assert log.lines == TEST_LINES
-        assert log.dump(filter_ansi=False) == "\n".join(TEST_LINES)
+        assert log.dump() == "\n".join(SCRUBBED_TEST_LINES)
 
     def test_call(self) -> None:
         log = m.Log()
