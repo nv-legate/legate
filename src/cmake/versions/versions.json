@@ -6,11 +6,27 @@
             "git_url": "https://github.com/NVIDIA/cccl.git",
             "version": "2.3.2"
         },
+        "HighFive": {
+            "git_shallow": false,
+            "git_tag": "8bb1ed8940880d33f4f9c2ea9b6072abd57219ef",
+            "git_url": "https://github.com/nv-legate/HighFive.git",
+            "version": "2.9.0"
+        },
         "argparse": {
-            "git_shallow": true,
             "git_tag": "fd13c2859131ab463e617a5a8abcc69eb7e1d897",
             "git_url": "https://github.com/nv-legate/argparse.git",
             "version": "3.1"
+        },
+        "hdf5_vfd_gds": {
+            "git_tag": "ec598e76a083887a36438da9766b5ac7eaec3596",
+            "git_url": "https://github.com/nv-legate/vfd-gds.git",
+            "version": "1.0.2"
+        },
+        "kvikio": {
+            "git_shallow": false,
+            "git_tag": "5a733bdfd373ec5e6d5f3ea57358d58189391af3",
+            "git_url": "https://github.com/rapidsai/kvikio.git",
+            "version": "24.10"
         },
         "mdspan": {
             "git_shallow": false,
@@ -36,7 +52,6 @@
             "version": "0.6"
         },
         "span": {
-            "git_shallow": true,
             "git_tag": "master",
             "git_url": "https://github.com/tcbrindle/span.git",
             "patches": [

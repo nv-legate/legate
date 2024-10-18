@@ -109,6 +109,12 @@ run_test_or_analysis() {
             set +u
             # shellcheck disable=SC2154
             mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client "${ucx_libs[@]}"
+
+            hdf5_libs=(zarr fsspec kerchunk)
+            # shellcheck disable=SC2154
+            mamba install -y -n "${CONDA_ENV}" "${hdf5_libs[@]}"
+            # Conda packages for h5py are very outdated only going up to 3.11
+            python3 -m pip install h5py
             set -u
 
             cd "${LEGATE_DIR}"
@@ -123,7 +129,6 @@ run_test_or_analysis() {
         "cpp")
             echo "Running C++ unit tests..."
             mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil
-
 
             set +u
             mamba install -y -n "${CONDA_ENV}" ucx openmpi openssh

@@ -152,6 +152,9 @@ cdef class Type:
     @staticmethod
     cdef Type from_py_object(object py_object)
 
+    @staticmethod
+    cdef Type from_np_dtype(object np_dtype)
+
 cdef class FixedArrayType(Type):
     cpdef object to_numpy_dtype(self)
 

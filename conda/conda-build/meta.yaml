@@ -168,6 +168,7 @@ requirements:
     - setuptools_scm
     - elfutils  # [linux]
     - libhwloc =* =*default*
+    - hdf5
 {% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
@@ -183,6 +184,7 @@ requirements:
     - libcufft-dev
     - libcurand-dev
     - libcusolver-dev
+    - libcufile-dev
 {% endif %}
 {% if network == 'ucx' %}
     - ucx >=1.16
@@ -198,6 +200,9 @@ requirements:
     - typing_extensions
     - elfutils  # [linux]
     - libhwloc =* =*default*
+    - zarr
+    - fsspec
+    - kerchunk
 {% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}

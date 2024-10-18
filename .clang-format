@@ -73,8 +73,14 @@ IncludeCategories:
     Priority:        3
   - Regex:           '^("|<)(legion|realm).*'
     Priority:        4
-  - Regex:           '^".*'
+  - Regex:           '^("|<)kvikio.*'
     Priority:        5
+  - Regex:           '^("|<)highfive.*'
+    Priority:        6
+  - Regex:           '^("|<)hdf5.*'
+    Priority:        7
+  - Regex:           '^".*'
+    Priority:        8
   - Regex:           '^<.*'
     Priority:        99
 IncludeIsMainRegex: '([-_](test|unittest))?$'

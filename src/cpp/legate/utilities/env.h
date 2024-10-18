@@ -240,4 +240,20 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_CUDA_DRIVER);
  */
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_INLINE_TASK_LAUNCH);
 
+/**
+ * @var LEGATE_IO_USE_VFD_GDS
+ *
+ * @brief Whether to enable HDF5 Virtual File Driver (VDS) GPUDirectStorage (GDS) Possible
+ * values: 0, 1.
+ *
+ * This variable, if set, enables the use of GDS with HDF5 files, which may dramatically speed
+ * up file storage and extraction. By default, it is off.
+ *
+ * @ingroup env
+ */
+#ifdef DOXYGEN
+#define LEGATE_IO_USE_VFD_GDS
+#endif
+LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_IO_USE_VFD_GDS);
+
 #undef LEGATE_CHECK_ENV_VAR_DOCS

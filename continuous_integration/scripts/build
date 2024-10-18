@@ -101,7 +101,7 @@ build_docs() {
     run_command 'Dump configure.py' cat "./config/examples/${LEGATE_ARCH}.py"
     run_command 'Configure Legate' "./config/examples/${LEGATE_ARCH}.py"
     # Install Legate Python bindings so the Python docs build works
-    run_command 'pip install Legate' python3 -m pip install . -vv
+    run_command 'pip install Legate' python3 -m pip install . -v
     run_command 'Build Documentation' make docs
     run_command 'Copy Artifacts' copy_docs_artifacts
 }

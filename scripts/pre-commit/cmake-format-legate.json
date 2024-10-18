@@ -62,6 +62,21 @@
                     "nargs": 0
                 }
             },
+            "find_or_configure_hdf5_vfd_gds": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_highfive": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_kvikio": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "find_or_configure_legion": {
                 "pargs": {
                     "nargs": 0

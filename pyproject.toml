@@ -41,6 +41,10 @@ classifiers = [
 ]
 dependencies = [
     "numpy!=2.1.0",
+    "zarr",
+    "h5py",
+    "fsspec",
+    "kerchunk",
     "rich",
 ]
 dynamic = ["version"]

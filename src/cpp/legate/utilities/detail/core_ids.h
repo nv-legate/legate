@@ -69,6 +69,12 @@ enum CoreTask : std::underlying_type_t<LocalTaskID> {  // NOLINT(performance-enu
   FIND_BOUNDING_BOX,
   FIND_BOUNDING_BOX_SORTED,
   PREFETCH_BLOATED_INSTANCES,
+  IO_KVIKIO_FILE_READ,
+  IO_KVIKIO_FILE_WRITE,
+  IO_KVIKIO_TILE_READ,
+  IO_KVIKIO_TILE_WRITE,
+  IO_KVIKIO_TILE_BY_OFFSETS_READ,
+  IO_HDF5_FILE_READ,
   FIRST_DYNAMIC_TASK,
   // Legate core runtime allocates MAX_TASK tasks from Legion upfront. All ID's prior to
   // FIRST_DYNAMIC_TASK are for specific, bespoke tasks. MAX_TASK - FIRST_DYNAMIC_TASK are for

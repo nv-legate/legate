@@ -12,6 +12,7 @@ from enum import IntEnum
 from typing import Any
 
 import numpy as np
+from numpy.typing import DTypeLike
 
 from ..utilities.typedefs import GlobalRedopID
 
@@ -77,6 +78,8 @@ class Type:
     def raw_ptr(self) -> int: ...
     @staticmethod
     def from_python_object(py_object: Any) -> Type: ...
+    @staticmethod
+    def from_numpy_dtype(dtype: DTypeLike) -> Type: ...
 
 class FixedArrayType(Type):
     def num_elements(self) -> int: ...

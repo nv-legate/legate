@@ -102,6 +102,7 @@ class CUDAConfig(SectionConfig):
                 "cuda-nvtx-dev",
                 "libcublas-dev",
                 "libcufft-dev",
+                "libcufile-dev",
                 "libcurand-dev",
                 "libcusolver-dev",
                 "libcusparse-dev",
@@ -169,6 +170,7 @@ class BuildConfig(SectionConfig):
             # Brings tcmalloc into the environment, which can be
             # optionally used by legate invocations.
             "gperftools",
+            "hdf5",
         )
         if self.compilers:
             pkgs += ("c-compiler", "cxx-compiler")
@@ -211,7 +213,6 @@ class RuntimeConfig(SectionConfig):
     @property
     def conda(self) -> Reqs:
         pkgs = (
-            "cffi",
             "llvm-openmp",
             "numpy>=1.22",
             "libblas=*=*openblas*",
@@ -221,6 +222,11 @@ class RuntimeConfig(SectionConfig):
             "opt_einsum",
             "scipy",
             "libhwloc=*=*default*",
+            "hdf5",
+            "h5py",
+            "zarr",
+            "fsspec",
+            "kerchunk",
         )
         if self.sanitizers:
             pkgs += (f"libsanitizer<={MAX_SANITIZER_VERSION_STR}",)

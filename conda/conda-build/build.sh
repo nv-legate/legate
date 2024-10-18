@@ -96,6 +96,26 @@ esac
   LEGATE_DIR="$(${PYTHON} ./scripts/get_legate_dir.py)"
   export LEGATE_DIR
   export LEGATE_ARCH='arch-conda'
+
+  # In classic conda fashion, it sets a bunch of environment variables for you but as
+  # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE because
+  # GCC and clang error with:
+  #
+  # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
+  # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+  # [-Werror=cpp]
+  #     330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+  #         |    ^~~~~~~
+  #
+  # Thanks conda, such a great help!
+  if [[ ${LEGATE_BUILD_MODE} == *debug* ]]; then
+    CPPFLAGS="${CPPFLAGS//-D_FORTIFY_SOURCE=[0-9]/}"
+    export CPPFLAGS
+    DEBUG_CPPFLAGS="${DEBUG_CPPFLAGS//-D_FORTIFY_SOURCE=[0-9]/}"
+    export DEBUG_CPPFLAGS
+    CFLAGS="${CFLAGS//-D_FORTIFY_SOURCE=[0-9]/}"
+    export CFLAGS
+  fi
 }
 
 function configure_legate()

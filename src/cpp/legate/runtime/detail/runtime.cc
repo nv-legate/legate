@@ -20,6 +20,7 @@
 #include "legate/data/detail/logical_array.h"
 #include "legate/data/detail/logical_region_field.h"
 #include "legate/data/detail/logical_store.h"
+#include "legate/experimental/io/detail/task.h"
 #include "legate/mapping/detail/core_mapper.h"
 #include "legate/mapping/detail/default_mapper.h"
 #include "legate/mapping/detail/machine.h"
@@ -1912,6 +1913,7 @@ void register_legate_core_tasks(Library* core_lib)
   register_array_tasks(core_lib);
   register_partitioning_tasks(core_lib);
   comm::register_tasks(core_lib);
+  legate::experimental::io::detail::register_tasks();
 }
 
 namespace {

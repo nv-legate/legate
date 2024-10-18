@@ -198,6 +198,23 @@ legate_find_or_configure(PACKAGE fmt)
 legate_find_or_configure(PACKAGE argparse)
 
 # ########################################################################################
+# * Kvikio --------------------------------------------------------------
+
+legate_find_or_configure(PACKAGE kvikio)
+
+# ########################################################################################
+# * HighFive --------------------------------------------------------------
+
+legate_find_or_configure(PACKAGE HighFive)
+
+# ########################################################################################
+# * HDF5 vfd-gds --------------------------------------------------------------
+
+if(Legion_USE_CUDA)
+  legate_find_or_configure(PACKAGE hdf5_vfd_gds)
+endif()
+
+# ########################################################################################
 # * legate --------------------------------------------------------------
 
 include("${LEGATE_CMAKE_DIR}/Modules/generate_sanitizer_options.cmake")
@@ -233,6 +250,7 @@ legate_generate_sanitizer_options(
 
 list(APPEND
      legate_SOURCES
+     # core
      legate/comm/coll.cc
      legate/comm/detail/backend_network.cc
      legate/comm/detail/comm.cc
@@ -354,7 +372,18 @@ list(APPEND
      legate/utilities/detail/formatters.cc
      legate/timing/timing.cc
      # stl
-     legate/experimental/stl/detail/clang_tidy_dummy.cpp)
+     legate/experimental/stl/detail/clang_tidy_dummy.cpp
+     # io
+     legate/experimental/io/kvikio/detail/basic.cc
+     legate/experimental/io/kvikio/detail/tile.cc
+     legate/experimental/io/kvikio/detail/tile_by_offsets.cc
+     legate/experimental/io/kvikio/interface.cc
+     legate/experimental/io/hdf5/detail/read.cc
+     legate/experimental/io/hdf5/detail/util.cc
+     legate/experimental/io/hdf5/interface.cc
+     legate/experimental/io/detail/task.cc
+     legate/experimental/io/detail/library.cc
+     legate/experimental/io/detail/mapper.cc)
 
 if(legate_ENABLE_SANITIZERS)
   list(APPEND legate_SOURCES legate/utilities/detail/sanitizer_defaults.cc)
@@ -420,6 +449,24 @@ else()
   list(APPEND legate_CXX_PUBLIC_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # In classic conda fashion, it sets a bunch of environment variables for you but as
+  # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE because
+  # GCC and clang error with:
+  #
+  # cmake-format: off
+  # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
+  # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+  # [-Werror=cpp]
+  # 330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+  #     |    ^~~~~~~
+  # cmake-format: on
+  #
+  # Thanks conda, such a great help!
+  list(APPEND legate_CXX_PRIVATE_OPTIONS -U_FORTIFY_SOURCE)
+  list(APPEND legate_CUDA_PRIVATE_OPTIONS -U_FORTIFY_SOURCE)
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(LEGATE_PLATFORM_RPATH_ORIGIN "\$ORIGIN")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -471,8 +518,13 @@ target_link_libraries(legate
                              $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
                              $<TARGET_NAME_IF_EXISTS:std::mdspan>
                              $<TARGET_NAME_IF_EXISTS:std::span>
-                      PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL> fmt::fmt
-                              argparse::argparse $<TARGET_NAME_IF_EXISTS:conda_env>)
+                      PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
+                              fmt::fmt
+                              argparse::argparse
+                              kvikio::kvikio
+                              $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
+                              HighFive::HighFive
+                              $<TARGET_NAME_IF_EXISTS:conda_env>)
 
 if(Legion_USE_CUDA)
   if(legate_STATIC_CUDA_RUNTIME)

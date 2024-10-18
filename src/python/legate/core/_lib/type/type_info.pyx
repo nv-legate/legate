@@ -19,6 +19,7 @@ import builtins
 from typing import Any
 
 import numpy as np
+from numpy.typing import DTypeLike
 
 
 cdef dict _TO_NUMPY_DTYPES = {
@@ -88,25 +89,6 @@ cdef dict _FROM_SIZED_NUMPY_DTYPES = {
     np.dtype(np.bytes_) : lambda int size: binary_type(size)
 }
 
-cdef inline Type deduce_numpy_type_(object py_object):
-    try:
-        return _FROM_NUMPY_DTYPES[py_object]
-    except KeyError:
-        pass
-
-    cdef int obj_size = int(
-        <str>(py_object.str).lstrip(<str>(py_object.char) + "<=>|")
-    )
-    base_dtype = np.dtype(py_object.base.type)
-
-    try:
-        return _FROM_SIZED_NUMPY_DTYPES[base_dtype](obj_size)
-    except KeyError:
-        # Either lookup or py_object.base failed
-        pass
-
-    raise NotImplementedError(f"Unhandled numpy data type: {py_object}")
-
 cdef inline Type deduce_sized_scalar_type_(object py_object):
     # numpys conversion algorithm is overly pessimistic for floating point
     # values with a large number of significant decimal digits. This leads to
@@ -126,7 +108,7 @@ cdef inline Type deduce_sized_scalar_type_(object py_object):
         return float64
     if isinstance(py_object, builtins.complex):
         return complex128
-    return deduce_numpy_type_(np.min_scalar_type(py_object))
+    return Type.from_np_dtype(np.min_scalar_type(py_object))
 
 cdef inline Type deduce_array_type_(object py_object):
     cdef uint32_t n_sub = 0
@@ -416,7 +398,7 @@ cdef class Type:
         if isinstance(py_object, (list, tuple, np.ndarray)):
             return deduce_array_type_(py_object)
         if isinstance(py_object, np.generic):
-            return deduce_numpy_type_(py_object.dtype)
+            return Type.from_np_dtype(py_object.dtype)
         if isinstance(py_object, (bytes, memoryview)):
             return binary_type(len(py_object))
         if py_object is None:
@@ -448,6 +430,46 @@ cdef class Type:
         """
         return Type.from_py_object(py_object)
 
+    @staticmethod
+    cdef Type from_np_dtype(object np_dtype):
+        try:
+            return _FROM_NUMPY_DTYPES[np_dtype]
+        except KeyError:
+            pass
+
+        cdef int obj_size = int(
+            <str>(np_dtype.str).lstrip(<str>(np_dtype.char) + "<=>|")
+        )
+        base_dtype = np.dtype(np_dtype.base.type)
+
+        try:
+            return _FROM_SIZED_NUMPY_DTYPES[base_dtype](obj_size)
+        except KeyError:
+            # Either lookup or np_dtype.base failed
+            pass
+
+        raise NotImplementedError(f"Unhandled numpy data type: {np_dtype}")
+
+    @staticmethod
+    def from_numpy_dtype(dtype: DTypeLike) -> Type:
+        r"""Construct a ``Type`` object from a numpy ``dtype``.
+
+        Parameters
+        ----------
+        dtype : DTypeLike
+            The numpy dtype.
+
+        Returns
+        -------
+        Type
+            The deduced type.
+
+        Raises
+        ------
+        NotImplementedError
+            If type deduction fails.
+        """
+        return Type.from_np_dtype(dtype)
 
 cdef class FixedArrayType(Type):
     # Cannot use Unconstructable here because Cython only allows 1 extension
