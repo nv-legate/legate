@@ -292,64 +292,45 @@ void check_image(const legate::LogicalStore& func,
   runtime->submit(std::move(task));
 }
 
-struct ImageTestSpec {
-  std::vector<std::uint64_t> domain_extents;
-  std::vector<std::uint64_t> range_extents;
-  legate::ImageComputationHint hint;
-  bool is_rect;
-  bool ascending;
-};
-
-void test_image(const ImageTestSpec& spec)
+void test_image(const std::vector<std::uint64_t>& domain_extents,
+                const std::vector<std::uint64_t>& range_extents,
+                legate::ImageComputationHint hint,
+                bool is_rect,
+                bool ascending)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
   static_cast<void>(context);
 
-  auto tgt_dim    = static_cast<std::int32_t>(spec.range_extents.size());
-  auto image_type = spec.is_rect ? static_cast<legate::Type>(legate::rect_type(tgt_dim))
-                                 : static_cast<legate::Type>(legate::point_type(tgt_dim));
-  auto func       = runtime->create_store(legate::Shape{spec.domain_extents}, image_type);
-  auto range      = runtime->create_store(legate::Shape{spec.range_extents}, legate::int64());
+  auto tgt_dim    = static_cast<std::int32_t>(range_extents.size());
+  auto image_type = is_rect ? static_cast<legate::Type>(legate::rect_type(tgt_dim))
+                            : static_cast<legate::Type>(legate::point_type(tgt_dim));
+  auto func       = runtime->create_store(legate::Shape{domain_extents}, image_type);
+  auto range      = runtime->create_store(legate::Shape{range_extents}, legate::int64());
 
-  initialize_function(func, spec.range_extents, spec.ascending);
+  initialize_function(func, range_extents, ascending);
   runtime->issue_fill(range, legate::Scalar(std::int64_t{1234}));
-  check_image(func, range, spec.hint);
+  check_image(func, range, hint);
   runtime->issue_execution_fence();
-  check_image(func, range, spec.hint);
+  check_image(func, range, hint);
 }
 
-void test_invalid()
+legate::AutoTask create_task_for_invalid(const legate::LogicalStore& func,
+                                         const legate::LogicalStore& range)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto create_task = [&](auto&& func, auto&& range) {
-    auto task = runtime->create_task(
-      context, legate::LocalTaskID{static_cast<std::int64_t>(IMAGE_TESTER) + func.dim()});
-    auto part_domain = task.declare_partition();
-    auto part_range  = task.declare_partition();
+  auto task = runtime->create_task(
+    context, legate::LocalTaskID{static_cast<std::int64_t>(IMAGE_TESTER) + func.dim()});
+  auto part_domain = task.declare_partition();
+  auto part_range  = task.declare_partition();
 
-    task.add_input(func, part_domain);
-    task.add_input(range, part_range);
-    task.add_constraint(legate::image(part_domain, part_range));
+  task.add_input(func, part_domain);
+  task.add_input(range, part_range);
+  task.add_constraint(legate::image(part_domain, part_range));
 
-    return task;
-  };
-
-  {
-    auto func1  = runtime->create_store(legate::Shape{10, 10}, legate::int32());
-    auto range1 = runtime->create_store(legate::Shape{10, 10}, legate::int64());
-    auto task   = create_task(func1, range1);
-    EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
-  }
-
-  {
-    auto func2  = runtime->create_store(legate::Shape{4, 4}, legate::point_type(2));
-    auto range2 = runtime->create_store(legate::Shape{10}, legate::int64());
-    auto task   = create_task(func2, range2.promote(1, 1));
-    EXPECT_THROW(runtime->submit(std::move(task)), std::runtime_error);
-  }
+  return task;
 }
 
 }  // namespace
@@ -357,22 +338,38 @@ void test_invalid()
 TEST_P(Valid, 1D)
 {
   auto& [hint, is_rect, ascending] = GetParam();
-  test_image({{9}, {100}, hint, is_rect, ascending});
+  test_image({9}, {100}, hint, is_rect, ascending);
 }
 
 TEST_P(Valid, 2D)
 {
   auto& [hint, is_rect, ascending] = GetParam();
-  test_image({{4, 4}, {10, 10}, hint, is_rect, ascending});
+  test_image({4, 4}, {10, 10}, hint, is_rect, ascending);
 }
 
 TEST_P(Valid, 3D)
 {
   auto& [hint, is_rect, ascending] = GetParam();
-  test_image({{2, 3, 4}, {5, 5, 5}, hint, is_rect, ascending});
+  test_image({2, 3, 4}, {5, 5, 5}, hint, is_rect, ascending);
 }
 
-TEST_F(ImageConstraint, Invalid) { test_invalid(); }
+TEST_F(ImageConstraint, InvalidType)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto func    = runtime->create_store(legate::Shape{10, 10}, legate::int32());
+  auto range   = runtime->create_store(legate::Shape{10, 10}, legate::int64());
+  auto task    = create_task_for_invalid(func, range);
+  EXPECT_THROW(runtime->submit(std::move(task)), std::invalid_argument);
+}
+
+TEST_F(ImageConstraint, InvalidStore)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto func    = runtime->create_store(legate::Shape{4, 4}, legate::point_type(2));
+  auto range   = runtime->create_store(legate::Shape{10}, legate::int64());
+  auto task    = create_task_for_invalid(func, range.promote(1, 1));
+  EXPECT_THROW(runtime->submit(std::move(task)), std::runtime_error);
+}
 
 // NOLINTEND(readability-magic-numbers)
 
