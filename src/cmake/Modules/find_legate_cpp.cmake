@@ -70,7 +70,13 @@ macro(find_legate_cpp_impl legate_version build_export_set install_export_set)
       message(STATUS "Legate appears to already have been built")
       # Found via pre-built, let's ensure those libs are up-to-date before we try to find
       # it
-      execute_process(COMMAND ${CMAKE_COMMAND} --build .
+      include(ProcessorCount)
+
+      ProcessorCount(procs)
+      if("${procs}" STREQUAL "0") # some kind of problem occurred
+        set(procs 1)
+      endif()
+      execute_process(COMMAND ${CMAKE_COMMAND} --build . -j "${procs}"
                       WORKING_DIRECTORY "${legate_ROOT}" COMMAND_ERROR_IS_FATAL ANY)
       legate_rapids_find_legate()
       set(_legate_FOUND_METHOD "PRE_BUILT")
