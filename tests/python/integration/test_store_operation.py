@@ -42,7 +42,7 @@ class TestLogicalStoreOperation:
         self, arr_shape: tuple[int], dim: int, shape: tuple[int]
     ) -> None:
         runtime = get_legate_runtime()
-        arr = np.ndarray(arr_shape, dtype=np.int16)
+        arr = np.zeros(arr_shape, dtype=np.int16)
         new_shape = arr_shape[:dim] + shape + arr_shape[dim + 1 :]
         reshaped = arr.reshape(new_shape)
         store = runtime.create_store_from_buffer(
@@ -50,9 +50,10 @@ class TestLogicalStoreOperation:
         )
         delinearized = store.delinearize(dim, shape)
         assert delinearized.equal_storage(store)
-        np.testing.assert_allclose(
-            delinearized.get_physical_store().get_inline_allocation(), reshaped
+        delin_arr = np.asarray(
+            delinearized.get_physical_store().get_inline_allocation()
         )
+        np.testing.assert_allclose(delin_arr, reshaped)
 
     @pytest.mark.parametrize(
         "shape",
@@ -109,7 +110,7 @@ class TestLogicalStoreOperation:
         self, arr_shape: tuple[int], dim: int, index: int
     ) -> None:
         runtime = get_legate_runtime()
-        arr = np.ndarray(arr_shape, dtype=np.float64)
+        arr = np.zeros(arr_shape, dtype=np.float64)
         store = runtime.create_store_from_buffer(
             ty.float64, arr.shape, arr, False
         )
@@ -140,7 +141,7 @@ class TestLogicalStoreOperation:
     @pytest.mark.parametrize("size", [0, 1, 252, 1024], ids=str)
     def test_promote(self, shape: tuple[int], dim: int, size: int) -> None:
         runtime = get_legate_runtime()
-        arr = np.ndarray(shape, dtype=np.int16)
+        arr = np.zeros(shape, dtype=np.int16)
         store = runtime.create_store_from_buffer(
             ty.int16, arr.shape, arr, False
         )
@@ -213,9 +214,10 @@ class TestLogicalStoreOperation:
         )
         arr_t = arr.transpose(axes)
         store_t = store.transpose(axes)
-        np.testing.assert_allclose(
-            store_t.get_physical_store().get_inline_allocation(), arr_t
+        store_arr = np.asarray(
+            store_t.get_physical_store().get_inline_allocation()
         )
+        np.testing.assert_allclose(store_arr, arr_t)
 
     @pytest.mark.parametrize(
         "arr_shape, dim, start, stop",

@@ -11,15 +11,15 @@
 from __future__ import annotations
 
 from types import ModuleType
-from typing import Any
+from typing import Any, Protocol, TypeAlias
 
 try:
-    import cupy
+    import cupy  # type: ignore[import-not-found]
 except ModuleNotFoundError:
     cupy = None
 
 import numpy as np
-from numpy._typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 
 from legate.core import InlineAllocation, Scalar, align, broadcast
 from legate.core._ext.task.util import KNOWN_VARIANTS
@@ -34,12 +34,25 @@ from legate.core.task import (
 )
 
 
+class HasArrayInterface(Protocol):
+    @property
+    def __array_interface__(self) -> dict[str, Any]:
+        pass
+
+    @property
+    def __cuda_array_interface__(self) -> dict[str, Any]:
+        pass
+
+
+ArrayConvertible: TypeAlias = HasArrayInterface | ArrayLike
+
+
 def check_cupy(exc: Exception) -> None:
     if cupy is None:
         raise RuntimeError("Need to install cupy for GPU variant") from exc
 
 
-def asarray(alloc: InlineAllocation) -> NDArray[Any]:
+def asarray(alloc: ArrayConvertible) -> NDArray[Any]:
     try:
         arr = np.asarray(alloc)
     except ValueError as exc:
@@ -113,7 +126,9 @@ def fill_task(out: OutputArray, val: Scalar) -> None:
     constraints=(broadcast("out"),),
     throws_exception=True,
 )
-def copy_np_array_task(out: OutputStore, np_arr: np.ndarray) -> None:
+def copy_np_array_task(
+    out: OutputStore, np_arr: np.ndarray[Any, np.dtype[Any]]
+) -> None:
     out_arr = asarray(out.get_inline_allocation())
     try:
         out_arr[:] = np_arr[:]

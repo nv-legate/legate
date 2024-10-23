@@ -158,7 +158,7 @@ class TestStoreOps:
             # operations must be given a non-empty argument or a future to use
             # as a fill value.
             pytest.skip()
-            return
+
         shape = range(1, LEGATE_MAX_DIM + 1)
         runtime = get_legate_runtime()
         store = runtime.create_store(dtype, shape)
@@ -214,7 +214,6 @@ class TestArrayOps:
             # operations must be given a non-empty argument or a future to use
             # as a fill value.
             pytest.skip()
-            return
 
         runtime = get_legate_runtime()
         lg_arr = runtime.create_array(

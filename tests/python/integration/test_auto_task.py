@@ -132,7 +132,7 @@ class TestAutoTask:
             runtime.core_library, tasks.copy_store_task.task_id
         )
 
-        in_arr_np = np.ndarray(shape=shape, dtype=np.int32)
+        in_arr_np = np.empty(shape=shape, dtype=np.int32)
         in_store = runtime.create_store_from_buffer(
             ty.int32, in_arr_np.shape, in_arr_np, False
         )
@@ -186,7 +186,7 @@ class TestAutoTask:
         out_store = runtime.create_store(ty.int32, shape)
         auto_task.add_output(out_store)
 
-        arr_np = np.ndarray(shape=shape, dtype=np.int32)
+        arr_np = np.empty(shape=shape, dtype=np.int32)
 
         auto_task.add_scalar_arg(arr_np)
         auto_task.add_broadcast(out_store)
@@ -260,7 +260,7 @@ class TestAutoTask:
         )
 
     @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
-    def test_concurrent(self, shape) -> None:
+    def test_concurrent(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
             runtime.core_library, tasks.copy_store_task.task_id
@@ -379,7 +379,7 @@ class TestAutoTaskConstraints:
         ndim = len(shape)
         indices = np.indices(shape)
         point_type = ty.point_type(ndim)
-        points = np.stack(indices, axis=indices.ndim - 1).reshape(
+        points = np.stack([v for v in indices], axis=indices.ndim - 1).reshape(
             (indices.size // ndim, ndim)
         )
 

@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from typing import Any, Type
+from typing import Any
 
 import numpy as np
 import pytest
@@ -19,6 +19,7 @@ from legate.core import (
     ImageComputationHint,
     LogicalArray,
     Scalar,
+    Type,
     bloat,
     get_legate_runtime,
     image,
@@ -221,7 +222,7 @@ class TestPyTask:
         ndim = len(shape)
         indices = np.indices(shape)
         point_type = ty.point_type(ndim)
-        points = np.stack(indices, axis=indices.ndim - 1).reshape(
+        points = np.stack([v for v in indices], axis=indices.ndim - 1).reshape(
             (indices.size // ndim, ndim)
         )
 

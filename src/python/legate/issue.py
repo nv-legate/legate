@@ -29,7 +29,9 @@ FAILED_TO_DETECT = "(failed to detect)"
 def try_version(module_name: str, attr: str) -> str:
     try:
         module = import_module(module_name)
-        return getattr(module, attr) if module else None
+        if not module:
+            return FAILED_TO_DETECT
+        return getattr(module, attr)
     except ModuleNotFoundError:
         return FAILED_TO_DETECT
     except ImportError as e:

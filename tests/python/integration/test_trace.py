@@ -18,22 +18,22 @@ from legate.core.task import InputStore, OutputStore, task
 
 
 @task
-def taskA(input: InputStore):
+def taskA(input: InputStore) -> None:
     pass
 
 
 @task
-def taskB(input: OutputStore, output: InputStore):
+def taskB(input: OutputStore, output: InputStore) -> None:
     pass
 
 
-def launch_task(store: LogicalStore):
+def launch_task(store: LogicalStore) -> None:
     get_legate_runtime().issue_fill(store, Scalar(42, ty.int64))
     taskA(store)
     taskB(store, store)
 
 
-def test_trace():
+def test_trace() -> None:
     runtime = get_legate_runtime()
     store = runtime.create_store(ty.int64, shape=(10,))
     launch_task(store)

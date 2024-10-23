@@ -68,7 +68,14 @@ RuntimeError will be raised.
 from __future__ import annotations
 
 import os
-from typing import Any, Generic, TypeAlias, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    TypeAlias,
+    TypeVar,
+    cast as typing_cast,
+)
 
 __all__ = (
     "convert_str",
@@ -155,16 +162,21 @@ def convert_str_seq(
         raise ValueError(f"Cannot convert {value} to list value")
 
 
-class SettingBase:
+ConversionFn = Callable[[Any], T]
+
+
+class SettingBase(Generic[T]):
     def __init__(
         self,
         name: str,
         default: Unset[T] = _Unset,
-        convert: Any | None = None,
+        convert: ConversionFn[T] | None = None,
         help: str = "",
     ) -> None:
         self._default = default
-        self._convert = convert if convert else convert_str
+        self._convert = (
+            convert if convert else typing_cast(ConversionFn[T], convert_str)
+        )
         self._help = help
         self._name = name
 
@@ -178,16 +190,7 @@ class SettingBase:
 
     @property
     def default(self) -> Unset[T]:
-        # Confusing error:
-        #
-        # legate/util/settings.py: note: In member "default" of class
-        # "SettingBase": legate/util/settings.py:181:16: error: Incompatible
-        # return value type (got "T@__init__ | type[_Unset]", expected
-        # "T@default | type[_Unset]") [return-value]
-        #
-        #             return self._default
-        #                    ^~~~~~~~~~~~~
-        return self._default  # type: ignore[return-value]
+        return self._default
 
     @property
     def convert_type(self) -> str:
@@ -202,7 +205,7 @@ class SettingBase:
         raise RuntimeError("unreachable")
 
 
-class PrioritizedSetting(Generic[T], SettingBase):
+class PrioritizedSetting(SettingBase[T]):
     """Return a value for a global setting according to configuration
     precedence.
 
@@ -233,7 +236,7 @@ class PrioritizedSetting(Generic[T], SettingBase):
         name: str,
         env_var: str | None = None,
         default: Unset[T] = _Unset,
-        convert: Any | None = None,
+        convert: ConversionFn[T] | None = None,
         help: str = "",
     ) -> None:
         super().__init__(name, default, convert, help)
@@ -320,7 +323,7 @@ class PrioritizedSetting(Generic[T], SettingBase):
         return self._env_var
 
 
-class EnvOnlySetting(Generic[T], SettingBase):
+class EnvOnlySetting(SettingBase[T]):
     """Return a value for a global environment variable setting.
 
     A ``convert`` agument may be provided to convert values before they are

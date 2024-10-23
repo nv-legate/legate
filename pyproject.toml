@@ -177,7 +177,7 @@ implicit_reexport = true
 strict_equality = true
 
 warn_unused_configs = true
-exclude = ["tests/python/integration", "tests/cpp"]
+exclude = ["tests/cpp"]
 
 [[tool.mypy.overrides]]
 # ignore certain auto-generated and utility files

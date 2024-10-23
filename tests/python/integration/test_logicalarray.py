@@ -16,6 +16,7 @@ import pytest
 from legate.core import (
     LEGATE_MAX_DIM,
     LogicalArray,
+    Type,
     get_legate_runtime,
     types as ty,
 )
@@ -52,7 +53,7 @@ class TestPromote:
     @pytest.mark.parametrize("nullable", [True, False])
     def test_dtype(self, dtype: ty.Type, nullable: bool) -> None:
         runtime = get_legate_runtime()
-        arr_np = np.ndarray(dtype=dtype.to_numpy_dtype(), shape=(1, 2, 3, 4))
+        arr_np = np.empty(dtype=dtype.to_numpy_dtype(), shape=(1, 2, 3, 4))
         store = runtime.create_store_from_buffer(
             dtype, arr_np.shape, arr_np, False
         )
@@ -76,7 +77,7 @@ class TestPromote:
     @pytest.mark.parametrize("nullable", [True, False])
     def test_shape(self, shape: tuple[int, ...], nullable: bool) -> None:
         runtime = get_legate_runtime()
-        arr_np = np.ndarray(dtype=np.int64, shape=shape)
+        arr_np = np.empty(dtype=np.int64, shape=shape)
         store = runtime.create_store_from_buffer(
             ty.int64, arr_np.shape, arr_np, False
         )
@@ -140,7 +141,7 @@ class TestArrayCreationErrors:
     @pytest.mark.parametrize(
         "dtype", [ty.string_type, ty.struct_type([ty.int8])]
     )
-    def test_create_array_like_invalid_dtype(self, dtype):
+    def test_create_array_like_invalid_dtype(self, dtype: Type) -> None:
         runtime = get_legate_runtime()
         arr = runtime.create_array(dtype, (1,))
         msg = "doesn't support variable size types or struct types"

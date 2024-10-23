@@ -48,6 +48,8 @@ class TestStoreCreation:
         runtime = get_legate_runtime()
         store = runtime.create_store(dtype=dtype, shape=shape)
         arr = np.asarray(store.get_physical_store().get_inline_allocation())
+
+        val: bool | bytes | int
         match dtype.code:
             case ty.TypeCode.BOOL:
                 val = bool(0)
@@ -103,13 +105,15 @@ class TestStoreCreationErrors:
         runtime = get_legate_runtime()
         msg = "Expected an iterable but got.*"
         with pytest.raises(ValueError, match=msg):
-            runtime.create_store(ty.int32, shape=1)
+            runtime.create_store(ty.int32, shape=1)  # type: ignore[arg-type]
 
     def test_invalid_shape_type(self) -> None:
         runtime = get_legate_runtime()
         msg = "an integer is required"
         with pytest.raises(TypeError, match=msg):
-            runtime.create_store(ty.int32, shape=("a", "b"))
+            runtime.create_store(
+                ty.int32, shape=("a", "b")  # type:ignore [arg-type]
+            )
 
     def test_exceed_max_dim(self) -> None:
         runtime = get_legate_runtime()
@@ -118,7 +122,7 @@ class TestStoreCreationErrors:
 
     def test_buffer_exceed_max_dim(self) -> None:
         runtime = get_legate_runtime()
-        arr = np.ndarray(range(1, LEGATE_MAX_DIM + 2))
+        arr = np.empty(range(1, LEGATE_MAX_DIM + 2))
         with pytest.raises(IndexError, match="maximum number of dimensions"):
             runtime.create_store_from_buffer(ty.int32, arr.shape, arr, False)
 

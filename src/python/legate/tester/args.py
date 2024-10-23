@@ -44,7 +44,7 @@ stages.add_argument(
     dest="features",
     action=ExtendAction,
     choices=MultipleChoices(sorted(FEATURES)),
-    type=lambda s: s.split(","),  # type: ignore [arg-type,return-value]
+    type=lambda s: s.split(","),
     help="Test this library with features (also via USE_*)",
 )
 

@@ -82,7 +82,7 @@ def create_random_points(
     shape: tuple[int, ...],
     dimensions: tuple[int, ...],
     no_duplicates: bool,
-) -> tuple[np.ndarray[Any, Any], LogicalStore]:
+) -> tuple[tuple[np.ndarray[Any, np.dtype[Any]], ...], LogicalStore]:
     store_vol = np.prod(shape)
     tgt_vol = np.prod(dimensions)
     ndim = len(dimensions)
@@ -96,7 +96,8 @@ def create_random_points(
             "The volume of the store must be smaller than the target volume"
         )
 
-    points = np.stack(np.indices(dimensions), axis=-1).reshape(tgt_vol, ndim)
+    idx = [i for i in np.indices(dimensions)]
+    points = np.stack(idx, axis=-1).reshape(tgt_vol, ndim)
     to_select = np.random.permutation(store_vol) % tgt_vol
     shuffled = points[to_select, :]
 

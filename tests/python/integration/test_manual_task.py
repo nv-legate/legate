@@ -139,7 +139,7 @@ class TestManualTask:
             runtime.core_library, tasks.copy_store_task.task_id, shape
         )
 
-        in_arr_np = np.ndarray(shape=shape, dtype=np.int32)
+        in_arr_np = np.empty(shape=shape, dtype=np.int32)
         in_store = runtime.create_store_from_buffer(
             ty.int32, in_arr_np.shape, in_arr_np, False
         )
@@ -188,7 +188,7 @@ class TestManualTask:
         out_store = runtime.create_store(ty.int32, shape)
         manual_task.add_output(out_store)
 
-        arr_np = np.ndarray(shape=shape, dtype=np.int32)
+        arr_np = np.empty(shape=shape, dtype=np.int32)
 
         manual_task.add_scalar_arg(arr_np, (ty.int32,))
         manual_task.execute()
