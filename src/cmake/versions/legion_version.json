@@ -4,6 +4,23 @@
             "git_shallow": false,
             "git_tag": "4ca82553a31b421814d55041dff4f1a0c9bacb3a",
             "git_url": "https://gitlab.com/StanfordLegion/legion.git",
+            "patches": [
+                {
+                    "file": "${current_json_dir}/../patches/legion_half.diff",
+                    "fixed_in": "",
+                    "issue": "legion half"
+                },
+                {
+                    "file": "${current_json_dir}/../patches/legion_complex_half.diff",
+                    "fixed_in": "",
+                    "issue": "legion half"
+                },
+                {
+                    "file": "${current_json_dir}/../patches/legion_redop.diff",
+                    "fixed_in": "",
+                    "issue": "legion half"
+                }
+            ],
             "version": "24.09.0"
         }
     }

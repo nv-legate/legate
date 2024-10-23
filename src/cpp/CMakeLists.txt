@@ -615,6 +615,11 @@ if(APPLE)
   target_compile_definitions(legate PUBLIC _LIBCUDACXX_STRING_H_HAS_CONST_OVERLOADS=1)
 endif()
 
+# See https://github.com/nv-legate/legate.core.internal/pull/1326#issuecomment-2418791698
+foreach(target legate LegionRuntime RealmRuntime)
+  target_compile_definitions("${target}" PUBLIC LIBCUDACXX_ENABLE_HOST_NVFP16=1)
+endforeach()
+
 include("${LEGATE_CMAKE_DIR}/Modules/generate_legate_defines.cmake")
 
 legate_generate_legate_defines()

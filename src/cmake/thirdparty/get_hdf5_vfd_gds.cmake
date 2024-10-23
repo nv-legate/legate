@@ -23,6 +23,8 @@ function(find_or_configure_hdf5_vfd_gds)
   get_target_property(cufile_location CUDA::cuFile LOCATION)
   cmake_path(GET cufile_location PARENT_PATH cufile_location)
 
+  include(GNUInstallDirs)
+
   rapids_cpm_find(hdf5_vfd_gds "${version}"
                   BUILD_EXPORT_SET legate-exports
                   INSTALL_EXPORT_SET legate-exports
@@ -30,9 +32,14 @@ function(find_or_configure_hdf5_vfd_gds)
                   GIT_REPOSITORY "${git_url}"
                   GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
                   GIT_TAG "${git_tag}"
-                  OPTIONS "BUILD_TESTING OFF" "BUILD_EXAMPLES OFF"
+                  OPTIONS "BUILD_TESTING OFF"
+                          "BUILD_EXAMPLES OFF"
                           "BUILD_DOCUMENTATION OFF"
-                          "HDF5_VFD_GDS_CUFILE_DIR ${cufile_location}")
+                          "HDF5_VFD_GDS_CUFILE_DIR ${cufile_location}"
+                          "HDF5_VFD_GDS_INSTALL_BIN_DIR ${CMAKE_INSTALL_BINDIR}"
+                          "HDF5_VFD_GDS_INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR}"
+                          "HDF5_VFD_GDS_INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}"
+                          "HDF5_VFD_GDS_INSTALL_DATA_DIR ${CMAKE_INSTALL_DATAROOTDIR}")
 
   get_target_property(imported hdf5_vfd_gds IMPORTED)
   if(NOT imported)

@@ -1,0 +1,486 @@
+diff --git a/runtime/mathtypes/half.h b/runtime/mathtypes/half.h
+index dce3249c7..43e4e4f5e 100644
+--- a/runtime/mathtypes/half.h
++++ b/runtime/mathtypes/half.h
+@@ -16,6 +16,8 @@
+ #ifndef __HALF_H__
+ #define __HALF_H__
+ 
++#include <legion_defines.h>
++
+ #include <stdint.h>
+ #include <string.h> // memcpy
+ #include <cmath>
+@@ -131,209 +133,169 @@ inline float __convert_halfint_to_float(uint16_t __x)
+   return result;
+ }
+ 
+-#if defined (__CUDACC__) || defined (__HIPCC__)
+-// The CUDA Toolkit only provides device versions for half precision operators,
+-// so we have to provide custom implementations below.
+-#if defined(LEGION_USE_CUDA)
+-#if defined(__CUDA_FP16_H__)
+-#error "This header must be included before cuda_fp16.h"
+-#endif
+-#define __CUDA_NO_HALF_OPERATORS__
++#ifdef LEGION_USE_CUDA
+ #include <cuda_fp16.h>
++// Must include cuda/std/cmath here because CCCL does e.g. "using ::isinf", and we want it to
++// pick up the std::isinf, not our isinf, because otherwise it results in multiple
++// definitions. I don't know why this fixes it (obviously, there still will be multiple
++// definitions of isinf()), but hey, I don't make the rules.
++#include <cuda/std/cmath>
+ #elif defined(LEGION_USE_HIP)
+ #ifdef __HIP_PLATFORM_NVCC__
+-#if defined(__CUDA_FP16_H__)
+-#error "This header must be included before cuda_fp16.h"
+-#endif
+-#define __CUDA_NO_HALF_OPERATORS__
+ #include <cuda_fp16.h>
++#include <cuda/std/cmath>
+ #else
+-#if defined(HIP_INCLUDE_HIP_HIP_FP16_H)
+-#error "This header must be included before hip_fp16.h"
+-#endif
+-#define __HIP_NO_HALF_OPERATORS__
+ #include <hip/hip_fp16.h>
+ #endif
++#elif __has_include(<cuda_fp16.h>)
++// Include this proactively because CCCL will if __has_include(<cuda_fp16.h>) is true, which
++// ultimately ends up with multiple definitions of __half
++#include <cuda_fp16.h>
++#include <cuda/std/cmath>
+ #endif
+ 
+-__CUDA_HD__
++#ifndef __CUDA_FP16_TYPES_EXIST__
++struct __half
++{
++  uint16_t __x{};
++
++  constexpr __half() = default;
++
++  /// Constructor from uint16_t
++  inline __half(short a, bool raw)
++  {
++    if (raw)
++      __x = a;
++    else
++      __x = __convert_float_to_halfint(float(a));
++  }
++
++  /// Constructor from float
++  inline explicit __half(float a)
++  {
++    __x = __convert_float_to_halfint(a);
++  }
++
++  inline __half& operator=(const float &rhs)
++  {
++    __x = __convert_float_to_halfint(rhs);
++    return *this;
++  }
++
++  /// Cast to float
++  inline operator float() const
++  {
++    return __convert_halfint_to_float(__x);
++  }
++
++  /// Get raw storage
++  inline uint16_t raw() const
++  {
++    return this->__x;
++  }
++
++  inline void set_raw(uint16_t raw)
++  {
++    this->__x = raw;
++  }
++
++  /// Increment
++  inline __half& operator +=(const __half &rhs)
++  {
++    *this = __half(float(*this) + float(rhs));
++    return *this;
++  }
++
++  /// Decrement
++  inline __half& operator -=(const __half&rhs)
++  {
++    *this = __half(float(*this) - float(rhs));
++    return *this;
++  }
++
++  /// Scale up
++  inline __half& operator *=(const __half &rhs)
++  {
++    *this = __half(float(*this) * float(rhs));
++    return *this;
++  }
++
++  /// Scale down
++  inline __half& operator /=(const __half &rhs)
++  {
++    *this = __half(float(*this) / float(rhs));
++    return *this;
++  }
++
++};
++
+ inline __half operator-(const __half &one)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hneg(one);
+-#else
+-  return __float2half(-__half2float(one));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hneg(one);
+-#else
+   return __half(-(float(one)));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline __half operator+(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hadd(one, two);
+-#else
+-  return __float2half(__half2float(one) + __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hadd(one, two);
+-#else
+   return __half(float(one) + float(two));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline __half operator-(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hsub(one, two);
+-#else
+-  return __float2half(__half2float(one) - __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hsub(one, two);
+-#else
+   return __half(float(one) - float(two));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline __half operator*(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hmul(one, two);
+-#else
+-  return __float2half(__half2float(one) * __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hmul(one, two);
+-#else
+   return __half(float(one) * float(two));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline __half operator/(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ == 8
+-  return hdiv(one, two);
+-#elif __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 9
+-  return __hdiv(one, two);
+-#else
+-  return __float2half(__half2float(one) / __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hdiv(one, two);
+-#else
+   return __half(float(one) / float(two));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline bool operator==(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __heq(one, two);
+-#else
+-  return (__half2float(one) == __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __heq(one, two);
+-#else
+   return (float(one) == float(two));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline bool operator!=(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hne(one, two);
+-#else
+-  return (__half2float(one) != __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hne(one, two);
+-#else
+   return (float(one) != float(two));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline bool operator<(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hlt(one, two);
+-#else
+-  return (__half2float(one) < __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hlt(one, two);
+-#else
+   return (float(one) < float(two));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline bool operator<=(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hle(one, two);
+-#else
+-  return (__half2float(one) <= __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hle(one, two);
+-#else
+   return (float(one) <= float(two));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline bool operator>(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hgt(one, two);
+-#else
+-  return (__half2float(one) > __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hgt(one, two);
+-#else
+   return (float(one) > float(two));
+-#endif
+ }
+ 
+-__CUDA_HD__
+ inline bool operator>=(const __half &one, const __half &two)
+ {
+-#ifdef __CUDA_ARCH__
+-#if __CUDA_ARCH__ >= 530 && __CUDACC_VER_MAJOR__ >= 8
+-  return __hge(one, two);
+-#else
+-  return (__half2float(one) >= __half2float(two));
+-#endif
+-#elif defined(__HIP_DEVICE_COMPILE__)
+-  return __hge(one, two);
+-#else
+   return (float(one) >= float(two));
+-#endif
+ }
+ 
++inline __half __convert_float_to_half(const float &a)
++{
++  uint16_t temp = __convert_float_to_halfint(a);
++  __half result(0, true/*raw*/);
++  result.set_raw(temp);
++  return result;
++}
++#endif
++
++#if defined (__CUDACC__) || defined (__HIPCC__)
++// The CUDA Toolkit only provides device versions for half precision operators,
++// so we have to provide custom implementations below.
+ __CUDA_HD__
+ inline __half asin(const __half &one)
+ {
+@@ -564,146 +526,6 @@ inline __half acos(const __half &one)
+ 
+ #else // not __CUDACC__ or __HIPCC__
+ 
+-struct __half
+-{
+-  uint16_t __x;
+-
+-  inline __half(void)
+-  {
+-    __x = 0;
+-  }
+-
+-  /// Constructor from uint16_t
+-  inline __half(short a, bool raw)
+-  {
+-    if (raw)
+-      __x = a;
+-    else
+-      __x = __convert_float_to_halfint(float(a));
+-  }
+-
+-  /// Constructor from float
+-  inline explicit __half(float a)
+-  {
+-    __x = __convert_float_to_halfint(a);
+-  }
+-
+-  inline __half& operator=(const float &rhs)
+-  {
+-    __x = __convert_float_to_halfint(rhs);
+-    return *this;
+-  }
+-
+-  /// Cast to float
+-  inline operator float() const
+-  {
+-    return __convert_halfint_to_float(__x);
+-  }
+-
+-  /// Get raw storage
+-  inline uint16_t raw() const
+-  {
+-    return this->__x;
+-  }
+-
+-  inline void set_raw(uint16_t raw)
+-  {
+-    this->__x = raw;
+-  }
+-
+-  /// Increment
+-  inline __half& operator +=(const __half &rhs)
+-  {
+-    *this = __half(float(*this) + float(rhs));
+-    return *this;
+-  }
+-
+-  /// Decrement
+-  inline __half& operator -=(const __half&rhs)
+-  {
+-    *this = __half(float(*this) - float(rhs));
+-    return *this;
+-  }
+-
+-  /// Scale up
+-  inline __half& operator *=(const __half &rhs)
+-  {
+-    *this = __half(float(*this) * float(rhs));
+-    return *this;
+-  }
+-
+-  /// Scale down
+-  inline __half& operator /=(const __half &rhs)
+-  {
+-    *this = __half(float(*this) / float(rhs));
+-    return *this;
+-  }
+-
+-};
+-
+-inline __half operator-(const __half &one)
+-{
+-  return __half(-(float(one)));
+-}
+-
+-inline __half operator+(const __half &one, const __half &two)
+-{
+-  return __half(float(one) + float(two));
+-}
+-
+-inline __half operator-(const __half &one, const __half &two)
+-{
+-  return __half(float(one) - float(two));
+-}
+-
+-inline __half operator*(const __half &one, const __half &two)
+-{
+-  return __half(float(one) * float(two));
+-}
+-
+-inline __half operator/(const __half &one, const __half &two)
+-{
+-  return __half(float(one) / float(two));
+-}
+-
+-inline bool operator==(const __half &one, const __half &two)
+-{
+-  return (float(one) == float(two));
+-}
+-
+-inline bool operator!=(const __half &one, const __half &two)
+-{
+-  return (float(one) != float(two));
+-}
+-
+-inline bool operator<(const __half &one, const __half &two)
+-{
+-  return (float(one) < float(two));
+-}
+-
+-inline bool operator<=(const __half &one, const __half &two)
+-{
+-  return (float(one) <= float(two));
+-}
+-
+-inline bool operator>(const __half &one, const __half &two)
+-{
+-  return (float(one) > float(two));
+-}
+-
+-inline bool operator>=(const __half &one, const __half &two)
+-{
+-  return (float(one) >= float(two));
+-}
+-
+-inline __half __convert_float_to_half(const float &a)
+-{
+-  uint16_t temp = __convert_float_to_halfint(a);
+-  __half result(0, true/*raw*/);
+-  result.set_raw(temp);
+-  return result;
+-}
+-
+ inline __half floor(const __half &a)
+ {
+   return static_cast<__half>(::floor(static_cast<float>(a)));
+@@ -774,6 +596,16 @@ inline __half sqrt(const __half &a)
+   return static_cast<__half>(::sqrt(static_cast<float>(a)));
+ }
+ 
++inline bool isinf(__half a)
++{
++  return std::isinf(static_cast<float>(a));
++}
++
++inline bool isnan(__half a)
++{
++  return std::isnan(static_cast<float>(a));
++}
++
+ #endif // Not nvcc or hipcc
+ 
+ #endif // __HALF_H__

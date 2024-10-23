@@ -1,0 +1,25 @@
+diff --git a/runtime/mathtypes/complex.h b/runtime/mathtypes/complex.h
+index 62dd69611..82a84932c 100644
+--- a/runtime/mathtypes/complex.h
++++ b/runtime/mathtypes/complex.h
+@@ -38,7 +38,11 @@
+ // cuda 12 (https://github.com/StanfordLegion/legion/issues/1469#)
+ // TODO: remove it once the bug is fixed in the future release of cuda.
+ #include <cuda_runtime.h>
+ #include <cuda/std/complex>
++#include <cuda/version> // CCCL_MAJOR_VERSION
++#if CCCL_MAJOR_VERSION > 2 || (CCCL_MAJOR_VERSION == 2 && CCCL_MINOR_VERSION >= 4)
++#define LEGION_HAVE_CUDA_COMPLEX_HALF 1
++#endif
+ #define COMPLEX_NAMESPACE cuda::std
+ #endif
+ #elif defined(LEGION_USE_HIP) && defined(__HIP_PLATFORM_AMD__)
+@@ -93,7 +98,7 @@ inline bool operator>=(const complex<T>& c1, const complex<T>& c2) {
+
+ } // namespace COMPLEX_NAMESPACE
+
+-#ifdef COMPLEX_HALF
++#if defined(COMPLEX_HALF) && !defined(LEGION_HAVE_CUDA_COMPLEX_HALF)
+ template<>
+ class COMPLEX_NAMESPACE::complex<__half> {
+ public:

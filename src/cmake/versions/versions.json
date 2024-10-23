@@ -1,15 +1,16 @@
 {
     "packages": {
-        "CCCL": {
-            "git_shallow": false,
-            "git_tag": "64d3a5f0c1c83ed83be8c0a9a1f0cdb31f913e81",
-            "git_url": "https://github.com/NVIDIA/cccl.git",
-            "version": "2.3.2"
-        },
         "HighFive": {
             "git_shallow": false,
             "git_tag": "8bb1ed8940880d33f4f9c2ea9b6072abd57219ef",
             "git_url": "https://github.com/nv-legate/HighFive.git",
+            "patches": [
+                {
+                    "file": "${current_json_dir}/../patches/highfive_targets.diff",
+                    "fixed_in": "",
+                    "issue": "https://github.com/BlueBrain/HighFive/issues/1050"
+                }
+            ],
             "version": "2.9.0"
         },
         "argparse": {
