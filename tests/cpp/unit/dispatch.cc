@@ -19,53 +19,95 @@ namespace dispatch_test {
 
 using DispatchTest = DefaultFixture;
 
-constexpr std::array<legate::Type::Code, 14> PRIMITIVE_TYPE_CODE = {legate::Type::Code::BOOL,
-                                                                    legate::Type::Code::INT8,
-                                                                    legate::Type::Code::INT16,
-                                                                    legate::Type::Code::INT32,
-                                                                    legate::Type::Code::INT64,
-                                                                    legate::Type::Code::UINT8,
-                                                                    legate::Type::Code::UINT16,
-                                                                    legate::Type::Code::UINT32,
-                                                                    legate::Type::Code::UINT64,
-                                                                    legate::Type::Code::FLOAT16,
-                                                                    legate::Type::Code::FLOAT32,
-                                                                    legate::Type::Code::FLOAT64,
-                                                                    legate::Type::Code::COMPLEX64,
-                                                                    legate::Type::Code::COMPLEX128};
+class DoubleDispatchTest
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<int, legate::Type::Code>> {};
 
-struct DoubleDispatchData {
-  std::int32_t data1;
-  std::int32_t data2;
-};
+class DoubleDispatchWithDimTest : public DefaultFixture,
+                                  public ::testing::WithParamInterface<std::tuple<int, int>> {};
+
+class DimDispatchTest : public DefaultFixture, public ::testing::WithParamInterface<int> {};
+
+class TypeDispatchTest : public DefaultFixture,
+                         public ::testing::WithParamInterface<legate::Type::Code> {};
+
+class DispatchNegativeDimTest : public DefaultFixture, public ::testing::WithParamInterface<int> {};
+
+class DispatchNegativeTypeTest : public DefaultFixture,
+                                 public ::testing::WithParamInterface<legate::Type::Code> {};
+
+INSTANTIATE_TEST_SUITE_P(DispatchTest,
+                         DoubleDispatchTest,
+                         ::testing::Combine(::testing::Values(1, 2, 3, LEGATE_MAX_DIM),
+                                            ::testing::Values(legate::Type::Code::BOOL,
+                                                              legate::Type::Code::INT8,
+                                                              legate::Type::Code::INT16,
+                                                              legate::Type::Code::INT32,
+                                                              legate::Type::Code::INT64,
+                                                              legate::Type::Code::UINT8,
+                                                              legate::Type::Code::UINT16,
+                                                              legate::Type::Code::UINT32,
+                                                              legate::Type::Code::UINT64,
+                                                              legate::Type::Code::FLOAT16,
+                                                              legate::Type::Code::FLOAT32,
+                                                              legate::Type::Code::FLOAT64,
+                                                              legate::Type::Code::COMPLEX64,
+                                                              legate::Type::Code::COMPLEX128)));
+
+INSTANTIATE_TEST_SUITE_P(DispatchTest,
+                         DoubleDispatchWithDimTest,
+                         ::testing::Combine(::testing::Values(1, 2, 3, LEGATE_MAX_DIM),
+                                            ::testing::Values(1, 2, 3, LEGATE_MAX_DIM)));
+
+INSTANTIATE_TEST_SUITE_P(DispatchTest, DimDispatchTest, ::testing::Values(1, 2, 3, LEGATE_MAX_DIM));
+
+INSTANTIATE_TEST_SUITE_P(DispatchTest,
+                         TypeDispatchTest,
+                         ::testing::Values(legate::Type::Code::BOOL,
+                                           legate::Type::Code::INT8,
+                                           legate::Type::Code::INT16,
+                                           legate::Type::Code::INT32,
+                                           legate::Type::Code::INT64,
+                                           legate::Type::Code::UINT8,
+                                           legate::Type::Code::UINT16,
+                                           legate::Type::Code::UINT32,
+                                           legate::Type::Code::UINT64,
+                                           legate::Type::Code::FLOAT16,
+                                           legate::Type::Code::FLOAT32,
+                                           legate::Type::Code::FLOAT64,
+                                           legate::Type::Code::COMPLEX64,
+                                           legate::Type::Code::COMPLEX128));
+
+INSTANTIATE_TEST_SUITE_P(DispatchTest,
+                         DispatchNegativeDimTest,
+                         ::testing::Values(0, -1, LEGATE_MAX_DIM + 1));
+
+INSTANTIATE_TEST_SUITE_P(DispatchTest,
+                         DispatchNegativeTypeTest,
+                         ::testing::Values(legate::Type::Code::FIXED_ARRAY,
+                                           legate::Type::Code::STRUCT,
+                                           legate::Type::Code::STRING,
+                                           legate::Type::Code::LIST,
+                                           legate::Type::Code::NIL,
+                                           legate::Type::Code::BINARY));
 
 class DoubleDispatchFn {
  public:
   template <legate::Type::Code CODE, std::int32_t DIM>
-  void operator()(DoubleDispatchData& data)
+  void operator()(legate::Type::Code code, std::int32_t dim)
   {
-    EXPECT_EQ(CODE, static_cast<legate::Type::Code>(data.data1));
-    EXPECT_EQ(DIM, data.data2);
-
-    data.data1 = 1;
-    data.data2 = 2;
-    EXPECT_EQ(data.data1, 1);
-    EXPECT_EQ(data.data2, 2);
+    ASSERT_EQ(CODE, code);
+    ASSERT_EQ(DIM, dim);
   }
 };
 
 class DoubleDispatchWithDimFn {
  public:
   template <std::int32_t DIM1, std::int32_t DIM2>
-  void operator()(DoubleDispatchData& data)
+  void operator()(std::int32_t dim1, std::int32_t dim2)
   {
-    EXPECT_EQ(DIM1, data.data1);
-    EXPECT_EQ(DIM2, data.data2);
-
-    data.data1 = 1;
-    data.data2 = 2;
-    EXPECT_EQ(data.data1, 1);
-    EXPECT_EQ(data.data2, 2);
+    ASSERT_EQ(DIM1, dim1);
+    ASSERT_EQ(DIM2, dim2);
   }
 };
 
@@ -74,7 +116,7 @@ class DimDispatchFn {
   template <std::int32_t DIM>
   void operator()(legate::Scalar& scalar)
   {
-    EXPECT_EQ(DIM, scalar.value<std::int32_t>());
+    ASSERT_EQ(DIM, scalar.value<std::int32_t>());
   }
 };
 
@@ -83,104 +125,89 @@ class TypeDispatchFn {
   template <legate::Type::Code CODE>
   void operator()(legate::Scalar& scalar)
   {
-    EXPECT_EQ(CODE, static_cast<legate::Type::Code>(scalar.value<std::uint32_t>()));
+    ASSERT_EQ(CODE, static_cast<legate::Type::Code>(scalar.value<std::uint32_t>()));
   }
 };
 
-TEST_F(DispatchTest, DoubleDispatch)
+TEST_P(DoubleDispatchTest, DoubleDispatch)
 {
-  for (std::size_t idx = 0; idx < PRIMITIVE_TYPE_CODE.size(); ++idx) {
-    auto code               = PRIMITIVE_TYPE_CODE.at(idx);
-    auto dim                = static_cast<std::int32_t>((idx % LEGATE_MAX_DIM) + 1);
-    DoubleDispatchData data = {static_cast<std::int32_t>(code), dim};
-    legate::double_dispatch(dim, code, DoubleDispatchFn{}, data);
-  }
+  const auto [dim, code] = GetParam();
 
-  // invalide dim
-  DoubleDispatchData data = {1, 1};
-  EXPECT_THROW(legate::double_dispatch(0, legate::Type::Code::BOOL, DoubleDispatchFn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(-1, legate::Type::Code::BOOL, DoubleDispatchFn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(
-    legate::double_dispatch(LEGATE_MAX_DIM + 1, legate::Type::Code::BOOL, DoubleDispatchFn{}, data),
-    std::runtime_error);
-
-  // invalid type code
-  EXPECT_THROW(
-    legate::double_dispatch(1, legate::Type::Code::FIXED_ARRAY, DoubleDispatchFn{}, data),
-    std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::STRUCT, DoubleDispatchFn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::STRING, DoubleDispatchFn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::LIST, DoubleDispatchFn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::NIL, DoubleDispatchFn{}, data),
-               std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, legate::Type::Code::BINARY, DoubleDispatchFn{}, data),
-               std::runtime_error);
+  legate::double_dispatch(dim, code, DoubleDispatchFn{}, code, dim);
 }
 
-TEST_F(DispatchTest, DoubleDispatchWithDims)
+TEST_P(DispatchNegativeDimTest, DoubleDispatch)
 {
-  for (std::int32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
-    DoubleDispatchData data = {idx, LEGATE_MAX_DIM - idx + 1};
-    legate::double_dispatch(idx, LEGATE_MAX_DIM - idx + 1, DoubleDispatchWithDimFn{}, data);
-  }
+  const auto dim = GetParam();
+
+  ASSERT_THROW(
+    legate::double_dispatch(
+      dim, legate::Type::Code::BOOL, DoubleDispatchFn{}, legate::Type::Code::BOOL, LEGATE_MAX_DIM),
+    std::runtime_error);
+}
+
+TEST_P(DispatchNegativeTypeTest, DoubleDispatch)
+{
+  const auto type = GetParam();
+
+  ASSERT_THROW(
+    legate::double_dispatch(
+      LEGATE_MAX_DIM, type, DoubleDispatchFn{}, legate::Type::Code::BOOL, LEGATE_MAX_DIM),
+    std::runtime_error);
+}
+
+TEST_P(DoubleDispatchWithDimTest, DoubleDispatchWithDim)
+{
+  const auto [dim1, dim2] = GetParam();
+
+  legate::double_dispatch(dim1, dim2, DoubleDispatchWithDimFn{}, dim1, dim2);
+}
+
+TEST_P(DispatchNegativeDimTest, DoubleDispatchWithDim)
+{
+  const auto dim = GetParam();
 
   // invalid dim1
-  DoubleDispatchData data = {1, 1};
-  EXPECT_THROW(legate::double_dispatch(0, 1, DoubleDispatchWithDimFn{}, data), std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(-1, 1, DoubleDispatchWithDimFn{}, data), std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(LEGATE_MAX_DIM + 1, 1, DoubleDispatchWithDimFn{}, data),
-               std::runtime_error);
+  ASSERT_THROW(
+    legate::double_dispatch(dim, LEGATE_MAX_DIM, DoubleDispatchWithDimFn{}, dim, LEGATE_MAX_DIM),
+    std::runtime_error);
 
   // invalid dim2
-  EXPECT_THROW(legate::double_dispatch(1, 0, DoubleDispatchWithDimFn{}, data), std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, -1, DoubleDispatchWithDimFn{}, data), std::runtime_error);
-  EXPECT_THROW(legate::double_dispatch(1, LEGATE_MAX_DIM + 1, DoubleDispatchWithDimFn{}, data),
-               std::runtime_error);
+  ASSERT_THROW(
+    legate::double_dispatch(LEGATE_MAX_DIM, dim, DoubleDispatchWithDimFn{}, LEGATE_MAX_DIM, dim),
+    std::runtime_error);
 }
 
-TEST_F(DispatchTest, DimDispatch)
+TEST_P(DimDispatchTest, DimDispatch)
 {
-  for (std::int32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
-    auto scalar = legate::Scalar{idx};
+  const auto dim = GetParam();
+  auto scalar    = legate::Scalar{static_cast<std::uint32_t>(dim)};
 
-    legate::dim_dispatch(idx, DimDispatchFn{}, scalar);
-  }
-
-  // invalid dim
-  auto scalar = legate::Scalar(1);
-  EXPECT_THROW(legate::dim_dispatch(0, DimDispatchFn{}, scalar), std::runtime_error);
-  EXPECT_THROW(legate::dim_dispatch(-1, DimDispatchFn{}, scalar), std::runtime_error);
-  EXPECT_THROW(legate::dim_dispatch(LEGATE_MAX_DIM + 1, DimDispatchFn{}, scalar),
-               std::runtime_error);
+  legate::dim_dispatch(dim, DimDispatchFn{}, scalar);
 }
 
-TEST_F(DispatchTest, TypeDispatch)
+TEST_P(DispatchNegativeDimTest, DimDispatch)
 {
-  for (auto code : PRIMITIVE_TYPE_CODE) {
-    auto scalar = legate::Scalar{static_cast<std::uint32_t>(code)};
+  const auto dim = GetParam();
+  auto scalar    = legate::Scalar{static_cast<std::uint32_t>(dim)};
 
-    legate::type_dispatch(code, TypeDispatchFn{}, scalar);
-  }
+  ASSERT_THROW(legate::dim_dispatch(dim, DimDispatchFn{}, scalar), std::runtime_error);
+}
 
-  // invalid type code
-  auto scalar = legate::Scalar(1);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::FIXED_ARRAY, TypeDispatchFn{}, scalar),
-               std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::STRUCT, TypeDispatchFn{}, scalar),
-               std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::STRING, TypeDispatchFn{}, scalar),
-               std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::LIST, TypeDispatchFn{}, scalar),
-               std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::NIL, TypeDispatchFn{}, scalar),
-               std::runtime_error);
-  EXPECT_THROW(legate::type_dispatch(legate::Type::Code::BINARY, TypeDispatchFn{}, scalar),
-               std::runtime_error);
+TEST_P(TypeDispatchTest, TypeDispatch)
+{
+  const auto type = GetParam();
+  auto scalar     = legate::Scalar{static_cast<std::uint32_t>(type)};
+
+  legate::type_dispatch(type, TypeDispatchFn{}, scalar);
+}
+
+TEST_P(DispatchNegativeTypeTest, TypeDispatch)
+{
+  const auto type = GetParam();
+  auto scalar     = legate::Scalar{static_cast<std::uint32_t>(type)};
+
+  ASSERT_THROW(legate::type_dispatch(type, TypeDispatchFn{}, scalar), std::runtime_error);
 }
 
 }  // namespace dispatch_test
