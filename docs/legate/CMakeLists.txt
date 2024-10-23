@@ -45,9 +45,6 @@ add_custom_target(Doxygen DEPENDS "${DOXYGEN_INDEX_FILE}" COMMENT "Running doxyg
 set(SPHINX_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/source")
 set(SPHINX_BUILD "${CMAKE_CURRENT_BINARY_DIR}/sphinx")
 
-file(COPY "${CMAKE_CURRENT_LIST_DIR}/eula.pdf" DESTINATION "${SPHINX_BUILD}/legate")
-file(COPY "${CMAKE_CURRENT_LIST_DIR}/eula.pdf"
-     DESTINATION "${SPHINX_BUILD}/legate/latest")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/switcher.json"
      DESTINATION "${SPHINX_BUILD}/legate")
 
