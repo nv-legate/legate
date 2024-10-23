@@ -140,7 +140,7 @@ void sanity_check_sizes(const LogicalArray& array,
   }
 
   {
-    auto&& extents = array.shape().extents();
+    auto extents = array.shape().extents();
 
     for (auto&& [d, c] : legate::detail::zip_equal(extents, tile_shape)) {
       if (d % c != 0) {
