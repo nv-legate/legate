@@ -12,20 +12,23 @@ from __future__ import annotations
 
 import random
 import re
-from typing import Optional, ParamSpec, Union
+from typing import Any, Optional, ParamSpec, Union
 
 import numpy as np
 import pytest
 
 import legate.core as lg
 from legate.core import (
+    Field,
     PhysicalStore,
     Scalar,
+    Table,
     VariantCode,
     get_legate_runtime,
     task as lct,
     types as ty,
 )
+from legate.core.data_interface import MAX_DATA_INTERFACE_VERSION
 from legate.core.task import (
     ADD,
     InputArray,
@@ -682,6 +685,185 @@ class TestTask(BaseTest):
 
         foo_union()
         foo_union(None)
+
+
+class TestLegateDataInterface:
+    def test_good(self) -> None:
+        @lct.task
+        def foo(x: InputArray) -> None:
+            arr = np.asarray(x)
+            assert arr.shape == (10,)
+            assert arr.dtype == np.int64
+            assert list(arr) == [22] * 10
+
+        field = Field("foo", dtype=ty.int64)
+        x = make_input_array(value=22)
+
+        foo(Table([field], [x]))
+
+    def test_missing_version(self) -> None:
+        class MissingVersion:
+            __legate_data_interface__: Any = {}
+
+        @lct.task
+        def foo(x: InputArray) -> None:
+            pass
+
+        with pytest.raises(
+            TypeError,
+            match="Argument: 'x' Legate data interface missing a version number",  # noqa E501
+        ):
+            foo(MissingVersion())
+
+    @pytest.mark.parametrize("v", ("junk", 1.2))
+    def test_bad_version(self, v: Any) -> None:
+        class BadVersion:
+            __legate_data_interface__ = {
+                "version": v,
+                "data": {
+                    Field("foo", dtype=ty.int64): FakeArray(
+                        make_input_store()
+                    ),
+                },
+            }
+
+        @lct.task
+        def foo(x: InputArray) -> None:
+            pass
+
+        with pytest.raises(
+            TypeError,
+            match="Argument: 'x' Legate data interface version expected an integer, got",  # noqa E501
+        ):
+            foo(BadVersion())
+
+    @pytest.mark.parametrize("v", (0, -1))
+    def test_bad_low_version(self, v: int) -> None:
+        class LowVersion:
+            __legate_data_interface__ = {
+                "version": v,
+                "data": {
+                    Field("foo", dtype=ty.int64): FakeArray(
+                        make_input_store()
+                    ),
+                },
+            }
+
+        @lct.task
+        def foo(x: InputArray) -> None:
+            pass
+
+        with pytest.raises(
+            TypeError,
+            match=f"Argument: 'x' Legate data interface version {v} is below",
+        ):
+            foo(LowVersion())
+
+    def test_bad_high_version(self) -> None:
+        v = MAX_DATA_INTERFACE_VERSION + 1
+
+        class HighVersion:
+            __legate_data_interface__ = {
+                "version": v,
+                "data": {
+                    Field("foo", dtype=ty.int64): FakeArray(
+                        make_input_store()
+                    ),
+                },
+            }
+
+        @lct.task
+        def foo(x: InputArray) -> None:
+            pass
+
+        with pytest.raises(
+            NotImplementedError,
+            match=f"Argument: 'x' Unsupported Legate data interface version {v}",  # noqa E501
+        ):
+            foo(HighVersion())
+
+    def test_bad_missing_fields(self) -> None:
+        class MissingFields:
+            __legate_data_interface__ = {"version": 1, "data": {}}
+
+        @lct.task
+        def foo(x: InputArray) -> None:
+            pass
+
+        with pytest.raises(
+            TypeError, match="Argument: 'x' Legate data object has no fields"
+        ):
+            foo(MissingFields())
+
+    def test_bad_multiple_fields(self) -> None:
+        class TooManyFields:
+            __legate_data_interface__ = {
+                "version": 1,
+                "data": {
+                    Field("foo", dtype=ty.int64): FakeArray(
+                        make_input_store()
+                    ),
+                    Field("bar", dtype=ty.int64): FakeArray(
+                        make_input_store()
+                    ),
+                },
+            }
+
+        @lct.task
+        def foo(x: InputArray) -> None:
+            pass
+
+        with pytest.raises(
+            NotImplementedError,
+            match="Argument: 'x' Legate data interface objects with more than one store are unsupported",  # noqa E501
+        ):
+            foo(TooManyFields())
+
+    # Can't currently even create a nullable field to test with
+    @pytest.mark.xfail
+    def test_bad_nullable_fields(self) -> None:
+        class NullableField:
+            __legate_data_interface__ = {
+                "version": 1,
+                "data": {
+                    Field("foo", nullable=True, dtype=ty.int64): FakeArray(
+                        make_input_store()
+                    )
+                },
+            }
+
+        @lct.task
+        def foo(x: InputArray) -> None:
+            pass
+
+        with pytest.raises(
+            NotImplementedError,
+            match="Argument: 'x' Legate data interface objects with nullable fields are unsupported",  # noqa E501
+        ):
+            foo(NullableField())
+
+    # Trying to create a nullable array, even a fake one, explodes
+    @pytest.mark.skip
+    def test_bad_nullable_array(self) -> None:
+        class NullableStore:
+            __legate_data_interface__ = {
+                "version": 1,
+                "data": {
+                    Field("foo", dtype=ty.int64): FakeArray(
+                        make_input_store(), nullable=True
+                    )
+                },
+            }
+
+        @lct.task
+        def foo(x: InputArray) -> None:
+            pass
+
+        with pytest.raises(
+            NotImplementedError,
+            match="Argument: 'x' Legate data interface objects with nullable stores are unsupported",  # noqa E501
+        ):
+            foo(NullableStore())
 
 
 class TestVariantInvoker(BaseTest):

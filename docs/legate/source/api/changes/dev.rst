@@ -202,6 +202,8 @@ Python
   tasks. ``None`` is currently the only allowed default value for stores. Users may use
   any of the supported "optional" type hint variants (``x | None``, ``Union[x, None]``,
   ``Optional[x]``) to inform the runtime that a store argument may be ``None``.
+- Add support for passing simple Legate Data Interface objects with a single,
+  non-nullable store, as arguments to Python tasks
 
 .. rubric:: Types
 

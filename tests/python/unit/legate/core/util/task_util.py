@@ -106,9 +106,12 @@ class FakeStore(PhysicalStore):
 
 
 class FakeArray(PhysicalArray):
-    def __init__(self, handle: LogicalStore | LogicalArray) -> None:
+    def __init__(
+        self, handle: LogicalStore | LogicalArray, nullable: bool = False
+    ) -> None:
         # purposefully don't init super here
         self._handle = handle
+        self._nullable = nullable
 
     def data(self) -> PhysicalStore:
         assert isinstance(self._handle, LogicalStore)

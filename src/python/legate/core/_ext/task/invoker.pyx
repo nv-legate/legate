@@ -40,6 +40,13 @@ from ..._lib.operation.task cimport AutoTask
 from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.type.type_info cimport Type, TypeCode, binary_type
+
+from ...data_interface import (
+    MAX_DATA_INTERFACE_VERSION,
+    MIN_DATA_INTERFACE_VERSION,
+    LegateDataInterface,
+)
+
 from .type cimport (
     ConstraintSet,
     InputArray,
@@ -61,6 +68,70 @@ cdef tuple[type, ...] _BASE_TYPES = _BASE_PHYSICAL_TYPES + _BASE_LOGICAL_TYPES
 cdef tuple[type, ...] _INPUT_TYPES = (InputStore, InputArray)
 cdef tuple[type, ...] _OUTPUT_TYPES = (OutputStore, OutputArray)
 cdef tuple[type, ...] _REDUCTION_TYPES = (ReductionStore, ReductionArray)
+
+
+cdef try_unpack_simple_store(arg: LegateDataInterface, name: str):
+    iface = arg.__legate_data_interface__
+
+    if "version" not in iface:
+        raise TypeError(
+            f"Argument: {name!r} Legate data interface missing a version "
+            "number"
+        )
+
+    v = iface["version"]
+
+    if not isinstance(v, int):
+        raise TypeError(
+            f"Argument: {name!r} Legate data interface version expected an "
+            f"integer, got {v!r}"
+        )
+
+    if v < MIN_DATA_INTERFACE_VERSION:
+        raise TypeError(
+            f"Argument: {name!r} Legate data interface version {v} is below "
+            f"{MIN_DATA_INTERFACE_VERSION=}"
+        )
+
+    if v > MAX_DATA_INTERFACE_VERSION:
+        raise NotImplementedError(
+            f"Argument: {name!r} Unsupported Legate data interface version {v}"
+        )
+
+    data = iface["data"]
+
+    it = iter(data)
+
+    try:
+        field = next(it)
+    except StopIteration:
+        raise TypeError(f"Argument: {name!r} Legate data object has no fields")
+
+    try:
+        next(it)
+    except StopIteration:
+        pass
+    else:
+        raise NotImplementedError(
+            f"Argument: {name!r} Legate data interface objects with more than "
+            "one store are unsupported"
+        )
+
+    if field.nullable:
+        raise NotImplementedError(
+            f"Argument: {name!r} Legate data interface objects with nullable "
+            "fields are unsupported"
+        )
+
+    column = data[field]
+    if column.nullable:
+        raise NotImplementedError(
+            f"Argument: {name!r} Legate data interface objects with nullable "
+            "stores are unsupported"
+        )
+
+    return column.data
+
 
 cdef inline type _unpack_generic_type(object annotation):
     origin_type = typing_get_origin(annotation)
@@ -334,6 +405,15 @@ cdef class VariantInvoker:
                 # metadata on stores does not yet exist.
                 user_param = get_legate_runtime().create_store_from_scalar(
                     Scalar(None)
+                )
+
+            # Special case for "simple" legate data interface objects, e.g
+            # cuNumeric arrays, that have only a single, non-nullable logical
+            # store
+            if hasattr(user_param, "__legate_data_interface__"):
+                user_param = try_unpack_simple_store(
+                    user_param,
+                    expected_param.name
                 )
 
             if not isinstance(user_param, _BASE_LOGICAL_TYPES):

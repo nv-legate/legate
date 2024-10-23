@@ -11,11 +11,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, TypedDict
+from typing import TYPE_CHECKING, Final, Protocol, TypedDict
 
 if TYPE_CHECKING:
     from ._lib.data.logical_array import LogicalArray
     from ._lib.type.type_info import Type
+
+
+MIN_DATA_INTERFACE_VERSION: Final = 1
+MAX_DATA_INTERFACE_VERSION: Final = 1
 
 
 class LegateDataInterfaceItem(TypedDict):
