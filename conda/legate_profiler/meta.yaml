@@ -38,7 +38,14 @@ build:
   string: {{ git_describe_hash }}
 
 requirements:
-  build: []
+  build:
+    - rust
+    - {{ compiler('c') }}
+    - libclang
+    - clang
+
+  host:
+    - openssl
 
   run:
     - legate ={{ legate_version }}

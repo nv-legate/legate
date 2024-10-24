@@ -64,7 +64,7 @@ jobs:
         run: |
           echo "Install pre-requisites to build and upload"
           apt-get update
-          apt-get install -y cargo libssl-dev curl jq
+          apt-get install -y curl jq
           DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 apt-get install -y pkg-config
 
       - name: Gather and pass the url, git-tag from legion version file
@@ -83,9 +83,9 @@ jobs:
           conda_build_args=();
           conda_build_args+=(--croot "${CONDA_ROOT}");
           conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
-          mamba install conda-build
-          conda-build "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
-          conda-build "${conda_build_args[@]}" conda/legate_profiler
+          mamba install -y boa conda-verify python
+          conda mambabuild "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
+          conda mambabuild "${conda_build_args[@]}" conda/legate_profiler
 
       - name: Display output files
         run: |
