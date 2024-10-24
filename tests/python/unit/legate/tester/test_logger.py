@@ -20,6 +20,7 @@ TEST_LINES = (
     "line 1",
     "[red]foo[/]",
     "bar",
+    "\033[1msome ANSI\033[0m",
     "last line",
 )
 
@@ -27,6 +28,7 @@ SCRUBBED_TEST_LINES = (
     "line 1",
     "foo",
     "bar",
+    "some ANSI",
     "last line",
 )
 
@@ -53,18 +55,12 @@ class TestLogger:
         log = m.Log()
         log(*TEST_LINES)
         assert log.lines == TEST_LINES
-        assert log.dump() == "line 1\nfoo\nbar\nlast line"
-
-    def test_dump_filter(self) -> None:
-        log = m.Log()
-        log.record(*TEST_LINES)
-        assert log.lines == TEST_LINES
-        assert log.dump() == "line 1\nfoo\nbar\nlast line"
+        assert log.dump() == "\n".join(SCRUBBED_TEST_LINES)
 
     def test_dump_index(self) -> None:
         log = m.Log()
         log.record(*TEST_LINES)
-        assert log.dump(start=1, end=3) == "foo\nbar"
+        assert log.dump(start=1, end=3) == "\n".join(SCRUBBED_TEST_LINES[1:3])
 
     def test_clear(self) -> None:
         log = m.Log()
