@@ -123,12 +123,10 @@ build:
 {% else %}
       - {{ name|lower }} ={{ version }} =*_gpu*
 {% endif %}
-{% if gpu_enabled_bool %}
   # prevent nccl from pulling in cudatoolkit
   ignore_run_exports:
-    - cudatoolkit
-  ignore_run_exports_from:
-    - cuda-nvcc
+{% if network == 'gex' %}
+    - openmpi
 {% endif %}
 
 # Note clang must go first! gxx is also in clangxx!!!!!
@@ -223,7 +221,9 @@ requirements:
 {% if network == 'ucx' %}
     - ucx >=1.16
 {% endif %}
+{% if network != 'gex' %}
     - openmpi <5
+{% endif %}
 
   run_constrained:
     - __glibc >=2.17  # [linux]

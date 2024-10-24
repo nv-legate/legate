@@ -174,6 +174,12 @@ function pip_install_legate()
   # SP_DIR is set by conda build. Disable shellcheck.
   # shellcheck disable=SC2154
   rm -rf "${SP_DIR}"/legion*egg-info
+
+  # If building gex, for now remove legate MPI wrapper. This should be handled more completely
+  # with a configure option in the future.
+  if [[ ${LEGATE_NETWORK} == "gex" ]]; then
+    find "${PREFIX}" -name "*legate*mpi*.so*" -exec rm {} \;
+  fi
 }
 
 build_start=$(date)
