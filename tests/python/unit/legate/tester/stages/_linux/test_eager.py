@@ -31,6 +31,7 @@ def test_default() -> None:
     assert stage.kind == "eager"
     assert stage.args == []
     assert stage.env(c, s) == {
+        "LEGATE_AUTO_CONFIG": "0",
         "CUNUMERIC_FORCE_THUNK": "eager",
         "CUNUMERIC_MIN_CPU_CHUNK": "2000000000",
         "CUNUMERIC_MIN_OMP_CHUNK": "2000000000",
@@ -52,6 +53,8 @@ def test_single_rank_shard_args(shard: tuple[int, ...], expected: str) -> None:
         expected,
         "--sysmem",
         str(SMALL_SYSMEM),
+        "--utility",
+        f"{c.core.utility}",
     ]
 
 

@@ -302,6 +302,7 @@ class Config:
             list_command.append(f"--gtest_filter={args.gtest_filter}")
 
         env = os.environ.copy()
+        env["LEGATE_AUTO_CONFIG"] = "0"
         # LSAN prints the suppressions that were applied at the end of the run
         # by default, e.g.
         #

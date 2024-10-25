@@ -41,7 +41,8 @@ NODES = Argument(
         type=int,
         default=defaults.LEGATE_NODES,
         dest="nodes",
-        help="Number of nodes to use",
+        help="Number of nodes to use. "
+        "[legate-only, not supported with standard Python invocation]",
     ),
 )
 
@@ -54,7 +55,8 @@ RANKS_PER_NODE = Argument(
         dest="ranks_per_node",
         help="Number of ranks (processes running copies of the program) to "
         "launch per node. 1 rank per node will typically result in the best "
-        "performance.",
+        "performance. "
+        "[legate-only, not supported with standard Python invocation]",
     ),
 )
 
@@ -91,29 +93,31 @@ CPUS = Argument(
     "--cpus",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_CPUS,
+        default=None,
         dest="cpus",
-        help="Number of CPUs to use per rank",
+        help="Number of standalone CPU cores to reserve per rank, must be >=0",
     ),
 )
+
 
 GPUS = Argument(
     "--gpus",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_GPUS,
+        default=None,
         dest="gpus",
-        help="Number of GPUs to use per rank",
+        help="Number of GPUs to reserve per rank, must be >=0",
     ),
 )
+
 
 OMPS = Argument(
     "--omps",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_OMP_PROCS,
+        default=None,
         dest="omps",
-        help="Number of OpenMP groups to use per rank",
+        help="Number of OpenMP groups to use per rank, must be >=0",
     ),
 )
 
@@ -122,29 +126,33 @@ OMPTHREADS = Argument(
     "--ompthreads",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_OMP_THREADS,
+        default=None,
         dest="ompthreads",
-        help="Number of threads per OpenMP group",
+        help="Number of threads / reserved CPU cores per OpenMP group, must "
+        "be >=0",
     ),
 )
+
 
 UTILITY = Argument(
     "--utility",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_UTILITY_CORES,
+        default=None,
         dest="utility",
-        help="Number of Utility processors per rank to request for meta-work",
+        help="Number of threads to use per rank for runtime meta-work, must "
+        "be >=0",
     ),
 )
+
 
 SYSMEM = Argument(
     "--sysmem",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_SYSMEM,
+        default=None,
         dest="sysmem",
-        help="Amount of DRAM memory per rank (in MBs)",
+        help="Size (in MiB) of DRAM memory to reserve per rank",
     ),
 )
 
@@ -153,9 +161,10 @@ NUMAMEM = Argument(
     "--numamem",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_NUMAMEM,
+        default=None,
         dest="numamem",
-        help="Amount of DRAM memory per NUMA domain per rank (in MBs)",
+        help="Size (in MiB) of NUMA-specific DRAM memory to reserve per NUMA "
+        "domain per rank",
     ),
 )
 
@@ -164,9 +173,10 @@ FBMEM = Argument(
     "--fbmem",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_FBMEM,
+        default=None,
         dest="fbmem",
-        help="Amount of framebuffer memory per GPU (in MBs)",
+        help='Size (in MiB) of GPU (or "framebuffer") memory to reserve per '
+        "GPU",
     ),
 )
 
@@ -175,9 +185,10 @@ ZCMEM = Argument(
     "--zcmem",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_ZCMEM,
+        default=None,
         dest="zcmem",
-        help="Amount of zero-copy memory per rank (in MBs)",
+        help='Size (in MiB) of GPU-registered (or "zero-copy") DRAM memory '
+        "to reserve per GPU",
     ),
 )
 
@@ -186,8 +197,8 @@ REGMEM = Argument(
     "--regmem",
     ArgSpec(
         type=int,
-        default=defaults.LEGATE_REGMEM,
+        default=None,
         dest="regmem",
-        help="Amount of registered CPU-side pinned memory per rank (in MBs)",
+        help="Size (in MiB) of NIC-registered DRAM memory to reserve per rank",
     ),
 )

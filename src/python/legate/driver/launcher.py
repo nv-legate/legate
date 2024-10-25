@@ -193,16 +193,6 @@ class Launcher:
                 / "realm_ucp_bootstrap_mpi.so"
             )
 
-        if config.core.gpus > 0:
-            # TODO(bryevdv)
-            # assert "LEGATE_NEED_CUDA" not in system.env
-            env["LEGATE_NEED_CUDA"] = "1"
-
-        if config.core.omps > 0:
-            # TODO(bryevdv)
-            # assert "LEGATE_NEED_OPENMP" not in system.env
-            env["LEGATE_NEED_OPENMP"] = "1"
-
         if config.multi_node.ranks > 1:
             assert "LEGATE_NEED_NETWORK" not in system.env
             env["LEGATE_NEED_NETWORK"] = "1"

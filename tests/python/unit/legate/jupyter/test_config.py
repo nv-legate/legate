@@ -50,19 +50,19 @@ class TestConfig:
             launcher_extra=[],
         )
         assert c.core == m.Core(
-            cpus=4,
-            gpus=0,
-            omps=defaults.LEGATE_OMP_PROCS,
-            ompthreads=defaults.LEGATE_OMP_THREADS,
-            utility=defaults.LEGATE_UTILITY_CORES,
+            cpus=None,
+            gpus=None,
+            omps=None,
+            ompthreads=None,
+            utility=None,
         )
         c.memory == m.Memory(
-            sysmem=defaults.LEGATE_SYSMEM,
-            numamem=defaults.LEGATE_NUMAMEM,
-            fbmem=defaults.LEGATE_FBMEM,
-            zcmem=defaults.LEGATE_ZCMEM,
-            regmem=defaults.LEGATE_REGMEM,
-            eager_alloc=defaults.LEGATE_EAGER_ALLOC_PERCENTAGE,
+            sysmem=None,
+            numamem=None,
+            fbmem=None,
+            zcmem=None,
+            regmem=None,
+            eager_alloc=None,
         )
 
         # These are all "turned off"

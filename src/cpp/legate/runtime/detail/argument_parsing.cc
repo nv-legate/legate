@@ -43,6 +43,8 @@ namespace legate::detail {
 
 namespace {
 
+constexpr std::int64_t MB = 1 << 20;
+
 // Simple wrapper for variables with default values
 template <typename T>
 class ScaledVar {
@@ -50,10 +52,13 @@ class ScaledVar {
   template <typename U>
   explicit ScaledVar(U default_val, T scale = T{1});
 
+  using value_type = T;
+
+  [[nodiscard]] T raw_value() const;
   [[nodiscard]] T value() const;
   [[nodiscard]] constexpr T default_value() const;
   [[nodiscard]] T& ref();
-  void set(const T& value);
+  void set(T value);
 
  private:
   static constexpr T UNSET{std::numeric_limits<T>::max()};
@@ -71,9 +76,15 @@ ScaledVar<T>::ScaledVar(U default_val, T scale) : default_value_{default_val}, s
 }
 
 template <typename T>
+T ScaledVar<T>::raw_value() const
+{
+  return (value_ == UNSET ? default_value() : value_);
+}
+
+template <typename T>
 T ScaledVar<T>::value() const
 {
-  return (value_ == UNSET ? default_value() : value_) * scale_;
+  return raw_value() * scale_;
 }
 
 template <typename T>
@@ -89,9 +100,9 @@ T& ScaledVar<T>::ref()
 }
 
 template <typename T>
-void ScaledVar<T>::set(const T& value)
+void ScaledVar<T>::set(T value)
 {
-  value_ = value;
+  value_ = std::move(value);
 }
 
 // ==========================================================================================
@@ -101,6 +112,8 @@ class Arg {
  public:
   Arg() = delete;
   explicit Arg(std::string_view flag, T init);
+
+  using value_type = T;
 
   std::string_view flag{};
   T value{};
@@ -178,7 +191,7 @@ void try_set_property(Realm::Runtime* runtime,
   const auto value = var.value.value();
 
   if (value < 0) {
-    throw std::invalid_argument{fmt::format("unable to set {}", var.flag)};
+    throw std::invalid_argument{fmt::format("unable to set {} to {}", var.flag, value)};
   }
 
   auto* const config = runtime->get_module_config(module_name);
@@ -193,9 +206,271 @@ void try_set_property(Realm::Runtime* runtime,
       fmt::format("unable to set {} (the {} module is not available)", var.flag, module_name)};
   }
 
-  if (const auto success = config->set_property(property_name, value); !success) {
+  if (!config->set_property(property_name, value)) {
     throw std::runtime_error{fmt::format("unable to set {}", var.flag)};
   }
+}
+
+// ==========================================================================================
+
+constexpr std::int64_t MINIMAL_MEM = 256;  // MB
+constexpr double SYSMEM_FRACTION   = 0.8;
+
+void autoconfigure_gpus(const Realm::ModuleConfig* cuda, ScaledVar<std::int32_t>* gpus)
+{
+  if (gpus->value() >= 0) {
+    return;
+  }
+
+  std::decay_t<decltype(*gpus)>::value_type auto_gpus = 0;
+
+  if (Config::auto_config && cuda != nullptr) {
+    // use all available GPUs
+    if (!cuda->get_resource("gpu", auto_gpus)) {
+      throw std::runtime_error{
+        "Auto-configuration failed: CUDA Realm module could not determine the number of GPUs"};
+    }
+  }  // otherwise don't allocate any GPUs
+  gpus->set(auto_gpus);
+}
+
+void autoconfigure_fbmem(const Realm::ModuleConfig* cuda,
+                         std::int32_t gpus,
+                         ScaledVar<std::int64_t>* fbmem)
+{
+  if (fbmem->value() >= 0) {
+    return;
+  }
+
+  if (gpus <= 0) {
+    fbmem->set(0);
+    return;
+  }
+
+  if (Config::auto_config) {
+    constexpr double FBMEM_FRACTION = 0.95;
+    std::size_t res_fbmem;
+
+    if (!cuda->get_resource("fbmem", res_fbmem)) {
+      throw std::runtime_error{
+        "Auto-configuration failed: CUDA Realm module could not determine the available GPU "
+        "memory"};
+    }
+
+    using T = std::decay_t<decltype(*fbmem)>::value_type;
+
+    const auto auto_fbmem =
+      static_cast<T>(std::floor(FBMEM_FRACTION * static_cast<double>(res_fbmem) / MB));
+
+    fbmem->set(auto_fbmem);
+  } else {
+    fbmem->set(MINIMAL_MEM);
+  }
+}
+
+void autoconfigure_omps(const Realm::ModuleConfig* openmp,
+                        const Realm::ModuleConfig* numa,
+                        std::int32_t gpus,
+                        ScaledVar<std::int32_t>* omps)
+{
+  if (omps->value() >= 0) {
+    return;
+  }
+
+  using T = std::decay_t<decltype(*omps)>::value_type;
+
+  const auto auto_omps = [&]() -> T {
+    if (Config::auto_config && openmp != nullptr) {
+      if (gpus > 0) {
+        // match the number of GPUs, to ensure host offloading does not repartition
+        return gpus;
+      }
+      if (numa) {
+        // create one OpenMP group per NUMA node
+        std::size_t res_numa_nodes;
+
+        if (!numa->get_resource("numa_nodes", res_numa_nodes)) {
+          throw std::runtime_error{
+            "Auto-configuration failed: NUMA Realm module could not determine the number of NUMA "
+            "nodes"};
+        }
+        return static_cast<T>(res_numa_nodes);
+      }
+      throw std::runtime_error{
+        "Auto-configuration failed: Cannot load NUMA Realm module to determine the number of "
+        "NUMA nodes"};
+    }
+    return 0;  // otherwise don't allocate any OpenMP groups
+  }();
+
+  omps->set(auto_omps);
+}
+
+void autoconfigure_numamem(const Realm::ModuleConfig* core,
+                           std::int32_t omps,
+                           ScaledVar<std::int64_t>* numamem)
+{
+  if (numamem->value() >= 0) {
+    return;
+  }
+
+  if (omps <= 0) {
+    numamem->set(0);
+    return;
+  }
+
+  if (Config::auto_config) {
+    std::size_t res_sysmem_size{};
+
+    if (!core->get_resource("sysmem", res_sysmem_size)) {
+      throw std::runtime_error{
+        "Auto-configuration failed: Core Realm module could not determine the available system "
+        "memory"};
+    }
+
+    using T = std::decay_t<decltype(*numamem)>::value_type;
+
+    const auto auto_numamem = static_cast<T>(std::floor(
+      SYSMEM_FRACTION * static_cast<double>(res_sysmem_size) / MB / static_cast<double>(omps)));
+
+    numamem->set(auto_numamem);
+  } else {
+    numamem->set(MINIMAL_MEM);
+  }
+}
+
+void autoconfigure_cpus(const Realm::ModuleConfig* core,
+                        std::int32_t omps,
+                        std::int32_t util,
+                        std::int32_t gpus,
+                        ScaledVar<std::int32_t>* cpus)
+{
+  if (cpus->value() >= 0) {
+    return;
+  }
+
+  if (!Config::auto_config || (omps > 0)) {
+    // leave one core available for profiling meta-tasks, and other random uses
+    cpus->set(1);
+    return;
+  }
+
+  if (gpus > 0) {
+    // match the number of GPUs, to ensure host offloading does not repartition
+    cpus->set(gpus);
+    return;
+  }
+
+  // use all unallocated cores
+  int res_num_cpus{};
+
+  if (!core->get_resource("cpu", res_num_cpus)) {
+    throw std::runtime_error{
+      "Auto-configuration failed: Core Realm module could not determine the number of CPU "
+      "cores"};
+  }
+  if (res_num_cpus == 0) {
+    throw std::runtime_error{
+      "Auto-configuration failed: Core Realm module detected 0 CPU cores while configuring "
+      "CPUs"};
+  }
+
+  using T = std::decay_t<decltype(*cpus)>::value_type;
+
+  const T auto_cpus = res_num_cpus - util - gpus;
+
+  if (auto_cpus <= 0) {
+    throw std::invalid_argument{
+      fmt::format("Auto-configuration failed: No CPU cores left to allocate to CPU processors. "
+                  "Have {}, but need {} for utility processors, and {} for GPU processors.",
+                  res_num_cpus,
+                  util,
+                  gpus)};
+  }
+  cpus->set(auto_cpus);
+}
+
+void autoconfigure_sysmem(const Realm::ModuleConfig* core,
+                          std::int64_t numamem,
+                          ScaledVar<std::int64_t>* sysmem)
+{
+  if (sysmem->value() >= 0) {
+    return;
+  }
+
+  if (!Config::auto_config || (numamem > 0)) {
+    // don't allocate much memory to --sysmem; leave most to be used for --numamem
+    sysmem->set(MINIMAL_MEM);
+    return;
+  }
+
+  using T = std::decay_t<decltype(*sysmem)>::value_type;
+
+  std::size_t res_sysmem_size{};
+
+  if (!core->get_resource("sysmem", res_sysmem_size)) {
+    throw std::runtime_error{
+      "Auto-configuration failed: Core Realm module could not determine the available system "
+      "memory"};
+  }
+
+  const auto auto_sysmem =
+    static_cast<T>(std::floor(SYSMEM_FRACTION * static_cast<double>(res_sysmem_size) / MB));
+
+  sysmem->set(auto_sysmem);
+}
+
+void autoconfigure_ompthreads(const Realm::ModuleConfig* core,
+                              std::int32_t util,
+                              std::int32_t cpus,
+                              std::int32_t gpus,
+                              std::int32_t omps,
+                              ScaledVar<std::int32_t>* ompthreads)
+{
+  if (ompthreads->value() >= 0) {
+    return;
+  }
+
+  if (omps <= 0) {
+    ompthreads->set(0);
+    return;
+  }
+
+  if (!Config::auto_config) {
+    ompthreads->set(1);
+    return;
+  }
+
+  using T = std::decay_t<decltype(*ompthreads)>::value_type;
+
+  int res_num_cpus{};
+
+  if (!core->get_resource("cpu", res_num_cpus)) {
+    throw std::runtime_error{
+      "Auto-configuration failed: Core Realm module could not determine the number of CPU "
+      "cores"};
+  }
+  if (res_num_cpus == 0) {
+    throw std::runtime_error{
+      "Auto-configuration failed: Core Realm module detected 0 CPU cores while configuring "
+      "number of OpenMP threads"};
+  }
+
+  const auto auto_ompthreads =
+    static_cast<T>(std::floor((res_num_cpus - cpus - util - gpus) / omps));
+
+  if (auto_ompthreads <= 0) {
+    throw std::invalid_argument{
+      fmt::format("Auto-configuration failed: Not enough CPU cores to split across {} OpenMP "
+                  "processors. Have {}, but need {} for CPU processors, {} for utility "
+                  "processors, and {} for GPU processors.",
+                  omps,
+                  res_num_cpus,
+                  cpus,
+                  util,
+                  gpus)};
+  }
+  ompthreads->set(auto_ompthreads);
 }
 
 void autoconfigure(Realm::Runtime* rt,
@@ -203,119 +478,51 @@ void autoconfigure(Realm::Runtime* rt,
                    Arg<ScaledVar<std::int32_t>>* cpus,
                    Arg<ScaledVar<std::int32_t>>* gpus,
                    Arg<ScaledVar<std::int32_t>>* omps,
-                   Arg<ScaledVar<std::int64_t>>* ompthreads,
+                   Arg<ScaledVar<std::int32_t>>* ompthreads,
                    Arg<ScaledVar<std::int64_t>>* sysmem,
                    Arg<ScaledVar<std::int64_t>>* fbmem,
                    Arg<ScaledVar<std::int64_t>>* numamem)
 {
-  auto* core   = rt->get_module_config("core");
-  auto* cuda   = rt->get_module_config("cuda");
-  auto* openmp = rt->get_module_config("openmp");
-  auto* numa   = rt->get_module_config("numa");
+  const auto* core = rt->get_module_config("core");
 
-  constexpr std::int64_t SYSMEM_DEFAULT = 256;
-  constexpr double SYSMEM_FRACTION      = 0.8;
-  constexpr double FBMEM_FRACTION       = 0.95;
+  // ensure core module
+  if (core == nullptr) {
+    throw std::runtime_error{"core module config is missing"};
+  }
+
+  const auto* cuda   = rt->get_module_config("cuda");
+  const auto* openmp = rt->get_module_config("openmp");
+  const auto* numa   = rt->get_module_config("numa");
 
   // auto-configure --gpus
-  if (gpus->value.value() < 0 && cuda != nullptr) {
-    int res_num_gpus;
-    if (!cuda->get_resource("gpu", res_num_gpus)) {
-      throw std::runtime_error{"cuda module could not determine num gpus"};
-    }
-    gpus->value.set(res_num_gpus);
-  }
+  autoconfigure_gpus(cuda, &gpus->value);
 
   // auto-configure --fbmem
-  if (fbmem->value.value() < 0 && cuda != nullptr) {
-    std::size_t res_min_fbmem_size;
-    if (!cuda->get_resource("fbmem", res_min_fbmem_size)) {
-      throw std::runtime_error{"cuda module could not determine fbmem"};
-    }
-    fbmem->value.set(std::floor(FBMEM_FRACTION * static_cast<double>(res_min_fbmem_size)));
-  }
+  autoconfigure_fbmem(cuda, gpus->value.value(), &fbmem->value);
 
-  // auto-configure --cpus
-  if (cpus->value.value() < 0) {
-    std::int32_t auto_cpus = 1;
-    if (openmp == nullptr) {
-      int res_num_cpus;
-      if (!core->get_resource("cpu", res_num_cpus)) {
-        throw std::runtime_error{"core module could not determine num cpus"};
-      }
-      auto_cpus = res_num_cpus - util->value.value() - gpus->value.value();
-      if (auto_cpus <= 0) {
-        throw std::invalid_argument{
-          fmt::format("Not enough CPU cores to satisfy --cpus configuration setting. Have {}, but "
-                      "need {} for utility processors, and {} for GPU processors.",
-                      res_num_cpus,
-                      util->value.value(),
-                      gpus->value.value())};
-      }
-    }
-    cpus->value.set(auto_cpus);
-  }
-
-  // auto-configure --sysmem
-  if (sysmem->value.value() < 0) {
-    if (openmp != nullptr) {
-      sysmem->value.set(SYSMEM_DEFAULT);
-    } else {
-      std::size_t res_sysmem_size;
-      if (!core->get_resource("sysmem", res_sysmem_size)) {
-        throw std::runtime_error{"core module could not determine sysmem"};
-      }
-      sysmem->value.set(std::floor(SYSMEM_FRACTION * static_cast<double>(res_sysmem_size)));
-    }
-  }
-
-  // auto-configure --omps,
-  if (omps->value.value() < 0 && openmp != nullptr) {
-    if (cuda != nullptr) {
-      omps->value.set(gpus->value.value());
-    } else if (numa != nullptr) {
-      std::size_t res_numa_nodes;
-      if (!numa->get_resource("numa_nodes", res_numa_nodes)) {
-        throw std::runtime_error{"numa module could not determine num nodes"};
-      }
-      omps->value.set(static_cast<std::int32_t>(res_numa_nodes));
-    } else {
-      throw std::runtime_error{
-        "OpenMP configured, but cannot load numa module to determine num numa nodes"};
-    }
-  }
-
-  // auto-configure --ompthreads
-  if (ompthreads->value.value() < 0 && openmp != nullptr) {
-    int res_num_cpus;
-    if (!core->get_resource("cpu", res_num_cpus)) {
-      throw std::runtime_error{"core module could not determine num cpus"};
-    }
-    auto auto_ompthreads =
-      std::floor((res_num_cpus - util->value.value() - gpus->value.value()) / omps->value.value());
-    if (auto_ompthreads <= 0) {
-      throw std::invalid_argument{
-        fmt::format("Not enough CPU cores to satisfy --ompthreads configuration setting. Have {}, "
-                    "but need {} for utility processors, {} for GPU processors, and the rest need "
-                    "to be split across {} OpenMP processors.",
-                    res_num_cpus,
-                    util->value.value(),
-                    gpus->value.value(),
-                    omps->value.value())};
-    }
-    ompthreads->value.set(static_cast<std::int64_t>(auto_ompthreads));
-  }
+  // auto-configure --omps
+  autoconfigure_omps(openmp, numa, gpus->value.value(), &omps->value);
 
   // auto-configure --numamem
-  if (numamem->value.value() < 0 && openmp != nullptr) {
-    std::size_t res_sysmem_size;
-    if (!core->get_resource("sysmem", res_sysmem_size)) {
-      throw std::runtime_error{"core module could not determine sysmem"};
-    }
-    numamem->value.set(std::floor(SYSMEM_FRACTION * static_cast<double>(res_sysmem_size) /
-                                  static_cast<double>(omps->value.value())));
-  }
+  autoconfigure_numamem(core, omps->value.value(), &numamem->value);
+
+  // auto-configure --cpus
+  autoconfigure_cpus(
+    core, omps->value.value(), util->value.value(), gpus->value.value(), &cpus->value);
+
+  // auto-configure --sysmem
+  autoconfigure_sysmem(core, numamem->value.value(), &sysmem->value);
+
+  // auto-configure --ompthreads
+  autoconfigure_ompthreads(core,
+                           util->value.value(),
+                           cpus->value.value(),
+                           gpus->value.value(),
+                           omps->value.value(),
+                           &ompthreads->value);
 }
+
+// ==========================================================================================
 
 void set_core_config_properties(Realm::Runtime* rt,
                                 const argparse::ArgumentParser& parser,
@@ -341,6 +548,7 @@ void set_cuda_config_properties(Realm::Runtime* rt,
     try_set_property(rt, "cuda", "fbmem", parser, fbmem);
     try_set_property(rt, "cuda", "zcmem", parser, zcmem);
   } catch (...) {
+    // If we have CUDA, but failed above, then rethrow, otherwise silently gobble the error
     if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
       throw;
     }
@@ -353,7 +561,8 @@ void set_cuda_config_properties(Realm::Runtime* rt,
 void set_openmp_config_properties(Realm::Runtime* rt,
                                   const argparse::ArgumentParser& parser,
                                   const Arg<ScaledVar<std::int32_t>>& omps,
-                                  const Arg<ScaledVar<std::int64_t>>& ompthreads)
+                                  const Arg<ScaledVar<std::int32_t>>& ompthreads,
+                                  const Arg<ScaledVar<std::int64_t>>& numamem)
 {
   if (omps.value.value() > 0) {
     const auto num_threads = ompthreads.value.value();
@@ -368,6 +577,7 @@ void set_openmp_config_properties(Realm::Runtime* rt,
   try {
     try_set_property(rt, "openmp", "ocpu", parser, omps);
     try_set_property(rt, "openmp", "othr", parser, ompthreads);
+    try_set_property(rt, "numa", "numamem", parser, numamem);
   } catch (...) {
     // If we have OpenMP, but failed above, then rethrow, otherwise silently gobble the error
     if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
@@ -403,14 +613,23 @@ void set_legion_default_args(std::string log_dir,
     add_logger(fmt::format("{}=2", mapping::detail::BaseMapper::LOGGER_NAME));
   }
 
+  if (spy) {
+    if (!log_to_file && !log_levels.empty()) {
+      // Spy output is dumped to the same place as other logging, so we must redirect all logging to
+      // a file, even if the user didn't ask for it.
+      // NOLINTNEXTLINE(performance-avoid-endl) endl is deliberate, we want a newline and flush
+      std::cout << "Logging output is being redirected to a file in --logdir" << std::endl;
+    }
+    args_ss << "-lg:spy ";
+    add_logger("legion_spy=2");
+    log_to_file = true;
+  }
+
+  // Do this after the --spy w/o --logdir check above, as the logging level legion_prof=2 doesn't
+  // actually print anything to the logs, so don't consider that a conflict.
   if (profile) {
     args_ss << "-lg:prof 1 -lg:prof_logfile " << log_path / "legate_%.prof" << " ";
     add_logger("legion_prof=2");
-  }
-
-  if (spy) {
-    args_ss << "-lg:spy ";
-    add_logger("legion_spy=2");
   }
 
   if (freeze_on_error) {
@@ -489,13 +708,13 @@ template <typename T>
 
 }  // namespace
 
-void handle_legate_args(std::string_view legate_config)
+void handle_legate_args()
 {
   // values with -1 defaults will be auto-configured via the Realm API
   constexpr std::int32_t DEFAULT_CPUS                = -1;
   constexpr std::int32_t DEFAULT_GPUS                = -1;
   constexpr std::int32_t DEFAULT_OMPS                = -1;
-  constexpr std::int64_t DEFAULT_OMPTHREADS          = -1;
+  constexpr std::int32_t DEFAULT_OMPTHREADS          = -1;
   constexpr std::int32_t DEFAULT_UTILITY             = 2;
   constexpr std::int64_t DEFAULT_SYSMEM              = -1;
   constexpr std::int64_t DEFAULT_NUMAMEM             = -1;
@@ -503,99 +722,99 @@ void handle_legate_args(std::string_view legate_config)
   constexpr std::int64_t DEFAULT_ZCMEM               = 128;  // MB
   constexpr std::int64_t DEFAULT_REGMEM              = 0;    // MB
   constexpr std::int32_t DEFAULT_EAGER_ALLOC_PERCENT = 50;
-  constexpr std::int64_t MB                          = 1024 * 1024;
 
   auto parser = argparse::ArgumentParser{
-    "LEGATE",
+    "LEGATE_CONFIG can contain:",
     std::string{LEGATE_STRINGIZE(LEGATE_VERSION_MAJOR) "." LEGATE_STRINGIZE(
       LEGATE_VERSION_MINOR) "." LEGATE_STRINGIZE(LEGATE_VERSION_PATCH)}};
 
-  parser.add_group("Legate arguments");
-
   auto cpus = add_argument(&parser,
                            "--cpus",
-                           "number of CPU's to reserve, must be >=0",
+                           "Number of standalone CPU cores to reserve, must be >=0",
                            ScaledVar<std::int32_t>{DEFAULT_CPUS});
   auto gpus = add_argument(&parser,
                            "--gpus",
-                           "number of GPU's to reserve, must be >=0",
+                           "Number of GPUs to reserve, must be >=0",
                            ScaledVar<std::int32_t>{DEFAULT_GPUS});
   auto omps = add_argument(&parser,
                            "--omps",
-                           "number of OpenMP processors to reserve, must be >=0",
+                           "Number of OpenMP groups to use, must be >=0",
                            ScaledVar<std::int32_t>{DEFAULT_OMPS});
 
-  auto ompthreads = add_argument(&parser,
-                                 "--ompthreads",
-                                 "number of OpenMP threads to use, must be >=0",
-                                 ScaledVar<std::int64_t>{DEFAULT_OMPTHREADS});
+  auto ompthreads =
+    add_argument(&parser,
+                 "--ompthreads",
+                 "Number of threads / reserved CPU cores per OpenMP group, must be >=0",
+                 ScaledVar<std::int32_t>{DEFAULT_OMPTHREADS});
 
-  auto util    = add_argument(&parser,
+  auto util   = add_argument(&parser,
                            "--utility",
-                           "number of utility processors to reserve, must be >=0",
+                           "Number of threads to use for runtime meta-work, must be >=0",
                            ScaledVar<std::int32_t>{DEFAULT_UTILITY});
-  auto sysmem  = add_argument(&parser,
+  auto sysmem = add_argument(&parser,
                              "--sysmem",
-                             "size (in megabytes) of system memory to reserve",
+                             "Size (in MiB) of DRAM memory to reserve per rank",
                              ScaledVar<std::int64_t>{DEFAULT_SYSMEM, MB});
-  auto numamem = add_argument(&parser,
-                              "--numamem",
-                              "size (in megabytes) of NUMA memory to reserve",
-                              ScaledVar<std::int64_t>{DEFAULT_NUMAMEM, MB});
-  auto fbmem   = add_argument(&parser,
+  auto numamem =
+    add_argument(&parser,
+                 "--numamem",
+                 "Size (in MiB) of NUMA-specific DRAM memory to reserve per NUMA domain",
+                 ScaledVar<std::int64_t>{DEFAULT_NUMAMEM, MB});
+  auto fbmem = add_argument(&parser,
                             "--fbmem",
-                            "size (in megabytes) of GPU (or \"frame buffer\") memory to reservef",
+                            "Size (in MiB) of GPU (or \"framebuffer\") memory to reserve per GPU",
                             ScaledVar<std::int64_t>{DEFAULT_FBMEM, MB});
-  auto zcmem   = add_argument(&parser,
-                            "--zcmem",
-                            "size (in megabytes) of zero-copy GPU memory to reserve",
-                            ScaledVar<std::int64_t>{DEFAULT_ZCMEM, MB});
-  auto regmem  = add_argument(&parser,
+  auto zcmem = add_argument(
+    &parser,
+    "--zcmem",
+    "Size (in MiB) of GPU-registered (or \"zero-copy\") DRAM memory to reserve per GPU",
+    ScaledVar<std::int64_t>{DEFAULT_ZCMEM, MB});
+  auto regmem = add_argument(&parser,
                              "--regmem",
-                             "size (in megabytes) of NIC-registered memory to reserve",
+                             "Size (in MiB) of NIC-registered DRAM memory to reserve",
                              ScaledVar<std::int64_t>{DEFAULT_REGMEM, MB});
 
   const auto eager_alloc_percent =
     add_argument(&parser,
                  "--eager-alloc-percentage",
-                 "percentage of eager allocation",
+                 "Percentage of reserved memory to allocate for eager allocations",
                  ScaledVar<std::int32_t>{DEFAULT_EAGER_ALLOC_PERCENT});
 
   const auto profile =
-    add_argument(&parser, "--profile", "whether to enable Legion runtime profiling", false);
-  const auto spy  = add_argument(&parser, "--spy", "whether to enable Legion spy", false);
+    add_argument(&parser, "--profile", "Whether to collect profiling logs", false);
+  const auto spy =
+    add_argument(&parser, "--spy", "Whether to collect dataflow & task graph logs", false);
   auto log_levels = add_argument(
     &parser,
     "--logging",
-    "comma separated list of loggers to enable and their level, e.g. legate=3,foo=0,bar=5",
+    "Comma separated list of loggers to enable and their level, e.g. legate=3,foo=0,bar=5",
     std::string{});
-  auto log_dir = add_argument(&parser, "--logdir", "directory to emit logfiles to", std::string{});
-  const auto log_to_file =
-    add_argument(&parser, "--log-to-file", "wether to save logs to file", false);
+  auto log_dir           = add_argument(&parser,
+                              "--logdir",
+                              "Directory to emit logfiles to, defaults to current directory",
+                              std::string{});
+  const auto log_to_file = add_argument(
+    &parser, "--log-to-file", "Redirect logging output to a file inside --logdir", false);
   const auto freeze_on_error = add_argument(
-    &parser, "--freeze-on-error", "whether to pause the program on first error", false);
+    &parser,
+    "--freeze-on-error",
+    "If the program crashes, freeze execution right before exit so a debugger can be attached",
+    false);
 
-  {
-    auto&& args = split_in_args(legate_config);
+  auto legate_config_env = LEGATE_CONFIG.get();
+  auto&& args            = split_in_args(legate_config_env.value_or(""));
 
-    try {
-      parser.parse_args(args);
-    } catch (const std::exception& exn) {
-      std::cerr << "== LEGATE ERROR:\n";
-      std::cerr << "== LEGATE ERROR: " << exn.what() << "\n";
-      std::cerr << "== LEGATE ERROR:\n";
-      std::cerr << parser;
-      std::exit(EXIT_FAILURE);
-    }
+  try {
+    parser.parse_args(args);
+  } catch (const std::exception& exn) {
+    std::cerr << "== LEGATE ERROR:\n";
+    std::cerr << "== LEGATE ERROR: " << exn.what() << "\n";
+    std::cerr << "== LEGATE ERROR:\n";
+    std::cerr << parser;
+    std::exit(EXIT_FAILURE);
   }
 
   auto rt = Realm::Runtime::get_runtime();
-
-  // ensure core module
-  auto* core = rt.get_module_config("core");
-  if (core == nullptr) {
-    throw std::runtime_error{"core module config is missing"};
-  }
 
   // ensure sensible utility
   if (const auto nutil = util.value.value(); nutil < 1) {
@@ -604,6 +823,23 @@ void handle_legate_args(std::string_view legate_config)
 
   autoconfigure(&rt, &util, &cpus, &gpus, &omps, &ompthreads, &sysmem, &fbmem, &numamem);
 
+  if (Config::show_config) {
+    // Can't use a logger, since Realm hasn't been initialized yet.
+    std::cout << "Legate hardware configuration:";
+    std::cout << " " << cpus.flag << "=" << cpus.value.raw_value();
+    std::cout << " " << gpus.flag << "=" << gpus.value.raw_value();
+    std::cout << " " << omps.flag << "=" << omps.value.raw_value();
+    std::cout << " " << ompthreads.flag << "=" << ompthreads.value.raw_value();
+    std::cout << " " << util.flag << "=" << util.value.raw_value();
+    std::cout << " " << sysmem.flag << "=" << sysmem.value.raw_value();
+    std::cout << " " << numamem.flag << "=" << numamem.value.raw_value();
+    std::cout << " " << fbmem.flag << "=" << fbmem.value.raw_value();
+    std::cout << " " << zcmem.flag << "=" << zcmem.value.raw_value();
+    std::cout << " " << regmem.flag << "=" << regmem.value.raw_value();
+    // Use of endl is deliberate, we want a newline and flush
+    std::cout << std::endl;  // NOLINT(performance-avoid-endl)
+  }
+
   // Set core configuration properties
   set_core_config_properties(&rt, parser, cpus, util, sysmem, regmem);
 
@@ -611,10 +847,7 @@ void handle_legate_args(std::string_view legate_config)
   set_cuda_config_properties(&rt, parser, gpus, fbmem, zcmem);
 
   // Set OpenMP configuration properties
-  set_openmp_config_properties(&rt, parser, omps, ompthreads);
-
-  // Set NUMA configuration properties
-  try_set_property(&rt, "numa", "numamem", parser, numamem);
+  set_openmp_config_properties(&rt, parser, omps, ompthreads, numamem);
 
   set_legion_default_args(std::move(log_dir.value),
                           eager_alloc_percent.value,

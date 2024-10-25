@@ -21,7 +21,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any, Protocol
 
-from rich import print as rich_print, reconfigure
+from rich import reconfigure
 
 from ..util.types import (
     ArgList,
@@ -30,7 +30,6 @@ from ..util.types import (
     RunMode,
     object_to_dataclass,
 )
-from ..util.ui import warn
 from .args import parser
 
 __all__ = ("Config",)
@@ -68,26 +67,26 @@ class Binding(DataclassMixin):
 
 @dataclass(frozen=True)
 class Core(DataclassMixin):
-    cpus: int
-    gpus: int
-    omps: int
-    ompthreads: int
-    utility: int
+    cpus: int | None
+    gpus: int | None
+    omps: int | None
+    ompthreads: int | None
+    utility: int | None
 
     # compat alias for old field name
     @property
-    def openmp(self) -> int:
+    def openmp(self) -> int | None:
         return self.omps
 
 
 @dataclass(frozen=True)
 class Memory(DataclassMixin):
-    sysmem: int
-    numamem: int
-    fbmem: int
-    zcmem: int
-    regmem: int
-    eager_alloc: int
+    sysmem: int | None
+    numamem: int | None
+    fbmem: int | None
+    zcmem: int | None
+    regmem: int | None
+    eager_alloc: int | None
 
 
 @dataclass(frozen=True)
@@ -197,9 +196,6 @@ class Config:
         self.user_opts = tuple(args.command[1:]) if self.user_program else ()
         self._user_run_mode = args.run_mode
 
-        # these may modify the args, so apply before dataclass conversions
-        self._fixup_log_to_file(args)
-
         self.multi_node = object_to_dataclass(args, MultiNode)
         self.binding = object_to_dataclass(args, Binding)
         self.core = object_to_dataclass(args, Core)
@@ -247,16 +243,3 @@ class Config:
             return "python"
 
         return "exec"
-
-    def _fixup_log_to_file(self, args: Namespace) -> None:
-        # Spy output is dumped to the same place as other logging, so we must
-        # redirect all logging to a file, even if the user didn't ask for it.
-        if args.spy:
-            if args.user_logging_levels is not None and not args.log_to_file:
-                rich_print(
-                    warn(
-                        "Logging output is being redirected to a "
-                        f"file in directory {args.logdir}"
-                    )
-                )
-            args.log_to_file = True

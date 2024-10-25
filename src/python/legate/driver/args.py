@@ -292,15 +292,12 @@ memory.add_argument(FBMEM.name, **FBMEM.kwargs)
 memory.add_argument(ZCMEM.name, **ZCMEM.kwargs)
 memory.add_argument(REGMEM.name, **REGMEM.kwargs)
 
-
-# FIXME: We set the eager pool size to 50% of the total size for now.
-#        This flag will be gone once we roll out a new allocation scheme.
 memory.add_argument(
     "--eager-alloc-percentage",
     dest="eager_alloc",
-    default=defaults.LEGATE_EAGER_ALLOC_PERCENTAGE,
+    default=None,
     required=False,
-    help="Specify the size of eager allocation pool in percentage",
+    help="Percentage of reserved memory to allocate for eager allocations",
 )
 
 
@@ -312,7 +309,7 @@ profiling.add_argument(
     dest="profile",
     action="store_true",
     required=False,
-    help="Profile Legate execution",
+    help="Whether to collect profiling logs",
 )
 
 
@@ -376,16 +373,17 @@ logging.add_argument(
     type=str,
     default=None,
     dest="user_logging_levels",
-    help="Extra loggers to turn on",
+    help="Comma separated list of loggers to enable and their level, e.g. "
+    "legate=3,foo=0,bar=5",
 )
+
 
 logging.add_argument(
     "--logdir",
     type=str,
     default=defaults.LEGATE_LOG_DIR,
     dest="logdir",
-    help="Directory for Legate log files (automatically created if it "
-    "doesn't exist; defaults to current directory if not set)",
+    help="Directory to emit logfiles to, defaults to current directory",
 )
 
 
@@ -466,7 +464,7 @@ debugging.add_argument(
     dest="spy",
     action="store_true",
     required=False,
-    help="Generate Legion Spy logs",
+    help="Whether to collect dataflow & task graph logs",
 )
 
 

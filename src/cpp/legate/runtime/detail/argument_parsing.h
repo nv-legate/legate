@@ -12,10 +12,8 @@
 
 #pragma once
 
-#include <string_view>
-
 namespace legate::detail {
 
-void handle_legate_args(std::string_view legate_config);
+void handle_legate_args();
 
 }  // namespace legate::detail

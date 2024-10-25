@@ -1,7 +1,6 @@
 Overview
 ========
 
-
 The Legate project makes it easier for programmers to leverage the
 power of large clusters of CPUs and GPUs. Using Legate, programs can be
 developed and tested on moderately sized data sets on local machines and
@@ -31,8 +30,6 @@ use arbitrary data and still be reordered across abstraction boundaries
 to hide communication and synchronization latencies (where the original
 sequential semantics of the program allow). This is essential to achieve
 optimal performance on large-scale machines.
-
-
 
 Why Legate
 ----------
@@ -108,7 +105,7 @@ to clients of the Legate API (i.e. Legate library developers):
    views is the responsibility of Legate API regardless of what
    (asynchronous) computations are performed on ``LegateStore`` objects or their
    views. This dependence analysis must be both sound and precise. It is
-   illegal to over-approximate dependences. This dependence analysis must also
+   illegal to over-approximate dependencies. This dependence analysis must also
    be performed globally in scope. Any use of the ``LegateStore`` on any
    processor/node in the system must abide by the original sequential
    semantics of the program
@@ -154,7 +151,7 @@ of subregion views regardless of the scale of the machine.
 
 Computations in Legate application libraries are described by Legion tasks.
 Tasks describe their data usage in terms of ``LegateStore`` objects, thereby
-allowing Legion to infer where dependences exist. Legion uses distributed
+allowing Legion to infer where dependencies exist. Legion uses distributed
 bounding volume hierarchies, similar to a high performance ray-tracer,
 to soundly and precisely perform dependence analysis on logical regions
 and insert the necessary synchronization between tasks to maintain the
@@ -184,144 +181,8 @@ across nodes (or GPU framebuffers). This is the transformation that allows
 sequential programs to run efficiently at scale across large clusters
 as though they are running on a single processor.
 
-How Do I Use Legate
--------------------
-
-After installing Legate, the next step is to install a Legate application
-library such as cuNumeric. The installation process for a Legate application
-library will require you to provide a pointer to the location of your Legate
-installation as this will be used to configure the installation of the Legate
-application library. After you finish installing any Legate application
-libraries, you can then simply replace their ``import`` statements with the
-equivalent ones from any Legate application libraries you have installed.  For
-example, you can change this:
-
-.. code-block:: python
-
-    import numpy as np
-
-to this:
-
-.. code-block:: python
-
-    import cunumeric as np
-
-After this, you can use the ``legate`` driver script in the ``bin`` directory
-of your installation to run any Python program.
-
-You can also use the standard Python interpreter, but in that case configuration
-options can only be passed through the environment (see below), and some options
-are not available (check the output of ``legate --help`` for more details).
-
-For example, to run your script in the default configuration (4 CPUs cores and
-4 GB of memory) just run:
-
-.. code-block:: sh
-
-    $ legate my_python_program.py [other args]
-
-The ``legate`` script also allows you to control the amount of resources that
-Legate consumes when running on the machine. The ``--cpus`` and ``--gpus``
-flags are used to specify how many CPU and GPU processors should be used on a
-node. The ``--sysmem`` flag can be used to specify how many MBs of DRAM Legate
-is allowed to use per node, while the ``--fbmem`` flag controls how many MBs
-of framebuffer memory Legate is allowed to use per GPU. For example, when
-running on a DGX station, you might run your application as follows:
-
-.. code-block:: sh
-
-    $ legate --cpus 16 --gpus 4 --sysmem 100000 --fbmem 15000 my_python_program.py
-
-This will make 16 CPU processors and all 4 GPUs available for use by Legate.
-It will also allow Legate to consume up to 100 GB of DRAM memory and 15 GB of
-framebuffer memory per GPU for a total of 60 GB of GPU framebuffer memory. Note
-that you probably will not be able to make all the resources of the machine
-available for Legate as some will be used by the system or Legate itself for
-meta-work. Currently if you try to exceed these resources during execution then
-Legate will inform you that it had insufficient resources to complete the job
-given its current mapping heuristics. If you believe the job should fit within
-the assigned resources please let us know so we can improve our mapping heuristics.
-There are many other flags available for use in the ``legate`` driver script
-that you can use to communicate how Legate should view the available machine
-resources. You can see a list of them by running:
-
-.. code-block:: sh
-
-    $ legate --help
-
-In addition to running Legate programs, you can also use Legate in an interactive
-mode by simply not passing any ``*.py`` files on the command line. You can still
-request resources just as you would though with a normal file. Legate will
-still use all the resources available to it, including doing multi-node execution.
-
-.. code-block:: sh
-
-    $ legate --cpus 16 --gpus 4 --sysmem 100000 --fbmem 15000
-    Welcome to Legion Python interactive console
-    >>>
-
-Note that Legate does not currently support multi-tenancy cases where different
-users are attempting to use the same hardware concurrently.
-
-As a convenience, several command-line options can have their default values set
-via environment variables. These environment variables, their corresponding command-
-line options, and their default values are as follows.
-
-============================ ================================ =============
-CLI Option                   Env. Variable                    Default Value
-============================ ================================ =============
-``--omps``                   LEGATE_OMP_PROCS                 0
-``--ompthreads``             LEGATE_OMP_THREADS               4
-``--utility``                LEGATE_UTILITY_CORES             2
-``--sysmem``                 LEGATE_SYSMEM                    4000
-``--numamem``                LEGATE_NUMAMEM                   0
-``--fbmem``                  LEGATE_FBMEM                     4000
-``--zcmem``                  LEGATE_ZCMEM                     32
-``--regmem``                 LEGATE_REGMEM                    0
-``--eager-alloc-percentage`` LEGATE_EAGER_ALLOC_PERCENTAGE    50
-============================ ================================ =============
-
-Distributed Launch
-~~~~~~~~~~~~~~~~~~
-
-Legate can be run in parallel by using the ``--nodes`` option followed by the
-number of nodes to be used.  Whenever the ``--nodes`` option is used, Legate
-will be launched using ``mpirun``, even with ``--nodes 1``.  Without the
-``--nodes`` option, no launcher will be used. Legate currently supports
-``mpirun``, ``srun``, and ``jsrun`` as launchers and we are open to adding
-additional launcher kinds. You can select the target kind of launcher with
-``--launcher``.
-
-Debugging and Profiling
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Legate also comes with several tools that you can use to better understand
-your program both from a correctness and a performance standpoint. For
-correctness, Legate has facilities for constructing both dataflow
-and event graphs for the actual run of an application. These graphs require
-that you have an installation of `GraphViz <https://www.graphviz.org/>`_
-available on your machine. To generate a dataflow graph for your Legate
-program simply pass the ``--dataflow`` flag to the ``legate.py`` script and after
-your run is complete we will generate a ``dataflow_legate.pdf`` file containing
-the dataflow graph of your program. To generate a corresponding event graph
-you simply need to pass the ``--event`` flag to the ``legate.py`` script to generate
-a ``event_graph_legate.pdf`` file. These files can grow to be fairly large for non-trivial
-programs so we encourage you to keep your programs small when using these
-visualizations or invest in a `robust PDF viewer <https://get.adobe.com/reader/>`_.
-
-For profiling all you need to do is pass the ``--profile`` flag to Legate and
-afterwards you will have a ``legate_prof`` directory containing a web page that
-can be viewed in any web browser that displays a timeline of your program's
-execution. You simply need to load the ``index.html`` page from a browser. You
-may have to enable local JavaScript execution if you are viewing the page from
-your local machine (depending on your browser).
-
-We recommend that you do not mix debugging and profiling in the same run as
-some of the logging for the debugging features requires significant file I/O
-that can adversely effect the performance of the application.
-
 Contact
-~~~~~~~
+-------
 
 For technical questions about Legate and Legate-based tools, please visit
 the `community discussion forum <https://github.com/nv-legate/discussion>`_.

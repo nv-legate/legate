@@ -76,18 +76,18 @@ class TestStoreCreation:
         ],
         ids=str,
     )
-    def test_store_shape(self, shape: tuple[int]) -> None:
+    def test_store_shape(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         store = runtime.create_store(dtype=ty.int32, shape=shape)
-        arr_np = np.zeros(dtype=np.int32, shape=shape)
+        assert store.shape == shape
         arr_store = np.asarray(
             store.get_physical_store().get_inline_allocation()
         )
+        arr_np = np.empty(shape=shape)
         assert arr_np.shape == arr_store.shape
-        assert np.allclose(arr_np, arr_store)
 
     @pytest.mark.parametrize("shape", [(0,), (4, 2, 3), (1, 0, 1)], ids=str)
-    def test_create_from_numpy_array(self, shape: tuple[int]) -> None:
+    def test_create_from_numpy_array(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         arr_np = np.random.random(shape)
         store = runtime.create_store_from_buffer(

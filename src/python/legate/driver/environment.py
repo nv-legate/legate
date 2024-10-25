@@ -15,50 +15,56 @@ import shlex
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Any
+
     from ..util.types import EnvPart
     from .config import ConfigProtocol
 
 __all__ = ("ENV_PARTS_LEGATE",)
 
 
+def _arg_helper(arg: str, value: Any) -> tuple[str, ...]:
+    return () if value is None else (arg, str(value))
+
+
 def env_cpus(config: ConfigProtocol) -> EnvPart:
-    return ("--cpus", str(config.core.cpus))
+    return _arg_helper("--cpus", config.core.cpus)
 
 
 def env_gpus(config: ConfigProtocol) -> EnvPart:
-    return ("--gpus", str(config.core.gpus))
+    return _arg_helper("--gpus", config.core.gpus)
 
 
 def env_omps(config: ConfigProtocol) -> EnvPart:
-    return ("--omps", str(config.core.omps))
+    return _arg_helper("--omps", config.core.omps)
 
 
 def env_ompthreads(config: ConfigProtocol) -> EnvPart:
-    return ("--ompthreads", str(config.core.ompthreads))
+    return _arg_helper("--ompthreads", config.core.ompthreads)
 
 
 def env_utility(config: ConfigProtocol) -> EnvPart:
-    return ("--utility", str(config.core.utility))
+    return _arg_helper("--utility", config.core.utility)
 
 
 def env_sysmem(config: ConfigProtocol) -> EnvPart:
-    return ("--sysmem", str(config.memory.sysmem))
+    return _arg_helper("--sysmem", config.memory.sysmem)
 
 
 def env_numamem(config: ConfigProtocol) -> EnvPart:
-    return ("--numamem", str(config.memory.numamem))
+    return _arg_helper("--numamem", config.memory.numamem)
 
 
 def env_zcmem(config: ConfigProtocol) -> EnvPart:
-    return ("--zcmem", str(config.memory.zcmem))
+    return _arg_helper("--zcmem", config.memory.zcmem)
 
 
 def env_fbmem(config: ConfigProtocol) -> EnvPart:
-    return ("--fbmem", str(config.memory.fbmem))
+    return _arg_helper("--fbmem", config.memory.fbmem)
 
 
 def env_regmem(config: ConfigProtocol) -> EnvPart:
-    return ("--regmem", str(config.memory.regmem))
+    return _arg_helper("--regmem", config.memory.regmem)
 
 
 def env_log_levels(config: ConfigProtocol) -> EnvPart:
@@ -75,7 +81,7 @@ def env_log_file(config: ConfigProtocol) -> EnvPart:
 
 
 def env_eager_alloc(config: ConfigProtocol) -> EnvPart:
-    return ("--eager-alloc-percentage", str(config.memory.eager_alloc))
+    return _arg_helper("--eager-alloc-percentage", config.memory.eager_alloc)
 
 
 def env_profile(config: ConfigProtocol) -> EnvPart:

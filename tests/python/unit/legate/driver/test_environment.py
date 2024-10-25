@@ -55,7 +55,7 @@ class Test_core_opts:
         config = genconfig([])
         func = getattr(m, f"env_{opt}")
         result = func(config)
-        assert result == (f"--{opt}", str(getattr(config.core, opt)))
+        assert result == ()
 
     def test_value(self, genconfig: GenConfig, opt: str) -> None:
         config = genconfig([f"--{opt}", "10"])
@@ -70,7 +70,7 @@ class Test_mem_opts:
         config = genconfig([])
         func = getattr(m, f"env_{opt}")
         result = func(config)
-        assert result == (f"--{opt}", str(getattr(config.memory, opt)))
+        assert result == ()
 
     def test_value(self, genconfig: GenConfig, opt: str) -> None:
         config = genconfig([f"--{opt}", "10"])

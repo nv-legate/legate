@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from ...defaults import SMALL_SYSMEM
 from ..test_stage import TestStage
-from ..util import Shard, StageSpec, adjust_workers
+from ..util import MANUAL_CONFIG_ENV, Shard, StageSpec, adjust_workers
 
 if TYPE_CHECKING:
     from ....util.types import ArgList, EnvDict
@@ -47,7 +47,7 @@ class GPU(TestStage):
         self._gpus = system.gpus
 
     def env(self, config: Config, system: TestSystem) -> EnvDict:
-        return {}
+        return dict(MANUAL_CONFIG_ENV)
 
     def delay(self, shard: Shard, config: Config, system: TestSystem) -> None:
         time.sleep(config.execution.gpu_delay / 1000)
@@ -68,6 +68,10 @@ class GPU(TestStage):
             str(shard_gpu_ids),
             "--sysmem",
             str(SMALL_SYSMEM),
+            "--cpus",
+            "1",
+            "--utility",
+            str(config.core.utility),
         ]
         args += self.handle_multi_node_args(config)
         return args

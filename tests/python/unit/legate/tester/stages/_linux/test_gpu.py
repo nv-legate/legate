@@ -30,7 +30,7 @@ def test_default() -> None:
     stage = m.GPU(c, s)
     assert stage.kind == "cuda"
     assert stage.args == []
-    assert stage.env(c, s) == {}
+    assert stage.env(c, s) == {"LEGATE_AUTO_CONFIG": "0"}
     assert stage.spec.workers > 0
 
 
@@ -52,6 +52,10 @@ class TestSingleRank:
             expected,
             "--sysmem",
             str(SMALL_SYSMEM),
+            "--cpus",
+            "1",
+            "--utility",
+            f"{c.core.utility}",
         ]
 
     def test_spec_with_gpus_1(self) -> None:
@@ -149,6 +153,10 @@ class TestMultiRank:
             expected,
             "--sysmem",
             str(SMALL_SYSMEM),
+            "--cpus",
+            "1",
+            "--utility",
+            f"{c.core.utility}",
         ]
 
     def test_spec_with_gpus_1(self) -> None:

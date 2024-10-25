@@ -84,6 +84,39 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_OPENMP);
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_NETWORK);
 
 /**
+ * @var LEGATE_AUTO_CONFIG
+ *
+ * @brief Enables Legate's automatic machine configuration heuristics (turned on by default).
+ * Possible values: 0, 1.
+ *
+ * If enabled, Legate will automatically select an appropriate configuration for the current machine
+ * (utilizing most of the available hardware resources, such as CPU cores, RAM and GPUs). If
+ * disabled, Legate will use a minimal set of resources. In both cases, further configuration is
+ * possible through `LEGATE_CONFIG`.
+ *
+ * If unset, equivalent to 1 (true).
+ *
+ * @ingroup env
+ */
+LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_AUTO_CONFIG);
+
+/**
+ * @var LEGATE_SHOW_CONFIG
+ *
+ * @brief Instructs Legate to print out its hardware resource configuration prior to starting.
+ * Possible values: 0, 1.
+ *
+ * This variable can be used to visually confirm that Legate's automatic configuration
+ * heuristics are picking up appropriate settings for your machine. If a setting is wrong, you
+ * can explicitly override it by passing the corresponding flag in `LEGATE_CONFIG`.
+ *
+ * If unset, equivalent to 0 (false).
+ *
+ * @ingroup env
+ */
+LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SHOW_CONFIG);
+
+/**
  * @var LEGATE_SHOW_PROGRESS
  *
  * @brief Instructs Legate to emit basic info at that start of each task. Possible values: 0,

@@ -173,42 +173,6 @@ class TestLauncherEnv:
 
         assert env["GASNET_MPI_THREAD"] == "MPI_THREAD_MULTIPLE"
 
-    def test_need_cuda_false(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch, "--gpus", "0"])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert "LEGATE_NEED_CUDA" not in env
-
-    def test_need_cuda_true(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch, "--gpus", "1"])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert env["LEGATE_NEED_CUDA"] == "1"
-
-    def test_need_openmp_false(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch, "--omps", "0"])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert "LEGATE_NEED_OPENMP" not in env
-
-    def test_need_openmp_true(
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch, "--omps", "1"])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert env["LEGATE_NEED_OPENMP"] == "1"
-
     def test_need_gasnet_false(  # iff single rank
         self, genconfig: GenConfig, launch: LauncherType
     ) -> None:

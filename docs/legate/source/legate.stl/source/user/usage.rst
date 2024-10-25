@@ -8,8 +8,6 @@
    without an express license agreement from NVIDIA CORPORATION or
    its affiliates is strictly prohibited.
 
-.. _usage:
-
 Usage
 =====
 

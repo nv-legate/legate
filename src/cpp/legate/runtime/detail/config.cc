@@ -20,6 +20,8 @@ namespace legate::detail {
 /*static*/ void Config::reset_() noexcept
 {
   Config::parsed_                    = false;
+  Config::auto_config                = true;
+  Config::show_config                = false;
   Config::show_progress_requested    = false;
   Config::use_empty_task             = false;
   Config::synchronize_stream_view    = false;
@@ -35,6 +37,8 @@ namespace legate::detail {
 {
   LEGATE_CHECK(!parsed());
   try {
+    Config::auto_config                = LEGATE_AUTO_CONFIG.get(/* default_value = */ true);
+    Config::show_config                = LEGATE_SHOW_CONFIG.get(/* default_value = */ false);
     Config::show_progress_requested    = LEGATE_SHOW_PROGRESS.get(/* default_value = */ false);
     Config::use_empty_task             = LEGATE_EMPTY_TASK.get(/* default_value = */ false);
     Config::synchronize_stream_view    = LEGATE_SYNC_STREAM_VIEW.get(/* default_value = */ false);

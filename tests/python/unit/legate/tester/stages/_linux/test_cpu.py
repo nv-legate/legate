@@ -18,11 +18,12 @@ import pytest
 
 from legate.tester.config import Config
 from legate.tester.stages._linux import cpu as m
-from legate.tester.stages.util import UNPIN_ENV, Shard
+from legate.tester.stages.util import MANUAL_CONFIG_ENV, UNPIN_ENV, Shard
 
 from .. import FakeSystem
 
-unpin_and_test = dict(UNPIN_ENV)
+unpin_and_test = dict(MANUAL_CONFIG_ENV)
+unpin_and_test.update(UNPIN_ENV)
 
 
 def test_default() -> None:
@@ -44,7 +45,7 @@ def test_cpu_pin_strict() -> None:
     stage = m.CPU(c, s)
     assert stage.kind == "cpus"
     assert stage.args == []
-    assert stage.env(c, s) == {}
+    assert stage.env(c, s) == MANUAL_CONFIG_ENV
     assert stage.spec.workers > 0
 
     shard = (1, 2, 3)
@@ -101,6 +102,8 @@ class TestSingleRank:
             f"{c.core.cpus}",
             "--sysmem",
             str(c.memory.sysmem),
+            "--utility",
+            f"{c.core.utility}",
             "--cpu-bind",
             expected,
         ]
@@ -221,6 +224,8 @@ class TestMultiRank:
             f"{c.core.cpus}",
             "--sysmem",
             str(c.memory.sysmem),
+            "--utility",
+            f"{c.core.utility}",
             "--cpu-bind",
             "0,1/2,3",
             "--launcher",

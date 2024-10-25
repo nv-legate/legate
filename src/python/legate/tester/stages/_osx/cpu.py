@@ -14,7 +14,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ..test_stage import TestStage
-from ..util import UNPIN_ENV, Shard, StageSpec, adjust_workers
+from ..util import (
+    MANUAL_CONFIG_ENV,
+    UNPIN_ENV,
+    Shard,
+    StageSpec,
+    adjust_workers,
+)
 
 if TYPE_CHECKING:
     from ....util.types import ArgList, EnvDict
@@ -44,7 +50,9 @@ class CPU(TestStage):
         self._init(config, system)
 
     def env(self, config: Config, system: TestSystem) -> EnvDict:
-        return dict(UNPIN_ENV)
+        env = dict(MANUAL_CONFIG_ENV)
+        env.update(UNPIN_ENV)
+        return env
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         return [
@@ -52,6 +60,8 @@ class CPU(TestStage):
             str(config.core.cpus),
             "--sysmem",
             str(config.memory.sysmem),
+            "--utility",
+            str(config.core.utility),
         ]
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:

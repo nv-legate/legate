@@ -22,19 +22,7 @@ import legate.driver.config as m
 import legate.driver.defaults as defaults
 from legate.util.types import DataclassMixin
 
-from ...util import Capsys, powerset
-
-DEFAULTS_ENV_VARS = (
-    "LEGATE_EAGER_ALLOC_PERCENTAGE",
-    "LEGATE_FBMEM",
-    "LEGATE_NUMAMEM",
-    "LEGATE_OMP_PROCS",
-    "LEGATE_OMP_THREADS",
-    "LEGATE_REGMEM",
-    "LEGATE_SYSMEM",
-    "LEGATE_UTILITY_CORES",
-    "LEGATE_ZCMEM",
-)
+from ...util import powerset
 
 
 class TestMultiNode:
@@ -282,20 +270,20 @@ class TestConfig:
             nic_bind=None,
         )
         assert c.core == m.Core(
-            cpus=4,
-            gpus=0,
-            omps=defaults.LEGATE_OMP_PROCS,
-            ompthreads=defaults.LEGATE_OMP_THREADS,
-            utility=defaults.LEGATE_UTILITY_CORES,
+            cpus=None,
+            gpus=None,
+            omps=None,
+            ompthreads=None,
+            utility=None,
         )
 
         c.memory == m.Memory(
-            sysmem=defaults.LEGATE_SYSMEM,
-            numamem=defaults.LEGATE_NUMAMEM,
-            fbmem=defaults.LEGATE_FBMEM,
-            zcmem=defaults.LEGATE_ZCMEM,
-            regmem=defaults.LEGATE_REGMEM,
-            eager_alloc=defaults.LEGATE_EAGER_ALLOC_PERCENTAGE,
+            sysmem=None,
+            numamem=None,
+            fbmem=None,
+            zcmem=None,
+            regmem=None,
+            eager_alloc=None,
         )
 
         c.profiling == m.Profiling(
@@ -356,17 +344,6 @@ class TestConfig:
                 call(c._args, m.Info),
                 call(c._args, m.Other),
             ]
-        )
-
-    def test_log_to_file_fixup(self, capsys: Capsys) -> None:
-        c = m.Config(["legate", "--logging", "foo", "--spy"])
-
-        assert c.logging.log_to_file
-
-        out, _ = capsys.readouterr()
-        assert out.strip() == (
-            "WARNING: Logging output is being redirected to a file in "
-            f"directory {c.logging.logdir}"
         )
 
     # maybe this is overkill but this is literally the point where the user's

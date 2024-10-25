@@ -1618,15 +1618,13 @@ void handle_realm_default_args()
     }
 
     Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
-    if (const auto legate_config_env = LEGATE_CONFIG.get(); legate_config_env.has_value()) {
-      try {
-        handle_legate_args(*legate_config_env);
-      } catch (const std::exception& e) {
-        // Cannot use log_legate() since Legion loggers silently swallow the messages if Legion
-        // has not yet been set up.
-        std::cerr << "failed to handle legate arguments: " << e.what();
-        return 1;
-      }
+    try {
+      handle_legate_args();
+    } catch (const std::exception& e) {
+      // Cannot use log_legate() since Legion loggers silently swallow the messages if Legion
+      // has not yet been set up.
+      std::cerr << "failed to handle legate arguments: " << e.what();
+      return 1;
     }
   }
 

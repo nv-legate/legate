@@ -20,6 +20,8 @@ from ..config import Config
 from ..logger import LOG
 from ..test_system import ProcessResult
 
+MANUAL_CONFIG_ENV = {"LEGATE_AUTO_CONFIG": "0"}
+
 UNPIN_ENV = {"REALM_SYNTHETIC_CORE_MAP": ""}
 
 # Raise min chunk sizes for deferred codepaths to force eager execution

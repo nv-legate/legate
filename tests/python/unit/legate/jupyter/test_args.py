@@ -53,44 +53,39 @@ class TestParserDefaults:
     # core
 
     def test_cpus(self) -> None:
-        assert m.parser.get_default("cpus") == defaults.LEGATE_CPUS
+        assert m.parser.get_default("cpus") is None
 
     def test_gpus(self) -> None:
-        assert m.parser.get_default("gpus") == defaults.LEGATE_GPUS
+        assert m.parser.get_default("gpus") is None
 
     def test_omps(self) -> None:
-        assert m.parser.get_default("omps") == defaults.LEGATE_OMP_PROCS
+        assert m.parser.get_default("omps") is None
 
     def test_ompthreads(self) -> None:
-        assert (
-            m.parser.get_default("ompthreads") == defaults.LEGATE_OMP_THREADS
-        )
+        assert m.parser.get_default("ompthreads") is None
 
     def test_utility(self) -> None:
-        assert m.parser.get_default("utility") == defaults.LEGATE_UTILITY_CORES
+        assert m.parser.get_default("utility") is None
 
     # memory
 
     def test_sysmem(self) -> None:
-        assert m.parser.get_default("sysmem") == defaults.LEGATE_SYSMEM
+        assert m.parser.get_default("sysmem") is None
 
     def test_numamem(self) -> None:
-        assert m.parser.get_default("numamem") == defaults.LEGATE_NUMAMEM
+        assert m.parser.get_default("numamem") is None
 
     def test_fbmem(self) -> None:
-        assert m.parser.get_default("fbmem") == defaults.LEGATE_FBMEM
+        assert m.parser.get_default("fbmem") is None
 
     def test_zcmem(self) -> None:
-        assert m.parser.get_default("zcmem") == defaults.LEGATE_ZCMEM
+        assert m.parser.get_default("zcmem") is None
 
     def test_regmem(self) -> None:
-        assert m.parser.get_default("regmem") == defaults.LEGATE_REGMEM
+        assert m.parser.get_default("regmem") is None
 
     def test_eager_alloc(self) -> None:
-        assert (
-            m.parser.get_default("eager_alloc")
-            == defaults.LEGATE_EAGER_ALLOC_PERCENTAGE
-        )
+        assert m.parser.get_default("eager_alloc") is None
 
     # info
 

@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 
-from legate.driver import defaults
 from legate.util import shared_args as sa
 
 __all__ = ("parser",)
@@ -81,14 +80,12 @@ memory.add_argument(sa.FBMEM.name, **sa.FBMEM.kwargs)
 memory.add_argument(sa.ZCMEM.name, **sa.ZCMEM.kwargs)
 memory.add_argument(sa.REGMEM.name, **sa.REGMEM.kwargs)
 
-# FIXME: We set the eager pool size to 50% of the total size for now.
-#        This flag will be gone once we roll out a new allocation scheme.
 memory.add_argument(
     "--eager-alloc-percentage",
     dest="eager_alloc",
-    default=defaults.LEGATE_EAGER_ALLOC_PERCENTAGE,
+    default=None,
     required=False,
-    help="Specify the size of eager allocation pool in percentage",
+    help="Percentage of reserved memory to allocate for eager allocations",
 )
 
 info = parser.add_argument_group("Informational")

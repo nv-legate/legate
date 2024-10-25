@@ -20,6 +20,8 @@ class Config {
  public:
   // Note, if you change any of these values, or add new ones, you must update Config::reset_()
   // accordingly
+  static inline bool auto_config                   = true;
+  static inline bool show_config                   = false;
   static inline bool show_progress_requested       = false;
   static inline bool use_empty_task                = false;
   static inline bool synchronize_stream_view       = false;

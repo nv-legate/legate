@@ -52,7 +52,7 @@ local defaults
 
     .. code-block:: python
 
-        settings.concensus(default=True)
+        settings.consensus(default=True)
 
     Local defaults have lower precendence than every other setting mechanism
     except global defaults.

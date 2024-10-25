@@ -124,7 +124,7 @@ run_test_or_analysis() {
 
             set_ld_preload
 
-            pytest --color=yes tests/python -s
+            LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python -s
             ;;
         "cpp")
             echo "Running C++ unit tests..."
@@ -150,7 +150,7 @@ run_test_or_analysis() {
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
-              LEGATE_TEST=1 LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 1000 --fbmem 1000 --numamem 0 --ompthreads 0 --omps 0" \
+              LEGATE_TEST=1 LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 1000 --fbmem 1000" \
                 "${gtest_file}" --gtest_color=yes "${EXTRA_ARGS}"
             }
 

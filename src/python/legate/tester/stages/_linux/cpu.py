@@ -16,7 +16,13 @@ from itertools import chain
 from typing import TYPE_CHECKING
 
 from ..test_stage import TestStage
-from ..util import UNPIN_ENV, Shard, StageSpec, adjust_workers
+from ..util import (
+    MANUAL_CONFIG_ENV,
+    UNPIN_ENV,
+    Shard,
+    StageSpec,
+    adjust_workers,
+)
 
 if TYPE_CHECKING:
     from ....util.types import ArgList, EnvDict
@@ -46,7 +52,10 @@ class CPU(TestStage):
         self._init(config, system)
 
     def env(self, config: Config, system: TestSystem) -> EnvDict:
-        return {} if config.execution.cpu_pin == "strict" else dict(UNPIN_ENV)
+        env = dict(MANUAL_CONFIG_ENV)
+        if config.execution.cpu_pin != "strict":
+            env.update(UNPIN_ENV)
+        return env
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         args = [
@@ -54,6 +63,8 @@ class CPU(TestStage):
             str(config.core.cpus),
             "--sysmem",
             str(config.memory.sysmem),
+            "--utility",
+            str(config.core.utility),
         ]
         args += self.handle_cpu_pin_args(config, shard)
         args += self.handle_multi_node_args(config)
