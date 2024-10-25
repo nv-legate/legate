@@ -137,6 +137,8 @@ C++
   to the detail namespace. As a consequence, the following headers are removed
   from the public interface:``backend_network.h``, ``thread_comm.h``,
   ``local_network.h``, and ``mpi_network.h``.
+- Add ``TaskContext::concurrent_task_barrier()`` to perform a blocking barrier across all
+  the leaf tasks in a concurrent task launch.
 
 .. rubric:: Types
 

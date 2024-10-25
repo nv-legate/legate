@@ -201,6 +201,34 @@ class TaskContext {
 
   [[nodiscard]] std::string_view get_provenance() const;
 
+  /**
+   * @brief Perform a blocking barrier across all the leaf tasks in a concurrent task launch.
+   *
+   * When a leaf task invokes this operation, control will not return to the task until all the
+   * leaf tasks in the same launch have executed the same barrier.
+   *
+   * This is useful e.g. to work around NCCL deadlocks, that can be triggered when another
+   * concurrent CUDA operation creates a false dependence or resource conflict with the resident
+   * NCCL kernels. By performing a barrier before and after every NCCL collective operation
+   * happening inside the leaf tasks in a concurrent task launch, we can effectively isolate the
+   * execution of the NCCL collective from all other CUDA work, thus preventing the deadlock. In
+   * more detail:
+   *
+   * - put a barrier before the collective operation
+   * - emit the collective operation
+   * - ensure that NCCL has actually emitted all its operations on the stream (e.g. `ncclGroupEnd`
+   *   has been called, if grouping operations)
+   * - perform another barrier
+   *
+   * @snippet integration/nccl.cu NCCL collective operation
+   *
+   * This operation can only be performed inside leaf tasks (not on the top-level task), and only in
+   * variants that have been declared as concurrent. All leaf tasks in a launch must take part in
+   * the barrier (it cannot be done only on a subset of them). Breaking any of the previously stated
+   * invariants is a fatal error.
+   */
+  void concurrent_task_barrier();
+
   [[nodiscard]] detail::TaskContext* impl() const;
 
   /**

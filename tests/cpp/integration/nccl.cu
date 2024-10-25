@@ -50,8 +50,17 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     *p_send = 12345;
 
     auto stream = context.get_task_stream();
+
+    /// [NCCL collective operation]
+    // The barrier must happen before the NCCL calls begin
+    context.concurrent_task_barrier();
     auto result = ncclAllGather(p_send, p_recv, 1, ncclUint64, *comm, stream);
     EXPECT_EQ(result, ncclSuccess);
+    // And insert a barrier after all NCCL calls return, to ensure that all ranks have
+    // emitted the NCCL calls
+    context.concurrent_task_barrier();
+    /// [NCCL collective operation]
+
     LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream));
     for (std::uint32_t idx = 0; idx < num_tasks; ++idx) {
       EXPECT_EQ(p_recv[idx], 12345);

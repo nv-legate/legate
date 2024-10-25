@@ -129,6 +129,7 @@ class Runtime {
                    std::int32_t radix);
   void flush_scheduling_window();
   void submit(InternalSharedPtr<Operation> op);
+  void concurrent_task_barrier();
 
   [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(const InternalSharedPtr<Shape>& shape,
                                                              InternalSharedPtr<Type> type,

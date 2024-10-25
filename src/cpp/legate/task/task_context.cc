@@ -137,6 +137,9 @@ mapping::Machine TaskContext::machine() const { return mapping::Machine{impl()->
 
 std::string_view TaskContext::get_provenance() const { return impl()->get_provenance(); }
 
+// NOLINTNEXTLINE(readability-make-member-function-const)
+void TaskContext::concurrent_task_barrier() { impl()->concurrent_task_barrier(); }
+
 CUstream_st* TaskContext::get_task_stream() const { return impl()->get_task_stream(); }
 
 }  // namespace legate

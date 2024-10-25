@@ -68,6 +68,8 @@ class TaskContext {
    */
   void make_all_unbound_stores_empty();
 
+  void concurrent_task_barrier();
+
  protected:
   [[nodiscard]] const std::vector<InternalSharedPtr<PhysicalStore>>& get_unbound_stores_()
     const noexcept;

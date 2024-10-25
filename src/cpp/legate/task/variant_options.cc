@@ -20,6 +20,9 @@ void VariantOptions::populate_registrar(Legion::TaskVariantRegistrar& registrar)
   registrar.set_inner(inner);
   registrar.set_idempotent(idempotent);
   registrar.set_concurrent(concurrent);
+  if (concurrent) {
+    registrar.set_concurrent_barrier(true);
+  }
 }
 
 std::ostream& operator<<(std::ostream& os, const VariantOptions& options)
