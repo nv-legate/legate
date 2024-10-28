@@ -92,13 +92,27 @@ void test_nested_provenance_auto(legate::Library library)
 
 }  // namespace
 
-TEST_F(ProvenanceTest, All)
+TEST_F(ProvenanceTest, Manual)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
+  test_provenance_manual(library);
+}
+
+TEST_F(ProvenanceTest, Auto)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
   test_provenance_auto(library);
-  test_provenance_manual(library);
+}
+
+TEST_F(ProvenanceTest, NestedAuto)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+
   test_nested_provenance_auto(library);
 }
 

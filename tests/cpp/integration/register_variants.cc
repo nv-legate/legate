@@ -28,15 +28,15 @@ using RegisterVariants = DefaultFixture;
 namespace {
 
 enum TaskID : std::uint8_t {
-  HELLO,
   HELLO1,
   HELLO2,
   HELLO3,
   HELLO4,
   HELLO5,
+  HELLO6,
 };
 
-constexpr std::array<TaskID, 6> TASK_IDS = {HELLO, HELLO1, HELLO2, HELLO3, HELLO4, HELLO5};
+constexpr std::string_view LIBRARY_NAME1 = "test_register_variants1";
 
 struct Registry {
   [[nodiscard]] static legate::TaskRegistrar& get_registrar();
@@ -81,38 +81,6 @@ struct BaseTask2 : public legate::LegateTask<BaseTask2> {
 
 namespace {
 
-void test_register_tasks(legate::Library& context)
-{
-  using HelloTask  = BaseTask<HELLO>;
-  using HelloTask1 = BaseTask<HELLO1>;
-  using HelloTask2 = BaseTask<HELLO2>;
-  using HelloTask3 = BaseTask<HELLO3>;
-
-  std::map<legate::VariantCode, legate::VariantOptions> all_options;
-  all_options[legate::VariantCode::CPU] = legate::VariantOptions{};
-  all_options[legate::VariantCode::GPU] = legate::VariantOptions{};
-
-  {
-    HelloTask::register_variants();
-    HelloTask1::register_variants(all_options);
-    Registry::get_registrar().register_all_tasks(context);
-  }
-
-  HelloTask2::register_variants(context);
-
-  HelloTask3::register_variants(context, all_options);
-
-  BaseTask2::register_variants(context, legate::LocalTaskID{HELLO4});
-  BaseTask2::register_variants(context, legate::LocalTaskID{HELLO5}, all_options);
-
-  // registered taskID the second time would throw exception
-  EXPECT_THROW(HelloTask2::register_variants(context), std::invalid_argument);
-  EXPECT_THROW(BaseTask2::register_variants(context, legate::LocalTaskID{HELLO4}, all_options),
-               std::invalid_argument);
-  EXPECT_THROW(BaseTask2::register_variants(context, legate::LocalTaskID{HELLO2}),
-               std::invalid_argument);
-}
-
 void test_auto_task(const legate::Library& context,
                     const legate::LogicalStore& store,
                     TaskID taskid)
@@ -146,38 +114,149 @@ void validate_store(const legate::LogicalStore& store)
   }
 }
 
-}  // namespace
-
-TEST_F(RegisterVariants, All)
+void verify_test(const legate::Library& context, TaskID taskid)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto context = runtime->create_library("test_register_variants1");
+  auto store   = runtime->create_store(legate::Shape{5, 5}, legate::int64());
+  test_auto_task(context, store, taskid);
+  validate_store(store);
 
-  for (auto task_id : TASK_IDS) {
-    EXPECT_THROW(static_cast<void>(context.get_task_name(legate::LocalTaskID{task_id})),
-                 std::out_of_range);
-  }
+  test_manual_task(context, store, taskid);
+  validate_store(store);
+}
 
-  test_register_tasks(context);
+}  // namespace
+
+TEST_F(RegisterVariants, Test1)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_or_create_library(LIBRARY_NAME1);
+
+  EXPECT_THROW(static_cast<void>(context.get_task_name(legate::LocalTaskID{HELLO1})),
+               std::out_of_range);
+
+  using HelloTask = BaseTask<HELLO1>;
+  HelloTask::register_variants();
+  Registry::get_registrar().register_all_tasks(context);
 
   // Sanity test that tasks are registered successfully
-  for (auto task_id : TASK_IDS) {
-    const std::string task_name =
-      task_id >= HELLO4 ? "register_variants::BaseTask2"
-                        : fmt::format("register_variants::BaseTask<{}>", fmt::underlying(task_id));
-    EXPECT_EQ(context.get_task_name(legate::LocalTaskID{task_id}), task_name);
-  }
+  const std::string task_name =
+    fmt::format("register_variants::BaseTask<{}>", fmt::underlying(HELLO1));
+  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO1}), task_name);
 
-  auto store = runtime->create_store(legate::Shape{5, 5}, legate::int64());
-  for (auto task_id : TASK_IDS) {
-    test_auto_task(context, store, task_id);
-    validate_store(store);
-  }
+  verify_test(context, HELLO1);
+}
 
-  for (auto task_id : TASK_IDS) {
-    test_manual_task(context, store, task_id);
-    validate_store(store);
-  }
+TEST_F(RegisterVariants, Test2)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_or_create_library("test_register_variants1");
+
+  EXPECT_THROW(static_cast<void>(context.get_task_name(legate::LocalTaskID{HELLO2})),
+               std::out_of_range);
+
+  std::map<legate::VariantCode, legate::VariantOptions> all_options;
+  all_options[legate::VariantCode::CPU] = legate::VariantOptions{};
+  all_options[legate::VariantCode::GPU] = legate::VariantOptions{};
+
+  using HelloTask = BaseTask<HELLO2>;
+  HelloTask::register_variants(all_options);
+  Registry::get_registrar().register_all_tasks(context);
+
+  // Sanity test that tasks are registered successfully
+  const std::string task_name =
+    fmt::format("register_variants::BaseTask<{}>", fmt::underlying(HELLO2));
+  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO2}), task_name);
+
+  verify_test(context, HELLO2);
+}
+
+TEST_F(RegisterVariants, Test3)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_or_create_library("test_register_variants1");
+
+  EXPECT_THROW(static_cast<void>(context.get_task_name(legate::LocalTaskID{HELLO3})),
+               std::out_of_range);
+
+  using HelloTask = BaseTask<HELLO3>;
+  HelloTask::register_variants(context);
+
+  // registered taskID the second time would throw exception
+  EXPECT_THROW(HelloTask::register_variants(context), std::invalid_argument);
+  // Sanity test that tasks are registered successfully
+  const std::string task_name =
+    fmt::format("register_variants::BaseTask<{}>", fmt::underlying(HELLO3));
+  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO3}), task_name);
+
+  verify_test(context, HELLO3);
+}
+
+TEST_F(RegisterVariants, Test4)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_or_create_library("test_register_variants1");
+
+  EXPECT_THROW(static_cast<void>(context.get_task_name(legate::LocalTaskID{HELLO4})),
+               std::out_of_range);
+
+  std::map<legate::VariantCode, legate::VariantOptions> all_options;
+  all_options[legate::VariantCode::CPU] = legate::VariantOptions{};
+  all_options[legate::VariantCode::GPU] = legate::VariantOptions{};
+
+  using HelloTask = BaseTask<HELLO4>;
+  HelloTask::register_variants(context, all_options);
+
+  // registered taskID the second time would throw exception
+  EXPECT_THROW(HelloTask::register_variants(context), std::invalid_argument);
+  // Sanity test that tasks are registered successfully
+  const std::string task_name =
+    fmt::format("register_variants::BaseTask<{}>", fmt::underlying(HELLO4));
+  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO4}), task_name);
+
+  verify_test(context, HELLO4);
+}
+
+TEST_F(RegisterVariants, Test5)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_or_create_library("test_register_variants1");
+
+  EXPECT_THROW(static_cast<void>(context.get_task_name(legate::LocalTaskID{HELLO5})),
+               std::out_of_range);
+
+  BaseTask2::register_variants(context, legate::LocalTaskID{HELLO5});
+
+  // registered taskID the second time would throw exception
+  EXPECT_THROW(BaseTask2::register_variants(context, legate::LocalTaskID{HELLO5}),
+               std::invalid_argument);
+  // Sanity test that tasks are registered successfully
+  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO5}), "register_variants::BaseTask2");
+
+  verify_test(context, HELLO5);
+}
+
+TEST_F(RegisterVariants, Test6)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto context = runtime->find_or_create_library("test_register_variants1");
+
+  EXPECT_THROW(static_cast<void>(context.get_task_name(legate::LocalTaskID{HELLO6})),
+               std::out_of_range);
+
+  std::map<legate::VariantCode, legate::VariantOptions> all_options;
+  all_options[legate::VariantCode::CPU] = legate::VariantOptions{};
+  all_options[legate::VariantCode::GPU] = legate::VariantOptions{};
+
+  BaseTask2::register_variants(context, legate::LocalTaskID{HELLO6}, all_options);
+
+  // registered taskID the second time would throw exception
+  EXPECT_THROW(BaseTask2::register_variants(context, legate::LocalTaskID{HELLO6}, all_options),
+               std::invalid_argument);
+  // Sanity test that tasks are registered successfully
+  EXPECT_EQ(context.get_task_name(legate::LocalTaskID{HELLO6}), "register_variants::BaseTask2");
+
+  verify_test(context, HELLO6);
 }
 
 class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
