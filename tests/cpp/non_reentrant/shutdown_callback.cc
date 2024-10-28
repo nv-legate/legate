@@ -31,10 +31,10 @@ TEST_F(ShutdownCallback, Basic)
   legate::register_shutdown_callback(std::move(callback_2));
 
   // Shutdown and verify that the callback is called
-  EXPECT_EQ(legate::finish(), 0);
+  ASSERT_EQ(legate::finish(), 0);
 
-  EXPECT_TRUE(callback_called_1);
-  EXPECT_TRUE(callback_called_2);
+  ASSERT_TRUE(callback_called_1);
+  ASSERT_TRUE(callback_called_2);
 }
 
 TEST_F(ShutdownCallback, Nested)
@@ -48,9 +48,9 @@ TEST_F(ShutdownCallback, Nested)
   legate::register_shutdown_callback(std::move(callback));
 
   // Shutdown and verify that the callback is called
-  EXPECT_EQ(legate::finish(), 0);
+  ASSERT_EQ(legate::finish(), 0);
 
-  EXPECT_TRUE(callback_called);
+  ASSERT_TRUE(callback_called);
 }
 
 }  // namespace test_shutdown_callback
