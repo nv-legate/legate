@@ -19,8 +19,6 @@ function(find_or_configure_kvikio)
   rapids_cpm_package_details(kvikio version git_url git_tag git_shallow unused)
 
   rapids_cpm_find(kvikio "${version}"
-                  BUILD_EXPORT_SET legate-exports
-                  INSTALL_EXPORT_SET legate-exports
                   CPM_ARGS
                   GIT_SHALLOW "${git_shallow}"
                   GIT_REPOSITORY "${git_url}" SYSTEM TRUE
