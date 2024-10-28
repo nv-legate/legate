@@ -34,6 +34,7 @@ def test_ENV_PARTS_LEGATE() -> None:
         m.env_sysmem,
         m.env_numamem,
         m.env_fbmem,
+        m.env_zcmem,
         m.env_regmem,
         m.env_log_levels,
         m.env_logdir,

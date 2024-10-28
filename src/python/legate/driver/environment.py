@@ -105,6 +105,7 @@ ENV_PARTS_LEGATE = (
     env_sysmem,
     env_numamem,
     env_fbmem,
+    env_zcmem,
     env_regmem,
     env_log_levels,
     env_logdir,

@@ -233,3 +233,49 @@ class Test_format_verbose:
             assert f"{k}={quote(driver.env[k])}" in scrubbed
 
         assert scrubbed.endswith(f"\n{'-':-<80}")
+
+
+# Below are the command-line options and flags that are handled by
+# handle_legate_args in /src/cpp/legate/runtime/detail/argument_parsing.cc
+
+OPTS = (
+    "--cpus",
+    "--gpus",
+    "--omps",
+    "--ompthreads",
+    "--utility",
+    "--sysmem",
+    "--numamem",
+    "--fbmem",
+    "--zcmem",
+    "--regmem",
+    "--eager-alloc-percentage",
+    "--logging",
+    "--logdir",
+)
+
+FLAGS = (
+    "--profile",
+    "--spy",
+    "--log-to-file",
+    "--freeze-on-error",
+)
+
+
+class Test_LEGATE_CONFIG:
+
+    @pytest.mark.parametrize("opt", OPTS)
+    def test_arg_opt_propagation(self, genconfig: GenConfig, opt: str) -> None:
+        config = genconfig([opt, "10"])
+        driver = m.LegateDriver(config, SYSTEM)
+        LC = driver.env["LEGATE_CONFIG"]
+        assert f"{opt} 10" in LC
+
+    @pytest.mark.parametrize("flag", FLAGS)
+    def test_arg_flag_propagation(
+        self, genconfig: GenConfig, flag: str
+    ) -> None:
+        config = genconfig([flag])
+        driver = m.LegateDriver(config, SYSTEM)
+        LC = driver.env["LEGATE_CONFIG"]
+        assert flag in LC

@@ -25,10 +25,7 @@ import legate.driver as m
 # all the expected plumbing is hooked up as it is supposed to be
 
 
-# TODO: this test with the fake argv path does not work for the way
-# legate is installed in CI, so skip for now.
-@pytest.mark.skip
-def test_main(mocker: MockerFixture) -> None:
+def test_main(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> None:
     import legate.driver.config
     import legate.driver.driver
     import legate.util.system
@@ -37,12 +34,15 @@ def test_main(mocker: MockerFixture) -> None:
     system_spy = mocker.spy(legate.util.system.System, "__init__")
     driver_spy = mocker.spy(legate.driver.driver.LegateDriver, "__init__")
     mocker.patch("legate.driver.driver.LegateDriver.run", return_value=123)
-    mocker.patch.object(sys, "argv", ["/some/path/foo", "bar"])
+    mocker.patch.object(sys, "argv", ["/some/path", "bar"])
+
+    # LEGATE_CONFIG should get spliced into the start of argv[1:]
+    monkeypatch.setenv("LEGATE_CONFIG", "foo")
 
     result = m.main()
 
     assert config_spy.call_count == 1
-    assert config_spy.call_args[0][1] == sys.argv
+    assert config_spy.call_args[0][1][1:] == ["foo", "bar"]
     assert config_spy.call_args[1] == {}
 
     assert system_spy.call_count == 1
