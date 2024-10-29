@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include "legate/cuda/cuda.h"
 #include "legate/utilities/typedefs.h"
 
 #include <array>
@@ -23,13 +24,13 @@ namespace legate::detail {
 template <std::int32_t NDIM>
 class Unravel {
  public:
-  __CUDA_HD__ explicit Unravel(const Rect<NDIM>& rect);
+  LEGATE_HOST_DEVICE explicit Unravel(const Rect<NDIM>& rect);
 
-  __CUDA_HD__ [[nodiscard]] std::uint64_t volume() const;
+  LEGATE_HOST_DEVICE [[nodiscard]] std::uint64_t volume() const;
 
-  __CUDA_HD__ [[nodiscard]] bool empty() const;
+  LEGATE_HOST_DEVICE [[nodiscard]] bool empty() const;
 
-  __CUDA_HD__ [[nodiscard]] Point<NDIM> operator()(std::uint64_t index) const;
+  LEGATE_HOST_DEVICE [[nodiscard]] Point<NDIM> operator()(std::uint64_t index) const;
 
  private:
   Point<NDIM> low_{};

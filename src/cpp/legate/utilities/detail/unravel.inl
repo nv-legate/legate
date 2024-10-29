@@ -18,7 +18,7 @@ namespace legate::detail {
 
 // This helper class converts indices to multi-dimensional points
 template <std::int32_t NDIM>
-__CUDA_HD__ Unravel<NDIM>::Unravel(const Rect<NDIM>& rect) : low_{rect.lo}
+LEGATE_HOST_DEVICE Unravel<NDIM>::Unravel(const Rect<NDIM>& rect) : low_{rect.lo}
 {
   std::uint64_t stride = 1;
   for (std::int32_t dim = NDIM - 1; dim >= 0; --dim) {
@@ -30,19 +30,19 @@ __CUDA_HD__ Unravel<NDIM>::Unravel(const Rect<NDIM>& rect) : low_{rect.lo}
 }
 
 template <std::int32_t NDIM>
-__CUDA_HD__ std::uint64_t Unravel<NDIM>::volume() const
+LEGATE_HOST_DEVICE std::uint64_t Unravel<NDIM>::volume() const
 {
   return strides_[NDIM - 1];
 }
 
 template <std::int32_t NDIM>
-__CUDA_HD__ bool Unravel<NDIM>::empty() const
+LEGATE_HOST_DEVICE bool Unravel<NDIM>::empty() const
 {
   return volume() == 0;
 }
 
 template <std::int32_t NDIM>
-__CUDA_HD__ Point<NDIM> Unravel<NDIM>::operator()(std::uint64_t index) const
+LEGATE_HOST_DEVICE Point<NDIM> Unravel<NDIM>::operator()(std::uint64_t index) const
 {
   auto point = low_;
   for (std::int32_t dim = 0; dim < NDIM - 1; dim++) {

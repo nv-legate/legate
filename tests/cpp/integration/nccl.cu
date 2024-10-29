@@ -15,12 +15,26 @@
 #include "legate.h"
 #include "utilities/utilities.h"
 
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 #include <nccl.h>
 
 namespace test_nccl {
 
 constexpr std::size_t SIZE = 100;
+
+#define CHECK_CUDA(...)                                                               \
+  do {                                                                                \
+    const cudaError_t __result__ = __VA_ARGS__;                                       \
+    if (__result__ != cudaSuccess) {                                                  \
+      throw std::runtime_error{                                                       \
+        fmt::format("Internal CUDA failure with error {} ({}) in file {} at line {}", \
+                    cudaGetErrorString(__result__),                                   \
+                    cudaGetErrorName(__result__),                                     \
+                    __FILE__,                                                         \
+                    __LINE__)};                                                       \
+    }                                                                                 \
+  } while (0)
 
 struct NCCLTester : public legate::LegateTask<NCCLTester> {
   static constexpr auto TASK_ID             = legate::LocalTaskID{0};
@@ -61,7 +75,7 @@ struct NCCLTester : public legate::LegateTask<NCCLTester> {
     context.concurrent_task_barrier();
     /// [NCCL collective operation]
 
-    LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream));
+    CHECK_CUDA(cudaStreamSynchronize(stream));
     for (std::uint32_t idx = 0; idx < num_tasks; ++idx) {
       EXPECT_EQ(p_recv[idx], 12345);
     }

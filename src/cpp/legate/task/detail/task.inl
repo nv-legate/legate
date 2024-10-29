@@ -79,7 +79,7 @@ template <typename F>
 }
 
 template <typename T, typename U>
-[[nodiscard]] nvtx::Range make_nvtx_range(T&& get_task_name, U&& get_provenance)
+[[nodiscard]] nvtx3::scoped_range make_nvtx_range(T&& get_task_name, U&& get_provenance)
 {
   std::string msg;
 
@@ -95,7 +95,7 @@ template <typename T, typename U>
       msg += provenance;
     }
   }
-  return nvtx::Range{msg.c_str()};
+  return nvtx3::scoped_range{msg.c_str()};
 }
 
 }  // namespace legate::detail::task_detail

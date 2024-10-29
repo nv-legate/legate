@@ -16,6 +16,8 @@
 
 #include <optional>
 
+using CUstream = struct CUstream_st*;
+
 /**
  * @file
  * @brief Class definition for legate::cuda::StreamPool
@@ -46,7 +48,7 @@ class LEGATE_STREAM_VIEW_DEPRECATED StreamView {
    *
    * @param stream Raw CUDA stream to wrap
    */
-  explicit StreamView(cudaStream_t stream);
+  explicit StreamView(CUstream stream);
   ~StreamView();
 
   StreamView(const StreamView&)            = delete;
@@ -62,11 +64,11 @@ class LEGATE_STREAM_VIEW_DEPRECATED StreamView {
    * @return Raw CUDA stream wrapped by the `StreamView`
    */
   // NOLINTNEXTLINE(google-explicit-constructor) implicit casting is intended here
-  operator cudaStream_t() const;
+  operator CUstream() const;
 
  private:
   bool valid_{};
-  cudaStream_t stream_{};
+  CUstream stream_{};
 };
 
 // We need this because in order to implement the deprecated functionality, we need to
@@ -109,7 +111,7 @@ class LEGATE_STREAM_POOL_DEPRECATED StreamPool {
 
  private:
   // For now we keep only one stream in the pool
-  std::optional<cudaStream_t> cached_stream_{};
+  std::optional<CUstream> cached_stream_{};
 };
 
 #undef LEGATE_SILENCE_STREAM_POOL_DEPRECATION_PRIVATE

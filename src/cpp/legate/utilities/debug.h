@@ -39,7 +39,7 @@ namespace legate {
 template <typename T, int DIM>
 [[nodiscard]] std::string print_dense_array(const T* base,
                                             const Point<DIM>& extents,
-                                            std::size_t strides[DIM]);
+                                            const std::size_t (&strides)[DIM]);
 /**
  * @ingroup util
  * @brief Converts the dense array into a string using an accessor

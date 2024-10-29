@@ -12,9 +12,9 @@
 
 #pragma once
 
+#include "legate/cuda/detail/nvtx.h"
 #include "legate/task/detail/returned_exception.h"
 #include "legate/task/task_context.h"
-#include "legate/utilities/nvtx_help.h"
 #include "legate/utilities/typedefs.h"
 
 #include <optional>
@@ -38,7 +38,7 @@ template <typename F>
                                                          F&& get_task_name);
 
 template <typename T, typename U>
-[[nodiscard]] nvtx::Range make_nvtx_range(T&& get_task_name, U&& get_provenance);
+[[nodiscard]] nvtx3::scoped_range make_nvtx_range(T&& get_task_name, U&& get_provenance);
 
 }  // namespace task_detail
 

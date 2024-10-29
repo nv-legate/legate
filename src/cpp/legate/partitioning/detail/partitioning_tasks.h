@@ -63,9 +63,9 @@ class ElementWiseMax {
   static const Point<NDIM> identity;  // NOLINT(readability-identifier-naming)
 
   template <bool EXCLUSIVE>
-  __CUDA_HD__ inline static void apply(LHS& lhs, RHS rhs);
+  LEGATE_HOST_DEVICE inline static void apply(LHS& lhs, RHS rhs);
   template <bool EXCLUSIVE>
-  __CUDA_HD__ inline static void fold(RHS& rhs1, RHS rhs2);
+  LEGATE_HOST_DEVICE inline static void fold(RHS& rhs1, RHS rhs2);
 };
 
 template <std::int32_t NDIM>
@@ -78,9 +78,9 @@ class ElementWiseMin {
   static const Point<NDIM> identity;  // NOLINT(readability-identifier-naming)
 
   template <bool EXCLUSIVE>
-  __CUDA_HD__ inline static void apply(LHS& lhs, RHS rhs);
+  LEGATE_HOST_DEVICE inline static void apply(LHS& lhs, RHS rhs);
   template <bool EXCLUSIVE>
-  __CUDA_HD__ inline static void fold(RHS& rhs1, RHS rhs2);
+  LEGATE_HOST_DEVICE inline static void fold(RHS& rhs1, RHS rhs2);
 };
 
 void register_partitioning_tasks(Library* core_lib);

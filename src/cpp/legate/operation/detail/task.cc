@@ -12,6 +12,9 @@
 
 #include "legate/operation/detail/task.h"
 
+#include <legate_defines.h>
+
+#include "legate/data/detail/array_tasks.h"
 #include "legate/mapping/detail/mapping.h"
 #include "legate/operation/detail/launcher_arg.h"
 #include "legate/operation/detail/task_launcher.h"
@@ -26,6 +29,7 @@
 #include "legate/type/detail/type_info.h"
 #include "legate/utilities/detail/core_ids.h"
 #include "legate/utilities/detail/zip.h"
+#include <legate/cuda/detail/cuda_driver_api.h>
 
 #include <algorithm>
 #include <fmt/format.h>
@@ -457,9 +461,9 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
     return;
   }
 
-  auto* core_lib = detail::Runtime::get_runtime()->core_library();
-  auto launcher =
-    detail::TaskLauncher{core_lib, machine_, provenance(), LocalTaskID{CoreTask::FIXUP_RANGES}};
+  auto* runtime  = Runtime::get_runtime();
+  auto* core_lib = runtime->core_library();
+  auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance(), FixupRanges::TASK_ID};
 
   launcher.set_priority(priority());
 
@@ -468,6 +472,7 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
     // legate arrays in ManualTasks
     launcher.add_output(array->to_launcher_arg_for_fixup(launch_domain, LEGION_NO_ACCESS));
   }
+
   launcher.execute(launch_domain);
 }
 

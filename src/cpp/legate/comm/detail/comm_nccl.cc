@@ -11,7 +11,10 @@
  */
 
 #include "legate/comm/detail/comm_nccl.h"
+
 #include "legate/cuda/cuda.h"
+#include "legate/cuda/detail/cuda_driver_api.h"
+#include "legate/cuda/detail/nvtx.h"
 #include "legate/data/buffer.h"
 #include "legate/operation/detail/task_launcher.h"
 #include "legate/runtime/detail/communicator_manager.h"
@@ -21,7 +24,6 @@
 #include "legate/runtime/runtime.h"
 #include "legate/task/detail/legion_task.h"
 #include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/nvtx_help.h"
 #include "legate/utilities/typedefs.h"
 
 #include <chrono>
@@ -76,7 +78,7 @@ class InitId : public detail::LegionTask<InitId> {
                                   Legion::Context context,
                                   Legion::Runtime* runtime)
   {
-    const legate::nvtx::Range auto_range{task_name_().data()};
+    nvtx3::scoped_range auto_range{task_name_().data()};
 
     legate::detail::show_progress(task, context, runtime);
 
@@ -98,7 +100,7 @@ class Init : public detail::LegionTask<Init> {
                                  Legion::Context context,
                                  Legion::Runtime* runtime)
   {
-    const legate::nvtx::Range auto_range{task_name_().data()};
+    nvtx3::scoped_range auto_range{task_name_().data()};
 
     legate::detail::show_progress(task, context, runtime);
 
@@ -130,19 +132,21 @@ class Init : public detail::LegionTask<Init> {
       return comm.release();
     }
 
-    auto stream = detail::Runtime::get_runtime()->get_cuda_stream();
+    auto* legate_runtime = detail::Runtime::get_runtime();
+    const auto* driver   = legate_runtime->get_cuda_driver_api();
+    auto stream          = legate_runtime->get_cuda_stream();
 
     // Perform a warm-up all-to-all
 
-    cudaEvent_t ev_start, ev_end_all_to_all, ev_end_all_gather;
-    LEGATE_CHECK_CUDA(cudaEventCreate(&ev_start));
-    LEGATE_CHECK_CUDA(cudaEventCreate(&ev_end_all_to_all));
-    LEGATE_CHECK_CUDA(cudaEventCreate(&ev_end_all_gather));
+    CUevent ev_start, ev_end_all_to_all, ev_end_all_gather;
+    LEGATE_CHECK_CUDRIVER(driver->event_create(&ev_start, 0));
+    LEGATE_CHECK_CUDRIVER(driver->event_create(&ev_end_all_to_all, 0));
+    LEGATE_CHECK_CUDRIVER(driver->event_create(&ev_end_all_gather, 0));
 
     auto src_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
     auto tgt_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
 
-    LEGATE_CHECK_CUDA(cudaEventRecord(ev_start, stream));
+    LEGATE_CHECK_CUDRIVER(driver->event_record(ev_start, stream));
 
     LEGATE_CHECK_NCCL(ncclGroupStart());
     for (std::size_t idx = 0; idx < num_ranks; ++idx) {
@@ -151,19 +155,21 @@ class Init : public detail::LegionTask<Init> {
     }
     LEGATE_CHECK_NCCL(ncclGroupEnd());
 
-    LEGATE_CHECK_CUDA(cudaEventRecord(ev_end_all_to_all, stream));
+    LEGATE_CHECK_CUDRIVER(driver->event_record(ev_end_all_to_all, stream));
 
     LEGATE_CHECK_NCCL(
       ncclAllGather(src_buffer.ptr(0), tgt_buffer.ptr(0), 1, ncclUint64, *comm, stream));
 
-    LEGATE_CHECK_CUDA(cudaEventRecord(ev_end_all_gather, stream));
+    LEGATE_CHECK_CUDRIVER(driver->event_record(ev_end_all_gather, stream));
 
-    LEGATE_CHECK_CUDA(cudaEventSynchronize(ev_end_all_gather));
+    LEGATE_CHECK_CUDRIVER(driver->event_synchronize(ev_end_all_gather));
 
     float time_all_to_all = 0.;
     float time_all_gather = 0.;
-    LEGATE_CHECK_CUDA(cudaEventElapsedTime(&time_all_to_all, ev_start, ev_end_all_to_all));
-    LEGATE_CHECK_CUDA(cudaEventElapsedTime(&time_all_gather, ev_end_all_to_all, ev_end_all_gather));
+    LEGATE_CHECK_CUDRIVER(
+      driver->event_elapsed_time(&time_all_to_all, ev_start, ev_end_all_to_all));
+    LEGATE_CHECK_CUDRIVER(
+      driver->event_elapsed_time(&time_all_gather, ev_end_all_to_all, ev_end_all_gather));
 
     if (0 == rank_id) {
       legate::detail::log_legate().debug(
@@ -173,9 +179,9 @@ class Init : public detail::LegionTask<Init> {
         time_all_gather);
     }
 
-    LEGATE_CHECK_CUDA(cudaEventDestroy(ev_start));
-    LEGATE_CHECK_CUDA(cudaEventDestroy(ev_end_all_to_all));
-    LEGATE_CHECK_CUDA(cudaEventDestroy(ev_end_all_gather));
+    LEGATE_CHECK_CUDRIVER(driver->event_destroy(ev_start));
+    LEGATE_CHECK_CUDRIVER(driver->event_destroy(ev_end_all_to_all));
+    LEGATE_CHECK_CUDRIVER(driver->event_destroy(ev_end_all_gather));
     return comm.release();
   }
 };
@@ -191,7 +197,7 @@ class Finalize : public detail::LegionTask<Finalize> {
                           Legion::Context context,
                           Legion::Runtime* runtime)
   {
-    const legate::nvtx::Range auto_range{task_name_().data()};
+    nvtx3::scoped_range auto_range{task_name_().data()};
 
     legate::detail::show_progress(task, context, runtime);
 

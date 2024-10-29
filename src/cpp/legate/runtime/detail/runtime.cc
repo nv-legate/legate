@@ -1782,6 +1782,10 @@ std::int32_t Runtime::finish()
   issue_execution_fence(true);
   mapper_manager_.reset();
   libraries_.clear();
+  // Reset this here and now (instead of waiting to destroy it when Runtime gets destroyed)
+  // because the dtor of the module manager tries to get the runtime, which it should not do if
+  // we are in the middle of self-destructing.
+  cu_mod_manager_.reset();
   // This should be empty at this point, since the execution fence will ensure they are all
   // raised, but just in case, clear them. There is no hope of properly handling them now.
   pending_exceptions_.clear();
@@ -2024,6 +2028,14 @@ const cuda::detail::CUDADriverAPI* Runtime::get_cuda_driver_api()
     cu_driver_.emplace();
   }
   return &*cu_driver_;
+}
+
+cuda::detail::CUDAModuleManager* Runtime::get_cuda_module_manager()
+{
+  if (!cu_mod_manager_.has_value()) {
+    cu_mod_manager_.emplace();
+  }
+  return &*cu_mod_manager_;
 }
 
 const MapperManager& Runtime::get_mapper_manager_() const

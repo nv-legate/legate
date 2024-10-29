@@ -89,6 +89,17 @@ function(list_add_if_not_present list elem)
   endif()
 endfunction()
 
+function(list_add_if_not_present_error list elem)
+  list(FIND ${list} "${elem}" exists)
+  if(exists EQUAL -1)
+    list(APPEND ${list} "${elem}")
+    set(${list} "${${list}}" PARENT_SCOPE)
+  else()
+    # present in list
+    message(FATAL_ERROR "Element '${elem}' already present in list ${list}:" "${${list}}")
+  endif()
+endfunction()
+
 macro(_legate_target_get_linked_libraries_in _target _outlist)
   list_add_if_not_present("${_outlist}" "${_target}")
 
@@ -138,3 +149,32 @@ function(legate_target_get_target_dependencies)
   _legate_target_get_linked_libraries_in("${_LEGATE_TARGET}" out_list)
   set(${_LEGATE_RESULT_VAR} "${out_list}" PARENT_SCOPE)
 endfunction()
+
+macro(legate_add_target_compile_option TARGET_NAME OPTION_LANG VIS OPTION_NAME)
+  if(NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
+    # Using this form of separate_arguments() makes sure that quotes are respected when
+    # the list is formed. Otherwise stuff like
+    #
+    # "--compiler-options='-foo -bar -baz'"
+    #
+    # becomes
+    #
+    # --compiler-options="'-foo";"-bar";"-baz'"
+    #
+    # which is obviously not what we wanted
+    separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
+  endif()
+  if(${OPTION_NAME})
+    target_compile_options(${TARGET_NAME} ${VIS}
+                           "$<$<COMPILE_LANGUAGE:${OPTION_LANG}>:${${OPTION_NAME}}>")
+  endif()
+endmacro()
+
+macro(legate_add_target_link_option TARGET_NAME VIS OPTION_NAME)
+  if(NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
+    separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
+  endif()
+  if(${OPTION_NAME})
+    target_link_options(${TARGET_NAME} ${VIS} "${${OPTION_NAME}}")
+  endif()
+endmacro()

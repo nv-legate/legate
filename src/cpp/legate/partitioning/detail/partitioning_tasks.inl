@@ -17,16 +17,12 @@
 
 #include "legion/legion_redop.h"
 
-#if LEGATE_DEFINED(LEGATE_NVCC)
-#include "cuda_runtime.h"
-#endif
-
 namespace legate::detail {
 
 // Copied and modified from Legion
 template <typename OP, typename T>
 #if LEGATE_DEFINED(LEGATE_NVCC)
-__device__
+LEGATE_DEVICE
 #endif
   void
   wrap_with_cas(OP op, T& lhs, T rhs)
@@ -41,8 +37,7 @@ __device__
     newval = Legion::__ulonglong_as_longlong(atomicCAS(
       ptr, Legion::__longlong_as_ulonglong(oldval), Legion::__longlong_as_ulonglong(newval)));
   } while (oldval != newval);
-#else
-#if LEGATE_DEFINED(__cpp_lib_atomic_ref) && (__cpp_lib_atomic_ref >= 201806L)
+#elif defined(__cpp_lib_atomic_ref) && (__cpp_lib_atomic_ref >= 201806L)
   std::atomic_ref<T> atomic{lhs};
   auto oldval = atomic.load();
   auto newval;
@@ -57,12 +52,11 @@ __device__
     newval = op(oldval, rhs);
   } while (!__sync_bool_compare_and_swap(static_cast<T*>(pointer), oldval, newval));
 #endif
-#endif
 }
 
 template <std::int32_t NDIM>
 template <bool EXCLUSIVE>
-__CUDA_HD__ inline /*static*/ void ElementWiseMax<NDIM>::apply(LHS& lhs, RHS rhs)
+LEGATE_HOST_DEVICE inline /*static*/ void ElementWiseMax<NDIM>::apply(LHS& lhs, RHS rhs)
 {
   static_assert(sizeof(coord_t) == sizeof(std::uint64_t), "coord_t has an unexpected size");
 
@@ -79,14 +73,14 @@ __CUDA_HD__ inline /*static*/ void ElementWiseMax<NDIM>::apply(LHS& lhs, RHS rhs
 
 template <std::int32_t NDIM>
 template <bool EXCLUSIVE>
-__CUDA_HD__ inline /*static*/ void ElementWiseMax<NDIM>::fold(RHS& rhs1, RHS rhs2)
+LEGATE_HOST_DEVICE inline /*static*/ void ElementWiseMax<NDIM>::fold(RHS& rhs1, RHS rhs2)
 {
   apply<EXCLUSIVE>(rhs1, rhs2);
 }
 
 template <std::int32_t NDIM>
 template <bool EXCLUSIVE>
-__CUDA_HD__ inline /*static*/ void ElementWiseMin<NDIM>::apply(LHS& lhs, RHS rhs)
+LEGATE_HOST_DEVICE inline /*static*/ void ElementWiseMin<NDIM>::apply(LHS& lhs, RHS rhs)
 {
   static_assert(sizeof(coord_t) == sizeof(std::uint64_t), "coord_t has an unexpected size");
 
@@ -103,7 +97,7 @@ __CUDA_HD__ inline /*static*/ void ElementWiseMin<NDIM>::apply(LHS& lhs, RHS rhs
 
 template <std::int32_t NDIM>
 template <bool EXCLUSIVE>
-__CUDA_HD__ inline /*static*/ void ElementWiseMin<NDIM>::fold(RHS& rhs1, RHS rhs2)
+LEGATE_HOST_DEVICE inline /*static*/ void ElementWiseMin<NDIM>::fold(RHS& rhs1, RHS rhs2)
 {
   apply<EXCLUSIVE>(rhs1, rhs2);
 }

@@ -255,6 +255,7 @@ void inline_task_body(const Task& task,
   const auto get_task_name = [&] { return task_name; };
   const auto _1 =
     task_detail::make_nvtx_range(get_task_name, [&] { return task.provenance().as_string_view(); });
+  static_cast<void>(_1);
 
   show_progress({}, get_task_name(), task.provenance().as_string_view());
 

@@ -10,28 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#pragma once
+// This is a template file is to allow for embedding binary files into a library
+// similar to how bin2c works.
 
-#include "legate/cuda/stream_pool.h"
+#include "@OUT_H_FILE@"
 
-#include <utility>
+namespace legate::detail {
 
-namespace legate::cuda {
+const unsigned char @VAR_NAME@[] = {@FILE_CONTENTS_HEX@};
 
-inline StreamView::StreamView(CUstream stream) : valid_{true}, stream_{stream} {}
+const std::size_t @VAR_NAME@_len = sizeof(@VAR_NAME@);
 
-inline StreamView::operator CUstream() const { return stream_; }
-
-inline StreamView::StreamView(StreamView&& rhs) noexcept
-  : valid_{std::exchange(rhs.valid_, false)}, stream_{rhs.stream_}
-{
-}
-
-inline StreamView& StreamView::operator=(StreamView&& rhs) noexcept
-{
-  valid_  = std::exchange(rhs.valid_, false);
-  stream_ = rhs.stream_;
-  return *this;
-}
-
-}  // namespace legate::cuda
+}  // namespace legate::detail

@@ -261,6 +261,7 @@ list(APPEND
      legate/comm/detail/thread_comm.cc
      legate/cuda/stream_pool.cc
      legate/cuda/detail/cuda_driver_api.cc
+     legate/cuda/detail/module_manager.cc
      legate/data/allocator.cc
      legate/data/external_allocation.cc
      legate/data/logical_array.cc
@@ -400,34 +401,33 @@ if(Legion_USE_OpenMP)
 endif()
 
 if(Legion_USE_CUDA)
-  list(APPEND legate_SOURCES legate/comm/detail/comm_nccl.cu
-       legate/data/detail/array_tasks.cu legate/partitioning/detail/partitioning_tasks.cu)
+  list(APPEND legate_SOURCES legate/comm/detail/comm_nccl.cc
+       legate/data/detail/array_tasks_cuda.cc
+       legate/partitioning/detail/partitioning_tasks_cuda.cc)
   if(CAL_DIR)
-    list(APPEND legate_SOURCES legate/comm/detail/comm_cal.cu)
+    list(APPEND legate_SOURCES legate/comm/detail/comm_cal.cc)
   endif()
+
+  include("${LEGATE_CMAKE_DIR}/Modules/generate_fatbin_modules.cmake")
+
+  legate_generate_fatbin_modules(DEST_DIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/fatbin"
+                                 GENERATED_SOURCES_VAR fatbin_src
+                                 SOURCES legate/data/detail/fixup_ranges_fatbin.cu
+                                         legate/data/detail/offsets_to_ranges_fatbin.cu
+                                         legate/data/detail/ranges_to_offsets_fatbin.cu
+                                         legate/partitioning/detail/partitioning_tasks_fatbin.cu
+                                 EXTRA_FLAGS ${legate_CUDA_FLAGS})
+
+  list(APPEND legate_SOURCES ${fatbin_src})
 endif()
 
-add_library(legate ${legate_SOURCES})
-add_library(legate::legate ALIAS legate)
-
 set(legate_CXX_PRIVATE_OPTIONS "")
-set(legate_CUDA_PRIVATE_OPTIONS "")
 set(legate_CXX_PUBLIC_OPTIONS "")
-set(legate_CUDA_PUBLIC_OPTIONS "")
 set(legate_LINKER_OPTIONS "")
 
 include("${LEGATE_CMAKE_DIR}/Modules/set_cpu_arch_flags.cmake")
 
 set_cpu_arch_flags(legate_CXX_PRIVATE_OPTIONS)
-
-if(Legion_USE_CUDA)
-  add_cuda_architecture_defines(legate_CUDA_PUBLIC_OPTIONS ARCHS ${Legion_CUDA_ARCH})
-
-  list(APPEND legate_CUDA_PRIVATE_OPTIONS -Xfatbin=-compress-all)
-  list(APPEND legate_CUDA_PRIVATE_OPTIONS --expt-extended-lambda)
-  list(APPEND legate_CUDA_PRIVATE_OPTIONS --expt-relaxed-constexpr)
-  list(APPEND legate_CUDA_PRIVATE_OPTIONS -Wno-deprecated-gpu-targets)
-endif()
 
 # Change THRUST_DEVICE_SYSTEM for `.cpp` files If we include Thrust in "CUDA mode" in .cc
 # files, that ends up pulling the definition of __half from the CUDA toolkit, and Legion
@@ -476,6 +476,9 @@ else()
   )
 endif()
 
+add_library(legate ${legate_SOURCES})
+add_library(legate::legate ALIAS legate)
+
 set_target_properties(legate
                       PROPERTIES EXPORT_NAME legate
                                  LIBRARY_OUTPUT_NAME legate
@@ -512,31 +515,19 @@ target_link_libraries(legate
                       PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper>
                              CCCL::Thrust
                              Legion::Legion
-                             # See
-                             # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
-                             $<TARGET_NAME_IF_EXISTS:$<IF:$<TARGET_EXISTS:CUDA::nvtx3>,CUDA::nvtx3,CUDA::nvToolsExt>>
                              $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
                              $<TARGET_NAME_IF_EXISTS:std::mdspan>
                              $<TARGET_NAME_IF_EXISTS:std::span>
                       PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
+                              # See
+                              # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
+                              $<TARGET_NAME_IF_EXISTS:CUDA::nvtx3>
                               fmt::fmt
                               argparse::argparse
                               kvikio::kvikio
                               $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
                               HighFive::HighFive
                               $<TARGET_NAME_IF_EXISTS:conda_env>)
-
-if(Legion_USE_CUDA)
-  if(legate_STATIC_CUDA_RUNTIME)
-    set_target_properties(legate PROPERTIES CUDA_RUNTIME_LIBRARY Static)
-    # Make sure to export to consumers what runtime we used
-    target_link_libraries(legate PUBLIC CUDA::cudart_static)
-  else()
-    set_target_properties(legate PROPERTIES CUDA_RUNTIME_LIBRARY Shared)
-    # Make sure to export to consumers what runtime we used
-    target_link_libraries(legate PUBLIC CUDA::cudart)
-  endif()
-endif()
 
 if(Legion_USE_CUDA AND CAL_DIR)
   message(VERBOSE "legate: CAL_DIR ${CAL_DIR}")
@@ -547,66 +538,11 @@ endif()
 # ########################################################################################
 # * Custom User Flags --------------------------------------------------------
 
-macro(legate_add_target_compile_option TARGET_NAME OPTION_LANG VIS OPTION_NAME)
-  if(NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
-    # Using this form of separate_arguments() makes sure that quotes are respected when
-    # the list is formed. Otherwise stuff like
-    #
-    # "--compiler-options='-foo -bar -baz'"
-    #
-    # becomes
-    #
-    # --compiler-options="'-foo";"-bar";"-baz'"
-    #
-    # which is obviously not what we wanted
-    separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
-  endif()
-  if(${OPTION_NAME})
-    target_compile_options(${TARGET_NAME} ${VIS}
-                           "$<$<COMPILE_LANGUAGE:${OPTION_LANG}>:${${OPTION_NAME}}>")
-  endif()
-endmacro()
-
-macro(legate_add_target_link_option TARGET_NAME VIS OPTION_NAME)
-  if(NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
-    separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
-  endif()
-  if(${OPTION_NAME})
-    target_link_options(${TARGET_NAME} ${VIS} "${${OPTION_NAME}}")
-  endif()
-endmacro()
-
-function(check_nvcc_pedantic_flags)
-  if(legate_SKIP_NVCC_PEDANTIC_CHECK)
-    message(VERBOSE "Skipping nvcc pedantic check (explicitly skipped by user)")
-    return()
-  endif()
-  if(NOT (CMAKE_CUDA_COMPILER_ID MATCHES "NVIDIA"))
-    message(VERBOSE
-            "Skipping nvcc pedantic check (compiler \"${CMAKE_CUDA_COMPILER_ID}\" is not nvcc)"
-    )
-    return()
-  endif()
-  # We want to catch either "-pedantic" or "--compiler-option=-pedantic" or
-  # --compiler-options='-pedantic' but we do NOT want to catch -Wformat-pedantic!
-  string(REGEX MATCH [=[[ |=|='|="]\-W?pedantic]=] match_var "${legate_CUDA_FLAGS}")
-  if(match_var)
-    message(FATAL_ERROR "-pedantic (or -Wpedantic) is not supported by nvcc and will lead to "
-                        "spurious warnings in generated code. Please remove it from your build flags. If "
-                        "you would like to override this behavior, reconfigure with "
-                        "-Dlegate_SKIP_NVCC_PEDANTIC_CHECK=ON.")
-  endif()
-endfunction()
-check_nvcc_pedantic_flags()
+include("${LEGATE_CMAKE_DIR}/Modules/utilities.cmake")
 
 legate_add_target_compile_option(legate CXX PRIVATE legate_CXX_PRIVATE_OPTIONS)
-legate_add_target_compile_option(legate CUDA PRIVATE legate_CUDA_PRIVATE_OPTIONS)
-
 legate_add_target_compile_option(legate CXX PUBLIC legate_CXX_PUBLIC_OPTIONS)
-legate_add_target_compile_option(legate CUDA PUBLIC legate_CUDA_PUBLIC_OPTIONS)
-
 legate_add_target_compile_option(legate CXX PRIVATE legate_CXX_FLAGS)
-legate_add_target_compile_option(legate CUDA PRIVATE legate_CUDA_FLAGS)
 
 legate_add_target_link_option(legate PUBLIC legate_LINKER_FLAGS)
 
@@ -739,7 +675,6 @@ install(FILES legate/utilities/debug.h
               legate/utilities/machine.h
               legate/utilities/memory.h
               legate/utilities/memory.inl
-              legate/utilities/nvtx_help.h
               legate/utilities/span.h
               legate/utilities/span.inl
               legate/utilities/tuple.h
@@ -994,15 +929,6 @@ add_custom_target(generate_install_info_py ALL
                   DEPENDS "${LEGATE_CMAKE_DIR}/templates/install_info.py.in"
                   BYPRODUCTS "${LEGATE_DIR}/src/python/legate/install_info.py"
                   COMMENT "Generate install_info.py")
-
-# touch these variables so they are not marked as "unused"
-set(legate_maybe_ignored_variables_
-    "${legate_CMAKE_PRESET_NAME};${CMAKE_BUILD_PARALLEL_LEVEL};")
-if(NOT Legion_USE_CUDA)
-  list(APPEND legate_maybe_ignored_variables_ "${legate_CUDA_FLAGS}")
-  list(APPEND legate_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_DEBUG}")
-  list(APPEND legate_maybe_ignored_variables_ "${CMAKE_CUDA_FLAGS_RELEASE}")
-endif()
 
 include("${LEGATE_CMAKE_DIR}/Modules/uninstall.cmake")
 

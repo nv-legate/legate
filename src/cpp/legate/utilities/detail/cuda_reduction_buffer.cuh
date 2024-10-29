@@ -15,39 +15,24 @@
 #include "legate/cuda/cuda.h"
 #include "legate/data/buffer.h"
 
+using CUstream = struct CUstream_st*;
+
 namespace legate::detail {
 
 template <typename REDOP>
 class CUDAReductionBuffer {
- private:
   using VAL = typename REDOP::RHS;
 
  public:
-  explicit CUDAReductionBuffer(cudaStream_t stream)
-    : buffer_{legate::create_buffer<VAL>(1, Memory::Kind::GPU_FB_MEM)}
-  {
-    VAL identity{REDOP::identity};
-    ptr_ = buffer_.ptr(0);
-    LEGATE_CHECK_CUDA(
-      cudaMemcpyAsync(ptr_, &identity, sizeof(identity), cudaMemcpyHostToDevice, stream));
-  }
+  using reduction_type = REDOP;
+
+  explicit CUDAReductionBuffer(CUstream stream);
 
   template <bool EXCLUSIVE>
-  __device__ void reduce(const VAL& value) const
-  {
-    REDOP::template fold<EXCLUSIVE /*exclusive*/>(*ptr_, value);
-  }
+  LEGATE_DEVICE void reduce(const VAL& value) const;
 
-  [[nodiscard]] __host__ VAL read(cudaStream_t stream) const
-  {
-    VAL result{REDOP::identity};
-    LEGATE_CHECK_CUDA(
-      cudaMemcpyAsync(&result, ptr_, sizeof(result), cudaMemcpyDeviceToHost, stream));
-    LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream));
-    return result;
-  }
-
-  [[nodiscard]] __device__ VAL read() const { return *ptr_; }
+  [[nodiscard]] LEGATE_HOST VAL read(CUstream stream) const;
+  [[nodiscard]] LEGATE_DEVICE VAL read() const;
 
  private:
   legate::Buffer<VAL> buffer_{};
@@ -55,3 +40,5 @@ class CUDAReductionBuffer {
 };
 
 }  // namespace legate::detail
+
+#include <legate/utilities/detail/cuda_reduction_buffer.inl>

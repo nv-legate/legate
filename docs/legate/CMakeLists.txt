@@ -17,8 +17,6 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "docs")
 find_package(Doxygen REQUIRED)
 find_package(Sphinx REQUIRED)
 
-file(GLOB_RECURSE legate_headers "${legate_LOCAL_INCLUDE_DIR}/*.h*")
-
 # Only set "dynamic" settings here. Any settings which would have a hard-coded value
 # should just be directly set in the Doxyfile.in
 set(DOXYGEN_INPUT_DIR "${legate_LOCAL_INCLUDE_DIR}")
@@ -34,11 +32,8 @@ configure_file("${DOXYFILE_IN}" "${DOXYFILE_OUT}" @ONLY)
 
 file(MAKE_DIRECTORY "${DOXYGEN_OUTPUT_DIR}") # Doxygen won't create this for us
 
-add_custom_command(OUTPUT "${DOXYGEN_INDEX_FILE}"
-                   DEPENDS "${legate_headers}"
-                   COMMAND "${DOXYGEN_EXECUTABLE}" Doxyfile
-                   MAIN_DEPENDENCY "${DOXYFILE_OUT}"
-                   COMMENT "Generating doxygen output")
+add_custom_command(OUTPUT "${DOXYGEN_INDEX_FILE}" COMMAND "${DOXYGEN_EXECUTABLE}" Doxyfile
+                   MAIN_DEPENDENCY "${DOXYFILE_OUT}" COMMENT "Generating doxygen output")
 
 add_custom_target(Doxygen DEPENDS "${DOXYGEN_INDEX_FILE}" COMMENT "Running doxygen")
 

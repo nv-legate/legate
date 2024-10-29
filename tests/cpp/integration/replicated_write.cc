@@ -18,9 +18,23 @@
 #include "legate/cuda/cuda.h"
 
 #include <cuda_runtime.h>
+#include <fmt/format.h>
 #endif
 
 namespace replicated_write_test {
+
+#define CHECK_CUDA(...)                                                               \
+  do {                                                                                \
+    const cudaError_t __result__ = __VA_ARGS__;                                       \
+    if (__result__ != cudaSuccess) {                                                  \
+      throw std::runtime_error{                                                       \
+        fmt::format("Internal CUDA failure with error {} ({}) in file {} at line {}", \
+                    cudaGetErrorString(__result__),                                   \
+                    cudaGetErrorName(__result__),                                     \
+                    __FILE__,                                                         \
+                    __LINE__)};                                                       \
+    }                                                                                 \
+  } while (0)
 
 // NOLINTBEGIN(readability-magic-numbers)
 
@@ -50,11 +64,10 @@ class WriterTask : public legate::LegateTask<WriterTask> {
       auto acc    = output.data().write_accessor<int64_t, 2>();
       auto stream = context.get_task_stream();
       auto vals   = std::vector<std::int64_t>(shape.volume(), 42);
-      LEGATE_CHECK_CUDA(cudaMemcpyAsync(acc.ptr(shape),
-                                        vals.data(),
-                                        sizeof(int64_t) * shape.volume(),
-                                        cudaMemcpyHostToDevice,
-                                        stream));
+      auto* ptr   = acc.ptr(shape);
+
+      CHECK_CUDA(cudaMemcpyAsync(
+        ptr, vals.data(), sizeof(*ptr) * shape.volume(), cudaMemcpyHostToDevice, stream));
     }
   }
 #endif

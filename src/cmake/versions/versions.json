@@ -25,7 +25,7 @@
         },
         "kvikio": {
             "git_shallow": false,
-            "git_tag": "5a733bdfd373ec5e6d5f3ea57358d58189391af3",
+            "git_tag": "dde7115b7a169bcc430b811225ccbac3711d7901",
             "git_url": "https://github.com/rapidsai/kvikio.git",
             "version": "24.10"
         },

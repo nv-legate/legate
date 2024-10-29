@@ -12,6 +12,7 @@
 
 #include "legate/cuda/detail/cuda_driver_api.h"
 
+#include "legate/runtime/detail/runtime.h"
 #include "legate/utilities/assert.h"
 #include "legate/utilities/detail/env.h"
 #include "legate/utilities/macros.h"
@@ -24,31 +25,47 @@ namespace legate::cuda::detail {
 
 void CUDADriverAPI::read_symbols_()
 {
-#define LEGATE_CU_LOAD_FN(name, function)                                       \
+#define LEGATE_CU_LOAD_FN(member_function, driver_function)                     \
   do {                                                                          \
     static_cast<void>(::dlerror());                                             \
-    this->LEGATE_CONCAT_(function, _) =                                         \
-      reinterpret_cast<decltype(this->LEGATE_CONCAT_(function, _))>(            \
-        ::dlsym(handle_, "cu" LEGATE_STRINGIZE_(name)));                        \
-    if (const char* error = dlerror(); error) {                                 \
+    this->member_function = reinterpret_cast<decltype(this->member_function)>(  \
+      ::dlsym(handle_, LEGATE_STRINGIZE_(driver_function)));                    \
+    if (const char* error = dlerror()) {                                        \
       throw std::runtime_error{                                                 \
         fmt::format("Failed to locate the symbol {} in the shared library: {}", \
-                    LEGATE_STRINGIZE_(name),                                    \
+                    LEGATE_STRINGIZE_(driver_function),                         \
                     error)};                                                    \
     }                                                                           \
   } while (0)
 
-  LEGATE_CU_LOAD_FN(Init, init);
-  LEGATE_CU_LOAD_FN(StreamCreate, stream_create);
-  LEGATE_CU_LOAD_FN(GetErrorString, get_error_string);
-  LEGATE_CU_LOAD_FN(GetErrorName, get_error_name);
-  LEGATE_CU_LOAD_FN(PointerGetAttributes, pointer_get_attributes);
-  LEGATE_CU_LOAD_FN(MemcpyAsync, mem_cpy_async);
-  LEGATE_CU_LOAD_FN(Memcpy, mem_cpy);
-  LEGATE_CU_LOAD_FN(StreamDestroy, stream_destroy);
-  LEGATE_CU_LOAD_FN(StreamSynchronize, stream_synchronize);
-  LEGATE_CU_LOAD_FN(CtxSynchronize, ctx_synchronize);
+  LEGATE_CU_LOAD_FN(init_, cuInit);
 
+  LEGATE_CU_LOAD_FN(get_error_string_, cuGetErrorString);
+  LEGATE_CU_LOAD_FN(get_error_name_, cuGetErrorName);
+
+  LEGATE_CU_LOAD_FN(pointer_get_attributes_, cuPointerGetAttributes);
+
+  LEGATE_CU_LOAD_FN(mem_cpy_async_, cuMemcpyAsync);
+  LEGATE_CU_LOAD_FN(mem_cpy_, cuMemcpy);
+
+  LEGATE_CU_LOAD_FN(stream_create_, cuStreamCreate);
+  LEGATE_CU_LOAD_FN(stream_destroy_, cuStreamDestroy);
+  LEGATE_CU_LOAD_FN(stream_synchronize_, cuStreamSynchronize);
+
+  LEGATE_CU_LOAD_FN(event_create_, cuEventCreate);
+  LEGATE_CU_LOAD_FN(event_record_, cuEventRecord);
+  LEGATE_CU_LOAD_FN(event_synchronize_, cuEventSynchronize);
+  LEGATE_CU_LOAD_FN(event_elapsed_time_, cuEventElapsedTime);
+  LEGATE_CU_LOAD_FN(event_destroy_, cuEventDestroy);
+
+  LEGATE_CU_LOAD_FN(ctx_get_device_, cuCtxGetDevice);
+  LEGATE_CU_LOAD_FN(ctx_synchronize_, cuCtxSynchronize);
+
+  LEGATE_CU_LOAD_FN(launch_kernel_, cuLaunchKernel);
+
+  LEGATE_CU_LOAD_FN(library_load_data_, cuLibraryLoadData);
+  LEGATE_CU_LOAD_FN(library_get_kernel_, cuLibraryGetKernel);
+  LEGATE_CU_LOAD_FN(library_unload_, cuLibraryUnload);
 #undef LEGATE_CU_LOAD_FN
 }
 
@@ -79,12 +96,6 @@ CUresult CUDADriverAPI::init(unsigned int flags) const
 {
   check_initialized_();
   return init_(flags);
-}
-
-CUresult CUDADriverAPI::stream_create(CUstream* stream, unsigned int flags) const
-{
-  check_initialized_();
-  return stream_create_(stream, flags);
 }
 
 CUresult CUDADriverAPI::get_error_string(CUresult error, const char** str) const
@@ -120,6 +131,12 @@ CUresult CUDADriverAPI::mem_cpy(CUdeviceptr dst, CUdeviceptr src, std::size_t nu
   return mem_cpy_(dst, src, num_bytes);
 }
 
+CUresult CUDADriverAPI::stream_create(CUstream* stream, unsigned int flags) const
+{
+  check_initialized_();
+  return stream_create_(stream, flags);
+}
+
 CUresult CUDADriverAPI::stream_destroy(CUstream stream) const
 {
   check_initialized_();
@@ -132,14 +149,163 @@ CUresult CUDADriverAPI::stream_synchronize(CUstream stream) const
   return stream_synchronize_(stream);
 }
 
+CUresult CUDADriverAPI::event_create(CUevent* event, unsigned int flags) const
+{
+  check_initialized_();
+  return event_create_(event, flags);
+}
+
+CUresult CUDADriverAPI::event_record(CUevent event, CUstream stream) const
+{
+  check_initialized_();
+  return event_record_(event, stream);
+}
+
+CUresult CUDADriverAPI::event_synchronize(CUevent event) const
+{
+  check_initialized_();
+  return event_synchronize_(event);
+}
+
+CUresult CUDADriverAPI::event_elapsed_time(float* ms, CUevent start, CUevent end) const
+{
+  check_initialized_();
+  return event_elapsed_time_(ms, start, end);
+}
+
+CUresult CUDADriverAPI::event_destroy(CUevent event) const
+{
+  check_initialized_();
+  return event_destroy_(event);
+}
+
+CUresult CUDADriverAPI::ctx_get_device(CUdevice* device) const
+{
+  check_initialized_();
+  return ctx_get_device_(device);
+}
+
 CUresult CUDADriverAPI::ctx_synchronize() const
 {
   check_initialized_();
   return ctx_synchronize_();
 }
 
+CUresult CUDADriverAPI::launch_kernel(CUfunction f,
+                                      Dim3 grid_dim,
+                                      Dim3 block_dim,
+                                      std::size_t shared_mem_bytes,
+                                      CUstream stream,
+                                      void** kernel_params,
+                                      void** extra) const
+{
+  check_initialized_();
+  return launch_kernel_(f,
+                        static_cast<unsigned int>(grid_dim.x),
+                        static_cast<unsigned int>(grid_dim.y),
+                        static_cast<unsigned int>(grid_dim.z),
+                        static_cast<unsigned int>(block_dim.x),
+                        static_cast<unsigned int>(block_dim.y),
+                        static_cast<unsigned int>(block_dim.z),
+                        static_cast<unsigned int>(shared_mem_bytes),
+                        stream,
+                        kernel_params,
+                        extra);
+}
+
+CUresult CUDADriverAPI::launch_kernel(CUkernel f,
+                                      Dim3 grid_dim,
+                                      Dim3 block_dim,
+                                      std::size_t shared_mem_bytes,
+                                      CUstream stream,
+                                      void** kernel_params,
+                                      void** extra) const
+{
+  return launch_kernel(reinterpret_cast<CUfunction>(f),
+                       grid_dim,
+                       block_dim,
+                       shared_mem_bytes,
+                       stream,
+                       kernel_params,
+                       extra);
+}
+
+CUresult CUDADriverAPI::library_load_data(CUlibrary* library,
+                                          const void* code,
+                                          CUjit_option* jit_options,
+                                          void** jit_options_values,
+                                          std::size_t num_jit_options,
+                                          CUlibraryOption* library_options,
+                                          void** library_option_values,
+                                          std::size_t num_library_options) const
+{
+  check_initialized_();
+  return library_load_data_(library,
+                            code,
+                            jit_options,
+                            jit_options_values,
+                            static_cast<unsigned int>(num_jit_options),
+                            library_options,
+                            library_option_values,
+                            static_cast<unsigned int>(num_library_options));
+}
+
+CUresult CUDADriverAPI::library_get_kernel(CUkernel* kernel,
+                                           CUlibrary library,
+                                           const char* name) const
+{
+  check_initialized_();
+  return library_get_kernel_(kernel, library, name);
+}
+
+CUresult CUDADriverAPI::library_unload(CUlibrary library) const
+{
+  check_initialized_();
+  return library_unload_(library);
+}
+
+// ==========================================================================================
+
 std::string_view CUDADriverAPI::handle_path() const noexcept { return handle_path_; }
 
 bool CUDADriverAPI::is_loaded() const noexcept { return handle_ != nullptr; }
+
+// ==========================================================================================
+
+CUDADriverError::CUDADriverError(const std::string& what, CUresult result)
+  : runtime_error{what}, result_{result}
+{
+}
+
+CUresult CUDADriverError::error_code() const noexcept { return result_; }
+
+// ==========================================================================================
+
+void throw_cuda_driver_error(CUresult result,
+                             std::string_view expression,
+                             std::string_view file,
+                             std::string_view func,
+                             int line)
+{
+  const char* error_str{};
+
+  // Do not care about the error, in fact, cannot handle it.
+  try {
+    static_cast<void>(
+      legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->get_error_string(result,
+                                                                                      &error_str));
+  } catch (const std::exception& exn) {
+    error_str = "unknown error occurred";
+  }
+  throw CUDADriverError{
+    fmt::format("Expression '{}' failed at {}:{} (in {}()) with error code {} ({})",
+                expression,
+                file,
+                line,
+                func,
+                static_cast<int>(result),
+                error_str),
+    result};
+}
 
 }  // namespace legate::cuda::detail

@@ -1,0 +1,205 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
+ */
+
+#include "legate/cuda/cuda.h"
+#include "legate/partitioning/detail/partitioning_tasks.h"
+#include "legate/task/task_context.h"
+#include "legate/utilities/detail/unravel.h"
+#include <legate/generated/fatbin/partitioning_tasks_fatbin.h>
+
+#include "legate/utilities/detail/cuda_reduction_buffer.cuh"
+
+#include <cstring>
+#include <fmt/format.h>
+
+namespace legate::detail {
+
+namespace {
+
+[[nodiscard]] constexpr std::size_t round_div(std::size_t x, std::size_t d)
+{
+  return (x + d - 1) / d;
+}
+
+template <bool RECT>
+struct FindBoundingBoxFn {
+  template <std::int32_t POINT_NDIM, std::int32_t STORE_NDIM>
+  void operator()(const legate::TaskContext& context,
+                  const legate::PhysicalStore& input,
+                  const legate::PhysicalStore& output)
+  {
+    auto shape   = input.shape<STORE_NDIM>();
+    auto out_acc = output.write_accessor<Domain, 1>();
+
+    auto stream = context.get_task_stream();
+
+    auto unravel = Unravel<STORE_NDIM>{shape};
+
+    auto result_low  = CUDAReductionBuffer<ElementWiseMin<POINT_NDIM>>{stream};
+    auto result_high = CUDAReductionBuffer<ElementWiseMax<POINT_NDIM>>{stream};
+
+    const std::size_t blocks = round_div(unravel.volume(), LEGATE_THREADS_PER_BLOCK);
+    const std::size_t shmem_size =
+      LEGATE_THREADS_PER_BLOCK / LEGATE_WARP_SIZE * sizeof(Point<POINT_NDIM>) * 2;
+    std::size_t num_iters = round_div(blocks, LEGATE_MAX_REDUCTION_CTAS);
+
+    auto* runtime     = Runtime::get_runtime();
+    const auto* api   = runtime->get_cuda_driver_api();
+    auto* mod_manager = runtime->get_cuda_module_manager();
+
+    if (!unravel.empty()) {
+      static const auto kernel_name = fmt::format("legate_find_bounding_box_kernel_{}_{}_{}",
+                                                  RECT ? "rect" : "point",
+                                                  POINT_NDIM,
+                                                  STORE_NDIM);
+      CUkernel kern =
+        mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
+
+      auto ident_lo = ElementWiseMin<POINT_NDIM>::identity;
+      auto ident_hi = ElementWiseMax<POINT_NDIM>::identity;
+
+      if constexpr (RECT) {
+        auto in_acc           = input.read_accessor<Rect<POINT_NDIM>, STORE_NDIM>(shape);
+        void* kernel_params[] = {
+          &unravel, &num_iters, &result_low, &result_high, &in_acc, &ident_lo, &ident_hi};
+
+        LEGATE_CHECK_CUDRIVER(api->launch_kernel(kern,
+                                                 {LEGATE_MAX_REDUCTION_CTAS},
+                                                 {LEGATE_THREADS_PER_BLOCK},
+                                                 shmem_size,
+                                                 stream,
+                                                 kernel_params,
+                                                 nullptr));
+      } else {
+        auto in_acc           = input.read_accessor<Point<POINT_NDIM>, STORE_NDIM>(shape);
+        void* kernel_params[] = {
+          &unravel, &num_iters, &result_low, &result_high, &in_acc, &ident_lo, &ident_hi};
+
+        LEGATE_CHECK_CUDRIVER(api->launch_kernel(kern,
+                                                 {LEGATE_MAX_REDUCTION_CTAS},
+                                                 {LEGATE_THREADS_PER_BLOCK},
+                                                 shmem_size,
+                                                 stream,
+                                                 kernel_params,
+                                                 nullptr));
+      }
+    }
+
+    static const auto kernel_name = fmt::format("legate_copy_output_{}", POINT_NDIM);
+    CUkernel kern =
+      mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
+    void* kernel_params[] = {&out_acc, &result_low, &result_high};
+
+    LEGATE_CHECK_CUDRIVER(api->launch_kernel(kern, {1}, {1}, 0, stream, kernel_params, nullptr));
+  }
+};
+
+template <bool RECT>
+struct FindBoundingBoxSortedFn {
+  template <std::int32_t POINT_NDIM, std::int32_t STORE_NDIM>
+  void operator()(const legate::TaskContext& context,
+                  const legate::PhysicalStore& input,
+                  const legate::PhysicalStore& output)
+  {
+    auto shape   = input.shape<STORE_NDIM>();
+    auto out_acc = output.write_accessor<Domain, 1>();
+
+    auto stream = context.get_task_stream();
+
+    auto unravel = Unravel<STORE_NDIM>{shape};
+
+    auto result_low  = CUDAReductionBuffer<ElementWiseMin<POINT_NDIM>>{stream};
+    auto result_high = CUDAReductionBuffer<ElementWiseMax<POINT_NDIM>>{stream};
+
+    auto* runtime     = Runtime::get_runtime();
+    const auto* api   = runtime->get_cuda_driver_api();
+    auto* mod_manager = runtime->get_cuda_module_manager();
+
+    if (!unravel.empty()) {
+      static const auto kernel_name = fmt::format("legate_find_bounding_box_sorted_kernel_{}_{}_{}",
+                                                  RECT ? "rect" : "point",
+                                                  POINT_NDIM,
+                                                  STORE_NDIM);
+      CUkernel kern =
+        mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
+
+      if constexpr (RECT) {
+        auto in_acc           = input.read_accessor<Rect<POINT_NDIM>, STORE_NDIM>(shape);
+        void* kernel_params[] = {&unravel, &result_low, &result_high, &in_acc};
+
+        LEGATE_CHECK_CUDRIVER(
+          api->launch_kernel(kern, {1}, {1}, 0, stream, kernel_params, nullptr));
+      } else {
+        auto in_acc           = input.read_accessor<Point<POINT_NDIM>, STORE_NDIM>(shape);
+        void* kernel_params[] = {&unravel, &result_low, &result_high, &in_acc};
+
+        LEGATE_CHECK_CUDRIVER(
+          api->launch_kernel(kern, {1}, {1}, 0, stream, kernel_params, nullptr));
+      }
+    }
+
+    static const auto kernel_name = fmt::format("legate_copy_output_{}", POINT_NDIM);
+    CUkernel kern =
+      mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
+    void* kernel_params[] = {&out_acc, &result_low, &result_high};
+
+    LEGATE_CHECK_CUDRIVER(api->launch_kernel(kern, {1}, {1}, 0, stream, kernel_params, nullptr));
+  }
+};
+
+}  // namespace
+
+/*static*/ void FindBoundingBox::gpu_variant(legate::TaskContext context)
+{
+  auto input  = context.input(0).data();
+  auto output = context.output(0).data();
+
+  auto type = input.type();
+
+  if (legate::is_rect_type(type)) {
+    legate::double_dispatch(
+      legate::ndim_rect_type(type), input.dim(), FindBoundingBoxFn<true>{}, context, input, output);
+  } else {
+    legate::double_dispatch(legate::ndim_point_type(type),
+                            input.dim(),
+                            FindBoundingBoxFn<false>{},
+                            context,
+                            input,
+                            output);
+  }
+}
+
+/*static*/ void FindBoundingBoxSorted::gpu_variant(legate::TaskContext context)
+{
+  auto input  = context.input(0).data();
+  auto output = context.output(0).data();
+
+  auto type = input.type();
+
+  if (legate::is_rect_type(type)) {
+    legate::double_dispatch(legate::ndim_rect_type(type),
+                            input.dim(),
+                            FindBoundingBoxSortedFn<true>{},
+                            context,
+                            input,
+                            output);
+  } else {
+    legate::double_dispatch(legate::ndim_point_type(type),
+                            input.dim(),
+                            FindBoundingBoxSortedFn<false>{},
+                            context,
+                            input,
+                            output);
+  }
+}
+
+}  // namespace legate::detail

@@ -12,26 +12,20 @@
 
 #pragma once
 
-#include "legate/cuda/stream_pool.h"
+#if __has_include(<nvtx3/nvtx3.hpp>)
+#include <nvtx3/nvtx3.hpp>
+#else
+namespace nvtx3 {
 
-#include <utility>
+// NOLINTBEGIN
+class [[maybe_unused]] scoped_range {
+ public:
+  template <typename... T>
+  scoped_range(T&&...) noexcept
+  {
+  }
+};
+// NOLINTEND
 
-namespace legate::cuda {
-
-inline StreamView::StreamView(CUstream stream) : valid_{true}, stream_{stream} {}
-
-inline StreamView::operator CUstream() const { return stream_; }
-
-inline StreamView::StreamView(StreamView&& rhs) noexcept
-  : valid_{std::exchange(rhs.valid_, false)}, stream_{rhs.stream_}
-{
-}
-
-inline StreamView& StreamView::operator=(StreamView&& rhs) noexcept
-{
-  valid_  = std::exchange(rhs.valid_, false);
-  stream_ = rhs.stream_;
-  return *this;
-}
-
-}  // namespace legate::cuda
+}  // namespace nvtx3
+#endif

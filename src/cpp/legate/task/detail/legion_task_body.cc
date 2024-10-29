@@ -15,6 +15,7 @@
 #include "legate/comm/communicator.h"
 #include "legate/cuda/cuda.h"
 #include "legate/mapping/detail/machine.h"
+#include "legate/runtime/detail/runtime.h"
 #include "legate/task/detail/return_value.h"
 #include "legate/task/detail/returned_exception.h"
 #include "legate/task/detail/task.h"
@@ -112,7 +113,7 @@ LegionTaskContext::LegionTaskContext(const Legion::Task* legion_task,
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) &&
       (legion_task_().current_proc.kind() == Processor::Kind::TOC_PROC) &&
       std::any_of(reductions().begin(), reductions().end(), is_scalar_store)) {
-    LEGATE_CHECK_CUDA(cudaDeviceSynchronize());
+    LEGATE_CHECK_CUDRIVER(Runtime::get_runtime()->get_cuda_driver_api()->ctx_synchronize());
   }
 }
 
@@ -217,6 +218,7 @@ void legion_task_body(VariantImpl variant_impl,
 
   const auto nvtx_range =
     task_detail::make_nvtx_range(get_task_name, [&] { return task->get_provenance_string(); });
+  static_cast<void>(nvtx_range);
 
   show_progress(task, legion_context, runtime);
 

@@ -13,6 +13,7 @@
 #pragma once
 
 #include "legate/cuda/detail/cuda_driver_api.h"
+#include "legate/cuda/detail/module_manager.h"
 #include "legate/data/detail/logical_region_field.h"
 #include "legate/data/detail/scalar.h"
 #include "legate/data/detail/shape.h"
@@ -364,6 +365,7 @@ class Runtime {
 
   [[nodiscard]] CUstream_st* get_cuda_stream() const;
   [[nodiscard]] const cuda::detail::CUDADriverAPI* get_cuda_driver_api();
+  [[nodiscard]] cuda::detail::CUDAModuleManager* get_cuda_module_manager();
 
   [[nodiscard]] Legion::Runtime* get_legion_runtime();
   [[nodiscard]] Legion::Context get_legion_context();
@@ -434,6 +436,7 @@ class Runtime {
   std::optional<MapperManager> mapper_manager_{};
 
   std::optional<cuda::detail::CUDADriverAPI> cu_driver_{};
+  std::optional<cuda::detail::CUDAModuleManager> cu_mod_manager_{};
 };
 
 [[nodiscard]] bool has_started();

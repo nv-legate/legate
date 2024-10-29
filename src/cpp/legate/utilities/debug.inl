@@ -12,8 +12,11 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/cuda/cuda.h"
 #include "legate/utilities/debug.h"
+#include "legate/utilities/macros.h"
 
 #include <sstream>
 
@@ -22,13 +25,18 @@ namespace legate {
 template <typename T, int DIM>
 [[nodiscard]] std::string print_dense_array(const T* base,
                                             const Point<DIM>& extents,
-                                            std::size_t strides[DIM])
+                                            const std::size_t (&strides)[DIM])
 {
   T* buf                            = nullptr;
   constexpr auto is_device_only_ptr = [](const void* ptr) {
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
     cudaPointerAttributes attrs;
     auto res = cudaPointerGetAttributes(&attrs, ptr);
     return res == cudaSuccess && attrs.type == cudaMemoryTypeDevice;
+#else
+    static_cast<void>(ptr);
+    return false;
+#endif
   };
 
   if (is_device_only_ptr(base)) {
@@ -39,9 +47,11 @@ template <typename T, int DIM>
     for (std::size_t dim = 0; dim < DIM; ++dim) {
       num_elems = max_different_types(num_elems, strides[dim] * extents[dim]);
     }
-    buf      = new T[num_elems];
+    buf = new T[num_elems];
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
     auto res = cudaMemcpy(buf, base, num_elems * sizeof(T), cudaMemcpyDeviceToHost);
     LEGATE_CHECK(res == cudaSuccess);
+#endif
     base = buf;
   }
   std::stringstream ss;

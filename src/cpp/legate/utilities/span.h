@@ -34,7 +34,7 @@ class Span {
   Span() = default;
 
   template <typename It>
-  Span(It begin, It end);
+  constexpr Span(It begin, It end);
 
   /**
    * @brief Creates a span with an existing pointer and a size.
@@ -45,7 +45,7 @@ class Span {
    * @param data Pointer to the data
    * @param size Number of elements
    */
-  Span(T* data, std::size_t size);
+  constexpr Span(T* data, std::size_t size);
   /**
    * @brief Returns the number of elements
    *
@@ -66,6 +66,18 @@ class Span {
    * @return Pointer to the end of allocation
    */
   [[nodiscard]] const T* end() const;
+  /**
+   * @brief Returns the pointer to the first element
+   *
+   * @return Pointer to the first element
+   */
+  [[nodiscard]] T* begin();
+  /**
+   * @brief Returns the pointer to the end of allocation
+   *
+   * @return Pointer to the end of allocation
+   */
+  [[nodiscard]] T* end();
   /**
    * @brief Slices off the first `off` elements. Passing an `off` greater than
    * the size will fail with an assertion failure.

@@ -24,10 +24,25 @@
 #endif
 
 #include <cstring>
+#include <fmt/format.h>
 #include <gtest/gtest.h>
+#include <stdexcept>
 #include <vector>
 
 namespace index_attach {
+
+#define CHECK_CUDA(...)                                                               \
+  do {                                                                                \
+    const cudaError_t __result__ = __VA_ARGS__;                                       \
+    if (__result__ != cudaSuccess) {                                                  \
+      throw std::runtime_error{                                                       \
+        fmt::format("Internal CUDA failure with error {} ({}) in file {} at line {}", \
+                    cudaGetErrorString(__result__),                                   \
+                    cudaGetErrorName(__result__),                                     \
+                    __FILE__,                                                         \
+                    __LINE__)};                                                       \
+    }                                                                                 \
+  } while (0)
 
 // NOLINTBEGIN(readability-magic-numbers)
 
@@ -167,13 +182,19 @@ TEST_F(IndexAttach, GPU)
   void* d_alloc1 = nullptr;
   void* d_alloc2 = nullptr;
 
-  LEGATE_CHECK_CUDA(cudaMalloc(&d_alloc1, BYTES));
-  LEGATE_CHECK_CUDA(cudaMalloc(&d_alloc2, BYTES));
+  CHECK_CUDA(cudaMalloc(&d_alloc1, BYTES));
+  CHECK_CUDA(cudaMalloc(&d_alloc2, BYTES));
 
-  LEGATE_CHECK_CUDA(cudaMemcpy(d_alloc1, h_alloc1.data(), BYTES, cudaMemcpyHostToDevice));
-  LEGATE_CHECK_CUDA(cudaMemcpy(d_alloc2, h_alloc2.data(), BYTES, cudaMemcpyHostToDevice));
+  CHECK_CUDA(cudaMemcpy(d_alloc1, h_alloc1.data(), BYTES, cudaMemcpyHostToDevice));
+  CHECK_CUDA(cudaMemcpy(d_alloc2, h_alloc2.data(), BYTES, cudaMemcpyHostToDevice));
 
-  auto deleter = [](void* ptr) noexcept { LEGATE_CHECK_CUDA(cudaFree(ptr)); };
+  auto deleter = [](void* ptr) noexcept {
+    try {
+      CHECK_CUDA(cudaFree(ptr));
+    } catch (const std::exception& e) {
+      LEGATE_ABORT(e.what());
+    }
+  };
   auto alloc1 =
     legate::ExternalAllocation::create_fbmem(0, d_alloc1, BYTES, true /*read_only*/, deleter);
   auto alloc2 = legate::ExternalAllocation::create_fbmem(
@@ -306,15 +327,19 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
     void* h_buffer = std::malloc(BYTES);
 
     EXPECT_NE(h_buffer, nullptr);
-    LEGATE_CHECK_CUDA(cudaMemcpy(h_buffer, ptr, BYTES, cudaMemcpyDeviceToHost));
-    // TODO(issue 464)
-    // EXPECT_EQ(*(static_cast<std::uint64_t*>(h_buffer)), INIT_VALUE - 1);
-    LEGATE_CHECK_CUDA(cudaFree(ptr));
+    try {
+      CHECK_CUDA(cudaMemcpy(h_buffer, ptr, BYTES, cudaMemcpyDeviceToHost));
+      // TODO(issue 464)
+      // EXPECT_EQ(*(static_cast<std::uint64_t*>(h_buffer)), INIT_VALUE - 1);
+      CHECK_CUDA(cudaFree(ptr));
+    } catch (const std::exception& e) {
+      LEGATE_ABORT(e.what());
+    }
     std::free(h_buffer);
   };
 
-  LEGATE_CHECK_CUDA(cudaMalloc(&d_alloc, BYTES));
-  LEGATE_CHECK_CUDA(cudaMemcpy(d_alloc, h_alloc.data(), BYTES, cudaMemcpyHostToDevice));
+  CHECK_CUDA(cudaMalloc(&d_alloc, BYTES));
+  CHECK_CUDA(cudaMemcpy(d_alloc, h_alloc.data(), BYTES, cudaMemcpyHostToDevice));
 
   legate::ExternalAllocation ext_alloc;
   switch (store_target) {
@@ -329,7 +354,7 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
       break;
     }
     default: {
-      LEGATE_CHECK_CUDA(cudaFree(d_alloc));
+      CHECK_CUDA(cudaFree(d_alloc));
       return;
     }
   }

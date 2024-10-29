@@ -10,28 +10,29 @@
  * its affiliates is strictly prohibited.
  */
 
-#pragma once
+#include <legate/utilities/typedefs.h>
 
-#include "legate/cuda/stream_pool.h"
+#include <cstddef>
 
-#include <utility>
+namespace {
 
-namespace legate::cuda {
-
-inline StreamView::StreamView(CUstream stream) : valid_{true}, stream_{stream} {}
-
-inline StreamView::operator CUstream() const { return stream_; }
-
-inline StreamView::StreamView(StreamView&& rhs) noexcept
-  : valid_{std::exchange(rhs.valid_, false)}, stream_{rhs.stream_}
+__device__ __forceinline__ std::size_t global_tid_1d()
 {
+  return static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
 }
 
-inline StreamView& StreamView::operator=(StreamView&& rhs) noexcept
-{
-  valid_  = std::exchange(rhs.valid_, false);
-  stream_ = rhs.stream_;
-  return *this;
-}
+}  // namespace
 
-}  // namespace legate::cuda
+extern "C" __global__ void legate_fixup_ranges_kernel(
+  std::size_t desc_volume,
+  legate::Point<1> desc_lo,
+  legate::Point<1> vardata_lo,
+  legate::AccessorRW<legate::Rect<1>, 1> desc_acc)
+{
+  if (const auto tid = global_tid_1d(); tid < desc_volume) {
+    auto& desc = desc_acc[desc_lo + tid];
+
+    desc.lo += vardata_lo;
+    desc.hi += vardata_lo;
+  }
+}

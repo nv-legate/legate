@@ -14,6 +14,7 @@
 #include <legate/experimental/io/hdf5/detail/read.h>
 #include <legate/experimental/io/hdf5/detail/util.h>
 #include <legate/mapping/mapping.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/type_info.h>  // for Type::Code formatter
 #include <legate/type/type_traits.h>
 #include <legate/utilities/abort.h>
@@ -119,11 +120,9 @@ class HDF5ReadFn {
 
         read_hdf5_file({}, dataset, bounce_buffer.ptr(0), offset, count);
         // And then copy from the bounce buffer to the GPU
-        LEGATE_CHECK_CUDA(cudaMemcpyAsync(dst,
-                                          bounce_buffer.ptr(0),
-                                          shape.volume() * sizeof(DTYPE),
-                                          cudaMemcpyHostToDevice,
-                                          stream));
+        LEGATE_CHECK_CUDRIVER(
+          legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->mem_cpy_async(
+            dst, bounce_buffer.ptr(0), shape.volume() * sizeof(DTYPE), stream));
       }
     } else {
       // When running on a CPU, we read directly into the destination memory

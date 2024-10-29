@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate_defines.h"
+#include "legate_defines.h"  // LEGATE_USE_CUDA
 
-#include "legate/utilities/compiler.h"
-#include "legate/utilities/macros.h"
+#include "legate/utilities/compiler.h"  // LEGATE_NVCC
+#include "legate/utilities/macros.h"    // LEGATE_DEFINED
 
 #include <cstdio>
 #include <cstdlib>
@@ -25,76 +25,23 @@
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 #else  // LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include <cstddef>
 #include <cstdint>
 
-#define LEGATE_CUDA_STUBS 1
+// Only keep what we need to define LEGATE_CHECK_CUDA and LEGATE_CHECK_CUDA_STREAM
 
-// NOLINTBEGIN(readability-identifier-naming)
-constexpr int cudaStreamNonBlocking = 0;
-
-enum cudaMemcpyKind : std::int8_t {
-  cudaMemcpyDeviceToHost,
-  cudaMemcpyDeviceToDevice,
-  cudaMemcpyHostToDevice
-};
-
-enum cudaMemoryType : std::int8_t { cudaMemoryTypeDevice, cudaMemoryTypeUnregistered };
-
+// NOLINTBEGIN
 enum cudaError_t : std::int8_t { cudaSuccess };
 
-struct CUstream_st;
+using CUstream = struct CUstream_st*;
 
-using cudaStream_t = struct CUstream_st*;
-
-struct cudaPointerAttributes {
-  cudaMemoryType type{};
-};
-
-// ==========================================================================================
-
-[[nodiscard]] constexpr cudaError_t cudaDeviceSynchronize() { return cudaSuccess; }
+[[nodiscard]] constexpr cudaError_t cudaStreamSynchronize(CUstream) { return cudaSuccess; }
 
 [[nodiscard]] constexpr cudaError_t cudaPeekAtLastError() { return cudaSuccess; }
 
 [[nodiscard]] constexpr const char* cudaGetErrorString(cudaError_t) { return "unknown CUDA error"; }
 
 [[nodiscard]] constexpr const char* cudaGetErrorName(cudaError_t) { return "unknown CUDA error"; }
-
-[[nodiscard]] constexpr cudaError_t cudaPointerGetAttributes(cudaPointerAttributes* attr,
-                                                             const void*)
-{
-  attr->type = cudaMemoryTypeUnregistered;
-  return cudaSuccess;
-}
-
-// ==========================================================================================
-
-[[nodiscard]] constexpr cudaError_t cudaMemcpyAsync(
-  void*, const void*, std::size_t, cudaMemcpyKind, cudaStream_t)
-{
-  return cudaSuccess;
-}
-
-[[nodiscard]] constexpr cudaError_t cudaMemcpy(void*, const void*, std::size_t, cudaMemcpyKind)
-{
-  return cudaSuccess;
-}
-
-// ==========================================================================================
-
-[[nodiscard]] constexpr cudaError_t cudaStreamCreateWithFlags(cudaStream_t* stream, int)
-{
-  *stream = cudaStream_t{};
-  return cudaSuccess;
-}
-
-[[nodiscard]] constexpr cudaError_t cudaStreamDestroy(cudaStream_t) { return cudaSuccess; }
-
-[[nodiscard]] constexpr cudaError_t cudaStreamSynchronize(cudaStream_t) { return cudaSuccess; }
-
-// NOLINTEND(readability-identifier-naming)
-
+// NOLINTEND
 #endif  // LEGATE_DEFINED(LEGATE_USE_CUDA)
 
 // Use of __CUDACC__ vs LEGATE_USE_CUDA or LEGATE_NVCC is deliberate here, we only want these
@@ -115,33 +62,29 @@ struct cudaPointerAttributes {
 #define LEGATE_MIN_CTAS_PER_SM 4
 #define LEGATE_MAX_REDUCTION_CTAS 1024
 #define LEGATE_WARP_SIZE 32
-#define LEGATE_CHECK_CUDA(...)                                               \
-  do {                                                                       \
-    const cudaError_t legate_cuda_error_result_ = __VA_ARGS__;               \
-    legate::cuda::check_cuda(legate_cuda_error_result_, __FILE__, __LINE__); \
+#define LEGATE_CHECK_CUDA(...)                                                 \
+  LEGATE_DEPRECATED_MACRO("please roll your own version of LEGATE_CHECK_CUDA") \
+  do {                                                                         \
+    const cudaError_t legate_cuda_error_result_ = __VA_ARGS__;                 \
+    legate::cuda::check_cuda(legate_cuda_error_result_, __FILE__, __LINE__);   \
   } while (false)
 // NOLINTNEXTLINE
-#define LegateCheckCUDA(...)                                                                       \
-  LEGATE_DEPRECATED_MACRO(                                                                         \
-    "please roll your own, or, if you must, temporarily use LEGATE_CHECK_CUDA instead. Note that " \
-    "LEGATE_CHECK_CUDA will also be removed at some point in the future.")                         \
-  LEGATE_CHECK_CUDA(__VA_ARGS__)
+#define LegateCheckCUDA(...) LEGATE_CHECK_CUDA(__VA_ARGS__)
 
 #if LEGATE_DEFINED(LEGATE_USE_DEBUG)
-#define LEGATE_CHECK_CUDA_STREAM(stream)              \
-  do {                                                \
-    LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream)); \
-    LEGATE_CHECK_CUDA(cudaPeekAtLastError());         \
+#define LEGATE_CHECK_CUDA_STREAM(stream)                                              \
+  LEGATE_DEPRECATED_MACRO("please roll your own version of LEGATE_CHECK_CUDA_STREAM") \
+  do {                                                                                \
+    LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream));                                 \
+    LEGATE_CHECK_CUDA(cudaPeekAtLastError());                                         \
   } while (false)
 #else
-#define LEGATE_CHECK_CUDA_STREAM(stream) LEGATE_CHECK_CUDA(cudaPeekAtLastError())
+#define LEGATE_CHECK_CUDA_STREAM(stream)                                              \
+  LEGATE_DEPRECATED_MACRO("please roll your own version of LEGATE_CHECK_CUDA_STREAM") \
+  LEGATE_CHECK_CUDA(cudaPeekAtLastError())
 #endif
 // NOLINTNEXTLINE
-#define LegateCheckCUDAStream(...)                                                              \
-  LEGATE_DEPRECATED_MACRO(                                                                      \
-    "please roll your own, or, if you must, temporarily use LEGATE_CHECK_CUDA_STREAM instead. " \
-    "Note that LEGATE_CHECK_CUDA_STREAM will also be removed at some point in the future.")     \
-  LEGATE_CHECK_CUDA_STREAM(__VA_ARGS__)
+#define LegateCheckCUDAStream(...) LEGATE_CHECK_CUDA_STREAM(__VA_ARGS__)
 
 namespace legate::cuda {
 

@@ -14,36 +14,41 @@
 
 #include "legate/cuda/stream_pool.h"
 
+#include "legate/cuda/detail/cuda_driver_api.h"
 #include "legate/runtime/detail/config.h"
 #include "legate/runtime/detail/runtime.h"
 
 namespace legate::cuda {
 
+namespace {
+
+[[nodiscard]] const detail::CUDADriverAPI* get_driver()
+{
+  return legate::detail::Runtime::get_runtime()->get_cuda_driver_api();
+}
+
+}  // namespace
+
 StreamView::~StreamView()
 {
-  if (valid_) {
-    if (LEGATE_DEFINED(LEGATE_USE_DEBUG) || legate::detail::Config::synchronize_stream_view) {
-      LEGATE_CHECK_CUDA(cudaStreamSynchronize(stream_));
-      LEGATE_CHECK_CUDA(cudaPeekAtLastError());
-    } else {
-      LEGATE_CHECK_CUDA(cudaPeekAtLastError());
-    }
+  if (valid_ && legate::detail::Config::synchronize_stream_view) {
+    LEGATE_CHECK_CUDRIVER(get_driver()->stream_synchronize(stream_));
   }
 }
 
 StreamPool::~StreamPool()
 {
   if (cached_stream_) {
-    LEGATE_CHECK_CUDA(cudaStreamDestroy(*cached_stream_));
+    LEGATE_CHECK_CUDRIVER(get_driver()->stream_destroy(*cached_stream_));
   }
 }
 
 StreamView StreamPool::get_stream()
 {
   if (!cached_stream_.has_value()) {
-    cudaStream_t stream;
+    CUstream stream;
 
-    LEGATE_CHECK_CUDA(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+    LEGATE_CHECK_CUDRIVER(get_driver()->stream_create(&stream, CU_STREAM_NON_BLOCKING));
     cached_stream_.emplace(stream);
   }
   return StreamView{*cached_stream_};

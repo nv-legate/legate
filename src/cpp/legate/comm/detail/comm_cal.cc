@@ -10,9 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/coll.h"
 #include "legate/comm/detail/comm_cal.h"
+
+#include "legate/comm/coll.h"
 #include "legate/cuda/cuda.h"
+#include "legate/cuda/detail/nvtx.h"
 #include "legate/data/buffer.h"
 #include "legate/operation/detail/task_launcher.h"
 #include "legate/runtime/detail/communicator_manager.h"
@@ -22,7 +24,6 @@
 #include "legate/task/detail/legion_task.h"
 #include "legate/utilities/assert.h"
 #include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/nvtx_help.h"
 #include "legate/utilities/typedefs.h"
 
 #include <cal.h>
@@ -121,7 +122,8 @@ class Init : public detail::LegionTask<Init> {
     auto cpu_comm = task->futures[0].get_result<comm::coll::CollComm>();
 
     int device = -1;
-    LEGATE_CHECK_CUDA(cudaGetDevice(&device));
+    LEGATE_CHECK_CUDRIVER(
+      legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->ctx_get_device(&device));
 
     /* Create communicator */
     cal_comm_t cal_comm = nullptr;
