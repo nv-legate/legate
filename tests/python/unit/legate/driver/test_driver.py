@@ -62,7 +62,14 @@ class TestDriver:
     def test_env(self, genconfig: GenConfig, launch: LauncherType) -> None:
         config = genconfig(["--launcher", launch])
 
-        driver = m.LegateDriver(config, SYSTEM)
+        system = System()
+
+        # if someone runs the test as "legate -m pytest ..." then that first
+        # legate invocation will modify the system env that subprocesses see
+        if "LEGATE_CONFIG" in system.env:
+            del system.env["LEGATE_CONFIG"]
+
+        driver = m.LegateDriver(config, system)
         env = driver.env
 
         assert "LEGATE_CONFIG" in env

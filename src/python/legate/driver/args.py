@@ -536,6 +536,7 @@ other.add_argument(
 )
 
 other.add_argument(
+    "-m",
     "--module",
     dest="module",
     default=None,
