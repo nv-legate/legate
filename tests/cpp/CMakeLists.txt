@@ -146,54 +146,127 @@ function(legate_configure_test)
   set(unique_src "${unique_src}" PARENT_SCOPE)
 endfunction()
 
-if(Legion_USE_CUDA)
-  file(GLOB integration_GPU_SRC ${PROJECT_SOURCE_DIR}/integration/*.cu)
-endif()
+set(runtime_SRC
+    # bug
+    bug/alias_via_promote.cc
+    bug/aligned_unpack.cc
+    bug/dangling_store_partition.cc
+    bug/logical_store_transform.cc
+    bug/nullable_arrays.cc
+    bug/premature_free.cc
+    bug/singleton_index_task.cc
+    # integration
+    integration/aligned_unbound_stores.cc
+    integration/alignment_constraints.cc
+    integration/attach.cc
+    integration/auto_task_error.cc
+    integration/bloat_constraints.cc
+    integration/broadcast_constraints.cc
+    integration/child_store.cc
+    integration/consensus_match.cc
+    integration/copy_failure.cc
+    integration/copy_gather.cc
+    integration/copy_gather_scatter.cc
+    integration/copy_normal.cc
+    integration/copy_scatter.cc
+    integration/cpu_communicator.cc
+    integration/delinearize.cc
+    integration/exception.cc
+    integration/field_reuse.cc
+    integration/fill.cc
+    integration/find_memory_kind.cc
+    integration/image_constraints.cc
+    integration/index_attach.cc
+    integration/inline_map.cc
+    integration/inout.cc
+    integration/is_running_in_task.cc
+    integration/machine_scope.cc
+    integration/manual_task.cc
+    integration/manual_task_proj.cc
+    integration/mixed_dim.cc
+    integration/multi_scalar_out.cc
+    integration/partitioner.cc
+    integration/projection.cc
+    integration/provenance.cc
+    integration/redundant.cc
+    integration/region_manager.cc
+    integration/register_variants.cc
+    integration/replicated_write.cc
+    integration/req_analyzer.cc
+    integration/scalar_out.cc
+    integration/scale_constraints.cc
+    integration/task_misc.cc
+    integration/tasks/task_simple.cc
+    integration/test_task_store.cc
+    integration/tree_reduce.cc
+    integration/tree_reduce_unique.cc
+    integration/tunable.cc
+    integration/variant_options_precedence.cc
+    integration/weighted.cc
+    # unit
+    unit/buffer.cc
+    unit/constraint.cc
+    unit/dispatch.cc
+    unit/library.cc
+    unit/logical_array.cc
+    unit/logical_store.cc
+    unit/machine.cc
+    unit/mapping.cc
+    unit/physical_array.cc
+    unit/physical_store.cc
+    unit/registration.cc
+    unit/runtime.cc
+    unit/scalar.cc
+    unit/scope.cc
+    unit/scoped_allocator.cc
+    unit/timing.cc
+    unit/type.cc
+    # experimental
+    experimental/stl/elementwise.cc
+    experimental/stl/fill.cc
+    experimental/stl/for_each.cc
+    experimental/stl/reduce.cc
+    experimental/stl/store.cc
+    experimental/stl/transform.cc
+    experimental/stl/transform_reduce.cc
+    experimental/stl/views.cc
+    experimental/tracing.cc)
 
-file(GLOB main_with_runtime_init_SRC ${PROJECT_SOURCE_DIR}/main_with_runtime_init.cc)
-file(GLOB main_wo_runtime_init_SRC ${PROJECT_SOURCE_DIR}/main_wo_runtime_init.cc)
+set(noinit_SRC
+    noinit/cuda_driver_api.cc
+    noinit/enable_shared_from_this.cc
+    noinit/enumerate.cc
+    noinit/environment_variable.cc
+    noinit/find_memory_kind.cc
+    noinit/internal_shared_ptr.cc
+    noinit/internal_weak_ptr.cc
+    noinit/is_running_in_task.cc
+    noinit/macros.cc
+    noinit/runtime_exception.cc
+    noinit/scope_fail.cc
+    noinit/scope_guard.cc
+    noinit/shared_ptr.cc
+    noinit/span.cc
+    noinit/task_exception.cc
+    noinit/to_domain.cc
+    noinit/variant_options.cc
+    noinit/zip_longest.cc
+    noinit/zip_shortest.cc)
 
-file(GLOB bug_SRC ${PROJECT_SOURCE_DIR}/bug/*.cc)
-file(GLOB integration_SRC ${PROJECT_SOURCE_DIR}/integration/*.cc)
-file(GLOB tasks_SRC ${PROJECT_SOURCE_DIR}/integration/tasks/*.cc)
-file(GLOB unit_SRC ${PROJECT_SOURCE_DIR}/unit/*.cc)
-file(GLOB stl_SRC ${PROJECT_SOURCE_DIR}/experimental/stl/*.cc)
-file(GLOB experimental_SRC ${PROJECT_SOURCE_DIR}/experimental/*.cc)
+set(non_reentrant_SRC non_reentrant/death_example.cc non_reentrant/oom_message.cc
+                      non_reentrant/runtime.cc non_reentrant/shutdown_callback.cc)
 
-file(GLOB noinit_SRC ${PROJECT_SOURCE_DIR}/noinit/*.cc)
-file(GLOB non_reentrant_SRC ${PROJECT_SOURCE_DIR}/non_reentrant/*.cc)
-
-include(GNUInstallDirs)
-
-# See https://github.com/rapidsai/rapids-cmake/issues/583
-if("${rapids-cmake-version}" VERSION_LESS "24.06.00")
-  string(JOIN
-         "\n"
-         code_string
-         [[
-if(POLICY CMP0159)
-  cmake_policy(SET CMP0159 OLD)
-  set(CMAKE_POLICY_DEFAULT_CMP0159 OLD)
-endif()
-]])
-  install(CODE "${code_string}")
-endif()
-
-legate_configure_test(NAME tests_with_runtime
-                      SOURCES ${main_with_runtime_init_SRC} ${bug_SRC} ${tasks_SRC}
-                              ${integration_SRC} ${unit_SRC} ${experimental_SRC}
-                              ${stl_SRC})
-legate_configure_test(NAME tests_wo_runtime SOURCES ${main_wo_runtime_init_SRC}
-                                                    ${noinit_SRC})
-legate_configure_test(NAME tests_non_reentrant SOURCES ${main_with_runtime_init_SRC}
+legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
+                                                      ${runtime_SRC})
+legate_configure_test(NAME tests_wo_runtime SOURCES main_wo_runtime_init.cc ${noinit_SRC})
+legate_configure_test(NAME tests_non_reentrant SOURCES main_with_runtime_init.cc
                                                        ${non_reentrant_SRC})
 
-if(integration_GPU_SRC)
-  legate_configure_test(NAME tests_with_gpus
-                        SOURCES ${main_with_runtime_init_SRC} ${bug_SRC} ${tasks_SRC}
-                                ${integration_SRC} ${unit_SRC} ${experimental_SRC}
-                                ${stl_SRC}
-                        GPUS 1
+if(Legion_USE_CUDA)
+  set(gpu_SRC integration/nccl.cu)
+
+  legate_configure_test(NAME tests_with_gpus SOURCES main_with_runtime_init.cc
+                                                     ${runtime_SRC} ${gpu_SRC} GPUS 1
                         PERCENT 30)
 endif()
 
