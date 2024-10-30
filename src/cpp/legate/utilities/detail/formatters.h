@@ -136,12 +136,4 @@ struct formatter<legate::detail::Storage> : formatter<std::string> {
   format_context::iterator format(const legate::detail::Storage& s, format_context& ctx) const;
 };
 
-#ifndef DOXYGEN
-// Needed because fmt tries to cast BasicZStringView to its private base class
-// (std::string_view), and therefore fails to compile. So we tell it directly that
-// BasicZStringView is not, in fact, a string.
-template <typename C, typename T>
-struct detail::is_string<legate::detail::BasicZStringView<C, T>> : std::false_type {};
-#endif
-
 }  // namespace fmt

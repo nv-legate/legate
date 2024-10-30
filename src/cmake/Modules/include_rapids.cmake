@@ -15,25 +15,27 @@ include_guard(GLOBAL)
 macro(legate_include_rapids)
   list(APPEND CMAKE_MESSAGE_CONTEXT "include_rapids")
 
-  if(NOT rapids-cmake-version)
-    # default
-    set(rapids-cmake-version 24.08)
-    set(rapids-cmake-sha "3cc764f287a6f3caeee5dd1c96c24b1710d4cdf1")
-  endif()
   if(NOT _LEGATE_HAS_RAPIDS)
+    if(NOT rapids-cmake-version)
+      # default
+      set(rapids-cmake-version 24.10)
+      set(rapids-cmake-sha "355d57d3c3dba93e9b5a6015c3dc57a27fd73901")
+    endif()
+
     if(NOT EXISTS ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
       file(DOWNLOAD
            https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${rapids-cmake-version}/RAPIDS.cmake
            ${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
     endif()
     include(${CMAKE_BINARY_DIR}/LEGATE_RAPIDS.cmake)
-    include(rapids-cmake)
-    include(rapids-cpm)
-    include(rapids-cuda)
-    include(rapids-export)
-    include(rapids-find)
     set(_LEGATE_HAS_RAPIDS ON)
   endif()
+  include(rapids-cmake)
+  include(rapids-cpm)
+  include(rapids-cuda)
+  include(rapids-export)
+  include(rapids-find)
+  include(rapids-version)
 
   list(POP_BACK CMAKE_MESSAGE_CONTEXT)
 endmacro()
