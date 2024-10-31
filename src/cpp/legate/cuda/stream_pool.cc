@@ -20,46 +20,23 @@
 
 namespace legate::cuda {
 
-namespace {
-
-[[nodiscard]] const detail::CUDADriverAPI* get_driver()
-{
-  return legate::detail::Runtime::get_runtime()->get_cuda_driver_api();
-}
-
-}  // namespace
-
 StreamView::~StreamView()
 {
   if (valid_ && legate::detail::Config::synchronize_stream_view) {
-    LEGATE_CHECK_CUDRIVER(get_driver()->stream_synchronize(stream_));
-  }
-}
-
-StreamPool::~StreamPool()
-{
-  if (cached_stream_) {
-    LEGATE_CHECK_CUDRIVER(get_driver()->stream_destroy(*cached_stream_));
+    LEGATE_CHECK_CUDRIVER(
+      legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->stream_synchronize(stream_));
   }
 }
 
 StreamView StreamPool::get_stream()
 {
-  if (!cached_stream_.has_value()) {
-    CUstream stream;
-
-    LEGATE_CHECK_CUDRIVER(get_driver()->stream_create(&stream, CU_STREAM_NON_BLOCKING));
-    cached_stream_.emplace(stream);
-  }
-  return StreamView{*cached_stream_};
+  return StreamView{legate::detail::Runtime::get_runtime()->get_cuda_stream()};
 }
 
 /*static*/ StreamPool& StreamPool::get_stream_pool()
 {
-  static StreamPool pools[LEGION_MAX_NUM_PROCS];
-  const auto proc = legate::detail::Runtime::get_runtime()->get_executing_processor();
-  auto proc_id    = proc.id & (LEGION_MAX_NUM_PROCS - 1);
-  return pools[proc_id];
+  static StreamPool pool;
+  return pool;
 }
 
 }  // namespace legate::cuda

@@ -57,13 +57,9 @@ void Fill::validate()
 
 void Fill::launch(Strategy* strategy)
 {
+  auto&& fill_value = get_fill_value_();
   if (lhs_->has_scalar_storage()) {
-    if (const auto* logical_store = std::get_if<InternalSharedPtr<LogicalStore>>(&value_)) {
-      lhs_->set_future((*logical_store)->get_future());
-    } else {
-      const auto& value = std::get<Scalar>(value_);
-      lhs_->set_future(Legion::Future::from_untyped_pointer(value.data(), value.size()));
-    }
+    lhs_->set_future(std::move(fill_value));
     return;
   }
 
@@ -72,20 +68,11 @@ void Fill::launch(Strategy* strategy)
   auto&& part          = (*strategy)[lhs_var_];
   auto lhs_proj        = create_store_partition(lhs_, part)->create_store_projection(launch_domain);
 
-  if (const auto* logical_store = std::get_if<InternalSharedPtr<LogicalStore>>(&value_)) {
-    if (launch_domain.is_valid()) {
-      launcher.launch(launch_domain, lhs_.get(), *lhs_proj, logical_store->get());
-      lhs_->set_key_partition(machine(), part);
-    } else {
-      launcher.launch_single(lhs_.get(), *lhs_proj, logical_store->get());
-    }
+  if (launch_domain.is_valid()) {
+    launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::move(fill_value));
+    lhs_->set_key_partition(machine(), part);
   } else {
-    if (launch_domain.is_valid()) {
-      launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::get<Scalar>(value_));
-      lhs_->set_key_partition(machine(), part);
-    } else {
-      launcher.launch_single(lhs_.get(), *lhs_proj, std::get<Scalar>(value_));
-    }
+    launcher.launch_single(lhs_.get(), *lhs_proj, std::move(fill_value));
   }
 }
 
@@ -106,6 +93,17 @@ bool Fill::needs_flush() const
     return (*logical_store)->needs_flush();
   }
   return false;
+}
+
+Legion::Future Fill::get_fill_value_() const
+{
+  if (const auto* logical_store = std::get_if<InternalSharedPtr<LogicalStore>>(&value_)) {
+    return (*logical_store)->get_future();
+  }
+
+  const auto& value = std::get<Scalar>(value_);
+
+  return Legion::Future::from_untyped_pointer(value.data(), value.size());
 }
 
 }  // namespace legate::detail

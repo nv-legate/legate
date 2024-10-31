@@ -41,6 +41,8 @@ class Fill final : public Operation {
   [[nodiscard]] bool needs_flush() const override;
 
  private:
+  Legion::Future get_fill_value_() const;
+
   const Variable* lhs_var_{};
   InternalSharedPtr<LogicalStore> lhs_{};
   std::variant<InternalSharedPtr<LogicalStore>, Scalar> value_{};

@@ -88,8 +88,6 @@ class LEGATE_STREAM_VIEW_DEPRECATED StreamView {
  */
 class LEGATE_STREAM_POOL_DEPRECATED StreamPool {
  public:
-  ~StreamPool();
-
   /**
    * @brief Returns a `StreamView` in the pool
    * @deprecated since 24.09: use legate::TaskContext::get_task_stream() instead

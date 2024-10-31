@@ -30,16 +30,11 @@ class FillLauncher {
   void launch(const Legion::Domain& launch_domain,
               LogicalStore* lhs,
               const StoreProjection& lhs_proj,
-              LogicalStore* value);
-  void launch(const Legion::Domain& launch_domain,
-              LogicalStore* lhs,
-              const StoreProjection& lhs_proj,
-              const Scalar& value);
-  void launch_single(LogicalStore* lhs, const StoreProjection& lhs_proj, LogicalStore* value);
-  void launch_single(LogicalStore* lhs, const StoreProjection& lhs_proj, const Scalar& value);
+              Legion::Future value);
+  void launch_single(LogicalStore* lhs, const StoreProjection& lhs_proj, Legion::Future value);
 
  private:
-  void pack_mapper_arg_(BufferBuilder& buffer, Legion::ProjectionID proj_id);
+  [[nodiscard]] BufferBuilder pack_mapper_arg_(Legion::ProjectionID proj_id) const;
 
   const mapping::detail::Machine& machine_;
   std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};

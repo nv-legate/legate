@@ -39,20 +39,17 @@ std::tuple<Legion::LogicalRegion, Legion::LogicalRegion, Legion::FieldID> prepar
 void FillLauncher::launch(const Legion::Domain& launch_domain,
                           LogicalStore* lhs,
                           const StoreProjection& lhs_proj,
-                          LogicalStore* value)
+                          Legion::Future value)
 {
-  BufferBuilder mapper_arg;
-
-  pack_mapper_arg_(mapper_arg, lhs_proj.proj_id);
+  auto mapper_arg = pack_mapper_arg_(lhs_proj.proj_id);
 
   const auto runtime             = Runtime::get_runtime();
   auto [_, lhs_parent, field_id] = prepare_lhs(lhs);
-  auto future_value              = value->get_future();
   auto index_fill                = Legion::IndexFillLauncher{
     launch_domain,
     lhs_proj.partition,
     std::move(lhs_parent),
-    std::move(future_value),
+    std::move(value),
     lhs_proj.proj_id,
     Legion::Predicate::TRUE_PRED,
     runtime->mapper_id(),
@@ -64,49 +61,18 @@ void FillLauncher::launch(const Legion::Domain& launch_domain,
   runtime->dispatch(index_fill);
 }
 
-void FillLauncher::launch(const Legion::Domain& launch_domain,
-                          LogicalStore* lhs,
-                          const StoreProjection& lhs_proj,
-                          const Scalar& value)
-{
-  BufferBuilder mapper_arg;
-
-  pack_mapper_arg_(mapper_arg, lhs_proj.proj_id);
-
-  const auto runtime             = Runtime::get_runtime();
-  auto [_, lhs_parent, field_id] = prepare_lhs(lhs);
-  auto index_fill                = Legion::IndexFillLauncher{
-    launch_domain,
-    lhs_proj.partition,
-    std::move(lhs_parent),
-    Legion::UntypedBuffer{value.data(), value.size()},
-    lhs_proj.proj_id,
-    Legion::Predicate::TRUE_PRED,
-    runtime->mapper_id(),
-    lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
-    mapper_arg.to_legion_buffer(),
-  };
-
-  index_fill.provenance = runtime->get_provenance().as_string_view();
-  index_fill.add_field(field_id);
-  runtime->dispatch(index_fill);
-}
-
 void FillLauncher::launch_single(LogicalStore* lhs,
                                  const StoreProjection& lhs_proj,
-                                 LogicalStore* value)
+                                 Legion::Future value)
 {
-  BufferBuilder mapper_arg;
-
-  pack_mapper_arg_(mapper_arg, lhs_proj.proj_id);
+  auto mapper_arg = pack_mapper_arg_(lhs_proj.proj_id);
 
   const auto runtime                      = Runtime::get_runtime();
   auto [lhs_region, lhs_parent, field_id] = prepare_lhs(lhs);
-  auto future_value                       = value->get_future();
   auto single_fill                        = Legion::FillLauncher{
     lhs_region,
     std::move(lhs_parent),
-    std::move(future_value),
+    std::move(value),
     Legion::Predicate::TRUE_PRED,
     runtime->mapper_id(),
     lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
@@ -117,35 +83,14 @@ void FillLauncher::launch_single(LogicalStore* lhs,
   runtime->dispatch(single_fill);
 }
 
-void FillLauncher::launch_single(LogicalStore* lhs,
-                                 const StoreProjection& lhs_proj,
-                                 const Scalar& value)
+BufferBuilder FillLauncher::pack_mapper_arg_(Legion::ProjectionID proj_id) const
 {
-  BufferBuilder mapper_arg;
+  BufferBuilder buffer;
 
-  pack_mapper_arg_(mapper_arg, lhs_proj.proj_id);
-
-  const auto runtime                      = Runtime::get_runtime();
-  auto [lhs_region, lhs_parent, field_id] = prepare_lhs(lhs);
-  auto single_fill                        = Legion::FillLauncher{
-    lhs_region,
-    std::move(lhs_parent),
-    Legion::UntypedBuffer{value.data(), value.size()},
-    Legion::Predicate::TRUE_PRED,
-    runtime->mapper_id(),
-    lhs_proj.is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0,
-    mapper_arg.to_legion_buffer()};
-
-  single_fill.provenance = runtime->get_provenance().as_string_view();
-  single_fill.add_field(field_id);
-  runtime->dispatch(single_fill);
-}
-
-void FillLauncher::pack_mapper_arg_(BufferBuilder& buffer, Legion::ProjectionID proj_id)
-{
   machine_.pack(buffer);
   buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, proj_id));
   buffer.pack(priority_);
+  return buffer;
 }
 
 }  // namespace legate::detail
