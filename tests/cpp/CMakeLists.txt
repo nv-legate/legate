@@ -20,10 +20,6 @@ if(PROJECT_IS_TOP_LEVEL)
   )
 endif()
 
-if(Legion_USE_CUDA)
-  enable_language(CUDA)
-endif()
-
 include(rapids-test)
 
 rapids_test_init()
@@ -50,12 +46,10 @@ function(legate_configure_test)
     message(FATAL_ERROR "Must pass NAME")
   endif()
 
-  if(NOT DEFINED _LEGATE_TEST_GPUS AND NOT DEFINED _LEGATE_TEST_PERCENT)
+  if(NOT DEFINED _LEGATE_TEST_GPUS)
     set(_LEGATE_TEST_GPUS 0)
-    set(_LEGATE_TEST_PERCENT 1)
-  elseif(NOT DEFINED _LEGATE_TEST_GPUS)
-    set(_LEGATE_TEST_GPUS 0)
-  elseif(NOT DEFINED _LEGATE_TEST_PERCENT)
+  endif()
+  if(NOT DEFINED _LEGATE_TEST_PERCENT)
     set(_LEGATE_TEST_PERCENT 1)
   endif()
 
@@ -67,12 +61,7 @@ function(legate_configure_test)
                                    # Don't use CMAKE_INSTALL_LIBDIR since we want the
                                    # rpath to be relative
                                    INSTALL_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}/../lib"
-                                   INSTALL_RPATH_USE_LINK_PATH TRUE
-                                   CXX_STANDARD ${CMAKE_CXX_STANDARD}
-                                   CXX_STANDARD_REQUIRED ON
-                                   # For std:: support of __int128_t. Can be removed once
-                                   # using cuda::std
-                                   CXX_EXTENSIONS ON)
+                                   INSTALL_RPATH_USE_LINK_PATH TRUE)
 
   target_include_directories(${_LEGATE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
 
@@ -89,10 +78,6 @@ function(legate_configure_test)
                                 fmt::fmt)
 
   if(Legion_USE_CUDA)
-    set_target_properties(${_LEGATE_TEST_NAME}
-                          PROPERTIES CUDA_ARCHITECTURES ${Legion_CUDA_ARCH}
-                                     CUDA_STANDARD ${CMAKE_CUDA_STANDARD}
-                                     CUDA_STANDARD_REQUIRED ON)
     target_link_libraries(${_LEGATE_TEST_NAME} PRIVATE NCCL::NCCL)
   endif()
 

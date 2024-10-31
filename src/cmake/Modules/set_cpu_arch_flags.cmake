@@ -77,5 +77,6 @@ function(set_cpu_arch_flags out_var)
     list(APPEND flags "-mvsx")
   endif()
 
-  set(${out_var} "${flags}" PARENT_SCOPE)
+  list(APPEND ${out_var} ${flags})
+  set(${out_var} "${${out_var}}" PARENT_SCOPE)
 endfunction()

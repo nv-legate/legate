@@ -134,7 +134,6 @@ class Legion(Package):
         cmake_var=CMAKE_VARIABLE("Legion_CUDA_FLAGS", CMakeList),
     )
 
-    Legion_CUDA_ARCH: Final = CMAKE_VARIABLE("Legion_CUDA_ARCH", CMakeList)
     Legion_EMBED_GASNet_CONFIGURE_ARGS: Final = CMAKE_VARIABLE(
         "Legion_EMBED_GASNet_CONFIGURE_ARGS", CMakeList
     )
@@ -263,9 +262,6 @@ class Legion(Package):
             self.manager.set_cmake_variable(self.Legion_USE_CUDA, True)
             self.append_flags_if_set(
                 self.Legion_CUDA_FLAGS, self.cl_args.legion_cuda_flags
-            )
-            self.append_flags_if_set(
-                self.Legion_CUDA_ARCH, self.cuda.cuda_arch
             )
         elif self.cl_args.legion_cuda_flags.cl_set:
             raise RuntimeError(
@@ -430,10 +426,6 @@ class Legion(Package):
                 self.Legion_CUDA_FLAGS
             ):
                 lines.append(("CUDA flags", cuda_flags))
-            if cuda_arch := self.manager.get_cmake_variable(
-                self.Legion_CUDA_ARCH
-            ):
-                lines.append(("CUDA arch", cuda_arch))
 
         if networks := self.manager.get_cmake_variable(self.Legion_NETWORKS):
             pass

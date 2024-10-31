@@ -1,21 +1,6 @@
 {
     "parse": {
         "additional_commands": {
-            "add_cuda_architecture_defines": {
-                "kwargs": {
-                    "ARCHS": "+",
-                    "DEFS": 1
-                },
-                "pargs": {
-                    "flags": [],
-                    "nargs": "*"
-                }
-            },
-            "add_def_if_arch_enabled": {
-                "pargs": {
-                    "nargs": 2
-                }
-            },
             "add_touch_legate_ninja_build_target": {
                 "pargs": {
                     "nargs": 0
@@ -209,6 +194,16 @@
                     "NAME": 1,
                     "PERCENT": 1,
                     "SOURCES": "+"
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
+            "legate_convert_cuda_arch_from_names": {
+                "kwargs": {
+                    "DEST_VAR": 1,
+                    "INPUT_VAR": 1
                 },
                 "pargs": {
                     "flags": [],
@@ -903,11 +898,6 @@
             "set_cpu_arch_flags_impl": {
                 "pargs": {
                     "nargs": 3
-                }
-            },
-            "set_cuda_arch_from_names": {
-                "pargs": {
-                    "nargs": 0
                 }
             },
             "set_ifndef": {

@@ -71,6 +71,12 @@ if(Legion_USE_CUDA)
   #
   # But 9 times out of 10, people are passing this in, because they are using configure.
   enable_language(CUDA)
+
+  include("${LEGATE_CMAKE_DIR}/Modules/cuda_arch_helpers.cmake")
+  # Needs to run before find_package(Legion)
+  set_ifndef(CMAKE_CUDA_ARCHITECTURES all-major)
+  legate_convert_cuda_arch_from_names(INPUT_VAR CMAKE_CUDA_ARCHITECTURES)
+  set(Legion_CUDA_ARCH ${CMAKE_CUDA_ARCHITECTURES})
 endif()
 
 include("${LEGATE_CMAKE_DIR}/Modules/default_flags.cmake")
@@ -93,12 +99,7 @@ legate_find_or_configure(PACKAGE cccl)
 # * Python -------------------------------------------------------------------
 
 macro(_find_package_python3)
-  rapids_find_package(Python3
-                      BUILD_EXPORT_SET legate-exports
-                      INSTALL_EXPORT_SET legate-exports
-                      COMPONENTS Interpreter Development
-                      FIND_ARGS
-                      REQUIRED)
+  rapids_find_package(Python3 COMPONENTS Interpreter Development FIND_ARGS REQUIRED)
   message(VERBOSE "legate: Has Python3: ${Python3_FOUND}")
   message(VERBOSE "legate: Has Python 3 interpreter: ${Python3_Interpreter_FOUND}")
   message(VERBOSE "legate: Python 3 include directories: ${Python3_INCLUDE_DIRS}")
@@ -115,13 +116,6 @@ if(Legion_USE_Python)
   if(Python3_FOUND AND Python3_VERSION)
     set(Legion_Python_Version ${Python3_VERSION})
   endif()
-endif()
-
-include("${LEGATE_CMAKE_DIR}/Modules/cuda_arch_helpers.cmake")
-
-if(Legion_USE_CUDA)
-  # Needs to run before find_package(Legion)
-  set_cuda_arch_from_names()
 endif()
 
 #
@@ -429,6 +423,23 @@ include("${LEGATE_CMAKE_DIR}/Modules/set_cpu_arch_flags.cmake")
 
 set_cpu_arch_flags(legate_CXX_PRIVATE_OPTIONS)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # In classic conda fashion, it sets a bunch of environment variables for you but as
+  # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE because
+  # GCC and clang error with:
+  #
+  # cmake-format: off
+  # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
+  # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+  # [-Werror=cpp]
+  # 330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+  #     |    ^~~~~~~
+  # cmake-format: on
+  #
+  # Thanks conda, such a great help!
+  list(APPEND legate_CXX_PRIVATE_OPTIONS -U_FORTIFY_SOURCE)
+endif()
+
 # Change THRUST_DEVICE_SYSTEM for `.cpp` files If we include Thrust in "CUDA mode" in .cc
 # files, that ends up pulling the definition of __half from the CUDA toolkit, and Legion
 # defines a custom __half when compiling outside of nvcc (because CUDA's __half doesn't
@@ -449,24 +460,6 @@ else()
   list(APPEND legate_CXX_PUBLIC_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  # In classic conda fashion, it sets a bunch of environment variables for you but as
-  # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE because
-  # GCC and clang error with:
-  #
-  # cmake-format: off
-  # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
-  # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
-  # [-Werror=cpp]
-  # 330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
-  #     |    ^~~~~~~
-  # cmake-format: on
-  #
-  # Thanks conda, such a great help!
-  list(APPEND legate_CXX_PRIVATE_OPTIONS -U_FORTIFY_SOURCE)
-  list(APPEND legate_CUDA_PRIVATE_OPTIONS -U_FORTIFY_SOURCE)
-endif()
-
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(LEGATE_PLATFORM_RPATH_ORIGIN "\$ORIGIN")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -484,10 +477,6 @@ set_target_properties(legate
                                  LIBRARY_OUTPUT_NAME legate
                                  BUILD_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}"
                                  INSTALL_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}"
-                                 CXX_STANDARD ${CMAKE_CXX_STANDARD}
-                                 CXX_STANDARD_REQUIRED ON
-                                 CUDA_STANDARD ${CMAKE_CUDA_STANDARD}
-                                 CUDA_STANDARD_REQUIRED ON
                                  POSITION_INDEPENDENT_CODE ON
                                  INTERFACE_POSITION_INDEPENDENT_CODE ON
                                  LIBRARY_OUTPUT_DIRECTORY lib
@@ -496,10 +485,6 @@ set_target_properties(legate
 # export this so that install_info.py can properly locate the versioned and unversioned
 # library names
 set_property(TARGET legate APPEND PROPERTY EXPORT_PROPERTIES LIBRARY_OUTPUT_NAME)
-
-if(Legion_USE_CUDA)
-  set_property(TARGET legate PROPERTY CUDA_ARCHITECTURES ${Legion_CUDA_ARCH})
-endif()
 
 target_link_libraries(legate
                       # Order is important here. We want conda includes to go last because
