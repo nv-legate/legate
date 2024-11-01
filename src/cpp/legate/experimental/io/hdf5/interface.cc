@@ -80,6 +80,8 @@ namespace {
           throw UnsupportedHDF5DataTypeError{fmt::format("unhandled floating point size: {}", s)};
       }
     }
+    case HighFive::DataTypeClass::BitField:
+      return legate::binary_type(static_cast<std::uint32_t>(dtype.getSize()));
     case HighFive::DataTypeClass::String: return legate::string_type();
     case HighFive::DataTypeClass::Invalid: return legate::null_type();
     default:
