@@ -22,79 +22,328 @@ namespace {
 
 using TypeUnit = DefaultFixture;
 
+class PrimitiveTypeTest
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<legate::Type, legate::Type::Code>> {};
+
+class PrimitiveTypeFeatureTest
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<legate::Type,
+                                                    legate::Type::Code,
+                                                    std::string,
+                                                    std::uint32_t /* size */,
+                                                    std::uint32_t /* alignment */>> {};
+
+class BinaryTypeTest : public DefaultFixture,
+                       public ::testing::WithParamInterface<std::uint32_t> {};
+
+class FixedArrayTypeTest
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<legate::Type, std::uint32_t, std::string>> {};
+
+class StructTypeTest
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<legate::Type,
+                                                    std::vector<legate::Type>,
+                                                    bool,
+                                                    std::uint32_t /* total_size */,
+                                                    std::uint32_t /* alignment */,
+                                                    std::string>> {};
+
+class DimTest : public DefaultFixture, public ::testing::WithParamInterface<std::uint32_t> {};
+
+class TypeTest : public DefaultFixture, public ::testing::WithParamInterface<legate::Type> {};
+
+class PointTypeTest : public DimTest {};
+
+class RectTypeTest : public DimTest {};
+
+class ListTypeTest : public DefaultFixture,
+                     public ::testing::WithParamInterface<std::tuple<legate::Type, std::string>> {};
+
+class UidFixedArrayTypeTest
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<legate::Type, std::uint32_t>> {};
+
+class UidTest : public TypeTest {};
+
+class ReductionOperatorTest
+  : public DefaultFixture,
+    public ::testing::WithParamInterface<std::tuple<legate::Type, legate::ReductionOpKind>> {};
+
+class NegativeTypeTest : public DefaultFixture,
+                         public ::testing::WithParamInterface<legate::Type::Code> {};
+
+class NegativeDimTest : public DimTest {};
+
+INSTANTIATE_TEST_SUITE_P(
+  TypeUnit,
+  PrimitiveTypeTest,
+  ::testing::Values(std::make_tuple(legate::null_type(), legate::Type::Code::NIL),
+                    std::make_tuple(legate::bool_(), legate::Type::Code::BOOL),
+                    std::make_tuple(legate::int8(), legate::Type::Code::INT8),
+                    std::make_tuple(legate::int16(), legate::Type::Code::INT16),
+                    std::make_tuple(legate::int32(), legate::Type::Code::INT32),
+                    std::make_tuple(legate::int64(), legate::Type::Code::INT64),
+                    std::make_tuple(legate::uint8(), legate::Type::Code::UINT8),
+                    std::make_tuple(legate::uint16(), legate::Type::Code::UINT16),
+                    std::make_tuple(legate::uint32(), legate::Type::Code::UINT32),
+                    std::make_tuple(legate::uint64(), legate::Type::Code::UINT64),
+                    std::make_tuple(legate::float16(), legate::Type::Code::FLOAT16),
+                    std::make_tuple(legate::float32(), legate::Type::Code::FLOAT32),
+                    std::make_tuple(legate::float64(), legate::Type::Code::FLOAT64),
+                    std::make_tuple(legate::complex64(), legate::Type::Code::COMPLEX64),
+                    std::make_tuple(legate::complex128(), legate::Type::Code::COMPLEX128)));
+
+INSTANTIATE_TEST_SUITE_P(
+  TypeUnit,
+  PrimitiveTypeFeatureTest,
+  ::testing::Values(
+    std::make_tuple(legate::null_type(), legate::Type::Code::NIL, "null_type", 0, 0),
+    std::make_tuple(legate::bool_(), legate::Type::Code::BOOL, "bool", sizeof(bool), alignof(bool)),
+    std::make_tuple(
+      legate::int8(), legate::Type::Code::INT8, "int8", sizeof(std::int8_t), alignof(std::int8_t)),
+    std::make_tuple(legate::int16(),
+                    legate::Type::Code::INT16,
+                    "int16",
+                    sizeof(std::int16_t),
+                    alignof(std::int16_t)),
+    std::make_tuple(legate::int32(),
+                    legate::Type::Code::INT32,
+                    "int32",
+                    sizeof(std::int32_t),
+                    alignof(std::int32_t)),
+    std::make_tuple(legate::int64(),
+                    legate::Type::Code::INT64,
+                    "int64",
+                    sizeof(std::int64_t),
+                    alignof(std::int64_t)),
+    std::make_tuple(legate::uint8(),
+                    legate::Type::Code::UINT8,
+                    "uint8",
+                    sizeof(std::uint8_t),
+                    alignof(std::uint8_t)),
+    std::make_tuple(legate::uint16(),
+                    legate::Type::Code::UINT16,
+                    "uint16",
+                    sizeof(std::uint16_t),
+                    alignof(std::uint16_t)),
+    std::make_tuple(legate::uint32(),
+                    legate::Type::Code::UINT32,
+                    "uint32",
+                    sizeof(std::uint32_t),
+                    alignof(std::uint32_t)),
+    std::make_tuple(legate::uint64(),
+                    legate::Type::Code::UINT64,
+                    "uint64",
+                    sizeof(std::uint64_t),
+                    alignof(std::uint64_t)),
+    std::make_tuple(
+      legate::float16(), legate::Type::Code::FLOAT16, "float16", sizeof(__half), alignof(__half)),
+    std::make_tuple(
+      legate::float32(), legate::Type::Code::FLOAT32, "float32", sizeof(float), alignof(float)),
+    std::make_tuple(
+      legate::float64(), legate::Type::Code::FLOAT64, "float64", sizeof(double), alignof(double)),
+    std::make_tuple(legate::complex64(),
+                    legate::Type::Code::COMPLEX64,
+                    "complex64",
+                    sizeof(complex<float>),
+                    alignof(complex<float>)),
+    std::make_tuple(legate::complex128(),
+                    legate::Type::Code::COMPLEX128,
+                    "complex128",
+                    sizeof(complex<double>),
+                    alignof(complex<double>))));
+
+INSTANTIATE_TEST_SUITE_P(TypeUnit,
+                         BinaryTypeTest,
+                         ::testing::Values(123, 45, 0, 0xFFFFF),
+                         ::testing::PrintToStringParamName{});
+
+INSTANTIATE_TEST_SUITE_P(
+  TypeUnit,
+  FixedArrayTypeTest,
+  ::testing::Values(
+    std::make_tuple(legate::uint64(), 20, "uint64[20]") /* element type is a primitive type */,
+    std::make_tuple(legate::fixed_array_type(legate::uint16(), 10),
+                    10,
+                    "uint16[10][10]") /* element type is not a primitive type */,
+    std::make_tuple(legate::float64(), 256, "float64[256]") /* // N > 0xFFU */));
+
+INSTANTIATE_TEST_SUITE_P(
+  TypeUnit,
+  StructTypeTest,
+  ::testing::Values(
+    std::make_tuple(
+      legate::struct_type(true, legate::int16(), legate::bool_(), legate::float64()),
+      std::vector<legate::Type>({legate::int16(), legate::bool_(), legate::float64()}),
+      true,
+      16,
+      sizeof(double),
+      "{int16:0,bool:2,float64:8}"),
+    std::make_tuple(
+      legate::struct_type(
+        std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()}), true),
+      std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()}),
+      true,
+      24,
+      sizeof(double),
+      "{bool:0,float64:8,int16:16}"),
+    std::make_tuple(
+      legate::struct_type(false, legate::int16(), legate::bool_(), legate::float64()),
+      std::vector<legate::Type>({legate::int16(), legate::bool_(), legate::float64()}),
+      false,
+      sizeof(int16_t) + sizeof(bool) + sizeof(double),
+      sizeof(bool),
+      "{int16:0,bool:2,float64:3}"),
+    std::make_tuple(
+      legate::struct_type(
+        std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()})),
+      std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()}),
+      false,
+      sizeof(int16_t) + sizeof(bool) + sizeof(double),
+      sizeof(bool),
+      "{bool:0,float64:1,int16:9}")));
+
+INSTANTIATE_TEST_SUITE_P(TypeUnit, PointTypeTest, ::testing::Values(1, 2, 3, LEGATE_MAX_DIM));
+
+INSTANTIATE_TEST_SUITE_P(TypeUnit, RectTypeTest, ::testing::Values(1, 2, 3, LEGATE_MAX_DIM));
+
+INSTANTIATE_TEST_SUITE_P(
+  TypeUnit,
+  ListTypeTest,
+  ::testing::Values(std::make_tuple(legate::bool_(), "list(bool)"),
+                    std::make_tuple(legate::int8(), "list(int8)"),
+                    std::make_tuple(legate::int16(), "list(int16)"),
+                    std::make_tuple(legate::int32(), "list(int32)"),
+                    std::make_tuple(legate::int64(), "list(int64)"),
+                    std::make_tuple(legate::uint8(), "list(uint8)"),
+                    std::make_tuple(legate::uint16(), "list(uint16)"),
+                    std::make_tuple(legate::uint32(), "list(uint32)"),
+                    std::make_tuple(legate::uint64(), "list(uint64)"),
+                    std::make_tuple(legate::float16(), "list(float16)"),
+                    std::make_tuple(legate::float32(), "list(float32)"),
+                    std::make_tuple(legate::float64(), "list(float64)"),
+                    std::make_tuple(legate::complex64(), "list(complex64)"),
+                    std::make_tuple(legate::complex128(), "list(complex128)"),
+                    std::make_tuple(legate::struct_type(true, legate::bool_(), legate::int32()),
+                                    "list({bool:0,int32:4})"),
+                    std::make_tuple(legate::struct_type(false, legate::bool_(), legate::int32()),
+                                    "list({bool:0,int32:1})"),
+                    std::make_tuple(legate::point_type(1), "list(int64[1])"),
+                    std::make_tuple(legate::rect_type(2), "list({int64[2]:0,int64[2]:16})")));
+
+INSTANTIATE_TEST_SUITE_P(TypeUnit,
+                         UidFixedArrayTypeTest,
+                         ::testing::Combine(::testing::Values(legate::bool_(),
+                                                              legate::int8(),
+                                                              legate::int16(),
+                                                              legate::int32(),
+                                                              legate::int64(),
+                                                              legate::uint8(),
+                                                              legate::uint16(),
+                                                              legate::uint32(),
+                                                              legate::uint64(),
+                                                              legate::float16(),
+                                                              legate::float32(),
+                                                              legate::float64(),
+                                                              legate::complex64(),
+                                                              legate::complex128()),
+                                            ::testing::Values(1, 2, 3, LEGATE_MAX_DIM)));
+
+INSTANTIATE_TEST_SUITE_P(TypeUnit,
+                         UidTest,
+                         ::testing::Values(legate::bool_(),
+                                           legate::int8(),
+                                           legate::int16(),
+                                           legate::int32(),
+                                           legate::int64(),
+                                           legate::uint8(),
+                                           legate::uint16(),
+                                           legate::uint32(),
+                                           legate::uint64(),
+                                           legate::float16(),
+                                           legate::float32(),
+                                           legate::float64(),
+                                           legate::complex64(),
+                                           legate::complex128()));
+
+INSTANTIATE_TEST_SUITE_P(
+  TypeUnit,
+  ReductionOperatorTest,
+  ::testing::Combine(
+    ::testing::Values(
+      legate::string_type(),
+      legate::fixed_array_type(legate::int64(), 10),
+      legate::struct_type(true, legate::int64(), legate::bool_(), legate::float64()),
+      legate::struct_type(false, legate::int64(), legate::bool_(), legate::float64()),
+      legate::binary_type(10)),
+    ::testing::Values(legate::ReductionOpKind::ADD,
+                      legate::ReductionOpKind::MUL,
+                      legate::ReductionOpKind::MAX,
+                      legate::ReductionOpKind::MIN,
+                      legate::ReductionOpKind::OR,
+                      legate::ReductionOpKind::AND,
+                      legate::ReductionOpKind::XOR)));
+
+INSTANTIATE_TEST_SUITE_P(TypeUnit,
+                         NegativeTypeTest,
+                         ::testing::Values(legate::Type::Code::FIXED_ARRAY,
+                                           legate::Type::Code::STRUCT,
+                                           legate::Type::Code::STRING,
+                                           legate::Type::Code::LIST,
+                                           legate::Type::Code::BINARY));
+
+INSTANTIATE_TEST_SUITE_P(TypeUnit, NegativeDimTest, ::testing::Values(-1, 0, LEGATE_MAX_DIM + 1));
+
 // NOLINTBEGIN(readability-magic-numbers)
 
 constexpr auto GLOBAL_OP_ID = legate::GlobalRedopID{0x1F};
 
-const std::array<legate::Type, 13>& PRIMITIVE_TYPE()
-{
-  static const std::array<legate::Type, 13> arr = {legate::bool_(),
-                                                   legate::int16(),
-                                                   legate::int32(),
-                                                   legate::int64(),
-                                                   legate::uint8(),
-                                                   legate::uint16(),
-                                                   legate::uint32(),
-                                                   legate::uint64(),
-                                                   legate::float16(),
-                                                   legate::float32(),
-                                                   legate::float64(),
-                                                   legate::complex64(),
-                                                   legate::complex128()};
-
-  return arr;
-}
-
-template <typename T>
-struct alignment_of : std::integral_constant<std::size_t, alignof(T)> {};
-
-template <>
-struct alignment_of<void> : std::integral_constant<std::size_t, 0> {};
-
-template <typename T>
 void test_primitive_type(const legate::Type& type,
+                         const legate::Type::Code& code,
                          const std::string& type_string,
-                         std::uint32_t size)
+                         std::uint32_t size,
+                         std::uint32_t alignment)
 {
-  EXPECT_EQ(type.code(), legate::type_code_of_v<T>);
-  EXPECT_EQ(type.size(), size);
-  // need extra layer of template indirection since alignof(void) (for null_type) is illegal
-  EXPECT_EQ(type.alignment(), alignment_of<T>::value);
-  EXPECT_FALSE(type.variable_size());
-  EXPECT_TRUE(type.is_primitive());
-  EXPECT_EQ(type.to_string(), type_string);
+  ASSERT_EQ(type.code(), code);
+  ASSERT_EQ(type.size(), size);
+  ASSERT_EQ(type.alignment(), alignment);
+  ASSERT_FALSE(type.variable_size());
+  ASSERT_TRUE(type.is_primitive());
+  ASSERT_EQ(type.to_string(), type_string);
 
   const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
 
-  EXPECT_EQ(other, type);
+  ASSERT_EQ(other, type);
 }
 
 void test_string_type(const legate::Type& type)
 {
-  EXPECT_EQ(type.code(), legate::Type::Code::STRING);
-  EXPECT_THROW(static_cast<void>(type.size()), std::invalid_argument);
-  EXPECT_EQ(type.alignment(), alignof(std::max_align_t));
-  EXPECT_TRUE(type.variable_size());
-  EXPECT_FALSE(type.is_primitive());
-  EXPECT_EQ(type.to_string(), "string");
+  ASSERT_EQ(type.code(), legate::Type::Code::STRING);
+  ASSERT_THROW(static_cast<void>(type.size()), std::invalid_argument);
+  ASSERT_EQ(type.alignment(), alignof(std::max_align_t));
+  ASSERT_TRUE(type.variable_size());
+  ASSERT_FALSE(type.is_primitive());
+  ASSERT_EQ(type.to_string(), "string");
 
   const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
 
-  EXPECT_EQ(other, type);
+  ASSERT_EQ(other, type);
 }
 
 void test_binary_type(const legate::Type& type, std::uint32_t size)
 {
-  EXPECT_EQ(type.code(), legate::Type::Code::BINARY);
-  EXPECT_EQ(type.size(), size);
-  EXPECT_EQ(type.alignment(), alignof(std::max_align_t));
-  EXPECT_FALSE(type.variable_size());
-  EXPECT_FALSE(type.is_primitive());
-  EXPECT_EQ(type.to_string(), fmt::format("binary({})", size));
+  ASSERT_EQ(type.code(), legate::Type::Code::BINARY);
+  ASSERT_EQ(type.size(), size);
+  ASSERT_EQ(type.alignment(), alignof(std::max_align_t));
+  ASSERT_FALSE(type.variable_size());
+  ASSERT_FALSE(type.is_primitive());
+  ASSERT_EQ(type.to_string(), fmt::format("binary({})", size));
 
   const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
 
-  EXPECT_EQ(other, type);
+  ASSERT_EQ(other, type);
 }
 
 void test_fixed_array_type(const legate::Type& type,
@@ -102,20 +351,21 @@ void test_fixed_array_type(const legate::Type& type,
                            std::uint32_t N,
                            const std::string& to_string)
 {
-  EXPECT_EQ(type.code(), legate::Type::Code::FIXED_ARRAY);
-  EXPECT_EQ(type.size(), element_type.size() * N);
-  EXPECT_EQ(type.alignment(), element_type.alignment());
-  EXPECT_FALSE(type.variable_size());
-  EXPECT_FALSE(type.is_primitive());
-  EXPECT_EQ(type.to_string(), to_string);
+  ASSERT_EQ(type.code(), legate::Type::Code::FIXED_ARRAY);
+  ASSERT_EQ(type.size(), element_type.size() * N);
+  ASSERT_EQ(type.alignment(), element_type.alignment());
+  ASSERT_FALSE(type.variable_size());
+  ASSERT_FALSE(type.is_primitive());
+  ASSERT_EQ(type.to_string(), to_string);
 
   const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
 
-  EXPECT_EQ(other, type);
+  ASSERT_EQ(other, type);
 
   auto fixed_array_type = type.as_fixed_array_type();
-  EXPECT_EQ(fixed_array_type.num_elements(), N);
-  EXPECT_EQ(fixed_array_type.element_type(), element_type);
+
+  ASSERT_EQ(fixed_array_type.num_elements(), N);
+  ASSERT_EQ(fixed_array_type.element_type(), element_type);
 }
 
 void test_struct_type(const legate::Type& type,
@@ -123,410 +373,349 @@ void test_struct_type(const legate::Type& type,
                       std::uint32_t size,
                       std::uint32_t alignment,
                       const std::string& to_string,
-                      const std::vector<legate::Type>& field_types,
-                      const std::vector<std::uint32_t>& /*offsets*/)
+                      const std::vector<legate::Type>& field_types)
 {
-  EXPECT_EQ(type.code(), legate::Type::Code::STRUCT);
-  EXPECT_EQ(type.size(), size);
-  EXPECT_EQ(type.alignment(), alignment);
-  EXPECT_FALSE(type.variable_size());
-  EXPECT_FALSE(type.is_primitive());
+  ASSERT_EQ(type.code(), legate::Type::Code::STRUCT);
+  ASSERT_EQ(type.size(), size);
+  ASSERT_EQ(type.alignment(), alignment);
+  ASSERT_FALSE(type.variable_size());
+  ASSERT_FALSE(type.is_primitive());
 
   const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
 
-  EXPECT_EQ(other, type);
+  ASSERT_EQ(other, type);
 
   auto struct_type = type.as_struct_type();
-  EXPECT_EQ(type.to_string(), to_string);
-  EXPECT_EQ(struct_type.aligned(), aligned);
-  EXPECT_EQ(struct_type.num_fields(), field_types.size());
+
+  ASSERT_EQ(type.to_string(), to_string);
+  ASSERT_EQ(struct_type.aligned(), aligned);
+  ASSERT_EQ(struct_type.num_fields(), field_types.size());
   for (std::uint32_t idx = 0; idx < field_types.size(); ++idx) {
-    EXPECT_EQ(struct_type.field_type(idx), field_types.at(idx));
+    ASSERT_EQ(struct_type.field_type(idx), field_types.at(idx));
   }
 }
 
 void test_list_type(const legate::Type& element_type, const std::string& to_string)
 {
   auto type = legate::list_type(element_type);
-  EXPECT_EQ(type.code(), legate::Type::Code::LIST);
-  EXPECT_THROW((void)type.size(), std::invalid_argument);
-  EXPECT_EQ(type.alignment(), 0);
-  EXPECT_TRUE(type.variable_size());
-  EXPECT_FALSE(type.is_primitive());
+
+  ASSERT_EQ(type.code(), legate::Type::Code::LIST);
+  ASSERT_THROW((void)type.size(), std::invalid_argument);
+  ASSERT_EQ(type.alignment(), 0);
+  ASSERT_TRUE(type.variable_size());
+  ASSERT_FALSE(type.is_primitive());
 
   const legate::Type other{type};  // NOLINT(performance-unnecessary-copy-initialization)
 
-  EXPECT_EQ(other, type);
+  ASSERT_EQ(other, type);
 
   auto list_type = type.as_list_type();
-  EXPECT_EQ(list_type.to_string(), to_string);
-  EXPECT_EQ(list_type.element_type(), element_type);
-}
 
-void test_reduction_op(const legate::Type& type)
-{
-  type.record_reduction_operator(static_cast<std::int32_t>(legate::ReductionOpKind::ADD),
-                                 GLOBAL_OP_ID);
-  EXPECT_EQ(type.find_reduction_operator(static_cast<std::int32_t>(legate::ReductionOpKind::ADD)),
-            GLOBAL_OP_ID);
-  EXPECT_EQ(type.find_reduction_operator(legate::ReductionOpKind::ADD), GLOBAL_OP_ID);
-
-  // repeat records for same type
-  EXPECT_THROW(type.record_reduction_operator(
-                 static_cast<std::int32_t>(legate::ReductionOpKind::ADD), GLOBAL_OP_ID),
-               std::invalid_argument);
+  ASSERT_EQ(list_type.to_string(), to_string);
+  ASSERT_EQ(list_type.element_type(), element_type);
 }
 
 }  // namespace
 
-TEST_F(TypeUnit, PrimitiveType)
+TEST_P(PrimitiveTypeFeatureTest, Basic)
 {
-  test_primitive_type<void>(legate::null_type(), "null_type", 0);
-  test_primitive_type<bool>(legate::bool_(), "bool", sizeof(bool));
-  test_primitive_type<std::int8_t>(legate::int8(), "int8", sizeof(int8_t));
-  test_primitive_type<std::int16_t>(legate::int16(), "int16", sizeof(int16_t));
-  test_primitive_type<std::int32_t>(legate::int32(), "int32", sizeof(int32_t));
-  test_primitive_type<std::int64_t>(legate::int64(), "int64", sizeof(int64_t));
-  test_primitive_type<std::uint8_t>(legate::uint8(), "uint8", sizeof(uint8_t));
-  test_primitive_type<std::uint16_t>(legate::uint16(), "uint16", sizeof(uint16_t));
-  test_primitive_type<std::uint32_t>(legate::uint32(), "uint32", sizeof(uint32_t));
-  test_primitive_type<std::uint64_t>(legate::uint64(), "uint64", sizeof(uint64_t));
-  test_primitive_type<__half>(legate::float16(), "float16", sizeof(__half));
-  test_primitive_type<float>(legate::float32(), "float32", sizeof(float));
-  test_primitive_type<double>(legate::float64(), "float64", sizeof(double));
-  test_primitive_type<complex<float>>(legate::complex64(), "complex64", sizeof(complex<float>));
-  test_primitive_type<complex<double>>(legate::complex128(), "complex128", sizeof(complex<double>));
+  const auto [type, code, to_string, size, alignment] = GetParam();
 
-  EXPECT_EQ(legate::null_type(), legate::primitive_type(legate::Type::Code::NIL));
-  EXPECT_EQ(legate::bool_(), legate::primitive_type(legate::Type::Code::BOOL));
-  EXPECT_EQ(legate::int8(), legate::primitive_type(legate::Type::Code::INT8));
-  EXPECT_EQ(legate::int16(), legate::primitive_type(legate::Type::Code::INT16));
-  EXPECT_EQ(legate::int32(), legate::primitive_type(legate::Type::Code::INT32));
-  EXPECT_EQ(legate::int64(), legate::primitive_type(legate::Type::Code::INT64));
-  EXPECT_EQ(legate::uint8(), legate::primitive_type(legate::Type::Code::UINT8));
-  EXPECT_EQ(legate::uint16(), legate::primitive_type(legate::Type::Code::UINT16));
-  EXPECT_EQ(legate::uint32(), legate::primitive_type(legate::Type::Code::UINT32));
-  EXPECT_EQ(legate::uint64(), legate::primitive_type(legate::Type::Code::UINT64));
-  EXPECT_EQ(legate::float16(), legate::primitive_type(legate::Type::Code::FLOAT16));
-  EXPECT_EQ(legate::float32(), legate::primitive_type(legate::Type::Code::FLOAT32));
-  EXPECT_EQ(legate::float64(), legate::primitive_type(legate::Type::Code::FLOAT64));
-  EXPECT_EQ(legate::complex64(), legate::primitive_type(legate::Type::Code::COMPLEX64));
-  EXPECT_EQ(legate::complex128(), legate::primitive_type(legate::Type::Code::COMPLEX128));
+  test_primitive_type(type, code, to_string, size, alignment);
+}
 
-  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::FIXED_ARRAY),
-               std::invalid_argument);
-  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::STRUCT), std::invalid_argument);
-  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::STRING), std::invalid_argument);
-  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::LIST), std::invalid_argument);
-  EXPECT_THROW((void)legate::primitive_type(legate::Type::Code::BINARY), std::invalid_argument);
+TEST_P(PrimitiveTypeTest, Basic)
+{
+  const auto [type, code] = GetParam();
+
+  ASSERT_EQ(type, legate::primitive_type(code));
+}
+
+TEST_P(NegativeTypeTest, PrimitiveType)
+{
+  ASSERT_THROW(static_cast<void>(legate::primitive_type(GetParam())), std::invalid_argument);
 }
 
 TEST_F(TypeUnit, StringType) { test_string_type(legate::string_type()); }
 
-class Binary : public DefaultFixture, public ::testing::WithParamInterface<std::uint32_t> {};
-
-INSTANTIATE_TEST_SUITE_P(TypeUnit,
-                         Binary,
-                         ::testing::Values(123, 45, 0, 0xFFFFF),
-                         ::testing::PrintToStringParamName{});
-
-TEST_P(Binary, Basic) { test_binary_type(legate::binary_type(GetParam()), GetParam()); }
+TEST_P(BinaryTypeTest, Basic) { test_binary_type(legate::binary_type(GetParam()), GetParam()); }
 
 TEST_F(TypeUnit, BinaryTypeBad)
 {
-  EXPECT_THROW((void)legate::binary_type(0xFFFFF + 1), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(legate::binary_type(0xFFFFF + 1)), std::out_of_range);
 }
 
-TEST_F(TypeUnit, FixedArrayType)
+TEST_P(FixedArrayTypeTest, Basic)
 {
-  // element type is a primitive type
-  {
-    constexpr std::uint32_t N = 10;
-    auto element_type         = legate::uint64();
-    auto fixed_array_type     = legate::fixed_array_type(element_type, N);
-    test_fixed_array_type(fixed_array_type, element_type, N, "uint64[10]");
-  }
+  const auto [element_type, size, to_string] = GetParam();
+  auto fixed_array_type                      = legate::fixed_array_type(element_type, size);
 
-  // element type is not a primitive type
-  {
-    constexpr std::uint32_t N = 10;
-    auto element_type         = legate::fixed_array_type(legate::uint16(), N);
-    auto fixed_array_type     = legate::fixed_array_type(element_type, N);
-    test_fixed_array_type(fixed_array_type, element_type, N, "uint16[10][10]");
-  }
+  test_fixed_array_type(fixed_array_type, element_type, size, to_string);
+}
 
-  // N > 0xFFU
-  {
-    constexpr std::uint32_t N = 256;
-    auto element_type         = legate::float64();
-    auto fixed_array_type     = legate::fixed_array_type(element_type, N);
-    test_fixed_array_type(fixed_array_type, element_type, N, "float64[256]");
-  }
-
+TEST_F(TypeUnit, FixedArrayTypeZeroSize)
+{
   // N = 0
-  EXPECT_NO_THROW((void)legate::fixed_array_type(legate::int64(), 0));
+  ASSERT_NO_THROW(static_cast<void>(legate::fixed_array_type(legate::int64(), 0)));
+}
 
+TEST_F(TypeUnit, FixedArrayTypeBadType)
+{
   // element type has variable size
-  EXPECT_THROW((void)legate::fixed_array_type(legate::string_type(), 10), std::invalid_argument);
-
-  // invalid casts
-  EXPECT_THROW((void)legate::uint32().as_fixed_array_type(), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(legate::fixed_array_type(legate::string_type(), 10)),
+               std::invalid_argument);
 }
 
-TEST_F(TypeUnit, StructType)
+TEST_F(TypeUnit, FixedArrayTypeBadCast)
 {
-  // aligned
-  {
-    const auto type =
-      legate::struct_type(true, legate::int16(), legate::bool_(), legate::float64());
-    const std::vector<legate::Type> field_types = {
-      legate::int16(), legate::bool_(), legate::float64()};
-    const std::vector<std::uint32_t> offsets = {0, 2, 8};
-    constexpr auto size                      = 16;  //  size = 8 (std::int16_t bool) + 8 (double)
+  // invalid casts
+  ASSERT_THROW(static_cast<void>(legate::uint32().as_fixed_array_type()), std::invalid_argument);
+}
 
-    test_struct_type(
-      type, true, size, sizeof(double), "{int16:0,bool:2,float64:8}", field_types, offsets);
-  }
+TEST_P(StructTypeTest, Basic)
+{
+  const auto [type, field_types, align, total_size, alignment, to_string] = GetParam();
 
-  // aligned
-  {
-    const std::vector<legate::Type> field_types = {
-      legate::bool_(), legate::float64(), legate::int16()};
-    const auto type                          = legate::struct_type(field_types, true);
-    const std::vector<std::uint32_t> offsets = {0, 8, 16};
-    constexpr auto size = 24;  // size: 24 = 8 (bool) + 8 (double) + 8 (int16_t)
+  test_struct_type(type, align, total_size, alignment, to_string, field_types);
+}
 
-    test_struct_type(
-      type, true, size, sizeof(double), "{bool:0,float64:8,int16:16}", field_types, offsets);
-  }
-
-  // not aligned
-  {
-    const auto type =
-      legate::struct_type(false, legate::int16(), legate::bool_(), legate::float64());
-    const std::vector<legate::Type> field_types = {
-      legate::int16(), legate::bool_(), legate::float64()};
-    const std::vector<std::uint32_t> offsets = {0, 2, 3};
-    constexpr auto size                      = sizeof(int16_t) + sizeof(bool) + sizeof(double);
-
-    test_struct_type(type, false, size, 1, "{int16:0,bool:2,float64:3}", field_types, offsets);
-  }
-
-  // not aligned
-  {
-    const std::vector<legate::Type> field_types = {
-      legate::bool_(), legate::float64(), legate::int16()};
-    const auto type                          = legate::struct_type(field_types);
-    const std::vector<std::uint32_t> offsets = {0, 1, 9};
-    constexpr auto size                      = sizeof(int16_t) + sizeof(bool) + sizeof(double);
-
-    test_struct_type(type, false, size, 1, "{bool:0,float64:1,int16:9}", field_types, offsets);
-  }
-
+TEST_F(TypeUnit, StructTypeBadType)
+{
   // field type has variable size
-  EXPECT_THROW((void)legate::struct_type(true, legate::string_type(), legate::int16()),
+  ASSERT_THROW(static_cast<void>(legate::struct_type(true, legate::string_type(), legate::int16())),
                std::runtime_error);
-  EXPECT_THROW((void)legate::struct_type(false, legate::string_type()), std::runtime_error);
-  EXPECT_THROW((void)legate::struct_type(true), std::invalid_argument);
-  EXPECT_THROW((void)legate::struct_type(false), std::invalid_argument);
-
-  // invalid casts
-  EXPECT_THROW((void)legate::uint32().as_struct_type(), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(legate::struct_type(false, legate::string_type())),
+               std::runtime_error);
+  ASSERT_THROW(static_cast<void>(legate::struct_type(true)), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(legate::struct_type(false)), std::invalid_argument);
 }
 
-TEST_F(TypeUnit, PointType)
+TEST_F(TypeUnit, StructTypeBadCast)
 {
-  for (std::uint32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
-    auto type = legate::point_type(idx);
+  // invalid casts
+  ASSERT_THROW(static_cast<void>(legate::uint32().as_struct_type()), std::invalid_argument);
+}
 
-    test_fixed_array_type(type, legate::int64(), idx, fmt::format("int64[{}]", idx));
-    EXPECT_TRUE(legate::is_point_type(type, idx));
-  }
+TEST_P(PointTypeTest, Basic)
+{
+  const auto dim = GetParam();
+  auto type      = legate::point_type(dim);
 
-  // point type checks
-  EXPECT_FALSE(legate::is_point_type(legate::point_type(1), 2));
-  EXPECT_FALSE(legate::is_point_type(legate::point_type(1), 0));
-  EXPECT_FALSE(legate::is_point_type(legate::point_type(1), -1));
+  test_fixed_array_type(type, legate::int64(), dim, fmt::format("int64[{}]", dim));
+  ASSERT_TRUE(legate::is_point_type(type, dim));
+}
 
-  EXPECT_FALSE(legate::is_point_type(legate::rect_type(1), 1));
-  EXPECT_FALSE(legate::is_point_type(legate::string_type(), 4));
+TEST_F(TypeUnit, PointTypeSpecific)
+{
   // Note: There are several cases in the runtime where 64-bit integers need to be interpreted as 1D
   // points, so we need a more lenient type checking in those cases.
-  EXPECT_TRUE(legate::is_point_type(legate::int64(), 1));
-
-  // invalid dim
-  EXPECT_THROW((void)legate::point_type(-1), std::out_of_range);
-  EXPECT_THROW((void)legate::point_type(0), std::out_of_range);
-  EXPECT_THROW((void)legate::point_type(LEGATE_MAX_DIM + 1), std::out_of_range);
+  ASSERT_TRUE(legate::is_point_type(legate::int64(), 1));
 }
 
-TEST_F(TypeUnit, RectType)
+TEST_F(TypeUnit, PointTypeDimMismatch)
 {
-  for (std::uint32_t idx = 1; idx <= LEGATE_MAX_DIM; ++idx) {
-    const auto type                             = legate::rect_type(idx);
-    const std::vector<legate::Type> field_types = {legate::point_type(idx),
-                                                   legate::point_type(idx)};
-    const std::vector<std::uint32_t> offsets    = {0,
-                                                   static_cast<std::uint32_t>(sizeof(uint64_t)) * idx};
-    const auto full_size                        = (field_types.size() * sizeof(uint64_t)) * idx;
-    const auto to_string =
-      fmt::format("{{int64[{}]:0,int64[{}]:{}}}", idx, idx, idx * sizeof(std::int64_t));
-
-    test_struct_type(type, true, full_size, sizeof(uint64_t), to_string, field_types, offsets);
-    EXPECT_TRUE(legate::is_rect_type(type, idx));
-  }
-
-  // rect type checks
-  EXPECT_FALSE(legate::is_rect_type(legate::rect_type(1), 2));
-  EXPECT_FALSE(legate::is_rect_type(legate::rect_type(1), 0));
-  EXPECT_FALSE(legate::is_rect_type(legate::rect_type(1), -1));
-
-  EXPECT_FALSE(legate::is_rect_type(legate::point_type(1), 1));
-  EXPECT_FALSE(legate::is_rect_type(legate::fixed_array_type(legate::int64(), 1), 1));
-  EXPECT_FALSE(legate::is_rect_type(legate::int64(), 1));
-
-  // invalid dim
-  EXPECT_THROW((void)legate::rect_type(-1), std::out_of_range);
-  EXPECT_THROW((void)legate::rect_type(0), std::out_of_range);
-  EXPECT_THROW((void)legate::rect_type(LEGATE_MAX_DIM + 1), std::out_of_range);
+  ASSERT_FALSE(legate::is_point_type(legate::point_type(1), 2));
+  ASSERT_FALSE(legate::is_point_type(legate::point_type(1), 0));
+  ASSERT_FALSE(legate::is_point_type(legate::point_type(1), -1));
 }
 
-TEST_F(TypeUnit, ListType)
+TEST_P(NegativeDimTest, PointType)
 {
-  test_list_type(legate::bool_(), "list(bool)");
-  test_list_type(legate::int8(), "list(int8)");
-  test_list_type(legate::int16(), "list(int16)");
-  test_list_type(legate::int32(), "list(int32)");
-  test_list_type(legate::int64(), "list(int64)");
-  test_list_type(legate::uint8(), "list(uint8)");
-  test_list_type(legate::uint16(), "list(uint16)");
-  test_list_type(legate::uint32(), "list(uint32)");
-  test_list_type(legate::uint64(), "list(uint64)");
-  test_list_type(legate::float16(), "list(float16)");
-  test_list_type(legate::float32(), "list(float32)");
-  test_list_type(legate::float64(), "list(float64)");
-  test_list_type(legate::complex64(), "list(complex64)");
-  test_list_type(legate::complex128(), "list(complex128)");
-  test_list_type(legate::struct_type(true, legate::bool_(), legate::int32()),
-                 "list({bool:0,int32:4})");
-  test_list_type(legate::struct_type(false, legate::bool_(), legate::int32()),
-                 "list({bool:0,int32:1})");
-  test_list_type(legate::point_type(1), "list(int64[1])");
-  test_list_type(legate::rect_type(2), "list({int64[2]:0,int64[2]:16})");
+  ASSERT_THROW(static_cast<void>(legate::point_type(GetParam())), std::out_of_range);
+}
 
+TEST_F(TypeUnit, PointTypeBadType)
+{
+  ASSERT_FALSE(legate::is_point_type(legate::rect_type(1), 1));
+  ASSERT_FALSE(legate::is_point_type(legate::string_type(), LEGATE_MAX_DIM));
+}
+
+TEST_P(RectTypeTest, Basic)
+{
+  const auto dim                              = GetParam();
+  const auto type                             = legate::rect_type(dim);
+  const std::vector<legate::Type> field_types = {legate::point_type(dim), legate::point_type(dim)};
+  const auto full_size                        = (field_types.size() * sizeof(uint64_t)) * dim;
+  const auto to_string =
+    fmt::format("{{int64[{}]:0,int64[{}]:{}}}", dim, dim, dim * sizeof(std::int64_t));
+
+  test_struct_type(type, true, full_size, sizeof(uint64_t), to_string, field_types);
+  ASSERT_TRUE(legate::is_rect_type(type, dim));
+}
+
+TEST_F(TypeUnit, RectTypeDimMismatch)
+{
+  ASSERT_FALSE(legate::is_rect_type(legate::rect_type(1), 2));
+  ASSERT_FALSE(legate::is_rect_type(legate::rect_type(1), 0));
+  ASSERT_FALSE(legate::is_rect_type(legate::rect_type(1), -1));
+}
+
+TEST_P(NegativeDimTest, RectType)
+{
+  ASSERT_THROW(static_cast<void>(legate::rect_type(GetParam())), std::out_of_range);
+}
+
+TEST_F(TypeUnit, RectTypeBadType)
+{
+  ASSERT_FALSE(legate::is_rect_type(legate::point_type(1), 1));
+  ASSERT_FALSE(legate::is_rect_type(legate::fixed_array_type(legate::int64(), 1), 1));
+  ASSERT_FALSE(legate::is_rect_type(legate::int64(), 1));
+}
+
+TEST_P(ListTypeTest, Basic)
+{
+  const auto [type, to_string] = GetParam();
+
+  test_list_type(type, to_string);
+}
+
+TEST_F(TypeUnit, ListTypeBadType)
+{
   // variable size types
-  EXPECT_THROW((void)legate::list_type(legate::string_type()), std::runtime_error);
-  EXPECT_THROW((void)legate::list_type(legate::list_type(legate::uint32())), std::runtime_error);
-
-  // invald casts
-  EXPECT_THROW((void)legate::string_type().as_struct_type(), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(legate::list_type(legate::string_type())), std::runtime_error);
+  ASSERT_THROW(static_cast<void>(legate::list_type(legate::list_type(legate::uint32()))),
+               std::runtime_error);
 }
 
-TEST_F(TypeUnit, Uid)
+TEST_F(TypeUnit, ListTypeBadCast)
 {
-  // fixed array type
-  for (std::uint32_t idx = 0; idx < PRIMITIVE_TYPE().size(); ++idx) {
-    auto element_type     = PRIMITIVE_TYPE().at(idx);
-    const auto N          = idx + 1;
-    auto fixed_array_type = legate::fixed_array_type(element_type, N);
+  // invald casts
+  ASSERT_THROW(static_cast<void>(legate::string_type().as_struct_type()), std::invalid_argument);
+}
 
-    EXPECT_EQ(fixed_array_type.uid() & 0x00FF, static_cast<std::int32_t>(element_type.code()));
-    EXPECT_EQ(fixed_array_type.uid() >> 8, N);
-    EXPECT_EQ(fixed_array_type.as_fixed_array_type().num_elements(), N);
+TEST_P(UidFixedArrayTypeTest, PrimitiveType)
+{
+  const auto [element_type, dim] = GetParam();
+  auto fixed_array_type          = legate::fixed_array_type(element_type, dim);
 
-    EXPECT_NE(fixed_array_type.uid(), legate::string_type().uid());
-    EXPECT_NE(fixed_array_type.uid(), static_cast<std::int32_t>(element_type.code()));
+  ASSERT_EQ(fixed_array_type.uid() & 0x00FF, static_cast<std::int32_t>(element_type.code()));
+  ASSERT_EQ(fixed_array_type.uid() >> 8, dim);
+  ASSERT_EQ(fixed_array_type.as_fixed_array_type().num_elements(), dim);
 
-    auto same_array_type = legate::fixed_array_type(element_type, N);
-    EXPECT_EQ(fixed_array_type.uid(), same_array_type.uid());
+  ASSERT_NE(fixed_array_type.uid(), legate::string_type().uid());
+  ASSERT_NE(fixed_array_type.uid(), static_cast<std::int32_t>(element_type.code()));
 
-    auto diff_array_type = legate::fixed_array_type(element_type, N + 1);
-    EXPECT_NE(fixed_array_type.uid(), diff_array_type.uid());
+  auto same_array_type = legate::fixed_array_type(element_type, dim);
 
-    // N > 0xFFU
-    auto big_array_type = legate::fixed_array_type(element_type, 300);
-    EXPECT_TRUE(big_array_type.uid() >= 0x10000);
+  ASSERT_EQ(fixed_array_type.uid(), same_array_type.uid());
 
-    // array of array types
-    auto array_of_array_type1 =
-      legate::fixed_array_type(legate::fixed_array_type(element_type, N), N);
-    auto array_of_array_type2 =
-      legate::fixed_array_type(legate::fixed_array_type(element_type, N), N);
-    EXPECT_NE(array_of_array_type1.uid(), array_of_array_type2.uid());
+  auto diff_array_type = legate::fixed_array_type(element_type, (dim % LEGATE_MAX_DIM) + 1);
 
-    // array of point types
-    const auto dim            = (N % LEGATE_MAX_DIM) + 1;
-    auto array_of_point_type1 = legate::fixed_array_type(legate::point_type(dim), N);
-    auto array_of_point_type2 = legate::fixed_array_type(legate::point_type(dim), N);
-    EXPECT_NE(array_of_point_type1.uid(), array_of_point_type2.uid());
+  ASSERT_NE(fixed_array_type.uid(), diff_array_type.uid());
+}
 
-    // array of rect types
-    auto array_of_rect_type1 = legate::fixed_array_type(legate::rect_type(dim), N);
-    auto array_of_rect_type2 = legate::fixed_array_type(legate::rect_type(dim), N);
-    EXPECT_NE(array_of_rect_type1.uid(), array_of_rect_type2.uid());
+TEST_P(UidFixedArrayTypeTest, FixedArrayType)
+{
+  const auto [element_type, dim] = GetParam();
+  // array of array types
+  auto array_of_array_type1 =
+    legate::fixed_array_type(legate::fixed_array_type(element_type, dim), dim);
+  auto array_of_array_type2 =
+    legate::fixed_array_type(legate::fixed_array_type(element_type, dim), dim);
 
-    // array of struct types
-    auto array_of_struct_type1 =
-      legate::fixed_array_type(legate::struct_type(true, element_type), N);
-    auto array_of_struct_type2 =
-      legate::fixed_array_type(legate::struct_type(true, element_type), N);
-    EXPECT_NE(array_of_struct_type1.uid(), array_of_struct_type2.uid());
-  }
+  ASSERT_NE(array_of_array_type1.uid(), array_of_array_type2.uid());
+}
 
-  // string type
-  EXPECT_EQ(legate::string_type().uid(), static_cast<std::int32_t>(legate::Type::Code::STRING));
+TEST_P(UidFixedArrayTypeTest, PointType)
+{
+  const auto [element_type, dim] = GetParam();
+  // array of point types
+  auto array_of_point_type1 = legate::fixed_array_type(legate::point_type(dim), dim);
+  auto array_of_point_type2 = legate::fixed_array_type(legate::point_type(dim), dim);
 
-  // struct type
-  for (auto&& element_type : PRIMITIVE_TYPE()) {
-    auto struct_type1 = legate::struct_type(true, element_type);
-    auto struct_type2 = legate::struct_type(true, element_type);
+  ASSERT_NE(array_of_point_type1.uid(), array_of_point_type2.uid());
+}
 
-    EXPECT_NE(struct_type1.uid(), struct_type2.uid());
-    EXPECT_TRUE(struct_type1.uid() >= 0x10000);
-    EXPECT_TRUE(struct_type2.uid() >= 0x10000);
+TEST_P(UidFixedArrayTypeTest, RectType)
+{
+  const auto [element_type, dim] = GetParam();
+  // array of rect types
+  auto array_of_rect_type1 = legate::fixed_array_type(legate::rect_type(dim), dim);
+  auto array_of_rect_type2 = legate::fixed_array_type(legate::rect_type(dim), dim);
 
-    EXPECT_NE(struct_type1.uid(), legate::string_type().uid());
-    EXPECT_NE(struct_type2.uid(), legate::string_type().uid());
-    EXPECT_NE(struct_type1.uid(), static_cast<std::int32_t>(element_type.code()));
-    EXPECT_NE(struct_type2.uid(), static_cast<std::int32_t>(element_type.code()));
-  }
+  ASSERT_NE(array_of_rect_type1.uid(), array_of_rect_type2.uid());
+}
 
-  // list type
-  for (auto&& element_type : PRIMITIVE_TYPE()) {
-    auto list_type1 = legate::list_type(element_type);
-    auto list_type2 = legate::list_type(element_type);
+TEST_P(UidFixedArrayTypeTest, StructType)
+{
+  const auto [element_type, dim] = GetParam();
+  // array of struct types
+  auto array_of_struct_type1 =
+    legate::fixed_array_type(legate::struct_type(true, element_type), dim);
+  auto array_of_struct_type2 =
+    legate::fixed_array_type(legate::struct_type(true, element_type), dim);
 
-    EXPECT_NE(list_type1.uid(), list_type2.uid());
-    EXPECT_TRUE(list_type1.uid() >= 0x10000);
-    EXPECT_TRUE(list_type2.uid() >= 0x10000);
+  ASSERT_NE(array_of_struct_type1.uid(), array_of_struct_type2.uid());
+}
 
-    EXPECT_NE(list_type1.uid(), legate::string_type().uid());
-    EXPECT_NE(list_type2.uid(), legate::string_type().uid());
-    EXPECT_NE(list_type1.uid(), static_cast<std::int32_t>(element_type.code()));
-    EXPECT_NE(list_type2.uid(), static_cast<std::int32_t>(element_type.code()));
-  }
+TEST_P(UidTest, LargeSizeArray)
+{
+  // N > 0xFFU
+  auto big_array_type = legate::fixed_array_type(GetParam(), 300);
 
-  // binary type
+  ASSERT_TRUE(big_array_type.uid() >= 0x10000);
+}
+
+TEST_F(TypeUnit, StringTypeUid)
+{
+  ASSERT_EQ(legate::string_type().uid(), static_cast<std::int32_t>(legate::Type::Code::STRING));
+}
+
+TEST_P(UidTest, StructType)
+{
+  const auto element_type = GetParam();
+  auto struct_type1       = legate::struct_type(true, element_type);
+  auto struct_type2       = legate::struct_type(true, element_type);
+
+  ASSERT_NE(struct_type1.uid(), struct_type2.uid());
+  ASSERT_TRUE(struct_type1.uid() >= 0x10000);
+  ASSERT_TRUE(struct_type2.uid() >= 0x10000);
+
+  ASSERT_NE(struct_type1.uid(), legate::string_type().uid());
+  ASSERT_NE(struct_type2.uid(), legate::string_type().uid());
+  ASSERT_NE(struct_type1.uid(), static_cast<std::int32_t>(element_type.code()));
+  ASSERT_NE(struct_type2.uid(), static_cast<std::int32_t>(element_type.code()));
+}
+
+TEST_P(UidTest, ListType)
+{
+  const auto element_type = GetParam();
+  auto list_type1         = legate::list_type(element_type);
+  auto list_type2         = legate::list_type(element_type);
+
+  ASSERT_NE(list_type1.uid(), list_type2.uid());
+  ASSERT_TRUE(list_type1.uid() >= 0x10000);
+  ASSERT_TRUE(list_type2.uid() >= 0x10000);
+
+  ASSERT_NE(list_type1.uid(), legate::string_type().uid());
+  ASSERT_NE(list_type2.uid(), legate::string_type().uid());
+  ASSERT_NE(list_type1.uid(), static_cast<std::int32_t>(element_type.code()));
+  ASSERT_NE(list_type2.uid(), static_cast<std::int32_t>(element_type.code()));
+}
+
+TEST_F(TypeUnit, BinaryTypeUid)
+{
   auto binary_type      = legate::binary_type(678);
   auto same_binary_type = legate::binary_type(678);
   auto diff_binary_type = legate::binary_type(67);
 
-  EXPECT_EQ(binary_type.uid(), same_binary_type.uid());
-  EXPECT_NE(binary_type.uid(), diff_binary_type.uid());
+  ASSERT_EQ(binary_type.uid(), same_binary_type.uid());
+  ASSERT_NE(binary_type.uid(), diff_binary_type.uid());
 }
 
-TEST_F(TypeUnit, ReductionOperator)
+TEST_P(ReductionOperatorTest, Record)
 {
-  test_reduction_op(legate::string_type());
-  test_reduction_op(legate::fixed_array_type(legate::int64(), 10));
-  test_reduction_op(legate::struct_type(true, legate::int64(), legate::bool_(), legate::float64()));
-  test_reduction_op(
-    legate::struct_type(false, legate::int64(), legate::bool_(), legate::float64()));
-  test_reduction_op(legate::binary_type(10));
+  const auto [type, op_kind] = GetParam();
+
+  type.record_reduction_operator(static_cast<std::int32_t>(op_kind), GLOBAL_OP_ID);
+  ASSERT_EQ(type.find_reduction_operator(static_cast<std::int32_t>(op_kind)), GLOBAL_OP_ID);
+  ASSERT_EQ(type.find_reduction_operator(op_kind), GLOBAL_OP_ID);
+
+  // repeat records for same type
+  ASSERT_THROW(type.record_reduction_operator(static_cast<std::int32_t>(op_kind), GLOBAL_OP_ID),
+               std::invalid_argument);
 }
 
-// TEST_F(TypeUnit, TypeCodeOf)
-// {
 static_assert(legate::type_code_of_v<void> == legate::Type::Code::NIL);
 static_assert(legate::type_code_of_v<bool> == legate::Type::Code::BOOL);
 static_assert(legate::type_code_of_v<std::int8_t> == legate::Type::Code::INT8);
@@ -543,10 +732,7 @@ static_assert(legate::type_code_of_v<double> == legate::Type::Code::FLOAT64);
 static_assert(legate::type_code_of_v<complex<float>> == legate::Type::Code::COMPLEX64);
 static_assert(legate::type_code_of_v<complex<double>> == legate::Type::Code::COMPLEX128);
 static_assert(legate::type_code_of_v<std::string> == legate::Type::Code::STRING);
-// }
 
-// TEST_F(TypeUnit, TypeOf)
-// {
 static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::BOOL>, bool>);
 static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::INT8>, std::int8_t>);
 static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::INT16>, std::int16_t>);
@@ -567,10 +753,7 @@ static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::FIXED_ARRAY>,
 static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::STRUCT>, void>);
 static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::LIST>, void>);
 static_assert(std::is_same_v<legate::type_of_t<legate::Type::Code::BINARY>, void>);
-// }
 
-// TEST_F(TypeUnit, TypeUtils)
-// {
 // is_integral
 static_assert(legate::is_integral<legate::Type::Code::BOOL>::value);
 static_assert(legate::is_integral<legate::Type::Code::INT8>::value);
@@ -710,7 +893,6 @@ static_assert(!legate::is_complex_type<double>::value);
 
 static_assert(!legate::is_complex_type<void>::value);
 static_assert(!legate::is_complex_type<std::string>::value);
-// }
 
 // NOLINTEND(readability-magic-numbers)
 
