@@ -10,7 +10,6 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import enum
 import multiprocessing as mp
 import os
 import platform
@@ -20,8 +19,9 @@ import textwrap
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
 from collections.abc import Sequence
+from enum import Enum, IntEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Literal
 
 from ..cmake.cmake_flags import (
     CMAKE_VARIABLE,
@@ -100,7 +100,7 @@ _DEFAULT_FLAGS: Final = _make_default_flags()
 assert set(_CMAKE_BUILD_TYPE_MAP.values()) == set(_DEFAULT_FLAGS.keys())
 
 
-class LibraryLinkage(str, enum.Enum):
+class LibraryLinkage(str, Enum):
     SHARED = "shared"
     STATIC = "static"
 
@@ -173,18 +173,72 @@ if __name__ == "__main__":
 )
 
 
+DebugConfigureFlag = Literal["", "--debug-find", "--trace", "--trace-expand"]
+
+
+class DebugConfigureValue(IntEnum):
+    NONE = 0
+    DEBUG_FIND = 1
+    TRACE = 2
+    TRACE_EXPAND = 3
+
+    @classmethod
+    def help_str(cls) -> str:
+        possible_values = "\n".join(f"- {v}: {v.to_flag()!r}" for v in cls)
+        return f"Possible values:\n{possible_values}"
+
+    def to_flag(self) -> DebugConfigureFlag:
+        r"""Retrieve the corresponding CMake flag for the debug value.
+
+        Returns
+        -------
+        DebugConfigureFlag
+            The CMake flag corresponding to the debug value.
+
+        Raises
+        ------
+        ValueError
+            If the value of the current object is out of range.
+        """
+        match self:
+            case self.NONE:
+                return ""
+            case self.DEBUG_FIND:
+                return "--debug-find"
+            case self.TRACE:
+                return "--trace"
+            case self.TRACE_EXPAND:
+                return "--trace-expand"
+            case _:
+                raise ValueError(f"Enum value out of bounds: {self}")
+
+    def to_flags(self) -> list[DebugConfigureFlag]:
+        r"""Build a list of CMake flags corresponding to the current value.
+
+        Returns
+        -------
+        list[DebugConfigureFlag]
+            The CMake flags.
+        """
+        raw_flags = (f.to_flag() for f in type(self) if self >= f)
+        return [f for f in raw_flags if f]  # Need to weed out NONE
+
+
 class MainPackage(Package, ABC):
     DEBUG_CONFIGURE: Final = ConfigArgument(
         name=DEBUG_CONFIGURE_FLAG,
         spec=ArgSpec(
             dest=flag_to_dest(DEBUG_CONFIGURE_FLAG),
-            type=int,
-            default=0,
-            const=1,
+            type=DebugConfigureValue,
+            default=DebugConfigureValue.NONE,
+            const=DebugConfigureValue.DEBUG_FIND,
             nargs="?",
             help=(
                 "Enable additional debugging flags to help debug configure. "
-                "A higher value means more debug info."
+                'A higher value means more debug info. High levels "stack" '
+                "on top of lower levels. So if level '1' adds --foo, then '2' "
+                "adds --foo --bar, and so on. Must be >= 0. "
+                + DebugConfigureValue.help_str()
             ),
         ),
         ephemeral=True,

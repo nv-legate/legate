@@ -15,6 +15,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
+from ..package.main_package import DebugConfigureValue
 from ..util.exception import CMakeConfigureError, WrongOrderError
 from .cmake_flags import CMakeList
 
@@ -262,14 +263,10 @@ class CMaker:
             # These are the commands should go in the cmake_command.txt since
             # they are general for any invocation
             ret = ["--log-context", "--log-level=DEBUG"]
-            debug_value: int = manager.cl_args.debug_configure.value
-            if debug_value >= 1:
-                ret.append("--debug-find")
-            if debug_value >= 2:
-                ret.append("--trace")
-            if debug_value >= 3:
-                ret.append("--trace-expand")
-
+            debug_value: DebugConfigureValue = (
+                manager.cl_args.debug_configure.value
+            )
+            ret.extend(debug_value.to_flags())
             ret.extend(
                 (
                     f"-D{manager.project_arch_name}:STRING"
