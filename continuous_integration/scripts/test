@@ -190,20 +190,32 @@ run_test_or_analysis() {
               run_legate_tests "${CONDA_PREFIX}/bin/tests_with_gpus" "$@"
             }
 
-            set_ld_preload
-            run_sequential_tests
-            run_cpp_tests cpus 1
-            # Also do some multi-CPU testing
-            uname_value=$(uname)
-            if [[ "${uname_value}" == "Darwin" ]]; then
-              run_cpp_tests cpus 2
-            else
-              run_cpp_tests cpus 4
-            fi
+            function run_all_runtime_tests()
+            {
+              run_cpp_tests cpus 1
+              # Also do some multi-CPU testing
+              uname_value=$(uname)
+              if [[ "${uname_value}" == "Darwin" ]]; then
+                run_cpp_tests cpus 2
+              else
+                run_cpp_tests cpus 4
+              fi
 
-            [[ -f ${CONDA_PREFIX}/bin/tests_with_gpus ]] && {
-              run_gpu_tests gpus 1
+              if [[ -f ${CONDA_PREFIX}/bin/tests_with_gpus ]]; then
+                run_gpu_tests gpus 1
+              fi
             }
+
+            set_ld_preload
+
+            run_sequential_tests
+
+            export LEGATE_WINDOW_SIZE=1
+            run_all_runtime_tests
+
+            # Run tests with the scheduling window enabled too
+            export LEGATE_WINDOW_SIZE=1024
+            run_all_runtime_tests
             ;;
         *)
             echo "Invalid case: $1"

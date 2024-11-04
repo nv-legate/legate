@@ -126,8 +126,8 @@ class LegateRuntimeSettings(Settings):
     window_size: EnvOnlySetting[int] = EnvOnlySetting(
         "window_size",
         "LEGATE_WINDOW_SIZE",
-        default=1024,
-        test_default=1024,
+        default=1,
+        test_default=1,
         convert=convert_int,
         help="""
         How many Legate operations to accumulate before emitting to Legion.
