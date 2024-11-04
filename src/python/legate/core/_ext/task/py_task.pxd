@@ -36,6 +36,7 @@ cdef class PyTask:
         Library                     _library
         tuple[ConstraintProxy, ...] _constraints
         bool                        _throws
+        bool                        _has_side_effect
 
     cpdef _LocalTaskID complete_registration(self)
     cdef void _update_variant(self, func: UserFunction, VariantCode variant)

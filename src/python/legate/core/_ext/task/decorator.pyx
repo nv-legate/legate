@@ -41,6 +41,7 @@ def task(
     variants: VariantList = DEFAULT_VARIANT_LIST,
     constraints: Sequence[ConstraintProxy] | None = None,
     throws_exception: bool = False,
+    has_side_effect: bool = False,
     register: bool = True,
 ) -> Callable[[UserFunction], PyTask] | PyTask:
     r"""Convert a Python function to a Legate task.
@@ -58,6 +59,9 @@ def task(
     throws_exception : bool, False
         True if any variants of ``func`` throws an exception, False
         otherwise.
+    has_side_effect : bool, False
+        Whether the task has any global side-effects. See ``AutoTask.set_side_
+        effect()`` for further information.
     register : bool, True
         Whether to immediately complete registration of the task.
 
@@ -77,6 +81,7 @@ def task(
             variants=variants,
             constraints=constraints,
             throws_exception=throws_exception,
+            has_side_effect=has_side_effect,
             register=register,
         )
 

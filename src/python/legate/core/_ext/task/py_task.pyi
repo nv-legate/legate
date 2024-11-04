@@ -30,6 +30,7 @@ class PyTask:
         variants: VariantList,
         constraints: Sequence[ConstraintProxy] | None = None,
         throws_exception: bool = False,
+        has_side_effect: bool = False,
         invoker: VariantInvoker | None = None,
         library: Library | None = None,
         register: bool = True,

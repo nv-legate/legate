@@ -37,6 +37,7 @@ cdef class PyTask:
         variants: VariantList,
         constraints: Sequence[ConstraintProxy] | None = None,
         throws_exception: bool = False,
+        has_side_effect: bool = False,
         invoker: VariantInvoker | None = None,
         library: Library | None = None,
         register: bool = True,
@@ -55,6 +56,9 @@ cdef class PyTask:
         throws_exception
             True if any variants of ``func`` throws an exception, False
             otherwise.
+        has_side_effect : bool, False
+            Whether the task has any global side-effects. See
+            ``AutoTask.set_side_effect()`` for further information.
         invoker
             The invoker used to store the signature and marshall arguments to
             and manage invoking the user variants. Defaults to constructing the
@@ -117,6 +121,7 @@ cdef class PyTask:
         self._library = library
         self._constraints = constraints
         self._throws = throws_exception
+        self._has_side_effect = has_side_effect
         if register:
             self.complete_registration()
 
@@ -188,8 +193,8 @@ cdef class PyTask:
         cdef AutoTask task = get_legate_runtime().create_auto_task(
             self._library, self.task_id
         )
-        if self._throws:
-            task._handle.throws_exception(True)
+        task._handle.throws_exception(self._throws)
+        task.set_side_effect(self._has_side_effect)
         self._invoker.prepare_call(task, args, kwargs, self._constraints)
         task.lock()
         return task
