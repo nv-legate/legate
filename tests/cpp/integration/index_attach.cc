@@ -59,7 +59,7 @@ class AccessStoreFn {
     using T                    = legate::type_of_t<CODE>;
     auto p_store               = context.input(0).data();
     constexpr std::int32_t DIM = 1;
-    EXPECT_EQ(p_store.dim(), DIM);
+    ASSERT_EQ(p_store.dim(), DIM);
     auto shape = p_store.shape<DIM>();
 
     if (shape.empty()) {
@@ -70,9 +70,9 @@ class AccessStoreFn {
     auto rw_acc = p_store.read_write_accessor<T, DIM>();
 
     for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
-      EXPECT_EQ(rw_acc[*it], static_cast<T>(value));
+      ASSERT_EQ(rw_acc[*it], static_cast<T>(value));
       rw_acc[*it] = static_cast<T>(INIT_VALUE);
-      EXPECT_EQ(rw_acc[*it], static_cast<T>(INIT_VALUE));
+      ASSERT_EQ(rw_acc[*it], static_cast<T>(INIT_VALUE));
     }
   }
 };
@@ -127,11 +127,94 @@ void test_sysmem(void* ptr,
   auto ext_alloc =
     legate::ExternalAllocation::create_sysmem(ptr, bytes, read_only, std::move(deleter));
 
-  EXPECT_EQ(ext_alloc.size(), bytes);
-  EXPECT_EQ(ext_alloc.read_only(), read_only);
-  EXPECT_EQ(ext_alloc.ptr(), ptr);
-  EXPECT_EQ(ext_alloc.target(), legate::mapping::StoreTarget::SYSMEM);
+  ASSERT_EQ(ext_alloc.size(), bytes);
+  ASSERT_EQ(ext_alloc.read_only(), read_only);
+  ASSERT_EQ(ext_alloc.ptr(), ptr);
+  ASSERT_EQ(ext_alloc.target(), legate::mapping::StoreTarget::SYSMEM);
   test_access_by_task<T>(ext_alloc, value);
+}
+
+template <typename T>
+void do_test(T value)
+{
+  std::vector<T> alloc(TILE_SIZE, value);
+  constexpr std::size_t BYTES = TILE_SIZE * sizeof(T);
+
+  test_sysmem<T>(alloc.data(), value, BYTES, false);
+}
+
+void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
+{
+  if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) == 0) {
+    static_cast<void>(store_target);
+    return;
+  }
+
+#if LEGATE_DEFINED(LEGATE_USE_CUDA)
+  constexpr std::size_t BYTES = TILE_SIZE * sizeof(std::uint64_t);
+  std::vector<std::uint64_t> h_alloc(TILE_SIZE, INIT_VALUE);
+  void* d_alloc = nullptr;
+  auto deleter  = [](void* ptr) noexcept {
+    auto h_buffer      = std::make_unique<std::uint64_t[]>(BYTES);
+    void* raw_h_buffer = static_cast<void*>(h_buffer.get());
+
+    ASSERT_NE(raw_h_buffer, nullptr);
+    try {
+      CHECK_CUDA(cudaMemcpy(raw_h_buffer, ptr, BYTES, cudaMemcpyDeviceToHost));
+      // TODO(issue 464)
+      // ASSERT_EQ(*(static_cast<std::uint64_t*>(raw_h_buffer)), INIT_VALUE - 1);
+      CHECK_CUDA(cudaFree(ptr));
+    } catch (const std::exception& e) {
+      LEGATE_ABORT(e.what());
+    }
+  };
+
+  CHECK_CUDA(cudaMalloc(&d_alloc, BYTES));
+  CHECK_CUDA(cudaMemcpy(d_alloc, h_alloc.data(), BYTES, cudaMemcpyHostToDevice));
+
+  legate::ExternalAllocation ext_alloc;
+  switch (store_target) {
+    case legate::mapping::StoreTarget::FBMEM: {
+      ext_alloc =
+        legate::ExternalAllocation::create_fbmem(0, d_alloc, BYTES, false, std::move(deleter));
+      break;
+    }
+    case legate::mapping::StoreTarget::ZCMEM: {
+      ext_alloc =
+        legate::ExternalAllocation::create_zcmem(d_alloc, BYTES, false, std::move(deleter));
+      break;
+    }
+    default: {
+      CHECK_CUDA(cudaFree(d_alloc));
+      return;
+    }
+  }
+
+  ASSERT_EQ(ext_alloc.size(), BYTES);
+  ASSERT_FALSE(ext_alloc.read_only());
+  ASSERT_EQ(ext_alloc.ptr(), d_alloc);
+  ASSERT_EQ(ext_alloc.target(), store_target);
+
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(legate::Shape{TILE_SIZE}, legate::uint64(), ext_alloc);
+  auto p_store = store.get_physical_store();
+  auto shape   = p_store.shape<1>();
+
+  if (shape.empty()) {
+    return;
+  }
+
+  auto acc = p_store.read_write_accessor<std::uint64_t, 1>();
+
+  for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
+    // TODO(issue 464)
+    // ASSERT_EQ(acc[*it], INIT_VALUE);
+    // acc[*it] = INIT_VALUE - 1;
+    // ASSERT_EQ(acc[*it], INIT_VALUE - 1);
+  }
+
+  store.detach();
+#endif
 }
 
 }  // namespace
@@ -160,7 +243,7 @@ TEST_F(IndexAttach, CPU)
   auto shape   = p_store.shape<1>();
 
   for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], (static_cast<std::size_t>((*it)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
+    ASSERT_EQ(acc[*it], (static_cast<std::size_t>((*it)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
   }
 
   store.detach();
@@ -206,81 +289,78 @@ TEST_F(IndexAttach, GPU)
                           legate::tuple<std::uint64_t>{TILE_SIZE},
                           legate::int64(),
                           {{alloc1, legate::tuple<std::uint64_t>{runtime->node_id() * 2}},
-                           {alloc2, legate::tuple<std::uint64_t>{runtime->node_id() * 2 + 1}}});
+                           {alloc2, legate::tuple<std::uint64_t>{(runtime->node_id() * 2) + 1}}});
 
   auto p_store = store.get_physical_store();
   auto acc     = p_store.read_accessor<std::int64_t, 1>();
   auto shape   = p_store.shape<1>();
 
   for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-    EXPECT_EQ(acc[*it], (static_cast<std::size_t>((*it)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
+    ASSERT_EQ(acc[*it], (static_cast<std::size_t>((*it)[0]) / TILE_SIZE) % 2 == 0 ? VAL1 : VAL2);
   }
 
   store.detach();
 #endif
 }
 
-TEST_F(IndexAttach, NegativeAttach)
+TEST_F(IndexAttach, NegativeAttachSmallerStore)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  std::vector<std::int64_t> buf(TILE_SIZE - 1, 0);
+  auto alloc = legate::ExternalAllocation::create_sysmem(
+    buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
+
+  // Trying to attach a buffer smaller than what the sub-store requires
+  ASSERT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
+                                           legate::tuple<std::uint64_t>{TILE_SIZE},
+                                           legate::int64(),
+                                           {{alloc, legate::tuple<std::uint64_t>{0}}}),
+               std::invalid_argument);
+}
+
+TEST_F(IndexAttach, NegativeAttachNonexistStore)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  std::vector<std::int64_t> buf(TILE_SIZE, 0);
+  auto alloc = legate::ExternalAllocation::create_sysmem(
+    buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
+
+  // Trying to attach a buffer to a non-existent sub-store
+  ASSERT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
+                                           legate::tuple<std::uint64_t>{TILE_SIZE},
+                                           legate::int64(),
+                                           {{alloc, legate::tuple<std::uint64_t>{1}}}),
+               std::out_of_range);
+}
+
+TEST_F(IndexAttach, NegativeDuplicateAttach)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  std::vector<std::int64_t> buf(TILE_SIZE, 0);
+  auto alloc = legate::ExternalAllocation::create_sysmem(
+    buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
+
+  // Trying to attach multiple buffers to the same sub-store
+  ASSERT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
+                                           legate::tuple<std::uint64_t>{TILE_SIZE},
+                                           legate::int64(),
+                                           {{alloc, legate::tuple<std::uint64_t>{0}},
+                                            {alloc, legate::tuple<std::uint64_t>{0}}}),
+               std::invalid_argument);
+}
+
+TEST_F(IndexAttach, NegativeAttachVariableStore)
 {
   auto runtime = legate::Runtime::get_runtime();
 
-  {
-    std::vector<std::int64_t> buf(TILE_SIZE - 1, 0);
-    auto alloc = legate::ExternalAllocation::create_sysmem(
-      buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
+  // Trying to attach buffer with variable size to store
+  constexpr const char value[] = "hello world";
+  auto ext_alloc               = legate::ExternalAllocation::create_sysmem(value, sizeof(value));
 
-    // Trying to attach a buffer smaller than what the sub-store requires
-    EXPECT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
-                                             legate::tuple<std::uint64_t>{TILE_SIZE},
-                                             legate::int64(),
-                                             {{alloc, legate::tuple<std::uint64_t>{0}}}),
-                 std::invalid_argument);
-  }
-
-  {
-    std::vector<std::int64_t> buf(TILE_SIZE, 0);
-    auto alloc = legate::ExternalAllocation::create_sysmem(
-      buf.data(), buf.size() * sizeof(decltype(buf)::value_type));
-
-    // Trying to attach a buffer to a non-existent sub-store
-    EXPECT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
-                                             legate::tuple<std::uint64_t>{TILE_SIZE},
-                                             legate::int64(),
-                                             {{alloc, legate::tuple<std::uint64_t>{1}}}),
-                 std::out_of_range);
-
-    // Trying to attach multiple buffers to the same sub-store
-    EXPECT_THROW((void)runtime->create_store(legate::Shape{TILE_SIZE},
-                                             legate::tuple<std::uint64_t>{TILE_SIZE},
-                                             legate::int64(),
-                                             {{alloc, legate::tuple<std::uint64_t>{0}},
-                                              {alloc, legate::tuple<std::uint64_t>{0}}}),
-                 std::invalid_argument);
-  }
-
-  {
-    // Trying to attach buffer with variable size to store
-    constexpr const char value[] = "hello world";
-    auto ext_alloc               = legate::ExternalAllocation::create_sysmem(value, sizeof(value));
-
-    EXPECT_THROW(
-      (void)runtime->create_store(legate::Shape{sizeof(value)}, legate::string_type(), ext_alloc),
-      std::invalid_argument);
-  }
+  ASSERT_THROW(
+    (void)runtime->create_store(legate::Shape{sizeof(value)}, legate::string_type(), ext_alloc),
+    std::invalid_argument);
 }
-
-namespace {
-
-template <typename T>
-void do_test(T value)
-{
-  std::vector<T> alloc(TILE_SIZE, value);
-  constexpr std::size_t BYTES = TILE_SIZE * sizeof(T);
-
-  test_sysmem<T>(alloc.data(), value, BYTES, false);
-}
-
-}  // namespace
 
 TEST_F(IndexAttach, SysmemAccessByTask)
 {
@@ -296,97 +376,19 @@ TEST_F(IndexAttach, SysmemAccessByTask)
 TEST_F(IndexAttach, MutuableSysmemAccessByTask)
 {
   constexpr std::size_t BYTES = TILE_SIZE * sizeof(std::uint64_t);
-  void* buffer                = std::malloc(BYTES);
+  auto buffer                 = std::make_unique<std::uint64_t[]>(BYTES);
+  void* raw_buffer            = static_cast<void*>(buffer.get());
   auto deleter                = [](void* ptr) noexcept {
     auto ext_value_ptr = static_cast<std::uint64_t*>(ptr);
 
     // changes to the store in task propagated back to the attached allocation
-    EXPECT_EQ(*(ext_value_ptr), INIT_VALUE);
-    std::free(ptr);
+    ASSERT_EQ(*(ext_value_ptr), INIT_VALUE);
   };
 
-  EXPECT_NE(buffer, nullptr);
-  std::memset(buffer, 0, BYTES);
-  test_sysmem<std::uint64_t>(buffer, 0, BYTES, false, std::move(deleter));
+  ASSERT_NE(raw_buffer, nullptr);
+  std::memset(raw_buffer, 0, BYTES);
+  test_sysmem<std::uint64_t>(raw_buffer, 0, BYTES, false, std::move(deleter));
 }
-
-namespace {
-
-void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
-{
-  if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) == 0) {
-    static_cast<void>(store_target);
-    return;
-  }
-
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  constexpr std::size_t BYTES = TILE_SIZE * sizeof(std::uint64_t);
-  std::vector<std::uint64_t> h_alloc(TILE_SIZE, INIT_VALUE);
-  void* d_alloc = nullptr;
-  auto deleter  = [](void* ptr) noexcept {
-    void* h_buffer = std::malloc(BYTES);
-
-    EXPECT_NE(h_buffer, nullptr);
-    try {
-      CHECK_CUDA(cudaMemcpy(h_buffer, ptr, BYTES, cudaMemcpyDeviceToHost));
-      // TODO(issue 464)
-      // EXPECT_EQ(*(static_cast<std::uint64_t*>(h_buffer)), INIT_VALUE - 1);
-      CHECK_CUDA(cudaFree(ptr));
-    } catch (const std::exception& e) {
-      LEGATE_ABORT(e.what());
-    }
-    std::free(h_buffer);
-  };
-
-  CHECK_CUDA(cudaMalloc(&d_alloc, BYTES));
-  CHECK_CUDA(cudaMemcpy(d_alloc, h_alloc.data(), BYTES, cudaMemcpyHostToDevice));
-
-  legate::ExternalAllocation ext_alloc;
-  switch (store_target) {
-    case legate::mapping::StoreTarget::FBMEM: {
-      ext_alloc =
-        legate::ExternalAllocation::create_fbmem(0, d_alloc, BYTES, false, std::move(deleter));
-      break;
-    }
-    case legate::mapping::StoreTarget::ZCMEM: {
-      ext_alloc =
-        legate::ExternalAllocation::create_zcmem(d_alloc, BYTES, false, std::move(deleter));
-      break;
-    }
-    default: {
-      CHECK_CUDA(cudaFree(d_alloc));
-      return;
-    }
-  }
-
-  EXPECT_EQ(ext_alloc.size(), BYTES);
-  EXPECT_FALSE(ext_alloc.read_only());
-  EXPECT_EQ(ext_alloc.ptr(), d_alloc);
-  EXPECT_EQ(ext_alloc.target(), store_target);
-
-  auto runtime = legate::Runtime::get_runtime();
-  auto store   = runtime->create_store(legate::Shape{TILE_SIZE}, legate::uint64(), ext_alloc);
-  auto p_store = store.get_physical_store();
-  auto shape   = p_store.shape<1>();
-
-  if (shape.empty()) {
-    return;
-  }
-
-  auto acc = p_store.read_write_accessor<std::uint64_t, 1>();
-
-  for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
-    // TODO(issue 464)
-    // EXPECT_EQ(acc[*it], INIT_VALUE);
-    // acc[*it] = INIT_VALUE - 1;
-    // EXPECT_EQ(acc[*it], INIT_VALUE - 1);
-  }
-
-  store.detach();
-#endif
-}
-
-}  // namespace
 
 TEST_F(IndexAttach, MutableFbmemAccess)
 {
@@ -402,21 +404,22 @@ TEST_F(IndexAttach, InvalidCreation)
 {
   void* ptr = nullptr;
 
-  EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_sysmem(ptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_sysmem(ptr, 10)),
                std::invalid_argument);
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  EXPECT_THROW(legate::ExternalAllocation::create_zcmem(ptr, 10), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(ptr, 10)),
+               std::invalid_argument);
   if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) > 0) {
-    EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
+    ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
                  std::invalid_argument);
   } else {
-    EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
+    ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
                  std::out_of_range);
   }
 #else
-  EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(ptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_zcmem(ptr, 10)),
                std::runtime_error);
-  EXPECT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
+  ASSERT_THROW(static_cast<void>(legate::ExternalAllocation::create_fbmem(0, ptr, 10)),
                std::runtime_error);
 #endif
 }
