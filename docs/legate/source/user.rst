@@ -8,3 +8,4 @@ User Guide
   Installation <installation.rst>
   Usage <usage.rst>
   Using with Jupyter <jupyter.rst>
+  GASNet-based Installation <gasnet.rst>
