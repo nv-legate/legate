@@ -31,12 +31,7 @@ function(legate_configure_benchmark)
                         PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
                                    BUILD_RPATH_USE_ORIGIN TRUE
-                                   INSTALL_RPATH_USE_LINK_PATH TRUE
-                                   CXX_STANDARD ${CMAKE_CXX_STANDARD}
-                                   CXX_STANDARD_REQUIRED ON
-                                   # For std:: support of __int128_t. Can be removed once
-                                   # using cuda::std
-                                   CXX_EXTENSIONS ON)
+                                   INSTALL_RPATH_USE_LINK_PATH TRUE)
 
   set_property(TARGET ${_LEGATE_BM_TARGET} APPEND
                PROPERTY INSTALL_RPATH
@@ -45,10 +40,6 @@ function(legate_configure_benchmark)
   target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE legate::legate benchmark::benchmark)
 
   if(Legion_USE_CUDA)
-    set_target_properties(${_LEGATE_BM_TARGET}
-                          PROPERTIES CUDA_ARCHITECTURES ${Legion_CUDA_ARCH}
-                                     CUDA_STANDARD ${CMAKE_CUDA_STANDARD}
-                                     CUDA_STANDARD_REQUIRED ON)
     target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE NCCL::NCCL)
   endif()
 
