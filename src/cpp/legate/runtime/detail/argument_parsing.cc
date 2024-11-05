@@ -269,7 +269,7 @@ void autoconfigure_fbmem(const Realm::ModuleConfig* cuda,
 }
 
 void autoconfigure_omps(const Realm::ModuleConfig* openmp,
-                        const Realm::ModuleConfig* numa,
+                        const std::vector<std::size_t>& numa_mems,
                         std::int32_t gpus,
                         ScaledVar<std::int32_t>* omps)
 {
@@ -280,33 +280,21 @@ void autoconfigure_omps(const Realm::ModuleConfig* openmp,
   using T = std::decay_t<decltype(*omps)>::value_type;
 
   const auto auto_omps = [&]() -> T {
-    if (Config::auto_config && openmp != nullptr) {
-      if (gpus > 0) {
-        // match the number of GPUs, to ensure host offloading does not repartition
-        return gpus;
-      }
-      if (numa) {
-        // create one OpenMP group per NUMA node
-        std::size_t res_numa_nodes;
-
-        if (!numa->get_resource("numa_nodes", res_numa_nodes)) {
-          throw std::runtime_error{
-            "Auto-configuration failed: NUMA Realm module could not determine the number of NUMA "
-            "nodes"};
-        }
-        return static_cast<T>(res_numa_nodes);
-      }
-      throw std::runtime_error{
-        "Auto-configuration failed: Cannot load NUMA Realm module to determine the number of "
-        "NUMA nodes"};
+    if (!Config::auto_config || !openmp) {
+      return 0;  // don't allocate any OpenMP groups
     }
-    return 0;  // otherwise don't allocate any OpenMP groups
+    if (gpus > 0) {
+      // match the number of GPUs, to ensure host offloading does not repartition
+      return gpus;
+    }
+    // create one OpenMP group per NUMA node (or a single group, if no NUMA info is available)
+    return std::max(static_cast<T>(numa_mems.size()), T{1});
   }();
 
   omps->set(auto_omps);
 }
 
-void autoconfigure_numamem(const Realm::ModuleConfig* core,
+void autoconfigure_numamem(const std::vector<std::size_t>& numa_mems,
                            std::int32_t omps,
                            ScaledVar<std::int64_t>* numamem)
 {
@@ -314,29 +302,26 @@ void autoconfigure_numamem(const Realm::ModuleConfig* core,
     return;
   }
 
-  if (omps <= 0) {
+  if (omps <= 0 || numa_mems.empty()) {
     numamem->set(0);
     return;
   }
 
-  if (Config::auto_config) {
-    std::size_t res_sysmem_size{};
-
-    if (!core->get_resource("sysmem", res_sysmem_size)) {
-      throw std::runtime_error{
-        "Auto-configuration failed: Core Realm module could not determine the available system "
-        "memory"};
-    }
-
-    using T = std::decay_t<decltype(*numamem)>::value_type;
-
-    const auto auto_numamem = static_cast<T>(std::floor(
-      SYSMEM_FRACTION * static_cast<double>(res_sysmem_size) / MB / static_cast<double>(omps)));
-
-    numamem->set(auto_numamem);
-  } else {
+  if (!Config::auto_config) {
     numamem->set(MINIMAL_MEM);
+    return;
   }
+
+  // TODO(mpapadakis): Assuming that all NUMA domains have the same size
+  const auto numa_mem_size = numa_mems.front();
+  const auto num_numa_mems = numa_mems.size();
+  const auto omps_per_numa = (omps + num_numa_mems - 1) / num_numa_mems;
+  using T                  = std::decay_t<decltype(*numamem)>::value_type;
+  const auto auto_numamem =
+    static_cast<T>(std::floor(SYSMEM_FRACTION * static_cast<double>(numa_mem_size) / MB /
+                              static_cast<double>(omps_per_numa)));
+
+  numamem->set(auto_numamem);
 }
 
 void autoconfigure_cpus(const Realm::ModuleConfig* core,
@@ -493,6 +478,10 @@ void autoconfigure(Realm::Runtime* rt,
   const auto* cuda   = rt->get_module_config("cuda");
   const auto* openmp = rt->get_module_config("openmp");
   const auto* numa   = rt->get_module_config("numa");
+  std::vector<std::size_t> numa_mems{};
+  if (numa && !numa->get_resource("numa_mems", numa_mems)) {
+    numa_mems.clear();
+  }
 
   // auto-configure --gpus
   autoconfigure_gpus(cuda, &gpus->value);
@@ -501,10 +490,10 @@ void autoconfigure(Realm::Runtime* rt,
   autoconfigure_fbmem(cuda, gpus->value.value(), &fbmem->value);
 
   // auto-configure --omps
-  autoconfigure_omps(openmp, numa, gpus->value.value(), &omps->value);
+  autoconfigure_omps(openmp, numa_mems, gpus->value.value(), &omps->value);
 
   // auto-configure --numamem
-  autoconfigure_numamem(core, omps->value.value(), &numamem->value);
+  autoconfigure_numamem(numa_mems, omps->value.value(), &numamem->value);
 
   // auto-configure --cpus
   autoconfigure_cpus(
@@ -531,10 +520,17 @@ void set_core_config_properties(Realm::Runtime* rt,
                                 const Arg<ScaledVar<std::int64_t>>& sysmem,
                                 const Arg<ScaledVar<std::int64_t>>& regmem)
 {
+  constexpr std::size_t SYSMEM_LIMIT_FOR_IPC_REG = 1024 * MB;
+
   try_set_property(rt, "core", "cpu", parser, cpus);
   try_set_property(rt, "core", "util", parser, util);
   try_set_property(rt, "core", "sysmem", parser, sysmem);
   try_set_property(rt, "core", "regmem", parser, regmem);
+
+  // Don't register sysmem for intra-node IPC if it's above a certain size, as it can take forever.
+  auto* const config = rt->get_module_config("core");
+  LEGATE_CHECK(config != nullptr);
+  static_cast<void>(config->set_property("sysmem_ipc_limit", SYSMEM_LIMIT_FOR_IPC_REG));
 }
 
 void set_cuda_config_properties(Realm::Runtime* rt,
