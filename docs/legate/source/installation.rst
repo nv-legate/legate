@@ -84,6 +84,8 @@ architectures. You can use Legate with Pascal GPUs as well, but there could
 be issues due to lack of independent thread scheduling. Please report any such
 issues by opening a bug.
 
+.. _installation_of_mpi_wrapper:
+
 Installation of the Legate MPI wrapper
 --------------------------------------
 
