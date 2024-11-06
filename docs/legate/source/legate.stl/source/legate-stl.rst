@@ -32,11 +32,6 @@ It provides:
   user/index
   reference/index
 
-.. toctree::
-  :maxdepth: 1
-
-  versions
-
 Indices and tables
 ------------------
 

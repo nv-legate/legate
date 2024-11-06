@@ -72,7 +72,7 @@ class TaskInfo {
 
   [[nodiscard]] std::optional<std::reference_wrapper<const VariantInfo>> find_variant(
     VariantCode vid) const;
-  [[deprecated("since 24.09: use find_variant() directly")]] [[nodiscard]] bool has_variant(
+  [[deprecated("since 24.11: use find_variant() directly")]] [[nodiscard]] bool has_variant(
     VariantCode vid) const;
 
   void register_task(GlobalTaskID task_id);

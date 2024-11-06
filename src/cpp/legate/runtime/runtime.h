@@ -710,7 +710,7 @@ class Runtime {
  */
 [[nodiscard]] std::int32_t finish();
 
-[[deprecated("since 24.09: use legate::finish() instead")]] void destroy();
+[[deprecated("since 24.11: use legate::finish() instead")]] void destroy();
 
 /**
  * @ingroup runtime
