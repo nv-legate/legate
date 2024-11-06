@@ -207,10 +207,9 @@ void Runtime::record_reduction_operator(std::uint32_t type_uid,
                                         GlobalRedopID legion_op_id)
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug("Record reduction op (type_uid: %d, op_kind: %d, legion_op_id: %d)",
-                       type_uid,
-                       op_kind,
-                       static_cast<Legion::ReductionOpID>(legion_op_id));
+    log_legate().debug() << "Record reduction op (type_uid: " << type_uid
+                         << ", op_kind: " << op_kind
+                         << ", legion_op_id: " << fmt::underlying(legion_op_id) << ")";
   }
 
   const auto inserted = reduction_ops_.try_emplace({type_uid, op_kind}, legion_op_id).second;
@@ -223,19 +222,19 @@ void Runtime::record_reduction_operator(std::uint32_t type_uid,
 
 GlobalRedopID Runtime::find_reduction_operator(std::uint32_t type_uid, std::int32_t op_kind) const
 {
-  auto finder = reduction_ops_.find({type_uid, op_kind});
+  const auto finder = reduction_ops_.find({type_uid, op_kind});
+
   if (reduction_ops_.end() == finder) {
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-      log_legate().debug("Can't find reduction op (type_uid: %d, op_kind: %d)", type_uid, op_kind);
+      log_legate().debug() << "Can't find reduction op (type_uid: " << type_uid
+                           << ", op_kind: " << op_kind << ")";
     }
     throw std::invalid_argument{
       fmt::format("Reduction op {} does not exist for type {}", op_kind, type_uid)};
   }
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug("Found reduction op %d (type_uid: %d, op_kind: %d)",
-                       static_cast<Legion::ReductionOpID>(finder->second),
-                       type_uid,
-                       op_kind);
+    log_legate().debug() << "Found reduction op " << fmt::underlying(finder->second)
+                         << " (type_uid: " << type_uid << ", op_kind: " << op_kind << ")";
   }
   return finder->second;
 }
@@ -1651,7 +1650,7 @@ void handle_realm_default_args()
 
   if (!Legion::Runtime::has_runtime()) {
     if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true); result != 0) {
-      log_legate().error("Legion Runtime failed to start.");
+      log_legate().error() << "Legion Runtime failed to start.";
       return result;
     }
   }
