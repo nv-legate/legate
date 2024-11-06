@@ -168,9 +168,9 @@ class CUDA(Package):
         self._configure_language_flags(
             self.CMAKE_CUDA_FLAGS, self.cl_args.CUDAFLAGS
         )
-
-        self.cuda_arch = self.cl_args.cuda_arch
-        self.append_flags_if_set(self.CMAKE_CUDA_ARCHITECTURES, self.cuda_arch)
+        self.append_flags_if_set(
+            self.CMAKE_CUDA_ARCHITECTURES, self.cl_args.cuda_arch
+        )
         self.set_flag_if_user_set(self.CUDAToolkit_ROOT, self.cl_args.cuda_dir)
 
     def summarize(self) -> str:
@@ -184,24 +184,34 @@ class CUDA(Package):
         if not self.state.enabled():
             return ""
 
-        arches = self.manager.get_cmake_variable(self.CMAKE_CUDA_ARCHITECTURES)
-        ret = [("Architectures", " ".join(arches))]
-        if cuda_dir := self.manager.get_cmake_variable(self.CUDAToolkit_ROOT):
-            ret.append(("CUDA Dir", cuda_dir))
-        try:
-            cc = self.manager.read_cmake_variable(self.CMAKE_CUDA_COMPILER)
-        except ValueError:
-            cc = self.cl_args.CUDAC.value
+        arches: list[str] | str | None = (
+            self.manager.read_or_get_cmake_variable(
+                self.CMAKE_CUDA_ARCHITECTURES
+            )
+        )
+        if not arches:
+            arches = []
+        if isinstance(arches, (list, tuple)):
+            arches = " ".join(arches)
+        ret = [("Architectures", arches)]
 
+        if cuda_dir := self.manager.read_or_get_cmake_variable(
+            self.CUDAToolkit_ROOT
+        ):
+            ret.append(("CUDA Dir", cuda_dir))
+
+        cc = self.manager.read_or_get_cmake_variable(self.CMAKE_CUDA_COMPILER)
+        assert cc is not None
         ret.append(("Executable", cc))
 
         version = self.log_execute_command([cc, "--version"]).stdout
-
         ret.append(("Version", version))
 
         ccflags: str | None | list[str] | tuple[str, ...]
         try:
-            ccflags = self.manager.read_cmake_variable(self.CMAKE_CUDA_FLAGS)
+            ccflags = self.manager.read_or_get_cmake_variable(
+                self.CMAKE_CUDA_FLAGS
+            )
         except ValueError:
             ccflags = self.cl_args.CUDAFLAGS.value
             if isinstance(ccflags, (list, tuple)):
