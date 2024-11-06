@@ -85,7 +85,7 @@ class TaskRegistrar {
    */
   void register_all_tasks(Library& library);
 
-  [[deprecated("since 24.09: Use register_all_tasks() instead")]] void record_task(
+  [[deprecated("since 24.11: Use register_all_tasks() instead")]] void record_task(
     LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
 
   class RecordTaskKey {

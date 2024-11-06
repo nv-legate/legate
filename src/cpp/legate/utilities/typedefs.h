@@ -48,7 +48,7 @@ enum class VariantCode : Legion::VariantID {  // NOLINT(performance-enum-size)
   OMP,
 };
 
-using LegateVariantCode [[deprecated("since 24.09: use legate::VariantCode instead")]] =
+using LegateVariantCode [[deprecated("since 24.11: use legate::VariantCode instead")]] =
   VariantCode;
 
 using LegateMainFnPtr = void (*)(std::int32_t, char**);
@@ -433,11 +433,11 @@ struct hash<legate::Memory> {
 }  // namespace std
 
 // backwards-compat workaround, should not use
-[[deprecated("since 24.09: using legate::VariantCode::NONE instead")]] inline constexpr auto
+[[deprecated("since 24.11: using legate::VariantCode::NONE instead")]] inline constexpr auto
   LEGATE_NO_VARIANT = legate::VariantCode::NONE;
-[[deprecated("since 24.09: using legate::VariantCode::CPU instead")]] inline constexpr auto
+[[deprecated("since 24.11: using legate::VariantCode::CPU instead")]] inline constexpr auto
   LEGATE_CPU_VARIANT = legate::VariantCode::CPU;
-[[deprecated("since 24.09: using legate::VariantCode::GPU instead")]] inline constexpr auto
+[[deprecated("since 24.11: using legate::VariantCode::GPU instead")]] inline constexpr auto
   LEGATE_GPU_VARIANT = legate::VariantCode::GPU;
-[[deprecated("since 24.09: using legate::VariantCode::OMP instead")]] inline constexpr auto
+[[deprecated("since 24.11: using legate::VariantCode::OMP instead")]] inline constexpr auto
   LEGATE_OMP_VARIANT = legate::VariantCode::OMP;

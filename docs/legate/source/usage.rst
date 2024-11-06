@@ -118,10 +118,10 @@ any ``*.py`` files on the command line):
 Distributed Launch
 ------------------
 
-If Legate has been configured with a networking backend, then you can run your
-program across multiple nodes, by using the ``--nodes`` option followed by the
-number of nodes to be used. When doing a multi-process run, a launcher program
-must be specified, that will do the actual spawning of the processes:
+You can run your program across multiple nodes by using the ``--nodes`` option
+followed by the number of nodes to be used. When doing a multi-process run, a
+launcher program must be specified, that will do the actual spawning of the
+processes:
 
 .. code-block:: sh
 
@@ -130,6 +130,9 @@ must be specified, that will do the actual spawning of the processes:
 In the above invocation the ``mpirun`` launcher will be used to spawn one Legate
 process on each of two nodes. Each process will use 4 CPU cores and 1 GPU on its
 assigned node.
+
+The default Legate conda packages include networking support based on UCX, but
+:ref:`GASNet-based<gasnet>` packages are also available.
 
 Note that resource setting flags such as ``--cpus 4`` and ``--gpus 1`` refer to
 each process. In the above invocation, each one of the two launched processes

@@ -3,5 +3,10 @@
         "name": "24.06",
         "url": "https://docs.nvidia.com/legate/24.06/",
         "version": "24.06"
+    },
+    {
+        "name": "24.11",
+        "url": "https://docs.nvidia.com/legate/24.11/",
+        "version": "24.11"
     }
 ]

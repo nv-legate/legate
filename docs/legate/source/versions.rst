@@ -19,7 +19,7 @@ Release types and tagging
 -------------------------
 
 Using CalVer for versioning, Legate projects use the notation `YY.MM.PP` for
-releases/tags where `YY` indicates the zero padded year, `MM` indicates the zero
+releases/tags, where `YY` indicates the zero padded year, `MM` indicates the zero
 padded month, and `PP` indicates the zero padded hotfix/patch version. Each
 release is accompanied by a tag in the git repo with the same formatting and
 leading `v`.
@@ -34,5 +34,20 @@ There is no limit or time constraint of these releases as they are governed by
 the need to fix critical issues in the current release. Generally, hotfix/patch
 releases contain only one change and are typically bug fixes; new features
 should not be introduced in this way.
+
+Weekly releases
+_______________
+
+Lightly validated packages are uploaded to the main `legate` conda channel at a
+roughly weekly cadence. These packages are versioned as `YY.MM.PP.devXXX`, where
+`XXX` is a monotonically increasing number. These packages do not go through
+full QA validation, and thus may contain functional and performance regressions.
+
+Nightly builds
+______________
+
+Nightly builds are uploaded under the non-default label
+`legate/label/experimental`. Please be aware that these packages are not
+validated at all.
 
 .. _CalVer: https://calver.org/
