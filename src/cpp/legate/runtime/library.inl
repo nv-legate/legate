@@ -13,9 +13,9 @@
 #pragma once
 
 // Useful for IDEs
-#include "legate/cuda/cuda.h"
 #include "legate/runtime/library.h"
 #include "legate/utilities/compiler.h"
+#include "legate/utilities/macros.h"
 #include "legate/utilities/typedefs.h"
 
 namespace legate::detail {

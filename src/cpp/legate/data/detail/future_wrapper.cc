@@ -12,7 +12,6 @@
 
 #include "legate/data/detail/future_wrapper.h"
 
-#include "legate/cuda/cuda.h"
 #include "legate/mapping/detail/mapping.h"
 #include "legate/runtime/detail/runtime.h"
 #include "legate/utilities/dispatch.h"

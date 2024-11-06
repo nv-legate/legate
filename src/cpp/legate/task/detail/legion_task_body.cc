@@ -13,7 +13,6 @@
 #include "legate/task/detail/legion_task_body.h"
 
 #include "legate/comm/communicator.h"
-#include "legate/cuda/cuda.h"
 #include "legate/mapping/detail/machine.h"
 #include "legate/runtime/detail/runtime.h"
 #include "legate/task/detail/return_value.h"

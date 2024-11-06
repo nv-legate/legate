@@ -206,3 +206,15 @@
  * @ingroup util
  */
 #define LEGATE_DEFINED(x) LEGATE_DEFINED_PRIVATE(LEGATE_CONCAT_(LEGATE_DEFINED_ENABLED_FORM_, x))
+
+#ifdef __CUDACC__
+#define LEGATE_HOST __host__
+#define LEGATE_DEVICE __device__
+#define LEGATE_KERNEL __global__
+#else
+#define LEGATE_HOST
+#define LEGATE_DEVICE
+#define LEGATE_KERNEL
+#endif
+
+#define LEGATE_HOST_DEVICE LEGATE_HOST LEGATE_DEVICE

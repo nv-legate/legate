@@ -10,7 +10,6 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate/cuda/cuda.h>
 #include <legate/experimental/io/hdf5/detail/read.h>
 #include <legate/experimental/io/hdf5/detail/util.h>
 #include <legate/mapping/mapping.h>

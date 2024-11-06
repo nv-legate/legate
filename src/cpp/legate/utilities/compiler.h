@@ -71,6 +71,12 @@
 #define LEGATE_MSVC 0
 #endif
 
+#ifdef __CUDA_ARCH__
+#define LEGATE_DEVICE_COMPILE 1
+#else
+#define LEGATE_DEVICE_COMPILE 0
+#endif
+
 #define LEGATE_WPEDANTIC_SEMICOLON_WORKAROUND() \
   static_assert(true, "see https://stackoverflow.com/a/59153563")
 

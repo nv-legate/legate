@@ -10,6 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
+#include "legate/cuda/cuda.h"
 #include "legate/cuda/detail/cuda_driver_api.h"
 #include "legate/data/detail/array_tasks.h"
 #include "legate/runtime/detail/runtime.h"

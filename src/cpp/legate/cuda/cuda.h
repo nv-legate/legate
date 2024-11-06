@@ -46,17 +46,6 @@ using CUstream = struct CUstream_st*;
 
 // Use of __CUDACC__ vs LEGATE_USE_CUDA or LEGATE_NVCC is deliberate here, we only want these
 // defined when compiling kernels
-#ifdef __CUDACC__
-#define LEGATE_HOST __host__
-#define LEGATE_DEVICE __device__
-#define LEGATE_KERNEL __global__
-#else
-#define LEGATE_HOST
-#define LEGATE_DEVICE
-#define LEGATE_KERNEL
-#endif
-
-#define LEGATE_HOST_DEVICE LEGATE_HOST LEGATE_DEVICE
 
 #define LEGATE_THREADS_PER_BLOCK 128
 #define LEGATE_MIN_CTAS_PER_SM 4

@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/cuda/cuda.h"
 #include "legate/data/buffer.h"
+#include "legate/utilities/macros.h"
 
 using CUstream = struct CUstream_st*;
 
