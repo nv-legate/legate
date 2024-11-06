@@ -45,7 +45,8 @@ class CudaArchAction(Action):
             "ampere": "80",
             "ada": "89",
             "hopper": "90",
-            # TODO(jfaibussowit): blackwell?
+            "blackwell": "100",
+            # TODO(jfaibussowit): rubin?
         }
         arch = []
         for sub_arch in in_arch.split(","):

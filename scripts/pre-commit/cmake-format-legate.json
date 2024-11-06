@@ -200,16 +200,6 @@
                     "nargs": "*"
                 }
             },
-            "legate_convert_cuda_arch_from_names": {
-                "kwargs": {
-                    "DEST_VAR": 1,
-                    "INPUT_VAR": 1
-                },
-                "pargs": {
-                    "flags": [],
-                    "nargs": "*"
-                }
-            },
             "legate_cpp_library_template": {
                 "pargs": {
                     "nargs": 2
@@ -386,6 +376,15 @@
             "legate_rapids_find_legate": {
                 "pargs": {
                     "nargs": 0
+                }
+            },
+            "legate_set_default_cuda_arch": {
+                "kwargs": {
+                    "DEST_VAR": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
                 }
             },
             "legate_set_default_flags_impl": {
@@ -908,6 +907,11 @@
             "set_or_default": {
                 "pargs": {
                     "nargs": 2
+                }
+            },
+            "unsupported_cuda_arch": {
+                "pargs": {
+                    "nargs": 1
                 }
             }
         }

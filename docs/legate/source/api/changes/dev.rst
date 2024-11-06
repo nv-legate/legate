@@ -14,6 +14,9 @@ Changes: Latest Development Version
 
 .. rubric:: General
 
+- Drop support for Maxwell GPU architecture. Legate now requires at least Pascal
+  (``sm_60``).
+
 C++
 ---
 

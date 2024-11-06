@@ -73,10 +73,10 @@ if(Legion_USE_CUDA)
   enable_language(CUDA)
 
   include("${LEGATE_CMAKE_DIR}/Modules/cuda_arch_helpers.cmake")
+
   # Needs to run before find_package(Legion)
-  set_ifndef(CMAKE_CUDA_ARCHITECTURES all-major)
-  legate_convert_cuda_arch_from_names(INPUT_VAR CMAKE_CUDA_ARCHITECTURES)
-  set(Legion_CUDA_ARCH ${CMAKE_CUDA_ARCHITECTURES})
+  legate_set_default_cuda_arch(DEST_VAR CMAKE_CUDA_ARCHITECTURES)
+  set(Legion_CUDA_ARCH "${CMAKE_CUDA_ARCHITECTURES}")
 endif()
 
 include("${LEGATE_CMAKE_DIR}/Modules/default_flags.cmake")

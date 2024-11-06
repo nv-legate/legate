@@ -51,11 +51,9 @@ function(legate_generate_fatbin_modules)
     set(_LEGATE_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/${_LEGATE_DEST_DIR}")
   endif()
 
-  _legate_check_nvcc_pedantic_flags(_LEGATE_EXTRA_FLAGS)
+  set(cuda_flags ${_LEGATE_EXTRA_FLAGS})
 
-  set(cuda_flags
-      "-Xfatbin=-compress-all" "--expt-extended-lambda" "--expt-relaxed-constexpr"
-      "-Wno-deprecated-gpu-targets" ${_LEGATE_EXTRA_FLAGS})
+  _legate_check_nvcc_pedantic_flags(cuda_flags)
 
   include("${LEGATE_CMAKE_DIR}/Modules/utilities.cmake")
 
@@ -69,26 +67,37 @@ function(legate_generate_fatbin_modules)
                                PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
                                        "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate"
     )
-    # Technically none of these libraries need to be linked into the fatbins, but since
-    # the fatbins include legate headers, and therefore transitively include the headers
-    # from these libraries, we have to include them...
-    target_link_libraries("${fatbin_target_name}" PRIVATE Legion::Legion fmt::fmt)
+
+    target_link_libraries("${fatbin_target_name}"
+                          PRIVATE CCCL::CCCL
+                                  # Technically none of the remaining libraries need to be
+                                  # linked into the fatbins, but since the fatbins include
+                                  # legate headers, and therefore transitively include the
+                                  # headers from these libraries, we have to include
+                                  # them...
+                                  Legion::Legion
+                                  fmt::fmt)
     # Don't use cuda_flags for this since it does not handle generator expressions.
     target_compile_options("${fatbin_target_name}"
                            PRIVATE $<$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>:
                                    -Xcudafe=--diag_suppress=boolean_controlling_expr_is_constant
+                                   -Xfatbin=-compress-all
+                                   --expt-extended-lambda
+                                   --expt-relaxed-constexpr
+                                   -Wno-deprecated-gpu-targets
                                    --fatbin>)
 
     set_target_properties("${fatbin_target_name}"
                           PROPERTIES POSITION_INDEPENDENT_CODE ON
-                                     INTERFACE_POSITION_INDEPENDENT_CODE ON
-                                     CUDA_ARCHITECTURES ${Legion_CUDA_ARCH})
+                                     INTERFACE_POSITION_INDEPENDENT_CODE ON)
 
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
       set_target_properties("${fatbin_target_name}" PROPERTIES CUDA_FATBIN_COMPILATION ON)
     endif()
 
-    legate_add_target_compile_option("${fatbin_target_name}" CUDA PRIVATE cuda_flags)
+    if(cuda_flags)
+      legate_add_target_compile_option("${fatbin_target_name}" CUDA PRIVATE cuda_flags)
+    endif()
 
     cmake_path(GET src STEM fatbin_var_name)
     list_add_if_not_present_error(seen_fatbin_vars "${fatbin_var_name}")

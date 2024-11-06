@@ -12,77 +12,114 @@
 
 include_guard(GLOBAL)
 
-# cmake/Modules/cuda_arch_helpers.cmake:16: [R0912] Too many branches 14/12
-#
-# Many branches are OK for this function, not only is it clear what they are doing, but
-# doing this in a branchless way would be less readable.
-#
-# cmake-lint: disable=R0912,R0915
-function(legate_convert_cuda_arch_from_names)
-  list(APPEND CMAKE_MESSAGE_CONTEXT "set_cuda_arch_from_names")
+function(_legate_get_supported_arch_list_nvcc dest_var var_name)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "nvcc")
+
+  set(cmd "${CMAKE_CUDA_COMPILER}" "-arch-ls")
+  execute_process(COMMAND ${cmd}
+                  OUTPUT_VARIABLE arch_list
+                  ERROR_VARIABLE err
+                  RESULT_VARIABLE result
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  if(result OR err)
+    message(FATAL_ERROR "Failed to auto-detect the list of supported CUDA "
+                        "architectures from NVCC. Please set ${var_name} to "
+                        "the appropriate list of architectures. Ran:\n"
+                        "${cmd}\n"
+                        "(${result}): ${err}")
+  endif()
+
+  string(REPLACE "\n" ";" arch_list ${arch_list})
+  list(TRANSFORM arch_list REPLACE [=[(compute|arch)_]=] "")
+  list(TRANSFORM arch_list STRIP)
+  list(REMOVE_ITEM arch_list "")
+  list(SORT arch_list)
+
+  set(${dest_var} "${arch_list}" PARENT_SCOPE)
+endfunction()
+
+function(legate_set_default_cuda_arch)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "set_default_cuda_arch")
 
   set(options)
-  set(oneValueArgs INPUT_VAR DEST_VAR)
+  set(oneValueArgs DEST_VAR)
   set(multiValueArgs)
   cmake_parse_arguments(_LEGATE "${options}" "${oneValueArgs}" "${multiValueArgs}"
                         ${ARGN})
 
-  if(NOT _LEGATE_INPUT_VAR)
-    message(FATAL_ERROR "Must pass INPUT_VAR")
-  endif()
-
   if(NOT _LEGATE_DEST_VAR)
-    set(${_LEGATE_DEST_VAR} ${_LEGATE_INPUT_VAR})
+    message(FATAL_ERROR "Must pass DEST_VAR")
   endif()
 
-  set(cuda_archs "")
-  # translate legacy arch names into numbers
-  if(${_LEGATE_INPUT_VAR} MATCHES "fermi")
-    list(APPEND cuda_archs 20)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "kepler")
-    list(APPEND cuda_archs 30)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "k20")
-    list(APPEND cuda_archs 35)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "k80")
-    list(APPEND cuda_archs 37)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "maxwell")
-    list(APPEND cuda_archs 52)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "pascal")
-    list(APPEND cuda_archs 60)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "volta")
-    list(APPEND cuda_archs 70)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "turing")
-    list(APPEND cuda_archs 75)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "ampere")
-    list(APPEND cuda_archs 80)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "ada")
-    list(APPEND cuda_archs 89)
-  endif()
-  if(${_LEGATE_INPUT_VAR} MATCHES "hopper")
-    list(APPEND cuda_archs 90)
-  endif()
-
-  if(cuda_archs)
-    list(LENGTH cuda_archs num_archs)
-    if(num_archs GREATER 1)
-      # A CMake architecture list entry of "80" means to build both compute and sm. What
-      # we want is for the newest arch only to build that way, while the rest build only
-      # for sm.
-      list(POP_BACK cuda_archs latest_arch)
-      list(TRANSFORM cuda_archs APPEND "-real")
-      list(APPEND cuda_archs ${latest_arch})
-    else()
-      list(TRANSFORM cuda_archs APPEND "-real")
+  if(${_LEGATE_DEST_VAR} STREQUAL "all-major")
+    message(STATUS "arch variable ${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}, "
+                   "translating to all supported major architectures")
+    set(ONLY_MAJOR ON)
+  elseif(${_LEGATE_DEST_VAR} STREQUAL "all")
+    message(STATUS "arch variable ${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}, "
+                   "translating to all supported architectures")
+    set(ONLY_MAJOR OFF)
+  elseif(DEFINED ${_LEGATE_DEST_VAR})
+    # Variable was already set by user to something else, don't mess with it.  Use of
+    # DEFINED is deliberate. We want to handle the case where DEST_VAR is "OFF" (which we
+    # should leave as-is).
+    message(STATUS "arch variable already pre-defined: "
+                   "${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}")
+    if(${_LEGATE_DEST_VAR} MATCHES [=[^[0-5][0-9]$]=])
+      message(FATAL_ERROR "CUDA architecture ${${_LEGATE_DEST_VAR}} is not supported.")
     endif()
-    set(${_LEGATE_DEST_VAR} ${cuda_archs} PARENT_SCOPE)
+
+    return()
+  else()
+    message(STATUS "arch variable ${_LEGATE_DEST_VAR} undefined, default to all-major")
+    set(ONLY_MAJOR ON)
   endif()
+
+  # At this point we should be left with only 2 options:
+  #
+  # * all-major
+  # * all
+  #
+  # Since the above if tree should have early-returned if the input variable had any other
+  # value. Thus, if this variable is unset, then we know that we didn't cover a branch
+  # above.
+  if(NOT DEFINED ONLY_MAJOR)
+    message(FATAL_ERROR "Bug in legate cmake, failed to set ONLY_MAJOR")
+  endif()
+
+  set(arch_list)
+  # Currently only know how to handle NVCC, but if we ever support clang, then this is
+  # where we'd do that
+  _legate_get_supported_arch_list_nvcc(arch_list "${_LEGATE_DEST_VAR}")
+
+  # Remove < sm_60
+  list(FILTER arch_list EXCLUDE REGEX [=[[0-5][0-9]]=])
+  if(ONLY_MAJOR)
+    list(GET arch_list -1 largest_virtual_arch)
+    # Remove any non-major architectures, they should all numeric-only except for Hopper,
+    # which strangely has sm_90a.
+    list(FILTER arch_list EXCLUDE REGEX [=[[0-9]+[1-9][a-z]?]=])
+    # To match all-major, which compiles for:
+    #
+    # ...all supported major real architectures, and the highest major virtual
+    # architecture.
+    list(APPEND arch_list "${largest_virtual_arch}")
+    # In case the last APPEND was pointless (i.e. highest arch ended in a 0)
+    list(REMOVE_DUPLICATES arch_list)
+  endif()
+
+  # A CMake architecture list entry of "80" means to build both compute and sm. What we
+  # want is for the newest arch only to build that way, while the rest build only for sm.
+  list(POP_BACK arch_list latest_arch)
+  # The regex is there to match any numeric-only (and the odd 90a as discussed above)
+  # architectures, and skip those already containing -real or -virtual.
+  list(TRANSFORM arch_list APPEND "-real" REGEX [=[^[0-9]+[a-z]?$]=])
+  list(APPEND arch_list ${latest_arch})
+
+  set(${_LEGATE_DEST_VAR} "${arch_list}")
+  set(${_LEGATE_DEST_VAR} "${${_LEGATE_DEST_VAR}}" PARENT_SCOPE)
+
+  message(STATUS "Set default CUDA architectures: "
+                 "${_LEGATE_DEST_VAR}=${${_LEGATE_DEST_VAR}}")
 endfunction()
