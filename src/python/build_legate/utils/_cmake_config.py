@@ -69,10 +69,12 @@ class CMakeConfig:
     @staticmethod
     def _read_cmake_args(cmake_spec: CMakeSpec) -> list[str]:
         def read_env_args(name: str) -> list[str]:
-            # split by semicolon and then with shlex if there are spaces
-            args = (x.strip() for x in os.environ.get(name, "").split(";"))
-            split_args = (shlex.split(x) for x in args if x)
-            return [arg for sublist in split_args for arg in sublist]
+            # Always use shlex to split, since some CMake variables are
+            # semi-colon separated internally. For example:
+            # '-DSOME_CMAKE_PATHS=/foo/bar;/baz/bop' should be parsed as a
+            # single value, not 2.
+            args = (x.strip() for x in shlex.split(os.environ.get(name, "")))
+            return [x for x in args if x]
 
         cmake_args = [
             arg
