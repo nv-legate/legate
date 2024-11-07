@@ -92,7 +92,7 @@ class Test_log_proc:
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
-        assert LOG.lines == (skipped(f"(foo) {proc.test_display}"),)
+        assert LOG.lines == (skipped(f"(foo) {proc.test_display}").plain,)
 
     def test_passed(self) -> None:
         config = Config([])
@@ -101,7 +101,7 @@ class Test_log_proc:
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
-        assert LOG.lines == (passed(f"(foo) {proc.test_display}"),)
+        assert LOG.lines == (passed(f"(foo) {proc.test_display}").plain,)
 
     def test_passed_verbose(self) -> None:
         config = Config([])
@@ -112,7 +112,9 @@ class Test_log_proc:
         m.log_proc("foo", proc, config, verbose=True)
 
         assert LOG.lines == tuple(
-            passed(f"(foo) {proc.test_display}", details=details).split("\n")
+            passed(f"(foo) {proc.test_display}", details=details).plain.split(
+                "\n"
+            )[:-1]
         )
 
     @pytest.mark.parametrize("returncode", (-23, -1, 1, 17))
@@ -124,7 +126,7 @@ class Test_log_proc:
         m.log_proc("foo", proc, config, verbose=False)
 
         assert LOG.lines == (
-            failed(f"(foo) {proc.test_display}", exit_code=returncode),
+            failed(f"(foo) {proc.test_display}", exit_code=returncode).plain,
         )
 
     @pytest.mark.parametrize("returncode", (-23, -1, 1, 17))
@@ -143,7 +145,7 @@ class Test_log_proc:
                 f"(foo) {proc.test_display}",
                 details=details,
                 exit_code=returncode,
-            ).split("\n")
+            ).plain.split("\n")[:-1]
         )
 
     def test_timeout(self) -> None:
@@ -153,7 +155,7 @@ class Test_log_proc:
         LOG.clear()
         m.log_proc("foo", proc, config, verbose=False)
 
-        assert LOG.lines == (timeout(f"(foo) {proc.test_display}"),)
+        assert LOG.lines == (timeout(f"(foo) {proc.test_display}").plain,)
 
     def test_timeout_verbose(self) -> None:
         config = Config([])
@@ -176,7 +178,7 @@ class Test_log_proc:
         assert LOG.lines == tuple(
             timeout(
                 f"(foo){duration} {proc.test_display}", details=details
-            ).split("\n")
+            ).plain.split("\n")[:-1]
         )
 
     def test_dry_run(self) -> None:
@@ -187,8 +189,9 @@ class Test_log_proc:
         m.log_proc("foo", proc, config, verbose=False)
 
         assert LOG.lines == (
-            shell(proc.invocation),
-            passed(f"(foo) {proc.test_display}"),
+            "",
+            shell(proc.invocation).plain,
+            passed(f"(foo) {proc.test_display}").plain,
         )
 
     def test_debug(self) -> None:
@@ -199,8 +202,9 @@ class Test_log_proc:
         m.log_proc("foo", proc, config, verbose=False)
 
         assert LOG.lines == (
-            shell(proc.invocation),
-            passed(f"(foo) {proc.test_display}"),
+            "",
+            shell(proc.invocation).plain,
+            passed(f"(foo) {proc.test_display}").plain,
         )
 
     def test_time(self) -> None:
@@ -215,6 +219,7 @@ class Test_log_proc:
 
         duration = m.format_duration(start=start, end=end)
         assert LOG.lines == (
-            shell(proc.invocation),
-            passed(f"(foo){duration} {proc.test_display}"),
+            "",
+            shell(proc.invocation).plain,
+            passed(f"(foo){duration} {proc.test_display}").plain,
         )

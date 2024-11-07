@@ -13,23 +13,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from io import StringIO
 from shlex import quote
 from subprocess import run
-from textwrap import indent
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Iterable
 
 from rich import print as rich_print
+from rich.console import NewLine, group
+from rich.rule import Rule
 
 from ..util.system import System
 from ..util.types import DataclassMixin
-from ..util.ui import kvtable, rule, section, value
+from ..util.ui import env, section
 from .command import CMD_PARTS_EXEC, CMD_PARTS_PYTHON
 from .config import ConfigProtocol
 from .environment import ENV_PARTS_LEGATE
 from .launcher import Launcher
 
 if TYPE_CHECKING:
+    from rich.console import RenderableType
+
     from ..util.types import Command, EnvDict
 
 __all__ = ("LegateDriver", "format_verbose")
@@ -160,10 +162,11 @@ def get_versions() -> LegateVersions:
     return LegateVersions(legate_version=lg_version)
 
 
+@group()
 def format_verbose(
     system: System,
     driver: LegateDriver | None = None,
-) -> str:
+) -> Iterable[RenderableType]:
     """Print system and driver configuration values.
 
     Parameters
@@ -177,36 +180,34 @@ def format_verbose(
 
     Returns
     -------
-        str
+        RenderableType
 
     """
-    out = StringIO()
 
-    out.write(f"\n{rule('Legion Python Configuration')}\n")
+    yield Rule("Legate Configuration")
+    yield NewLine()
 
-    out.write(section("\nLegate paths:\n"))
-    out.write(indent(str(system.legate_paths), prefix="  "))
+    yield section("Legate paths")
+    yield system.legate_paths.ui
+    yield NewLine()
 
-    out.write(section("\n\nLegion paths:\n"))
-    out.write(indent(str(system.legion_paths), prefix="  "))
+    yield section("Legion paths")
+    yield system.legion_paths.ui
+    yield NewLine()
 
-    out.write(section("\n\nVersions:\n"))
-    out.write(indent(str(get_versions()), prefix="  "))
+    yield section("Versions")
+    yield get_versions().ui
+    yield NewLine()
 
     if driver:
-        out.write(section("\n\nCommand:\n"))
+        yield section("Command")
         cmd = " ".join(quote(t) for t in driver.cmd)
-        out.write(f"  {value(cmd)}")
+        yield f" [dim green]{cmd}[/]"
+        yield NewLine()
 
         if keys := sorted(driver.custom_env_vars):
-            out.write(section("\n\nCustomized Environment:\n"))
-            out.write(
-                indent(
-                    kvtable(driver.env, delim="=", align=False, keys=keys),
-                    prefix="  ",
-                )
-            )
+            yield section("Customized Environment")
+            yield env(driver.env, keys=keys)
+        yield NewLine()
 
-    out.write(f"\n\n{rule()}\n")
-
-    return out.getvalue()
+    yield Rule()

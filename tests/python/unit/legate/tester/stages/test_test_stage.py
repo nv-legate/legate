@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 import pytest
+from rich.console import Console
 
 from legate.tester import FeatureType
 from legate.tester.config import Config
@@ -26,6 +27,8 @@ from legate.tester.test_system import ProcessResult, TestSystem as _TestSystem
 from legate.util.types import ArgList, EnvDict
 
 from . import FakeSystem
+
+CONSOLE = Console(color_system=None, soft_wrap=True)
 
 
 class MockTestStage(m.TestStage):
@@ -58,19 +61,24 @@ class TestTestStage:
     def test_intro(self) -> None:
         c = Config([])
         stage = MockTestStage(c, FakeSystem())
-        assert "Entering stage: mock" in stage.intro
+
+        with CONSOLE.capture() as capture:
+            CONSOLE.print(stage.intro)
+        assert "Entering stage: mock" in capture.get()
 
     def test_outro(self) -> None:
         c = Config([])
         stage = MockTestStage(c, FakeSystem())
         stage.result = StageResult(
             [ProcessResult("invoke", "test/file")],
-            timedelta(seconds=2.123),
+            timedelta(seconds=2.12),
         )
-        outro = stage.outro
+        with CONSOLE.capture() as capture:
+            CONSOLE.print(stage.outro)
+        outro = capture.get()
         assert "Exiting stage: mock" in outro
         assert "Passed 1 of 1 tests (100.0%)" in outro
-        assert "2.123" in outro
+        assert "2.12" in outro
 
 
 class TestTestStage_handle_cpu_pin_args:

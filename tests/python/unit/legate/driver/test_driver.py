@@ -147,12 +147,10 @@ class TestDriver:
         run_out = capsys.readouterr()[0].strip()
 
         with CONSOLE.capture() as capture:
-            CONSOLE.print(
-                m.format_verbose(driver.system, driver).strip(), end=""
-            )
+            CONSOLE.print(m.format_verbose(driver.system, driver), end="")
         pv_out = capture.get()
 
-        assert pv_out in run_out
+        assert pv_out.strip() in run_out.strip()
 
     @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)
     def test_verbose_nonzero_rank_id(
@@ -179,7 +177,7 @@ class TestDriver:
         run_out = capsys.readouterr()[0].strip()
 
         with CONSOLE.capture() as capture:
-            CONSOLE.print(m.format_verbose(system, driver).strip(), end="")
+            CONSOLE.print(m.format_verbose(system, driver), end="")
         pv_out = capture.get()
 
         assert pv_out not in run_out
@@ -195,51 +193,35 @@ class Test_format_verbose:
     def test_system_only(self) -> None:
         system = System()
 
-        text = m.format_verbose(system).strip()
+        text = m.format_verbose(system)
         with CONSOLE.capture() as capture:
             CONSOLE.print(text, end="")
         scrubbed = capture.get()
 
-        assert scrubbed.startswith(
-            f"{'--- Legion Python Configuration ':-<80}"
-        )
-        assert "Legate paths:" in scrubbed
-        for line in str(system.legate_paths).split():
-            assert line in text
+        assert "Legate paths" in scrubbed
 
-        assert "Legion paths:" in scrubbed
-        for line in str(system.legion_paths).split():
-            assert line in text
+        assert "Legion paths" in scrubbed
 
     def test_system_and_driver(self, capsys: Capsys) -> None:
         config = Config(["legate"])
         system = System()
         driver = m.LegateDriver(config, system)
 
-        text = m.format_verbose(system, driver).strip()
+        text = m.format_verbose(system, driver)
         with CONSOLE.capture() as capture:
             CONSOLE.print(text, end="")
         scrubbed = capture.get()
 
-        assert scrubbed.startswith(
-            f"{'--- Legion Python Configuration ':-<80}"
-        )
-        assert "Legate paths:" in scrubbed
-        for line in str(system.legate_paths).split():
-            assert line in text
+        assert "Legate paths" in scrubbed
 
-        assert "Legion paths:" in scrubbed
-        for line in str(system.legion_paths).split():
-            assert line in text
+        assert "Legion paths" in scrubbed
 
-        assert "Command:" in scrubbed
+        assert "Command" in scrubbed
         assert f"{' '.join(quote(t) for t in driver.cmd)}" in scrubbed
 
-        assert "Customized Environment:" in scrubbed
+        assert "Customized Environment" in scrubbed
         for k in driver.custom_env_vars:
             assert f"{k}={quote(driver.env[k])}" in scrubbed
-
-        assert scrubbed.endswith(f"\n{'-':-<80}")
 
 
 # Below are the command-line options and flags that are handled by

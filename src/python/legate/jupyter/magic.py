@@ -12,18 +12,18 @@
 from __future__ import annotations
 
 import os
-from textwrap import indent
 from typing import TYPE_CHECKING
 
 from IPython.core.magic import Magics, line_magic, magics_class
 from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
+from rich.console import Group
 
 from legate.jupyter.kernel import (
     LEGATE_JUPYTER_KERNEL_SPEC_KEY,
     LEGATE_JUPYTER_METADATA_KEY,
     LegateMetadata,
 )
-from legate.util.ui import kvtable
+from legate.util.ui import table
 
 if TYPE_CHECKING:
     from IPython import InteractiveShell
@@ -65,7 +65,8 @@ class LegateInfo:
         self.spec_name = spec_name
         self.config = spec.metadata[LEGATE_JUPYTER_METADATA_KEY]
 
-    def __str__(self) -> str:
+    @property
+    def ui(self) -> Group:
         nodes = self.config["multi_node"]["nodes"]
         header = f"Kernel {self.spec_name!r} configured for {nodes} node(s)"
         core_table = {
@@ -75,17 +76,13 @@ class LegateInfo:
             desc: self.config["memory"][field]
             for field, desc in memory.items()
         }
-
-        out = f"""{header}
-
-Cores:
-{indent(kvtable(core_table, align=False), prefix='  ')}
-
-Memory:
-{indent(kvtable(memory_table, align=False), prefix='  ')}
-"""
-        # remove any text colors in notebook
-        return out
+        return Group(
+            header,
+            "Cores:",
+            table(core_table, justify="left"),
+            "Memory:",
+            table(memory_table, justify="left"),
+        )
 
 
 @magics_class

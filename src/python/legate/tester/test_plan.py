@@ -16,13 +16,20 @@ from __future__ import annotations
 
 from datetime import timedelta
 from itertools import chain
+from typing import TYPE_CHECKING, Any
 
-from ..util.ui import banner, rule, summary, warn
+from rich.rule import Rule
+from rich.text import Text
+
+from ..util.ui import banner, section, summary, table, warn
 from . import LAST_FAILED_FILENAME
 from .config import Config
 from .logger import LOG
 from .stages import STAGES, log_proc
 from .test_system import ProcessResult, TestSystem
+
+if TYPE_CHECKING:
+    from rich.panel import Panel
 
 
 class TestPlan:
@@ -69,8 +76,6 @@ class TestPlan:
         total = len(all_procs)
         passed = sum(proc.passed for proc in all_procs)
 
-        LOG(f"\n{rule(pad=4)}")
-
         self._log_failures(all_procs)
 
         self._record_last_failed(all_procs)
@@ -80,7 +85,7 @@ class TestPlan:
         return int((total - passed) > 0)
 
     @property
-    def intro(self) -> str:
+    def intro(self) -> Panel:
         """An informative banner to display at test run start."""
 
         cpus = len(self._system.cpus)
@@ -89,25 +94,23 @@ class TestPlan:
         except RuntimeError:
             gpus = "N/A"
 
+        details: dict[str, Any] = {
+            "Feature stages": ", ".join(x for x in self._config.features),
+            "System description": f"{cpus} cpus / {gpus} gpus",
+        }
+
         if self._config.gtest_tests:
-            details = (
-                f"* Feature stages       : {', '.join(x for x in self._config.features)}",  # noqa E501
-                f"* Test files per stage : {len(self._config.gtest_tests)}",
-                f"* System description   : {cpus} cpus / {gpus} gpus",
-            )
-            return banner(
-                f"Test Suite Configuration ({'OpenMPI' if self._config.multi_node.ranks_per_node > 1 else 'GTest'})",  # noqa E501
-                details=details,
-            )
+            details["Test files per stage"] = len(self._config.gtest_tests)
+            ranks = self._config.multi_node.ranks_per_node
+            kind = "OpenMPI" if ranks > 1 else "GTest"
+            title = f"Test Suite Configuration ({kind})"
+        else:
+            details["Test files per stage"] = len(self._config.test_files)
+            title = "Test Suite Configuration (Python)"
 
-        details = (
-            f"* Feature stages       : {', '.join(x for x in self._config.features)}",  # noqa E501
-            f"* Test files per stage : {len(self._config.test_files)}",
-            f"* System description   : {cpus} cpus / {gpus} gpus",
-        )
-        return banner("Test Suite Configuration (Python)", details=details)
+        return banner(title, content=table(details, quote=False))
 
-    def outro(self, total: int, passed: int) -> str:
+    def outro(self, total: int, passed: int) -> Panel:
         """An informative banner to display at test run end.
 
         Parameters
@@ -119,32 +122,31 @@ class TestPlan:
             Number of tests that passed in all stages
 
         """
-        details = [
+        details = (
             f"* {s.name: <6}: "
             + f"{s.result.passed} / {s.result.total} passed in {s.result.time.total_seconds():0.2f}s"  # noqa E501
             for s in self._stages
-        ]
-
-        time = sum((s.result.time for s in self._stages), timedelta(0, 0))
-        details.append("")
-        details.append(
-            summary("All tests", total, passed, time, justify=False)
         )
 
-        overall = banner("Overall summary", details=details)
+        content = Text.from_markup("\n".join(details) + "\n\n")
 
-        return f"{overall}\n"
+        time = sum((s.result.time for s in self._stages), timedelta(0, 0))
+        content += summary(total, passed, time)
+
+        return banner("Overall summary", content=content)
 
     def _log_failures(self, all_procs: tuple[ProcessResult, ...]) -> None:
         if all(proc.passed for proc in all_procs):
             return
 
-        LOG(f"{banner('FAILURES')}\n")
+        LOG(section("FAILURES"))
 
         for stage in self._stages:
             procs = (proc for proc in stage.result.procs if not proc.passed)
             for proc in procs:
                 log_proc(stage.name, proc, self._config, verbose=True)
+
+        LOG(Rule(style="dim white"))
 
     def _record_last_failed(
         self, all_procs: tuple[ProcessResult, ...]

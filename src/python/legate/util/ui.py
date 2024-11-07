@@ -18,26 +18,35 @@ text output (i.e. without ANSI color codes) will be generated.
 """
 from __future__ import annotations
 
+import shlex
 from collections.abc import Iterable
 from datetime import timedelta
-from shlex import quote
-from typing import Any, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+
+from rich import box
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+
+if TYPE_CHECKING:
+    from rich.console import RenderableType, TextType
 
 Details: TypeAlias = Iterable[str]
+KeyVals: TypeAlias = dict[str, Any]
+Justify: TypeAlias = Literal["default", "left", "center", "right", "full"]
+
+ERROR = Text.from_markup("[red]ERROR:[/]")
 
 __all__ = (
     "UI_WIDTH",
     "banner",
+    "env",
     "error",
     "failed",
-    "key",
-    "kvtable",
+    "table",
     "passed",
-    "rule",
-    "section",
     "skipped",
     "timeout",
-    "value",
     "warn",
 )
 
@@ -46,266 +55,289 @@ __all__ = (
 UI_WIDTH = 80
 
 
-def _format_details(details: Details | None = None, pre: str = "   ") -> str:
-    if details:
-        return f"{pre}" + f"\n{pre}".join(f"{line}" for line in details)
-    return ""
+def _format_details(
+    details: Details, *, pre: Text | None = None, indent: int = 3
+) -> Text:
+    pad = " " * indent
+    text = Text("\n")
+    for line in details:
+        if pre:
+            text.append(pre)
+        text += text.assemble(pad, Text.from_ansi(line, no_wrap=True), "\n")
+    return text
 
 
 def banner(
-    heading: str,
+    title: TextType,
+    content: RenderableType,
     *,
-    char: str = "#",
     width: int = UI_WIDTH,
-    details: Iterable[str] | None = None,
-) -> str:
-    """Generate a title banner, with optional details included.
+) -> Panel:
+    """Generate a titled banner, with details included.
 
     Parameters
     ----------
-    heading : str
-        Text to use for the title
+    title : TextSType
+        Renderable to use for the title.
 
-    char : str, optional
-        A character to use to frame the banner. (default: "#")
+    content : RenderableType,
+        Content to display in area below the heading.
 
     width : int, optional
-        How wide to draw the banner. (Note: user-supplied heading or
-        details willnot be truncated if they exceed this width)
-
-    details : Iterable[str], optional
-        A list of lines to diplay inside the banner area below the heading
+        How wide to draw the banner.
 
     """
-    pre = f"{char * 3} "
-    divider = char * width
-    if not details:
-        return f"\n{divider}\n{pre}{heading}\n{divider}"
-    return f"""
-{divider}
-{pre}
-{pre}{heading}
-{pre}
-{_format_details(details, pre)}
-{pre}
-{divider}"""
+    return Panel(
+        content,
+        title=title,
+        title_align="left",
+        padding=1,
+        width=width,
+        border_style="dim",
+        box=box.DOUBLE_EDGE,
+    )
 
 
-def error(text: str) -> str:
-    """Format text as an error.
+def section(
+    content: RenderableType,
+    *,
+    width: int = UI_WIDTH,
+) -> Panel:
+    """Generate a section divider
 
     Parameters
     ----------
-    text : str
-        The text to format
+    content : RenderableType
+        Renderable to use for the section divider
+
+    width : int, optional
+        How wide to draw the banner.
+
+    """
+    return Panel(content, width=width, border_style="dim")
+
+
+def error(message: str, *, details: Details | None = None) -> Text:
+    """Format a message as an error, including optional details.
+
+    Parameters
+    ----------
+    message : str
+        The message text to format after "ERROR".
+
+
+    details : Details, optional
+        A sequence of text lines to display below the message.
+
+        The text may contain ANSI (e.g. if it comes from a subprocess), but
+        is assumed not contain Rich markup tags.
 
     Returns
     -------
-        str
+        Text
 
     """
-    return f"[red]ERROR: {text}[/]"
+    error = Text.from_markup("[red]ERROR:[/]")
+    msg = Text.from_ansi(message)
+    text = Text.assemble(error, " ", msg)
+    if details:
+        text += Text.assemble(error, "\n")
+        text += _format_details(details, pre=error)
+        text += Text.assemble(error, "\n")
+    return text
 
 
-def skipped(msg: str) -> str:
+def warn(message: str) -> Text:
+    """Format a message as a warning.
+
+    Parameters
+    ----------
+    message : str
+        The message text to format after "WARNING".
+
+    Returns
+    -------
+        Text
+
+    """
+    warning = Text.from_markup("[magenta]WARNING:[/]")
+    msg = Text.from_markup(message)
+    return Text.assemble(warning, " ", msg)
+
+
+def skipped(message: str) -> Text:
     """Report a skipped test with a cyan [SKIP]
 
     Parameters
     ----------
-    msg : str
-        Text to display after [SKIP]
+    message : str
+        Message text to format after "[SKIP]".
+
+    Returns
+    -------
+        Text
 
     """
-    return f"[cyan][SKIP][/] {msg}"
+    skipped = Text.from_markup("[cyan][SKIP][/]")
+    msg = Text.from_markup(message)
+    return Text.assemble(skipped, " ", msg)
 
 
-def timeout(msg: str, *, details: Details | None = None) -> str:
+def timeout(message: str, *, details: Details | None = None) -> Text:
     """Report a timed-out test with a yellow [TIME]
 
     Parameters
     ----------
-    msg : str
-        Text to display after [TIME]
+    message : str
+        Message text to format after "[TIME]".
 
     details : Details, optional
-        A sequenece of text lines to diplay below the ``msg`` line
+        A sequence of text lines to display below the message.
+
+        The text may contain ANSI (e.g. if it comes from a subprocess), but
+        is assumed not contain Rich markup tags.
+
+    Returns
+    -------
+        Text
 
     """
-    ret = f"[yellow][TIME][/] {msg}"
+    timeout = Text.from_markup("[yellow][TIME][/]")
+    msg = Text.from_markup(message)
+    text = Text.assemble(timeout, " ", msg)
     if details:
-        ret += f"\n{_format_details(details)}"
-    return ret
+        text += _format_details(details)
+    return text
 
 
 def failed(
-    msg: str, *, details: Details | None = None, exit_code: int | None = None
-) -> str:
-    """Report a failed test result with a bright red [FAIL].
-
-    Parameters
-    ----------
-    msg : str
-        Text to display after [FAIL]
-
-    details : Iterable[str], optional
-        A sequenece of text lines to diplay below the ``msg`` line
-
-    """
-    fail = "[bold red][FAIL][/]"
-    exit = f" [bold white](exit: {exit_code})[/]" if exit_code else ""
-    if details:
-        return f"{fail} {msg}{exit}\n{_format_details(details)}"
-    return f"{fail} {msg}{exit}"
-
-
-def passed(msg: str, *, details: Details | None = None) -> str:
-    """Report a passed test result with a bright green [PASS].
-
-    Parameters
-    ----------
-    msg : str
-        Text to display after [PASS]
-
-    details : Iterable[str], optional
-        A sequenece of text lines to diplay below the ``msg`` line
-
-    """
-    passed = "[bold green][PASS][/]"
-    if details:
-        return f"{passed} {msg}\n{_format_details(details)}"
-    return f"{passed} {msg}"
-
-
-def key(text: str) -> str:
-    """Format a 'key' from a key-value pair.
-
-    Parameters
-    ----------
-    text : str
-        The key to format
-
-    Returns
-    -------
-        str
-
-    """
-    return f"[dim green]{text}[/]"
-
-
-def value(text: str) -> str:
-    """Format a 'value' from of a key-value pair.
-
-    Parameters
-    ----------
-    text : str
-        The key to format
-
-    Returns
-    -------
-        str
-
-    """
-    return f"[yellow]{text}[/]"
-
-
-def kvtable(
-    items: dict[str, Any],
+    message: str,
     *,
-    delim: str = " : ",
-    align: bool = True,
-    keys: Iterable[str] | None = None,
-) -> str:
-    """Format a dictionay as a table of key-value pairs.
+    details: Details | None = None,
+    exit_code: int | None = None,
+) -> Text:
+    """Report a failed test result with a bold red [FAIL].
 
-    Values are passed to shlex.quote before printing.
+    Parameters
+    ----------
+    message : str
+        Message text to format after "[FAIL]".
+
+    details : Iterable[str], optional
+        A sequenece of text lines to display below the message.
+
+        The text may contain ANSI (e.g. if it comes from a subprocess), but
+        is assumed not contain Rich markup tags.
+
+    Returns
+    -------
+        Text
+
+    """
+    failed = Text.from_markup("[bold red][FAIL][/]")
+    msg = Text.from_markup(message)
+    text = Text.assemble(failed, " ", msg)
+    if exit_code is not None:
+        text += Text.from_markup(f" [bold white](exit: {exit_code})[/]")
+    if details:
+        text += _format_details(details)
+    return text
+
+
+def passed(message: str, *, details: Details | None = None) -> Text:
+    """Report a passed test result with a bold green [PASS].
+
+    Parameters
+    ----------
+    message : str
+        Message text to format after "[PASS]".
+
+    details : Iterable[str], optional
+        A sequenece of text lines to display below the message.
+
+        The text may contain ANSI (e.g. if it comes from a subprocess), but
+        is assumed not contain Rich markup tags.
+
+    Returns
+    -------
+        Text
+
+    """
+    passed = Text.from_markup("[bold green][PASS][/]")
+    msg = Text.from_markup(message)
+    text = Text.assemble(passed, " ", msg)
+    if details:
+        text += _format_details(details)
+    return text
+
+
+def table(
+    items: KeyVals, quote: bool = True, justify: Justify = "right"
+) -> Table:
+    """Format a dictionary as a basic table.
+
+    By default, values are passed to shlex.quote before formatting.
 
     Parameters
     ----------
     items : dict[str, Any]
         The dictionary of items to format
 
-    delim : str, optional
-        A delimiter to display between keys and values (default: " : ")
+    Returns
+    -------
+        Table
 
-    align : bool, optional
-        Whether to align delimiters to the longest key length (default: True)
+    """
+    table = Table(box=None, show_header=False)
+
+    table.add_column("Keys", justify=justify, style="dim green", no_wrap=True)
+    table.add_column("Values", style="yellow", no_wrap=True)
+
+    for key in items:
+        val = shlex.quote(str(items[key])) if quote else str(items[key])
+        table.add_row(key, val)
+
+    return table
+
+
+def env(
+    items: KeyVals,
+    *,
+    keys: Iterable[str] | None = None,
+) -> Text:
+    """Format a dictionary as a table of environment variables
+
+    Values are passed to shlex.quote before formatting.
+
+    Parameters
+    ----------
+    items : dict[str, Any]
+        The dictionary of items to format
 
     keys : Iterable[str] or None, optional
         If not None, only the specified subset of keys is included in the
-        table output (default: None)
+        output (default: None)
 
     Returns
     -------
-        str
+        Text
 
     """
-    # annoying but necessary to take len on color-formatted version
-    N = max(len(key(k)) for k in items) if align else 0
-
     keys = items.keys() if keys is None else keys
 
-    return "\n".join(
-        f"{key(k): <{N}}{delim}{value(quote(str(items[k])))}" for k in keys
-    )
+    text = Text()
+
+    # don't use Text.from_markup here since keys or values
+    # might contain content that could confuse rich
+    for key in keys:
+        k = Text(f" {key}", style="dim green")
+        v = Text(shlex.quote(str(items[key])), style="yellow")
+        text += Text.assemble(k, "=", v, "\n")
+
+    return text
 
 
-def rule(
-    text: str | None = None,
-    *,
-    pad: int = 0,
-    char: str = "-",
-    N: int = UI_WIDTH,
-) -> str:
-    """Format a horizontal rule, optionally with text
-
-    Parameters
-    ----------
-    text : str or None, optional
-        If not None, display this text inline in the rule (default: None)
-
-    pad : int, optional
-        An amount of padding to put in front of the rule
-
-    char: str, optional
-        A character to use for the rule (default: "-")
-
-    N : int, optional
-        Character width for the rule (default: 80)
-
-    Returns
-    -------
-        str
-
-    """
-    width = N - pad
-    if text is None:
-        return f"[cyan]{char * width: >{N}}[/]"
-    return (
-        "[cyan]"
-        + " " * pad
-        + char * 3
-        + f"{f' {text} ' :{char}<{width - 3}}"
-        + "[/]"
-    )
-
-
-def section(text: str) -> str:
-    """Format text as a section header
-
-    Parameters
-    ----------
-    text : str
-        The text to format
-
-    Returns
-    -------
-        str
-
-    """
-    return f"[bright white]{text}[/]"
-
-
-def shell(cmd: str, *, char: str = "+") -> str:
+def shell(cmd: str, *, char: str = "+") -> Text:
     """Report a shell command in a dim white color.
 
     Parameters
@@ -316,27 +348,27 @@ def shell(cmd: str, *, char: str = "+") -> str:
     char : str, optional
         A character to prefix the ``cmd`` with. (default: "+")
 
+    Returns
+    -------
+        Text
+
     """
-    return f"[dim white]{char}{cmd}[/]"
+    # don't use Text.from_markup here since cmd
+    # might contain content that could confuse rich
+    return Text(f"{char}{cmd}", style="dim white")
 
 
 def summary(
-    name: str,
     total: int,
     passed: int,
     time: timedelta,
-    *,
-    justify: bool = True,
-) -> str:
+) -> Text:
     """Generate a test result summary line.
 
-    The output is bright green if all tests passed, otherwise bright red.
+    The output is bold green if all tests passed, otherwise bold red.
 
     Parameters
     ----------
-    name : str
-        A name to display in this summary line.
-
     total : int
         The total number of tests to report.
 
@@ -346,29 +378,20 @@ def summary(
     time : timedelta
         The time taken to run the tests
 
-    """
-    summary = (
-        f"{name}: Passed {passed} of {total} tests "
-        f"({passed / total * 100:0.1f}%) "
-        f"in {time.total_seconds():0.2f}s"
-        if total > 0
-        else f"{name}: 0 tests are running, Please check"
-    )
-    color = "green" if passed == total and total > 0 else "red"
-    return f"[bright {color}]{summary: >{UI_WIDTH}}[/]" if justify else summary
-
-
-def warn(text: str) -> str:
-    """Format text as a warning.
-
-    Parameters
-    ----------
-    text : str
-        The text to format
-
     Returns
     -------
-        str
+        Text
 
     """
-    return f"[magenta]WARNING: {text}[/]"
+    if total == 0:
+        return Text.from_markup("[bold red]No tests run, please check[/]")
+
+    color = "green" if passed == total else "red"
+
+    summary = (
+        f"Passed {passed} of {total} tests "
+        f"({passed / total * 100:0.1f}%) "
+        f"in {time.total_seconds():0.2f}s"
+    )
+
+    return Text.from_markup(f"[bold {color}]{summary}[/]")

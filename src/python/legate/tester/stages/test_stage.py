@@ -15,15 +15,21 @@ import multiprocessing
 import queue
 from datetime import datetime
 from pathlib import Path
-from typing import Any, NoReturn, Protocol
+from typing import TYPE_CHECKING, Any, NoReturn, Protocol
+
+from rich.console import Group
+from rich.rule import Rule
 
 from ...util.types import ArgList, EnvDict
-from ...util.ui import banner, summary
+from ...util.ui import section, summary
 from .. import FeatureType
 from ..config import Config
 from ..runner import Runner, TestSpec
 from ..test_system import ProcessResult, TestSystem
 from .util import Shard, StageResult, StageSpec, log_proc
+
+if TYPE_CHECKING:
+    from rich.panel import Panel
 
 
 class TestStage(Protocol):
@@ -152,36 +158,26 @@ class TestStage(Protocol):
         return self.__class__.__name__
 
     @property
-    def intro(self) -> str:
+    def intro(self) -> Panel:
         """An informative banner to display at stage end."""
-        workers = self.spec.workers
-        workers_text = f"{workers} worker{'s' if workers > 1 else ''}"
-        return (
-            banner(f"Entering stage: {self.name} (with {workers_text})") + "\n"
-        )
+        num_workers = self.spec.workers
+        workers = f"with {num_workers} worker{'s' if num_workers > 1 else ''}"
+        return section(f"Entering stage: [cyan]{self.name}[/] ({workers})")
 
     @property
-    def outro(self) -> str:
+    def outro(self) -> Group:
         """An informative banner to display at stage end."""
         total, passed = self.result.total, self.result.passed
 
-        result = summary(self.name, total, passed, self.result.time)
-
-        footer = banner(
-            f"Exiting stage: {self.name}",
-            details=(
-                "* Results      : "
-                + (
-                    f"{passed} / {total} files passed "  # noqa E500
-                    f"({passed / total * 100:0.1f}%)"
-                    if total > 0
-                    else "0 tests are running, Please check "
-                ),
-                "* Elapsed time : " + f"{self.result.time}",
+        return Group(
+            section(
+                Group(
+                    f"Exiting stage: [cyan]{self.name}[/]\n",
+                    summary(total, passed, self.result.time),
+                )
             ),
+            Rule(style="white"),
         )
-
-        return f"{result}\n{footer}"
 
     def _run(
         self,

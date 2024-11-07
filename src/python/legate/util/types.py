@@ -16,9 +16,12 @@ from __future__ import annotations
 
 from dataclasses import Field, dataclass
 from pathlib import Path
-from typing import Any, Literal, Protocol, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, TypeVar
 
-from .ui import kvtable
+from .ui import table
+
+if TYPE_CHECKING:
+    from rich.table import Table
 
 __all__ = (
     "ArgList",
@@ -94,8 +97,9 @@ class DataclassProtocol(Protocol):
 class DataclassMixin(DataclassProtocol):
     """A mixin for automatically pretty-printing a dataclass."""
 
-    def __str__(self) -> str:
-        return kvtable(self.__dict__)
+    @property
+    def ui(self) -> Table:
+        return table(self.__dict__, justify="left")
 
 
 T = TypeVar("T", bound=DataclassProtocol)

@@ -162,6 +162,7 @@ def log_proc(
 ) -> None:
     """Log a process result according to the current configuration"""
     if config.info.debug or config.dry_run:
+        LOG("\n")
         LOG(shell(proc.invocation))
 
     if proc.time is None or proc.start is None or proc.end is None:
