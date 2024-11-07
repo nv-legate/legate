@@ -277,17 +277,20 @@ class DocsConfig(SectionConfig):
             "ipython",
             "jinja2",
             "markdown",
-            "pydata-sphinx-theme>=0.13",
-            "myst-parser",
-            "nbsphinx",
-            "sphinx-copybutton",
-            "sphinx>=4.4.0",
-            "breathe>=4.35.0",
         )
 
+    # Use pip for sphinx and breathe deps. Need Sphinx>8 for the NV theme
+    # but conda breath requires Sphinx<=7.2 even though things work.
     @property
     def pip(self) -> Reqs:
-        return ()
+        return (
+            "breathe>=4.35.0",
+            "myst-parser",
+            "nbsphinx",
+            "nvidia-sphinx-theme",
+            "sphinx>=8",
+            "sphinx-copybutton",
+        )
 
 
 @dataclass(frozen=True)
