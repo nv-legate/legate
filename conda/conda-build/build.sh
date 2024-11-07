@@ -47,6 +47,14 @@ function preamble()
   # Rewrite conda's -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY to
   #                 -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH
   CMAKE_ARGS="${CMAKE_ARGS//_INCLUDE=ONLY/_INCLUDE=BOTH}"
+  # Conda sets these to -I/some/path/in/cuda/toolkit, but this breaks all sorts of stuff
+  # in CMake. Since we use CCCL as a third-party dependency, we add its headers with
+  # -isystem, but since conda adds additional headers with -I, those take precedence over
+  # -isystem, meaning they are effectively shadowed.
+  #
+  # So thanks, conda, once again, for doing something "helpful"!
+  unset NVCC_APPEND_FLAGS
+  unset NVCC_PREPEND_FLAGS
 
   configure_args=()
   if [[ "${USE_OPENMP:-OFF}" == 'OFF' ]]; then
