@@ -43,7 +43,9 @@ class DummyManager(ConfigurationManager):
     def log_divider(self, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def log_execute_command(self, cmd: Sequence[_T]) -> Any:
+    def log_execute_command(
+        self, cmd: Sequence[_T], live: bool = False
+    ) -> Any:
         pass
 
     def log_execute_func(  # type: ignore[override]

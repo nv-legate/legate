@@ -308,10 +308,10 @@ class CMaker:
             title=f"Configuring {manager.project_name}",
         )
         try:
-            manager.log_execute_command(cmake_command)
+            manager.log_execute_command(cmake_command, live=True)
         except Exception as e:
             raise CMakeConfigureError(
                 f"CMake failed to configure {manager.project_name}"
             ) from e
 
-        manager.log_divider()
+        manager.log_divider(tee=True)

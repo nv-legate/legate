@@ -53,7 +53,8 @@ def _handle_exception(
             f", please see {config._logger.file_path} for "
             "additional details."
         )
-        config.log_boxed(excn_str, title=message, tee=True)
+        config.log_divider()
+        config.log_boxed(excn_str, title=message)
         config.log_divider()
     except Exception as e:
         print(
@@ -80,9 +81,7 @@ def _basic_configure_impl(
     config = ConfigurationManager(argv, MainPackageType)
     try:
         try:
-            config.setup()
-            config.configure()
-            config.finalize()
+            config.main()
         except:  # noqa E722
             if post_mortem:
                 py_db.post_mortem()

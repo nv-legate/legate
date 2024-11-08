@@ -14,11 +14,12 @@ from argparse import Namespace
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 from .logger import Logger
 
 if TYPE_CHECKING:
+    from .logger import AlignMethod
     from .manager import ConfigurationManager
 
 _P = ParamSpec("_P")
@@ -51,9 +52,19 @@ class Configurable:
         return self._manager
 
     @property
+    def cl_args(self) -> Namespace:
+        r"""See `ConfigurationManager.cl_args`."""
+        return self.manager.cl_args
+
+    @property
     def project_name(self) -> str:
         r"""See `ConfigurationManager.project_name`."""
         return self.manager.project_name
+
+    @property
+    def project_name_upper(self) -> str:
+        r"""See `ConfigurationManager.project_name`."""
+        return self.manager.project_name_upper
 
     @property
     def project_arch(self) -> str:
@@ -71,6 +82,11 @@ class Configurable:
         return self.manager.project_dir
 
     @property
+    def project_src_dir(self) -> Path:
+        r"""See `ConfigurationManager.project_src_dir`."""
+        return self.manager.project_src_dir
+
+    @property
     def project_dir_name(self) -> str:
         r"""See `ConfigurationManager.project_dir_name`."""
         return self.manager.project_dir_name
@@ -85,34 +101,24 @@ class Configurable:
         r"""See `ConfigurationManager.project_cmake_dir`."""
         return self.manager.project_cmake_dir
 
-    @property
-    def cl_args(self) -> Namespace:
-        r"""See `ConfigurationManager.cl_args`."""
-        return self.manager.cl_args
-
     @Logger.log_passthrough
     def log(
         self,
-        mess: str,
+        msg: str | list[str] | tuple[str, ...],
         *,
         tee: bool = False,
-        end: str = "\n",
-        scroll: bool = False,
         caller_context: bool = True,
+        keep: bool = False,
     ) -> None:
         r"""See `ConfigurationManager.log`."""
         return self.manager.log(
-            mess,
-            tee=tee,
-            end=end,
-            scroll=scroll,
-            caller_context=caller_context,
+            msg, tee=tee, caller_context=caller_context, keep=keep
         )
 
     @Logger.log_passthrough
-    def log_divider(self, tee: bool = False) -> None:
+    def log_divider(self, tee: bool = False, keep: bool = False) -> None:
         r"""See `ConfigurationManager.log_divider`."""
-        return self.manager.log_divider(tee=tee)
+        return self.manager.log_divider(tee=tee, keep=keep)
 
     @Logger.log_passthrough
     def log_boxed(
@@ -120,27 +126,18 @@ class Configurable:
         message: str,
         *,
         title: str = "",
-        divider_char: str | None = None,
-        tee: bool = True,
-        caller_context: bool = False,
-        **kwargs: Any,
+        title_style: str = "",
+        align: AlignMethod = "center",
     ) -> None:
         r"""See `ConfigurationManager.log_boxed`."""
         return self.manager.log_boxed(
-            message,
-            title=title,
-            divider_char=divider_char,
-            tee=tee,
-            caller_context=caller_context,
-            **kwargs,
+            message, title=title, title_style=title_style, align=align
         )
 
     @Logger.log_passthrough
-    def log_warning(
-        self, message: str, *, title: str = "WARNING", **kwargs: Any
-    ) -> None:
+    def log_warning(self, message: str, *, title: str = "WARNING") -> None:
         r"""See `ConfigurationManager.log_warning`."""
-        return self.manager.log_warning(message, title=title, **kwargs)
+        return self.manager.log_warning(message, title=title)
 
     @Logger.log_passthrough
     def log_execute_func(
@@ -151,10 +148,10 @@ class Configurable:
 
     @Logger.log_passthrough
     def log_execute_command(
-        self, command: Sequence[_T]
+        self, command: Sequence[_T], live: bool = False
     ) -> CompletedProcess[str]:
         r"""See `ConfigurationManager.log_execute_command`."""
-        return self.manager.log_execute_command(command)
+        return self.manager.log_execute_command(command, live=live)
 
     def setup(self) -> None:
         r"""Setup a `Configurable` for later configuration. By default,

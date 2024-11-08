@@ -18,14 +18,13 @@ from pathlib import Path
 from typing import Any, TypeAlias
 
 import pytest
-from pytest import CaptureFixture, MonkeyPatch
+from pytest import MonkeyPatch
 
 from ..cmake.cmaker import CMakeCommandSpec
 from ..logger import Logger
 from ..main import basic_configure
 from ..manager import ConfigurationManager
 from ..package.main_package import _detect_num_cpus
-from ..util.constants import Constants
 from .fixtures.dummy_main_module import DummyMainModule
 
 
@@ -212,7 +211,6 @@ class TestMain:
     def test_basic_configure_bad_halfway(
         self,
         monkeypatch: MonkeyPatch,
-        capsys: CaptureFixture[str],
         AEDIFIX_PYTEST_DIR: Path,
     ) -> None:
         exn_mess = "Throwing from setup"
@@ -228,10 +226,11 @@ class TestMain:
         configure_log = AEDIFIX_PYTEST_DIR / "configure.log"
         assert configure_log.exists()
         assert configure_log.is_file()
-        assert len(configure_log.read_text().strip())
+        config_log_text = configure_log.read_text().strip()
+        assert config_log_text
 
-        lines = capsys.readouterr().out.splitlines()
-        expected_lines = Logger.build_multiline_message(
+        logger = Logger(AEDIFIX_PYTEST_DIR / "dummy.log")
+        expected_lines = logger.build_multiline_message(
             sup_title="CONFIGURATION CRASH",
             divider_char="-",
             text=(
@@ -239,10 +238,11 @@ class TestMain:
                 "details."
             ),
         ).splitlines()
-        banner = "=" * Constants.banner_length
+        banner = "=" * (logger.console.width - 1)
         expected_lines.insert(0, banner)
         expected_lines.append(banner)
-        assert lines == expected_lines
+        config_log_lines = set(config_log_text.splitlines())
+        assert set(expected_lines) <= config_log_lines
 
     def test_basic_configure_bare(
         self, AEDIFIX_PYTEST_DIR: Path, AEDIFIX_PYTEST_ARCH: str

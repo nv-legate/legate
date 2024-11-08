@@ -15,25 +15,49 @@ import os
 import shutil
 import sys
 import textwrap
+from collections import deque
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
 
-from .util.constants import Constants
+# This must be the ONLY place that rich is imported to ensure that this error
+# message is seen when running configure on a system where it is not yet
+# installed.
+try:
+    import rich  # noqa: F401
+except ModuleNotFoundError:
+    raise RuntimeError("Please run 'python3 -m pip install rich' to continue")
+
+from rich.align import Align, AlignMethod
+from rich.console import Console, RenderableType
+from rich.live import Live
+from rich.panel import Panel
+from rich.rule import Rule
+from rich.table import Table
 
 _T = TypeVar("_T")
 
 
 class Logger:
-    __slots__ = ("_screen_logger", "_file_logger")
+    __slots__ = (
+        "_file_logger",
+        "_row_data",
+        "_console",
+        "_table",
+        "_live",
+        "_live_raii",
+    )
     __unique_id: ClassVar = 0
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, max_live_lines: int = 40) -> None:
         r"""Construct a Logger.
 
         Parameters
         ----------
         path : Path
             The path at which to create the on-disk log.
+        max_live_lines : 40
+            The maximum number of live output lines to keep.
         """
 
         def make_name(base_name: str) -> str:
@@ -50,30 +74,57 @@ class Logger:
                 Logger.__unique_id += 1
             return base_name
 
-        path = path.resolve()
-        self._screen_logger = self._create_logger(
-            make_name("screen_configure"),
-            logging.StreamHandler,
-            stream=sys.stdout,
-        )
         self._file_logger = self._create_logger(
             make_name("file_configure"),
             logging.FileHandler,
-            path,
+            path.resolve(),
             mode="w",
             delay=True,
         )
 
-    def __del__(self) -> None:
-        for attr in ("_screen_logger", "_file_logger"):
-            logger = getattr(self, attr, None)
-            if logger is None:
-                continue
-            for handler in logger.handlers:
-                try:
-                    handler.flush()
-                except ValueError:
-                    pass
+        self._row_data: deque[tuple[RenderableType, bool]] = deque(
+            maxlen=max_live_lines
+        )
+        self._console = Console()
+        self._table = self._make_table(self.console, self._row_data)
+        self._live = Live(
+            self._table, console=self.console, auto_refresh=False
+        )
+        self._live_raii: Live | None = None
+
+    @staticmethod
+    def _make_table(
+        console: Console, row_data: deque[tuple[RenderableType, bool]]
+    ) -> Table:
+        table = Table.grid(expand=True)
+        for raw_data, _ in row_data:
+            data: RenderableType
+            if isinstance(raw_data, str):
+                data = console.render_str(raw_data)
+            else:
+                data = raw_data
+            table.add_row(data)
+        return table
+
+    def __enter__(self) -> Logger:
+        self._live_raii = self._live.__enter__()
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.flush()
+        self._live.__exit__(*args)
+        self._live_raii = None
+
+    @property
+    def console(self) -> Console:
+        r"""Get the current active Console
+
+        Returns
+        -------
+        Console
+            The current active console.
+        """
+        return self._console
 
     @property
     def file_path(self) -> Path:
@@ -153,11 +204,11 @@ class Logger:
         logger.addHandler(handler)
         return logger
 
-    @staticmethod
     def build_multiline_message(
+        self,
         sup_title: str,
         text: str,
-        divider_char: str | None = None,
+        divider_char: str = "-",
         length: int | None = None,
         prefix: str = " " * 2,
         **kwargs: Any,
@@ -170,7 +221,7 @@ class Logger:
             The super title for the message, e.g. 'WARNING'.
         text : str
             The body of the message.
-        divider_shar : str, optional
+        divider_char : str, "-"
             The char to form the divider between `sup_title` and `text`, if
             any. Must be a single character.
         length : int, optional
@@ -187,7 +238,7 @@ class Logger:
             The formatted multiline message.
         """
         if length is None:
-            length = Constants.banner_length
+            length = self.console.width - 1
 
         kwargs.setdefault("break_on_hyphens", False)
         kwargs.setdefault("break_long_words", False)
@@ -230,14 +281,13 @@ class Logger:
         if len(wrapped) == 1:
             # center-justify single lines, and remove the bogus prefix
             wrapped[0] = center_line(wrapped[0].lstrip())
-        if divider_char is not None:
+        if divider_char and sup_title:
             # add the divider if we are making a message like
             #
             # =====================
             #   BIG SCARY TITLE
             # --------------------- <- divider_char is '-'
             #   foo bar
-            divider_char = str(divider_char)
             assert len(divider_char) == 1
             wrapped.insert(0, divider_char * length)
         if sup_title:
@@ -251,121 +301,166 @@ class Logger:
             wrapped.insert(0, center_line(str(sup_title)))
         return "\n".join(wrapped)
 
-    @classmethod
-    def build_multiline_error_message(
-        cls,
-        sup_title: str,
-        text: str,
-        divider_char: str = "-",
-        length: int | None = None,
-        **kwargs: Any,
-    ) -> str:
-        r"""Build a multiline error message.
+    def flush(self) -> None:
+        r"""Flush any pending log writes to disk or screen."""
+        for handler in self._file_logger.handlers:
+            try:
+                handler.flush()
+            except AttributeError:
+                pass
+        self._live.refresh()
+
+    def _append_live_message(self, mess: RenderableType, keep: bool) -> None:
+        r"""Append a new message to the live data stream.
 
         Parameters
         ----------
-        sup_tile : str
-            The super title for the message, e.g. 'WARNING'.
-        text : str
-            The body of the message.
-        divider_shar : str, '-'
-            The char to form the divider between `sup_title` and `text`, if
-            any. Must be a single character. Defaults to '-'.
-        length : int, optional
-            The maximum width of the message. Defaults to the width of the
-            screen.
-        **kwargs : Any
-            Additional keyword arguments to `Logger.build_multiline_message()`.
+        mess : RenderableType
+            The message to append.
+        keep : bool
+            True if the message should persist, False otherwise. If the
+            message persists, then appending new data (which might otherwise
+            bump the message off the queue) will instead bump the next
+            available message off.
 
-        Returns
-        -------
-        message : str
-            The formatted error message.
         """
-        if length is None:
-            length = Constants.banner_length
-
-        if not text.endswith("\n"):
-            text += "\n"
-
-        banner_line = "*" * length
-        return "\n".join(
-            [
-                banner_line,
-                cls.build_multiline_message(
-                    sup_title,
-                    text,
-                    divider_char=divider_char,
-                    length=length,
-                    **kwargs,
-                ),
-                banner_line,
-                "",  # to add an additional newline at the end
-            ]
-        )
-
-    def flush(self) -> None:
-        r"""Flush any pending log writes to disk or screen."""
-        for logger in (self._file_logger, self._screen_logger):
-            for handler in logger.handlers:
-                try:
-                    handler.flush()
-                except AttributeError:
-                    pass
+        row_data = self._row_data
+        assert row_data.maxlen is not None  # mypy
+        if len(row_data) >= (row_data.maxlen - 1):
+            for idx, (_, data_keep) in enumerate(row_data):
+                if not data_keep:
+                    del row_data[idx]
+                    break
+            else:
+                raise ValueError(
+                    "Could not prune row data, every entry was marked as "
+                    "persistent"
+                )
+        row_data.append((mess, keep))
 
     def log_screen(
-        self, mess: str, end: str = "\n", flush: bool = False
+        self,
+        mess: (
+            RenderableType | list[RenderableType] | tuple[RenderableType, ...]
+        ),
+        keep: bool = False,
     ) -> None:
         r"""Log a message to the screen.
 
         Parameters
         ----------
-        mess : str
-            The message to print to screen.
-        end : str, '\n'
-            The line ending to append to mess. Defaults to newline.
-        flush : bool, False
-            True if the log handler should flush before returning, False
-            otherwise.
+        mess :RenderableType | list[RenderableType] | tuple[RenderableType,...]
+            The message(s) to print to screen.
+        keep : bool, False
+            Whether to keep the message permanently in live output.
         """
-        if end == "\r":
-            flush = True
-        was_scrolling = False
-        slogger = self._screen_logger
-        handlers = slogger.handlers
-        for handler in handlers:
-            assert isinstance(handler, logging.StreamHandler)
-            if handler.terminator == "\r":
-                was_scrolling = True
-            handler.terminator = end
+        if not self._live.is_started:
+            with self:
+                self.log_screen(mess, keep=keep)
+            return
 
-        # Kind of a dirty hack to re-stablish newlines after "scrolling"
-        # behavior.
-        if end == "\n" and was_scrolling:
-            mess = "\n" + mess
-        if end not in {"\n", "\r"}:
-            mess += end
-        slogger.log(slogger.level, mess)
-        if flush:
-            for handler in handlers:
-                try:
-                    handler.flush()
-                except AttributeError:
-                    pass
+        def do_log(message: RenderableType, keep: bool) -> None:
+            self._append_live_message(message, keep)
+            self._table = self._make_table(self.console, self._row_data)
+            self._live.update(self._table, refresh=True)
 
-    def log_screen_clear_line(self) -> None:
-        r"""Clear the current line for the screen logger."""
-        self.log_screen("\r\033[K", end="\r")
+        match mess:
+            case list() | tuple():
+                for m in mess:
+                    do_log(m, keep)
+            case _:
+                do_log(mess, keep)
 
-    def log_file(self, message: str) -> None:
+    def log_file(self, message: str | Sequence[str]) -> None:
         r"""Log a message to the log file.
 
         Parameters
         ----------
-        message : str
-            The message to log to file.
+        message : str | Sequence[str]
+            The message, or sequence of lines to log to file.
         """
-        self._file_logger.log(self._screen_logger.level, message)
+        if not isinstance(message, str):
+            message = "\n".join(message)
+        self._file_logger.log(self._file_logger.level, message)
+
+    def _log_boxed_file(self, message: str, title: str) -> None:
+        file_msg = self.build_multiline_message(title, message)
+        self.log_divider(tee=False)
+        self.log_file(file_msg)
+        self.log_divider(tee=False)
+
+    def _log_boxed_screen(
+        self,
+        message: str,
+        title: str,
+        title_style: str,
+        align: AlignMethod,
+    ) -> None:
+        if title_style:
+            if not title_style.startswith("["):
+                title_style = "[" + title_style
+            if not title_style.endswith("]"):
+                title_style += "]"
+        if title:
+            title = f"[bold]{title_style}{title}[/]"
+
+        rich_txt = self.console.render_str(message)
+        screen_message = Panel(Align(rich_txt, align=align), title=title)
+        self.log_screen(screen_message, keep=True)
+
+    def log_boxed(
+        self,
+        message: str,
+        *,
+        title: str = "",
+        title_style: str = "",
+        align: AlignMethod = "center",
+    ) -> None:
+        r"""Log a message surrounded by a box.
+
+        Parameters
+        ----------
+        message : str
+            The message to log.
+        title : str, ''
+            An optional title for the box.
+        title_style : str, ''
+            Optional additional styling for the title.
+        align : AlignMethod, 'center'
+            How to align the text.
+        """
+        self._log_boxed_file(message, title)
+        self._log_boxed_screen(message, title, title_style, align)
+
+    def log_warning(self, message: str, *, title: str = "WARNING") -> None:
+        r"""Log a warning to the log.
+
+        Parameters
+        ----------
+        message : str
+            The message to print.
+        title : str, 'WARNING'
+            The title to use for the box.
+        """
+        self.log_boxed(
+            message, title=f"***** {title} *****", title_style="[yellow]"
+        )
+
+    def log_divider(self, tee: bool = False, keep: bool = True) -> None:
+        r"""Append a dividing line to the logs.
+
+        Parameters
+        ----------
+        tee : bool, False
+           If True, output is printed to screen in addition to being appended
+           to the on-disk log file. If False, output is only written to disk.
+        keep : bool, True
+           If ``tee`` is True, whether to persist the message in terminal
+           output.
+        """
+        self.log_file("=" * (self.console.width - 1))
+        if tee:
+            self.log_screen(Rule(), keep=keep)
 
     def copy_log(self, dest: Path) -> Path:
         r"""Copy the file log to another location.

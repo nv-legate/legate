@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from pytest import LogCaptureFixture
+from pytest import CaptureFixture
 
 from ..logger import Logger
 
@@ -34,35 +34,69 @@ class TestLogger:
         import logging
 
         logger = Logger(tmp_configure_log)
-        assert isinstance(logger._screen_logger, logging.Logger)
         assert isinstance(logger._file_logger, logging.Logger)
         assert logger.file_path == tmp_configure_log
+        assert len(logger._row_data) == 0
+        assert not logger._live.is_started
 
     def test_flush(self, logger: Logger) -> None:
         logger.flush()
 
     @pytest.mark.parametrize("mess", ("hello world", "goodbye world"))
-    @pytest.mark.parametrize("end", ("\n", "\r", "!!!"))
-    @pytest.mark.parametrize("flush", (True, False))
     def test_log_screen(
         self,
         logger: Logger,
-        caplog: LogCaptureFixture,
+        capsys: CaptureFixture[str],
         mess: str,
-        end: str,
-        flush: bool,
     ) -> None:
-        logger.log_screen(mess=mess, end=end, flush=flush)
-        assert len(caplog.messages) == 1
-        expected = mess + ("" if end in {"\n", "\r"} else end)
-        assert caplog.messages[0] == expected
+        with logger:
+            logger.log_screen(mess=mess)
+        captured = capsys.readouterr()
+        assert mess in captured.out
+        assert captured.err == ""
 
-    def test_log_screen_clear_line(
-        self, logger: Logger, caplog: LogCaptureFixture
-    ) -> None:
-        logger.log_screen_clear_line()
-        assert len(caplog.messages) == 1
-        assert caplog.messages[0] == "\r\033[K"
+    def test_logger_context(self, logger: Logger) -> None:
+        assert logger._live.is_started is False
+        with logger as lg:
+            # Need to use alias lg since otherwise mypy says the final line is
+            # unreachable, since I guess it assumes the lifetime of the
+            # variable "logger" is tied to the with statement?
+            assert lg is logger
+            assert lg._live.is_started is True
+        assert logger._live.is_started is False
+
+    def test_append_live_message(self, logger: Logger) -> None:
+        row_data = logger._row_data
+        # make sure that the above access doesn't return a copy or something
+        # like that
+        assert row_data is logger._row_data
+        assert row_data.maxlen is not None
+        assert len(row_data) == 0
+        logger._append_live_message("foo", True)
+        assert len(row_data) == 1
+        assert row_data[0] == ("foo", True)
+        for i in range(row_data.maxlen - len(row_data)):
+            row_data.append((f"bar_{i}", False))
+        assert len(row_data) == row_data.maxlen
+        assert row_data[0] == ("foo", True)
+        logger._append_live_message("new_foo", True)
+        assert len(row_data) == row_data.maxlen
+        assert row_data[0] == ("foo", True)
+        # The last non-kept entry should now be next
+        assert row_data[1] == ("bar_1", False)
+
+    def test_append_live_message_full(self, logger: Logger) -> None:
+        assert logger._row_data.maxlen is not None
+        for i in range(logger._row_data.maxlen):
+            logger._row_data.append((f"foo_{i}", True))
+        with pytest.raises(
+            ValueError,
+            match=(
+                "Could not prune row data, every entry was marked as "
+                "persistent"
+            ),
+        ):
+            logger._append_live_message("oh no", True)
 
     def test_log_file(self, logger: Logger) -> None:
         mess = "foo bar baz"

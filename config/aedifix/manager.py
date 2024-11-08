@@ -41,7 +41,6 @@ from .reconfigure import Reconfigure
 from .util.argument_parser import ConfigArgument
 from .util.callables import classify_callable, get_calling_function
 from .util.cl_arg import CLArg
-from .util.constants import Constants
 from .util.exception import (
     CommandError,
     UnsatisfiableConfigurationError,
@@ -56,6 +55,7 @@ from .util.utility import (
 
 if TYPE_CHECKING:
     from .cmake.cmake_flags import CMakeFlagBase
+    from .logger import AlignMethod
     from .package.main_package import MainPackage
     from .package.package import Package
 
@@ -495,8 +495,7 @@ class ConfigurationManager:
                 yield from val_list
 
         summary = "\n".join(gen_summary())
-        self.log_divider(tee=True)
-        self.log(summary, tee=True, caller_context=False)
+        self.log_boxed(summary, title="Configuration Summary")
         install_mess = [
             "Please set the following:",
             "",
@@ -510,7 +509,11 @@ class ConfigurationManager:
             install_mess.extend(
                 ("And install Python bindings:", "$ pip install .")
             )
-        self.log_boxed("\n".join(install_mess), title="Configuration Complete")
+        self.log_boxed(
+            "\n".join(install_mess),
+            title="Configuration Complete",
+            align="left",
+        )
 
     # Member variable access
     @property
@@ -736,32 +739,28 @@ class ConfigurationManager:
     # Logging
     def log(
         self,
-        mess: str,
+        msg: str | list[str] | tuple[str, ...],
         *,
         tee: bool = False,
-        end: str = "\n",
-        scroll: bool = False,
         caller_context: bool = True,
+        keep: bool = False,
     ) -> None:
         r"""Append a message to the log.
 
         Parameters
         ----------
-        mess : str
-            The message to append to the log.
+        msg : str | list[str] | tuple[str, ...]
+            The message(s) to append to the log.
         tee : bool, False
             If True, output is printed to screen in addition to being appended
             to the on-disk log file. If False, output is only written to disk.
-        end : str, '\n'
-            The line ending to append to the message.
-        scroll : bool, False
-            If True, writes `mess` on a new line, if False overwrites the
-            current line with `mess`.
         caller_context : bool, True
             Whether to prepand the name of the function which called this
             function to `mess`.
+        keep : bool, False
+            Whether to make the message persist in live output.
         """
-        verbose_mess = mess
+        verbose_mess = msg
         if caller_context:
             try:
                 caller = get_calling_function()
@@ -771,20 +770,21 @@ class ConfigurationManager:
                 caller_name, _, _ = classify_callable(
                     caller, fully_qualify=False
                 )
-                verbose_mess = f"{caller_name}(): {mess}"
+                match msg:
+                    case str():
+                        verbose_mess = f"{caller_name}(): {msg}"
+                    case _:
+                        verbose_mess = [
+                            f"{caller_name}(): {sub}" for sub in msg
+                        ]
 
         self._logger.log_file(verbose_mess)
-        if not tee:
-            return
+        if tee:
+            # See https://github.com/python/mypy/issues/18121 for why this
+            # type-check is ignored
+            self._logger.log_screen(msg, keep=keep)  # type: ignore[arg-type]
 
-        if scroll:
-            self._logger.log_screen_clear_line()
-            mess = mess[: Constants.banner_length]
-            end = "\r"
-        self._logger.log_screen(mess, end=end)
-
-    @Logger.log_passthrough
-    def log_divider(self, tee: bool = False) -> None:
+    def log_divider(self, tee: bool = False, keep: bool = True) -> None:
         r"""Append a dividing line to the logs.
 
         Parameters
@@ -792,19 +792,19 @@ class ConfigurationManager:
         tee : bool, False
            If True, output is printed to screen in addition to being appended
            to the on-disk log file. If False, output is only written to disk.
+        keep : bool, True
+           If ``tee`` is True, whether to persist the message in terminal
+           output.
         """
-        self.log("=" * Constants.banner_length, tee=tee, caller_context=False)
+        self._logger.log_divider(tee=tee, keep=keep)
 
-    @Logger.log_passthrough
     def log_boxed(
         self,
         message: str,
         *,
         title: str = "",
-        divider_char: str | None = None,
-        tee: bool = True,
-        caller_context: bool = False,
-        **kwargs: Any,
+        title_style: str = "",
+        align: AlignMethod = "center",
     ) -> None:
         r"""Log a message surrounded by a box.
 
@@ -814,35 +814,16 @@ class ConfigurationManager:
             The message to log.
         title : str, ''
             An optional title for the box.
-        divider_char : str | None
-            The character to use as the divider between the title and box
-            contents.
-        tee : bool, True
-            If True, output is printed to screen in addition to being appended
-            to the on-disk log file. If False, output is only written to disk.
-        caller_context : bool, False
-            Same meaning as for `ConfigurationManager.log()`.
-        **kwargs : Any
-            Additional keyword arguments to `ConfigurationManager.log()`.
+        title_style : str, ''
+            Optional additional styling for the title.
+        align : AlignMethod, 'center'
+            How to align the text.
         """
-        self.log_divider(tee=tee)
-        if divider_char is None:
-            if title:
-                divider_char = "-"
-        else:
-            assert (
-                len(divider_char) == 1
-            ), "divider CHAR must be a char (i.e. length 1), not a string!"
-        message = self._logger.build_multiline_message(
-            title, message, divider_char=divider_char
+        self._logger.log_boxed(
+            message, title=title, title_style=title_style, align=align
         )
-        self.log(message, tee=tee, caller_context=caller_context, **kwargs)
-        self.log_divider(tee=tee)
 
-    @Logger.log_passthrough
-    def log_warning(
-        self, message: str, *, title: str = "WARNING", **kwargs: Any
-    ) -> None:
+    def log_warning(self, message: str, *, title: str = "WARNING") -> None:
         r"""Log a warning to the log.
 
         Parameters
@@ -851,13 +832,11 @@ class ConfigurationManager:
             The message to print.
         title : str, 'WARNING'
             The title to use for the box.
-        **kwargs : Any
-            Keyword arguments to `ConifgurationManager.log_boxed()`.
         """
-        self.log_boxed(message, title=f"***** {title} *****", **kwargs)
+        self._logger.log_warning(message, title=title)
 
     def log_execute_command(
-        self, command: Sequence[_T]
+        self, command: Sequence[_T], live: bool = False
     ) -> CompletedProcess[str]:
         r"""Execute a system command and return the output.
 
@@ -865,6 +844,9 @@ class ConfigurationManager:
         ----------
         command : Sequence[T]
             The command list to execute.
+        live : bool, False
+            Whether to output the live output to screen as well (it is always
+            updated continuously to the log file).
 
         Returns
         -------
@@ -879,7 +861,12 @@ class ConfigurationManager:
 
         def callback(stdout: str, stderr: str) -> None:
             if stdout := stdout.strip():
-                self.log(stdout, caller_context=False)
+                if live:
+                    self.log(
+                        stdout.splitlines(), caller_context=False, tee=True
+                    )
+                else:
+                    self.log(stdout, caller_context=False)
             if stderr := stderr.strip():
                 self.log(f"STDERR:\n{stderr}", caller_context=False)
 
@@ -935,14 +922,13 @@ class ConfigurationManager:
         self.log(
             f"RUNNING: {qual_name}() ({qual_path}:{lineno})",
             tee=True,
-            scroll=True,
             caller_context=False,
         )
         if docstr := inspect.getdoc(fn):
             self.log(f"  {docstr}\n", caller_context=False)
         else:
             # for a newline
-            self.log("", caller_context=False)
+            self.log("\n", caller_context=False)
         return fn(*args, **kwargs)
 
     # Meat and potatoes
@@ -1066,3 +1052,10 @@ class ConfigurationManager:
         self.log_execute_func(self._main_package.post_finalize)
         self.log_execute_func(self._emit_summary)
         self._logger.copy_log(self.project_arch_dir / "configure.log")
+
+    def main(self) -> None:
+        r"""Perform the main loop of the configuration."""
+        with self._logger:
+            self.setup()
+            self.configure()
+            self.finalize()

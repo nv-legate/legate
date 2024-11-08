@@ -10,7 +10,6 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from . import constants
 from . import exception
 from . import types
 from . import callables
