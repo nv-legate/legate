@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import numpy as np
@@ -365,8 +366,10 @@ class TestLogicalStoreOperationErrors:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.int16, (2, 2, 2))
         partition = store.partition_by_tiling((1, 1, 1))
-        msg = "Operands should have the same size"
-        with pytest.raises(ValueError, match=msg):
+        msg = re.escape(
+            "Color [1] is invalid for partition of color shape [2, 2, 2]"
+        )
+        with pytest.raises(IndexError, match=msg):
             partition.get_child_store(1)
 
     def test_get_child_store_invalid_index(self) -> None:

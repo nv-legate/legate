@@ -242,7 +242,7 @@ set(noinit_SRC
     noinit/task_exception.cc
     noinit/to_domain.cc
     noinit/variant_options.cc
-    noinit/zip_longest.cc
+    noinit/zip_equal.cc
     noinit/zip_shortest.cc)
 
 set(non_reentrant_SRC non_reentrant/death_example.cc non_reentrant/oom_message.cc

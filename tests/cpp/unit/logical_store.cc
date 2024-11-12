@@ -657,10 +657,6 @@ TEST_F(LogicalStoreUnit, ChildStore)
   EXPECT_EQ(partition.get_child_store({2, 1}).shape(), (legate::Shape{2, 4}));
   EXPECT_EQ(partition.get_child_store({4, 1}).shape(), (legate::Shape{1, 4}));
 
-  // TODO(issue 686)
-  // EXPECT_EQ(partition.get_child_store({5, 1}).shape(), (legate::Shape{18446744073709551615, 4}));
-  // EXPECT_EQ(partition.get_child_store({0, 2}).shape(), (legate::Shape{2, 0}));
-
   partition = store.partition_by_tiling({3, 5});
   const std::vector<std::uint64_t> shape2{3, 2};
   EXPECT_EQ(partition.color_shape().data(), shape2);
@@ -668,10 +664,15 @@ TEST_F(LogicalStoreUnit, ChildStore)
   EXPECT_EQ(partition.get_child_store({0, 0}).shape(), (legate::Shape{3, 5}));
   EXPECT_EQ(partition.get_child_store({1, 1}).shape(), (legate::Shape{3, 3}));
   EXPECT_EQ(partition.get_child_store({2, 1}).shape(), (legate::Shape{3, 3}));
+}
 
-  // TODO(issue 686)
-  // EXPECT_EQ(partition.get_child_store({3, 1}).shape(), (legate::Shape{0, 3}));
-  // EXPECT_EQ(partition.get_child_store({0, 2}).shape(), (legate::Shape{3, 18446744073709551615}));
+TEST_F(LogicalStoreUnit, GetChildStoreBadColorSize)
+{
+  const auto runtime   = legate::Runtime::get_runtime();
+  const auto store     = runtime->create_store(legate::Shape{2, 2, 2}, legate::int16());
+  const auto partition = store.partition_by_tiling({1, 1, 1});
+
+  ASSERT_THROW(static_cast<void>(partition.get_child_store({1})), std::out_of_range);
 }
 
 TEST_F(LogicalStoreUnit, InvalidChildStore)
