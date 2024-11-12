@@ -19,6 +19,7 @@ from legate.core import (
     ImageComputationHint,
     LogicalArray,
     Scalar,
+    TaskTarget,
     Type,
     bloat,
     get_legate_runtime,
@@ -110,6 +111,12 @@ class TestPyTask:
         "val, dtype", zip(SCALAR_VALS, ARRAY_TYPES), ids=str
     )
     def test_legate_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
+        runtime = get_legate_runtime()
+        if (
+            isinstance(val, bytes)
+            and runtime.machine.preferred_target == TaskTarget.GPU
+        ):
+            pytest.skip("aborts proc with GPU")
         shape = (3, 1, 3)
         arr_np = np.full(shape, val, dtype=dtype.to_numpy_dtype())
         out_np, out_store = utils.empty_array_and_store(dtype, shape)

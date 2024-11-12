@@ -21,6 +21,7 @@ from legate.core import (
     LogicalArray,
     Scalar,
     Scope,
+    TaskTarget,
     bloat,
     get_legate_runtime,
     image,
@@ -152,9 +153,14 @@ class TestAutoTask:
         "val, dtype", zip(SCALAR_VALS, ARRAY_TYPES), ids=str
     )
     def test_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
+        runtime = get_legate_runtime()
+        if (
+            isinstance(val, bytes)
+            and runtime.machine.preferred_target == TaskTarget.GPU
+        ):
+            pytest.skip("aborts proc with GPU")
         shape = (3, 1, 3)
         dtype_np = dtype.to_numpy_dtype()
-        runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
             runtime.core_library, tasks.fill_task.task_id
         )

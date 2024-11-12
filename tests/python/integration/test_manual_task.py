@@ -19,6 +19,7 @@ import pytest
 from legate.core import (
     Scalar,
     Scope,
+    TaskTarget,
     get_legate_runtime,
     track_provenance,
     types as ty,
@@ -158,9 +159,14 @@ class TestManualTask:
         "val, dtype", zip(SCALAR_VALS, ARRAY_TYPES), ids=str
     )
     def test_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
+        runtime = get_legate_runtime()
+        if (
+            isinstance(val, bytes)
+            and runtime.machine.preferred_target == TaskTarget.GPU
+        ):
+            pytest.skip("aborts proc with GPU")
         shape = (3, 1, 3)
         dtype_np = dtype.to_numpy_dtype()
-        runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
             runtime.core_library, tasks.fill_task.task_id, shape
         )
