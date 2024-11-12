@@ -14,6 +14,7 @@
 """
 from __future__ import annotations
 
+import json
 import os
 import shlex
 import shutil
@@ -121,7 +122,7 @@ class Config:
         self.argv = argv
 
         args, self._extra_args = parser.parse_known_args(self.argv[1:])
-
+        args.gtest_skip_list = set(args.gtest_skip_list)
         # only saving this for help with testing
         self._args = args
 
@@ -283,13 +284,32 @@ class Config:
     def _read_last_failed(self) -> tuple[Path, ...]:
         try:
             with open(LAST_FAILED_FILENAME) as f:
-                lines = (line for line in f.readlines() if line.strip())
-                return tuple(Path(line.strip()) for line in lines)
+                lines = (line.strip() for line in f.readlines())
+                return tuple(Path(line) for line in lines if line)
         except OSError:
             return ()
 
+    @staticmethod
+    def _get_cached_tests(
+        gtest_file: Path, cache_file: Path
+    ) -> list[str] | None:
+        if not cache_file.exists():
+            return None
+
+        # If the gtest_file is newer than the cache file, ignore it
+        if gtest_file.stat().st_mtime > cache_file.stat().st_mtime:
+            return None
+
+        with cache_file.open() as fd:
+            return json.load(fd)
+
+    @staticmethod
+    def _cache_tests(cache_file: Path, test_names: list[str]) -> None:
+        with cache_file.open("w") as fd:
+            json.dump(test_names, fd)
+
     def _compute_gtest_tests_single(
-        self, gtest_file: Path | str, to_skip: set[str], args: Namespace
+        self, gtest_file: Path | str, args: Namespace
     ) -> list[str]:
         gtest_file = Path(gtest_file).resolve()
         if not gtest_file.exists():
@@ -297,9 +317,9 @@ class Config:
                 f"gtest binary: '{gtest_file}' does not appear to exist"
             )
 
-        list_command = [str(gtest_file), "--gtest_list_tests"]
-        if args.gtest_filter is not None:
-            list_command.append(f"--gtest_filter={args.gtest_filter}")
+        cache_file = gtest_file.parent / (gtest_file.name + ".cached_gtests")
+        if cached_tests := self._get_cached_tests(gtest_file, cache_file):
+            return cached_tests
 
         env = os.environ.copy()
         env["LEGATE_AUTO_CONFIG"] = "0"
@@ -320,7 +340,9 @@ class Config:
         )
         try:
             cmd_out = subprocess.check_output(
-                list_command, stderr=subprocess.STDOUT, env=env
+                [str(gtest_file), "--gtest_list_tests"],
+                stderr=subprocess.STDOUT,
+                env=env,
             )
         except subprocess.CalledProcessError as cpe:
             print("Failed to fetch GTest tests")
@@ -330,7 +352,7 @@ class Config:
                 print(f"stderr:\n{cpe.stderr.decode()}")
             raise
 
-        result = cmd_out.decode(sys.stdout.encoding).split("\n")
+        result = cmd_out.decode(sys.stdout.encoding).splitlines()
 
         test_group = ""
         test_names = []
@@ -344,35 +366,51 @@ class Config:
                 test_group = line.split("#")[0].strip()
                 continue
 
+            test_name = test_group + line.split("#")[0].strip()
+            # Assign test to test group
+            test_names.append(test_name)
+
+        self._cache_tests(cache_file, test_names)
+        return test_names
+
+    def _filter_gtests(
+        self, test_names: list[str], args: Namespace
+    ) -> list[str]:
+
+        skip_list = args.gtest_skip_list
+        gtest_filter = args.gtest_filter
+        is_parallel = (
+            self.multi_node.ranks_per_node > 1 or self.multi_node.nodes > 1
+        )
+
+        def is_death_test(name: str) -> bool:
+            return name.split(".", maxsplit=1)[0].endswith("DeathTest")
+
+        def keep_test(name: str) -> bool:
+            if name in skip_list:
+                return False
+
             # Skip death tests when running with multiple processes. It looks
             # as if GTest catches the failure and declares the test successful,
             # but for some reason the failure is not actually completely
             # neutralized, and the exit code is non-zero.
-            if (
-                self.multi_node.ranks_per_node > 1 or self.multi_node.nodes > 1
-            ) and (test_group.endswith("DeathTest.")):
-                continue
+            if is_parallel and is_death_test(name):
+                return False
 
-            test_name = test_group + line.split("#")[0].strip()
-            if test_name in to_skip:
-                continue
+            return gtest_filter.match(name)
 
-            # Assign test to test group
-            test_names.append(test_name)
-
+        if skip_list or is_parallel or (gtest_filter.pattern != ".*"):
+            test_names = [name for name in test_names if keep_test(name)]
         return test_names
 
     def _compute_gtest_tests(self, args: Namespace) -> dict[Path, list[str]]:
         if args.gtest_files is None:
             return {}
 
-        to_skip = set(args.gtest_skip_list)
-        all_tests = {
-            gtest_file: self._compute_gtest_tests_single(
-                gtest_file, to_skip, args
-            )
-            for gtest_file in args.gtest_files
-        }
+        all_tests: dict[Path, list[str]] = {}
+        for gtest_file in args.gtest_files:
+            raw_test_names = self._compute_gtest_tests_single(gtest_file, args)
+            all_tests[gtest_file] = self._filter_gtests(raw_test_names, args)
 
         if args.gtest_tests:
             remain_tests = {

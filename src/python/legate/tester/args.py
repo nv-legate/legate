@@ -14,6 +14,7 @@
 """
 from __future__ import annotations
 
+import re
 from argparse import ArgumentParser
 from pathlib import Path
 from typing import Literal, TypeAlias
@@ -97,7 +98,8 @@ gtest_group.add_argument(
 gtest_group.add_argument(
     "--gtest-filter",
     dest="gtest_filter",
-    default=None,
+    type=re.compile,
+    default=".*",
     help="Pattern to filter GTest tests",
 )
 
