@@ -10,53 +10,40 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <stddef.h>
+#include <cstdio>
+#include <cstdlib>
+#include <string_view>
 
 // NOLINTBEGIN
-#if defined(_WIN64) || defined(__LP64__)
-using CUdeviceptr = unsigned long long;
-#else
-using CUdeviceptr = unsigned int;
-#endif
 using CUresult   = int;
-using CUdevice   = int;
-using CUcontext  = struct CUctx_st*;
-using CUstream   = struct CUstream_st*;
-using CUfunction = struct CUfunc_st*;
-using CUevent    = struct CUevent_st*;
-using CUkernel   = struct CUkern_st*;
-using CUlibrary  = struct CUlib_st*;
+using cuuint64_t = unsigned long long;
 
-enum CUlibraryOption : int;
-enum CUjit_option : int;
+namespace {
 
-extern "C" CUresult cuInit(unsigned int) { return 0; }
-extern "C" CUresult cuStreamCreate(CUstream*, unsigned int) { return 0; }
-extern "C" CUresult cuGetErrorString(CUresult, const char**) { return 0; }
-extern "C" CUresult cuGetErrorName(CUresult, const char**) { return 0; }
-extern "C" CUresult cuPointerGetAttributes(void*, int, CUdeviceptr) { return 0; }
-extern "C" CUresult cuMemcpyAsync(CUdeviceptr, CUdeviceptr, size_t, CUstream) { return 0; }
-extern "C" CUresult cuMemcpy(CUdeviceptr, CUdeviceptr, size_t) { return 0; }
-extern "C" CUresult cuStreamDestroy(CUstream) { return 0; }
-extern "C" CUresult cuStreamSynchronize(CUstream) { return 0; }
-extern "C" CUresult cuCtxSynchronize() { return 0; }
-extern "C" CUresult cuEventCreate(CUevent*, unsigned int) { return 0; }
-extern "C" CUresult cuEventRecord(CUevent, CUstream) { return 0; }
-extern "C" CUresult cuEventSynchronize(CUevent) { return 0; }
-extern "C" CUresult cuEventElapsedTime(float*, CUevent, CUevent) { return 0; }
-extern "C" CUresult cuEventDestroy(CUevent) { return 0; }
-extern "C" CUresult cuCtxGetDevice(CUdevice*) { return 0; }
-extern "C" CUresult cuLaunchKernel(
-  CUfunction, size_t, size_t, size_t, size_t, size_t, size_t, size_t, CUstream, void**, void**)
+CUresult invalid_function(...)
 {
+  std::fprintf(stderr,
+               "Invalid function call in dummy legate CUDA driver module. Consider whether you "
+               "actually need to test whether the function does what it does, or whether you just "
+               "need to test that *something* exists.");
+  std::abort();
+  return 1;
+}
+
+CUresult cu_init(unsigned int) { return 0; }
+
+}  // namespace
+
+extern "C" CUresult cuGetProcAddress(const char* name, void** fn_ptr, int, cuuint64_t)
+{
+  // The unit test only tests that cuInit() is callable, so it suffices to only be able to
+  // handle that. All other functions need to get a non-NULL pointer (since the loading code
+  // checks that), but other than that, they don't need to get a proper function.
+  if (std::string_view{name} == "cuInit") {
+    *fn_ptr = reinterpret_cast<void*>(cu_init);
+  } else {
+    *fn_ptr = reinterpret_cast<void*>(invalid_function);
+  }
   return 0;
 }
-extern "C" CUresult cuLibraryLoadData(
-  CUlibrary*, const void*, CUjit_option*, void**, size_t, CUlibraryOption*, void**, size_t)
-{
-  return 0;
-}
-extern "C" CUresult cuLibraryGetKernel(CUkernel*, CUlibrary, const char*) { return 0; }
-extern "C" CUresult cuLibraryUnload(CUlibrary) { return 0; }
-
 // NOLINTEND

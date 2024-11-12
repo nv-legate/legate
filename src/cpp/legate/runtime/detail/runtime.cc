@@ -2011,7 +2011,7 @@ extern void register_exception_reduction_op(const Library* context);
   register_legate_core_sharding_functors(core_lib);
 }
 
-CUstream_st* Runtime::get_cuda_stream() const
+CUstream Runtime::get_cuda_stream() const
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     // The header-file is includable without CUDA, but the actual symbols are not compiled

@@ -18,12 +18,11 @@
 #include "legate/mapping/detail/machine.h"
 #include "legate/task/detail/returned_exception.h"
 #include "legate/utilities/internal_shared_ptr.h"
+#include <legate/cuda/detail/cuda_driver_types.h>
 
 #include <optional>
 #include <string_view>
 #include <vector>
-
-struct CUstream_st;
 
 namespace legate::detail {
 
@@ -57,7 +56,7 @@ class TaskContext {
 
   [[nodiscard]] VariantCode variant_kind() const noexcept;
   [[nodiscard]] bool can_raise_exception() const noexcept;
-  [[nodiscard]] CUstream_st* get_task_stream() const;
+  [[nodiscard]] CUstream get_task_stream() const;
   [[nodiscard]] bool can_elide_device_ctx_sync() const noexcept;
 
   void set_exception(ReturnedException what);

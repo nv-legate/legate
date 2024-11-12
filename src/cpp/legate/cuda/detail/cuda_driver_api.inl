@@ -28,11 +28,4 @@ CUresult CUDADriverAPI::mem_cpy_async(T* dst,
                        stream);
 }
 
-template <typename T, typename U>
-CUresult CUDADriverAPI::mem_cpy(T* dst, const U* src, std::size_t num_bytes) const
-{
-  return mem_cpy(
-    reinterpret_cast<std::uintptr_t>(dst), reinterpret_cast<std::uintptr_t>(src), num_bytes);
-}
-
 }  // namespace legate::cuda::detail

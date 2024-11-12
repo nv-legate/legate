@@ -14,8 +14,7 @@
 
 #include "legate/data/buffer.h"
 #include "legate/utilities/macros.h"
-
-using CUstream = struct CUstream_st*;
+#include <legate/cuda/detail/cuda_driver_types.h>
 
 namespace legate::detail {
 

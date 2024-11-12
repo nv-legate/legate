@@ -41,6 +41,7 @@
 #include "legate/utilities/detail/zstring_view.h"
 #include "legate/utilities/hash.h"
 #include "legate/utilities/internal_shared_ptr.h"
+#include <legate/cuda/detail/cuda_driver_types.h>
 
 #include <list>
 #include <map>
@@ -52,8 +53,6 @@
 #include <utility>
 #include <variant>
 #include <vector>
-
-struct CUstream_st;
 
 namespace legate::mapping {
 
@@ -363,7 +362,7 @@ class Runtime {
   [[nodiscard]] std::int32_t finish();
   [[nodiscard]] const Library* core_library() const;
 
-  [[nodiscard]] CUstream_st* get_cuda_stream() const;
+  [[nodiscard]] CUstream get_cuda_stream() const;
   [[nodiscard]] const cuda::detail::CUDADriverAPI* get_cuda_driver_api();
   [[nodiscard]] cuda::detail::CUDAModuleManager* get_cuda_module_manager();
 
