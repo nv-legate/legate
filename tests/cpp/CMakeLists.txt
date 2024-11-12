@@ -205,7 +205,14 @@ set(runtime_SRC
     unit/scope.cc
     unit/scoped_allocator.cc
     unit/timing.cc
-    unit/type.cc
+    unit/type/binary_type.cc
+    unit/type/fixed_array_type.cc
+    unit/type/list_type.cc
+    unit/type/primitive_type.cc
+    unit/type/string_type.cc
+    unit/type/struct_type.cc
+    unit/type/type_features.cc
+    unit/type/type_traits.cc
     # experimental
     experimental/stl/elementwise.cc
     experimental/stl/fill.cc
