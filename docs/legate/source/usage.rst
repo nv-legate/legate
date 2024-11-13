@@ -7,7 +7,7 @@ Running Legate Programs
 -----------------------
 
 Python programs using the Legate APIs (directly or through a Legate-based
-library such as cuNumeric) can be run using the standard Python interpreter:
+library such as cuPyNumeric) can be run using the standard Python interpreter:
 
 .. code-block:: sh
 

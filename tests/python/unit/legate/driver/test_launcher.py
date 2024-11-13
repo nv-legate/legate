@@ -47,7 +47,7 @@ def test_LAUNCHER_VAR_PREFIXES() -> None:
         "PYTHON",
         "UCX_",
         "NCCL_",
-        "CUNUMERIC_",
+        "CUPYNUMERIC_",
         "NVIDIA_",
         "LD_",
     )

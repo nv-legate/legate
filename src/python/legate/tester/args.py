@@ -338,7 +338,7 @@ other.add_argument(
     default=None,
     help=(
         "path value of --source in coverage run command, "
-        "e.g. /project_path/cunumeric/cunumeric"
+        "e.g. /project_path/cupynumeric/cupynumeric"
     ),
 )
 

@@ -91,7 +91,7 @@ def main() -> None:
     print(f"Platform    :  {platform.platform()}")
     print(f"Legion      :  {legion_version()}")
     print(f"Legate      :  {try_version('legate', '__version__')}")
-    print(f"Cunumeric   :  {try_version('cunumeric', '__version__')}")
+    print(f"cuPynumeric :  {try_version('cupynumeric', '__version__')}")
     print(f"Numpy       :  {try_version('numpy', '__version__')}")
     print(f"Scipy       :  {try_version('scipy', '__version__')}")
     print(f"Numba       :  {try_version('numba', '__version__')}")

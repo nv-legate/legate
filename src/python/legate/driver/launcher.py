@@ -42,7 +42,7 @@ LAUNCHER_VAR_PREFIXES = (
     "PYTHON",
     "UCX_",
     "NCCL_",
-    "CUNUMERIC_",
+    "CUPYNUMERIC_",
     "NVIDIA_",
     "LD_",
 )

@@ -89,7 +89,7 @@ class ScopedAllocator {
   // std::unique_ptr<Impl> impl_{} as std::unique_ptr<Impl> impl_ = std::unique_ptr<Impl>{}.
   // After copy initialization, the destructor of std::unique_ptr does not know
   // how to delete the Impl because it is forward declared.
-  // The followings are the error messages when compiling cuNumeric
+  // The followings are the error messages when compiling cuPyNumeric
   // /usr/include/c++/9/bits/unique_ptr.h(79): error: incomplete type is not allowed
   // static_assert(sizeof(_Tp)>0,
   //                       ^
@@ -100,7 +100,7 @@ class ScopedAllocator {
   //                                [with _Tp=legate::ScopedAllocator::Impl, _Dp=std::
   //                                default_delete<legate::ScopedAllocator::Impl>]" at line 88 of
   //                                legate/data/allocator.h
-  //  1 error detected in the compilation of "cunumeric/nullary/fill.cu".
+  //  1 error detected in the compilation of "cupynumeric/nullary/fill.cu".
   std::unique_ptr<Impl> impl_;
 };
 
