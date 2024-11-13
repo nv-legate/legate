@@ -13,8 +13,12 @@
 #pragma once
 
 // Useful for IDEs
+#include <legate_defines.h>
+
 #include "legate/utilities/detail/zip.h"
 #include "legate/utilities/tuple.h"
+#include <legate/utilities/assert.h>
+#include <legate/utilities/macros.h>
 
 #include <algorithm>
 #include <functional>
@@ -201,11 +205,11 @@ tuple<T> tuple<T>::insert(std::int32_t pos, U&& value) const
 
   new_values.reserve(static_cast<std::size_t>(len) + 1);
   for (std::int32_t idx = 0; idx < pos; ++idx) {
-    new_values.append_inplace(data()[idx]);
+    new_values.append_inplace((*this)[idx]);
   }
   new_values.append_inplace(std::forward<U>(value));
   for (std::int32_t idx = pos; idx < len; ++idx) {
-    new_values.append_inplace(data()[idx]);
+    new_values.append_inplace((*this)[idx]);
   }
   return new_values;
 }
@@ -225,13 +229,14 @@ tuple<T> tuple<T>::remove(std::int32_t pos) const
 {
   tuple new_values;
 
+  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) < size());
   if (const auto len = static_cast<std::int32_t>(size())) {
     new_values.reserve(len - 1);
     for (std::int32_t idx = 0; idx < pos; ++idx) {
-      new_values.append_inplace(data()[idx]);
+      new_values.append_inplace((*this)[idx]);
     }
     for (std::int32_t idx = pos + 1; idx < len; ++idx) {
-      new_values.append_inplace(data()[idx]);
+      new_values.append_inplace((*this)[idx]);
     }
   }
   return new_values;
@@ -241,8 +246,9 @@ template <typename T>
 template <typename U>
 tuple<T> tuple<T>::update(std::int32_t pos, U&& value) const
 {
-  tuple new_values{data()};
+  tuple new_values = *this;
 
+  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) < size());
   new_values[pos] = std::forward<U>(value);
   return new_values;
 }
@@ -251,6 +257,8 @@ template <typename T>
 template <typename U>
 void tuple<T>::insert_inplace(std::int32_t pos, U&& value)
 {
+  // <= size here because we are allowed to insert at the end
+  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) <= size());
   data().insert(begin() + pos, std::forward<U>(value));
 }
 
@@ -264,6 +272,7 @@ void tuple<T>::append_inplace(U&& value)
 template <typename T>
 void tuple<T>::remove_inplace(std::int32_t pos)
 {
+  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) < size());
   data().erase(begin() + pos);
 }
 
@@ -317,14 +326,23 @@ bool tuple<T>::any(PRED&& pred) const
   return std::any_of(begin(), end(), std::forward<PRED>(pred));
 }
 
+namespace detail {
+
+void assert_valid_mapping(std::size_t tuple_size, const std::vector<std::int32_t>& mapping);
+
+}  // namespace detail
+
 template <typename T>
 tuple<T> tuple<T>::map(const std::vector<std::int32_t>& mapping) const
 {
   tuple new_values;
 
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    detail::assert_valid_mapping(size(), mapping);
+  }
   new_values.reserve(mapping.size());
   for (auto idx : mapping) {
-    new_values.append_inplace(data()[idx]);
+    new_values.append_inplace((*this)[idx]);
   }
   return new_values;
 }
@@ -332,7 +350,9 @@ tuple<T> tuple<T>::map(const std::vector<std::int32_t>& mapping) const
 template <typename T>
 void tuple<T>::map_inplace(std::vector<std::int32_t>& mapping)
 {
-  LEGATE_CHECK(mapping.size() == size());
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    detail::assert_valid_mapping(size(), mapping);
+  }
   // https://devblogs.microsoft.com/oldnewthing/20170102-00/?p=95095
   for (std::size_t i = 0; i < mapping.size(); ++i) {
     auto current = i;
@@ -341,7 +361,7 @@ void tuple<T>::map_inplace(std::vector<std::int32_t>& mapping)
       auto next = mapping[current];
       using std::swap;
 
-      swap(data()[current], data()[next]);
+      swap((*this)[current], (*this)[next]);
       mapping[current] = static_cast<std::int32_t>(current);
       current          = static_cast<std::size_t>(next);
     }

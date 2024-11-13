@@ -15,6 +15,10 @@
 #include "legate/utilities/tuple.h"
 #include "legate/utilities/typedefs.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
 namespace legate::detail {
 
 // Commonly used conversion routines for tuples
@@ -24,5 +28,9 @@ namespace legate::detail {
 [[nodiscard]] DomainPoint to_domain_point(const tuple<std::uint64_t>& shape);
 
 [[nodiscard]] tuple<std::uint64_t> from_domain(const Domain& domain);
+
+// This is forward declared in tuple.h to avoid including this header
+// NOLINTNEXTLINE(readability-redundant-declaration)
+void assert_valid_mapping(std::size_t tuple_size, const std::vector<std::int32_t>& mapping);
 
 }  // namespace legate::detail

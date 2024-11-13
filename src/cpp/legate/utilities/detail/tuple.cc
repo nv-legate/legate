@@ -12,6 +12,12 @@
 
 #include "legate/utilities/detail/tuple.h"
 
+#include <algorithm>
+#include <cstdint>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+#include <stdexcept>
+
 namespace legate::detail {
 
 Domain to_domain(const tuple<std::uint64_t>& shape)
@@ -54,6 +60,40 @@ tuple<std::uint64_t> from_domain(const Domain& domain)
     result.emplace_back(hi[idx] - lo[idx] + 1);
   }
   return tuple<std::uint64_t>{std::move(result)};
+}
+
+void assert_valid_mapping(std::size_t tuple_size, const std::vector<std::int32_t>& mapping)
+{
+  if (mapping.size() != tuple_size) {
+    throw std::out_of_range{
+      fmt::format("mapping size {} != tuple size {}", mapping.size(), tuple_size)};
+  }
+
+  // Early out here because we use front() and back() below
+  if (mapping.empty()) {
+    return;
+  }
+
+  auto sorted_mapping = mapping;
+
+  std::sort(sorted_mapping.begin(), sorted_mapping.end());
+  // Check that elements are in range. The copy is sorted, so it suffices to check the
+  // bounds. If either is out of range, then at least one element of the mapping is out of
+  // range.
+  if (sorted_mapping.front() < 0) {
+    throw std::out_of_range{fmt::format("mapping {} contains negative elements", mapping)};
+  }
+  if (static_cast<std::size_t>(sorted_mapping.back()) >= tuple_size) {
+    throw std::out_of_range{
+      fmt::format("mapping {} contains elements outside of tuple size {}", mapping, tuple_size)};
+  }
+
+  // Check that elements are unique
+  if (const auto it = std::adjacent_find(sorted_mapping.begin(), sorted_mapping.end());
+      it != sorted_mapping.end()) {
+    throw std::invalid_argument{
+      fmt::format("Invalid mapping: contains duplicate element(s) {} ({})", *it, mapping)};
+  }
 }
 
 }  // namespace legate::detail
