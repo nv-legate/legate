@@ -408,7 +408,7 @@ cdef class VariantInvoker:
                 )
 
             # Special case for "simple" legate data interface objects, e.g
-            # cuNumeric arrays, that have only a single, non-nullable logical
+            # cuPyNumeric arrays, that have only a single, non-nullable logical
             # store
             if hasattr(user_param, "__legate_data_interface__"):
                 user_param = try_unpack_simple_store(

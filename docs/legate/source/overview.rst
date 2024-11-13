@@ -139,7 +139,7 @@ Legion without needing to learn all of the lowest-level interfaces.
 
 The `Legion programming model <https://legion.stanford.edu/pdfs/sc2012.pdf>`_
 greatly aids in implementing the Legate API. Data types from libraries,
-such as arrays in cuNumeric are mapped down onto ``LegateStore`` objects
+such as arrays in cuPyNumeric are mapped down onto ``LegateStore`` objects
 that wrap Legion data types such as logical regions or futures.
 In the case of regions, Legate application libraries rely heavily on
 Legion's `support for partitioning of logical regions into arbitrary subregion views <https://legion.stanford.edu/pdfs/oopsla2013.pdf>`_.

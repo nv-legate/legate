@@ -14,7 +14,7 @@ import sys
 import textwrap
 from argparse import REMAINDER, ArgumentParser, RawDescriptionHelpFormatter
 
-KNOWN_PATCHES = {"numpy": "cunumeric"}
+KNOWN_PATCHES = {"numpy": "cupynumeric"}
 
 newline = "\n"
 

@@ -215,11 +215,11 @@ to `configure` (or let the build process attempt to locate them automatically).
 
 #### OpenBLAS
 
-Used by cuNumeric for implementing linear algebra routines on CPUs.
+Used by cuPyNumeric for implementing linear algebra routines on CPUs.
 
 This library is automatically pulled from conda. If you wish to provide an
 alternative installation, then you can manually remove `openblas` from the
-generated environment file and pass `--with-openblas` to cuNumeric's
+generated environment file and pass `--with-openblas` to cuPyNumeric's
 `install.py`.
 
 Note that if you want to build OpenBLAS from source you will need to get a
@@ -239,19 +239,19 @@ OpenBLAS configured with the following options:
 
 #### TBLIS
 
-Used by cuNumeric for implementing tensor contraction routines on CPUs.
+Used by cuPyNumeric for implementing tensor contraction routines on CPUs.
 
-This library will be automatically downloaded and built during cuNumeric
+This library will be automatically downloaded and built during cuPyNumeric
 installation. If you wish to provide an alternative installation, pass
-`--with-tblis` to cuNumeric's `install.py`.
+`--with-tblis` to cuPyNumeric's `install.py`.
 
-cuNumeric requires a build of TBLIS configured as follows:
+cuPyNumeric requires a build of TBLIS configured as follows:
 
 ```
 --with-label-type=int32_t --with-length-type=int64_t --with-stride-type=int64_t
 ```
 
-and additionally `--enable-thread-model=openmp` if cuNumeric is compiled
+and additionally `--enable-thread-model=openmp` if cuPyNumeric is compiled
 with OpenMP support.
 
 #### Numactl (optional)

@@ -375,7 +375,7 @@ class PhysicalStore {
    *
    * @throw std::invalid_argument If the array is nullable or has sub-arrays
    */
-  // NOLINTNEXTLINE(google-explicit-constructor) very common pattern in cuNumeric
+  // NOLINTNEXTLINE(google-explicit-constructor) very common pattern in cuPyNumeric
   PhysicalStore(const PhysicalArray& array);
 
   LEGATE_CYTHON_DEFAULT_CTOR(PhysicalStore);

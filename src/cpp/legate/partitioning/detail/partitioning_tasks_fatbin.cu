@@ -109,7 +109,7 @@ __device__ __forceinline__ constexpr std::size_t round_div(std::size_t x, std::s
   return (x + d - 1) / d;
 }
 
-// The following is copied from cuNumeric and modified
+// The following is copied from cuPyNumeric and modified
 template <typename T>
 __device__ __forceinline__ T shuffle(unsigned mask, T var, int laneMask, int width)
 {

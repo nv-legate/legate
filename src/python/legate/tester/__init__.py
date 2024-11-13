@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Utilities and helpers for implementing the Cunumeric custom test runner.
+"""Utilities and helpers for implementing the Legate custom test runner.
 
 """
 from __future__ import annotations
