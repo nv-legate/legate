@@ -64,7 +64,10 @@ html_theme_options = {
         "json_url": JSON_URL,
         "navbar_start": ["navbar-logo", "version-switcher"],
         "version_match": ".".join(legate.__version__.split(".", 2)[:2]),
-    }
+    },
+    "extra_footer": [
+        '<script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>'  # NOQA
+    ],
 }
 
 # -- Options for extensions --------------------------------------------------
