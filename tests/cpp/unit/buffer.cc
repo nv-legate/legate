@@ -40,7 +40,7 @@ class BufferFn {
         break;
       }
       default: {
-        auto buffer = legate::create_buffer<uint64_t, DIM>(
+        auto buffer = legate::create_buffer<std::uint64_t, DIM>(
           legate::Point<DIM>(bytes), static_cast<legate::Memory::Kind>(kind), alignment);
         auto memory = buffer.get_instance().get_location();
         EXPECT_TRUE(memory.exists());

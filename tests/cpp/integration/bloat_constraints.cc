@@ -81,8 +81,8 @@ void test_bloat(const BloatTestSpec& spec)
 
   auto source  = runtime->create_store(spec.extents, legate::int64());
   auto bloated = runtime->create_store(spec.extents, legate::int64());
-  runtime->issue_fill(source, legate::Scalar(int64_t{0}));
-  runtime->issue_fill(bloated, legate::Scalar(int64_t{0}));
+  runtime->issue_fill(source, legate::Scalar{std::int64_t{0}});
+  runtime->issue_fill(bloated, legate::Scalar{std::int64_t{0}});
 
   auto task =
     runtime->create_task(context, static_cast<legate::LocalTaskID>(BLOAT_TESTER + source.dim()));
@@ -90,9 +90,9 @@ void test_bloat(const BloatTestSpec& spec)
   auto part_bloated = task.add_input(bloated);
   task.add_constraint(
     legate::bloat(part_source, part_bloated, spec.low_offsets, spec.high_offsets));
-  task.add_scalar_arg(legate::Scalar(spec.extents.data()));
-  task.add_scalar_arg(legate::Scalar(spec.low_offsets.data()));
-  task.add_scalar_arg(legate::Scalar(spec.high_offsets.data()));
+  task.add_scalar_arg(legate::Scalar{spec.extents.data()});
+  task.add_scalar_arg(legate::Scalar{spec.low_offsets.data()});
+  task.add_scalar_arg(legate::Scalar{spec.high_offsets.data()});
 
   runtime->submit(std::move(task));
 }

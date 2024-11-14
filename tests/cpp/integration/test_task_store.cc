@@ -112,13 +112,13 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
 
     switch (data_mode) {
       case TaskDataMode::INPUT: {
-        auto acc = store.read_accessor<int32_t, DIM>();
+        auto acc = store.read_accessor<std::int32_t, DIM>();
         for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
           EXPECT_EQ(acc[*it], value);
         }
       } break;
       case TaskDataMode::OUTPUT: {
-        auto acc = store.write_accessor<int32_t, DIM>();
+        auto acc = store.write_accessor<std::int32_t, DIM>();
         for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
           acc[*it] = value;
         }
@@ -155,7 +155,7 @@ struct VerifyOutputBody {
     if (shape.empty()) {
       return;
     }
-    auto acc = store.read_accessor<int32_t, DIM>(shape);
+    auto acc = store.read_accessor<std::int32_t, DIM>(shape);
     for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
       EXPECT_EQ(acc[*it], expected_value);
     }

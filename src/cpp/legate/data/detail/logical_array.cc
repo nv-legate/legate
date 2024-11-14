@@ -208,19 +208,19 @@ void BaseLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>&
 
 bool ListLogicalArray::unbound() const { return descriptor_->unbound() || vardata_->unbound(); }
 
-InternalSharedPtr<LogicalArray> ListLogicalArray::promote(int32_t, size_t) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::promote(std::int32_t, std::size_t) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
 }
 
-InternalSharedPtr<LogicalArray> ListLogicalArray::project(int32_t, int64_t) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::project(std::int32_t, std::int64_t) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
 }
 
-InternalSharedPtr<LogicalArray> ListLogicalArray::slice(int32_t, Slice) const
+InternalSharedPtr<LogicalArray> ListLogicalArray::slice(std::int32_t, Slice) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};
@@ -233,7 +233,7 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::transpose(const std::vector<st
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
-  int32_t, const std::vector<std::uint64_t>&) const
+  std::int32_t, const std::vector<std::uint64_t>&) const
 {
   throw std::runtime_error{"List array does not support store transformations"};
   return {};

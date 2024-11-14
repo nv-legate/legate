@@ -78,7 +78,7 @@ class PartitionManager {
 
  private:
   std::int64_t min_shard_volume_{};
-  std::unordered_map<uint32_t, std::vector<std::uint32_t>> all_factors_{};
+  std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> all_factors_{};
 
   using TilingCacheKey = std::pair<Legion::IndexSpace, Tiling>;
   std::unordered_map<TilingCacheKey, Legion::IndexPartition, hasher<TilingCacheKey>>

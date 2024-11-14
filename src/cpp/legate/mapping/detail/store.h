@@ -29,7 +29,7 @@ namespace legate::mapping::detail {
 
 class RegionField {
  public:
-  using Id = std::tuple<bool, uint32_t, Legion::FieldID>;
+  using Id = std::tuple<bool, std::uint32_t, Legion::FieldID>;
 
   RegionField() = default;
   RegionField(const Legion::RegionRequirement* req,

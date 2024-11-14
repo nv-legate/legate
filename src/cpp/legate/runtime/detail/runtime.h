@@ -393,7 +393,7 @@ class Runtime {
 
   std::unordered_map<Domain, Legion::IndexSpace> cached_index_spaces_{};
 
-  using AffineProjectionDesc   = std::pair<uint32_t, proj::SymbolicPoint>;
+  using AffineProjectionDesc   = std::pair<std::uint32_t, proj::SymbolicPoint>;
   using CompoundProjectionDesc = std::pair<tuple<std::uint64_t>, proj::SymbolicPoint>;
   std::int64_t next_projection_id_{
     static_cast<std::int64_t>(CoreProjectionOp::FIRST_DYNAMIC_FUNCTOR)};

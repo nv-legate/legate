@@ -49,7 +49,7 @@ class WriterTask : public legate::LegateTask<WriterTask> {
     auto outputs = context.outputs();
     for (auto& output : outputs) {
       auto shape = output.shape<2>();
-      auto acc   = output.data().write_accessor<int64_t, 2>();
+      auto acc   = output.data().write_accessor<std::int64_t, 2>();
       for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
         acc[*it] = 42;
       }
@@ -61,7 +61,7 @@ class WriterTask : public legate::LegateTask<WriterTask> {
     auto outputs = context.outputs();
     for (auto& output : outputs) {
       auto shape  = output.shape<2>();
-      auto acc    = output.data().write_accessor<int64_t, 2>();
+      auto acc    = output.data().write_accessor<std::int64_t, 2>();
       auto stream = context.get_task_stream();
       auto vals   = std::vector<std::int64_t>(shape.volume(), 42);
       auto* ptr   = acc.ptr(shape);
@@ -96,7 +96,7 @@ class CheckerTask : public legate::LegateTask<CheckerTask> {
       if (shape.empty()) {
         return;
       }
-      auto acc = input.data().read_accessor<int64_t, 2>();
+      auto acc = input.data().read_accessor<std::int64_t, 2>();
       for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
         EXPECT_EQ(acc[*it], 42);
       }
@@ -166,7 +166,7 @@ void validate_output_inline(const legate::LogicalStore& store)
 {
   auto p_store = store.get_physical_store();
   auto shape   = p_store.shape<2>();
-  auto acc     = p_store.read_accessor<int64_t, 2>();
+  auto acc     = p_store.read_accessor<std::int64_t, 2>();
   for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
     EXPECT_EQ(acc[*it], 42);
   }

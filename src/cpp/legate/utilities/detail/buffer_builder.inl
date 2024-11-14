@@ -20,7 +20,7 @@ namespace legate::detail {
 template <typename T>
 void BufferBuilder::pack(const T& value)
 {
-  pack_buffer(reinterpret_cast<const int8_t*>(std::addressof(value)),
+  pack_buffer(reinterpret_cast<const std::int8_t*>(std::addressof(value)),
               sizeof(T),  // NOLINT(bugprone-sizeof-expression)
               alignof(T));
 }

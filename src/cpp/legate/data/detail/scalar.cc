@@ -93,7 +93,7 @@ const void* Scalar::copy_data_(const void* data, std::size_t size)
 std::size_t Scalar::size() const
 {
   if (type()->code == Type::Code::STRING) {
-    return *static_cast<const uint32_t*>(data()) + sizeof(uint32_t);
+    return *static_cast<const std::uint32_t*>(data()) + sizeof(std::uint32_t);
   }
   return type()->size();
 }

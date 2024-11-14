@@ -32,11 +32,11 @@ struct ProjTesterTask : public legate::LegateTask<ProjTesterTask> {
 
     EXPECT_EQ(row_wise.lo[0], DIM_EXTENT / N_TILES_PER_DIM * task_index[0]);
     EXPECT_EQ(row_wise.hi[0], (DIM_EXTENT / N_TILES_PER_DIM * (task_index[0] + 1)) - 1);
-    EXPECT_EQ(row_wise.lo[1], int64_t{0});
-    EXPECT_EQ(row_wise.hi[1], int64_t{DIM_EXTENT - 1});
+    EXPECT_EQ(row_wise.lo[1], std::int64_t{0});
+    EXPECT_EQ(row_wise.hi[1], std::int64_t{DIM_EXTENT - 1});
 
-    EXPECT_EQ(col_wise.lo[0], int64_t{0});
-    EXPECT_EQ(col_wise.hi[0], int64_t{DIM_EXTENT - 1});
+    EXPECT_EQ(col_wise.lo[0], std::int64_t{0});
+    EXPECT_EQ(col_wise.hi[0], std::int64_t{DIM_EXTENT - 1});
     EXPECT_EQ(col_wise.lo[1], DIM_EXTENT / N_TILES_PER_DIM * task_index[1]);
     EXPECT_EQ(col_wise.hi[1], (DIM_EXTENT / N_TILES_PER_DIM * (task_index[1] + 1)) - 1);
   }

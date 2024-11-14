@@ -59,8 +59,8 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
   auto store                        = array.data();
   static constexpr std::int32_t DIM = 3;
   EXPECT_TRUE(store.is_unbound_store());
-  ASSERT_NO_THROW(
-    static_cast<void>(store.create_output_buffer<uint32_t, DIM>(legate::Point<DIM>(10), true)));
+  ASSERT_NO_THROW(static_cast<void>(
+    store.create_output_buffer<std::uint32_t, DIM>(legate::Point<DIM>(10), true)));
 
   EXPECT_EQ(array.nullable(), nullable);
   EXPECT_EQ(array.dim(), DIM);
@@ -114,7 +114,7 @@ void test_array_data(legate::PhysicalStore& store, bool is_unbound, legate::Type
   auto list_array                   = array.as_list_array();
   auto descriptor_store             = list_array.descriptor().data();
   auto vardata_store                = list_array.vardata().data();
-  auto buffer = vardata_store.create_output_buffer<int64_t, DIM>(legate::Point<1>(100), true);
+  auto buffer = vardata_store.create_output_buffer<std::int64_t, DIM>(legate::Point<1>(100), true);
   if (unbound) {
     ASSERT_NO_THROW(descriptor_store.bind_empty_data());
   }
@@ -141,13 +141,13 @@ void test_array_data(legate::PhysicalStore& store, bool is_unbound, legate::Type
     EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
   }
 
-  test_array_data<int64_t, DIM>(descriptor_store, unbound, legate::Type::Code::STRUCT);
-  test_array_data<int64_t, DIM>(vardata_store, true, legate::Type::Code::INT64);
+  test_array_data<std::int64_t, DIM>(descriptor_store, unbound, legate::Type::Code::STRUCT);
+  test_array_data<std::int64_t, DIM>(vardata_store, true, legate::Type::Code::INT64);
 
   auto desc = array.child(0).data();
   auto var  = array.child(1).data();
-  test_array_data<int64_t, DIM>(desc, unbound, legate::Type::Code::STRUCT);
-  test_array_data<int64_t, DIM>(var, true, legate::Type::Code::INT64);
+  test_array_data<std::int64_t, DIM>(desc, unbound, legate::Type::Code::STRUCT);
+  test_array_data<std::int64_t, DIM>(var, true, legate::Type::Code::INT64);
 
   // invalid
   EXPECT_THROW(static_cast<void>(array.child(2)), std::out_of_range);
@@ -166,8 +166,8 @@ void test_array_data(legate::PhysicalStore& store, bool is_unbound, legate::Type
   auto ranges_store                 = string_array.ranges().data();
   auto chars_store                  = string_array.chars().data();
   static constexpr std::int32_t DIM = 1;
-  ASSERT_NO_THROW(
-    static_cast<void>(chars_store.create_output_buffer<int8_t, DIM>(legate::Point<DIM>(10), true)));
+  ASSERT_NO_THROW(static_cast<void>(
+    chars_store.create_output_buffer<std::int8_t, DIM>(legate::Point<DIM>(10), true)));
   if (unbound) {
     ASSERT_NO_THROW(ranges_store.bind_empty_data());
   }
@@ -194,20 +194,20 @@ void test_array_data(legate::PhysicalStore& store, bool is_unbound, legate::Type
     EXPECT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
   }
 
-  test_array_data<int8_t, DIM>(ranges_store, unbound, legate::Type::Code::STRUCT);
-  test_array_data<int8_t, DIM>(chars_store, true, legate::Type::Code::INT8);
+  test_array_data<std::int8_t, DIM>(ranges_store, unbound, legate::Type::Code::STRUCT);
+  test_array_data<std::int8_t, DIM>(chars_store, true, legate::Type::Code::INT8);
 
   auto ranges = array.child(0).data();
   auto chars  = array.child(1).data();
-  test_array_data<int8_t, DIM>(ranges, unbound, legate::Type::Code::STRUCT);
-  test_array_data<int8_t, DIM>(chars, true, legate::Type::Code::INT8);
+  test_array_data<std::int8_t, DIM>(ranges, unbound, legate::Type::Code::STRUCT);
+  test_array_data<std::int8_t, DIM>(chars, true, legate::Type::Code::INT8);
 
   // cast to ListArray
   auto list_array       = array.as_list_array();
   auto descriptor_store = list_array.descriptor().data();
   auto vardata_store    = list_array.vardata().data();
-  test_array_data<int8_t, DIM>(descriptor_store, unbound, legate::Type::Code::STRUCT);
-  test_array_data<int8_t, DIM>(vardata_store, true, legate::Type::Code::INT8);
+  test_array_data<std::int8_t, DIM>(descriptor_store, unbound, legate::Type::Code::STRUCT);
+  test_array_data<std::int8_t, DIM>(vardata_store, true, legate::Type::Code::INT8);
 
   // invalid
   EXPECT_THROW(static_cast<void>(array.child(2)), std::out_of_range);
@@ -218,7 +218,7 @@ void fill_bound_base_array(legate::PhysicalArray& array, bool nullable)
 {
   auto store                        = array.data();
   static constexpr std::int32_t DIM = 2;
-  auto w_store                      = store.write_accessor<int32_t, DIM>();
+  auto w_store                      = store.write_accessor<std::int32_t, DIM>();
   auto store_shape                  = store.shape<DIM>();
   auto i                            = 0;
   if (!store_shape.empty()) {
@@ -246,7 +246,7 @@ void fill_unbound_base_array(legate::PhysicalArray& array, bool nullable)
 {
   auto store = array.data();
   ASSERT_NO_THROW(
-    static_cast<void>(store.create_output_buffer<int32_t, 2>(legate::Point<2>(5), true)));
+    static_cast<void>(store.create_output_buffer<std::int32_t, 2>(legate::Point<2>(5), true)));
   if (nullable) {
     auto null_mask = array.null_mask();
     ASSERT_NO_THROW(
@@ -258,7 +258,7 @@ void check_bound_base_array(legate::PhysicalArray& array, bool nullable)
 {
   auto store                        = array.data();
   static constexpr std::int32_t DIM = 2;
-  auto r_store                      = store.read_accessor<int32_t, DIM>();
+  auto r_store                      = store.read_accessor<std::int32_t, DIM>();
   auto store_shape                  = store.shape<DIM>();
   auto i                            = 0;
   if (!store_shape.empty()) {
@@ -286,7 +286,7 @@ void check_unbound_base_array(legate::PhysicalArray& array, bool nullable)
 {
   auto store                        = array.data();
   static constexpr std::int32_t DIM = 2;
-  auto rw_store                     = store.read_write_accessor<int32_t, DIM>();
+  auto rw_store                     = store.read_write_accessor<std::int32_t, DIM>();
   auto store_shape                  = store.shape<DIM>();
   auto i                            = 2;
   if (!store_shape.empty()) {
@@ -327,7 +327,7 @@ void bind_list_array(legate::PhysicalArray& array, bool nullable, bool unbound)
   auto vardata_store                = list_array.vardata().data();
   static constexpr std::int32_t DIM = 1;
   ASSERT_NO_THROW(static_cast<void>(
-    vardata_store.create_output_buffer<int64_t, DIM>(legate::Point<DIM>(10), true)));
+    vardata_store.create_output_buffer<std::int64_t, DIM>(legate::Point<DIM>(10), true)));
   if (unbound) {
     ASSERT_NO_THROW(descriptor_store.bind_empty_data());
   }
@@ -345,7 +345,7 @@ void check_list_array(legate::PhysicalArray& array, bool nullable, bool unbound)
   auto list_array                   = array.as_list_array();
   auto vardata_store                = list_array.vardata().data();
   static constexpr std::int32_t DIM = 1;
-  auto rw_vardata                   = vardata_store.read_write_accessor<int64_t, DIM>();
+  auto rw_vardata                   = vardata_store.read_write_accessor<std::int64_t, DIM>();
   auto vardata_shape                = vardata_store.shape<DIM>();
   auto i                            = 0;
   if (!vardata_shape.empty()) {
@@ -387,8 +387,8 @@ void bind_string_array(legate::PhysicalArray& array, bool nullable, bool unbound
   auto ranges_store                 = string_array.ranges().data();
   auto chars_store                  = string_array.chars().data();
   static constexpr std::int32_t DIM = 1;
-  ASSERT_NO_THROW(
-    static_cast<void>(chars_store.create_output_buffer<int8_t, 1>(legate::Point<DIM>(10), true)));
+  ASSERT_NO_THROW(static_cast<void>(
+    chars_store.create_output_buffer<std::int8_t, 1>(legate::Point<DIM>(10), true)));
   if (unbound) {
     ASSERT_NO_THROW(ranges_store.bind_empty_data());
   }
@@ -406,7 +406,7 @@ void check_string_array(legate::PhysicalArray& array, bool nullable, bool unboun
   auto string_array                 = array.as_string_array();
   auto chars_store                  = string_array.chars().data();
   static constexpr std::int32_t DIM = 1;
-  auto rw_chars                     = chars_store.read_write_accessor<int8_t, DIM>();
+  auto rw_chars                     = chars_store.read_write_accessor<std::int8_t, DIM>();
   auto chars_shape                  = chars_store.shape<1>();
   auto i                            = 0;
   if (!chars_shape.empty()) {

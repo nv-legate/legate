@@ -66,7 +66,7 @@ INSTANTIATE_TEST_SUITE_P(
       legate::struct_type(false, legate::int16(), legate::bool_(), legate::float64()),
       std::vector<legate::Type>({legate::int16(), legate::bool_(), legate::float64()}),
       false,
-      sizeof(int16_t) + sizeof(bool) + sizeof(double),
+      sizeof(std::int16_t) + sizeof(bool) + sizeof(double),
       sizeof(bool),
       "{int16:0,bool:2,float64:3}"),
     std::make_tuple(
@@ -74,7 +74,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()})),
       std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()}),
       false,
-      sizeof(int16_t) + sizeof(bool) + sizeof(double),
+      sizeof(std::int16_t) + sizeof(bool) + sizeof(double),
       sizeof(bool),
       "{bool:0,float64:1,int16:9}")));
 
@@ -154,11 +154,11 @@ TEST_P(RectTypeTest, Basic)
   const auto dim                              = GetParam();
   const auto type                             = legate::rect_type(dim);
   const std::vector<legate::Type> field_types = {legate::point_type(dim), legate::point_type(dim)};
-  const auto full_size                        = (field_types.size() * sizeof(uint64_t)) * dim;
+  const auto full_size                        = (field_types.size() * sizeof(std::uint64_t)) * dim;
   const auto to_string =
     fmt::format("{{int64[{}]:0,int64[{}]:{}}}", dim, dim, dim * sizeof(std::int64_t));
 
-  test_struct_type(type, true, full_size, sizeof(uint64_t), to_string, field_types);
+  test_struct_type(type, true, full_size, sizeof(std::uint64_t), to_string, field_types);
   ASSERT_TRUE(legate::is_rect_type(type, dim));
 }
 

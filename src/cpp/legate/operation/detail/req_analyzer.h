@@ -65,7 +65,7 @@ class FieldSet {
   // This must be an ordered map to avoid control divergence
   std::map<Key, Entry> coalesced_{};
   using ReqIndexMapKey = std::pair<Key, Legion::FieldID>;
-  std::unordered_map<ReqIndexMapKey, uint32_t, hasher<ReqIndexMapKey>> req_indices_{};
+  std::unordered_map<ReqIndexMapKey, std::uint32_t, hasher<ReqIndexMapKey>> req_indices_{};
 
   // This must be an ordered map to avoid control divergence
   std::map<Legion::FieldID, ProjectionSet> field_projs_{};

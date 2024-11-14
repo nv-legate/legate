@@ -23,7 +23,7 @@ namespace legate {
 
 // NOLINTBEGIN
 #if defined(_WIN64) || defined(__LP64__)
-// Don't use uint64_t, we want to match the driver headers exactly
+// Don't use std::uint64_t, we want to match the driver headers exactly
 using CUdeviceptr = unsigned long long;  // NOLINT(google-runtime-int)
 #else
 using CUdeviceptr = unsigned int;

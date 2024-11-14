@@ -19,7 +19,7 @@
 
 namespace legate {
 
-void PhysicalStore::bind_untyped_data(Buffer<int8_t, 1>& buffer, const Point<1>& extents) const
+void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>& buffer, const Point<1>& extents) const
 {
   check_valid_binding_(true);
   check_buffer_dimension_(1);

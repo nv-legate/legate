@@ -28,7 +28,7 @@ void hello_cpu_variant(legate::TaskContext& context)
   if (shape.empty()) {
     return;
   }
-  auto acc = output.write_accessor<int64_t, 2>(shape);
+  auto acc = output.write_accessor<std::int64_t, 2>(shape);
 
   for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
     acc[*it] = (*it)[0] + (*it)[1] * 1000;

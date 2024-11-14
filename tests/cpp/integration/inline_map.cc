@@ -30,7 +30,7 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
   {
     auto output = context.output(0).data();
     auto shape  = output.shape<1>();
-    auto acc    = output.read_write_accessor<int64_t, 1>(shape);
+    auto acc    = output.read_write_accessor<std::int64_t, 1>(shape);
     for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
       acc[*it] += 1;
     }
@@ -65,9 +65,9 @@ void test_inline_map_region_and_slice()
   auto slice_ls = root_ls.slice(0, legate::Slice(1));
   auto slice_ps = slice_ls.get_physical_store();
   EXPECT_FALSE(slice_ps.is_future());
-  auto root_acc  = root_ps.write_accessor<int64_t, 1>();
+  auto root_acc  = root_ps.write_accessor<std::int64_t, 1>();
   root_acc[2]    = 42;
-  auto slice_acc = slice_ps.read_accessor<int64_t, 1>();
+  auto slice_acc = slice_ps.read_accessor<std::int64_t, 1>();
   EXPECT_EQ(slice_acc[1], 42);
 }
 
@@ -78,7 +78,7 @@ void test_inline_map_and_task()
   auto l_store = runtime->create_store(legate::Shape{5}, legate::int64());
   {
     auto p_store = l_store.get_physical_store();
-    auto acc     = p_store.write_accessor<int64_t, 1>();
+    auto acc     = p_store.write_accessor<std::int64_t, 1>();
     acc[2]       = 42;
   }
   auto task = runtime->create_task(context, AdderTask::TASK_ID, {1});
@@ -86,7 +86,7 @@ void test_inline_map_and_task()
   task.add_output(l_store);
   runtime->submit(std::move(task));
   auto p_store = l_store.get_physical_store();
-  auto acc     = p_store.read_accessor<int64_t, 1>();
+  auto acc     = p_store.read_accessor<std::int64_t, 1>();
   EXPECT_EQ(acc[2], 43);
 }
 

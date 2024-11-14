@@ -62,7 +62,7 @@ ReturnValue UnboundRegionField::pack_weight() const
 
 void UnboundRegionField::update_num_elements(std::size_t num_elements)
 {
-  const AccessorWO<size_t, 1> acc{num_elements_, sizeof(num_elements), false};
+  const AccessorWO<std::size_t, 1> acc{num_elements_, sizeof(num_elements), false};
   acc[0] = num_elements;
 }
 

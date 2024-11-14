@@ -61,7 +61,7 @@ namespace legate::detail {
   auto vardata_shape = vardata.shape<1>();
   auto vardata_lo    = vardata_shape.lo[0];
 
-  auto offsets_acc = offsets.read_accessor<int32_t, 1>();
+  auto offsets_acc = offsets.read_accessor<std::int32_t, 1>();
   auto ranges_acc  = ranges.write_accessor<Rect<1>, 1>();
 #pragma omp parallel for schedule(static)
   for (std::int64_t idx = shape.lo[0]; idx < shape.hi[0]; ++idx) {
@@ -85,7 +85,7 @@ namespace legate::detail {
   }
 
   auto ranges_acc  = ranges.read_accessor<Rect<1>, 1>();
-  auto offsets_acc = offsets.write_accessor<int32_t, 1>();
+  auto offsets_acc = offsets.write_accessor<std::int32_t, 1>();
   auto lo          = ranges_acc[shape.lo].lo[0];
 #pragma omp parallel for schedule(static)
   for (std::int64_t idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) {

@@ -39,13 +39,13 @@ void increment_physical_store(const legate::PhysicalStore& store, std::int32_t d
 {
   if (dim == 1) {
     auto shape = store.shape<1>();
-    auto acc   = store.read_write_accessor<int64_t, 1, true>(shape);
+    auto acc   = store.read_write_accessor<std::int64_t, 1, true>(shape);
     for (legate::PointInRectIterator<1> it(shape); it.valid(); ++it) {
       acc[*it] += 1;
     }
   } else {
     auto shape = store.shape<2>();
-    auto acc   = store.read_write_accessor<int64_t, 2, true>(shape);
+    auto acc   = store.read_write_accessor<std::int64_t, 2, true>(shape);
     for (legate::PointInRectIterator<2> it(shape); it.valid(); ++it) {
       acc[*it] += 1;
     }
@@ -58,13 +58,13 @@ void check_physical_store(const legate::PhysicalStore& store,
 {
   if (dim == 1) {
     auto shape = store.shape<1>();
-    auto acc   = store.read_accessor<int64_t, 1, true>(shape);
+    auto acc   = store.read_accessor<std::int64_t, 1, true>(shape);
     for (std::size_t i = 0; i < SHAPE_1D()[0]; ++i) {
       EXPECT_EQ(acc[i], counter++);
     }
   } else {
     auto shape = store.shape<2>();
-    auto acc   = store.read_accessor<int64_t, 2, true>(shape);
+    auto acc   = store.read_accessor<std::int64_t, 2, true>(shape);
     // Legate should always see elements in the expected order
     for (std::uint64_t i = 0; i < SHAPE_2D()[0]; ++i) {
       for (std::uint64_t j = 0; j < SHAPE_2D()[1]; ++j) {
@@ -117,7 +117,7 @@ class Attach : public RegisterOnceFixture<Config> {};
 
 class Positive : public RegisterOnceFixture<Config>,
                  public ::testing::WithParamInterface<
-                   std::tuple<std::pair<int32_t, bool>, bool, bool, bool, bool>> {};
+                   std::tuple<std::pair<std::int32_t, bool>, bool, bool, bool, bool>> {};
 
 INSTANTIATE_TEST_SUITE_P(Attach,
                          Positive,
@@ -129,17 +129,17 @@ INSTANTIATE_TEST_SUITE_P(Attach,
                                             ::testing::Bool(),
                                             ::testing::Bool()));
 
-int64_t* make_buffer(std::int32_t dim, bool fortran)
+std::int64_t* make_buffer(std::int32_t dim, bool fortran)
 {
-  int64_t* buffer;
+  std::int64_t* buffer;
   std::int64_t counter = 0;
   if (dim == 1) {
-    buffer = new int64_t[SHAPE_1D().volume()];
+    buffer = new std::int64_t[SHAPE_1D().volume()];
     for (std::size_t i = 0; i < SHAPE_1D()[0]; ++i) {
       buffer[i] = counter++;
     }
   } else {
-    buffer = new int64_t[SHAPE_2D().volume()];
+    buffer = new std::int64_t[SHAPE_2D().volume()];
     for (std::size_t i = 0; i < SHAPE_2D()[0]; ++i) {
       for (std::size_t j = 0; j < SHAPE_2D()[1]; ++j) {
         if (fortran) {
@@ -153,7 +153,7 @@ int64_t* make_buffer(std::int32_t dim, bool fortran)
   return buffer;
 }
 
-void check_buffer(int64_t* buffer, std::int32_t dim, bool fortran, std::int64_t counter)
+void check_buffer(std::int64_t* buffer, std::int32_t dim, bool fortran, std::int64_t counter)
 {
   if (dim == 1) {
     for (std::size_t i = 0; i < SHAPE_1D()[0]; ++i) {
@@ -254,7 +254,7 @@ TEST_F(Attach, Negative)
 
   {
     // Trying to detach a sub-store
-    auto mem     = new int64_t[SHAPE_1D().volume()];
+    auto mem     = new std::int64_t[SHAPE_1D().volume()];
     auto l_store = runtime->create_store(SHAPE_1D(), legate::int64(), mem, true /*share*/);
     EXPECT_THROW(l_store.project(0, 1).detach(), std::invalid_argument);
     // We have to properly detach this

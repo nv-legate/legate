@@ -61,7 +61,7 @@ namespace legate::detail {
   const auto vardata_shape = vardata.shape<1>();
   const auto vardata_lo    = vardata_shape.lo[0];
 
-  const auto offsets_acc = offsets.read_accessor<int32_t, 1>();
+  const auto offsets_acc = offsets.read_accessor<std::int32_t, 1>();
   const auto ranges_acc  = ranges.write_accessor<Rect<1>, 1>();
   for (auto idx = shape.lo[0]; idx < shape.hi[0]; ++idx) {
     ranges_acc[idx].lo[0] = vardata_lo + offsets_acc[idx];
@@ -84,7 +84,7 @@ namespace legate::detail {
   }
 
   const auto ranges_acc  = ranges.read_accessor<Rect<1>, 1>();
-  const auto offsets_acc = offsets.write_accessor<int32_t, 1>();
+  const auto offsets_acc = offsets.write_accessor<std::int32_t, 1>();
   const auto lo          = ranges_acc[shape.lo].lo[0];
   for (auto idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) {
     offsets_acc[idx] = static_cast<std::int32_t>(ranges_acc[idx].lo[0] - lo);

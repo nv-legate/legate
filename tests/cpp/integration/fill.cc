@@ -95,7 +95,7 @@ template <std::int32_t DIM>
     return;
   }
 
-  auto val_acc = input.data().read_accessor<int64_t, DIM>(shape);
+  auto val_acc = input.data().read_accessor<std::int64_t, DIM>(shape);
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
     EXPECT_EQ(val_acc[*it], value);
   }
@@ -133,7 +133,7 @@ template <std::int32_t DIM>
   };
 
   if (!input.nullable()) {
-    auto acc         = input.data().read_accessor<int64_t, DIM>(shape);
+    auto acc         = input.data().read_accessor<std::int64_t, DIM>(shape);
     auto v_in_slice  = value_in_slice.value<std::int64_t>();
     auto v_out_slice = value_outside_slice.value<std::int64_t>();
     for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
@@ -142,7 +142,7 @@ template <std::int32_t DIM>
     return;
   }
 
-  auto val_acc    = input.data().read_accessor<int64_t, DIM>(shape);
+  auto val_acc    = input.data().read_accessor<std::int64_t, DIM>(shape);
   auto mask_acc   = input.null_mask().read_accessor<bool, DIM>(shape);
   auto v_in_slice = value_in_slice.value<std::int64_t>();
   for (legate::PointInRectIterator<DIM> it(shape); it.valid(); ++it) {
@@ -160,7 +160,7 @@ template <std::int32_t DIM>
   auto output        = context.output(0);
   const auto& scalar = context.scalar(0);
 
-  auto acc = output.data().write_accessor<int8_t, 1, false>();
+  auto acc = output.data().write_accessor<std::int8_t, 1, false>();
   std::memcpy(acc.ptr(0), scalar.ptr(), scalar.size());
 }
 

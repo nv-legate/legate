@@ -38,9 +38,9 @@ void task_wrapper(VariantImpl,
                   VariantCode,
                   std::optional<std::string_view>,
                   const void*,
-                  size_t,
+                  std::size_t,
                   const void*,
-                  size_t,
+                  std::size_t,
                   Legion::Processor);
 
 template <VariantImpl variant_fn, VariantCode variant_kind>

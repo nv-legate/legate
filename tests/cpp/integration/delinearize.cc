@@ -33,7 +33,7 @@ struct Arange : public legate::LegateTask<Arange> {
   {
     auto output = context.output(0).data();
     auto shape  = output.shape<1>();
-    auto acc    = output.write_accessor<int64_t, 1>();
+    auto acc    = output.write_accessor<std::int64_t, 1>();
     for (legate::PointInRectIterator<1> it{shape}; it.valid(); ++it) {
       auto p = *it;
       acc[p] = p[0];
@@ -49,8 +49,8 @@ struct Copy : public legate::LegateTask<Copy> {
     auto input   = context.input(0).data();
     auto output  = context.output(0).data();
     auto shape   = output.shape<3>();
-    auto out_acc = output.write_accessor<int64_t, 3>();
-    auto in_acc  = input.read_accessor<int64_t, 3>();
+    auto out_acc = output.write_accessor<std::int64_t, 3>();
+    auto in_acc  = input.read_accessor<std::int64_t, 3>();
     for (legate::PointInRectIterator<3> it{shape}; it.valid(); ++it) {
       out_acc[*it] = in_acc[*it];
     }
@@ -92,7 +92,7 @@ void test_delinearize()
   }
 
   auto p_out = output.data().get_physical_store();
-  auto acc   = p_out.read_accessor<int64_t, 3>();
+  auto acc   = p_out.read_accessor<std::int64_t, 3>();
   auto shape = p_out.shape<3>();
   for (legate::PointInRectIterator<3> it{shape}; it.valid(); ++it) {
     auto p = *it;

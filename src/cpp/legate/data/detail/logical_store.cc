@@ -622,8 +622,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
       stop += extent;
     }
 
-    return std::make_pair<size_t, std::size_t>(std::max(int64_t{0}, start),
-                                               std::max(int64_t{0}, stop));
+    return std::make_pair<std::size_t, std::size_t>(std::max(std::int64_t{0}, start),
+                                                    std::max(std::int64_t{0}, stop));
   };
 
   auto exts          = extents();
@@ -692,7 +692,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
   auto delinearizable = [](auto&& to_match, const auto& new_dim_extents) {
     auto begin = new_dim_extents.begin();
     auto end   = new_dim_extents.end();
-    return std::reduce(begin, end, size_t{1}, std::multiplies<>{}) == to_match &&
+    return std::reduce(begin, end, std::size_t{1}, std::multiplies<>{}) == to_match &&
            // overflow check
            std::all_of(begin, end, [&to_match](auto size) { return size <= to_match; });
   };

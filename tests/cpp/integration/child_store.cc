@@ -43,7 +43,7 @@ TEST_F(ChildStore, Simple)
       EXPECT_EQ(extents[1], dim1 == 0 ? TILE_SIZE : EXTENT - TILE_SIZE);
 
       auto p_child = child.get_physical_store();
-      auto acc     = p_child.write_accessor<int64_t, 2>();
+      auto acc     = p_child.write_accessor<std::int64_t, 2>();
       for (std::int64_t i = 0; i < static_cast<std::int64_t>(extents[0]); ++i) {
         for (std::int64_t j = 0; j < static_cast<std::int64_t>(extents[1]); ++j) {
           acc[{i, j}] = static_cast<legate::coord_t>((dim0 * FACTOR) + dim1);
@@ -53,7 +53,7 @@ TEST_F(ChildStore, Simple)
   }
 
   auto p_store = store.get_physical_store();
-  auto acc     = p_store.read_accessor<int64_t, 2>();
+  auto acc     = p_store.read_accessor<std::int64_t, 2>();
 
   for (std::int64_t i = 0; i < static_cast<std::int64_t>(EXTENT); ++i) {
     for (std::int64_t j = 0; j < static_cast<std::int64_t>(EXTENT); ++j) {

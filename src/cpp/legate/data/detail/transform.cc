@@ -562,8 +562,8 @@ Transpose::Transpose(std::vector<std::int32_t>&& axes) : axes_{std::move(axes)}
   // second time to do the iota-ing
   inverse_.reserve(size);
   std::generate_n(std::back_inserter(inverse_), size, [n = 0]() mutable { return n++; });
-  std::sort(inverse_.begin(), inverse_.end(), [&](const int32_t& idx1, const int32_t& idx2) {
-    return axes_[idx1] < axes_[idx2];
+  std::sort(inverse_.begin(), inverse_.end(), [&](std::int32_t idx1, std::int32_t idx2) {
+    return axes_[static_cast<std::size_t>(idx1)] < axes_[static_cast<std::size_t>(idx2)];
   });
 }
 

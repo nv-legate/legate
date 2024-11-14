@@ -114,7 +114,7 @@ inline StringArrayAccessor<LEGION_WRITE_DISCARD>::StringArrayAccessor(const Stri
 
 inline void StringArrayAccessor<LEGION_WRITE_DISCARD>::insert(std::string_view value)
 {
-  ListArrayAccessor::insert({reinterpret_cast<const int8_t*>(value.data()), value.size()});
+  ListArrayAccessor::insert({reinterpret_cast<const std::int8_t*>(value.data()), value.size()});
 }
 
 }  // namespace legate

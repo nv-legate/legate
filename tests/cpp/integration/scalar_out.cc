@@ -32,8 +32,8 @@ struct Copy : public legate::LegateTask<Copy> {
     if (shape.empty()) {
       return;
     }
-    auto out_acc = output.write_accessor<int64_t, 1>();
-    auto in_acc  = input.read_accessor<int64_t, 1>();
+    auto out_acc = output.write_accessor<std::int64_t, 1>();
+    auto in_acc  = input.read_accessor<std::int64_t, 1>();
     out_acc[0]   = in_acc[0];
   }
 };
@@ -67,7 +67,7 @@ void test_scalar_out()
   }
 
   auto p_out = output.get_physical_store();
-  auto acc   = p_out.read_accessor<int64_t, 1>();
+  auto acc   = p_out.read_accessor<std::int64_t, 1>();
   EXPECT_EQ(acc[0], 123);
 }
 

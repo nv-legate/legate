@@ -50,14 +50,14 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
     auto output = context.output(0).data();
     auto rect   = input.shape<1>();
     auto volume = static_cast<std::int64_t>(rect.volume());
-    auto in     = input.read_accessor<int64_t, 1>(rect);
+    auto in     = input.read_accessor<std::int64_t, 1>(rect);
     std::unordered_set<std::int64_t> dedup_set;
     for (std::int64_t idx = 0; idx < volume; ++idx) {
       dedup_set.insert(in[idx]);
     }
 
-    auto result =
-      output.create_output_buffer<int64_t, 1>(static_cast<legate::coord_t>(dedup_set.size()), true);
+    auto result = output.create_output_buffer<std::int64_t, 1>(
+      static_cast<legate::coord_t>(dedup_set.size()), true);
     std::int64_t pos = 0;
     for (auto e : dedup_set) {
       result[pos++] = e;
@@ -71,10 +71,10 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
-    std::vector<std::pair<legate::AccessorRO<int64_t, 1>, legate::Rect<1>>> inputs;
+    std::vector<std::pair<legate::AccessorRO<std::int64_t, 1>, legate::Rect<1>>> inputs;
     for (auto& input_arr : context.inputs()) {
       auto shape = input_arr.shape<1>();
-      auto acc   = input_arr.data().read_accessor<int64_t, 1>(shape);
+      auto acc   = input_arr.data().read_accessor<std::int64_t, 1>(shape);
       inputs.emplace_back(acc, shape);
     }
     std::set<std::int64_t> dedup_set;
@@ -88,7 +88,7 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
 
     const std::size_t size = dedup_set.size();
     std::int64_t pos       = 0;
-    auto result            = output.create_output_buffer<int64_t, 1>(legate::Point<1>(size), true);
+    auto result = output.create_output_buffer<std::int64_t, 1>(legate::Point<1>(size), true);
     for (auto e : dedup_set) {
       result[pos++] = e;
     }
@@ -103,7 +103,7 @@ struct CheckTask : public legate::LegateTask<CheckTask> {
     auto input  = context.input(0).data();
     auto rect   = input.shape<1>();
     auto volume = rect.volume();
-    auto in     = input.read_accessor<int64_t, 1>(rect);
+    auto in     = input.read_accessor<std::int64_t, 1>(rect);
     ASSERT_EQ(volume, TILE_SIZE / 2);
     for (std::size_t idx = 0; idx < volume; ++idx) {
       ASSERT_EQ(in[idx], idx);

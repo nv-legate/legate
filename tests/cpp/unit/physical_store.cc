@@ -111,7 +111,7 @@ struct UnboundStoreFn {
         /// [Bind an untyped buffer to an unbound store]
         constexpr auto num_elements      = 9;
         const auto element_size_in_bytes = store.type().size();
-        auto buffer = legate::create_buffer<int8_t, 1>(num_elements * element_size_in_bytes);
+        auto buffer = legate::create_buffer<std::int8_t, 1>(num_elements * element_size_in_bytes);
         store.bind_untyped_data(buffer, legate::Point<1>{num_elements});
         /// [Bind an untyped buffer to an unbound store]
         LEGATE_CHECK(num_elements == UNBOUND_STORE_EXTENTS);
@@ -420,7 +420,7 @@ struct ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
   auto list_array       = array.as_list_array();
   auto descriptor_store = list_array.descriptor().data();
   auto vardata_store    = list_array.vardata().data();
-  auto buffer = vardata_store.create_output_buffer<int64_t, 1>(legate::Point<1>{10}, true);
+  auto buffer = vardata_store.create_output_buffer<std::int64_t, 1>(legate::Point<1>{10}, true);
   if (array.nullable()) {
     auto null_mask = array.null_mask();
     if (null_mask.is_unbound_store()) {
@@ -445,7 +445,7 @@ struct StringArrayStoreTask : public legate::LegateTask<StringArrayStoreTask> {
   auto string_array = array.as_string_array();
   auto ranges_store = string_array.ranges().data();
   auto chars_store  = string_array.chars().data();
-  auto buffer       = chars_store.create_output_buffer<int8_t, 1>(legate::Point<1>{10}, true);
+  auto buffer       = chars_store.create_output_buffer<std::int8_t, 1>(legate::Point<1>{10}, true);
   if (ranges_store.is_unbound_store()) {
     ranges_store.bind_empty_data();
   }
@@ -602,7 +602,7 @@ void test_accessor_future_store(bool transform)
 
   EXPECT_EQ(store.shape<1>().volume(), 1);
 
-  auto read_acc = store.read_accessor<uint64_t, 1>();
+  auto read_acc = store.read_accessor<std::uint64_t, 1>();
   EXPECT_EQ(read_acc[0], UINT64_VALUE);
   EXPECT_EQ(read_acc[0], store.scalar<std::uint64_t>());
 
@@ -613,8 +613,9 @@ void test_accessor_future_store(bool transform)
   }
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // accessors of beyond the privilege
-    EXPECT_THROW(static_cast<void>(store.write_accessor<uint64_t, 1>()), std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.read_write_accessor<uint64_t, 1>()),
+    EXPECT_THROW(static_cast<void>(store.write_accessor<std::uint64_t, 1>()),
+                 std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(store.read_write_accessor<std::uint64_t, 1>()),
                  std::invalid_argument);
     EXPECT_THROW(
       static_cast<void>(store.reduce_accessor<legate::SumReduction<u_int64_t>, false, 1>()),
@@ -632,12 +633,13 @@ void test_invalid_accessor()
     auto store         = logical_store.get_physical_store();
 
     constexpr std::int32_t INVALID_DIM = 3;
-    EXPECT_THROW(static_cast<void>(store.read_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>()),
-                 std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.write_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>()),
+    EXPECT_THROW(static_cast<void>(store.read_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>()),
                  std::invalid_argument);
     EXPECT_THROW(
-      static_cast<void>(store.read_write_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>()),
+      static_cast<void>(store.write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>()),
+      std::invalid_argument);
+    EXPECT_THROW(
+      static_cast<void>(store.read_write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>()),
       std::invalid_argument);
     EXPECT_THROW(
       static_cast<void>(
@@ -647,14 +649,14 @@ void test_invalid_accessor()
 
     auto bounds = legate::Rect<INVALID_DIM, std::int16_t>({0, 0, 0}, {0, 0, 0});
     EXPECT_THROW(
-      static_cast<void>(store.read_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
+      static_cast<void>(store.read_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
       std::invalid_argument);
     EXPECT_THROW(
-      static_cast<void>(store.write_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
+      static_cast<void>(store.write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
       std::invalid_argument);
-    EXPECT_THROW(
-      static_cast<void>(store.read_write_accessor<int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
-      std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(
+                   store.read_write_accessor<std::int16_t, INVALID_DIM, VALIDATE_TYPE>(bounds)),
+                 std::invalid_argument);
     EXPECT_THROW(
       static_cast<void>(
         store
@@ -670,9 +672,9 @@ void test_invalid_accessor()
     auto store         = logical_store.get_physical_store();
 
     constexpr std::int32_t DIM = 2;
-    EXPECT_THROW(static_cast<void>(store.read_accessor<int32_t, DIM, VALIDATE_TYPE>()),
+    EXPECT_THROW(static_cast<void>(store.read_accessor<std::int32_t, DIM, VALIDATE_TYPE>()),
                  std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.write_accessor<uint64_t, DIM, VALIDATE_TYPE>()),
+    EXPECT_THROW(static_cast<void>(store.write_accessor<std::uint64_t, DIM, VALIDATE_TYPE>()),
                  std::invalid_argument);
     EXPECT_THROW(static_cast<void>(store.read_write_accessor<bool, DIM, VALIDATE_TYPE>()),
                  std::invalid_argument);
@@ -682,9 +684,9 @@ void test_invalid_accessor()
       std::invalid_argument);
 
     auto bounds = legate::Rect<DIM, std::uint16_t>{{0, 0}, {0, 0}};
-    EXPECT_THROW(static_cast<void>(store.read_accessor<uint32_t, DIM, VALIDATE_TYPE>(bounds)),
+    EXPECT_THROW(static_cast<void>(store.read_accessor<std::uint32_t, DIM, VALIDATE_TYPE>(bounds)),
                  std::invalid_argument);
-    EXPECT_THROW(static_cast<void>(store.write_accessor<int64_t, DIM, VALIDATE_TYPE>(bounds)),
+    EXPECT_THROW(static_cast<void>(store.write_accessor<std::int64_t, DIM, VALIDATE_TYPE>(bounds)),
                  std::invalid_argument);
     EXPECT_THROW(static_cast<void>(store.read_write_accessor<double, DIM, VALIDATE_TYPE>(bounds)),
                  std::invalid_argument);
@@ -868,7 +870,7 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
     auto store                 = logical_store.get_physical_store();
     const legate::Rect<DIM> expect_rect{0, 4};
 
-    test_bound_store<int64_t, DIM>(store, expect_rect);
+    test_bound_store<std::int64_t, DIM>(store, expect_rect);
   }
 #endif
 #if LEGATE_MAX_DIM >= 2
@@ -910,7 +912,7 @@ TEST_F(PhysicalStoreUnit, BoundStoreMultiDims)
     const std::vector<legate::coord_t> hi{19, 5, 3, 9, 49};
     const legate::Rect<DIM> expect_rect{legate::Point<5>{lo.data()}, legate::Point<5>{hi.data()}};
 
-    test_bound_store<uint16_t, DIM>(store, expect_rect);
+    test_bound_store<std::uint16_t, DIM>(store, expect_rect);
   }
 #endif
 #if LEGATE_MAX_DIM >= 6
@@ -970,7 +972,7 @@ TEST_F(PhysicalStoreUnit, BoundStoreInvalid)
   auto logical_store = runtime->create_store({static_cast<std::size_t>(-2), 1}, legate::int64());
   auto store         = logical_store.get_physical_store();
   auto expect_rect   = legate::Rect<DIM, std::int64_t>{{0, 0}, {-3, 0}};
-  test_bound_store<int64_t, DIM>(store, expect_rect);
+  test_bound_store<std::int64_t, DIM>(store, expect_rect);
 }
 
 TEST_F(PhysicalStoreUnit, UnboundStoreCreation)
@@ -1006,7 +1008,7 @@ TEST_F(PhysicalStoreUnit, UnboundStoreBindBuffer)
     auto store = create_unbound_store_by_task(UnboundStoreOpCode::BIND_EMPTY, legate::int32());
     // empty rect
     auto expect_rect = legate::Rect<DIM, std::int32_t>{0, -1};
-    test_bound_store<int32_t, DIM>(store, expect_rect);
+    test_bound_store<std::int32_t, DIM>(store, expect_rect);
   }
 
   {

@@ -113,7 +113,7 @@ void test_inout()
     runtime->submit(std::move(task));
 
     auto p_out = store.get_physical_store();
-    auto acc   = p_out.read_accessor<int64_t, 2>();
+    auto acc   = p_out.read_accessor<std::int64_t, 2>();
     auto shape = p_out.shape<2>();
     for (legate::PointInRectIterator<2> it{shape}; it.valid(); ++it) {
       auto p = *it;

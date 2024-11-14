@@ -223,7 +223,7 @@ TEST_F(IndexAttach, CPU)
 {
   constexpr std::int64_t VAL1 = 42;
   constexpr std::int64_t VAL2 = 84;
-  constexpr std::size_t BYTES = TILE_SIZE * sizeof(int64_t);
+  constexpr std::size_t BYTES = TILE_SIZE * sizeof(std::int64_t);
 
   std::vector<std::int64_t> alloc1(TILE_SIZE, VAL1), alloc2(TILE_SIZE, VAL2);
   auto runtime = legate::Runtime::get_runtime();

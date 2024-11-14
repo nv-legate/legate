@@ -157,8 +157,8 @@ Span<const VAL> Scalar::values() const
     }
 
     auto data         = ptr();
-    auto len          = *static_cast<const uint32_t*>(data);
-    const auto* begin = static_cast<const char*>(data) + sizeof(uint32_t);
+    auto len          = *static_cast<const std::uint32_t*>(data);
+    const auto* begin = static_cast<const char*>(data) + sizeof(std::uint32_t);
     return {reinterpret_cast<const VAL*>(begin), len};
   }
   if (ty.code() == Type::Code::NIL) {
