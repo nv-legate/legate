@@ -40,18 +40,16 @@ environment, use environment variable ``CONDA_OVERRIDE_CUDA``:
 Support Matrix
 --------------
 
-The following table lists Legate's minimum supported versions of major
-dependencies.
+The following table lists Legate's minimum supported versions of major dependencies.
 
 "Full support" means that the corresponding versions (and all later ones) are
-being tested regularly, released as conda packages, and are expected to work.
-Please report any incompatibility you find against a fully-supported version
-by opening a bug.
+being tested with some regularity, and are expected to work. Please report any
+incompatibility you find against a fully-supported version by opening a bug.
 
 "Best-effort support" means that the corresponding versions are not actively
-tested, but Legate should be compatible with them if built from source. We
-will not actively work to fix any incompatibilities discovered under these
-versions, but we accept contributions that fix such incompatibilities.
+tested, but Legate should be compatible with them. We will not actively work to
+fix any incompatibilities discovered under these versions, but we accept
+contributions that fix such incompatibilities.
 
 .. list-table:: Support Matrix
    :header-rows: 1
@@ -61,13 +59,10 @@ versions, but we accept contributions that fix such incompatibilities.
      - Best-effort support (min version)
    * - CPU architecture
      - x86-64 (Haswell), aarch64
-     - ppc64le, older x86-64, Apple Silicon
+     - older x86-64
    * - OS
      - RHEL 8, Ubuntu 20.04
-     - MacOS 12, other Linux
-   * - C++ compiler
-     - gcc 8, clang 7, nvc++ 19.1
-     - any compiler with C++17 support
+     - other Linux
    * - GPU architecture
      - Volta
      - Pascal
@@ -97,45 +92,40 @@ If you encounter runtime failures such as
 
    failed to load MPI wrapper: 'some/path/to/liblegate_mpi_wrapper.so' ...
 
-Or if you want to use Legate in combination with a different MPI library than
-the one it was compiled against (see the dependencies on the Legate package),
-e.g. you are on an HPC cluster and want to use the vendor's MPI library, then
-you will need to compile and install the Legate MPI wrapper locally on your
-machine. See :ref:`FAQ<mpi_wrapper_faq>` for more information on why this is
-needed.
+Or if you want to use Legate in combination with a different MPI library than the one it
+was compiled against (see the dependencies on the Legate package), e.g. you are on an HPC
+cluster and want to use the vendor's MPI library, then you will need to compile and
+install the Legate MPI wrapper locally on your machine. See :ref:`FAQ<mpi_wrapper_faq>`
+for more information on why this is needed.
 
-Assuming Legate is installed to a directory called ``INSTALL_PREFIX``, to build
-and install the wrappers simply run the following:
+Assuming Legate is installed to a directory called ``INSTALL_PREFIX``, to build and
+install the wrappers simply run the following:
 
 .. code-block:: sh
 
    $ INSTALL_PREFIX/share/legate/mpi_wrapper/install.bash
 
-This command will build and install the MPI wrappers to the default
-installation prefix. In order to build and install the wrappers you will
-need to have:
+This command will build and install the MPI wrappers to the default installation
+prefix. In order to build and install the wrappers you will need to have:
 
 - CMake (at least version 3.0).
 - A C++ compiler.
 - A local installation of MPI.
 - Write access to the installation prefix.
 
-There are several influential environment variables that users may set in order
-to control the build and installation process:
+There are several influential environment variables that users may set in order to control
+the build and installation process:
 
 - ``CMAKE``: name or path to the ``cmake`` executable.
-- ``CMAKE_INSTALL_PREFIX``, ``PREFIX``, or ``DESTDIR``: path to which the MPI
-  wrappers should be installed. If one or more of these variables is set and
-  not empty, they are preferred in the order listed. That is,
-  ``CMAKE_INSTALL_PREFIX`` will be preferred over ``PREFIX``, which is
-  preferred over ``DESTDIR``.
-- ``CMAKE_ARGS`` or ``CMAKE_CONFIGURE_ARGS``: if set, arguments to be passed
-  to the initial CMake configure command. If both are set,
-  ``CMAKE_CONFIGURE_ARGS`` is preferred over ``CMAKE_ARGS``.
-- ``CMAKE_BUILD_ARGS``: if set, arguments to be passed to the CMake build
-  command.
-- ``CMAKE_INSTALL_ARGS``: if set, arguments to be passed to the CMake install
-  command.
+- ``CMAKE_INSTALL_PREFIX``, ``PREFIX``, or ``DESTDIR``: path to which the MPI wrappers
+  should be installed. If one or more of these variables is set and not empty, they are
+  preferred in the order listed. That is, ``CMAKE_INSTALL_PREFIX`` will be preferred over
+  ``PREFIX``, which is preferred over ``DESTDIR``.
+- ``CMAKE_ARGS`` or ``CMAKE_CONFIGURE_ARGS``: if set, arguments to be passed to the
+  initial CMake configure command. If both are set, ``CMAKE_CONFIGURE_ARGS`` is preferred
+  over ``CMAKE_ARGS``.
+- ``CMAKE_BUILD_ARGS``: if set, arguments to be passed to the CMake build command.
+- ``CMAKE_INSTALL_ARGS``: if set, arguments to be passed to the CMake install command.
 
 
 Installation of the Legate IPython Kernel
@@ -165,14 +155,3 @@ source projects before use.
 
 For license information regarding projects bundled directly, see
 :ref:`thirdparty`.
-
-Building and Installing from Source
------------------------------------
-
-Building Legate from source has multiple steps and can involve different
-dependencies, depending on your system configuration. For the most up to date
-instructions for the latest source code, see the `BUILD.md`_ document in the
-`Legate repository`_.
-
-.. _BUILD.md: https://github.com/nv-legate/legate.core/blob/HEAD/BUILD.md
-.. _Legate repository: https://github.com/nv-legate/legate.core
