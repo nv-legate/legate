@@ -35,7 +35,7 @@ CUDAModuleManager::~CUDAModuleManager() noexcept
   const auto* api = legate::detail::Runtime::get_runtime()->get_cuda_driver_api();
 
   for (auto&& [_, cu_lib] : libraries_()) {
-    LEGATE_CHECK_CUDRIVER(api->library_unload(cu_lib));
+    api->library_unload(&cu_lib);
   }
 }
 
@@ -104,14 +104,13 @@ CUlibrary CUDAModuleManager::load_library(
     try {
       const auto* api = legate::detail::Runtime::get_runtime()->get_cuda_driver_api();
 
-      LEGATE_CHECK_CUDRIVER(api->library_load_data(&it->second,
-                                                   fatbin,
-                                                   jit_options.first.begin(),
-                                                   jit_options.second.begin(),
-                                                   jit_options.first.size(),
-                                                   library_options.first.begin(),
-                                                   library_options.second.begin(),
-                                                   library_options.first.size()));
+      it->second = api->library_load_data(fatbin,
+                                          jit_options.first.begin(),
+                                          jit_options.second.begin(),
+                                          jit_options.first.size(),
+                                          library_options.first.begin(),
+                                          library_options.second.begin(),
+                                          library_options.first.size());
     } catch (...) {
       libraries_().erase(it);
       throw;
@@ -129,12 +128,8 @@ CUkernel CUDAModuleManager::load_kernel_from_fatbin(const void* fatbin, const ch
 
   const auto lib = load_library(fatbin);
 
-  CUkernel kern;
-
-  LEGATE_CHECK_CUDRIVER(
-    legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->library_get_kernel(
-      &kern, lib, kernel_name));
-  return kern;
+  return legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->library_get_kernel(
+    lib, kernel_name);
 }
 
 }  // namespace legate::cuda::detail

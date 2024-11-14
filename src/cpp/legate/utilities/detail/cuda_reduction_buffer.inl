@@ -24,8 +24,8 @@ CUDAReductionBuffer<REDOP>::CUDAReductionBuffer(CUstream stream)
 {
   static const VAL identity{REDOP::identity};
 
-  LEGATE_CHECK_CUDRIVER(Runtime::get_runtime()->get_cuda_driver_api()->mem_cpy_async(
-    ptr_, &identity, sizeof(identity), stream));
+  Runtime::get_runtime()->get_cuda_driver_api()->mem_cpy_async(
+    ptr_, &identity, sizeof(identity), stream);
 }
 
 template <typename REDOP>
@@ -42,8 +42,8 @@ LEGATE_HOST typename CUDAReductionBuffer<REDOP>::VAL CUDAReductionBuffer<REDOP>:
   VAL result;
   const auto* driver = Runtime::get_runtime()->get_cuda_driver_api();
 
-  LEGATE_CHECK_CUDRIVER(driver->mem_cpy_async(&result, ptr_, sizeof(result), stream));
-  LEGATE_CHECK_CUDRIVER(driver->stream_synchronize(stream));
+  driver->mem_cpy_async(&result, ptr_, sizeof(result), stream);
+  driver->stream_synchronize(stream);
   return result;
 }
 

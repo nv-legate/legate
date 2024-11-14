@@ -23,8 +23,7 @@ namespace legate::cuda {
 StreamView::~StreamView()
 {
   if (valid_ && legate::detail::Config::synchronize_stream_view) {
-    LEGATE_CHECK_CUDRIVER(
-      legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->stream_synchronize(stream_));
+    legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->stream_synchronize(stream_);
   }
 }
 

@@ -68,38 +68,43 @@ struct FindBoundingBoxFn {
       auto ident_hi = ElementWiseMax<POINT_NDIM>::identity;
 
       if constexpr (RECT) {
-        auto in_acc           = input.read_accessor<Rect<POINT_NDIM>, STORE_NDIM>(shape);
-        void* kernel_params[] = {
-          &unravel, &num_iters, &result_low, &result_high, &in_acc, &ident_lo, &ident_hi};
+        auto in_acc = input.read_accessor<Rect<POINT_NDIM>, STORE_NDIM>(shape);
 
-        LEGATE_CHECK_CUDRIVER(api->launch_kernel(kern,
-                                                 {LEGATE_MAX_REDUCTION_CTAS},
-                                                 {LEGATE_THREADS_PER_BLOCK},
-                                                 shmem_size,
-                                                 stream,
-                                                 kernel_params,
-                                                 nullptr));
+        api->launch_kernel(kern,
+                           {LEGATE_MAX_REDUCTION_CTAS},
+                           {LEGATE_THREADS_PER_BLOCK},
+                           shmem_size,
+                           stream,
+                           unravel,
+                           num_iters,
+                           result_low,
+                           result_high,
+                           in_acc,
+                           ident_lo,
+                           ident_hi);
       } else {
-        auto in_acc           = input.read_accessor<Point<POINT_NDIM>, STORE_NDIM>(shape);
-        void* kernel_params[] = {
-          &unravel, &num_iters, &result_low, &result_high, &in_acc, &ident_lo, &ident_hi};
+        auto in_acc = input.read_accessor<Point<POINT_NDIM>, STORE_NDIM>(shape);
 
-        LEGATE_CHECK_CUDRIVER(api->launch_kernel(kern,
-                                                 {LEGATE_MAX_REDUCTION_CTAS},
-                                                 {LEGATE_THREADS_PER_BLOCK},
-                                                 shmem_size,
-                                                 stream,
-                                                 kernel_params,
-                                                 nullptr));
+        api->launch_kernel(kern,
+                           {LEGATE_MAX_REDUCTION_CTAS},
+                           {LEGATE_THREADS_PER_BLOCK},
+                           shmem_size,
+                           stream,
+                           unravel,
+                           num_iters,
+                           result_low,
+                           result_high,
+                           in_acc,
+                           ident_lo,
+                           ident_hi);
       }
     }
 
     static const auto kernel_name = fmt::format("legate_copy_output_{}", POINT_NDIM);
     CUkernel kern =
       mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
-    void* kernel_params[] = {&out_acc, &result_low, &result_high};
 
-    LEGATE_CHECK_CUDRIVER(api->launch_kernel(kern, {1}, {1}, 0, stream, kernel_params, nullptr));
+    api->launch_kernel(kern, {1}, {1}, 0, stream, out_acc, result_low, result_high);
   }
 };
 
@@ -133,26 +138,21 @@ struct FindBoundingBoxSortedFn {
         mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
 
       if constexpr (RECT) {
-        auto in_acc           = input.read_accessor<Rect<POINT_NDIM>, STORE_NDIM>(shape);
-        void* kernel_params[] = {&unravel, &result_low, &result_high, &in_acc};
+        auto in_acc = input.read_accessor<Rect<POINT_NDIM>, STORE_NDIM>(shape);
 
-        LEGATE_CHECK_CUDRIVER(
-          api->launch_kernel(kern, {1}, {1}, 0, stream, kernel_params, nullptr));
+        api->launch_kernel(kern, {1}, {1}, 0, stream, unravel, result_low, result_high, in_acc);
       } else {
-        auto in_acc           = input.read_accessor<Point<POINT_NDIM>, STORE_NDIM>(shape);
-        void* kernel_params[] = {&unravel, &result_low, &result_high, &in_acc};
+        auto in_acc = input.read_accessor<Point<POINT_NDIM>, STORE_NDIM>(shape);
 
-        LEGATE_CHECK_CUDRIVER(
-          api->launch_kernel(kern, {1}, {1}, 0, stream, kernel_params, nullptr));
+        api->launch_kernel(kern, {1}, {1}, 0, stream, unravel, result_low, result_high, in_acc);
       }
     }
 
     static const auto kernel_name = fmt::format("legate_copy_output_{}", POINT_NDIM);
     CUkernel kern =
       mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
-    void* kernel_params[] = {&out_acc, &result_low, &result_high};
 
-    LEGATE_CHECK_CUDRIVER(api->launch_kernel(kern, {1}, {1}, 0, stream, kernel_params, nullptr));
+    api->launch_kernel(kern, {1}, {1}, 0, stream, out_acc, result_low, result_high);
   }
 };
 

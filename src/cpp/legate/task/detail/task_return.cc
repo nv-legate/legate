@@ -46,8 +46,8 @@ void TaskReturn::pack(void* buffer) const
 
     for (auto&& [ret, offset] : zip_equal(return_values_, layout_)) {
       if (ret.is_device_value()) {
-        LEGATE_CHECK_CUDRIVER(runtime->get_cuda_driver_api()->mem_cpy_async(
-          out_ptr + offset, ret.ptr(), ret.size(), stream));
+        runtime->get_cuda_driver_api()->mem_cpy_async(
+          out_ptr + offset, ret.ptr(), ret.size(), stream);
       } else {
         std::memcpy(out_ptr + offset, ret.ptr(), ret.size());
       }
@@ -77,7 +77,7 @@ void TaskReturn::finalize(Legion::Context legion_context) const
   //        potentially launched with different streams, within the task. Until we find
   //        the right approach, we simply synchronize the device before proceeding.
   if (kind == Processor::TOC_PROC) {
-    LEGATE_CHECK_CUDRIVER(runtime->get_cuda_driver_api()->ctx_synchronize());
+    runtime->get_cuda_driver_api()->ctx_synchronize();
   }
 
   auto return_buffer =

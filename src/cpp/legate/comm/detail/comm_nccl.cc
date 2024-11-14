@@ -137,16 +137,14 @@ class Init : public detail::LegionTask<Init> {
     auto stream          = legate_runtime->get_cuda_stream();
 
     // Perform a warm-up all-to-all
-
-    CUevent ev_start, ev_end_all_to_all, ev_end_all_gather;
-    LEGATE_CHECK_CUDRIVER(driver->event_create(&ev_start, 0));
-    LEGATE_CHECK_CUDRIVER(driver->event_create(&ev_end_all_to_all, 0));
-    LEGATE_CHECK_CUDRIVER(driver->event_create(&ev_end_all_gather, 0));
+    CUevent ev_start          = driver->event_create();
+    CUevent ev_end_all_to_all = driver->event_create();
+    CUevent ev_end_all_gather = driver->event_create();
 
     auto src_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
     auto tgt_buffer = create_buffer<Payload>(num_ranks, Memory::Kind::GPU_FB_MEM);
 
-    LEGATE_CHECK_CUDRIVER(driver->event_record(ev_start, stream));
+    driver->event_record(ev_start, stream);
 
     LEGATE_CHECK_NCCL(ncclGroupStart());
     for (std::size_t idx = 0; idx < num_ranks; ++idx) {
@@ -155,21 +153,17 @@ class Init : public detail::LegionTask<Init> {
     }
     LEGATE_CHECK_NCCL(ncclGroupEnd());
 
-    LEGATE_CHECK_CUDRIVER(driver->event_record(ev_end_all_to_all, stream));
+    driver->event_record(ev_end_all_to_all, stream);
 
     LEGATE_CHECK_NCCL(
       ncclAllGather(src_buffer.ptr(0), tgt_buffer.ptr(0), 1, ncclUint64, *comm, stream));
 
-    LEGATE_CHECK_CUDRIVER(driver->event_record(ev_end_all_gather, stream));
+    driver->event_record(ev_end_all_gather, stream);
 
-    LEGATE_CHECK_CUDRIVER(driver->event_synchronize(ev_end_all_gather));
+    driver->event_synchronize(ev_end_all_gather);
 
-    float time_all_to_all = 0.;
-    float time_all_gather = 0.;
-    LEGATE_CHECK_CUDRIVER(
-      driver->event_elapsed_time(&time_all_to_all, ev_start, ev_end_all_to_all));
-    LEGATE_CHECK_CUDRIVER(
-      driver->event_elapsed_time(&time_all_gather, ev_end_all_to_all, ev_end_all_gather));
+    const auto time_all_to_all = driver->event_elapsed_time(ev_start, ev_end_all_to_all);
+    const auto time_all_gather = driver->event_elapsed_time(ev_end_all_to_all, ev_end_all_gather);
 
     if (0 == rank_id) {
       legate::detail::log_legate().debug(
@@ -179,9 +173,9 @@ class Init : public detail::LegionTask<Init> {
         time_all_gather);
     }
 
-    LEGATE_CHECK_CUDRIVER(driver->event_destroy(ev_start));
-    LEGATE_CHECK_CUDRIVER(driver->event_destroy(ev_end_all_to_all));
-    LEGATE_CHECK_CUDRIVER(driver->event_destroy(ev_end_all_gather));
+    driver->event_destroy(&ev_start);
+    driver->event_destroy(&ev_end_all_to_all);
+    driver->event_destroy(&ev_end_all_gather);
     return comm.release();
   }
 };

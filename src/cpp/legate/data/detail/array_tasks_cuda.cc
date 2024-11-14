@@ -60,10 +60,16 @@ namespace legate::detail {
     auto desc_acc         = desc.data().read_write_accessor<Rect<1>, 1>();
     auto desc_volume      = desc_shape.volume();
     const auto num_blocks = (desc_volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
-    void* kernel_params[] = {&desc_volume, &desc_shape.lo, &vardata_lo, &desc_acc};
 
-    LEGATE_CHECK_CUDRIVER(api->launch_kernel(
-      kern, {num_blocks}, {LEGATE_THREADS_PER_BLOCK}, 0, stream, kernel_params, nullptr));
+    api->launch_kernel(kern,
+                       {num_blocks},
+                       {LEGATE_THREADS_PER_BLOCK},
+                       0,
+                       stream,
+                       desc_volume,
+                       desc_shape.lo,
+                       vardata_lo,
+                       desc_acc);
   }
 }
 
@@ -95,15 +101,17 @@ namespace legate::detail {
   const auto num_blocks =
     (offsets_volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
 
-  void* kernel_params[] = {&offsets_volume,
-                           &vardata_volume,
-                           &offsets_shape.lo,
-                           &vardata_shape.lo,
-                           &ranges_acc,
-                           &offsets_acc};
-
-  LEGATE_CHECK_CUDRIVER(api->launch_kernel(
-    kern, {num_blocks}, {LEGATE_THREADS_PER_BLOCK}, 0, stream, kernel_params, nullptr));
+  api->launch_kernel(kern,
+                     {num_blocks},
+                     {LEGATE_THREADS_PER_BLOCK},
+                     0,
+                     stream,
+                     offsets_volume,
+                     vardata_volume,
+                     offsets_shape.lo,
+                     vardata_shape.lo,
+                     ranges_acc,
+                     offsets_acc);
 }
 
 /*static*/ void RangesToOffsets::gpu_variant(legate::TaskContext context)
@@ -129,10 +137,15 @@ namespace legate::detail {
   auto ranges_volume    = ranges_shape.volume();
   const auto num_blocks = (ranges_volume + LEGATE_THREADS_PER_BLOCK - 1) / LEGATE_THREADS_PER_BLOCK;
 
-  void* kernel_params[] = {&ranges_volume, &ranges_shape.lo, &offsets_acc, &ranges_acc};
-
-  LEGATE_CHECK_CUDRIVER(api->launch_kernel(
-    kern, {num_blocks}, {LEGATE_THREADS_PER_BLOCK}, 0, stream, kernel_params, nullptr));
+  api->launch_kernel(kern,
+                     {num_blocks},
+                     {LEGATE_THREADS_PER_BLOCK},
+                     0,
+                     stream,
+                     ranges_volume,
+                     ranges_shape.lo,
+                     offsets_acc,
+                     ranges_acc);
 }
 
 }  // namespace legate::detail

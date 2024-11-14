@@ -121,9 +121,7 @@ class Init : public detail::LegionTask<Init> {
     LEGATE_CHECK(task->futures.size() == 1);
     auto cpu_comm = task->futures[0].get_result<comm::coll::CollComm>();
 
-    int device = -1;
-    LEGATE_CHECK_CUDRIVER(
-      legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->ctx_get_device(&device));
+    auto device = legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->ctx_get_device();
 
     /* Create communicator */
     cal_comm_t cal_comm = nullptr;

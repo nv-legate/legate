@@ -61,7 +61,7 @@ TEST_F(CUDADriverAPITest, SetLoadPath)
 
     ASSERT_EQ(driver.handle_path(), fpath);
     ASSERT_FALSE(driver.is_loaded());
-    ASSERT_THROW(static_cast<void>(driver.init(0)), std::logic_error);
+    ASSERT_THROW(driver.init(), std::logic_error);
   }
   {
     // Test that changing the env var has immediate effect
@@ -73,7 +73,7 @@ TEST_F(CUDADriverAPITest, SetLoadPath)
 
     ASSERT_EQ(driver.handle_path(), fpath);
     ASSERT_FALSE(driver.is_loaded());
-    ASSERT_THROW(static_cast<void>(driver.init(0)), std::logic_error);
+    ASSERT_THROW(driver.init(), std::logic_error);
   }
 }
 
@@ -88,7 +88,7 @@ TEST_F(CUDADriverAPITest, TestLoad)
 
   ASSERT_THAT(driver.handle_path(), ::testing::EndsWith(fpath));
   ASSERT_TRUE(driver.is_loaded());
-  ASSERT_EQ(driver.init(0), 0);
+  ASSERT_NO_THROW(driver.init());
 }
 
 }  // namespace test_cuda_loader

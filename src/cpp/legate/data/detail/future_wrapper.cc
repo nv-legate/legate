@@ -47,8 +47,7 @@ namespace {
     auto* runtime  = Runtime::get_runtime();
     auto stream    = runtime->get_cuda_stream();
 
-    LEGATE_CHECK_CUDRIVER(
-      runtime->get_cuda_driver_api()->mem_cpy_async(acc.ptr(0), init_value, field_size, stream));
+    runtime->get_cuda_driver_api()->mem_cpy_async(acc.ptr(0), init_value, field_size, stream);
     return ret;
   }
   return Legion::UntypedDeferredValue{field_size, mem_kind, init_value};
@@ -181,8 +180,7 @@ void FutureWrapper::initialize_with_identity(GlobalRedopID redop_id)
     auto* runtime = Runtime::get_runtime();
     auto stream   = runtime->get_cuda_stream();
 
-    LEGATE_CHECK_CUDRIVER(
-      runtime->get_cuda_driver_api()->mem_cpy_async(ptr, identity, field_size(), stream));
+    runtime->get_cuda_driver_api()->mem_cpy_async(ptr, identity, field_size(), stream);
   } else {
     std::memcpy(ptr, identity, field_size());
   }

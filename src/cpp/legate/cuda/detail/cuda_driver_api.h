@@ -41,68 +41,69 @@ class CUDADriverAPI {
  public:
   CUDADriverAPI();
 
-  [[nodiscard]] CUresult init(unsigned int flags) const;
+  void init() const;
 
-  [[nodiscard]] CUresult get_error_string(CUresult error, const char** str) const;
-  [[nodiscard]] CUresult get_error_name(CUresult error, const char** str) const;
+  [[nodiscard]] const char* get_error_string(CUresult error) const;
+  [[nodiscard]] const char* get_error_name(CUresult error) const;
 
-  [[nodiscard]] CUresult mem_cpy_async(CUdeviceptr dst,
-                                       CUdeviceptr src,
-                                       std::size_t num_bytes,
-                                       CUstream stream) const;
+  void mem_cpy_async(CUdeviceptr dst,
+                     CUdeviceptr src,
+                     std::size_t num_bytes,
+                     CUstream stream) const;
   template <typename T, typename U>
-  [[nodiscard]] CUresult mem_cpy_async(T* dst,
-                                       const U* src,
-                                       std::size_t num_bytes,
-                                       CUstream stream) const;
+  void mem_cpy_async(T* dst, const U* src, std::size_t num_bytes, CUstream stream) const;
 
-  [[nodiscard]] CUresult stream_create(CUstream* stream, unsigned int flags) const;
-  [[nodiscard]] CUresult stream_destroy(CUstream stream) const;
-  [[nodiscard]] CUresult stream_synchronize(CUstream stream) const;
+  [[nodiscard]] CUstream stream_create(unsigned int flags) const;
+  void stream_destroy(CUstream* stream) const;
+  void stream_synchronize(CUstream stream) const;
 
-  [[nodiscard]] CUresult event_create(CUevent* event, unsigned int flags) const;
-  [[nodiscard]] CUresult event_record(CUevent event, CUstream stream) const;
-  [[nodiscard]] CUresult event_synchronize(CUevent event) const;
-  [[nodiscard]] CUresult event_elapsed_time(float* ms, CUevent start, CUevent end) const;
-  [[nodiscard]] CUresult event_destroy(CUevent event) const;
+  [[nodiscard]] CUevent event_create(unsigned int flags = 0) const;
+  void event_record(CUevent event, CUstream stream) const;
+  void event_synchronize(CUevent event) const;
+  [[nodiscard]] float event_elapsed_time(CUevent start, CUevent end) const;
+  void event_destroy(CUevent* event) const;
 
-  [[nodiscard]] CUresult device_primary_ctx_retain(CUcontext* ctx, CUdevice dev) const;
-  [[nodiscard]] CUresult device_primary_ctx_release(CUdevice dev) const;
+  void device_primary_ctx_retain(CUcontext* ctx, CUdevice dev) const;
+  void device_primary_ctx_release(CUdevice dev) const;
 
-  [[nodiscard]] CUresult ctx_get_device(CUdevice* device) const;
-  [[nodiscard]] CUresult ctx_push_current(CUcontext ctx) const;
-  [[nodiscard]] CUresult ctx_pop_current(CUcontext* ctx) const;
-  [[nodiscard]] CUresult ctx_synchronize() const;
+  [[nodiscard]] CUdevice ctx_get_device() const;
+  void ctx_push_current(CUcontext ctx) const;
+  [[nodiscard]] CUcontext ctx_pop_current() const;
+  void ctx_synchronize() const;
 
-  [[nodiscard]] CUresult kernel_get_function(CUfunction* func, CUkernel kernel) const;
+  [[nodiscard]] CUfunction kernel_get_function(CUkernel kernel) const;
 
-  [[nodiscard]] CUresult launch_kernel(CUfunction f,
-                                       Dim3 grid_dim,
-                                       Dim3 block_dim,
-                                       std::size_t shared_mem_bytes,
-                                       CUstream stream,
-                                       void** kernel_params,
-                                       void** extra) const;
-  [[nodiscard]] CUresult launch_kernel(CUkernel f,
-                                       Dim3 grid_dim,
-                                       Dim3 block_dim,
-                                       std::size_t shared_mem_bytes,
-                                       CUstream stream,
-                                       void** kernel_params,
-                                       void** extra) const;
+  void launch_kernel_direct(CUfunction f,
+                            Dim3 grid_dim,
+                            Dim3 block_dim,
+                            std::size_t shared_mem_bytes,
+                            CUstream stream,
+                            void** kernel_params,
+                            void** extra) const;
+  template <typename... T>
+  void launch_kernel(CUkernel f,
+                     Dim3 grid_dim,
+                     Dim3 block_dim,
+                     std::size_t shared_mem_bytes,
+                     CUstream stream,
+                     T&&... args) const;
+  template <typename... T>
+  void launch_kernel(CUfunction f,
+                     Dim3 grid_dim,
+                     Dim3 block_dim,
+                     std::size_t shared_mem_bytes,
+                     CUstream stream,
+                     T&&... args) const;
 
-  [[nodiscard]] CUresult library_load_data(CUlibrary* library,
-                                           const void* code,
-                                           CUjit_option* jit_options,
-                                           void** jit_options_values,
-                                           std::size_t num_jit_options,
-                                           CUlibraryOption* library_options,
-                                           void** library_option_values,
-                                           std::size_t num_library_options) const;
-  [[nodiscard]] CUresult library_get_kernel(CUkernel* kernel,
-                                            CUlibrary library,
-                                            const char* name) const;
-  [[nodiscard]] CUresult library_unload(CUlibrary library) const;
+  [[nodiscard]] CUlibrary library_load_data(const void* code,
+                                            CUjit_option* jit_options,
+                                            void** jit_options_values,
+                                            std::size_t num_jit_options,
+                                            CUlibraryOption* library_options,
+                                            void** library_option_values,
+                                            std::size_t num_library_options) const;
+  [[nodiscard]] CUkernel library_get_kernel(CUlibrary library, const char* name) const;
+  void library_unload(CUlibrary* library) const;
 
   [[nodiscard]] std::string_view handle_path() const noexcept;
   [[nodiscard]] bool is_loaded() const noexcept;
@@ -188,15 +189,6 @@ class CUDADriverError : public std::runtime_error {
                                           std::string_view file,
                                           std::string_view func,
                                           int line);
-
-#define LEGATE_CHECK_CUDRIVER(...)                                                          \
-  do {                                                                                      \
-    const ::legate::CUresult __legate_cu_result__ = __VA_ARGS__;                            \
-    if (LEGATE_UNLIKELY(__legate_cu_result__)) {                                            \
-      ::legate::cuda::detail::throw_cuda_driver_error(                                      \
-        __legate_cu_result__, LEGATE_STRINGIZE(__VA_ARGS__), __FILE__, __func__, __LINE__); \
-    }                                                                                       \
-  } while (0)
 
 }  // namespace legate::cuda::detail
 
