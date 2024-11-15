@@ -27,9 +27,9 @@ from .utils.utils import random_array_and_store
 
 class TestArrayCreation:
     @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
-    @pytest.mark.parametrize("dtype", ARRAY_TYPES, ids=str)
+    @pytest.mark.parametrize("dtype", ARRAY_TYPES + (None,), ids=str)
     def test_create_array_like(
-        self, shape: tuple[int, ...], dtype: ty.Type
+        self, shape: tuple[int, ...], dtype: None | ty.Type
     ) -> None:
         runtime = get_legate_runtime()
         np_arr0, store = random_array_and_store(shape)
@@ -37,9 +37,12 @@ class TestArrayCreation:
         np_arr1 = np.asarray(lg_arr1.get_physical_array())
         lg_arr2 = runtime.create_array_like(lg_arr1, dtype)
         np_arr2 = np.asarray(lg_arr2.get_physical_array())
-        # no sure what else to assert on
+        # not sure what else to assert on
         assert np_arr2.shape == np_arr1.shape
-        assert lg_arr2.type == dtype
+        if dtype is None:
+            assert lg_arr2.type.to_numpy_dtype() == np_arr1.dtype
+        else:
+            assert lg_arr2.type == dtype
         assert not lg_arr2.data.equal_storage(lg_arr1.data)
         np.testing.assert_allclose(np_arr1, np_arr0)
 
@@ -147,6 +150,13 @@ class TestArrayCreationErrors:
         msg = "doesn't support variable size types or struct types"
         with pytest.raises(RuntimeError, match=msg):
             runtime.create_array_like(arr, arr.type)
+
+    def test_nullable_array_interface(self) -> None:
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(ty.uint16, shape=(1,), nullable=True)
+        msg = "nullable arrays don't support the array interface directly"
+        with pytest.raises(ValueError, match=msg):
+            np.asarray(arr.get_physical_array())
 
 
 if __name__ == "__main__":

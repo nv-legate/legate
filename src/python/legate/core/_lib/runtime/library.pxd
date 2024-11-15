@@ -28,7 +28,7 @@ cdef extern from "legate/runtime/library.h" namespace "legate" nogil:
     cdef cppclass _Library "legate::Library":
         _Library()
         _Library(const _Library&)
-        _LocalTaskID get_new_task_id()
+        _LocalTaskID get_new_task_id() except+
         _GlobalTaskID get_task_id(_LocalTaskID)
         _GlobalRedopID get_reduction_op_id(_LocalRedopID)
         _Scalar get_tunable(int64_t, _Type)

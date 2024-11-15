@@ -12,7 +12,12 @@ from __future__ import annotations
 
 import pytest
 
-from legate.core import LogicalArray, get_legate_runtime, types as ty
+from legate.core import (
+    LEGATE_MAX_DIM,
+    LogicalArray,
+    get_legate_runtime,
+    types as ty,
+)
 
 from .util.types import _PRIMITIVES
 
@@ -502,6 +507,80 @@ class TestChild:
         assert arr.child(0).type == ty.int64
         assert arr.child(1).type == ty.uint16
         assert arr.child(2).type == ty.float32
+
+
+class TestCreate:
+    def test_unbound_array(self) -> None:
+        dtype = ty.float16
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(dtype)
+        assert arr.unbound
+        assert arr.ndim == 1
+        # unbound shape comparison will abort python proc, so just check str
+        # arr2 = runtime.create_array(ty.int32)
+        # arr.shape == arr2.shape
+        # terminate called after throwing an instance of
+        # 'std::invalid_argument'
+        #   what():  Illegal to access an uninitialized unbound store
+        assert str(arr.shape) == "Shape(unbound 1D)"
+        assert arr.type == dtype
+        assert not arr.nullable
+        assert not arr.nested
+        assert arr.num_children == 0
+
+    def test_string_type_unbound(self) -> None:
+        dtype = ty.string_type
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(dtype, (1,))
+        assert arr.unbound
+        assert arr.ndim == 1
+        assert arr.shape == (1,)
+        assert arr.type == dtype
+        assert not arr.nullable
+        assert arr.nested
+        assert arr.num_children == 2
+
+    def test_array_ndim(self) -> None:
+        dtype = ty.int32
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(dtype=ty.int32, ndim=2)
+        assert arr.unbound
+        assert arr.ndim == 2
+        assert str(arr.shape) == "Shape(unbound 2D)"
+        assert arr.type == dtype
+        assert not arr.nullable
+        assert not arr.nested
+        assert arr.num_children == 0
+
+
+class TestCreateErrors:
+    def test_string_type_ndim(self) -> None:
+        runtime = get_legate_runtime()
+        msg = "List/string arrays can only be 1D"
+        with pytest.raises(ValueError, match=msg):
+            runtime.create_array(ty.string_type, (1, 1, 1))
+
+    def test_exceed_max_ndim(self) -> None:
+        runtime = get_legate_runtime()
+        msg = "maximum number of dimensions"
+        with pytest.raises(IndexError, match=msg):
+            runtime.create_array(ty.int8, ndim=LEGATE_MAX_DIM + 1)
+
+    def test_shape_and_ndim(self) -> None:
+        runtime = get_legate_runtime()
+        with pytest.raises(ValueError, match="ndim cannot be used with shape"):
+            runtime.create_array(ty.int8, shape=(100, 1), ndim=2)
+
+    def test_access_unbound_properties(self) -> None:
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(ty.float16)
+        msg = "Illegal to access an uninitialized unbound store"
+        with pytest.raises(ValueError, match=msg):
+            arr.extents
+        with pytest.raises(ValueError, match=msg):
+            arr.volume
+        with pytest.raises(ValueError, match=msg):
+            arr.size
 
 
 if __name__ == "__main__":

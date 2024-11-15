@@ -140,6 +140,13 @@ class TestStoreCreationErrors:
         with pytest.raises(ValueError, match=msg):
             store.get_physical_store()
 
+    def test_small_buffer(self) -> None:
+        runtime = get_legate_runtime()
+        arr = np.array([1024])
+        msg = "Passed buffer is too small for a store of shape .* and type .*"
+        with pytest.raises(ValueError, match=msg):
+            runtime.create_store_from_buffer(ty.uint64, (1024,), arr, False)
+
 
 if __name__ == "__main__":
     import sys

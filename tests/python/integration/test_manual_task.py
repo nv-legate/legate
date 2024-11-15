@@ -406,13 +406,33 @@ class TestManualTaskErrors:
             exc_task.execute()
         runtime.issue_execution_fence(block=True)
 
-    def test_create_empty_launch_domain(self) -> None:
+    @pytest.mark.parametrize(
+        "launch_domain, msg",
+        [
+            ((0, 0, 0), "Launch domain must not be empty"),
+            (1, "Launch space must be iterable"),
+        ],
+    )
+    def test_create_invalid_launch_domain(
+        self, launch_domain: Any, msg: str
+    ) -> None:
         runtime = get_legate_runtime()
-        msg = "Launch domain must not be empty"
-
         with pytest.raises(ValueError, match=msg):
             runtime.create_manual_task(
-                runtime.core_library, tasks.basic_task.task_id, (0, 0, 0)
+                runtime.core_library,
+                tasks.basic_task.task_id,
+                launch_domain,
+            )
+
+    def test_create_invalid_lower_bounds(self) -> None:
+        runtime = get_legate_runtime()
+        msg = "Lower bounds must be iterable"
+        with pytest.raises(ValueError, match=msg):
+            runtime.create_manual_task(
+                runtime.core_library,
+                tasks.basic_task.task_id,
+                (1,),
+                1,  # type:ignore [arg-type]
             )
 
     @pytest.mark.xfail(run=False, reason="crashes application")

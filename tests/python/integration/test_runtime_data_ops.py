@@ -112,6 +112,18 @@ class TestStoreOps:
         runtime.issue_gather(out, store, ind)
         np.testing.assert_allclose(arr_np[ind_np].reshape(tgt_shape), out_np)
 
+    def test_issue_gather_redop(self) -> None:
+        src_shape = (7, 10)
+        tgt_shape = (0, 0)
+        runtime = get_legate_runtime()
+        arr_np, store = utils.random_array_and_store(src_shape)
+        out_np, out = utils.zero_array_and_store(ty.float64, tgt_shape)
+        ind_np, ind = utils.create_random_points(
+            tgt_shape, src_shape, no_duplicates=False
+        )
+        runtime.issue_gather(out, store, ind, ty.ReductionOpKind.ADD)
+        np.testing.assert_allclose(arr_np[ind_np].reshape(tgt_shape), out_np)
+
     @pytest.mark.parametrize("tgt_shape, src_shape", BROADCAST_SHAPES, ids=str)
     def test_issue_scatter(
         self,
@@ -126,6 +138,19 @@ class TestStoreOps:
             src_shape, tgt_shape, no_duplicates=True
         )
         runtime.issue_scatter(out, ind, store)
+        np.testing.assert_allclose(arr_np, out_np[ind_np].reshape(src_shape))
+
+    def test_issue_scatter_redop(self) -> None:
+        src_shape = (0, 0)
+        tgt_shape = (7, 10)
+        runtime = get_legate_runtime()
+        arr_np, store = utils.random_array_and_store(src_shape)
+        out_np, out = utils.zero_array_and_store(ty.float64, tgt_shape)
+
+        ind_np, ind = utils.create_random_points(
+            src_shape, tgt_shape, no_duplicates=True
+        )
+        runtime.issue_scatter(out, ind, store, ty.ReductionOpKind.ADD)
         np.testing.assert_allclose(arr_np, out_np[ind_np].reshape(src_shape))
 
     @pytest.mark.parametrize("tgt_shape, src_shape", BROADCAST_SHAPES, ids=str)
@@ -145,6 +170,24 @@ class TestStoreOps:
         runtime.issue_scatter_gather(out, tgt_ind, store, src_ind)
         np.testing.assert_allclose(arr_np[src_ind_np], out_np[tgt_ind_np])
 
+    def test_issue_scatter_gather_redop(self) -> None:
+        src_shape = tgt_shape = (10, 10)
+        ind_shape = (0, 0)
+        runtime = get_legate_runtime()
+        arr_np, store = utils.random_array_and_store(src_shape)
+        out_np, out = utils.zero_array_and_store(ty.float64, tgt_shape)
+
+        src_ind_np, src_ind = utils.create_random_points(
+            ind_shape, src_shape, no_duplicates=False
+        )
+        tgt_ind_np, tgt_ind = utils.create_random_points(
+            ind_shape, tgt_shape, no_duplicates=True
+        )
+        runtime.issue_scatter_gather(
+            out, tgt_ind, store, src_ind, ty.ReductionOpKind.ADD
+        )
+        np.testing.assert_allclose(arr_np[src_ind_np], out_np[tgt_ind_np])
+
     @pytest.mark.parametrize(
         "dtype, val", zip(ARRAY_TYPES, SCALAR_VALS), ids=str
     )
@@ -152,13 +195,6 @@ class TestStoreOps:
     def test_issue_fill_scalar(
         self, dtype: ty.Type, val: Any, create: bool
     ) -> None:
-        if val is None:
-            # LEGION ERROR: Fill operation 2378 in task Legate Core Toplevel
-            # Task (UID 1) was launched without a fill value. All fill
-            # operations must be given a non-empty argument or a future to use
-            # as a fill value.
-            pytest.skip()
-
         shape = range(1, LEGATE_MAX_DIM + 1)
         runtime = get_legate_runtime()
         store = runtime.create_store(dtype, shape)
@@ -167,6 +203,14 @@ class TestStoreOps:
         arr = np.asarray(store.get_physical_store().get_inline_allocation())
         assert (arr == scalar).all()
         assert (arr == val).all()
+
+    def test_issue_fill_none(self) -> None:
+        shape = range(1, LEGATE_MAX_DIM + 1)
+        runtime = get_legate_runtime()
+        lg_arr = runtime.create_array(ty.uint64, shape, nullable=True)
+        runtime.issue_fill(lg_arr, None)
+        arr = np.asarray(lg_arr.get_physical_array().data())
+        assert not arr.any()
 
     @pytest.mark.parametrize(
         "dtype, val", zip(ARRAY_TYPES, SCALAR_VALS), ids=str
@@ -279,6 +323,18 @@ class TestStoreOpsErrors:
         with pytest.raises(ValueError, match=msg):
             runtime.issue_fill(store, val)
 
+    @pytest.mark.parametrize(
+        "dtype, val",
+        [(ty.struct_type([ty.int32]), (1,)), (ty.string_type, "foo")],
+        ids=str,
+    )
+    def test_issue_fill_unsupported(self, dtype: ty.Type, val: Any) -> None:
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(dtype, shape=(1,))
+        msg = "Fills on list or struct arrays are not supported yet"
+        with pytest.raises(RuntimeError, match=msg):
+            runtime.issue_fill(arr, val)
+
     def test_issue_fill_mismatching_dtype(self) -> None:
         shape = range(1, LEGATE_MAX_DIM + 1)
         runtime = get_legate_runtime()
@@ -296,6 +352,27 @@ class TestStoreOpsErrors:
             runtime.tree_reduce(
                 runtime.core_library, tasks.zeros_task.task_id, store
             )
+
+    def test_fill_non_nullable(self) -> None:
+        runtime = get_legate_runtime()
+        msg = "Non-nullable arrays cannot be filled with null"
+        store = runtime.create_store(ty.float64, (1, 1))
+        with pytest.raises(ValueError, match=msg):
+            runtime.issue_fill(store, None)
+
+    @pytest.mark.xfail(run=False, reason="hits LEGION ERROR and aborts proc")
+    def test_prefetch_uninitialized(self) -> None:
+        runtime = get_legate_runtime()
+        store = runtime.create_store(ty.int32, (3, 1, 3))
+        # docstring says this will trip "runtime error"
+        # taking aborting python proc as correct behavior
+        # LEGION ERROR: Region requirement 0 of operation
+        # legate::detail::(anonymous namespace)::PrefetchBloatedInstances
+        # in parent task Legate Core Toplevel Task is using uninitialized data
+        # for field(s) 10000 of logical region (29,10,10)
+        # with read-only privileges
+        with pytest.raises(RuntimeError):
+            runtime.prefetch_bloated_instances(store, (1, 2, 3), (3, 2, 1))
 
 
 if __name__ == "__main__":

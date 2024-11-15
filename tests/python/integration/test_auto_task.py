@@ -558,6 +558,28 @@ class TestAutoTaskErrors:
         with pytest.raises(exc, match=msg):
             task.add_communicator("foo")
 
+    @pytest.mark.parametrize("shape", LARGE_SHAPES, ids=str)
+    def test_prefetched_store(self, shape: tuple[int, ...]) -> None:
+        runtime = get_legate_runtime()
+        dtype = ty.int32
+        arr, store = utils.empty_array_and_store(dtype, shape)
+        low_offsets = tuple(np.random.randint(1, 6) for _ in shape)
+        high_offsets = low_offsets[::-1]
+        runtime.prefetch_bloated_instances(
+            store, low_offsets, high_offsets, True
+        )
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.fill_task.task_id
+        )
+        auto_task.add_output(store)
+        val = 7654321
+        exp = np.full(shape, val, dtype=dtype.to_numpy_dtype())
+        auto_task.add_scalar_arg(Scalar(val, dtype))
+        auto_task.execute()
+        runtime.issue_execution_fence(block=True)
+        # just check nothing is broken
+        np.testing.assert_allclose(arr, exp)
+
 
 class TestAutoTaskConstraintsErrors:
 
