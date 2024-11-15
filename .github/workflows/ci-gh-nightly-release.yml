@@ -32,6 +32,9 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
+        exclude:
+          - {build-mode: debug, upload-enabled: true}
+          - {build-mode: debug-sanitizer, upload-enabled: true}
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
@@ -40,6 +43,7 @@ jobs:
       build-mode: ${{ matrix.build-mode }}
       build-type: release
       upload-enabled: ${{ matrix.upload-enabled }}
+      upload-action: ${{ matrix.upload-enabled == true && (matrix.build-mode == 'release' && 'upload-package-ALL' || matrix.build-mode == 'release-debug' && 'upload-package-URM') || 'upload-package-None' }}
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
       nightly: true
