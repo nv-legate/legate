@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 core = {
     "cpus": "CPUs to use per rank",
     "gpus": "GPUs to use per rank",
-    "openmp": "OpenMP groups to use per rank",
+    "omps": "OpenMP groups to use per rank",
     "ompthreads": "Threads per OpenMP group",
     "utility": "Utility processors per rank",
 }
