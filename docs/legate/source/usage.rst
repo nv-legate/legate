@@ -121,7 +121,8 @@ Distributed Launch
 You can run your program across multiple nodes by using the ``--nodes`` option
 followed by the number of nodes to be used. When doing a multi-process run, a
 launcher program must be specified, that will do the actual spawning of the
-processes:
+processes. Run a command like the following from the same machine where you would
+normally invoke ``mpirun``:
 
 .. code-block:: sh
 
@@ -286,8 +287,10 @@ the ``--spy`` ``legate`` option (or pass the same through ``LEGATE_CONFIG``):
     legate --spy myprog.py
 
 Legate will collect the necessary logging information in the ``legate_*.log``
-files (one per process). To post-process these files, install `GraphViz
-<https://www.graphviz.org/>`_ on your machine, then run:
+files (one per process). By default these files are placed in the same directory
+where the program was launched (you can control this with the ``--logdir``
+option). To post-process these files, install
+`GraphViz <https://www.graphviz.org/>`_ on your machine, then run:
 
 .. code-block:: sh
 
@@ -313,7 +316,9 @@ launching the application (or through ``LEGATE_CONFIG``):
     legate --profile myprog.py
 
 At the end of execution you will have a set of ``legate_*.prof`` files (one per
-process), that can be opened with the profile viewer, to see a timeline of your
+process). By default these files are placed in the same directory where the
+program was launched (you can control this with the ``--logdir`` option). These
+files can be opened with the profile viewer, to see a timeline of your
 program's execution:
 
 .. code-block:: sh

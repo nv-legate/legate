@@ -35,6 +35,13 @@ environment, use environment variable ``CONDA_OVERRIDE_CUDA``:
     CONDA_OVERRIDE_CUDA="12.2" \
       conda install -c conda-forge -c legate legate
 
+You will probably also want to install some downstream libraries built on top of
+Legate, e.g. `cuPyNumeric <https://docs.nvidia.com/cupynumeric>`_:
+
+.. code-block:: sh
+
+    conda install -c conda-forge -c legate cupynumeric
+
 .. _support_matrix:
 
 Support Matrix

@@ -57,16 +57,11 @@ package installation:
 
 .. code-block:: sh
 
-    conda create -n myenv -c conda-forge -c legate/label/gex legate
-
-In addition to the Legate package, the wrapper packages should be installed to
-provide the wrapper build scripts and environment automation:
-
-.. code-block:: sh
-
     conda create -n myenv -c conda-forge -c legate/label/gex legate realm-gex-wrapper legate-mpi-wrapper
 
-When the packages are installed, the instructions for building the wrappers are displayed:
+In addition to the Legate package, the user should install the wrapper packages
+that contain the scripts necessary to build the wrappers. When the packages are
+installed, the instructions for building the wrappers are displayed:
 
 .. code-block:: sh
 
@@ -186,11 +181,21 @@ mark).  After the environment is activated, we can first build the MPI wrapper
     $ conda activate legate-gex-anaconda
 
 On Perlmutter, when attempting to build the MPI wrapper, at the time of writing
-this document, the installed ``cmake`` is too old.   In case of CMake version
-error, a new version can be installed with ``conda install cmake`` or by any
-other means.  Note that when the wrapper is built, the final message suggests
-reactivating the environment, but that is not necessary before building the
-GASNet wrapper:
+this document, the installed ``cmake`` is too old:
+
+.. code-block:: sh
+
+    $ /conda/envs/legate-gex-anaconda/mpi-wrapper/build-mpi-wrapper.sh
+    Building Legate MPI wrapper:
+      Installation directory: /conda/envs/legate-gex-anaconda/lib
+      Compiler: CC
+    CMake Error at CMakeLists.txt:13 (cmake_minimum_required):
+      CMake 3.22.1 or higher is required.  You are running version 3.20.4
+
+In case of CMake version error, a new version can be installed with ``conda
+install cmake`` or by any other means.  Note that when the wrapper is built, the
+final message suggests reactivating the environment, but that is not necessary
+before building the GASNet wrapper:
 
 .. code-block:: sh
 
