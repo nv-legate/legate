@@ -72,6 +72,3 @@ Wonchan Lee, *Legate: A Productive Programming Framework for Composable, Scalabl
 
 Rohan Yadav, *Composing Distributed Computations Through Task and Kernel Fusion* (2024-06-26)
 `Paper <https://arxiv.org/abs/2406.18109>`__
-
-Jay Patel, *Distributed Computing with cuNumeric* (Accelerated Computing Hub, 2024-11-04)
-`Notebook <https://github.com/NVIDIA/accelerated-computing-hub/blob/main/Accelerated_Python_User_Guide/notebooks/Chapter_X_Distributed_Computing_cuNumeric.ipynb>`__

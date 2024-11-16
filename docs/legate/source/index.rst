@@ -3,13 +3,13 @@
 NVIDIA Legate
 =============
 
-The Legate project endeavors to democratize computing by making it possible
-for all programmers to leverage the power of large clusters of CPUs and GPUs
-by running the same code that runs on a desktop or a laptop at scale. Using
-this technology, computational and data scientists can develop and test
-programs on moderately sized data sets on local machines and then immediately
-scale up to larger data sets deployed on many nodes in the cloud or on a
-supercomputer without any code modifications.
+The Legate project endeavors to democratize computing by making it possible for
+all programmers to leverage the power of large clusters of CPUs and GPUs by
+running the same code that runs on a desktop or a laptop at scale. Using this
+technology, computational and data scientists and researchers can develop and
+test programs on moderately sized data sets on local machines and then
+immediately scale up to larger data sets deployed on many nodes in the cloud or
+on a supercomputer without any code modifications.
 
 .. toctree::
   :maxdepth: 2

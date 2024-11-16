@@ -21,7 +21,7 @@ What other libraries are you planning to release for the Legate ecosystem?
     please let us know at *legate@nvidia.com* so that we can get a feel for
     where best to put our time.
 
-Does Legate interoperate with X?
+Does Legate interoperate with [other distributed runtime]?
     Yes, probably, but we don't recommend it. Our motivation for building
     Legate is to provide the bare minimum subset of functionality that
     we believe is essential for building truly composable software that can still

@@ -3,49 +3,79 @@
 Running Legate programs with Jupyter Notebook
 =============================================
 
-Same as normal Python programs, Legate programs can be run
-using Jupyter Notebook. Currently we support single node execution with
+Legate leverages `Legion's Jupyter Notebook support <https://github.com/StanfordLegion/legion/blob/master/jupyter_notebook/>`_
+to enable Python programs to run in Jupyter Notebook environments. 
+Currently we support single node execution with
 multiple CPUs and GPUs, and plan to support multi-node execution in the future.
-We leverage Legion's Jupyter support, so you may want to refer to the
-`relevant section in Legion's README <https://github.com/StanfordLegion/legion/blob/master/jupyter_notebook/README.md>`_.
-To simplify the installation, we provide a script specifically for Legate libraries.
+
+Installing the Customized Legate Jupyter Notebook Kernel
+--------------------------------------------------------
+
+Legate provides the "legate-jupyter" script 
+for installing a customized Jupyter kernel tailored for Legate libraries.
+Run the following command to install the Legate Jupyter kernel:
+
+.. code-block:: sh
+
+    legate-jupyter --name <kernel-name> --cpus <num-cpus> --gpus <num-gpus> <other-configurations>
+
+The kernel's configuration will match the arguments provided during installation. 
+For a full list of configuration options, use:
+
+.. code-block:: sh
+
+    legate-jupyter --help
+
+Each unique configuration requires creating and installing a new kernel using "legate-jupyter".
+To view all installed kernels, run the following command:
+
+.. code-block:: sh
+
+    jupyter kernelspec list
+
+Once installed, you can select one of the configured kernels to run Legate programs.
 
 Running with Jupyter Notebook
 -----------------------------
 
-You will need to start a Jupyter server, then you can use a Jupyter notebook
-from any browser. Please refer to the following two sections from the README of
-the `Legion Jupyter Notebook extension <https://github.com/StanfordLegion/legion/tree/master/jupyter_notebook>`_.
+To run a Legate program using Jupyter Notebook, you first need to start a Jupyter Notebook server 
+and then access it through your browser. Here are the detailed steps:
 
-* Start the Jupyter Notebook server
-* Use the Jupyter Notebook in the browser
-
-Configuring the Jupyter Notebook
---------------------------------
-
-The Legate Jupyter kernel is configured according to the command line
-arguments provided at install time.  Standard ``legate`` options for Core,
-Memory, and Multi-node configuration may be provided, as well as a name for
-the kernel:
+Launch the Jupyter Notebook server on the machine where Legate will be executed:
 
 .. code-block:: sh
 
-    legate-jupyter --name legate_cpus_2 --cpus 2
+    jupyter notebook --port=<port-number> --no-browser
 
-Other configuration options can be seen by using the ``--help`` command line
-option.
+A "token" value will be displayed on the terminal once the server starts.
+
+Open your browser and navigate to:
+
+.. code-block:: sh
+    
+    http://localhost:<port-number>/?token=<token>
+
+to access the Jupyter Notebook. 
+
+If the server is running on a remote machine, you need to establish an SSH tunnel from your local machine to the remote server:
+
+.. code-block:: sh
+
+    ssh -4 -t -L <port-number>:localhost:<local-port-number> <username>@<remote-server-hostname> ssh -t -L <local-port-number>:localhost:<port-number> <remote-server-hostname>
+
+Once the Jupyter Notebook page loads, click "New" in the top-right corner and select one of the installed Legate kernels from the dropdown menu. A new window/tab will be opened for you, to run your Python programs.
 
 Magic Command
 -------------
 
-We provide a Jupyter magic command to display the IPython kernel configuration.
+We provide a Jupyter magic command to display the IPython kernel configuration. This input:
 
 .. code-block::
 
     %load_ext legate.jupyter
     %legate_info
 
-results in output:
+will print out something like:
 
 .. code-block::
 

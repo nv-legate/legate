@@ -7,10 +7,6 @@ developed and tested on moderately sized data sets on local machines and
 then immediately scaled up to larger data sets deployed on many nodes in
 the cloud or on a supercomputer, *without any code modifications*.
 
-The Legate API is implemented on top of the `Legion <https://legion.stanford.edu/>`_
-programming model and runtime system, which was originally designed for large
-HPC applications that target supercomputers.
-
 The Legate project is built from two foundational principles:
 
 **Implicit parallelism**
@@ -46,14 +42,14 @@ an expert in parallel programming and distributed systems, thereby allowing
 developers to bring the problem-solving power of large machines to bear on
 more kinds of challenging problems than ever before.
 
-What is Legate
---------------
+The Legate Data Model
+---------------------
 
-Legate is our version of `Apache Arrow <https://arrow.apache.org/>`_. Apache
-Arrow has significantly improved composability of software libraries by making it
-possible for different libraries to share in-memory buffers of data without
-unnecessary copying. However, it falls short when it comes to meeting two
-of our primary requirements for Legate:
+Legate's data model is inspired by `Apache Arrow <https://arrow.apache.org/>`_.
+Apache Arrow has significantly improved composability of software libraries by
+making it possible for different libraries to share in-memory buffers of data
+without unnecessary copying. However, it falls short when it comes to meeting
+two of our primary requirements for Legate:
 
 1. Arrow only provides an API for describing a physical representation
    of data as a single memory allocation. There is no interface for describing
