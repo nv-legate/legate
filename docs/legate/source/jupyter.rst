@@ -4,14 +4,14 @@ Running Legate programs with Jupyter Notebook
 =============================================
 
 Legate leverages `Legion's Jupyter Notebook support <https://github.com/StanfordLegion/legion/blob/master/jupyter_notebook/>`_
-to enable Python programs to run in Jupyter Notebook environments. 
+to enable Python programs to run in Jupyter Notebook environments.
 Currently we support single node execution with
 multiple CPUs and GPUs, and plan to support multi-node execution in the future.
 
 Installing the Customized Legate Jupyter Notebook Kernel
 --------------------------------------------------------
 
-Legate provides the "legate-jupyter" script 
+Legate provides the "legate-jupyter" script
 for installing a customized Jupyter kernel tailored for Legate libraries.
 Run the following command to install the Legate Jupyter kernel:
 
@@ -19,7 +19,7 @@ Run the following command to install the Legate Jupyter kernel:
 
     legate-jupyter --name <kernel-name> --cpus <num-cpus> --gpus <num-gpus> <other-configurations>
 
-The kernel's configuration will match the arguments provided during installation. 
+The kernel's configuration will match the arguments provided during installation.
 For a full list of configuration options, use:
 
 .. code-block:: sh
@@ -38,7 +38,7 @@ Once installed, you can select one of the configured kernels to run Legate progr
 Running with Jupyter Notebook
 -----------------------------
 
-To run a Legate program using Jupyter Notebook, you first need to start a Jupyter Notebook server 
+To run a Legate program using Jupyter Notebook, you first need to start a Jupyter Notebook server
 and then access it through your browser. Here are the detailed steps:
 
 Launch the Jupyter Notebook server on the machine where Legate will be executed:
@@ -52,10 +52,10 @@ A "token" value will be displayed on the terminal once the server starts.
 Open your browser and navigate to:
 
 .. code-block:: sh
-    
+
     http://localhost:<port-number>/?token=<token>
 
-to access the Jupyter Notebook. 
+to access the Jupyter Notebook.
 
 If the server is running on a remote machine, you need to establish an SSH tunnel from your local machine to the remote server:
 
