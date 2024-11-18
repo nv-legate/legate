@@ -259,8 +259,12 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
     field_manager_.reset();
     core_library_ = nullptr;
     legate::comm::coll::collFinalize();
+    cu_mod_manager_.reset();
+    cu_driver_.reset();
     initialized_ = false;);
   initialized_ = true;
+  cu_driver_.emplace();
+  cu_mod_manager_.emplace();
   legate::comm::coll::collInit(argc, argv);
   legion_context_ = std::move(legion_context);
   field_manager_  = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
@@ -849,9 +853,9 @@ class ExtractExceptionFn {
   {
     if (pending.raised()) {
       return {std::move(pending)};
-    }
+    }  // namespace
     return std::nullopt;
-  }  // namespace
+  }
 };
 
 }  // namespace
@@ -2023,18 +2027,18 @@ CUstream Runtime::get_cuda_stream() const
 
 const cuda::detail::CUDADriverAPI* Runtime::get_cuda_driver_api()
 {
-  if (!cu_driver_.has_value()) {
-    cu_driver_.emplace();
-  }
-  return &*cu_driver_;
+  // This needs to be initialized in a thread-safe manner, so we do it in
+  // Runtime::initialize(). Hence, we want this to throw if it is accessed before then, because
+  // we can't guarantee it's threadsafe (and don't want to wrap this in some kind of mutex...).
+  return &cu_driver_.value();  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 cuda::detail::CUDAModuleManager* Runtime::get_cuda_module_manager()
 {
-  if (!cu_mod_manager_.has_value()) {
-    cu_mod_manager_.emplace();
-  }
-  return &*cu_mod_manager_;
+  // This needs to be initialized in a thread-safe manner, so we do it in
+  // Runtime::initialize(). Hence, we want this to throw if it is accessed before then, because
+  // we can't guarantee it's threadsafe (and don't want to wrap this in some kind of mutex...).
+  return &cu_mod_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 const MapperManager& Runtime::get_mapper_manager_() const
