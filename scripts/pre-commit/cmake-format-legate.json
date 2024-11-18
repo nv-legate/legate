@@ -37,6 +37,11 @@
                     "nargs": 0
                 }
             },
+            "find_or_configure_cpm_licenses": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "find_or_configure_fmt": {
                 "pargs": {
                     "nargs": 0

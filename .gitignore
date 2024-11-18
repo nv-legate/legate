@@ -29,6 +29,7 @@ _skbuild/
 config.mk
 /docs/legate/build
 docs/legate/source/api/python/generated/
+docs/legate/source/generated/
 *.egg-info
 .cache
 .coverage

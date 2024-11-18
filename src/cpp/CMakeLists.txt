@@ -209,6 +209,11 @@ if(Legion_USE_CUDA)
 endif()
 
 # ########################################################################################
+# * CPMLicenses --------------------------------------------------------------
+
+legate_find_or_configure(PACKAGE cpm_licenses)
+
+# ########################################################################################
 # * legate --------------------------------------------------------------
 
 include("${LEGATE_CMAKE_DIR}/Modules/generate_sanitizer_options.cmake")
@@ -560,10 +565,6 @@ legate_add_tidy_diff_target()
 foreach(src IN LISTS legate_SOURCES)
   legate_add_tidy_target(SOURCE "${src}")
 endforeach()
-
-if(legate_BUILD_DOCS)
-  add_subdirectory(${LEGATE_DIR}/docs/legate docs/legate)
-endif()
 
 # ########################################################################################
 # * install targets-----------------------------------------------------------
@@ -918,5 +919,20 @@ add_custom_target(generate_install_info_py ALL
 include("${LEGATE_CMAKE_DIR}/Modules/uninstall.cmake")
 
 legate_uninstall_target(TARGET uninstall)
+
+# This call must come LAST because cpm_licenses_create_disclaimer_target only works
+# properly if it is called after all thirdparty packages have been downloaded.  Do not
+# move this call!
+set(legate_LICENSE_FILE "${CMAKE_CURRENT_BINARY_DIR}/licenses.txt")
+cpm_licenses_create_disclaimer_target(legate_write_licenses "${legate_LICENSE_FILE}"
+                                      "${CPM_PACKAGES}")
+
+install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target legate_write_licenses
+                COMMAND_ERROR_IS_FATAL ANY)")
+install(FILES ${legate_LICENSE_FILE} DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate")
+
+if(legate_BUILD_DOCS)
+  add_subdirectory(${LEGATE_DIR}/docs/legate docs/legate)
+endif()
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

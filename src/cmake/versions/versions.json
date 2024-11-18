@@ -18,6 +18,11 @@
             "git_url": "https://github.com/nv-legate/argparse.git",
             "version": "3.1"
         },
+        "cpm_licenses": {
+            "git_tag": "v${version}",
+            "git_url": "https://github.com/cpm-cmake/CPMLicenses.cmake.git",
+            "version": "0.0.7"
+        },
         "hdf5_vfd_gds": {
             "git_tag": "ec598e76a083887a36438da9766b5ac7eaec3596",
             "git_url": "https://github.com/nv-legate/vfd-gds.git",

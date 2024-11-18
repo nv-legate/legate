@@ -43,9 +43,44 @@ set(SPHINX_BUILD "${CMAKE_CURRENT_BINARY_DIR}/sphinx")
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/switcher.json"
      DESTINATION "${SPHINX_BUILD}/legate")
 
+if(NOT legate_LICENSE_FILE)
+  message(FATAL_ERROR "Don't know where Legate license file is. "
+                      "Expected cmake variable legate_LICENSE_FILE to contain it's location, but that variable is empty. "
+                      "Presumably somebody changed the name?")
+endif()
+
+# Need to make this every time because git does not allow you to check in empty
+# directories
+file(MAKE_DIRECTORY "${SPHINX_SOURCE}/generated")
+
+# cmake-format: off
+# Need to do this symlink because the .rst files have no way to know where the build
+# directory is. I tried using rst_prolog (while setting an environment variable
+# LEGATE_SPHINX_BUILD):
+#
+# rst_prolog="""
+# .. |BUILD_DIR| replace:: {os.environ["LEGATE_SPHINX_BUILD"]}
+# """
+#
+# and then:
+#
+# .. include:: |BUILD_DIR|/path/to/license.txt
+#
+# But this didn't work because you can't do replacements inside other directives in rst
+# apparently. The only way I found that works is just symlinking it somewhere into the
+# source directory then...
+# cmake-format: on
+add_custom_target(symlink_license_file
+                  COMMAND ${CMAKE_COMMAND} -E create_symlink "${legate_LICENSE_FILE}"
+                          "${SPHINX_SOURCE}/generated/licenses.txt"
+                  BYPRODUCTS "${SPHINX_SOURCE}/generated/licenses.txt"
+                  COMMENT "Symlinking licenses.txt -> ${SPHINX_SOURCE}/generated")
+add_dependencies(symlink_license_file legate_write_licenses)
+
 add_custom_target(Sphinx
                   COMMAND "${SPHINX_EXECUTABLE}" -b html
                           -Dbreathe_projects.legate="${DOXYGEN_OUTPUT_DIR}/xml" -W
                           "${SPHINX_SOURCE}" "${SPHINX_BUILD}/legate/latest"
                   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
                   COMMENT "Generating documentation with Sphinx")
+add_dependencies(Sphinx symlink_license_file)
