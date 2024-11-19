@@ -241,6 +241,7 @@ set(noinit_SRC
     noinit/span.cc
     noinit/task_exception.cc
     noinit/to_domain.cc
+    noinit/tuple.cc
     noinit/variant_options.cc
     noinit/zip_equal.cc
     noinit/zip_shortest.cc)

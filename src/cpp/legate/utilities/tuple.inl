@@ -200,6 +200,9 @@ template <typename T>
 template <typename U>
 tuple<T> tuple<T>::insert(std::int32_t pos, U&& value) const
 {
+  // <= size here because we are allowed to insert at the end
+  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) <= size());
+
   const auto len = static_cast<std::int32_t>(size());
   tuple new_values;
 
@@ -357,7 +360,7 @@ void tuple<T>::map_inplace(std::vector<std::int32_t>& mapping)
   for (std::size_t i = 0; i < mapping.size(); ++i) {
     auto current = i;
 
-    while (i != mapping[current]) {
+    while (i != static_cast<std::size_t>(mapping[current])) {
       auto next = mapping[current];
       using std::swap;
 
