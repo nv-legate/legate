@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fmt/format.h>
+#include <limits>
 #include <mutex>
 #include <stdexcept>
 #include <string>
@@ -60,7 +61,22 @@ template <typename T>
 
     if (const auto [_2, ec] = std::from_chars(value_sv.begin(), value_sv.end(), ret);
         ec != std::errc{}) {
-      throw std::runtime_error{std::make_error_code(ec).message()};
+      if (ec == std::errc::invalid_argument) {
+        throw std::invalid_argument{fmt::format(
+          "{} is not a valid value for {}. Expected an integral or floating point value",
+          value_sv,
+          variable)};
+      }
+      if (ec == std::errc::result_out_of_range) {
+        throw std::out_of_range{fmt::format("{} is not a valid value for {}, must be in [{}, {}]",
+                                            value_sv,
+                                            variable,
+                                            std::numeric_limits<T>::min(),
+                                            std::numeric_limits<T>::max())};
+      }
+      throw std::system_error{
+        std::make_error_code(ec),
+        fmt::format("Unknown error parsing {}, found {}", variable, value_sv)};
     }
     // We need to hold the environment lock until here since we are still reading from it in
     // from_chars().

@@ -310,4 +310,30 @@ TYPED_TEST(Environ, GetTestUnset)
   legate::test::Environment::unset_env_var(ENV_VAR.data());
 }
 
+namespace {
+
+class Environ2 : public DefaultFixture {};
+
+}  // namespace
+
+TEST_F(Environ2, BadValueInvalidArgument)
+{
+  constexpr auto var = legate::detail::EnvironmentVariable<std::uint32_t>{"FOO_BAR_BAZ"};
+  const auto tmp     = legate::test::Environment::temporary_env_var("FOO_BAR_BAZ", "true", true);
+
+  ASSERT_THROW(static_cast<void>(var.get()), std::invalid_argument);
+}
+
+TEST_F(Environ2, BadValueOutOfRange)
+{
+  constexpr auto var = legate::detail::EnvironmentVariable<std::uint32_t>{"FOO_BAR_BAZ"};
+  // The value is out of range for uin32_t
+  static_assert(std::numeric_limits<std::uint32_t>::max() <
+                std::numeric_limits<std::uint64_t>::max());
+  const auto val = std::to_string(std::numeric_limits<std::uint64_t>::max());
+  const auto tmp = legate::test::Environment::temporary_env_var("FOO_BAR_BAZ", val.c_str(), true);
+
+  ASSERT_THROW(static_cast<void>(var.get()), std::out_of_range);
+}
+
 }  // namespace environment_variable_test
