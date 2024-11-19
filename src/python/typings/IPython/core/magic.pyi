@@ -10,9 +10,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, TypeVar
-
-from typing_extensions import ParamSpec
+from typing import Any, Callable, ParamSpec, TypeVar
 
 class Magics:
     def __init__(self, shell: Any) -> None: ...

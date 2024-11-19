@@ -110,7 +110,7 @@ jobs:
 
       - name: Update environment
         run: |
-          mamba create -n legate rich cmake clangxx compiler-rt pytest pytest-mock typing_extensions "${{ matrix.generator }}"
+          mamba create -n legate rich cmake clangxx compiler-rt pytest pytest-mock "${{ matrix.generator }}"
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: List Conda packages and info
