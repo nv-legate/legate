@@ -19,8 +19,6 @@ function(find_or_configure_highfive)
   rapids_cpm_package_details(HighFive version git_url git_tag git_shallow unused)
 
   rapids_cpm_find(HighFive "${version}"
-                  BUILD_EXPORT_SET legate-exports
-                  INSTALL_EXPORT_SET legate-exports
                   CPM_ARGS
                   GIT_REPOSITORY "${git_url}"
                   GIT_SHALLOW "${git_shallow}" SYSTEM TRUE

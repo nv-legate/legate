@@ -26,8 +26,6 @@ function(find_or_configure_hdf5_vfd_gds)
   include(GNUInstallDirs)
 
   rapids_cpm_find(hdf5_vfd_gds "${version}"
-                  BUILD_EXPORT_SET legate-exports
-                  INSTALL_EXPORT_SET legate-exports
                   CPM_ARGS
                   GIT_REPOSITORY "${git_url}"
                   GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
