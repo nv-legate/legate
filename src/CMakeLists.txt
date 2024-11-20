@@ -125,7 +125,7 @@ set_property(DIRECTORY
                       cmake/templates/uninstall.cmake.in
                       cmake/templates/legate_defines.h.in)
 
-set(legate_version 24.11.00)
+set(legate_version 24.11.01)
 
 if(SKBUILD)
   project(legate_python
