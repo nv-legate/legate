@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 from IPython.core.magic import Magics, line_magic, magics_class
 from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
+from rich import print as rich_print
 from rich.console import Group
 
 from legate.jupyter.kernel import (
@@ -93,4 +94,4 @@ class LegateInfoMagics(Magics):
 
     @line_magic
     def legate_info(self, line: str) -> None:
-        print(self.info)
+        rich_print(self.info.ui)
