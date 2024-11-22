@@ -13,6 +13,8 @@
 
 """
 
+from . import FeatureType
+
 # -- core
 
 #: Value to use if --cpus is not specified.
@@ -47,6 +49,9 @@ NODES = 1
 RANKS_PER_NODE = 1
 
 # --
+
+# names for available feature stages
+FEATURES: tuple[FeatureType, ...] = ("cpus", "cuda", "eager", "openmp")
 
 # Value to use if --bloat-factor is not specified
 GPU_BLOAT_FACTOR = 1.5

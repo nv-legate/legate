@@ -24,9 +24,10 @@ from ...util.types import ArgList, EnvDict
 from ...util.ui import section, summary
 from .. import FeatureType
 from ..config import Config
+from ..defaults import FEATURES, PROCESS_ENV
 from ..runner import Runner, TestSpec
 from ..test_system import ProcessResult, TestSystem
-from .util import Shard, StageResult, StageSpec, log_proc
+from .util import MANUAL_CONFIG_ENV, Shard, StageResult, StageSpec, log_proc
 
 if TYPE_CHECKING:
     from rich.panel import Panel
@@ -67,7 +68,7 @@ class TestStage(Protocol):
     def __init__(self, config: Config, system: TestSystem) -> None:
         pass
 
-    def env(self, config: Config, system: TestSystem) -> EnvDict:
+    def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
         """Generate stage-specific customizations to the process env
 
         Parameters
@@ -97,7 +98,7 @@ class TestStage(Protocol):
             Process execution wrapper
 
         """
-        return
+        return None
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         """Generate the command line arguments necessary to launch
@@ -151,6 +152,44 @@ class TestStage(Protocol):
         t1 = datetime.now()
 
         self.result = StageResult(procs, t1 - t0)
+
+    def env(self, config: Config, system: TestSystem) -> EnvDict:
+        """Compute the environment variables to set for this test execution,
+        taking into account any per-stage or per-project customizations
+        into account.
+
+        Parameters
+        ----------
+        config: Config
+            Test runner configuration
+
+        system: TestSystem
+            Process execution wrapper
+
+        Returns
+        -------
+            EnvDict
+
+        """
+        # start with general env values needed for every legate test
+        env = dict(PROCESS_ENV)
+
+        # can't use auto-resource configuration in any tests
+        env.update(MANUAL_CONFIG_ENV)
+
+        # add general stage environment customizations
+        env.update(self.stage_env(config, system))
+
+        # add project-specific stage environment customizations
+        env.update(config.project.stage_env(self.kind))
+
+        # special case for LEGATE_CONFIG -- if users have specified this on
+        # their own we still want to see the value since it will affect the
+        # test invocation directly.
+        if "LEGATE_CONFIG" in system.env:
+            env["LEGATE_CONFIG"] = system.env["LEGATE_CONFIG"]
+
+        return env
 
     @property
     def name(self) -> str:
@@ -219,7 +258,7 @@ class TestStage(Protocol):
         result = system.run(
             cmd,
             test_spec.display,
-            env=self._env(config, system),
+            env=self.env(config, system),
             timeout=config.execution.timeout,
         )
 
@@ -228,18 +267,6 @@ class TestStage(Protocol):
         self.shards.put(shard)
 
         return result
-
-    def _env(self, config: Config, system: TestSystem) -> EnvDict:
-        env = dict(config.env)
-        env.update(self.env(config, system))
-
-        # special case for LEGATE_CONFIG -- if users have specified this on
-        # their own we still want to see the value since it will affect the
-        # test invocation directly.
-        if "LEGATE_CONFIG" in system.env:
-            env["LEGATE_CONFIG"] = system.env["LEGATE_CONFIG"]
-
-        return env
 
     def _init(self, config: Config, system: TestSystem) -> None:
         self.runner = Runner.create(config)
@@ -309,7 +336,7 @@ class TestStage(Protocol):
         unsharded_specs = [s for s in specs if s.path in custom_paths_map]
         unsharded_results = []
         for spec in unsharded_specs:
-            kind = custom_paths_map[spec.path].kind or lt.FEATURES
+            kind = custom_paths_map[spec.path].kind or FEATURES
             args = custom_paths_map[spec.path].args or []
             if self.kind == kind or self.kind in kind:
                 result = self._run(spec, config, system, custom_args=args)
@@ -325,7 +352,7 @@ class TestStage(Protocol):
         from subprocess import run
 
         cmd = self.runner.cmd_gdb(config)
-        env = os.environ | self._env(config, system)
+        env = os.environ | self.env(config, system)
 
         run(cmd, env=env)
 

@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Literal, TypeAlias
 
 from ..util.args import ExtendAction, MultipleChoices
-from . import FEATURES, defaults
+from . import defaults
 
 PinOptionsType: TypeAlias = Literal["partial", "none", "strict"]
 
@@ -44,7 +44,7 @@ stages.add_argument(
     "--use",
     dest="features",
     action=ExtendAction,
-    choices=MultipleChoices(sorted(FEATURES)),
+    choices=MultipleChoices(sorted(defaults.FEATURES)),
     type=lambda s: s.split(","),
     help="Test this library with features (also via USE_*)",
 )

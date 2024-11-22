@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from legate.tester.defaults import (
     CPUS_PER_NODE,
+    FEATURES,
     GPU_BLOAT_FACTOR,
     GPU_DELAY,
     GPU_MEMORY_BUDGET,
@@ -28,6 +29,10 @@ from legate.tester.defaults import (
     SMALL_SYSMEM,
     SYS_MEMORY_BUDGET,
 )
+
+
+def test_FEATURES() -> None:
+    assert FEATURES == ("cpus", "cuda", "eager", "openmp")
 
 
 def test_CPUS_PER_NODE() -> None:

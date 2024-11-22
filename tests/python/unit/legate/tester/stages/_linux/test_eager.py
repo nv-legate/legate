@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and stage_env.
 
 """
 from __future__ import annotations
@@ -30,8 +30,7 @@ def test_default() -> None:
     stage = m.Eager(c, s)
     assert stage.kind == "eager"
     assert stage.args == []
-    assert stage.env(c, s) == {
-        "LEGATE_AUTO_CONFIG": "0",
+    assert stage.stage_env(c, s) == {
         "CUPYNUMERIC_FORCE_THUNK": "eager",
         "CUPYNUMERIC_MIN_CPU_CHUNK": "2000000000",
         "CUPYNUMERIC_MIN_OMP_CHUNK": "2000000000",

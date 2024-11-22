@@ -19,10 +19,16 @@ from datetime import timedelta
 import pytest
 from rich.console import Console
 
-from legate.tester import FeatureType
+from legate.tester import FeatureType, defaults
 from legate.tester.config import Config
+from legate.tester.project import Project
 from legate.tester.stages import test_stage as m
-from legate.tester.stages.util import Shard, StageResult, StageSpec
+from legate.tester.stages.util import (
+    MANUAL_CONFIG_ENV,
+    Shard,
+    StageResult,
+    StageSpec,
+)
 from legate.tester.test_system import ProcessResult, TestSystem as _TestSystem
 from legate.util.types import ArgList, EnvDict
 
@@ -32,13 +38,14 @@ CONSOLE = Console(color_system=None, soft_wrap=True)
 
 
 class MockTestStage(m.TestStage):
-    kind: FeatureType = "eager"
-
     name = "mock"
 
     args = ["-foo", "-bar"]
 
-    def __init__(self, config: Config, system: _TestSystem) -> None:
+    def __init__(
+        self, config: Config, system: _TestSystem, kind: FeatureType = "eager"
+    ) -> None:
+        self.kind = kind
         self._init(config, system)
 
     def compute_spec(self, config: Config, system: _TestSystem) -> StageSpec:
@@ -48,8 +55,8 @@ class MockTestStage(m.TestStage):
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         return []
 
-    def env(self, config: Config, system: _TestSystem) -> EnvDict:
-        return {}
+    def stage_env(self, config: Config, system: _TestSystem) -> EnvDict:
+        return {"stage": "env"}
 
 
 class TestTestStage:
@@ -79,6 +86,60 @@ class TestTestStage:
         assert "Exiting stage: mock" in outro
         assert "Passed 1 of 1 tests (100.0%)" in outro
         assert "2.12" in outro
+
+    def test_env(self) -> None:
+        c = Config([])
+        s = FakeSystem()
+        stage = MockTestStage(c, s)
+
+        env = stage.env(c, FakeSystem())
+
+        expected = dict(defaults.PROCESS_ENV)
+        expected.update(MANUAL_CONFIG_ENV)
+        expected.update(stage.stage_env(c, s))
+        # no project.stage_env
+
+        assert env == expected
+        assert "LEGATE_CONFIG" not in env
+
+    def test_env_with_LEGATE_CONFIG(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("LEGATE_CONFIG", "foo")
+
+        c = Config([])
+        s = FakeSystem()
+        stage = MockTestStage(c, s)
+
+        env = stage.env(c, FakeSystem())
+
+        expected = dict(defaults.PROCESS_ENV)
+        expected.update(MANUAL_CONFIG_ENV)
+        expected.update(stage.stage_env(c, s))
+        # no project.stage_env
+        expected["LEGATE_CONFIG"] = "foo"
+
+        assert env == expected
+
+    @pytest.mark.parametrize("feature", defaults.FEATURES)
+    def test_env_with_custom_project(self, feature: FeatureType) -> None:
+        class CustomProj(Project):
+            def stage_env(self, feature: FeatureType) -> EnvDict:
+                return {"feature": feature}
+
+        c = Config([], CustomProj())
+        s = FakeSystem()
+        stage = MockTestStage(c, s, feature)
+
+        env = stage.env(c, FakeSystem())
+
+        expected = dict(defaults.PROCESS_ENV)
+        expected.update(MANUAL_CONFIG_ENV)
+        expected.update(stage.stage_env(c, s))
+        expected.update(c.project.stage_env(feature))
+
+        assert env["feature"] == feature
+        assert env == expected
 
 
 class TestTestStage_handle_cpu_pin_args:

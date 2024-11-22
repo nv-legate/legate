@@ -24,27 +24,6 @@ from ..util.types import ArgList
 #: Define the available feature types for tests
 FeatureType: TypeAlias = Literal["cpus", "cuda", "eager", "openmp"]
 
-#: Feature values that are accepted for --use, in the relative order
-#: that the corresponding test stages should always execute in
-#:
-#: Client test scripts can update this value with their own customizations.
-FEATURES: tuple[FeatureType, ...] = (
-    "cpus",
-    "cuda",
-    "eager",
-    "openmp",
-)
-
-#: Paths to test files that should be skipped entirely in all stages.
-#:
-#: Client test scripts can update this set with their own customizations.
-SKIPPED_EXAMPLES: set[str] = set()
-
-#: Extra arguments to add when specific test files are executed (in any stage).
-#:
-#: Client test scripts can update this dict with their own customizations.
-PER_FILE_ARGS: dict[str, ArgList] = {}
-
 
 @dataclass
 class CustomTest:
@@ -53,12 +32,10 @@ class CustomTest:
     kind: FeatureType | list[FeatureType] | None = None
 
 
-#: Customized configurations for specific test files. Each entry will result
-#: in the specified test file being run in the specified stage, with the given
-#: command line arguments appended (overriding default stage arguments). These
-#: files are run serially, after the sharded, parallelized tests.
-#:
-#: Client test scripts can update this list with their own customizations.
+# These will eventually go away but it will take a few PRs back and
+# forth to avoid breaking downstream usage
+SKIPPED_EXAMPLES: set[str] = set()
+PER_FILE_ARGS: dict[str, ArgList] = {}
 CUSTOM_FILES: list[CustomTest] = []
 
 

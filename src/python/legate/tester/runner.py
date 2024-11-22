@@ -20,8 +20,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from . import PER_FILE_ARGS
-
 if TYPE_CHECKING:
     from ..util.types import ArgList, Command
     from .config import Config
@@ -238,7 +236,8 @@ class LegateRunner(Runner):
 
         """
         test_file_string = str(test_file)
-        args = PER_FILE_ARGS.get(test_file_string, [])
+        per_file_args = config.project.per_file_args()
+        args = per_file_args.get(test_file_string, [])
 
         # These are a bit ugly but necessary in order to make pytest generate
         # more verbose output for integration tests when -v, -vv is specified

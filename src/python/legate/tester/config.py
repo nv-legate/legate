@@ -30,18 +30,12 @@ from rich import reconfigure
 from ..util.types import (
     ArgList,
     DataclassMixin,
-    EnvDict,
     LauncherType,
     object_to_dataclass,
 )
-from . import (
-    FEATURES,
-    LAST_FAILED_FILENAME,
-    SKIPPED_EXAMPLES,
-    FeatureType,
-    defaults,
-)
+from . import LAST_FAILED_FILENAME, FeatureType, defaults
 from .args import PinOptionsType, parser
+from .project import Project
 
 
 @dataclass(frozen=True)
@@ -118,13 +112,17 @@ class Config:
 
     """
 
-    def __init__(self, argv: ArgList) -> None:
+    def __init__(self, argv: ArgList, project: Project | None = None) -> None:
         self.argv = argv
 
         args, self._extra_args = parser.parse_known_args(self.argv[1:])
         args.gtest_skip_list = set(args.gtest_skip_list)
         # only saving this for help with testing
         self._args = args
+
+        if project is None:
+            project = Project()
+        self.project = project
 
         # feature configuration
         self.features = self._compute_features(args)
@@ -173,11 +171,6 @@ class Config:
         return self.other.dry_run
 
     @property
-    def env(self) -> EnvDict:
-        """Custom environment settings used for process exectution."""
-        return dict(defaults.PROCESS_ENV)
-
-    @property
     def extra_args(self) -> ArgList:
         """Extra command-line arguments to pass on to individual test files."""
         return self._extra_args
@@ -216,7 +209,8 @@ class Config:
             examples = (
                 path.relative_to(self.root_dir)
                 for path in self.root_dir.joinpath("examples").glob("*.py")
-                if str(path.relative_to(self.root_dir)) not in SKIPPED_EXAMPLES
+                if str(path.relative_to(self.root_dir))
+                not in self.project.skipped_examples()
             )
             files.extend(sorted(examples))
 
@@ -260,7 +254,7 @@ class Config:
         else:
             computed = [
                 feature
-                for feature in FEATURES
+                for feature in defaults.FEATURES
                 if os.environ.get(f"USE_{feature.upper()}", None) == "1"
             ]
 

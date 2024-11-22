@@ -17,13 +17,7 @@ from typing import TYPE_CHECKING
 
 from ...defaults import SMALL_SYSMEM
 from ..test_stage import TestStage
-from ..util import (
-    MANUAL_CONFIG_ENV,
-    UNPIN_ENV,
-    Shard,
-    StageSpec,
-    adjust_workers,
-)
+from ..util import UNPIN_ENV, Shard, StageSpec, adjust_workers
 
 if TYPE_CHECKING:
     from ....util.types import ArgList, EnvDict
@@ -52,8 +46,8 @@ class OMP(TestStage):
     def __init__(self, config: Config, system: TestSystem) -> None:
         self._init(config, system)
 
-    def env(self, config: Config, system: TestSystem) -> EnvDict:
-        env = dict(MANUAL_CONFIG_ENV)
+    def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
+        env = dict()
         if config.execution.cpu_pin != "strict":
             env.update(UNPIN_ENV)
         return env

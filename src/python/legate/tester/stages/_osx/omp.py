@@ -15,13 +15,7 @@ from typing import TYPE_CHECKING
 
 from ...defaults import SMALL_SYSMEM
 from ..test_stage import TestStage
-from ..util import (
-    MANUAL_CONFIG_ENV,
-    UNPIN_ENV,
-    Shard,
-    StageSpec,
-    adjust_workers,
-)
+from ..util import UNPIN_ENV, Shard, StageSpec, adjust_workers
 
 if TYPE_CHECKING:
     from ....util.types import ArgList, EnvDict
@@ -50,10 +44,8 @@ class OMP(TestStage):
     def __init__(self, config: Config, system: TestSystem) -> None:
         self._init(config, system)
 
-    def env(self, config: Config, system: TestSystem) -> EnvDict:
-        env = dict(MANUAL_CONFIG_ENV)
-        env.update(UNPIN_ENV)
-        return env
+    def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
+        return dict(UNPIN_ENV)
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         return [

@@ -14,8 +14,28 @@
 """
 from __future__ import annotations
 
-from legate.tester import LAST_FAILED_FILENAME
+import pytest
+
+import legate.tester.project as m
+from legate.tester import FeatureType, defaults
 
 
-def test_LAST_FAILED_FILENAME() -> None:
-    assert LAST_FAILED_FILENAME.endswith(".legate-test-last-failed")
+def test_skipped_examples_default() -> None:
+    skipped_examples = m.Project().skipped_examples()
+    assert skipped_examples == set()
+
+
+def test_per_file_args_default() -> None:
+    per_file_args = m.Project().per_file_args()
+    assert per_file_args == {}
+
+
+def test_custom_files_default() -> None:
+    custom_files = m.Project().custom_files()
+    assert custom_files == []
+
+
+@pytest.mark.parametrize("feature", defaults.FEATURES)
+def test_stage_env_default(feature: FeatureType) -> None:
+    stage_env = m.Project().stage_env(feature)
+    assert stage_env == {}

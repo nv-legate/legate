@@ -21,7 +21,7 @@ from pathlib import Path, PurePath
 import pytest
 from pytest_mock import MockerFixture
 
-from legate.tester import FEATURES, config as m, defaults
+from legate.tester import config as m, defaults
 from legate.tester.args import PIN_OPTIONS, PinOptionsType
 
 REPO_TOP = Path(__file__).parents[4]
@@ -87,7 +87,7 @@ class TestConfig:
         c = m.Config(["test.py", "--last-failed"])
         assert c.last_failed
 
-    @pytest.mark.parametrize("feature", FEATURES)
+    @pytest.mark.parametrize("feature", defaults.FEATURES)
     def test_env_features(
         self, monkeypatch: pytest.MonkeyPatch, feature: str
     ) -> None:
@@ -101,7 +101,7 @@ class TestConfig:
         c = m.Config(["test.py", "--use", "cuda"])
         assert set(c.features) == {"cuda"}
 
-    @pytest.mark.parametrize("feature", FEATURES)
+    @pytest.mark.parametrize("feature", defaults.FEATURES)
     def test_cmd_features(self, feature: str) -> None:
         # test a single value
         c = m.Config(["test.py", "--use", feature])

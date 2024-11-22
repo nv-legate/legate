@@ -21,6 +21,7 @@ from pytest_mock import MockerFixture
 
 import legate.tester.runner as m
 from legate.tester.config import Config
+from legate.tester.project import Project
 
 
 class Runner:
@@ -109,12 +110,11 @@ class TestLegateRunner:
             assert r.file_args(Path("integration/foo"), c) == ["-v", "-s"]
 
         def test_per_file_args(self, mocker: MockerFixture) -> None:
-            # runner.py just imports PER_FILE_ARGS directly by itself, so we
-            # must patch the value there, rather than in legate.tester
-            mocker.patch.object(
-                m, "PER_FILE_ARGS", {"integration/foo": ["--foo"]}
-            )
-            c = Config(["test.py"])
+            class CustomProj(Project):
+                def per_file_args(self) -> dict[str, list[str]]:
+                    return {"integration/foo": ["--foo"]}
+
+            c = Config(["test.py"], project=CustomProj())
             r = m.LegateRunner()
             assert r.file_args(Path("integration/foo"), c) == ["--foo"]
 

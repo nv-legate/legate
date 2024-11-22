@@ -15,7 +15,7 @@ import time
 from typing import TYPE_CHECKING
 
 from ..test_stage import TestStage
-from ..util import MANUAL_CONFIG_ENV, UNPIN_ENV
+from ..util import UNPIN_ENV
 
 if TYPE_CHECKING:
     from ....util.types import ArgList, EnvDict
@@ -45,10 +45,8 @@ class GPU(TestStage):
     def __init__(self, config: Config, system: TestSystem) -> None:
         raise RuntimeError("GPU test are not supported on OSX")
 
-    def env(self, config: Config, system: TestSystem) -> EnvDict:
-        env = dict(MANUAL_CONFIG_ENV)
-        env.update(UNPIN_ENV)
-        return env
+    def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
+        return dict(UNPIN_ENV)
 
     def delay(self, shard: Shard, config: Config, system: TestSystem) -> None:
         time.sleep(config.execution.gpu_delay / 1000)

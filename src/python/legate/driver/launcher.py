@@ -144,7 +144,9 @@ class Launcher:
 
     @staticmethod
     def is_launcher_var(name: str) -> bool:
-        """Whether an environment variable name is relevant for the laucher."""
+        """Whether an environment variable name is important for the
+        launcher.
+        """
         return name.endswith("PATH") or any(
             name.startswith(prefix) for prefix in LAUNCHER_VAR_PREFIXES
         )

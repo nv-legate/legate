@@ -15,14 +15,7 @@ from typing import TYPE_CHECKING
 
 from ...defaults import SMALL_SYSMEM
 from ..test_stage import TestStage
-from ..util import (
-    EAGER_ENV,
-    MANUAL_CONFIG_ENV,
-    UNPIN_ENV,
-    Shard,
-    StageSpec,
-    adjust_workers,
-)
+from ..util import EAGER_ENV, UNPIN_ENV, Shard, StageSpec, adjust_workers
 
 if TYPE_CHECKING:
     from ....util.types import ArgList, EnvDict
@@ -51,8 +44,8 @@ class Eager(TestStage):
     def __init__(self, config: Config, system: TestSystem) -> None:
         self._init(config, system)
 
-    def env(self, config: Config, system: TestSystem) -> EnvDict:
-        env = dict(MANUAL_CONFIG_ENV)
+    def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
+        env = dict()
         env.update(EAGER_ENV)
         env.update(UNPIN_ENV)
         return env
