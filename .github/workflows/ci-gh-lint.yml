@@ -1,5 +1,5 @@
 ---
-name: Lint legate on GH
+name: Lint
 
 concurrency:
   group: ci-lint-on-${{ github.event_name }}-from-${{ github.ref_name }}
@@ -197,3 +197,16 @@ jobs:
           # CI to unearth all clang-tidy errors in one go, otherwise the dev needs to play
           # whack-a-mole with each additional error.
           LEGATE_CMAKE_ARGS="-- -k 0" make tidy -j 14
+
+
+  lint-pass:
+    if: always()
+    needs:
+      - pre-commit
+      - test-configure
+      - tidy
+    runs-on: linux-amd64-cpu4
+    steps:
+      - name: Check job results
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
