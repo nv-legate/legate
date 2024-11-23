@@ -29,8 +29,11 @@ namespace legate::detail {
 
 [[nodiscard]] tuple<std::uint64_t> from_domain(const Domain& domain);
 
-// This is forward declared in tuple.h to avoid including this header
-// NOLINTNEXTLINE(readability-redundant-declaration)
+// These are forward declared in tuple.h to avoid including this header
+// NOLINTBEGIN(readability-redundant-declaration)
 void assert_valid_mapping(std::size_t tuple_size, const std::vector<std::int32_t>& mapping);
+
+void assert_in_range(std::size_t tuple_size, std::int32_t pos);
+// NOLINTEND(readability-redundant-declaration)
 
 }  // namespace legate::detail

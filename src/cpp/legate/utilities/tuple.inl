@@ -196,12 +196,20 @@ void tuple<T>::reserve(size_type size)
   return data().reserve(size);
 }
 
+namespace detail {
+
+void assert_in_range(std::size_t tuple_size, std::int32_t pos);
+
+}  // namespace detail
+
 template <typename T>
 template <typename U>
 tuple<T> tuple<T>::insert(std::int32_t pos, U&& value) const
 {
-  // <= size here because we are allowed to insert at the end
-  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) <= size());
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    // size + 1 here because we are allowed to insert at the end
+    detail::assert_in_range(size() + 1, pos);
+  }
 
   const auto len = static_cast<std::int32_t>(size());
   tuple new_values;
@@ -232,7 +240,9 @@ tuple<T> tuple<T>::remove(std::int32_t pos) const
 {
   tuple new_values;
 
-  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) < size());
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    detail::assert_in_range(size(), pos);
+  }
   if (const auto len = static_cast<std::int32_t>(size())) {
     new_values.reserve(len - 1);
     for (std::int32_t idx = 0; idx < pos; ++idx) {
@@ -251,7 +261,9 @@ tuple<T> tuple<T>::update(std::int32_t pos, U&& value) const
 {
   tuple new_values = *this;
 
-  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) < size());
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    detail::assert_in_range(size(), pos);
+  }
   new_values[pos] = std::forward<U>(value);
   return new_values;
 }
@@ -260,8 +272,10 @@ template <typename T>
 template <typename U>
 void tuple<T>::insert_inplace(std::int32_t pos, U&& value)
 {
-  // <= size here because we are allowed to insert at the end
-  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) <= size());
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    // size + 1 here because we are allowed to insert at the end
+    detail::assert_in_range(size() + 1, pos);
+  }
   data().insert(begin() + pos, std::forward<U>(value));
 }
 
@@ -275,7 +289,9 @@ void tuple<T>::append_inplace(U&& value)
 template <typename T>
 void tuple<T>::remove_inplace(std::int32_t pos)
 {
-  LEGATE_ASSERT(pos >= 0 && static_cast<size_type>(pos) < size());
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    detail::assert_in_range(size(), pos);
+  }
   data().erase(begin() + pos);
 }
 

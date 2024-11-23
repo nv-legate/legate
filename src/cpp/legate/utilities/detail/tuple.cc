@@ -96,4 +96,11 @@ void assert_valid_mapping(std::size_t tuple_size, const std::vector<std::int32_t
   }
 }
 
+void assert_in_range(std::size_t tuple_size, std::int32_t pos)
+{
+  if ((pos < 0) || (static_cast<std::size_t>(pos) >= tuple_size)) {
+    throw std::out_of_range{fmt::format("Index {} out of range [0, {})", pos, tuple_size)};
+  }
+}
+
 }  // namespace legate::detail

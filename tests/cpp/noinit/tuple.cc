@@ -560,52 +560,52 @@ TEST(TupleUnitNegative, MapInplace)
   ASSERT_THROW(tuple.map_inplace(mapping4), std::invalid_argument);
 }
 
-TEST(TupleUnitDeath, Insert)
+TEST(TupleUnitNegative, Insert)
 {
   if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    GTEST_SKIP() << "Skip the test if no LEGATE_USE_DEBUG is defined";
+    GTEST_SKIP() << "The functions don't throw if LEGATE_USE_DEBUG is not defined";
   }
 
   const legate::tuple<std::int32_t> tuple{1, 2, 3};
   const legate::tuple<std::int32_t> tuple_empty{};
 
-  EXPECT_DEATH(static_cast<void>(tuple.insert(4, 10)), "");
-  EXPECT_DEATH(static_cast<void>(tuple.insert(-1, 10)), "");
-  EXPECT_DEATH(static_cast<void>(tuple_empty.insert(-1, 10)), "");
-  EXPECT_DEATH(static_cast<void>(tuple_empty.insert(1, 10)), "");
+  ASSERT_THROW(static_cast<void>(tuple.insert(4, 10)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(tuple.insert(-1, 10)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(tuple_empty.insert(-1, 10)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(tuple_empty.insert(1, 10)), std::out_of_range);
 }
 
-TEST(TupleUnitDeath, InsertInplace)
+TEST(TupleUnitNegative, InsertInplace)
 {
   if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    GTEST_SKIP() << "Skip the test if no LEGATE_USE_DEBUG is defined";
+    GTEST_SKIP() << "The functions don't throw if LEGATE_USE_DEBUG is not defined";
   }
 
   legate::tuple<std::int32_t> tuple{1, 2, 3};
   legate::tuple<std::int32_t> tuple_empty{};
 
-  EXPECT_DEATH(tuple.insert_inplace(4, 10), "");
-  EXPECT_DEATH(tuple_empty.insert_inplace(1, 10), "");
+  ASSERT_THROW(tuple.insert_inplace(4, 10), std::out_of_range);
+  ASSERT_THROW(tuple_empty.insert_inplace(1, 10), std::out_of_range);
 }
 
-TEST(TupleUnitDeath, Remove)
+TEST(TupleUnitNegative, Remove)
 {
   if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    GTEST_SKIP() << "Skip the test if no LEGATE_USE_DEBUG is defined";
+    GTEST_SKIP() << "The functions don't throw if LEGATE_USE_DEBUG is not defined";
   }
 
   const legate::tuple<std::int32_t> tuple{1, 2, 3};
   const legate::tuple<std::int32_t> tuple_empty{};
 
-  EXPECT_DEATH(static_cast<void>(tuple.remove(4)), "");
-  EXPECT_DEATH(static_cast<void>(tuple.remove(-1)), "");
-  EXPECT_DEATH(static_cast<void>(tuple_empty.remove(0)), "");
-  EXPECT_DEATH(static_cast<void>(tuple_empty.remove(-1)), "");
+  ASSERT_THROW(static_cast<void>(tuple.remove(4)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(tuple.remove(-1)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(tuple_empty.remove(0)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(tuple_empty.remove(-1)), std::out_of_range);
 }
 
 LEGATE_PRAGMA_PUSH();
 LEGATE_PRAGMA_GCC_IGNORE("-Wstringop-overflow");
-TEST(TupleUnitDeath, RemoveInplace)
+TEST(TupleUnitNegative, RemoveInplace)
 {
   if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     GTEST_SKIP() << "Skip the test if no LEGATE_USE_DEBUG is defined";
@@ -614,14 +614,14 @@ TEST(TupleUnitDeath, RemoveInplace)
   legate::tuple<std::int32_t> tuple{1, 2, 3};
   legate::tuple<std::int32_t> tuple_empty{};
 
-  EXPECT_DEATH(tuple.remove_inplace(4), "");
-  EXPECT_DEATH(tuple.remove_inplace(-1), "");
-  EXPECT_DEATH(tuple_empty.remove_inplace(0), "");
-  EXPECT_DEATH(tuple_empty.remove_inplace(-1), "");
+  ASSERT_THROW(tuple.remove_inplace(4), std::out_of_range);
+  ASSERT_THROW(tuple.remove_inplace(-1), std::out_of_range);
+  ASSERT_THROW(tuple_empty.remove_inplace(0), std::out_of_range);
+  ASSERT_THROW(tuple_empty.remove_inplace(-1), std::out_of_range);
 }
 LEGATE_PRAGMA_POP();
 
-TEST(TupleUnitDeath, Update)
+TEST(TupleUnitNegative, Update)
 {
   if (!LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     GTEST_SKIP() << "Skip the test if no LEGATE_USE_DEBUG is defined";
@@ -630,10 +630,10 @@ TEST(TupleUnitDeath, Update)
   const legate::tuple<std::int32_t> tuple{1, 2, 3};
   const legate::tuple<std::int32_t> tuple_empty{};
 
-  EXPECT_DEATH(static_cast<void>(tuple.update(4, 10)), "");
-  EXPECT_DEATH(static_cast<void>(tuple.update(-1, 10)), "");
-  EXPECT_DEATH(static_cast<void>(tuple_empty.update(0, 10)), "");
-  EXPECT_DEATH(static_cast<void>(tuple_empty.update(-1, 10)), "");
+  ASSERT_THROW(static_cast<void>(tuple.update(4, 10)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(tuple.update(-1, 10)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(tuple_empty.update(0, 10)), std::out_of_range);
+  ASSERT_THROW(static_cast<void>(tuple_empty.update(-1, 10)), std::out_of_range);
 }
 
 // NOLINTEND(readability-magic-numbers)
