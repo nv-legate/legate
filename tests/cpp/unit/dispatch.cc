@@ -38,7 +38,7 @@ class DispatchNegativeTypeTest : public DefaultFixture,
 
 INSTANTIATE_TEST_SUITE_P(DispatchTest,
                          DoubleDispatchTest,
-                         ::testing::Combine(::testing::Values(1, 2, 3, LEGATE_MAX_DIM),
+                         ::testing::Combine(::testing::Range(1, LEGATE_MAX_DIM),
                                             ::testing::Values(legate::Type::Code::BOOL,
                                                               legate::Type::Code::INT8,
                                                               legate::Type::Code::INT16,
@@ -56,10 +56,10 @@ INSTANTIATE_TEST_SUITE_P(DispatchTest,
 
 INSTANTIATE_TEST_SUITE_P(DispatchTest,
                          DoubleDispatchWithDimTest,
-                         ::testing::Combine(::testing::Values(1, 2, 3, LEGATE_MAX_DIM),
-                                            ::testing::Values(1, 2, 3, LEGATE_MAX_DIM)));
+                         ::testing::Combine(::testing::Range(1, LEGATE_MAX_DIM),
+                                            ::testing::Range(1, LEGATE_MAX_DIM)));
 
-INSTANTIATE_TEST_SUITE_P(DispatchTest, DimDispatchTest, ::testing::Values(1, 2, 3, LEGATE_MAX_DIM));
+INSTANTIATE_TEST_SUITE_P(DispatchTest, DimDispatchTest, ::testing::Range(1, LEGATE_MAX_DIM));
 
 INSTANTIATE_TEST_SUITE_P(DispatchTest,
                          TypeDispatchTest,

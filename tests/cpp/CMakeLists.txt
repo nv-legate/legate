@@ -194,7 +194,6 @@ set(runtime_SRC
     unit/dispatch.cc
     unit/library.cc
     unit/logical_array.cc
-    unit/logical_store.cc
     unit/machine.cc
     unit/mapping.cc
     unit/physical_array.cc
@@ -205,6 +204,16 @@ set(runtime_SRC
     unit/scope.cc
     unit/scoped_allocator.cc
     unit/timing.cc
+    unit/logical_store/create_store.cc
+    unit/logical_store/delinearize.cc
+    unit/logical_store/equal_storage.cc
+    unit/logical_store/overlaps.cc
+    unit/logical_store/partition.cc
+    unit/logical_store/physical_store.cc
+    unit/logical_store/project.cc
+    unit/logical_store/promote.cc
+    unit/logical_store/slice.cc
+    unit/logical_store/transpose.cc
     unit/type/binary_type.cc
     unit/type/fixed_array_type.cc
     unit/type/list_type.cc

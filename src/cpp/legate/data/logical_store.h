@@ -348,7 +348,7 @@ class LogicalStore {
    *
    * The call can block if the store is unbound
    *
-   * @param tile_shape %Shape of tiles
+   * @param tile_shape Shape of tiles
    *
    * @return A store partition
    */
@@ -391,12 +391,12 @@ class LogicalStore {
    * example, the store produced by slicing will *not* share the same storage as its parent,
    * and this routine will return false for it:
    *
-   * @snippet unit/logical_store.cc Store::equal_storage: Comparing sliced stores
+   * @snippet unit/logical_store/equal_storage.cc Store::equal_storage: Comparing sliced stores
    *
    * Transposed stores, on the other hand, still share the same storage, and hence this routine
    * will return true for them:
    *
-   * @snippet unit/logical_store.cc Store::equal_storage: Comparing transposed stores
+   * @snippet unit/logical_store/equal_storage.cc Store::equal_storage: Comparing transposed stores
    */
   [[nodiscard]] bool equal_storage(const LogicalStore& other) const;
 
