@@ -68,7 +68,7 @@ LEGATE_PRAGMA_POP();
 inline typename ControlBlockBase::ref_count_type ControlBlockBase::decrement_refcount_(
   std::atomic<ref_count_type>* refcount) noexcept
 {
-  const auto v = refcount->fetch_sub(1, std::memory_order_acq_rel);
+  const auto v = refcount->fetch_sub(1, std::memory_order_release);
 
   LEGATE_ASSERT(v > 0);
   return v - 1;
@@ -77,6 +77,16 @@ inline typename ControlBlockBase::ref_count_type ControlBlockBase::decrement_ref
 inline void ControlBlockBase::maybe_destroy_control_block() noexcept
 {
   if (!strong_ref_cnt() && !weak_ref_cnt() && !user_ref_cnt()) {
+    // Refcount subs are std::memory_order_release, so all reads/writes to the refcounts are
+    // completed at this point. Thus, if we happen to reach this point then we are certain that
+    // we are the only remaining holder of the shared pointer.
+    //
+    // However, we still need to ensure the compiler does not reorder the call to
+    // destroy_control_block() before our refcounts (because we do not "acquire" the resource
+    // during the decrement).
+    //
+    // See https://stackoverflow.com/a/48148318/13615317
+    std::atomic_thread_fence(std::memory_order_acquire);
     destroy_control_block();
   }
 }
@@ -190,6 +200,8 @@ SeparateControlBlock<T, D, A>::SeparateControlBlock(value_type* ptr,
 template <typename T, typename D, typename A>
 void SeparateControlBlock<T, D, A>::destroy_object() noexcept
 {
+  // See discussion in maybe_destroy_control_block() on why this memory fence is required.
+  std::atomic_thread_fence(std::memory_order_acquire);
   // NOLINTNEXTLINE(bugprone-sizeof-expression): we want to compare with 0, that's the point
   static_assert(sizeof(value_type) > 0, "Value type must be complete at destruction");
   LEGATE_ASSERT(ptr_);

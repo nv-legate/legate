@@ -19,6 +19,7 @@
 #include "shared_ptr_util.h"
 
 #include <stdexcept>
+#include <thread>
 
 template <typename T>
 struct InternalSharedPtrUnit : BasicSharedPtrUnit<T> {};
@@ -381,9 +382,8 @@ TYPED_TEST(InternalSharedPtrUnit, Array)
   constexpr auto N = 100;
   auto bare_ptr    = new TypeParam[N];
 
-  for (auto i = 0; i < N; ++i) {
-    bare_ptr[i] = 1;
-  }
+  std::fill(bare_ptr, bare_ptr + N, 1);
+
   legate::InternalSharedPtr<TypeParam[]> ptr{bare_ptr};
 
   test_basic_equal(ptr, bare_ptr, N);
@@ -453,5 +453,78 @@ TEST_F(InternalSharedPtrUnitFriend, UniqThrow)
 }
 
 }  // namespace legate
+
+TYPED_TEST(InternalSharedPtrUnit, MultiThreaded)
+{
+  auto sh_ptr               = legate::make_internal_shared<TypeParam>(123);
+  std::atomic<bool> running = true;
+  std::atomic<bool> started = false;
+  std::exception_ptr t1exn  = nullptr;
+  std::exception_ptr t2exn  = nullptr;
+
+  auto t1 = std::thread{[&, sh_ptr]() mutable {
+    try {
+      constexpr auto max_it = 10'000;
+
+      started.store(true, std::memory_order_release);
+
+      auto other_ptr = sh_ptr;
+      for (auto i = 0; running.load(std::memory_order_relaxed); ++i) {
+        if (i > max_it) {
+          FAIL() << "Max iteration count reached: " << i
+                 << " likely the other thread has stalled, aborting test to avoid infinite loop\n";
+        }
+        other_ptr = sh_ptr;
+        ASSERT_TRUE(sh_ptr.use_count());
+        ASSERT_TRUE(sh_ptr.get());
+        ASSERT_EQ(sh_ptr.get(), other_ptr.get());
+        ASSERT_EQ(*sh_ptr, *other_ptr);
+        sh_ptr = legate::SharedPtr<TypeParam>{other_ptr};
+        other_ptr.reset();
+      }
+    } catch (...) {
+      t1exn = std::current_exception();
+    }
+  }};
+
+  auto t2 = std::thread{[&, sh_ptr_2 = std::move(sh_ptr)]() mutable {
+    try {
+      constexpr auto max_it = 50;
+      // Wait for other thread to definitely have started so we at least make it likely they both
+      // run at the same time
+      while (!started.load(std::memory_order_acquire)) {}
+
+      auto other_ptr = sh_ptr_2;
+      for (auto i = 0; i < max_it; ++i) {
+        other_ptr = sh_ptr_2;
+        sh_ptr_2  = other_ptr;
+        ASSERT_TRUE(sh_ptr_2.use_count());
+        ASSERT_TRUE(sh_ptr_2.get());
+        ASSERT_EQ(sh_ptr_2.get(), other_ptr.get());
+        ASSERT_EQ(*sh_ptr_2, *other_ptr);
+        other_ptr.reset();
+      }
+      // Shut off the other thread halfway through
+      running.store(false, std::memory_order_relaxed);
+    } catch (...) {
+      t2exn = std::current_exception();
+    }
+  }};
+
+  t2.join();
+  t1.join();
+
+  constexpr auto check_exn = [](const std::exception_ptr& ptr, int thread_num) {
+    try {
+      if (ptr) {
+        std::rethrow_exception(ptr);
+      }
+    } catch (const std::exception& e) {
+      FAIL() << "Exception thrown in thread " << thread_num << ": " << e.what() << "\n";
+    }
+  };
+  check_exn(t1exn, 1);
+  check_exn(t2exn, 2);
+}
 
 // NOLINTEND(readability-magic-numbers)

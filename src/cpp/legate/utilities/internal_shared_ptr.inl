@@ -53,8 +53,7 @@ void InternalWeakPtr<T>::weak_reference_() noexcept
 template <typename T>
 void InternalWeakPtr<T>::weak_dereference_() noexcept
 {
-  if (ctrl_) {
-    ctrl_->weak_deref();
+  if (ctrl_ && (ctrl_->weak_deref() == 0)) {
     maybe_destroy_();
   }
 }
@@ -261,8 +260,9 @@ void InternalSharedPtr<T>::strong_dereference_() noexcept
 {
   if (ctrl_) {
     LEGATE_ASSERT(get());
-    ctrl_->strong_deref();
-    maybe_destroy_();
+    if (ctrl_->strong_deref() == 0) {
+      maybe_destroy_();
+    }
   }
 }
 
@@ -281,8 +281,9 @@ void InternalSharedPtr<T>::weak_dereference_() noexcept
 {
   if (ctrl_) {
     LEGATE_ASSERT(get());
-    ctrl_->weak_deref();
-    maybe_destroy_();
+    if (ctrl_->weak_deref() == 0) {
+      maybe_destroy_();
+    }
   }
 }
 
@@ -304,8 +305,15 @@ void InternalSharedPtr<T>::user_dereference_(SharedPtrAccessTag) noexcept
 {
   if (ctrl_) {
     LEGATE_ASSERT(get());
-    ctrl_->user_deref();
-    maybe_destroy_();
+    if (ctrl_->user_deref() == 0) {
+      // A user reference is also a strong reference, because a SharedPtr always holds an
+      // InternalSharedPtr. Thus, there is no scenario in which a user reference is the last to
+      // fall to 0, and we can therefore elide calling maybe_destroy_() here.
+      //
+      // We want to skip calling it because maybe_destroy_() is called from both weak_deref and
+      // strong_deref, so it must call use_count() to check it is actually safe to destroy.
+      LEGATE_ASSERT(use_count());
+    }
   }
 }
 // NOLINTEND(readability-identifier-naming)
