@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 from ...defaults import SMALL_SYSMEM
 from ..test_stage import TestStage
-from ..util import EAGER_ENV, Shard, StageSpec, adjust_workers
+from ..util import Shard, StageSpec, adjust_workers
 
 if TYPE_CHECKING:
     from ....util.types import ArgList, EnvDict
@@ -45,9 +45,7 @@ class Eager(TestStage):
         self._init(config, system)
 
     def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
-        env = dict()
-        env.update(EAGER_ENV)
-        return env
+        return dict()
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         return [

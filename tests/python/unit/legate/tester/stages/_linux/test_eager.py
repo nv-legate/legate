@@ -30,12 +30,7 @@ def test_default() -> None:
     stage = m.Eager(c, s)
     assert stage.kind == "eager"
     assert stage.args == []
-    assert stage.stage_env(c, s) == {
-        "CUPYNUMERIC_FORCE_THUNK": "eager",
-        "CUPYNUMERIC_MIN_CPU_CHUNK": "2000000000",
-        "CUPYNUMERIC_MIN_OMP_CHUNK": "2000000000",
-        "CUPYNUMERIC_MIN_GPU_CHUNK": "2000000000",
-    }
+    assert stage.stage_env(c, s) == {}
     assert stage.spec.workers > 0
 
 

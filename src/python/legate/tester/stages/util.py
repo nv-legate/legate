@@ -24,15 +24,6 @@ MANUAL_CONFIG_ENV = {"LEGATE_AUTO_CONFIG": "0"}
 
 UNPIN_ENV = {"REALM_SYNTHETIC_CORE_MAP": ""}
 
-# Raise min chunk sizes for deferred codepaths to force eager execution
-EAGER_ENV = {
-    "CUPYNUMERIC_FORCE_THUNK": "eager",
-    "CUPYNUMERIC_MIN_CPU_CHUNK": "2000000000",
-    "CUPYNUMERIC_MIN_OMP_CHUNK": "2000000000",
-    "CUPYNUMERIC_MIN_GPU_CHUNK": "2000000000",
-}
-
-
 RankShard: TypeAlias = tuple[int, ...]
 
 
