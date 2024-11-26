@@ -7,4 +7,3 @@ API Reference
 
   Python API Reference <python/index.rst>
   C++ API Reference <cpp/index.rst>
-  Changelog <changes/index.rst>

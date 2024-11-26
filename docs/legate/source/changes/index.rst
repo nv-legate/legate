@@ -1,5 +1,5 @@
-API Reference
-=============
+Change Log
+==========
 
 .. toctree::
   :maxdepth: 1

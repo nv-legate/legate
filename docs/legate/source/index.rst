@@ -24,6 +24,7 @@ on a supercomputer without any code modifications.
   :maxdepth: 1
 
   Versions <versions.rst>
+  Changelog <changes/index.rst>
 
 .. toctree::
   :maxdepth: 2
