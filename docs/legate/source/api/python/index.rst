@@ -11,3 +11,12 @@ Python API Reference
    classes
    tasks
    settings
+
+
+Experimental API
+----------------
+
+.. toctree::
+   :maxdepth: 2
+
+   io

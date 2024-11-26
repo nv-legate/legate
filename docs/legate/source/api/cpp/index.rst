@@ -17,4 +17,8 @@ C++ API Reference
 Experimental API
 ----------------
 
-:ref:`stl-reference`
+.. toctree::
+   :maxdepth: 1
+
+   io
+   ../../legate.stl/source/reference/index

@@ -32,8 +32,9 @@ configure_file("${DOXYFILE_IN}" "${DOXYFILE_OUT}" @ONLY)
 
 file(MAKE_DIRECTORY "${DOXYGEN_OUTPUT_DIR}") # Doxygen won't create this for us
 
-add_custom_command(OUTPUT "${DOXYGEN_INDEX_FILE}" COMMAND "${DOXYGEN_EXECUTABLE}" Doxyfile
-                   MAIN_DEPENDENCY "${DOXYFILE_OUT}" COMMENT "Generating doxygen output")
+add_custom_command(OUTPUT "${DOXYGEN_INDEX_FILE}" DEPENDS "${DOXYFILE_OUT}"
+                   COMMAND "${DOXYGEN_EXECUTABLE}" "${DOXYFILE_OUT}"
+                   COMMENT "Generating doxygen output")
 
 add_custom_target(Doxygen DEPENDS "${DOXYGEN_INDEX_FILE}" COMMENT "Running doxygen")
 

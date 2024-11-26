@@ -689,6 +689,7 @@ install(FILES legate/utilities/detail/compressed_pair.h
               legate/utilities/detail/enumerate.inl
               legate/utilities/detail/zstring_view.h
               legate/utilities/detail/zstring_view.inl
+              legate/utilities/detail/doxygen.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail)
 
 # ########################################################################################

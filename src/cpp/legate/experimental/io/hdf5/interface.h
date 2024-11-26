@@ -13,11 +13,24 @@
 #pragma once
 
 #include <legate/data/logical_array.h>
+#include <legate/utilities/detail/doxygen.h>
 
 #include <filesystem>
 #include <string_view>
 
+/**
+ * @defgroup io_hdf5 HDF5
+ * @ingroup io
+ *
+ * @brief I/O operations backed by HDF5.
+ */
+
 namespace legate::experimental::io::hdf5 {
+
+/**
+ * @addtogroup io_hdf5
+ * @{
+ */
 
 /**
  * @brief An exception thrown when a HDF5 datatype could not be converted to a Type.
@@ -80,5 +93,7 @@ class InvalidDataSetError : public std::invalid_argument {
  */
 [[nodiscard]] LogicalArray from_file(const std::filesystem::path& file_path,
                                      std::string_view dataset_name);
+
+/** @} */
 
 }  // namespace legate::experimental::io::hdf5

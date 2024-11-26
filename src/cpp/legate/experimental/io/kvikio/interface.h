@@ -13,6 +13,7 @@
 #pragma once
 
 #include <legate/data/logical_array.h>
+#include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
 #include <filesystem>
@@ -26,7 +27,19 @@ class Type;
 
 }  // namespace legate
 
+/**
+ * @defgroup io_kvikio KVikIO
+ * @ingroup io
+ *
+ * @brief I/O operations backed by KVikIO.
+ */
+
 namespace legate::experimental::io::kvikio {
+
+/**
+ * @addtogroup io_kvikio
+ * @{
+ */
 
 /**
  * @brief Read a LogicalArray from a file.
@@ -252,5 +265,7 @@ void to_file(const std::filesystem::path& file_path,
                                                 const Type& type,
                                                 const std::vector<std::uint64_t>& offsets,
                                                 const std::vector<std::uint64_t>& tile_shape);
+
+/** @} */
 
 }  // namespace legate::experimental::io::kvikio
