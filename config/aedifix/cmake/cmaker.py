@@ -245,7 +245,7 @@ class CMaker:
         if not build_dir.exists():
             build_dir.mkdir(parents=True)
         args = self._canonical_args()
-        cmake_exe = args.pop("CMAKE_EXECUTABLE").value
+        cmake_exe = args.pop("CMAKE_COMMAND").value
         generator = args.pop("CMAKE_GENERATOR")
         # These commands should not go in the cmake_command.txt since they
         # pertain only to this precise invocation.

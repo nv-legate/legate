@@ -43,7 +43,7 @@ _default_gen = _determine_default_generator()
 
 
 class CMake(Package):
-    CMAKE_EXECUTABLE: Final = ConfigArgument(
+    CMAKE_COMMAND: Final = ConfigArgument(
         name="--cmake-executable",
         spec=ArgSpec(
             dest="cmake_executable",
@@ -52,7 +52,7 @@ class CMake(Package):
             default=_cmake_exe,
             help="Path to CMake executable (if not on PATH).",
         ),
-        cmake_var=CMAKE_VARIABLE("CMAKE_EXECUTABLE", CMakePath, prefix=""),
+        cmake_var=CMAKE_VARIABLE("CMAKE_COMMAND", CMakePath, prefix=""),
     )
     CMAKE_GENERATOR: Final = ConfigArgument(
         name="--cmake-generator",
@@ -84,7 +84,7 @@ class CMake(Package):
         RuntimeError
             If the cmake version is not all numeric.
         """
-        cmake_exe = self.manager.get_cmake_variable(self.CMAKE_EXECUTABLE)
+        cmake_exe = self.manager.get_cmake_variable(self.CMAKE_COMMAND)
         version = (
             self.log_execute_command([cmake_exe, "--version"])
             .stdout.splitlines()[0]  # "cmake version XX.YY.ZZ"
@@ -104,7 +104,7 @@ class CMake(Package):
     def configure_core_cmake_variables(self) -> None:
         r"""Configure the core cmake variables"""
         self.manager.set_cmake_variable(
-            self.CMAKE_EXECUTABLE, self.cl_args.cmake_executable.value
+            self.CMAKE_COMMAND, self.cl_args.cmake_executable.value
         )
         self.manager.set_cmake_variable(
             self.CMAKE_GENERATOR, self.cl_args.cmake_generator.value
@@ -127,12 +127,12 @@ class CMake(Package):
         lines = [
             (
                 "Executable",
-                self.manager.get_cmake_variable(self.CMAKE_EXECUTABLE),
+                self.manager.read_cmake_variable(self.CMAKE_COMMAND),
             ),
             ("Version", self.version),
             (
                 "Generator",
-                self.manager.get_cmake_variable(self.CMAKE_GENERATOR),
+                self.manager.read_cmake_variable(self.CMAKE_GENERATOR),
             ),
         ]
 

@@ -113,12 +113,6 @@ class Package(Configurable):
             )
         return self._state
 
-    def force_enable(self) -> None:
-        r"""Force a package to be enabled."""
-        self.log(f"Forcing {self.name} to always be enabled!")
-        self._state = EnableState(value=True, explicit=self.state.explicit)
-        self._always_enabled = True
-
     def add_options(self, parser: ArgumentParser) -> None:
         r"""Add options for a package.
 

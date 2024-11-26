@@ -1,0 +1,29 @@
+#!@PYTHON_EXECUTABLE@
+# SPDX-FileCopyrightText: Copyright (c) @YEAR@ NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+from __future__ import annotations
+
+import sys
+
+sys.path.insert(0, "@PROJECT_DIR@")
+
+from config.aedifix.main import basic_configure
+
+from @MAIN_PACKAGE_MODULE@ import @MAIN_PACKAGE_TYPE@
+
+
+def main() -> int:
+    argv = [@ARGV_LIST@] + sys.argv[1:]
+    return basic_configure(tuple(argv), @MAIN_PACKAGE_TYPE@)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -111,11 +111,17 @@ class GASNet(Package):
             A summary of configured GASNet.
         """
         lines = []
-        if root_dir := self.manager.get_cmake_variable(self.GASNet_ROOT_DIR):
+        if root_dir := self.manager.read_or_get_cmake_variable(
+            self.GASNet_ROOT_DIR
+        ):
             lines.append(("Root directory", root_dir))
-        if conduit := self.manager.get_cmake_variable(self.GASNet_CONDUIT):
+        if conduit := self.manager.read_or_get_cmake_variable(
+            self.GASNet_CONDUIT
+        ):
             lines.append(("Conduit(s)", conduit))
-        if system := self.manager.get_cmake_variable(self.GASNet_SYSTEM):
+        if system := self.manager.read_or_get_cmake_variable(
+            self.GASNet_SYSTEM
+        ):
             lines.append(("System", system))
         return self.create_package_summary(lines)
 

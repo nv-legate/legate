@@ -58,9 +58,8 @@ class NCCL(Package):
             A summary of configured NCCL.
         """
         lines = []
-        if self.state.enabled():
-            if nccl_dir := self.manager.get_cmake_variable(self.NCCL_DIR):
-                lines.append(("Root dir", nccl_dir))
+        if nccl_dir := self.manager.read_or_get_cmake_variable(self.NCCL_DIR):
+            lines.append(("Root dir", nccl_dir))
         return self.create_package_summary(lines)
 
 

@@ -13,6 +13,7 @@ from __future__ import annotations
 import ctypes.util
 from typing import TYPE_CHECKING, Final
 
+from ...cmake import CMAKE_VARIABLE, CMakeString
 from ...util.argument_parser import ArgSpec, ConfigArgument
 from ..package import EnableState, Package
 
@@ -27,6 +28,8 @@ class OpenMP(Package):
             dest="with_openmp", type=bool, help="Build with OpenMP support."
         ),
     )
+    OpenMP_VERSION = CMAKE_VARIABLE("OpenMP_VERSION", CMakeString)
+    OpenMP_CXX_FLAGS = CMAKE_VARIABLE("OpenMP_CXX_FLAGS", CMakeString)
 
     def __init__(self, manager: ConfigurationManager) -> None:
         super().__init__(manager=manager, name="OpenMP")
@@ -57,9 +60,18 @@ class OpenMP(Package):
         summary : str
             The summary of OpenMP
         """
+        if not self.state.enabled():
+            return ""
+
         lines = []
-        if self.state.enabled():
-            lines.append(("Enabled", True))
+        if version := self.manager.read_or_get_cmake_variable(
+            self.OpenMP_VERSION
+        ):
+            lines.append(("Version", version))
+        if flags := self.manager.read_or_get_cmake_variable(
+            self.OpenMP_CXX_FLAGS
+        ):
+            lines.append(("Flags", flags))
         return self.create_package_summary(lines)
 
 

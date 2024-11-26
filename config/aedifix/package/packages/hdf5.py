@@ -64,10 +64,12 @@ class HDF5(Package):
         summary : str
             A summary of configured HDF5.
         """
+        if not self.state.enabled():
+            return ""
+
         lines = []
-        if self.state.enabled():
-            if root_dir := self.manager.get_cmake_variable(self.HDF5_ROOT):
-                lines.append(("Root directory", root_dir))
+        if root_dir := self.manager.read_or_get_cmake_variable(self.HDF5_ROOT):
+            lines.append(("Root directory", root_dir))
         return self.create_package_summary(lines)
 
 

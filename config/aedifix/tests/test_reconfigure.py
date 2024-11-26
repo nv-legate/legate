@@ -14,12 +14,15 @@ from __future__ import annotations
 import os
 import random
 import sys
-import textwrap
 from pathlib import Path
+from typing import Any
 
 import pytest
+from pytest import MonkeyPatch
 
+from ..cmake.cmake_flags import CMakeString
 from ..reconfigure import Reconfigure
+from ..util.utility import subprocess_capture_output
 from .fixtures.dummy_main_module import DummyMainModule
 from .fixtures.dummy_manager import DummyManager
 
@@ -27,6 +30,80 @@ from .fixtures.dummy_manager import DummyManager
 @pytest.fixture
 def reconf(manager: DummyManager) -> Reconfigure:
     return Reconfigure(manager)
+
+
+TEST_SANITIZED_ARGV_ARGS: tuple[
+    tuple[tuple[str, ...], set[str], list[str], list[str]], ...
+] = (
+    (
+        (
+            "--arg_1",
+            "value_1",
+            "--arg2=value2",
+            "--ephem_1",
+            "--ephem_2=value2",
+            "--ephem_3",
+            "value3",
+            "--arg-end",
+        ),
+        {"--ephem_1", "--ephem_2", "--ephem_3"},
+        [],
+        [
+            "--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}",
+            "--arg_1",
+            "value_1",
+            "--arg2=value2",
+            "--arg-end",
+        ],
+    ),
+    (
+        tuple(),
+        set(),
+        list(),
+        ["--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}"],
+    ),
+    (
+        ("--arg_1", "value_1", "--arg2=value2", "--arg-end"),
+        set(),
+        ["-DFOO=BAR", "-DBAZ='BOP BLIP'"],
+        [
+            "--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}",
+            "--arg_1",
+            "value_1",
+            "--arg2=value2",
+            "--arg-end",
+            "--",
+            "-DFOO=BAR",
+            "-DBAZ='BOP BLIP'",
+        ],
+    ),
+    (
+        (
+            "--arg_1",
+            "value_1",
+            "--arg2=value2",
+            "--arg-ephem",
+            "--arg-end",
+            "--",
+            "-DFOO=BAZ",
+        ),
+        {
+            "--arg-ephem",
+        },
+        ["-DFOO=BAR", "-DBAZ='BOP BLIP'"],
+        [
+            "--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}",
+            "--arg_1",
+            "value_1",
+            "--arg2=value2",
+            "--arg-end",
+            "--",
+            "-DFOO=BAZ",
+            "-DFOO=BAR",
+            "-DBAZ='BOP BLIP'",
+        ],
+    ),
+)
 
 
 class TestReconfigure:
@@ -44,6 +121,14 @@ class TestReconfigure:
         )
         assert not reconf.reconfigure_file.parent.exists()
         assert not reconf.reconfigure_file.exists()
+
+    def test_get_import_line(self) -> None:
+        class DummyClass:
+            pass
+
+        mod_name, type_name = Reconfigure.get_import_line(DummyClass)
+        assert mod_name == "config.aedifix.tests.test_reconfigure"
+        assert type_name == "DummyClass"
 
     def ensure_reconfigure_file(
         self, reconfigure: Reconfigure, link_symlink: bool
@@ -101,193 +186,55 @@ class TestReconfigure:
         assert reconf._backup is None
 
     @pytest.mark.parametrize(
-        "pre_create_symlink,link_symlink",
-        # no point in doing (False, True) combination as link_symlink has no
-        # effect then anyways
-        ((True, True), (True, False), (False, False)),
+        "argv, ephemeral_args, extra_argv, expected", TEST_SANITIZED_ARGV_ARGS
     )
-    def test_emit_file(
+    def test_sanitized_argv(
         self,
         reconf: Reconfigure,
-        AEDIFIX_PYTEST_DIR: Path,
-        pre_create_symlink: bool,
-        link_symlink: bool,
+        AEDIFIX_PYTEST_ARCH: str,
+        argv: tuple[str, ...],
+        ephemeral_args: set[str],
+        extra_argv: list[str],
+        expected: list[str],
     ) -> None:
-        if pre_create_symlink:
-            # This will create a reconfigure file with other text in it, let's
-            # ensure that we are properly overwriting that.
-            reconf_file, symlink = self.ensure_reconfigure_file(
-                reconf, link_symlink=link_symlink
-            )
-            assert reconf_file.exists()
-            if link_symlink:
-                assert symlink.exists()
-            else:
-                assert not symlink.exists()
-        else:
-            reconf_file = reconf.reconfigure_file
-            reconf_file.parent.mkdir(exist_ok=False)
-            symlink = AEDIFIX_PYTEST_DIR / reconf_file.name
-            assert not reconf_file.exists()
-            assert not symlink.exists()
-
-        text = r"""
-        foo, bar, baz
-        bop
-        quux
-        {random_number}
-        """.format(
-            random_number=random.random()
-        )
-
-        reconf.emit_file(text)
-
-        assert reconf_file.exists()
-        assert reconf_file.is_file()
-        assert os.access(reconf_file, os.X_OK)
-        assert reconf_file.read_text() == text
-
-        assert symlink.exists()
-        assert symlink.is_symlink()
-        assert symlink.parent / symlink.readlink() == reconf_file
-
-    def pre_test_finalize(
-        self, reconf: Reconfigure, argv: tuple[str, ...]
-    ) -> Path:
-        assert isinstance(reconf.manager, DummyManager)
-        reconf.manager.set_argv(argv)
-        reconf_file = reconf.reconfigure_file
-        assert not reconf_file.exists()
-        reconf_file.parent.mkdir(exist_ok=False)
-        return reconf_file
-
-    def post_test_finalize(
-        self, reconf_file: Path, symlink: Path, main_fn: str
-    ) -> None:
-        assert reconf_file.exists()
-        assert reconf_file.is_file()
-        assert os.access(reconf_file, os.X_OK)
-        text = reconf_file.read_text()
-        assert "import DummyMainModule" in text
-        main_fn = textwrap.dedent(main_fn).strip()
-        assert main_fn in text
-
-        assert symlink.exists()
-        assert symlink.is_symlink()
-        assert symlink.parent / symlink.readlink() == reconf_file
+        ret = reconf.sanitized_argv(argv, ephemeral_args, extra_argv)
+        expected = [
+            s.format(AEDIFIX_PYTEST_ARCH=AEDIFIX_PYTEST_ARCH) for s in expected
+        ]
+        assert ret == expected
 
     def test_finalize(
         self,
         reconf: Reconfigure,
         AEDIFIX_PYTEST_DIR: Path,
-        AEDIFIX_PYTEST_ARCH: str,
+        monkeypatch: MonkeyPatch,
     ) -> None:
-        argv = (
-            "--arg_1",
-            "value_1",
-            "--arg2=value2",
-            "--ephem_1",
-            "--ephem_2=value2",
-            "--ephem_3",
-            "value3",
-            "--arg-end",
-        )
-        ephemeral_args = {"--ephem_1", "--ephem_2", "--ephem_3"}
-        main_fn = r"""
-        def main() -> int:
-            argv = [
-                "--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}",
-                "--arg_1",
-                "value_1",
-                "--arg2=value2",
-                "--arg-end",
-            ] + sys.argv[1:]
-            return basic_configure(
-                tuple(argv), DummyMainModule
-            )
+        reconf_file = reconf.reconfigure_file
+        assert not reconf_file.exists()
+        reconf_file.parent.mkdir(exist_ok=False)
 
-        if __name__ == "__main__":
-            sys.exit(main())
-        """.format(
-            AEDIFIX_PYTEST_ARCH=AEDIFIX_PYTEST_ARCH
-        )
+        def log_execute_command(cmd: list[Any], **kwargs: Any) -> None:
+            subprocess_capture_output(list(map(str, cmd)))
 
-        reconf_file = self.pre_test_finalize(reconf=reconf, argv=argv)
-        reconf.finalize(DummyMainModule, ephemeral_args)
-        self.post_test_finalize(
-            reconf_file=reconf_file,
-            symlink=AEDIFIX_PYTEST_DIR / reconf_file.name,
-            main_fn=main_fn,
+        monkeypatch.setattr(
+            reconf.manager, "log_execute_command", log_execute_command
         )
+        reconf.manager.register_cmake_variable(CMakeString("CMAKE_COMMAND"))
+        reconf.manager.set_cmake_variable("CMAKE_COMMAND", "cmake")
 
-    def test_finalize_bare_argv(
-        self,
-        reconf: Reconfigure,
-        AEDIFIX_PYTEST_DIR: Path,
-        AEDIFIX_PYTEST_ARCH: str,
-    ) -> None:
-        argv: tuple[str, ...] = tuple()
-        ephemeral_args: set[str] = set()
-        main_fn = r"""
-        def main() -> int:
-            argv = [
-                "--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}",
-            ] + sys.argv[1:]
-            return basic_configure(
-                tuple(argv), DummyMainModule
-            )
+        reconf.finalize(DummyMainModule, set())
 
-        if __name__ == "__main__":
-            sys.exit(main())
-        """.format(
-            AEDIFIX_PYTEST_ARCH=AEDIFIX_PYTEST_ARCH
-        )
+        assert reconf_file.exists()
+        assert reconf_file.is_file()
+        assert os.access(reconf_file, os.X_OK)
+        text = reconf_file.read_text()
+        assert "import DummyMainModule" in text
+        assert "return basic_configure(tuple(argv), DummyMainModule)" in text
 
-        reconf_file = self.pre_test_finalize(reconf=reconf, argv=argv)
-        reconf.finalize(DummyMainModule, ephemeral_args)
-        self.post_test_finalize(
-            reconf_file=reconf_file,
-            symlink=AEDIFIX_PYTEST_DIR / reconf_file.name,
-            main_fn=main_fn,
-        )
-
-    def test_finalize_extra_argv(
-        self,
-        reconf: Reconfigure,
-        AEDIFIX_PYTEST_DIR: Path,
-        AEDIFIX_PYTEST_ARCH: str,
-    ) -> None:
-        argv = ("--arg_1", "value_1", "--arg2=value2", "--arg-end")
-        ephemeral_args: set[str] = set()
-        extra_argv = ["-DFOO=BAR", "-DBAZ='BOP BLIP'"]
-        main_fn = r"""
-        def main() -> int:
-            argv = [
-                "--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}",
-                "--arg_1",
-                "value_1",
-                "--arg2=value2",
-                "--arg-end",
-                "--",
-                "-DFOO=BAR",
-                "-DBAZ='BOP BLIP'",
-            ] + sys.argv[1:]
-            return basic_configure(
-                tuple(argv), DummyMainModule
-            )
-
-        if __name__ == "__main__":
-            sys.exit(main())
-        """.format(
-            AEDIFIX_PYTEST_ARCH=AEDIFIX_PYTEST_ARCH
-        )
-        reconf_file = self.pre_test_finalize(reconf=reconf, argv=argv)
-        reconf.finalize(DummyMainModule, ephemeral_args, extra_argv=extra_argv)
-        self.post_test_finalize(
-            reconf_file=reconf_file,
-            symlink=AEDIFIX_PYTEST_DIR / reconf_file.name,
-            main_fn=main_fn,
-        )
+        symlink = AEDIFIX_PYTEST_DIR / reconf_file.name
+        assert symlink.exists()
+        assert symlink.is_symlink()
+        assert symlink.parent / symlink.readlink() == reconf_file
 
 
 if __name__ == "__main__":

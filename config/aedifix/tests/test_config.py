@@ -32,10 +32,6 @@ class TestConfigFile:
         template.touch()
         config = ConfigFile(manager=manager, config_file_template=template)
 
-        assert config.cmake_configure_file.exists()
-        assert config.cmake_configure_file.is_file()
-        assert "configure_file" in config.cmake_configure_file.read_text()
-
         assert config.template_file.exists()
         assert config.template_file.is_file()
         assert config.template_file == template

@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import enum
 import platform
+import re
+import shlex
 import subprocess
 import sysconfig
 from collections.abc import Callable, Iterable, Sequence
@@ -24,9 +26,12 @@ from subprocess import (
     TimeoutExpired,
 )
 from sys import version_info
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, Final, TypeVar
 
 from .exception import CommandError
+
+if TYPE_CHECKING:
+    from ..base import Configurable
 
 _T = TypeVar("_T")
 
@@ -452,3 +457,55 @@ def partition_argv(argv: Iterable[str]) -> tuple[list[str], list[str]]:
             main_argv.append(arg)
 
     return main_argv, rest_argv
+
+
+CMAKE_TEMPLATES_DIR: Final = Path(__file__).resolve().parents[1] / "templates"
+CMAKE_CONFIGURE_FILE: Final = CMAKE_TEMPLATES_DIR / "configure_file.cmake"
+
+assert (
+    CMAKE_CONFIGURE_FILE.exists()
+), f"Cmake configure file {CMAKE_CONFIGURE_FILE} does not exist"
+assert (
+    CMAKE_CONFIGURE_FILE.is_file()
+), f"Cmake configure file {CMAKE_CONFIGURE_FILE} is not a file"
+
+
+def cmake_configure_file(
+    obj: Configurable, src_file: Path, dest_file: Path, defs: dict[str, Any]
+) -> None:
+    r"""Configure a file using CMake's configure_file().
+
+    Parameters
+    ----------
+    obj : Configurable
+        The configurable to use to launch the cmake command.
+    src_file : Path
+        The input file (i.e. the "template" file) to configure.
+    dest_file : Path
+        The destination file, where the output should be written.
+    defs : dict[str, Any]
+        A mapping of variable names to values to be replaced. I.e. ``@key@``
+        will be replaced by ``value``.
+    """
+    cmake_exe = obj.manager.read_or_get_cmake_variable("CMAKE_COMMAND")
+    base_cmd = [
+        cmake_exe,
+        f"-DAEDIFIX_CONFIGURE_FILE_SRC={src_file}",
+        f"-DAEDIFIX_CONFIGURE_FILE_DEST={dest_file}",
+    ]
+    defs_cmd = [
+        f"-D{key}={shlex.quote(str(value))}" for key, value in defs.items()
+    ]
+
+    if unhandled_subs := {
+        var_name
+        for var_name in re.findall(r"@([\w_]+)@", src_file.read_text())
+        if var_name not in defs
+    }:
+        raise ValueError(
+            f"Substitution(s) {unhandled_subs} for {src_file} not found in "
+            f"defs {defs.keys()}"
+        )
+
+    cmd = base_cmd + defs_cmd + ["-P", CMAKE_CONFIGURE_FILE]
+    obj.log_execute_command(cmd)

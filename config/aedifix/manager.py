@@ -733,7 +733,7 @@ class ConfigurationManager:
         """
         try:
             return self.read_cmake_variable(name)
-        except ValueError:
+        except (ValueError, FileNotFoundError):
             return self.get_cmake_variable(name)
 
     # Logging

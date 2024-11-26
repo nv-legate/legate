@@ -335,7 +335,7 @@ class Legate(MainPackage):
         self.log(f"Minimum cmake version required: {min_ver}")
         if version_parse(self.cmake.version) < version_parse(min_ver):
             cmake_exe = self.manager.get_cmake_variable(
-                self.cmake.CMAKE_EXECUTABLE
+                self.cmake.CMAKE_COMMAND
             )
             raise RuntimeError(
                 f"CMake executable {cmake_exe} too old! Expected version "

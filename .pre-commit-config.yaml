@@ -6,7 +6,7 @@ repos:
       - id: check-json  # checks that all json files have proper syntax
       - id: check-toml  # checks that all toml files have proper syntax
       - id: debug-statements  # check for debug statements
-        exclude: '^config/aedifix/main.py$'  # intentional
+        exclude: '^(config/aedifix/main.py|config/aedifix/templates/.*)$'  # intentional
       - id: end-of-file-fixer  # check all files end in a newline
         # handled by clang-format
         exclude_types: [c, c++, cuda]
@@ -25,10 +25,12 @@ repos:
     rev: 24.8.0
     hooks:
       - id: black
+        exclude: '^config/aedifix/templates/.*$'
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.1
     hooks:
       - id: flake8
+        exclude: '^config/aedifix/templates/.*$'
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: 'v18.1.8'
     hooks:

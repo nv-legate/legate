@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Final
 
 from .base import Configurable
 from .util.exception import UnsatisfiableConfigurationError
+from .util.utility import cmake_configure_file
 
 if TYPE_CHECKING:
     from .manager import ConfigurationManager
@@ -52,17 +53,6 @@ class ConfigFile(Configurable):
         """
         super().__init__(manager=manager)
         self._config_file_template = config_file_template.resolve()
-
-        self._cmake_configure_file = (
-            Path(__file__).resolve().parent / "configure_file.cmake"
-        )
-        assert (
-            self._cmake_configure_file.exists()
-        ), f"Cmake configure file {self._cmake_configure_file} does not exist"
-        assert (
-            self._cmake_configure_file.is_file()
-        ), f"Cmake configure file {self._cmake_configure_file} is not a file"
-
         self._default_subst = {"PYTHON_EXECUTABLE": sys.executable}
 
     @property
@@ -92,19 +82,7 @@ class ConfigFile(Configurable):
         """
         return self.project_arch_dir / "gmakevariables"
 
-    @property
-    def cmake_configure_file(self) -> Path:
-        r"""Return the cmake configure file to use to generate the
-        project config file.
-
-        Returns
-        -------
-        configure_file : Path
-            The path to the cmake configure file.
-        """
-        return self._cmake_configure_file
-
-    def _cmake_cache_to_cmd_line_args(self, cmake_cache: Path) -> list[str]:
+    def _read_entire_cmake_cache(self, cmake_cache: Path) -> dict[str, str]:
         r"""Read a CMakeCache.txt and convert all of the cache values to
         CMake command-line values in the form of -DNAME=VALUE.
 
@@ -135,15 +113,10 @@ class ConfigFile(Configurable):
                 cmake_variable_re.match(line.lstrip())
                 for line in filter(keep_line, fd)
             )
-            lines = [
-                f"-D{m.group('name')}={m.group('value')}"
-                for m in line_gen
-                if m
-            ]
+            defs = {m.group("name"): m.group("value") for m in line_gen if m}
+        return defs
 
-        return lines
-
-    def _make_aedifix_substitutions(self, text: str) -> list[str]:
+    def _make_aedifix_substitutions(self, text: str) -> dict[str, str]:
         r"""Read the template file and find any aedifix-specific variable
         subsitutions. Return a list of CMake command line arguments with the
         requested substitution value.
@@ -179,18 +152,18 @@ class ConfigFile(Configurable):
                 f"Unknown project variable: {var!r}"
             )
 
-        ret = []
+        ret = {}
         aedifix_vars = set(re.findall(r"@AEDIFIX_([^\s]+?)@", text))
         for var in aedifix_vars:
-            value = make_subst(var)
-            match str(value).casefold():
+            value = str(make_subst(var))
+            match value.casefold():
                 case "on" | "yes" | "true":
                     value = "1"
                 case "off" | "no" | "false":
                     value = "0"
                 case _:
                     pass
-            ret.append(f"-DAEDIFIX_{var}={value}")
+            ret[f"AEDIFIX_{var}"] = value
         return ret
 
     def finalize(self) -> None:
@@ -207,21 +180,13 @@ class ConfigFile(Configurable):
         self.log(f"Using project file: {project_file}")
         self.log(f"Using template file: {template_file}")
 
-        cmake_exe = self.manager.read_cmake_variable("CMAKE_COMMAND")
         cache_vars = self.log_execute_func(
-            self._cmake_cache_to_cmd_line_args,
+            self._read_entire_cmake_cache,
             self.project_cmake_dir / "CMakeCache.txt",
         )
         aedifix_vars = self.log_execute_func(
             self._make_aedifix_substitutions, template_file.read_text()
         )
-        rest_vars = [
-            f"-DAEDIFIX_CONFIGURE_FILE_SRC={template_file}",
-            f"-DAEDIFIX_CONFIGURE_FILE_DEST={project_file}",
-            "-P",
-            self.cmake_configure_file,
-        ]
-        self.log_execute_command(
-            [cmake_exe] + cache_vars + aedifix_vars + rest_vars
-        )
+        defs = cache_vars | aedifix_vars
+        cmake_configure_file(self, template_file, project_file, defs)
         self.log(f"Wrote to project file: {project_file}")

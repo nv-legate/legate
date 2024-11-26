@@ -10,7 +10,6 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from argparse import Namespace
 from collections.abc import Callable, Sequence
 from typing import Any, ParamSpec, TypeVar
 
@@ -24,23 +23,16 @@ _P = ParamSpec("_P")
 
 
 class DummyManager(ConfigurationManager):
-    def set_argv(self, argv: tuple[str, ...]) -> tuple[str, ...]:
-        old = self._argv
-        self._argv = argv
-        return old
-
-    def set_cl_args(self, cl_args: Namespace) -> Namespace | None:
-        old = self._cl_args
-        self._cl_args = cl_args
-        return old
-
     def log(self, *args: Any, **kwargs: Any) -> None:
+        pass
+
+    def log_divider(self, *args: Any, **kwargs: Any) -> None:
         pass
 
     def log_boxed(self, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def log_divider(self, *args: Any, **kwargs: Any) -> None:
+    def log_warning(self, *args: Any, **kwargs: Any) -> None:
         pass
 
     def log_execute_command(

@@ -107,7 +107,7 @@ class TestInfo:
         assert not self.cmakecache_txt.exists()
         assert not self.command_spec.exists()
 
-    def post_test(self, argv: Argv, expected_spec: CMakeCommandSpec) -> None:
+    def post_test(self, expected_spec: CMakeCommandSpec) -> None:
         # basics
         assert self.arch_dir.is_dir()
         # configure.log
@@ -124,23 +124,6 @@ class TestInfo:
         # reconfigure
         assert self.reconfigure.exists()
         assert self.reconfigure.is_file()
-        argv_lines = []
-        with self.reconfigure.open() as fd:
-            capturing = False
-            for line in map(str.strip, fd):
-                if line.startswith("argv = ["):
-                    capturing = True
-                elif capturing:
-                    if line.startswith("] + sys.argv[1:]"):
-                        break
-                    argv_lines.append(line)
-        # argv_lines should alwyas be one longer than argv, since configure
-        # will insert the implicit --AEDIFIX_PYTEST_ARCH=<whatever> as the
-        # first argument
-        expected_argv = [
-            f'"--AEDIFIX_PYTEST_ARCH={self.AEDIFIX_PYTEST_ARCH}",'
-        ] + [f'"{arg}",' for arg in argv]
-        assert argv_lines == expected_argv
 
         assert self.reconfigure_symlink.exists()
         assert self.reconfigure_symlink.is_symlink()
@@ -275,7 +258,7 @@ class TestMain:
 
         ret = basic_configure(argv, DummyMainModule)
         assert ret == 0
-        test_info.post_test(argv, expected_spec)
+        test_info.post_test(expected_spec)
 
     def test_basic_configure_release(
         self, AEDIFIX_PYTEST_DIR: Path, AEDIFIX_PYTEST_ARCH: str
@@ -308,7 +291,7 @@ class TestMain:
 
         ret = basic_configure(argv, DummyMainModule)
         assert ret == 0
-        test_info.post_test(argv, expected_spec)
+        test_info.post_test(expected_spec)
 
     def test_basic_configure_relwithdebinfo(
         self, AEDIFIX_PYTEST_DIR: Path, AEDIFIX_PYTEST_ARCH: str
@@ -341,7 +324,7 @@ class TestMain:
 
         ret = basic_configure(argv, DummyMainModule)
         assert ret == 0
-        test_info.post_test(argv, expected_spec)
+        test_info.post_test(expected_spec)
 
     def test_basic_configure_clang_debug(
         self, AEDIFIX_PYTEST_DIR: Path, AEDIFIX_PYTEST_ARCH: str
@@ -404,7 +387,7 @@ class TestMain:
 
         ret = basic_configure(argv, DummyMainModule)
         assert ret == 0
-        test_info.post_test(argv, expected_spec)
+        test_info.post_test(expected_spec)
 
     def test_extra_argv(
         self, AEDIFIX_PYTEST_DIR: Path, AEDIFIX_PYTEST_ARCH: str
@@ -447,7 +430,7 @@ class TestMain:
 
         ret = basic_configure(argv, DummyMainModule)
         assert ret == 0
-        test_info.post_test(argv, expected_spec)
+        test_info.post_test(expected_spec)
 
 
 if __name__ == "__main__":
