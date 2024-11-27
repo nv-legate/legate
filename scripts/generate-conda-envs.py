@@ -100,6 +100,7 @@ class CUDAConfig(SectionConfig):
                 "cuda-driver-dev",
                 "cuda-nvml-dev",
                 "cuda-nvtx-dev",
+                "cuda-cupti-dev",
                 "libcublas-dev",
                 "libcufft-dev",
                 "libcufile-dev",

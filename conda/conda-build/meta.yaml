@@ -178,6 +178,7 @@ requirements:
     - cuda-nvtx-dev
     - cuda-nvml-dev
     - cuda-driver-dev
+    - cuda-cupti-dev
     - libcublas-dev
     - libcufft-dev
     - libcurand-dev
