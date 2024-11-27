@@ -76,7 +76,7 @@ function(legate_generate_fatbin_modules)
                                   # headers from these libraries, we have to include
                                   # them...
                                   Legion::Legion
-                                  fmt::fmt)
+                                  fmt::fmt-header-only)
     # Don't use cuda_flags for this since it does not handle generator expressions.
     target_compile_options("${fatbin_target_name}"
                            PRIVATE $<$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>:

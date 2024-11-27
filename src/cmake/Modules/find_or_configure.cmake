@@ -12,10 +12,76 @@
 
 include_guard(GLOBAL)
 
+function(legate_find_or_configure_init)
+  set(legate_DEP_INSTALL_LIBDIR "${CMAKE_INSTALL_LIBDIR}/legate/deps" PARENT_SCOPE)
+  set(legate_DEP_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/deps"
+      PARENT_SCOPE)
+  set(legate_DEP_INSTALL_BINDIR "${CMAKE_INSTALL_BINDIR}/legate/deps" PARENT_SCOPE)
+  set(legate_FIND_OR_CONFIGURE_INIT ON PARENT_SCOPE)
+endfunction()
+
+function(legate_install_dependencies)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "install_dependency")
+
+  set(one_value_args "FIXUP_TARGET")
+  set(multi_value_args "TARGETS")
+  cmake_parse_arguments(_LEGATE "" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+  if(NOT _LEGATE_TARGETS)
+    message(FATAL_ERROR "Must pass TARGETS")
+  endif()
+
+  if(NOT legate_FIND_OR_CONFIGURE_INIT)
+    message(FATAL_ERROR "Must call legate_find_or_configure_init() first")
+  endif()
+
+  foreach(target IN LISTS _LEGATE_TARGETS)
+    if(NOT TARGET ${target})
+      message(FATAL_ERROR "Target ${target} is not a target")
+    endif()
+
+    get_target_property(imported ${target} IMPORTED)
+    if(imported)
+      continue()
+    endif()
+
+    get_target_property(base_target ${target} ALIASED_TARGET)
+    if(base_target)
+      set(target ${base_target})
+    endif()
+
+    if(_LEGATE_FIXUP_TARGET)
+      cmake_language(CALL "${_LEGATE_FIXUP_TARGET}" ${target})
+    endif()
+
+    # cmake-format: off
+    install(
+      TARGETS "${target}"
+      ARCHIVE
+        NAMELINK_SKIP
+        DESTINATION "${legate_DEP_INSTALL_LIBDIR}"
+      LIBRARY
+        NAMELINK_SKIP
+        DESTINATION "${legate_DEP_INSTALL_LIBDIR}"
+      RUNTIME
+        DESTINATION "${legate_DEP_INSTALL_BINDIR}"
+      PUBLIC_HEADER
+        DESTINATION "${legate_DEP_INSTALL_INCLUDEDIR}"
+      PRIVATE_HEADER
+        DESTINATION "${legate_DEP_INSTALL_INCLUDEDIR}"
+      INCLUDES DESTINATION "${legate_DEP_INSTALL_INCLUDEDIR}")
+    # cmake-format: on
+  endforeach()
+endfunction()
+
 # This guy needs to be a macro in case the find_or_configure_<package> sets variables it
 # expects to be exposed in the caller
 macro(legate_find_or_configure)
   list(APPEND CMAKE_MESSAGE_CONTEXT "find_or_configure")
+
+  if(NOT legate_FIND_OR_CONFIGURE_INIT)
+    message(FATAL_ERROR "Must call legate_find_or_configure_init() first")
+  endif()
 
   cmake_parse_arguments(_LEGATE_FOC "" "PACKAGE" "" ${ARGN})
 
@@ -34,6 +100,7 @@ macro(legate_find_or_configure)
   if(legate_IGNORE_INSTALLED_PACKAGES AND (NOT ${_LEGATE_FOC_PACKAGE}_ROOT))
     message(STATUS "Ignoring all installed packages when searching for ${_LEGATE_FOC_PACKAGE}"
     )
+    set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON)
     set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
   endif()
 
@@ -73,6 +140,7 @@ macro(legate_find_or_configure)
     # cmake-format: on
     message(STATUS "${_LEGATE_FOC_PACKAGE}_DIR and ${_LEGATE_FOC_PACKAGE}_ROOT undefined, "
                    "forcing CPM to re-use downloaded ${_LEGATE_FOC_PACKAGE} from now on")
+    set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON)
     set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
   endif()
 

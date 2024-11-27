@@ -23,6 +23,8 @@ add_compile_options(-w)
 
 include("${LEGATE_CMAKE_DIR}/Modules/find_or_configure.cmake")
 
+legate_find_or_configure_init()
+
 legate_find_or_configure(PACKAGE fmt)
 
 # More tomfoolery required because of scikit-build-core. scikit-build-core has a "wheel
@@ -88,7 +90,7 @@ function(legate_create_cython_modules)
                                                 # us, since fmt is a PRIVATE dependency of
                                                 # legate (as it is not found in any public
                                                 # includes).
-                                                fmt::fmt
+                                                fmt::fmt-header-only
                                INSTALL_DIR "${skbuild_platlib_relpath}/${rel_path}")
 
   foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)

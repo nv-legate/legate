@@ -19,12 +19,10 @@ function(find_or_configure_nccl)
     return()
   endif()
 
-  rapids_find_generate_module(NCCL HEADER_NAMES nccl.h LIBRARY_NAMES nccl
-                              BUILD_EXPORT_SET legate-exports)
-
+  rapids_find_generate_module(NCCL HEADER_NAMES nccl.h LIBRARY_NAMES nccl)
   # Currently NCCL has no CMake build-system so we require it built and installed on the
   # machine already
-  rapids_find_package(NCCL BUILD_EXPORT_SET legate-exports)
+  rapids_find_package(NCCL)
   if(TARGET NCCL::NCCL)
     return()
   endif()
@@ -58,5 +56,5 @@ function(find_or_configure_nccl)
   endif()
 
   message(VERBOSE "CMAKE_LIBRARY_ARCHITECTURE is set: ${CMAKE_LIBRARY_ARCHITECTURE}")
-  rapids_find_package(NCCL REQUIRED BUILD_EXPORT_SET legate-exports)
+  rapids_find_package(NCCL REQUIRED)
 endfunction()

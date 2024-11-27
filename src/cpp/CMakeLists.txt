@@ -54,10 +54,7 @@ endif()
 # * Dependencies -------------------------------------------------------------
 
 # add third party dependencies using CPM
-set(legate_VERSIONS_JSON "${LEGATE_CMAKE_DIR}/versions/versions.json")
-rapids_cpm_init(OVERRIDE ${legate_VERSIONS_JSON})
-
-include("${LEGATE_CMAKE_DIR}/Modules/find_or_configure.cmake")
+rapids_cpm_init(OVERRIDE "${LEGATE_CMAKE_DIR}/versions/versions.json")
 
 # ########################################################################################
 # * Default Flags -------------------------------------------------------------
@@ -89,11 +86,18 @@ include("${LEGATE_CMAKE_DIR}/Modules/debug_symbols.cmake")
 legate_configure_debug_symbols()
 
 # ########################################################################################
+# * Dependencies ---------------------------------------------------------------------
+
+include("${LEGATE_CMAKE_DIR}/Modules/find_or_configure.cmake")
+
+legate_find_or_configure_init()
+
+# ########################################################################################
 # * CCCL ---------------------------------------------------------------------
 
 # Pull this in before Legion, so that Legion will use the same libcu++ as Legate (the one
 # pull from CCCL)
-legate_find_or_configure(PACKAGE cccl)
+legate_find_or_configure(PACKAGE CCCL)
 
 # ########################################################################################
 # * Python -------------------------------------------------------------------
@@ -179,7 +183,7 @@ legate_find_or_configure(PACKAGE span)
 # ########################################################################################
 # * std::mdspan --------------------------------------------------------------
 
-legate_find_or_configure(PACKAGE mdspan)
+legate_find_or_configure(PACKAGE MDSpan)
 
 # ########################################################################################
 # * fmt::fmt --------------------------------------------------------------
@@ -194,7 +198,7 @@ legate_find_or_configure(PACKAGE argparse)
 # ########################################################################################
 # * Kvikio --------------------------------------------------------------
 
-legate_find_or_configure(PACKAGE kvikio)
+legate_find_or_configure(PACKAGE KvikIO)
 
 # ########################################################################################
 # * HighFive --------------------------------------------------------------
@@ -481,7 +485,8 @@ set_target_properties(legate
                       PROPERTIES EXPORT_NAME legate
                                  LIBRARY_OUTPUT_NAME legate
                                  BUILD_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}"
-                                 INSTALL_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}"
+                                 INSTALL_RPATH
+                                 "${LEGATE_PLATFORM_RPATH_ORIGIN};${LEGATE_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR}"
                                  POSITION_INDEPENDENT_CODE ON
                                  INTERFACE_POSITION_INDEPENDENT_CODE ON
                                  LIBRARY_OUTPUT_DIRECTORY lib
@@ -512,7 +517,7 @@ target_link_libraries(legate
                               # See
                               # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
                               $<TARGET_NAME_IF_EXISTS:CUDA::nvtx3>
-                              fmt::fmt
+                              fmt::fmt-header-only
                               argparse::argparse
                               kvikio::kvikio
                               $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
@@ -556,6 +561,7 @@ target_include_directories(legate
                            PUBLIC $<BUILD_INTERFACE:${legate_LOCAL_INCLUDE_DIR}>
                                   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate>
                            INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate>
+                                     $<INSTALL_INTERFACE:${legate_DEP_INSTALL_INCLUDEDIR}>
 )
 
 include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")

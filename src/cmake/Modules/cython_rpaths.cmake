@@ -67,8 +67,12 @@ function(legate_populate_dependency_rpaths_editable ret_val)
   list(APPEND CMAKE_MESSAGE_CONTEXT "editable")
 
   set(legate_cython_rpaths)
+  set(legate_targets legate::legate Legion::LegionRuntime Legion::RealmRuntime)
+  if(TARGET hdf5_vfd_gds)
+    list(APPEND legate_targets hdf5_vfd_gds)
+  endif()
   # Handle "normal" dependencies which set LIBRARY_OUTPUT_DIRECTORY
-  foreach(target legate::legate Legion::LegionRuntime Legion::RealmRuntime)
+  foreach(target IN LISTS legate_targets)
     get_target_property(imported ${target} IMPORTED)
     if(imported)
       legate_handle_imported_target_rpaths_(legate_cython_rpaths ${target})
@@ -76,26 +80,6 @@ function(legate_populate_dependency_rpaths_editable ret_val)
       legate_handle_normal_target_rpaths_(legate_cython_rpaths ${target})
     endif()
   endforeach()
-
-  # Handle fmt, which does not set LIBRARY_OUTPUT_DIRECTORY, but we know that it will
-  # place its libraries at BINARY_DIR
-  get_target_property(imported fmt::fmt IMPORTED)
-  if(imported)
-    legate_handle_imported_target_rpaths_(legate_cython_rpaths fmt::fmt)
-  else()
-    get_target_property(fmt_bin_dir fmt::fmt BINARY_DIR)
-    if(NOT fmt_bin_dir)
-      message(FATAL_ERROR "Could not determine binary dir for fmt")
-    endif()
-
-    if(NOT IS_ABSOLUTE ${fmt_bin_dir})
-      message(FATAL_ERROR "fmt binary dir is not absolute: ${fmt_bin_dir}")
-    endif()
-
-    message(VERBOSE "adding rpath for normal target fmt::fmt: ${fmt_bin_dir}")
-    list(APPEND legate_cython_rpaths "${fmt_bin_dir}")
-  endif()
-
   list(REMOVE_DUPLICATES legate_cython_rpaths)
   set(${ret_val} "${legate_cython_rpaths}" PARENT_SCOPE)
 endfunction()
@@ -139,7 +123,7 @@ function(legate_populate_cython_dependency_rpaths)
     # site-packages dir, which is always found as
     # /path/to/lib/python3.VERSION/site-packages/. The combined rpaths would make this
     # point to /path/to/lib which seems right. But who knows.
-    set(legate_cython_rpaths "../../")
+    set(legate_cython_rpaths "../../" "../../legate/deps")
   endif()
 
   message(STATUS "legate_cython_rpaths='${legate_cython_rpaths}'")

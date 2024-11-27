@@ -52,6 +52,11 @@
                     "nargs": 0
                 }
             },
+            "find_or_configure_google_test": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "find_or_configure_hdf5_vfd_gds": {
                 "pargs": {
                     "nargs": 0
@@ -260,6 +265,11 @@
                     "nargs": "*"
                 }
             },
+            "legate_find_or_configure_init": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "legate_find_program": {
                 "kwargs": {
                     "FIND_PROGRAM_ARGS": "+"
@@ -332,6 +342,16 @@
                     "flags": [
                         "RECURSIVE"
                     ],
+                    "nargs": "*"
+                }
+            },
+            "legate_install_dependencies": {
+                "kwargs": {
+                    "FIXUP_TARGET": 1,
+                    "TARGETS": "+"
+                },
+                "pargs": {
+                    "flags": [],
                     "nargs": "*"
                 }
             },

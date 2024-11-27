@@ -24,12 +24,7 @@ include(rapids-test)
 
 rapids_test_init()
 
-include(${rapids-cmake-dir}/cpm/gtest.cmake)
-
-# BUILD_EXPORT_SET and INSTALL_EXPORT_SET are crucial, otherwise gtest does not get
-# installed
-rapids_cpm_gtest(BUILD_EXPORT_SET legate-exports INSTALL_EXPORT_SET legate-exports
-                                                                    CPM_ARGS SYSTEM TRUE)
+legate_find_or_configure(PACKAGE google_test)
 
 include("${LEGATE_CMAKE_DIR}/Modules/debug_symbols.cmake")
 include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
@@ -60,7 +55,8 @@ function(legate_configure_test)
                                    BUILD_RPATH_USE_ORIGIN TRUE
                                    # Don't use CMAKE_INSTALL_LIBDIR since we want the
                                    # rpath to be relative
-                                   INSTALL_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}/../lib"
+                                   INSTALL_RPATH
+                                   "${LEGATE_PLATFORM_RPATH_ORIGIN}/../${CMAKE_INSTALL_LIBDIR};${LEGATE_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}"
                                    INSTALL_RPATH_USE_LINK_PATH TRUE)
 
   target_include_directories(${_LEGATE_TEST_NAME} PRIVATE ${PROJECT_SOURCE_DIR})
@@ -75,7 +71,7 @@ function(legate_configure_test)
                                 # This is not done automatically for us, since fmt is a
                                 # PRIVATE dependency of legate (as it is not found in any
                                 # public includes).
-                                fmt::fmt)
+                                fmt::fmt-header-only)
 
   if(Legion_USE_CUDA)
     target_link_libraries(${_LEGATE_TEST_NAME} PRIVATE NCCL::NCCL)

@@ -1,6 +1,10 @@
 {
     "packages": {
+        "GTest": {
+            "exclude_from_all": true
+        },
         "HighFive": {
+            "exclude_from_all": true,
             "git_shallow": false,
             "git_tag": "8bb1ed8940880d33f4f9c2ea9b6072abd57219ef",
             "git_url": "https://github.com/nv-legate/HighFive.git",
@@ -14,21 +18,31 @@
             "version": "2.9.0"
         },
         "argparse": {
+            "exclude_from_all": true,
             "git_tag": "fd13c2859131ab463e617a5a8abcc69eb7e1d897",
             "git_url": "https://github.com/nv-legate/argparse.git",
             "version": "3.1"
         },
+        "benchmark": {
+            "exclude_from_all": true
+        },
         "cpm_licenses": {
+            "exclude_from_all": true,
             "git_tag": "v${version}",
             "git_url": "https://github.com/cpm-cmake/CPMLicenses.cmake.git",
             "version": "0.0.7"
         },
+        "fmt": {
+            "exclude_from_all": true
+        },
         "hdf5_vfd_gds": {
+            "exclude_from_all": true,
             "git_tag": "ec598e76a083887a36438da9766b5ac7eaec3596",
             "git_url": "https://github.com/nv-legate/vfd-gds.git",
             "version": "1.0.2"
         },
         "kvikio": {
+            "exclude_from_all": true,
             "git_shallow": false,
             "git_tag": "dde7115b7a169bcc430b811225ccbac3711d7901",
             "git_url": "https://github.com/rapidsai/kvikio.git",
