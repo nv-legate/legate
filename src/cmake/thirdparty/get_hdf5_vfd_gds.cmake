@@ -19,35 +19,15 @@ function(find_or_configure_hdf5_vfd_gds)
   rapids_cpm_package_details(hdf5_vfd_gds version git_url git_tag git_shallow
                              exclude_from_all)
 
-  # Technically this would also be fixed by the target_link_libraries() below, but if we
-  # don't set this before, then we will fail to configure.
-  get_target_property(cufile_location CUDA::cuFile LOCATION)
-  cmake_path(GET cufile_location PARENT_PATH cufile_location)
-
-  include(GNUInstallDirs)
-
   rapids_cpm_find(hdf5_vfd_gds "${version}"
                   CPM_ARGS
                   GIT_REPOSITORY "${git_url}"
                   GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
                   GIT_TAG "${git_tag}"
                   EXCLUDE_FROM_ALL ${exclude_from_all}
-                  OPTIONS "BUILD_TESTING OFF"
-                          "BUILD_EXAMPLES OFF"
-                          "BUILD_DOCUMENTATION OFF"
-                          "HDF5_VFD_GDS_CUFILE_DIR ${cufile_location}"
-                          "HDF5_VFD_GDS_INSTALL_BIN_DIR ${CMAKE_INSTALL_BINDIR}"
-                          "HDF5_VFD_GDS_INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR}"
-                          "HDF5_VFD_GDS_INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}"
-                          "HDF5_VFD_GDS_INSTALL_DATA_DIR ${CMAKE_INSTALL_DATAROOTDIR}")
+                  OPTIONS "BUILD_TESTING OFF" "BUILD_EXAMPLES OFF"
+                          "BUILD_DOCUMENTATION OFF")
 
-  get_target_property(imported hdf5_vfd_gds IMPORTED)
-  if(NOT imported)
-    # The CMakeLists for HDF5 VFD GDS are horribly outdated and they do not properly link
-    # themselves against cuFile and its headers. So if we built hdf5_vfd_gds ourselves
-    # (i.e. not imported), we need to fixup their stuff...
-    target_link_libraries(hdf5_vfd_gds CUDA::cuFile)
-  endif()
   if(exclude_from_all)
     legate_install_dependencies(TARGETS hdf5_vfd_gds)
   endif()

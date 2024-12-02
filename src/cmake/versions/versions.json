@@ -43,7 +43,7 @@
         },
         "hdf5_vfd_gds": {
             "exclude_from_all": true,
-            "git_tag": "ec598e76a083887a36438da9766b5ac7eaec3596",
+            "git_tag": "6732824b2112f7416156fafc35433506cd1226f7",
             "git_url": "https://github.com/nv-legate/vfd-gds.git",
             "version": "1.0.2"
         },
