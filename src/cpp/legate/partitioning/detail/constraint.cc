@@ -16,9 +16,11 @@
 #include "legate/partitioning/detail/partition.h"
 #include "legate/partitioning/detail/partitioner.h"
 #include "legate/utilities/memory.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -50,13 +52,14 @@ void Alignment::validate() const
   auto&& lhs_store = lhs_->operation()->find_store(lhs_);
   auto&& rhs_store = rhs_->operation()->find_store(rhs_);
   if (lhs_store->unbound() != rhs_store->unbound()) {
-    throw std::invalid_argument{"Alignment requires the stores to be all normal or all unbound"};
+    throw TracedException<std::invalid_argument>{
+      "Alignment requires the stores to be all normal or all unbound"};
   }
   if (lhs_store->unbound()) {
     return;
   }
   if (*lhs_store->shape() != *rhs_store->shape()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Alignment requires the stores to have the same shape, but found {} and {}",
                   lhs_store->extents(),
                   rhs_store->extents())};
@@ -78,7 +81,7 @@ void Broadcast::validate() const
   auto&& store = variable_->operation()->find_store(variable_);
   for (auto axis : axes_.data()) {
     if (axis >= store->dim()) {
-      throw std::invalid_argument{
+      throw TracedException<std::invalid_argument>{
         fmt::format("Invalid broadcasting dimension {} for a {}-D store", axis, store->dim())};
     }
   }
@@ -104,12 +107,13 @@ void ImageConstraint::validate() const
   auto&& range = var_range_->operation()->find_store(var_range_);
 
   if (!(is_point_type(func->type(), range->dim()) || is_rect_type(func->type(), range->dim()))) {
-    throw std::invalid_argument{fmt::format(
+    throw TracedException<std::invalid_argument>{fmt::format(
       "Store from which the image partition is derived should have {}-D points or rects",
       range->dim())};
   }
   if (range->transformed()) {
-    throw std::runtime_error{"Image constraints on transformed stores are not supported yet"};
+    throw TracedException<std::runtime_error>{
+      "Image constraints on transformed stores are not supported yet"};
   }
 }
 
@@ -143,12 +147,12 @@ void ScaleConstraint::validate() const
   const auto sdim = smaller->dim();
 
   if (sdim != bigger->dim()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       "Scaling constraint requires the stores to have the same number of dimensions"};
   }
 
   if (const auto sdim_s = static_cast<std::size_t>(sdim); sdim_s != factors_.size()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       "Scaling constraint requires the number of factors to match the number of dimensions"};
   }
 }
@@ -176,13 +180,13 @@ void BloatConstraint::validate() const
   const auto sdim = source->dim();
 
   if (sdim != bloat->dim()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       "Bloating constraint requires the stores to have the same number of dimensions"};
   }
 
   if (const auto sdim_s = static_cast<std::size_t>(sdim);
       sdim_s != low_offsets_.size() || sdim_s != high_offsets_.size()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       "Bloating constraint requires the number of offsets to match the number of dimensions"};
   }
 }
@@ -214,7 +218,7 @@ InternalSharedPtr<Alignment> align(const Variable* lhs, const Variable* rhs)
 InternalSharedPtr<Broadcast> broadcast(const Variable* variable, tuple<std::uint32_t> axes)
 {
   if (axes.empty()) {
-    throw std::invalid_argument{"List of axes to broadcast must not be empty"};
+    throw TracedException<std::invalid_argument>{"List of axes to broadcast must not be empty"};
   }
   return make_internal_shared<Broadcast>(variable, std::move(axes));
 }

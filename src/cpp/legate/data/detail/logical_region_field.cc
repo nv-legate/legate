@@ -16,8 +16,10 @@
 #include "legate/runtime/detail/field_manager.h"
 #include "legate/runtime/detail/runtime.h"
 #include "legate/utilities/detail/tuple.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -155,10 +157,10 @@ void LogicalRegionField::detach()
     return;
   }
   if (nullptr != parent_) {
-    throw std::invalid_argument{"Manual detach must be called on the root store"};
+    throw TracedException<std::invalid_argument>{"Manual detach must be called on the root store"};
   }
   if (!attached_) {
-    throw std::invalid_argument{"Store has no attachment to detach"};
+    throw TracedException<std::invalid_argument>{"Store has no attachment to detach"};
   }
 
   // Need to flush the scheduling window to get all pending attach ops to be issued

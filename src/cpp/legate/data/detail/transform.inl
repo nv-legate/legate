@@ -18,14 +18,9 @@
 
 namespace legate::detail {
 
-inline NonInvertibleTransformation::NonInvertibleTransformation(std::string error_message)
-  : error_message_{std::move(error_message)}
+inline NonInvertibleTransformation::NonInvertibleTransformation(std::string_view error_message)
+  : runtime_error{error_message.data()}  // NOLINT(bugprone-suspicious-stringview-data-usage)
 {
-}
-
-inline const char* NonInvertibleTransformation::what() const noexcept
-{
-  return error_message_.c_str();
 }
 
 // ==========================================================================================

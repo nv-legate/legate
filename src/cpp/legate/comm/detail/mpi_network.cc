@@ -20,6 +20,7 @@
 #include "legate/utilities/scope_guard.h"
 #include "legate/utilities/span.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -27,6 +28,7 @@
 #include <cstring>
 #include <memory>
 #include <numeric>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 
@@ -354,7 +356,8 @@ void MPINetwork::gather_(const void* sendbuf,
 
   // Should not see inplace here
   if (sendbuf == recvbuf) {
-    throw std::invalid_argument{"MPINetwork::gather() does not support inplace gather"};
+    throw legate::detail::TracedException<std::invalid_argument>{
+      "MPINetwork::gather() does not support inplace gather"};
   }
 
   const int root_mpi_rank = global_comm->mapping_table.mpi_rank[root];

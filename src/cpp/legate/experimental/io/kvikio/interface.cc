@@ -18,6 +18,7 @@
 #include <legate/experimental/io/kvikio/interface.h>
 #include <legate/runtime/runtime.h>
 #include <legate/type/type_info.h>
+#include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zip.h>
 
 #include <cstdint>
@@ -38,7 +39,8 @@ namespace {
 void check_file_exists(const std::filesystem::path& path)
 {
   if (!std::filesystem::exists(path)) {
-    throw std::system_error{std::make_error_code(std::errc::no_such_file_or_directory), path};
+    throw legate::detail::TracedException<std::system_error>{
+      std::make_error_code(std::errc::no_such_file_or_directory), path};
   }
 }
 
@@ -90,7 +92,8 @@ void clear_file(const std::filesystem::path& path)
 void to_file(const std::filesystem::path& file_path, const LogicalArray& array)
 {
   if (const auto dim = array.dim(); dim != 1) {
-    throw std::invalid_argument{fmt::format("number of array dimensions must be 1 (have {})", dim)};
+    throw legate::detail::TracedException<std::invalid_argument>{
+      fmt::format("number of array dimensions must be 1 (have {})", dim)};
   }
 
   auto* rt  = Runtime::get_runtime();
@@ -124,7 +127,7 @@ void sanity_check_sizes(const LogicalArray& array,
                         const std::vector<std::uint64_t>& tile_start)
 {
   if (tile_start.size() != tile_shape.size()) {
-    throw std::invalid_argument{
+    throw legate::detail::TracedException<std::invalid_argument>{
       fmt::format("tile_start and tile_shape must have the same size. tile_start.size() = {}, "
                   "tile_shape.size() = {}",
                   tile_start.size(),
@@ -132,7 +135,7 @@ void sanity_check_sizes(const LogicalArray& array,
   }
 
   if (array.dim() != tile_shape.size()) {
-    throw std::invalid_argument{
+    throw legate::detail::TracedException<std::invalid_argument>{
       fmt::format("Array and tile_shape must have the same size. Array.dim() = {}, "
                   "tile_shape.size() = {}",
                   array.dim(),
@@ -144,7 +147,7 @@ void sanity_check_sizes(const LogicalArray& array,
 
     for (auto&& [d, c] : legate::detail::zip_equal(extents, tile_shape)) {
       if (d % c != 0) {
-        throw std::invalid_argument{fmt::format(
+        throw legate::detail::TracedException<std::invalid_argument>{fmt::format(
           "The array shape ({}) must be divisible by the tile shape ({})", extents, tile_shape)};
       }
     }
@@ -221,7 +224,7 @@ LogicalArray from_file_by_offsets(const std::filesystem::path& file_path,
   auto&& launch_shape = partition.color_shape();
 
   if (const auto launch_vol = launch_shape.volume(); launch_vol != offsets.size()) {
-    throw std::invalid_argument{
+    throw legate::detail::TracedException<std::invalid_argument>{
       fmt::format("Number of offsets ({}) must match the number of array tiles ({})",
                   offsets.size(),
                   launch_vol)};

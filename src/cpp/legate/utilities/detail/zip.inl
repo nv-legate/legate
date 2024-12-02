@@ -18,8 +18,6 @@
 #include "legate/utilities/detail/zip.h"
 #include "legate/utilities/macros.h"
 
-#include <stdexcept>
-
 namespace legate::detail {
 
 namespace zip_detail {
@@ -365,6 +363,8 @@ namespace zip_detail {
 template <typename T>
 using has_size = decltype(std::size(std::declval<T>()));
 
+[[noreturn]] void throw_unequal_container_sizes();
+
 }  // namespace zip_detail
 
 template <typename... T>
@@ -377,7 +377,7 @@ zip_detail::Zipper<zip_detail::ZiperatorEqual, T...> zip_equal(T&&... args)
     }(args...);
 
     if (!all_same_size) {
-      throw std::invalid_argument{"Arguments to zip_equal() are not all equal"};
+      zip_detail::throw_unequal_container_sizes();
     }
   }
   return {std::forward<T>(args)...};

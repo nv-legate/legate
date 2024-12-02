@@ -15,9 +15,11 @@
 #include "legate/runtime/detail/library.h"
 #include "legate/utilities/dispatch.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
 #include <mutex>
+#include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
@@ -272,7 +274,8 @@ ProjectionFunction* find_projection_function(Legion::ProjectionID proj_id)
   auto finder = functor_table.find(proj_id);
 
   if (finder == functor_table.end()) {
-    throw std::invalid_argument{fmt::format("Failed to find projection functor of id {}", proj_id)};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Failed to find projection functor of id {}", proj_id)};
   }
 
   return finder->second.get();

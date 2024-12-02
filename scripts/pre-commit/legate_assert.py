@@ -18,18 +18,22 @@ from util.re_replacement import RegexReplacement, Replacement
 
 def main() -> int:
     repl = [
-        Replacement(r"(\s+)assert\(", r"\1LEGATE_CHECK("),
+        Replacement(
+            r"(\s+)assert\(", r"\1LEGATE_CHECK(", pragma_keyword="assert"
+        ),
         Replacement(
             r"if\s+\(LEGATE_DEFINED\(LEGATE_USE_DEBUG\)\)\s+{"
             r"\s+LEGATE_ASSERT\(([^;]*)\);\s+"
             r"}",
             r"LEGATE_ASSERT(\1);",
+            pragma_keyword="assert",
         ),
         Replacement(
             r"if\s+\(LEGATE_DEFINED\(LEGATE_USE_DEBUG\)\)\s+{"
             r"\s+LEGATE_CHECK\(([^;]*)\);\s+"
             r"}",
             r"LEGATE_CHECK(\1);",
+            pragma_keyword="assert",
         ),
     ]
     return RegexReplacement(

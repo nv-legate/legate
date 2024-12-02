@@ -13,6 +13,7 @@
 #pragma once
 
 #include "legate/partitioning/detail/partition.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>
 
@@ -39,7 +40,7 @@ inline bool NoPartition::has_launch_domain() const { return false; }
 
 inline const tuple<std::uint64_t>& NoPartition::color_shape() const
 {
-  throw std::invalid_argument{"NoPartition doesn't support color_shape"};
+  throw TracedException<std::invalid_argument>{"NoPartition doesn't support color_shape"};
 }
 
 // ==========================================================================================

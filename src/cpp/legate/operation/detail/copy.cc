@@ -18,7 +18,9 @@
 #include "legate/partitioning/detail/partition.h"
 #include "legate/partitioning/detail/partitioner.h"
 #include "legate/type/detail/type_info.h"
+#include <legate/utilities/detail/traced_exception.h>
 
+#include <stdexcept>
 #include <utility>
 
 namespace legate::detail {
@@ -42,11 +44,12 @@ Copy::Copy(InternalSharedPtr<LogicalStore> target,
 void Copy::validate()
 {
   if (*source_.store->type() != *target_.store->type()) {
-    throw std::invalid_argument{"Source and target must have the same type"};
+    throw TracedException<std::invalid_argument>{"Source and target must have the same type"};
   }
   constexpr auto validate_store = [](const auto& store) {
     if (store->unbound() || store->transformed()) {
-      throw std::invalid_argument{"Copy accepts only normal and untransformed stores"};
+      throw TracedException<std::invalid_argument>{
+        "Copy accepts only normal and untransformed stores"};
     }
   };
   validate_store(target_.store);
@@ -54,11 +57,13 @@ void Copy::validate()
   constraint_->validate();
 
   if (target_.store->has_scalar_storage() != source_.store->has_scalar_storage()) {
-    throw std::runtime_error{"Copies are supported only between the same kind of stores"};
+    throw TracedException<std::runtime_error>{
+      "Copies are supported only between the same kind of stores"};
   }
   if (redop_kind_.has_value()) {
     if (target_.store->has_scalar_storage()) {
-      throw std::runtime_error{"Reduction copies don't support future-backed target stores"};
+      throw TracedException<std::runtime_error>{
+        "Reduction copies don't support future-backed target stores"};
     }
     // Try to retrieve the reduction operator ID here to check if it's defined for the value type
     static_cast<void>(target_.store->type()->find_reduction_operator(*redop_kind_));

@@ -19,21 +19,17 @@
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/typedefs.h"
 
-#include <exception>
 #include <iosfwd>
 #include <memory>
-#include <string>
+#include <stdexcept>
+#include <string_view>
 
 namespace legate::detail {
 
-class NonInvertibleTransformation final : public std::exception {
+class NonInvertibleTransformation : public std::runtime_error {
  public:
-  explicit NonInvertibleTransformation(std::string error_message = "Non-invertible transformation");
-
-  [[nodiscard]] const char* what() const noexcept override;
-
- private:
-  std::string error_message_{};
+  explicit NonInvertibleTransformation(
+    std::string_view error_message = "Non-invertible transformation");
 };
 
 class Transform {

@@ -18,6 +18,7 @@
 #include "legate/runtime/scope.h"
 #include "legate/utilities/detail/tuple.h"
 #include "legate/utilities/internal_shared_ptr.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/core.h>
 #include <optional>
@@ -209,7 +210,7 @@ LogicalArray Runtime::create_array(const Shape& shape,
   // yet, because they may get initialized by different producer tasks and there's no guarantee that
   // the tasks will bind the same size data to them.
   if (shape_impl->unbound()) {
-    throw std::invalid_argument{
+    throw detail::TracedException<std::invalid_argument>{
       "Shape of an unbound array or store cannot be used to create another array "
       "until the array or store is initialized by a task"};
   }
@@ -256,7 +257,7 @@ LogicalStore Runtime::create_store(const Shape& shape,
   // We shouldn't allow users to create unbound store out of the same shape that hasn't be bound
   // yet. (See the comments in Runtime::create_array.)
   if (shape_impl->unbound()) {
-    throw std::invalid_argument{
+    throw detail::TracedException<std::invalid_argument>{
       "Shape of an unbound array or store cannot be used to create another store "
       "until the array or store is initialized by a task"};
   }
@@ -337,7 +338,7 @@ std::optional<Runtime> the_public_runtime{};
 /*static*/ Runtime* Runtime::get_runtime()
 {
   if (!has_started()) {
-    throw std::runtime_error{
+    throw detail::TracedException<std::runtime_error>{
       "Legate runtime has not been initialized. Please invoke legate::start to use the "
       "runtime"};
   }
@@ -355,7 +356,8 @@ std::int32_t start(std::int32_t argc, char** argv)
   }
 
   if (has_finished()) {
-    throw std::runtime_error{"Legate runtime cannot be started after legate::finish is called"};
+    throw detail::TracedException<std::runtime_error>{
+      "Legate runtime cannot be started after legate::finish is called"};
   }
 
   auto ret = detail::Runtime::start(argc, argv);
@@ -390,7 +392,8 @@ std::int32_t finish()
 void destroy()
 {
   if (const auto ret = finish()) {
-    throw std::runtime_error{fmt::format("failed to finalize legate runtime, error code: {}", ret)};
+    throw detail::TracedException<std::runtime_error>{
+      fmt::format("failed to finalize legate runtime, error code: {}", ret)};
   }
 }
 

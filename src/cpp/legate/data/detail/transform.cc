@@ -14,11 +14,13 @@
 
 #include "legate/utilities/detail/buffer_builder.h"
 #include "legate/utilities/detail/core_ids.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
 #include <fmt/format.h>
 #include <iostream>
 #include <iterator>
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -812,25 +814,25 @@ Restrictions Delinearize::convert(Restrictions restrictions, bool /*forbid_fake_
 
 tuple<std::uint64_t> Delinearize::convert_color(tuple<std::uint64_t> /*color*/) const
 {
-  throw NonInvertibleTransformation{};
+  throw TracedException<NonInvertibleTransformation>{};
   return {};
 }
 
 tuple<std::uint64_t> Delinearize::convert_color_shape(tuple<std::uint64_t> /*color_shape*/) const
 {
-  throw NonInvertibleTransformation{};
+  throw TracedException<NonInvertibleTransformation>{};
   return {};
 }
 
 tuple<std::uint64_t> Delinearize::convert_extents(tuple<std::uint64_t> /*extents*/) const
 {
-  throw NonInvertibleTransformation{};
+  throw TracedException<NonInvertibleTransformation>{};
   return {};
 }
 
 tuple<std::int64_t> Delinearize::convert_point(tuple<std::int64_t> /*point*/) const
 {
-  throw NonInvertibleTransformation{};
+  throw TracedException<NonInvertibleTransformation>{};
   return {};
 }
 
@@ -871,7 +873,7 @@ tuple<std::uint64_t> Delinearize::invert_color(tuple<std::uint64_t> color) const
   }
 
   if (sum != 0) {
-    throw NonInvertibleTransformation{};
+    throw TracedException<NonInvertibleTransformation>{};
   }
 
   for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
@@ -889,7 +891,7 @@ tuple<std::uint64_t> Delinearize::invert_color_shape(tuple<std::uint64_t> color_
   }
 
   if (volume != 1) {
-    throw NonInvertibleTransformation{};
+    throw TracedException<NonInvertibleTransformation>{};
   }
 
   for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
@@ -906,7 +908,7 @@ tuple<std::int64_t> Delinearize::invert_point(tuple<std::int64_t> point) const
   }
 
   if (sum != 0) {
-    throw NonInvertibleTransformation{};
+    throw TracedException<NonInvertibleTransformation>{};
   }
 
   for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
@@ -921,7 +923,7 @@ tuple<std::uint64_t> Delinearize::invert_extents(tuple<std::uint64_t> extents) c
 {
   for (std::uint32_t idx = 1; idx < sizes_.size(); ++idx) {
     if (extents[dim_ + idx] != sizes_[idx]) {
-      throw NonInvertibleTransformation{};
+      throw TracedException<NonInvertibleTransformation>{};
     }
   }
 

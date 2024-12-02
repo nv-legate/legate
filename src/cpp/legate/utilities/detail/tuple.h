@@ -32,7 +32,7 @@ namespace legate::detail {
 // These are forward declared in tuple.h to avoid including this header
 // NOLINTBEGIN(readability-redundant-declaration)
 void assert_valid_mapping(std::size_t tuple_size, const std::vector<std::int32_t>& mapping);
-
+[[noreturn]] void throw_invalid_tuple_sizes(std::size_t lhs_size, std::size_t rhs_size);
 void assert_in_range(std::size_t tuple_size, std::int32_t pos);
 // NOLINTEND(readability-redundant-declaration)
 

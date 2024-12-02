@@ -17,6 +17,7 @@
 #include "legate/utilities/detail/enumerate.h"
 #include "legate/utilities/detail/type_traits.h"
 #include "legate/utilities/detail/zstring_view.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
 #include <atomic>
@@ -62,7 +63,7 @@ class StaticDeterminationError : public std::invalid_argument {
     case Type::Code::FIXED_ARRAY: return "fixed_array";
     case Type::Code::LIST: return "list";
   }
-  throw std::invalid_argument{"invalid type code"};
+  throw TracedException<std::invalid_argument>{"invalid type code"};
 }
 
 [[nodiscard]] std::uint32_t SIZEOF(Type::Code code)
@@ -94,11 +95,11 @@ class StaticDeterminationError : public std::invalid_argument {
     case Type::Code::FIXED_ARRAY: [[fallthrough]];
     case Type::Code::LIST: [[fallthrough]];
     case Type::Code::STRING: {
-      throw StaticDeterminationError{
+      throw TracedException<StaticDeterminationError>{
         fmt::format("Cannot statically determine size of non-integral type: {}", code)};
     }
   };
-  throw std::invalid_argument{"invalid type code"};
+  throw TracedException<std::invalid_argument>{"invalid type code"};
 }
 
 [[nodiscard]] std::uint32_t ALIGNOF(Type::Code code)
@@ -130,11 +131,11 @@ class StaticDeterminationError : public std::invalid_argument {
     case Type::Code::FIXED_ARRAY: [[fallthrough]];
     case Type::Code::LIST: [[fallthrough]];
     case Type::Code::STRING: {
-      throw StaticDeterminationError{
+      throw TracedException<StaticDeterminationError>{
         fmt::format("Cannot statically determine alignment of non-integral type: {}", code)};
     }
   };
-  throw std::invalid_argument{"invalid type code"};
+  throw TracedException<std::invalid_argument>{"invalid type code"};
 }
 
 constexpr const char* const VARIABLE_SIZE_ERROR_MESSAGE =
@@ -171,7 +172,7 @@ std::uint32_t get_next_uid()
 
 std::uint32_t Type::size() const
 {
-  throw std::invalid_argument{"Size of a variable size type is undefined"};
+  throw TracedException<std::invalid_argument>{"Size of a variable size type is undefined"};
   return {};
 }
 
@@ -221,7 +222,7 @@ FixedArrayType::FixedArrayType(std::uint32_t uid,
     size_{element_type_->size() * N}
 {
   if (element_type_->variable_size()) {
-    throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+    throw TracedException<std::invalid_argument>{VARIABLE_SIZE_ERROR_MESSAGE};
   }
 }
 
@@ -260,10 +261,10 @@ StructType::StructType(std::uint32_t uid,
 {
   if (std::any_of(
         field_types_.begin(), field_types_.end(), [](auto& ty) { return ty->variable_size(); })) {
-    throw std::runtime_error{"Struct types can't have a variable size field"};
+    throw TracedException<std::runtime_error>{"Struct types can't have a variable size field"};
   }
   if (field_types_.empty()) {
-    throw std::invalid_argument{"Struct types must have at least one field"};
+    throw TracedException<std::invalid_argument>{"Struct types must have at least one field"};
   }
 
   offsets_.reserve(field_types_.size());
@@ -274,7 +275,7 @@ StructType::StructType(std::uint32_t uid,
 
     for (auto&& field_type : field_types_) {
       if (field_type->variable_size()) {
-        throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+        throw TracedException<std::invalid_argument>{VARIABLE_SIZE_ERROR_MESSAGE};
       }
       const auto my_align = field_type->alignment();
       alignment_          = std::max(my_align, alignment_);
@@ -287,7 +288,7 @@ StructType::StructType(std::uint32_t uid,
   } else {
     for (auto&& field_type : field_types_) {
       if (field_type->variable_size()) {
-        throw std::invalid_argument{VARIABLE_SIZE_ERROR_MESSAGE};
+        throw TracedException<std::invalid_argument>{VARIABLE_SIZE_ERROR_MESSAGE};
       }
       offsets_.push_back(size_);
       size_ += field_type->size();
@@ -391,7 +392,7 @@ ListType::ListType(std::uint32_t uid, InternalSharedPtr<Type> element_type)
   : ExtensionType{uid, Type::Code::LIST}, element_type_{std::move(element_type)}
 {
   if (element_type_->variable_size()) {
-    throw std::runtime_error{"Nested variable size types are not implemented yet"};
+    throw TracedException<std::runtime_error>{"Nested variable size types are not implemented yet"};
   }
 }
 
@@ -428,7 +429,7 @@ InternalSharedPtr<Type> string_type()
 InternalSharedPtr<Type> binary_type(std::uint32_t size)
 {
   if (size > MAX_BINARY_TYPE_SIZE) {
-    throw std::out_of_range{
+    throw TracedException<std::out_of_range>{
       fmt::format("Maximum size for opaque binary types is {}", MAX_BINARY_TYPE_SIZE)};
   }
   // size + 1 to account for size = 0
@@ -557,7 +558,8 @@ InternalSharedPtr<FixedArrayType> point_type(std::uint32_t ndim)
   static InternalSharedPtr<FixedArrayType> cache[LEGATE_MAX_DIM + 1];
 
   if (0 == ndim || ndim > LEGATE_MAX_DIM) {
-    throw std::out_of_range{fmt::format("{} is not a supported number of dimensions", ndim)};
+    throw TracedException<std::out_of_range>{
+      fmt::format("{} is not a supported number of dimensions", ndim)};
   }
   if (nullptr == cache[ndim]) {
     cache[ndim] =
@@ -571,7 +573,8 @@ InternalSharedPtr<StructType> rect_type(std::uint32_t ndim)
   static InternalSharedPtr<StructType> cache[LEGATE_MAX_DIM + 1];
 
   if (0 == ndim || ndim > LEGATE_MAX_DIM) {
-    throw std::out_of_range{fmt::format("{} is not a supported number of dimensions", ndim)};
+    throw TracedException<std::out_of_range>{
+      fmt::format("{} is not a supported number of dimensions", ndim)};
   }
 
   if (nullptr == cache[ndim]) {
@@ -612,7 +615,8 @@ bool is_point_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 std::int32_t ndim_point_type(const InternalSharedPtr<Type>& type)
 {
   if (!is_point_type(type)) {
-    throw std::invalid_argument{fmt::format("Expected a point type but got {}", *type)};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Expected a point type but got {}", *type)};
   }
   return type->code == Type::Code::INT64
            ? 1
@@ -633,7 +637,8 @@ bool is_rect_type(const InternalSharedPtr<Type>& type, std::uint32_t ndim)
 std::int32_t ndim_rect_type(const InternalSharedPtr<Type>& type)
 {
   if (!is_rect_type(type)) {
-    throw std::invalid_argument{fmt::format("Expected a rect type but got {}", *type)};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Expected a rect type but got {}", *type)};
   }
   return static_cast<std::int32_t>(type->uid() - BASE_RECT_TYPE_UID);
 }

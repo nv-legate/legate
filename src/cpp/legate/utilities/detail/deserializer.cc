@@ -15,6 +15,7 @@
 #include "legate/data/detail/physical_store.h"
 #include "legate/data/physical_store.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include "legion/legion_c.h"
 #include "legion/legion_c_util.h"
@@ -35,7 +36,7 @@ std::pair<void*, std::size_t> align_for_unpack_impl(void* ptr,
   if (!std::align(align, bytes, ptr, avail_space)) {
     // If we get here, it means that someone did not pack the value correctly, likely without
     // first aligning the pointer!
-    throw std::runtime_error{fmt::format(
+    throw TracedException<std::runtime_error>{fmt::format(
       "Failed to align buffer {} (of size: {}) to {}-byte alignment (remaining capacity: {})",
       ptr,
       bytes,

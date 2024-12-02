@@ -17,6 +17,9 @@
 #include "legate/partitioning/detail/constraint_solver.h"
 #include "legate/partitioning/detail/partition.h"
 #include "legate/partitioning/detail/partitioner.h"
+#include <legate/utilities/detail/traced_exception.h>
+
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -42,11 +45,11 @@ Gather::Gather(InternalSharedPtr<LogicalStore> target,
 void Gather::validate()
 {
   if (*source_.store->type() != *target_.store->type()) {
-    throw std::invalid_argument("Source and targets must have the same type");
+    throw TracedException<std::invalid_argument>("Source and targets must have the same type");
   }
   auto validate_store = [](const auto& store) {
     if (store->unbound() || store->has_scalar_storage() || store->transformed()) {
-      throw std::invalid_argument(
+      throw TracedException<std::invalid_argument>(
         "Gather accepts only normal, untransformed, region-backed stores");
     }
   };
@@ -55,8 +58,8 @@ void Gather::validate()
   validate_store(source_indirect_.store);
 
   if (!is_point_type(source_indirect_.store->type(), source_.store->dim())) {
-    throw std::invalid_argument("Indirection store should contain " +
-                                std::to_string(source_.store->dim()) + "-D points");
+    throw TracedException<std::invalid_argument>(
+      "Indirection store should contain " + std::to_string(source_.store->dim()) + "-D points");
   }
 
   constraint_->validate();

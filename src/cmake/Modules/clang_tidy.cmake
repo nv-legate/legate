@@ -43,14 +43,15 @@ function(legate_add_tidy_target)
     endif()
 
     cmake_path(SET src NORMALIZE "${_TIDY_SOURCE}")
-    string(MAKE_C_IDENTIFIER "${src}_tidy" tidy_target)
-
     if(NOT IS_ABSOLUTE "${src}")
       cmake_path(SET src NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
     endif()
+
     cmake_path(RELATIVE_PATH src BASE_DIRECTORY "${LEGATE_DIR}" OUTPUT_VARIABLE rel_src)
+    string(MAKE_C_IDENTIFIER "${rel_src}_tidy" tidy_target)
 
     add_custom_target("${tidy_target}"
+                      DEPENDS "${src}"
                       COMMAND "${LEGATE_CLANG_TIDY}"
                               --config-file="${LEGATE_DIR}/.clang-tidy" -p
                               "${CMAKE_BINARY_DIR}" --use-color --quiet

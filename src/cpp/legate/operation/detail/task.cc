@@ -30,9 +30,11 @@
 #include "legate/utilities/detail/core_ids.h"
 #include "legate/utilities/detail/zip.h"
 #include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
 #include <fmt/format.h>
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -354,7 +356,7 @@ const Variable* AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
 void AutoTask::add_input(InternalSharedPtr<LogicalArray> array, const Variable* partition_symbol)
 {
   if (array->unbound()) {
-    throw std::invalid_argument{"Unbound arrays cannot be used as input"};
+    throw TracedException<std::invalid_argument>{"Unbound arrays cannot be used as input"};
   }
 
   auto& arg = inputs_.emplace_back(std::move(array));
@@ -385,11 +387,11 @@ void AutoTask::add_reduction(InternalSharedPtr<LogicalArray> array,
                              const Variable* partition_symbol)
 {
   if (array->unbound()) {
-    throw std::invalid_argument{"Unbound arrays cannot be used for reductions"};
+    throw TracedException<std::invalid_argument>{"Unbound arrays cannot be used for reductions"};
   }
 
   if (array->type()->variable_size()) {
-    throw std::invalid_argument{"List/string arrays cannot be used for reduction"};
+    throw TracedException<std::invalid_argument>{"List/string arrays cannot be used for reduction"};
   }
   auto legion_redop_id = array->type()->find_reduction_operator(redop_kind);
 
@@ -495,7 +497,7 @@ ManualTask::ManualTask(const Library* library,
 void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
 {
   if (store->unbound()) {
-    throw std::invalid_argument{"Unbound stores cannot be used as input"};
+    throw TracedException<std::invalid_argument>{"Unbound stores cannot be used as input"};
   }
 
   add_store_(inputs_, store, create_no_partition());
@@ -534,7 +536,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStore>& store,
                                std::int32_t redop_kind)
 {
   if (store->unbound()) {
-    throw std::invalid_argument{"Unbound stores cannot be used for reduction"};
+    throw TracedException<std::invalid_argument>{"Unbound stores cannot be used for reduction"};
   }
 
   auto legion_redop_id = store->type()->find_reduction_operator(redop_kind);

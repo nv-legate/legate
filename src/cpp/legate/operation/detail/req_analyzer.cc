@@ -13,6 +13,9 @@
 #include "legate/operation/detail/req_analyzer.h"
 
 #include "legate/utilities/detail/enumerate.h"
+#include <legate/utilities/detail/traced_exception.h>
+
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -35,7 +38,7 @@ void ProjectionSet::insert(Legion::PrivilegeMode new_privilege,
 
   if (privilege != LEGION_READ_ONLY && privilege != NO_ACCESS && store_projs.size() > 1 &&
       !relax_interference_checks) {
-    throw InterferingStoreError{};
+    throw TracedException<InterferingStoreError>{};
   }
 }
 

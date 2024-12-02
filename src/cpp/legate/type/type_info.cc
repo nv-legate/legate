@@ -13,6 +13,7 @@
 #include "legate/type/type_info.h"
 
 #include "legate/type/detail/type_info.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -66,7 +67,7 @@ bool Type::operator!=(const Type& other) const { return !operator==(other); }
 FixedArrayType::FixedArrayType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)}
 {
   if (code() != Code::FIXED_ARRAY) {
-    throw std::invalid_argument{"Type is not a fixed array type"};
+    throw detail::TracedException<std::invalid_argument>{"Type is not a fixed array type"};
   }
 }
 
@@ -83,7 +84,7 @@ Type FixedArrayType::element_type() const
 StructType::StructType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)}
 {
   if (code() != Code::STRUCT) {
-    throw std::invalid_argument{"Type is not a struct type"};
+    throw detail::TracedException<std::invalid_argument>{"Type is not a struct type"};
   }
 }
 
@@ -110,7 +111,7 @@ std::vector<std::uint32_t> StructType::offsets() const
 ListType::ListType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)}
 {
   if (code() != Code::LIST) {
-    throw std::invalid_argument{"Type is not a list type"};
+    throw detail::TracedException<std::invalid_argument>{"Type is not a list type"};
   }
 }
 

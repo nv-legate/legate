@@ -13,6 +13,9 @@
 #pragma once
 
 #include "legate/data/detail/external_allocation.h"
+#include <legate/utilities/detail/traced_exception.h>
+
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -25,10 +28,10 @@ inline ExternalAllocation::ExternalAllocation(
   std::optional<Deleter> deleter)
   : read_only_{read_only},
     target_{target},
-    ptr_{
-      ptr
-        ? ptr
-        : throw std::invalid_argument{"External allocation cannot be created from a null pointer"}},
+    ptr_{ptr
+           ? ptr
+           : throw TracedException<
+               std::invalid_argument>{"External allocation cannot be created from a null pointer"}},
     size_{size},
     resource_{std::move(resource)},
     deleter_{std::move(deleter)}

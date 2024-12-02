@@ -12,6 +12,8 @@
 
 #include "legate/data/detail/physical_array.h"
 
+#include <legate/utilities/detail/traced_exception.h>
+
 #include <fmt/format.h>
 #include <stdexcept>
 
@@ -21,7 +23,7 @@ const InternalSharedPtr<PhysicalStore>& PhysicalArray::data() const
 {
   static const InternalSharedPtr<PhysicalStore> ret{};
 
-  throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
+  throw TracedException<std::invalid_argument>{"Data store of a nested array cannot be retrieved"};
   return ret;
 }
 
@@ -44,14 +46,15 @@ bool BasePhysicalArray::unbound() const
 const InternalSharedPtr<PhysicalStore>& BasePhysicalArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
+    throw TracedException<std::invalid_argument>{
+      "Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }
 
 InternalSharedPtr<PhysicalArray> BasePhysicalArray::child(std::uint32_t /*index*/) const
 {
-  throw std::invalid_argument{"Non-nested array has no child sub-array"};
+  throw TracedException<std::invalid_argument>{"Non-nested array has no child sub-array"};
   return {};
 }
 
@@ -80,7 +83,8 @@ InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(std::uint32_t index) c
     case 0: return descriptor();
     case 1: return vardata();
     default: {
-      throw std::out_of_range{fmt::format("List array does not have child {}", index)};
+      throw TracedException<std::out_of_range>{
+        fmt::format("List array does not have child {}", index)};
       break;
     }
   }
@@ -114,7 +118,8 @@ bool StructPhysicalArray::valid() const
 const InternalSharedPtr<PhysicalStore>& StructPhysicalArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
+    throw TracedException<std::invalid_argument>{
+      "Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }

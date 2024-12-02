@@ -14,7 +14,9 @@
 
 #include "legate/mapping/detail/mapping.h"
 #include "legate/mapping/detail/store.h"
+#include <legate/utilities/detail/traced_exception.h>
 
+#include <stdexcept>
 #include <utility>
 
 namespace legate::mapping {
@@ -131,7 +133,8 @@ bool InstanceMappingPolicy::operator!=(const InstanceMappingPolicy& other) const
                                              InstanceMappingPolicy&& policy)
 {
   if (stores.empty()) {
-    throw std::invalid_argument{"Invalid to create a store mapping without any store"};
+    throw legate::detail::TracedException<std::invalid_argument>{
+      "Invalid to create a store mapping without any store"};
   }
   auto mapping = std::make_unique<detail::StoreMapping>();
 

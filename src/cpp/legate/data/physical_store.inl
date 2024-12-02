@@ -259,7 +259,7 @@ template <typename VAL>
 VAL PhysicalStore::scalar() const
 {
   if (!is_future()) {
-    throw std::invalid_argument{"Scalars can be retrieved only from scalar stores"};
+    throw_invalid_scalar_access_();
   }
   if (is_read_only_future_()) {
     // get_untyped_pointer_from_future_ is guaranteed to return an aligned pointer when T is the

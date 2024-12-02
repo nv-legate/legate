@@ -15,6 +15,7 @@
 #include "legate/data/buffer.h"
 #include "legate/mapping/detail/mapping.h"
 #include "legate/utilities/dispatch.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <cstring>  // std::memcpy
 #include <fmt/format.h>
@@ -76,7 +77,8 @@ bool PhysicalStore::transformed() const { return !transform_->identity(); }
 Domain PhysicalStore::domain() const
 {
   if (is_unbound_store()) {
-    throw std::invalid_argument{"Invalid to retrieve the domain of an unbound store"};
+    throw TracedException<std::invalid_argument>{
+      "Invalid to retrieve the domain of an unbound store"};
   }
 
   auto result = is_future() ? future_.domain() : region_field_.domain();
@@ -94,7 +96,8 @@ Domain PhysicalStore::domain() const
 InlineAllocation PhysicalStore::get_inline_allocation() const
 {
   if (is_unbound_store()) {
-    throw std::invalid_argument{"Allocation info cannot be retrieved from an unbound store"};
+    throw TracedException<std::invalid_argument>{
+      "Allocation info cannot be retrieved from an unbound store"};
   }
 
   if (transformed()) {
@@ -112,7 +115,7 @@ InlineAllocation PhysicalStore::get_inline_allocation() const
 mapping::StoreTarget PhysicalStore::target() const
 {
   if (is_unbound_store()) {
-    throw std::invalid_argument{"Target of an unbound store cannot be queried"};
+    throw TracedException<std::invalid_argument>{"Target of an unbound store cannot be queried"};
   }
   if (is_future()) {
     return future_.target();
@@ -129,7 +132,7 @@ void PhysicalStore::bind_empty_data()
 void PhysicalStore::check_accessor_dimension_(std::int32_t dim) const
 {
   if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
-    throw std::invalid_argument{fmt::format(
+    throw TracedException<std::invalid_argument>{fmt::format(
       "Dimension mismatch: invalid to create a {}-D accessor to a {}-D store", dim, this->dim())};
   }
 }
@@ -137,7 +140,7 @@ void PhysicalStore::check_accessor_dimension_(std::int32_t dim) const
 void PhysicalStore::check_buffer_dimension_(std::int32_t dim) const
 {
   if (dim != this->dim()) {
-    throw std::invalid_argument{fmt::format(
+    throw TracedException<std::invalid_argument>{fmt::format(
       "Dimension mismatch: invalid to bind a {}-D buffer to a {}-D store", dim, this->dim())};
   }
 }
@@ -145,7 +148,7 @@ void PhysicalStore::check_buffer_dimension_(std::int32_t dim) const
 void PhysicalStore::check_shape_dimension_(std::int32_t dim) const
 {
   if (dim != this->dim() && (this->dim() != 0 || dim != 1)) {
-    throw std::invalid_argument{fmt::format(
+    throw TracedException<std::invalid_argument>{fmt::format(
       "Dimension mismatch: invalid to retrieve a {}-D rect from a {}-D store", dim, this->dim())};
   }
 }
@@ -153,24 +156,24 @@ void PhysicalStore::check_shape_dimension_(std::int32_t dim) const
 void PhysicalStore::check_valid_binding_(bool bind_buffer) const
 {
   if (!is_unbound_store()) {
-    throw std::invalid_argument{"Buffer can be bound only to an unbound store"};
+    throw TracedException<std::invalid_argument>{"Buffer can be bound only to an unbound store"};
   }
   if (bind_buffer && unbound_field_.bound()) {
-    throw std::invalid_argument{"A buffer has already been bound to the store"};
+    throw TracedException<std::invalid_argument>{"A buffer has already been bound to the store"};
   }
 }
 
 void PhysicalStore::check_write_access_() const
 {
   if (!is_writable()) {
-    throw std::invalid_argument{"Store isn't writable"};
+    throw TracedException<std::invalid_argument>{"Store isn't writable"};
   }
 }
 
 void PhysicalStore::check_reduction_access_() const
 {
   if (!(is_writable() || is_reducible())) {
-    throw std::invalid_argument{"Store isn't reducible"};
+    throw TracedException<std::invalid_argument>{"Store isn't reducible"};
   }
 }
 

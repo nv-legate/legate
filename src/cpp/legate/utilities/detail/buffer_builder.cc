@@ -14,6 +14,8 @@
 
 #include "legate_defines.h"
 
+#include <legate/utilities/detail/traced_exception.h>
+
 #include <cstring>
 #include <fmt/format.h>
 #include <memory>
@@ -38,10 +40,11 @@ void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t a
     constexpr auto is_power_of_2 = [](std::size_t v) { return v && !(v & (v - 1)); };
 
     if (!align) {
-      throw std::invalid_argument{"alignment cannot be 0"};
+      throw TracedException<std::invalid_argument>{"alignment cannot be 0"};
     }
     if (!is_power_of_2(align)) {
-      throw std::invalid_argument{fmt::format("alignment is not a power of 2: {}", align)};
+      throw TracedException<std::invalid_argument>{
+        fmt::format("alignment is not a power of 2: {}", align)};
     }
   }
 
@@ -63,7 +66,7 @@ void BufferBuilder::pack_buffer(const void* mem, std::size_t size, std::size_t a
     const auto ptr = std::align(align, size, aligned_ptr, new_size_and_padding);
     // this should never fail, but hey you never know
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && !ptr) {
-      throw std::runtime_error{
+      throw TracedException<std::runtime_error>{
         fmt::format("Failed to align pointer of size {} to alignment {}, this should never happen!",
                     size,
                     align)};

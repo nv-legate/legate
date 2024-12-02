@@ -12,8 +12,12 @@
 
 #pragma once
 
+#include <legate/utilities/detail/traced_exception.h>
+
 #include "config.hpp"
 #include "legate.h"
+
+#include <stdexcept>
 
 // Include this last:
 #include "prefix.hpp"
@@ -74,11 +78,11 @@ class initialize_library {  // NOLINT(readability-identifier-naming)
    * @throw std::runtime_error If the runtime has not started
    */
   initialize_library()
-    : library_{
-        legate::has_started()
-          ? legate::Runtime::get_runtime()->find_or_create_library("legate.stl",
-                                                                   LEGATE_STL_RESOURCE_CONFIG)
-          : throw std::runtime_error{"Legate STL requires the Legate runtime to be started first"}}
+    : library_{legate::has_started()
+                 ? legate::Runtime::get_runtime()->find_or_create_library(
+                     "legate.stl", LEGATE_STL_RESOURCE_CONFIG)
+                 : throw legate::detail::TracedException<std::runtime_error>{
+                     "Legate STL requires the Legate runtime to be started first"}}
   {
   }
 

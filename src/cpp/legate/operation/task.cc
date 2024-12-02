@@ -13,6 +13,9 @@
 #include "legate/operation/task.h"
 
 #include "legate/operation/detail/task.h"
+#include <legate/utilities/detail/traced_exception.h>
+
+#include <stdexcept>
 
 namespace legate {
 
@@ -46,7 +49,8 @@ const SharedPtr<detail::AutoTask>& AutoTask::impl_() const
 {
   auto&& result = pimpl_->impl();
   if (!result) {
-    throw std::runtime_error{"Illegal to reuse task descriptors that are already submitted"};
+    throw detail::TracedException<std::runtime_error>{
+      "Illegal to reuse task descriptors that are already submitted"};
   }
   return result;
 }
@@ -190,7 +194,8 @@ const SharedPtr<detail::ManualTask>& ManualTask::impl_() const
 {
   auto&& result = pimpl_->impl();
   if (!result) {
-    throw std::runtime_error{"Illegal to reuse task descriptors that are already submitted"};
+    throw detail::TracedException<std::runtime_error>{
+      "Illegal to reuse task descriptors that are already submitted"};
   }
   return result;
 }

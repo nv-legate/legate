@@ -127,7 +127,7 @@ function(legate_configure_test)
   set(unique_src "${unique_src}" PARENT_SCOPE)
 endfunction()
 
-set(runtime_SRC
+set(with_runtime_SRC
     # bug
     bug/alias_via_promote.cc
     bug/aligned_unpack.cc
@@ -229,7 +229,7 @@ set(runtime_SRC
     experimental/stl/views.cc
     experimental/tracing.cc)
 
-set(noinit_SRC
+set(wo_runtime_SRC
     noinit/cuda_driver_api.cc
     noinit/enable_shared_from_this.cc
     noinit/enumerate.cc
@@ -251,20 +251,29 @@ set(noinit_SRC
     noinit/zip_equal.cc
     noinit/zip_shortest.cc)
 
-set(non_reentrant_SRC non_reentrant/death_example.cc non_reentrant/oom_message.cc
-                      non_reentrant/runtime.cc non_reentrant/shutdown_callback.cc)
+set(non_reentrant_with_runtime_SRC
+    non_reentrant/death_example.cc non_reentrant/oom_message.cc non_reentrant/runtime.cc
+    non_reentrant/shutdown_callback.cc)
+
+set(non_reentrant_wo_runtime_SRC
+    non_reentrant/wo_runtime/exception/base.cc
+    non_reentrant/wo_runtime/exception/traced_exception.cc
+    non_reentrant/wo_runtime/exception/terminate_handler.cc)
 
 legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
-                                                      ${runtime_SRC})
-legate_configure_test(NAME tests_wo_runtime SOURCES main_wo_runtime_init.cc ${noinit_SRC})
-legate_configure_test(NAME tests_non_reentrant SOURCES main_with_runtime_init.cc
-                                                       ${non_reentrant_SRC})
+                                                      ${with_runtime_SRC})
+legate_configure_test(NAME tests_wo_runtime SOURCES main_wo_runtime_init.cc
+                                                    ${wo_runtime_SRC})
+legate_configure_test(NAME tests_non_reentrant_with_runtime
+                      SOURCES main_with_runtime_init.cc ${non_reentrant_with_runtime_SRC})
+legate_configure_test(NAME tests_non_reentrant_wo_runtime
+                      SOURCES main_wo_runtime_init.cc ${non_reentrant_wo_runtime_SRC})
 
 if(Legion_USE_CUDA)
   set(gpu_SRC integration/nccl.cu)
 
   legate_configure_test(NAME tests_with_gpus SOURCES main_with_runtime_init.cc
-                                                     ${runtime_SRC} ${gpu_SRC} GPUS 1
+                                                     ${with_runtime_SRC} ${gpu_SRC} GPUS 1
                         PERCENT 30)
 endif()
 

@@ -13,6 +13,7 @@
 #include "legate/data/detail/scalar.h"
 
 #include "legate/data/scalar.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
 #include <stdexcept>
@@ -44,7 +45,7 @@ template <>
 std::string_view Scalar::value() const
 {
   if (type().code() != Type::Code::STRING) {
-    throw std::invalid_argument{"Type of the scalar is not string"};
+    throw detail::TracedException<std::invalid_argument>{"Type of the scalar is not string"};
   }
 
   const void* data  = ptr();
@@ -80,10 +81,11 @@ const void* Scalar::ptr() const { return impl_->data(); }
                                                         std::size_t size)
 {
   if (type.code() == Type::Code::NIL) {
-    throw std::invalid_argument{"Null type cannot be used"};
+    throw detail::TracedException<std::invalid_argument>{"Null type cannot be used"};
   }
   if (type.size() != size) {
-    throw std::invalid_argument{"Size of the value doesn't match with the type"};
+    throw detail::TracedException<std::invalid_argument>{
+      "Size of the value doesn't match with the type"};
   }
 
   return create_impl_(type, data, copy);
@@ -97,16 +99,23 @@ const void* Scalar::ptr() const { return impl_->data(); }
 
 /*static*/ void Scalar::throw_invalid_size_exception_(std::size_t type_size, std::size_t size_of_T)
 {
-  throw std::invalid_argument{fmt::format(
+  throw detail::TracedException<std::invalid_argument>{fmt::format(
     "Size of the scalar is {}, but the requested type has size {}", type_size, size_of_T)};
 }
 
-/*static*/ void Scalar::throw_invalid_type_exception_(Type::Code code,
-                                                      std::string_view kind,
-                                                      std::size_t expected,
-                                                      std::size_t actual)
+/*static*/ void Scalar::throw_invalid_type_conversion_exception_(std::string_view from,
+                                                                 std::string_view to)
 {
-  throw std::invalid_argument{fmt::format(
+  throw detail::TracedException<std::invalid_argument>{
+    fmt::format("{} cannot be casted to {}", from, to)};
+}
+
+/*static*/ void Scalar::throw_invalid_span_conversion_exception_(Type::Code code,
+                                                                 std::string_view kind,
+                                                                 std::size_t expected,
+                                                                 std::size_t actual)
+{
+  throw detail::TracedException<std::invalid_argument>{fmt::format(
     "{} scalar can only be converted into a span of a type whose {} is {} bytes (have {})",
     code,
     kind,

@@ -14,9 +14,11 @@
 
 #include "legate/runtime/detail/library.h"
 #include "legate/utilities/detail/deserializer.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+#include <stdexcept>
 
 namespace legate::mapping::detail {
 
@@ -53,7 +55,8 @@ TaskTarget Task::target() const
     case Processor::TOC_PROC: return TaskTarget::GPU;
     case Processor::OMP_PROC: return TaskTarget::OMP;
     default:
-      throw std::invalid_argument{fmt::format("Invalid task target: {}", fmt::streamed(kind))};
+      throw legate::detail::TracedException<std::invalid_argument>{
+        fmt::format("Invalid task target: {}", fmt::streamed(kind))};
   }
 }
 

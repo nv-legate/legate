@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import shutil
 import sys
 import textwrap
@@ -245,6 +246,7 @@ class TestMain:
                 "--log-level=DEBUG",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
+                "-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING=",
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Release",
@@ -278,6 +280,7 @@ class TestMain:
                 "--log-level=DEBUG",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
+                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Release",
@@ -311,6 +314,7 @@ class TestMain:
                 "--log-level=DEBUG",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
+                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo",
@@ -372,6 +376,7 @@ class TestMain:
                 "--log-level=DEBUG",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
+                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
                 "-DBUILD_SHARED_LIBS:BOOL=OFF",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Debug",
@@ -415,6 +420,7 @@ class TestMain:
                 "--log-level=DEBUG",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
+                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo",

@@ -70,6 +70,7 @@ class ConfigurationManager:
 
     __slots__ = (
         "_cl_args",
+        "_orig_argv",
         "_argv",
         "_extra_argv",
         "_main_package",
@@ -100,7 +101,8 @@ class ConfigurationManager:
         os.environ["AEDIFIX"] = "1"
         main_package = MainModuleType.from_argv(self, argv)
         self._cl_args: Namespace | None = None
-        main_argv, extra_argv = partition_argv(argv)
+        self._orig_argv = tuple(argv)
+        main_argv, extra_argv = partition_argv(self._orig_argv)
         self._argv = tuple(main_argv)
         self._extra_argv = extra_argv
         self._main_package = main_package

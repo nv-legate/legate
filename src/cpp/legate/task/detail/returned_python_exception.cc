@@ -82,7 +82,10 @@ std::string ReturnedPythonException::to_string() const
 
 void ReturnedPythonException::throw_exception()
 {
-  throw PythonTaskException{
+  // Should not wrap this exception in a trace, it may already contain a traced exception.
+  // clang-format off
+  throw PythonTaskException{ // legate-lint: no-trace
+    // clang-format on
     std::exchange(size_, 0),
     const_pointer_cast<const char[]>(std::move(pickle_bytes_)).as_user_ptr()};
 }

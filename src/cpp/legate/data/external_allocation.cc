@@ -16,8 +16,11 @@
 
 #include "legate/data/detail/external_allocation.h"
 #include "legate/runtime/detail/runtime.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include "realm/instance.h"
+
+#include <stdexcept>
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
 #include "realm/cuda/cuda_access.h"
@@ -25,7 +28,6 @@
 
 #include <fmt/format.h>
 #include <memory>
-#include <stdexcept>
 
 namespace legate {
 
@@ -77,7 +79,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   static_cast<void>(size);
   static_cast<void>(read_only);
   static_cast<void>(deleter);
-  throw std::runtime_error{"CUDA support is unavailable"};
+  throw detail::TracedException<std::runtime_error>{"CUDA support is unavailable"};
   return {};
 #endif
 }
@@ -92,7 +94,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
   auto& local_gpus = detail::Runtime::get_runtime()->local_machine().gpus();
   if (local_device_id >= local_gpus.size()) {
-    throw std::out_of_range{
+    throw detail::TracedException<std::out_of_range>{
       fmt::format("Device ID {} is invalid (the runtime is configured with only {}",
                   local_device_id,
                   local_gpus.size())};
@@ -113,7 +115,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   static_cast<void>(size);
   static_cast<void>(read_only);
   static_cast<void>(deleter);
-  throw std::runtime_error{"CUDA support is unavailable"};
+  throw detail::TracedException<std::runtime_error>{"CUDA support is unavailable"};
   return {};
 #endif
 }

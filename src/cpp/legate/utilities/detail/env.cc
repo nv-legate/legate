@@ -15,6 +15,7 @@
 #include "legate/utilities/assert.h"             // LEGATE_LIKELY()
 #include "legate/utilities/detail/formatters.h"  // to format ZStringView
 #include "legate/utilities/detail/zstring_view.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <cerrno>
 #include <charconv>
@@ -44,7 +45,7 @@ template <typename T>
 [[nodiscard]] std::optional<T> read_env_common(ZStringView variable)
 {
   if (variable.empty()) {
-    throw std::invalid_argument{"Environment variable name is empty"};
+    throw TracedException<std::invalid_argument>{"Environment variable name is empty"};
   }
 
   const auto _ = ENVIRONMENT_LOCK();
@@ -62,19 +63,20 @@ template <typename T>
     if (const auto [_2, ec] = std::from_chars(value_sv.begin(), value_sv.end(), ret);
         ec != std::errc{}) {
       if (ec == std::errc::invalid_argument) {
-        throw std::invalid_argument{fmt::format(
+        throw TracedException<std::invalid_argument>{fmt::format(
           "{} is not a valid value for {}. Expected an integral or floating point value",
           value_sv,
           variable)};
       }
       if (ec == std::errc::result_out_of_range) {
-        throw std::out_of_range{fmt::format("{} is not a valid value for {}, must be in [{}, {}]",
-                                            value_sv,
-                                            variable,
-                                            std::numeric_limits<T>::min(),
-                                            std::numeric_limits<T>::max())};
+        throw TracedException<std::out_of_range>{
+          fmt::format("{} is not a valid value for {}, must be in [{}, {}]",
+                      value_sv,
+                      variable,
+                      std::numeric_limits<T>::min(),
+                      std::numeric_limits<T>::max())};
       }
-      throw std::system_error{
+      throw TracedException<std::system_error>{
         std::make_error_code(ec),
         fmt::format("Unknown error parsing {}, found {}", variable, value_sv)};
     }
@@ -101,7 +103,7 @@ template <>
   auto parsed_val = read_env_common<std::int64_t>(variable);
 
   if (parsed_val.has_value() && (*parsed_val < 0)) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Invalid value for config value \"{}\": {}. Value must not be negative.",
                   variable,
                   *parsed_val)};
@@ -171,11 +173,12 @@ void EnvironmentVariableBase::set_(std::string_view value, bool overwrite) const
                     overwrite ? 1 : 0);
   }();
   if (LEGATE_UNLIKELY(ret)) {
-    throw std::runtime_error{fmt::format("setenv({}, {}) failed with exit code: {}: {}",
-                                         static_cast<ZStringView>(*this),
-                                         value,
-                                         ret,
-                                         std::strerror(errno))};
+    throw TracedException<std::runtime_error>{
+      fmt::format("setenv({}, {}) failed with exit code: {}: {}",
+                  static_cast<ZStringView>(*this),
+                  value,
+                  ret,
+                  std::strerror(errno))};
   }
 }
 

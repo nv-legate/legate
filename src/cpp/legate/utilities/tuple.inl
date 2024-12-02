@@ -515,6 +515,12 @@ auto apply(FUNC&& func, const tuple<T>& rhs)
   return result;
 }
 
+namespace detail {
+
+[[noreturn]] void throw_invalid_tuple_sizes(std::size_t lhs_size, std::size_t rhs_size);
+
+}  // namespace detail
+
 template <typename FUNC, typename T1, typename T2>
 auto apply(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
 {
@@ -522,10 +528,9 @@ auto apply(FUNC&& func, const tuple<T1>& rhs1, const tuple<T2>& rhs2)
   tuple<VAL> result;
 
   if (rhs1.size() != rhs2.size()) {
-    throw std::invalid_argument{"Operands should have the same size"};
+    detail::throw_invalid_tuple_sizes(rhs1.size(), rhs2.size());
   }
   result.reserve(rhs1.size());
-
   for (auto&& [rh1, rh2] : legate::detail::zip_equal(rhs1.data(), rhs2.data())) {
     result.append_inplace(func(rh1, rh2));
   }

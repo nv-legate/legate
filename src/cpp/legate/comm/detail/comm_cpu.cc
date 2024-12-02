@@ -21,6 +21,7 @@
 #include "legate/runtime/detail/runtime.h"
 #include "legate/runtime/library.h"
 #include "legate/utilities/macros.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>
 
@@ -37,7 +38,7 @@ void register_tasks(detail::Library* core_library)
       if constexpr (LEGATE_DEFINED(LEGATE_USE_NETWORK)) {
         mpi::register_tasks(lib);
       } else {
-        throw std::runtime_error{
+        throw legate::detail::TracedException<std::runtime_error>{
           "cannot register MPI tasks, legate was not configured with MPI support"};
       }
       break;
@@ -55,7 +56,7 @@ void register_factory(const detail::Library* library)
         if constexpr (LEGATE_DEFINED(LEGATE_USE_NETWORK)) {
           return mpi::make_factory(library);
         }
-        throw std::runtime_error{
+        throw legate::detail::TracedException<std::runtime_error>{
           "cannot create MPI factory, legate was not configured with MPI support"};
       case CollCommType::CollLocal: return local::make_factory(library);
     }

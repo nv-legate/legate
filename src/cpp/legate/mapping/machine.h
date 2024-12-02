@@ -123,6 +123,10 @@ class ProcessorRange {
   [[nodiscard]] constexpr bool operator!=(const ProcessorRange& other) const noexcept;
   [[nodiscard]] constexpr bool operator<(const ProcessorRange& other) const noexcept;
   [[nodiscard]] std::size_t hash() const noexcept;
+
+ private:
+  [[noreturn]] static void throw_illegal_empty_node_range_();
+  [[noreturn]] static void throw_illegal_invalid_intersection_();
 };
 
 std::ostream& operator<<(std::ostream& stream, const ProcessorRange& range);

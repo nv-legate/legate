@@ -17,6 +17,7 @@
 #include "legate/utilities/detail/formatters.h"
 #include "legate/utilities/detail/zstring_view.h"
 #include "legate/utilities/macros.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
 #include <cctype>
@@ -159,8 +160,8 @@ class HandleLoadError : public std::invalid_argument {
     // case it does not exist. For example, on Windows, C:a/b/c/d *does* work, but a user
     // seeing such a path might think to themselves "well, obviously, you probably meant
     // C:a\b\c".
-    throw InvalidWrapperLocation{fmt::format("invalid MPI wrapper location: '{}' (does not exist)",
-                                             orig_path.make_preferred())};
+    throw legate::detail::TracedException<InvalidWrapperLocation>{fmt::format(
+      "invalid MPI wrapper location: '{}' (does not exist)", orig_path.make_preferred())};
   }
   resolved_path.make_preferred();
   return resolved_path;
@@ -184,7 +185,7 @@ MPIInterface::Impl::try_load_handle_(const std::filesystem::path& path)
     return *std::move(handle);
   }
 
-  throw HandleLoadError{
+  throw legate::detail::TracedException<HandleLoadError>{
     fmt::format("failed to load MPI wrapper '{}': {}", wrapper_lib, ::dlerror())};
 }
 
@@ -200,7 +201,7 @@ void MPIInterface::Impl::load_wrapper_()
     if (const auto ret = ::dlsym(this->handle_.get(), LEGATE_STRINGIZE(src))) {               \
       this->dest = reinterpret_cast<dest_type>(ret); /* NOLINT(bugprone-macro-parentheses) */ \
     } else {                                                                                  \
-      throw std::runtime_error{                                                               \
+      throw legate::detail::TracedException<std::runtime_error>{                              \
         fmt::format("dlsym(" LEGATE_STRINGIZE(src) ") failed: {}", ::dlerror())};             \
     }                                                                                         \
   } while (0)

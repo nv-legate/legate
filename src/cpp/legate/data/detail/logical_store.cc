@@ -28,6 +28,7 @@
 #include "legate/utilities/detail/enumerate.h"
 #include "legate/utilities/detail/formatters.h"
 #include "legate/utilities/detail/tuple.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
 #include <fmt/format.h>
@@ -452,7 +453,7 @@ InternalSharedPtr<Storage> StoragePartition::get_child_storage(
   LEGATE_ASSERT(self.get() == this);
 
   if (partition_->kind() != Partition::Kind::TILING) {
-    throw std::runtime_error{"Sub-storage is implemented only for tiling"};
+    throw TracedException<std::runtime_error>{"Sub-storage is implemented only for tiling"};
   }
 
   auto tiling        = static_cast<Tiling*>(partition_.get());
@@ -466,7 +467,7 @@ InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(
   const tuple<std::uint64_t>& color)
 {
   if (partition_->kind() != Partition::Kind::TILING) {
-    throw std::runtime_error{"Sub-storage is implemented only for tiling"};
+    throw TracedException<std::runtime_error>{"Sub-storage is implemented only for tiling"};
   }
 
   auto tiling = static_cast<Tiling*>(partition_.get());
@@ -498,7 +499,7 @@ namespace {
 void assert_fixed_storage_size(const InternalSharedPtr<Storage>& storage)
 {
   if (storage->type()->variable_size()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Store cannot be created with variable size type {}", *(storage->type()))};
   }
 }
@@ -566,7 +567,7 @@ void LogicalStore::set_future_map(Legion::FutureMap future_map, std::size_t scal
 InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, std::size_t dim_size)
 {
   if (extra_dim < 0 || extra_dim > static_cast<std::int32_t>(dim())) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Invalid promotion on dimension {} for a {}-D store", extra_dim, dim())};
   }
 
@@ -580,12 +581,12 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
   auto&& old_extents = extents();
 
   if (d < 0 || d >= static_cast<std::int32_t>(dim())) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Invalid projection on dimension {} for a {}-D store", d, dim())};
   }
 
   if (index < 0 || index >= static_cast<std::int64_t>(old_extents[d])) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Projection index {} is out of bounds [0, {})", index, old_extents[d])};
   }
 
@@ -607,7 +608,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
 {
   LEGATE_ASSERT(self.get() == this);
   if (dim < 0 || dim >= static_cast<std::int32_t>(this->dim())) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Invalid slicing of dimension {} for a {}-D store", dim, this->dim())};
   }
 
@@ -630,7 +631,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
   auto [start, stop] = sanitize_slice(slice, static_cast<std::int64_t>(exts[dim]));
 
   if (start < stop && (start >= exts[dim] || stop > exts[dim])) {
-    throw std::invalid_argument{fmt::format(
+    throw TracedException<std::invalid_argument>{fmt::format(
       "Out-of-bounds slicing on dimension {} for a store of shape {}", this->dim(), extents())};
   }
 
@@ -660,17 +661,18 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
 InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t> axes)
 {
   if (axes.size() != dim()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Dimension Mismatch: expected {} axes, but got {}", dim(), axes.size())};
   }
 
   if (axes.size() != std::set<std::int32_t>{axes.begin(), axes.end()}.size()) {
-    throw std::invalid_argument{"Duplicate axes found"};
+    throw TracedException<std::invalid_argument>{"Duplicate axes found"};
   }
 
   for (auto&& ax_i : axes) {
     if (ax_i < 0 || ax_i >= static_cast<std::int32_t>(dim())) {
-      throw std::invalid_argument{fmt::format("Invalid axis {} for a {}-D store", ax_i, dim())};
+      throw TracedException<std::invalid_argument>{
+        fmt::format("Invalid axis {} for a {}-D store", ax_i, dim())};
     }
   }
 
@@ -683,7 +685,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
                                                           std::vector<std::uint64_t> sizes)
 {
   if (dim < 0 || dim >= static_cast<std::int32_t>(this->dim())) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Invalid delinearization on dimension {} for a {}-D store", dim, this->dim())};
   }
 
@@ -698,7 +700,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
   };
 
   if (!delinearizable(old_extents[dim], sizes)) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Dimension of size {} cannot be delinearized into {}", old_extents[dim], sizes)};
   }
 
@@ -724,13 +726,13 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
 {
   LEGATE_ASSERT(self.get() == this);
   if (tile_shape.size() != dim()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Incompatible tile shape: expected a {}-tuple, got a {}-tuple",
                   extents().size(),
                   tile_shape.size())};
   }
   if (tile_shape.volume() == 0) {
-    throw std::invalid_argument{"Tile shape must have a volume greater than 0"};
+    throw TracedException<std::invalid_argument>{"Tile shape must have a volume greater than 0"};
   }
   auto color_shape = apply([](auto c, auto t) { return (c + t - 1) / t; }, extents(), tile_shape);
   auto partition   = create_tiling(std::move(tile_shape), std::move(color_shape));
@@ -740,7 +742,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
 InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(bool ignore_future_mutability)
 {
   if (unbound()) {
-    throw std::invalid_argument{"Unbound store cannot be inlined mapped"};
+    throw TracedException<std::invalid_argument>{"Unbound store cannot be inlined mapped"};
   }
 
   // If there's already a physical store for this logical store, just return the cached one.
@@ -796,10 +798,11 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(bool ignore_fu
 void LogicalStore::detach()
 {
   if (transformed()) {
-    throw std::invalid_argument{"Manual detach must be called on the root store"};
+    throw TracedException<std::invalid_argument>{"Manual detach must be called on the root store"};
   }
   if (has_scalar_storage() || unbound()) {
-    throw std::invalid_argument{"Only stores created with share=true can be manually detached"};
+    throw TracedException<std::invalid_argument>{
+      "Only stores created with share=true can be manually detached"};
   }
   get_region_field()->detach();
 }
@@ -948,7 +951,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
 {
   LEGATE_ASSERT(self.get() == this);
   if (unbound()) {
-    throw std::invalid_argument{"Unbound store cannot be manually partitioned"};
+    throw TracedException<std::invalid_argument>{"Unbound store cannot be manually partitioned"};
   }
   auto storage_partition = create_storage_partition(
     get_storage(), partition->invert(partition, transform_.get()), std::move(complete));
@@ -1004,7 +1007,7 @@ std::unique_ptr<Analyzable> LogicalStore::future_to_launcher_arg_(Legion::Future
 
   if (!future.exists()) {
     if (privilege != LEGION_WRITE_ONLY) {
-      throw std::invalid_argument{
+      throw TracedException<std::invalid_argument>{
         "Read access or reduction to an uninitialized scalar store is prohibited"};
     }
     return std::make_unique<WriteOnlyScalarStoreArg>(this, redop);
@@ -1169,12 +1172,13 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
   const tuple<std::uint64_t>& color) const
 {
   if (partition_->kind() != Partition::Kind::TILING) {
-    throw std::runtime_error{"Child stores can be retrieved only from tile partitions"};
+    throw TracedException<std::runtime_error>{
+      "Child stores can be retrieved only from tile partitions"};
   }
   const auto* tiling = static_cast<const Tiling*>(partition_.get());
 
   if (!tiling->has_color(color)) {
-    throw std::out_of_range{
+    throw TracedException<std::out_of_range>{
       fmt::format("Color {} is invalid for partition of color shape {}", color, color_shape())};
   }
 

@@ -15,6 +15,8 @@
 
 #include <legion.h>
 
+#include <legate/version.h>
+
 #ifndef LEGION_REDOP_HALF
 #error "Legate needs Legion to be compiled with -DLEGION_REDOP_HALF"
 #endif
@@ -32,6 +34,8 @@
 #define LEGATE_SHARED_LIBRARY_SUFFIX "@CMAKE_SHARED_LIBRARY_SUFFIX@"
 
 #define LEGATE_SHARED_LIBRARY_PREFIX "@CMAKE_SHARED_LIBRARY_PREFIX@"
+
+#define LEGATE_CONFIGURE_OPTIONS "@LEGATE_CONFIGURE_OPTIONS@"
 
 #if !defined(LEGATE_USE_CUDA) && defined(LEGION_USE_CUDA)
 #define LEGATE_USE_CUDA 1
@@ -57,3 +61,10 @@
 // TODO(wonchanl): 2022-10-04: Work around a Legion bug, by not instantiating futures on
 // framebuffer.
 #define LEGATE_NO_FUTURES_ON_FB 1
+
+namespace legate {
+
+extern const char *const LEGATE_GIT_HASH;
+extern const char *const LEGION_GIT_HASH;
+
+} // namespace legate

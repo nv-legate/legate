@@ -17,6 +17,9 @@
 #include "legate/operation/detail/store_projection.h"
 #include "legate/partitioning/detail/constraint_solver.h"
 #include "legate/partitioning/detail/partitioner.h"
+#include <legate/utilities/detail/traced_exception.h>
+
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -51,7 +54,7 @@ void Fill::validate()
   const auto& value_type =
     value_.index() == 0 ? std::get<0>(value_)->type() : std::get<1>(value_).type();
   if (*lhs_->type() != *value_type) {
-    throw std::invalid_argument{"Fill value and target must have the same type"};
+    throw TracedException<std::invalid_argument>{"Fill value and target must have the same type"};
   }
 }
 

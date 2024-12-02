@@ -412,6 +412,8 @@ class PhysicalStore {
   void get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid) const;
   void update_num_elements_(std::size_t num_elements) const;
 
+  [[noreturn]] static void throw_invalid_scalar_access_();
+
   SharedPtr<detail::PhysicalStore> impl_{};
 };
 

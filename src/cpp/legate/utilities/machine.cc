@@ -14,13 +14,16 @@
 
 #include "legate/runtime/detail/config.h"
 #include "legate/runtime/detail/runtime.h"
+#include <legate/utilities/detail/traced_exception.h>
+
+#include <stdexcept>
 
 namespace legate {
 
 Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible)
 {
   if (!Legion::Runtime::has_runtime()) {
-    throw std::runtime_error{"Runtime has not started"};
+    throw detail::TracedException<std::runtime_error>{"Runtime has not started"};
   }
 
   switch (const auto kind = detail::Runtime::get_runtime()->get_executing_processor().kind()) {

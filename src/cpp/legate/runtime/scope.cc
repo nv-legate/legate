@@ -13,8 +13,10 @@
 #include "legate/runtime/scope.h"
 
 #include "legate/runtime/detail/runtime.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <optional>
+#include <stdexcept>
 #include <utility>
 
 namespace legate {
@@ -24,7 +26,8 @@ class Scope::Impl {
   void set_priority(std::int32_t priority)
   {
     if (priority_) {
-      throw std::invalid_argument{"Priority can be set only once for each scope"};
+      throw detail::TracedException<std::invalid_argument>{
+        "Priority can be set only once for each scope"};
     }
     priority_ = detail::Runtime::get_runtime()->scope().exchange_priority(priority);
   }
@@ -32,7 +35,8 @@ class Scope::Impl {
   void set_exception_mode(ExceptionMode exception_mode)
   {
     if (exception_mode_) {
-      throw std::invalid_argument{"Exception mode can be set only once for each scope"};
+      throw detail::TracedException<std::invalid_argument>{
+        "Exception mode can be set only once for each scope"};
     }
     exception_mode_ =
       detail::Runtime::get_runtime()->scope().exchange_exception_mode(exception_mode);
@@ -41,7 +45,8 @@ class Scope::Impl {
   void set_provenance(std::string provenance)
   {
     if (provenance_) {
-      throw std::invalid_argument{"Provenance can be set only once for each scope"};
+      throw detail::TracedException<std::invalid_argument>{
+        "Provenance can be set only once for each scope"};
     }
     provenance_ =
       detail::Runtime::get_runtime()->scope().exchange_provenance(std::move(provenance));
@@ -50,7 +55,8 @@ class Scope::Impl {
   void set_machine(InternalSharedPtr<mapping::detail::Machine> machine)
   {
     if (machine_) {
-      throw std::invalid_argument{"Machine can be set only once for each scope"};
+      throw detail::TracedException<std::invalid_argument>{
+        "Machine can be set only once for each scope"};
     }
     machine_ = detail::Runtime::get_runtime()->scope().exchange_machine(std::move(machine));
   }
@@ -130,7 +136,8 @@ void Scope::set_machine(const mapping::Machine& machine)
 {
   auto result = Scope::machine() & machine;
   if (result.empty()) {
-    throw std::runtime_error{"Empty machines cannot be used for resource scoping"};
+    throw detail::TracedException<std::runtime_error>{
+      "Empty machines cannot be used for resource scoping"};
   }
   impl_->set_machine(result.impl());
 }

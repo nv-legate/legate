@@ -38,6 +38,10 @@ function(legate_generate_legate_defines)
     set(LEGATE_USE_CAL 1)
   endif()
 
+  if(NOT LEGATE_CONFIGURE_OPTIONS)
+    set(LEGATE_CONFIGURE_OPTIONS "<unknown configure options>")
+  endif()
+
   configure_file(${LEGATE_CMAKE_DIR}/templates/legate_defines.h.in
                  "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate_defines.h"
                  @ONLY)

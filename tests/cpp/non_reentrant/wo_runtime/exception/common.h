@@ -1,0 +1,134 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+ *
+ * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+ * property and proprietary rights in and to this material, related
+ * documentation and any modifications thereto. Any use, reproduction,
+ * disclosure or distribution of this material and related documentation
+ * without an express license agreement from NVIDIA CORPORATION or
+ * its affiliates is strictly prohibited.
+ */
+
+#pragma once
+
+#include <algorithm>
+#include <fmt/format.h>
+#include <fmt/std.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <typeinfo>
+#include <utilities/env.h>
+#include <utilities/utilities.h>
+#include <vector>
+
+namespace traced_exception_test {
+
+class TracedExceptionFixture : public DefaultFixture {
+ public:
+  void SetUp() override;
+  void TearDown() override;
+
+ private:
+  std::optional<legate::test::Environment::TemporaryEnvVar> tmp_{};
+};
+
+inline void TracedExceptionFixture::SetUp()
+{
+  // Must disable color output, otherwise the tests checking the tracebacks will be
+  // interspersed with color codes.
+  //
+  // Must do this in a fixture because the "should exceptions use color" check is done
+  // exactly once, and on construction of a TracedException object. So we need to ensure that
+  // all tests are disabling color output.
+  tmp_.emplace("NO_COLOR", "1", true);
+  DefaultFixture::SetUp();
+}
+
+inline void TracedExceptionFixture::TearDown()
+{
+  tmp_.reset();
+  DefaultFixture::TearDown();
+}
+
+[[nodiscard]] inline std::vector<std::string> split_string(std::string_view str)
+{
+  std::vector<std::string> strings;
+  std::string_view::size_type pos  = 0;
+  std::string_view::size_type prev = 0;
+
+  strings.reserve(static_cast<std::size_t>(std::count(str.begin(), str.end(), '\n')));
+  while ((pos = str.find('\n', prev)) != std::string_view::npos) {
+    strings.emplace_back(str.substr(prev, pos - prev));
+    prev = pos + 1;
+  }
+
+  // To get the last substring (or only, if delimiter is not found)
+  if (const auto end = str.substr(prev); !end.empty()) {
+    strings.emplace_back(end);
+  }
+  return strings;
+}
+
+MATCHER_P3(MatchesStackTrace,  // NOLINT
+           exn_type_info,      // NOLINT
+           exn_message,        // NOLINT
+           file_name,          // NOLINT
+           fmt::format("matches the legate stack trace (with message '{}')", exn_message))
+{
+  using ::testing::MatchesRegex;
+  using ::testing::StartsWith;
+
+  const auto lines = split_string(arg);
+  const auto deref = [&](std::vector<std::string>::const_iterator it) -> std::string_view {
+    EXPECT_NE(it, lines.end()) << "Line-iterator out of range";
+    return *it;
+  };
+
+  EXPECT_FALSE(lines.empty());
+  // If cpptrace encounters an error when trying to gather a stack trace (such as failing to
+  // read debug symbols from system libraries), it prints a bunch of error messages:
+  //
+  // Cpptrace internal error: Unable to read object file /usr/lib/libc++abi.dylib
+  // Cpptrace internal error: Unable to read object file /usr/lib/system/libunwind.dylib
+  // ...
+  //
+  // We can safely skip those to get to the actual traceback.
+  auto it = std::find_if(lines.cbegin(), lines.cend(), [](std::string_view line) {
+    return line.find("Cpptrace internal error") == std::string_view::npos;
+  });
+
+  EXPECT_NE(it, lines.end()) << "did not find a legate stack trace";
+  EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: [=]+"));
+  EXPECT_EQ(deref(it++), fmt::format("LEGATE ERROR: {}: {}", exn_type_info, exn_message));
+  EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: System: .*"));
+  EXPECT_THAT(deref(it++),
+              MatchesRegex(R"(LEGATE ERROR: Legate version: [0-9]+.[0-9]+.[0-9]+ \([A-z0-9]+\))"));
+  EXPECT_THAT(deref(it++),
+              MatchesRegex(R"(LEGATE ERROR: Legion version: [0-9]+.[0-9]+.[0-9]+ \([A-z0-9]+\))"));
+  EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: Configure options: .*"));
+  EXPECT_EQ(deref(it++),
+            "LEGATE ERROR: Stack trace (most recent call first, top-most exception only):");
+
+  auto found = false;
+
+  for (; it != lines.end(); ++it) {
+    EXPECT_THAT(*it, StartsWith("LEGATE ERROR: "));
+    if (it->find(file_name) != std::string::npos) {
+      found = true;
+    }
+  }
+
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    // Can only reliably expect to find the file name in the stack trace in debug mode. Release
+    // builds will likely have stripped this out.
+    EXPECT_TRUE(found);
+  }
+  EXPECT_THAT(lines.back(), MatchesRegex("LEGATE ERROR: [=]+"));
+  return true;
+}
+
+}  // namespace traced_exception_test

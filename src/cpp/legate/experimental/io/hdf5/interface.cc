@@ -18,6 +18,7 @@
 #include <legate/experimental/io/hdf5/interface.h>
 #include <legate/runtime/runtime.h>
 #include <legate/type/type_info.h>
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <highfive/H5DataSet.hpp>
 
@@ -61,7 +62,9 @@ namespace {
         case _16_BIT: return legate::int16();
         case _32_BIT: return legate::int32();
         case _64_BIT: return legate::int64();
-        default: throw UnsupportedHDF5DataTypeError{fmt::format("unhandled integer size: {}", s)};
+        default:
+          throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
+            fmt::format("unhandled integer size: {}", s)};
       }
     }
     case HighFive::DataTypeClass::Float: {
@@ -70,14 +73,15 @@ namespace {
           // HighFive throws "Type given to create_and_check_datatype is not valid" if you try
           // to construct a float16. I suppose we could just let it through (in the hopes that
           // eventually they do support it), but for now we catch this explicitly.
-          throw UnsupportedHDF5DataTypeError{fmt::format(
+          throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{fmt::format(
             "unsupported floating point size: {}. Legate supports this datatype but HDF5 does "
             "not",
             s)};
         case _32_BIT: return legate::float32();
         case _64_BIT: return legate::float64();
         default:
-          throw UnsupportedHDF5DataTypeError{fmt::format("unhandled floating point size: {}", s)};
+          throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
+            fmt::format("unhandled floating point size: {}", s)};
       }
     }
     case HighFive::DataTypeClass::BitField:
@@ -85,7 +89,7 @@ namespace {
     case HighFive::DataTypeClass::String: return legate::string_type();
     case HighFive::DataTypeClass::Invalid: return legate::null_type();
     default:
-      throw UnsupportedHDF5DataTypeError{
+      throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
         fmt::format("unsupported HDF5 datatype: {}", dtype.string())};
   }
 }
@@ -115,7 +119,7 @@ namespace {
   const auto f       = detail::open_hdf5_file(lock, path, /*gds*/ false);
   const auto dataset = [&](const std::string& name) {
     if (!f.exist(name) || (f.getObjectType(name) != HighFive::ObjectType::Dataset)) {
-      throw InvalidDataSetError{
+      throw legate::detail::TracedException<InvalidDataSetError>{
         fmt::format("Dataset '{}' does not exist in {}", name, path), path, name};
     }
     return f.getDataSet(name);
@@ -134,7 +138,8 @@ namespace {
 LogicalArray from_file(const std::filesystem::path& file_path, std::string_view dataset_name)
 {
   if (!std::filesystem::exists(file_path)) {
-    throw std::system_error{std::make_error_code(std::errc::no_such_file_or_directory), file_path};
+    throw legate::detail::TracedException<std::system_error>{
+      std::make_error_code(std::errc::no_such_file_or_directory), file_path};
   }
 
   auto&& native_path = file_path.native();

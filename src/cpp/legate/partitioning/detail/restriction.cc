@@ -13,6 +13,7 @@
 #include "legate/partitioning/detail/restriction.h"
 
 #include "legate/utilities/detail/zip.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -32,7 +33,7 @@ Restrictions join(const Restrictions& lhs, const Restrictions& rhs)
 void join_inplace(Restrictions& lhs, const Restrictions& rhs)
 {
   if (lhs.size() != rhs.size()) {
-    throw std::invalid_argument{"Restrictions must have the same size"};
+    throw TracedException<std::invalid_argument>{"Restrictions must have the same size"};
   }
   if (rhs.empty()) {
     return;

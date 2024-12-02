@@ -17,6 +17,7 @@
 #include "legate/operation/detail/task.h"
 #include "legate/partitioning/detail/constraint.h"
 #include "legate/partitioning/detail/constraint_solver.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
 #include <fmt/format.h>
@@ -27,7 +28,7 @@ namespace legate::detail {
 
 const InternalSharedPtr<LogicalStore>& LogicalArray::data() const
 {
-  throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
+  throw TracedException<std::invalid_argument>{"Data store of a nested array cannot be retrieved"};
 
   static const InternalSharedPtr<LogicalStore> ptr;
   return ptr;
@@ -89,7 +90,8 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::delinearize(
 const InternalSharedPtr<LogicalStore>& BaseLogicalArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
+    throw TracedException<std::invalid_argument>{
+      "Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }
@@ -113,7 +115,7 @@ InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array(
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::child(std::uint32_t /*index*/) const
 {
-  throw std::invalid_argument{"Non-nested array has no child sub-array"};
+  throw TracedException<std::invalid_argument>{"Non-nested array has no child sub-array"};
   return {};
 }
 
@@ -210,32 +212,32 @@ bool ListLogicalArray::unbound() const { return descriptor_->unbound() || vardat
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::promote(std::int32_t, std::size_t) const
 {
-  throw std::runtime_error{"List array does not support store transformations"};
+  throw TracedException<std::runtime_error>{"List array does not support store transformations"};
   return {};
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::project(std::int32_t, std::int64_t) const
 {
-  throw std::runtime_error{"List array does not support store transformations"};
+  throw TracedException<std::runtime_error>{"List array does not support store transformations"};
   return {};
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::slice(std::int32_t, Slice) const
 {
-  throw std::runtime_error{"List array does not support store transformations"};
+  throw TracedException<std::runtime_error>{"List array does not support store transformations"};
   return {};
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::transpose(const std::vector<std::int32_t>&) const
 {
-  throw std::runtime_error{"List array does not support store transformations"};
+  throw TracedException<std::runtime_error>{"List array does not support store transformations"};
   return {};
 }
 
 InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
   std::int32_t, const std::vector<std::uint64_t>&) const
 {
-  throw std::runtime_error{"List array does not support store transformations"};
+  throw TracedException<std::runtime_error>{"List array does not support store transformations"};
   return {};
 }
 
@@ -251,13 +253,15 @@ InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array(
 InternalSharedPtr<LogicalArray> ListLogicalArray::child(std::uint32_t index) const
 {
   if (unbound()) {
-    throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
+    throw TracedException<std::invalid_argument>{
+      "Invalid to retrieve a sub-array of an unbound array"};
   }
   switch (index) {
     case 0: return descriptor_;
     case 1: return vardata_;
     default: {
-      throw std::out_of_range{fmt::format("List array does not have child {}", index)};
+      throw TracedException<std::out_of_range>{
+        fmt::format("List array does not have child {}", index)};
       break;
     }
   }
@@ -267,7 +271,8 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::child(std::uint32_t index) con
 const InternalSharedPtr<BaseLogicalArray>& ListLogicalArray::descriptor() const
 {
   if (unbound()) {
-    throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
+    throw TracedException<std::invalid_argument>{
+      "Invalid to retrieve a sub-array of an unbound array"};
   }
   return descriptor_;
 }
@@ -275,7 +280,8 @@ const InternalSharedPtr<BaseLogicalArray>& ListLogicalArray::descriptor() const
 const InternalSharedPtr<LogicalArray>& ListLogicalArray::vardata() const
 {
   if (unbound()) {
-    throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
+    throw TracedException<std::invalid_argument>{
+      "Invalid to retrieve a sub-array of an unbound array"};
   }
   return vardata_;
 }
@@ -431,7 +437,8 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::delinearize(
 const InternalSharedPtr<LogicalStore>& StructLogicalArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
+    throw TracedException<std::invalid_argument>{
+      "Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }
@@ -454,7 +461,8 @@ InternalSharedPtr<PhysicalArray> StructLogicalArray::get_physical_array(
 InternalSharedPtr<LogicalArray> StructLogicalArray::child(std::uint32_t index) const
 {
   if (unbound()) {
-    throw std::invalid_argument{"Invalid to retrieve a sub-array of an unbound array"};
+    throw TracedException<std::invalid_argument>{
+      "Invalid to retrieve a sub-array of an unbound array"};
   }
   return fields_.at(index);
 }

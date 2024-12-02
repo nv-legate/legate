@@ -12,9 +12,11 @@
 
 #include <legate/cuda/detail/module_manager.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <array>
 #include <fmt/format.h>
+#include <stdexcept>
 
 namespace legate::cuda::detail {
 
@@ -77,17 +79,17 @@ CUlibrary CUDAModuleManager::load_library(
   std::pair<Span<CUlibraryOption>, Span<void*>> library_options)
 {
   if (!fatbin) {
-    throw std::invalid_argument{"Fatbin pointer cannot be NULL"};
+    throw legate::detail::TracedException<std::invalid_argument>{"Fatbin pointer cannot be NULL"};
   }
 
   if (jit_options.first.size() != jit_options.second.size()) {
-    throw std::out_of_range{
+    throw legate::detail::TracedException<std::out_of_range>{
       fmt::format("Number of jit options ({}) != number of jit option values ({})",
                   jit_options.first.size(),
                   jit_options.second.size())};
   }
   if (library_options.first.size() != library_options.second.size()) {
-    throw std::out_of_range{
+    throw legate::detail::TracedException<std::out_of_range>{
       fmt::format("Number of library options ({}) != number of library option values ({})",
                   library_options.first.size(),
                   library_options.second.size())};
@@ -123,7 +125,7 @@ CUkernel CUDAModuleManager::load_kernel_from_fatbin(const void* fatbin, const ch
 {
   // No need to check fatbin, load_library() does that for us
   if (!kernel_name) {
-    throw std::invalid_argument{"Kernel name must not be NULL"};
+    throw legate::detail::TracedException<std::invalid_argument>{"Kernel name must not be NULL"};
   }
 
   const auto lib = load_library(fatbin);

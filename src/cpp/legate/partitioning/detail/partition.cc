@@ -17,12 +17,14 @@
 #include "legate/runtime/detail/runtime.h"
 #include "legate/type/detail/type_info.h"
 #include "legate/utilities/detail/tuple.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
 #include <functional>
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -44,7 +46,7 @@ InternalSharedPtr<Partition> NoPartition::bloat(const tuple<std::uint64_t>& /*lo
 
 Legion::Domain NoPartition::launch_domain() const
 {
-  throw std::invalid_argument{"NoPartition has no launch domain"};
+  throw TracedException<std::invalid_argument>{"NoPartition has no launch domain"};
 }
 
 std::string NoPartition::to_string() const { return "NoPartition"; }
@@ -306,14 +308,14 @@ bool Weighted::satisfies_restrictions(const Restrictions& restrictions) const
 
 InternalSharedPtr<Partition> Weighted::scale(const tuple<std::uint64_t>& /*factors*/) const
 {
-  throw std::runtime_error{"Not implemented"};
+  throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
 }
 
 InternalSharedPtr<Partition> Weighted::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
                                              const tuple<std::uint64_t>& /*high_offsets*/) const
 {
-  throw std::runtime_error{"Not implemented"};
+  throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
 }
 
@@ -355,7 +357,7 @@ InternalSharedPtr<Partition> Weighted::convert(const InternalSharedPtr<Partition
   if (transform->identity()) {
     return self;
   }
-  throw NonInvertibleTransformation{};
+  throw TracedException<NonInvertibleTransformation>{};
   return nullptr;
 }
 
@@ -415,14 +417,14 @@ bool Image::satisfies_restrictions(const Restrictions& restrictions) const
 
 InternalSharedPtr<Partition> Image::scale(const tuple<std::uint64_t>& /*factors*/) const
 {
-  throw std::runtime_error{"Not implemented"};
+  throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
 }
 
 InternalSharedPtr<Partition> Image::bloat(const tuple<std::uint64_t>& /*low_offsts*/,
                                           const tuple<std::uint64_t>& /*high_offsets*/) const
 {
-  throw std::runtime_error{"Not implemented"};
+  throw TracedException<std::runtime_error>{"Not implemented"};
   return {};
 }
 
@@ -494,7 +496,7 @@ InternalSharedPtr<Partition> Image::convert(const InternalSharedPtr<Partition>& 
   if (transform->identity()) {
     return self;
   }
-  throw NonInvertibleTransformation{};
+  throw TracedException<NonInvertibleTransformation>{};
   return nullptr;
 }
 
@@ -504,7 +506,7 @@ InternalSharedPtr<Partition> Image::invert(const InternalSharedPtr<Partition>& s
   if (transform->identity()) {
     return self;
   }
-  throw NonInvertibleTransformation{};
+  throw TracedException<NonInvertibleTransformation>{};
   return nullptr;
 }
 

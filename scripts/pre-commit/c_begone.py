@@ -489,8 +489,12 @@ def make_repl() -> list[Replacement]:
         rf"(\s+|<|\s+:\s+|\w+\s+=\s+|\(|^\s+)({ctype_re})([\s><;\),\*&\{{])"
     )
     return [
-        Replacement(cfun_re, r"\1std::\2(", flags=re.MULTILINE),
-        Replacement(ctype_re, r"\1std::\2\3", flags=re.MULTILINE),
+        Replacement(
+            cfun_re, r"\1std::\2(", pragma_keyword="std", flags=re.MULTILINE
+        ),
+        Replacement(
+            ctype_re, r"\1std::\2\3", pragma_keyword="std", flags=re.MULTILINE
+        ),
     ]
 
 

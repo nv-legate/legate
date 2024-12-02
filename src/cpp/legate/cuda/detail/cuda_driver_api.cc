@@ -17,6 +17,7 @@
 #include "legate/runtime/detail/runtime.h"
 #include "legate/utilities/assert.h"
 #include "legate/utilities/detail/env.h"
+#include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/macros.h>
 
 #include <dlfcn.h>
@@ -118,7 +119,7 @@ void load_dlsym_function(void* handle, const char name[], F** dest)
   static_cast<void>(::dlerror());
   *dest = reinterpret_cast<F*>(::dlsym(handle, name));
   if (const char* error = ::dlerror()) {
-    throw std::runtime_error{
+    throw legate::detail::TracedException<std::runtime_error>{
       fmt::format("Failed to locate the symbol {} in the shared library: {}", name, error)};
   }
 }
@@ -133,7 +134,7 @@ using cuGetProcAddressT = CUresult (*)(const char*, void**, int, std::uint64_t);
 
     if (std::cmatch match{};
         std::regex_search(df_sv.cbegin(), df_sv.cend(), match, std::regex{"_v\\d+$"})) {
-      throw std::invalid_argument{fmt::format(
+      throw legate::detail::TracedException<std::invalid_argument>{fmt::format(
         "CUDA driver symbol '{}' ill-formed, must not end in version specifier (found {})",
         df_sv,
         fmt::streamed(match[0]))};
@@ -145,7 +146,7 @@ using cuGetProcAddressT = CUresult (*)(const char*, void**, int, std::uint64_t);
     cu_get_proc_address(driver_function, &ret, LEGATE_CUDA_VERSION, CU_GET_PROC_ADDRESS_DEFAULT);
 
   if (error || !ret) {
-    throw std::runtime_error{
+    throw legate::detail::TracedException<std::runtime_error>{
       fmt::format("Failed to load the symbol {} from the CUDA driver shared library: {}",
                   driver_function,
                   error)};
@@ -227,7 +228,7 @@ void CUDADriverAPI::read_symbols_()
 void CUDADriverAPI::check_initialized_() const
 {
   if (!is_loaded()) {
-    throw std::logic_error{
+    throw legate::detail::TracedException<std::logic_error>{
       fmt::format("Cannot call CUDA driver API, failed to load {}", handle_path())};
   }
 }
@@ -504,7 +505,7 @@ void throw_cuda_driver_error(CUresult result,
     error_name = "unknown error";
   }
 
-  throw CUDADriverError{
+  throw legate::detail::TracedException<CUDADriverError>{
     fmt::format("CUDA driver expression '{}' failed at {}:{} (in {}()) with error code {} ({}): {}",
                 expression,
                 file,

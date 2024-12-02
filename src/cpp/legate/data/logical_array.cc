@@ -14,7 +14,9 @@
 
 #include "legate/data/detail/logical_array.h"
 #include "legate/data/detail/user_storage_tracker.h"
+#include <legate/utilities/detail/traced_exception.h>
 
+#include <stdexcept>
 #include <vector>
 
 namespace legate {
@@ -92,7 +94,7 @@ PhysicalArray LogicalArray::get_physical_array() const
 ListLogicalArray LogicalArray::as_list_array() const
 {
   if (impl()->kind() != detail::ArrayKind::LIST) {
-    throw std::invalid_argument{"Array is not a list array"};
+    throw detail::TracedException<std::invalid_argument>{"Array is not a list array"};
   }
   return ListLogicalArray{impl()};
 }
@@ -100,7 +102,7 @@ ListLogicalArray LogicalArray::as_list_array() const
 StringLogicalArray LogicalArray::as_string_array() const
 {
   if (type().code() != Type::Code::STRING) {
-    throw std::invalid_argument{"Array is not a string array"};
+    throw detail::TracedException<std::invalid_argument>{"Array is not a string array"};
   }
   return StringLogicalArray{impl()};
 }

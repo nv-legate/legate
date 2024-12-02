@@ -19,6 +19,7 @@
 #include <legate/utilities/abort.h>
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <highfive/H5File.hpp>
 #include <highfive/H5PropertyList.hpp>
@@ -133,7 +134,8 @@ class HDF5ReadFn {
             std::enable_if_t<!IS_SUPPORTED<CODE>>* = nullptr>
   void operator()(const legate::TaskContext&, legate::PhysicalStore*, bool)
   {
-    throw std::runtime_error{fmt::format("HDF5 read not supported for {}", CODE)};
+    throw legate::detail::TracedException<std::runtime_error>{
+      fmt::format("HDF5 read not supported for {}", CODE)};
   }
 
  private:

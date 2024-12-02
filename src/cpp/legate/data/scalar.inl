@@ -111,7 +111,7 @@ VAL Scalar::value() const
   const auto ty = type();
 
   if (ty.code() == Type::Code::STRING) {
-    throw std::invalid_argument{"String cannot be casted to other types"};
+    throw_invalid_type_conversion_exception_("string", "other types");
   }
   if (sizeof(VAL) != ty.size()) {
     throw_invalid_size_exception_(ty.size(), sizeof(VAL));
@@ -147,13 +147,14 @@ Span<const VAL> Scalar::values() const
     using char_type = typename type_of_t<Type::Code::STRING>::value_type;
 
     if constexpr (std::is_same_v<VAL, bool>) {
-      throw std::invalid_argument{"Conversion from string to Span<bool> not allowed"};
+      throw_invalid_type_conversion_exception_("string", "Span<bool>");
     }
     if constexpr (sizeof(VAL) != sizeof(char_type)) {
-      throw_invalid_type_exception_(ty.code(), "size", sizeof(char_type), sizeof(VAL));
+      throw_invalid_span_conversion_exception_(ty.code(), "size", sizeof(char_type), sizeof(VAL));
     }
     if constexpr (alignof(VAL) != alignof(char_type)) {
-      throw_invalid_type_exception_(ty.code(), "alignment", alignof(char_type), alignof(VAL));
+      throw_invalid_span_conversion_exception_(
+        ty.code(), "alignment", alignof(char_type), alignof(VAL));
     }
 
     auto data         = ptr();

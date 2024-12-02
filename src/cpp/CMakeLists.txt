@@ -213,6 +213,11 @@ if(Legion_USE_CUDA)
 endif()
 
 # ########################################################################################
+# * cpptrace --------------------------------------------------------------
+
+legate_find_or_configure(PACKAGE cpptrace)
+
+# ########################################################################################
 # * CPMLicenses --------------------------------------------------------------
 
 legate_find_or_configure(PACKAGE cpm_licenses)
@@ -374,6 +379,8 @@ list(APPEND
      legate/utilities/detail/tuple.cc
      legate/utilities/detail/deserializer.cc
      legate/utilities/detail/formatters.cc
+     legate/utilities/detail/traced_exception.cc
+     legate/utilities/detail/zip.cc
      legate/timing/timing.cc
      # stl
      legate/experimental/stl/detail/clang_tidy_dummy.cpp
@@ -423,6 +430,14 @@ if(Legion_USE_CUDA)
 
   list(APPEND legate_SOURCES ${fatbin_src})
 endif()
+
+include("${LEGATE_CMAKE_DIR}/Modules/generate_git_revision_file.cmake")
+
+legate_generate_git_revision_file(
+  GENERATED_SRC_VAR git_revision_src EXTRA_TARGETS Legion::Legion
+  EXTRA_TARGETS_PREFIX LEGION)
+
+list(APPEND legate_SOURCES ${git_revision_src})
 
 set(legate_CXX_PRIVATE_OPTIONS "")
 set(legate_CXX_PUBLIC_OPTIONS "")
@@ -522,6 +537,7 @@ target_link_libraries(legate
                               kvikio::kvikio
                               $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
                               HighFive::HighFive
+                              cpptrace::cpptrace
                               $<TARGET_NAME_IF_EXISTS:conda_env>)
 
 if(Legion_USE_CUDA AND CAL_DIR)

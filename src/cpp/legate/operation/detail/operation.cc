@@ -16,6 +16,7 @@
 #include "legate/partitioning/detail/partitioner.h"
 #include "legate/runtime/detail/runtime.h"
 #include "legate/utilities/detail/formatters.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
 #include <stdexcept>
@@ -44,7 +45,7 @@ namespace {
     case Operation::Kind::RELEASE_REGION_FIELD: return "ReleaseRegionField";
   }
 
-  throw std::invalid_argument{"invalid operation kind"};
+  throw TracedException<std::invalid_argument>{"invalid operation kind"};
 }
 
 }  // namespace
@@ -89,7 +90,7 @@ bool Operation::is_internal() const
     }
   }
 
-  throw std::invalid_argument{"invalid operation kind"};
+  throw TracedException<std::invalid_argument>{"invalid operation kind"};
 }
 
 bool Operation::needs_partitioning() const
@@ -117,7 +118,7 @@ bool Operation::needs_partitioning() const
     }
   }
 
-  throw std::invalid_argument{"invalid operation kind"};
+  throw TracedException<std::invalid_argument>{"invalid operation kind"};
 }
 
 std::string Operation::to_string(bool show_provenance) const
@@ -181,7 +182,7 @@ void Operation::record_partition_(
       throw;
     }
   } else if (mapped_store->id() != sid) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Variable {} is already assigned to another store", *variable)};
   }
 }

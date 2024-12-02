@@ -1,6 +1,11 @@
 {
     "parse": {
         "additional_commands": {
+            "add_files": {
+                "pargs": {
+                    "nargs": 1
+                }
+            },
             "add_touch_legate_ninja_build_target": {
                 "pargs": {
                     "nargs": 0
@@ -38,6 +43,11 @@
                 }
             },
             "find_or_configure_cpm_licenses": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
+            "find_or_configure_cpptrace": {
                 "pargs": {
                     "nargs": 0
                 }
@@ -291,6 +301,17 @@
                     "nargs": "*"
                 }
             },
+            "legate_generate_git_revision_file": {
+                "kwargs": {
+                    "EXTRA_TARGETS": "+",
+                    "EXTRA_TARGETS_PREFIX": "+",
+                    "GENERATED_SRC_VAR": 1
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
             "legate_generate_legate_defines": {
                 "pargs": {
                     "nargs": 0
@@ -472,6 +493,11 @@
                 }
             },
             "list_add_if_not_present_error": {
+                "pargs": {
+                    "nargs": 2
+                }
+            },
+            "make_file": {
                 "pargs": {
                     "nargs": 2
                 }

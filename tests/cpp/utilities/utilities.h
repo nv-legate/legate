@@ -20,7 +20,6 @@
 
 class DefaultFixture : public ::testing::Test {
  public:
-  void SetUp() override { ::testing::Test::SetUp(); }
   void TearDown() override
   {
     // This fixture is used for unit tests and others that don't use the runtime, so we should check

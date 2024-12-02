@@ -17,6 +17,7 @@
 #include "legate/data/physical_store.h"
 #include "legate/type/type_info.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <cstdint>
 #include <stdexcept>
@@ -50,7 +51,7 @@ void PhysicalArray::check_shape_dimension_(std::int32_t dim) const
 ListPhysicalArray PhysicalArray::as_list_array() const
 {
   if (impl_->kind() != detail::ArrayKind::LIST) {
-    throw std::invalid_argument{"Array is not a list array"};
+    throw detail::TracedException<std::invalid_argument>{"Array is not a list array"};
   }
   return ListPhysicalArray{impl_};
 }
@@ -58,7 +59,7 @@ ListPhysicalArray PhysicalArray::as_list_array() const
 StringPhysicalArray PhysicalArray::as_string_array() const
 {
   if (type().code() != Type::Code::STRING) {
-    throw std::invalid_argument{"Array is not a string array"};
+    throw detail::TracedException<std::invalid_argument>{"Array is not a string array"};
   }
   return StringPhysicalArray{impl_};
 }

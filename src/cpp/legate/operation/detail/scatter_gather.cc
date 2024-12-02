@@ -17,8 +17,10 @@
 #include "legate/partitioning/detail/constraint_solver.h"
 #include "legate/partitioning/detail/partition.h"
 #include "legate/partitioning/detail/partitioner.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -47,11 +49,11 @@ ScatterGather::ScatterGather(InternalSharedPtr<LogicalStore> target,
 void ScatterGather::validate()
 {
   if (*source_.store->type() != *target_.store->type()) {
-    throw std::invalid_argument{"Source and targets must have the same type"};
+    throw TracedException<std::invalid_argument>{"Source and targets must have the same type"};
   }
   constexpr auto validate_store = [](const auto& store) {
     if (store->unbound() || store->has_scalar_storage() || store->transformed()) {
-      throw std::invalid_argument{
+      throw TracedException<std::invalid_argument>{
         "ScatterGather accepts only normal, untransformed, region-backed stores"};
     }
   };
@@ -61,11 +63,11 @@ void ScatterGather::validate()
   validate_store(source_indirect_.store);
 
   if (!is_point_type(source_indirect_.store->type(), source_.store->dim())) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Source indirection store should contain {}-D points", source_.store->dim())};
   }
   if (!is_point_type(target_indirect_.store->type(), target_.store->dim())) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Target indirection store should contain {}-D points", target_.store->dim())};
   }
 

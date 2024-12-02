@@ -13,8 +13,10 @@
 #include "legate/runtime/detail/communicator_manager.h"
 
 #include "legate/runtime/detail/runtime.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -77,7 +79,8 @@ CommunicatorFactory* CommunicatorManager::find_factory(std::string_view name)
                    return e.first == name;
                  });
   if (it == factories_.end()) {
-    throw std::runtime_error{fmt::format("No factory available for communicator '{}'", name)};
+    throw TracedException<std::runtime_error>{
+      fmt::format("No factory available for communicator '{}'", name)};
   }
   return it->second.get();
 }

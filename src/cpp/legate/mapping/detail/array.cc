@@ -12,6 +12,8 @@
 
 #include "legate/mapping/detail/array.h"
 
+#include <legate/utilities/detail/traced_exception.h>
+
 #include <algorithm>
 #include <fmt/format.h>
 #include <stdexcept>
@@ -20,7 +22,8 @@ namespace legate::mapping::detail {
 
 const InternalSharedPtr<Store>& Array::data() const
 {
-  throw std::invalid_argument{"Data store of a nested array cannot be retrieved"};
+  throw legate::detail::TracedException<std::invalid_argument>{
+    "Data store of a nested array cannot be retrieved"};
 
   static const InternalSharedPtr<Store> ptr;
   return ptr;
@@ -37,14 +40,16 @@ bool BaseArray::unbound() const
 const InternalSharedPtr<Store>& BaseArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
+    throw legate::detail::TracedException<std::invalid_argument>{
+      "Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }
 
 InternalSharedPtr<Array> BaseArray::child(std::uint32_t /*index*/) const
 {
-  throw std::invalid_argument{"Non-nested array has no child sub-array"};
+  throw legate::detail::TracedException<std::invalid_argument>{
+    "Non-nested array has no child sub-array"};
   return {};
 }
 
@@ -70,7 +75,8 @@ InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
     case 0: return descriptor();
     case 1: return vardata();
     default: {
-      throw std::out_of_range{fmt::format("List array does not have child {}", index)};
+      throw legate::detail::TracedException<std::out_of_range>{
+        fmt::format("List array does not have child {}", index)};
       break;
     }
   }
@@ -98,7 +104,8 @@ bool StructArray::unbound() const
 const InternalSharedPtr<Store>& StructArray::null_mask() const
 {
   if (!nullable()) {
-    throw std::invalid_argument{"Invalid to retrieve the null mask of a non-nullable array"};
+    throw legate::detail::TracedException<std::invalid_argument>{
+      "Invalid to retrieve the null mask of a non-nullable array"};
   }
   return null_mask_;
 }

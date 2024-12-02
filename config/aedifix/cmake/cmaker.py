@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
@@ -273,6 +274,8 @@ class CMaker:
                     f"='{manager.project_arch}'",
                     f"-D{manager.project_dir_name}:PATH="
                     f"'{manager.project_dir}'",
+                    f"-D{manager.project_name_upper}_CONFIGURE_OPTIONS:STRING="
+                    f"{shlex.join(manager._orig_argv)}",
                 )
             )
 
@@ -280,6 +283,8 @@ class CMaker:
                 value.to_command_line(quote=quote) for value in args.values()
             )
 
+            # mypy is confused? We massage extra_argv into a list above
+            assert isinstance(extra_argv, list)
             ret.extend(extra_argv)
 
             return ret

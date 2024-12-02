@@ -14,10 +14,18 @@
 
 #include "legate/data/detail/physical_store.h"
 #include "legate/data/physical_array.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+#include <stdexcept>
 
 namespace legate {
+
+/*static*/ void PhysicalStore::throw_invalid_scalar_access_()
+{
+  throw detail::TracedException<std::invalid_argument>{
+    "Scalars can be retrieved only from scalar stores"};
+}
 
 void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>& buffer, const Point<1>& extents) const
 {
@@ -66,7 +74,8 @@ mapping::StoreTarget PhysicalStore::target() const { return impl()->target(); }
 
 PhysicalStore::PhysicalStore(const PhysicalArray& array)
   : impl_{array.nullable()
-            ? throw std::invalid_argument{"Nullable array cannot be converted to a store"}
+            ? throw detail::TracedException<
+                std::invalid_argument>{"Nullable array cannot be converted to a store"}
             : array.data().impl()}
 {
 }
@@ -75,7 +84,7 @@ void PhysicalStore::check_accessor_type_(Type::Code code, std::size_t size_of_T)
 {
   // Test exact match for primitive types
   if (code != Type::Code::NIL) {
-    throw std::invalid_argument{
+    throw detail::TracedException<std::invalid_argument>{
       fmt::format("Type mismatch: {} accessor to a {} store. Disable type checking via accessor "
                   "template parameter if this is intended.",
                   primitive_type(code).to_string(),
@@ -83,7 +92,7 @@ void PhysicalStore::check_accessor_type_(Type::Code code, std::size_t size_of_T)
   }
   // Test size matches for other types
   if (size_of_T != type().size()) {
-    throw std::invalid_argument{
+    throw detail::TracedException<std::invalid_argument>{
       fmt::format("Type size mismatch: store type {} has size {}, requested type has size {}. "
                   "Disable type checking via accessor template parameter if this is intended.",
                   type().to_string(),

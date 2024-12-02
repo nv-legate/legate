@@ -14,6 +14,7 @@
 
 #include "legate/task/exception.h"
 #include "legate/utilities/detail/formatters.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -28,7 +29,8 @@ namespace legate::detail {
 
 void ReturnedCppException::throw_exception()
 {
-  throw TaskException{std::exchange(index_, 0), std::move(message_)};
+  // Don't wrap this in a trace, it may already contain a traced exception.
+  throw TaskException{std::exchange(index_, 0), std::move(message_)};  // legate-lint: no-trace
 }
 
 // Note, this function returns an upper bound on the size of the type as it also incorporates
@@ -84,7 +86,7 @@ void ReturnedCppException::legion_deserialize(const void* buffer)
     std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &index_);
     std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &mess_size);
     if (rem_cap < mess_size) {
-      throw std::range_error{
+      throw TracedException<std::range_error>{
         fmt::format("Remaining capacity of serdez buffer: {} < length of stored string: {}. This "
                     "indicates a bug in the packing routine",
                     rem_cap,

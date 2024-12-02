@@ -524,6 +524,12 @@ InternalSharedPtr<T>& InternalSharedPtr<T>::operator=(SharedPtr<U>&& other) noex
   return *this;
 }
 
+namespace detail {
+
+[[noreturn]] void throw_bad_internal_weak_ptr();
+
+}  // namespace detail
+
 template <typename T>
 template <typename U, typename SFINAE>
 InternalSharedPtr<T>::InternalSharedPtr(const InternalWeakPtr<U>& other)
@@ -532,9 +538,7 @@ InternalSharedPtr<T>::InternalSharedPtr(const InternalWeakPtr<U>& other)
                       other.ctrl_ ? static_cast<T*>(other.ctrl_->ptr()) : nullptr}
 {
   if (!ctrl_) {
-    throw BadInternalWeakPtr{
-      "Trying to construct an InternalSharedPtr from "
-      "an empty InternalWeakPtr"};
+    detail::throw_bad_internal_weak_ptr();
   }
   strong_reference_();
 }

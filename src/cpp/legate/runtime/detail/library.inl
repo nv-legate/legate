@@ -13,6 +13,7 @@
 #pragma once
 
 #include "legate/runtime/detail/library.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
 #include <stdexcept>
@@ -25,7 +26,7 @@ inline Library::ResourceIdScope::ResourceIdScope(std::int64_t base,
   : base_{base}, size_{size}, next_{size - dyn_size}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && (dyn_size > this->size())) {
-    throw std::out_of_range{fmt::format(
+    throw TracedException<std::out_of_range>{fmt::format(
       "Number of dynamic resource IDs {} > total number of IDs {}", dyn_size, this->size())};
   }
 }
@@ -33,7 +34,7 @@ inline Library::ResourceIdScope::ResourceIdScope(std::int64_t base,
 inline std::int64_t Library::ResourceIdScope::translate(std::int64_t local_resource_id) const
 {
   if (local_resource_id >= size_) {
-    throw std::out_of_range{fmt::format(
+    throw TracedException<std::out_of_range>{fmt::format(
       "Maximum local ID is {} but received a local ID {}", size_ - 1, local_resource_id)};
   }
   return base_ + local_resource_id;
@@ -48,7 +49,7 @@ inline std::int64_t Library::ResourceIdScope::invert(std::int64_t resource_id) c
 inline std::int64_t Library::ResourceIdScope::generate_id()
 {
   if (next_ == size_) {
-    throw std::overflow_error{"The scope ran out of IDs"};
+    throw TracedException<std::overflow_error>{"The scope ran out of IDs"};
   }
   return next_++;
 }

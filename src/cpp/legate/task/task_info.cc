@@ -16,10 +16,12 @@
 #include "legate/utilities/detail/formatters.h"
 #include "legate/utilities/detail/zstring_view.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <array>
 #include <fmt/format.h>
 #include <sstream>
+#include <stdexcept>
 
 namespace legate {
 
@@ -69,7 +71,8 @@ void TaskInfo::Impl::add_variant(VariantCode vid,
                   std::forward_as_tuple(vid),
                   std::forward_as_tuple(body, code_desc, options))
          .second) {
-    throw std::invalid_argument{fmt::format("Task {} already has variant {}", name(), vid)};
+    throw detail::TracedException<std::invalid_argument>{
+      fmt::format("Task {} already has variant {}", name(), vid)};
   }
 }
 

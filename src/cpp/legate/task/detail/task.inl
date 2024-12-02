@@ -55,7 +55,9 @@ template <typename F>
                  exn_type,
                  "): \"",
                  exn_message,
-                 "\". Legate tasks may only throw instances of legate::TaskException.");
+                 "\". Legate tasks may only "
+                 "throw instances "  // legate-lint: no-trace
+                 "of legate::TaskException.");
   };
 
   try {

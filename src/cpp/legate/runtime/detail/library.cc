@@ -16,9 +16,11 @@
 #include "legate/runtime/detail/runtime.h"
 #include "legate/runtime/runtime.h"
 #include "legate/utilities/detail/type_traits.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <exception>
 #include <fmt/format.h>
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -136,13 +138,13 @@ std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
                                              InternalSharedPtr<Type> type) const
 {
   if (type->variable_size()) {
-    throw std::invalid_argument{"Tunable variables must have fixed-size types"};
+    throw TracedException<std::invalid_argument>{"Tunable variables must have fixed-size types"};
   }
   auto result         = Runtime::get_runtime()->get_tunable(*this, tunable_id);
   std::size_t extents = 0;
   const void* buffer  = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
   if (extents != type->size()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Size mismatch: expected {} bytes but got {} bytes", type->size(), extents)};
   }
   return std::make_unique<Scalar>(std::move(type), buffer, true);
@@ -169,7 +171,7 @@ void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo>
                          << *task_info;
   }
   if (tasks_.find(local_task_id) != tasks_.end()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Task {} already exists in library {}", local_task_id, library_name_)};
   }
   task_info->register_task(task_id);
@@ -181,7 +183,7 @@ const TaskInfo* Library::find_task(LocalTaskID local_task_id) const
   auto finder = tasks_.find(local_task_id);
 
   if (tasks_.end() == finder) {
-    throw std::out_of_range{
+    throw TracedException<std::out_of_range>{
       fmt::format("Library {} does not have task {}", get_library_name(), local_task_id)};
   }
   return finder->second.get();

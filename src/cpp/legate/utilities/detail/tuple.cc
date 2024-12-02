@@ -12,6 +12,8 @@
 
 #include "legate/utilities/detail/tuple.h"
 
+#include <legate/utilities/detail/traced_exception.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <fmt/format.h>
@@ -65,7 +67,7 @@ tuple<std::uint64_t> from_domain(const Domain& domain)
 void assert_valid_mapping(std::size_t tuple_size, const std::vector<std::int32_t>& mapping)
 {
   if (mapping.size() != tuple_size) {
-    throw std::out_of_range{
+    throw TracedException<std::out_of_range>{
       fmt::format("mapping size {} != tuple size {}", mapping.size(), tuple_size)};
   }
 
@@ -81,25 +83,33 @@ void assert_valid_mapping(std::size_t tuple_size, const std::vector<std::int32_t
   // bounds. If either is out of range, then at least one element of the mapping is out of
   // range.
   if (sorted_mapping.front() < 0) {
-    throw std::out_of_range{fmt::format("mapping {} contains negative elements", mapping)};
+    throw TracedException<std::out_of_range>{
+      fmt::format("mapping {} contains negative elements", mapping)};
   }
   if (static_cast<std::size_t>(sorted_mapping.back()) >= tuple_size) {
-    throw std::out_of_range{
+    throw TracedException<std::out_of_range>{
       fmt::format("mapping {} contains elements outside of tuple size {}", mapping, tuple_size)};
   }
 
   // Check that elements are unique
   if (const auto it = std::adjacent_find(sorted_mapping.begin(), sorted_mapping.end());
       it != sorted_mapping.end()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Invalid mapping: contains duplicate element(s) {} ({})", *it, mapping)};
   }
+}
+
+void throw_invalid_tuple_sizes(std::size_t lhs_size, std::size_t rhs_size)
+{
+  throw TracedException<std::invalid_argument>{
+    fmt::format("Operands should have the same size: {} != {}", lhs_size, rhs_size)};
 }
 
 void assert_in_range(std::size_t tuple_size, std::int32_t pos)
 {
   if ((pos < 0) || (static_cast<std::size_t>(pos) >= tuple_size)) {
-    throw std::out_of_range{fmt::format("Index {} out of range [0, {})", pos, tuple_size)};
+    throw TracedException<std::out_of_range>{
+      fmt::format("Index {} out of range [0, {})", pos, tuple_size)};
   }
 }
 

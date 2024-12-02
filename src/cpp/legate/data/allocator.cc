@@ -14,6 +14,7 @@
 
 #include "legate/data/buffer.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -47,10 +48,11 @@ ScopedAllocator::Impl::Impl(Memory::Kind kind, bool scoped, std::size_t alignmen
   constexpr auto is_power_of_2 = [](std::size_t n) { return (n & (n - 1)) == 0; };
 
   if (alignment == 0) {
-    throw std::domain_error{"alignment cannot be 0"};
+    throw detail::TracedException<std::domain_error>{"alignment cannot be 0"};
   }
   if (!is_power_of_2(alignment)) {
-    throw std::domain_error{fmt::format("invalid alignment {}, must be a power of 2", alignment)};
+    throw detail::TracedException<std::domain_error>{
+      fmt::format("invalid alignment {}, must be a power of 2", alignment)};
   }
 }
 
@@ -91,7 +93,8 @@ void ScopedAllocator::Impl::deallocate(void* ptr)
   const auto it = buffers_.find(ptr);
 
   if (it == buffers_.end()) {
-    throw std::invalid_argument{fmt::format("Invalid address {} for deallocation", ptr)};
+    throw detail::TracedException<std::invalid_argument>{
+      fmt::format("Invalid address {} for deallocation", ptr)};
   }
 
   it->second.destroy();

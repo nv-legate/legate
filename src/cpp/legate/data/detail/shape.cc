@@ -15,8 +15,10 @@
 #include "legate/data/shape.h"
 #include "legate/runtime/detail/runtime.h"
 #include "legate/utilities/detail/tuple.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/ranges.h>
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -98,7 +100,8 @@ bool Shape::operator==(Shape& other)
   if (State::UNBOUND == state_ || State::UNBOUND == other.state_) {
     Runtime::get_runtime()->flush_scheduling_window();
     if (State::UNBOUND == state_ || State::UNBOUND == other.state_) {
-      throw std::invalid_argument{"Illegal to access an uninitialized unbound store"};
+      throw TracedException<std::invalid_argument>{
+        "Illegal to access an uninitialized unbound store"};
     }
   }
   // If both shapes are in the bound state and their index spaces are the same, we can elide the
@@ -118,7 +121,8 @@ void Shape::ensure_binding_()
   }
   Runtime::get_runtime()->flush_scheduling_window();
   if (State::UNBOUND == state_) {
-    throw std::invalid_argument{"Illegal to access an uninitialized unbound store"};
+    throw TracedException<std::invalid_argument>{
+      "Illegal to access an uninitialized unbound store"};
   }
 }
 

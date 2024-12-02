@@ -177,7 +177,9 @@ run_test_or_analysis() {
               # shellcheck disable=SC2154
               run_legate_tests "${CONDA_PREFIX}/bin/tests_wo_runtime" cpus 1
               # shellcheck disable=SC2154
-              run_legate_tests_with_driver "${CONDA_PREFIX}/bin/tests_non_reentrant" cpus 1
+              run_legate_tests_with_driver "${CONDA_PREFIX}/bin/tests_non_reentrant_with_runtime" cpus 1
+              # shellcheck disable=SC2154
+              run_legate_tests_with_driver "${CONDA_PREFIX}/bin/tests_non_reentrant_wo_runtime" cpus 1
             }
 
             function run_cpp_tests()

@@ -16,10 +16,12 @@
 #include "legate/data/physical_store.h"
 #include "legate/operation/detail/timing.h"
 #include "legate/runtime/detail/runtime.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include "legion.h"
 
 #include <optional>
+#include <stdexcept>
 
 namespace legate::timing {
 
@@ -44,7 +46,7 @@ class Time::Impl {
 std::int64_t Time::value() const
 {
   if (!impl_) {
-    throw std::invalid_argument{"Invalid time object"};
+    throw legate::detail::TracedException<std::invalid_argument>{"Invalid time object"};
   }
   return impl_->value();
 }

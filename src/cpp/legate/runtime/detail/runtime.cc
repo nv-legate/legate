@@ -63,6 +63,7 @@
 #include "legate/utilities/linearize.h"
 #include "legate/utilities/machine.h"
 #include "legate/utilities/scope_guard.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include "realm/network.h"
 #include <realm/cuda/cuda_module.h>
@@ -131,7 +132,8 @@ Library* Runtime::create_library(
   std::map<VariantCode, VariantOptions> default_options)
 {
   if (libraries_.find(library_name) != libraries_.end()) {
-    throw std::invalid_argument{fmt::format("Library {} already exists", library_name)};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Library {} already exists", library_name)};
   }
 
   log_legate().debug() << "Library " << library_name << " is created";
@@ -161,7 +163,8 @@ template <typename LibraryMapT>
 
   if (libraries.end() == finder) {
     if (!can_fail) {
-      throw std::out_of_range{fmt::format("Library {} does not exist", library_name)};
+      throw TracedException<std::out_of_range>{
+        fmt::format("Library {} does not exist", library_name)};
     }
     return {};
   }
@@ -215,7 +218,7 @@ void Runtime::record_reduction_operator(std::uint32_t type_uid,
   const auto inserted = reduction_ops_.try_emplace({type_uid, op_kind}, legion_op_id).second;
 
   if (!inserted) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Reduction op {} already exists for type {}", op_kind, type_uid)};
   }
 }
@@ -229,7 +232,7 @@ GlobalRedopID Runtime::find_reduction_operator(std::uint32_t type_uid, std::int3
       log_legate().debug() << "Can't find reduction op (type_uid: " << type_uid
                            << ", op_kind: " << op_kind << ")";
     }
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Reduction op {} does not exist for type {}", op_kind, type_uid)};
   }
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -248,7 +251,7 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
       // OK to call initialize twice if it's the same context.
       return;
     }
-    throw std::runtime_error{"Legate runtime has already been initialized"};
+    throw TracedException<std::runtime_error>{"Legate runtime has already been initialized"};
   }
   LEGATE_SCOPE_FAIL(
     // de-initialize everything in reverse order
@@ -286,7 +289,7 @@ mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
   });
 
   if (sliced.empty()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       fmt::format("Task {} ({}) of library {} does not have any valid variant for the current "
                   "machine configuration",
                   task_id,
@@ -311,7 +314,7 @@ InternalSharedPtr<ManualTask> Runtime::create_task(const Library* library,
                                                    const Domain& launch_domain)
 {
   if (launch_domain.empty()) {
-    throw std::invalid_argument{"Launch domain must not be empty"};
+    throw TracedException<std::invalid_argument>{"Launch domain must not be empty"};
   }
   auto machine = slice_machine_for_task(library, task_id);
   auto task    = make_internal_shared<ManualTask>(
@@ -384,12 +387,14 @@ void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs,
                          InternalSharedPtr<LogicalStore> value)
 {
   if (lhs->kind() != ArrayKind::BASE) {
-    throw std::runtime_error{"Fills on list or struct arrays are not supported yet"};
+    throw TracedException<std::runtime_error>{
+      "Fills on list or struct arrays are not supported yet"};
   }
 
   if (value->type()->code == Type::Code::NIL) {
     if (!lhs->nullable()) {
-      throw std::invalid_argument{"Non-nullable arrays cannot be filled with null"};
+      throw TracedException<std::invalid_argument>{
+        "Non-nullable arrays cannot be filled with null"};
     }
     issue_fill(lhs->data(), Scalar{lhs->type()});
     issue_fill(lhs->null_mask(), Scalar{false});
@@ -406,12 +411,14 @@ void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs,
 void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs, Scalar value)
 {
   if (lhs->kind() != ArrayKind::BASE) {
-    throw std::runtime_error{"Fills on list or struct arrays are not supported yet"};
+    throw TracedException<std::runtime_error>{
+      "Fills on list or struct arrays are not supported yet"};
   }
 
   if (value.type()->code == Type::Code::NIL) {
     if (!lhs->nullable()) {
-      throw std::invalid_argument{"Non-nullable arrays cannot be filled with null"};
+      throw TracedException<std::invalid_argument>{
+        "Non-nullable arrays cannot be filled with null"};
     }
     issue_fill(lhs->data(), Scalar{lhs->type()});
     issue_fill(lhs->null_mask(), Scalar{false});
@@ -428,10 +435,10 @@ void Runtime::issue_fill(const InternalSharedPtr<LogicalArray>& lhs, Scalar valu
 void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value)
 {
   if (lhs->unbound()) {
-    throw std::invalid_argument{"Fill lhs must be a normal store"};
+    throw TracedException<std::invalid_argument>{"Fill lhs must be a normal store"};
   }
   if (!value->has_scalar_storage()) {
-    throw std::invalid_argument{"Fill value should be a Future-back store"};
+    throw TracedException<std::invalid_argument>{"Fill value should be a Future-back store"};
   }
 
   submit(make_internal_shared<Fill>(
@@ -442,7 +449,7 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<
 void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
 {
   if (lhs->unbound()) {
-    throw std::invalid_argument{"Fill lhs must be a normal store"};
+    throw TracedException<std::invalid_argument>{"Fill lhs must be a normal store"};
   }
 
   submit(make_internal_shared<Fill>(
@@ -457,7 +464,7 @@ void Runtime::tree_reduce(const Library* library,
                           std::int32_t radix)
 {
   if (store->dim() != 1) {
-    throw std::runtime_error{"Multi-dimensional stores are not supported"};
+    throw TracedException<std::runtime_error>{"Multi-dimensional stores are not supported"};
   }
 
   auto machine = slice_machine_for_task(library, task_id);
@@ -540,7 +547,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_array(const InternalSharedPtr<Sh
 
   if (type->variable_size()) {
     if (shape->ndim() != 1) {
-      throw std::invalid_argument{"List/string arrays can only be 1D"};
+      throw TracedException<std::invalid_argument>{"List/string arrays can only be 1D"};
     }
 
     auto elem_type  = Type::Code::STRING == type->code
@@ -562,7 +569,7 @@ InternalSharedPtr<LogicalArray> Runtime::create_array_like(
   const InternalSharedPtr<LogicalArray>& array, InternalSharedPtr<Type> type)
 {
   if (Type::Code::STRUCT == type->code || type->variable_size()) {
-    throw std::runtime_error{
+    throw TracedException<std::runtime_error>{
       "create_array_like doesn't support variable size types or struct types"};
   }
   if (array->unbound()) {
@@ -582,28 +589,29 @@ InternalSharedPtr<LogicalArray> Runtime::create_list_array(
   InternalSharedPtr<LogicalArray> vardata)
 {
   if (Type::Code::STRING != type->code && Type::Code::LIST != type->code) {
-    throw std::invalid_argument{fmt::format("Expected a list type but got {}", *type)};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Expected a list type but got {}", *type)};
   }
   if (descriptor->unbound() || vardata->unbound()) {
-    throw std::invalid_argument("Sub-arrays should not be unbound");
+    throw TracedException<std::invalid_argument>("Sub-arrays should not be unbound");
   }
   if (descriptor->dim() != 1 || vardata->dim() != 1) {
-    throw std::invalid_argument("Sub-arrays should be 1D");
+    throw TracedException<std::invalid_argument>("Sub-arrays should be 1D");
   }
   if (!is_rect_type(descriptor->type(), 1)) {
-    throw std::invalid_argument{"Descriptor array does not have a 1D rect type"};
+    throw TracedException<std::invalid_argument>{"Descriptor array does not have a 1D rect type"};
   }
   // If this doesn't hold, something bad happened (and will happen below)
   LEGATE_CHECK(!descriptor->nested());
   if (vardata->nullable()) {
-    throw std::invalid_argument{"Vardata should not be nullable"};
+    throw TracedException<std::invalid_argument>{"Vardata should not be nullable"};
   }
 
   auto elem_type = Type::Code::STRING == type->code
                      ? int8()
                      : dynamic_cast<const detail::ListType&>(*type).element_type();
   if (*vardata->type() != *elem_type) {
-    throw std::invalid_argument{fmt::format(
+    throw TracedException<std::invalid_argument>{fmt::format(
       "Expected a vardata array of type {} but got {}", *elem_type, *(vardata->type()))};
   }
 
@@ -645,12 +653,12 @@ void validate_store_shape(const InternalSharedPtr<Shape>& shape,
                           const InternalSharedPtr<Type>& type)
 {
   if (shape->unbound()) {
-    throw std::invalid_argument{
+    throw TracedException<std::invalid_argument>{
       "Shape of an unbound array or store cannot be used to create another store "
       "until the array or store is initialized by a task"};
   }
   if (type->variable_size()) {
-    throw std::invalid_argument{"Store must have a fixed-size type"};
+    throw TracedException<std::invalid_argument>{"Store must have a fixed-size type"};
   }
 }
 
@@ -679,7 +687,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> s
                                                       bool optimize_scalar /*=false*/)
 {
   if (type->variable_size()) {
-    throw std::invalid_argument{"Store must have a fixed-size type"};
+    throw TracedException<std::invalid_argument>{"Store must have a fixed-size type"};
   }
   check_dimensionality_(shape->ndim());
   auto storage = make_internal_shared<detail::Storage>(
@@ -694,7 +702,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
 {
   validate_store_shape(shape, scalar.type());
   if (shape->volume() != 1) {
-    throw std::invalid_argument{"Scalar stores must have a shape of volume 1"};
+    throw TracedException<std::invalid_argument>{"Scalar stores must have a shape of volume 1"};
   }
   auto future  = Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
   auto storage = make_internal_shared<detail::Storage>(
@@ -711,7 +719,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(
   validate_store_shape(shape, type);
   LEGATE_CHECK(allocation->ptr());
   if (allocation->size() < shape->volume() * type->size()) {
-    throw std::invalid_argument{fmt::format(
+    throw TracedException<std::invalid_argument>{fmt::format(
       "External allocation of size {} is not big enough for a store of shape {} and type {}",
       allocation->size(),
       shape->extents(),
@@ -758,7 +766,7 @@ Runtime::IndexAttachResult Runtime::create_store(
       // If we're here, this color might have been seen in one of the previous iterations
       for (std::int64_t k = 0; k < idx; ++k) {
         if (allocations[k].second == color) {
-          throw std::invalid_argument{
+          throw TracedException<std::invalid_argument>{
             fmt::format("Mulitple external allocations are found for color {}", color)};
         }
       }
@@ -772,11 +780,11 @@ Runtime::IndexAttachResult Runtime::create_store(
     LEGATE_ASSERT(alloc->ptr());
 
     if (!alloc->read_only()) {
-      throw std::invalid_argument{"External allocations must be read-only"};
+      throw TracedException<std::invalid_argument>{"External allocations must be read-only"};
     }
 
     if (required_size > alloc->size()) {
-      throw std::invalid_argument{
+      throw TracedException<std::invalid_argument>{
         fmt::format("Sub-store for color {}  requires the allocation to be at least {} bytes, but "
                     "the allocation is only {} bytes",
                     color,
@@ -828,7 +836,7 @@ void Runtime::prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
 void Runtime::check_dimensionality_(std::uint32_t dim)
 {
   if (dim > LEGATE_MAX_DIM) {
-    throw std::out_of_range{
+    throw TracedException<std::out_of_range>{
       fmt::format("The maximum number of dimensions is {}, but a {}-D store is requested",
                   LEGION_MAX_DIM,
                   dim)};
@@ -1026,7 +1034,7 @@ RegionManager* Runtime::find_or_create_region_manager(const Legion::IndexSpace& 
 const Legion::IndexSpace& Runtime::find_or_create_index_space(const tuple<std::uint64_t>& extents)
 {
   if (extents.size() > LEGATE_MAX_DIM) {
-    throw std::out_of_range{fmt::format(
+    throw TracedException<std::out_of_range>{fmt::format(
       "Legate is configured with the maximum number of dimensions set to {}, but got a {}-D shape",
       LEGATE_MAX_DIM,
       extents.size())};
@@ -1608,6 +1616,8 @@ void handle_realm_default_args()
 
 /*static*/ std::int32_t Runtime::start(std::int32_t argc, char** argv)
 {
+  // Call as soon as possible, to ensure that any exceptions are pretty-printed
+  static_cast<void>(install_terminate_handler());
   // Must populate this before we handle Legate args as it expects to read its values.
   Config::parse();
   if (!Legion::Runtime::has_runtime()) {
@@ -1633,17 +1643,17 @@ void handle_realm_default_args()
 
   // Do these after handle_legate_args()
   if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_NEED_CUDA.get(/* default_value = */ false)) {
-    throw std::runtime_error{
+    throw TracedException<std::runtime_error>{
       "Legate was run with GPUs but was not built with GPU support. "
       "Please install Legate again with the \"--with-cuda\" flag"};
   }
   if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && LEGATE_NEED_OPENMP.get(/* default_value = */ false)) {
-    throw std::runtime_error{
+    throw TracedException<std::runtime_error>{
       "Legate was run with OpenMP enabled, but was not built with OpenMP support. "
       "Please install Legate again with the \"--with-openmp\" flag"};
   }
   if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get(/* default_value = */ false)) {
-    throw std::runtime_error{
+    throw TracedException<std::runtime_error>{
       "Legate was run on multiple nodes but was not built with networking "
       "support. Please install Legate again with network support (e.g. \"--with-mpi\" or "
       "\"--with-gasnet\")"};
@@ -1654,7 +1664,7 @@ void handle_realm_default_args()
 
   if (!Legion::Runtime::has_runtime()) {
     if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true); result != 0) {
-      log_legate().error() << "Legion Runtime failed to start.";
+      std::cerr << "Legion Runtime failed to start: error code " << result << "\n";
       return result;
     }
   }
@@ -1677,12 +1687,7 @@ void handle_realm_default_args()
   }
 
   // We can now initialize the Legate runtime with the Legion context
-  try {
-    Runtime::get_runtime()->initialize(legion_context, argc, argv);
-  } catch (const std::exception& e) {
-    log_legate().error() << e.what();
-    return 1;
-  }
+  Runtime::get_runtime()->initialize(legion_context, argc, argv);
   return 0;
 }
 
@@ -1707,7 +1712,7 @@ Runtime* RuntimeManager::get()
     if (state() == State::FINALIZED) {
       // Legion currently does not allow re-initialization after shutdown, so we need to track
       // this ourselves...
-      throw std::runtime_error{
+      throw TracedException<std::runtime_error>{
         "Legate runtime has been finalized, and cannot be re-initialized without restarting the "
         "program."};
     }  // namespace

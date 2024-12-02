@@ -16,7 +16,6 @@
 #include "legate/utilities/hash.h"
 
 #include <algorithm>
-#include <stdexcept>
 
 namespace legate::mapping {
 
@@ -57,7 +56,7 @@ constexpr ProcessorRange ProcessorRange::slice(std::uint32_t from, std::uint32_t
 constexpr NodeRange ProcessorRange::get_node_range() const
 {
   if (empty()) {
-    throw std::invalid_argument{"Illegal to get a node range of an empty processor range"};
+    throw_illegal_empty_node_range_();
   }
   return {low / per_node_count, (high + per_node_count - 1) / per_node_count};
 }
@@ -74,8 +73,7 @@ constexpr ProcessorRange::ProcessorRange(std::uint32_t low_id,
 constexpr ProcessorRange ProcessorRange::operator&(const ProcessorRange& other) const
 {
   if (other.per_node_count != per_node_count) {
-    throw std::invalid_argument{
-      "Invalid to compute an intersection between processor ranges with different per-node counts"};
+    throw_illegal_invalid_intersection_();
   }
   return {std::max(low, other.low), std::min(high, other.high), per_node_count};
 }

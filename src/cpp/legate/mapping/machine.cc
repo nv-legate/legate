@@ -13,9 +13,11 @@
 #include "legate/mapping/machine.h"
 
 #include "legate/mapping/detail/machine.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
 #include <iostream>
+#include <stdexcept>
 #include <utility>
 
 namespace legate::mapping {
@@ -25,6 +27,18 @@ std::size_t NodeRange::hash() const noexcept { return hash_all(low, high); }
 /////////////////////////////////////
 // legate::mapping::ProcessorRange
 /////////////////////////////////////
+
+/*static*/ void ProcessorRange::throw_illegal_empty_node_range_()
+{
+  throw legate::detail::TracedException<std::invalid_argument>{
+    "Illegal to get a node range of an empty processor range"};
+}
+
+/*static*/ void ProcessorRange::throw_illegal_invalid_intersection_()
+{
+  throw legate::detail::TracedException<std::invalid_argument>{
+    "Invalid to compute an intersection between processor ranges with different per-node counts"};
+}
 
 std::string ProcessorRange::to_string() const
 {
