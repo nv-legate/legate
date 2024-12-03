@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <legate/utilities/detail/doxygen.h>
+
 #include <cstdint>
 
 /**
@@ -22,7 +24,11 @@
 namespace legate {
 
 /**
- * @ingroup runtime
+ * @addtogroup runtime
+ * @{
+ */
+
+/**
  * @brief Enum for exception handling modes
  */
 enum class ExceptionMode : std::uint8_t {
@@ -30,5 +36,7 @@ enum class ExceptionMode : std::uint8_t {
   DEFERRED,  /*!< Defers all exceptions until the current scope exits. */
   IGNORED,   /*!< All exceptions are ignored. */
 };
+
+/** @} */
 
 }  // namespace legate

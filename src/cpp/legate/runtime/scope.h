@@ -13,6 +13,7 @@
 #include "legate/mapping/machine.h"
 #include "legate/runtime/exception_mode.h"
 #include "legate/utilities/memory.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
 #include <memory>
@@ -27,7 +28,11 @@
 namespace legate {
 
 /**
- * @ingroup util
+ * @addtogroup util
+ * @{
+ */
+
+/**
  * @brief A helper class to configure task execution
  *
  * The Scope class offers APIs to configure runtime parameters for task execution. The parameters
@@ -232,5 +237,7 @@ class Scope {
 };
 
 extern template class DefaultDelete<Scope::Impl>;
+
+/** @} */
 
 }  // namespace legate

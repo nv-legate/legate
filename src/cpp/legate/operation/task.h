@@ -20,6 +20,7 @@
 #include "legate/utilities/compiler.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <string_view>
 #include <type_traits>
@@ -37,7 +38,11 @@ class ManualTask;
 namespace legate {
 
 /**
- * @ingroup task
+ * @addtogroup task
+ * @{
+ */
+
+/**
  * @brief A class for auto-parallelized task desciptors
  */
 class AutoTask {
@@ -241,7 +246,6 @@ class AutoTask {
 };
 
 /**
- * @ingroup task
  * @brief A class for manually parallelized task descriptors
  */
 class ManualTask {
@@ -402,6 +406,8 @@ class ManualTask {
   class Impl;
   InternalSharedPtr<Impl> pimpl_{};
 };
+
+/** @} */
 
 }  // namespace legate
 

@@ -8,11 +8,11 @@ IO
 HDF5
 ====
 
-.. doxygengroup:: io_hdf5
+.. doxygengroup:: io-hdf5
    :members:
 
 KVikIO
 ======
 
-.. doxygengroup:: io_kvikio
+.. doxygengroup:: io-kvikio
    :members:

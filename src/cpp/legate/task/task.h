@@ -18,22 +18,25 @@
 #include "legate/task/variant_options.h"
 #include "legate/utilities/detail/zstring_view.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <map>
 #include <memory>
 #include <string_view>
 
-/** @defgroup task Task
- */
-
 /**
  * @file
  * @brief Class definition fo legate::LegateTask
  */
+
 namespace legate {
 
 /**
- * @ingroup task
+ * @addtogroup task
+ * @{
+ */
+
+/**
  * @brief A base class template for Legate task implementations.
  *
  * Any Legate task class must inherit legate::LegateTask directly or transitively. The type
@@ -136,6 +139,8 @@ class LegateTask {  // NOLINT(bugprone-crtp-constructor-accessibility)
                             std::size_t userlen,
                             Legion::Processor p);
 };
+
+/** @} */
 
 }  // namespace legate
 

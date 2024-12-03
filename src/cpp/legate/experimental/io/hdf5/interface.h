@@ -19,16 +19,14 @@
 #include <string_view>
 
 /**
- * @defgroup io_hdf5 HDF5
- * @ingroup io
- *
- * @brief I/O operations backed by HDF5.
+ * @file
+ * @brief Interface for HDF5 I/O
  */
 
 namespace legate::experimental::io::hdf5 {
 
 /**
- * @addtogroup io_hdf5
+ * @addtogroup io-hdf5
  * @{
  */
 

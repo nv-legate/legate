@@ -14,6 +14,7 @@
 
 #include "legate/data/scalar.h"
 #include "legate/mapping/array.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <vector>
 
@@ -29,7 +30,11 @@ class Task;
 }  // namespace detail
 
 /**
- * @ingroup mapping
+ * @addtogroup mapping
+ * @{
+ */
+
+/**
  * @brief A metadata class for tasks
  */
 class Task {
@@ -132,6 +137,8 @@ class Task {
 
   detail::Task* pimpl_{};
 };
+
+/** @} */
 
 }  // namespace legate::mapping
 

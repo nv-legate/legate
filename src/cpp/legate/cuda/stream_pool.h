@@ -13,6 +13,7 @@
 #pragma once
 
 #include "legate/cuda/cuda.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <optional>
 
@@ -25,6 +26,11 @@ using CUstream = struct CUstream_st*;
 
 namespace legate::cuda {
 
+/**
+ * @addtogroup task
+ * @{
+ */
+
 #if LEGATE_DEFINED(LEGATE_SILENCE_STREAM_POOL_DEPRECATION_PRIVATE)
 #define LEGATE_STREAM_VIEW_DEPRECATED
 #else
@@ -33,7 +39,6 @@ namespace legate::cuda {
 #endif
 
 /**
- * @ingroup task
  * @brief A simple wrapper around CUDA streams to inject auxiliary features
  * @deprecated since 24.11: please provide your own implementation of this class
  *
@@ -82,7 +87,6 @@ class LEGATE_STREAM_VIEW_DEPRECATED StreamView {
 #endif
 
 /**
- * @ingroup task
  * @brief A stream pool
  * @deprecated since 24.11: use legate::TaskContext::get_task_stream() instead
  */
@@ -115,6 +119,8 @@ class LEGATE_STREAM_POOL_DEPRECATED StreamPool {
 #undef LEGATE_SILENCE_STREAM_POOL_DEPRECATION_PRIVATE
 #undef LEGATE_STREAM_POOL_DEPRECATED
 #undef LEGATE_STREAM_VIEW_DEPRECATED
+
+/** @} */
 
 }  // namespace legate::cuda
 

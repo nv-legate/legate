@@ -12,7 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 #include <memory>
@@ -25,7 +26,11 @@
 namespace legate {
 
 /**
- * @ingroup data
+ * @addtogroup data
+ * @{
+ */
+
+/**
  * @brief A simple allocator backed by \ref Buffer objects
  *
  * For each allocation request, this allocator creates a 1D \ref Buffer of `std::int8_t` and
@@ -103,5 +108,7 @@ class ScopedAllocator {
   //  1 error detected in the compilation of "cupynumeric/nullary/fill.cu".
   std::unique_ptr<Impl> impl_;
 };
+
+/** @} */
 
 }  // namespace legate

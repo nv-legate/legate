@@ -16,6 +16,7 @@
 #include "legate/utilities/shared_ptr.h"
 #include "legate/utilities/tuple.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
 #include <initializer_list>
@@ -36,8 +37,11 @@ class Shape;
 }  // namespace detail
 
 /**
- * @ingroup data
- *
+ * @addtogroup data
+ * @{
+ */
+
+/**
  * @brief A class to express shapes of multi-dimensional entities in Legate
  *
  * `Shape` objects describe *logical* shapes, of multi-dimensional containers in Legate such as
@@ -190,6 +194,8 @@ class Shape {
  private:
   SharedPtr<detail::Shape> impl_{};
 };
+
+/** @} */
 
 }  // namespace legate
 

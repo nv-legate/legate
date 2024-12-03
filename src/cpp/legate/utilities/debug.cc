@@ -14,6 +14,7 @@
 
 #include "legate/type/type_traits.h"
 #include "legate/utilities/dispatch.h"
+#include <legate/data/physical_store.h>
 
 namespace legate {
 

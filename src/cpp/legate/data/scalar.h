@@ -18,6 +18,7 @@
 #include "legate/utilities/span.h"
 #include "legate/utilities/tuple.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <memory>
 #include <string_view>
@@ -40,7 +41,11 @@ class ManualTask;
 class Runtime;
 
 /**
- * @ingroup data
+ * @addtogroup data
+ * @{
+ */
+
+/**
  * @brief A type-erased container for scalars
  *
  * A `Scalar` can be owned or shared, depending on whether it owns the backing allocation:
@@ -255,6 +260,8 @@ class Scalar {
  * invalid data.
  */
 [[nodiscard]] Scalar null();
+
+/** @} */
 
 }  // namespace legate
 

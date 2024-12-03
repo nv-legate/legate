@@ -20,6 +20,7 @@
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 /**
  * @file
@@ -38,8 +39,11 @@ class ListLogicalArray;
 class StringLogicalArray;
 
 /**
- * @ingroup data
- *
+ * @addtogroup data
+ * @{
+ */
+
+/**
  * @brief A multi-dimensional array
  */
 class LogicalArray {
@@ -266,8 +270,6 @@ class LogicalArray {
 };
 
 /**
- * @ingroup data
- *
  * @brief A multi-dimensional array representing a list of values
  */
 class ListLogicalArray : public LogicalArray {
@@ -293,8 +295,6 @@ class ListLogicalArray : public LogicalArray {
 };
 
 /**
- * @ingroup data
- *
  * @brief A multi-dimensional array representing a string
  */
 class StringLogicalArray : public LogicalArray {
@@ -318,6 +318,8 @@ class StringLogicalArray : public LogicalArray {
 
   explicit StringLogicalArray(InternalSharedPtr<detail::LogicalArray> impl);
 };
+
+/** @} */
 
 }  // namespace legate
 

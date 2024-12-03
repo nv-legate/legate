@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/utilities/shared_ptr.h"
+#include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/shared_ptr.h>
 
 #include <cstdint>
-#include <memory>
 #include <utility>
 
 /**
@@ -26,7 +26,11 @@
 namespace legate::timing {
 
 /**
- * @ingroup util
+ * @addtogroup util
+ * @{
+ */
+
+/**
  * @brief Deferred timestamp class
  */
 class Time {
@@ -52,7 +56,6 @@ class Time {
 };
 
 /**
- * @ingroup util
  * @brief Returns a timestamp at the resolution of microseconds
  *
  * The returned timestamp indicates the time at which all preceding Legate operations finish. This
@@ -64,7 +67,6 @@ class Time {
 [[nodiscard]] Time measure_microseconds();
 
 /**
- * @ingroup util
  * @brief Returns a timestamp at the resolution of nanoseconds
  *
  * The returned timestamp indicates the time at which all preceding Legate operations finish. This
@@ -74,5 +76,7 @@ class Time {
  * @return A `Time` object
  */
 [[nodiscard]] Time measure_nanoseconds();
+
+/** @} */
 
 }  // namespace legate::timing

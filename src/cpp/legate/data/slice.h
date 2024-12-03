@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <legate/utilities/detail/doxygen.h>
+
 #include <cstdint>
 #include <optional>
 
@@ -23,7 +25,11 @@
 namespace legate {
 
 /**
- * @ingroup data
+ * @addtogroup data
+ * @{
+ */
+
+/**
  * @brief A slice descriptor
  *
  * `Slice` behaves similarly to how the slice in Python does, and has different semantics
@@ -52,6 +58,8 @@ class Slice {
   std::optional<std::int64_t> start{OPEN}; /**< The start index of the slice */
   std::optional<std::int64_t> stop{OPEN};  /**< The end index of the slice */
 };
+
+/** @} */
 
 }  // namespace legate
 

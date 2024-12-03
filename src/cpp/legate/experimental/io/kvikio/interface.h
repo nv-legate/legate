@@ -20,6 +20,11 @@
 #include <optional>
 #include <vector>
 
+/**
+ * @file
+ * @brief Interface for KVikIO I/O
+ */
+
 namespace legate {
 
 class Shape;
@@ -27,17 +32,10 @@ class Type;
 
 }  // namespace legate
 
-/**
- * @defgroup io_kvikio KVikIO
- * @ingroup io
- *
- * @brief I/O operations backed by KVikIO.
- */
-
 namespace legate::experimental::io::kvikio {
 
 /**
- * @addtogroup io_kvikio
+ * @addtogroup io-kvikio
  * @{
  */
 

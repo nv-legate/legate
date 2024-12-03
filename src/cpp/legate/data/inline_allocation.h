@@ -12,14 +12,19 @@
 
 #pragma once
 
+#include <legate/utilities/detail/doxygen.h>
+
 #include <cstddef>
 #include <vector>
 
 namespace legate {
 
 /**
- * @ingroup data
- *
+ * @addtogroup data
+ * @{
+ */
+
+/**
  * @brief An object representing the raw memory and strides held by a `PhysicalStore`
  */
 class InlineAllocation {
@@ -27,5 +32,7 @@ class InlineAllocation {
   void* ptr{};                        /**< pointer to the start of the allocation */
   std::vector<std::size_t> strides{}; /**< vector of offsets into the buffer */
 };
+
+/** @} */
 
 }  // namespace legate

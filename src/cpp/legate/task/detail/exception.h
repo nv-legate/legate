@@ -12,15 +12,20 @@
 
 #pragma once
 
-#include "legate/task/exception.h"
-#include "legate/utilities/shared_ptr.h"
+#include <legate/task/exception.h>
+#include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/shared_ptr.h>
 
 #include <cstdint>
 
 namespace legate::detail {
 
 /**
- * @ingroup task
+ * @addtogroup task
+ * @{
+ */
+
+/**
  * @brief An exception class used to model exceptions thrown from Python.
  *
  * Any client that needs to catch a C++ exception during task execution and have it rethrown
@@ -62,6 +67,8 @@ class PythonTaskException : public TaskException {
   std::uint64_t size_{};
   SharedPtr<const char[]> bytes_{};
 };
+
+/** @} */
 
 }  // namespace legate::detail
 

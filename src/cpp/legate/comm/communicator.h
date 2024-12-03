@@ -12,7 +12,9 @@
 
 #pragma once
 
-#include "legion.h"
+#include <legate/utilities/detail/doxygen.h>
+
+#include <legion.h>
 
 /**
  * @file
@@ -22,7 +24,11 @@
 namespace legate::comm {
 
 /**
- * @ingroup task
+ * @addtogroup task
+ * @{
+ */
+
+/**
  * @brief A thin wrapper class for communicators stored in futures. This class only provides
  * a tempalte method to retrieve the communicator handle and the client is expected to pass
  * the right handle type.
@@ -54,6 +60,8 @@ class Communicator {
  private:
   Legion::Future future_{};
 };
+
+/** @} */
 
 }  // namespace legate::comm
 

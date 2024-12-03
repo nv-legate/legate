@@ -14,6 +14,7 @@
 
 #include "legate/utilities/tuple.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <functional>
 #include <iosfwd>
@@ -27,7 +28,11 @@
 namespace legate {
 
 /**
- * @ingroup task
+ * @addtogroup task
+ * @{
+ */
+
+/**
  * @brief A class that symbolically represents coordinates.
  *
  * A @f$\mathtt{SymbolicExpr}(i, w, c)@f$ object denotes an expression @f$ w \cdot \mathit{dim}_i +
@@ -101,7 +106,6 @@ class SymbolicExpr {
 std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
 
 /**
- * @ingroup task
  * @brief A symbolic representation of points
  *
  * Symbolic points are used to capture mappings between points in different
@@ -114,7 +118,6 @@ std::ostream& operator<<(std::ostream& out, const SymbolicExpr& expr);
 using SymbolicPoint = tuple<SymbolicExpr>;
 
 /**
- * @ingroup task
  * @brief Constructs a `SymbolicExpr` representing coordinates of a dimension
  *
  * @param dim The dimension index
@@ -124,7 +127,6 @@ using SymbolicPoint = tuple<SymbolicExpr>;
 [[nodiscard]] SymbolicExpr dimension(std::uint32_t dim);
 
 /**
- * @ingroup task
  * @brief Constructs a `SymbolicExpr` representing a constant value.
  *
  * @param value The constant value to embed
@@ -132,6 +134,8 @@ using SymbolicPoint = tuple<SymbolicExpr>;
  * @return A symbolic expression for the given constant
  */
 [[nodiscard]] SymbolicExpr constant(std::int32_t value);
+
+/** @} */
 
 }  // namespace legate
 

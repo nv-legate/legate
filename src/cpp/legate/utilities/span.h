@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <legate/utilities/detail/doxygen.h>
+
 #include <cstddef>
 
 /**
@@ -22,8 +24,11 @@
 namespace legate {
 
 /**
- * @ingroup data
- *
+ * @addtogroup data
+ * @{
+ */
+
+/**
  * @brief A simple span implementation used in Legate.
  *
  * Should eventually be replaced with std::span once we bump up the C++ standard version to C++20
@@ -98,6 +103,8 @@ class Span {
   T* data_{};
   std::size_t size_{};
 };
+
+/** @} */
 
 }  // namespace legate
 

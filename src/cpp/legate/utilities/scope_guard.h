@@ -12,8 +12,9 @@
 
 #pragma once
 
-#include "legate/utilities/detail/compressed_pair.h"
-#include "legate/utilities/macros.h"
+#include <legate/utilities/detail/compressed_pair.h>
+#include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/macros.h>
 
 #include <type_traits>
 
@@ -25,12 +26,15 @@
 namespace legate {
 
 /**
+ * @addtogroup util
+ * @{
+ */
+
+/**
  * @brief A simple wrapper around a callable that automatically executes the callable on
  * exiting the scope.
  *
  * @tparam F The type of the callable to execute.
- *
- * @ingroup util
  */
 template <typename F>
 class ScopeGuard {
@@ -153,8 +157,6 @@ class ScopeGuard {
  * @tparam The type of \p fn, usually inferred from the argument itself.
  *
  * @see ScopeGuard
- *
- * @ingroup util
  */
 template <typename F>
 [[nodiscard]] ScopeGuard<F> make_scope_guard(F&& fn) noexcept;
@@ -200,8 +202,6 @@ template <typename F>
  *
  * @see ScopeGuard
  * @see LEGATE_SCOPE_FAIL
- *
- * @ingroup util
  */
 #define LEGATE_SCOPE_GUARD(...)                               \
   const auto LEGATE_CONCAT(__legate_scope_guard_, __LINE__) = \
@@ -212,8 +212,6 @@ template <typename F>
  * exited due to an exception.
  *
  * @tparam F The type of the callable to execute.
- *
- * @ingroup util
  */
 template <typename F>
 class ScopeFail {
@@ -276,8 +274,6 @@ class ScopeFail {
  * @tparam The type of \p fn, usually inferred from the argument itself.
  *
  * @see ScopeFail
- *
- * @ingroup util
  */
 template <typename F>
 [[nodiscard]] ScopeFail<F> make_scope_fail(F&& fn) noexcept;
@@ -295,13 +291,13 @@ template <typename F>
  *
  * @see ScopeFail
  * @see LEGATE_SCOPE_GUARD
- *
- * @ingroup util
  */
 #define LEGATE_SCOPE_FAIL(...)                               \
   const auto LEGATE_CONCAT(__legate_scope_fail_, __LINE__) = \
     ::legate::make_scope_fail([&]() noexcept { __VA_ARGS__; })
 
+/** @} */
+
 }  // namespace legate
 
-#include "legate/utilities/scope_guard.inl"
+#include <legate/utilities/scope_guard.inl>

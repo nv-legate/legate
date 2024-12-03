@@ -14,6 +14,7 @@
 
 #include "legate/utilities/machine.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include "legion.h"
 
@@ -28,10 +29,17 @@
 
 namespace legate {
 
+/**
+ * @addtogroup data
+ * @{
+ */
+
+/**
+ * @brief The default alignment for memory allocations
+ */
 inline constexpr std::size_t DEFAULT_ALIGNMENT = 16;
 
 /**
- * @ingroup data
  * @brief A typed buffer class for intra-task temporary allocations
  *
  * Values in a buffer can be accessed by index expressions with \ref Point objects, or via a raw
@@ -64,7 +72,6 @@ template <typename VAL, std::int32_t DIM = 1>
 using Buffer = Legion::DeferredBuffer<VAL, DIM>;
 
 /**
- * @ingroup data
  * @brief Creates a \ref Buffer of specific extents
  *
  * @param extents Extents of the buffer
@@ -93,7 +100,6 @@ template <typename VAL, std::int32_t DIM>
 }
 
 /**
- * @ingroup data
  * @brief Creates a \ref Buffer of a specific size. Always returns a 1D \ref Buffer.
  *
  * @param size Size of the \ref Buffer
@@ -110,5 +116,7 @@ template <typename VAL>
 {
   return create_buffer<VAL, 1>(Point<1>{size}, kind, alignment);
 }
+
+/** @} */
 
 }  // namespace legate

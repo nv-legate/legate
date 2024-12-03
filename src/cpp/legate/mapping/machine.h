@@ -16,6 +16,7 @@
 #include "legate/utilities/compiler.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -33,7 +34,11 @@
 namespace legate::mapping {
 
 /**
- * @ingroup mapping
+ * @addtogroup mapping
+ * @{
+ */
+
+/**
  * @brief A class to represent a range of nodes.
  *
  * `NodeRange`s are half-open intervals of logical node IDs.
@@ -50,7 +55,6 @@ class NodeRange {
 };
 
 /**
- * @ingroup mapping
  * @brief A class to represent a range of processors.
  *
  * `ProcessorRange`s are half-open intervals of logical processors IDs.
@@ -136,7 +140,6 @@ class Machine;
 }  // namespace detail
 
 /**
- * @ingroup mapping
  * @brief Machine descriptor class
  *
  * A `Machine` object describes the machine resource that should be used for a given scope of
@@ -311,6 +314,8 @@ class Machine {
 };
 
 std::ostream& operator<<(std::ostream& stream, const Machine& machine);
+
+/** @} */
 
 }  // namespace legate::mapping
 

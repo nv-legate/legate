@@ -82,21 +82,30 @@
  */
 
 /**
+ * @defgroup stl Legate Standard Template Library
+ */
+
+/**
  * @defgroup stl-concepts Concepts
+ * @ingroup stl
  */
 
 /**
  * @defgroup stl-containers Containers
+ * @ingroup stl
  */
 
 /**
  * @defgroup stl-views Views
+ * @ingroup stl
  */
 
 /**
  * @defgroup stl-algorithms Algorithms
+ * @ingroup stl
  */
 
 /**
  * @defgroup stl-utilities Utilities
+ * @ingroup stl
  */

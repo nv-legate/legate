@@ -16,13 +16,11 @@
 #include "legate/mapping/store.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <iosfwd>
 #include <memory>
 #include <vector>
-
-/** @defgroup mapping Mapping API
- */
 
 /**
  * @file
@@ -39,13 +37,17 @@ class StoreMapping;
 
 }  // namespace detail
 
+/**
+ * @addtogroup mapping
+ * @{
+ */
+
 class Task;
 
 // NOTE: codes are chosen to reflect the precedence between the processor kinds in choosing target
 // processors for tasks.
 
 /**
- * @ingroup mapping
  * @brief An enum class for task targets
  *
  * The enumerators of `TaskTarget` are ordered by their precedence; i.e., `GPU`, if available, is
@@ -71,7 +73,6 @@ static_assert(TaskTarget::OMP < TaskTarget::CPU);
 std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
 
 /**
- * @ingroup mapping
  * @brief An enum class for store targets
  */
 enum class StoreTarget : std::uint8_t {
@@ -96,7 +97,6 @@ enum class StoreTarget : std::uint8_t {
 std::ostream& operator<<(std::ostream& stream, const StoreTarget& target);
 
 /**
- * @ingroup mapping
  * @brief An enum class for instance allocation policies
  */
 enum class AllocPolicy : std::uint8_t {
@@ -111,7 +111,6 @@ enum class AllocPolicy : std::uint8_t {
 };
 
 /**
- * @ingroup mapping
  * @brief An enum class for instant layouts
  */
 enum class InstLayout : std::uint8_t {
@@ -127,7 +126,6 @@ enum class InstLayout : std::uint8_t {
 };
 
 /**
- * @ingroup mapping
  * @brief A descriptor for dimension ordering
  */
 class DimOrdering {
@@ -216,7 +214,6 @@ class DimOrdering {
 };
 
 /**
- * @ingroup mapping
  * @brief A descriptor for instance mapping policy
  */
 class InstanceMappingPolicy {
@@ -373,7 +370,6 @@ class InstanceMappingPolicy {
 };
 
 /**
- * @ingroup mapping
  * @brief A mapping policy for stores
  */
 class StoreMapping {
@@ -485,7 +481,6 @@ class StoreMapping {
 };
 
 /**
- * @ingroup mapping
  * @brief An abstract class that defines machine query APIs
  */
 class MachineQueryInterface {
@@ -518,7 +513,6 @@ class MachineQueryInterface {
 };
 
 /**
- * @ingroup mapping
  * @brief An abstract class that defines Legate mapping APIs
  *
  * The APIs give Legate libraries high-level control on task and store mappings
@@ -558,6 +552,8 @@ class Mapper {
    */
   [[nodiscard]] virtual Scalar tunable_value(TunableID tunable_id) = 0;
 };
+
+/** @} */
 
 }  // namespace legate::mapping
 

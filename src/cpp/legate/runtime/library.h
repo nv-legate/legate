@@ -16,6 +16,7 @@
 #include "legate/task/variant_options.h"
 #include "legate/utilities/compiler.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <map>
 #include <memory>
@@ -32,11 +33,15 @@ class Library;
 
 namespace legate {
 
+/**
+ * @addtogroup runtime
+ * @{
+ */
+
 class TaskInfo;
 class Runtime;
 
 /**
- * @ingroup runtime
  * @brief A library class that provides APIs for registering components
  */
 class Library {
@@ -170,6 +175,8 @@ class Library {
 
   detail::Library* impl_{};
 };
+
+/** @} */
 
 }  // namespace legate
 

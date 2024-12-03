@@ -15,6 +15,7 @@
 #include "legate/mapping/mapping.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <functional>
 #include <optional>
@@ -33,8 +34,11 @@ class ExternalAllocation;
 namespace legate {
 
 /**
- * @ingroup data
- *
+ * @addtogroup data
+ * @{
+ */
+
+/**
  * @brief Descriptor for external allocations
  *
  * An `ExternalAllocation` is a handle to a memory allocation outside Legate's memory management.
@@ -234,6 +238,8 @@ class ExternalAllocation {
  private:
   SharedPtr<detail::ExternalAllocation> impl_{};
 };
+
+/** @} */
 
 }  // namespace legate
 

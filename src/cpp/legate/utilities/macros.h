@@ -11,6 +11,12 @@
  */
 
 #pragma once
+#include <legate/utilities/detail/doxygen.h>
+
+/**
+ * @addtogroup util
+ * @{
+ */
 
 /**
  * @file
@@ -37,8 +43,6 @@
  * @endcode
  *
  * @see LEGATE_CONCAT()
- *
- * @ingroup util
  */
 #define LEGATE_CONCAT_(x, ...) x##__VA_ARGS__
 
@@ -61,8 +65,6 @@
  * @endcode
  *
  * @see LEGATE_CONCAT_()
- *
- * @ingroup util
  */
 #define LEGATE_CONCAT(x, ...) LEGATE_CONCAT_(x, __VA_ARGS__)
 
@@ -87,8 +89,6 @@
  * @endcode
  *
  * @see LEGATE_STRINGIZE()
- *
- * @ingroup util
  */
 #define LEGATE_STRINGIZE_(...) #__VA_ARGS__
 
@@ -112,8 +112,6 @@
  * @endcode
  *
  * @see LEGATE_STRINGIZE_()
- *
- * @ingroup util
  */
 #define LEGATE_STRINGIZE(...) LEGATE_STRINGIZE_(__VA_ARGS__)
 
@@ -202,8 +200,6 @@
  * @endcode
  *
  * @see LEGATE_CONCAT()
- *
- * @ingroup util
  */
 #define LEGATE_DEFINED(x) LEGATE_DEFINED_PRIVATE(LEGATE_CONCAT_(LEGATE_DEFINED_ENABLED_FORM_, x))
 
@@ -218,3 +214,5 @@
 #endif
 
 #define LEGATE_HOST_DEVICE LEGATE_HOST LEGATE_DEVICE
+
+/** @} */

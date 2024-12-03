@@ -22,6 +22,7 @@
 #include "legate/runtime/resource.h"
 #include "legate/task/variant_options.h"
 #include "legate/type/type_info.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
 #include <map>
@@ -36,14 +37,16 @@
  * @brief Definitions for legate::Runtime and top-level APIs
  */
 
-/** @defgroup runtime Runtime and library contexts
- */
-
 namespace legate::mapping {
 class Mapper;
 }  // namespace legate::mapping
 
 namespace legate {
+
+/**
+ * @addtogroup runtime
+ * @{
+ */
 
 class Scalar;
 class Type;
@@ -53,8 +56,6 @@ class Runtime;
 }  // namespace detail
 
 /**
- * @ingroup runtime
- *
  * @brief Class that implements the Legate runtime
  *
  * The legate runtime provides common services, including as library registration,
@@ -667,8 +668,6 @@ class Runtime {
 };
 
 /**
- * @ingroup runtime
- *
  * @brief Starts the Legate runtime
  *
  * This makes the runtime ready to accept requests made via its APIs
@@ -681,8 +680,6 @@ class Runtime {
 [[nodiscard]] std::int32_t start(std::int32_t argc, char** argv);
 
 /**
- * @ingroup runtime
- *
  * @brief Checks if the runtime has started.
  *
  * @return `true` if the runtime has started, `false` if the runtime has not started yet or
@@ -691,8 +688,6 @@ class Runtime {
 [[nodiscard]] bool has_started();
 
 /**
- * @ingroup runtime
- *
  * @brief Checks if the runtime has finished.
  *
  * @return `true` if `finish()` has been called, `false` otherwise.
@@ -700,8 +695,6 @@ class Runtime {
 [[nodiscard]] bool has_finished();
 
 /**
- * @ingroup runtime
- *
  * @brief Waits for the runtime to finish
  *
  * The client code must call this to make sure all Legate tasks run
@@ -713,8 +706,6 @@ class Runtime {
 [[deprecated("since 24.11: use legate::finish() instead")]] void destroy();
 
 /**
- * @ingroup runtime
- *
  * @brief Registers a callback that should be invoked during the runtime shutdown
  *
  * Any callbacks will be invoked before the core library and the runtime are destroyed. All
@@ -731,8 +722,6 @@ template <typename T>
 void register_shutdown_callback(T&& callback);
 
 /**
- * @ingroup runtime
- *
  * @brief Returns the machine for the current scope
  *
  * @return Machine object
@@ -740,14 +729,14 @@ void register_shutdown_callback(T&& callback);
 [[nodiscard]] mapping::Machine get_machine();
 
 /**
- * @ingroup runtime
- *
  * @brief Checks if the code is running in a task
  *
  * @return true If the code is running in a task
  * @return false If the code is not running in a task
  */
 [[nodiscard]] bool is_running_in_task();
+
+/** @} */
 
 }  // namespace legate
 

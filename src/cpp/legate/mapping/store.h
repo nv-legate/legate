@@ -13,6 +13,7 @@
 #pragma once
 
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 /**
  * @file
@@ -26,8 +27,11 @@ class Store;
 namespace legate::mapping {
 
 /**
- * @ingroup mapping
- *
+ * @addtogroup mapping
+ * @{
+ */
+
+/**
  * @brief A metadata class that mirrors the structure of legate::PhysicalStore but contains only the
  * data relevant to mapping
  */
@@ -101,6 +105,8 @@ class Store {
  private:
   const detail::Store* impl_{};
 };
+
+/** @} */
 
 }  // namespace legate::mapping
 

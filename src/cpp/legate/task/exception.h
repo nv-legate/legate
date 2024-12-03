@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <legate/utilities/detail/doxygen.h>
+
 #include <cstdint>
 #include <exception>
 #include <string>
@@ -24,7 +26,11 @@
 namespace legate {
 
 /**
- * @ingroup task
+ * @addtogroup task
+ * @{
+ */
+
+/**
  * @brief An exception class used in cross language exception handling
  *
  * Any client that needs to catch a C++ exception during task execution and have it rethrown
@@ -71,6 +77,8 @@ class TaskException : public std::exception {
   std::int32_t index_{-1};
   std::string error_message_{};
 };
+
+/** @} */
 
 }  // namespace legate
 

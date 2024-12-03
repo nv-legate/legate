@@ -15,6 +15,7 @@
 #include "legate/utilities/compiler.h"
 #include "legate/utilities/shared_ptr.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include "legion/legion_config.h"
 
@@ -28,14 +29,16 @@
  * @brief Legate type system
  */
 
-/** @defgroup types Type system
- */
-
 namespace legate::detail {
 class Type;
 }  // namespace legate::detail
 
 namespace legate {
+
+/**
+ * @addtogroup types
+ * @{
+ */
 
 class FixedArrayType;
 class ListType;
@@ -45,7 +48,6 @@ class StructType;
 // want to inadvertently muck that up.
 // NOLINTBEGIN(performance-enum-size)
 /**
- * @ingroup types
  * @brief Enum for reduction operator kinds
  */
 enum class ReductionOpKind : std::int32_t {
@@ -60,7 +62,6 @@ enum class ReductionOpKind : std::int32_t {
 // NOLINTEND(performance-enum-size)
 
 /**
- * @ingroup types
  * @brief A base class for data type metadata
  */
 class Type {
@@ -70,7 +71,6 @@ class Type {
   // values to map to Legion kinds exactly, but we don't care what the others are.
   // NOLINTBEGIN(performance-enum-size, readability-enum-initial-value)
   /**
-   * @ingroup types
    * @brief Enum for type codes
    */
   enum class Code : std::int32_t {
@@ -236,7 +236,6 @@ class Type {
 };
 
 /**
- * @ingroup types
  * @brief A class for fixed-size array data types
  */
 class FixedArrayType : public Type {
@@ -258,7 +257,6 @@ class FixedArrayType : public Type {
 };
 
 /**
- * @ingroup types
  * @brief A class for struct data types
  */
 class StructType : public Type {
@@ -295,7 +293,6 @@ class StructType : public Type {
 };
 
 /**
- * @ingroup types
  * @brief A class for list types
  */
 class ListType : public Type {
@@ -311,7 +308,6 @@ class ListType : public Type {
 };
 
 /**
- * @ingroup types
  * @brief Creates a metadata object for a primitive type
  *
  * @param code Type code
@@ -321,7 +317,6 @@ class ListType : public Type {
 [[nodiscard]] Type primitive_type(Type::Code code);
 
 /**
- * @ingroup types
  * @brief Creates a metadata object for the string type
  *
  * @return Type object
@@ -329,7 +324,6 @@ class ListType : public Type {
 [[nodiscard]] Type string_type();
 
 /**
- * @ingroup types
  * @brief Creates an opaque binary type of a given size
  *
  * @param size Element size
@@ -339,7 +333,6 @@ class ListType : public Type {
 [[nodiscard]] Type binary_type(std::uint32_t size);
 
 /**
- * @ingroup types
  * @brief Creates a metadata object for a fixed-size array type
  *
  * @param element_type Type of the array elements
@@ -350,7 +343,6 @@ class ListType : public Type {
 [[nodiscard]] FixedArrayType fixed_array_type(const Type& element_type, std::uint32_t N);
 
 /**
- * @ingroup types
  * @brief Creates a metadata object for a struct type
  *
  * @param field_types A vector of field types
@@ -361,7 +353,6 @@ class ListType : public Type {
 [[nodiscard]] StructType struct_type(const std::vector<Type>& field_types, bool align = false);
 
 /**
- * @ingroup types
  * @brief Creates a metadata object for a list type
  *
  * @param element_type Type of the list elements
@@ -371,7 +362,6 @@ class ListType : public Type {
 [[nodiscard]] ListType list_type(const Type& element_type);
 
 /**
- * @ingroup types
  * @brief Creates a metadata object for a struct type
  *
  * @param align If true, fields in the struct are aligned
@@ -389,7 +379,6 @@ std::ostream& operator<<(std::ostream&, const Type::Code&);
 std::ostream& operator<<(std::ostream&, const Type&);
 
 /**
- * @ingroup types
  * @brief Creates a boolean type
  *
  * @return Type object
@@ -397,7 +386,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type bool_();  // NOLINT(readability-identifier-naming)
 
 /**
- * @ingroup types
  * @brief Creates a 8-bit signed integer type
  *
  * @return Type object
@@ -405,7 +393,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type int8();
 
 /**
- * @ingroup types
  * @brief Creates a 16-bit signed integer type
  *
  * @return Type object
@@ -413,7 +400,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type int16();
 
 /**
- * @ingroup types
  * @brief Creates a 32-bit signed integer type
  *
  * @return Type object
@@ -421,7 +407,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type int32();
 
 /**
- * @ingroup types
  * @brief Creates a 64-bit signed integer type
  *
  * @return Type object
@@ -429,7 +414,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type int64();
 
 /**
- * @ingroup types
  * @brief Creates a 8-bit unsigned integer type
  *
  * @return Type object
@@ -437,7 +421,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type uint8();
 
 /**
- * @ingroup types
  * @brief Creates a 16-bit unsigned integer type
  *
  * @return Type object
@@ -445,7 +428,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type uint16();
 
 /**
- * @ingroup types
  * @brief Creates a 32-bit unsigned integer type
  *
  * @return Type object
@@ -453,7 +435,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type uint32();
 
 /**
- * @ingroup types
  * @brief Creates a 64-bit unsigned integer type
  *
  * @return Type object
@@ -461,7 +442,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type uint64();
 
 /**
- * @ingroup types
  * @brief Creates a half-precision floating point type
  *
  * @return Type object
@@ -469,7 +449,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type float16();
 
 /**
- * @ingroup types
  * @brief Creates a single-precision floating point type
  *
  * @return Type object
@@ -477,7 +456,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type float32();
 
 /**
- * @ingroup types
  * @brief Creates a double-precision floating point type
  *
  * @return Type object
@@ -485,7 +463,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type float64();
 
 /**
- * @ingroup types
  * @brief Creates a single-precision complex number type
  *
  * @return Type object
@@ -493,7 +470,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type complex64();
 
 /**
- * @ingroup types
  * @brief Creates a double-precision complex number type
  *
  * @return Type object
@@ -501,7 +477,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type complex128();
 
 /**
- * @ingroup types
  * @brief Creates a point type
  *
  * @param ndim Number of dimensions
@@ -511,7 +486,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] FixedArrayType point_type(std::uint32_t ndim);
 
 /**
- * @ingroup types
  * @brief Creates a rect type
  *
  * @param ndim Number of dimensions
@@ -521,7 +495,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] StructType rect_type(std::uint32_t ndim);
 
 /**
- * @ingroup types
  * @brief Creates a null type
  *
  * @return Type object
@@ -529,7 +502,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] Type null_type();
 
 /**
- * @ingroup types
  * @brief Checks if the type is a point type
  *
  * @param type Type to check
@@ -540,7 +512,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] bool is_point_type(const Type& type);
 
 /**
- * @ingroup types
  * @brief Checks if the type is a point type of the given dimensionality
  *
  * @param type Type to check
@@ -552,7 +523,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] bool is_point_type(const Type& type, std::uint32_t ndim);
 
 /**
- * @ingroup types
  * @brief Returns the number of dimensions of a given point type
  *
  * @param type Point type
@@ -564,7 +534,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] std::int32_t ndim_point_type(const Type& type);
 
 /**
- * @ingroup types
  * @brief Checks if the type is a rect type
  *
  * @param type Type to check
@@ -575,7 +544,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] bool is_rect_type(const Type& type);
 
 /**
- * @ingroup types
  * @brief Checks if the type is a rect type of the given dimensionality
  *
  * @param type Type to check
@@ -587,7 +555,6 @@ std::ostream& operator<<(std::ostream&, const Type&);
 [[nodiscard]] bool is_rect_type(const Type& type, std::uint32_t ndim);
 
 /**
- * @ingroup types
  * @brief Returns the number of dimensions of a given rect type
  *
  * @param type Rect type
@@ -597,6 +564,8 @@ std::ostream& operator<<(std::ostream&, const Type&);
  * @throw std::invalid_argument IF the type is not a rect type
  */
 [[nodiscard]] std::int32_t ndim_rect_type(const Type& type);
+
+/** @} */
 
 }  // namespace legate
 

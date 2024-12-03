@@ -13,6 +13,7 @@
 #pragma once
 
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
 #include <functional>
@@ -29,7 +30,11 @@ class TaskInfo;
 class Library;
 
 /**
- * @ingroup task
+ * @addtogroup task
+ * @{
+ */
+
+/**
  * @brief A helper class for task variant registration.
  *
  * The `legate::TaskRegistrar` class is designed to simplify the boilerplate that client libraries
@@ -104,5 +109,7 @@ class TaskRegistrar {
   class Impl;
   std::unique_ptr<Impl> impl_;
 };
+
+/** @} */
 
 }  // namespace legate

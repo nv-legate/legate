@@ -15,6 +15,7 @@
 #include "legate_defines.h"
 
 #include "legate/type/type_info.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <stdexcept>
 #include <utility>
@@ -146,7 +147,11 @@ class InnerDimDispatchFn {
 }  // namespace detail
 
 /**
- * @ingroup util
+ * @addtogroup util
+ * @{
+ */
+
+/**
  * @brief Converts the runtime dimension and type code into compile time constants and
  * invokes the functor with them
  *
@@ -214,7 +219,6 @@ constexpr decltype(auto) double_dispatch(int dim, Type::Code code, Functor f, Fn
 }
 
 /**
- * @ingroup util
  * @brief Converts the runtime dimensions into compile time constants and invokes
  * the functor with them
  *
@@ -282,7 +286,6 @@ constexpr decltype(auto) double_dispatch(int dim1, int dim2, Functor f, Fnargs&&
 }
 
 /**
- * @ingroup util
  * @brief Converts the runtime dimension into a compile time constant and invokes
  * the functor with it
  *
@@ -349,7 +352,6 @@ constexpr decltype(auto) dim_dispatch(int dim, Functor f, Fnargs&&... args)
 }
 
 /**
- * @ingroup util
  * @brief Converts the runtime type code into a compile time constant and invokes
  * the functor with it
  *
@@ -411,5 +413,7 @@ constexpr decltype(auto) type_dispatch(Type::Code code, Functor&& f, Fnargs&&...
   }
   return f.template operator()<Type::Code::BOOL>(std::forward<Fnargs>(args)...);
 }
+
+/** @} */
 
 }  // namespace legate

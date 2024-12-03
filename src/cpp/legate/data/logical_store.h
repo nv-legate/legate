@@ -19,6 +19,7 @@
 #include "legate/utilities/compiler.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <utility>
 #include <vector>
@@ -38,12 +39,15 @@ class Storage;
 
 namespace legate {
 
+/**
+ * @addtogroup data
+ * @{
+ */
+
 class LogicalStorePartition;
 class Runtime;
 
 /**
- * @ingroup data
- *
  * @brief A multi-dimensional data container
  *
  * `LogicalStore` is a multi-dimensional data container for fixed-size elements. Stores are
@@ -438,6 +442,8 @@ class LogicalStorePartition {
   class Impl;
   InternalSharedPtr<Impl> impl_{};
 };
+
+/** @} */
 
 }  // namespace legate
 

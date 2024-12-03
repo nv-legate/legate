@@ -12,12 +12,18 @@
 
 #pragma once
 
+#include <legate/utilities/detail/doxygen.h>
+
 #include <cstdint>
 
 namespace legate {
 
 /**
- * @ingroup runtime
+ * @addtogroup runtime
+ * @{
+ */
+
+/**
  * @brief POD for library configuration.
  */
 struct ResourceConfig {
@@ -36,5 +42,7 @@ struct ResourceConfig {
   std::int64_t max_projections{};
   std::int64_t max_shardings{};
 };
+
+/** @} */
 
 }  // namespace legate

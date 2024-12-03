@@ -12,22 +12,24 @@
 
 #pragma once
 
-#include "legate/data/physical_store.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/typedefs.h>
 
 #include <string>
 
-/** @defgroup util Utilities
+namespace legate {
+
+/**
+ * @addtogroup util
+ * @{
  */
 
 /**
  * @file
  * @brief Debugging utilities
  */
-namespace legate {
 
 /**
- * @ingroup util
  * @brief Converts the dense array into a string
  *
  * @param base Array to convert
@@ -41,7 +43,6 @@ template <typename T, int DIM>
                                             const Point<DIM>& extents,
                                             const std::size_t (&strides)[DIM]);
 /**
- * @ingroup util
  * @brief Converts the dense array into a string using an accessor
  *
  * @param accessor Accessor to an array
@@ -62,6 +63,8 @@ template <int DIM, typename ACC>
 //  * @return A string expressing the contents of the store
 //  */
 // [[nodiscard]] std::string print_dense_array(const PhysicalStore& store);
+
+/** @} */
 
 }  // namespace legate
 

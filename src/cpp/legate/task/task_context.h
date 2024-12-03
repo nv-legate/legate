@@ -17,6 +17,7 @@
 #include "legate/data/scalar.h"
 #include "legate/mapping/machine.h"
 #include "legate/mapping/mapping.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <string_view>
 #include <vector>
@@ -35,7 +36,11 @@ class TaskContext;
 namespace legate {
 
 /**
- * @ingroup task
+ * @addtogroup task
+ * @{
+ */
+
+/**
  * @brief A task context that contains task arguments and communicators
  */
 class TaskContext {
@@ -257,6 +262,8 @@ class TaskContext {
  private:
   detail::TaskContext* impl_{};
 };
+
+/** @} */
 
 }  // namespace legate
 

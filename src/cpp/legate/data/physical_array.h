@@ -18,6 +18,7 @@
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
 
@@ -38,8 +39,11 @@ class ListPhysicalArray;
 class StringPhysicalArray;
 
 /**
- * @ingroup data
- *
+ * @addtogroup data
+ * @{
+ */
+
+/**
  * @brief A multi-dimensional array abstraction for fixed- or variable-size elements
  *
  * `PhysicalArray`s can be backed by one or more `PhysicalStore`s, depending on their types.
@@ -157,8 +161,6 @@ class PhysicalArray {
 };
 
 /**
- * @ingroup data
- *
  * @brief A multi-dimensional array abstraction for variable-size list of elements.
  */
 class ListPhysicalArray : public PhysicalArray {
@@ -184,8 +186,6 @@ class ListPhysicalArray : public PhysicalArray {
 };
 
 /**
- * @ingroup data
- *
  * @brief A multi-dimensional array abstraction representing a string.
  */
 class StringPhysicalArray : public PhysicalArray {
@@ -209,6 +209,8 @@ class StringPhysicalArray : public PhysicalArray {
 
   explicit StringPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl);
 };
+
+/** @} */
 
 }  // namespace legate
 

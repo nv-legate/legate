@@ -20,9 +20,7 @@
 #include "legate/utilities/dispatch.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
-
-/** @defgroup data Data abstractions and allocators
- */
+#include <legate/utilities/detail/doxygen.h>
 
 /**
  * @file
@@ -35,13 +33,16 @@ class PhysicalStore;
 
 namespace legate {
 
+/**
+ * @addtogroup data
+ * @{
+ */
+
 class PhysicalArray;
 
 #define LEGATE_TRUE_WHEN_DEBUG LEGATE_DEFINED(LEGATE_USE_DEBUG)
 
 /**
- * @ingroup data
- *
  * @brief A multi-dimensional data container storing task data
  */
 class PhysicalStore {
@@ -418,6 +419,8 @@ class PhysicalStore {
 };
 
 #undef LEGATE_TRUE_WHEN_DEBUG
+
+/** @} */
 
 }  // namespace legate
 

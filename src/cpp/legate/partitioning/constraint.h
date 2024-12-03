@@ -18,17 +18,21 @@
 #include "legate/utilities/memory.h"
 #include "legate/utilities/shared_ptr.h"
 #include "legate/utilities/tuple.h"
+#include <legate/utilities/detail/doxygen.h>
 
 #include <string>
-
-/** @defgroup partitioning Partitioning
- */
 
 /**
  * @file
  * @brief Class definitions for partitioning constraint language
  */
+
 namespace legate {
+
+/**
+ * @addtogroup partitioning
+ * @{
+ */
 
 class AutoTask;
 
@@ -40,7 +44,6 @@ class Variable;
 }  // namespace detail
 
 /**
- * @ingroup partitioning
  * @brief Class for partition symbols
  */
 class Variable {
@@ -58,7 +61,6 @@ class Variable {
 };
 
 /**
- * @ingroup partitioning
  * @brief A base class for partitioning constraints
  */
 class Constraint {
@@ -81,7 +83,6 @@ class Constraint {
 };
 
 /**
- * @ingroup partitioning
  * @brief Creates an alignment constraint on two variables
  *
  * An alignment constraint between variables `x` and `y` indicates to the runtime that the
@@ -103,7 +104,6 @@ class Constraint {
 [[nodiscard]] Constraint align(Variable lhs, Variable rhs);
 
 /**
- * @ingroup partitioning
  * @brief Creates a broadcast constraint on a variable.
  *
  * A broadcast constraint informs the runtime that the variable should not be split among the
@@ -119,7 +119,6 @@ class Constraint {
 [[nodiscard]] Constraint broadcast(Variable variable);
 
 /**
- * @ingroup partitioning
  * @brief Creates a broadcast constraint on a variable.
  *
  * A modified form of broadcast constraint which applies the broadcast to a subset of the axes of
@@ -135,7 +134,6 @@ class Constraint {
 [[nodiscard]] Constraint broadcast(Variable variable, tuple<std::uint32_t> axes);
 
 /**
- * @ingroup partitioning
  * @brief Hints to the runtime for the image computation
  */
 enum class ImageComputationHint : std::uint8_t {
@@ -146,7 +144,6 @@ enum class ImageComputationHint : std::uint8_t {
 };
 
 /**
- * @ingroup partitioning
  * @brief Creates an image constraint between partitions.
  *
  * The elements of \p var_function are treated as pointers to elements in \p var_range. Each
@@ -178,7 +175,6 @@ enum class ImageComputationHint : std::uint8_t {
                                ImageComputationHint hint = ImageComputationHint::NO_HINT);
 
 /**
- * @ingroup partitioning
  * @brief Creates a scaling constraint between partitions
  *
  * A scaling constraint is similar to an alignment constraint, except that the sizes of the
@@ -211,7 +207,6 @@ enum class ImageComputationHint : std::uint8_t {
                                Variable var_bigger);
 
 /**
- * @ingroup partitioning
  * @brief Creates a bloating constraint between partitions
  *
  * This is typically used in stencil computations, to instruct the runtime that the tiles on
@@ -243,6 +238,8 @@ enum class ImageComputationHint : std::uint8_t {
                                Variable var_bloat,
                                tuple<std::uint64_t> low_offsets,
                                tuple<std::uint64_t> high_offsets);
+
+/** @} */
 
 }  // namespace legate
 

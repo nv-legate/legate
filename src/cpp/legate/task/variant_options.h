@@ -13,6 +13,7 @@
 #pragma once
 
 #include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/doxygen.h>
 
 /**
  * @file
@@ -20,14 +21,17 @@
  */
 namespace legate {
 
+/**
+ * @addtogroup task
+ * @{
+ */
+
 // Each scalar output store can take up to 12 bytes, so in the worst case there can be only up to
 // 341 scalar output stores.
 inline constexpr std::size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
 
 /**
  * @brief A helper class for specifying variant options
- *
- * @ingroup task
  */
 class VariantOptions {
  public:
@@ -125,6 +129,8 @@ class VariantOptions {
 inline constexpr VariantOptions VariantOptions::DEFAULT_OPTIONS{};
 
 std::ostream& operator<<(std::ostream& os, const VariantOptions& options);
+
+/** @} */
 
 }  // namespace legate
 

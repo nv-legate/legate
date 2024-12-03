@@ -20,7 +20,11 @@
 namespace legate::detail {
 
 /**
- * @ingroup util
+ * @addtogroup util
+ * @{
+ */
+
+/**
  * @brief A helper class to serialize values into a contiguous buffer
  */
 class BufferBuilder {
@@ -73,6 +77,8 @@ class BufferBuilder {
  private:
   std::vector<std::int8_t> buffer_{};
 };
+
+/** @} */
 
 }  // namespace legate::detail
 
