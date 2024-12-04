@@ -31,6 +31,7 @@ from ..aedifix import (
 )
 
 if TYPE_CHECKING:
+    from ..aedifix.package.packages.cal import CAL
     from ..aedifix.package.packages.cmake import CMake
     from ..aedifix.package.packages.legion import Legion
     from ..aedifix.package.packages.python import Python
@@ -135,6 +136,7 @@ class Legate(MainPackage):
             "legate_IGNORE_INSTALLED_PACKAGES", CMakeBool
         ),
     )
+    legate_USE_CAL: Final = CMAKE_VARIABLE("legate_USE_CAL", CMakeBool)
 
     def __init__(
         self, manager: ConfigurationManager, argv: Sequence[str]
@@ -226,6 +228,7 @@ class Legate(MainPackage):
         self.python: Python = self.require(  # type: ignore[assignment]
             "python"
         )
+        self.cal: CAL = self.require("cal")  # type: ignore[assignment]
 
     def maybe_uninstall_legate(self) -> None:
         r"""Uninstall Legate if --with-clean is given on command line
@@ -424,6 +427,14 @@ class Legate(MainPackage):
             self.LEGATE_CLANG_TIDY, self.cl_args.clang_tidy_executable
         )
 
+    def configure_cal(self) -> None:
+        r"""Configure CAL variables."""
+        cal_state = self.cal.state
+        if cal_state.enabled():
+            self.manager.set_cmake_variable(self.legate_USE_CAL, True)
+        elif cal_state.explicitly_disabled():
+            self.manager.set_cmake_variable(self.legate_USE_CAL, False)
+
     def configure(self) -> None:
         r"""Configure Legate."""
         super().configure()
@@ -431,6 +442,7 @@ class Legate(MainPackage):
         self.log_execute_func(self.configure_legate_variables)
         self.log_execute_func(self.configure_legion)
         self.log_execute_func(self.configure_clang_tidy)
+        self.log_execute_func(self.configure_cal)
 
     def _summarize_flags(self) -> list[tuple[str, Any]]:
         def make_summary(

@@ -184,6 +184,7 @@ requirements:
     - libcurand-dev
     - libcusolver-dev
     - libcufile-dev
+    - libcal-dev
 {% endif %}
 {% if network == 'ucx' %}
     - ucx >=1.16

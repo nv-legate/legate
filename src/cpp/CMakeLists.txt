@@ -176,6 +176,13 @@ if(Legion_USE_CUDA)
 endif()
 
 # ########################################################################################
+# * CAL ----------------------------------------------------------------
+
+if(legate_USE_CAL)
+  legate_find_or_configure(PACKAGE CAL)
+endif()
+
+# ########################################################################################
 # * std::span ----------------------------------------------------------------
 
 legate_find_or_configure(PACKAGE span)
@@ -410,13 +417,14 @@ if(Legion_USE_OpenMP)
        legate/partitioning/detail/partitioning_tasks_omp.cc)
 endif()
 
+if(legate_USE_CAL)
+  list(APPEND legate_SOURCES legate/comm/detail/comm_cal.cc)
+endif()
+
 if(Legion_USE_CUDA)
   list(APPEND legate_SOURCES legate/comm/detail/comm_nccl.cc
        legate/data/detail/array_tasks_cuda.cc
        legate/partitioning/detail/partitioning_tasks_cuda.cc)
-  if(CAL_DIR)
-    list(APPEND legate_SOURCES legate/comm/detail/comm_cal.cc)
-  endif()
 
   include("${LEGATE_CMAKE_DIR}/Modules/generate_fatbin_modules.cmake")
 
@@ -546,13 +554,8 @@ target_link_libraries(legate
                               $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
                               HighFive::HighFive
                               cpptrace::cpptrace
+                              $<TARGET_NAME_IF_EXISTS:CAL::CAL>
                               $<TARGET_NAME_IF_EXISTS:conda_env>)
-
-if(Legion_USE_CUDA AND CAL_DIR)
-  message(VERBOSE "legate: CAL_DIR ${CAL_DIR}")
-  target_include_directories(legate PRIVATE ${CAL_DIR}/include)
-  target_link_libraries(legate PRIVATE ${CAL_DIR}/lib/libcal.so)
-endif()
 
 # ########################################################################################
 # * Custom User Flags --------------------------------------------------------

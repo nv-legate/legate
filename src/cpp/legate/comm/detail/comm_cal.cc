@@ -14,7 +14,6 @@
 
 #include "legate/comm/coll.h"
 #include "legate/cuda/cuda.h"
-#include "legate/cuda/detail/nvtx.h"
 #include "legate/data/buffer.h"
 #include "legate/operation/detail/task_launcher.h"
 #include "legate/runtime/detail/communicator_manager.h"
@@ -25,6 +24,7 @@
 #include "legate/utilities/assert.h"
 #include "legate/utilities/detail/core_ids.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/cuda/detail/nvtx.h>
 
 #include <cal.h>
 #include <cstdint>
@@ -78,23 +78,16 @@ void check_cal(calError_t error, const char* file, int line)
   void* src_buf, void* recv_buf, std::size_t size, void* data, void** request)
 {
   // this is sync!
-  comm::coll::collAllgather(src_buf,
-                            recv_buf,
-                            size,
-                            comm::coll::CollDataType::CollInt8,
-                            reinterpret_cast<comm::coll::CollComm>(data));
+  legate::comm::coll::collAllgather(src_buf,
+                                    recv_buf,
+                                    static_cast<int>(size),
+                                    legate::comm::coll::CollDataType::CollInt8,
+                                    reinterpret_cast<legate::comm::coll::CollComm>(data));
 
   // some dummy request
-  auto dummy = new calError_t{};
-  *request   = static_cast<void*>(dummy);
+  static auto dummy = 0;
 
-  return CAL_OK;
-}
-
-[[nodiscard]] calError_t request_test(void*) { return CAL_OK; }
-[[nodiscard]] calError_t request_free(void* request)
-{
-  delete reinterpret_cast<calError_t*>(request);
+  *request = static_cast<void*>(&dummy);
   return CAL_OK;
 }
 
@@ -106,33 +99,31 @@ class Init : public detail::LegionTask<Init> {
 
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
-  static cal_comm_t gpu_variant(const Legion::Task* task,
-                                const std::vector<Legion::PhysicalRegion>& /*regions*/,
-                                Legion::Context context,
-                                Legion::Runtime* runtime)
+  [[nodiscard]] static cal_comm_t gpu_variant(
+    const Legion::Task* task,
+    const std::vector<Legion::PhysicalRegion>& /*regions*/,
+    Legion::Context context,
+    Legion::Runtime* runtime)
   {
-    legate::nvtx::Range auto_range{"comm::cal::init"};
+    const nvtx3::scoped_range auto_range{task_name_().data()};
 
     legate::detail::show_progress(task, context, runtime);
 
-    auto rank      = task->index_point[0];
-    auto num_ranks = task->index_domain.get_volume();
-
     LEGATE_CHECK(task->futures.size() == 1);
-    auto cpu_comm = task->futures[0].get_result<comm::coll::CollComm>();
-
-    auto device = legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->ctx_get_device();
+    auto* cpu_comm = task->futures[0].get_result<legate::comm::coll::CollComm>();
 
     /* Create communicator */
     cal_comm_t cal_comm = nullptr;
-    cal_comm_create_params_t params;
-    params.allgather    = allgather;
-    params.req_test     = request_test;
-    params.req_free     = request_free;
-    params.data         = reinterpret_cast<void*>(cpu_comm);
-    params.rank         = rank;
-    params.nranks       = num_ranks;
-    params.local_device = device;
+    cal_comm_create_params_t params{};
+
+    params.allgather = allgather;
+    params.req_test  = [](void*) { return CAL_OK; };
+    params.req_free  = [](void*) { return CAL_OK; };
+    params.data      = static_cast<void*>(cpu_comm);
+    params.rank      = task->index_point[0];
+    params.nranks    = task->index_domain.get_volume();
+    params.local_device =
+      legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->ctx_get_device();
 
     CHECK_CAL(cal_comm_create(params, &cal_comm));
 
@@ -151,7 +142,7 @@ class Finalize : public detail::LegionTask<Finalize> {
                           Legion::Context context,
                           Legion::Runtime* runtime)
   {
-    legate::nvtx::Range auto_range{"comm::cal::finalize"};
+    const nvtx3::scoped_range auto_range{task_name_().data()};
 
     legate::detail::show_progress(task, context, runtime);
 
@@ -169,6 +160,7 @@ class Factory final : public detail::CommunicatorFactory {
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
 
  private:
+  [[nodiscard]] static Domain make_launch_domain_(std::uint32_t num_tasks);
   [[nodiscard]] Legion::FutureMap initialize_(const mapping::detail::Machine& machine,
                                               std::uint32_t num_tasks) override;
   void finalize_(const mapping::detail::Machine& machine,
@@ -187,31 +179,37 @@ bool Factory::is_supported_target(mapping::TaskTarget target) const
   return target == mapping::TaskTarget::GPU;
 }
 
+Domain Factory::make_launch_domain_(std::uint32_t num_tasks)
+{
+  return Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}};
+}
+
 Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
                                        std::uint32_t num_tasks)
 {
-  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
-
-  detail::TaskLauncher init_cal_launcher{core_library_, machine, Init::TASK_ID, LEGATE_GPU_VARIANT};
-  init_cal_launcher.set_concurrent(true);
+  const auto launch_domain = make_launch_domain_(num_tasks);
+  auto launcher            = detail::TaskLauncher{
+    core_library_, machine, Init::TASK_ID, static_cast<Legion::MappingTagID>(VariantCode::GPU)};
 
   // add cpu communicator
   auto* comm_mgr         = detail::Runtime::get_runtime()->communicator_manager();
   auto* cpu_comm_factory = comm_mgr->find_factory("cpu");
-  auto cpu_comm          = cpu_comm_factory->find_or_create(
+  const auto cpu_comm    = cpu_comm_factory->find_or_create(
     mapping::TaskTarget::GPU, machine.processor_range(), launch_domain);
-  init_cal_launcher.add_future_map(cpu_comm);
 
-  return init_cal_launcher.execute(launch_domain);
+  launcher.set_concurrent(true);
+  launcher.add_future_map(cpu_comm);
+  return launcher.execute(launch_domain);
 }
 
 void Factory::finalize_(const mapping::detail::Machine& machine,
                         std::uint32_t num_tasks,
                         const Legion::FutureMap& communicator)
 {
-  Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
+  const auto launch_domain = make_launch_domain_(num_tasks);
+  auto launcher            = detail::TaskLauncher{
+    core_library_, machine, Finalize::TASK_ID, static_cast<Legion::MappingTagID>(VariantCode::GPU)};
 
-  detail::TaskLauncher launcher{core_library_, machine, Finalize::TASK_ID, LEGATE_GPU_VARIANT};
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);
   launcher.execute(launch_domain);

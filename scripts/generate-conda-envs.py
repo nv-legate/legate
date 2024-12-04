@@ -108,6 +108,7 @@ class CUDAConfig(SectionConfig):
                 "libcusolver-dev",
                 "libcusparse-dev",
                 "libnvjitlink-dev",
+                "libcal-dev",
             )
 
         if self.compilers:
