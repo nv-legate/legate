@@ -484,24 +484,32 @@ else()
   list(APPEND legate_CXX_PUBLIC_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
 endif()
 
+add_library(legate ${legate_SOURCES})
+add_library(legate::legate ALIAS legate)
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(LEGATE_PLATFORM_RPATH_ORIGIN "\$ORIGIN")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(LEGATE_PLATFORM_RPATH_ORIGIN "@loader_path")
 else()
-  message(FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}, don't know how to set rpath 'origin' on this platform"
-  )
+  message(FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}, don't know how to set "
+                      "rpath 'origin' on this platform")
 endif()
 
-add_library(legate ${legate_SOURCES})
-add_library(legate::legate ALIAS legate)
+set(install_rpath
+    "${LEGATE_PLATFORM_RPATH_ORIGIN}"
+    # The ../ is needed because
+    # ${LEGATE_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR} expands to (on linux)
+    # $ORIGIN/lib/legate/deps, which is fine *except* if $ORIGIN is already in lib/. In
+    # that case it would expand to lib/lib/legate/deps which DNE. So we need to ../ once
+    # so that it expands to lib/../lib/legate/deps. A hack for sure, but it works.
+    "${LEGATE_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}")
 
 set_target_properties(legate
                       PROPERTIES EXPORT_NAME legate
                                  LIBRARY_OUTPUT_NAME legate
                                  BUILD_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}"
-                                 INSTALL_RPATH
-                                 "${LEGATE_PLATFORM_RPATH_ORIGIN};${LEGATE_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR}"
+                                 INSTALL_RPATH "${install_rpath}"
                                  POSITION_INDEPENDENT_CODE ON
                                  INTERFACE_POSITION_INDEPENDENT_CODE ON
                                  LIBRARY_OUTPUT_DIRECTORY lib
