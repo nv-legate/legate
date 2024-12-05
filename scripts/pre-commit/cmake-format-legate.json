@@ -93,15 +93,8 @@
                 }
             },
             "find_or_configure_legion_impl": {
-                "kwargs": {
-                    "BRANCH": 1,
-                    "EXCLUDE_FROM_ALL": 1,
-                    "REPOSITORY": 1,
-                    "VERSION": 1
-                },
                 "pargs": {
-                    "flags": [],
-                    "nargs": "*"
+                    "nargs": 5
                 }
             },
             "find_or_configure_mdspan": {
@@ -399,6 +392,11 @@
                     "nargs": 2
                 }
             },
+            "legate_option": {
+                "pargs": {
+                    "nargs": 4
+                }
+            },
             "legate_populate_cython_dependency_rpaths": {
                 "kwargs": {
                     "RAPIDS_ASSOCIATED_TARGET": 1,
@@ -455,6 +453,11 @@
             "legate_set_language_standard": {
                 "pargs": {
                     "nargs": 2
+                }
+            },
+            "legate_setting": {
+                "pargs": {
+                    "nargs": 4
                 }
             },
             "legate_string_ends_with": {
@@ -956,11 +959,6 @@
                 }
             },
             "set_ifndef": {
-                "pargs": {
-                    "nargs": 2
-                }
-            },
-            "set_or_default": {
                 "pargs": {
                     "nargs": 2
                 }

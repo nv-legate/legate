@@ -12,136 +12,123 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "options")
 
-option(legate_BUILD_TESTS "Whether to build the C++ tests")
-option(legate_BUILD_EXAMPLES "Whether to build the C++/python examples")
-option(BUILD_SHARED_LIBS "Build legate.shared libraries" ON)
+function(_legate_option_or_setting kind name var_env docs default)
+  macro(_set_val value)
+    if(kind STREQUAL "OPTION")
+      option(${name} "${docs}" "${value}")
+    elseif(kind STREQUAL "SETTING")
+      set(${name} ${value} CACHE STRING "${docs}")
+    else()
+      message(FATAL_ERROR "Unknown kind: ${kind}")
+    endif()
+    set(${name} ${value})
+  endmacro()
 
-function(set_or_default var_name var_env)
-  list(LENGTH ARGN num_extra_args)
-  if(num_extra_args GREATER 0)
-    list(GET ARGN 0 var_default)
+  if(default STREQUAL "UNSET")
+    unset(default)
+  elseif(default STREQUAL "SET_BUT_EMPTY")
+    set(default "")
   endif()
-  if(DEFINED ${var_name})
-    message(VERBOSE "legate: ${var_name}=${${var_name}}")
+
+  if(DEFINED ${name})
+    _set_val("${${name}}")
+    set(providence "predefined")
   elseif(DEFINED ENV{${var_env}})
-    set(${var_name} $ENV{${var_env}} PARENT_SCOPE)
-    message(VERBOSE "legate: ${var_name}=$ENV{${var_env}} (from envvar '${var_env}')")
-  elseif(DEFINED var_default)
-    set(${var_name} ${var_default} PARENT_SCOPE)
-    message(VERBOSE "legate: ${var_name}=${var_default} (from default value)")
+    _set_val("$ENV{${var_env}}")
+    set(providence "environment '${var_env}'")
+  elseif(DEFINED default)
+    _set_val("${default}")
+    set(providence "default value")
   else()
-    message(VERBOSE "legate: not setting ${var_name}")
+    message(VERBOSE "Not setting ${name}")
+    return()
+  endif()
+
+  if(NOT DEFINED ${name})
+    message(FATAL_ERROR "Bug in this function")
+  endif()
+
+  message(VERBOSE "${name}=${${name}} (from ${providence})")
+  set(${name} ${${name}} PARENT_SCOPE)
+endfunction()
+
+function(legate_setting name var_env docs default_val)
+  _legate_option_or_setting(SETTING "${name}" "${var_env}" "${docs}" "${default_val}")
+  if(DEFINED ${name})
+    set(${name} ${${name}} PARENT_SCOPE)
   endif()
 endfunction()
 
-# Initialize these vars from the CLI, then fallback to an envvar or a default value.
-set_or_default(Legion_SPY USE_SPY OFF)
-set_or_default(Legion_USE_LLVM USE_LLVM OFF)
-set_or_default(Legion_USE_CUDA USE_CUDA OFF)
-set_or_default(Legion_USE_HDF5 USE_HDF OFF)
-set_or_default(Legion_NETWORKS NETWORKS "")
-set_or_default(Legion_USE_OpenMP USE_OPENMP OFF)
-set_or_default(Legion_BOUNDS_CHECKS CHECK_BOUNDS OFF)
-set_or_default(legate_SKIP_NVCC_PEDANTIC_CHECK legate_SKIP_NVCC_PEDANTIC_CHECK OFF)
-set_or_default(legate_ENABLE_SANITIZERS legate_ENABLE_SANITIZERS OFF)
-set_or_default(legate_IGNORE_INSTALLED_PACKAGES legate_IGNORE_INSTALLED_PACKAGES OFF)
+function(legate_option name var_env docs default_val)
+  _legate_option_or_setting(OPTION "${name}" "${var_env}" "${docs}" "${default_val}")
+  if(DEFINED ${name})
+    set(${name} ${${name}} PARENT_SCOPE)
+  endif()
+endfunction()
 
-option(Legion_SPY "Enable detailed logging for Legion Spy" OFF)
-option(Legion_USE_LLVM "Use LLVM JIT operations" OFF)
-option(Legion_USE_HDF5 "Enable support for HDF5" OFF)
-option(Legion_USE_CUDA "Enable Legion support for the CUDA runtime" OFF)
-option(Legion_NETWORKS "Networking backends to use (semicolon-separated)" "")
-option(Legion_USE_OpenMP "Use OpenMP" OFF)
-option(Legion_USE_Python "Use Python" OFF)
-option(Legion_BOUNDS_CHECKS "Enable bounds checking in Legion accessors" OFF)
-option(legate_SKIP_NVCC_PEDANTIC_CHECK
-       "Skip checking for -pedantic or -Wpedantic compiler flags for NVCC" OFF)
-option(legate_ENABLE_SANITIZERS "Enable sanitizer support for legate" OFF)
-option(legate_IGNORE_INSTALLED_PACKAGES
-       "When deciding to search for or download third-party packages, never search and always download"
-       OFF)
+# Initialize these vars from the CLI, then fallback to an evar or a default value.
+legate_option(legate_BUILD_TESTS BUILD_TESTS "Whether to build the C++ tests" OFF)
+legate_option(legate_BUILD_EXAMPLES BUILD_EXAMPLES
+              "Whether to build the C++/python examples" OFF)
+legate_option(legate_BUILD_DOCS BUILD_DOCS "Build doxygen docs" OFF)
+legate_option(Legion_SPY USE_SPY "Enable detailed logging for Legion Spy" OFF)
+legate_option(Legion_USE_LLVM USE_LLVM "Use LLVM JIT operations" OFF)
+legate_option(Legion_USE_CUDA USE_CUDA "Enable Legion support for the CUDA runtime" OFF)
+legate_option(Legion_USE_HDF5 USE_HDF "Enable support for HDF5" OFF)
+legate_setting(Legion_NETWORKS NETWORKS
+               "Networking backends to use (semicolon-separated)" SET_BUT_EMPTY)
+legate_option(Legion_USE_OpenMP USE_OPENMP "Use OpenMP" OFF)
+legate_option(Legion_USE_Python LEGION_USE_PYTHON "Use Python" OFF)
+legate_option(Legion_BOUNDS_CHECKS CHECK_BOUNDS
+              "Enable bounds checking in Legion accessors" OFF)
+legate_option(legate_SKIP_NVCC_PEDANTIC_CHECK LEGATE_SKIP_NVCC_PEDANTIC_CHECK
+              "Skip checking for -pedantic or -Wpedantic compiler flags for NVCC" OFF)
+legate_option(legate_ENABLE_SANITIZERS LEGATE_ENABLE_SANITIZERS
+              "Enable sanitizer support for legate" OFF)
+legate_option(legate_IGNORE_INSTALLED_PACKAGES
+              LEGATE_IGNORE_INSTALLED_PACKAGES
+              "When deciding to search for or download third-party packages, never search and always download"
+              OFF)
 
 if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
-  set_or_default(GASNet_ROOT_DIR GASNET)
-  set_or_default(GASNet_CONDUIT CONDUIT "mpi")
+  legate_setting(GASNet_ROOT_DIR GASNET "GASNet root directory" UNSET)
+  legate_setting(GASNet_CONDUIT CONDUIT "Default GASNet conduit" "mpi")
 
   if(NOT GASNet_ROOT_DIR)
-    option(Legion_EMBED_GASNet "Embed a custom GASNet build into Legion" ON)
+    legate_option(Legion_EMBED_GASNet LEGION_EMBED_GASNET
+                  "Embed a custom GASNet build into Legion" ON)
   endif()
 endif()
 
-set_or_default(Legion_MAX_DIM LEGION_MAX_DIM 4)
+legate_setting(Legion_MAX_DIM LEGION_MAX_DIM "Maximum dimension" 4)
 
 # Check the max dimensions
 if((Legion_MAX_DIM LESS 1) OR (Legion_MAX_DIM GREATER 9))
-  message(FATAL_ERROR "The maximum number of Legate dimensions must be between 1 and 9 inclusive"
-  )
+  message(FATAL_ERROR "The maximum number of Legate dimensions must be between"
+                      " 1 and 9 inclusive")
 endif()
 
-set_or_default(Legion_MAX_FIELDS LEGION_MAX_FIELDS 256)
+legate_setting(Legion_MAX_FIELDS LEGION_MAX_FIELDS "Maximum number of fields" 256)
 
 # Check that max fields is between 32 and 4096 and is a power of 2
 if(NOT Legion_MAX_FIELDS MATCHES "^(32|64|128|256|512|1024|2048|4096)$")
-  message(FATAL_ERROR "The maximum number of Legate fields must be a power of 2 between 32 and 4096 inclusive"
-  )
+  message(FATAL_ERROR "The maximum number of Legate fields must be a power of 2"
+                      " between 32 and 4096 inclusive")
 endif()
 
-# We never want local fields
-set(Legion_DEFAULT_LOCAL_FIELDS 0)
+legate_setting(CMAKE_CUDA_RUNTIME_LIBRARY CMAKE_CUDA_RUNTIME_LIBRARY
+               "Default linkage kind for CUDA" SHARED)
+legate_setting(NCCL_DIR NCCL_DIR "NCCL Root directory" UNSET)
+legate_setting(CUDA_TOOLKIT_ROOT_DIR CUDA "CUDA Root directory" UNSET)
 
-option(legate_STATIC_CUDA_RUNTIME "Statically link the cuda runtime library" OFF)
-option(legate_EXCLUDE_LEGION_FROM_ALL "Exclude Legion targets from legate's 'all' target"
-       OFF)
-option(legate_BUILD_DOCS "Build doxygen docs" OFF)
+legate_setting(legate_CXX_FLAGS LEGATE_CXX_FLAGS "C++ flags for legate" SET_BUT_EMPTY)
+legate_setting(legate_CUDA_FLAGS LEGATE_CUDA_FLAGS "CUDA flags for legate" SET_BUT_EMPTY)
+legate_setting(legate_LINKER_FLAGS LEGATE_LD_FLAGS "Linker flags for legate"
+               SET_BUT_EMPTY)
 
-set_or_default(NCCL_DIR NCCL_PATH)
-set_or_default(CUDA_TOOLKIT_ROOT_DIR CUDA)
-set_or_default(Legion_CUDA_ARCH GPU_ARCH all-major)
-set_or_default(Legion_HIJACK_CUDART USE_CUDART_HIJACK OFF)
-
-include(CMakeDependentOption)
-cmake_dependent_option(Legion_HIJACK_CUDART
-                       "Allow Legion to hijack and rewrite application calls into the CUDA runtime"
-                       ON
-                       "Legion_USE_CUDA;Legion_HIJACK_CUDART"
-                       OFF)
-# This needs to be added as an option to force values to be visible in Legion build
-option(Legion_HIJACK_CUDART "Replace default CUDA runtime with the Realm version" OFF)
-
-if(Legion_HIJACK_CUDART)
-  message(WARNING [=[
-#####################################################################
-Warning: Realm's CUDA runtime hijack is incompatible with NCCL.
-Please note that your code will crash catastrophically as soon as it
-calls into NCCL either directly or through some other Legate library.
-#####################################################################
-]=])
-endif()
-
-if(BUILD_SHARED_LIBS)
-  if(Legion_HIJACK_CUDART)
-    # Statically link CUDA if HIJACK_CUDART is set
-    set(Legion_CUDA_DYNAMIC_LOAD OFF)
-    set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
-  elseif(NOT DEFINED Legion_CUDA_DYNAMIC_LOAD)
-    # If HIJACK_CUDART isn't set and BUILD_SHARED_LIBS is true, default
-    # Legion_CUDA_DYNAMIC_LOAD to true
-    set(Legion_CUDA_DYNAMIC_LOAD ON)
-    set(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
-  endif()
-elseif(NOT DEFINED Legion_CUDA_DYNAMIC_LOAD)
-  # If BUILD_SHARED_LIBS is false, default Legion_CUDA_DYNAMIC_LOAD to false also
-  set(Legion_CUDA_DYNAMIC_LOAD OFF)
-  set(CUDA_USE_STATIC_CUDA_RUNTIME ON)
-endif()
-
-set(legate_CXX_FLAGS "" CACHE STRING "C++ flags for legate")
-set(legate_CUDA_FLAGS "" CACHE STRING "CUDA flags for legate")
-set(legate_LINKER_FLAGS "" CACHE STRING "Linker flags for legate")
-
-# there must be some way to automate creating these for all dependent packages...
-set(Legion_CXX_FLAGS "" CACHE STRING "C++ flags for Legion")
-set(Legion_CUDA_FLAGS "" CACHE STRING "CUDA flags for Legion")
-set(Legion_LINKER_FLAGS "" CACHE STRING "Linker flags for Legion")
+legate_setting(Legion_CXX_FLAGS LEGION_CXX_FLAGS "C++ flags for Legion" SET_BUT_EMPTY)
+legate_setting(Legion_CUDA_FLAGS LEGION_CUDA_FLAGS "CUDA flags for Legion" SET_BUT_EMPTY)
+legate_setting(Legion_LINKER_FLAGS LEGION_LD_FLAGS "Linker flags for Legion"
+               SET_BUT_EMPTY)
 
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)
