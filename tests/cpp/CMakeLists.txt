@@ -192,7 +192,6 @@ set(with_runtime_SRC
     unit/logical_array.cc
     unit/machine.cc
     unit/mapping.cc
-    unit/physical_array.cc
     unit/physical_store.cc
     unit/registration.cc
     unit/runtime.cc
@@ -210,6 +209,13 @@ set(with_runtime_SRC
     unit/logical_store/promote.cc
     unit/logical_store/slice.cc
     unit/logical_store/transpose.cc
+    unit/physical_array/create_array.cc
+    unit/physical_array/create_list_array.cc
+    unit/physical_array/create_string_array.cc
+    unit/physical_array/create_struct_array.cc
+    unit/physical_array/fill_array.cc
+    unit/physical_array/fill_list_array.cc
+    unit/physical_array/fill_string_array.cc
     unit/type/binary_type.cc
     unit/type/fixed_array_type.cc
     unit/type/list_type.cc
