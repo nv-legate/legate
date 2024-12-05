@@ -108,6 +108,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           "Legion_UCX_DYNAMIC_LOAD ON"
                           # We never want local fields
                           "Legion_DEFAULT_LOCAL_FIELDS 0"
+                          "Legion_HIJACK_CUDART OFF"
                           "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON")
 
   set(Legion_VERSION "${version}" PARENT_SCOPE)
