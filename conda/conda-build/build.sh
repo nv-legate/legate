@@ -57,6 +57,7 @@ function preamble()
   unset NVCC_PREPEND_FLAGS
 
   configure_args=()
+  configure_args+=(--legion-max-dim=6)
   if [[ "${USE_OPENMP:-OFF}" == 'OFF' ]]; then
     configure_args+=(--with-openmp=0)
   else

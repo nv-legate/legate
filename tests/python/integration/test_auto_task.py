@@ -426,7 +426,7 @@ class TestAutoTaskConstraints:
     def test_repeat_with_scale(self, in_shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         in_np, in_store = utils.random_array_and_store(in_shape)
-        repeats = np.random.randint(1, 5, in_np.ndim)
+        repeats = np.random.randint(1, 3, in_np.ndim)
         out_shape = tuple(
             in_shape[i] * repeats[i] for i in range(len(in_shape))
         )

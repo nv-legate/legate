@@ -16,6 +16,7 @@ Changes: Latest Development Version
 
 - Drop support for Maxwell GPU architecture. Legate now requires at least Pascal
   (``sm_60``).
+- Change the default number of maximum dimensions for Legate arrays from 4 to 6.
 
 C++
 ---
