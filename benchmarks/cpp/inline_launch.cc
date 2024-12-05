@@ -133,10 +133,7 @@ BENCHMARK_REGISTER_F(TaskLaunchFixture, InlineTaskLaunch)
 
 int main(int argc, char** argv)
 {
-  if (const auto ret = legate::start(argc, argv); ret) {
-    std::cerr << "Error starting legate, error code: " << ret << "\n";
-    return ret;
-  }
+  legate::start();
   EmptyTask::register_variants(legate::Runtime::get_runtime()->find_or_create_library(LIBNAME));
 
   ::benchmark::Initialize(&argc, argv);

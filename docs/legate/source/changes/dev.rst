@@ -34,7 +34,13 @@ C++
 
 .. rubric:: Runtime
 
+- Deprecate ``legate::start(argc, argv)``. Users should use the argument-less version
+  ``legate::start()`` instead. The values of ``argc`` and ``argv`` were always ignored, so
+  this change has no runtime effect.
+
 .. rubric:: Utilities
+
+- Remove ``legate::comm::coll::collInit()`` and ``legate::comm::coll::collFinalize()``.
 
 
 Python

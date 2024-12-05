@@ -17,6 +17,7 @@
 #include "legate/mapping/detail/machine.h"
 #include "legate/mapping/detail/mapping.h"
 #include "legate/operation/detail/task_launcher.h"
+#include <legate/comm/detail/backend_network.h>
 
 namespace legate::detail::comm::cpu {
 
@@ -46,7 +47,8 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
   const auto tag =
     static_cast<Legion::MappingTagID>(mapping::detail::to_variant_code(machine.preferred_target()));
   // Generate a unique ID
-  auto comm_id = Legion::Future::from_value<std::int32_t>(legate::comm::coll::collInitComm());
+  auto comm_id =
+    Legion::Future::from_value<std::int32_t>(coll::BackendNetwork::get_network()->init_comm());
   // Find a mapping of all participants
   detail::TaskLauncher init_cpucoll_mapping_launcher{
     core_library_, machine, init_mapping_task_type::TASK_ID, tag};

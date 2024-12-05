@@ -27,7 +27,7 @@ namespace legate::detail::comm::coll {
 
 // public functions start from here
 
-LocalNetwork::LocalNetwork(int /*argc*/, char* /*argv*/[])
+LocalNetwork::LocalNetwork()
 {
   logger().debug() << "Enable LocalNetwork";
   LEGATE_CHECK(current_unique_id_ == 0);

@@ -670,14 +670,29 @@ class Runtime {
 /**
  * @brief Starts the Legate runtime
  *
- * This makes the runtime ready to accept requests made via its APIs
+ * @param argc Argument is ignored.
+ * @param argv Argument is ignored.
  *
- * @param argc Number of command-line flags
- * @param argv Command-line flags
+ * @return Always returns 0
  *
- * @return Non-zero value when the runtime start-up failed, 0 otherwise
+ * @deprecated Use the argument-less version of this function instead: `start()`
+ *
+ * @see start()
  */
-[[nodiscard]] std::int32_t start(std::int32_t argc, char** argv);
+[[deprecated("since 25.01; Use the argument-less version of this function instead")]] std::int32_t
+start(std::int32_t argc, char* argv[]);
+
+/**
+ * @ingroup runtime
+ *
+ * @brief Starts the Legate runtime
+ *
+ * This makes the runtime ready to accept requests made via its APIs. It may be called any
+ * number of times, only the first call has any effect.
+ *
+ * @throw std::runtime_error If the Legate runtime fails to start.
+ */
+void start();
 
 /**
  * @brief Checks if the runtime has started.

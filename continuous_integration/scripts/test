@@ -136,22 +136,16 @@ run_test_or_analysis() {
 
             cd "${LEGATE_DIR}"
 
-            EXTRA_ARGS=""
-            # TODO (wonchanl, jfaibussowit) Sanitizers can raise false alarms if the code does
-            # user-level threading, so we turn it off for sanitizer-enabled tests
-            if [[ ${LEGATE_ARCH} == *sanitizer* ]]; then
-              EXTRA_ARGS="-ll:force_kthreads"
-            fi
-            export EXTRA_ARGS
-
             function run_legate_tests()
             {
               local gtest_file="${1}"
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
-              LEGATE_TEST=1 LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 1000 --fbmem 1000" \
-                "${gtest_file}" --gtest_color=yes "${EXTRA_ARGS}"
+              LEGATE_TEST=1 \
+                LEGATE_AUTO_CONFIG=0 \
+                LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 1000 --fbmem 1000" \
+                "${gtest_file}" --gtest_color=yes
             }
 
             function run_legate_tests_with_driver()
@@ -168,8 +162,7 @@ run_test_or_analysis() {
                       --timeout 90 \
                       --"${proc_type}" "${proc_count}" \
                       --sysmem 100 \
-                      -j "${worker_count}" \
-                      "${EXTRA_ARGS}"
+                      -j "${worker_count}"
             }
 
             function run_sequential_tests()

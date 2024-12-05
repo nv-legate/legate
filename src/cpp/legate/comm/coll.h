@@ -40,14 +40,6 @@ void collAlltoall(
 
 void collAllgather(
   const void* sendbuf, void* recvbuf, int count, CollDataType type, CollComm global_comm);
-
-void collInit(int argc, char* argv[]);
-
-void collFinalize();
-
-void collAbort() noexcept;
-
-[[nodiscard]] int collInitComm();
 // NOLINTEND(readability-identifier-naming)
 
 }  // namespace legate::comm::coll

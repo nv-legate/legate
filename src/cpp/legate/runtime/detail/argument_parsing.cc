@@ -647,6 +647,12 @@ void set_legion_default_args(std::string log_dir,
     args_ss << "-logfile " << log_path / "legate_%.log" << " -errlevel 4 ";
   }
 
+  if (LEGATE_DEFINED(LEGATE_HAS_ASAN)) {
+    // TODO (wonchanl, jfaibussowit) Sanitizers can raise false alarms if the code does
+    // user-level threading, so we turn it off for sanitizer-enabled tests
+    args_ss << "-ll:force_kthreads ";
+  }
+
   if (const auto existing_default_args = LEGION_DEFAULT_ARGS.get();
       existing_default_args.has_value()) {
     args_ss << *existing_default_args;

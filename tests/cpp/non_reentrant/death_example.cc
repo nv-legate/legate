@@ -26,7 +26,7 @@ namespace {
 
 void kill_process()
 {
-  (void)legate::start(0, nullptr);
+  legate::start();
   std::abort();
 }
 

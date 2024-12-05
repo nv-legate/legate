@@ -55,12 +55,12 @@ std::unique_ptr<BackendNetwork> the_backend_network{};
   // either register CPU tasks or MPI tasks), so it ideally would check
   // BackendNetwork::get_network()->comm_type.
   //
-  // HOWEVER, it is called before collInit(), and so BackendNetwork is not yet
-  // initialized. So we duplicate the selection logic of collInit() here...
+  // HOWEVER, it is called before comm::coll::init(), and so BackendNetwork is not yet
+  // initialized. So we duplicate the selection logic of comm::coll::init() here...
   //
   // We use a static local to cache our first answer (wherever it was called from) so that when
-  // we do get around to collInit(), we can check that the actually created communicator is of
-  // the same type that we guessed it would be previously.
+  // we do get around to comm:coll::init(), we can check that the actually created communicator
+  // is of the same type that we guessed it would be previously.
   static const auto guessed_comm_type = [] {
     if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get(/* default_value */ false)) {
       return legate::comm::coll::CollCommType::CollMPI;

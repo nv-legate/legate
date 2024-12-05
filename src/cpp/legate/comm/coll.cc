@@ -12,15 +12,9 @@
 
 #include "legate/comm/coll.h"
 
-#include "legate_defines.h"
-
 #include "legate/comm/detail/backend_network.h"
-#include "legate/comm/detail/local_network.h"
 #include "legate/comm/detail/logger.h"
-#include "legate/comm/detail/mpi_network.h"
-#include "legate/utilities/assert.h"
-#include "legate/utilities/detail/env.h"
-#include "legate/utilities/macros.h"
+#include "legate/utilities/abort.h"
 
 namespace coll_detail = legate::detail::comm::coll;
 
@@ -99,46 +93,5 @@ void collAllgather(
   coll_detail::BackendNetwork::get_network()->all_gather(
     sendbuf, recvbuf, count, type, global_comm);
 }
-
-// called from main thread
-void collInit(int argc, char* argv[])
-{
-  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) &&
-      detail::LEGATE_NEED_NETWORK.get(/* default_value */ false)) {
-#if LEGATE_DEFINED(LEGATE_USE_NETWORK)
-    coll_detail::BackendNetwork::create_network(
-      std::make_unique<detail::comm::coll::MPINetwork>(argc, argv));
-#endif
-  } else {
-    coll_detail::BackendNetwork::create_network(
-      std::make_unique<detail::comm::coll::LocalNetwork>(argc, argv));
-  }
-  // Make sure our nasty hack returned the right answer initially
-  LEGATE_CHECK(coll_detail::BackendNetwork::get_network()->comm_type ==
-               coll_detail::BackendNetwork::guess_comm_type_());
-}
-
-void collFinalize()
-{
-  // Fully reset the BackendNetwork::get_network() pointer before letting the BackendNetwork object
-  // get destroyed, so that any calls to LEGATE_ABORT within the destructor won't end up triggering
-  // an abort while we're finalizing (MPI in particular doesn't like calls to MPI_Abort after MPI
-  // has been finalized).
-  if (coll_detail::BackendNetwork::has_network()) {
-    const auto local_pointer [[maybe_unused]] =
-      std::exchange(coll_detail::BackendNetwork::get_network(), nullptr);
-
-    static_cast<void>(local_pointer);
-  }
-}
-
-void collAbort() noexcept
-{
-  if (coll_detail::BackendNetwork::has_network()) {
-    coll_detail::BackendNetwork::get_network()->abort();
-  }
-}
-
-int collInitComm() { return coll_detail::BackendNetwork::get_network()->init_comm(); }
 
 }  // namespace legate::comm::coll

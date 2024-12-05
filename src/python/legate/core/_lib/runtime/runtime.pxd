@@ -209,9 +209,9 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         @staticmethod
         _Runtime* get_runtime()
 
-    cdef int32_t start(int32_t, char**) except+
+    cdef void start() except+
 
-    cdef int32_t finish()
+    cdef int32_t finish() except+
 
     cdef bool _is_running_in_task "legate::is_running_in_task"()
 

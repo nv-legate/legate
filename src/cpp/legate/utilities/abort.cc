@@ -10,10 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/abort.h"
-
-#include "legate/comm/coll.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/comm/detail/coll.h>
+#include <legate/utilities/abort.h>
+#include <legate/utilities/typedefs.h>
 
 #include <legion.h>
 
@@ -45,10 +44,7 @@ void abort_handler(std::string_view file, std::string_view func, int line, std::
   } else {
     print_message(std::cerr) << std::endl;  // NOLINT(performance-avoid-endl)
   }
-  legate::comm::coll::collAbort();
-  // if we are here, then either the comm library has not been initialized, or it didn't have
-  // an abort mechanism.Either way, we abort normally now.
-  std::abort();
+  comm::coll::abort();
 }
 
 }  // namespace legate::detail

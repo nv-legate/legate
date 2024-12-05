@@ -349,10 +349,10 @@ std::optional<Runtime> the_public_runtime{};
   return &*the_public_runtime;
 }
 
-std::int32_t start(std::int32_t argc, char** argv)
+void start()
 {
   if (has_started()) {
-    return 0;
+    return;
   }
 
   if (has_finished()) {
@@ -360,7 +360,7 @@ std::int32_t start(std::int32_t argc, char** argv)
       "Legate runtime cannot be started after legate::finish is called"};
   }
 
-  auto ret = detail::Runtime::start(argc, argv);
+  detail::Runtime::start();
   // Called for effect, otherwise the following:
   //
   // legate::start(...);
@@ -368,10 +368,13 @@ std::int32_t start(std::int32_t argc, char** argv)
   //
   // Would never finalize the runtime, since the_public_runtime would never have been
   // constructed, so finish() would just return 0
-  if (ret == 0) {
-    static_cast<void>(Runtime::get_runtime());
-  }
-  return ret;
+  static_cast<void>(Runtime::get_runtime());
+}
+
+std::int32_t start(std::int32_t, char**)
+{
+  start();
+  return 0;
 }
 
 bool has_started() { return detail::has_started(); }

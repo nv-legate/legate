@@ -21,15 +21,18 @@ int main(int argc, char** argv)
   ::testing::InitGoogleTest(&argc, argv);
   GTEST_FLAG_SET(death_test_style, "threadsafe");
 
-  if (auto result = legate::start(argc, argv); result != 0) {
-    [&result] { FAIL() << "Legate failed to start: " << result; }();
-    return result;
+  try {
+    legate::start();
+  } catch (const std::exception& e) {
+    [&] { FAIL() << "Legate failed to start: " << e.what(); }();
+    return 1;
   }
 
   try {
     const legate::experimental::stl::initialize_library init{};
   } catch (const std::exception& exn) {
-    std::cerr << exn.what() << '\n';
+    [&] { FAIL() << "Legate STL failed to start: " << exn.what(); }();
+    return 1;
   }
 
   auto result = RUN_ALL_TESTS();

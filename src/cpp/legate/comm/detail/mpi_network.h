@@ -24,7 +24,7 @@ class MPINetwork final : public BackendNetwork {
   using MPIInterface = mpi::detail::MPIInterface;
 
  public:
-  MPINetwork(int argc, char* argv[]);
+  MPINetwork();
 
   ~MPINetwork() override;
 

@@ -92,7 +92,7 @@ class Runtime {
   [[nodiscard]] GlobalRedopID find_reduction_operator(std::uint32_t type_uid,
                                                       std::int32_t op_kind) const;
 
-  void initialize(Legion::Context legion_context, std::int32_t argc, char** argv);
+  void initialize(Legion::Context legion_context);
 
   [[nodiscard]] mapping::detail::Machine slice_machine_for_task(const Library* library,
                                                                 LocalTaskID task_id) const;
@@ -356,7 +356,7 @@ class Runtime {
 
  public:
   [[nodiscard]] static Runtime* get_runtime();
-  [[nodiscard]] static std::int32_t start(std::int32_t argc, char** argv);
+  static void start();
   [[nodiscard]] bool initialized() const;
   void register_shutdown_callback(ShutdownCallback callback);
   [[nodiscard]] std::int32_t finish();

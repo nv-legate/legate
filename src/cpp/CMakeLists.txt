@@ -267,6 +267,7 @@ list(APPEND
      legate_SOURCES
      # core
      legate/comm/coll.cc
+     legate/comm/detail/coll.cc
      legate/comm/detail/backend_network.cc
      legate/comm/detail/comm.cc
      legate/comm/detail/comm_cpu.cc

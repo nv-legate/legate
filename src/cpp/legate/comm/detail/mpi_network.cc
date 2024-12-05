@@ -34,7 +34,7 @@
 
 namespace legate::detail::comm::coll {
 
-MPINetwork::MPINetwork(int /*argc*/, char* /*argv*/[])
+MPINetwork::MPINetwork()
 {
   logger().debug() << "Enable MPINetwork";
   LEGATE_CHECK(current_unique_id_ == 0);
@@ -63,8 +63,10 @@ MPINetwork::MPINetwork(int /*argc*/, char* /*argv*/[])
   int flag    = 0;
   int* tag_ub = nullptr;
   // check
-  LEGATE_CHECK_MPI(MPIInterface::mpi_comm_get_attr(
-    MPIInterface::MPI_COMM_WORLD(), MPIInterface::MPI_TAG_UB(), &tag_ub, &flag));
+  LEGATE_CHECK_MPI(MPIInterface::mpi_comm_get_attr(MPIInterface::MPI_COMM_WORLD(),
+                                                   MPIInterface::MPI_TAG_UB(),
+                                                   static_cast<void*>(&tag_ub),
+                                                   &flag));
   LEGATE_CHECK(flag);
   mpi_tag_ub_ = *tag_ub;
   LEGATE_CHECK(mpi_comms_.empty());

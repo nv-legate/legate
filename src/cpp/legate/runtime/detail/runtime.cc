@@ -12,7 +12,6 @@
 
 #include "legate/runtime/detail/runtime.h"
 
-#include "legate/comm/coll.h"
 #include "legate/comm/detail/comm.h"
 #include "legate/cuda/detail/cuda_driver_api.h"
 #include "legate/data/detail/array_tasks.h"
@@ -63,6 +62,7 @@
 #include "legate/utilities/linearize.h"
 #include "legate/utilities/machine.h"
 #include "legate/utilities/scope_guard.h"
+#include <legate/comm/detail/coll.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include "realm/network.h"
@@ -242,7 +242,7 @@ GlobalRedopID Runtime::find_reduction_operator(std::uint32_t type_uid, std::int3
   return finder->second;
 }
 
-void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char** argv)
+void Runtime::initialize(Legion::Context legion_context)
 {
   if (initialized()) {
     if (get_legion_context() == legion_context) {
@@ -253,6 +253,7 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
     }
     throw TracedException<std::runtime_error>{"Legate runtime has already been initialized"};
   }
+
   LEGATE_SCOPE_FAIL(
     // de-initialize everything in reverse order
     Config::has_socket_mem = false;
@@ -261,17 +262,19 @@ void Runtime::initialize(Legion::Context legion_context, std::int32_t argc, char
     communicator_manager_.reset();
     field_manager_.reset();
     core_library_ = nullptr;
-    legate::comm::coll::collFinalize();
+    comm::coll::finalize();
     cu_mod_manager_.reset();
     cu_driver_.reset();
-    initialized_ = false;);
-  initialized_ = true;
+    legion_context_ = {};
+    initialized_    = false;);
+
+  initialized_    = true;
+  legion_context_ = std::move(legion_context);
   cu_driver_.emplace();
   cu_mod_manager_.emplace();
-  legate::comm::coll::collInit(argc, argv);
-  legion_context_ = std::move(legion_context);
-  field_manager_  = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
-                                               : std::make_unique<FieldManager>();
+  comm::coll::init();
+  field_manager_ = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
+                                              : std::make_unique<FieldManager>();
   communicator_manager_.emplace();
   partition_manager_.emplace();
   static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
@@ -676,7 +679,7 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
                                                        optimize_scalar,
                                                        get_provenance().as_string_view());
   return make_internal_shared<LogicalStore>(std::move(storage));
-}
+}  // namespace
 
 // shape can be unbound in this function, so we shouldn't use the same validation as the other
 // variants
@@ -1614,7 +1617,7 @@ void handle_realm_default_args()
 
 }  // namespace
 
-/*static*/ std::int32_t Runtime::start(std::int32_t argc, char** argv)
+/*static*/ void Runtime::start()
 {
   // Call as soon as possible, to ensure that any exceptions are pretty-printed
   static_cast<void>(install_terminate_handler());
@@ -1626,18 +1629,21 @@ void handle_realm_default_args()
     } catch (const std::exception& e) {
       // Cannot use log_legate() since Legion loggers silently swallow the messages if Legion
       // has not yet been set up.
-      std::cerr << "failed to handle realm arguments: " << e.what();
-      return 1;
+      throw TracedException<std::runtime_error>{
+        fmt::format("failed to handle realm arguments: {}", e.what())};
     }
 
-    Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
+    int dummy_argc    = 0;
+    char** dummy_argv = nullptr;
+
+    Legion::Runtime::initialize(&dummy_argc, &dummy_argv, /*filter=*/false, /*parse=*/false);
     try {
       handle_legate_args();
     } catch (const std::exception& e) {
       // Cannot use log_legate() since Legion loggers silently swallow the messages if Legion
       // has not yet been set up.
-      std::cerr << "failed to handle legate arguments: " << e.what();
-      return 1;
+      throw TracedException<std::runtime_error>{
+        fmt::format("failed to handle legate arguments: {}", e.what())};
     }
   }
 
@@ -1663,9 +1669,10 @@ void handle_realm_default_args()
                                                  true /*global*/);
 
   if (!Legion::Runtime::has_runtime()) {
-    if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true); result != 0) {
-      std::cerr << "Legion Runtime failed to start: error code " << result << "\n";
-      return result;
+    if (const auto result =
+          Legion::Runtime::start(/*argc*/ 0, /*argv*/ nullptr, /*background=*/true)) {
+      throw TracedException<std::runtime_error>{
+        fmt::format("Legion Runtime failed to start, error code: {}", result)};
     }
   }
 
@@ -1687,8 +1694,7 @@ void handle_realm_default_args()
   }
 
   // We can now initialize the Legate runtime with the Legion context
-  Runtime::get_runtime()->initialize(legion_context, argc, argv);
-  return 0;
+  Runtime::get_runtime()->initialize(legion_context);
 }
 
 namespace {
@@ -1718,7 +1724,7 @@ Runtime* RuntimeManager::get()
     }  // namespace
     rt_.emplace();
     state_ = State::INITIALIZED;
-  }
+  }  // namespace
   return &*rt_;
 }  // namespace
 
@@ -1784,7 +1790,7 @@ std::int32_t Runtime::finish()
   partition_manager_.reset();
   scope_        = Scope{};
   core_library_ = nullptr;
-  legate::comm::coll::collFinalize();
+  comm::coll::finalize();
   // Mappers get raw pointers to Libraries, so just in case any of the above launched residual
   // cleanup tasks, we issue another fence here before we clear the Libraries.
   issue_execution_fence(true);

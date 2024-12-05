@@ -215,4 +215,24 @@
 
 #define LEGATE_HOST_DEVICE LEGATE_HOST LEGATE_DEVICE
 
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
+// __has_feature(thread_sanitizer) is available only on Clang, while GCC defines
+// __SANITIZE_THREAD__
+#if __has_feature(thread_sanitizer) || defined(__SANITIZE_THREAD__)
+#define LEGATE_HAS_TSAN 1
+#else
+#define LEGATE_HAS_TSAN 0
+#endif
+
+// __has_feature(address_sanitizer) is available only on Clang, while GCC defines
+// __SANITIZE_ADDRESS__
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+#define LEGATE_HAS_ASAN 1
+#else
+#define LEGATE_HAS_ASAN 0
+#endif
+
 /** @} */

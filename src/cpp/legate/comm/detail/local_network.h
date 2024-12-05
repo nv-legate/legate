@@ -22,7 +22,7 @@ namespace legate::detail::comm::coll {
 
 class LocalNetwork : public BackendNetwork {
  public:
-  LocalNetwork(int argc, char* argv[]);
+  LocalNetwork();
 
   ~LocalNetwork() override;
 

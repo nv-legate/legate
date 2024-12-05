@@ -10,22 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/runtime.h"
+#pragma once
 
-#include "legate.h"
-#include "utilities/utilities.h"
+namespace legate::detail::comm::coll {
 
-#include <gtest/gtest.h>
+void init();
 
-namespace runtime_exception_test {
+void finalize();
 
-using RuntimeNoInit = ::testing::Test;
+[[noreturn]] void abort() noexcept;
 
-TEST_F(RuntimeNoInit, GetRuntime)
-{
-  ASSERT_NO_THROW(legate::start());
-  ASSERT_EQ(legate::finish(), 0);
-  EXPECT_THROW(static_cast<void>(legate::Runtime::get_runtime()), std::runtime_error);
-}
-
-}  // namespace runtime_exception_test
+}  // namespace legate::detail::comm::coll
