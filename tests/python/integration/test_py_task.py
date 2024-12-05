@@ -156,6 +156,11 @@ class TestPyTask:
             )
 
         runtime = get_legate_runtime()
+        if (
+            isinstance(val, bytes)
+            and runtime.machine.preferred_target == TaskTarget.GPU
+        ):
+            pytest.skip("aborts proc with GPU")
         out_arr, out_store = utils.empty_array_and_store(dtype, shape)
         in_arr = np.full(shape, val, dtype=dtype.to_numpy_dtype())
         tasks.copy_np_array_task(out_store, in_arr)

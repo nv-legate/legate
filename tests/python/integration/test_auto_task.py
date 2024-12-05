@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+import os
 import re
 from typing import Any, Type
 
@@ -345,6 +346,13 @@ class TestAutoTaskConstraints:
     def test_add_broadcast(self) -> None:
         runtime = get_legate_runtime()
         count = runtime.machine.count()
+        legate_test = os.environ.get("LEGATE_TEST", "0") == "1"
+        # GPU variant doesn't necessarily partition the store to node count
+        if (
+            not legate_test
+            and runtime.machine.preferred_target == TaskTarget.GPU
+        ):
+            count = 1
         src_shape, tgt_shape = ((5, 1024, 5), (5, 1024 * count, 5))
         in_np, in_store = utils.random_array_and_store(src_shape)
         out_np, out_store = utils.zero_array_and_store(ty.float64, tgt_shape)
