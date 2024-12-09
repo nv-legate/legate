@@ -187,6 +187,7 @@ set(with_runtime_SRC
     # unit
     unit/buffer.cc
     unit/constraint.cc
+    unit/debug.cc
     unit/dispatch.cc
     unit/library.cc
     unit/logical_array.cc

@@ -15,6 +15,7 @@
 #include <legate_defines.h>
 
 #include "legate/cuda/cuda.h"
+#include "legate/utilities/assert.h"
 #include "legate/utilities/debug.h"
 #include "legate/utilities/macros.h"
 
@@ -96,7 +97,7 @@ template <typename T, int DIM>
 }
 
 template <int DIM, typename ACC>
-[[nodiscard]] std::string print_dense_array(ACC accessor, const Rect<DIM>& rect)
+[[nodiscard]] std::string print_dense_array(const ACC& accessor, const Rect<DIM>& rect)
 {
   const Point<DIM> extents = rect.hi - rect.lo + Point<DIM>::ONES();
   std::size_t strides[DIM];

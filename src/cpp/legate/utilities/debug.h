@@ -51,7 +51,7 @@ template <typename T, int DIM>
  * @return A string expressing the contents of the array
  */
 template <int DIM, typename ACC>
-[[nodiscard]] std::string print_dense_array(ACC accessor, const Rect<DIM>& rect);
+[[nodiscard]] std::string print_dense_array(const ACC& accessor, const Rect<DIM>& rect);
 // TODO(mpapadakis): Disabled while we find a workaround for operator<< missing for
 // cuda::std::complex, see legate.core.internal#475
 // /**
