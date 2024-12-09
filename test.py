@@ -35,7 +35,8 @@ def _find_tests(prefix: Path) -> tuple[Path, list[Path]] | None:
     tests_bin = [
         tests_dir / "bin" / "tests_with_runtime",
         tests_dir / "bin" / "tests_wo_runtime",
-        tests_dir / "bin" / "tests_non_reentrant",
+        tests_dir / "bin" / "tests_non_reentrant_with_runtime",
+        tests_dir / "bin" / "tests_non_reentrant_wo_runtime",
     ]
     if all(p.exists() for p in tests_bin):
         return tests_dir, tests_bin
