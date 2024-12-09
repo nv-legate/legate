@@ -12,8 +12,9 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/partitioning/detail/partitioning_tasks.h"
-#include "legate/utilities/compiler.h"
 
 #include "legion/legion_redop.h"
 

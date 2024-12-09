@@ -12,7 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/compiler.h"
+#include <legate_defines.h>
+
 #include "legate/utilities/shared_ptr.h"
 #include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
@@ -219,7 +220,7 @@ class Type {
   bool operator==(const Type& other) const;
   bool operator!=(const Type& other) const;
 
-  LEGATE_CYTHON_DEFAULT_CTOR(Type);
+  Type() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   Type(const Type&)                = default;
   Type(Type&&) noexcept            = default;

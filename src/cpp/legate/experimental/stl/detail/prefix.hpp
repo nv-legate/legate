@@ -16,7 +16,8 @@
 //
 // INCLUDE GUARDS ARE NOT NEEDED IN THIS HEADER
 
-#include "legate/utilities/compiler.h"
+#include <legate_defines.h>
+
 #include "legate/utilities/macros.h"
 
 #if !LEGATE_DEFINED(LEGATE_STL_DETAIL_CONFIG_INCLUDED)

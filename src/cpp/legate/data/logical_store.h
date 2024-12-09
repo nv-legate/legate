@@ -12,11 +12,12 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/data/physical_store.h"
 #include "legate/data/shape.h"
 #include "legate/data/slice.h"
 #include "legate/type/type_info.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
 #include <legate/utilities/detail/doxygen.h>
@@ -408,7 +409,7 @@ class LogicalStore {
 
   [[nodiscard]] const SharedPtr<detail::LogicalStore>& impl() const;
 
-  LEGATE_CYTHON_DEFAULT_CTOR(LogicalStore);
+  LogicalStore() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   LogicalStore(const LogicalStore& other)                = default;
   LogicalStore& operator=(const LogicalStore& other)     = default;

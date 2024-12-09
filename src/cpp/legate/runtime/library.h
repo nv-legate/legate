@@ -12,9 +12,10 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/data/scalar.h"
 #include "legate/task/variant_options.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
 
@@ -155,7 +156,7 @@ class Library {
 
   [[nodiscard]] const std::map<VariantCode, VariantOptions>& get_default_variant_options() const;
 
-  LEGATE_CYTHON_DEFAULT_CTOR(Library);
+  Library() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   explicit Library(detail::Library* impl);
   Library(const Library&)            = default;

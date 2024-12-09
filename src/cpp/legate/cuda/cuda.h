@@ -12,10 +12,9 @@
 
 #pragma once
 
-#include "legate_defines.h"  // LEGATE_USE_CUDA
+#include <legate_defines.h>  // LEGATE_NVCC
 
-#include "legate/utilities/compiler.h"  // LEGATE_NVCC
-#include "legate/utilities/macros.h"    // LEGATE_DEFINED
+#include "legate/utilities/macros.h"  // LEGATE_DEFINED
 
 #include <cstdio>
 #include <cstdlib>

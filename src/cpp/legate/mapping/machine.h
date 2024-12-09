@@ -12,8 +12,9 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/mapping/mapping.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
 #include <legate/utilities/detail/doxygen.h>
@@ -297,7 +298,7 @@ class Machine {
    */
   [[nodiscard]] bool empty() const;
 
-  LEGATE_CYTHON_DEFAULT_CTOR(Machine);
+  Machine() = LEGATE_DEFAULT_WHEN_CYTHON;
   explicit Machine(std::map<TaskTarget, ProcessorRange> ranges);
   explicit Machine(InternalSharedPtr<detail::Machine> impl);
   explicit Machine(detail::Machine impl);

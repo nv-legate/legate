@@ -12,9 +12,10 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/data/physical_store.h"
 #include "legate/type/type_info.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
 #include "legate/utilities/typedefs.h"
@@ -145,7 +146,7 @@ class PhysicalArray {
 
   [[nodiscard]] const SharedPtr<detail::PhysicalArray>& impl() const;
 
-  LEGATE_CYTHON_DEFAULT_CTOR(PhysicalArray);
+  PhysicalArray() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   virtual ~PhysicalArray() noexcept                  = default;
   PhysicalArray(const PhysicalArray&) noexcept       = default;

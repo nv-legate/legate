@@ -12,11 +12,12 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/data/buffer.h"
 #include "legate/data/inline_allocation.h"
 #include "legate/mapping/mapping.h"
 #include "legate/type/type_traits.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/dispatch.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
@@ -379,7 +380,7 @@ class PhysicalStore {
   // NOLINTNEXTLINE(google-explicit-constructor) very common pattern in cuPyNumeric
   PhysicalStore(const PhysicalArray& array);
 
-  LEGATE_CYTHON_DEFAULT_CTOR(PhysicalStore);
+  PhysicalStore() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   explicit PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl);
 

@@ -12,7 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/compiler.h"
+#include <legate_defines.h>
+
 #include "legate/utilities/cpp_version.h"
 #include "legate/utilities/detail/zip.h"
 

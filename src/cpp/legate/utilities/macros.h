@@ -11,6 +11,7 @@
  */
 
 #pragma once
+
 #include <legate/utilities/detail/doxygen.h>
 
 /**
@@ -202,37 +203,5 @@
  * @see LEGATE_CONCAT()
  */
 #define LEGATE_DEFINED(x) LEGATE_DEFINED_PRIVATE(LEGATE_CONCAT_(LEGATE_DEFINED_ENABLED_FORM_, x))
-
-#ifdef __CUDACC__
-#define LEGATE_HOST __host__
-#define LEGATE_DEVICE __device__
-#define LEGATE_KERNEL __global__
-#else
-#define LEGATE_HOST
-#define LEGATE_DEVICE
-#define LEGATE_KERNEL
-#endif
-
-#define LEGATE_HOST_DEVICE LEGATE_HOST LEGATE_DEVICE
-
-#ifndef __has_feature
-#define __has_feature(x) 0
-#endif
-
-// __has_feature(thread_sanitizer) is available only on Clang, while GCC defines
-// __SANITIZE_THREAD__
-#if __has_feature(thread_sanitizer) || defined(__SANITIZE_THREAD__)
-#define LEGATE_HAS_TSAN 1
-#else
-#define LEGATE_HAS_TSAN 0
-#endif
-
-// __has_feature(address_sanitizer) is available only on Clang, while GCC defines
-// __SANITIZE_ADDRESS__
-#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
-#define LEGATE_HAS_ASAN 1
-#else
-#define LEGATE_HAS_ASAN 0
-#endif
 
 /** @} */

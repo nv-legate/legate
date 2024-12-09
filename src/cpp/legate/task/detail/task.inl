@@ -12,13 +12,15 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/runtime/detail/config.h"
 #include "legate/task/detail/task.h"
 #include "legate/task/detail/task_context.h"
 #include "legate/task/exception.h"
 #include "legate/utilities/abort.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/macros.h"
+#include <legate/utilities/compiler.h>
 
 #include <exception>
 #include <optional>

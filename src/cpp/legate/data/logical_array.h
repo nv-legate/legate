@@ -12,11 +12,12 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/data/logical_store.h"
 #include "legate/data/physical_array.h"
 #include "legate/data/shape.h"
 #include "legate/type/type_info.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/shared_ptr.h"
 #include "legate/utilities/typedefs.h"
@@ -248,7 +249,7 @@ class LogicalArray {
    */
   [[nodiscard]] StringLogicalArray as_string_array() const;
 
-  LEGATE_CYTHON_DEFAULT_CTOR(LogicalArray);
+  LogicalArray() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   explicit LogicalArray(InternalSharedPtr<detail::LogicalArray> impl);
 

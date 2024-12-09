@@ -12,9 +12,10 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/data/detail/logical_store.h"
 #include "legate/operation/detail/operation.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/macros.h"
 
 #include <cstdint>

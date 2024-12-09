@@ -12,9 +12,10 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/cuda/cuda.h"
 #include "legate/utilities/assert.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/macros.h"
 
 #include "config.hpp"  // includes <version>

@@ -12,8 +12,9 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include "legate/data/shape.h"
-#include "legate/utilities/compiler.h"
 #include "legate/utilities/internal_shared_ptr.h"
 #include "legate/utilities/memory.h"
 #include "legate/utilities/shared_ptr.h"
@@ -48,7 +49,7 @@ class Variable;
  */
 class Variable {
  public:
-  LEGATE_CYTHON_DEFAULT_CTOR(Variable);
+  Variable() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   explicit Variable(const detail::Variable* impl);
 
@@ -67,7 +68,7 @@ class Constraint {
  public:
   [[nodiscard]] std::string to_string() const;
 
-  LEGATE_CYTHON_DEFAULT_CTOR(Constraint);
+  Constraint() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   explicit Constraint(InternalSharedPtr<detail::Constraint>&& impl);
   Constraint(const Constraint&)                = default;
