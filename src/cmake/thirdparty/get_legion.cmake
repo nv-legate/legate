@@ -54,6 +54,8 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
   get_cpm_git_args(legion_cpm_git_args REPOSITORY "${git_repo}" BRANCH "${git_branch}"
                    SHALLOW "${shallow}")
 
+  string(REGEX REPLACE "0([0-9]+)" "\\1" version "${version}")
+
   # cmake-lint: disable=W0106
   set_ifndef(Legion_PYTHON_EXTRA_INSTALL_ARGS
              "--root / --prefix \"\${CMAKE_INSTALL_PREFIX}\"")
