@@ -11,10 +11,12 @@
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from datetime import datetime
 from shlex import quote
-from subprocess import run
+from signal import SIGINT
+from subprocess import Popen
 from typing import TYPE_CHECKING, Any, Iterable
 
 from rich import print as rich_print
@@ -128,7 +130,22 @@ class LegateDriver:
         if self.config.other.timing:
             self.print_on_head_node(f"Legate start: {datetime.now()}")
 
-        ret = run(self.cmd, env=self.env).returncode
+        proc = Popen(
+            self.cmd,
+            env=self.env,
+            start_new_session=True,
+            stdin=sys.stdin,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
+        while True:
+            try:
+                proc.wait()
+            except KeyboardInterrupt:
+                proc.send_signal(SIGINT)
+                continue
+            break
+        ret = proc.returncode
 
         if self.config.other.timing:
             self.print_on_head_node(f"Legate end: {datetime.now()}")

@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import sys
 from shlex import quote
 
 import pytest
@@ -97,11 +98,11 @@ class TestDriver:
         config = genconfig(["--launcher", launch, "--dry-run"])
         driver = m.LegateDriver(config, SYSTEM)
 
-        mock_run = mocker.patch.object(m, "run")
+        mock_Popen = mocker.patch.object(m, "Popen")
 
         driver.run()
 
-        mock_run.assert_not_called()
+        mock_Popen.assert_not_called()
 
     @pytest.mark.parametrize("launch", LAUNCHERS)
     def test_run(
@@ -110,11 +111,18 @@ class TestDriver:
         config = genconfig(["--launcher", launch])
         driver = m.LegateDriver(config, SYSTEM)
 
-        mock_run = mocker.patch.object(m, "run")
+        mock_Popen = mocker.patch.object(m, "Popen")
 
         driver.run()
 
-        mock_run.assert_called_once_with(driver.cmd, env=driver.env)
+        mock_Popen.assert_called_once_with(
+            driver.cmd,
+            env=driver.env,
+            start_new_session=True,
+            stdin=sys.stdin,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
 
     # skip simple launcher for this test
     @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
