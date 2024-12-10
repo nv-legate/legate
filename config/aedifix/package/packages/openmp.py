@@ -10,12 +10,11 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import ctypes.util
 from typing import TYPE_CHECKING, Final
 
 from ...cmake import CMAKE_VARIABLE, CMakeString
 from ...util.argument_parser import ArgSpec, ConfigArgument
-from ..package import EnableState, Package
+from ..package import Package
 
 if TYPE_CHECKING:
     from ...manager import ConfigurationManager
@@ -27,30 +26,14 @@ class OpenMP(Package):
         spec=ArgSpec(
             dest="with_openmp", type=bool, help="Build with OpenMP support."
         ),
+        enables_package=True,
+        primary=True,
     )
     OpenMP_VERSION = CMAKE_VARIABLE("OpenMP_VERSION", CMakeString)
     OpenMP_CXX_FLAGS = CMAKE_VARIABLE("OpenMP_CXX_FLAGS", CMakeString)
 
     def __init__(self, manager: ConfigurationManager) -> None:
         super().__init__(manager=manager, name="OpenMP")
-
-    def find_package(self) -> None:
-        r"""Determine whether OpenMP is enabled. Does a very crude search for
-        several common names of lib OpenMP.
-        """
-        super().find_package()
-        for libname in ("omp", "libomp", "libgomp"):
-            try:
-                lib = ctypes.util.find_library(libname)
-            except FileNotFoundError:
-                # https://github.com/python/cpython/issues/114257
-                continue
-            if lib:
-                self.log(
-                    f"Found possible OpenMP library: {lib}, enabling OpenMP"
-                )
-                self._state = EnableState(value=True, explicit=False)
-                break
 
     def summarize(self) -> str:
         r"""Summarize configured OpenMP.

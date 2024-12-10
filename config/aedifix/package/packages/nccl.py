@@ -27,6 +27,8 @@ class NCCL(Package):
         spec=ArgSpec(
             dest="with_nccl", type=bool, help="Build with NCCL support."
         ),
+        enables_package=True,
+        primary=True,
     )
     NCCL_DIR: Final = ConfigArgument(
         name="--with-nccl-dir",
@@ -36,6 +38,7 @@ class NCCL(Package):
             help="Path to NCCL installation directory.",
         ),
         cmake_var=CMAKE_VARIABLE("NCCL_DIR", CMakePath),
+        enables_package=True,
     )
 
     def __init__(self, manager: ConfigurationManager) -> None:

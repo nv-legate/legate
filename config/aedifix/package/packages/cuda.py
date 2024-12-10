@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...cmake import CMAKE_VARIABLE, CMakeExecutable, CMakeList, CMakePath
 from ...util.argument_parser import ArgSpec, ConfigArgument
-from ..package import EnableState, Package
+from ..package import Package
 
 if TYPE_CHECKING:
     from ...manager import ConfigurationManager
@@ -87,6 +87,8 @@ class CUDA(Package):
             default=shutil.which("nvcc") is not None,
             help="Build with CUDA support.",
         ),
+        enables_package=True,
+        primary=True,
     )
     CUDAToolkit_ROOT: Final = ConfigArgument(
         name="--with-cuda-dir",
@@ -98,6 +100,7 @@ class CUDA(Package):
             help="Path to CUDA installation directory.",
         ),
         cmake_var=CMAKE_VARIABLE("CUDAToolkit_ROOT", CMakePath),
+        enables_package=True,
     )
     CMAKE_CUDA_COMPILER: Final = ConfigArgument(
         name="--with-cudac",
@@ -108,6 +111,7 @@ class CUDA(Package):
             help="Specify CUDA compiler",
         ),
         cmake_var=CMAKE_VARIABLE("CMAKE_CUDA_COMPILER", CMakeExecutable),
+        enables_package=True,
     )
     CMAKE_CUDA_FLAGS: Final = ConfigArgument(
         name="--CUDAFLAGS",
@@ -140,24 +144,6 @@ class CUDA(Package):
             The configuration manager to manage this package.
         """
         super().__init__(manager=manager, name="CUDA")
-
-    def find_package(self) -> None:
-        r"""Attempt to find CUDA. Checks whether any of the locator flags has
-        a truthy value, and assumes this means the package is enabled.
-        """
-        super().find_package()
-        if self.state.enabled():
-            return  # no need to search any more
-
-        cl_args = self.cl_args
-        for v in (cl_args.CUDAC,):
-            if v.value:
-                self.log(
-                    f"Enabling CUDA because {v.name} has truthy "
-                    f'value "{v.value}" ({v})'
-                )
-                self._enabled = EnableState(value=True, explicit=v.cl_set)
-                break
 
     def configure(self) -> None:
         r"""Configure CUDA."""

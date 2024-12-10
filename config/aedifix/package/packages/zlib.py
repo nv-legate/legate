@@ -27,6 +27,8 @@ class ZLIB(Package):
         spec=ArgSpec(
             dest="with_zlib", type=bool, help="Build with Zlib support."
         ),
+        enables_package=True,
+        primary=True,
     )
     ZLIB_ROOT: Final = ConfigArgument(
         name="--with-zlib-dir",
@@ -36,6 +38,7 @@ class ZLIB(Package):
             help="Path to ZLIB installation directory.",
         ),
         cmake_var=CMAKE_VARIABLE("ZLIB_ROOT", CMakePath),
+        enables_package=True,
     )
     ZLIB_VERSION = CMAKE_VARIABLE("ZLIB_VERSION", CMakeString)
     ZLIB_INCLUDE_DIRS = CMAKE_VARIABLE("ZLIB_INCLUDE_DIRS", CMakePath)

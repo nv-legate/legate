@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...cmake import CMAKE_VARIABLE, CMakePath, CMakeString
 from ...util.argument_parser import ArgSpec, ConfigArgument
-from ..package import EnableState, Package
+from ..package import Package
 
 if TYPE_CHECKING:
     from ...manager import ConfigurationManager
@@ -27,6 +27,8 @@ class GASNet(Package):
         spec=ArgSpec(
             dest="with_gasnet", type=bool, help="Build with GASNet support."
         ),
+        enables_package=True,
+        primary=True,
     )
     GASNet_ROOT_DIR: Final = ConfigArgument(
         name="--with-gasnet-dir",
@@ -36,6 +38,7 @@ class GASNet(Package):
             help="Path to GASNet installation directory.",
         ),
         cmake_var=CMAKE_VARIABLE("GASNet_ROOT_DIR", CMakePath),
+        enables_package=True,
     )
     GASNet_CONDUIT: Final = ConfigArgument(
         name="--gasnet-conduit",
@@ -48,6 +51,7 @@ class GASNet(Package):
             help="Build with specified GASNet conduit.",
         ),
         cmake_var=CMAKE_VARIABLE("GASNet_CONDUIT", CMakeString),
+        enables_package=True,
     )
     GASNet_SYSTEM: Final = ConfigArgument(
         name="--gasnet-system",
@@ -56,6 +60,7 @@ class GASNet(Package):
             help="Specify a system-specific configuration to use for GASNet",
         ),
         cmake_var=CMAKE_VARIABLE("GASNet_SYSTEM", CMakeString),
+        enables_package=True,
     )
 
     def __init__(self, manager: ConfigurationManager) -> None:
@@ -67,24 +72,6 @@ class GASNet(Package):
             The configuration manager to manage this package.
         """
         super().__init__(manager=manager, name="GASNet")
-
-    def find_package(self) -> None:
-        r"""Attempt to find GASNet."""
-        super().find_package()
-        if self.state.enabled():
-            return
-
-        cl_args = self.cl_args
-        for v in (
-            cl_args.gasnet_conduit,
-            cl_args.gasnet_system,
-        ):
-            if value := v.value:
-                self.log(
-                    f"Enabling GASNet due to {v} having truthy value {value}"
-                )
-                self._enabled = EnableState(value=True, explicit=v.cl_set)
-                break
 
     def configure(self) -> None:
         r"""Configure GASNet."""

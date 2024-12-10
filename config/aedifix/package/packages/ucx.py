@@ -27,6 +27,8 @@ class UCX(Package):
         spec=ArgSpec(
             dest="with_ucx", type=bool, help="Build with UCX support."
         ),
+        enables_package=True,
+        primary=True,
     )
     UCX_ROOT: Final = ConfigArgument(
         name="--with-ucx-dir",
@@ -36,6 +38,7 @@ class UCX(Package):
             help="Path to UCX installation directory.",
         ),
         cmake_var=CMAKE_VARIABLE("UCX_ROOT", CMakePath),
+        enables_package=True,
     )
 
     def __init__(self, manager: ConfigurationManager) -> None:

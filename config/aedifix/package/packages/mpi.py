@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Final
 
 from ...cmake import CMAKE_VARIABLE, CMakeExecutable, CMakePath
 from ...util.argument_parser import ArgSpec, ConfigArgument
-from ..package import EnableState, Package
+from ..package import Package
 
 if TYPE_CHECKING:
     from ...manager import ConfigurationManager
@@ -35,6 +35,8 @@ class MPI(Package):
         spec=ArgSpec(
             dest="with_mpi", type=bool, help="Build with MPI support."
         ),
+        enables_package=True,
+        primary=True,
     )
     MPI_HOME: Final = ConfigArgument(
         name="--with-mpi-dir",
@@ -44,6 +46,7 @@ class MPI(Package):
             help="Path to MPI installation directory.",
         ),
         cmake_var=CMAKE_VARIABLE("MPI_HOME", CMakePath),
+        enables_package=True,
     )
     MPIEXEC_EXECUTABLE: Final = ConfigArgument(
         name="--with-mpiexec-executable",
@@ -54,6 +57,7 @@ class MPI(Package):
             help="Path to mpiexec executable.",
         ),
         cmake_var=CMAKE_VARIABLE("MPIEXEC_EXECUTABLE", CMakeExecutable),
+        enables_package=True,
     )
     MPI_CXX_COMPILER: Final = CMAKE_VARIABLE(
         "MPI_CXX_COMPILER", CMakeExecutable
@@ -75,18 +79,6 @@ class MPI(Package):
             The configuration manager to manage this package.
         """
         super().__init__(manager=manager, name="MPI")
-
-    def find_package(self) -> None:
-        r"""Find MPI."""
-        super().find_package()
-        for v in (self.cl_args.mpiexec,):
-            if value := v.value:
-                self.log(
-                    f"Enabling MPI due to {v.name} having "
-                    f'truthy value "{value}" ({v})'
-                )
-                self._enabled = EnableState(value=True, explicit=v.cl_set)
-                break
 
     def configure(self) -> None:
         r"""Configure MPI."""

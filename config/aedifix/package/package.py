@@ -10,7 +10,6 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import enum
 import shlex
 import textwrap
 from argparse import ArgumentParser, _ArgumentGroup as ArgumentGroup
@@ -31,37 +30,31 @@ if TYPE_CHECKING:
 _T = TypeVar("_T")
 
 
-@dataclass(slots=True, frozen=True)
-class EnableState:
-    value: bool
-    explicit: bool = False
-
-    def enabled(self) -> bool:
-        return self.value
-
-    def disabled(self) -> bool:
-        return not self.enabled()
-
-    def explicitly_enabled(self) -> bool:
-        return self.enabled() and self.explicit
-
-    def explicitly_disabled(self) -> bool:
-        return self.disabled() and self.explicit
-
-    def implicitly_enabled(self) -> bool:
-        return self.enabled() and (not self.explicit)
-
-    def implicitly_disabled(self) -> bool:
-        return self.disabled() and (not self.explicit)
-
-    class Kind(enum.Enum):
-        ENABLED = enum.auto()
-        DISABLED = enum.auto()
-        PRIMARY_DISABLED = enum.auto()
-
-
 class Package(Configurable):
     __slots__ = "_name", "_state", "_always_enabled"
+
+    @dataclass(slots=True, frozen=True)
+    class EnableState:
+        value: bool
+        explicit: bool = False
+
+        def enabled(self) -> bool:
+            return self.value
+
+        def disabled(self) -> bool:
+            return not self.enabled()
+
+        def explicitly_enabled(self) -> bool:
+            return self.enabled() and self.explicit
+
+        def explicitly_disabled(self) -> bool:
+            return self.disabled() and self.explicit
+
+        def implicitly_enabled(self) -> bool:
+            return self.enabled() and (not self.explicit)
+
+        def implicitly_disabled(self) -> bool:
+            return self.disabled() and (not self.explicit)
 
     def __init__(
         self,
@@ -80,9 +73,15 @@ class Package(Configurable):
         always_enabled : bool, False
             Whether this package should be considered unconditionally enabled.
         """
+        from .main_package import MainPackage
+
         super().__init__(manager=manager)
+
+        if isinstance(self, MainPackage):
+            always_enabled = True
+
         self._name = name
-        self._state = EnableState(value=always_enabled)
+        self._state = Package.EnableState(value=always_enabled)
         self._always_enabled = always_enabled
 
     @property
@@ -307,94 +306,74 @@ class Package(Configurable):
             flags = default_flags[cl_arg.name]
         self.manager.append_cmake_variable(name=name, flags=flags)
 
-    def find_package(self) -> None:
-        r"""Try to locate a package, and enable if it successful. By default,
-        does nothing.
-        """
-        pass
-
-    def _determine_package_enabled(self) -> tuple[EnableState.Kind, bool]:
-        r"""Try to determine if a package is enabled or not. By default, simply
-        checks the value of --with-<PACKAGE_NAME> and
-        --with-<PACKAGE_NAME>-dir.
-
-        Returns
-        -------
-        enabled : bool
-            True if the package is enabled, False otherwise.
-        explicit : bool
-            True if the state is explicitly set by user, False otherwise
-        """
-        name = self.name
-
-        if self._always_enabled:
-            self.log(f"{name}: always enabled")
-            return EnableState.Kind.ENABLED, False
-
-        cl_args = self.cl_args
-        lo_name = name.casefold()
-        for is_primary_attr, attr_name in (
-            (True, f"with_{lo_name}"),
-            (False, f"{lo_name}_dir"),
-        ):
-            self.log(f'{name}: testing for "{attr_name}"')
-            if not hasattr(cl_args, attr_name):
-                self.log(f'{name}: "{attr_name}", no such attribute exists')
-                continue
-
-            attr = getattr(cl_args, attr_name)
-            value = attr.value
-            if value:
-                self.log(
-                    f'{name}: enabled due to "{attr_name}" having '
-                    f'truthy value "{value}" ({attr})'
-                )
-                return EnableState.Kind.ENABLED, attr.cl_set
-
-            self.log(
-                f'{name}: not enabled due to "{attr_name}" having '
-                f'falsey value "{value}" ({attr})'
-            )
-            if is_primary_attr:
-                self.log(
-                    f"{name}: stopping attribute search due to primary "
-                    f'attribute "{attr_name}" having falsey value'
-                )
-                return EnableState.Kind.PRIMARY_DISABLED, attr.cl_set
-
-        return EnableState.Kind.DISABLED, False
-
-    def _find_package(self) -> None:
-        r"""Attempt to find the current package."""
-        enabled_state, user_set = self._determine_package_enabled()
-        self._state = EnableState(
-            value=enabled_state == EnableState.Kind.ENABLED, explicit=user_set
-        )
-        if (
-            enabled_state != EnableState.Kind.PRIMARY_DISABLED
-            and not self.state.explicit
-        ):
-            # Call subclass hook (whether enabled or disabled), but only if the
-            # primary attribute wasn't false and the state was explicitly set.
-            self.find_package()
-        if self.state.enabled():
-            self.log(f"{self.name}: enabled")
-        else:
-            self.log(
-                f"{self.name}: not enabled due to all indicators being falsey"
-            )
-
     def declare_dependencies(self) -> None:
         r"""Set up and declare dependencies for packages. By default,
         declares no dependencies."""
         pass
 
+    def _determine_package_enabled(self) -> EnableState:
+        r"""Try to determine if a package is enabled or not.
+
+        Returns
+        -------
+        enabled : EnableState
+            Whether the package is enabled.
+        """
+        if self._always_enabled:
+            self.log(f"{self.name}: always enabled")
+            return Package.EnableState(value=True, explicit=False)
+
+        config_args = []
+        primary_attr = None
+        for attr_name in dir(self):
+            try:
+                attr = getattr(self, attr_name)
+            except Exception:
+                continue
+
+            if not isinstance(attr, ConfigArgument):
+                continue
+
+            if not attr.enables_package:
+                # Don't care about attributes that don't play a role in
+                # enabling the package
+                continue
+
+            config_args.append(attr)
+            if attr.primary:
+                assert primary_attr is None, (
+                    "Multiple primary ConfigArgument's, previously "
+                    f"found {attr}"
+                )
+                primary_attr = attr
+
+        assert (
+            primary_attr is not None
+        ), f"Never found primary config argument for {self.name}"
+
+        # The primary attribute, if set, should ultimately control whether the
+        # package is enabled or disabled, so we check it first
+        config_args.insert(0, primary_attr)
+        for arg in config_args:
+            cl_arg = getattr(self.cl_args, arg.spec.dest)
+            if (val := cl_arg.value) is not None:
+                return Package.EnableState(
+                    value=bool(val), explicit=cl_arg.cl_set
+                )
+
+        return Package.EnableState(value=False, explicit=False)
+
     def configure(self) -> None:
         r"""Configure a Package."""
         super().configure()
-        self.log_execute_func(self._find_package)
-        enabled_str = "is" if self.state.enabled() else "is NOT"
-        self.log(f"Package {self.name} {enabled_str} enabled")
+        self._state = self._determine_package_enabled()
+        if self.state.enabled():
+            self.log(f"Package {self.name}: enabled")
+        else:
+            self.log(
+                f"Package {self.name}: disabled due to all indicators being "
+                "falsey"
+            )
 
     def summarize(self) -> str:
         r"""Return a summary of this `Configurable`. By defalt, returns

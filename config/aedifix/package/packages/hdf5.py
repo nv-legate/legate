@@ -27,6 +27,8 @@ class HDF5(Package):
         spec=ArgSpec(
             dest="with_hdf5", type=bool, help="Build with HDF5 support."
         ),
+        enables_package=True,
+        primary=True,
     )
     HDF5_ROOT: Final = ConfigArgument(
         name="--with-hdf5-dir",
@@ -36,6 +38,7 @@ class HDF5(Package):
             help="Path to HDF5 installation directory.",
         ),
         cmake_var=CMAKE_VARIABLE("HDF5_ROOT", CMakePath),
+        enables_package=True,
     )
 
     def __init__(self, manager: ConfigurationManager) -> None:

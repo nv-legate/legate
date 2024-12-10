@@ -38,7 +38,6 @@ class Configurable:
             The global configuration manager which manages this configurable.
         """
         self._manager = manager
-        super().__init__()
 
     @property
     def manager(self) -> ConfigurationManager:

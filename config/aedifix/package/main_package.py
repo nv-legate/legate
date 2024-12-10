@@ -31,7 +31,7 @@ from ..cmake.cmake_flags import (
     CMakePath,
     CMakeString,
 )
-from ..util.argument_parser import ArgSpec, ConfigArgument, _str_to_bool
+from ..util.argument_parser import ArgSpec, ConfigArgument
 from ..util.utility import (
     CMAKE_TEMPLATES_DIR,
     ValueProvenance,
@@ -563,7 +563,7 @@ class MainPackage(Package, ABC):
                 nargs="?",
                 const=True,
                 default=None,
-                type=_str_to_bool,
+                type=ConfigArgument._str_to_bool,
                 dest=dest_name,
             )
         else:
@@ -650,25 +650,6 @@ class MainPackage(Package, ABC):
         # then do the options for the derived main package
         package_group = self.create_argument_group(parser, title=self.name)
         self.log_execute_func(self.add_package_options, package_group)
-
-    def inspect_packages(self, packages: Sequence[Package]) -> None:
-        r"""Inspect the set of packages loaded byx the configuration manager.
-
-        Parameters
-        ----------
-        packages : Sequence[Package]
-            The packages to inspect.
-
-        Notes
-        -----
-        This routine may be used to add, remove, or otherwise modify the
-        loaded packages. For example, the main package may want to set certain
-        packages to always be enabled, or perhaps would like to remove other
-        packages (for which it provides no support).
-
-        By default, no packages are removed.
-        """
-        pass
 
     def configure_core_package_variables(self) -> None:
         r"""Configure the core main package cmake variables."""

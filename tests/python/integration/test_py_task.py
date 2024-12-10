@@ -174,11 +174,11 @@ class TestPyTask:
     def test_repeat_with_scale(self, in_shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         in_np, in_store = utils.random_array_and_store(in_shape)
-        repeats = tuple(np.random.randint(1, 3, in_np.ndim))
+        # Need to cast to int since randint() returns signedinteger[_32Bit |
+        # _64Bit] since numpy 2.13
+        repeats = tuple(map(int, np.random.randint(1, 3, in_np.ndim)))
 
-        out_shape = tuple(
-            in_shape[i] * repeats[i] for i in range(len(in_shape))
-        )
+        out_shape = tuple(s * r for s, r in zip(in_shape, repeats))
         out_np, out_store = utils.zero_array_and_store(ty.float64, out_shape)
         auto_task = tasks.repeat_task.prepare_call(
             in_store, out_store, repeats

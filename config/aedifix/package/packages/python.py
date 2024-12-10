@@ -28,6 +28,8 @@ class Python(Package):
         spec=ArgSpec(
             dest="with_python", type=bool, help="Build with Python bindings."
         ),
+        enables_package=True,
+        primary=True,
     )
 
     def __init__(self, manager: ConfigurationManager) -> None:

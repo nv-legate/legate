@@ -27,6 +27,8 @@ class CAL(Package):
         spec=ArgSpec(
             dest="with_cal", type=bool, help="Build with CAL support."
         ),
+        enables_package=True,
+        primary=True,
     )
     CAL_DIR: Final = ConfigArgument(
         name="--with-cal-dir",
@@ -36,6 +38,7 @@ class CAL(Package):
             help="Path to CAL installation directory.",
         ),
         cmake_var=CMAKE_VARIABLE("CAL_DIR", CMakePath),
+        enables_package=True,
     )
 
     def __init__(self, manager: ConfigurationManager) -> None:

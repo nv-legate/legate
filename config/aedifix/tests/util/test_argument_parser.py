@@ -23,29 +23,50 @@ from ...util.argument_parser import (
     ConfigArgument,
     ExclusiveArgumentGroup,
     Unset,
-    _str_to_bool,
 )
 from ...util.exception import LengthError
 
 
 class TestConfigArgument:
+    def test_create_bare(self) -> None:
+        name = "--bar"
+        spec = ArgSpec(dest="bar")
+        arg = ConfigArgument(name=name, spec=spec)
+
+        assert arg.name == name
+        assert arg.spec == spec
+        assert arg.cmake_var is None
+        assert arg.ephemeral is False
+        assert arg.enables_package is False
+        assert arg.primary is False
+
     @pytest.mark.parametrize(
         "cmake_var", (None, CMAKE_VARIABLE("FOO", CMakeString))
     )
     @pytest.mark.parametrize("ephemeral", (True, False))
+    @pytest.mark.parametrize("enables_package", (True, False))
+    @pytest.mark.parametrize("primary", (True, False))
     def test_create(
-        self, cmake_var: _CMakeVar | None, ephemeral: bool
+        self,
+        cmake_var: _CMakeVar | None,
+        ephemeral: bool,
+        enables_package: bool,
+        primary: bool,
     ) -> None:
         arg = ConfigArgument(
             name="--foo",
             spec=ArgSpec(dest="bar"),
             cmake_var=cmake_var,
             ephemeral=ephemeral,
+            enables_package=enables_package,
+            primary=primary,
         )
         assert arg.name == "--foo"
         assert arg.spec == ArgSpec(dest="bar")
         assert arg.cmake_var == cmake_var
         assert arg.ephemeral == ephemeral
+        assert arg.enables_package == enables_package
+        assert arg.primary == primary
 
     @pytest.mark.parametrize(
         "cmake_var", (None, CMAKE_VARIABLE("FOO", CMakeString))
@@ -92,7 +113,7 @@ class TestConfigArgument:
             assert action.const is (True if const is Unset else const)
             assert action.default is (False if default is Unset else default)
             assert action.metavar == ("bool" if metavar is Unset else metavar)
-            assert action.type is _str_to_bool
+            assert action.type is ConfigArgument._str_to_bool
         else:
             assert action.nargs == (None if nargs is Unset else nargs)
             assert action.const == (None if const is Unset else const)

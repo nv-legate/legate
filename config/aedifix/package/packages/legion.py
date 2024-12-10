@@ -164,7 +164,7 @@ class Legion(Package):
         manager : ConfigurationManager
             The configuration manager to manage this package.
         """
-        super().__init__(manager=manager, name="Legion")
+        super().__init__(manager=manager, name="Legion", always_enabled=True)
 
     def declare_dependencies(self) -> None:
         r"""Declare dependencies for Legion."""

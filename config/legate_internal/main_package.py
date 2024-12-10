@@ -27,7 +27,6 @@ from ..aedifix import (
     ConfigArgument,
     ConfigurationManager,
     MainPackage,
-    Package,
 )
 
 if TYPE_CHECKING:
@@ -188,35 +187,6 @@ class Legate(MainPackage):
             The constructed main package.
         """
         return cls(manager, argv)
-
-    def inspect_packages(self, packages: Sequence[Package]) -> None:
-        r"""Inspect the set of packages loaded by the configuration manager.
-
-        Parameters
-        ----------
-        packages : Sequence[Package]
-            The packages to inspect.
-        """
-        always_enabled = {"legion": 0, "cmake": 0}
-        for pack in packages:
-            pack_name = pack.name
-            try:
-                always_enabled[pack_name.casefold()] += 1
-            except KeyError:
-                continue
-            self.log(f"Force-enabling '{pack_name}'")
-
-        for name, init_cnt in always_enabled.items():
-            if not init_cnt:
-                raise AssertionError(
-                    f"Did not find package '{name}' during package inspection,"
-                    " has it been removed?"
-                )
-            if init_cnt > 1:
-                raise AssertionError(
-                    f"Duplicate packages for '{name}'? Initialized it "
-                    f"{init_cnt} times"
-                )
 
     def declare_dependencies(self) -> None:
         r"""Declare Dependencies for Legate."""

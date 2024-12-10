@@ -122,6 +122,15 @@ if(Legion_USE_Python)
   endif()
 endif()
 
+if(NOT DEFINED Legion_USE_OpenMP)
+  rapids_find_package(OpenMP
+                      GLOBAL_TARGETS OpenMP::OpenMP_CXX
+                      BUILD_EXPORT_SET legate-exports
+                      INSTALL_EXPORT_SET legate-exports
+                      COMPONENTS CXX)
+  option(Legion_USE_OpenMP "Use OpenMP for Legion" ${OpenMP_FOUND})
+endif()
+
 #
 # If we find Legion already configured on the system, it will report whether it was
 # compiled with Python (Legion_USE_PYTHON), CUDA (Legion_USE_CUDA), OpenMP

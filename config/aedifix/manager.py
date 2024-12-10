@@ -1001,10 +1001,6 @@ class ConfigurationManager:
             self.log_execute_func(packages.load_packages, self)
         )
 
-        self.log_execute_func(
-            self._main_package.inspect_packages, self._modules
-        )
-
         # Sort the modules alphabetically for the parsing of arguments, but
         # keep the main package on top.
         self._modules.remove(self._main_package)
