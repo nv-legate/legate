@@ -11,11 +11,11 @@
 
 from libcpp.utility cimport move as std_move
 
-from ....._ext.cython_libcpp.string_view cimport (
+from ....core._ext.cython_libcpp.string_view cimport (
     string_view as std_string_view,
     string_view_from_py as std_string_view_from_py,
 )
-from ....data.logical_array cimport LogicalArray, _LogicalArray
+from ....core._lib.data.logical_array cimport LogicalArray, _LogicalArray
 
 
 cpdef LogicalArray from_file(object path, str dataset_name):
@@ -37,10 +37,11 @@ cpdef LogicalArray from_file(object path, str dataset_name):
     LogicalArray
         The Legate array read from disk.
     """
+    cdef str str_path = str(path)
     cdef std_string_view cpp_path
     cdef std_string_view cpp_dataset_name
 
-    cpp_path = std_string_view_from_py(str(path))
+    cpp_path = std_string_view_from_py(str_path)
     cpp_dataset_name = std_string_view_from_py(dataset_name)
 
     cdef _LogicalArray ret

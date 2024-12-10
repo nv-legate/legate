@@ -18,7 +18,7 @@
 #include <mutex>
 #include <string>
 
-namespace legate::experimental::io::hdf5::detail {
+namespace legate::io::hdf5::detail {
 
 // HDF5 isn't thread-safe so we use a global lock, which means the reads are serialized within
 // each Legate rank. See
@@ -36,4 +36,4 @@ class HDF5GlobalLock {
                                             const std::string& filepath,
                                             bool gds_on);
 
-}  // namespace legate::experimental::io::hdf5::detail
+}  // namespace legate::io::hdf5::detail

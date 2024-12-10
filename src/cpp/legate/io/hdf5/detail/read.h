@@ -17,7 +17,7 @@
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/typedefs.h>
 
-namespace legate::experimental::io::hdf5::detail {
+namespace legate::io::hdf5::detail {
 
 /**
  * @brief Read HDF5 file into Legate store
@@ -41,4 +41,4 @@ class HDF5Read : public LegateTask<HDF5Read> {
   static void gpu_variant(legate::TaskContext context);
 };
 
-}  // namespace legate::experimental::io::hdf5::detail
+}  // namespace legate::io::hdf5::detail

@@ -13,9 +13,9 @@
 #include <legate/data/scalar.h>
 #include <legate/data/shape.h>
 #include <legate/experimental/io/detail/library.h>
-#include <legate/experimental/io/hdf5/detail/read.h>
-#include <legate/experimental/io/hdf5/detail/util.h>
-#include <legate/experimental/io/hdf5/interface.h>
+#include <legate/io/hdf5/detail/read.h>
+#include <legate/io/hdf5/detail/util.h>
+#include <legate/io/hdf5/interface.h>
 #include <legate/runtime/runtime.h>
 #include <legate/type/type_info.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -28,7 +28,7 @@
 #include <string_view>
 #include <system_error>
 
-namespace legate::experimental::io::hdf5 {
+namespace legate::io::hdf5 {
 
 InvalidDataSetError::InvalidDataSetError(const std::string& what,
                                          std::filesystem::path path,
@@ -146,7 +146,8 @@ LogicalArray from_file(const std::filesystem::path& file_path, std::string_view 
   auto* rt           = Runtime::get_runtime();
   auto ret           = create_output_array(native_path, dataset_name, rt);
 
-  auto task = rt->create_task(io::detail::core_io_library(), detail::HDF5Read::TASK_ID);
+  auto task =
+    rt->create_task(experimental::io::detail::core_io_library(), detail::HDF5Read::TASK_ID);
 
   task.add_scalar_arg(Scalar{native_path});
   task.add_scalar_arg(Scalar{dataset_name});
@@ -156,4 +157,4 @@ LogicalArray from_file(const std::filesystem::path& file_path, std::string_view 
   return ret;
 }
 
-}  // namespace legate::experimental::io::hdf5
+}  // namespace legate::io::hdf5

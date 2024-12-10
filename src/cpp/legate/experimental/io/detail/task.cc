@@ -12,10 +12,10 @@
 
 #include <legate/experimental/io/detail/library.h>
 #include <legate/experimental/io/detail/task.h>
-#include <legate/experimental/io/hdf5/detail/read.h>
 #include <legate/experimental/io/kvikio/detail/basic.h>
 #include <legate/experimental/io/kvikio/detail/tile.h>
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
+#include <legate/io/hdf5/detail/read.h>
 
 namespace legate::experimental::io::detail {
 
@@ -30,7 +30,7 @@ void register_tasks()
   kvikio::detail::TileWrite::register_variants(lib);
   kvikio::detail::TileByOffsetsRead::register_variants(lib);
   // HDF5
-  hdf5::detail::HDF5Read::register_variants(lib);
+  legate::io::hdf5::detail::HDF5Read::register_variants(lib);
 }
 
 }  // namespace legate::experimental::io::detail

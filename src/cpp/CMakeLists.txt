@@ -393,13 +393,13 @@ list(APPEND
      # stl
      legate/experimental/stl/detail/clang_tidy_dummy.cpp
      # io
+     legate/io/hdf5/detail/read.cc
+     legate/io/hdf5/detail/util.cc
+     legate/io/hdf5/interface.cc
      legate/experimental/io/kvikio/detail/basic.cc
      legate/experimental/io/kvikio/detail/tile.cc
      legate/experimental/io/kvikio/detail/tile_by_offsets.cc
      legate/experimental/io/kvikio/interface.cc
-     legate/experimental/io/hdf5/detail/read.cc
-     legate/experimental/io/hdf5/detail/util.cc
-     legate/experimental/io/hdf5/interface.cc
      legate/experimental/io/detail/task.cc
      legate/experimental/io/detail/library.cc
      legate/experimental/io/detail/mapper.cc)
@@ -725,6 +725,12 @@ install(FILES legate/utilities/detail/compressed_pair.h
               legate/utilities/detail/zstring_view.inl
               legate/utilities/detail/doxygen.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail)
+
+# ########################################################################################
+# * install Legate I/O -----------------------------------------------------------
+
+install(FILES legate/io/hdf5/interface.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/io/hdf5)
 
 # ########################################################################################
 # * install Legate STL -----------------------------------------------------------

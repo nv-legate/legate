@@ -25,7 +25,7 @@ import pytest
 from numpy.testing import assert_array_equal
 
 from legate.core import get_legate_runtime
-from legate.core.experimental.io.hdf5 import from_file, kerchunk_read
+from legate.io.hdf5 import from_file, kerchunk_read
 
 shape_chunks = (
     "shape,chunks",

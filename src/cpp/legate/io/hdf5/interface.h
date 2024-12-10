@@ -23,7 +23,7 @@
  * @brief Interface for HDF5 I/O
  */
 
-namespace legate::experimental::io::hdf5 {
+namespace legate::io::hdf5 {
 
 /**
  * @addtogroup io-hdf5
@@ -84,14 +84,10 @@ class InvalidDataSetError : public std::invalid_argument {
  * @throws std::system_error If file_path does not exist.
  * @throws UnusupportedHDF5DataType If the data type cannot be converted to a Type.
  * @throws InvalidDataSetError If the dataset is invalid, or is not found.
- *
- * @warning This API is experimental. A future release may change or remove this API without
- * warning, deprecation period, or notice. The user is nevertheless encouraged to use this API,
- * and submit any feedback to legate@nvidia.com.
  */
 [[nodiscard]] LogicalArray from_file(const std::filesystem::path& file_path,
                                      std::string_view dataset_name);
 
 /** @} */
 
-}  // namespace legate::experimental::io::hdf5
+}  // namespace legate::io::hdf5

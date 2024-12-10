@@ -12,7 +12,7 @@
 
 #include <legate_defines.h>
 
-#include <legate/experimental/io/hdf5/detail/util.h>
+#include <legate/io/hdf5/detail/util.h>
 #include <legate/utilities/abort.h>
 #include <legate/utilities/macros.h>
 
@@ -33,7 +33,7 @@
 // NOLINTEND
 #endif
 
-namespace legate::experimental::io::hdf5::detail {
+namespace legate::io::hdf5::detail {
 
 namespace {
 
@@ -71,4 +71,4 @@ void EnableGDS::apply(::hid_t hid) const noexcept
   return HighFive::File{filepath, open_mode};
 }
 
-}  // namespace legate::experimental::io::hdf5::detail
+}  // namespace legate::io::hdf5::detail

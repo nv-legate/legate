@@ -10,8 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate/experimental/io/hdf5/detail/read.h>
-#include <legate/experimental/io/hdf5/detail/util.h>
+#include <legate/io/hdf5/detail/read.h>
+#include <legate/io/hdf5/detail/util.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/type_info.h>  // for Type::Code formatter
@@ -33,7 +33,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace legate::experimental::io::hdf5::detail {
+namespace legate::io::hdf5::detail {
 
 namespace {
 
@@ -156,4 +156,4 @@ void task_body(const legate::TaskContext& context, bool is_device)
 
 /*static*/ void HDF5Read::gpu_variant(legate::TaskContext context) { task_body(context, true); }
 
-}  // namespace legate::experimental::io::hdf5::detail
+}  // namespace legate::io::hdf5::detail

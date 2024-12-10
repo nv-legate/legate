@@ -10,6 +10,6 @@
 # its affiliates is strictly prohibited.
 #=============================================================================
 
-list(APPEND CMAKE_MESSAGE_CONTEXT "io")
+list(APPEND CMAKE_MESSAGE_CONTEXT "_lib")
 
-add_subdirectory(kvikio)
+add_subdirectory(hdf5)

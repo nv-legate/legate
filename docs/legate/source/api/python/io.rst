@@ -10,7 +10,7 @@ Utilities for serializing and deserializing Legate stores.
 HDF5
 ----
 
-.. currentmodule:: legate.core.experimental.io.hdf5
+.. currentmodule:: legate.io.hdf5
 
 .. autosummary::
    :toctree: generated/

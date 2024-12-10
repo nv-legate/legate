@@ -43,6 +43,11 @@ C++
 
 - Remove ``legate::comm::coll::collInit()`` and ``legate::comm::coll::collFinalize()``.
 
+.. rubric:: I/O
+
+- Move the HDF5 interface out from the experimental
+  namespace. ``legate::experimental::io::hdf5`` is now ``legate::io::hdf5``.
+
 
 Python
 ------
@@ -62,3 +67,8 @@ Python
 .. rubric:: Runtime
 
 .. rubric:: Utilities
+
+.. rubric:: I/O
+
+- Move the HDF5 interface out from the experimental
+  namespace. ``legate.core.experimental.io.hdf5`` is now ``legate.io.hdf5``.

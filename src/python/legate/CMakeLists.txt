@@ -104,4 +104,5 @@ function(legate_create_cython_modules)
 endfunction()
 
 add_subdirectory(core)
+add_subdirectory(io)
 add_subdirectory(timing)

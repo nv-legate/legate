@@ -20,17 +20,17 @@ import h5py  # type: ignore
 import zarr  # type: ignore
 from kerchunk.hdf import SingleHdf5ToZarr  # type: ignore
 
-from ... import Type
-from .tile import from_tiles_by_offsets
-from .zarr import _get_padded_shape
+from ..core import Type
+from ..core.experimental.io.tile import from_tiles_by_offsets
+from ..core.experimental.io.zarr import _get_padded_shape
 
 if TYPE_CHECKING:
-    from ... import LogicalArray
+    from ..core import LogicalArray
 
 
 # This module is the "public" interface for this function, so import it purely
 # to re-export it.
-from ..._lib.experimental.io.hdf5.hdf5_interface import from_file  # noqa: F401
+from ._lib.hdf5.hdf5_interface import from_file  # noqa: F401
 
 
 def _get_virtual_dataset_names(filepath: str) -> set[str]:
