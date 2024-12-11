@@ -35,6 +35,7 @@ from legate.util.types import ArgList, EnvDict
 from . import FakeSystem
 
 CONSOLE = Console(color_system=None, soft_wrap=True)
+PROJECT = Project()
 
 
 class MockTestStage(m.TestStage):
@@ -61,12 +62,12 @@ class MockTestStage(m.TestStage):
 
 class TestTestStage:
     def test_name(self) -> None:
-        c = Config([])
+        c = Config([], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
         assert stage.name == "mock"
 
     def test_intro(self) -> None:
-        c = Config([])
+        c = Config([], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
 
         with CONSOLE.capture() as capture:
@@ -74,7 +75,7 @@ class TestTestStage:
         assert "Entering stage: mock" in capture.get()
 
     def test_outro(self) -> None:
-        c = Config([])
+        c = Config([], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
         stage.result = StageResult(
             [ProcessResult("invoke", "test/file")],
@@ -88,7 +89,7 @@ class TestTestStage:
         assert "2.12" in outro
 
     def test_env(self) -> None:
-        c = Config([])
+        c = Config([], project=PROJECT)
         s = FakeSystem()
         stage = MockTestStage(c, s)
 
@@ -107,7 +108,7 @@ class TestTestStage:
     ) -> None:
         monkeypatch.setenv("LEGATE_CONFIG", "foo")
 
-        c = Config([])
+        c = Config([], project=PROJECT)
         s = FakeSystem()
         stage = MockTestStage(c, s)
 
@@ -127,7 +128,7 @@ class TestTestStage:
             def stage_env(self, feature: FeatureType) -> EnvDict:
                 return {"feature": feature}
 
-        c = Config([], CustomProj())
+        c = Config([], project=CustomProj())
         s = FakeSystem()
         stage = MockTestStage(c, s, feature)
 
@@ -144,13 +145,13 @@ class TestTestStage:
 
 class TestTestStage_handle_cpu_pin_args:
     def test_none(self) -> None:
-        c = Config(["test.py", "--cpu-pin", "none"])
+        c = Config(["test.py", "--cpu-pin", "none"], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
         shard = Shard([(0, 1), (2, 3)])
         assert stage.handle_cpu_pin_args(c, shard) == []
 
     def test_strict(self) -> None:
-        c = Config(["test.py", "--cpu-pin", "strict"])
+        c = Config(["test.py", "--cpu-pin", "strict"], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
         shard = Shard([(0, 1), (2, 3)])
         assert stage.handle_cpu_pin_args(c, shard) == [
@@ -159,7 +160,7 @@ class TestTestStage_handle_cpu_pin_args:
         ]
 
     def test_partial(self) -> None:
-        c = Config(["test.py", "--cpu-pin", "partial"])
+        c = Config(["test.py", "--cpu-pin", "partial"], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
         shard = Shard([(0, 1), (2, 3)])
         assert stage.handle_cpu_pin_args(c, shard) == [
@@ -170,13 +171,16 @@ class TestTestStage_handle_cpu_pin_args:
 
 class TestTestStage_handle_multi_node_args:
     def test_default(self) -> None:
-        c = Config(["test.py"])
+        c = Config(["test.py"], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
         assert stage.handle_multi_node_args(c) == []
 
     @pytest.mark.parametrize("launch", ("jsrun", "srun"))
     def test_ranks(self, launch: str) -> None:
-        c = Config(["test.py", "--ranks-per-node", "4", "--launcher", launch])
+        c = Config(
+            ["test.py", "--ranks-per-node", "4", "--launcher", launch],
+            project=PROJECT,
+        )
         stage = MockTestStage(c, FakeSystem())
         assert stage.handle_multi_node_args(c) == [
             "--launcher",
@@ -187,7 +191,9 @@ class TestTestStage_handle_multi_node_args:
 
     @pytest.mark.parametrize("launch", ("jsrun", "srun"))
     def test_nodes(self, launch: str) -> None:
-        c = Config(["test.py", "--nodes", "4", "--launcher", launch])
+        c = Config(
+            ["test.py", "--nodes", "4", "--launcher", launch], project=PROJECT
+        )
         stage = MockTestStage(c, FakeSystem())
         assert stage.handle_multi_node_args(c) == [
             "--launcher",
@@ -197,19 +203,20 @@ class TestTestStage_handle_multi_node_args:
         ]
 
     def test_launcher_none(self) -> None:
-        c = Config(["test.py", "--launcher", "none"])
+        c = Config(["test.py", "--launcher", "none"], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
         assert stage.handle_multi_node_args(c) == []
 
     @pytest.mark.parametrize("launch", ("jsrun", "srun", "mpirun"))
     def test_launcher_others(self, launch: str) -> None:
-        c = Config(["test.py", "--launcher", launch])
+        c = Config(["test.py", "--launcher", launch], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
         assert stage.handle_multi_node_args(c) == ["--launcher", launch]
 
     def test_launcher_extra(self) -> None:
         c = Config(
-            ["test.py", "--launcher-extra", "a/b", "--launcher-extra", "c"]
+            ["test.py", "--launcher-extra", "a/b", "--launcher-extra", "c"],
+            project=PROJECT,
         )
         stage = MockTestStage(c, FakeSystem())
         assert stage.handle_multi_node_args(c) == [
@@ -231,7 +238,8 @@ class TestTestStage_handle_multi_node_args:
                 "c",
                 "--mpi-output-filename",
                 "a/b c/d.out",
-            ]
+            ],
+            project=PROJECT,
         )
         stage = MockTestStage(c, FakeSystem())
         assert stage.handle_multi_node_args(c) == [

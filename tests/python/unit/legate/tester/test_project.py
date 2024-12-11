@@ -25,11 +25,6 @@ def test_skipped_examples_default() -> None:
     assert skipped_examples == set()
 
 
-def test_per_file_args_default() -> None:
-    per_file_args = m.Project().per_file_args()
-    assert per_file_args == {}
-
-
 def test_custom_files_default() -> None:
     custom_files = m.Project().custom_files()
     assert custom_files == []

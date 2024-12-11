@@ -17,11 +17,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pytest_mock import MockerFixture
 
 import legate.tester.runner as m
 from legate.tester.config import Config
 from legate.tester.project import Project
+
+PROJECT = Project()
 
 
 class Runner:
@@ -34,7 +35,7 @@ class Runner:
 class TestLegateRunner:
 
     def test_test_specs(self) -> None:
-        c = Config(["test.py"])
+        c = Config(["test.py"], project=PROJECT)
         c.files = [Path("foo"), Path("bar")]
         r = m.LegateRunner()
         assert r.test_specs(c) == (
@@ -44,7 +45,10 @@ class TestLegateRunner:
 
     class Test_cmd_gdb:
         def test_multi_node_bad(self) -> None:
-            c = Config(["test.py", "--nodes", "2", "--launcher", "srun"])
+            c = Config(
+                ["test.py", "--nodes", "2", "--launcher", "srun"],
+                project=PROJECT,
+            )
             r = m.LegateRunner()
             with pytest.raises(
                 ValueError, match="--gdb can only be used with a single rank"
@@ -53,7 +57,8 @@ class TestLegateRunner:
 
         def test_multi_rank_bad(self) -> None:
             c = Config(
-                ["test.py", "--ranks-per-node", "2", "--launcher", "srun"]
+                ["test.py", "--ranks-per-node", "2", "--launcher", "srun"],
+                project=PROJECT,
             )
             r = m.LegateRunner()
             with pytest.raises(
@@ -62,7 +67,7 @@ class TestLegateRunner:
                 r.cmd_gdb(c)
 
         def test_zero_tests_bad(self) -> None:
-            c = Config(["test.py"])
+            c = Config(["test.py"], project=PROJECT)
             c.files = []
             r = m.LegateRunner()
             with pytest.raises(
@@ -75,7 +80,7 @@ class TestLegateRunner:
                 r.cmd_gdb(c)
 
         def test_multi_tests_bad(self) -> None:
-            c = Config(["test.py"])
+            c = Config(["test.py"], project=PROJECT)
             c.files = ["foo", "bar"]
             r = m.LegateRunner()
             with pytest.raises(
@@ -84,50 +89,21 @@ class TestLegateRunner:
                 r.cmd_gdb(c)
 
         def test_good(self) -> None:
-            c = Config(
-                [
-                    "test.py",
-                ]
-            )
+            c = Config(["test.py"], project=PROJECT)
             c.files = ["foo"]
             r = m.LegateRunner()
             assert r.cmd_gdb(c) == r.cmd(m.TestSpec(Path("foo"), "foo"), c, [])
 
-    class Test_file_args:
-        def test_default(self) -> None:
-            c = Config(["test.py"])
-            r = m.LegateRunner()
-            assert r.file_args(Path("integration/foo"), c) == []
-
-        def test_v(self) -> None:
-            c = Config(["test.py", "-v"])
-            r = m.LegateRunner()
-            assert r.file_args(Path("integration/foo"), c) == ["-v"]
-
-        def test_vv(self) -> None:
-            c = Config(["test.py", "-vv"])
-            r = m.LegateRunner()
-            assert r.file_args(Path("integration/foo"), c) == ["-v", "-s"]
-
-        def test_per_file_args(self, mocker: MockerFixture) -> None:
-            class CustomProj(Project):
-                def per_file_args(self) -> dict[str, list[str]]:
-                    return {"integration/foo": ["--foo"]}
-
-            c = Config(["test.py"], project=CustomProj())
-            r = m.LegateRunner()
-            assert r.file_args(Path("integration/foo"), c) == ["--foo"]
-
     class TestTestStage_cov_args:
         def test_without_cov_bin(self) -> None:
-            c = Config(["test.py", "--cov-args", "run -a"])
+            c = Config(["test.py", "--cov-args", "run -a"], project=PROJECT)
             r = m.LegateRunner()
             assert r.cov_args(c) == []
 
         def test_with_cov_bin(self) -> None:
             cov_bin = "conda/envs/legate/bin/coverage"
             args = ["--cov-bin", cov_bin]
-            c = Config(["test.py"] + args)
+            c = Config(["test.py"] + args, project=PROJECT)
             expected_result = [
                 "--run-mode=python",
                 cov_bin,
@@ -144,7 +120,7 @@ class TestLegateRunner:
                 + ["--cov-args", cov_args]
                 + ["--cov-src-path", cov_src_path]
             )
-            c = Config(["test.py"] + args)
+            c = Config(["test.py"] + args, project=PROJECT)
             expected_result = (
                 ["--run-mode=python", cov_bin]
                 + cov_args.split()
@@ -157,7 +133,7 @@ class TestLegateRunner:
 class TestGTestRunner:
 
     def test_test_specs(self) -> None:
-        c = Config(["test.py"])
+        c = Config(["test.py"], project=PROJECT)
         c.gtest_tests = {Path("foo"): ["bar", "baz"]}
         r = m.GTestRunner()
         assert r.test_specs(c) == (
@@ -168,14 +144,15 @@ class TestGTestRunner:
     class Test_cmd:
 
         def test_cmd_single(self) -> None:
-            c = Config(["test.py"])
+            c = Config(["test.py"], project=PROJECT)
             r = m.GTestRunner()
             args = (m.TestSpec(Path("foo"), "", "bar"), c, ["--custom"])
             assert r.cmd(*args) == r._cmd_single(*args)
 
         def test_cmd_multi_rank(self) -> None:
             c = Config(
-                ["test.py", "--ranks-per-node", "2", "--launcher", "mpirun"]
+                ["test.py", "--ranks-per-node", "2", "--launcher", "mpirun"],
+                project=PROJECT,
             )
             r = m.GTestRunner()
             args = (m.TestSpec(Path("foo"), "", "bar"), c, ["--custom"])
@@ -184,7 +161,10 @@ class TestGTestRunner:
         def test_cmd_multi_node_mpirun(self) -> None:
             # we do care about the launcher here, only mpirun will add args
             # that distinguish the result from _cmd_single
-            c = Config(["test.py", "--nodes", "2", "--launcher", "mpirun"])
+            c = Config(
+                ["test.py", "--nodes", "2", "--launcher", "mpirun"],
+                project=PROJECT,
+            )
             r = m.GTestRunner()
             args = (m.TestSpec(Path("foo"), "", "bar"), c, ["--custom"])
             assert r.cmd(*args) == r._cmd_multi(*args)
@@ -199,7 +179,8 @@ class TestGTestRunner:
                     "mpirun",
                     "--mpi-output-filename",
                     "a/b c/d.out",
-                ]
+                ],
+                project=PROJECT,
             )
             r = m.GTestRunner()
             out = r.cmd(m.TestSpec(Path("foo"), "", "bar"), c, [])
@@ -217,7 +198,8 @@ class TestGTestRunner:
                     "srun",
                     "--mpi-output-filename",
                     "a/b c/d.out",
-                ]
+                ],
+                project=PROJECT,
             )
             r = m.GTestRunner()
             out = r.cmd(m.TestSpec(Path("foo"), "", "bar"), c, [])
@@ -225,7 +207,10 @@ class TestGTestRunner:
 
     class Test_cmd_gdb:
         def test_multi_node_bad(self) -> None:
-            c = Config(["test.py", "--nodes", "2", "--launcher", "srun"])
+            c = Config(
+                ["test.py", "--nodes", "2", "--launcher", "srun"],
+                project=PROJECT,
+            )
             r = m.GTestRunner()
             with pytest.raises(
                 ValueError, match="--gdb can only be used with a single rank"
@@ -234,7 +219,8 @@ class TestGTestRunner:
 
         def test_multi_rank_bad(self) -> None:
             c = Config(
-                ["test.py", "--ranks-per-node", "2", "--launcher", "srun"]
+                ["test.py", "--ranks-per-node", "2", "--launcher", "srun"],
+                project=PROJECT,
             )
             r = m.GTestRunner()
             with pytest.raises(
@@ -243,7 +229,7 @@ class TestGTestRunner:
                 r.cmd_gdb(c)
 
         def test_missing_gtest_file_bad(self) -> None:
-            c = Config(["test.py"])
+            c = Config(["test.py"], project=PROJECT)
             c.gtest_tests = {Path(): []}
             r = m.GTestRunner()
             with pytest.raises(
@@ -256,7 +242,7 @@ class TestGTestRunner:
                 r.cmd_gdb(c)
 
         def test_zero_tests_bad(self) -> None:
-            c = Config(["test.py"])
+            c = Config(["test.py"], project=PROJECT)
             c.gtest_tests = {}
             r = m.GTestRunner()
             with pytest.raises(
@@ -269,7 +255,7 @@ class TestGTestRunner:
                 r.cmd_gdb(c)
 
         def test_multi_tests_bad(self) -> None:
-            c = Config(["test.py"])
+            c = Config(["test.py"], project=PROJECT)
             c.gtest_tests = {Path("foo"): ["bar", "baz"]}
             r = m.GTestRunner()
             with pytest.raises(
@@ -278,7 +264,7 @@ class TestGTestRunner:
                 r.cmd_gdb(c)
 
         def test_multi_tests_bad_multi(self) -> None:
-            c = Config(["test.py"])
+            c = Config(["test.py"], project=PROJECT)
             c.gtest_tests = {Path("foo"): ["bar"], Path("baz"): ["bop"]}
             r = m.GTestRunner()
             with pytest.raises(
@@ -287,7 +273,7 @@ class TestGTestRunner:
                 r.cmd_gdb(c)
 
         def test_good(self) -> None:
-            c = Config(["test.py"])
+            c = Config(["test.py"], project=PROJECT)
             c.gtest_tests = {Path("foo"): ["bar"]}
             r = m.GTestRunner()
             assert r.cmd_gdb(c) == r._cmd_single(

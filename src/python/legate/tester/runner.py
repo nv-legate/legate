@@ -236,8 +236,7 @@ class LegateRunner(Runner):
 
         """
         test_file_string = str(test_file)
-        per_file_args = config.project.per_file_args()
-        args = per_file_args.get(test_file_string, [])
+        args = []
 
         # These are a bit ugly but necessary in order to make pytest generate
         # more verbose output for integration tests when -v, -vv is specified

@@ -18,14 +18,17 @@ import pytest
 
 from legate.tester.config import Config
 from legate.tester.defaults import SMALL_SYSMEM
+from legate.tester.project import Project
 from legate.tester.stages._linux import gpu as m
 from legate.tester.stages.util import Shard
 
 from .. import FakeSystem
 
+PROJECT = Project()
+
 
 def test_default() -> None:
-    c = Config([])
+    c = Config([], project=PROJECT)
     s = FakeSystem()
     stage = m.GPU(c, s)
     assert stage.kind == "cuda"
@@ -39,7 +42,7 @@ class TestSingleRank:
         "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
-        c = Config([])
+        c = Config([], project=PROJECT)
         s = FakeSystem()
         stage = m.GPU(c, s)
         result = stage.shard_args(Shard([shard]), c)
@@ -59,7 +62,7 @@ class TestSingleRank:
         ]
 
     def test_spec_with_gpus_1(self) -> None:
-        c = Config(["test.py", "--gpus", "1"])
+        c = Config(["test.py", "--gpus", "1"], project=PROJECT)
         s = FakeSystem()
         stage = m.GPU(c, s)
         assert stage.spec.workers == 24
@@ -77,7 +80,7 @@ class TestSingleRank:
         )
 
     def test_spec_with_gpus_2(self) -> None:
-        c = Config(["test.py", "--gpus", "2"])
+        c = Config(["test.py", "--gpus", "2"], project=PROJECT)
         s = FakeSystem()
         stage = m.GPU(c, s)
         assert stage.spec.workers == 12
@@ -92,7 +95,7 @@ class TestSingleRank:
         )
 
     def test_spec_with_requested_workers(self) -> None:
-        c = Config(["test.py", "--gpus", "1", "-j", "2"])
+        c = Config(["test.py", "--gpus", "1", "-j", "2"], project=PROJECT)
         s = FakeSystem()
         stage = m.GPU(c, s)
         assert stage.spec.workers == 2
@@ -111,14 +114,14 @@ class TestSingleRank:
 
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem()
-        c = Config(["test.py", "-j", "0"])
+        c = Config(["test.py", "-j", "0"], project=PROJECT)
         assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.GPU(c, s)
 
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem()
-        c = Config(["test.py", "-j", f"{len(s.gpus) + 100}"])
+        c = Config(["test.py", "-j", f"{len(s.gpus) + 100}"], project=PROJECT)
         requested_workers = c.execution.workers
         assert requested_workers is not None
         assert requested_workers > len(s.gpus)
@@ -127,8 +130,8 @@ class TestSingleRank:
 
     def test_spec_with_verbose(self) -> None:
         args = ["test.py", "--gpus", "2"]
-        c = Config(args)
-        cv = Config(args + ["--verbose"])
+        c = Config(args, project=PROJECT)
+        cv = Config(args + ["--verbose"], project=PROJECT)
         s = FakeSystem()
 
         spec, vspec = m.GPU(c, s).spec, m.GPU(cv, s).spec
@@ -140,7 +143,7 @@ class TestMultiRank:
         "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
-        c = Config([])
+        c = Config([], project=PROJECT)
         s = FakeSystem()
         stage = m.GPU(c, s)
         result = stage.shard_args(Shard([shard]), c)
@@ -170,7 +173,8 @@ class TestMultiRank:
                 "2",
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(gpus=4)
         stage = m.GPU(c, s)
@@ -195,7 +199,8 @@ class TestMultiRank:
                 "2",
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(gpus=4)
         stage = m.GPU(c, s)

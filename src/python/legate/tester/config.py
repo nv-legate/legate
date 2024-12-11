@@ -112,17 +112,14 @@ class Config:
 
     """
 
-    def __init__(self, argv: ArgList, project: Project | None = None) -> None:
+    def __init__(self, argv: ArgList, *, project: Project) -> None:
         self.argv = argv
+        self.project = project
 
         args, self._extra_args = parser.parse_known_args(self.argv[1:])
         args.gtest_skip_list = set(args.gtest_skip_list)
         # only saving this for help with testing
         self._args = args
-
-        if project is None:
-            project = Project()
-        self.project = project
 
         # feature configuration
         self.features = self._compute_features(args)

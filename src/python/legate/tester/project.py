@@ -14,14 +14,8 @@
 """
 from __future__ import annotations
 
-from ..util.types import ArgList, EnvDict
-from . import (
-    CUSTOM_FILES,
-    PER_FILE_ARGS,
-    SKIPPED_EXAMPLES,
-    CustomTest,
-    FeatureType,
-)
+from ..util.types import EnvDict
+from . import CustomTest, FeatureType
 
 
 class Project:
@@ -32,20 +26,7 @@ class Project:
         Client test scripts can override this method to return their own
         customizations.
         """
-        # For now, return the default value from `legate.tester` to preserve
-        # interim compatibility for downstream projects
-        return SKIPPED_EXAMPLES
-
-    def per_file_args(self) -> dict[str, ArgList]:
-        """Extra arguments to add when specific test files are executed
-        (in any stage).
-
-        Client test scripts can override this method to return their own
-        customizations
-        """
-        # For now, return the default value from `legate.tester` to preserve
-        # interim compatibility for downstream projects
-        return PER_FILE_ARGS
+        return set()
 
     def custom_files(self) -> list[CustomTest]:
         """Customized configurations for specific test files.
@@ -58,9 +39,7 @@ class Project:
         Client test scripts can override this method to return their own
         customizations
         """
-        # For now, return the default value from `legate.tester` to preserve
-        # interim compatibility for downstream projects
-        return CUSTOM_FILES
+        return []
 
     def stage_env(self, feature: FeatureType) -> EnvDict:
         """Extra environment variables for the project, based on the

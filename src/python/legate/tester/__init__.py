@@ -32,13 +32,6 @@ class CustomTest:
     kind: FeatureType | list[FeatureType] | None = None
 
 
-# These will eventually go away but it will take a few PRs back and
-# forth to avoid breaking downstream usage
-SKIPPED_EXAMPLES: set[str] = set()
-PER_FILE_ARGS: dict[str, ArgList] = {}
-CUSTOM_FILES: list[CustomTest] = []
-
-
 def _compute_last_failed_filename() -> str:
     base_name = ".legate-test-last-failed"
     if (legate_dir := os.environ.get("LEGATE_DIR", "")) and (

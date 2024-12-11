@@ -18,6 +18,7 @@ import pytest
 
 from legate.tester.config import Config
 from legate.tester.defaults import SMALL_SYSMEM
+from legate.tester.project import Project
 from legate.tester.stages._linux import omp as m
 from legate.tester.stages.util import UNPIN_ENV, Shard
 
@@ -25,9 +26,11 @@ from .. import FakeSystem
 
 unpin_and_test = dict(UNPIN_ENV)
 
+PROJECT = Project()
+
 
 def test_default() -> None:
-    c = Config([])
+    c = Config([], project=PROJECT)
     s = FakeSystem(cpus=12)
     stage = m.OMP(c, s)
     assert stage.kind == "openmp"
@@ -40,7 +43,7 @@ def test_default() -> None:
 
 
 def test_cpu_pin_strict() -> None:
-    c = Config(["test.py", "--cpu-pin", "strict"])
+    c = Config(["test.py", "--cpu-pin", "strict"], project=PROJECT)
     s = FakeSystem(cpus=12)
     stage = m.OMP(c, s)
     assert stage.kind == "openmp"
@@ -53,7 +56,9 @@ def test_cpu_pin_strict() -> None:
 
 
 def test_cpu_pin_strict_zero_computed_workers() -> None:
-    c = Config(["test.py", "--cpu-pin", "strict", "--omps", "16"])
+    c = Config(
+        ["test.py", "--cpu-pin", "strict", "--omps", "16"], project=PROJECT
+    )
     s = FakeSystem(cpus=12)
     with pytest.raises(RuntimeError, match="not enough"):
         m.OMP(c, s)
@@ -63,7 +68,7 @@ def test_cpu_pin_strict_zero_computed_workers() -> None:
     r"ignore:\d+ detected core\(s\) not enough for.*running anyway"
 )
 def test_cpu_pin_nonstrict_zero_computed_workers() -> None:
-    c = Config(["test.py", "--omps", "16"])
+    c = Config(["test.py", "--omps", "16"], project=PROJECT)
     s = FakeSystem(cpus=12)
     stage = m.OMP(c, s)
     assert stage.kind == "openmp"
@@ -76,7 +81,7 @@ def test_cpu_pin_nonstrict_zero_computed_workers() -> None:
 
 
 def test_cpu_pin_none() -> None:
-    c = Config(["test.py", "--cpu-pin", "none"])
+    c = Config(["test.py", "--cpu-pin", "none"], project=PROJECT)
     s = FakeSystem(cpus=12)
     stage = m.OMP(c, s)
     assert stage.kind == "openmp"
@@ -93,7 +98,7 @@ class TestSingleRank:
         "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
-        c = Config([])
+        c = Config([], project=PROJECT)
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
         result = stage.shard_args(Shard([shard]), c)
@@ -115,7 +120,9 @@ class TestSingleRank:
         ]
 
     def test_spec_with_omps_1_threads_1(self) -> None:
-        c = Config(["test.py", "--omps", "1", "--ompthreads", "1"])
+        c = Config(
+            ["test.py", "--omps", "1", "--ompthreads", "1"], project=PROJECT
+        )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
         assert stage.spec.workers == 6
@@ -129,7 +136,9 @@ class TestSingleRank:
         ]
 
     def test_spec_with_omps_1_threads_2(self) -> None:
-        c = Config(["test.py", "--omps", "1", "--ompthreads", "2"])
+        c = Config(
+            ["test.py", "--omps", "1", "--ompthreads", "2"], project=PROJECT
+        )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
         assert stage.spec.workers == 4
@@ -141,7 +150,9 @@ class TestSingleRank:
         ]
 
     def test_spec_with_omps_2_threads_1(self) -> None:
-        c = Config(["test.py", "--omps", "2", "--ompthreads", "1"])
+        c = Config(
+            ["test.py", "--omps", "2", "--ompthreads", "1"], project=PROJECT
+        )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
         assert stage.spec.workers == 4
@@ -153,7 +164,9 @@ class TestSingleRank:
         ]
 
     def test_spec_with_omps_2_threads_2(self) -> None:
-        c = Config(["test.py", "--omps", "2", "--ompthreads", "2"])
+        c = Config(
+            ["test.py", "--omps", "2", "--ompthreads", "2"], project=PROJECT
+        )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
         assert stage.spec.workers == 2
@@ -164,7 +177,8 @@ class TestSingleRank:
 
     def test_spec_with_utility(self) -> None:
         c = Config(
-            ["test.py", "--omps", "2", "--ompthreads", "2", "--utility", "3"]
+            ["test.py", "--omps", "2", "--ompthreads", "2", "--utility", "3"],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
@@ -172,7 +186,10 @@ class TestSingleRank:
         assert stage.spec.shards == [Shard([(0, 1, 2, 3, 4, 5, 6)])]
 
     def test_spec_with_requested_workers(self) -> None:
-        c = Config(["test.py", "--omps", "1", "--ompthreads", "1", "-j", "2"])
+        c = Config(
+            ["test.py", "--omps", "1", "--ompthreads", "1", "-j", "2"],
+            project=PROJECT,
+        )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
         assert stage.spec.workers == 2
@@ -180,14 +197,14 @@ class TestSingleRank:
 
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem(cpus=12)
-        c = Config(["test.py", "-j", "0"])
+        c = Config(["test.py", "-j", "0"], project=PROJECT)
         assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.OMP(c, s)
 
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem(cpus=12)
-        c = Config(["test.py", "-j", f"{len(s.cpus) + 1}"])
+        c = Config(["test.py", "-j", f"{len(s.cpus) + 1}"], project=PROJECT)
         requested_workers = c.execution.workers
         assert requested_workers is not None
         assert requested_workers > len(s.cpus)
@@ -196,8 +213,8 @@ class TestSingleRank:
 
     def test_spec_with_verbose(self) -> None:
         args = ["test.py", "--cpus", "2"]
-        c = Config(args)
-        cv = Config(args + ["--verbose"])
+        c = Config(args, project=PROJECT)
+        cv = Config(args + ["--verbose"], project=PROJECT)
         s = FakeSystem(cpus=12)
 
         spec, vspec = m.OMP(c, s).spec, m.OMP(cv, s).spec
@@ -214,7 +231,7 @@ class TestSingleRank:
             "--cpu-pin",
             "strict",
         ]
-        c = Config(args)
+        c = Config(args, project=PROJECT)
         s = FakeSystem(cpus=4)
 
         with pytest.raises(RuntimeError):
@@ -231,7 +248,7 @@ class TestSingleRank:
             "--cpu-pin",
             "none",
         ]
-        c = Config(args)
+        c = Config(args, project=PROJECT)
         s = FakeSystem(cpus=4)
 
         with pytest.warns():
@@ -248,7 +265,7 @@ class TestMultiRank:
         "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
-        c = Config([])
+        c = Config([], project=PROJECT)
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
         result = stage.shard_args(Shard([shard]), c)
@@ -282,7 +299,8 @@ class TestMultiRank:
                 # any launcher will do
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
@@ -306,7 +324,8 @@ class TestMultiRank:
                 # any launcher will do
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
@@ -329,7 +348,8 @@ class TestMultiRank:
                 # any launcher will do
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
@@ -352,7 +372,8 @@ class TestMultiRank:
                 # any launcher will do
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
@@ -376,7 +397,8 @@ class TestMultiRank:
                 # any launcher will do
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=16)
         stage = m.OMP(c, s)
@@ -400,7 +422,8 @@ class TestMultiRank:
                 # any launcher will do
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
@@ -426,7 +449,7 @@ class TestMultiRank:
             "--launcher",
             "srun",
         ]
-        c = Config(args)
+        c = Config(args, project=PROJECT)
         s = FakeSystem(cpus=4)
 
         with pytest.raises(RuntimeError):
@@ -448,7 +471,7 @@ class TestMultiRank:
             "--launcher",
             "srun",
         ]
-        c = Config(args)
+        c = Config(args, project=PROJECT)
         s = FakeSystem(cpus=4)
 
         with pytest.warns():

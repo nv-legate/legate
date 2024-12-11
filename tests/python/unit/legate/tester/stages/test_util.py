@@ -20,9 +20,12 @@ import pytest
 
 from legate.tester.config import Config
 from legate.tester.logger import LOG
+from legate.tester.project import Project
 from legate.tester.stages import util as m
 from legate.tester.test_system import ProcessResult
 from legate.util.ui import failed, passed, shell, skipped, timeout
+
+PROJECT = Project()
 
 
 def test_StageResult() -> None:
@@ -84,7 +87,7 @@ class Test_adjust_workers:
 class Test_log_proc:
     @pytest.mark.parametrize("returncode", (-23, -1, 0, 1, 17))
     def test_skipped(self, returncode: int) -> None:
-        config = Config([])
+        config = Config([], project=PROJECT)
         proc = ProcessResult(
             "proc", "proc_display", skipped=True, returncode=returncode
         )
@@ -95,7 +98,7 @@ class Test_log_proc:
         assert LOG.lines == (skipped(f"(foo) {proc.test_display}").plain,)
 
     def test_passed(self) -> None:
-        config = Config([])
+        config = Config([], project=PROJECT)
         proc = ProcessResult("proc", "proc_display")
 
         LOG.clear()
@@ -104,7 +107,7 @@ class Test_log_proc:
         assert LOG.lines == (passed(f"(foo) {proc.test_display}").plain,)
 
     def test_passed_verbose(self) -> None:
-        config = Config([])
+        config = Config([], project=PROJECT)
         proc = ProcessResult("proc", "proc_display", output="foo\nbar")
         details = proc.output.split("\n")
 
@@ -119,7 +122,7 @@ class Test_log_proc:
 
     @pytest.mark.parametrize("returncode", (-23, -1, 1, 17))
     def test_failed(self, returncode: int) -> None:
-        config = Config([])
+        config = Config([], project=PROJECT)
         proc = ProcessResult("proc", "proc_display", returncode=returncode)
 
         LOG.clear()
@@ -131,7 +134,7 @@ class Test_log_proc:
 
     @pytest.mark.parametrize("returncode", (-23, -1, 1, 17))
     def test_failed_verbose(self, returncode: int) -> None:
-        config = Config([])
+        config = Config([], project=PROJECT)
         proc = ProcessResult(
             "proc", "proc_display", returncode=returncode, output="foo\nbar"
         )
@@ -149,7 +152,7 @@ class Test_log_proc:
         )
 
     def test_timeout(self) -> None:
-        config = Config([])
+        config = Config([], project=PROJECT)
         proc = ProcessResult("proc", "proc_display", timeout=True)
 
         LOG.clear()
@@ -158,7 +161,7 @@ class Test_log_proc:
         assert LOG.lines == (timeout(f"(foo) {proc.test_display}").plain,)
 
     def test_timeout_verbose(self) -> None:
-        config = Config([])
+        config = Config([], project=PROJECT)
         start = datetime.now()
         end = start + timedelta(seconds=45)
         proc = ProcessResult(
@@ -182,7 +185,7 @@ class Test_log_proc:
         )
 
     def test_dry_run(self) -> None:
-        config = Config(["test.py", "--dry-run"])
+        config = Config(["test.py", "--dry-run"], project=PROJECT)
         proc = ProcessResult("proc", "proc_display")
 
         LOG.clear()
@@ -195,7 +198,7 @@ class Test_log_proc:
         )
 
     def test_debug(self) -> None:
-        config = Config(["test.py", "--debug"])
+        config = Config(["test.py", "--debug"], project=PROJECT)
         proc = ProcessResult("proc", "proc_display")
 
         LOG.clear()
@@ -208,7 +211,7 @@ class Test_log_proc:
         )
 
     def test_time(self) -> None:
-        config = Config(["test.py", "--debug"])
+        config = Config(["test.py", "--debug"], project=PROJECT)
         start = datetime.now()
         end = start + timedelta(seconds=2.41)
 

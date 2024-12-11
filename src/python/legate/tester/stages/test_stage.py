@@ -317,10 +317,9 @@ class TestStage(Protocol):
 
         assert not config.other.gdb
 
-        # make sure we get any updated values from downstream test scripts
-        import legate.tester as lt
-
-        custom_paths_map = {Path(x.file): x for x in lt.CUSTOM_FILES}
+        custom_paths_map = {
+            Path(x.file): x for x in config.project.custom_files()
+        }
 
         specs = self.runner.test_specs(config)
 

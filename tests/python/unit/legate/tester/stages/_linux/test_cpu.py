@@ -17,16 +17,19 @@ from __future__ import annotations
 import pytest
 
 from legate.tester.config import Config
+from legate.tester.project import Project
 from legate.tester.stages._linux import cpu as m
 from legate.tester.stages.util import UNPIN_ENV, Shard
 
 from .. import FakeSystem
 
+PROJECT = Project()
+
 unpin_and_test = dict(UNPIN_ENV)
 
 
 def test_default() -> None:
-    c = Config([])
+    c = Config([], project=PROJECT)
     s = FakeSystem(cpus=12)
     stage = m.CPU(c, s)
     assert stage.kind == "cpus"
@@ -39,7 +42,7 @@ def test_default() -> None:
 
 
 def test_cpu_pin_strict() -> None:
-    c = Config(["test.py", "--cpu-pin", "strict"])
+    c = Config(["test.py", "--cpu-pin", "strict"], project=PROJECT)
     s = FakeSystem(cpus=12)
     stage = m.CPU(c, s)
     assert stage.kind == "cpus"
@@ -52,7 +55,9 @@ def test_cpu_pin_strict() -> None:
 
 
 def test_cpu_pin_strict_zero_computed_workers() -> None:
-    c = Config(["test.py", "--cpu-pin", "strict", "--cpus", "16"])
+    c = Config(
+        ["test.py", "--cpu-pin", "strict", "--cpus", "16"], project=PROJECT
+    )
     s = FakeSystem(cpus=12)
     with pytest.raises(RuntimeError, match="not enough"):
         m.CPU(c, s)
@@ -62,7 +67,7 @@ def test_cpu_pin_strict_zero_computed_workers() -> None:
     r"ignore:\d+ detected core\(s\) not enough for.*running anyway"
 )
 def test_cpu_pin_nonstrict_zero_computed_workers() -> None:
-    c = Config(["test.py", "--cpus", "16"])
+    c = Config(["test.py", "--cpus", "16"], project=PROJECT)
     s = FakeSystem(cpus=12)
     stage = m.CPU(c, s)
     assert stage.kind == "cpus"
@@ -75,7 +80,7 @@ def test_cpu_pin_nonstrict_zero_computed_workers() -> None:
 
 
 def test_cpu_pin_none() -> None:
-    c = Config(["test.py", "--cpu-pin", "none"])
+    c = Config(["test.py", "--cpu-pin", "none"], project=PROJECT)
     s = FakeSystem(cpus=12)
     stage = m.CPU(c, s)
     assert stage.kind == "cpus"
@@ -92,7 +97,7 @@ class TestSingleRank:
         "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
-        c = Config(["test.py", "--sysmem", "2000"])
+        c = Config(["test.py", "--sysmem", "2000"], project=PROJECT)
         s = FakeSystem()
         stage = m.CPU(c, s)
         result = stage.shard_args(Shard([shard]), c)
@@ -108,7 +113,7 @@ class TestSingleRank:
         ]
 
     def test_spec_with_cpus_1(self) -> None:
-        c = Config(["test.py", "--cpus", "1"])
+        c = Config(["test.py", "--cpus", "1"], project=PROJECT)
         s = FakeSystem()
         stage = m.CPU(c, s)
         assert stage.spec.workers == 3
@@ -119,7 +124,7 @@ class TestSingleRank:
         ]
 
     def test_spec_with_cpus_2(self) -> None:
-        c = Config(["test.py", "--cpus", "2"])
+        c = Config(["test.py", "--cpus", "2"], project=PROJECT)
         s = FakeSystem()
         stage = m.CPU(c, s)
         assert stage.spec.workers == 2
@@ -129,7 +134,9 @@ class TestSingleRank:
         ]
 
     def test_spec_with_utility(self) -> None:
-        c = Config(["test.py", "--cpus", "1", "--utility", "2"])
+        c = Config(
+            ["test.py", "--cpus", "1", "--utility", "2"], project=PROJECT
+        )
         s = FakeSystem()
         stage = m.CPU(c, s)
         assert stage.spec.workers == 2
@@ -141,7 +148,7 @@ class TestSingleRank:
     def test_spec_with_requested_workers(
         self,
     ) -> None:
-        c = Config(["test.py", "--cpus", "1", "-j", "2"])
+        c = Config(["test.py", "--cpus", "1", "-j", "2"], project=PROJECT)
         s = FakeSystem()
         stage = m.CPU(c, s)
         assert stage.spec.workers == 2
@@ -152,14 +159,14 @@ class TestSingleRank:
 
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem()
-        c = Config(["test.py", "-j", "0"])
+        c = Config(["test.py", "-j", "0"], project=PROJECT)
         assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
             m.CPU(c, s)
 
     def test_spec_with_requested_workers_bad(self) -> None:
         s = FakeSystem()
-        c = Config(["test.py", "-j", f"{len(s.cpus) + 1}"])
+        c = Config(["test.py", "-j", f"{len(s.cpus) + 1}"], project=PROJECT)
         requested_workers = c.execution.workers
         assert requested_workers is not None
         assert requested_workers > len(s.cpus)
@@ -168,8 +175,8 @@ class TestSingleRank:
 
     def test_spec_with_verbose(self) -> None:
         args = ["test.py", "--cpus", "2"]
-        c = Config(args)
-        cv = Config(args + ["--verbose"])
+        c = Config(args, project=PROJECT)
+        cv = Config(args + ["--verbose"], project=PROJECT)
         s = FakeSystem()
 
         spec, vspec = m.CPU(c, s).spec, m.CPU(cv, s).spec
@@ -178,7 +185,7 @@ class TestSingleRank:
     @pytest.mark.parametrize("cpus", (4, 5, 10, 20))
     def test_oversubscription_with_pin(self, cpus: int) -> None:
         args = ["test.py", "--cpus", str(cpus), "--cpu-pin", "strict"]
-        c = Config(args)
+        c = Config(args, project=PROJECT)
         s = FakeSystem(cpus=4)
 
         with pytest.raises(RuntimeError):
@@ -187,7 +194,7 @@ class TestSingleRank:
     @pytest.mark.parametrize("cpus", (4, 5, 10, 20))
     def test_oversubscription_no_pin(self, cpus: int) -> None:
         args = ["test.py", "--cpus", str(cpus), "--cpu-pin", "none"]
-        c = Config(args)
+        c = Config(args, project=PROJECT)
         s = FakeSystem(cpus=4)
 
         with pytest.warns():
@@ -213,7 +220,8 @@ class TestMultiRank:
                 # any launcher will do
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
@@ -243,7 +251,8 @@ class TestMultiRank:
                 "2",
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
@@ -264,7 +273,8 @@ class TestMultiRank:
                 "2",
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
@@ -287,7 +297,8 @@ class TestMultiRank:
                 # any launcher will do
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
@@ -309,7 +320,8 @@ class TestMultiRank:
                 "2",
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
@@ -329,7 +341,8 @@ class TestMultiRank:
                 "2",
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         assert c.execution.workers == 0
         with pytest.raises(RuntimeError):
@@ -346,7 +359,8 @@ class TestMultiRank:
                 "2",
                 "--launcher",
                 "srun",
-            ]
+            ],
+            project=PROJECT,
         )
         requested_workers = c.execution.workers
         assert requested_workers is not None
@@ -368,7 +382,7 @@ class TestMultiRank:
             "--launcher",
             "srun",
         ]
-        c = Config(args)
+        c = Config(args, project=PROJECT)
         s = FakeSystem(cpus=4)
 
         with pytest.raises(RuntimeError):
@@ -388,7 +402,7 @@ class TestMultiRank:
             "--launcher",
             "srun",
         ]
-        c = Config(args)
+        c = Config(args, project=PROJECT)
         s = FakeSystem(cpus=4)
 
         with pytest.warns():

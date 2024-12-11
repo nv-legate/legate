@@ -26,6 +26,7 @@ except ModuleNotFoundError:
 
 from legate.tester.args import parser
 from legate.tester.config import Config
+from legate.tester.project import Project
 from legate.tester.test_plan import TestPlan
 from legate.tester.test_system import TestSystem
 
@@ -82,6 +83,10 @@ def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
     return None, None
 
 
+class LegateProject(Project):
+    pass
+
+
 def main() -> int:
     GTEST_TESTS_DIR, GTEST_TESTS_BIN = _find_latest_cpp_test_dir()
 
@@ -92,7 +97,7 @@ def main() -> int:
         ),
     )
 
-    config = Config(sys.argv)
+    config = Config(sys.argv, project=LegateProject())
     system = TestSystem(dry_run=config.dry_run)
     plan = TestPlan(config, system)
 

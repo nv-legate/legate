@@ -18,14 +18,17 @@ import pytest
 
 from legate.tester.config import Config
 from legate.tester.defaults import SMALL_SYSMEM
+from legate.tester.project import Project
 from legate.tester.stages._linux import eager as m
 from legate.tester.stages.util import Shard
 
 from .. import FakeSystem
 
+PROJECT = Project()
+
 
 def test_default() -> None:
-    c = Config([])
+    c = Config([], project=PROJECT)
     s = FakeSystem()
     stage = m.Eager(c, s)
     assert stage.kind == "eager"
@@ -36,7 +39,7 @@ def test_default() -> None:
 
 @pytest.mark.parametrize("shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]])
 def test_single_rank_shard_args(shard: tuple[int, ...], expected: str) -> None:
-    c = Config([])
+    c = Config([], project=PROJECT)
     s = FakeSystem()
     stage = m.Eager(c, s)
     result = stage.shard_args(Shard([shard]), c)
@@ -53,7 +56,7 @@ def test_single_rank_shard_args(shard: tuple[int, ...], expected: str) -> None:
 
 
 def test_single_rank_spec() -> None:
-    c = Config([])
+    c = Config([], project=PROJECT)
     s = FakeSystem()
     stage = m.Eager(c, s)
     assert stage.spec.workers == len(s.cpus)
@@ -64,7 +67,7 @@ def test_single_rank_spec() -> None:
 
 def test_single_rank_spec_with_requested_workers_zero() -> None:
     s = FakeSystem()
-    c = Config(["test.py", "-j", "0"])
+    c = Config(["test.py", "-j", "0"], project=PROJECT)
     assert c.execution.workers == 0
     with pytest.raises(RuntimeError):
         m.Eager(c, s)
@@ -72,7 +75,7 @@ def test_single_rank_spec_with_requested_workers_zero() -> None:
 
 def test_single_rank_spec_with_requested_workers_bad() -> None:
     s = FakeSystem()
-    c = Config(["test.py", "-j", f"{len(s.cpus) + 1}"])
+    c = Config(["test.py", "-j", f"{len(s.cpus) + 1}"], project=PROJECT)
     requested_workers = c.execution.workers
     assert requested_workers is not None
     assert requested_workers > len(s.cpus)
@@ -81,8 +84,8 @@ def test_single_rank_spec_with_requested_workers_bad() -> None:
 
 
 def test_single_rank_spec_with_verbose() -> None:
-    c = Config(["test.py"])
-    cv = Config(["test.py", "--verbose"])
+    c = Config(["test.py"], project=PROJECT)
+    cv = Config(["test.py", "--verbose"], project=PROJECT)
     s = FakeSystem()
 
     spec, vspec = m.Eager(c, s).spec, m.Eager(cv, s).spec
