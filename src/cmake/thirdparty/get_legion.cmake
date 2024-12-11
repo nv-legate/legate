@@ -45,7 +45,22 @@ function(legate_maybe_override_legion user_repository user_branch)
       file(WRITE "${legion_overrides_json}" "${new_legion_json}")
     endif()
   endif()
+  # https://docs.rapids.ai/api/rapids-cmake/stable/command/rapids_cpm_package_override/
+  #
+  # > Added in version v23.10.00: When the variable CPM_<package_name>_SOURCE exists, any
+  # > override entries for package_name will be ignored.
+  #
+  # Work around this by unsetting this variable temporarily
+  if(CPM_Legion_SOURCE)
+    set(legion_src_cache_bkp "$CACHE{CPM_Legion_SOURCE}")
+    unset(CPM_Legion_SOURCE)
+    unset(CPM_Legion_SOURCE CACHE)
+  endif()
   rapids_cpm_package_override("${legion_overrides_json}")
+  if(legion_src_cache_bkp)
+    # Don't need to reset the regular variable since we are in a function
+    set(CPM_Legion_SOURCE "${legion_src_cache_bkp}" CACHE PATH "" FORCE)
+  endif()
 endfunction()
 
 function(find_or_configure_legion_impl version git_repo git_branch shallow
