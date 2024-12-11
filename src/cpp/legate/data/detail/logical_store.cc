@@ -631,8 +631,12 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
   auto [start, stop] = sanitize_slice(slice, static_cast<std::int64_t>(exts[dim]));
 
   if (start < stop && (start >= exts[dim] || stop > exts[dim])) {
-    throw TracedException<std::invalid_argument>{fmt::format(
-      "Out-of-bounds slicing on dimension {} for a store of shape {}", this->dim(), extents())};
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Out-of-bounds slicing [{}, {}] on dimension {} for a store of shape {}",
+                  start,
+                  stop,
+                  dim,
+                  extents())};
   }
 
   exts[dim] = (start < stop) ? (stop - start) : 0;

@@ -190,7 +190,6 @@ set(with_runtime_SRC
     unit/debug.cc
     unit/dispatch.cc
     unit/library.cc
-    unit/logical_array.cc
     unit/machine.cc
     unit/mapping.cc
     unit/physical_store.cc
@@ -200,6 +199,13 @@ set(with_runtime_SRC
     unit/scope.cc
     unit/scoped_allocator.cc
     unit/timing.cc
+    unit/logical_array/create_array.cc
+    unit/logical_array/delinearize.cc
+    unit/logical_array/project.cc
+    unit/logical_array/promote.cc
+    unit/logical_array/slice.cc
+    unit/logical_array/transpose.cc
+    unit/logical_array/utils.cc
     unit/logical_store/create_store.cc
     unit/logical_store/delinearize.cc
     unit/logical_store/equal_storage.cc
