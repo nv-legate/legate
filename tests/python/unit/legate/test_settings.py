@@ -20,6 +20,7 @@ from legate.util.fs import read_c_define
 from legate.util.settings import EnvOnlySetting, PrioritizedSetting, _Unset
 
 _expected_settings = (
+    "limit_stdout",
     "consensus",
     "cycle_check",
     "future_leak_check",

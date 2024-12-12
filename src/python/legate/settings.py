@@ -40,6 +40,19 @@ class LegateRuntimeSettings(Settings):
         """,
     )
 
+    limit_stdout: EnvOnlySetting[bool] = EnvOnlySetting(
+        "limit_stdout",
+        "LEGATE_LIMIT_STDOUT",
+        default=False,
+        test_default=False,
+        convert=convert_bool,
+        help="""
+        Whether to limit stdout output to only the first rank.
+
+        This is a read-only environment variable setting used by the runtime.
+        """,
+    )
+
     cycle_check: PrioritizedSetting[bool] = PrioritizedSetting(
         "cycle_check",
         "LEGATE_CYCLE_CHECK",

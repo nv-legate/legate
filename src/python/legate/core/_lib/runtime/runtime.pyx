@@ -24,9 +24,9 @@ import gc
 import inspect
 import json
 import pickle
+import sys
 from collections.abc import Collection
 from typing import Any
-
 
 from ..data.external_allocation cimport _ExternalAllocation, create_from_buffer
 from ..data.logical_array cimport (
@@ -51,7 +51,41 @@ from ..utilities.utils cimport (
 )
 from .library cimport Library, _Library
 
+from ....settings import settings
 from ...utils import AnyCallable, ShutdownCallback
+
+
+class _LegateOutputStream:
+    def __init__(self, stream: Any, node_id: int) -> None:
+        self._stream = stream
+        self._node_id = node_id
+
+    def close(self) -> None:
+        self._stream.close()
+
+    def fileno(self) -> int:
+        return self._stream.fileno()
+
+    def flush(self) -> None:
+        self._stream.flush()
+
+    def write(self, string: str) -> None:
+        if self._should_write:
+            self._stream.write(string)
+
+    def writelines(self, sequence: Iterable[str]) -> None:
+        if self._should_write:
+            self._stream.writelines(sequence)
+
+    def isatty(self) -> bool:
+        return self._stream.isatty()
+
+    def set_parent(self, parent: Any) -> None:
+        self._stream.set_parent(parent)
+
+    @property
+    def _should_write(self) -> bool:
+        return self._node_id == 0
 
 
 cdef class ShutdownCallbackManager:
@@ -1051,7 +1085,10 @@ cdef class Runtime(Unconstructable):
 
 cdef Runtime initialize():
     start()
-    return Runtime.from_handle(_Runtime.get_runtime())
+    runtime = Runtime.from_handle(_Runtime.get_runtime())
+    if settings.limit_stdout():
+        sys.stdout = _LegateOutputStream(sys.stdout, runtime.node_id)
+    return runtime
 
 
 cdef Runtime _runtime = None

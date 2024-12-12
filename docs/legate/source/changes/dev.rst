@@ -54,6 +54,9 @@ Python
 
 .. rubric:: General
 
+- Add environment variable ``LEGATE_LIMIT_STDOUT``. If enabled, restricts `stdout` output
+  to only the first rank (default is output for all ranks).
+
 .. rubric:: Data
 
 .. rubric:: Mapping
