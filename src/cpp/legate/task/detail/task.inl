@@ -24,6 +24,7 @@
 
 #include <exception>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -35,6 +36,15 @@ template <typename F>
                                                          VariantImpl variant_impl,
                                                          F&& get_task_name)
 {
+  constexpr auto EXN_EXPLANATION = std::string_view{
+    "If this exception is expected to be thrown (and handled), then you must explicitly "
+    "inform the runtime that this task may raise an exception via the AutoTask/ManualTask "
+    "throws_exception() member function on task construction. Furthermore, you must wrap the "
+    "exception in an instance of legate::TaskException. Note that throwing exceptions from tasks "
+    "is discouraged as it has severe performance implications. For example, the runtime is "
+    "required to block the caller on the completion of the task. It should only be used as a "
+    "last resort."};
+
   const auto handle_raised_exception = [&](ReturnedException exn,
                                            std::string_view exn_text) -> ReturnedException {
     if (ctx.can_raise_exception()) {
@@ -45,21 +55,21 @@ template <typename F>
     // this is a bug in the library that needs to be reported to the developer
     LEGATE_ABORT("Task \"",
                  get_task_name(),
-                 "\" threw an exception \"",
+                 "\" threw an exception\n\"",
                  exn_text,
-                 "\", but the task did not declare any exception.");
+                 "\"\n, but the task did not declare any exception. ",
+                 EXN_EXPLANATION);
   };
   const auto report_unsupported_exception_type = [&](std::string_view exn_type,
                                                      std::string_view exn_message) {
     LEGATE_ABORT("Task \"",
                  get_task_name(),
-                 "\" threw an unsupported exception type (",
+                 "\" threw an unexpected exception (",
                  exn_type,
                  "): \"",
                  exn_message,
-                 "\". Legate tasks may only "
-                 "throw instances "  // legate-lint: no-trace
-                 "of legate::TaskException.");
+                 "\". ",
+                 EXN_EXPLANATION);
   };
 
   try {
@@ -68,9 +78,10 @@ template <typename F>
     }
 
     if (auto&& excn = ctx.impl()->get_exception(); excn.has_value()) {
-      // TODO(jfaibussowit): need to extract the actual error message here
       LEGATE_ASSERT(excn->kind() == ExceptionKind::PYTHON);
-      return handle_raised_exception(*std::move(excn), "Unknown Python Exception");
+      auto msg = std::get<ReturnedPythonException>(excn->variant()).message();
+
+      return handle_raised_exception(*std::move(excn), msg);
     }
   } catch (const legate::TaskException& e) {
     return handle_raised_exception(ReturnedCppException{e.index(), e.what()}, e.what());

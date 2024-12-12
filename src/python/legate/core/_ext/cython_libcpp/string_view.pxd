@@ -256,25 +256,23 @@ cdef extern from "<string_view>" namespace "std" nogil:
         bint operator>= (const string_view&)
         bint operator>= (const char*)
 
-cdef inline string_view string_view_from_py(object obj):
+
+ctypedef fused string_like:
+    str
+    bytes
+
+cdef inline string_view string_view_from_py(string_like obj):
     cdef const char* data = NULL
     cdef Py_ssize_t ssize = 0
 
-    if PyUnicode_Check(obj):
+    if string_like is str:
         data = PyUnicode_AsUTF8AndSize(obj, &ssize)
         if not data:
             raise RuntimeError("error unpacking string as utf-8")
-        return string_view(data, <size_t>ssize)
-
-    cdef size_t bsize = 0
-    if PyBytes_Check(obj):
-        bsize = PyBytes_GET_SIZE(obj)
+    else:
         data = PyBytes_AS_STRING(obj)
-        return string_view(data, bsize)
-
-    raise RuntimeError(
-        "string_view_from_py: expected bytes or unicode object"
-    )
+        ssize = PyBytes_GET_SIZE(obj)
+    return string_view(data, <size_t>ssize)
 
 cdef inline str str_from_string_view(string_view sv):
     return PyUnicode_FromStringAndSize(sv.data(), sv.size())

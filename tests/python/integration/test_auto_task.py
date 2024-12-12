@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import os
 import re
-from typing import Any, Type
+from typing import Any
 
 import numpy as np
 import pytest
@@ -77,7 +77,7 @@ class TestAutoTask:
         assert found.groups()[0] == __file__
 
     @pytest.mark.parametrize("exc", [ValueError, AssertionError, RuntimeError])
-    def test_pytask_exception_handling(self, exc: Type[Exception]) -> None:
+    def test_pytask_exception_handling(self, exc: type[Exception]) -> None:
         runtime = get_legate_runtime()
         library = runtime.core_library
 

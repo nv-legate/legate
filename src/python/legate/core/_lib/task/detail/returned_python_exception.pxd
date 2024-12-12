@@ -9,9 +9,12 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+from libcpp.string cimport string as std_string
+
+
 cdef extern from "legate/task/detail/returned_python_exception.h" \
       namespace "legate::detail" nogil:
     cdef cppclass _ReturnedPythonException \
           "legate::detail::ReturnedPythonException":
         _ReturnedPythonException()
-        _ReturnedPythonException(const void *, size_t)
+        _ReturnedPythonException(const void *, size_t, std_string)

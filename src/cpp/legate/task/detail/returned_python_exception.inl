@@ -14,55 +14,40 @@
 
 #include "legate/task/detail/returned_python_exception.h"
 
+#include <utility>
+
 namespace legate::detail {
 
-inline ReturnedPythonException::ReturnedPythonException(const void* buf, std::size_t len)
-  : ReturnedPythonException{Span<const void>{buf, len}}
+inline ReturnedPythonException::ReturnedPythonException(const void* pkl_buf,
+                                                        std::size_t pkl_len,
+                                                        std::string msg)
+  : ReturnedPythonException{Span<const void>{pkl_buf, pkl_len}, std::move(msg)}
 {
 }
 
-inline ReturnedPythonException::ReturnedPythonException(Span<const void> span)
-  : ReturnedPythonException{span, InternalSharedPtr<char[]>{new char[span.size()]}}
+constexpr ExceptionKind ReturnedPythonException::kind() { return ExceptionKind::PYTHON; }
+
+inline std::pair<std::size_t, const char*> ReturnedPythonException::pickle() const
 {
+  return bytes_ ? std::make_pair(bytes_->pkl_size, bytes_->pkl_bytes.get())
+                : std::make_pair(0, nullptr);
 }
 
-inline ReturnedPythonException::ReturnedPythonException(Span<const void> span,
-                                                        InternalSharedPtr<char[]> mem)
-  : size_{span.size()}, pickle_bytes_{std::move(mem)}
+inline std::string_view ReturnedPythonException::message() const
 {
-  if (size()) {
-    std::memcpy(pickle_bytes_.get(), span.ptr(), size());
-  }
+  return bytes_ ? bytes_->msg : std::string_view{""};
 }
 
-inline ReturnedPythonException::ReturnedPythonException(ReturnedPythonException&& other) noexcept
-  : size_{std::exchange(other.size_, 0)}, pickle_bytes_{std::move(other.pickle_bytes_)}
-{
-}
-
-inline ReturnedPythonException& ReturnedPythonException::operator=(
-  ReturnedPythonException&& other) noexcept
-{
-  if (this != &other) {
-    size_         = std::exchange(other.size_, 0);
-    pickle_bytes_ = std::move(other.pickle_bytes_);
-  }
-  return *this;
-}
-
-// NOLINTNEXTLINE(readability-redundant-inline-specifier)
-inline constexpr ExceptionKind ReturnedPythonException::kind() { return ExceptionKind::PYTHON; }
-
-inline const void* ReturnedPythonException::data() const { return pickle_bytes_.get(); }
-
-inline std::uint64_t ReturnedPythonException::size() const { return size_; }
-
-inline bool ReturnedPythonException::raised() const { return data(); }
+inline bool ReturnedPythonException::raised() const { return pickle().first; }
 
 inline std::size_t ReturnedPythonException::legion_buffer_size() const
 {
+  const auto pkl_size  = pickle().first;
+  const auto mess_size = message().size();
+
   return max_aligned_size_for_type<decltype(kind())>() +
-         max_aligned_size_for_type<decltype(size())>() + size();
+         max_aligned_size_for_type<decltype(pkl_size)>() + pkl_size +
+         max_aligned_size_for_type<decltype(mess_size)>() + mess_size;
 }
 
 }  // namespace legate::detail

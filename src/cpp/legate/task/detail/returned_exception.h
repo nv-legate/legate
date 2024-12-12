@@ -34,7 +34,10 @@ class ReturnedException {
   ReturnedException& operator=(ReturnedException&&) noexcept = default;
 
   template <typename T,
-            typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, ReturnedException>>>
+            typename = std::enable_if_t<!std::is_same_v<
+              // Clearly we are using the _t variant, but clang-tidy is off its rocker
+              std::decay_t<T>,  // NOLINT(modernize-type-traits)
+              ReturnedException>>>
   // We want to mimic variant
   // NOLINTNEXTLINE(google-explicit-constructor)
   ReturnedException(T&& t) noexcept(std::is_nothrow_constructible_v<variant_type, T>);
@@ -60,6 +63,8 @@ class ReturnedException {
   [[nodiscard]] ReturnValue pack() const;
   [[nodiscard]] std::string to_string() const;
   [[nodiscard]] ExceptionKind kind() const;
+
+  [[nodiscard]] const variant_type& variant() const;
 
   [[noreturn]] void throw_exception();
 

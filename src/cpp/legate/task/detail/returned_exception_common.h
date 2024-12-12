@@ -30,7 +30,7 @@ template <typename T>
                                                         std::size_t remaining_cap,
                                                         T&& value)
 {
-  const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
+  const auto [ptr, align_offset] = align_for_unpack<T>(buf, remaining_cap);
 
   *static_cast<std::decay_t<T>*>(ptr) = std::forward<T>(value);
   return {static_cast<char*>(ptr) + sizeof(T), remaining_cap - sizeof(T) - align_offset};
@@ -48,7 +48,7 @@ template <typename T>
     return {buf, remaining_cap};
   }
 
-  const auto [ptr, align_offset] = detail::align_for_unpack<T>(buf, remaining_cap);
+  const auto [ptr, align_offset] = align_for_unpack<T>(buf, remaining_cap);
 
   LEGATE_ASSERT(value);
   std::memcpy(ptr, value, copy_bytes);
@@ -60,8 +60,7 @@ template <typename T>
                                                                 std::size_t remaining_cap,
                                                                 T* value)
 {
-  const auto [ptr, align_offset] =
-    legate::detail::align_for_unpack<T>(const_cast<void*>(buf), remaining_cap);
+  const auto [ptr, align_offset] = align_for_unpack<T>(const_cast<void*>(buf), remaining_cap);
 
   *value = *static_cast<std::decay_t<T>*>(ptr);
   return {static_cast<char*>(ptr) + sizeof(T), remaining_cap - sizeof(T) - align_offset};
@@ -79,13 +78,11 @@ template <typename T>
     return {buf, remaining_cap};
   }
 
-  const auto val_ptr = *value;
-  const auto [ptr, align_offset] =
-    legate::detail::align_for_unpack<T>(const_cast<void*>(buf), remaining_cap);
+  const auto [ptr, align_offset] = align_for_unpack<T>(const_cast<void*>(buf), remaining_cap);
 
-  LEGATE_ASSERT(val_ptr);
-  std::memcpy(val_ptr, ptr, copy_bytes);
-  return {static_cast<char*>(val_ptr) + copy_bytes, remaining_cap - copy_bytes - align_offset};
+  LEGATE_ASSERT(*value);
+  std::memcpy(*value, ptr, copy_bytes);
+  return {static_cast<char*>(ptr) + copy_bytes, remaining_cap - copy_bytes - align_offset};
 }
 
 template <typename T>

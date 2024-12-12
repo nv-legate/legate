@@ -18,6 +18,7 @@ from ..utilities.unconstructable cimport Unconstructable
 from .detail.returned_python_exception cimport _ReturnedPythonException
 
 import pickle
+import traceback
 
 
 cdef class TaskContext(Unconstructable):
@@ -127,12 +128,11 @@ cdef class TaskContext(Unconstructable):
         cdef Py_ssize_t length = 0
         cdef char *buf = NULL
         cdef bytes exn_bytes = pickle.dumps(excn)
+        cdef str exn_text = "".join(traceback.format_exception(excn))
 
         PyBytes_AsStringAndSize(exn_bytes, &buf, &length)
         self._handle.impl().set_exception(
-            _ReturnedPythonException(
-                buf, length
-            )
+            _ReturnedPythonException(buf, length, exn_text.encode())
         )
 
     cpdef bool can_raise_exception(self):

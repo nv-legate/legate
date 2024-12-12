@@ -22,9 +22,6 @@ from ..utilities.unconstructable cimport Unconstructable
 from .task_context cimport TaskContext, _TaskContext
 from .variant_helper cimport task_wrapper_dyn_name
 
-import sys
-import traceback
-
 
 cdef extern from *:
     # The vilest of hacks, known as the "cname-hack". Cython does not support
@@ -85,37 +82,26 @@ cdef extern void _py_variant "_py_variant"(_TaskContext ctx) with gil:
     except Exception as excn:
         # Cython does not know how to throw C++ exceptions, so we have to tell
         # the context to throw them later
-        if py_ctx.can_raise_exception():
+        try:
+            py_ctx.set_exception(excn)
+        except Exception as excn2:
             try:
-                py_ctx.set_exception(excn)
-            except Exception as excn2:
-                try:
-                    abort_message = str(excn2).encode()
-                except:  # noqa E722
-                    # couldn't even encode, something is truly wrong
-                    pass
+                abort_message = str(excn2).encode()
+            except:  # noqa E722
+                # couldn't even encode, something is truly wrong
+                pass
 
-                # We failed to set the exception for some reason. There is not
-                # much that can really go wrong with that, so if that happened
-                # we are well and truly hosed. Try one last ditch effort to
-                # inform the user, and then abort
-                std_fprintf(
-                    stderr,
-                    "Unhandled Python exception: '%s', aborting!\n",
-                    abort_message.c_str()
-                )
-                std_fflush(NULL)
-                std_abort()
-        else:
-            print(traceback.format_exc(), file=sys.stderr, flush=True)
-            print(
-                f"Task {py_callback} threw an exception but the task did not "
-                "declare any exceptions",
-                file=sys.stderr,
-                flush=True
+            # We failed to set the exception for some reason. There is not
+            # much that can really go wrong with that, so if that happened
+            # we are well and truly hosed. Try one last ditch effort to
+            # inform the user, and then abort
+            std_fprintf(
+                stderr,
+                "Unhandled Python exception: '%s', aborting!\n",
+                abort_message.c_str()
             )
+            std_fflush(NULL)
             std_abort()
-    return
 
 # Need an initializer function since I could not figure out how to initialize a
 # std::unordered_map from a = {a : b, c : d} expression...

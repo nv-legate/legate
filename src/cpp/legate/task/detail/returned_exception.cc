@@ -167,7 +167,7 @@ void returned_exception_fold(const Legion::ReductionOp* /*reduction_op*/,
   auto lhs = ReturnedException::construct_from_buffer(lhs_ptr);
   auto rhs = ReturnedException::construct_from_buffer(rhs_ptr);
 
-  JoinReturnedException::fold<true>(lhs, rhs);
+  JoinReturnedException::fold<true>(lhs, std::move(rhs));
   pack_returned_exception(lhs, &lhs_ptr, &lhs_size);
 }
 

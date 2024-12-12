@@ -14,24 +14,58 @@
 
 #include "legate/task/detail/exception.h"
 #include "legate/task/detail/returned_exception_common.h"
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iomanip>
+#include <fmt/format.h>
 #include <limits>
-#include <sstream>
+#include <memory>
+#include <stdexcept>
 #include <utility>
 
 namespace legate::detail {
+
+ReturnedPythonException::Payload::Payload(std::size_t size,
+                                          std::unique_ptr<char[]> bytes,
+                                          std::string m) noexcept
+  : pkl_size{size}, pkl_bytes{std::move(bytes)}, msg{std::move(m)}
+{
+}
+
+namespace {
+
+[[nodiscard]] std::unique_ptr<char[]> copy_bytes(Span<const void> span)
+{
+  auto ret = std::unique_ptr<char[]>{new char[span.size()]};
+
+  std::memcpy(ret.get(), span.ptr(), span.size());
+  return ret;
+}
+
+}  // namespace
+
+ReturnedPythonException::ReturnedPythonException(Span<const void> pkl_span, std::string msg)
+  : bytes_{make_internal_shared<Payload>(pkl_span.size(), copy_bytes(pkl_span), std::move(msg))}
+{
+}
 
 void ReturnedPythonException::legion_serialize(void* buffer) const
 {
   auto rem_cap = legion_buffer_size();
 
   std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, kind());
-  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, size());
-  static_cast<void>(pack_buffer(buffer, rem_cap, size(), static_cast<const char*>(data())));
+
+  const auto [pkl_size, pkl_ptr] = pickle();
+
+  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, pkl_size);
+  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, pkl_size, pkl_ptr);
+
+  const auto mess = message();
+
+  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, mess.size());
+  std::ignore               = pack_buffer(buffer, rem_cap, mess.size(), mess.data());
 }
 
 void ReturnedPythonException::legion_deserialize(const void* buffer)
@@ -43,16 +77,24 @@ void ReturnedPythonException::legion_deserialize(const void* buffer)
 
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &kind);
   LEGATE_ASSERT(kind == ExceptionKind::PYTHON);
-  std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &size_);
-  if (const auto buf_size = size()) {
-    // NOLINTNEXTLINE(readability-magic-numbers)
-    static_assert(LEGATE_CPP_MIN_VERSION < 20, "Use make_unique_for_overwrite below");
-    auto mem       = std::unique_ptr<char[]>{new char[buf_size]};
-    const auto ptr = mem.get();
 
-    static_cast<void>(unpack_buffer(buffer, buf_size, buf_size, &ptr));
-    pickle_bytes_.reset(mem.release());
-  }
+  // This temporary is used in order to preserve strong exception guarantee
+  auto tmp_bytes = make_internal_shared<Payload>();
+
+  std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &tmp_bytes->pkl_size);
+  // NOLINTNEXTLINE(readability-magic-numbers)
+  static_assert(LEGATE_CPP_MIN_VERSION < 20, "Use make_unique_for_overwrite below");
+  tmp_bytes->pkl_bytes.reset(new char[tmp_bytes->pkl_size]);
+
+  auto* const ptr = tmp_bytes->pkl_bytes.get();
+
+  std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, tmp_bytes->pkl_size, &ptr);
+
+  std::decay_t<decltype(tmp_bytes->msg)>::size_type mess_size{};
+
+  std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &mess_size);
+  tmp_bytes->msg.assign(static_cast<const char*>(buffer), mess_size);
+  bytes_ = std::move(tmp_bytes);
 }
 
 ReturnValue ReturnedPythonException::pack() const
@@ -69,25 +111,31 @@ ReturnValue ReturnedPythonException::pack() const
 
 std::string ReturnedPythonException::to_string() const
 {
-  std::stringstream ss;
+  const auto [pkl_size, pkl_bytes] = pickle();
+  std::string ret;
 
-  ss << "ReturnedPythonException(size = " << size() << ", bytes = ";
-  for (std::uint64_t i = 0; i < size(); ++i) {
-    ss << "\\x" << std::setw(2) << std::setfill('0') << std::hex
-       << static_cast<std::int32_t>(pickle_bytes_.get()[i]);
+  fmt::format_to(std::back_inserter(ret), "ReturnedPythonException(size = {}, bytes = ", pkl_size);
+  for (std::size_t i = 0; i < pkl_size; ++i) {
+    fmt::format_to(std::back_inserter(ret), "\\x{:0x}", static_cast<std::int32_t>(pkl_bytes[i]));
   }
-  ss << ')';
-  return std::move(ss).str();
+  fmt::format_to(std::back_inserter(ret), ", message = {})", message());
+  return ret;
 }
 
 void ReturnedPythonException::throw_exception()
 {
+  if (!raised()) {
+    throw TracedException<std::logic_error>{
+      "Cannot throw TracedException<exception>, as this python exception object is empty"};
+  }
+
+  const auto pkl_size = bytes_->pkl_size;
+  auto ptr            = SharedPtr<const char[]>{std::move(bytes_->pkl_bytes)};
+
+  // Point of no return, at this point ptr owns the pickle bytes...
+  bytes_.reset();
   // Should not wrap this exception in a trace, it may already contain a traced exception.
-  // clang-format off
-  throw PythonTaskException{ // legate-lint: no-trace
-    // clang-format on
-    std::exchange(size_, 0),
-    const_pointer_cast<const char[]>(std::move(pickle_bytes_)).as_user_ptr()};
+  throw PythonTaskException{pkl_size, std::move(ptr)};  // legate-lint: no-trace
 }
 
 }  // namespace legate::detail

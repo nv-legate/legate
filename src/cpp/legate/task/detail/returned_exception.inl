@@ -39,9 +39,12 @@ decltype(auto) ReturnedException::visit(T&& fn)
 template <typename T>
 decltype(auto) ReturnedException::visit(T&& fn) const
 {
-  return std::visit(std::forward<T>(fn), variant_);
+  return std::visit(std::forward<T>(fn), variant());
 }
 
-// ==========================================================================================
+inline const ReturnedException::variant_type& ReturnedException::variant() const
+{
+  return variant_;
+}
 
 }  // namespace legate::detail
