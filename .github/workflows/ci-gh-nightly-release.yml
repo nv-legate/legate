@@ -47,6 +47,8 @@ jobs:
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
       nightly: true
+      refname: ${{ github.ref_name }}
+      default-branch: ${{ github.event.repository.default_branch }}
     secrets: inherit
 
   build-legate-profiler:

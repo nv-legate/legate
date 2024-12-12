@@ -25,4 +25,6 @@ jobs:
       upload-enabled: false
       nightly: false
       network: ucx
+      refname: ${{ github.ref_name }}
+      default-branch: ${{ github.event.repository.default_branch }}
     secrets: inherit

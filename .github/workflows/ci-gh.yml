@@ -39,6 +39,8 @@ jobs:
       python-version: "3.10"
       target-device: ${{ matrix.target-device }}
       upload-enabled: false
+      refname: ${{ github.ref_name }}
+      default-branch: ${{ github.event.repository.default_branch }}
     secrets: inherit
 
   tests-pass:
