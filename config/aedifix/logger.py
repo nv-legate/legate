@@ -92,6 +92,14 @@ class Logger:
         )
         self._live_raii: Live | None = None
 
+        orig_hook = sys.breakpointhook
+
+        def bphook(*args: Any, **kwargs: Any) -> Any:
+            self._live.stop()
+            return orig_hook(*args, **kwargs)
+
+        sys.breakpointhook = bphook
+
     @staticmethod
     def _make_table(
         console: Console, row_data: deque[tuple[RenderableType, bool]]

@@ -10,7 +10,6 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import functools
 import inspect
 import os
 import platform
@@ -429,30 +428,9 @@ class ConfigurationManager:
         dependencies. After this function returns, self._modules is sorted in
         topological order based on the requirements dictated by the packages.
         """
-
-        @functools.cache
-        def conf_name_cache_get(conf_obj: Package) -> str:
-            module = inspect.getmodule(conf_obj)
-            assert module is not None
-            long_name = module.__name__
-            if pack_name := module.__package__:
-                short_name = long_name.replace(pack_name, "")
-            else:
-                short_name = long_name
-            return short_name.lstrip(".")
-
-        mod_idx_map: dict[str, int] = {}
-        for idx, conf_obj in enumerate(self._modules):
-            short_name = conf_name_cache_get(conf_obj)
-            assert short_name not in mod_idx_map, (
-                # TODO, there can be conflicts if we have foo.bar and baz.bar
-                f"Duplicate modules in module map: {short_name} "
-                f"({idx} and {mod_idx_map[short_name]}). "
-                "Should make this logic more robust!"
-            )
-            mod_idx_map[short_name] = idx
-
-        self._module_map = mod_idx_map
+        self._module_map = {
+            type(conf_obj): idx for idx, conf_obj in enumerate(self._modules)
+        }
         assert len(self._module_map) == len(
             self._modules
         ), "Duplicate modules!"
@@ -471,11 +449,11 @@ class ConfigurationManager:
         self._modules = []
         for idx, conf_obj in enumerate(self._topo_sorter.static_order()):
             self._modules.append(conf_obj)
-            self._module_map[conf_name_cache_get(conf_obj)] = idx
+            self._module_map[type(conf_obj)] = idx
 
         del self._topo_sorter
 
-    def _get_package(self, req_package: str) -> Package:
+    def _get_package(self, req_package: type[Package]) -> Package:
         try:
             ret_idx = self._module_map[req_package]
         except KeyError as ke:
@@ -507,7 +485,10 @@ class ConfigurationManager:
             "Then build libraries:",
             "$ make",
         ]
-        if self._get_package("python").state.enabled():
+
+        from .package.packages.python import Python
+
+        if self._get_package(Python).state.enabled():
             install_mess.extend(
                 ("And install Python bindings:", "$ pip install .")
             )
@@ -934,7 +915,7 @@ class ConfigurationManager:
         return fn(*args, **kwargs)
 
     # Meat and potatoes
-    def require(self, package: Package, req_package: str) -> Package:
+    def require(self, package: Package, req_package: type[Package]) -> Package:
         r"""Indicate to the manager that `package` requires `req_package` to
         run before itself, and return a handle to the requested package.
 
@@ -942,9 +923,8 @@ class ConfigurationManager:
         ----------
         package : Package
             The package that is requesting the dependency.
-        req_package : str
-            The string name of the module. I.e. given `foo.bar.baz.py`, then
-            mod_name should be 'baz'.
+        req_package : type[Package]
+            The class of the required package
 
         Returns
         -------
@@ -1008,6 +988,7 @@ class ConfigurationManager:
         self._modules.insert(0, self._main_package)
 
         self._cl_args = self.log_execute_func(self._parse_args, self.argv)
+
         # do this after parsing args because args might have --help (in which
         # case we do not want to clobber the arch directory)
         self.log_execute_func(self._setup_environ)

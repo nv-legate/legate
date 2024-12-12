@@ -368,6 +368,7 @@ class MainPackage(Package, ABC):
         project_config_file_template: Path,
         project_src_dir: Path | None = None,
         default_arch_file_path: Path | None = None,
+        dependencies: tuple[type[Package], ...] = tuple(),
     ) -> None:
         r"""Construct the MainPackage.
 
@@ -404,7 +405,12 @@ class MainPackage(Package, ABC):
             If the project arch value is set (either from command line or
             environment variable) but empty.
         """
-        super().__init__(manager=manager, name=name)
+        super().__init__(
+            manager=manager,
+            name=name,
+            always_enabled=True,
+            dependencies=dependencies,
+        )
         assert not arch_name.startswith("-")
         assert not arch_name.endswith("_")
         assert arch_name.isupper()

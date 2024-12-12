@@ -15,7 +15,7 @@ import shutil
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final, cast
 
 from ..aedifix import (
     CMAKE_VARIABLE,
@@ -28,12 +28,10 @@ from ..aedifix import (
     ConfigurationManager,
     MainPackage,
 )
-
-if TYPE_CHECKING:
-    from ..aedifix.package.packages.cal import CAL
-    from ..aedifix.package.packages.cmake import CMake
-    from ..aedifix.package.packages.legion import Legion
-    from ..aedifix.package.packages.python import Python
+from ..aedifix.package.packages.cal import CAL
+from ..aedifix.package.packages.cmake import CMake
+from ..aedifix.package.packages.legion import Legion
+from ..aedifix.package.packages.python import Python
 
 
 class Legate(MainPackage):
@@ -166,6 +164,7 @@ class Legate(MainPackage):
             default_arch_file_path=(
                 legate_dir / "scripts" / "get_legate_arch.py"
             ),
+            dependencies=(CMake, Legion, Python, CAL),
         )
 
     @classmethod
@@ -187,18 +186,6 @@ class Legate(MainPackage):
             The constructed main package.
         """
         return cls(manager, argv)
-
-    def declare_dependencies(self) -> None:
-        r"""Declare Dependencies for Legate."""
-        super().declare_dependencies()
-        self.cmake: CMake = self.require("cmake")  # type: ignore[assignment]
-        self.legion: Legion = self.require(  # type: ignore[assignment]
-            "legion"
-        )
-        self.python: Python = self.require(  # type: ignore[assignment]
-            "python"
-        )
-        self.cal: CAL = self.require("cal")  # type: ignore[assignment]
 
     def maybe_uninstall_legate(self) -> None:
         r"""Uninstall Legate if --with-clean is given on command line
@@ -306,13 +293,12 @@ class Legate(MainPackage):
                 )
 
         self.log(f"Minimum cmake version required: {min_ver}")
-        if version_parse(self.cmake.version) < version_parse(min_ver):
-            cmake_exe = self.manager.get_cmake_variable(
-                self.cmake.CMAKE_COMMAND
-            )
+        cmake = cast(CMake, self.deps.CMake)
+        if version_parse(cmake.version) < version_parse(min_ver):
+            cmake_exe = self.manager.get_cmake_variable(cmake.CMAKE_COMMAND)
             raise RuntimeError(
                 f"CMake executable {cmake_exe} too old! Expected version "
-                f"{min_ver}, have {self.cmake.version}"
+                f"{min_ver}, have {cmake.version}"
             )
 
     def configure_legate_variables(self) -> None:
@@ -386,9 +372,9 @@ class Legate(MainPackage):
         self.set_flag_if_user_set(
             self.legate_LEGION_BRANCH, self.cl_args.legion_branch
         )
-        if self.python.state.enabled():
+        if self.deps.Python.state.enabled():
             self.manager.set_cmake_variable(
-                self.legion.Legion_BUILD_BINDINGS, False
+                cast(Legion, self.deps.Legion).Legion_BUILD_BINDINGS, False
             )
 
     def configure_clang_tidy(self) -> None:
@@ -399,7 +385,7 @@ class Legate(MainPackage):
 
     def configure_cal(self) -> None:
         r"""Configure CAL variables."""
-        cal_state = self.cal.state
+        cal_state = self.deps.CAL.state
         if cal_state.enabled():
             self.manager.set_cmake_variable(self.legate_USE_CAL, True)
         elif cal_state.explicitly_disabled():
@@ -432,7 +418,7 @@ class Legate(MainPackage):
         ]
 
     def _summarize_python(self) -> list[tuple[str, Any]]:
-        python = self.python
+        python = cast(Python, self.deps.Python)
         py_enabled = python.state.enabled()
         lines: list[tuple[str, Any]] = [("Python bindings", py_enabled)]
         if py_enabled:

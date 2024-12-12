@@ -12,15 +12,15 @@ from __future__ import annotations
 
 import shlex
 import textwrap
-from argparse import ArgumentParser, _ArgumentGroup as ArgumentGroup
+from argparse import ArgumentParser, Namespace, _ArgumentGroup as ArgumentGroup
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from ..base import Configurable
 from ..cmake.cmake_flags import _CMakeVar
-from ..logger import Logger
 from ..util.argument_parser import ConfigArgument, ExclusiveArgumentGroup
+from ..util.exception import WrongOrderError
 
 if TYPE_CHECKING:
     from ..manager import ConfigurationManager
@@ -30,8 +30,13 @@ if TYPE_CHECKING:
 _T = TypeVar("_T")
 
 
+class Dependencies(Namespace):
+    def __getattr__(self, value: str) -> Package:
+        return super().__getattr__(value)
+
+
 class Package(Configurable):
-    __slots__ = "_name", "_state", "_always_enabled"
+    __slots__ = "_name", "_state", "_always_enabled", "_dep_types", "_deps"
 
     @dataclass(slots=True, frozen=True)
     class EnableState:
@@ -61,6 +66,7 @@ class Package(Configurable):
         manager: ConfigurationManager,
         name: str,
         always_enabled: bool = False,
+        dependencies: tuple[type[Package], ...] = tuple(),
     ) -> None:
         r"""Constuct a Package.
 
@@ -83,6 +89,8 @@ class Package(Configurable):
         self._name = name
         self._state = Package.EnableState(value=always_enabled)
         self._always_enabled = always_enabled
+        self._dep_types = dependencies
+        self._deps: Dependencies | None = None
 
     @property
     def name(self) -> str:
@@ -111,6 +119,21 @@ class Package(Configurable):
                 f"{self._state}"
             )
         return self._state
+
+    @property
+    def deps(self) -> Dependencies:
+        r"""Get the package dependencies.
+
+        Returns
+        -------
+        deps : Namespace
+            The package dependencies.
+        """
+        if self._deps is None:
+            raise WrongOrderError(
+                "Must declare dependencies before accessing them"
+            )
+        return self._deps
 
     def add_options(self, parser: ArgumentParser) -> None:
         r"""Add options for a package.
@@ -223,24 +246,6 @@ class Package(Configurable):
                     )
                     handle_config_arg(attr, parser)
 
-    @Logger.log_passthrough
-    def require(self, mod_name: str) -> Package:
-        r"""Indicate to the manager that `self` requires `mod_name` to run
-        before itself, and return a handle to the requested package.
-
-        Parameters
-        ----------
-        mod_name : str
-            The string name of the module. I.e. given `foo.bar.baz.py`, then
-            mod_name should be 'baz'
-
-        Returns
-        -------
-        package : Package
-            The indicated package.
-        """
-        return self.manager.require(self, mod_name)
-
     def create_argument_group(
         self, parser: ArgumentParser, title: str | None = None
     ) -> ArgumentGroup:
@@ -309,7 +314,11 @@ class Package(Configurable):
     def declare_dependencies(self) -> None:
         r"""Set up and declare dependencies for packages. By default,
         declares no dependencies."""
-        pass
+        deps = {
+            dep_ty.__name__: self.manager.require(self, dep_ty)
+            for dep_ty in self._dep_types
+        }
+        self._deps = Dependencies(**deps)
 
     def _determine_package_enabled(self) -> EnableState:
         r"""Try to determine if a package is enabled or not.

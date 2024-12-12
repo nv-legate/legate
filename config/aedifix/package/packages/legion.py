@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, cast as TYPE_CAST
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from ...cmake import (
     CMAKE_VARIABLE,
@@ -29,17 +29,17 @@ from ...util.argument_parser import (
 from ...util.exception import UnsatisfiableConfigurationError
 from ...util.utility import dest_to_flag
 from ..package import Package
+from .cuda import CUDA
+from .gasnet import GASNet
+from .hdf5 import HDF5
+from .mpi import MPI
+from .openmp import OpenMP
+from .python import Python
+from .ucx import UCX
+from .zlib import ZLIB
 
 if TYPE_CHECKING:
     from ...manager import ConfigurationManager
-    from .cuda import CUDA
-    from .gasnet import GASNet
-    from .hdf5 import HDF5
-    from .mpi import MPI
-    from .openmp import OpenMP
-    from .python import Python
-    from .ucx import UCX
-    from .zlib import ZLIB
 
 
 class Legion(Package):
@@ -164,34 +164,12 @@ class Legion(Package):
         manager : ConfigurationManager
             The configuration manager to manage this package.
         """
-        super().__init__(manager=manager, name="Legion", always_enabled=True)
-
-    def declare_dependencies(self) -> None:
-        r"""Declare dependencies for Legion."""
-        super().declare_dependencies()
-        # mypy complains:
-        #
-        # config/aedifix/packages/legion.py: note: In member
-        # "declare_dependencies" of class "Legion":
-        # config/aedifix/packages/legion.py:127:27: error: Incompatible
-        # types in assignment (expression has type "Package", variable has type
-        # "CUDA")
-        # [assignment]
-        #    self.cuda: CUDA = self.require("cuda")
-        #                      ^~~~~~~~~~~~~~~~~~~~
-        #
-        # So instead we first cast to Any, and then let mypy see the real type
-        # on the lhs. We cannot just cast directly to the real type since that
-        # means we'd actually have to import the class, which is a fake
-        # dependency we don't want to introduce.
-        self.cuda: CUDA = TYPE_CAST(Any, self.require("cuda"))
-        self.gasnet: GASNet = TYPE_CAST(Any, self.require("gasnet"))
-        self.openmp: OpenMP = TYPE_CAST(Any, self.require("openmp"))
-        self.hdf5: HDF5 = TYPE_CAST(Any, self.require("hdf5"))
-        self.python: Python = TYPE_CAST(Any, self.require("python"))
-        self.mpi: MPI = TYPE_CAST(Any, self.require("mpi"))
-        self.ucx: UCX = TYPE_CAST(Any, self.require("ucx"))
-        self.zlib: ZLIB = TYPE_CAST(Any, self.require("zlib"))
+        super().__init__(
+            manager=manager,
+            name="Legion",
+            always_enabled=True,
+            dependencies=(CUDA, GASNet, OpenMP, HDF5, Python, MPI, UCX, ZLIB),
+        )
 
     def check_conflicting_options(self) -> None:
         r"""Check for conflicting options that are too complicated to "
@@ -258,24 +236,25 @@ class Legion(Package):
         RuntimeError
             If CUDA flags are requested but CUDA is not enabled.
         """
-        if self.cuda.state.enabled():
+        cuda_state = self.deps.CUDA.state
+        if cuda_state.enabled():
             self.manager.set_cmake_variable(self.Legion_USE_CUDA, True)
             self.append_flags_if_set(
                 self.Legion_CUDA_FLAGS, self.cl_args.legion_cuda_flags
             )
         elif self.cl_args.legion_cuda_flags.cl_set:
             raise RuntimeError(
-                "--legate-cuda-flags set "
+                "--legion-cuda-flags set "
                 f"({self.cl_args.legion_cuda_flags.value}), "
                 "but CUDA is not enabled."
             )
-        elif self.cuda.state.explicitly_disabled():
+        elif cuda_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_USE_CUDA, False)
 
     def configure_gasnet(self) -> None:
         r"""Configure Legion to use GASNet. Does nothing if GASNet is not
         enabled."""
-        if self.gasnet.state.enabled():
+        if self.deps.GASNet.state.enabled():
             self.manager.append_cmake_variable(
                 self.Legion_EMBED_GASNet_CONFIGURE_ARGS,
                 ["--with-ibv-max-hcas=8"],
@@ -284,50 +263,55 @@ class Legion(Package):
     def configure_openmp(self) -> None:
         r"""Configure Legion to use OpenMP. Does nothing if OpenMP is not
         enabled."""
-        if self.openmp.state.enabled():
+        omp_state = self.deps.OpenMP.state
+        if omp_state.enabled():
             self.manager.set_cmake_variable(self.Legion_USE_OpenMP, True)
-        elif self.openmp.state.explicitly_disabled():
+        elif omp_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_USE_OpenMP, False)
 
     def configure_hdf5(self) -> None:
         r"""Configure Legion to use HDF5. Does nothing if HDF5 is not
         enabled.
         """
-        if self.hdf5.state.enabled():
+        hdf5_state = self.deps.HDF5.state
+        if hdf5_state.enabled():
             self.manager.set_cmake_variable(self.Legion_USE_HDF5, True)
-        elif self.hdf5.state.explicitly_disabled():
+        elif hdf5_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_USE_HDF5, False)
 
     def configure_python(self) -> None:
         r"""Configure Legion to use Python. Does nothing if Python is not
         enabled.
         """
-        if self.python.state.enabled():
+        python = cast(Python, self.deps.Python)
+        py_state = python.state
+        if py_state.enabled():
             self.manager.set_cmake_variable(self.Legion_BUILD_BINDINGS, True)
             self.manager.set_cmake_variable(self.Legion_USE_Python, True)
             self.manager.set_cmake_variable(self.Legion_BUILD_JUPYTER, True)
             self.manager.set_cmake_variable(
-                self.Legion_Python_Version, self.python.lib_version
+                self.Legion_Python_Version, python.lib_version
             )
-        elif self.python.state.explicitly_disabled():
+        elif py_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_BUILD_BINDINGS, False)
             self.manager.set_cmake_variable(self.Legion_BUILD_JUPYTER, False)
             self.manager.set_cmake_variable(self.Legion_USE_Python, False)
 
     def configure_zlib(self) -> None:
         r"""Configure Legion to use ZLIB. Disables ZLIB if is not enabled."""
-        if self.zlib.state.enabled():
+        zlib_state = self.deps.ZLIB.state
+        if zlib_state.enabled():
             self.manager.set_cmake_variable(self.Legion_USE_ZLIB, True)
-        elif self.zlib.state.explicitly_disabled():
+        elif zlib_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_USE_ZLIB, False)
 
     def configure_networks(self) -> None:
         r"""Configure all of the collected networks, and enable them."""
         networks = []
         explicit_disable = False
-        network_map = {"gasnet": "gasnetex", "ucx": "ucx", "mpi": "mpi"}
+        network_map = {"GASNet": "gasnetex", "UCX": "ucx", "MPI": "mpi"}
         for py_attr, net_name in network_map.items():
-            state = getattr(self, py_attr).state
+            state = getattr(self.deps, py_attr).state
             if state.enabled():
                 networks.append(net_name)
             elif state.explicit:
