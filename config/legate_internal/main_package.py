@@ -133,6 +133,21 @@ class Legate(MainPackage):
             "legate_IGNORE_INSTALLED_PACKAGES", CMakeBool
         ),
     )
+    legate_USE_CPROFILE: Final = ConfigArgument(
+        name="--with-cprofile",
+        spec=ArgSpec(
+            dest="use_cprofile",
+            type=bool,
+            help="If true, Legate will be built with detailed cProfile output."
+            " In particular, this flag will enable profiling Cython code"
+            " in Legate. WARNING: When enabled, this may negatively affect"
+            " program performance. cProfile is a Python built-in module"
+            " for profiling runtime performance, measuring function"
+            " calls and execution time in Python programs.",
+        ),
+        cmake_var=CMAKE_VARIABLE("legate_USE_CPROFILE", CMakeBool),
+    )
+
     legate_USE_CAL: Final = CMAKE_VARIABLE("legate_USE_CAL", CMakeBool)
 
     def __init__(
@@ -391,6 +406,12 @@ class Legate(MainPackage):
         elif cal_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.legate_USE_CAL, False)
 
+    def configure_cprofile(self) -> None:
+        r"""Configure cprofile variables."""
+        self.set_flag_if_user_set(
+            self.legate_USE_CPROFILE, self.cl_args.use_cprofile
+        )
+
     def configure(self) -> None:
         r"""Configure Legate."""
         super().configure()
@@ -399,6 +420,7 @@ class Legate(MainPackage):
         self.log_execute_func(self.configure_legion)
         self.log_execute_func(self.configure_clang_tidy)
         self.log_execute_func(self.configure_cal)
+        self.log_execute_func(self.configure_cprofile)
 
     def _summarize_flags(self) -> list[tuple[str, Any]]:
         def make_summary(

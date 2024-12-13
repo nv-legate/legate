@@ -53,6 +53,10 @@ message(STATUS "Using scikit-build-core data-to-platlib directory redirect: ${sk
 
 define_property(GLOBAL PROPERTY LEGATE_CYTHON_TARGETS BRIEF_DOCS "Legate cython targets")
 
+if(legate_USE_CPROFILE)
+  set(CYTHON_FLAGS "${CYTHON_FLAGS} --directive profile=True")
+endif()
+
 function(legate_create_cython_modules)
   list(APPEND CMAKE_MESSAGE_CONTEXT "create_cython_modules")
 
