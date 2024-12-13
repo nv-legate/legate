@@ -386,7 +386,6 @@ list(APPEND
      legate/type/detail/type_info.cc
      legate/utilities/debug.cc
      legate/utilities/machine.cc
-     legate/utilities/linearize.cc
      legate/utilities/internal_shared_ptr.cc
      legate/utilities/compiler.cc
      legate/utilities/abort.cc
@@ -398,6 +397,7 @@ list(APPEND
      legate/utilities/detail/formatters.cc
      legate/utilities/detail/traced_exception.cc
      legate/utilities/detail/zip.cc
+     legate/utilities/detail/linearize.cc
      legate/timing/timing.cc
      # stl
      legate/experimental/stl/detail/clang_tidy_dummy.cpp

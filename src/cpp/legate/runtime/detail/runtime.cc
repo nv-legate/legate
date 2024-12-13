@@ -59,10 +59,10 @@
 #include "legate/utilities/detail/formatters.h"
 #include "legate/utilities/detail/tuple.h"
 #include "legate/utilities/hash.h"
-#include "legate/utilities/linearize.h"
 #include "legate/utilities/machine.h"
 #include "legate/utilities/scope_guard.h"
 #include <legate/comm/detail/coll.h>
+#include <legate/utilities/detail/linearize.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include "realm/network.h"

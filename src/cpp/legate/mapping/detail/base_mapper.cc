@@ -27,7 +27,7 @@
 #include "legate/utilities/detail/store_iterator_cache.h"
 #include "legate/utilities/detail/type_traits.h"
 #include "legate/utilities/detail/zip.h"
-#include "legate/utilities/linearize.h"
+#include <legate/utilities/detail/linearize.h>
 
 #include "mappers/mapping_utilities.h"
 
@@ -276,12 +276,13 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   const auto lo                = key_functor->project_point(sharding_domain.lo());
   const auto hi                = key_functor->project_point(sharding_domain.hi());
   const auto start_proc_id     = machine_desc.processor_range().low;
-  const auto total_tasks_count = linearize(lo, hi, hi) + 1;
+  const auto total_tasks_count = legate::detail::linearize(lo, hi, hi) + 1;
 
   for (Domain::DomainPointIterator itr{input.domain}; itr; ++itr) {
     const auto p = key_functor->project_point(itr.p);
     const auto idx =
-      (linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) + start_proc_id;
+      (legate::detail::linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) +
+      start_proc_id;
 
     output.slices.emplace_back(Domain{itr.p, itr.p},
                                local_range[static_cast<std::uint32_t>(idx)],
@@ -1521,9 +1522,10 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
     auto p            = key_functor->project_point(copy.index_point);
 
     const std::uint32_t start_proc_id     = machine_desc.processor_range().low;
-    const std::uint32_t total_tasks_count = linearize(lo, hi, hi) + 1;
+    const std::uint32_t total_tasks_count = legate::detail::linearize(lo, hi, hi) + 1;
     auto idx =
-      (linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) + start_proc_id;
+      (legate::detail::linearize(lo, hi, p) * local_range.total_proc_count() / total_tasks_count) +
+      start_proc_id;
     target_proc = local_range[idx];
   } else {
     target_proc = local_range.first();

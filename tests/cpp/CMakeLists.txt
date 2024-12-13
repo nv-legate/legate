@@ -262,7 +262,8 @@ set(wo_runtime_SRC
     noinit/tuple.cc
     noinit/variant_options.cc
     noinit/zip_equal.cc
-    noinit/zip_shortest.cc)
+    noinit/zip_shortest.cc
+    noinit/delinearize.cc)
 
 set(non_reentrant_with_runtime_SRC
     non_reentrant/death_example.cc non_reentrant/oom_message.cc non_reentrant/runtime.cc

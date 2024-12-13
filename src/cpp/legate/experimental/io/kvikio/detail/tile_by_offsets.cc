@@ -13,8 +13,8 @@
 #include <legate/data/physical_store.h>
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
 #include <legate/type/type_info.h>
+#include <legate/utilities/detail/linearize.h>
 #include <legate/utilities/dispatch.h>
-#include <legate/utilities/linearize.h>
 #include <legate/utilities/span.h>
 
 #include <kvikio/file_handle.hpp>
@@ -55,10 +55,11 @@ void TileByOffsetsReadFn::operator()(legate::TaskContext context,
   const auto nbytes = shape_volume * sizeof(DTYPE);
   // We know that the accessor is contiguous because we set `policy.exact = true`
   // in `Mapper::store_mappings()`.
-  auto&& task_index             = context.get_task_index();
-  auto&& launch_domain          = context.get_launch_domain();
-  const auto path               = context.scalar(0).value<std::string_view>();
-  const auto flatten_task_index = linearize(launch_domain.lo(), launch_domain.hi(), task_index);
+  auto&& task_index    = context.get_task_index();
+  auto&& launch_domain = context.get_launch_domain();
+  const auto path      = context.scalar(0).value<std::string_view>();
+  const auto flatten_task_index =
+    legate::detail::linearize(launch_domain.lo(), launch_domain.hi(), task_index);
   const Span<const std::uint64_t> offsets = context.scalar(1).values<std::uint64_t>();
 
   auto f            = ::kvikio::FileHandle{std::string{path}, "r"};

@@ -16,7 +16,7 @@
 #include "legate/runtime/detail/projection.h"
 #include "legate/utilities/detail/core_ids.h"
 #include "legate/utilities/detail/type_traits.h"
-#include "legate/utilities/linearize.h"
+#include <legate/utilities/detail/linearize.h>
 
 #include <algorithm>
 #include <mutex>
