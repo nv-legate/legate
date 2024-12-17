@@ -86,7 +86,7 @@ class Logger:
             maxlen=max_live_lines
         )
         self._console = Console()
-        self._table = self._make_table(self.console, self._row_data)
+        self._table = self._make_table(self._row_data)
         self._live = Live(
             self._table, console=self.console, auto_refresh=False
         )
@@ -101,16 +101,10 @@ class Logger:
         sys.breakpointhook = bphook
 
     @staticmethod
-    def _make_table(
-        console: Console, row_data: deque[tuple[RenderableType, bool]]
-    ) -> Table:
+    def _make_table(row_data: deque[tuple[RenderableType, bool]]) -> Table:
         table = Table.grid(expand=True)
-        for raw_data, _ in row_data:
-            data: RenderableType
-            if isinstance(raw_data, str):
-                data = console.render_str(raw_data)
-            else:
-                data = raw_data
+        table.highlight = True
+        for data, _ in row_data:
             table.add_row(data)
         return table
 
@@ -357,7 +351,9 @@ class Logger:
 
         Parameters
         ----------
-        mess :RenderableType | list[RenderableType] | tuple[RenderableType,...]
+        mess : RenderableType |
+               list[RenderableType] |
+               tuple[RenderableType, ...]
             The message(s) to print to screen.
         keep : bool, False
             Whether to keep the message permanently in live output.
@@ -369,7 +365,7 @@ class Logger:
 
         def do_log(message: RenderableType, keep: bool) -> None:
             self._append_live_message(message, keep)
-            self._table = self._make_table(self.console, self._row_data)
+            self._table = self._make_table(self._row_data)
             self._live.update(self._table, refresh=True)
 
         match mess:
@@ -451,7 +447,9 @@ class Logger:
             The title to use for the box.
         """
         self.log_boxed(
-            message, title=f"***** {title} *****", title_style="[yellow]"
+            message,
+            title=f"***** {title.strip()} *****",
+            title_style="[yellow]",
         )
 
     def log_divider(self, tee: bool = False, keep: bool = True) -> None:

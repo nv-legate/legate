@@ -18,8 +18,10 @@ import subprocess
 import sysconfig
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
+from signal import SIGINT
 from subprocess import (
     PIPE,
+    STDOUT,
     CalledProcessError,
     CompletedProcess,
     Popen,
@@ -123,15 +125,24 @@ def subprocess_capture_output(
 def subprocess_capture_output_live_impl(
     callback: Callable[[str, str], None], *args: Any, **kwargs: Any
 ) -> CompletedProcess[str]:
-    def decode_output(output: bytes | None | str) -> str:
-        if not output:
-            return ""
-        if isinstance(output, bytes):
-            return output.decode()
-        return output
+    def normalize_output(output: bytes | None | str) -> str:
+        match output:
+            case None:
+                return ""
+            case str():
+                return output
+            case bytes():
+                return output.decode()
+            case _:
+                raise ValueError(
+                    f"Unhandled output type: {type(output)}: {output}"
+                )
 
     kwargs.setdefault("stdout", PIPE)
-    kwargs.setdefault("stderr", PIPE)
+    kwargs.setdefault("stderr", STDOUT)
+    kwargs["universal_newlines"] = True
+    kwargs["text"] = True
+
     timeout = kwargs.pop("timeout", 1)
 
     total_stdout = ""
@@ -141,11 +152,12 @@ def subprocess_capture_output_live_impl(
         done = False
         while not done:
             try:
-                stdout_bytes, stderr_bytes = process.communicate(
-                    timeout=timeout
-                )
+                stdout, stderr = process.communicate(timeout=timeout)
             except TimeoutExpired as te:
-                stdout_bytes, stderr_bytes = te.stdout, te.stderr
+                stdout, stderr = te.stdout, te.stderr
+            except KeyboardInterrupt:
+                process.send_signal(SIGINT)
+                raise
             except:  # noqa E722
                 process.kill()
                 raise
@@ -154,8 +166,8 @@ def subprocess_capture_output_live_impl(
                 # and/or stderr were updated.
                 done = True
 
-            stderr = decode_output(stderr_bytes)
-            stdout = decode_output(stdout_bytes)
+            stderr = normalize_output(stderr)
+            stdout = normalize_output(stdout)
 
             if total_stdout == stdout and total_stderr == stderr:
                 # The process hasn't printed anything new, retry the
@@ -165,16 +177,17 @@ def subprocess_capture_output_live_impl(
             # The streams will always contain the sum-total output of the
             # subprocess call, so we need to strip the stuff we've already
             # "seen" from the output before sending it to the callback.
-            new_stdout = stdout.removeprefix(total_stdout)
-            new_stderr = stderr.removeprefix(total_stderr)
+            new_stdout = stdout[len(total_stdout) :]
+            new_stderr = stderr[len(total_stderr) :]
             # Now we replace the complete stdout
             total_stdout = stdout
             total_stderr = stderr
             callback(new_stdout, new_stderr)
 
-    retcode = process.poll()
-    if retcode is None:
-        retcode = 0
+        retcode = process.poll()
+        if retcode is None:
+            retcode = 0
+
     return CompletedProcess(process.args, retcode, total_stdout, total_stderr)
 
 

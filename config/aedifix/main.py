@@ -30,18 +30,28 @@ SUCCESS: Final = 0
 FAILURE: Final = 1
 
 
-def _format_exception(
-    excn: Exception, message: str
-) -> tuple[str, str, Exception]:
-    if not message.endswith(" "):
-        message += " "
-    return "".join(traceback.format_exception(excn, chain=True)), message, excn
+def _handle_generic_error(
+    config: ConfigurationManager, message: str, title: str
+) -> None:
+    try:
+        config.log_divider()
+        config.log_warning(message, title=title)
+        config.log_divider()
+    except Exception as e:
+        print(
+            "Error printing error message from exception or "
+            "printing the traceback:",
+            str(e),
+            flush=True,
+        )
+        print(title, flush=True)
+        print(message, flush=True)
 
 
 def _handle_exception(
     config: ConfigurationManager,
     excn_trace: str,
-    message: str,
+    title: str,
     excn_obj: Exception,
 ) -> None:
     try:
@@ -53,9 +63,7 @@ def _handle_exception(
             f", please see {config._logger.file_path} for "
             "additional details."
         )
-        config.log_divider()
-        config.log_boxed(excn_str, title=message)
-        config.log_divider()
+        _handle_generic_error(config, excn_str, title)
     except Exception as e:
         print(
             "Error printing error message from exception or "
@@ -75,7 +83,7 @@ def _basic_configure_impl(
         import pdb as py_db
 
     post_mortem = any(ON_ERROR_DEBUGGER_FLAG in arg for arg in argv)
-    excn_obj = None
+    excn: Exception | None = None
     # If the following throws, then something is seriously beansed. Better to
     # eschew pretty-printing and just allow the entire exception to be printed.
     config = ConfigurationManager(argv, MainPackageType)
@@ -86,29 +94,34 @@ def _basic_configure_impl(
             if post_mortem:
                 py_db.post_mortem()
             raise
-    except UnsatisfiableConfigurationError as excn:
-        excn_trace, message, excn_obj = _format_exception(
-            excn, "Configuration is not satisfiable"
-        )
-    except CMakeConfigureError as excn:
-        excn_trace, message, excn_obj = _format_exception(
-            excn, "CMake configuration failed"
-        )
-    except AssertionError as excn:
+    except UnsatisfiableConfigurationError as e:
+        title = "Configuration is not satisfiable"
+        excn = e
+    except CMakeConfigureError as e:
+        title = "CMake configuration failed"
+        excn = e
+    except AssertionError as e:
         if excn_str := str(excn):
-            mess = (
+            title = (
                 f"Assertion Error: {excn_str}, this indicates a configure bug!"
             )
         else:
-            mess = "CONFIGURATION CRASH"
-        excn_trace, message, excn_obj = _format_exception(excn, mess)
-    except Exception as excn:
-        excn_trace, message, excn_obj = _format_exception(
-            excn, "CONFIGURATION CRASH"
+            title = "CONFIGURATION CRASH"
+        excn = e
+    except KeyboardInterrupt:
+        _handle_generic_error(
+            config,
+            message="Configuration was aborted by the user (recieved SIGINT)",
+            title="Configuration Aborted",
         )
+        return FAILURE
+    except Exception as e:
+        title = "CONFIGURATION CRASH"
+        excn = e
 
-    if excn_obj is not None:
-        _handle_exception(config, excn_trace, message, excn_obj)
+    if excn is not None:
+        trace = "".join(traceback.format_exception(excn, chain=True))
+        _handle_exception(config, trace, title, excn)
         return FAILURE
     return SUCCESS
 

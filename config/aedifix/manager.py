@@ -756,10 +756,12 @@ class ConfigurationManager:
                 match msg:
                     case str():
                         verbose_mess = f"{caller_name}(): {msg}"
-                    case _:
+                    case list() | tuple():
                         verbose_mess = [
                             f"{caller_name}(): {sub}" for sub in msg
                         ]
+                    case _:
+                        raise TypeError(msg)
 
         self._logger.log_file(verbose_mess)
         if tee:
@@ -841,13 +843,14 @@ class ConfigurationManager:
         RuntimeError
             If the command returns a non-zero errorcode
         """
+        from rich.markup import escape
 
         def callback(stdout: str, stderr: str) -> None:
             if stdout := stdout.strip():
                 if live:
-                    self.log(
-                        stdout.splitlines(), caller_context=False, tee=True
-                    )
+                    stdout = escape(stdout)
+                    lines = tuple(map(str.rstrip, stdout.splitlines()))
+                    self.log(lines, caller_context=False, tee=True)
                 else:
                     self.log(stdout, caller_context=False)
             if stderr := stderr.strip():

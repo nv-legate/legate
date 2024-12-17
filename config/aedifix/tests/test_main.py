@@ -208,14 +208,13 @@ class TestMain:
         assert ret != 0
 
         configure_log = AEDIFIX_PYTEST_DIR / "configure.log"
-        assert configure_log.exists()
         assert configure_log.is_file()
         config_log_text = configure_log.read_text().strip()
         assert config_log_text
 
         logger = Logger(AEDIFIX_PYTEST_DIR / "dummy.log")
         expected_lines = logger.build_multiline_message(
-            sup_title="CONFIGURATION CRASH",
+            sup_title="***** CONFIGURATION CRASH *****",
             divider_char="-",
             text=(
                 f"{exn_mess}, please see {configure_log} for additional "
