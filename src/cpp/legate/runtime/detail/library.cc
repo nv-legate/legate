@@ -159,34 +159,42 @@ void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo>
       std::throw_with_nested(
         std::out_of_range{fmt::format("Task {} is invalid for library '{}' (max local task id: {})",
                                       local_task_id,
-                                      library_name_,
+                                      get_library_name(),
                                       task_scope_.size() - 1)});
     }
   }();
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "[" << library_name_ << "] task "
+    log_legate().debug() << "[" << get_library_name() << "] task "
                          << traits::detail::to_underlying(local_task_id)
                          << " (global id: " << traits::detail::to_underlying(task_id) << "), "
                          << *task_info;
   }
-  if (tasks_.find(local_task_id) != tasks_.end()) {
+
+  const auto [it, inserted] = tasks_.try_emplace(local_task_id, std::move(task_info));
+
+  if (!inserted) {
     throw TracedException<std::invalid_argument>{
-      fmt::format("Task {} already exists in library {}", local_task_id, library_name_)};
+      fmt::format("Task {} already exists in library {}", local_task_id, get_library_name())};
   }
-  task_info->register_task(task_id);
-  tasks_.emplace(local_task_id, std::move(task_info));
+
+  try {
+    it->second->register_task(task_id);
+  } catch (...) {
+    tasks_.erase(it);
+    throw;
+  }
 }
 
 const TaskInfo* Library::find_task(LocalTaskID local_task_id) const
 {
-  auto finder = tasks_.find(local_task_id);
+  const auto it = tasks_.find(local_task_id);
 
-  if (tasks_.end() == finder) {
+  if (tasks_.end() == it) {
     throw TracedException<std::out_of_range>{
       fmt::format("Library {} does not have task {}", get_library_name(), local_task_id)};
   }
-  return finder->second.get();
+  return it->second.get();
 }
 
 }  // namespace legate::detail
