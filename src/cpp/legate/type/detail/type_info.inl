@@ -18,6 +18,8 @@ namespace legate::detail {
 
 inline Type::Type(Code type_code) : code{type_code} {}
 
+inline bool Type::operator==(const Type& other) const { return code == other.code; }
+
 inline bool Type::operator!=(const Type& other) const { return !operator==(other); }
 
 // ==========================================================================================
@@ -32,8 +34,6 @@ inline bool PrimitiveType::variable_size() const { return false; }
 
 inline bool PrimitiveType::is_primitive() const { return true; }
 
-inline bool PrimitiveType::equal(const Type& other) const { return code == other.code; }
-
 // ==========================================================================================
 
 inline StringType::StringType() : Type{Type::Code::STRING} {}
@@ -47,8 +47,6 @@ inline std::uint32_t StringType::uid() const { return static_cast<std::uint32_t>
 inline std::string StringType::to_string() const { return "string"; }
 
 inline bool StringType::is_primitive() const { return false; }
-
-inline bool StringType::equal(const Type& other) const { return code == other.code; }
 
 // ==========================================================================================
 
@@ -74,13 +72,13 @@ inline std::uint32_t BinaryType::alignment() const { return alignof(std::max_ali
 
 inline bool BinaryType::variable_size() const { return false; }
 
-inline bool BinaryType::equal(const Type& other) const { return uid_ == other.uid(); }
+inline bool BinaryType::operator==(const Type& other) const { return uid() == other.uid(); }
 
 // ==========================================================================================
 
 inline std::uint32_t FixedArrayType::size() const { return size_; }
 
-inline std::uint32_t FixedArrayType::alignment() const { return element_type_->alignment(); }
+inline std::uint32_t FixedArrayType::alignment() const { return element_type()->alignment(); }
 
 inline bool FixedArrayType::variable_size() const { return false; }
 
@@ -96,7 +94,10 @@ inline std::uint32_t StructType::alignment() const { return alignment_; }
 
 inline bool StructType::variable_size() const { return false; }
 
-inline std::uint32_t StructType::num_fields() const { return field_types().size(); }
+inline std::uint32_t StructType::num_fields() const
+{
+  return static_cast<std::uint32_t>(field_types().size());
+}
 
 inline const std::vector<InternalSharedPtr<Type>>& StructType::field_types() const
 {

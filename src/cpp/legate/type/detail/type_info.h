@@ -33,19 +33,18 @@ class Type {
 
   virtual ~Type() = default;
   [[nodiscard]] virtual std::uint32_t size() const;
-  [[nodiscard]] virtual std::uint32_t alignment() const     = 0;
-  [[nodiscard]] virtual std::uint32_t uid() const           = 0;
-  [[nodiscard]] virtual bool variable_size() const          = 0;
-  [[nodiscard]] virtual std::string to_string() const       = 0;
-  [[nodiscard]] virtual bool is_primitive() const           = 0;
-  virtual void pack(BufferBuilder& buffer) const            = 0;
-  [[nodiscard]] virtual bool equal(const Type& other) const = 0;
+  [[nodiscard]] virtual std::uint32_t alignment() const = 0;
+  [[nodiscard]] virtual std::uint32_t uid() const       = 0;
+  [[nodiscard]] virtual bool variable_size() const      = 0;
+  [[nodiscard]] virtual std::string to_string() const   = 0;
+  [[nodiscard]] virtual bool is_primitive() const       = 0;
+  virtual void pack(BufferBuilder& buffer) const        = 0;
 
   void record_reduction_operator(std::int32_t op_kind, GlobalRedopID global_op_id) const;
   [[nodiscard]] GlobalRedopID find_reduction_operator(std::int32_t op_kind) const;
   [[nodiscard]] GlobalRedopID find_reduction_operator(ReductionOpKind op_kind) const;
-  bool operator==(const Type& other) const;
-  bool operator!=(const Type& other) const;
+  [[nodiscard]] virtual bool operator==(const Type& other) const;
+  [[nodiscard]] bool operator!=(const Type& other) const;
 
   Code code;
 };
@@ -63,8 +62,6 @@ class PrimitiveType final : public Type {
   void pack(BufferBuilder& buffer) const override;
 
  private:
-  [[nodiscard]] bool equal(const Type& other) const override;
-
   std::uint32_t size_{};
   std::uint32_t alignment_{};
 };
@@ -79,9 +76,6 @@ class StringType final : public Type {
   [[nodiscard]] std::string to_string() const override;
   [[nodiscard]] bool is_primitive() const override;
   void pack(BufferBuilder& buffer) const override;
-
- private:
-  [[nodiscard]] bool equal(const Type& other) const override;
 };
 
 class ExtensionType : public Type {
@@ -103,10 +97,9 @@ class BinaryType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
+  [[nodiscard]] bool operator==(const Type& other) const override;
 
  private:
-  [[nodiscard]] bool equal(const Type& other) const override;
-
   std::uint32_t size_{};
 };
 
@@ -119,13 +112,12 @@ class FixedArrayType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
+  [[nodiscard]] bool operator==(const Type& other) const override;
 
   [[nodiscard]] std::uint32_t num_elements() const;
   [[nodiscard]] const InternalSharedPtr<Type>& element_type() const;
 
  private:
-  [[nodiscard]] bool equal(const Type& other) const override;
-
   InternalSharedPtr<Type> element_type_{};
   // clang-tidy wants us to lower-case this, but that would make it less readable.
   std::uint32_t N_{};  // NOLINT(readability-identifier-naming)
@@ -143,6 +135,7 @@ class StructType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
+  [[nodiscard]] bool operator==(const Type& other) const override;
 
   [[nodiscard]] std::uint32_t num_fields() const;
   [[nodiscard]] const InternalSharedPtr<Type>& field_type(std::uint32_t field_idx) const;
@@ -151,8 +144,6 @@ class StructType final : public ExtensionType {
   [[nodiscard]] const std::vector<std::uint32_t>& offsets() const;
 
  private:
-  [[nodiscard]] bool equal(const Type& other) const override;
-
   bool aligned_{};
   std::uint32_t size_{};
   std::uint32_t alignment_{};
@@ -168,12 +159,11 @@ class ListType final : public ExtensionType {
   [[nodiscard]] bool variable_size() const override;
   [[nodiscard]] std::string to_string() const override;
   void pack(BufferBuilder& buffer) const override;
+  [[nodiscard]] bool operator==(const Type& other) const override;
 
   [[nodiscard]] const InternalSharedPtr<Type>& element_type() const;
 
  private:
-  [[nodiscard]] bool equal(const Type& other) const override;
-
   InternalSharedPtr<Type> element_type_{};
 };
 

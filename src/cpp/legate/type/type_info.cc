@@ -60,9 +60,9 @@ GlobalRedopID Type::find_reduction_operator(ReductionOpKind op_kind) const
   return impl()->find_reduction_operator(static_cast<std::int32_t>(op_kind));
 }
 
-bool Type::operator==(const Type& other) const { return impl()->equal(*other.impl_); }
+bool Type::operator==(const Type& other) const { return *impl() == *other.impl(); }
 
-bool Type::operator!=(const Type& other) const { return !operator==(other); }
+bool Type::operator!=(const Type& other) const { return *impl() != *other.impl(); }
 
 FixedArrayType::FixedArrayType(InternalSharedPtr<detail::Type> type) : Type{std::move(type)}
 {

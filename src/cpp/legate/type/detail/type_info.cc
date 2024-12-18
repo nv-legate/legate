@@ -138,9 +138,6 @@ class StaticDeterminationError : public std::invalid_argument {
   throw TracedException<std::invalid_argument>{"invalid type code"};
 }
 
-constexpr const char* const VARIABLE_SIZE_ERROR_MESSAGE =
-  "Variable-size element type cannot be used";
-
 // Some notes about these magic numbers:
 //
 // The numbers are chosen such that UIDs of types are truly unique even in the presence of types
@@ -162,10 +159,11 @@ constexpr std::uint32_t BASE_CUSTOM_TYPE_UID = BASE_RECT_TYPE_UID + LEGATE_MAX_D
 // Last byte of a static UID is a type code
 constexpr std::uint32_t MAX_BINARY_TYPE_SIZE = 0x0FFFFF00 >> TYPE_CODE_OFFSET;
 
-std::uint32_t get_next_uid()
+[[nodiscard]] std::uint32_t get_next_uid()
 {
   static std::atomic<std::uint32_t> next_uid = BASE_CUSTOM_TYPE_UID;
-  return next_uid++;
+
+  return next_uid.fetch_add(1, std::memory_order_relaxed);
 }
 
 }  // namespace
@@ -173,7 +171,6 @@ std::uint32_t get_next_uid()
 std::uint32_t Type::size() const
 {
   throw TracedException<std::invalid_argument>{"Size of a variable size type is undefined"};
-  return {};
 }
 
 void Type::record_reduction_operator(std::int32_t op_kind, GlobalRedopID global_op_id) const
@@ -191,8 +188,6 @@ GlobalRedopID Type::find_reduction_operator(ReductionOpKind op_kind) const
   return find_reduction_operator(static_cast<std::int32_t>(op_kind));
 }
 
-bool Type::operator==(const Type& other) const { return equal(other); }
-
 PrimitiveType::PrimitiveType(Code type_code)
   : Type{type_code}, size_{SIZEOF(type_code)}, alignment_{ALIGNOF(type_code)}
 {
@@ -205,12 +200,12 @@ void PrimitiveType::pack(BufferBuilder& buffer) const
   buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
 }
 
-std::string BinaryType::to_string() const { return fmt::format("binary({})", size_); }
+std::string BinaryType::to_string() const { return fmt::format("binary({})", size()); }
 
 void BinaryType::pack(BufferBuilder& buffer) const
 {
   buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
-  buffer.pack<std::uint32_t>(size_);
+  buffer.pack<std::uint32_t>(size());
 }
 
 FixedArrayType::FixedArrayType(std::uint32_t uid,
@@ -219,36 +214,41 @@ FixedArrayType::FixedArrayType(std::uint32_t uid,
   : ExtensionType{uid, Type::Code::FIXED_ARRAY},
     element_type_{std::move(element_type)},
     N_{N},
-    size_{element_type_->size() * N}
+    size_{this->element_type()->size() * N}
 {
-  if (element_type_->variable_size()) {
-    throw TracedException<std::invalid_argument>{VARIABLE_SIZE_ERROR_MESSAGE};
+  if (this->element_type()->variable_size()) {
+    throw TracedException<std::invalid_argument>{"Variable-size element type cannot be used"};
   }
 }
 
-std::string FixedArrayType::to_string() const { return fmt::format("{}[{}]", *element_type_, N_); }
+std::string FixedArrayType::to_string() const
+{
+  return fmt::format("{}[{}]", *element_type(), num_elements());
+}
 
 void FixedArrayType::pack(BufferBuilder& buffer) const
 {
   buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
-  buffer.pack<std::uint32_t>(uid_);
-  buffer.pack<std::uint32_t>(N_);
+  buffer.pack<std::uint32_t>(uid());
+  buffer.pack<std::uint32_t>(num_elements());
   element_type_->pack(buffer);
 }
 
-bool FixedArrayType::equal(const Type& other) const
+bool FixedArrayType::operator==(const Type& other) const
 {
   if (code != other.code) {
     return false;
   }
-  auto& casted = static_cast<const FixedArrayType&>(other);
+
+  const auto& casted = static_cast<const FixedArrayType&>(other);
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
-    return uid_ == casted.uid_ && N_ == casted.N_ && element_type_ == casted.element_type_;
+    return uid() == casted.uid() && num_elements() == casted.num_elements() &&
+           element_type() == casted.element_type();
   }
   // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-  return uid_ == casted.uid_;
+  return uid() == casted.uid();
 }
 
 StructType::StructType(std::uint32_t uid,
@@ -259,38 +259,34 @@ StructType::StructType(std::uint32_t uid,
     alignment_{1},
     field_types_{std::move(field_types)}
 {
-  if (std::any_of(
-        field_types_.begin(), field_types_.end(), [](auto& ty) { return ty->variable_size(); })) {
+  if (std::any_of(this->field_types().begin(), this->field_types().end(), [](const auto& ty) {
+        return ty->variable_size();
+      })) {
     throw TracedException<std::runtime_error>{"Struct types can't have a variable size field"};
   }
-  if (field_types_.empty()) {
+  if (this->field_types().empty()) {
     throw TracedException<std::invalid_argument>{"Struct types must have at least one field"};
   }
 
-  offsets_.reserve(field_types_.size());
-  if (aligned_) {
+  offsets_.reserve(this->field_types().size());
+  if (aligned()) {
     static constexpr auto align_offset = [](std::uint32_t offset, std::uint32_t alignment) {
       return (offset + (alignment - 1)) & -alignment;
     };
 
-    for (auto&& field_type : field_types_) {
-      if (field_type->variable_size()) {
-        throw TracedException<std::invalid_argument>{VARIABLE_SIZE_ERROR_MESSAGE};
-      }
+    for (auto&& field_type : this->field_types()) {
       const auto my_align = field_type->alignment();
       alignment_          = std::max(my_align, alignment_);
 
       const auto offset = align_offset(size_, my_align);
+
       offsets_.push_back(offset);
       size_ = offset + field_type->size();
     }
     size_ = align_offset(size_, alignment_);
   } else {
-    for (auto&& field_type : field_types_) {
-      if (field_type->variable_size()) {
-        throw TracedException<std::invalid_argument>{VARIABLE_SIZE_ERROR_MESSAGE};
-      }
-      offsets_.push_back(size_);
+    for (auto&& field_type : this->field_types()) {
+      offsets_.push_back(size());
       size_ += field_type->size();
     }
   }
@@ -300,9 +296,8 @@ std::string StructType::to_string() const
 {
   std::string result = "{";
 
-  LEGATE_ASSERT(field_types_.size() == offsets_.size());
-  for (auto&& [idx, rest] :
-       legate::detail::enumerate(legate::detail::zip_equal(field_types(), offsets()))) {
+  LEGATE_ASSERT(field_types().size() == offsets().size());
+  for (auto&& [idx, rest] : enumerate(zip_equal(field_types(), offsets()))) {
     auto&& [field_type, offset] = rest;
 
     if (idx > 0) {
@@ -317,44 +312,33 @@ std::string StructType::to_string() const
 void StructType::pack(BufferBuilder& buffer) const
 {
   buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
-  buffer.pack<std::uint32_t>(uid_);
-  buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(field_types_.size()));
-  for (auto&& field_type : field_types_) {
+  buffer.pack<std::uint32_t>(uid());
+  buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(field_types().size()));
+  for (auto&& field_type : field_types()) {
     field_type->pack(buffer);
   }
-  buffer.pack<bool>(aligned_);
+  buffer.pack<bool>(aligned());
 }
 
-bool StructType::equal(const Type& other) const
+bool StructType::operator==(const Type& other) const
 {
   if (code != other.code) {
     return false;
   }
-  auto& casted = static_cast<const StructType&>(other);
+
+  const auto& casted = static_cast<const StructType&>(other);
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
-    if (uid_ != casted.uid_) {
-      return false;
-    }
-    const auto nf = num_fields();
-    if (nf != casted.num_fields()) {
-      return false;
-    }
-    for (std::uint32_t idx = 0; idx < nf; ++idx) {
-      if (field_type(idx) != casted.field_type(idx)) {
-        return false;
-      }
-    }
-    return true;
+    return uid() == casted.uid() && field_types() == casted.field_types();
   }
   // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-  return uid_ == casted.uid_;
+  return uid() == casted.uid();
 }
 
 const InternalSharedPtr<Type>& StructType::field_type(std::uint32_t field_idx) const
 {
-  return field_types_.at(field_idx);
+  return field_types().at(field_idx);
 }
 
 void StringType::pack(BufferBuilder& buffer) const
@@ -381,43 +365,45 @@ InternalSharedPtr<Type> primitive_type(Type::Code code)
     std::throw_with_nested(std::invalid_argument{result});
   }
 
-  auto finder = cache.find(code);
-  if (finder != cache.end()) {
-    return finder->second;
+  const auto [it, inserted] = cache.try_emplace(code);
+
+  if (inserted) {
+    it->second = make_internal_shared<PrimitiveType>(code);
   }
-  return cache[code] = make_internal_shared<PrimitiveType>(code);
+  return it->second;
 }
 
 ListType::ListType(std::uint32_t uid, InternalSharedPtr<Type> element_type)
   : ExtensionType{uid, Type::Code::LIST}, element_type_{std::move(element_type)}
 {
-  if (element_type_->variable_size()) {
+  if (this->element_type()->variable_size()) {
     throw TracedException<std::runtime_error>{"Nested variable size types are not implemented yet"};
   }
 }
 
-std::string ListType::to_string() const { return fmt::format("list({})", *element_type_); }
+std::string ListType::to_string() const { return fmt::format("list({})", *element_type()); }
 
 void ListType::pack(BufferBuilder& buffer) const
 {
   buffer.pack<std::int32_t>(static_cast<std::int32_t>(code));
-  buffer.pack<std::uint32_t>(uid_);
-  element_type_->pack(buffer);
+  buffer.pack<std::uint32_t>(uid());
+  element_type()->pack(buffer);
 }
 
-bool ListType::equal(const Type& other) const
+bool ListType::operator==(const Type& other) const
 {
   if (code != other.code) {
     return false;
   }
-  auto& casted = static_cast<const ListType&>(other);
+
+  const auto& casted = static_cast<const ListType&>(other);
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
-    return uid_ == casted.uid_ && element_type_ == casted.element_type_;
+    return uid() == casted.uid() && element_type() == casted.element_type();
   }
   // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
-  return uid_ == casted.uid_;
+  return uid() == casted.uid();
 }
 
 InternalSharedPtr<Type> string_type()
@@ -561,6 +547,7 @@ InternalSharedPtr<FixedArrayType> point_type(std::uint32_t ndim)
     throw TracedException<std::out_of_range>{
       fmt::format("{} is not a supported number of dimensions", ndim)};
   }
+
   if (nullptr == cache[ndim]) {
     cache[ndim] =
       make_internal_shared<detail::FixedArrayType>(BASE_POINT_TYPE_UID + ndim, int64(), ndim);
@@ -595,13 +582,14 @@ InternalSharedPtr<Type> null_type()
 
 InternalSharedPtr<Type> domain_type()
 {
-  static auto result = detail::binary_type(sizeof(Domain));
+  static const auto result = detail::binary_type(sizeof(Domain));
   return result;
 }
 
 bool is_point_type(const InternalSharedPtr<Type>& type)
 {
   const auto uid = type->uid();
+
   return type->code == Type::Code::INT64 ||
          (uid > BASE_POINT_TYPE_UID && uid <= BASE_POINT_TYPE_UID + LEGATE_MAX_DIM);
 }
@@ -625,7 +613,8 @@ std::int32_t ndim_point_type(const InternalSharedPtr<Type>& type)
 
 bool is_rect_type(const InternalSharedPtr<Type>& type)
 {
-  auto uid = type->uid();
+  const auto uid = type->uid();
+
   return uid > BASE_RECT_TYPE_UID && uid <= BASE_RECT_TYPE_UID + LEGATE_MAX_DIM;
 }
 
