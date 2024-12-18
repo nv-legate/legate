@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import os
 import platform
 import re
 import sys
@@ -87,6 +88,10 @@ def devices() -> str:
 
 
 def main() -> None:
+    # legate-issue should never fail, but sometimes auto-config is
+    # too aggressive and will cause legate-issue itself to crash
+    os.environ["LEGATE_AUTO_CONFIG"] = "0"
+
     print(f"Python      :  {sys.version.split(NEWLINE)[0]}")
     print(f"Platform    :  {platform.platform()}")
     print(f"Legion      :  {legion_version()}")
