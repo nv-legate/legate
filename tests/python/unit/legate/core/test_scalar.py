@@ -17,13 +17,16 @@ import pytest
 
 from legate.core import Scalar, types as ty
 
+from .util.types import _PRIMITIVES
+
 
 @pytest.fixture
-def scalar_s_list() -> list[tuple[bool | str | None, ty.Type]]:
+def scalar_s_list() -> list[tuple[bool | str | bytes | None, ty.Type]]:
     return [
         (None, ty.null_type),
         (False, ty.bool_),
         ("hello", ty.string_type),
+        (b"hello", ty.binary_type(5)),
     ]
 
 
@@ -79,9 +82,10 @@ class TestScalar:
     def test_scalar_type_str(
         self, scalar_s_list: list[tuple[bool | str | None, ty.Type]]
     ) -> None:
-        for number, data_type in scalar_s_list:
-            value = Scalar(number, data_type)
+        for val, data_type in scalar_s_list:
+            value = Scalar(val, data_type)
             assert value.type == data_type
+            assert value.value() == val
 
     def test_scalar_type_int(
         self, scalar_i_list: list[tuple[int | float, ty.Type]]
@@ -96,6 +100,20 @@ class TestScalar:
         for number, data_type in scalar_f_list:
             value = Scalar(number, data_type)
             assert value.type == data_type
+
+    @pytest.mark.parametrize(
+        "value, dtype",
+        [
+            ((3, 0.81, 8), ty.float64),
+            (((3,), (1.2,), (999,)), ty.array_type(ty.float64, 1)),
+        ],
+    )
+    def test_scalar_type_fixed_array(
+        self, value: tuple[float | tuple[tuple[float]], ...], dtype: ty.Type
+    ) -> None:
+        scalar = Scalar(value, ty.array_type(dtype, 3))
+        exp = np.array(value, dtype=dtype.to_numpy_dtype())
+        np.testing.assert_allclose(np.asarray(scalar), exp)
 
     def test_scalar_type_complex(
         self, scalar_c_list: list[tuple[complex, ty.Type]]
@@ -169,6 +187,43 @@ class TestScalar:
         )
         assert abs(real_part.value - 200.34) < 0.0001
         assert abs(imaginary_part.value - 100) < 0.0001
+
+    def test_struct_value(self) -> None:
+        value = (3, 0.81, 8)
+        scalar = Scalar(value, ty.struct_type([ty.int32, ty.float64, ty.int8]))
+        assert scalar.value() == value
+
+    def test_scalar_properties(self) -> None:
+        value = 3.1415926
+        scalar = Scalar(value, ty.float64)
+        assert str(scalar) == f"Scalar({value}, {ty.float64})"
+        assert repr(scalar) == f"Scalar({value}, {ty.float64})"
+        assert isinstance(scalar.ptr, int)
+        assert isinstance(scalar.raw_handle, int)
+        assert np.asarray(scalar) == scalar.value()
+
+
+class TestScalarErrors:
+    @pytest.mark.parametrize("dtype", _PRIMITIVES)
+    def test_invalid_buffer(self, dtype: ty.Type) -> None:
+        value = "foo"
+        msg = rf"Expected bytes or NumPy ndarray, but got {type(value)}"
+        with pytest.raises(ValueError, match=msg):
+            Scalar(value, dtype)
+
+    def test_invalid_struct_value(self) -> None:
+        value = 123
+        msg = (
+            rf"Expected bytes, NumPy ndarray, or tuple, but got {type(value)}"
+        )
+        with pytest.raises(ValueError, match=msg):
+            Scalar(value, ty.struct_type([ty.int8]))
+
+    def test_variable_size_array_interface(self) -> None:
+        scalar = Scalar("123")
+        msg = "Scalars with variable size types don't support array interface"
+        with pytest.raises(ValueError, match=msg):
+            np.asarray(scalar)
 
 
 if __name__ == "__main__":

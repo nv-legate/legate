@@ -174,6 +174,11 @@ class TestPyTask:
     def test_repeat_with_scale(self, in_shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         in_np, in_store = utils.random_array_and_store(in_shape)
+        if (
+            runtime.machine.preferred_target == TaskTarget.GPU
+            and in_np.size >= 1024
+        ):
+            pytest.xfail(reason="cupy reporting overflow")
         # Need to cast to int since randint() returns signedinteger[_32Bit |
         # _64Bit] since numpy 2.13
         repeats = tuple(map(int, np.random.randint(1, 3, in_np.ndim)))
