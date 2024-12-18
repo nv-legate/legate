@@ -243,6 +243,7 @@ set(with_runtime_SRC
     experimental/tracing.cc)
 
 set(wo_runtime_SRC
+    noinit/config.cc
     noinit/cuda_driver_api.cc
     noinit/enable_shared_from_this.cc
     noinit/enumerate.cc
