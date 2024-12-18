@@ -398,6 +398,7 @@ list(APPEND
      legate/utilities/detail/traced_exception.cc
      legate/utilities/detail/zip.cc
      legate/utilities/detail/linearize.cc
+     legate/utilities/detail/error.cc
      legate/timing/timing.cc
      # stl
      legate/experimental/stl/detail/clang_tidy_dummy.cpp

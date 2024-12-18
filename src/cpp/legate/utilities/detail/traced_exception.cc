@@ -10,182 +10,39 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate_defines.h>
-
-#include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/error.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/span.h>
-#include <legate/version.h>
-
-#include <legion_defines.h>
 
 #include <array>
 #include <atomic>
 #include <cpptrace/basic.hpp>
 #include <cpptrace/from_current.hpp>
-#include <cpptrace/utils.hpp>
+#include <cstddef>
 #include <cstdlib>
 #include <exception>
-#include <fmt/color.h>
 #include <fmt/format.h>
 #include <fmt/std.h>
 #include <iostream>
 #include <string_view>
-#include <sys/utsname.h>
+#include <vector>
 
 namespace legate::detail {
 
 namespace {
 
-constexpr auto BASE_ERROR_PREFIX = std::string_view{"LEGATE ERROR:"};
-
-[[nodiscard]] bool detect_use_color() noexcept
+void unwrap_nested_exception(const std::exception& exn, std::vector<std::string>* whats)
 {
-  try {
-    // Don't use EnvironmentVariable, because it may itself throw a TracedException. If that
-    // happens, we get:
-    //
-    // libc++abi: __cxa_guard_acquire detected recursive initialization: do you have a
-    // function-local static variable whose initialization depends on that function?
-    //
-    // Which is not great
-    if (const auto* no_color = std::getenv("NO_COLOR"); no_color && (no_color[0] != '0')) {
-      return false;
-    }
-    return cpptrace::isatty(cpptrace::stdout_fileno) && cpptrace::isatty(cpptrace::stderr_fileno);
-  } catch (...) {
-    return false;
-  }
-}
-
-[[nodiscard]] std::string make_error_prefix(bool use_color)
-{
-  if (use_color) {
-    return fmt::format(fmt::fg(fmt::color::indian_red), BASE_ERROR_PREFIX);
-  }
-  return std::string{BASE_ERROR_PREFIX};
-}
-
-[[nodiscard]] std::string get_system_summary()
-{
-  struct ::utsname res = {};
-
-  if (::uname(&res)) {
-    return "unknown system";
-  }
-  return fmt::format(
-    "{}, {}, {}, {}, {}", res.sysname, res.release, res.nodename, res.version, res.machine);
-}
-
-void add_exception_messages(
-  std::string_view PREFIX,
-  Span<const std::pair<const std::type_info&, std::string_view>> prev_exns,
-  std::string* ret)
-{
-  fmt::format_to(
-    std::back_inserter(*ret), "{} {}: {}\n", PREFIX, prev_exns[0].first, prev_exns[0].second);
-
-  if (prev_exns.size() == 1) {
-    return;
+  switch (const auto num_nested = whats->size()) {
+    case 0: whats->emplace_back(fmt::format("{}: {}", typeid(exn), exn.what())); break;
+    case 1:
+      whats->emplace_back("Above exception also contained nested exception(s):");
+      [[fallthrough]];
+    default:
+      whats->emplace_back(fmt::format("#{} {}: {}", num_nested, typeid(exn), exn.what()));
+      break;
   }
 
-  fmt::format_to(
-    std::back_inserter(*ret), "{} Above exception also contained nested exception(s):\n", PREFIX);
-  // Start at second index
-  for (std::size_t i = 1; i < prev_exns.size(); ++i) {
-    fmt::format_to(std::back_inserter(*ret),
-                   "{} #{} {}: {}\n",
-                   PREFIX,
-                   i,
-                   prev_exns[i].first,
-                   prev_exns[i].second);
-  }
-}
-
-void add_traceback(std::string_view PREFIX,
-                   bool USE_COLOR,
-                   const cpptrace::stacktrace& trace,
-                   std::string* ret)
-{
-  fmt::format_to(std::back_inserter(*ret),
-                 "{} Stack trace (most recent call first, top-most exception only):\n",
-                 PREFIX);
-  if (trace.empty()) {
-    fmt::format_to(std::back_inserter(*ret), "{} <unknown stack trace>\n", PREFIX);
-    return;
-  }
-
-  const auto num_digits = [&] {
-    const auto num_frames = trace.frames.size();
-
-    if (num_frames < 10) {  // NOLINT(readability-magic-numbers)
-      return 1;
-    }
-    if (num_frames < 100) {  // NOLINT(readability-magic-numbers)
-      return 2;
-    }
-    if (num_frames < 1'000) {  // NOLINT(readability-magic-numbers)
-      return 3;
-    }
-    // If we are handling tracebacks longer than 1000 function calls deep then we are in bigger
-    // trouble.
-    return 4;
-  }();
-
-  for (auto&& [idx, frame] : enumerate(trace)) {
-    fmt::format_to(std::back_inserter(*ret),
-                   "{} #{:<{}} {}\n",
-                   PREFIX,
-                   idx,
-                   num_digits,
-                   frame.to_string(USE_COLOR));
-  }
-}
-
-[[nodiscard]] std::string make_error_message_impl(
-  Span<const std::pair<const std::type_info&, std::string_view>> prev_exns,
-  const cpptrace::stacktrace& trace)
-{
-  // If any of this throws an exception, we are basically screwed
-  static const auto USE_COLOR      = detect_use_color();
-  static const auto PREFIX         = make_error_prefix(USE_COLOR);
-  constexpr auto RULER_LENGTH      = 80;
-  static const auto RULER          = fmt::format("{} {:=>{}}\n", PREFIX, "", RULER_LENGTH);
-  static const auto SYSTEM_SUMMARY = fmt::format("{} System: {}\n", PREFIX, get_system_summary());
-  static const auto LEGATE_VERSION_SUMMARY = fmt::format("{} Legate version: {}.{}.{} ({})\n",
-                                                         PREFIX,
-                                                         LEGATE_VERSION_MAJOR,
-                                                         LEGATE_VERSION_MINOR,
-                                                         LEGATE_VERSION_PATCH,
-                                                         LEGATE_GIT_HASH);
-  static const auto LEGION_VERSION_SUMMARY =
-    fmt::format("{} Legion version: {} ({})\n", PREFIX, LEGION_VERSION, LEGION_GIT_HASH);
-  static const auto CONFIGURE_SUMMARY =
-    fmt::format("{} Configure options: {}\n", PREFIX, LEGATE_CONFIGURE_OPTIONS);
-  constexpr auto FIVE_KB = 5 * 1024;
-
-  std::string ret;
-
-  // With the system info, version info, color, and a moderately long stack trace, we easily
-  // clear 5-6Kb in a single string here, so best to reserve this beast upfront. Note: the goal
-  // is not performance, but to avoid fragmentation and subsequently running out of memory (if
-  // that's even possible) due to constantly realloc-ing the buffer.
-  ret.reserve(FIVE_KB);
-  ret += RULER;
-  add_exception_messages(PREFIX, prev_exns, &ret);
-  ret += SYSTEM_SUMMARY;
-  ret += LEGATE_VERSION_SUMMARY;
-  ret += LEGION_VERSION_SUMMARY;
-  ret += CONFIGURE_SUMMARY;
-  add_traceback(PREFIX, USE_COLOR, trace, &ret);
-  ret += RULER;
-  return ret;
-}
-
-void unwrap_nested_exception(const std::exception& exn,
-                             std::vector<std::pair<const std::type_info&, std::string_view>>* whats)
-{
-  whats->emplace_back(typeid(exn), exn.what());
   try {
     std::rethrow_if_nested(exn);
   } catch (const std::exception& nested) {
@@ -215,11 +72,11 @@ void unwrap_nested_exception(const std::exception& exn,
     }
     catch (const std::exception& exn)
     {
-      std::vector<std::pair<const std::type_info&, std::string_view>> maybe_nested;
+      std::vector<std::string> maybe_nested;
 
       unwrap_nested_exception(exn, &maybe_nested);
-      std::cerr << make_error_message_impl({maybe_nested.cbegin(), maybe_nested.cend()},
-                                           cpptrace::from_current_exception());
+      std::cerr << make_error_message({maybe_nested.cbegin(), maybe_nested.cend()},
+                                      cpptrace::from_current_exception());
       std::abort();
     }
     catch (...)
@@ -263,11 +120,10 @@ bool install_terminate_handler() noexcept
 {
   static_cast<void>(install_terminate_handler());
 
-  const std::array<std::pair<const std::type_info&, std::string_view>, 1> tmp = {
-    std::make_pair(std::cref(exn_ty), what)};
+  const std::array<std::string, 1> tmp = {fmt::format("{}: {}", exn_ty, what)};
 
-  return make_error_message_impl({tmp.begin(), tmp.end()},
-                                 cpptrace::stacktrace::current(skip_frames + 1));
+  return make_error_message({tmp.cbegin(), tmp.cend()},
+                            cpptrace::stacktrace::current(skip_frames + 1));
 }
 
 // ------------------------------------------------------------------------------------------

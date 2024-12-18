@@ -12,38 +12,27 @@
 
 #include <legate/comm/detail/coll.h>
 #include <legate/utilities/abort.h>
-#include <legate/utilities/typedefs.h>
+#include <legate/utilities/detail/error.h>
 
-#include <legion.h>
-
-#include <cstdlib>
+#include <array>
+#include <cpptrace/basic.hpp>
+#include <fmt/format.h>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <string_view>
-#include <type_traits>
 #include <utility>
 
 namespace legate::detail {
 
 void abort_handler(std::string_view file, std::string_view func, int line, std::stringstream* ss)
 {
-  const auto print_message = [&](auto&& dest) -> decltype(auto) {
-    // Flush any output first so our message definitely shows up
-    std::cout << std::flush;
+  const std::array<std::string, 2> exn_messages = {
+    fmt::format("Legate called abort at {}:{} in {}()", file, line, func), std::move(*ss).str()};
 
-    dest << "Legate called abort at " << file << ":" << line << " in " << func
-         << "(): " << std::move(*ss).str();
-    return std::forward<std::decay_t<decltype(dest)>>(dest);
-  };
-
-  // If Legion is not yet initialized (or it has shut down), then the Legion loggers silently
-  // swallow the error messages. By using std::cerr, we lose out on some of the nice formatting
-  // (e.g. printing the current node ID), but at least the abort message gets printed.
-  if (Legion::Runtime::has_runtime() && Legion::Runtime::has_context()) {
-    print_message(log_legate().error());
-  } else {
-    print_message(std::cerr) << std::endl;  // NOLINT(performance-avoid-endl)
-  }
+  std::cerr << make_error_message({exn_messages.begin(), exn_messages.end()},
+                                  cpptrace::stacktrace::current(/* skip */ 1))
+            << std::endl;  // NOLINT(performance-avoid-endl)
   comm::coll::abort();
 }
 

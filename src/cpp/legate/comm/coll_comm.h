@@ -16,6 +16,7 @@
 
 #include "legate/utilities/macros.h"
 
+#include <cstddef>
 #include <cstdint>
 
 namespace legate::detail::comm::coll {
