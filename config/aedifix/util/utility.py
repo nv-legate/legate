@@ -145,8 +145,10 @@ def subprocess_capture_output_live_impl(
 
     timeout = kwargs.pop("timeout", 1)
 
-    total_stdout = ""
-    total_stderr = ""
+    total_stdout_len = 0
+    total_stderr_len = 0
+    stdout = ""
+    stderr = ""
 
     with Popen(*args, **kwargs) as process:
         done = False
@@ -154,7 +156,8 @@ def subprocess_capture_output_live_impl(
             try:
                 stdout, stderr = process.communicate(timeout=timeout)
             except TimeoutExpired as te:
-                stdout, stderr = te.stdout, te.stderr
+                stdout = normalize_output(te.stdout)
+                stderr = normalize_output(te.stderr)
             except KeyboardInterrupt:
                 process.send_signal(SIGINT)
                 raise
@@ -165,30 +168,25 @@ def subprocess_capture_output_live_impl(
                 # Don't break, instead wait for end of loop, in case stdout
                 # and/or stderr were updated.
                 done = True
-
-            stderr = normalize_output(stderr)
-            stdout = normalize_output(stdout)
-
-            if total_stdout == stdout and total_stderr == stderr:
-                # The process hasn't printed anything new, retry the
-                # communicate
-                continue
+                stderr = normalize_output(stderr)
+                stdout = normalize_output(stdout)
 
             # The streams will always contain the sum-total output of the
             # subprocess call, so we need to strip the stuff we've already
             # "seen" from the output before sending it to the callback.
-            new_stdout = stdout[len(total_stdout) :]
-            new_stderr = stderr[len(total_stderr) :]
-            # Now we replace the complete stdout
-            total_stdout = stdout
-            total_stderr = stderr
-            callback(new_stdout, new_stderr)
+            new_stdout = stdout[total_stdout_len:]
+            new_stderr = stderr[total_stderr_len:]
+            if new_stdout or new_stderr:
+                # Now we replace the complete stdout
+                total_stdout_len = len(stdout)
+                total_stderr_len = len(stderr)
+                callback(new_stdout, new_stderr)
 
         retcode = process.poll()
         if retcode is None:
             retcode = 0
 
-    return CompletedProcess(process.args, retcode, total_stdout, total_stderr)
+    return CompletedProcess(process.args, retcode, stdout, stderr)
 
 
 def subprocess_capture_output_live(
