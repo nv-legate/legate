@@ -16,7 +16,7 @@ from argparse import (
     ArgumentTypeError,
     _ArgumentGroup as ArgumentGroup,
 )
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import (
     dataclass,
     fields as dataclasses_fields,
@@ -66,7 +66,7 @@ class ArgSpec:
     nargs: NotRequired[int | NargsType] = Unset
     const: NotRequired[Any] = Unset
     default: NotRequired[Any] = Unset
-    type: NotRequired[type[Any]] = Unset
+    type: NotRequired[type[Any] | Callable[[str], Any]] = Unset
     choices: NotRequired[Sequence[Any]] = Unset
     help: NotRequired[str] = Unset
     metavar: NotRequired[str] = Unset

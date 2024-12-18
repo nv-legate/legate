@@ -153,6 +153,10 @@ class DebugConfigureValue(IntEnum):
     TRACE_EXPAND = 3
 
     @classmethod
+    def from_string(cls, str_val: str) -> DebugConfigureValue:
+        return cls(int(str_val))
+
+    @classmethod
     def help_str(cls) -> str:
         possible_values = "\n".join(f"- {v}: {v.to_flag()!r}" for v in cls)
         return f"Possible values:\n{possible_values}"
@@ -199,7 +203,7 @@ class MainPackage(Package, ABC):
         name=DEBUG_CONFIGURE_FLAG,
         spec=ArgSpec(
             dest=flag_to_dest(DEBUG_CONFIGURE_FLAG),
-            type=DebugConfigureValue,
+            type=DebugConfigureValue.from_string,
             default=DebugConfigureValue.NONE,
             const=DebugConfigureValue.DEBUG_FIND,
             nargs="?",
