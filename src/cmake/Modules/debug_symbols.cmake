@@ -24,6 +24,14 @@ function(_legate_install_debug_syms_macos target install_dir)
             "(target was imported, we did not generate it)")
     return()
   endif()
+
+  get_target_property(already_installed "${target}" LEGATE_DEBUG_SYMBOLS_INSTALL_DIR)
+  if(already_installed)
+    message(VERBOSE "already installed debug information for ${target}: "
+            "${already_installed}")
+    return()
+  endif()
+
   get_target_property(target_type "${target}" TYPE)
   if((target_type STREQUAL "SHARED_LIBRARY") OR (target_type STREQUAL "EXECUTABLE"))
     # We want to install the dsymutil stuff directly next to the installed binary/lib.
@@ -33,6 +41,18 @@ function(_legate_install_debug_syms_macos target install_dir)
     #
     # So instead we need them to tell us exactly where to put it...
     install(DIRECTORY "$<TARGET_FILE:${target}>.dSYM" DESTINATION "${install_dir}")
+
+    # Need to get at the base target so that we can modify its properties
+    get_target_property(base_target "${target}" ALIASED_TARGET)
+    if(base_target)
+      set(target "${base_target}")
+    endif()
+    # cmake-format incorrectly indents this, and then cmake-lint complains, so disable
+    # formatting for this line
+    # cmake-format: off
+    set_target_properties("${target}"
+      PROPERTIES LEGATE_DEBUG_SYMBOLS_INSTALL_DIR "${install_dir}")
+    # cmake-format: on
   endif()
 endfunction()
 
@@ -101,6 +121,7 @@ endmacro()
 function(legate_configure_debug_symbols)
   list(APPEND CMAKE_MESSAGE_CONTEXT "configure_debug_symbols")
 
+  define_property(TARGET PROPERTY LEGATE_DEBUG_SYMBOLS_INSTALL_DIR)
   if((CMAKE_BUILD_TYPE STREQUAL "Debug") OR (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
       _legate_configure_debug_symbols_macos()

@@ -26,7 +26,8 @@ function(find_or_configure_argparse)
                   CPM_ARGS
                   GIT_REPOSITORY "${git_url}"
                   GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
-                  GIT_TAG "${git_tag}" EXLUDE_FROM_ALL ${exclude_from_all})
+                  GIT_TAG "${git_tag}"
+                  EXCLUDE_FROM_ALL ${exclude_from_all})
 
   if(exclude_from_all)
     legate_install_dependencies(TARGETS argparse::argparse)

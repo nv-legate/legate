@@ -58,11 +58,11 @@ function(legate_install_dependencies)
     install(
       TARGETS "${target}"
       ARCHIVE
-        NAMELINK_SKIP
         DESTINATION "${legate_DEP_INSTALL_LIBDIR}"
+        NAMELINK_SKIP
       LIBRARY
-        NAMELINK_SKIP
         DESTINATION "${legate_DEP_INSTALL_LIBDIR}"
+        NAMELINK_SKIP
       RUNTIME
         DESTINATION "${legate_DEP_INSTALL_BINDIR}"
       PUBLIC_HEADER
@@ -71,6 +71,19 @@ function(legate_install_dependencies)
         DESTINATION "${legate_DEP_INSTALL_INCLUDEDIR}"
       INCLUDES DESTINATION "${legate_DEP_INSTALL_INCLUDEDIR}")
     # cmake-format: on
+
+    get_target_property(target_type "${target}" TYPE)
+    if(target_type STREQUAL "SHARED_LIBRARY")
+      set(install_dir "${legate_DEP_INSTALL_LIBDIR}")
+    elseif(target_type STREQUAL "EXECUTABLE")
+      set(install_dir "${legate_DEP_INSTALL_BINDIR}")
+    else()
+      set(install_dir "")
+    endif()
+
+    if(install_dir)
+      legate_install_debug_symbols(TARGET "${target}" INSTALL_DIR "${install_dir}")
+    endif()
   endforeach()
 endfunction()
 
