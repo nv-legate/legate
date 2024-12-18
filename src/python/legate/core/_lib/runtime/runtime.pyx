@@ -85,7 +85,7 @@ class _LegateOutputStream:
 
     @property
     def _should_write(self) -> bool:
-        return self._node_id == 0
+        return self._node_id == 0 or is_running_in_task()
 
 
 cdef class ShutdownCallbackManager:
