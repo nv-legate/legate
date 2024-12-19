@@ -439,7 +439,7 @@ template <std::int32_t Dim, typename Rect>
 template <std::int32_t Dim>
 [[nodiscard]] inline std::array<coord_t, Dim> dynamic_extents(const legate::PhysicalStore& store)
 {
-  return dynamic_extents<Dim>(store.shape < Dim ? Dim : 1 > ());
+  return dynamic_extents<Dim>(store.shape<Dim ? Dim : 1>());
 }
 }  // namespace detail
 /** @endcond */

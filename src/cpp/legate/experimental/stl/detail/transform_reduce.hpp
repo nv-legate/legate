@@ -80,11 +80,11 @@ namespace legate::experimental::stl {
 template <typename InputRange,
           typename Init,
           typename Reduction,
-          typename UnaryTransform>                                                    //
-  requires(                                                                           //
-            logical_store_like<InputRange>                                            //
-            && logical_store_like<Init>                                               //
-            && legate_reduction<as_reduction_t<Reduction, element_type_of_t<Init>>>)  //
+          typename UnaryTransform>                                            //
+  requires(                                                                   //
+    logical_store_like<InputRange>                                            //
+    && logical_store_like<Init>                                               //
+    && legate_reduction<as_reduction_t<Reduction, element_type_of_t<Init>>>)  //
 [[nodiscard]] auto transform_reduce(InputRange&& input,
                                     Init&& init,
                                     Reduction&& reduction_op,

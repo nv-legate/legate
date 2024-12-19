@@ -137,8 +137,7 @@ namespace detected_detail {
 
 template <typename Default,
           typename AlwaysVoid,
-          template <typename...>
-          typename Op,
+          template <typename...> typename Op,
           typename... Args>
 struct Detector : std::false_type {
   using type = Default;

@@ -30,7 +30,7 @@ void for_each_1D()
   stl::logical_store<std::int64_t, 1> store = {std::in_place,  //
                                                {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}};
 
-  stl::for_each(store, [] LEGATE_HOST_DEVICE(std::int64_t & x) { ++x; });
+  stl::for_each(store, [] LEGATE_HOST_DEVICE(std::int64_t& x) { ++x; });
 
   // Check the result
   std::int64_t expected = 0;
