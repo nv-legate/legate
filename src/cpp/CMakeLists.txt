@@ -986,4 +986,11 @@ if(legate_BUILD_DOCS)
   add_subdirectory(${LEGATE_DIR}/docs/legate docs/legate)
 endif()
 
+# HACK: so configure can read them back, should eventually be replaced by a JSON dump that
+# configure can read directly.
+foreach(var CMAKE_C_FLAGS CMAKE_CXX_FLAGS legate_CXX_FLAGS legate_CUDA_FLAGS
+            legate_LINKER_FLAGS)
+  set(AEDIFIX_${var} "${${var}}" CACHE STRING "" FORCE)
+endforeach()
+
 list(POP_BACK CMAKE_MESSAGE_CONTEXT)

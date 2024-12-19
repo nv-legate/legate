@@ -475,7 +475,7 @@ class ConfigurationManager:
                 yield from val_list
 
         summary = "\n".join(gen_summary())
-        self.log_boxed(summary, title="Configuration Summary")
+        self.log_boxed(summary, title="Configuration Summary", align="left")
         install_mess = [
             "Please set the following:",
             "",

@@ -20,7 +20,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/utilities.cmake)
 function(legate_set_default_flags_impl)
   list(APPEND CMAKE_MESSAGE_CONTEXT "set_default_flags")
 
-  set(options SET_CACHE IS_LINKER)
+  set(options IS_LINKER)
   set(one_value_args DEST_VAR LANG)
   set(multi_value_args FLAGS)
 
@@ -70,9 +70,6 @@ function(legate_set_default_flags_impl)
   endforeach()
 
   set(${_FLAGS_DEST_VAR} "${dest}" PARENT_SCOPE)
-  if(_FLAGS_SET_CACHE)
-    set(${_FLAGS_DEST_VAR} "${dest}" CACHE STRING "" FORCE)
-  endif()
 endfunction()
 
 # Too many statements 51/50
@@ -119,7 +116,7 @@ function(legate_configure_default_compiler_flags)
   endif()
 
   if(NOT legate_CXX_FLAGS)
-    legate_set_default_flags_impl(SET_CACHE LANG CXX DEST_VAR legate_CXX_FLAGS
+    legate_set_default_flags_impl(LANG CXX DEST_VAR legate_CXX_FLAGS
                                   FLAGS ${default_cxx_flags})
     set(legate_CXX_FLAGS "${legate_CXX_FLAGS}" PARENT_SCOPE)
   endif()
@@ -131,27 +128,8 @@ function(legate_configure_default_compiler_flags)
                                   FLAGS ${default_cxx_flags_sanitizer})
 
     list(JOIN cmake_cxx_flags_tmp " " cmake_cxx_flags_tmp)
-    # Don't assign this blindly, first, check if CMAKE_CXX_FLAGS ends with exactly the
-    # flags we intend to append. We do this because otherwise, every time any cmake
-    # changes are made, we end up appending the same flags to an ever growing
-    # CMAKE_CXX_FLAGS:
-    #
-    # 1st configure: -foo -bar -baz 2nd configure: -foo -bar -baz -foo -bar -baz ...
-    #
-    # This plays havoc with compiler caches like ccache, which treat each such variant as
-    # different, and hence causes a full (uncached!) recompilation of all dependencies.
-    legate_string_ends_with(SRC "${CMAKE_CXX_FLAGS}" ENDS_WITH "${cmake_cxx_flags_tmp}"
-                            RESULT_VAR found)
-
-    if(found)
-      message(STATUS "CMAKE_CXX_FLAGS already ends with sanitizer flags, not adding them")
-    else()
-      message(STATUS "CMAKE_CXX_FLAGS does not end with sanitizer flags, adding them")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${cmake_cxx_flags_tmp}")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
-      # OK, now we can set cache
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
-    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${cmake_cxx_flags_tmp}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" PARENT_SCOPE)
   endif()
 
   if(NOT legate_CUDA_FLAGS)
@@ -174,7 +152,7 @@ function(legate_configure_default_compiler_flags)
       list(APPEND default_cuda_flags "-g" "-lineinfo")
     endif()
 
-    legate_set_default_flags_impl(SET_CACHE LANG CUDA DEST_VAR legate_CUDA_FLAGS
+    legate_set_default_flags_impl(LANG CUDA DEST_VAR legate_CUDA_FLAGS
                                   FLAGS ${default_cuda_flags})
     set(legate_CUDA_FLAGS "${legate_CUDA_FLAGS}" PARENT_SCOPE)
   endif()
@@ -189,8 +167,7 @@ function(legate_configure_default_linker_flags)
   endif()
 
   if(NOT legate_LINKER_FLAGS)
-    legate_set_default_flags_impl(SET_CACHE IS_LINKER LANG CXX
-                                  DEST_VAR legate_LINKER_FLAGS
+    legate_set_default_flags_impl(IS_LINKER LANG CXX DEST_VAR legate_LINKER_FLAGS
                                   FLAGS ${default_linker_flags})
     set(legate_LINKER_FLAGS "${legate_LINKER_FLAGS}" PARENT_SCOPE)
   endif()

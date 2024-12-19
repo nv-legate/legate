@@ -804,11 +804,17 @@ class MainPackage(Package, ABC):
 
             ccflags: str | None | list[str] | tuple[str, ...]
             try:
-                ccflags = self.manager.read_cmake_variable(cmake_flags_var)
+                assert cmake_flags_var.cmake_var is not None  # mypy
+                ccflags = self.manager.read_cmake_variable(
+                    "AEDIFIX_" + cmake_flags_var.cmake_var
+                )
             except ValueError:
-                ccflags = getattr(self.cl_args, flags_attr_name).value
-                if isinstance(ccflags, (list, tuple)):
-                    ccflags = " ".join(ccflags)
+                try:
+                    ccflags = self.manager.read_cmake_variable(cmake_flags_var)
+                except ValueError:
+                    ccflags = getattr(self.cl_args, flags_attr_name).value
+                    if isinstance(ccflags, (list, tuple)):
+                        ccflags = " ".join(ccflags)
 
             if not ccflags:
                 ccflags = "[]"

@@ -444,7 +444,6 @@
                 },
                 "pargs": {
                     "flags": [
-                        "SET_CACHE",
                         "IS_LINKER"
                     ],
                     "nargs": "*"

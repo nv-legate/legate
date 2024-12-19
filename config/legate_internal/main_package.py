@@ -428,7 +428,13 @@ class Legate(MainPackage):
         ) -> tuple[str, str]:
             flags = self.manager.get_cmake_variable(cmake_varname)
             if not flags:
-                flags = self.manager.read_cmake_variable(cmake_varname)
+                try:
+                    assert cmake_varname.cmake_var is not None  # mypy
+                    flags = self.manager.read_cmake_variable(
+                        "AEDIFIX_" + cmake_varname.cmake_var
+                    )
+                except ValueError:
+                    flags = self.manager.read_cmake_variable(cmake_varname)
             if isinstance(flags, (list, tuple)):
                 flags = " ".join(flags)
             return (f"{name} Flags", flags.replace(";", " "))
