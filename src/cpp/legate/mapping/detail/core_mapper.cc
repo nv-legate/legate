@@ -23,20 +23,11 @@ namespace legate::mapping::detail {
 // should be overriding this mapper so we burry it in here
 class CoreMapper final : public Mapper {
  public:
-  [[nodiscard]] legate::mapping::TaskTarget task_target(
-    const legate::mapping::Task& task,
-    const std::vector<legate::mapping::TaskTarget>& options) override;
   [[nodiscard]] std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& task,
     const std::vector<legate::mapping::StoreTarget>& options) override;
   [[nodiscard]] legate::Scalar tunable_value(legate::TunableID tunable_id) override;
 };
-
-TaskTarget CoreMapper::task_target(const legate::mapping::Task&,
-                                   const std::vector<TaskTarget>& options)
-{
-  return options.front();
-}
 
 std::vector<legate::mapping::StoreMapping> CoreMapper::store_mappings(
   const legate::mapping::Task&, const std::vector<StoreTarget>&)

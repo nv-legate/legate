@@ -16,12 +16,6 @@
 
 namespace legate::mapping::detail {
 
-inline TaskTarget DefaultMapper::task_target(const mapping::Task&,
-                                             const std::vector<TaskTarget>& options)
-{
-  return options.front();
-}
-
 inline std::vector<mapping::StoreMapping> DefaultMapper::store_mappings(
   const mapping::Task& /*task*/, const std::vector<StoreTarget>& /*options*/)
 {

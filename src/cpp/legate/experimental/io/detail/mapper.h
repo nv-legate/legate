@@ -23,8 +23,6 @@ namespace legate::experimental::io::detail {
 
 class Mapper final : public legate::mapping::Mapper {
  public:
-  [[nodiscard]] mapping::TaskTarget task_target(
-    const mapping::Task& task, const std::vector<mapping::TaskTarget>& options) override;
   [[nodiscard]] std::vector<mapping::StoreMapping> store_mappings(
     const mapping::Task& task, const std::vector<mapping::StoreTarget>& options) override;
   [[nodiscard]] legate::Scalar tunable_value(TunableID) override;

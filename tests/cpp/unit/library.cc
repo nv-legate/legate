@@ -23,13 +23,6 @@
 namespace test_library {
 
 class LibraryMapper : public legate::mapping::Mapper {
-  legate::mapping::TaskTarget task_target(
-    const legate::mapping::Task& /*task*/,
-    const std::vector<legate::mapping::TaskTarget>& options) override
-  {
-    return options.front();
-  }
-
   std::vector<legate::mapping::StoreMapping> store_mappings(
     const legate::mapping::Task& /*task*/,
     const std::vector<legate::mapping::StoreTarget>& /*options*/) override

@@ -521,16 +521,6 @@ class Mapper {
  public:
   virtual ~Mapper() = default;
   /**
-   * @brief Picks the target processor type for the task
-   *
-   * @param task Task to map
-   * @param options Processor types for which the task has variants
-   *
-   * @return A target processor type
-   */
-  [[nodiscard]] virtual TaskTarget task_target(const Task& task,
-                                               const std::vector<TaskTarget>& options) = 0;
-  /**
    * @brief Chooses mapping policies for the task's stores.
    *
    * Store mappings can be underspecified; any store of the task that doesn't have a mapping policy

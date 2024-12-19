@@ -34,8 +34,6 @@ namespace legate::mapping::detail {
 // The only way (other than to disable the check wholesale), is to silence it for this class...
 class DefaultMapper final : public Mapper {  // NOLINT(bugprone-forward-declaration-namespace)
  public:
-  [[nodiscard]] TaskTarget task_target(const mapping::Task& task,
-                                       const std::vector<TaskTarget>& options) override;
   [[nodiscard]] std::vector<mapping::StoreMapping> store_mappings(
     const mapping::Task& task, const std::vector<StoreTarget>& options) override;
   [[nodiscard]] Scalar tunable_value(TunableID tunable_id) override;

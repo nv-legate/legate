@@ -27,6 +27,8 @@ C++
 
 .. rubric:: Mapping
 
+- Remove ``legate::mapping::Mapper::task_target()``.
+
 .. rubric:: Partitioning
 
 .. rubric:: Tasks

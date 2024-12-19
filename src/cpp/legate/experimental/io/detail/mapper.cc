@@ -15,12 +15,6 @@
 
 namespace legate::experimental::io::detail {
 
-mapping::TaskTarget Mapper::task_target(const mapping::Task&,
-                                        const std::vector<mapping::TaskTarget>& options)
-{
-  return options.front();
-}
-
 std::vector<mapping::StoreMapping> Mapper::store_mappings(
   const mapping::Task& task, const std::vector<mapping::StoreTarget>& options)
 {

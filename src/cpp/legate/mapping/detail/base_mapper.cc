@@ -209,25 +209,23 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
       task, legate_task, get_stores, &output.check_collective_regions);
   }
 
-  auto&& machine_desc = legate_task.machine();
-  auto targets        = machine_desc.valid_targets();
+  const auto target = [&] {
+    const auto& machine_desc = legate_task.machine();
+    const auto& targets      = machine_desc.valid_targets();
+    const auto it            = std::find_if(
+      targets.begin(), targets.end(), [&](TaskTarget tgt) { return has_variant_(ctx, task, tgt); });
 
-  targets.erase(std::remove_if(targets.begin(),
-                               targets.end(),
-                               [&](TaskTarget target) { return !has_variant_(ctx, task, target); }),
-                targets.end());
+    if (it == targets.end()) {
+      LEGATE_ABORT("Task ",
+                   task.get_task_name(),
+                   "[",
+                   task.get_provenance_string(),
+                   "] does not have a valid variant for this resource configuration: ",
+                   machine_desc);
+    }
+    return *it;
+  }();
 
-  if (targets.empty()) {
-    LEGATE_ABORT("Task ",
-                 task.get_task_name(),
-                 "[",
-                 task.get_provenance_string(),
-                 "] does not have a valid variant for this resource configuration: ",
-                 machine_desc);
-  }
-
-  const auto target =
-    legate_task.library()->get_mapper()->task_target(mapping::Task{&legate_task}, targets);
   // The initial processor just needs to have the same kind as the eventual target of this task
   output.initial_proc = local_machine_.procs(target).front();
 
