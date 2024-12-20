@@ -59,10 +59,7 @@ macro(find_legate_cpp_impl legate_version build_export_set install_export_set)
                        liblegate
                        "${CMAKE_SHARED_LIBRARY_PREFIX}legate${CMAKE_SHARED_LIBRARY_SUFFIX}"
                        "${CMAKE_SHARED_LIBRARY_PREFIX}legate.${legate_version}${CMAKE_SHARED_LIBRARY_SUFFIX}"
-                 PATHS "${legate_ROOT}"
-                       "${legate_ROOT}/${lib_dir}"
-                       "${legate_ROOT}/${CMAKE_INSTALL_LIBDIR}"
-                       "${legate_ROOT}/cpp/${lib_dir}"
+                 PATHS "${legate_ROOT}" "${legate_ROOT}/${CMAKE_INSTALL_LIBDIR}"
                        "${legate_ROOT}/cpp/${CMAKE_INSTALL_LIBDIR}"
                  NO_DEFAULT_PATH)
 

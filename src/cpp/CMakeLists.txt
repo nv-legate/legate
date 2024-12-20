@@ -20,35 +20,19 @@ include("${LEGATE_CMAKE_DIR}/Modules/legate_options.cmake")
 # ########################################################################################
 # * Project definition -------------------------------------------------------
 
-include(GNUInstallDirs)
-
 # Write the version header
 rapids_cmake_write_version_file(${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/version.h
                                 PREFIX LEGATE)
 
-include("${LEGATE_CMAKE_DIR}/Modules/compile_commands.cmake")
-
-legate_export_compile_commands(DEST_DIR ${LEGATE_DIR})
-
-# ########################################################################################
-# * Build Type ---------------------------------------------------------------
-
-# Set a default build type if none was specified
-rapids_cmake_build_type(Release)
-
-# ########################################################################################
-# * conda environment --------------------------------------------------------
-
-rapids_cmake_support_conda_env(conda_env MODIFY_PREFIX_PATH)
-
-# We're building python extension libraries, which must always be installed under lib/,
-# even if the system normally uses lib64/. Rapids-cmake currently doesn't realize this
-# when we're going through scikit-build, see
-# https://github.com/rapidsai/rapids-cmake/issues/426 Do this before we include Legion, so
-# its build also inherits this setting.
-if(TARGET conda_env)
-  set(CMAKE_INSTALL_LIBDIR "lib")
-endif()
+message(STATUS "Symlinking compile_commands.json to root directory")
+file(CREATE_LINK
+     # Using CMAKE_BINARY_DIR vs CMAKE_CURRENT_BINARY_DIR is intentional. If we use
+     # CURRENT_BINARY_DIR, then it breaks anytime someone uses add_subdirectory(), since
+     # cmake always puts the compile_commands.json in the top-level build dir (not in the
+     # sub tree)
+     "${CMAKE_BINARY_DIR}/compile_commands.json"
+     "${LEGATE_DIR}/compile_commands.json"
+     SYMBOLIC)
 
 # ########################################################################################
 # * Dependencies -------------------------------------------------------------
@@ -506,34 +490,34 @@ endif()
 add_library(legate ${legate_SOURCES})
 add_library(legate::legate ALIAS legate)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set(LEGATE_PLATFORM_RPATH_ORIGIN "\$ORIGIN")
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  set(LEGATE_PLATFORM_RPATH_ORIGIN "@loader_path")
-else()
-  message(FATAL_ERROR "Unsupported system: ${CMAKE_SYSTEM_NAME}, don't know how to set "
-                      "rpath 'origin' on this platform")
-endif()
+# For whatever reason cmake-format craps out when formatting the below, so much so that
+# cmake-lint then ultimately complains with:
+#
+# cmake-format: off
+# src/cpp/CMakeLists.txt:480,80: [C0307] Bad indentation:
+#                                                              )
+# ^----BodyNode: 1:0->StatementNode: 477:0->TreeNode: 480:80
+# cmake-format: on
+# cmake-format: off
+set_target_properties(legate
+                        PROPERTIES
+                          EXPORT_NAME              legate
+                          LIBRARY_OUTPUT_NAME      legate
+                          LIBRARY_OUTPUT_DIRECTORY lib
+                          BUILD_RPATH_USE_ORIGIN   TRUE
+                          SOVERSION                ${PROJECT_VERSION})
+# cmake-format: on
 
 set(install_rpath
-    "${LEGATE_PLATFORM_RPATH_ORIGIN}"
+    "${legate_PLATFORM_RPATH_ORIGIN}"
     # The ../ is needed because
-    # ${LEGATE_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR} expands to (on linux)
+    # ${legate_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR} expands to (on linux)
     # $ORIGIN/lib/legate/deps, which is fine *except* if $ORIGIN is already in lib/. In
     # that case it would expand to lib/lib/legate/deps which DNE. So we need to ../ once
     # so that it expands to lib/../lib/legate/deps. A hack for sure, but it works.
-    "${LEGATE_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}")
+    "${legate_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}")
 
-set_target_properties(legate
-                      PROPERTIES EXPORT_NAME legate
-                                 LIBRARY_OUTPUT_NAME legate
-                                 BUILD_RPATH "${LEGATE_PLATFORM_RPATH_ORIGIN}"
-                                 INSTALL_RPATH "${install_rpath}"
-                                 POSITION_INDEPENDENT_CODE ON
-                                 INTERFACE_POSITION_INDEPENDENT_CODE ON
-                                 LIBRARY_OUTPUT_DIRECTORY lib
-                                 SOVERSION ${legate_version})
-
+set_property(TARGET legate APPEND PROPERTY INSTALL_RPATH "${install_rpath}")
 # export this so that install_info.py can properly locate the versioned and unversioned
 # library names
 set_property(TARGET legate APPEND PROPERTY EXPORT_PROPERTIES LIBRARY_OUTPUT_NAME)
@@ -615,9 +599,7 @@ endforeach()
 
 include(CPack)
 
-rapids_cmake_install_lib_dir(lib_dir)
-
-install(TARGETS legate DESTINATION ${lib_dir} EXPORT legate-exports)
+install(TARGETS legate DESTINATION ${CMAKE_INSTALL_LIBDIR} EXPORT legate-exports)
 
 install(FILES legate.h
               ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate_defines.h
@@ -779,10 +761,6 @@ install(FILES legate/experimental/stl/detail/for_each.hpp
 install(FILES legate/timing/timing.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/timing)
 
-install(DIRECTORY ${LEGATE_CMAKE_DIR}/Modules/
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/legate" FILES_MATCHING
-        PATTERN "*.cmake")
-
 # ########################################################################################
 # * install Legate MPI Wrapper -----------------------------------------------------------
 #
@@ -838,7 +816,7 @@ install(PROGRAMS ${LEGATE_DIR}/legate-bind.sh DESTINATION ${CMAKE_INSTALL_BINDIR
 # ########################################################################################
 # * install Legate debug symbols ---------------------------------------------------------
 
-legate_install_debug_symbols(TARGET legate INSTALL_DIR ${lib_dir} RECURSIVE)
+legate_install_debug_symbols(TARGET legate INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} RECURSIVE)
 
 # ########################################################################################
 # * install export -----------------------------------------------------------
@@ -851,8 +829,6 @@ Imported Targets:
   - legate::legate
 
 ]=])
-
-file(READ "${LEGATE_CMAKE_DIR}/legate_helper_functions.cmake" helper_functions)
 
 # Normally this is done transparently (via the "code_string" below, embedded in the
 # Findlegate.cmake) if the CMakeLists.txt calling this one finds the legate via a
@@ -893,8 +869,7 @@ endif()
 if(Legion_NETWORKS)
   find_package(MPI REQUIRED COMPONENTS CXX)
 endif()
-]=]
-       "${helper_functions}")
+]=])
 
 get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
 
@@ -921,12 +896,6 @@ rapids_export(BUILD legate
               DOCUMENTATION doc_string
               FINAL_CODE_BLOCK code_string)
 
-# Symlink the module directory into the binary dir, so that the helper functions in
-# legate-config.cmake can be used even if the project is not installed.
-message(STATUS "Symlinking cmake module directory into ${CMAKE_CURRENT_BINARY_DIR}")
-file(CREATE_LINK "${LEGATE_CMAKE_DIR}/Modules" ${CMAKE_CURRENT_BINARY_DIR}/Modules
-     SYMBOLIC)
-
 set(legate_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
 if(legate_BUILD_TESTS)
@@ -946,7 +915,7 @@ endif()
 
 add_custom_target(generate_install_info_py ALL
                   COMMAND ${CMAKE_COMMAND} -DLEGATE_CMAKE_DIR="${LEGATE_CMAKE_DIR}"
-                          -DLEGATE_ARCH="${LEGATE_ARCH}"
+                          -DLEGATE_ARCH="${LEGATE_ARCH}" -DLEGATE_DIR="${LEGATE_DIR}"
                           -DLegion_VERSION="${Legion_VERSION}"
                           -DLegion_GIT_BRANCH="${Legion_GIT_BRANCH}"
                           -DLegion_GIT_REPO="${Legion_GIT_REPO}"
@@ -957,9 +926,8 @@ add_custom_target(generate_install_info_py ALL
                           -DLegion_MAX_DIM="${Legion_MAX_DIM}"
                           -DLegion_MAX_FIELDS="${Legion_MAX_FIELDS}"
                           -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
-                          -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                          -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                          -DLEGATE_DIR="${LEGATE_DIR}" -DLEGATE_ARCH="${LEGATE_ARCH}"
+                          -DCMAKE_C_COMPILER="${CMAKE_C_COMPILER}"
+                          -DCMAKE_CXX_COMPILER="${CMAKE_CXX_COMPILER}"
                           -Dlegate_LIB_NAME="$<TARGET_FILE_PREFIX:legate::legate>$<TARGET_FILE_BASE_NAME:legate::legate>"
                           -Dlegate_FULL_LIB_NAME="$<TARGET_FILE_NAME:legate::legate>" -P
                           "${LEGATE_CMAKE_DIR}/generate_install_info_py.cmake"

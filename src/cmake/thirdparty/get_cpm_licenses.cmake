@@ -25,4 +25,5 @@ function(find_or_configure_cpm_licenses)
                   GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
                   GIT_TAG "${git_tag}"
                   EXCLUDE_FROM_ALL ${exclude_from_all})
+  cpm_export_variables(cpm_licenses)
 endfunction()

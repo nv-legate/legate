@@ -19,4 +19,5 @@ function(find_or_configure_google_test)
 
   rapids_cpm_gtest(CPM_ARGS SYSTEM TRUE)
   legate_install_dependencies(TARGETS GTest::gtest GTest::gmock)
+  cpm_export_variables(GTest)
 endfunction()

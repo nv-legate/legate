@@ -18,4 +18,5 @@ function(find_or_configure_fmt)
   include(${rapids-cmake-dir}/cpm/fmt.cmake)
 
   rapids_cpm_fmt()
+  cpm_export_variables(fmt)
 endfunction()

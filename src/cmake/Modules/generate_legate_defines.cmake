@@ -12,8 +12,6 @@
 
 include_guard(GLOBAL)
 
-include(GNUInstallDirs)
-
 function(legate_generate_legate_defines)
   list(APPEND CMAKE_MESSAGE_CONTEXT "generate_legate_defines")
 

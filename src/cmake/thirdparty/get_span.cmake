@@ -56,4 +56,5 @@ function(find_or_configure_span)
   rapids_export_find_package_root(INSTALL span
                                   [=[${CMAKE_CURRENT_LIST_DIR}/../../legate/deps/cmake]=]
                                   EXPORT_SET legate-exports)
+  cpm_export_variables(span)
 endfunction()

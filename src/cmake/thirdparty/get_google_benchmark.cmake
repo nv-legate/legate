@@ -28,4 +28,5 @@ function(find_or_configure_google_benchmark)
   include(${rapids-cmake-dir}/cpm/gbench.cmake)
 
   rapids_cpm_gbench(CPM_ARGS OPTIONS "BENCHMARK_ENABLE_TESTING OFF")
+  cpm_export_variables(benchmark)
 endfunction()

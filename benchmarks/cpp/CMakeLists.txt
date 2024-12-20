@@ -17,8 +17,6 @@ include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
 
 legate_find_or_configure(PACKAGE google_benchmark)
 
-include(GNUInstallDirs)
-
 function(legate_configure_benchmark)
   set(options)
   set(one_value TARGET)
@@ -35,7 +33,7 @@ function(legate_configure_benchmark)
 
   set_property(TARGET ${_LEGATE_BM_TARGET} APPEND
                PROPERTY INSTALL_RPATH
-                        "${LEGATE_PLATFORM_RPATH_ORIGIN}/../${CMAKE_INSTALL_LIBDIR}")
+                        "${legate_PLATFORM_RPATH_ORIGIN}/../${CMAKE_INSTALL_LIBDIR}")
 
   target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE legate::legate benchmark::benchmark)
 

@@ -57,4 +57,5 @@ function(find_or_configure_mdspan)
   rapids_export_find_package_root(INSTALL mdspan
                                   [=[${CMAKE_CURRENT_LIST_DIR}/../../legate/deps/cmake]=]
                                   EXPORT_SET legate-exports)
+  cpm_export_variables(mdspan)
 endfunction()

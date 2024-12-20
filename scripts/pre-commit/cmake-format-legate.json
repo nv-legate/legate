@@ -255,15 +255,6 @@
                     "nargs": "1+"
                 }
             },
-            "legate_export_compile_commands": {
-                "kwargs": {
-                    "DEST_DIR": 1
-                },
-                "pargs": {
-                    "flags": [],
-                    "nargs": "*"
-                }
-            },
             "legate_find_or_configure": {
                 "kwargs": {
                     "PACKAGE": 1

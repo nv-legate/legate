@@ -128,6 +128,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           "Legion_HIJACK_CUDART OFF"
                           "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON")
 
+  cpm_export_variables(Legion)
   set(Legion_VERSION "${version}" PARENT_SCOPE)
   set(Legion_GIT_REPO "${git_repo}" PARENT_SCOPE)
   set(Legion_GIT_BRANCH "${git_branch}" PARENT_SCOPE)
@@ -167,4 +168,5 @@ calls into NCCL either directly or through some other Legate library.
     message(VERBOSE "${var}=${${var}}")
     set(${var} "${${var}}" PARENT_SCOPE)
   endforeach()
+  cpm_export_variables(Legion)
 endfunction()

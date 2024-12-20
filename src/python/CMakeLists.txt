@@ -19,28 +19,11 @@ if(SKBUILD_STATE STREQUAL "editable")
 endif()
 
 # ########################################################################################
-# * conda environment --------------------------------------------------------
-
-include(GNUInstallDirs)
-
-rapids_cmake_support_conda_env(conda_env MODIFY_PREFIX_PATH)
-
-# We're building python extension libraries, which must always be installed under lib/,
-# even if the system normally uses lib64/. Rapids-cmake currently doesn't realize this
-# when we're going through scikit-build, see
-# https://github.com/rapidsai/rapids-cmake/issues/426
-if(TARGET conda_env)
-  set(CMAKE_INSTALL_LIBDIR "lib")
-endif()
-
-rapids_cmake_install_lib_dir(lib_dir)
-
-# ########################################################################################
 # * Find or build the C++ -----------------------------------------------
 
 include("${LEGATE_CMAKE_DIR}/Modules/find_legate_cpp.cmake")
 
-find_legate_cpp(VERSION ${legate_version} BUILD_EXPORT_SET legate-python-exports
+find_legate_cpp(VERSION ${PROJECT_VERSION} BUILD_EXPORT_SET legate-python-exports
                 INSTALL_EXPORT_SET legate-python-exports)
 
 # ########################################################################################
@@ -74,7 +57,8 @@ legate_populate_cython_dependency_rpaths(RAPIDS_ASSOCIATED_TARGET legate::legate
 
 include(CPack)
 
-install(TARGETS legate_python DESTINATION ${lib_dir} EXPORT legate-python-exports)
+install(TARGETS legate_python DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        EXPORT legate-python-exports)
 
 if(_legate_FOUND_METHOD STREQUAL "PRE_BUILT")
   # If we found the library via pre-built libs then we also need to install them (and any
