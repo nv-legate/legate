@@ -166,35 +166,29 @@ def get_legate_build_dir_from_skbuild_dir(skbuild_dir: Path) -> Path | None:
             f"scikit-build-core CMakeCache does not exist: {cmake_cache_txt}"
         )
 
-    try:
-        # Test whether _legate_FOUND_METHOD is set to
-        # SELF_BUILT. If it is, then we built legate C++ as a
-        # side-effect of building legate_python.
-        read_cmake_cache_value(
-            cmake_cache_txt,
-            "_legate_FOUND_METHOD:INTERNAL=SELF_BUILT",
-        )
-    except Exception:
-        # _legate_FOUND_METHOD is either PRE_BUILT or INSTALLED,
-        # so check to see if legate_DIR is a valid path. If it is,
-        # check whether legate_DIR is a path to a legate
-        # build dir i.e.  `-D legate_ROOT=/legate/build`
-        legate_dir = Path(
-            read_cmake_cache_value(cmake_cache_txt, "legate_DIR:PATH=")
-        )
-
-        # If legate_dir doesn't have a CMakeCache.txt, CMake's
-        # find_package found a system legate installation.
-        # Return the installation paths.
-        cmake_cache_txt = legate_dir / "CMakeCache.txt"
-        if cmake_cache_txt.exists():
-            return Path(
-                read_cmake_cache_value(
-                    cmake_cache_txt, "legate_BINARY_DIR:STATIC="
-                )
+    legate_found_method = read_cmake_cache_value(
+        cmake_cache_txt,
+        "_legate_FOUND_METHOD:INTERNAL=",
+    )
+    match legate_found_method:
+        case "SELF_BUILT":
+            return skbuild_dir
+        case "PRE_BUILT":
+            # Use of legate_DIR vs LEGATE_DIR is deliberate. The latter points
+            # to the "base" directory, the former will point to the arch
+            # directory (since that's where the pre-built version lives).
+            legate_cmake_build_dir = Path(
+                read_cmake_cache_value(cmake_cache_txt, "legate_DIR:PATH=")
             )
-        return None
-    return skbuild_dir
+            assert_dir_exists(legate_cmake_build_dir)
+            assert_file_exists(legate_cmake_build_dir / "CMakeCache.txt")
+            return legate_cmake_build_dir
+        case _:
+            m = (
+                "Unknown legate found method: "
+                f"{legate_found_method} in {cmake_cache_txt}"
+            )
+            raise ValueError(m)
 
 
 def get_legate_build_dir(legate_parent_dir: Path) -> Path | None:
@@ -321,7 +315,9 @@ def get_legate_paths() -> LegatePaths:
     )
 
     legate_binary_dir = Path(
-        read_cmake_cache_value(cmake_cache_txt, "legate_BINARY_DIR:STATIC=")
+        read_cmake_cache_value(
+            cmake_cache_txt, "legate_cpp_BINARY_DIR:STATIC="
+        )
     )
 
     bind_sh_path = legate_dir / "legate-bind.sh"
