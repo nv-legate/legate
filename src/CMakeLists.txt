@@ -16,8 +16,6 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "legate")
 
 cmake_path(SET LEGATE_CMAKE_DIR NORMALIZE "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-include("${LEGATE_CMAKE_DIR}/policies.cmake" NO_POLICY_SCOPE)
-
 if(SKBUILD)
   set(legate_project_suffix python)
 else()
