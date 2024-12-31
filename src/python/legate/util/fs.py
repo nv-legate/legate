@@ -310,8 +310,13 @@ def get_legate_paths() -> LegatePaths:
     # install, or are being called by test.py
     cmake_cache_txt = legate_build_dir / "CMakeCache.txt"
 
-    legate_dir = Path(
-        read_cmake_cache_value(cmake_cache_txt, "LEGATE_DIR:PATH=")
+    bind_sh_path = (
+        Path(
+            read_cmake_cache_value(
+                cmake_cache_txt, "legate_cpp_SOURCE_DIR:STATIC="
+            )
+        ).parent
+        / "legate-bind.sh"
     )
 
     legate_binary_dir = Path(
@@ -319,8 +324,6 @@ def get_legate_paths() -> LegatePaths:
             cmake_cache_txt, "legate_cpp_BINARY_DIR:STATIC="
         )
     )
-
-    bind_sh_path = legate_dir / "legate-bind.sh"
 
     legate_lib_path = legate_binary_dir / "cpp" / "lib"
 

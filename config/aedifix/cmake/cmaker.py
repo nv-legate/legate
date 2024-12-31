@@ -102,10 +102,10 @@ class CMaker:
             If no variable with name `name` has been registered.
         """
         self._ensure_registered(name)
-        manager.log(f"Setting value {name} to {value}")
-        manager.log(f"Current value for {name}: {self._args[name]}")
+        manager.log(
+            f"Setting value {name} to {value} (current: {self._args[name]})"
+        )
         self._args[name].value = value
-        manager.log(f"New value for {name}: {value}")
 
     def get_value(self, manager: ConfigurationManager, name: str) -> Any:
         r"""Get a CMake variable's value.
@@ -128,7 +128,6 @@ class CMaker:
             If no variable with name `name` has been registered.
         """
         self._ensure_registered(name)
-        manager.log(f"Getting value of {name}")
         value = self._args[name].value
         manager.log(f"Value for {name}: {value}")
         return value
@@ -210,6 +209,22 @@ class CMaker:
         with cmd_file.open("w") as fd:
             json.dump(cmd_spec, fd)
 
+    def _load_cmake_export_conf(self, manager: ConfigurationManager) -> None:
+        conf_path = manager.project_export_config_path
+        if not conf_path.is_file():
+            raise CMakeConfigureError(
+                f"CMake project failed to emit {conf_path}"
+            )
+
+        config = json.loads(manager.project_export_config_path.read_text())
+        for key, value in config.items():
+            if value:
+                self.set_value(manager, key, value)
+            else:
+                manager.log(
+                    f"Ignoring cmake value {key} (falsey value: {value})"
+                )
+
     def finalize(
         self,
         manager: ConfigurationManager,
@@ -270,12 +285,22 @@ class CMaker:
             ret.extend(debug_value.to_flags())
             ret.extend(
                 (
+                    "-DAEDIFIX:BOOL=ON",
                     f"-D{manager.project_arch_name}:STRING"
                     f"='{manager.project_arch}'",
                     f"-D{manager.project_dir_name}:PATH="
                     f"'{manager.project_dir}'",
                     f"-D{manager.project_name_upper}_CONFIGURE_OPTIONS:STRING="
                     f"{shlex.join(manager._orig_argv)}",
+                )
+            )
+            export_vars = ";".join(arg.name for arg in self._args.values())
+
+            ret.extend(
+                (
+                    f"-DAEDIFIX_EXPORT_VARIABLES:STRING='{export_vars}'",
+                    "-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH="
+                    f"'{manager.project_export_config_path}'",
                 )
             )
 
@@ -320,3 +345,4 @@ class CMaker:
             ) from e
 
         manager.log_divider(tee=True)
+        self._load_cmake_export_conf(manager)

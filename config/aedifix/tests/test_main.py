@@ -43,15 +43,21 @@ def setup_cmake_project(AEDIFIX_PYTEST_DIR: Path) -> None:
         """
     ).strip()
     cmakelists_template = textwrap.dedent(
-        """
+        r"""
         cmake_minimum_required(VERSION 3.13...3.16 FATAL_ERROR)
 
-        project(example_exec VERSION 0.0.1 LANGUAGES CXX)
+        project(example_exec VERSION 0.0.1 LANGUAGES C CXX)
 
         add_executable(example_exec src/main.cpp)
         target_compile_features(example_exec PRIVATE cxx_auto_type)
 
         install(TARGETS example_exec)
+
+        set(data "{}")
+        foreach(var IN LISTS AEDIFIX_EXPORT_VARIABLES)
+          string(JSON data SET "${data}" "${var}" "\"${${var}}\"")
+        endforeach()
+        file(WRITE "${AEDIFIX_EXPORT_CONFIG_PATH}" "${data}")
         """
     ).strip()
     src_dir = AEDIFIX_PYTEST_DIR / "src"
@@ -97,6 +103,7 @@ class TestInfo:
         if generator is None:
             generator = "Ninja" if shutil.which("ninja") else "Unix Makefiles"
         self.generator = generator
+        self.export_config_path = self.cmake_dir / "aedifix_export_config.json"
 
     def pre_test(self) -> None:
         assert not self.arch_dir.exists()
@@ -169,6 +176,23 @@ class TestInfo:
         assert self.command_spec.is_file()
         with self.command_spec.open() as fd:
             spec = json.load(fd)
+
+        assert "CMAKE_COMMANDS" in spec
+        # Remove the export variables entry. It's too odious to test properly
+        # (and would break the second anyone added any new flags), so just do
+        # some minor tests
+        cmake_commands = spec["CMAKE_COMMANDS"]
+        for idx, val in enumerate(cmake_commands):
+            if val.startswith("-DAEDIFIX_EXPORT_VARIABLES"):
+                assert "CMAKE_C_COMPILER" in val
+                assert "CMAKE_CXX_COMPILER" in val
+                assert "CMAKE_COMMAND" in val
+                assert "CMAKE_GENERATOR" in val
+                assert len(val.split(";")) > 20
+                del cmake_commands[idx]
+                break
+        else:
+            pytest.fail("Did not find export variables in cmake command")
         assert spec == expected_spec
 
 
@@ -243,9 +267,11 @@ class TestMain:
             "CMAKE_COMMANDS": [
                 "--log-context",
                 "--log-level=DEBUG",
+                "-DAEDIFIX:BOOL=ON",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 "-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING=",
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Release",
@@ -277,9 +303,11 @@ class TestMain:
             "CMAKE_COMMANDS": [
                 "--log-context",
                 "--log-level=DEBUG",
+                "-DAEDIFIX:BOOL=ON",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Release",
@@ -311,9 +339,11 @@ class TestMain:
             "CMAKE_COMMANDS": [
                 "--log-context",
                 "--log-level=DEBUG",
+                "-DAEDIFIX:BOOL=ON",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo",
@@ -373,9 +403,11 @@ class TestMain:
             "CMAKE_COMMANDS": [
                 "--log-context",
                 "--log-level=DEBUG",
+                "-DAEDIFIX:BOOL=ON",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
                 "-DBUILD_SHARED_LIBS:BOOL=OFF",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Debug",
@@ -417,9 +449,11 @@ class TestMain:
             "CMAKE_COMMANDS": [
                 "--log-context",
                 "--log-level=DEBUG",
+                "-DAEDIFIX:BOOL=ON",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo",

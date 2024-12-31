@@ -42,6 +42,7 @@ class ZLIB(Package):
     )
     ZLIB_VERSION = CMAKE_VARIABLE("ZLIB_VERSION", CMakeString)
     ZLIB_INCLUDE_DIRS = CMAKE_VARIABLE("ZLIB_INCLUDE_DIRS", CMakePath)
+    ZLIB_INCLUDE_DIR = CMAKE_VARIABLE("ZLIB_INCLUDE_DIR", CMakePath)
     ZLIB_LIBRARIES = CMAKE_VARIABLE("ZLIB_LIBRARIES", CMakeString)
 
     def __init__(self, manager: ConfigurationManager) -> None:
@@ -76,21 +77,13 @@ class ZLIB(Package):
         lines = []
         # Some versions of FindZLIB don't actually set these variables in the
         # cache, so we may or may not find them
-        if version := self.manager.read_or_get_cmake_variable(
-            self.ZLIB_VERSION
-        ):
+        if version := self.manager.get_cmake_variable(self.ZLIB_VERSION):
             lines.append(("Version", version))
-        if inc_dirs := self.manager.read_or_get_cmake_variable(
-            self.ZLIB_INCLUDE_DIRS
-        ):
+        if inc_dirs := self.manager.get_cmake_variable(self.ZLIB_INCLUDE_DIRS):
             lines.append(("Include Dirs", inc_dirs))
-        elif inc_dir := self.manager.read_or_get_cmake_variable(
-            "ZLIB_INCLUDE_DIR"
-        ):
+        elif inc_dir := self.manager.get_cmake_variable(self.ZLIB_INCLUDE_DIR):
             lines.append(("Include Dir", inc_dir))
-        if libs := self.manager.read_or_get_cmake_variable(
-            self.ZLIB_LIBRARIES
-        ):
+        if libs := self.manager.get_cmake_variable(self.ZLIB_LIBRARIES):
             lines.append(("Libraries", libs))
         return self.create_package_summary(lines)
 

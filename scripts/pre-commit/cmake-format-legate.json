@@ -255,6 +255,11 @@
                     "nargs": "1+"
                 }
             },
+            "legate_export_aedifix_post_config": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "legate_find_or_configure": {
                 "kwargs": {
                     "PACKAGE": 1

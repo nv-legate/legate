@@ -71,7 +71,7 @@ class HDF5(Package):
             return ""
 
         lines = []
-        if root_dir := self.manager.read_or_get_cmake_variable(self.HDF5_ROOT):
+        if root_dir := self.manager.get_cmake_variable(self.HDF5_ROOT):
             lines.append(("Root directory", root_dir))
         return self.create_package_summary(lines)
 

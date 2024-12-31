@@ -15,10 +15,6 @@ cmake_minimum_required(VERSION 3.26.4)
 list(APPEND CMAKE_MESSAGE_CONTEXT "legate")
 
 cmake_path(SET LEGATE_CMAKE_DIR NORMALIZE "${CMAKE_CURRENT_LIST_DIR}/cmake")
-if(NOT DEFINED CACHE{LEGATE_CMAKE_DIR})
-  set(LEGATE_CMAKE_DIR # cmake-lint: disable=C0103
-      "${LEGATE_CMAKE_DIR}" CACHE INTERNAL "" FORCE)
-endif()
 
 include("${LEGATE_CMAKE_DIR}/policies.cmake" NO_POLICY_SCOPE)
 
@@ -49,12 +45,10 @@ if(NOT DEFINED LEGATE_DIR)
 endif()
 
 cmake_path(SET LEGATE_DIR NORMALIZE "${LEGATE_DIR}")
-# push it to cache
-set(LEGATE_DIR "${LEGATE_DIR}" CACHE PATH "Full path to the legate root directory" FORCE)
 
 if(NOT DEFINED LEGATE_ARCH)
   set(bin_dir ${CMAKE_CURRENT_BINARY_DIR})
-  if("$ENV{AEDIFIX}" STREQUAL "1")
+  if(AEDIFIX)
     # We are being driven by Aedifix, that must mean our current binary path is
     # $LEGATE_DIR/<arch-name>/cmake_build. That being said, this path should never be
     # exercised, because aedifix should be setting this value for us!
@@ -116,6 +110,7 @@ macro(set_ifndef variable value)
     set(${variable} ${value})
   endif()
 endmacro()
+
 # For now we want the optimization flags to match on both normal make and cmake builds so
 # we override the cmake defaults here for release, this changes -O3 to -O2 and removes
 # -DNDEBUG

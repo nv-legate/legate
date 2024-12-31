@@ -103,27 +103,21 @@ class MPI(Package):
             return ""
 
         lines = []
-        if mpi_dir := self.manager.read_or_get_cmake_variable(self.MPI_HOME):
+        if mpi_dir := self.manager.get_cmake_variable(self.MPI_HOME):
             lines.append(("Root dir", mpi_dir))
-        if mpicc := self.manager.read_or_get_cmake_variable(
-            self.MPI_C_COMPILER
-        ):
+        if mpicc := self.manager.get_cmake_variable(self.MPI_C_COMPILER):
             lines.append(("mpicc", mpicc))
-        if mpicc_inc := self.manager.read_or_get_cmake_variable(
+        if mpicc_inc := self.manager.get_cmake_variable(
             self.MPI_C_COMPILER_INCLUDE_DIRS
         ):
             lines.append(("C Include Dirs", mpicc_inc))
-        if mpicxx := self.manager.read_or_get_cmake_variable(
-            self.MPI_CXX_COMPILER
-        ):
+        if mpicxx := self.manager.get_cmake_variable(self.MPI_CXX_COMPILER):
             lines.append(("mpicxx", mpicxx))
-        if mpicxx_inc := self.manager.read_or_get_cmake_variable(
+        if mpicxx_inc := self.manager.get_cmake_variable(
             self.MPI_CXX_COMPILER_INCLUDE_DIRS
         ):
             lines.append(("C++ Include Dirs", mpicxx_inc))
-        if mpiexec := self.manager.read_or_get_cmake_variable(
-            self.MPIEXEC_EXECUTABLE
-        ):
+        if mpiexec := self.manager.get_cmake_variable(self.MPIEXEC_EXECUTABLE):
             lines.append(("mpiexec", mpiexec))
         return self.create_package_summary(lines)
 

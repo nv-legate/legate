@@ -16,7 +16,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from shlex import quote as shlex_quote
 from types import GeneratorType
-from typing import Any, Final, Literal, TypeVar, cast as TYPE_CAST
+from typing import Any, Final, Literal, TypeVar
 
 _T = TypeVar("_T")
 
@@ -232,9 +232,11 @@ class CMakeList(CMakeFlagBase):
         super().__init__(name=name, value=value, prefix=prefix)
 
     @staticmethod
-    def _sanitize_value(value: Any) -> list[_T]:
+    def _sanitize_value(value: Any) -> list[str]:
         if isinstance(value, (list, tuple, GeneratorType)):
             return list(value)
+        if isinstance(value, str):
+            return value.split(";")
         raise TypeError(type(value))
 
     def _canonicalize_cb(self) -> tuple[bool, list[str] | None]:
@@ -265,13 +267,13 @@ class CMakeBool(CMakeFlagBase):
     @staticmethod
     def _sanitize_value(value: Any) -> Literal["ON", "OFF"]:
         if isinstance(value, str):
-            if value not in {"OFF", "ON"}:
-                raise ValueError(f"value: {value} not in [OFF, ON]")
-            # mypy (as of 1.8.0)  does not yet narrow the type of value from
-            # str to Literal["ON", "OFF"] based on the 'in' check above (see
-            # https://github.com/python/mypy/issues/12535), so we have to tell
-            # it.
-            return TYPE_CAST(Literal["ON", "OFF"], value)
+            match value.strip().casefold():
+                case "off" | "false" | "no" | "f" | "0" | "":
+                    return "OFF"
+                case "on" | "true" | "yes" | "t" | "1":
+                    return "ON"
+                case _:
+                    raise ValueError(f"Invalid boolean value {value}")
         if isinstance(value, (bool, int)):
             if isinstance(value, int) and value not in {0, 1}:
                 raise ValueError(f"value: {value} not in [0, 1]")

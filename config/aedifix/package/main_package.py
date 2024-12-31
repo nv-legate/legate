@@ -331,6 +331,9 @@ class MainPackage(Package, ABC):
         ),
         cmake_var=CMAKE_VARIABLE("CMAKE_INSTALL_PREFIX", CMakePath),
     )
+    CMAKE_MAKE_PROGRAM: Final = CMAKE_VARIABLE(
+        "CMAKE_MAKE_PROGRAM", CMakeExecutable
+    )
 
     __package_ignore_attrs__ = (
         "DEBUG_CONFIGURE",
@@ -765,7 +768,9 @@ class MainPackage(Package, ABC):
                     ),
                     (
                         "Build Generator",
-                        self.manager.read_cmake_variable("CMAKE_MAKE_PROGRAM"),
+                        self.manager.get_cmake_variable(
+                            self.CMAKE_MAKE_PROGRAM
+                        ),
                     ),
                     (
                         "Build type",
@@ -773,13 +778,13 @@ class MainPackage(Package, ABC):
                     ),
                     (
                         "Num Build Threads",
-                        self.manager.read_cmake_variable(
+                        self.manager.get_cmake_variable(
                             self.CMAKE_BUILD_PARALLEL_LEVEL
                         ),
                     ),
                     (
                         "Install prefix",
-                        self.manager.read_cmake_variable(
+                        self.manager.get_cmake_variable(
                             self.CMAKE_INSTALL_PREFIX
                         ),
                     ),
@@ -795,35 +800,28 @@ class MainPackage(Package, ABC):
             cmake_flags_var: ConfigArgument,
             flags_attr_name: str,
         ) -> str:
-            try:
-                cc = self.manager.read_cmake_variable(cmake_compiler_var)
-            except ValueError:
-                cc = getattr(self.cl_args, compiler_attr_name).value
+            cc = self.manager.get_cmake_variable(cmake_compiler_var)
+            if cc:
+                version = self.log_execute_command([cc, "--version"]).stdout
+            else:
+                version = "(unknown)"
 
-            version = self.log_execute_command([cc, "--version"]).stdout
-
-            ccflags: str | None | list[str] | tuple[str, ...]
-            try:
-                assert cmake_flags_var.cmake_var is not None  # mypy
-                ccflags = self.manager.read_cmake_variable(
-                    "AEDIFIX_" + cmake_flags_var.cmake_var
-                )
-            except ValueError:
-                try:
-                    ccflags = self.manager.read_cmake_variable(cmake_flags_var)
-                except ValueError:
-                    ccflags = getattr(self.cl_args, flags_attr_name).value
-                    if isinstance(ccflags, (list, tuple)):
-                        ccflags = " ".join(ccflags)
-
-            if not ccflags:
-                ccflags = "[]"
+            ccflags = self.manager.get_cmake_variable(cmake_flags_var)
+            match ccflags:
+                case list() | tuple():
+                    ccflags_str = " ".join(ccflags)
+                case str():
+                    ccflags_str = ccflags
+                case None:
+                    ccflags_str = ""
+                case _:
+                    raise TypeError(type(ccflags))
 
             return self.create_package_summary(
                 [
                     ("Executable", cc),
                     ("Version", version),
-                    (f"Global {name} Flags", ccflags),
+                    (f"Global {name} Flags", ccflags_str),
                 ],
                 title=f"{name} Compiler",
             )

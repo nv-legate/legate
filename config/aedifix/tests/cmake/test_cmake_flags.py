@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import copy
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -49,9 +50,15 @@ class TestCMakeList:
         assert var.prefix == "bar"
         assert var.type == "STRING"
 
+        var = CMakeList("foo", value="foo;bar")
+        assert var.name == "foo"
+        assert var.value == ["foo", "bar"]
+        assert var.prefix == "-D"
+        assert var.type == "STRING"
+
     def test_create_bad(self) -> None:
-        with pytest.raises(TypeError):
-            CMakeList("foo", value="hello")
+        with pytest.raises(TypeError, match=re.escape(rf"{type(1)}")):
+            CMakeList("foo", value=1)  # type: ignore[arg-type]
 
     def test_canonicalize(self) -> None:
         var = CMakeList("foo")
@@ -138,9 +145,6 @@ class TestCMakeBool:
 
         with pytest.raises(ValueError):
             CMakeBool("foo", value=400)
-
-        with pytest.raises(ValueError):
-            CMakeBool("foo", value="off")
 
         with pytest.raises(TypeError):
             CMakeBool("foo", value=1.0)  # type: ignore[arg-type]
@@ -542,7 +546,8 @@ class TestCMakeExecutable:
 
         with pytest.raises(TypeError):
             CMakeExecutable(
-                "foo", value=complex(1, 2)  # type: ignore[arg-type]
+                "foo",
+                value=complex(1, 2),  # type: ignore[arg-type]
             )
 
         with pytest.raises(TypeError):

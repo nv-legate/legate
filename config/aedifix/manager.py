@@ -13,7 +13,6 @@ from __future__ import annotations
 import inspect
 import os
 import platform
-import re
 import shutil
 import sys
 import textwrap
@@ -635,6 +634,20 @@ class ConfigurationManager:
         """
         return self.project_arch_dir / "cmake_build"
 
+    @property
+    def project_export_config_path(self) -> Path:
+        r"""Get the projects export config file path.
+
+        Returns
+        -------
+        export_path : Path
+            The full path to the export config file containing all of the
+            exported variables to be read back by aedifix once the cmake
+            build completes, e.g.
+            `/path/to/legate/arch-foo/cmake_build/aedifix_export_config.json`
+        """
+        return self.project_cmake_dir / "aedifix_export_config.json"
+
     @staticmethod
     def _sanitize_name(var: str | ConfigArgument) -> str:
         name: str
@@ -670,54 +683,6 @@ class ConfigurationManager:
         return self._cmaker.append_value(
             self, self._sanitize_name(name), flags
         )
-
-    def read_cmake_variable(self, name: str | ConfigArgument) -> str:
-        r"""Read a CMake variable from the cache.
-
-        Parameters
-        ----------
-        name : str
-            The name of the CMake variable to read.
-
-        Returns
-        -------
-        value : str
-            The value of the CMake variable.
-
-        Raises
-        ------
-        ValueError
-            If the value could not be found.
-        """
-        name = self._sanitize_name(name)
-        cmake_cache_txt = self.project_cmake_dir / "CMakeCache.txt"
-        re_pat = re.compile(name)
-        with cmake_cache_txt.open() as fd:
-            for line in filter(re_pat.match, fd):
-                return line.split("=", maxsplit=1)[1].strip()
-
-        raise ValueError(f"Did not find {name} in {cmake_cache_txt}")
-
-    def read_or_get_cmake_variable(
-        self, name: str | ConfigArgument
-    ) -> str | None:
-        r"""Attempt to read a CMake variable from the CMake cache, or,
-        failing that, get the cmake variable from the internal cache
-
-        Parameters
-        ----------
-        name : str | ConfigArgument
-            The name of the CMake variable, or ConfigArgument representing it.
-
-        Returns
-        -------
-        value : str | None
-            If the value was found, the string representation, None otherwise.
-        """
-        try:
-            return self.read_cmake_variable(name)
-        except (ValueError, FileNotFoundError):
-            return self.get_cmake_variable(name)
 
     # Logging
     def log(

@@ -108,48 +108,6 @@ class TestConfigurationManager:
         assert manager._logger.file_path.is_file()
 
     @pytest.mark.slow
-    def test_read_cmake_variable(
-        self, manager: ConfigurationManager, AEDIFIX_PYTEST_DIR: Path
-    ) -> None:
-        main_cpp_template = textwrap.dedent(
-            r"""
-        #include <iostream>
-
-        int main(int argc, char *argv[])
-        {
-          std::cout << "hello, world!\n";
-          return 0;
-        }
-        """
-        ).strip()
-        cmakelists_template = textwrap.dedent(
-            """
-        cmake_minimum_required(VERSION 3.13...3.16 FATAL_ERROR)
-
-        project(example_exec VERSION 0.0.1 LANGUAGES CXX)
-
-        add_executable(example_exec src/main.cpp)
-
-        set(
-          MY_VARIABLE
-          -foo=bar -baz=bop -hello --world
-          CACHE STRING "My variable" FORCE
-        )
-        install(TARGETS example_exec)
-        """
-        ).strip()
-        src_dir = AEDIFIX_PYTEST_DIR / "src"
-        src_dir.mkdir()
-        (src_dir / "main.cpp").write_text(main_cpp_template)
-        (AEDIFIX_PYTEST_DIR / "CMakeLists.txt").write_text(cmakelists_template)
-        manager.setup()
-        manager.configure()
-        manager.finalize()
-        var = manager.read_cmake_variable("MY_VARIABLE")
-        assert isinstance(var, str)
-        assert var.split(";") == ["-foo=bar", "-baz=bop", "-hello", "--world"]
-
-    @pytest.mark.slow
     def test_manager_extra_args(self, AEDIFIX_PYTEST_DIR: Path) -> None:
         main_cpp_template = textwrap.dedent(
             r"""
@@ -185,6 +143,12 @@ class TestConfigurationManager:
         add_executable(example_exec src/main.cpp)
 
         install(TARGETS example_exec)
+
+        set(data "{}")
+        foreach(var IN LISTS AEDIFIX_EXPORT_VARIABLES)
+          string(JSON data SET "${data}" "${var}" "\"${${var}}\"")
+        endforeach()
+        file(WRITE "${AEDIFIX_EXPORT_CONFIG_PATH}" "${data}")
         """
         ).strip()
         src_dir = AEDIFIX_PYTEST_DIR / "src"
@@ -197,7 +161,14 @@ class TestConfigurationManager:
         manager.setup()
         manager.configure()
         manager.finalize()
-        var = manager.read_cmake_variable("MY_VARIABLE")
+        cmake_cache = manager.project_cmake_dir / "CMakeCache.txt"
+        var = ""
+        for line in cmake_cache.read_text().splitlines():
+            if line.startswith("MY_VARIABLE"):
+                var = line.split("=")[1].strip()
+                break
+        else:
+            pytest.fail(f"Failed to find 'MY_VARIABLE' in {cmake_cache}")
         assert isinstance(var, str)
         assert var == "foo-bar-baz"
 

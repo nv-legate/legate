@@ -498,7 +498,7 @@ def cmake_configure_file(
         A mapping of variable names to values to be replaced. I.e. ``@key@``
         will be replaced by ``value``.
     """
-    cmake_exe = obj.manager.read_or_get_cmake_variable("CMAKE_COMMAND")
+    cmake_exe = obj.manager.get_cmake_variable("CMAKE_COMMAND")
     base_cmd = [
         cmake_exe,
         f"-DAEDIFIX_CONFIGURE_FILE_SRC={src_file}",

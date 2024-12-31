@@ -155,6 +155,7 @@ class Legion(Package):
     CPM_DOWNLOAD_Legion: Final = CMAKE_VARIABLE(
         "CPM_DOWNLOAD_Legion", CMakeBool
     )
+    Legion_DIR: Final = CMAKE_VARIABLE("Legion_DIR", CMakePath)
 
     def __init__(self, manager: ConfigurationManager) -> None:
         r"""Construct a Legion Package.
@@ -356,41 +357,28 @@ class Legion(Package):
 
         def get_location() -> Path | None:
             dir_group = self.DirGroup
-            try:
-                root_dir = self.manager.read_cmake_variable(
-                    dir_group.Legion_ROOT  # type: ignore[attr-defined]
-                )
-            except ValueError:
-                pass
-            else:
-                if root_dir := root_dir.strip():
-                    return Path(root_dir)
+            root_dir = self.manager.get_cmake_variable(
+                dir_group.Legion_ROOT  # type: ignore[attr-defined]
+            )
+            if root_dir:
+                return Path(root_dir)
 
-            try:
-                root_dir = self.manager.read_cmake_variable("Legion_DIR")
-            except ValueError:
-                pass
-            else:
-                root_dir = root_dir.strip()
-                if "NOTFOUND" not in root_dir:
-                    return Path(root_dir)
+            root_dir = self.manager.get_cmake_variable(self.Legion_DIR)
+            if root_dir and "NOTFOUND" not in root_dir:
+                return Path(root_dir)
 
-            try:
-                root_dir = self.manager.read_cmake_variable(
-                    dir_group.CPM_Legion_SOURCE  # type: ignore[attr-defined]
-                )
-            except ValueError:
-                pass
-            else:
-                if root_dir := root_dir.strip():
-                    root_path = Path(root_dir)
-                    # If the source directory is relative to the cmake
-                    # directory, then we downloaded Legion, but set
-                    # CPM_Legion_Source ourselves.
-                    if not root_path.is_relative_to(
-                        self.manager.project_cmake_dir
-                    ):
-                        return root_path
+            root_dir = self.manager.get_cmake_variable(
+                dir_group.CPM_Legion_SOURCE  # type: ignore[attr-defined]
+            )
+            if root_dir:
+                root_path = Path(root_dir)
+                # If the source directory is relative to the cmake
+                # directory, then we downloaded Legion, but set
+                # CPM_Legion_Source ourselves.
+                if not root_path.is_relative_to(
+                    self.manager.project_cmake_dir
+                ):
+                    return root_path
             return None
 
         lines: list[tuple[str, Any]] = []

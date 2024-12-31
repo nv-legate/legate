@@ -47,13 +47,9 @@ class OpenMP(Package):
             return ""
 
         lines = []
-        if version := self.manager.read_or_get_cmake_variable(
-            self.OpenMP_VERSION
-        ):
+        if version := self.manager.get_cmake_variable(self.OpenMP_VERSION):
             lines.append(("Version", version))
-        if flags := self.manager.read_or_get_cmake_variable(
-            self.OpenMP_CXX_FLAGS
-        ):
+        if flags := self.manager.get_cmake_variable(self.OpenMP_CXX_FLAGS):
             lines.append(("Flags", flags))
         return self.create_package_summary(lines)
 

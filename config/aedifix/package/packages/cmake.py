@@ -127,12 +127,12 @@ class CMake(Package):
         lines = [
             (
                 "Executable",
-                self.manager.read_cmake_variable(self.CMAKE_COMMAND),
+                self.manager.get_cmake_variable(self.CMAKE_COMMAND),
             ),
             ("Version", self.version),
             (
                 "Generator",
-                self.manager.read_cmake_variable(self.CMAKE_GENERATOR),
+                self.manager.get_cmake_variable(self.CMAKE_GENERATOR),
             ),
         ]
 

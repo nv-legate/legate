@@ -171,10 +171,8 @@ class CUDA(Package):
         if not self.state.enabled():
             return ""
 
-        arches: list[str] | str | None = (
-            self.manager.read_or_get_cmake_variable(
-                self.CMAKE_CUDA_ARCHITECTURES
-            )
+        arches: list[str] | str | None = self.manager.get_cmake_variable(
+            self.CMAKE_CUDA_ARCHITECTURES
         )
         if not arches:
             arches = []
@@ -182,28 +180,17 @@ class CUDA(Package):
             arches = " ".join(arches)
         ret = [("Architectures", arches)]
 
-        if cuda_dir := self.manager.read_or_get_cmake_variable(
-            self.CUDAToolkit_ROOT
-        ):
+        if cuda_dir := self.manager.get_cmake_variable(self.CUDAToolkit_ROOT):
             ret.append(("CUDA Dir", cuda_dir))
 
-        cc = self.manager.read_or_get_cmake_variable(self.CMAKE_CUDA_COMPILER)
+        cc = self.manager.get_cmake_variable(self.CMAKE_CUDA_COMPILER)
         assert cc is not None
         ret.append(("Executable", cc))
 
         version = self.log_execute_command([cc, "--version"]).stdout
         ret.append(("Version", version))
 
-        ccflags: str | None | list[str] | tuple[str, ...]
-        try:
-            ccflags = self.manager.read_or_get_cmake_variable(
-                self.CMAKE_CUDA_FLAGS
-            )
-        except ValueError:
-            ccflags = self.cl_args.CUDAFLAGS.value
-            if isinstance(ccflags, (list, tuple)):
-                ccflags = " ".join(ccflags)
-
+        ccflags = self.manager.get_cmake_variable(self.CMAKE_CUDA_FLAGS)
         if not ccflags:
             ccflags = "[]"
         ret.append(("Flags", ccflags))

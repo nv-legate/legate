@@ -427,17 +427,16 @@ class Legate(MainPackage):
             name: str, cmake_varname: ConfigArgument
         ) -> tuple[str, str]:
             flags = self.manager.get_cmake_variable(cmake_varname)
-            if not flags:
-                try:
-                    assert cmake_varname.cmake_var is not None  # mypy
-                    flags = self.manager.read_cmake_variable(
-                        "AEDIFIX_" + cmake_varname.cmake_var
-                    )
-                except ValueError:
-                    flags = self.manager.read_cmake_variable(cmake_varname)
-            if isinstance(flags, (list, tuple)):
-                flags = " ".join(flags)
-            return (f"{name} Flags", flags.replace(";", " "))
+            match flags:
+                case list() | tuple():
+                    flags_str = " ".join(flags)
+                case None:
+                    flags_str = ""
+                case str():
+                    flags_str = flags
+                case _:
+                    raise TypeError(type(flags))
+            return (f"{name} Flags", flags_str.replace(";", " "))
 
         return [
             make_summary("C++", self.legate_CXX_FLAGS),
