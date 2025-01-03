@@ -15,8 +15,11 @@ from typing import Any
 
 import numpy as np
 import pytest
+from numpy.typing import DTypeLike
 
-from legate.core import Type, types as ty
+from legate.core import Type, TypeCode, types as ty
+
+from .util.types import _PRIMITIVES
 
 
 class TestType:
@@ -54,11 +57,116 @@ class TestType:
             ),
             (np.array([None, None, None]), ty.array_type(ty.null_type, 3)),
             (np.array(1, dtype=np.int8), ty.array_type(ty.int8, 1)),
+            (tuple(range(100)), ty.array_type(ty.uint8, 100)),
+            (ty.int32, ty.int32),
         ],
     )
     def test_from_python_type(self, obj: Any, expected_ty: Type) -> None:
         cur_ty = Type.from_python_object(obj)
         assert cur_ty == expected_ty
+
+    @pytest.mark.parametrize(
+        ("np_dtype", "expected_ty"),
+        [
+            (np.dtype(np.bool_), ty.bool_),
+            (np.dtype(np.int8), ty.int8),
+            (np.dtype(np.int16), ty.int16),
+            (np.dtype(np.int32), ty.int32),
+            (np.dtype(np.int64), ty.int64),
+            (np.dtype(np.uint8), ty.uint8),
+            (np.dtype(np.uint16), ty.uint16),
+            (np.dtype(np.uint32), ty.uint32),
+            (np.dtype(np.uint64), ty.uint64),
+            (np.dtype(np.float16), ty.float16),
+            (np.dtype(np.float32), ty.float32),
+            (np.dtype(np.float64), ty.float64),
+            (np.dtype(np.complex64), ty.complex64),
+            (np.dtype(np.complex128), ty.complex128),
+            (np.dtype(np.str_), ty.string_type),
+        ],
+    )
+    def test_from_numpy_dtype(
+        self, np_dtype: DTypeLike, expected_ty: Type
+    ) -> None:
+        assert Type.from_numpy_dtype(np_dtype) == expected_ty
+
+    def test_init_null(self) -> None:
+        assert Type() == ty.null_type
+
+    @pytest.mark.parametrize("dtype", _PRIMITIVES)
+    def test_primitive_properties(self, dtype: Type) -> None:
+        assert dtype.is_primitive is True
+        assert isinstance(dtype.alignment, int)
+        assert dtype.size % dtype.alignment == 0
+        assert isinstance(dtype.code, int)
+        assert isinstance(dtype.raw_ptr, int)
+        assert isinstance(hash(dtype), int)
+        assert not dtype.variable_size
+
+    @pytest.mark.parametrize(
+        ("dtype", "align", "offsets", "size"),
+        [
+            (
+                ty.struct_type([ty.int32, ty.int8, ty.int64], True),
+                True,
+                (0, 4, 8),
+                16,
+            ),
+            (
+                ty.struct_type([ty.int32, ty.int8, ty.int64]),
+                False,
+                (0, 4, 5),
+                13,
+            ),
+            (
+                ty.struct_type([ty.array_type(ty.int32, 3)], True),
+                True,
+                (0,),
+                12,
+            ),
+            (
+                ty.struct_type([ty.float32, ty.binary_type(5)], True),
+                True,
+                (0, 16),
+                32,
+            ),
+            (ty.rect_type(3), True, (0, 24), 48),
+        ],
+        ids=str,
+    )
+    def test_struct_properties(
+        self,
+        dtype: ty.StructType,
+        align: bool,
+        offsets: tuple[int, ...],
+        size: int,
+    ) -> None:
+        assert dtype.aligned is align
+        assert dtype.offsets == offsets
+        assert dtype.size == size
+        assert dtype.code == TypeCode.STRUCT
+        max_alignment = max(
+            [dtype.field_type(i).alignment for i in range(dtype.num_fields)]
+        )
+        assert dtype.alignment == max_alignment if dtype.aligned else 1
+        assert not dtype.is_primitive
+        assert not dtype.variable_size
+
+    def test_record_reduction_op(self) -> None:
+        op_kind = ty.ReductionOpKind.AND
+        op_id = 34567
+        ty.string_type.record_reduction_op(op_kind, op_id)
+        assert ty.string_type.reduction_op_id(op_kind) == op_id
+
+
+class TestTypeErrors:
+    @pytest.mark.parametrize(
+        "dtype", [ty.FixedArrayType, ty.StructType], ids=str
+    )
+    def test_unconstructable_types(self, dtype: type[Type]) -> None:
+        msg = f"{dtype.__name__} objects must not be constructed directly"
+        with pytest.raises(ValueError, match=msg):
+            _ = dtype()
 
 
 if __name__ == "__main__":
