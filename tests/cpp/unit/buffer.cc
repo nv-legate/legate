@@ -57,6 +57,7 @@ class BufferFn {
 struct BufferTask : public legate::LegateTask<BufferTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
   static void cpu_variant(legate::TaskContext context);
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
 /*static*/ void BufferTask::cpu_variant(legate::TaskContext context)

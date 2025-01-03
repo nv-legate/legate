@@ -16,29 +16,21 @@ namespace legate {
 
 void VariantOptions::populate_registrar(Legion::TaskVariantRegistrar& registrar) const
 {
-  registrar.set_leaf(leaf);
-  registrar.set_inner(inner);
-  registrar.set_idempotent(idempotent);
+  registrar.set_leaf(true);
+  registrar.set_inner(false);
+  registrar.set_idempotent(false);
   registrar.set_concurrent(concurrent);
-  if (concurrent) {
-    registrar.set_concurrent_barrier(true);
-  }
+  registrar.set_concurrent_barrier(concurrent);
 }
 
 std::ostream& operator<<(std::ostream& os, const VariantOptions& options)
 {
   os << "(";
-  if (options.leaf) {
-    os << "leaf,";
-  }
-  if (options.inner) {
-    os << "inner,";
-  }
-  if (options.idempotent) {
-    os << "idempotent,";
-  }
   if (options.concurrent) {
     os << "concurrent,";
+  }
+  if (options.has_allocations) {
+    os << "has_allocations,";
   }
   os << options.return_size << ")";
   return os;

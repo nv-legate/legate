@@ -78,6 +78,7 @@ struct CheckGatherScatterTask
   static constexpr std::int32_t TASK_ID = CHECK_GATHER_SCATTER_TASK +
                                           (SRC_DIM * TEST_MAX_DIM * TEST_MAX_DIM) +
                                           (IND_DIM * TEST_MAX_DIM) + TGT_DIM;
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context)
   {

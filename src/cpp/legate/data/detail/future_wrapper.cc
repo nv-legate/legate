@@ -27,30 +27,34 @@ namespace legate::detail {
 namespace {
 
 [[nodiscard]] Legion::UntypedDeferredValue untyped_deferred_value_from_future(
-  const Legion::Future& fut, std::size_t field_size, std::size_t field_offset)
+  const Legion::Future& fut,
+  std::uint32_t field_size,
+  std::uint32_t field_alignment,
+  std::uint64_t field_offset)
 {
   const auto mem_kind =
     find_memory_kind_for_executing_processor(LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB));
 
   if (!fut.valid()) {
-    return Legion::UntypedDeferredValue{field_size, mem_kind};
+    return Legion::UntypedDeferredValue{field_size, mem_kind, nullptr, field_alignment};
   }
 
   LEGATE_ASSERT(field_offset + field_size <= fut.get_untyped_size());
 
   const auto* init_value = static_cast<const std::int8_t*>(fut.get_buffer(mem_kind)) + field_offset;
 
-  if (LEGATE_DEFINED(LEGATE_USE_CUDA) && (mem_kind == Memory::Kind::GPU_FB_MEM)) {
-    // TODO(wonchanl): This should be done by Legion
-    auto ret       = Legion::UntypedDeferredValue{field_size, mem_kind};
-    const auto acc = AccessorWO<std::int8_t, 1>{ret, field_size, false};
-    auto* runtime  = Runtime::get_runtime();
-    auto stream    = runtime->get_cuda_stream();
+  auto ret       = Legion::UntypedDeferredValue{field_size, mem_kind, nullptr, field_alignment};
+  const auto acc = AccessorWO<std::int8_t, 1>{ret, field_size, false};
 
-    runtime->get_cuda_driver_api()->mem_cpy_async(acc.ptr(0), init_value, field_size, stream);
-    return ret;
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA) && (mem_kind == Memory::Kind::GPU_FB_MEM)) {
+    auto* const runtime = Runtime::get_runtime();
+
+    runtime->get_cuda_driver_api()->mem_cpy_async(
+      acc.ptr(0), init_value, field_size, runtime->get_cuda_stream());
+  } else {
+    std::memcpy(acc.ptr(0), init_value, field_size);
   }
-  return Legion::UntypedDeferredValue{field_size, mem_kind, init_value};
+  return ret;
 }
 
 }  // namespace
@@ -60,7 +64,8 @@ namespace {
 // static_assert).
 FutureWrapper::FutureWrapper(bool read_only,
                              std::uint32_t field_size,
-                             std::size_t field_offset,
+                             std::uint32_t field_alignment,
+                             std::uint64_t field_offset,
                              const Domain& domain,  // NOLINT(modernize-pass-by-value)
                              Legion::Future future)
   : read_only_{read_only},
@@ -70,7 +75,7 @@ FutureWrapper::FutureWrapper(bool read_only,
     future_{std::move(future)},
     buffer_{read_only ? Legion::UntypedDeferredValue{}
                       : untyped_deferred_value_from_future(
-                          get_future(), this->field_size(), this->field_offset())}
+                          get_future(), this->field_size(), field_alignment, this->field_offset())}
 {
 }
 

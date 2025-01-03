@@ -22,20 +22,8 @@ using VariantOptions = DefaultFixture;
 TEST_F(VariantOptions, Basic)
 {
   legate::VariantOptions options;
-  EXPECT_EQ(options.leaf, true);
-  EXPECT_EQ(options.inner, false);
-  EXPECT_EQ(options.idempotent, false);
   EXPECT_EQ(options.concurrent, false);
   EXPECT_EQ(options.return_size, legate::LEGATE_MAX_SIZE_SCALAR_RETURN);
-
-  options.with_leaf(false);
-  EXPECT_EQ(options.leaf, false);
-
-  options.with_inner(true);
-  EXPECT_EQ(options.inner, true);
-
-  options.with_idempotent(true);
-  EXPECT_EQ(options.idempotent, true);
 
   options.with_concurrent(true);
   EXPECT_EQ(options.concurrent, true);

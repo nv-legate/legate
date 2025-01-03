@@ -86,7 +86,6 @@ class Memory(DataclassMixin):
     fbmem: int | None
     zcmem: int | None
     regmem: int | None
-    eager_alloc: int | None
 
 
 @dataclass(frozen=True)

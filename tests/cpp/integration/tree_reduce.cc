@@ -37,7 +37,8 @@ struct ProduceNormalTask : public legate::LegateTask<ProduceNormalTask> {
 };
 
 struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_PRODUCE_UNBOUND};
+  static constexpr auto TASK_ID             = legate::LocalTaskID{TASK_PRODUCE_UNBOUND};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context)
   {

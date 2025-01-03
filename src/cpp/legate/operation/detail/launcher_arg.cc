@@ -83,6 +83,7 @@ void ScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack<bool>(read_only_);
   buffer.pack<std::int32_t>(analyzer.get_index(future_));
   buffer.pack<std::uint32_t>(store_->type()->size());
+  buffer.pack<std::uint32_t>(store_->type()->alignment());
   buffer.pack<std::uint64_t>(scalar_offset_);
   buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
 }
@@ -97,6 +98,7 @@ void ReplicatedScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& 
   buffer.pack<bool>(read_only_);
   buffer.pack<std::int32_t>(analyzer.get_index(future_map_));
   buffer.pack<std::uint32_t>(store_->type()->size());
+  buffer.pack<std::uint32_t>(store_->type()->alignment());
   buffer.pack<std::uint64_t>(scalar_offset_);
   buffer.pack<std::uint64_t>(store_->get_storage()->extents().data());
 }
@@ -114,6 +116,7 @@ void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /
   // future index
   buffer.pack<std::int32_t>(-1);
   buffer.pack<std::uint32_t>(store_->type()->size());
+  buffer.pack<std::uint32_t>(store_->type()->alignment());
   // field offset
   buffer.pack<std::uint64_t>(0);
   // TODO(wonchanl): the extents of an unbound scalar store are derived from the launch domain, but

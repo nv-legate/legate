@@ -23,19 +23,22 @@ constexpr std::uint64_t ALLOCATE_BYTES = 100;
 constexpr std::uint64_t OVER_ALIGNMENT = 128;
 
 struct DeallocateTask : public legate::LegateTask<DeallocateTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static constexpr auto TASK_ID             = legate::LocalTaskID{1};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct DoubleDeallocateTask : public legate::LegateTask<DoubleDeallocateTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{2};
+  static constexpr auto TASK_ID             = legate::LocalTaskID{2};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct InvalidAllocateTask : public legate::LegateTask<InvalidAllocateTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{3};
+  static constexpr auto TASK_ID             = legate::LocalTaskID{3};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context);
 };

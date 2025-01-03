@@ -98,11 +98,11 @@ class Task {
    */
   [[nodiscard]] Array reduction(std::uint32_t index) const;
   /**
-   * @brief Returns metadata for the task's scalars
+   * @brief Returns a by-value argument of the task
    *
-   * @param index Index of the scalar array
+   * @param index Index of the scalar
    *
-   * @return Scalar metadata object
+   * @return Scalar
    */
   [[nodiscard]] Scalar scalar(std::uint32_t index) const;
 
@@ -124,8 +124,27 @@ class Task {
    * @return Number of arrays
    */
   [[nodiscard]] std::size_t num_reductions() const;
+  /**
+   * @brief Returns the number of `Scalar`s
+   *
+   * @return Number of `Scalar`s
+   */
+  [[nodiscard]] std::size_t num_scalars() const;
+  /**
+   * @brief Indicates whether the task is parallelized
+   *
+   * @return true The task is a single task
+   * @return false The task is one in a set of multiple parallel tasks
+   */
+  [[nodiscard]] bool is_single_task() const;
+  /**
+   * @brief Returns the launch domain
+   *
+   * @return Launch domain
+   */
+  [[nodiscard]] const Domain& get_launch_domain() const;
 
-  explicit Task(detail::Task* impl);
+  explicit Task(const detail::Task* impl);
 
   Task(const Task&)            = delete;
   Task& operator=(const Task&) = delete;
@@ -133,9 +152,9 @@ class Task {
   Task& operator=(Task&&)      = delete;
 
  private:
-  [[nodiscard]] detail::Task* impl_() const noexcept;
+  [[nodiscard]] const detail::Task* impl_() const noexcept;
 
-  detail::Task* pimpl_{};
+  const detail::Task* pimpl_{};
 };
 
 /** @} */

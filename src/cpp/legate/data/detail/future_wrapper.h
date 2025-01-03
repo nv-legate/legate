@@ -26,7 +26,8 @@ class FutureWrapper {
   FutureWrapper() = default;
   FutureWrapper(bool read_only,
                 std::uint32_t field_size,
-                std::size_t field_offset,
+                std::uint32_t field_alignment,
+                std::uint64_t field_offset,
                 const Domain& domain,
                 Legion::Future future);
   ~FutureWrapper() noexcept;
@@ -58,7 +59,7 @@ class FutureWrapper {
  private:
   bool read_only_{true};
   std::uint32_t field_size_{};
-  std::size_t field_offset_{};
+  std::uint64_t field_offset_{};
   Domain domain_{};
   Legion::Future future_{};
   Legion::UntypedDeferredValue buffer_{};

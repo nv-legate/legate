@@ -534,6 +534,25 @@ class Mapper {
   [[nodiscard]] virtual std::vector<StoreMapping> store_mappings(
     const Task& task, const std::vector<StoreTarget>& options) = 0;
   /**
+   * @brief Returns an upper bound for the amount of memory (in bytes), of a particular memory type,
+   * allocated by a task via Legate allocators.
+   *
+   * All buffers created by ``create_buffer`` or ``create_output_buffer`` calls are drawn from this
+   * allocation pool, and their aggregate size cannot exceed the upper bound returned from this call
+   * (the program will crash otherwise). Any out-of-band memory allocations (e.g., those created by
+   * ``malloc`` or ``cudaMalloc``) invisible to Legate are not subject to this pool bound.
+   *
+   * This callback is invoked only for task variants that are registered with ``has_allocations``
+   * being ``true``.
+   *
+   * @param task Task to map
+   * @param memory_kind Type of memory in which the memory pool is created
+   *
+   * @return A memory pool size; returning ``std::nullopt`` means the total size is unknown.
+   */
+  [[nodiscard]] virtual std::optional<std::size_t> allocation_pool_size(
+    const Task& task, StoreTarget memory_kind) = 0;
+  /**
    * @brief Returns a tunable value
    *
    * @param tunable_id a tunable value id

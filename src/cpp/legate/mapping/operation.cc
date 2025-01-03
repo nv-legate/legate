@@ -65,4 +65,10 @@ std::size_t Task::num_outputs() const { return impl_()->outputs().size(); }
 
 std::size_t Task::num_reductions() const { return impl_()->reductions().size(); }
 
+std::size_t Task::num_scalars() const { return impl_()->scalars().size(); }
+
+bool Task::is_single_task() const { return impl_()->is_single_task(); }
+
+const Domain& Task::get_launch_domain() const { return impl_()->get_launch_domain(); }
+
 }  // namespace legate::mapping

@@ -14,6 +14,7 @@
 #include "utilities/utilities.h"
 
 #include <gtest/gtest.h>
+#include <optional>
 
 // Note on how to run this test properly:
 //
@@ -59,6 +60,11 @@ class LibraryMapper : public legate::mapping::Mapper {
   legate::Scalar tunable_value(legate::TunableID /*tunable_id*/) override
   {
     return legate::Scalar{};
+  }
+  std::optional<std::size_t> allocation_pool_size(
+    const legate::mapping::Task& /*task*/, legate::mapping::StoreTarget /*memory_kind*/) override
+  {
+    return std::nullopt;
   }
 };
 

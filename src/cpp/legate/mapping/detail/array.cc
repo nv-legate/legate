@@ -69,6 +69,12 @@ std::int32_t ListArray::dim() const { return descriptor()->dim(); }
 
 bool ListArray::unbound() const { return descriptor()->unbound() || vardata()->unbound(); }
 
+bool ListArray::valid() const
+{
+  LEGATE_ASSERT(descriptor()->valid() == vardata()->valid());
+  return descriptor()->valid();
+}
+
 InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
 {
   switch (index) {
@@ -93,12 +99,20 @@ Domain ListArray::domain() const { return descriptor()->domain(); }
 
 // ==========================================================================================
 
-std::int32_t StructArray::dim() const { return fields_.front()->dim(); }
+std::int32_t StructArray::dim() const { return fields().front()->dim(); }
 
 bool StructArray::unbound() const
 {
   return std::any_of(
-    fields_.cbegin(), fields_.cend(), [](const auto& field) { return field->unbound(); });
+    fields().cbegin(), fields().cend(), [](const auto& field) { return field->unbound(); });
+}
+
+bool StructArray::valid() const
+{
+  const auto result =
+    std::all_of(fields().begin(), fields().end(), [](const auto& field) { return field->valid(); });
+  LEGATE_ASSERT(null_mask()->valid() == result);
+  return result;
 }
 
 const InternalSharedPtr<Store>& StructArray::null_mask() const
@@ -110,7 +124,10 @@ const InternalSharedPtr<Store>& StructArray::null_mask() const
   return null_mask_;
 }
 
-InternalSharedPtr<Array> StructArray::child(std::uint32_t index) const { return fields_.at(index); }
+InternalSharedPtr<Array> StructArray::child(std::uint32_t index) const
+{
+  return fields().at(index);
+}
 
 void StructArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
@@ -119,6 +136,6 @@ void StructArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result)
   }
 }
 
-Domain StructArray::domain() const { return fields_.front()->domain(); }
+Domain StructArray::domain() const { return fields().front()->domain(); }
 
 }  // namespace legate::mapping::detail

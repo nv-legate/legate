@@ -18,7 +18,8 @@
 namespace unbound_nullable_array_test {
 
 struct Initialize : public legate::LegateTask<Initialize> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static constexpr auto TASK_ID             = legate::LocalTaskID{0};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
   static void cpu_variant(legate::TaskContext context)
   {
     auto arr_prim   = context.output(0);

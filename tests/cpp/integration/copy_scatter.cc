@@ -32,6 +32,7 @@ template <std::int32_t IND_DIM, std::int32_t TGT_DIM>
 struct CheckScatterTask : public legate::LegateTask<CheckScatterTask<IND_DIM, TGT_DIM>> {
   static constexpr auto TASK_ID =
     legate::LocalTaskID{CHECK_SCATTER_TASK + (IND_DIM * TEST_MAX_DIM) + TGT_DIM};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   struct CheckScatterTaskBody {
     template <legate::Type::Code CODE>

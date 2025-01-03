@@ -37,6 +37,8 @@ class DefaultMapper final : public Mapper {  // NOLINT(bugprone-forward-declarat
   [[nodiscard]] std::vector<mapping::StoreMapping> store_mappings(
     const mapping::Task& task, const std::vector<StoreTarget>& options) override;
   [[nodiscard]] Scalar tunable_value(TunableID tunable_id) override;
+  [[nodiscard]] std::optional<std::size_t> allocation_pool_size(const Task& task,
+                                                                StoreTarget memory_kind) override;
 };
 
 }  // namespace legate::mapping::detail

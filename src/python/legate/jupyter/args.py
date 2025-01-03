@@ -80,13 +80,6 @@ memory.add_argument(sa.FBMEM.name, **sa.FBMEM.kwargs)
 memory.add_argument(sa.ZCMEM.name, **sa.ZCMEM.kwargs)
 memory.add_argument(sa.REGMEM.name, **sa.REGMEM.kwargs)
 
-memory.add_argument(
-    "--eager-alloc-percentage",
-    dest="eager_alloc",
-    default=None,
-    required=False,
-    help="Percentage of reserved memory to allocate for eager allocations",
-)
 
 info = parser.add_argument_group("Informational")
 

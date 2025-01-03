@@ -17,6 +17,8 @@ Changes: Latest Development Version
 - Drop support for Maxwell GPU architecture. Legate now requires at least Pascal
   (``sm_60``).
 - Change the default number of maximum dimensions for Legate arrays from 4 to 6.
+- Remove the ``--eager-alloc-percentage`` flag, as the one pool allocation scheme
+  makes it obsolete.
 
 C++
 ---
@@ -27,11 +29,30 @@ C++
 
 .. rubric:: Mapping
 
+- Add ``legate::mapping::Mapper::allocation_pool_size()``. Legate mappers are
+  now required to implement the new mapping callback returning sizes of
+  allocation pools used by task variants that are registered with
+  ``has_allocations`` being ``true``.
+
+- Add ``legate::mapping::Operation::num_scalars()``.
+
+- Add ``legate::mapping::Operation::is_single_task()``.
+
+- Add ``legate::mapping::Operation::get_launch_domain()``.
+
 - Remove ``legate::mapping::Mapper::task_target()``.
 
 .. rubric:: Partitioning
 
 .. rubric:: Tasks
+
+- Remove ``legate::VariantOptions::leaf``, ``legate::VariantOptions::inner``,
+  and ``legate::VariantOptions::idempotent``, as they don't actually do
+  anything in Legate.
+
+- Add ``legate::VariantOptions::has_allocations``, which indicates that the
+  task variant is allowed to create temporary or output buffers during
+  execution.
 
 .. rubric:: Types
 

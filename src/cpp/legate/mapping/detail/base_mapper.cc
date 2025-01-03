@@ -20,6 +20,7 @@
 #include "legate/runtime/detail/projection.h"
 #include "legate/runtime/detail/runtime.h"
 #include "legate/runtime/detail/shard.h"
+#include "legate/task/detail/task_return.h"
 #include "legate/utilities/detail/core_ids.h"
 #include "legate/utilities/detail/enumerate.h"
 #include "legate/utilities/detail/env.h"
@@ -36,7 +37,10 @@
 #include <cstring>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <functional>
+#include <limits>
 #include <sstream>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 
@@ -44,7 +48,8 @@ namespace legate::mapping::detail {
 
 namespace {
 
-const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind)
+const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind,
+                                                      bool for_pool_size = false)
 {
   switch (kind) {
     case Processor::Kind::TOC_PROC: {
@@ -52,8 +57,11 @@ const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind)
       return targets;
     }
     case Processor::Kind::OMP_PROC: {
+      // TODO(wonchanl): the distinction should go away once Realm drops the socket memory as a
+      // separate entity
       static const std::vector<StoreTarget> targets = {StoreTarget::SOCKETMEM, StoreTarget::SYSMEM};
-      return targets;
+      static const std::vector<StoreTarget> target_for_pool_size = {StoreTarget::SOCKETMEM};
+      return for_pool_size ? target_for_pool_size : targets;
     }
     case Processor::Kind::LOC_PROC: {
       static const std::vector<StoreTarget> targets = {StoreTarget::SYSMEM};
@@ -518,12 +526,12 @@ void map_unbound_stores(const std::vector<std::unique_ptr<StoreMapping>>& mappin
                         Legion::Mapping::Mapper::MapTaskOutput* output)
 {
   for (auto&& mapping : mappings) {
+    const auto* store  = mapping->store();
     const auto req_idx = mapping->requirement_index();
 
     output->output_targets[req_idx] = local_machine.get_memory(target_proc, mapping->policy.target);
 
     const auto ndim = mapping->store()->dim();
-    // FIXME: Unbound stores can have more than one dimension later
     std::vector<Legion::DimensionKind> dimension_ordering;
 
     dimension_ordering.reserve(static_cast<std::size_t>(ndim) + 1);
@@ -533,10 +541,129 @@ void map_unbound_stores(const std::vector<std::unique_ptr<StoreMapping>>& mappin
     }
     dimension_ordering.push_back(Legion::DimensionKind::LEGION_DIM_F);
 
-    auto& ordering_constraint = output->output_constraints[req_idx].ordering_constraint;
+    auto& output_constraint   = output->output_constraints[req_idx];
+    auto& ordering_constraint = output_constraint.ordering_constraint;
 
     ordering_constraint.ordering   = std::move(dimension_ordering);
     ordering_constraint.contiguous = false;
+
+    output_constraint.alignment_constraints.emplace_back(
+      store->region_field().field_id(), LEGION_EQ_EK, store->type()->alignment());
+  }
+}
+
+[[nodiscard]] std::size_t calculate_legate_allocation_size(Legion::Mapping::MapperRuntime* runtime,
+                                                           Legion::Mapping::MapperContext ctx,
+                                                           const Legion::Task& task,
+                                                           const Task& legate_task,
+                                                           const VariantInfo& vinfo)
+{
+  auto&& all_arrays = {std::cref(legate_task.inputs()),
+                       std::cref(legate_task.outputs()),
+                       std::cref(legate_task.reductions())};
+  auto get_stores   = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
+
+  // Here we calculate the total size of buffers created for scalar stores and unbound stores in the
+  // following way: each output or reduction scalar store embeds a buffer to hold the update; each
+  // unbound store gets a buffer that holds the number of elements, which will later be retrieved to
+  // keep track of the store's key partition (of the legate::detail::Weighted type).
+  auto layout = legate::detail::TaskReturnLayoutForUnpack{};
+  for (auto&& arrays : all_arrays) {
+    for (auto&& array : arrays.get()) {
+      for (auto&& store : get_stores(*array)) {
+        if (store->is_future()) {
+          const auto& type = store->type();
+          if (type->size() == 0) {
+            continue;
+          }
+          std::ignore = layout.next(type->size(), type->alignment());
+        } else if (store->unbound()) {
+          // The number of elements for each unbound store is stored in a buffer of type
+          // std::size_t
+          std::ignore = layout.next(sizeof(std::size_t), alignof(std::size_t));
+        }
+      }
+    }
+  }
+  // The math above only accounts for the buffers that are created when the stores are deserialized
+  // in the task preamble. Once the task is done, the final values in those buffers are packed into
+  // a return buffer of the task, which is yet to be included in the pool size. Therefore, we double
+  // the pool size calculated so far to take the return buffer size into account.
+  const auto size = layout.total_size() * 2;
+
+  // If the aggregate size of buffers is greater than the return size of the variant, raise an
+  // error
+  //
+  // TODO(wonchanl): the task can still exceed the return size if it has an exception string
+  // longer than the specified return size minus the space reserved for scalar returns. Currently,
+  // Legate defers the error handling to Legion in this case, but ideally Legate should handle it.
+  if (size > vinfo.options.return_size) {
+    LEGATE_ABORT(fmt::format(
+      "Necessary pool size ({} bytes) exceeds the specified return size ({} bytes) of task {}[{}]",
+      size,
+      vinfo.options.return_size,
+      Legion::Mapping::Utilities::to_string(runtime, ctx, task),
+      task.get_provenance_string()));
+  }
+
+  // If the task can raise an exception, we reserve space for the serialized exception by
+  // requesting a pool as big as the return size
+  //
+  // TODO(wonchanl): this return size business is brittle and also inscrutable for users because
+  // they don't necessarily know what constitutes the buffer returned from a variant. Legate
+  // should instead infer the right return size based on a task signature.
+  return legate_task.can_raise_exception() ? vinfo.options.return_size : size;
+}
+
+void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
+                          Legion::Mapping::MapperContext ctx,
+                          const Legion::Task& task,
+                          const LocalMachine& local_machine,
+                          Logger* logger,
+                          Task* legate_task,
+                          Legion::Mapping::Mapper::MapTaskOutput* output)
+{
+  auto* library = legate_task->library();
+  // TODO(mpapadakis): Unify the variant finding with BaseMapper::find_variant_
+  auto&& maybe_vinfo = library->find_task(legate_task->task_id())
+                         ->find_variant(to_variant_code(legate_task->target()));
+
+  LEGATE_CHECK(maybe_vinfo.has_value());
+
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  auto&& vinfo = maybe_vinfo->get();
+
+  const auto legate_alloc_size =
+    calculate_legate_allocation_size(runtime, ctx, task, *legate_task, vinfo);
+
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    logger->debug() << "Task " << Legion::Mapping::Utilities::to_string(runtime, ctx, task)
+                    << " needs at least " << legate_alloc_size
+                    << " bytes in a pool for scalar stores, unbound stores, and exceptions";
+  }
+
+  const auto& allocation_pool_targets = default_store_targets(task.target_proc.kind(), true);
+  if (!vinfo.options.has_allocations) {
+    // Unfortunately, even when the user said her task doesn't create any allocations, there can be
+    // some made by Legate. Therefore, we still need to return the right bounds so Legate can create
+    // those allocations in (the pre- and post-amble of) the user task.
+    for (auto&& target : allocation_pool_targets) {
+      output->leaf_pool_bounds.try_emplace(local_machine.get_memory(task.target_proc, target),
+                                           legate_alloc_size);
+    }
+    return;
+  }
+
+  auto* legate_mapper = library->get_mapper();
+  for (auto&& target : allocation_pool_targets) {
+    const auto size   = legate_mapper->allocation_pool_size(mapping::Task{legate_task}, target);
+    const auto memory = local_machine.get_memory(task.target_proc, target);
+    output->leaf_pool_bounds.try_emplace(
+      memory,
+      size.has_value()
+        ? Legion::PoolBounds{*size + legate_alloc_size}
+        : Legion::PoolBounds{Legion::UnboundPoolScope::LEGION_INDEX_TASK_UNBOUNDED_POOL,
+                             std::numeric_limits<std::size_t>::max()});
   }
 }
 
@@ -621,6 +748,8 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                      task.target_proc,
                      output_map,
                      legate_task.machine().count() < task.index_domain.get_volume());
+
+  calculate_pool_sizes(runtime, ctx, task, local_machine_, &logger(), &legate_task, &output);
 
   for (auto&& mapping : for_stores) {
     if (!mapping->policy.redundant) {
@@ -1226,9 +1355,12 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
   // allocations here, but will have to properly report the case where a task reserving an eager
   // instance (of known size) has not finished yet, so its reserved eager memory has not yet been
   // returned to the deferred pool.
+  //
+  // UPDATE(wonchanl): Removing the mentioning of the eager pool from the message, but the reporting
+  // still needs to be extended per the description above.
   logger().error() << "There is not enough space because Legate is reserving " << total_size
-                   << " of the available " << target_memory.capacity() << " bytes (minus the eager"
-                   << " pool allocation) for the following LogicalStores:";
+                   << " of the available " << target_memory.capacity()
+                   << " bytes for the following LogicalStores:";
   for (auto&& [store_key, insts] : insts_for_store) {
     auto&& [fs, fid] = store_key;
 

@@ -67,9 +67,13 @@ class Task : public Mappable {
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& reductions() const;
   [[nodiscard]] const std::vector<InternalSharedPtr<legate::detail::Scalar>>& scalars() const;
 
+  [[nodiscard]] bool is_single_task() const;
   [[nodiscard]] const DomainPoint& point() const;
+  [[nodiscard]] const Domain& get_launch_domain() const;
 
   [[nodiscard]] TaskTarget target() const;
+
+  [[nodiscard]] bool can_raise_exception() const;
 
  private:
   const Legion::Task* task_{};
@@ -79,6 +83,7 @@ class Task : public Mappable {
   std::vector<InternalSharedPtr<Array>> outputs_{};
   std::vector<InternalSharedPtr<Array>> reductions_{};
   std::vector<InternalSharedPtr<legate::detail::Scalar>> scalars_{};
+  bool can_raise_exception_{};
 };
 
 class Copy : public Mappable {

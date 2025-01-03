@@ -16,24 +16,6 @@
 
 namespace legate {
 
-constexpr VariantOptions& VariantOptions::with_leaf(bool _leaf)
-{
-  leaf = _leaf;
-  return *this;
-}
-
-constexpr VariantOptions& VariantOptions::with_inner(bool _inner)
-{
-  inner = _inner;
-  return *this;
-}
-
-constexpr VariantOptions& VariantOptions::with_idempotent(bool _idempotent)
-{
-  idempotent = _idempotent;
-  return *this;
-}
-
 constexpr VariantOptions& VariantOptions::with_concurrent(bool _concurrent)
 {
   concurrent = _concurrent;
@@ -46,6 +28,12 @@ constexpr VariantOptions& VariantOptions::with_return_size(std::size_t _return_s
   return *this;
 }
 
+constexpr VariantOptions& VariantOptions::with_has_allocations(bool _has_allocations)
+{
+  has_allocations = _has_allocations;
+  return *this;
+}
+
 constexpr VariantOptions& VariantOptions::with_elide_device_ctx_sync(bool elide_sync)
 {
   elide_device_ctx_sync = elide_sync;
@@ -54,8 +42,8 @@ constexpr VariantOptions& VariantOptions::with_elide_device_ctx_sync(bool elide_
 
 constexpr bool VariantOptions::operator==(const VariantOptions& other) const
 {
-  return leaf == other.leaf && inner == other.inner && idempotent == other.idempotent &&
-         concurrent == other.concurrent && return_size == other.return_size;
+  return concurrent == other.concurrent && return_size == other.return_size &&
+         has_allocations == other.has_allocations;
 }
 
 constexpr bool VariantOptions::operator!=(const VariantOptions& other) const

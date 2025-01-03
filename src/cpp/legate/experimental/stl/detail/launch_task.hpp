@@ -758,6 +758,9 @@ template <typename Function,
           typename Constraints>
 struct IterationOperation  //
   : LegateTask<IterationOperation<Function, Inputs, Outputs, Scalars, Constraints>> {
+  static constexpr auto CPU_VARIANT_OPTIONS = VariantOptions{}.with_has_allocations(false);
+  static constexpr auto GPU_VARIANT_OPTIONS = VariantOptions{}.with_has_allocations(false);
+
   static void cpu_variant(TaskContext context)
   {
     auto&& inputs  = context.inputs();
@@ -978,6 +981,9 @@ template <typename Reduction,
           typename Constraints>
 struct ReductionOperation
   : LegateTask<ReductionOperation<Reduction, Inputs, Outputs, Scalars, Constraints>> {
+  static constexpr auto CPU_VARIANT_OPTIONS = VariantOptions{}.with_has_allocations(false);
+  static constexpr auto GPU_VARIANT_OPTIONS = VariantOptions{}.with_has_allocations(false);
+
   static void cpu_variant(TaskContext context)
   {
     auto&& inputs     = context.inputs();

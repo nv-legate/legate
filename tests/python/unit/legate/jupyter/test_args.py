@@ -84,9 +84,6 @@ class TestParserDefaults:
     def test_regmem(self) -> None:
         assert m.parser.get_default("regmem") is None
 
-    def test_eager_alloc(self) -> None:
-        assert m.parser.get_default("eager_alloc") is None
-
     # info
 
     def test_verbose(self) -> None:

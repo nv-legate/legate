@@ -120,7 +120,6 @@ class TestMemory:
             "fbmem",
             "zcmem",
             "regmem",
-            "eager_alloc",
         }
 
     def test_mixin(self) -> None:
@@ -283,7 +282,6 @@ class TestConfig:
             fbmem=None,
             zcmem=None,
             regmem=None,
-            eager_alloc=None,
         )
 
         c.profiling == m.Profiling(

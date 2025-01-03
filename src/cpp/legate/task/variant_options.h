@@ -15,6 +15,8 @@
 #include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
 
+#include <cstddef>
+
 /**
  * @file
  * @brief Class definition of legate::VariantOptions
@@ -36,15 +38,14 @@ inline constexpr std::size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
 class VariantOptions {
  public:
   /**
-   * @brief If the flag is `true`, the variant launches no subtasks. `true` by default.
-   */
-  bool leaf{true};
-  bool inner{false};
-  bool idempotent{false};
-  /**
    * @brief If the flag is `true`, the variant needs a concurrent task launch. `false` by default.
    */
   bool concurrent{false};
+  /**
+   * @brief If the flag is `true`, the variant is allowed to create buffers (temporary or output)
+   * during execution. `false` by default.
+   */
+  bool has_allocations{false};
   /**
    * @brief Maximum aggregate size for scalar output values. 4096 by default.
    */
@@ -68,14 +69,6 @@ class VariantOptions {
   bool elide_device_ctx_sync{};
 
   /**
-   * @brief Changes the value of the `leaf` flag
-   *
-   * @param `leaf` A new value for the `leaf` flag
-   */
-  constexpr VariantOptions& with_leaf(bool leaf);
-  constexpr VariantOptions& with_inner(bool inner);
-  constexpr VariantOptions& with_idempotent(bool idempotent);
-  /**
    * @brief Changes the value of the `concurrent` flag
    *
    * @param `concurrent` A new value for the `concurrent` flag
@@ -87,6 +80,12 @@ class VariantOptions {
    * @param `return_size` A new maximum aggregate size for scalar output values
    */
   constexpr VariantOptions& with_return_size(std::size_t return_size);
+  /**
+   * @brief Changes the value of the `has_allocations` flag
+   *
+   * @param `has_allocations` A new value for the `has_allocations` flag
+   */
+  constexpr VariantOptions& with_has_allocations(bool has_allocations);
 
   /**
    * @brief Sets whether the variant can elide device context synchronization after task

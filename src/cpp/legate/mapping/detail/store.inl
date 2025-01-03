@@ -25,6 +25,11 @@ inline RegionField::RegionField(const Legion::RegionRequirement* req,
 {
 }
 
+inline bool RegionField::valid() const
+{
+  return get_requirement()->region != Legion::LogicalRegion::NO_REGION;
+}
+
 inline RegionField::Id RegionField::unique_id() const { return {unbound(), index(), field_id()}; }
 
 inline std::int32_t RegionField::dim() const { return dim_; }

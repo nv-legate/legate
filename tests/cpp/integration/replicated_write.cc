@@ -44,6 +44,8 @@ class WriterTask : public legate::LegateTask<WriterTask> {
  public:
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(false);
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto outputs = context.outputs();

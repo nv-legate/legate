@@ -48,6 +48,12 @@ class TesterMapper : public legate::mapping::Mapper {
   {
     return legate::Scalar{};
   }
+
+  std::optional<std::size_t> allocation_pool_size(
+    const legate::mapping::Task& /*task*/, legate::mapping::StoreTarget /*memory_kind*/) override
+  {
+    return std::nullopt;
+  }
 };
 
 struct InoutTask : public legate::LegateTask<InoutTask> {

@@ -80,8 +80,10 @@ void TaskReturn::finalize(Legion::Context legion_context) const
     runtime->get_cuda_driver_api()->ctx_synchronize();
   }
 
-  auto return_buffer =
-    Legion::UntypedDeferredValue{buffer_size(), find_memory_kind_for_executing_processor()};
+  auto return_buffer = Legion::UntypedDeferredValue{buffer_size(),
+                                                    find_memory_kind_for_executing_processor(),
+                                                    nullptr /*initial_value*/,
+                                                    1 /*alignment*/};
   const AccessorWO<std::int8_t, 1> acc{return_buffer, buffer_size(), false};
 
   pack(acc.ptr(0));

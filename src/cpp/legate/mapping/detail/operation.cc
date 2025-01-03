@@ -13,6 +13,7 @@
 #include "legate/mapping/detail/operation.h"
 
 #include "legate/runtime/detail/library.h"
+#include "legate/utilities/detail/core_ids.h"
 #include "legate/utilities/detail/deserializer.h"
 #include <legate/utilities/detail/traced_exception.h>
 
@@ -35,12 +36,19 @@ Task::Task(const Legion::Task* task,
   : Mappable{task}, task_{task}
 {
   TaskDeserializer dez{task, runtime, context};
+  library_             = dez.unpack<legate::detail::Library*>();
+  inputs_              = dez.unpack_arrays();
+  outputs_             = dez.unpack_arrays();
+  reductions_          = dez.unpack_arrays();
+  scalars_             = dez.unpack_scalars();
+  can_raise_exception_ = dez.unpack<bool>();
 
-  library_    = dez.unpack<legate::detail::Library*>();
-  inputs_     = dez.unpack_arrays();
-  outputs_    = dez.unpack_arrays();
-  reductions_ = dez.unpack_arrays();
-  scalars_    = dez.unpack_scalars();
+  if (task_->tag ==
+      static_cast<Legion::MappingTagID>(legate::detail::CoreMappingTag::TREE_REDUCE)) {
+    inputs_.erase(
+      std::remove_if(inputs_.begin(), inputs_.end(), [](const auto& inp) { return !inp->valid(); }),
+      inputs_.end());
+  }
 }
 
 LocalTaskID Task::task_id() const

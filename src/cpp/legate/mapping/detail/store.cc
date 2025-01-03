@@ -76,6 +76,8 @@ Store::Store(Legion::Mapping::MapperRuntime* runtime,
 {
 }
 
+bool Store::valid() const { return is_future() || unbound() || region_field().valid(); }
+
 bool Store::can_colocate_with(const Store& other) const
 {
   if (is_future() || other.is_future()) {
@@ -106,7 +108,7 @@ Domain Store::domain() const
 {
   LEGATE_CHECK(!unbound());
   auto result = is_future() ? future().domain() : region_field().domain(runtime_, context_);
-  if (transform_) {
+  if (!transform_->identity()) {
     result = transform_->transform(result);
   }
   LEGATE_CHECK(result.dim == dim());

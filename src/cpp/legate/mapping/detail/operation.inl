@@ -44,7 +44,13 @@ inline const std::vector<InternalSharedPtr<legate::detail::Scalar>>& Task::scala
   return scalars_;
 }
 
+inline bool Task::is_single_task() const { return !task_->is_index_space; }
+
 inline const DomainPoint& Task::point() const { return task_->index_point; }
+
+inline const Domain& Task::get_launch_domain() const { return task_->index_domain; }
+
+inline bool Task::can_raise_exception() const { return can_raise_exception_; }
 
 // ==========================================================================================
 

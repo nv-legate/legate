@@ -78,6 +78,7 @@ class WriterTask : public legate::LegateTask<WriterTask> {
 class ReducerTask : public legate::LegateTask<ReducerTask> {
  public:
   static constexpr auto TASK_ID = legate::LocalTaskID{1};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto&& reductions = context.reductions();

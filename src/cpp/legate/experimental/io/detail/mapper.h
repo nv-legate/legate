@@ -17,6 +17,8 @@
 #include <legate/mapping/operation.h>
 #include <legate/utilities/typedefs.h>
 
+#include <cstddef>
+#include <optional>
 #include <vector>
 
 namespace legate::experimental::io::detail {
@@ -25,6 +27,8 @@ class Mapper final : public legate::mapping::Mapper {
  public:
   [[nodiscard]] std::vector<mapping::StoreMapping> store_mappings(
     const mapping::Task& task, const std::vector<mapping::StoreTarget>& options) override;
+  [[nodiscard]] std::optional<std::size_t> allocation_pool_size(
+    const mapping::Task& task, mapping::StoreTarget memory_kind) override;
   [[nodiscard]] legate::Scalar tunable_value(TunableID) override;
 };
 

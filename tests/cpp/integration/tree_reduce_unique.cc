@@ -42,7 +42,8 @@ struct FillTask : public legate::LegateTask<FillTask> {
 };
 
 struct UniqueTask : public legate::LegateTask<UniqueTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_UNIQUE};
+  static constexpr auto TASK_ID             = legate::LocalTaskID{TASK_UNIQUE};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -66,7 +67,8 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
 };
 
 struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_UNIQUE_REDUCE};
+  static constexpr auto TASK_ID             = legate::LocalTaskID{TASK_UNIQUE_REDUCE};
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context)
   {

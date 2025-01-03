@@ -780,6 +780,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(bool ignore_fu
     // inline-task fast-path
     auto future = FutureWrapper{/* read_only */ !ignore_future_mutability,
                                 type()->size(),
+                                type()->alignment(),
                                 storage->scalar_offset(),
                                 domain,
                                 storage->get_future()};

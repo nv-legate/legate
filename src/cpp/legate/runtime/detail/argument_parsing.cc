@@ -586,7 +586,6 @@ void set_openmp_config_properties(Realm::Runtime* rt,
 }
 
 void set_legion_default_args(std::string log_dir,
-                             const ScaledVar<std::int32_t>& eager_alloc_percent,
                              std::string log_levels,
                              bool profile,
                              bool spy,
@@ -598,7 +597,7 @@ void set_legion_default_args(std::string log_dir,
   std::stringstream args_ss;
 
   // some values have to be passed via env var
-  args_ss << "-lg:eager_alloc_percentage " << eager_alloc_percent.value() << " -lg:local 0 ";
+  args_ss << "-lg:local 0 ";
 
   const auto add_logger = [&](std::string_view item) {
     if (!log_levels.empty()) {
@@ -716,17 +715,16 @@ template <typename T>
 void handle_legate_args()
 {
   // values with -1 defaults will be auto-configured via the Realm API
-  constexpr std::int32_t DEFAULT_CPUS                = -1;
-  constexpr std::int32_t DEFAULT_GPUS                = -1;
-  constexpr std::int32_t DEFAULT_OMPS                = -1;
-  constexpr std::int32_t DEFAULT_OMPTHREADS          = -1;
-  constexpr std::int32_t DEFAULT_UTILITY             = 2;
-  constexpr std::int64_t DEFAULT_SYSMEM              = -1;
-  constexpr std::int64_t DEFAULT_NUMAMEM             = -1;
-  constexpr std::int64_t DEFAULT_FBMEM               = -1;
-  constexpr std::int64_t DEFAULT_ZCMEM               = 128;  // MB
-  constexpr std::int64_t DEFAULT_REGMEM              = 0;    // MB
-  constexpr std::int32_t DEFAULT_EAGER_ALLOC_PERCENT = 50;
+  constexpr std::int32_t DEFAULT_CPUS       = -1;
+  constexpr std::int32_t DEFAULT_GPUS       = -1;
+  constexpr std::int32_t DEFAULT_OMPS       = -1;
+  constexpr std::int32_t DEFAULT_OMPTHREADS = -1;
+  constexpr std::int32_t DEFAULT_UTILITY    = 2;
+  constexpr std::int64_t DEFAULT_SYSMEM     = -1;
+  constexpr std::int64_t DEFAULT_NUMAMEM    = -1;
+  constexpr std::int64_t DEFAULT_FBMEM      = -1;
+  constexpr std::int64_t DEFAULT_ZCMEM      = 128;  // MB
+  constexpr std::int64_t DEFAULT_REGMEM     = 0;    // MB
 
   auto parser = argparse::ArgumentParser{
     "LEGATE_CONFIG can contain:",
@@ -778,12 +776,6 @@ void handle_legate_args()
                              "--regmem",
                              "Size (in MiB) of NIC-registered DRAM memory to reserve",
                              ScaledVar<std::int64_t>{DEFAULT_REGMEM, MB});
-
-  const auto eager_alloc_percent =
-    add_argument(&parser,
-                 "--eager-alloc-percentage",
-                 "Percentage of reserved memory to allocate for eager allocations",
-                 ScaledVar<std::int32_t>{DEFAULT_EAGER_ALLOC_PERCENT});
 
   const auto profile =
     add_argument(&parser, "--profile", "Whether to collect profiling logs", false);
@@ -856,7 +848,6 @@ void handle_legate_args()
   set_openmp_config_properties(&rt, parser, omps, ompthreads, numamem);
 
   set_legion_default_args(std::move(log_dir.value),
-                          eager_alloc_percent.value,
                           std::move(log_levels.value),
                           profile.value,
                           spy.value,

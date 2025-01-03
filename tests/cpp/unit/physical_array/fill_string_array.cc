@@ -23,6 +23,8 @@ class FillStringTask : public legate::LegateTask<FillStringTask> {
  public:
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
 
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
+
   static void cpu_variant(legate::TaskContext);
 };
 

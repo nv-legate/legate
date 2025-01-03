@@ -36,6 +36,9 @@ class HDF5Read : public LegateTask<HDF5Read> {
  public:
   static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_HDF5_FILE_READ};
 
+  static constexpr VariantOptions GPU_VARIANT_OPTIONS =
+    VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
+
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
   static void gpu_variant(legate::TaskContext context);

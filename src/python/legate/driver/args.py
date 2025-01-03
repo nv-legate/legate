@@ -292,14 +292,6 @@ memory.add_argument(FBMEM.name, **FBMEM.kwargs)
 memory.add_argument(ZCMEM.name, **ZCMEM.kwargs)
 memory.add_argument(REGMEM.name, **REGMEM.kwargs)
 
-memory.add_argument(
-    "--eager-alloc-percentage",
-    dest="eager_alloc",
-    default=None,
-    required=False,
-    help="Percentage of reserved memory to allocate for eager allocations",
-)
-
 
 profiling = parser.add_argument_group("Profiling")
 

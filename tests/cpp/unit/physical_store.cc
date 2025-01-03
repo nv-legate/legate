@@ -328,6 +328,7 @@ struct ReduceAccessorFn {
 struct UnboundStoreTask : public legate::LegateTask<UnboundStoreTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::UNBOUND_STORE_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
 /*static*/ void UnboundStoreTask::cpu_variant(legate::TaskContext context)
@@ -375,6 +376,7 @@ struct AccessorTestTask : public legate::LegateTask<AccessorTestTask> {
 struct PrimitiveArrayStoreTask : public legate::LegateTask<PrimitiveArrayStoreTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::PRIMITIVE_ARRAY_STORE_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
 struct ArrayStoreFn {
@@ -412,6 +414,7 @@ struct ArrayStoreFn {
 struct ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::LIST_ARRAY_STORE_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
 /*static*/ void ListArrayStoreTask::cpu_variant(legate::TaskContext context)
@@ -437,6 +440,7 @@ struct ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
 struct StringArrayStoreTask : public legate::LegateTask<StringArrayStoreTask> {
   static constexpr auto TASK_ID = legate::LocalTaskID{StoreTaskID::STRING_ARRAY_STORE_TASK_ID};
   static void cpu_variant(legate::TaskContext context);
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
 /*static*/ void StringArrayStoreTask::cpu_variant(legate::TaskContext context)

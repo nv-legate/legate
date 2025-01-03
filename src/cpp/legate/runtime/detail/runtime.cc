@@ -1866,14 +1866,14 @@ template <VariantCode variant_id>
 void register_extract_scalar_variant(const TaskInfo::RuntimeAddVariantKey& key,
                                      Library* core_lib,
                                      const std::unique_ptr<TaskInfo>& task_info,
-                                     const VariantOptions* variant_options = nullptr)
+                                     const VariantOptions& variant_options)
 {
   // TODO(wonchanl): We could support Legion & Realm calling convensions so we don't pass nullptr
   // here. Should also remove the corresponding workaround function in TaskInfo!
   task_info->add_variant_(key,
                           legate::Library{core_lib},
                           variant_id,
-                          variant_options,
+                          &variant_options,
                           Legion::CodeDescriptor{extract_scalar_task<variant_id>});
 }
 
@@ -1911,17 +1911,17 @@ class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
 
 void register_legate_core_tasks(Library* core_lib)
 {
-  constexpr auto key = TaskInfo::RuntimeAddVariantKey{};
-  auto task_info     = std::make_unique<TaskInfo>("core::extract_scalar");
+  constexpr auto key     = TaskInfo::RuntimeAddVariantKey{};
+  auto task_info         = std::make_unique<TaskInfo>("core::extract_scalar");
+  constexpr auto options = VariantOptions{}.with_has_allocations(true);
 
-  register_extract_scalar_variant<VariantCode::CPU>(key, core_lib, task_info);
+  register_extract_scalar_variant<VariantCode::CPU>(key, core_lib, task_info, options);
   if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
-    constexpr auto options = VariantOptions{}.with_elide_device_ctx_sync(true);
-
-    register_extract_scalar_variant<VariantCode::GPU>(key, core_lib, task_info, &options);
+    register_extract_scalar_variant<VariantCode::GPU>(
+      key, core_lib, task_info, VariantOptions{options}.with_elide_device_ctx_sync(true));
   }
   if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
-    register_extract_scalar_variant<VariantCode::OMP>(key, core_lib, task_info);
+    register_extract_scalar_variant<VariantCode::OMP>(key, core_lib, task_info, options);
   }
   core_lib->register_task(LocalTaskID{CoreTask::EXTRACT_SCALAR}, std::move(task_info));
   PrefetchBloatedInstances::register_variants(legate::Library{core_lib});

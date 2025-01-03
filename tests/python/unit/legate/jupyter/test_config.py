@@ -62,7 +62,6 @@ class TestConfig:
             fbmem=None,
             zcmem=None,
             regmem=None,
-            eager_alloc=None,
         )
 
         # These are all "turned off"

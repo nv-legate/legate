@@ -43,6 +43,8 @@ inline bool BaseArray::nullable() const { return null_mask_ != nullptr; }
 
 inline bool BaseArray::nested() const { return false; }
 
+inline bool BaseArray::valid() const { return data()->valid(); }
+
 inline const InternalSharedPtr<Store>& BaseArray::data() const { return data_; }
 
 // ==========================================================================================
@@ -90,5 +92,7 @@ inline const InternalSharedPtr<legate::detail::Type>& StructArray::type() const 
 inline bool StructArray::nullable() const { return null_mask_ != nullptr; }
 
 inline bool StructArray::nested() const { return true; }
+
+inline const std::vector<InternalSharedPtr<Array>>& StructArray::fields() const { return fields_; }
 
 }  // namespace legate::mapping::detail

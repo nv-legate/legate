@@ -150,15 +150,17 @@ InternalSharedPtr<PhysicalStore> TaskDeserializer::unpack_store()
 
 void TaskDeserializer::unpack_impl(FutureWrapper& value)
 {
-  auto read_only    = unpack<bool>();
-  auto future_index = unpack<std::int32_t>();
-  auto field_size   = unpack<std::uint32_t>();
-  auto field_offset = unpack<std::uint64_t>();
-  auto domain       = unpack<Domain>();
+  const auto read_only       = unpack<bool>();
+  const auto future_index    = unpack<std::int32_t>();
+  const auto field_size      = unpack<std::uint32_t>();
+  const auto field_alignment = unpack<std::uint32_t>();
+  const auto field_offset    = unpack<std::uint64_t>();
+  const auto domain          = unpack<Domain>();
 
   const auto has_storage = future_index >= 0;
   Legion::Future future  = has_storage ? futures_[future_index] : Legion::Future{};
-  value = FutureWrapper{read_only, field_size, field_offset, domain, std::move(future)};
+  value =
+    FutureWrapper{read_only, field_size, field_alignment, field_offset, domain, std::move(future)};
 }
 
 void TaskDeserializer::unpack_impl(RegionField& value)
@@ -299,6 +301,7 @@ void TaskDeserializer::unpack_impl(FutureWrapper& value)
   // We still need to deserialize these fields to get to the domain
   static_cast<void>(unpack<bool>());
   auto future_index = unpack<std::int32_t>();
+  static_cast<void>(unpack<std::uint32_t>());
   static_cast<void>(unpack<std::uint32_t>());
   static_cast<void>(unpack<std::uint64_t>());
   auto domain = unpack<Domain>();

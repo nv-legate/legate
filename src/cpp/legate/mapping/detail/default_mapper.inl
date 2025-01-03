@@ -28,4 +28,10 @@ inline Scalar DefaultMapper::tunable_value(TunableID /*tunable_id*/)
   return Scalar{0};
 }
 
+inline std::optional<std::size_t> DefaultMapper::allocation_pool_size(const Task& /*task*/,
+                                                                      StoreTarget /*memory_kind*/)
+{
+  return std::nullopt;
+}
+
 }  // namespace legate::mapping::detail

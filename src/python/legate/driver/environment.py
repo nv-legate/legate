@@ -80,10 +80,6 @@ def env_log_file(config: ConfigProtocol) -> EnvPart:
     return ("--log-to-file",) if config.logging.log_to_file else ()
 
 
-def env_eager_alloc(config: ConfigProtocol) -> EnvPart:
-    return _arg_helper("--eager-alloc-percentage", config.memory.eager_alloc)
-
-
 def env_profile(config: ConfigProtocol) -> EnvPart:
     return ("--profile",) if config.profiling.profile else ()
 
@@ -110,7 +106,6 @@ ENV_PARTS_LEGATE = (
     env_log_levels,
     env_logdir,
     env_log_file,
-    env_eager_alloc,
     env_profile,
     env_spy,
     env_freeze_on_error,

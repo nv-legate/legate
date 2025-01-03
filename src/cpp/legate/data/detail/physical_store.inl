@@ -20,8 +20,10 @@
 namespace legate::detail {
 
 inline UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
-  : num_elements_{Legion::UntypedDeferredValue{sizeof(std::size_t),
-                                               find_memory_kind_for_executing_processor()}},
+  : num_elements_{sizeof(std::size_t),
+                  find_memory_kind_for_executing_processor(),
+                  nullptr /*init_value*/,
+                  alignof(std::size_t)},
     out_{out},
     fid_{fid}
 {

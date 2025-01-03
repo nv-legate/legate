@@ -39,7 +39,6 @@ def test_ENV_PARTS_LEGATE() -> None:
         m.env_log_levels,
         m.env_logdir,
         m.env_log_file,
-        m.env_eager_alloc,
         m.env_profile,
         m.env_spy,
         m.env_freeze_on_error,
@@ -114,21 +113,6 @@ class Test_log_file:
         config = genconfig(["--log-to-file"])
         result = m.env_log_file(config)
         assert result == ("--log-to-file",)
-
-
-class Test_eager_alloc:
-    def test_default(self, genconfig: GenConfig) -> None:
-        config = genconfig([])
-        result = m.env_log_file(config)
-        assert result == ()
-
-    def test_value(self, genconfig: GenConfig) -> None:
-        config = genconfig(["--eager-alloc-percentage"])
-        result = m.env_eager_alloc(config)
-        assert result == (
-            "--eager-alloc-percentage",
-            str(config.memory.eager_alloc),
-        )
 
 
 class Test_profile:

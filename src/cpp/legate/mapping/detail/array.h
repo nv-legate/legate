@@ -31,6 +31,7 @@ class Array {
   [[nodiscard]] virtual bool unbound() const                                        = 0;
   [[nodiscard]] virtual bool nullable() const                                       = 0;
   [[nodiscard]] virtual bool nested() const                                         = 0;
+  [[nodiscard]] virtual bool valid() const                                          = 0;
 
   [[nodiscard]] virtual const InternalSharedPtr<Store>& data() const;
   [[nodiscard]] virtual const InternalSharedPtr<Store>& null_mask() const         = 0;
@@ -51,6 +52,7 @@ class BaseArray final : public Array {
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
+  [[nodiscard]] bool valid() const override;
 
   [[nodiscard]] const InternalSharedPtr<Store>& data() const override;
   [[nodiscard]] const InternalSharedPtr<Store>& null_mask() const override;
@@ -76,6 +78,7 @@ class ListArray final : public Array {
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
+  [[nodiscard]] bool valid() const override;
 
   [[nodiscard]] const InternalSharedPtr<Store>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<Array> child(std::uint32_t index) const override;
@@ -102,12 +105,15 @@ class StructArray final : public Array {
   [[nodiscard]] bool unbound() const override;
   [[nodiscard]] bool nullable() const override;
   [[nodiscard]] bool nested() const override;
+  [[nodiscard]] bool valid() const override;
 
   [[nodiscard]] const InternalSharedPtr<Store>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<Array> child(std::uint32_t index) const override;
   void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const override;
 
   [[nodiscard]] Domain domain() const override;
+
+  [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& fields() const;
 
  private:
   InternalSharedPtr<legate::detail::Type> type_{};

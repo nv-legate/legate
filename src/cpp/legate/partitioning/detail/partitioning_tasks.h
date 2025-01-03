@@ -27,7 +27,7 @@ class FindBoundingBox : public LegateTask<FindBoundingBox> {
  public:
   static constexpr auto TASK_ID = LocalTaskID{CoreTask::FIND_BOUNDING_BOX};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
-    VariantOptions{}.with_elide_device_ctx_sync(true);
+    VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
@@ -42,7 +42,7 @@ class FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
  public:
   static constexpr auto TASK_ID = LocalTaskID{CoreTask::FIND_BOUNDING_BOX_SORTED};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
-    VariantOptions{}.with_elide_device_ctx_sync(true);
+    VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)

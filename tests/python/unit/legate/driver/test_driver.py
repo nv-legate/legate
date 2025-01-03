@@ -246,7 +246,6 @@ OPTS = (
     "--fbmem",
     "--zcmem",
     "--regmem",
-    "--eager-alloc-percentage",
     "--logging",
     "--logdir",
 )

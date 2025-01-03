@@ -20,7 +20,8 @@ namespace legate::detail {
 
 template <typename REDOP>
 CUDAReductionBuffer<REDOP>::CUDAReductionBuffer(CUstream stream)
-  : buffer_{legate::create_buffer<VAL>(1, Memory::Kind::GPU_FB_MEM)}, ptr_{buffer_.ptr(0)}
+  : buffer_{legate::create_buffer<VAL>(1, Memory::Kind::GPU_FB_MEM, alignof(VAL))},
+    ptr_{buffer_.ptr(0)}
 {
   static const VAL identity{REDOP::identity};
 

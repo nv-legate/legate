@@ -35,6 +35,12 @@ class LibraryMapper : public legate::mapping::Mapper {
     LEGATE_ABORT("This method should never be called");
     return legate::Scalar{};
   }
+
+  std::optional<std::size_t> allocation_pool_size(
+    const legate::mapping::Task& /*task*/, legate::mapping::StoreTarget /*memory_kind*/) override
+  {
+    return std::nullopt;
+  }
 };
 
 using Library = DefaultFixture;
@@ -231,8 +237,7 @@ TEST_F(Library, VariantOptions)
   const std::map<legate::VariantCode, legate::VariantOptions> default_options2 = {
     {legate::VariantCode::CPU, legate::VariantOptions{}.with_return_size(1234)},
     {legate::VariantCode::GPU,
-     legate::VariantOptions{}.with_idempotent(true).with_concurrent(true).with_return_size(
-       7355608)}};
+     legate::VariantOptions{}.with_concurrent(true).with_return_size(7355608)}};
   const auto lib2 = runtime->create_library("test_library.bar", {}, nullptr, default_options2);
 
   // Creation of lib2 should not affect lib1

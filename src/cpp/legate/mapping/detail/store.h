@@ -38,6 +38,8 @@ class RegionField {
               Legion::FieldID fid,
               bool unbound);
 
+  [[nodiscard]] bool valid() const;
+
   [[nodiscard]] bool can_colocate_with(const RegionField& other) const;
 
   [[nodiscard]] Legion::Domain domain(Legion::Mapping::MapperRuntime* runtime,
@@ -100,6 +102,7 @@ class Store {
 
   [[nodiscard]] bool is_future() const;
   [[nodiscard]] bool unbound() const;
+  [[nodiscard]] bool valid() const;
   [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] const InternalSharedPtr<legate::detail::Type>& type() const;
 
