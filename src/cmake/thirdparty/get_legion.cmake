@@ -45,22 +45,7 @@ function(legate_maybe_override_legion user_repository user_branch)
       file(WRITE "${legion_overrides_json}" "${new_legion_json}")
     endif()
   endif()
-  # https://docs.rapids.ai/api/rapids-cmake/stable/command/rapids_cpm_package_override/
-  #
-  # > Added in version v23.10.00: When the variable CPM_<package_name>_SOURCE exists, any
-  # > override entries for package_name will be ignored.
-  #
-  # Work around this by unsetting this variable temporarily
-  if(CPM_Legion_SOURCE)
-    set(legion_src_cache_bkp "$CACHE{CPM_Legion_SOURCE}")
-    unset(CPM_Legion_SOURCE)
-    unset(CPM_Legion_SOURCE CACHE)
-  endif()
   rapids_cpm_package_override("${legion_overrides_json}")
-  if(legion_src_cache_bkp)
-    # Don't need to reset the regular variable since we are in a function
-    set(CPM_Legion_SOURCE "${legion_src_cache_bkp}" CACHE PATH "" FORCE)
-  endif()
 endfunction()
 
 function(find_or_configure_legion_impl version git_repo git_branch shallow
@@ -103,7 +88,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
   message(VERBOSE "legate: Legion git_branch: ${git_branch}")
   message(VERBOSE "legate: Legion exclude_from_all: ${exclude_from_all}")
 
-  rapids_cpm_find(Legion ${version}
+  rapids_cpm_find(Legion "${version}"
                   BUILD_EXPORT_SET legate-exports
                   INSTALL_EXPORT_SET legate-exports
                   GLOBAL_TARGETS Legion::Realm Legion::Regent Legion::Legion
@@ -157,6 +142,32 @@ calls into NCCL either directly or through some other Legate library.
 
   include("${rapids-cmake-dir}/cpm/detail/package_details.cmake")
   rapids_cpm_package_details(Legion version git_repo git_branch shallow exclude_from_all)
+  # https://docs.rapids.ai/api/rapids-cmake/stable/command/rapids_cpm_package_override/
+  #
+  # > Added in version v23.10.00: When the variable CPM_<package_name>_SOURCE exists, any
+  # > override entries for package_name will be ignored.
+  #
+  # This means that our above call to maybe_override Legion might have been completely
+  # pointless, and all of the below information is stale. So we have to manually read the
+  # override file ourselves.
+  if(NOT version)
+    if(NOT CPM_Legion_SOURCE)
+      # If we don't have a version, and we haven't set the source, then idk why this would
+      # fail, but likely the issue isn't on our side
+      message(FATAL_ERROR "rapids-cmake failed to set version information (and likely "
+                          "all the rest of the fields from the override). Please open a "
+                          "bug report at https://github.com/rapidsai/rapids-cmake/issues "
+                          "to report this issue.")
+    endif()
+    file(READ "${LEGATE_CMAKE_DIR}/versions/legion_version.json" json_data)
+    string(JSON version GET "${json_data}" "packages" "Legion" "version")
+    string(JSON shallow GET "${json_data}" "packages" "Legion" "git_shallow")
+    string(JSON exclude_from_all GET "${json_data}" "packages" "Legion"
+           "exclude_from_all")
+    if(exclude_from_all MATCHES ".*NOTFOUND")
+      set(exclude_from_all OFF)
+    endif()
+  endif()
 
   find_or_configure_legion_impl("${version}" "${git_repo}" "${git_branch}" "${shallow}"
                                 "${exclude_from_all}")
