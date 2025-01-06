@@ -397,19 +397,21 @@ class Logger:
         self,
         message: str,
         title: str,
-        title_style: str,
+        style: str,
         align: AlignMethod,
     ) -> None:
-        if title_style:
+        if title:
+            title_style = style
             if not title_style.startswith("["):
                 title_style = "[" + title_style
             if not title_style.endswith("]"):
                 title_style += "]"
-        if title:
             title = f"[bold]{title_style}{title}[/]"
 
         rich_txt = self.console.render_str(message)
-        screen_message = Panel(Align(rich_txt, align=align), title=title)
+        screen_message = Panel(
+            Align(rich_txt, align=align), style=style, title=title
+        )
         self.log_screen(screen_message, keep=True)
 
     def log_boxed(
@@ -449,7 +451,23 @@ class Logger:
         self.log_boxed(
             message,
             title=f"***** {title.strip()} *****",
-            title_style="[yellow]",
+            title_style="bold yellow",
+        )
+
+    def log_error(self, message: str, *, title: str = "WARNING") -> None:
+        r"""Log a warning to the log.
+
+        Parameters
+        ----------
+        message : str
+            The message to print.
+        title : str, 'WARNING'
+            The title to use for the box.
+        """
+        self.log_boxed(
+            message,
+            title=f"***** {title.strip()} *****",
+            title_style="bold red",
         )
 
     def log_divider(self, tee: bool = False, keep: bool = True) -> None:

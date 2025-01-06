@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import sys
 import traceback
+from argparse import ArgumentError
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Final
 
@@ -35,7 +36,7 @@ def _handle_generic_error(
 ) -> None:
     try:
         config.log_divider()
-        config.log_warning(message, title=title)
+        config.log_error(message, title=title)
         config.log_divider()
     except Exception as e:
         print(
@@ -100,14 +101,6 @@ def _basic_configure_impl(
     except CMakeConfigureError as e:
         title = "CMake configuration failed"
         excn = e
-    except AssertionError as e:
-        if excn_str := str(excn):
-            title = (
-                f"Assertion Error: {excn_str}, this indicates a configure bug!"
-            )
-        else:
-            title = "CONFIGURATION CRASH"
-        excn = e
     except KeyboardInterrupt:
         _handle_generic_error(
             config,
@@ -115,6 +108,9 @@ def _basic_configure_impl(
             title="Configuration Aborted",
         )
         return FAILURE
+    except ArgumentError as e:
+        title = "Invalid Option"
+        excn = e
     except Exception as e:
         title = "CONFIGURATION CRASH"
         excn = e

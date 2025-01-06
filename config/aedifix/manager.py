@@ -785,6 +785,18 @@ class ConfigurationManager:
         """
         self._logger.log_warning(message, title=title)
 
+    def log_error(self, message: str, *, title: str = "ERROR") -> None:
+        r"""Log an error to the log.
+
+        Parameters
+        ----------
+        message : str
+            The message to print.
+        title : str, 'ERROR'
+            The title to use for the box.
+        """
+        self._logger.log_error(message, title=title)
+
     def log_execute_command(
         self, command: Sequence[_T], live: bool = False
     ) -> CompletedProcess[str]:
