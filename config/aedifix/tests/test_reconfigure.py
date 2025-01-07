@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -12,19 +11,20 @@
 from __future__ import annotations
 
 import os
-import random
 import sys
+import random
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
-from pytest import MonkeyPatch
 
 from ..cmake.cmake_flags import CMakeString
 from ..reconfigure import Reconfigure
 from ..util.utility import subprocess_capture_output
 from .fixtures.dummy_main_module import DummyMainModule
-from .fixtures.dummy_manager import DummyManager
+
+if TYPE_CHECKING:
+    from .fixtures.dummy_manager import DummyManager
 
 
 @pytest.fixture
@@ -56,12 +56,7 @@ TEST_SANITIZED_ARGV_ARGS: tuple[
             "--arg-end",
         ],
     ),
-    (
-        tuple(),
-        set(),
-        list(),
-        ["--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}"],
-    ),
+    ((), set(), [], ["--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}"]),
     (
         ("--arg_1", "value_1", "--arg2=value2", "--arg-end"),
         set(),
@@ -87,9 +82,7 @@ TEST_SANITIZED_ARGV_ARGS: tuple[
             "--",
             "-DFOO=BAZ",
         ),
-        {
-            "--arg-ephem",
-        },
+        {"--arg-ephem"},
         ["-DFOO=BAR", "-DBAZ='BOP BLIP'"],
         [
             "--AEDIFIX_PYTEST_ARCH={AEDIFIX_PYTEST_ARCH}",
@@ -186,7 +179,8 @@ class TestReconfigure:
         assert reconf._backup is None
 
     @pytest.mark.parametrize(
-        "argv, ephemeral_args, extra_argv, expected", TEST_SANITIZED_ARGV_ARGS
+        ("argv", "ephemeral_args", "extra_argv", "expected"),
+        TEST_SANITIZED_ARGV_ARGS,
     )
     def test_sanitized_argv(
         self,
@@ -207,7 +201,7 @@ class TestReconfigure:
         self,
         reconf: Reconfigure,
         AEDIFIX_PYTEST_DIR: Path,
-        monkeypatch: MonkeyPatch,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         reconf_file = reconf.reconfigure_file
         assert not reconf_file.exists()

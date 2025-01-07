@@ -8,7 +8,7 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-
+from __future__ import annotations
 
 import pytest
 
@@ -32,8 +32,8 @@ class Test_store_creation:
         assert store.ndim == 1
         assert store.type == ty.int64
         assert not store.transformed
-        with pytest.raises(ValueError):
-            store.shape.extents
+        with pytest.raises(ValueError):  # noqa: PT011
+            _ = store.shape.extents
 
     def test_ndim(self) -> None:
         runtime = get_legate_runtime()
@@ -124,49 +124,49 @@ class Test_store_invalid_transform:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.int64, shape=(4, 3))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.promote(3, 5)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.promote(-3, 5)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.project(2, 1)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.project(-3, 1)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.project(0, 4)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.slice(2, slice(1, 3))
 
         with pytest.raises(NotImplementedError):
             store.slice(1, slice(1, 3, 2))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.slice(1, slice(1, 4))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.transpose((2,))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.transpose((0, 0))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.transpose((2, 0))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.delinearize(2, (2, 3))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.delinearize(0, (2, 3))
 
     def test_unbound(self) -> None:
         runtime = get_legate_runtime()
         store = runtime.create_store(ty.int64)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             store.promote(1, 1)
 
 

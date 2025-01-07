@@ -12,7 +12,7 @@ from __future__ import annotations
 
 
 class BaseError(Exception):
-    r"""Base exception"""
+    r"""Base exception."""
 
 
 class UnsatisfiableConfigurationError(BaseError):
@@ -27,7 +27,7 @@ class CMakeConfigureError(BaseError):
 
 
 class LengthError(BaseError):
-    r"""An exception to signify an object that is not of the right length"""
+    r"""An exception to signify an object that is not of the right length."""
 
 
 class WrongOrderError(BaseError):

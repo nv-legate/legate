@@ -9,17 +9,18 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Utilities and helpers for implementing the Legate custom test runner.
+"""Utilities and helpers for implementing the Legate custom test runner."""
 
-"""
 from __future__ import annotations
 
-from ..util.types import EnvDict
-from . import CustomTest, FeatureType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..util.types import EnvDict
+    from . import CustomTest, FeatureType
 
 
 class Project:
-
     def skipped_examples(self) -> set[str]:
         """Paths to test files that should be skipped entirely in all stages.
 
@@ -41,7 +42,7 @@ class Project:
         """
         return []
 
-    def stage_env(self, feature: FeatureType) -> EnvDict:
+    def stage_env(self, feature: FeatureType) -> EnvDict:  # noqa: ARG002
         """Extra environment variables for the project, based on the
         stage feature type.
 

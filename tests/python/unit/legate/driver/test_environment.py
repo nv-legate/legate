@@ -12,12 +12,14 @@
 from __future__ import annotations
 
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
 
 import legate.driver.environment as m
 
-from .util import GenConfig
+if TYPE_CHECKING:
+    from .util import GenConfig
 
 
 def test___all__() -> None:
@@ -25,7 +27,7 @@ def test___all__() -> None:
 
 
 def test_ENV_PARTS_LEGATE() -> None:
-    assert m.ENV_PARTS_LEGATE == (
+    assert (
         m.env_cpus,
         m.env_gpus,
         m.env_omps,
@@ -42,7 +44,7 @@ def test_ENV_PARTS_LEGATE() -> None:
         m.env_profile,
         m.env_spy,
         m.env_freeze_on_error,
-    )
+    ) == m.ENV_PARTS_LEGATE
 
 
 CORE_OPTS = ("cpus", "gpus", "omps", "ompthreads", "utility")

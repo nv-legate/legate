@@ -9,20 +9,24 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 from datetime import timedelta
 from subprocess import CompletedProcess
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING
 
 import psutil
+
 import pytest
-from pytest_mock import MockerFixture
 
 from legate.tester import test_system as m
+
+if TYPE_CHECKING:
+    from unittest.mock import MagicMock
+
+    from pytest_mock import MockerFixture
 
 
 class TestProcessResult:
@@ -79,7 +83,8 @@ class TestSystem:
 
         assert result.invocation == CMD
         assert result.test_display == "test/file"
-        assert result.time is not None and result.time > timedelta(0)
+        assert result.time is not None
+        assert result.time > timedelta(0)
         assert not result.skipped
         assert not result.timeout
         assert result.returncode == 10
@@ -100,7 +105,8 @@ class TestSystem:
 
         assert result.invocation == CMD
         assert result.test_display == "test/file"
-        assert result.time is not None and result.time > timedelta(0)
+        assert result.time is not None
+        assert result.time > timedelta(0)
         assert not result.skipped
         assert not result.timeout
         assert result.returncode == 10

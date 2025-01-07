@@ -14,17 +14,21 @@
 #
 from __future__ import annotations
 
-import math
 import sys
-from pathlib import Path
+import math
+from typing import TYPE_CHECKING
 
+import zarr  # type: ignore # noqa: PGH003
 import numpy as np
-import pytest
-import zarr  # type: ignore
 from numpy.testing import assert_array_equal
+
+import pytest
 
 from legate.core import LogicalArray, Type, get_legate_runtime
 from legate.core.experimental.io.zarr import read_array, write_array
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 shape_chunks = (
     "shape,chunks",
@@ -44,7 +48,7 @@ shape_chunks = (
 def test_write_array(
     tmp_path: Path, shape: tuple[int, ...], chunks: tuple[int, ...], dtype: str
 ) -> None:
-    """Test write of a Zarr array"""
+    """Test write of a Zarr array."""
     a = np.arange(math.prod(shape), dtype=dtype).reshape(shape)
     store = get_legate_runtime().create_store_from_buffer(
         Type.from_numpy_dtype(a.dtype), a.shape, a, False
@@ -63,7 +67,7 @@ def test_write_array(
 def test_read_array(
     tmp_path: Path, shape: tuple[int, ...], chunks: tuple[int, ...], dtype: str
 ) -> None:
-    """Test read of a Zarr array"""
+    """Test read of a Zarr array."""
     a = np.arange(math.prod(shape), dtype=dtype).reshape(shape)
     zarr.open_array(
         tmp_path, mode="w", shape=shape, chunks=chunks, compressor=None

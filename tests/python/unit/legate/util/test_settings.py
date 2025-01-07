@@ -13,11 +13,14 @@ from __future__ import annotations
 
 import os
 from contextlib import contextmanager
-from typing import Any, Iterator, Mapping
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 import legate.util.settings as m
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Mapping
 
 
 @contextmanager
@@ -46,7 +49,7 @@ class TestConverters:
         assert m.convert_bool(value) == value
 
     def test_convert_bool_bad(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             m.convert_bool("junk")
 
 
@@ -169,4 +172,4 @@ class TestPrioritizedSetting:
 
         assert s.bar() == 10
         s.bar = 20
-        assert s.bar() == 20  # type: ignore
+        assert s.bar() == 20  # type: ignore[operator]

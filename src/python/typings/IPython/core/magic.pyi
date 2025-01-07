@@ -8,15 +8,13 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from __future__ import annotations
-
 from typing import Any, Callable, ParamSpec, TypeVar
 
 class Magics:
     def __init__(self, shell: Any) -> None: ...
 
-R = TypeVar("R")
-P = ParamSpec("P")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
-line_magic: Callable[[Callable[P, R]], Callable[P, R]]
-magics_class: Callable[[Callable[P, R]], Callable[P, R]]
+line_magic: Callable[[Callable[_P, _R]], Callable[_P, _R]]
+magics_class: Callable[[Callable[_P, _R]], Callable[_P, _R]]

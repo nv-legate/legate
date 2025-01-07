@@ -14,8 +14,9 @@ import re
 from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray  # noqa: TC002
+
 import pytest
-from numpy.typing import NDArray
 
 from legate.core import Scalar, Type, get_legate_runtime, types as ty
 from legate.core.task import task
@@ -34,7 +35,7 @@ def NOT_NATIVELY_SUPPORTED_WARNING(obj: Any) -> str:
 
 class TestScalarTask:
     @pytest.mark.parametrize(
-        "value, dtype, py_dtype",
+        ("value", "dtype", "py_dtype"),
         [
             (1, ty.int64, int),
             (10, ty.int32, int),
@@ -117,7 +118,8 @@ class TestScalarTask:
         @task
         def default_args_dict(
             x_default: dict[str, float],
-            x: dict[str, float] = {"foo": 1.2},
+            # The point of this test is to ensure that defaults are preserved
+            x: dict[str, float] = {"foo": 1.2},  # noqa: B006
         ) -> None:
             assert_isinstance(x, dict)
             assert_isinstance(x_default, dict)
@@ -154,7 +156,7 @@ class TestScalarTaskBad:
     def test_mismatched_type_hint_call_scalar(self) -> None:
         @task
         def foo(x: int) -> None:
-            assert False, "This point should never be reached"
+            pytest.fail("This point should never be reached")
 
         scal = Scalar(1, ty.int64)
         msg = re.escape(
@@ -169,11 +171,11 @@ class TestScalarTaskBad:
     def test_mismatched_type_hint_call_pytype(self) -> None:
         @task
         def foo(x: Scalar) -> None:
-            assert False, "This point should never be reached"
+            pytest.fail("This point should never be reached")
 
         arg = 1
         msg = re.escape(
-            f"Task expected a value of type {repr(Scalar)} for parameter x, "
+            f"Task expected a value of type {Scalar!r} for parameter x, "
             f"but got {type(arg)}"
         )
         with pytest.raises(TypeError, match=msg):
@@ -182,7 +184,7 @@ class TestScalarTaskBad:
             foo(arg)
 
     def test_empty_tuple(self) -> None:
-        tup: tuple[int, ...] = tuple()
+        tup: tuple[int, ...] = ()
 
         @task
         def tuple_task(x: tuple[int, ...]) -> None:
@@ -203,7 +205,6 @@ class TestScalarTaskBad:
         ),
     )
     def test_dict(self, d: dict[Any, Any]) -> None:
-
         @task
         def dict_task(x: dict[Any, Any]) -> None:
             assert_isinstance(x, dict)
@@ -220,4 +221,4 @@ if __name__ == "__main__":
 
     # add -s to args, we do not want pytest to capture stdout here since this
     # gobbles any C++ exceptions
-    sys.exit(pytest.main(sys.argv + ["-s"]))
+    sys.exit(pytest.main([*sys.argv, "-s"]))

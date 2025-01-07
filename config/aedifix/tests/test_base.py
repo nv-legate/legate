@@ -12,12 +12,15 @@ from __future__ import annotations
 
 import re
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ..base import Configurable
 from ..util.exception import WrongOrderError
-from .fixtures.dummy_manager import DummyManager
+
+if TYPE_CHECKING:
+    from .fixtures.dummy_manager import DummyManager
 
 
 @pytest.fixture
@@ -39,7 +42,7 @@ class TestConfigurable:
         with pytest.raises(
             WrongOrderError, match=re.escape("Must call setup() first")
         ):
-            conf.cl_args
+            _ = conf.cl_args
 
 
 if __name__ == "__main__":

@@ -16,9 +16,9 @@ _T = TypeVar("_T")
 
 
 class CLArg(Generic[_T]):
-    __slots__ = "_name", "_value", "_cl_set"
+    __slots__ = "_cl_set", "_name", "_value"
 
-    def __init__(self, name: str, value: _T | None, cl_set: bool) -> None:
+    def __init__(self, name: str, value: _T | None, *, cl_set: bool) -> None:
         r"""Construct a ``CLArg``.
 
         Parameters

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 import sys
-from collections.abc import Collection
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -30,6 +30,9 @@ from legate.core._lib.partitioning.constraint import (
     Variable,
 )
 from legate.core.task import InputStore, task
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
 
 
 @pytest.fixture
@@ -123,14 +126,7 @@ class TestAlign:
             lg.align("asdasd", variable_x)  # type: ignore[call-overload]
 
 
-AXES: tuple[Collection[int], ...] = (
-    tuple(),
-    [],
-    (1,),
-    [1],
-    (1, 2, 3),
-    [3, 4, 5],
-)
+AXES: tuple[Collection[int], ...] = ((), [], (1,), [1], (1, 2, 3), [3, 4, 5])
 
 
 class TestBroadcast:
@@ -233,7 +229,7 @@ class TestImage:
             lg.image("asdasd", variable_x)  # type: ignore[call-overload]
 
 
-FACTORS: tuple[tuple[int, ...], ...] = (tuple(), (1,), (2, 3, 4))
+FACTORS: tuple[tuple[int, ...], ...] = ((), (1,), (2, 3, 4))
 
 
 class TestScale:
@@ -281,7 +277,9 @@ class TestScale:
             ),
         ):
             lg.scale(
-                factors, variable_x, "asdasd"  # type: ignore[call-overload]
+                factors,
+                variable_x,
+                "asdasd",  # type: ignore[call-overload]
             )
 
         with pytest.raises(
@@ -292,11 +290,13 @@ class TestScale:
             ),
         ):
             lg.scale(
-                factors, "asdasd", variable_x  # type: ignore[call-overload]
+                factors,
+                "asdasd",
+                variable_x,  # type: ignore[call-overload]
             )
 
 
-OFFSETS: tuple[tuple[int, ...], ...] = (tuple(), (1,), (2, 3, 4))
+OFFSETS: tuple[tuple[int, ...], ...] = ((), (1,), (2, 3, 4))
 
 
 class TestBloat:

@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 
-def build_wheel(
+def build_wheel(  # noqa: D103
     wheel_directory: str,
     config_settings: dict[str, list[str] | str] | None = None,
     metadata_directory: str | None = None,

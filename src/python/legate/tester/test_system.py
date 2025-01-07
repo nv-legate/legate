@@ -13,19 +13,24 @@
 system information (number of CPUs present, etc).
 
 """
+
 from __future__ import annotations
 
-import multiprocessing
 import os
-from collections.abc import Sequence
+import multiprocessing
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from subprocess import PIPE, STDOUT, TimeoutExpired, run as stdlib_run
+from typing import TYPE_CHECKING
 
 import psutil
 
 from ..util.system import System
-from ..util.types import EnvDict
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from ..util.types import EnvDict
 
 __all__ = ("TestSystem",)
 
@@ -84,17 +89,13 @@ class TestSystem(System):
 
     """
 
-    def __init__(
-        self,
-        *,
-        dry_run: bool = False,
-    ) -> None:
+    def __init__(self, *, dry_run: bool = False) -> None:
         super().__init__()
         self.manager = multiprocessing.Manager()
         self.dry_run: bool = dry_run
 
     @property
-    def memory(self) -> int:
+    def memory(self) -> int:  # noqa: D102
         return psutil.virtual_memory().total
 
     def run(
@@ -124,7 +125,6 @@ class TestSystem(System):
             A current working directory to pass to stdlib ``run``.
 
         """
-
         env = env or {}
 
         envstr = (
@@ -149,6 +149,7 @@ class TestSystem(System):
                 stdout=PIPE,
                 stderr=STDOUT,
                 timeout=timeout,
+                check=False,
             )
         except TimeoutExpired as te:
             if te.stdout is None:

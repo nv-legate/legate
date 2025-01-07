@@ -10,13 +10,13 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import inspect
 import os
-import platform
-import shutil
 import sys
-import textwrap
 import time
+import shutil
+import inspect
+import platform
+import textwrap
 from argparse import (
     SUPPRESS as ARGPARSE_SUPPRESS,
     ArgumentDefaultsHelpFormatter,
@@ -25,10 +25,8 @@ from argparse import (
     RawDescriptionHelpFormatter,
 )
 from collections import defaultdict
-from collections.abc import Callable, Iterator, Sequence
 from graphlib import TopologicalSorter
 from pathlib import Path
-from subprocess import CompletedProcess
 from typing import TYPE_CHECKING, Any, Final, ParamSpec, TypeVar
 
 from .cmake.cmaker import CMaker
@@ -52,6 +50,9 @@ from .util.utility import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator, Sequence
+    from subprocess import CompletedProcess
+
     from .cmake.cmake_flags import CMakeFlagBase
     from .logger import AlignMethod
     from .package.main_package import MainPackage
@@ -67,26 +68,26 @@ class ConfigurationManager:
     """
 
     __slots__ = (
-        "_cl_args",
-        "_orig_argv",
+        "_aedifix_root_dir",
         "_argv",
-        "_extra_argv",
-        "_main_package",
-        "_modules",
-        "_logger",
+        "_cl_args",
         "_cmaker",
         "_config",
-        "_reconfigure",
         "_ephemeral_args",
+        "_extra_argv",
+        "_logger",
+        "_main_package",
         "_module_map",
+        "_modules",
+        "_orig_argv",
+        "_reconfigure",
         "_topo_sorter",
-        "_aedifix_root_dir",
     )
 
     def __init__(
         self, argv: Sequence[str], MainModuleType: type[MainPackage]
     ) -> None:
-        r"""Construct a `ConfigurationManager`
+        r"""Construct a `ConfigurationManager`.
 
         Parameters
         ----------
@@ -97,6 +98,8 @@ class ConfigurationManager:
             a configuration.
         """
         os.environ["AEDIFIX"] = "1"
+        # points to the directory containing the "aedifix" install
+        self._aedifix_root_dir: Final = Path(__file__).resolve().parent.parent
         main_package = MainModuleType.from_argv(self, argv)
         self._cl_args: Namespace | None = None
         self._orig_argv = tuple(argv)
@@ -113,12 +116,10 @@ class ConfigurationManager:
         )
         self._reconfigure = Reconfigure(manager=self)
         self._ephemeral_args: set[str] = set()
-        # points to the directory containing the "aedifix" install
-        self._aedifix_root_dir: Final = Path(__file__).resolve().parent.parent
 
     # Private methods
     def _setup_log(self) -> None:
-        r"""Output just the ~bear necessities~"""
+        r"""Output just the ~bear necessities~."""
         self.log_boxed(
             f"Configuring {self.project_name} to compile on your system"
         )
@@ -131,7 +132,7 @@ class ConfigurationManager:
         self.log(
             f"Configure Options: {' '.join(self.argv)}", caller_context=False
         )
-        self.log(f"Working directory: {os.getcwd()}", caller_context=False)
+        self.log(f"Working directory: {Path.cwd()}", caller_context=False)
         self.log(
             f"Machine platform:\n{platform.uname()}", caller_context=False
         )
@@ -147,7 +148,8 @@ class ConfigurationManager:
 
     def _log_git_info(self) -> None:
         r"""Log information about the current commit and branch of the
-        repository."""
+        repository.
+        """
         git_exe = shutil.which("git")
         if git_exe is None:
             self.log(
@@ -160,10 +162,11 @@ class ConfigurationManager:
                 [git_exe, "branch", "--show-current"]
             ).stdout.strip()
         except CommandError as ce:
-            if ce.return_code == 128:
+            NOT_A_GIT_REPO_ERROR = 128
+            if ce.return_code == NOT_A_GIT_REPO_ERROR:
                 self.log(
                     "git branch --show-current returned exit code "
-                    f"{ce.return_code}. Current directory is not a git "
+                    f"{NOT_A_GIT_REPO_ERROR}. Current directory is not a git "
                     "repository."
                 )
             # Silently gobble this error, it's mostly just informational
@@ -265,7 +268,7 @@ class ConfigurationManager:
         suppress_parser = ArgumentParser(
             argument_default=ARGPARSE_SUPPRESS, add_help=False
         )
-        for action in parser._actions:
+        for action in parser._actions:  # noqa: SLF001
             suppress_parser.add_argument(
                 *action.option_strings, dest=action.dest, nargs="*"
             )
@@ -345,12 +348,13 @@ class ConfigurationManager:
         if arch_dir.exists():
             self.log(f"{proj_name} arch exists: {arch_dir}")
             if not arch_dir.is_dir():
-                raise RuntimeError(
+                msg = (
                     f"{proj_name} arch directory "
                     f"{arch_dir} already exists, but is not a "
                     "directory. Please delete move or delete this file "
                     "before re-running configure!"
                 )
+                raise RuntimeError(msg)
             if not with_clean_val:
                 reconfigure_file = self._reconfigure.reconfigure_file
                 if Path(sys.argv[0]).resolve() == reconfigure_file:
@@ -380,7 +384,7 @@ class ConfigurationManager:
                     )
                     return
 
-                raise UnsatisfiableConfigurationError(
+                msg = (
                     f"{proj_name} arch directory {arch_dir} already exists and"
                     " would be overwritten by this configure command. If you:"
                     "\n"
@@ -401,16 +405,18 @@ class ConfigurationManager:
                     f"with {dest_to_flag(force.name)}"
                     "\n\n"
                 )
+                raise UnsatisfiableConfigurationError(msg)
 
             self.log("Deleting arch directory, then recreating it")
             proj_dir = self.project_dir
             if arch_dir == proj_dir or arch_dir in proj_dir.parents:
                 # yes, this happened to me :(
-                raise RuntimeError(
+                msg = (
                     f"Arch dir {arch_dir} is either a sub-path of or is the "
                     f"same as the project dir ({proj_dir}). Deleting the arch "
                     "dir would be catastrophic, probably this is a mistake!"
                 )
+                raise RuntimeError(msg)
 
             self.log_execute_func(self._reconfigure.backup_reconfigure_script)
             shutil.rmtree(arch_dir)
@@ -525,7 +531,8 @@ class ConfigurationManager:
             `ConfigurationManager.setup()` is called.
         """
         if self._cl_args is None:
-            raise WrongOrderError("Must call setup() first")
+            msg = "Must call setup() first"
+            raise WrongOrderError(msg)
         return self._cl_args
 
     @property
@@ -653,9 +660,8 @@ class ConfigurationManager:
         name: str
         if isinstance(var, ConfigArgument):
             if var.cmake_var is None:
-                raise ValueError(
-                    f"CMake Variable for {var.name} is unset: {var}"
-                )
+                msg = f"CMake Variable for {var.name} is unset: {var}"
+                raise ValueError(msg)
             name = var.cmake_var
         else:
             name = var
@@ -734,7 +740,7 @@ class ConfigurationManager:
             # type-check is ignored
             self._logger.log_screen(msg, keep=keep)  # type: ignore[arg-type]
 
-    def log_divider(self, tee: bool = False, keep: bool = True) -> None:
+    def log_divider(self, *, tee: bool = False, keep: bool = True) -> None:
         r"""Append a dividing line to the logs.
 
         Parameters
@@ -798,7 +804,7 @@ class ConfigurationManager:
         self._logger.log_error(message, title=title)
 
     def log_execute_command(
-        self, command: Sequence[_T], live: bool = False
+        self, command: Sequence[_T], *, live: bool = False
     ) -> CompletedProcess[str]:
         r"""Execute a system command and return the output.
 
@@ -873,10 +879,8 @@ class ConfigurationManager:
             # we want to extract 'foo/bar/baz/module.py' since that makes for
             # prettier printing below
             for parent in (self._aedifix_root_dir, self.project_dir):
-                try:
+                if src_path.is_relative_to(parent):
                     return src_path.relative_to(parent)
-                except ValueError:
-                    continue
             return src_path
 
         qual_name, src_path, lineno = classify_callable(fn)
@@ -924,10 +928,11 @@ class ConfigurationManager:
         try:
             topo_sorter = self._topo_sorter
         except AttributeError as ae:
-            raise RuntimeError(
+            msg = (
                 "Trying to require a module outside of setup_dependencies(), "
                 "this is not allowed"
-            ) from ae
+            )
+            raise RuntimeError(msg) from ae
 
         topo_sorter.add(package, ret)
         return ret

@@ -11,20 +11,23 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
 import pytest
-from numpy.typing import DTypeLike
 
 from legate.core import Type, TypeCode, types as ty
 
 from .util.types import _PRIMITIVES
 
+if TYPE_CHECKING:
+    from numpy.typing import DTypeLike
+
 
 class TestType:
     @pytest.mark.parametrize(
-        "obj,expected_ty",
+        ("obj", "expected_ty"),
         [
             (0, ty.uint8),
             (1, ty.uint8),
@@ -47,10 +50,7 @@ class TestType:
             (b"foo", ty.binary_type(3)),
             ([1, 2, 3], ty.array_type(ty.uint8, 3)),
             ((1, 2, 3), ty.array_type(ty.uint8, 3)),
-            (
-                np.array([1.0, 2.0, 3.0]),
-                ty.array_type(ty.float64, 3),
-            ),
+            (np.array([1.0, 2.0, 3.0]), ty.array_type(ty.float64, 3)),
             (
                 np.array([1.0, 2.0, 3.0], dtype=np.float32),
                 ty.array_type(ty.float32, 3),

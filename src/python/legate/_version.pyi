@@ -7,8 +7,9 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
+import typing_extensions
 
-VERSION_TUPLE = tuple[int | str, ...]
+VERSION_TUPLE: typing_extensions.TypeAlias = tuple[int | str, ...]
 
 version: str
 __version__: str

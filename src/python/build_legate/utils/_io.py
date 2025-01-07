@@ -11,20 +11,23 @@
 from __future__ import annotations
 
 import os
-import platform
-import shutil
 import sys
 import time
-from collections.abc import Generator
+import shutil
+import platform
 from contextlib import contextmanager
 from pathlib import Path
 from subprocess import PIPE, Popen
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import rich
 
 from ._legate_config import get_legate_config
-from ._types import BuildKind
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from ._types import BuildKind
 
 BANNER_LEN: Final = 80
 ERROR_BANNER: Final = f"XXX== {BANNER_LEN * '='} ==XXX"
@@ -53,7 +56,7 @@ def warning_print(text: str, **kwargs: Any) -> None:
 
 @contextmanager
 def Tee(log_file: Path) -> Generator[Path, None, None]:
-    r"""Set up tee-ing of stdout and stderr to the log file
+    r"""Set up tee-ing of stdout and stderr to the log file.
 
     Parameters
     ----------
@@ -137,8 +140,6 @@ def BuildLog(build_kind: BuildKind) -> Generator[None, None, None]:
 
             yield
     except Exception as exn:
-        mess = (
-            f"ERROR: {exn}\n" "\n" f"Please see {log_file} for further details"
-        )
+        mess = f"ERROR: {exn}\n\nPlease see {log_file} for further details"
         warning_print(mess)
         raise

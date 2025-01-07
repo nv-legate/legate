@@ -29,7 +29,7 @@ ARCH_STR: tuple[tuple[str, list[str]], ...] = (
 
 
 class TestCudaArchAction:
-    @pytest.mark.parametrize("argv,expected", ARCH_STR)
+    @pytest.mark.parametrize(("argv", "expected"), ARCH_STR)
     def test_map_cuda_arch_names(self, argv: str, expected: list[str]) -> None:
         ret = CudaArchAction.map_cuda_arch_names(argv)
         assert ret == expected

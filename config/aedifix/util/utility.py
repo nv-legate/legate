@@ -10,13 +10,12 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import enum
-import platform
 import re
+import enum
 import shlex
-import subprocess
+import platform
 import sysconfig
-from collections.abc import Callable, Iterable, Sequence
+import subprocess
 from pathlib import Path
 from signal import SIGINT
 from subprocess import (
@@ -33,6 +32,8 @@ from typing import TYPE_CHECKING, Any, Final, TypeVar
 from .exception import CommandError
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Sequence
+
     from ..base import Configurable
 
 _T = TypeVar("_T")
@@ -83,7 +84,7 @@ def subprocess_check_returncode(
 def subprocess_capture_output(
     *args: Any, check: bool = True, **kwargs: Any
 ) -> CompletedProcess[str]:
-    r"""Lightweight wrapper over `subprocess.run()`
+    r"""Lightweight wrapper over `subprocess.run()`.
 
     Parameters
     ----------
@@ -111,33 +112,26 @@ def subprocess_capture_output(
     diagnostics.
     """
     ret = subprocess.run(
-        *args,
-        capture_output=True,
-        universal_newlines=True,
-        check=False,
-        **kwargs,
+        *args, capture_output=True, text=True, check=False, **kwargs
     )
     if check:
         ret = subprocess_check_returncode(ret)
     return ret
 
 
+def _normalize_output(output: bytes | None | str) -> str:
+    match output:
+        case None:
+            return ""
+        case str():
+            return output
+        case bytes():
+            return output.decode()
+
+
 def subprocess_capture_output_live_impl(
     callback: Callable[[str, str], None], *args: Any, **kwargs: Any
 ) -> CompletedProcess[str]:
-    def normalize_output(output: bytes | None | str) -> str:
-        match output:
-            case None:
-                return ""
-            case str():
-                return output
-            case bytes():
-                return output.decode()
-            case _:
-                raise ValueError(
-                    f"Unhandled output type: {type(output)}: {output}"
-                )
-
     kwargs.setdefault("stdout", PIPE)
     kwargs.setdefault("stderr", STDOUT)
     kwargs["universal_newlines"] = True
@@ -156,20 +150,20 @@ def subprocess_capture_output_live_impl(
             try:
                 stdout, stderr = process.communicate(timeout=timeout)
             except TimeoutExpired as te:
-                stdout = normalize_output(te.stdout)
-                stderr = normalize_output(te.stderr)
+                stdout = _normalize_output(te.stdout)
+                stderr = _normalize_output(te.stderr)
             except KeyboardInterrupt:
                 process.send_signal(SIGINT)
                 raise
-            except:  # noqa E722
+            except:
                 process.kill()
                 raise
             else:
                 # Don't break, instead wait for end of loop, in case stdout
                 # and/or stderr were updated.
                 done = True
-                stderr = normalize_output(stderr)
-                stdout = normalize_output(stdout)
+                stderr = _normalize_output(stderr)
+                stdout = _normalize_output(stdout)
 
             # The streams will always contain the sum-total output of the
             # subprocess call, so we need to strip the stuff we've already
@@ -238,7 +232,7 @@ def subprocess_capture_output_live(
 
 
 def copy_doc(source: Any) -> Callable[[_T], _T]:
-    r"""Copy the docstring from one object to another
+    r"""Copy the docstring from one object to another.
 
     Parameters
     ----------
@@ -267,8 +261,8 @@ class ValueProvenance(enum.Enum):
 
 
 def find_active_python_version_and_path() -> tuple[str, Path]:
-    r"""Determine the current Python version and the path to its
-    shared library.
+    r"""Determine the current Python version and the path to its shared
+    library.
 
     Returns
     -------
@@ -302,13 +296,15 @@ def find_active_python_version_and_path() -> tuple[str, Path]:
     try:
         py_lib_path = paths[0]
     except IndexError as ie:
-        raise FileNotFoundError("Could not auto-locate Python library") from ie
+        msg = "Could not auto-locate Python library"
+        raise FileNotFoundError(msg) from ie
 
     if not py_lib_path.exists():
-        raise RuntimeError(
+        msg = (
             "Could not auto-locate Python library, "
             f"found library ({py_lib_path}) does not appear to exist"
         )
+        raise RuntimeError(msg)
     return version, py_lib_path
 
 
@@ -336,10 +332,11 @@ def prune_command_line_args(
     """
     for arg in remove_args:
         if not arg.startswith("-"):
-            raise ValueError(f"Argument '{arg}' must start with '-'")
+            msg = f"Argument '{arg}' must start with '-'"
+            raise ValueError(msg)
 
     if not remove_args:
-        return [a for a in argv]
+        return list(argv)
 
     idx = 0
     cl_args = []
@@ -513,10 +510,11 @@ def cmake_configure_file(
         for var_name in re.findall(r"@([\w_]+)@", src_file.read_text())
         if var_name not in defs
     }:
-        raise ValueError(
+        msg = (
             f"Substitution(s) {unhandled_subs} for {src_file} not found in "
             f"defs {defs.keys()}"
         )
+        raise ValueError(msg)
 
     cmd = base_cmd + defs_cmd + ["-P", CMAKE_CONFIGURE_FILE]
     obj.log_execute_command(cmd)

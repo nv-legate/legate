@@ -8,7 +8,7 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-
+from __future__ import annotations
 
 import pytest
 
@@ -20,14 +20,14 @@ class Test_scalar_arg:
         runtime = get_legate_runtime()
         # Create a task object only to test validation logic
         task = runtime.create_auto_task(runtime.core_library, LocalTaskID(1))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             task.add_scalar_arg(1, ty.array_type(ty.int8, 1))
 
     def test_array_size_mismatch(self) -> None:
         runtime = get_legate_runtime()
         # Create a task object only to test validation logic
         task = runtime.create_auto_task(runtime.core_library, LocalTaskID(1))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             task.add_scalar_arg((1, 2, 3), ty.array_type(ty.int8, 1))
 
 

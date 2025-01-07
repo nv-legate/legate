@@ -12,13 +12,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import TypeAlias
+from typing import TYPE_CHECKING, TypeAlias
 
 from ...util.ui import failed, passed, shell, skipped, timeout
-from ..config import Config
 from ..logger import LOG
-from ..test_system import ProcessResult
+
+if TYPE_CHECKING:
+    from datetime import datetime, timedelta
+
+    from ..config import Config
+    from ..test_system import ProcessResult
 
 MANUAL_CONFIG_ENV = {"LEGATE_AUTO_CONFIG": "0"}
 
@@ -29,18 +32,18 @@ RankShard: TypeAlias = tuple[int, ...]
 
 @dataclass(frozen=True)
 class Shard:
-    """Specify how resources should be allotted for each test process"""
+    """Specify how resources should be allotted for each test process."""
 
     #: A list of shards for each rank
     ranks: list[RankShard]
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # noqa: D105
         return "/".join(",".join(str(r) for r in rank) for rank in self.ranks)
 
 
 @dataclass(frozen=True)
 class StageSpec:
-    """Specify the operation of a test run"""
+    """Specify the operation of a test run."""
 
     #: The number of worker processes to start for running tests
     workers: int
@@ -96,17 +99,20 @@ def adjust_workers(
 
     """
     if requested_workers is not None and requested_workers < 0:
-        raise ValueError("requested workers must be non-negative")
+        msg = "requested workers must be non-negative"
+        raise ValueError(msg)
 
     if requested_workers == 0:
-        raise RuntimeError("requested workers must not be zero")
+        msg = "requested workers must not be zero"
+        raise RuntimeError(msg)
 
     if requested_workers is not None:
         if requested_workers > workers:
-            raise RuntimeError(
+            msg = (
                 f"Requested workers ({requested_workers}) is greater than "
                 f"computed workers ({workers})"
             )
+            raise RuntimeError(msg)
         workers = requested_workers
 
     if workers == 0:
@@ -139,7 +145,8 @@ def format_duration(start: datetime, end: datetime) -> str:
         If the duration is invalid, such as when end comes before start.
     """
     if end < start:
-        raise ValueError(f"End ({end}) happens before start ({start})")
+        msg = f"End ({end}) happens before start ({start})"
+        raise ValueError(msg)
 
     duration = (end - start).total_seconds()
     time = f"{duration:0.2f}s"
@@ -151,7 +158,7 @@ def format_duration(start: datetime, end: datetime) -> str:
 def log_proc(
     name: str, proc: ProcessResult, config: Config, *, verbose: bool
 ) -> None:
-    """Log a process result according to the current configuration"""
+    """Log a process result according to the current configuration."""
     if config.info.debug or config.dry_run:
         LOG("\n")
         LOG(shell(proc.invocation))

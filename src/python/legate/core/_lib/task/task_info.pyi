@@ -9,16 +9,12 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from collections.abc import Callable
-from typing import Any
-
 from ..._ext.task.type import VariantFunction
 from ..utilities.typedefs import LocalTaskID, VariantCode
 from ..utilities.unconstructable import Unconstructable
 
 class TaskInfo(Unconstructable):
     def __dealloc__(self) -> None: ...
-    def __repr__(self) -> str: ...
     @classmethod
     def from_variants(
         cls,

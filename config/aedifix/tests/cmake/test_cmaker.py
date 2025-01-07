@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -12,13 +11,16 @@
 from __future__ import annotations
 
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ...cmake.cmake_flags import CMakeBool, CMakeInt, CMakeList, CMakeString
 from ...cmake.cmaker import CMaker
 from ...util.exception import WrongOrderError
-from ..fixtures.dummy_manager import DummyManager
+
+if TYPE_CHECKING:
+    from ..fixtures.dummy_manager import DummyManager
 
 
 @pytest.fixture
@@ -138,8 +140,7 @@ class TestCMaker:
         cmaker.register_variable(manager, var_int)
 
         with pytest.raises(
-            TypeError,
-            match=f"Cannot append to {type(var_int)}",
+            TypeError, match=f"Cannot append to {type(var_int)}"
         ):
             cmaker.append_value(manager, "foo", [1, 2])
 

@@ -24,7 +24,7 @@ def test_UI_WIDTH() -> None:
 
 def test_banner_simple() -> None:
     b = m.banner("some text", "and content")
-    assert "some text" == b.title
+    assert b.title == "some text"
     assert "and content" in str(b.renderable)
 
 
@@ -70,11 +70,11 @@ def test_failed() -> None:
 
 
 def test_failed_with_exit_code() -> None:
-    fail = "[bold red][FAIL][/]"
-    exit = " [bold white](exit: 10)[/]"
+    fail_str = "[bold red][FAIL][/]"
+    exit_str = " [bold white](exit: 10)[/]"
     assert m.failed("msg", exit_code=10) == Text.from_markup(
-        f"{fail} msg{exit}"
-    )  # noqa
+        f"{fail_str} msg{exit_str}"
+    )
 
 
 def test_failed_with_details() -> None:
@@ -84,11 +84,11 @@ def test_failed_with_details() -> None:
 
 
 def test_failed_with_details_and_exit_code() -> None:
-    fail = "[bold red][FAIL][/]"
-    exit = " [bold white](exit: 10)[/]"
+    fail_str = "[bold red][FAIL][/]"
+    exit_str = " [bold white](exit: 10)[/]"
     assert m.failed(
         "msg", details=["a", "b"], exit_code=10
-    ) == Text.from_markup(f"{fail} msg{exit}\n   a\n   b\n")
+    ) == Text.from_markup(f"{fail_str} msg{exit_str}\n   a\n   b\n")
 
 
 def test_skipped() -> None:
@@ -101,5 +101,5 @@ def test_timeout() -> None:
 
 def test_summary() -> None:
     assert m.summary(12, 11, timedelta(seconds=2.123)) == Text.from_markup(
-        f"[bold red]Passed 11 of 12 tests (91.7%) in 2.12s[/]"  # noqa E501
+        "[bold red]Passed 11 of 12 tests (91.7%) in 2.12s[/]"
     )

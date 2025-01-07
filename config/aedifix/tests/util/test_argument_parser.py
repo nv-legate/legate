@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -74,7 +73,7 @@ class TestConfigArgument:
     @pytest.mark.parametrize("ephemeral", (True, False))
     @pytest.mark.parametrize("ty", (None, int, str, bool))
     @pytest.mark.parametrize(
-        "const,nargs", ((Unset, Unset), (True, "?"), (False, "?"))
+        ("const", "nargs"), ((Unset, Unset), (True, "?"), (False, "?"))
     )
     @pytest.mark.parametrize("default", (Unset, True, False))
     @pytest.mark.parametrize("metavar", (Unset, "foo"))

@@ -11,11 +11,11 @@
 from __future__ import annotations
 
 import re
-import shutil
 import sys
-from collections.abc import Sequence
+import shutil
+import contextlib
 from pathlib import Path
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from ..aedifix import (
     CMAKE_VARIABLE,
@@ -32,6 +32,9 @@ from ..aedifix.package.packages.cal import CAL
 from ..aedifix.package.packages.cmake import CMake
 from ..aedifix.package.packages.legion import Legion
 from ..aedifix.package.packages.python import Python
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class Legate(MainPackage):
@@ -62,27 +65,21 @@ class Legate(MainPackage):
     legate_CXX_FLAGS: Final = ConfigArgument(
         name="--legate-cxx-flags",
         spec=ArgSpec(
-            dest="legate_cxx_flags",
-            nargs=1,
-            help="C++ flags for Legate",
+            dest="legate_cxx_flags", nargs=1, help="C++ flags for Legate"
         ),
         cmake_var=CMAKE_VARIABLE("legate_CXX_FLAGS", CMakeList),
     )
     legate_CUDA_FLAGS: Final = ConfigArgument(
         name="--legate-cuda-flags",
         spec=ArgSpec(
-            dest="legate_cuda_flags",
-            nargs=1,
-            help="CUDA flags for Legate",
+            dest="legate_cuda_flags", nargs=1, help="CUDA flags for Legate"
         ),
         cmake_var=CMAKE_VARIABLE("legate_CUDA_FLAGS", CMakeList),
     )
     legate_LINKER_FLAGS: Final = ConfigArgument(
         name="--legate-linker-flags",
         spec=ArgSpec(
-            dest="legate_linker_flags",
-            nargs=1,
-            help="Linker flags for Legate",
+            dest="legate_linker_flags", nargs=1, help="Linker flags for Legate"
         ),
         cmake_var=CMAKE_VARIABLE("legate_LINKER_FLAGS", CMakeList),
     )
@@ -237,14 +234,7 @@ class Legate(MainPackage):
             return
 
         if self.cl_args.with_clean.value:
-            cmd = [
-                sys.executable,
-                "-m",
-                "pip",
-                "uninstall",
-                "--yes",
-                "legate",
-            ]
+            cmd = [sys.executable, "-m", "pip", "uninstall", "--yes", "legate"]
             str_cmd = " ".join(cmd)
             self.log_warning(
                 f"Running {str_cmd!r} to uninstall legate as part of a clean "
@@ -273,7 +263,7 @@ class Legate(MainPackage):
             )
 
     def setup(self) -> None:
-        r"""Setup Legate"""
+        r"""Setup Legate."""
         self.log_execute_func(self.maybe_uninstall_legate)
         super().setup()
 
@@ -302,19 +292,21 @@ class Legate(MainPackage):
                     min_ver = re_match.group(1)
                     break
             else:
-                raise RuntimeError(
+                msg = (
                     "Failed to parse minimum required CMake version from"
                     f" {cmakelists_txt}"
                 )
+                raise RuntimeError(msg)
 
         self.log(f"Minimum cmake version required: {min_ver}")
         cmake = cast(CMake, self.deps.CMake)
         if version_parse(cmake.version) < version_parse(min_ver):
             cmake_exe = self.manager.get_cmake_variable(cmake.CMAKE_COMMAND)
-            raise RuntimeError(
+            msg = (
                 f"CMake executable {cmake_exe} too old! Expected version "
                 f"{min_ver}, have {cmake.version}"
             )
+            raise RuntimeError(msg)
 
     def configure_legate_variables(self) -> None:
         r"""Configure the general variables for Legate."""
@@ -322,8 +314,7 @@ class Legate(MainPackage):
             self.legate_CXX_FLAGS, self.cl_args.legate_cxx_flags
         )
         self.append_flags_if_set(
-            self.legate_LINKER_FLAGS,
-            self.cl_args.legate_linker_flags,
+            self.legate_LINKER_FLAGS, self.cl_args.legate_linker_flags
         )
         self.append_flags_if_set(
             self.legate_CUDA_FLAGS, self.cl_args.legate_cuda_flags
@@ -367,9 +358,9 @@ class Legate(MainPackage):
                 "For example, consider the following:"
                 "\n"
                 "\n"
-                f" 1. ./configure --{flag_name}=0 --with-foo (CMake downloads and builds libfoo.so)\n"  # noqa e501
-                f" 2. pip install . (CMake -- as a byproduct of installing {self.project_name} -- installs libfoo.so)\n"  # noqa E501
-                " 3. ./reconfigure... (CMake now picks up installed libfoo.so instead of reusing the downloaded one)\n"  # noqa E501
+                f" 1. ./configure --{flag_name}=0 --with-foo (CMake downloads and builds libfoo.so)\n"  # noqa: E501
+                f" 2. pip install . (CMake -- as a byproduct of installing {self.project_name} -- installs libfoo.so)\n"  # noqa: E501
+                " 3. ./reconfigure... (CMake now picks up installed libfoo.so instead of reusing the downloaded one)\n"  # noqa: E501
                 "\n"
                 "The package can now no longer be built."
                 "\n"
@@ -449,16 +440,10 @@ class Legate(MainPackage):
         py_enabled = python.state.enabled()
         lines: list[tuple[str, Any]] = [("Python bindings", py_enabled)]
         if py_enabled:
-            try:
+            with contextlib.suppress(AttributeError):
                 lines.append(("Python library path", python.lib_path))
-            except AttributeError:
-                # no python.lib_path
-                pass
-            try:
+            with contextlib.suppress(AttributeError):
                 lines.append(("Python library version", python.lib_version))
-            except AttributeError:
-                # no python.lib_version
-                pass
         return lines
 
     def _summarize_misc(self) -> list[tuple[str, Any]]:

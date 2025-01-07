@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# noqa: INP001
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -18,6 +18,7 @@ from legate import get_legate_runtime
 
 
 def main() -> None:
+    """."""
     runtime = get_legate_runtime()
     lib = runtime.create_library("hello")
 

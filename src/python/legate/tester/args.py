@@ -9,9 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Provide an argparse ArgumentParser for the test runner.
+"""Provide an argparse ArgumentParser for the test runner."""
 
-"""
 from __future__ import annotations
 
 import re
@@ -24,11 +23,7 @@ from . import defaults
 
 PinOptionsType: TypeAlias = Literal["partial", "none", "strict"]
 
-PIN_OPTIONS: tuple[PinOptionsType, ...] = (
-    "partial",
-    "none",
-    "strict",
-)
+PIN_OPTIONS: tuple[PinOptionsType, ...] = ("partial", "none", "strict")
 
 #: The argument parser for test.py
 parser = ArgumentParser(

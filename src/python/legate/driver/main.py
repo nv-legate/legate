@@ -9,9 +9,6 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""
-
-"""
 from __future__ import annotations
 
 from rich import print as rich_print
@@ -29,23 +26,23 @@ def prepare_driver(argv: list[str]) -> LegateDriver:
 
     try:
         config = Config(argv)
-    except Exception as e:
+    except Exception:
         rich_print(error("Could not configure driver:\n"))
-        raise e
+        raise
 
     try:
         system = System()
-    except Exception as e:
+    except Exception:
         rich_print(error("Could not determine System settings: \n"))
-        raise e
+        raise
 
     try:
         driver = LegateDriver(config, system)
-    except Exception as e:
-        msg = "Could not initialize driver, path config and exception follow:"  # noqa
+    except Exception:
+        msg = "Could not initialize driver, path config and exception follow:"
         rich_print(error(msg))
         rich_print(format_verbose(system), flush=True)
-        raise e
+        raise
 
     return driver
 

@@ -15,6 +15,7 @@ import re
 from typing import Any
 
 import numpy as np
+
 import pytest
 
 from legate.core import (
@@ -43,7 +44,6 @@ from .utils.data import (
 
 
 class TestAutoTask:
-
     def test_create_auto_task(self) -> None:
         runtime = get_legate_runtime()
         library = runtime.core_library
@@ -151,7 +151,7 @@ class TestAutoTask:
         )
 
     @pytest.mark.parametrize(
-        "val, dtype", zip(SCALAR_VALS, ARRAY_TYPES), ids=str
+        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES), ids=str
     )
     def test_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
@@ -309,7 +309,6 @@ class TestAutoTask:
 
 
 class TestAutoTaskConstraints:
-
     @pytest.mark.xfail(
         get_legate_runtime().machine.count() > 1,
         run=False,
@@ -393,7 +392,7 @@ class TestAutoTaskConstraints:
         ndim = len(shape)
         indices = np.indices(shape)
         point_type = ty.point_type(ndim)
-        points = np.stack([v for v in indices], axis=indices.ndim - 1).reshape(
+        points = np.stack(list(indices), axis=indices.ndim - 1).reshape(
             (indices.size // ndim, ndim)
         )
 
@@ -403,10 +402,7 @@ class TestAutoTaskConstraints:
         rng = np.random.default_rng()
         rng.shuffle(func_arr)
         func_store = runtime.create_store_from_buffer(
-            point_type,
-            func_shape,
-            func_arr[: np.prod(func_shape)],
-            False,
+            point_type, func_shape, func_arr[: np.prod(func_shape)], False
         )
 
         _, range_store = utils.random_array_and_store(shape)
@@ -450,7 +446,6 @@ class TestAutoTaskConstraints:
 
     @pytest.mark.parametrize("shape", SHAPES + LARGE_SHAPES, ids=str)
     def test_bloat_constraints(self, shape: tuple[int, ...]) -> None:
-
         bloat_task = task(variants=tuple(tasks.KNOWN_VARIANTS))(
             tasks.basic_bloat_task
         )
@@ -493,9 +488,9 @@ class TestAutoTaskErrors:
         )
         msg = "Expected .* but got .*"
         with pytest.raises(ValueError, match=msg):
-            auto_task.add_output("foo")  # type: ignore
+            auto_task.add_output("foo")  # type: ignore[arg-type]
         with pytest.raises(ValueError, match=msg):
-            auto_task.add_input(Scalar(1, ty.int8))  # type: ignore
+            auto_task.add_input(Scalar(1, ty.int8))  # type: ignore[arg-type]
 
     @pytest.mark.parametrize(
         "dtype", [(ty.int32, ty.int64), (np.int32,)], ids=str
@@ -535,7 +530,7 @@ class TestAutoTaskErrors:
         try:
             auto_task.execute()
         except Exception as exc:
-            assert msg not in str(exc)
+            assert msg not in str(exc)  # noqa: PT017
         runtime.issue_execution_fence(block=True)
 
     @pytest.mark.xfail(run=False, reason="crashes application")
@@ -590,7 +585,6 @@ class TestAutoTaskErrors:
 
 
 class TestAutoTaskConstraintsErrors:
-
     def test_alignment_shape_mismatch(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(

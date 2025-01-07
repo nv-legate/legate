@@ -11,11 +11,13 @@
 from __future__ import annotations
 
 import inspect
-from collections.abc import Callable
 from functools import lru_cache
 from pathlib import Path
-from types import CodeType, FrameType
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import CodeType, FrameType
 
 _get_calling_function_called = 0
 
@@ -70,15 +72,15 @@ def _gcf_nested(fr: FrameType, co: CodeType) -> Callable[..., Any]:
     return _gcf_get_local(fr, co.co_name)
 
 
-def _gcf_functools_wraps(fr: FrameType, co: CodeType) -> Callable[..., Any]:
+def _gcf_functools_wraps(fr: FrameType, _co: CodeType) -> Callable[..., Any]:
     return _gcf_get_local(fr, "func")
 
 
-def _gcf_misc_1(fr: FrameType, co: CodeType) -> Callable[..., Any]:
+def _gcf_misc_1(fr: FrameType, _co: CodeType) -> Callable[..., Any]:
     return _gcf_get_local(fr, "meth")
 
 
-def _gcf_misc_2(fr: FrameType, co: CodeType) -> Callable[..., Any]:
+def _gcf_misc_2(fr: FrameType, _co: CodeType) -> Callable[..., Any]:
     return _gcf_get_local(fr, "f")
 
 
@@ -120,12 +122,13 @@ def _get_calling_function_impl() -> Callable[..., Any]:
             break
     else:
         # We exhausted the range iterator
-        raise AssertionError(
+        msg = (
             f"Iterated {maxidx} times trying to determine the calling "
             "function, but failed to find it. This is likely a bug! "
             f"Stack: {stack}"
         )
-    raise ValueError()
+        raise AssertionError(msg)
+    raise ValueError
 
 
 def get_calling_function() -> Callable[..., Any]:
@@ -141,10 +144,10 @@ def get_calling_function() -> Callable[..., Any]:
     ValueError
         If the calling function cannot be determined.
     """
-    global _get_calling_function_called
+    global _get_calling_function_called  # noqa: PLW0603
 
     if _get_calling_function_called:
-        raise GetCallingFuncRecursionError()
+        raise GetCallingFuncRecursionError
 
     _get_calling_function_called += 1
     try:
@@ -169,7 +172,7 @@ def _is_classmethod(method: Any) -> bool:
 
 @lru_cache
 def classify_callable(
-    fn: Callable[..., Any], fully_qualify: bool = True
+    fn: Callable[..., Any], *, fully_qualify: bool = True
 ) -> tuple[str, Path, int]:
     r"""Classify a callable object.
 

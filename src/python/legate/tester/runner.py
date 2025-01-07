@@ -9,18 +9,18 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
-import shlex
 import sys
+import shlex
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from ..util.types import ArgList, Command
     from .config import Config
 
@@ -62,8 +62,7 @@ class Runner:
         # TODO: change this when legate/gtest subcommands split
         if config.gtest_tests:
             return GTestRunner()
-        else:
-            return LegateRunner()
+        return LegateRunner()
 
     def cmd_gdb(self, config: Config) -> Command:
         """Generate the command invocation to run a test under gdb.
@@ -78,7 +77,7 @@ class Runner:
             Command
 
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def cmd(
         self,
@@ -106,7 +105,7 @@ class Runner:
             Command
 
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def test_specs(self, config: Config) -> tuple[TestSpec, ...]:
         """Generate a specification for each test to run.
@@ -121,11 +120,10 @@ class Runner:
             Test runner configuration
 
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class LegateRunner(Runner):
-
     def cmd_gdb(self, config: Config) -> Command:
         """Generate the command invocation to run a single legate python test
         under gdb.
@@ -141,15 +139,16 @@ class LegateRunner(Runner):
 
         """
         if config.multi_node.ranks_per_node > 1 or config.multi_node.nodes > 1:
-            raise ValueError("--gdb can only be used with a single rank")
+            msg = "--gdb can only be used with a single rank"
+            raise ValueError(msg)
 
         if len(config.test_files) == 0:
-            raise ValueError(
-                "--gdb can only be used with a single test (none were given)"
-            )
+            msg = "--gdb can only be used with a single test (none were given)"
+            raise ValueError(msg)
 
         if len(config.test_files) > 1:
-            raise ValueError("--gdb can only be used with a single test")
+            msg = "--gdb can only be used with a single test"
+            raise ValueError(msg)
 
         spec = TestSpec(config.test_files[0], str(config.test_files[0]))
         return self.cmd(spec, config, [])
@@ -190,16 +189,17 @@ class LegateRunner(Runner):
         # the python code, so we ask pytest to omit the python fault handler.
         pytest_args = ["-p", "no:faulthandler"]
 
-        cmd = (
-            [sys.executable, str(config.legate_path)]
-            + stage_args
-            + gdb_args
-            + cov_args
-            + [str(config.root_dir / test_spec.path)]
-            + pytest_args
-            + file_args
-            + config.extra_args
-        )
+        cmd = [
+            sys.executable,
+            str(config.legate_path),
+            *stage_args,
+            *gdb_args,
+            *cov_args,
+            str(config.root_dir / test_spec.path),
+            *pytest_args,
+            *file_args,
+            *config.extra_args,
+        ]
 
         if custom_args:
             cmd += custom_args
@@ -261,7 +261,7 @@ class LegateRunner(Runner):
             # of a python script since it does not end in .py
             args = ["--run-mode=python"]
 
-            args += [str(config.other.cov_bin)] + config.other.cov_args.split()
+            args += [str(config.other.cov_bin), *config.other.cov_args.split()]
             if config.other.cov_src_path:
                 args += ["--source", str(config.other.cov_src_path)]
         else:
@@ -271,7 +271,6 @@ class LegateRunner(Runner):
 
 
 class GTestRunner(Runner):
-
     def cmd_gdb(self, config: Config) -> Command:
         """Generate the command invocation to run a gtest test under gdb.
 
@@ -286,23 +285,26 @@ class GTestRunner(Runner):
 
         """
         if config.multi_node.ranks_per_node > 1 or config.multi_node.nodes > 1:
-            raise ValueError("--gdb can only be used with a single rank")
+            msg = "--gdb can only be used with a single rank"
+            raise ValueError(msg)
 
         gtest_tests = config.gtest_tests
         test_lists = list(gtest_tests.values())
 
         match sum(map(len, test_lists)):
             case 0:
-                raise ValueError(
+                msg = (
                     "--gdb can only be used with a single test (none were "
                     "given)"
                 )
+                raise ValueError(msg)
             case 1:
                 pass
             case _:
-                raise ValueError("--gdb can only be used with a single test")
+                msg = "--gdb can only be used with a single test"
+                raise ValueError(msg)
 
-        spec = TestSpec(list(gtest_tests.keys())[0], "", test_lists[0][0])
+        spec = TestSpec(next(iter(gtest_tests.keys())), "", test_lists[0][0])
         return self._cmd_single(spec, config, [])
 
     def cmd(
@@ -331,19 +333,13 @@ class GTestRunner(Runner):
             Command
 
         """
-
         multi_rank = (
             config.multi_node.ranks_per_node > 1 or config.multi_node.nodes > 1
         )
 
         func = self._cmd_multi if multi_rank else self._cmd_single
 
-        return func(
-            test_spec,
-            config,
-            stage_args,
-            custom_args=custom_args,
-        )
+        return func(test_spec, config, stage_args, custom_args=custom_args)
 
     def test_specs(self, config: Config) -> tuple[TestSpec, ...]:
         """Generate extra args that go along with the test file.
@@ -367,7 +363,7 @@ class GTestRunner(Runner):
     def gtest_args(
         self, test_spec: TestSpec, *, gdb: bool = False, color: bool = False
     ) -> ArgList:
-        """Generate args specific to configuring gtest
+        """Generate args specific to configuring gtest.
 
         Parameters
         ----------
@@ -414,13 +410,14 @@ class GTestRunner(Runner):
             test_spec, gdb=config.other.gdb, color=config.other.color
         )
 
-        cmd = (
-            [sys.executable, str(config.legate_path)]
-            + stage_args
-            + gdb_args
-            + gtest_args
-            + config.extra_args
-        )
+        cmd = [
+            sys.executable,
+            str(config.legate_path),
+            *stage_args,
+            *gdb_args,
+            *gtest_args,
+            *config.extra_args,
+        ]
 
         if custom_args:
             cmd += custom_args
@@ -451,12 +448,13 @@ class GTestRunner(Runner):
 
         gtest_args = self.gtest_args(test_spec, color=config.other.color)
 
-        cmd = (
-            [sys.executable, str(config.legate_path)]
-            + stage_args
-            + gtest_args
-            + config.extra_args
-        )
+        cmd = [
+            sys.executable,
+            str(config.legate_path),
+            *stage_args,
+            *gtest_args,
+            *config.extra_args,
+        ]
 
         if config.multi_node.launcher == "mpirun":
             cmd += ["--launcher-extra=--merge-stderr-to-stdout"]

@@ -13,6 +13,7 @@ from __future__ import annotations
 import ctypes
 
 import numpy as np
+
 import pytest
 
 from legate.core import Scalar, types as ty
@@ -46,19 +47,12 @@ def scalar_i_list() -> list[tuple[int | float, ty.Type]]:
 
 @pytest.fixture
 def scalar_f_list() -> list[tuple[float, ty.Type]]:
-    return [
-        (300, ty.float16),
-        (-300.456, ty.float32),
-        (300.456, ty.float64),
-    ]
+    return [(300, ty.float16), (-300.456, ty.float32), (300.456, ty.float64)]
 
 
 @pytest.fixture
 def scalar_c_list() -> list[tuple[complex, ty.Type]]:
-    return [
-        (-3.4 + 2.0j, ty.complex64),
-        (-300.456 + 128j, ty.complex128),
-    ]
+    return [(-3.4 + 2.0j, ty.complex64), (-300.456 + 128j, ty.complex128)]
 
 
 @pytest.fixture
@@ -102,7 +96,7 @@ class TestScalar:
             assert value.type == data_type
 
     @pytest.mark.parametrize(
-        "value, dtype",
+        ("value", "dtype"),
         [
             ((3, 0.81, 8), ty.float64),
             (((3,), (1.2,), (999,)), ty.array_type(ty.float64, 1)),

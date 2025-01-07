@@ -12,7 +12,7 @@
 from collections.abc import Iterable
 from typing import Any
 
-from ...data_interface import Field, LegateDataInterfaceItem
+from ...data_interface import LegateDataInterfaceItem
 from ..type.type_info import Type
 from ..utilities.unconstructable import Unconstructable
 from .physical_store import PhysicalStore
@@ -40,7 +40,6 @@ class LogicalStore(Unconstructable):
     def transformed(self) -> bool: ...
     @property
     def __legate_data_interface__(self) -> LegateDataInterfaceItem: ...
-    def __str__(self) -> str: ...
     def __getitem__(
         self, indices: int | slice | tuple[int | slice, ...]
     ) -> LogicalStore: ...

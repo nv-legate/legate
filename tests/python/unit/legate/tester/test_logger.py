@@ -9,9 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 from rich.text import Text
@@ -28,14 +27,7 @@ TEST_IN_LINES = (
 
 TEST_OUT_LINES = ("line 1", "foo", "bar", "last line", "with", "newlines")
 
-SCRUBBED_TEST_LINES = (
-    "line 1",
-    "foo",
-    "bar",
-    "last line",
-    "with",
-    "newlines",
-)
+SCRUBBED_TEST_LINES = ("line 1", "foo", "bar", "last line", "with", "newlines")
 
 
 class TestLogger:

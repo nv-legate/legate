@@ -1,5 +1,12 @@
 ---
 repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        types: [yaml]
+        args: ['-c', './scripts/pre-commit/yamllint.yml']
+        exclude: 'meta\.yaml$'
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -17,26 +24,18 @@ repos:
         exclude: '^src/cmake/patches/.*\.diff$'
         # handled by clang-format
         exclude_types: [c, c++, cuda]
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-  - repo: https://github.com/psf/black
-    rev: 24.10.0
-    hooks:
-      - id: black
-        exclude: '^config/aedifix/templates/.*$'
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
-    hooks:
-      - id: flake8
-        exclude: '^config/aedifix/templates/.*$'
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: 'v19.1.5'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
         types_or: []
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.3
+    hooks:
+      - id: ruff-format
+      - id: ruff
+        args: ["--config=./pyproject.toml", "--fix"]
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v1.13.0'
     hooks:
@@ -59,13 +58,6 @@ repos:
     hooks:
       - id: shellcheck
         args: ['--rcfile', './scripts/pre-commit/shellcheckrc']
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
-    hooks:
-      - id: yamllint
-        types: [yaml]
-        args: ['-c', './scripts/pre-commit/yamllint.yml']
-        exclude: 'meta\.yaml$'
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.4
     hooks:

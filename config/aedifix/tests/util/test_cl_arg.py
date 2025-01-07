@@ -23,7 +23,7 @@ _T = TypeVar("_T")
 class TestCLArg:
     @pytest.mark.parametrize("name", ("foo", "bar"))
     @pytest.mark.parametrize(
-        "value,new_val",
+        ("value", "new_val"),
         ((True, False), (1, -1), (2.0, 123123123.0), ("three", "four")),
     )
     @pytest.mark.parametrize("cl_set", (True, False))
@@ -41,12 +41,9 @@ class TestCLArg:
         assert clarg.cl_set is False
 
     @pytest.mark.parametrize("name", ("foo", "bar"))
-    @pytest.mark.parametrize(
-        "value,new_val",
-        ((True, False), (1, -1), (2.0, 123123123.0), ("three", "four")),
-    )
+    @pytest.mark.parametrize("value", (True, 1, 2.0, "three"))
     @pytest.mark.parametrize("cl_set", (True, False))
-    def test_eq(self, name: str, value: _T, new_val: _T, cl_set: bool) -> None:
+    def test_eq(self, name: str, value: _T, cl_set: bool) -> None:
         lhs = CLArg(name=name, value=value, cl_set=cl_set)
         rhs = CLArg(name=name, value=value, cl_set=cl_set)
         assert lhs == rhs

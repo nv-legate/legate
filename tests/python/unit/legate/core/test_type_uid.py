@@ -17,7 +17,7 @@ from legate.core import types as ty
 
 from .util.types import _PRIMITIVES
 
-_PRIMITIVES_UIDS = {type.uid for type in _PRIMITIVES}
+_PRIMITIVES_UIDS = {pty.uid for pty in _PRIMITIVES}
 
 
 class TestFixedArrayType:

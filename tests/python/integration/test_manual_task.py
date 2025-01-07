@@ -14,6 +14,7 @@ import re
 from typing import Any
 
 import numpy as np
+
 import pytest
 
 from legate.core import (
@@ -41,19 +42,14 @@ class TestManualTask:
         runtime = get_legate_runtime()
         library = runtime.core_library
         runtime.create_manual_task(
-            library,
-            tasks.basic_task.task_id,
-            (1, 2, 3),
-            (0, 1, 2),
+            library, tasks.basic_task.task_id, (1, 2, 3), (0, 1, 2)
         )
 
     def test_default_provenance(self) -> None:
         runtime = get_legate_runtime()
         library = runtime.core_library
         manual_task = runtime.create_manual_task(
-            library,
-            tasks.basic_task.task_id,
-            (1, 2, 3),
+            library, tasks.basic_task.task_id, (1, 2, 3)
         )
         assert manual_task.provenance() == ""
 
@@ -63,9 +59,7 @@ class TestManualTask:
         provenance = "foo"
         with Scope(provenance=provenance):
             manual_task = runtime.create_manual_task(
-                library,
-                tasks.basic_task.task_id,
-                (1, 2, 3),
+                library, tasks.basic_task.task_id, (1, 2, 3)
             )
         assert manual_task.provenance() == provenance
 
@@ -73,9 +67,7 @@ class TestManualTask:
         runtime = get_legate_runtime()
         library = runtime.core_library
         manual_task = track_provenance()(runtime.create_manual_task)(
-            library,
-            tasks.basic_task.task_id,
-            (1, 2, 3),
+            library, tasks.basic_task.task_id, (1, 2, 3)
         )
         pattern = r"[^/](/[^:]+):.*"
         match = re.search(pattern, manual_task.provenance())
@@ -156,7 +148,7 @@ class TestManualTask:
         )
 
     @pytest.mark.parametrize(
-        "val, dtype", zip(SCALAR_VALS, ARRAY_TYPES), ids=str
+        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES), ids=str
     )
     def test_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
@@ -322,9 +314,9 @@ class TestManualTaskErrors:
         )
         msg = "Expected .* but got .*"
         with pytest.raises(TypeError, match=msg):
-            manual_task.add_output("foo")  # type: ignore
+            manual_task.add_output("foo")  # type: ignore[arg-type]
         with pytest.raises(TypeError, match=msg):
-            manual_task.add_input(Scalar(1, ty.int8))  # type: ignore
+            manual_task.add_input(Scalar(1, ty.int8))  # type: ignore[arg-type]
 
     @pytest.mark.parametrize(
         "dtype", [(ty.int32, ty.int64), (np.int32,)], ids=str
@@ -366,11 +358,11 @@ class TestManualTaskErrors:
         try:
             manual_task.execute()
         except Exception as exc:
-            assert msg not in str(exc)
+            assert msg not in str(exc)  # noqa: PT017
         runtime.issue_execution_fence(block=True)
 
     @pytest.mark.parametrize(
-        "shape, bounds",
+        ("shape", "bounds"),
         [(SHAPES[0], EMPTY_SHAPES[0]), (SHAPES[1], SHAPES[1])],
         ids=str,
     )
@@ -407,7 +399,7 @@ class TestManualTaskErrors:
         runtime.issue_execution_fence(block=True)
 
     @pytest.mark.parametrize(
-        "launch_domain, msg",
+        ("launch_domain", "msg"),
         [
             ((0, 0, 0), "Launch domain must not be empty"),
             (1, "Launch space must be iterable"),
@@ -419,9 +411,7 @@ class TestManualTaskErrors:
         runtime = get_legate_runtime()
         with pytest.raises(ValueError, match=msg):
             runtime.create_manual_task(
-                runtime.core_library,
-                tasks.basic_task.task_id,
-                launch_domain,
+                runtime.core_library, tasks.basic_task.task_id, launch_domain
             )
 
     def test_create_invalid_lower_bounds(self) -> None:

@@ -40,13 +40,15 @@ class CPU(TestStage):
 
     kind: FeatureType = "cpus"
 
-    args: ArgList = []
-
     def __init__(self, config: Config, system: TestSystem) -> None:
         self._init(config, system)
 
-    def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
-        env = dict()
+    def stage_env(
+        self,
+        config: Config,
+        system: TestSystem,  # noqa: ARG002
+    ) -> EnvDict:
+        env = {}
         if config.execution.cpu_pin != "strict":
             env.update(UNPIN_ENV)
         return env
@@ -82,16 +84,18 @@ class CPU(TestStage):
 
         if cpu_workers == 0:
             if config.execution.cpu_pin == "strict":
-                raise RuntimeError(
+                msg = (
                     f"{len(cpus)} detected core(s) not enough for "
                     f"{ranks_per_node} rank(s) per node, each "
                     f"reserving {procs} core(s) with strict CPU pinning"
                 )
-            elif mem_workers > 0:
+                raise RuntimeError(msg)
+            if mem_workers > 0:
                 warnings.warn(
                     f"{len(cpus)} detected core(s) not enough for "
                     f"{ranks_per_node} rank(s) per node, each "
-                    f"reserving {procs} core(s), running anyway."
+                    f"reserving {procs} core(s), running anyway.",
+                    stacklevel=2,
                 )
                 all_cpus = chain.from_iterable(cpu.ids for cpu in cpus)
                 return StageSpec(1, [Shard([tuple(sorted(all_cpus))])])

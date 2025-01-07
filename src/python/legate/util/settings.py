@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-""" Control global configuration options with environment variables.
+"""Control global configuration options with environment variables.
 
 Precedence
 ~~~~~~~~~~
@@ -65,6 +65,7 @@ If no value is obtained after searching all of these locations, then a
 RuntimeError will be raised.
 
 """
+
 from __future__ import annotations
 
 import os
@@ -78,11 +79,11 @@ from typing import (
 )
 
 __all__ = (
-    "convert_str",
-    "convert_bool",
-    "convert_str_seq",
     "PrioritizedSetting",
     "Settings",
+    "convert_bool",
+    "convert_str",
+    "convert_str_seq",
 )
 
 
@@ -102,7 +103,7 @@ def convert_str(value: str) -> str:
 
 
 def convert_int(value: str) -> int:
-    """Return an integer value"""
+    """Return an integer value."""
     return int(value)
 
 
@@ -116,10 +117,12 @@ def convert_bool(value: bool | str) -> bool:
         value (str):
             A string value to convert to bool
 
-    Returns:
+    Returns
+    -------
         bool
 
-    Raises:
+    Raises
+    ------
         ValueError
 
     """
@@ -132,11 +135,12 @@ def convert_bool(value: bool | str) -> bool:
     if val == "0":
         return False
 
-    raise ValueError(f'Cannot convert {value!r} to bool, use "0" or "1"')
+    msg = f'Cannot convert {value!r} to bool, use "0" or "1"'
+    raise ValueError(msg)
 
 
 def convert_str_seq(
-    value: list[str] | tuple[str, ...] | str
+    value: list[str] | tuple[str, ...] | str,
 ) -> tuple[str, ...]:
     """Convert a string to a list of strings.
 
@@ -147,9 +151,11 @@ def convert_str_seq(
             A string to convert to a list of strings
 
     Returns
+    -------
         list[str]
 
-    Raises:
+    Raises
+    ------
         ValueError
 
     """
@@ -158,8 +164,9 @@ def convert_str_seq(
 
     try:
         return tuple(value.split(","))
-    except Exception:
-        raise ValueError(f"Cannot convert {value} to list value")
+    except Exception as e:
+        msg = f"Cannot convert {value} to list value"
+        raise ValueError(msg) from e
 
 
 ConversionFn = Callable[[Any], T]
@@ -171,7 +178,7 @@ class SettingBase(Generic[T]):
         name: str,
         default: Unset[T] = _Unset,
         convert: ConversionFn[T] | None = None,
-        help: str = "",
+        help: str = "",  # noqa: A002
     ) -> None:
         self._default = default
         self._convert = (
@@ -202,7 +209,8 @@ class SettingBase(Generic[T]):
             return 'bool ("0" or "1")'
         if self._convert is convert_str_seq:
             return "tuple[str, ...]"
-        raise RuntimeError("unreachable")
+        msg = "unreachable"
+        raise RuntimeError(msg)
 
 
 class PrioritizedSetting(SettingBase[T]):
@@ -237,7 +245,7 @@ class PrioritizedSetting(SettingBase[T]):
         env_var: str | None = None,
         default: Unset[T] = _Unset,
         convert: ConversionFn[T] | None = None,
-        help: str = "",
+        help: str = "",  # noqa: A002
     ) -> None:
         super().__init__(name, default, convert, help)
         self._env_var = env_var
@@ -257,13 +265,14 @@ class PrioritizedSetting(SettingBase[T]):
                 An optional default value that only takes precendence over
                 implicit default values specified on the property itself.
 
-        Returns:
+        Returns
+        -------
             str or int or float
 
-        Raises:
+        Raises
+        ------
             RuntimeError
         """
-
         # 4. immediate values
         if value is not None:
             return self._convert(value)
@@ -284,16 +293,15 @@ class PrioritizedSetting(SettingBase[T]):
         if self._default is not _Unset:
             return self._convert(self._default)
 
-        raise RuntimeError(
-            f"No configured value found for setting {self._name!r}"
-        )
+        msg = f"No configured value found for setting {self._name!r}"
+        raise RuntimeError(msg)
 
-    def __get__(
+    def __get__(  # noqa: D105
         self, instance: Any, owner: type[Any]
     ) -> PrioritizedSetting[T]:
         return self
 
-    def __set__(self, instance: Any, value: str | T) -> None:
+    def __set__(self, instance: Any, value: str | T) -> None:  # noqa: D105
         self.set_value(value)
 
     def set_value(self, value: str | T) -> None:
@@ -306,7 +314,8 @@ class PrioritizedSetting(SettingBase[T]):
             value (str or int or float):
                 A user-set value for this setting
 
-        Returns:
+        Returns
+        -------
             None
         """
         # It is usually not advised to store any data directly on descriptors,
@@ -319,7 +328,7 @@ class PrioritizedSetting(SettingBase[T]):
         self._user_value = _Unset
 
     @property
-    def env_var(self) -> str | None:
+    def env_var(self) -> str | None:  # noqa: D102
         return self._env_var
 
 
@@ -330,14 +339,14 @@ class EnvOnlySetting(SettingBase[T]):
     returned.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         name: str,
         env_var: str,
         default: Unset[T] = _Unset,
         test_default: Unset[T] = _Unset,
         convert: Any | None = None,
-        help: str = "",
+        help: str = "",  # noqa: A002
     ) -> None:
         super().__init__(name, default, convert, help)
         self._test_default = test_default

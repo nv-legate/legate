@@ -39,7 +39,7 @@ def to_tiles(
 def from_tiles_by_offsets(
     path: Pathlike,
     shape: Shapelike,
-    type: Type,
+    type: Type,  # noqa: A002
     offsets: tuple[int, ...],
     tile_shape: tuple[int, ...] | None = None,
 ) -> LogicalArray: ...

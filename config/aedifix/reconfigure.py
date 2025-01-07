@@ -10,11 +10,10 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import inspect
-import shutil
 import sys
+import shutil
+import inspect
 from datetime import date
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .base import Configurable
@@ -26,11 +25,13 @@ from .util.utility import (
 )
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from .manager import ConfigurationManager
 
 
 class Reconfigure(Configurable):
-    __slots__ = "_file", "_backup"
+    __slots__ = "_backup", "_file"
 
     def __init__(self, manager: ConfigurationManager) -> None:
         r"""Construct a Reconfigure.
@@ -90,7 +91,8 @@ class Reconfigure(Configurable):
 
     def backup_reconfigure_script(self) -> None:
         r"""Create a backup of the reconfigure script for builds where
-        --with-clean is specified, in case configure fails."""
+        --with-clean is specified, in case configure fails.
+        """
         symlink = self.project_dir / self.reconfigure_file.name
         self.log(f"Attempting to backup reconfigure script: {symlink}")
         if not symlink.exists():

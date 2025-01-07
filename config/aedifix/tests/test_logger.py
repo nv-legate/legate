@@ -11,12 +11,14 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-from pytest import CaptureFixture
 
 from ..logger import Logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -44,10 +46,7 @@ class TestLogger:
 
     @pytest.mark.parametrize("mess", ("hello world", "goodbye world"))
     def test_log_screen(
-        self,
-        logger: Logger,
-        capsys: CaptureFixture[str],
-        mess: str,
+        self, logger: Logger, capsys: pytest.CaptureFixture[str], mess: str
     ) -> None:
         with logger:
             logger.log_screen(mess=mess)
@@ -72,14 +71,14 @@ class TestLogger:
         assert row_data is logger._row_data
         assert row_data.maxlen is not None
         assert len(row_data) == 0
-        logger._append_live_message("foo", True)
+        logger._append_live_message("foo", keep=True)
         assert len(row_data) == 1
         assert row_data[0] == ("foo", True)
         for i in range(row_data.maxlen - len(row_data)):
             row_data.append((f"bar_{i}", False))
         assert len(row_data) == row_data.maxlen
         assert row_data[0] == ("foo", True)
-        logger._append_live_message("new_foo", True)
+        logger._append_live_message("new_foo", keep=True)
         assert len(row_data) == row_data.maxlen
         assert row_data[0] == ("foo", True)
         # The last non-kept entry should now be next
@@ -96,7 +95,7 @@ class TestLogger:
                 "persistent"
             ),
         ):
-            logger._append_live_message("oh no", True)
+            logger._append_live_message("oh no", keep=True)
 
     def test_log_file(self, logger: Logger) -> None:
         mess = "foo bar baz"

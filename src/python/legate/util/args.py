@@ -13,9 +13,19 @@ from __future__ import annotations
 
 import sys
 from argparse import SUPPRESS, Action, ArgumentParser, Namespace
-from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, fields
-from typing import Any, Generic, Literal, NoReturn, TypeAlias, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    NoReturn,
+    TypeAlias,
+    TypeVar,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Sequence
 
 
 class _UnsetType:
@@ -70,11 +80,11 @@ class Argument:
     spec: ArgSpec
 
     @property
-    def kwargs(self) -> dict[str, Any]:
-        return dict(entries(self.spec))
+    def kwargs(self) -> dict[str, Any]:  # noqa: D102
+        return dict(_entries(self.spec))
 
 
-def entries(obj: Any) -> Iterable[tuple[str, Any]]:
+def _entries(obj: Any) -> Iterable[tuple[str, Any]]:
     for f in fields(obj):
         value = getattr(obj, f.name)
         if value is not Unset:
@@ -91,7 +101,6 @@ class MultipleChoices(Generic[T]):
 
     Examples
     --------
-
     >>> choices = MultipleChoices(["a", "b", "c"])
 
     >>> "a" in choices
@@ -105,24 +114,24 @@ class MultipleChoices(Generic[T]):
     def __init__(self, choices: Iterable[T]) -> None:
         self._choices = set(choices)
 
-    def __contains__(self, x: T | Sequence[T]) -> bool:
+    def __contains__(self, x: T | Sequence[T]) -> bool:  # noqa: D105
         if isinstance(x, (list, tuple)):
             return set(x).issubset(self._choices)
         return x in self._choices
 
-    def __iter__(self) -> Iterator[T]:
+    def __iter__(self) -> Iterator[T]:  # noqa: D105
         return self._choices.__iter__()
 
 
 class ExtendAction(Action, Generic[T]):
     """A custom argparse action to collect multiple values into a list."""
 
-    def __call__(
+    def __call__(  # noqa: D102
         self,
-        parser: ArgumentParser,
+        parser: ArgumentParser,  # noqa: ARG002
         namespace: Namespace,
         values: str | Sequence[T] | None,
-        option_string: str | None = None,
+        option_string: str | None = None,  # noqa: ARG002
     ) -> None:
         items = getattr(namespace, self.dest) or []
         if isinstance(values, (list, tuple)):
@@ -140,12 +149,12 @@ class InfoAction(Action):
         kwargs["default"] = SUPPRESS
         super().__init__(*args, **kwargs)
 
-    def __call__(
+    def __call__(  # noqa: D102
         self,
-        parser: ArgumentParser,
-        namespace: Namespace,
-        values: str | Sequence[T] | None,
-        option_string: str | None = None,
+        parser: ArgumentParser,  # noqa: ARG002
+        namespace: Namespace,  # noqa: ARG002
+        values: str | Sequence[T] | None,  # noqa: ARG002
+        option_string: str | None = None,  # noqa: ARG002
     ) -> NoReturn:
         from .info import print_build_info
 

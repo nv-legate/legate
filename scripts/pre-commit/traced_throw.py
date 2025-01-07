@@ -80,9 +80,9 @@ def _make_legate_symbol(sym: str) -> tuple[str, str, str]:
 
 
 IGNORED_EXCEPTION_TYPES: Final = (
-    ("std::bad_alloc",)
-    + _make_legate_symbol("TracedException")
-    + _make_legate_symbol("TracedExceptionBase")
+    "std::bad_alloc",
+    *_make_legate_symbol("TracedException"),
+    *_make_legate_symbol("TracedExceptionBase"),
 )
 
 

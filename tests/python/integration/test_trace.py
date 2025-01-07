@@ -18,12 +18,12 @@ from legate.core.task import InputStore, OutputStore, task
 
 
 @task
-def taskA(input: InputStore) -> None:
+def taskA(store: InputStore) -> None:
     pass
 
 
 @task
-def taskB(input: OutputStore, output: InputStore) -> None:
+def taskB(ostore: OutputStore, ostore2: InputStore) -> None:
     pass
 
 

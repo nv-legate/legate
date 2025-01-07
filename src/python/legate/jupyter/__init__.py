@@ -18,11 +18,11 @@ if TYPE_CHECKING:
     from IPython import InteractiveShell
 
 
-def load_ipython_extension(ipython: InteractiveShell) -> None:
+def load_ipython_extension(ipython: InteractiveShell) -> None:  # noqa: D103
     ipython.register_magics(LegateInfoMagics(ipython))
 
 
-def main() -> int:
+def main() -> int:  # noqa: D103
     import sys
 
     from .main import main as _main

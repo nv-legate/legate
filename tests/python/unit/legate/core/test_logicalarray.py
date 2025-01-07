@@ -576,11 +576,11 @@ class TestCreateErrors:
         arr = runtime.create_array(ty.float16)
         msg = "Illegal to access an uninitialized unbound store"
         with pytest.raises(ValueError, match=msg):
-            arr.extents
+            _ = arr.extents
         with pytest.raises(ValueError, match=msg):
-            arr.volume
+            _ = arr.volume
         with pytest.raises(ValueError, match=msg):
-            arr.size
+            _ = arr.size
 
 
 if __name__ == "__main__":

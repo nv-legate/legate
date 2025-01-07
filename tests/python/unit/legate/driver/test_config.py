@@ -11,18 +11,22 @@
 
 from __future__ import annotations
 
-import os
+import operator
+import functools
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import call
 
 import pytest
-from pytest_mock import MockerFixture
 
 import legate.driver.config as m
-import legate.driver.defaults as defaults
+from legate.driver import defaults
 from legate.util.types import DataclassMixin
 
 from ...util import powerset
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
 
 class TestMultiNode:
@@ -43,12 +47,11 @@ class TestMultiNode:
     )
     def test_launcher_extra_fixup_basic(self, extra: list[str]) -> None:
         mn = m.MultiNode(
-            nodes=1,
-            ranks_per_node=1,
-            launcher="mpirun",
-            launcher_extra=extra,
+            nodes=1, ranks_per_node=1, launcher="mpirun", launcher_extra=extra
         )
-        assert mn.launcher_extra == sum((x.split() for x in extra), [])
+        assert mn.launcher_extra == functools.reduce(
+            operator.iadd, (x.split() for x in extra), []
+        )
 
     def test_launcher_extra_fixup_complex(self) -> None:
         mn = m.MultiNode(
@@ -75,14 +78,9 @@ class TestMultiNode:
             nodes=1,
             ranks_per_node=1,
             launcher="mpirun",
-            launcher_extra=[
-                "-f 'some path with spaces/foo.txt'",
-            ],
+            launcher_extra=["-f 'some path with spaces/foo.txt'"],
         )
-        assert mn.launcher_extra == [
-            "-f",
-            "some path with spaces/foo.txt",
-        ]
+        assert mn.launcher_extra == ["-f", "some path with spaces/foo.txt"]
 
 
 class TestBinding:
@@ -153,7 +151,9 @@ class TestProfiling:
             nsys_targets="foo,bar",
             nsys_extra=extra,
         )
-        assert p.nsys_extra == sum((x.split() for x in extra), [])
+        assert p.nsys_extra == functools.reduce(
+            operator.iadd, (x.split() for x in extra), []
+        )
 
     def test_nsys_extra_fixup_complex(self) -> None:
         p = m.Profiling(
@@ -162,10 +162,7 @@ class TestProfiling:
             nvprof=True,
             nsys=True,
             nsys_targets="foo,bar",
-            nsys_extra=[
-                "-H g0002,g0002 -X SOMEENV --fork",
-                "-bind-to none",
-            ],
+            nsys_extra=["-H g0002,g0002 -X SOMEENV --fork", "-bind-to none"],
         )
         assert p.nsys_extra == [
             "-H",
@@ -184,14 +181,9 @@ class TestProfiling:
             nvprof=True,
             nsys=True,
             nsys_targets="foo,bar",
-            nsys_extra=[
-                "-f 'some path with spaces/foo.txt'",
-            ],
+            nsys_extra=["-f 'some path with spaces/foo.txt'"],
         )
-        assert p.nsys_extra == [
-            "-f",
-            "some path with spaces/foo.txt",
-        ]
+        assert p.nsys_extra == ["-f", "some path with spaces/foo.txt"]
 
 
 class TestLogging:
@@ -224,10 +216,7 @@ class TestDebugging:
 
 class TestInfo:
     def test_fields(self) -> None:
-        assert set(m.Info.__dataclass_fields__) == {
-            "verbose",
-            "bind_detail",
-        }
+        assert set(m.Info.__dataclass_fields__) == {"verbose", "bind_detail"}
 
     def test_mixin(self) -> None:
         assert issubclass(m.Info, DataclassMixin)
@@ -263,40 +252,27 @@ class TestConfig:
             launcher_extra=[],
         )
         assert c.binding == m.Binding(
-            cpu_bind=None,
-            mem_bind=None,
-            gpu_bind=None,
-            nic_bind=None,
+            cpu_bind=None, mem_bind=None, gpu_bind=None, nic_bind=None
         )
         assert c.core == m.Core(
-            cpus=None,
-            gpus=None,
-            omps=None,
-            ompthreads=None,
-            utility=None,
+            cpus=None, gpus=None, omps=None, ompthreads=None, utility=None
         )
 
-        c.memory == m.Memory(
-            sysmem=None,
-            numamem=None,
-            fbmem=None,
-            zcmem=None,
-            regmem=None,
+        assert c.memory == m.Memory(
+            sysmem=None, numamem=None, fbmem=None, zcmem=None, regmem=None
         )
 
-        c.profiling == m.Profiling(
+        assert c.profiling == m.Profiling(
             profile=False,
             cprofile=False,
             nvprof=False,
             nsys=False,
-            nsys_targets="",
+            nsys_targets=defaults.NSYS_TARGETS,
             nsys_extra=[],
         )
 
         assert c.logging == m.Logging(
-            user_logging_levels=None,
-            logdir=Path(os.getcwd()),
-            log_to_file=False,
+            user_logging_levels=None, logdir=Path.cwd(), log_to_file=False
         )
 
         assert c.debugging == m.Debugging(
@@ -349,18 +325,10 @@ class TestConfig:
     # ingest succeeds over a very wide range of command line combinations (one
     # option from most sub-configs)
     @pytest.mark.parametrize(
-        "args",
-        powerset(
-            (
-                "--spy",
-                "--gdb",
-                "--profile",
-                "--cprofile",
-            )
-        ),
+        "args", powerset(("--spy", "--gdb", "--profile", "--cprofile"))
     )
     def test_user_opts(self, args: tuple[str, ...]) -> None:
-        c = m.Config(["legate"] + list(args) + ["foo.py", "-a", "1"])
+        c = m.Config(["legate", *list(args), "foo.py", "-a", "1"])
 
         assert c.user_opts == ("-a", "1")
         assert c.user_program == "foo.py"
@@ -377,13 +345,20 @@ class TestConfig:
     ) -> None:
         with pytest.raises(RuntimeError):
             m.Config(
-                ["legate", "--run-mode", "exec", "--module", "mod", "prog"]
-                + opts
+                [
+                    "legate",
+                    "--run-mode",
+                    "exec",
+                    "--module",
+                    "mod",
+                    "prog",
+                    *opts,
+                ]
             )
 
     @pytest.mark.parametrize("opts", USER_OPTS)
     def test_exec_run_mode_with_prog_no_module(self, opts: list[str]) -> None:
-        c = m.Config(["legate", "--run-mode", "exec", "prog"] + opts)
+        c = m.Config(["legate", "--run-mode", "exec", "prog", *opts])
 
         assert c.user_opts == tuple(opts)
         assert c.run_mode == "exec"
@@ -394,8 +369,15 @@ class TestConfig:
         self, opts: list[str]
     ) -> None:
         c = m.Config(
-            ["legate", "--run-mode", "python", "--module", "mod", "prog"]
-            + opts
+            [
+                "legate",
+                "--run-mode",
+                "python",
+                "--module",
+                "mod",
+                "prog",
+                *opts,
+            ]
         )
 
         assert c.user_opts == tuple(opts)
@@ -406,7 +388,7 @@ class TestConfig:
     def test_python_run_mode_with_prog_no_module(
         self, opts: list[str]
     ) -> None:
-        c = m.Config(["legate", "--run-mode", "python", "prog"] + opts)
+        c = m.Config(["legate", "--run-mode", "python", "prog", *opts])
 
         assert c.user_opts == tuple(opts)
         assert c.run_mode == "python"
@@ -431,15 +413,7 @@ class TestConfig:
         self, opts: list[str]
     ) -> None:
         c = m.Config(
-            [
-                "legate",
-                "--gpus",
-                "2",
-                "--module",
-                "mod",
-                "script.py",
-            ]
-            + opts
+            ["legate", "--gpus", "2", "--module", "mod", "script.py", *opts]
         )
 
         assert c.user_opts == tuple(opts)
@@ -451,7 +425,7 @@ class TestConfig:
     def test_default_run_mode_with_script_no_module(
         self, opts: list[str]
     ) -> None:
-        c = m.Config(["legate", "--gpus", "2", "script.py"] + opts)
+        c = m.Config(["legate", "--gpus", "2", "script.py", *opts])
 
         assert c.user_opts == tuple(opts)
         assert c.user_program == "script.py"
@@ -463,7 +437,7 @@ class TestConfig:
         self, opts: list[str]
     ) -> None:
         c = m.Config(
-            ["legate", "--gpus", "2", "--module", "mod", "prog"] + opts
+            ["legate", "--gpus", "2", "--module", "mod", "prog", *opts]
         )
 
         assert c.user_opts == tuple(opts)
@@ -475,7 +449,7 @@ class TestConfig:
     def test_default_run_mode_with_prog_no_modue(
         self, opts: list[str]
     ) -> None:
-        c = m.Config(["legate", "--gpus", "2", "prog"] + opts)
+        c = m.Config(["legate", "--gpus", "2", "prog", *opts])
 
         assert c.user_opts == tuple(opts)
         assert c.user_program == "prog"

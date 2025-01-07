@@ -12,20 +12,25 @@
 specific features.
 
 """
+
 from __future__ import annotations
 
 import sys
+from typing import TYPE_CHECKING
 
-from .. import FeatureType
-from .test_stage import TestStage
 from .util import log_proc
 
+if TYPE_CHECKING:
+    from .. import FeatureType
+    from .test_stage import TestStage
+
 if sys.platform == "darwin":
-    from ._osx import CPU, Eager, GPU, OMP
+    from ._osx import CPU, GPU, OMP, Eager
 elif sys.platform.startswith("linux"):
-    from ._linux import CPU, Eager, GPU, OMP
+    from ._linux import CPU, GPU, OMP, Eager
 else:
-    raise RuntimeError(f"unsupported platform: {sys.platform}")
+    msg = f"unsupported platform: {sys.platform}"
+    raise RuntimeError(msg)
 
 #: All the available test stages that can be selected
 STAGES: dict[FeatureType, type[TestStage]] = {

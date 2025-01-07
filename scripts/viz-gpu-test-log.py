@@ -10,11 +10,12 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
+from __future__ import annotations
 
-import dataclasses
-import json
 import re
 import sys
+import json
+import dataclasses
 from argparse import ArgumentParser, FileType
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -45,8 +46,8 @@ _FULL_RESULT_PAT = r"Results .* / ([0-9]+) files passed"
 
 @dataclass
 class Test:
-    """
-    Representation of a test invocation as an event on the Chrome trace viewer
+    """Representation of a test invocation as an event on the Chrome trace
+    viewer.
     """
 
     #: Title of event on the trace viewer; in our case the test filename
@@ -80,7 +81,8 @@ class LineParser:
         for k, v in self._gpu_for_test.items():
             if k.endswith(file):
                 return v
-        raise ValueError(f"Invocation command not found for test {file}")
+        msg = f"Invocation command not found for test {file}"
+        raise ValueError(msg)
 
     def parse(self, line: str) -> None:
         self._state(line)
@@ -121,10 +123,11 @@ class LineParser:
             expected = int(m.group(1))
             found = len(self._tests)
             if expected != found:
-                raise ValueError(
+                msg = (
                     f"Expected to find {expected} invocations but only found "
                     f"{found}"
                 )
+                raise ValueError(msg)
             self._state = self.DONE
 
     def DONE(self, line: str) -> None:
@@ -140,11 +143,7 @@ class LineParser:
 
 if __name__ == "__main__":
     arg_parser = ArgumentParser(description=_HELP_MSG)
-    arg_parser.add_argument(
-        "input",
-        type=FileType("r"),
-        help="Input filename",
-    )
+    arg_parser.add_argument("input", type=FileType("r"), help="Input filename")
     arg_parser.add_argument(
         "output",
         nargs="?",

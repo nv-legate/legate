@@ -184,7 +184,7 @@ class Legion(Package):
         with_legion_src_dir = self.cl_args.with_legion_src_dir
         legion_branch = self.cl_args.legion_branch
         if with_legion_src_dir.value and legion_branch.value:
-            raise UnsatisfiableConfigurationError(
+            msg = (
                 "Cannot specify both "
                 f"{dest_to_flag(with_legion_src_dir.name)} and "
                 f"{dest_to_flag(legion_branch.name)}, their combined meaning "
@@ -193,9 +193,10 @@ class Legion(Package):
                 "commit that dir is currently on), so the chosen Legion "
                 "branch would have no effect."
             )
+            raise UnsatisfiableConfigurationError(msg)
 
     def configure_root_dirs(self) -> None:
-        r"""Configure the various "root" directories that Legion requires"""
+        r"""Configure the various "root" directories that Legion requires."""
         dir_group = self.DirGroup
         if (lg_dir := self.cl_args.legion_dir).cl_set:
             self.manager.set_cmake_variable(
@@ -244,17 +245,19 @@ class Legion(Package):
                 self.Legion_CUDA_FLAGS, self.cl_args.legion_cuda_flags
             )
         elif self.cl_args.legion_cuda_flags.cl_set:
-            raise RuntimeError(
+            msg = (
                 "--legion-cuda-flags set "
                 f"({self.cl_args.legion_cuda_flags.value}), "
                 "but CUDA is not enabled."
             )
+            raise RuntimeError(msg)
         elif cuda_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_USE_CUDA, False)
 
     def configure_gasnet(self) -> None:
         r"""Configure Legion to use GASNet. Does nothing if GASNet is not
-        enabled."""
+        enabled.
+        """
         if self.deps.GASNet.state.enabled():
             self.manager.append_cmake_variable(
                 self.Legion_EMBED_GASNet_CONFIGURE_ARGS,
@@ -263,7 +266,8 @@ class Legion(Package):
 
     def configure_openmp(self) -> None:
         r"""Configure Legion to use OpenMP. Does nothing if OpenMP is not
-        enabled."""
+        enabled.
+        """
         omp_state = self.deps.OpenMP.state
         if omp_state.enabled():
             self.manager.set_cmake_variable(self.Legion_USE_OpenMP, True)
@@ -322,7 +326,7 @@ class Legion(Package):
         if len(networks) > 1:
             self.log_warning(
                 "Building Realm with multiple networking backends "
-                f"({', '.join(networks)}) is not fully supported currently.",
+                f"({', '.join(networks)}) is not fully supported currently."
             )
         if networks:
             self.manager.set_cmake_variable(
@@ -346,7 +350,7 @@ class Legion(Package):
         self.log_execute_func(self.configure_zlib)
         self.log_execute_func(self.configure_networks)
 
-    def summarize(self) -> str:
+    def summarize(self) -> str:  # noqa: C901
         r"""Summarize Legion.
 
         Returns

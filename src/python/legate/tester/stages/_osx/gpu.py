@@ -40,19 +40,31 @@ class GPU(TestStage):
 
     kind: FeatureType = "cuda"
 
-    args: ArgList = []
+    def __init__(
+        self,
+        config: Config,  # noqa: ARG002
+        system: TestSystem,  # noqa: ARG002
+    ) -> None:
+        msg = "GPU test are not supported on OSX"
+        raise RuntimeError(msg)
 
-    def __init__(self, config: Config, system: TestSystem) -> None:
-        raise RuntimeError("GPU test are not supported on OSX")
-
-    def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
+    def stage_env(
+        self,
+        config: Config,  # noqa: ARG002
+        system: TestSystem,  # noqa: ARG002
+    ) -> EnvDict:
         return dict(UNPIN_ENV)
 
-    def delay(self, shard: Shard, config: Config, system: TestSystem) -> None:
+    def delay(
+        self,
+        shard: Shard,  # noqa: ARG002
+        config: Config,
+        system: TestSystem,  # noqa: ARG002
+    ) -> None:
         time.sleep(config.execution.gpu_delay / 1000)
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
-        raise NotImplementedError()
+        raise NotImplementedError

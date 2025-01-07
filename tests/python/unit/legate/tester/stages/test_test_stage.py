@@ -9,15 +9,16 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING, ClassVar
+
+from rich.console import Console
 
 import pytest
-from rich.console import Console
 
 from legate.tester import FeatureType, defaults
 from legate.tester.config import Config
@@ -30,9 +31,11 @@ from legate.tester.stages.util import (
     StageSpec,
 )
 from legate.tester.test_system import ProcessResult, TestSystem as _TestSystem
-from legate.util.types import ArgList, EnvDict
 
 from . import FakeSystem
+
+if TYPE_CHECKING:
+    from legate.util.types import ArgList, EnvDict
 
 CONSOLE = Console(color_system=None, soft_wrap=True)
 PROJECT = Project()
@@ -41,7 +44,7 @@ PROJECT = Project()
 class MockTestStage(m.TestStage):
     name = "mock"
 
-    args = ["-foo", "-bar"]
+    args: ClassVar = ["-foo", "-bar"]
 
     def __init__(
         self, config: Config, system: _TestSystem, kind: FeatureType = "eager"
@@ -49,14 +52,14 @@ class MockTestStage(m.TestStage):
         self.kind = kind
         self._init(config, system)
 
-    def compute_spec(self, config: Config, system: _TestSystem) -> StageSpec:
+    def compute_spec(self, _config: Config, _system: _TestSystem) -> StageSpec:
         shards = [Shard([(0,)]), Shard([(1,)]), Shard([(2,)])]
         return StageSpec(2, shards)
 
-    def shard_args(self, shard: Shard, config: Config) -> ArgList:
+    def shard_args(self, _shard: Shard, _config: Config) -> ArgList:
         return []
 
-    def stage_env(self, config: Config, system: _TestSystem) -> EnvDict:
+    def stage_env(self, _config: Config, _system: _TestSystem) -> EnvDict:
         return {"stage": "env"}
 
 
@@ -78,8 +81,7 @@ class TestTestStage:
         c = Config([], project=PROJECT)
         stage = MockTestStage(c, FakeSystem())
         stage.result = StageResult(
-            [ProcessResult("invoke", "test/file")],
-            timedelta(seconds=2.12),
+            [ProcessResult("invoke", "test/file")], timedelta(seconds=2.12)
         )
         with CONSOLE.capture() as capture:
             CONSOLE.print(stage.outro)

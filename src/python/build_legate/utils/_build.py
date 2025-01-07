@@ -10,11 +10,15 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ._cmake_config import CMakeConfig
 from ._io import vprint
 from ._legate_config import get_legate_config
-from ._types import BuildImpl, BuildKind, ConfigSettings
 from ._utils import clean_skbuild_dir, fix_env, was_built_with_build_isolation
+
+if TYPE_CHECKING:
+    from ._types import BuildImpl, BuildKind, ConfigSettings
 
 
 def prepare_config_settings(

@@ -17,24 +17,26 @@ from datetime import datetime
 from shlex import quote
 from signal import SIGINT
 from subprocess import Popen
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any
 
 from rich import print as rich_print
 from rich.console import NewLine, group
 from rich.rule import Rule
 
-from ..util.system import System
 from ..util.types import DataclassMixin
 from ..util.ui import env, section
 from .command import CMD_PARTS_EXEC, CMD_PARTS_PYTHON
-from .config import ConfigProtocol
 from .environment import ENV_PARTS_LEGATE
 from .launcher import Launcher
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from rich.console import RenderableType
 
+    from ..util.system import System
     from ..util.types import Command, EnvDict
+    from .config import ConfigProtocol
 
 __all__ = ("LegateDriver", "format_verbose")
 
@@ -125,7 +127,8 @@ class LegateDriver:
             return 0
 
         if self.config.multi_node.nodes > 1 and self.config.console:
-            raise RuntimeError("Cannot start console with more than one node.")
+            msg = "Cannot start console with more than one node."
+            raise RuntimeError(msg)
 
         if self.config.other.timing:
             self.print_on_head_node(f"Legate start: {datetime.now()}")
@@ -166,7 +169,7 @@ class LegateDriver:
 
         return ret
 
-    def print_on_head_node(self, *args: Any, **kw: Any) -> None:
+    def print_on_head_node(self, *args: Any, **kw: Any) -> None:  # noqa: D102
         launcher = self.launcher
 
         if launcher.kind != "none" or launcher.detected_rank_id == "0":
@@ -181,8 +184,7 @@ def get_versions() -> LegateVersions:
 
 @group()
 def format_verbose(
-    system: System,
-    driver: LegateDriver | None = None,
+    system: System, driver: LegateDriver | None = None
 ) -> Iterable[RenderableType]:
     """Print system and driver configuration values.
 
@@ -200,7 +202,6 @@ def format_verbose(
         RenderableType
 
     """
-
     yield Rule("Legate Configuration")
     yield NewLine()
 

@@ -9,17 +9,16 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate driver configuration from command-line and environment.
+"""Consolidate driver configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 import shlex
-from argparse import Namespace
+import operator
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cached_property, reduce
 from pathlib import Path
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from rich import reconfigure
 
@@ -31,6 +30,9 @@ from ..util.types import (
     object_to_dataclass,
 )
 from .args import parser
+
+if TYPE_CHECKING:
+    from argparse import Namespace
 
 __all__ = ("Config",)
 
@@ -47,8 +49,10 @@ class MultiNode(DataclassMixin):
         # internal whitespace, have to use __setattr__ for frozen
         # https://docs.python.org/3/library/dataclasses.html#frozen-instances
         if self.launcher_extra:
-            ex: list[str] = sum(
-                (shlex.split(x) for x in self.launcher_extra), []
+            ex: list[str] = reduce(
+                operator.iadd,
+                (shlex.split(x) for x in self.launcher_extra),
+                [],
             )
             object.__setattr__(self, "launcher_extra", ex)
 
@@ -102,7 +106,9 @@ class Profiling(DataclassMixin):
         # internal whitespace, have to use __setattr__ for frozen
         # https://docs.python.org/3/library/dataclasses.html#frozen-instances
         if self.nsys_extra:
-            ex: list[str] = sum((shlex.split(x) for x in self.nsys_extra), [])
+            ex: list[str] = reduce(
+                operator.iadd, (shlex.split(x) for x in self.nsys_extra), []
+            )
             object.__setattr__(self, "nsys_extra", ex)
 
 
@@ -207,13 +213,11 @@ class Config:
 
         if self.run_mode == "exec":
             if self.user_program is None:
-                raise RuntimeError(
-                    "'exec' run mode requires a program to execute"
-                )
+                msg = "'exec' run mode requires a program to execute"
+                raise RuntimeError(msg)
             if self.other.module is not None:
-                raise RuntimeError(
-                    "'exec' run mode cannot be used with --module"
-                )
+                msg = "'exec' run mode cannot be used with --module"
+                raise RuntimeError(msg)
 
         color_system = "auto" if self.other.color else None
         reconfigure(soft_wrap=True, color_system=color_system)
@@ -224,7 +228,7 @@ class Config:
         return self.user_program is None and self.run_mode == "python"
 
     @cached_property
-    def run_mode(self) -> RunMode:
+    def run_mode(self) -> RunMode:  # noqa: D102
         # honor any explicit user configuration
         if self._user_run_mode is not None:
             return self._user_run_mode

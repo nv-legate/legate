@@ -98,14 +98,14 @@ class TestUtility:
         assert new_argv == ["foo", "--bar", "--foo"]
 
     @pytest.mark.parametrize(
-        "flag_str, expected",
+        ("flag_str", "expected"),
         (("", ""), ("--foo", "foo"), ("-f", "f"), ("-foo--bar", "foo__bar")),
     )
     def test_flag_to_dest(self, flag_str: str, expected: str) -> None:
         assert flag_to_dest(flag_str) == expected
 
     @pytest.mark.parametrize(
-        "dest_str, expected",
+        ("dest_str", "expected"),
         (
             ("", "--"),
             ("foo", "--foo"),
@@ -118,7 +118,7 @@ class TestUtility:
         assert dest_to_flag(dest_str) == expected
 
     @pytest.mark.parametrize(
-        "argv, expected",
+        ("argv", "expected"),
         [
             ([], ([], [])),
             (["-foo"], (["-foo"], [])),

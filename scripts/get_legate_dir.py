@@ -11,15 +11,15 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+from pathlib import Path
+
 
 def get_legate_dir() -> str:
-    from os.path import abspath, dirname
-
-    return dirname(dirname(abspath(__file__)))
+    return str(Path(__file__).resolve().parents[1])
 
 
 def main() -> None:
-    print(get_legate_dir(), end="", flush=True)
+    print(get_legate_dir(), end="", flush=True)  # noqa: T201
 
 
 if __name__ == "__main__":

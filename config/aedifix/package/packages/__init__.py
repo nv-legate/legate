@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..package import Package
     from ...manager import ConfigurationManager
+    from ..package import Package
 
 
 def load_packages(manager: ConfigurationManager) -> list[Package]:

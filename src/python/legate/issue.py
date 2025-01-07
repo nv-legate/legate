@@ -14,16 +14,16 @@
 #
 from __future__ import annotations
 
-import json
+# ruff: noqa: D103, T201
 import os
-import platform
 import re
 import sys
+import json
+import platform
 from importlib import import_module
 from subprocess import CalledProcessError, check_output
 from textwrap import indent
 
-NEWLINE = "\n"
 FAILED_TO_DETECT = "(failed to detect)"
 
 
@@ -43,7 +43,8 @@ def try_version(module_name: str, attr: str) -> str:
 def legion_version() -> str:
     import legate.install_info as info
 
-    if (result := info.legion_version) == "":
+    result = info.legion_version
+    if result == "":
         return FAILED_TO_DETECT
 
     if info.legion_git_branch:
@@ -54,21 +55,27 @@ def legion_version() -> str:
 
 def cuda_version() -> str:
     try:
-        if out := check_output("conda list cuda-version --json".split()):
+        if out := check_output(["conda", "list", "cuda-version", "--json"]):
             info = json.loads(out.decode("utf-8"))[0]
             return f"{info['dist_name']} ({info['channel']})"
-        return FAILED_TO_DETECT
+
     except (CalledProcessError, IndexError, KeyError):
         return FAILED_TO_DETECT
     except FileNotFoundError:
         return "(conda missing)"
+    else:
+        return FAILED_TO_DETECT
 
 
 def driver_version() -> str:
+    cmd = [
+        "nvidia-smi",
+        "--query-gpu=driver_version",
+        "--format=csv,noheader",
+        "--id=0",
+    ]
     try:
-        out = check_output(
-            "nvidia-smi --query-gpu=driver_version --format=csv,noheader --id=0".split()  # noqa
-        )
+        out = check_output(cmd)
         return out.decode("utf-8").strip()
     except (CalledProcessError, IndexError, KeyError):
         return FAILED_TO_DETECT
@@ -77,8 +84,9 @@ def driver_version() -> str:
 
 
 def devices() -> str:
+    cmd = ["nvidia-smi", "-L"]
     try:
-        out = check_output("nvidia-smi -L".split())
+        out = check_output(cmd)
         gpus = re.sub(r" \(UUID: .*\)", "", out.decode("utf-8").strip())
         return f"\n{indent(gpus, '  ')}"
     except (CalledProcessError, IndexError, KeyError):
@@ -92,7 +100,7 @@ def main() -> None:
     # too aggressive and will cause legate-issue itself to crash
     os.environ["LEGATE_AUTO_CONFIG"] = "0"
 
-    print(f"Python      :  {sys.version.split(NEWLINE)[0]}")
+    print(f"Python      :  {sys.version.splitlines()[0]}")
     print(f"Platform    :  {platform.platform()}")
     print(f"Legion      :  {legion_version()}")
     print(f"Legate      :  {try_version('legate', '__version__')}")

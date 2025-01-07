@@ -9,5 +9,3 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 from __future__ import annotations
-
-from . import main_package

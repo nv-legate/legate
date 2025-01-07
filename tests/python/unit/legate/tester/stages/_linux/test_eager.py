@@ -9,9 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and stage_env.
+"""Consolidate test configuration from command-line and stage_env."""
 
-"""
 from __future__ import annotations
 
 import pytest
@@ -37,7 +36,9 @@ def test_default() -> None:
     assert stage.spec.workers > 0
 
 
-@pytest.mark.parametrize("shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]])
+@pytest.mark.parametrize(
+    ("shard", "expected"), [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
+)
 def test_single_rank_shard_args(shard: tuple[int, ...], expected: str) -> None:
     c = Config([], project=PROJECT)
     s = FakeSystem()

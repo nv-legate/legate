@@ -8,20 +8,24 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-
+from __future__ import annotations
 
 import sys
 from argparse import ArgumentParser
 from dataclasses import dataclass
-from typing import Iterable, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import pytest
-from pytest_mock import MockerFixture
 
 import legate.util.args as m
-import legate.util.info as info
+from legate.util import info
 
 from ...util import powerset
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from pytest_mock import MockerFixture
 
 T = TypeVar("T")
 
@@ -98,20 +102,18 @@ class TestArgSpec:
         assert spec.action == m.Unset
 
         # all others are unset
-        assert set(m.entries(spec)) == {
-            ("dest", "dest"),
-        }
+        assert set(m._entries(spec)) == {("dest", "dest")}
 
 
 class TestArgument:
     def test_kwargs(self) -> None:
         arg = m.Argument("arg", m.ArgSpec("dest", default=2, help="help"))
 
-        assert arg.kwargs == dict(m.entries(arg.spec))
+        assert arg.kwargs == dict(m._entries(arg.spec))
 
 
 def test_entries() -> None:
-    assert set(m.entries(_TestObj())) == {("a", 10), ("c", "foo")}
+    assert set(m._entries(_TestObj())) == {("a", 10), ("c", "foo")}
 
 
 if __name__ == "__main__":

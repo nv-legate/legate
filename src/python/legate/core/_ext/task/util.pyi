@@ -8,10 +8,9 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Final, TypeAlias, TypeVar
+from typing import Any, Final, TypeVar
 
 from ..._lib.utilities.typedefs import VariantCode
 from .type import VariantList

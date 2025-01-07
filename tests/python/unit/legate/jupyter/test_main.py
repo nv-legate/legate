@@ -12,11 +12,14 @@
 from __future__ import annotations
 
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
-from pytest_mock import MockerFixture
 
 import legate.jupyter as m
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
 # main function shadows main module
 # def test___all__() -> None:
@@ -29,9 +32,9 @@ import legate.jupyter as m
 # legate is installed in CI, so skip for now.
 @pytest.mark.skip
 def test_main(mocker: MockerFixture) -> None:
+    import legate.util.system
     import legate.driver.driver
     import legate.jupyter.config
-    import legate.util.system
 
     config_spy = mocker.spy(legate.jupyter.config.Config, "__init__")
     system_spy = mocker.spy(legate.util.system.System, "__init__")

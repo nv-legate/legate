@@ -40,16 +40,23 @@ class GPU(TestStage):
 
     kind: FeatureType = "cuda"
 
-    args: ArgList = []
-
     def __init__(self, config: Config, system: TestSystem) -> None:
         self._init(config, system)
         self._gpus = system.gpus
 
-    def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
-        return dict()
+    def stage_env(
+        self,
+        config: Config,  # noqa: ARG002
+        system: TestSystem,  # noqa: ARG002
+    ) -> EnvDict:
+        return {}
 
-    def delay(self, shard: Shard, config: Config, system: TestSystem) -> None:
+    def delay(
+        self,
+        shard: Shard,  # noqa: ARG002
+        config: Config,
+        system: TestSystem,  # noqa: ARG002
+    ) -> None:
         time.sleep(config.execution.gpu_delay / 1000)
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:

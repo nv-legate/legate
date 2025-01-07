@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -16,7 +15,7 @@ import re
 import sys
 import textwrap
 from copy import deepcopy
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -31,15 +30,18 @@ from ..util.cl_arg import CLArg
 from ..util.exception import WrongOrderError
 from .fixtures.dummy_main_module import DummyMainModule
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 @pytest.fixture
 def manager() -> ConfigurationManager:
-    return ConfigurationManager(tuple(), DummyMainModule)
+    return ConfigurationManager((), DummyMainModule)
 
 
 class TestConfigurationManager:
     @pytest.mark.parametrize(
-        "argv", (tuple(), ("--foo",), ("-b", "1", "--bar=baz"))
+        "argv", ((), ("--foo",), ("-b", "1", "--bar=baz"))
     )
     def test_create(
         self,
@@ -53,7 +55,7 @@ class TestConfigurationManager:
         with pytest.raises(
             WrongOrderError, match=re.escape("Must call setup() first")
         ):
-            manager.cl_args
+            _ = manager.cl_args
         assert manager.project_name == "DummyMainModule"
         assert manager.project_arch == AEDIFIX_PYTEST_ARCH
         assert manager.project_arch_name == "AEDIFIX_PYTEST_ARCH"
@@ -91,8 +93,13 @@ class TestConfigurationManager:
         manager.setup()
         assert len(manager._modules) > 1
         assert manager.argv == orig_argv
-        assert manager.cl_args.AEDIFIX_PYTEST_ARCH == CLArg(
-            name="AEDIFIX_PYTEST_ARCH", value=AEDIFIX_PYTEST_ARCH, cl_set=False
+        assert (
+            CLArg(
+                name="AEDIFIX_PYTEST_ARCH",
+                value=AEDIFIX_PYTEST_ARCH,
+                cl_set=False,
+            )
+            == manager.cl_args.AEDIFIX_PYTEST_ARCH
         )
         assert manager._ephemeral_args == {
             WITH_CLEAN_FLAG,

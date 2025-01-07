@@ -10,23 +10,25 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import logging
 import os
-import shutil
 import sys
+import shutil
+import logging
 import textwrap
 from collections import deque
-from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, ClassVar, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 
 # This must be the ONLY place that rich is imported to ensure that this error
 # message is seen when running configure on a system where it is not yet
 # installed.
 try:
     import rich  # noqa: F401
-except ModuleNotFoundError:
-    raise RuntimeError("Please run 'python3 -m pip install rich' to continue")
+except ModuleNotFoundError as mnfe:
+    msg = "Please run 'python3 -m pip install rich' to continue"
+    raise RuntimeError(msg) from mnfe
+
+import contextlib
 
 from rich.align import Align, AlignMethod
 from rich.console import Console, RenderableType
@@ -34,18 +36,22 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
+from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 _T = TypeVar("_T")
 
 
 class Logger:
     __slots__ = (
-        "_file_logger",
-        "_row_data",
         "_console",
-        "_table",
+        "_file_logger",
         "_live",
         "_live_raii",
+        "_row_data",
+        "_table",
     )
     __unique_id: ClassVar = 0
 
@@ -108,18 +114,18 @@ class Logger:
             table.add_row(data)
         return table
 
-    def __enter__(self) -> Logger:
+    def __enter__(self) -> Self:
         self._live_raii = self._live.__enter__()
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         self.flush()
-        self._live.__exit__(*args)
+        self._live.__exit__(*args)  # type: ignore[arg-type]
         self._live_raii = None
 
     @property
     def console(self) -> Console:
-        r"""Get the current active Console
+        r"""Get the current active Console.
 
         Returns
         -------
@@ -190,7 +196,7 @@ class Logger:
         Note how bar() (the true originator of the logging call) is ignored,
         and baz is printed instead.
         """
-        setattr(func, "__config_log_ignore___", True)
+        func.__config_log_ignore___ = True  # type: ignore[attr-defined]
         return func
 
     @staticmethod
@@ -306,13 +312,13 @@ class Logger:
     def flush(self) -> None:
         r"""Flush any pending log writes to disk or screen."""
         for handler in self._file_logger.handlers:
-            try:
+            with contextlib.suppress(AttributeError):
                 handler.flush()
-            except AttributeError:
-                pass
         self._live.refresh()
 
-    def _append_live_message(self, mess: RenderableType, keep: bool) -> None:
+    def _append_live_message(
+        self, mess: RenderableType, *, keep: bool
+    ) -> None:
         r"""Append a new message to the live data stream.
 
         Parameters
@@ -334,10 +340,11 @@ class Logger:
                     del row_data[idx]
                     break
             else:
-                raise ValueError(
+                msg = (
                     "Could not prune row data, every entry was marked as "
                     "persistent"
                 )
+                raise ValueError(msg)
         row_data.append((mess, keep))
 
     def log_screen(
@@ -345,6 +352,7 @@ class Logger:
         mess: (
             RenderableType | list[RenderableType] | tuple[RenderableType, ...]
         ),
+        *,
         keep: bool = False,
     ) -> None:
         r"""Log a message to the screen.
@@ -363,17 +371,17 @@ class Logger:
                 self.log_screen(mess, keep=keep)
             return
 
-        def do_log(message: RenderableType, keep: bool) -> None:
-            self._append_live_message(message, keep)
+        def do_log(message: RenderableType, *, keep: bool) -> None:
+            self._append_live_message(message, keep=keep)
             self._table = self._make_table(self._row_data)
             self._live.update(self._table, refresh=True)
 
         match mess:
             case list() | tuple():
                 for m in mess:
-                    do_log(m, keep)
+                    do_log(m, keep=keep)
             case _:
-                do_log(mess, keep)
+                do_log(mess, keep=keep)
 
     def log_file(self, message: str | Sequence[str]) -> None:
         r"""Log a message to the log file.
@@ -394,11 +402,7 @@ class Logger:
         self.log_divider(tee=False)
 
     def _log_boxed_screen(
-        self,
-        message: str,
-        title: str,
-        style: str,
-        align: AlignMethod,
+        self, message: str, title: str, style: str, align: AlignMethod
     ) -> None:
         if title:
             title_style = style
@@ -470,7 +474,7 @@ class Logger:
             title_style="bold red",
         )
 
-    def log_divider(self, tee: bool = False, keep: bool = True) -> None:
+    def log_divider(self, *, tee: bool = False, keep: bool = True) -> None:
         r"""Append a dividing line to the logs.
 
         Parameters

@@ -10,26 +10,27 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+import sys
 import json
 import shlex
 import shutil
-import sys
 import textwrap
 from pathlib import Path
-from typing import Any, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import pytest
-from pytest import MonkeyPatch
 
-from ..cmake.cmaker import CMakeCommandSpec
 from ..logger import Logger
 from ..main import basic_configure
 from ..manager import ConfigurationManager
 from ..package.main_package import _detect_num_cpus
 from .fixtures.dummy_main_module import DummyMainModule
 
+if TYPE_CHECKING:
+    from ..cmake.cmaker import CMakeCommandSpec
 
-@pytest.fixture(scope="function", autouse=True)
+
+@pytest.fixture(autouse=True)
 def setup_cmake_project(AEDIFIX_PYTEST_DIR: Path) -> None:
     main_cpp_template = textwrap.dedent(
         r"""
@@ -160,17 +161,16 @@ class TestInfo:
             "# TYPE is a hint to GUIs for the type of VALUE, DO NOT EDIT TYPE!.\n",  # noqa: E501
             "# VALUE is the current value for the KEY.\n",
         ]
+        idx = 0
         with self.cmakecache_txt.open() as fd:
-            min_lines = len(cache_header_lines)
             # Exploit the fact that zip() will end when the shortest iterator
             # is exhausted (i.e. cache_header_lines in this case)
-            for idx, (line, expected) in enumerate(
-                zip(fd, cache_header_lines)
-            ):
+            for line, expected in zip(fd, cache_header_lines):
                 assert line == expected
-            # But double check the fact that cache_header_lines was indeed the
-            # shortest
-            assert idx + 1 == min_lines
+                idx += 1
+        # But double check the fact that cache_header_lines was indeed the
+        # shortest
+        assert idx == len(cache_header_lines)
 
         assert self.command_spec.exists()
         assert self.command_spec.is_file()
@@ -202,7 +202,9 @@ class SpecialException(Exception):
 
 @pytest.mark.slow
 class TestMain:
-    def test_basic_configure_bad_init(self, monkeypatch: MonkeyPatch) -> None:
+    def test_basic_configure_bad_init(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         exn_mess = "Throwing from __init__"
 
         def throwing_init(*args: Any, **kwargs: Any) -> None:
@@ -210,16 +212,10 @@ class TestMain:
 
         monkeypatch.setattr(ConfigurationManager, "__init__", throwing_init)
         with pytest.raises(SpecialException, match=exn_mess):
-            basic_configure(tuple(), DummyMainModule)
-            # We should not get here, since if ConfigurationManager fails
-            # to construct, then basic_configure() can do nothing but allow
-            # the exception to percolate up.
-            pytest.fail("Should not get here")
+            basic_configure((), DummyMainModule)
 
     def test_basic_configure_bad_halfway(
-        self,
-        monkeypatch: MonkeyPatch,
-        AEDIFIX_PYTEST_DIR: Path,
+        self, monkeypatch: pytest.MonkeyPatch, AEDIFIX_PYTEST_DIR: Path
     ) -> None:
         exn_mess = "Throwing from setup"
 
@@ -228,7 +224,7 @@ class TestMain:
 
         monkeypatch.setattr(ConfigurationManager, "setup", throwing_setup)
 
-        ret = basic_configure(tuple(), DummyMainModule)
+        ret = basic_configure((), DummyMainModule)
         assert ret != 0
 
         configure_log = AEDIFIX_PYTEST_DIR / "configure.log"
@@ -271,7 +267,7 @@ class TestMain:
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
                 "-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING=",
-                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Release",
@@ -295,6 +291,7 @@ class TestMain:
 
         num_cpus = _detect_num_cpus()
         argv: Argv = ["--build-type=release"]
+        argv_str = shlex.join(argv)
         expected_spec: CMakeCommandSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
             "CMAKE_GENERATOR": test_info.generator,
@@ -306,8 +303,8 @@ class TestMain:
                 "-DAEDIFIX:BOOL=ON",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
-                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
-                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
+                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={argv_str}",
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Release",
@@ -331,6 +328,7 @@ class TestMain:
 
         num_cpus = _detect_num_cpus()
         argv: Argv = ["--build-type=relwithdebinfo"]
+        argv_str = shlex.join(argv)
         expected_spec: CMakeCommandSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
             "CMAKE_GENERATOR": test_info.generator,
@@ -342,8 +340,8 @@ class TestMain:
                 "-DAEDIFIX:BOOL=ON",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
-                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
-                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
+                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={argv_str}",
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo",
@@ -367,7 +365,8 @@ class TestMain:
         )
         test_info.pre_test()
 
-        flags = " ".join(
+        # This causes it to be joined as a string that is too long
+        flags = " ".join(  # noqa: FLY002
             [
                 "-O0",
                 "-g3",
@@ -395,6 +394,7 @@ class TestMain:
             f"--CFLAGS={flags}",
             f"--CXXFLAGS={flags}",
         ]
+        argv_str = shlex.join(argv)
         expected_spec: CMakeCommandSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
             "CMAKE_GENERATOR": test_info.generator,
@@ -406,8 +406,8 @@ class TestMain:
                 "-DAEDIFIX:BOOL=ON",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
-                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
-                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
+                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={argv_str}",
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",
                 "-DBUILD_SHARED_LIBS:BOOL=OFF",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=Debug",
@@ -441,6 +441,7 @@ class TestMain:
             "-DFOO=BAR",
             "-DBAZ=1234",
         ]
+        argv_str = shlex.join(argv)
         expected_spec: CMakeCommandSpec = {
             "CMAKE_EXECUTABLE": f"{test_info.cmake_exe}",
             "CMAKE_GENERATOR": test_info.generator,
@@ -452,8 +453,8 @@ class TestMain:
                 "-DAEDIFIX:BOOL=ON",
                 f"-DAEDIFIX_PYTEST_ARCH:STRING='{AEDIFIX_PYTEST_ARCH}'",
                 f"-DAEDIFIX_PYTEST_DIR:PATH='{AEDIFIX_PYTEST_DIR}'",
-                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={shlex.join(argv)}",  # noqa: E501
-                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",  # noqa: E501
+                f"-DDUMMYMAINMODULE_CONFIGURE_OPTIONS:STRING={argv_str}",
+                f"-DAEDIFIX_EXPORT_CONFIG_PATH:FILEPATH='{test_info.export_config_path}'",
                 "-DBUILD_SHARED_LIBS:BOOL=ON",
                 f"-DCMAKE_BUILD_PARALLEL_LEVEL:STRING={num_cpus}",
                 "-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo",

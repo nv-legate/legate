@@ -13,7 +13,6 @@ from __future__ import annotations
 import os
 import shutil
 from argparse import Action, ArgumentParser, Namespace
-from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
@@ -22,6 +21,8 @@ from ...util.argument_parser import ArgSpec, ConfigArgument
 from ..package import Package
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ...manager import ConfigurationManager
 
 
@@ -51,19 +52,19 @@ class CudaArchAction(Action):
         arch = []
         for sub_arch in in_arch.split(","):
             # support Turing, TURING, and, if the user is feeling spicy, tUrInG
-            sub_arch = sub_arch.strip().casefold()
-            if not sub_arch:
+            sub_arch_lo = sub_arch.strip().casefold()
+            if not sub_arch_lo:
                 # in_arch = "something,,something_else"
                 continue
-            arch.append(arch_map.get(sub_arch, sub_arch))
+            arch.append(arch_map.get(sub_arch_lo, sub_arch_lo))
         return arch
 
     def __call__(
         self,
-        parser: ArgumentParser,
+        parser: ArgumentParser,  # noqa: ARG002
         namespace: Namespace,
         values: str | Sequence[str] | None,
-        option_string: str | None = None,
+        option_string: str | None = None,  # noqa: ARG002
     ) -> None:
         if isinstance(values, (list, tuple)):
             str_values = ",".join(values)

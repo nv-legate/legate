@@ -9,9 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -26,14 +25,12 @@ PROJECT = Project()
 
 
 class Runner:
-
     # TODO: update when legate/gtest command split happens
     def test_create(self) -> None:
         pass
 
 
 class TestLegateRunner:
-
     def test_test_specs(self) -> None:
         c = Config(["test.py"], project=PROJECT)
         c.files = [Path("foo"), Path("bar")]
@@ -103,11 +100,12 @@ class TestLegateRunner:
         def test_with_cov_bin(self) -> None:
             cov_bin = "conda/envs/legate/bin/coverage"
             args = ["--cov-bin", cov_bin]
-            c = Config(["test.py"] + args, project=PROJECT)
+            c = Config(["test.py", *args], project=PROJECT)
             expected_result = [
                 "--run-mode=python",
                 cov_bin,
-            ] + c.other.cov_args.split()
+                *c.other.cov_args.split(),
+            ]
             r = m.LegateRunner()
             assert r.cov_args(c) == expected_result
 
@@ -115,23 +113,27 @@ class TestLegateRunner:
             cov_bin = "conda/envs/legate/bin/coverage"
             cov_args = "run -a"
             cov_src_path = "source_path"
-            args = (
-                ["--cov-bin", cov_bin]
-                + ["--cov-args", cov_args]
-                + ["--cov-src-path", cov_src_path]
-            )
-            c = Config(["test.py"] + args, project=PROJECT)
-            expected_result = (
-                ["--run-mode=python", cov_bin]
-                + cov_args.split()
-                + ["--source", cov_src_path]
-            )
+            args = [
+                "--cov-bin",
+                cov_bin,
+                "--cov-args",
+                cov_args,
+                "--cov-src-path",
+                cov_src_path,
+            ]
+            c = Config(["test.py", *args], project=PROJECT)
+            expected_result = [
+                "--run-mode=python",
+                cov_bin,
+                *cov_args.split(),
+                "--source",
+                cov_src_path,
+            ]
             r = m.LegateRunner()
             assert r.cov_args(c) == expected_result
 
 
 class TestGTestRunner:
-
     def test_test_specs(self) -> None:
         c = Config(["test.py"], project=PROJECT)
         c.gtest_tests = {Path("foo"): ["bar", "baz"]}
@@ -142,7 +144,6 @@ class TestGTestRunner:
         )
 
     class Test_cmd:
-
         def test_cmd_single(self) -> None:
             c = Config(["test.py"], project=PROJECT)
             r = m.GTestRunner()
@@ -281,7 +282,6 @@ class TestGTestRunner:
             )
 
     class Test_gtest_args:
-
         def test_defaults(self) -> None:
             r = m.GTestRunner()
             assert r.gtest_args(m.TestSpec(Path("foo"), "", "bar")) == [
@@ -293,36 +293,22 @@ class TestGTestRunner:
             r = m.GTestRunner()
             assert r.gtest_args(
                 m.TestSpec(Path("foo"), "", "bar"), color=True
-            ) == [
-                "foo",
-                "--gtest_filter=bar",
-                "--gtest_color=yes",
-            ]
+            ) == ["foo", "--gtest_filter=bar", "--gtest_color=yes"]
 
         def test_colors_disabled(self) -> None:
             r = m.GTestRunner()
             assert r.gtest_args(
                 m.TestSpec(Path("foo"), "", "bar"), color=False
-            ) == [
-                "foo",
-                "--gtest_filter=bar",
-            ]
+            ) == ["foo", "--gtest_filter=bar"]
 
         def test_gdb_enabled(self) -> None:
             r = m.GTestRunner()
             assert r.gtest_args(
                 m.TestSpec(Path("foo"), "", "bar"), gdb=True
-            ) == [
-                "foo",
-                "--gtest_filter=bar",
-                "--gtest_catch_exceptions=0",
-            ]
+            ) == ["foo", "--gtest_filter=bar", "--gtest_catch_exceptions=0"]
 
         def test_gdb_disabled(self) -> None:
             r = m.GTestRunner()
             assert r.gtest_args(
                 m.TestSpec(Path("foo"), "", "bar"), gdb=False
-            ) == [
-                "foo",
-                "--gtest_filter=bar",
-            ]
+            ) == ["foo", "--gtest_filter=bar"]

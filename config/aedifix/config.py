@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import re
 import sys
-from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from .base import Configurable
@@ -20,6 +19,8 @@ from .util.exception import UnsatisfiableConfigurationError
 from .util.utility import cmake_configure_file
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from .manager import ConfigurationManager
 
 
@@ -32,15 +33,13 @@ class ConfigFile(Configurable):
     """
 
     __slots__ = (
-        "_config_file_template",
         "_cmake_configure_file",
+        "_config_file_template",
         "_default_subst",
     )
 
     def __init__(
-        self,
-        manager: ConfigurationManager,
-        config_file_template: Path,
+        self, manager: ConfigurationManager, config_file_template: Path
     ) -> None:
         r"""Construct a Config.
 
@@ -101,9 +100,7 @@ class ConfigFile(Configurable):
             line = line.strip()
             if not line:
                 return False
-            if line.startswith(("//", "#")):
-                return False
-            return True
+            return not line.startswith(("//", "#"))
 
         cmake_variable_re: Final = re.compile(
             r"(?P<name>[A-Za-z_0-9\-]+):(?P<type>[A-Z]+)\s*=\s*(?P<value>.*)"
@@ -113,8 +110,7 @@ class ConfigFile(Configurable):
                 cmake_variable_re.match(line.lstrip())
                 for line in filter(keep_line, fd)
             )
-            defs = {m.group("name"): m.group("value") for m in line_gen if m}
-        return defs
+            return {m.group("name"): m.group("value") for m in line_gen if m}
 
     def _make_aedifix_substitutions(self, text: str) -> dict[str, str]:
         r"""Read the template file and find any aedifix-specific variable
@@ -148,9 +144,8 @@ class ConfigFile(Configurable):
             except KeyError:
                 pass
 
-            raise UnsatisfiableConfigurationError(
-                f"Unknown project variable: {var!r}"
-            )
+            msg = f"Unknown project variable: {var!r}"
+            raise UnsatisfiableConfigurationError(msg)
 
         ret = {}
         aedifix_vars = set(re.findall(r"@AEDIFIX_([^\s]+?)@", text))

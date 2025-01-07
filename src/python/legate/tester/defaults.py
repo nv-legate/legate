@@ -9,11 +9,14 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Default configuration values
+"""Default configuration values."""
 
-"""
+from __future__ import annotations
 
-from . import FeatureType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from . import FeatureType
 
 # -- core
 

@@ -10,41 +10,41 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+from . import util
 from .decorator import task
 from .invoker import VariantInvoker
 from .py_task import PyTask
 from .type import (
-    InputStore,
-    OutputStore,
-    ReductionStore,
-    InputArray,
-    OutputArray,
-    ReductionArray,
     ADD,
-    MUL,
+    AND,
     MAX,
     MIN,
+    MUL,
     OR,
-    AND,
     XOR,
+    InputArray,
+    InputStore,
+    OutputArray,
+    OutputStore,
+    ReductionArray,
+    ReductionStore,
 )
-from . import util
 
 __all__ = (
-    "task",
-    "VariantInvoker",
-    "PyTask",
-    "InputStore",
-    "OutputStore",
-    "ReductionStore",
-    "InputArray",
-    "OutputArray",
-    "ReductionArray",
     "ADD",
-    "MUL",
+    "AND",
     "MAX",
     "MIN",
+    "MUL",
     "OR",
-    "AND",
     "XOR",
+    "InputArray",
+    "InputStore",
+    "OutputArray",
+    "OutputStore",
+    "PyTask",
+    "ReductionArray",
+    "ReductionStore",
+    "VariantInvoker",
+    "task",
 )

@@ -10,15 +10,16 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from argparse import Namespace
-from collections.abc import Callable, Sequence
-from pathlib import Path
-from subprocess import CompletedProcess
 from typing import TYPE_CHECKING, ParamSpec, TypeVar
 
 from .logger import Logger
 
 if TYPE_CHECKING:
+    from argparse import Namespace
+    from collections.abc import Callable, Sequence
+    from pathlib import Path
+    from subprocess import CompletedProcess
+
     from .logger import AlignMethod
     from .manager import ConfigurationManager
 
@@ -27,7 +28,7 @@ _T = TypeVar("_T")
 
 
 class Configurable:
-    __slots__ = "_manager"
+    __slots__ = ("_manager",)
 
     def __init__(self, manager: ConfigurationManager) -> None:
         r"""Construct a Configurable.
@@ -115,7 +116,7 @@ class Configurable:
         )
 
     @Logger.log_passthrough
-    def log_divider(self, tee: bool = False, keep: bool = False) -> None:
+    def log_divider(self, *, tee: bool = False, keep: bool = False) -> None:
         r"""See `ConfigurationManager.log_divider`."""
         return self.manager.log_divider(tee=tee, keep=keep)
 
@@ -147,7 +148,7 @@ class Configurable:
 
     @Logger.log_passthrough
     def log_execute_command(
-        self, command: Sequence[_T], live: bool = False
+        self, command: Sequence[_T], *, live: bool = False
     ) -> CompletedProcess[str]:
         r"""See `ConfigurationManager.log_execute_command`."""
         return self.manager.log_execute_command(command, live=live)
@@ -156,14 +157,11 @@ class Configurable:
         r"""Setup a `Configurable` for later configuration. By default,
         does nothing.
         """
-        pass
 
     def configure(self) -> None:
         r"""Configure a `Configurable`, setting any options. By default, does
         nothing.
         """
-        pass
 
     def finalize(self) -> None:
         r"""Finalize a `Configurable`. By default, does nothing."""
-        pass

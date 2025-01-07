@@ -16,7 +16,7 @@ from argparse import SUPPRESS
 import pytest
 
 import legate.driver.args as m
-import legate.driver.defaults as defaults
+from legate.driver import defaults
 
 
 class TestParserDefaults:
@@ -204,7 +204,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("OMPI_COMM_WORLD_SIZE", "5")
         monkeypatch.setenv("OMPI_COMM_WORLD_LOCAL_SIZE", "3")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
 
         assert "OMPI_COMM_WORLD_SIZE=5" in str(e.value)
@@ -216,7 +216,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("OMPI_COMM_WORLD_SIZE", "5.2")
         monkeypatch.setenv("OMPI_COMM_WORLD_LOCAL_SIZE", "3")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "OMPI_COMM_WORLD_SIZE=5.2" in str(e.value)
         assert "OMPI_COMM_WORLD_LOCAL_SIZE=3" in str(e.value)
@@ -227,7 +227,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("OMPI_COMM_WORLD_SIZE", "5")
         monkeypatch.setenv("OMPI_COMM_WORLD_LOCAL_SIZE", "3.2")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "OMPI_COMM_WORLD_SIZE=5" in str(e.value)
         assert "OMPI_COMM_WORLD_LOCAL_SIZE=3.2" in str(e.value)
@@ -250,7 +250,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("MV2_COMM_WORLD_SIZE", "5")
         monkeypatch.setenv("MV2_COMM_WORLD_LOCAL_SIZE", "3")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "MV2_COMM_WORLD_SIZE=5" in str(e.value)
         assert "MV2_COMM_WORLD_LOCAL_SIZE=3" in str(e.value)
@@ -261,7 +261,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("MV2_COMM_WORLD_SIZE", "5.2w")
         monkeypatch.setenv("MV2_COMM_WORLD_LOCAL_SIZE", "3")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "MV2_COMM_WORLD_SIZE=5.2" in str(e.value)
         assert "MV2_COMM_WORLD_LOCAL_SIZE=3" in str(e.value)
@@ -272,7 +272,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("MV2_COMM_WORLD_SIZE", "5")
         monkeypatch.setenv("MV2_COMM_WORLD_LOCAL_SIZE", "3.2")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "MV2_COMM_WORLD_SIZE=5" in str(e.value)
         assert "MV2_COMM_WORLD_LOCAL_SIZE=3.2" in str(e.value)
@@ -311,7 +311,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("SLURM_TASKS_PER_NODE", "3(x2),10")
         monkeypatch.setenv("SLURM_JOB_NUM_NODES", "2")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "SLURM_TASKS_PER_NODE=3(x2),10" in str(e.value)
 
@@ -364,7 +364,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("SLURM_NTASKS", "5")
         monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "SLURM_NTASKS=5" in str(e.value)
         assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
@@ -375,7 +375,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("SLURM_NTASKS", "5")
         monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3.2")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "SLURM_NTASKS=5" in str(e.value)
         assert "SLURM_JOB_NUM_NODES=3.2" in str(e.value)
@@ -386,7 +386,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("SLURM_NTASKS", "5.2")
         monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "SLURM_NTASKS=5.2" in str(e.value)
         assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
@@ -397,7 +397,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("SLURM_NTASKS", "5")
         monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "SLURM_NTASKS=5" in str(e.value)
         assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
@@ -408,7 +408,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("SLURM_NPROCS", "5.2")
         monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "SLURM_NPROCS=5.2" in str(e.value)
         assert "SLURM_JOB_NUM_NODES=3" in str(e.value)
@@ -419,7 +419,7 @@ class TestMultiNodeDefaults:
         monkeypatch.setenv("SLURM_NPROCS", "5")
         monkeypatch.setenv("SLURM_JOB_NUM_NODES", "3")
 
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as e:  # noqa: PT011
             m.detect_multi_node_defaults()
         assert "SLURM_NPROCS=5" in str(e.value)
         assert "SLURM_JOB_NUM_NODES=3" in str(e.value)

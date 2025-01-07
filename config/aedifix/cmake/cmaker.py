@@ -12,16 +12,17 @@ from __future__ import annotations
 
 import json
 import shlex
-from collections.abc import Sequence
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
-from ..package.main_package import DebugConfigureValue
 from ..util.exception import CMakeConfigureError, WrongOrderError
 from .cmake_flags import CMakeList
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from pathlib import Path
+
     from ..manager import ConfigurationManager
+    from ..package.main_package import DebugConfigureValue
     from .cmake_flags import CMakeFlagBase
 
     _T = TypeVar("_T")
@@ -70,17 +71,17 @@ class CMaker:
 
         prev_reg = self._args[name]
         if not isinstance(prev_reg, kind):
-            raise ValueError(
+            msg = (
                 f"Variable {name} already registered as kind "
                 f"{type(prev_reg)}, cannot overwrite it!"
             )
+            raise ValueError(msg)  # noqa: TRY004
         manager.log(f"{name} already registered as kind {kind}")
 
     def _ensure_registered(self, name: str) -> None:
         if name not in self._args:
-            raise WrongOrderError(
-                f"No variable with name {name!r} has been registered"
-            )
+            msg = f"No variable with name {name!r} has been registered"
+            raise WrongOrderError(msg)
 
     def set_value(
         self, manager: ConfigurationManager, name: str, value: _T
@@ -161,7 +162,8 @@ class CMaker:
 
         cmake_var = self._args[name]
         if not isinstance(cmake_var, CMakeList):
-            raise TypeError(f"Cannot append to {type(cmake_var)}")
+            msg = f"Cannot append to {type(cmake_var)}"
+            raise TypeError(msg)
         cur_values = cmake_var.value
         # Need "was_none" since the getter/setter for cmake_var may perform a
         # copy on assignment, so cmake_var.value = cur_values = [] wouldn't
@@ -212,9 +214,8 @@ class CMaker:
     def _load_cmake_export_conf(self, manager: ConfigurationManager) -> None:
         conf_path = manager.project_export_config_path
         if not conf_path.is_file():
-            raise CMakeConfigureError(
-                f"CMake project failed to emit {conf_path}"
-            )
+            m = f"CMake project failed to emit {conf_path}"
+            raise CMakeConfigureError(m)
 
         config = json.loads(manager.project_export_config_path.read_text())
         for key, value in config.items():
@@ -275,7 +276,7 @@ class CMaker:
             generator.value,
         ]
 
-        def create_cmake_commands(quote: bool) -> list[str]:
+        def create_cmake_commands(*, quote: bool) -> list[str]:
             # These are the commands should go in the cmake_command.txt since
             # they are general for any invocation
             ret = ["--log-context", "--log-level=DEBUG"]
@@ -291,7 +292,7 @@ class CMaker:
                     f"-D{manager.project_dir_name}:PATH="
                     f"'{manager.project_dir}'",
                     f"-D{manager.project_name_upper}_CONFIGURE_OPTIONS:STRING="
-                    f"{shlex.join(manager._orig_argv)}",
+                    f"{shlex.join(manager._orig_argv)}",  # noqa: SLF001
                 )
             )
             export_vars = ";".join(arg.name for arg in self._args.values())
@@ -340,9 +341,8 @@ class CMaker:
         try:
             manager.log_execute_command(cmake_command, live=True)
         except Exception as e:
-            raise CMakeConfigureError(
-                f"CMake failed to configure {manager.project_name}"
-            ) from e
+            msg = f"CMake failed to configure {manager.project_name}"
+            raise CMakeConfigureError(msg) from e
 
         manager.log_divider(tee=True)
         self._load_cmake_export_conf(manager)

@@ -12,12 +12,15 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from types import ModuleType
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ...util.load_module import load_module_from_path
 from ..fixtures import dummy_module
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 
 @pytest.fixture
@@ -42,8 +45,7 @@ class TestLoadModule:
             == dummy_module.function.__code__.co_filename
         )
         assert (
-            mod.function.MAGIC_NUMBER
-            == dummy_module.function.MAGIC_NUMBER  # type: ignore[attr-defined]
+            mod.function.MAGIC_NUMBER == dummy_module.function.MAGIC_NUMBER  # type: ignore[attr-defined]
         )
         assert mod.Class.MAGIC_ATTR == dummy_module.Class.MAGIC_ATTR
 
@@ -58,7 +60,7 @@ class TestLoadModule:
     def test_load_module_from_path_bad(self) -> None:
         path = Path("/foo/bar/baz")
         assert not path.exists(), "Well well well..."
-        modules_cpy = {k: v for k, v in sys.modules.items()}
+        modules_cpy = dict(sys.modules.items())
         with pytest.raises(
             (ImportError, FileNotFoundError),
             match=rf"\[Errno \d+\] No such file or directory: '{path}'",

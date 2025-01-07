@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -12,8 +11,11 @@
 from __future__ import annotations
 
 import pydoc
-from pathlib import Path
-from types import ModuleType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from types import ModuleType
 
 
 def load_module_from_path(path: Path | str) -> ModuleType:
@@ -46,4 +48,5 @@ def load_module_from_path(path: Path | str) -> ModuleType:
     try:
         return pydoc.importfile(str(path))
     except pydoc.ErrorDuringImport as edi:
-        raise ImportError(f"Failed to import {path}") from edi
+        msg = f"Failed to import {path}"
+        raise ImportError(msg) from edi

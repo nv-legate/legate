@@ -10,8 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from types import ModuleType
-from typing import Any, Protocol, TypeAlias
+from typing import TYPE_CHECKING, Any, Protocol, TypeAlias
 
 try:
     import cupy  # type: ignore[import-not-found]
@@ -33,6 +32,9 @@ from legate.core.task import (
     task,
 )
 
+if TYPE_CHECKING:
+    from types import ModuleType
+
 
 class HasArrayInterface(Protocol):
     @property
@@ -49,7 +51,8 @@ ArrayConvertible: TypeAlias = HasArrayInterface | ArrayLike
 
 def check_cupy(exc: Exception) -> None:
     if cupy is None:
-        raise RuntimeError("Need to install cupy for GPU variant") from exc
+        msg = "Need to install cupy for GPU variant"
+        raise RuntimeError(msg) from exc
 
 
 def asarray(alloc: ArrayConvertible) -> NDArray[Any]:
@@ -156,10 +159,7 @@ def repeat_task(
     out_arr[:] = store_arr
 
 
-def basic_image_task(
-    func_store: InputStore,
-    range_store: InputStore,
-) -> None:
+def basic_image_task(func_store: InputStore, range_store: InputStore) -> None:
     lib = numpy_or_cupy(func_store.get_inline_allocation())
 
     buf = lib.asarray(func_store.get_inline_allocation())

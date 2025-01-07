@@ -12,16 +12,20 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
 import pytest
 
 import legate.driver.launcher as m
 from legate.util.shared_args import LAUNCHERS
 from legate.util.system import System
-from legate.util.types import LauncherType
 
 from ...util import powerset_nonempty
-from .util import GenConfig, GenObjs
+
+if TYPE_CHECKING:
+    from legate.util.types import LauncherType
+
+    from .util import GenConfig, GenObjs
 
 SYSTEM = System()
 
@@ -112,7 +116,7 @@ class TestLauncher__eq__:
 
         launcher = m.Launcher.create(config, SYSTEM)
 
-        assert launcher == launcher
+        assert launcher == launcher  # noqa: PLR0124
 
     def test_identical_config(
         self, genconfig: GenConfig, launch: LauncherType
@@ -247,7 +251,7 @@ class TestLauncherEnv:
         config = genconfig(["--launcher", launch])
 
         with pytest.raises(RuntimeError):
-            m.Launcher.create(config, system).env
+            _ = m.Launcher.create(config, system).env
 
     def test_gasnet_trace(
         self, genconfig: GenConfig, launch: LauncherType
@@ -303,7 +307,10 @@ class TestSimpleLauncher:
     def test_multi_rank_bad(self, genconfig: GenConfig) -> None:
         config = genconfig([], multi_rank=(2, 2))
 
-        msg = "Could not detect rank ID on multi-rank run with no --launcher provided."  # noqa
+        msg = (
+            "Could not detect rank ID on multi-rank "
+            "run with no --launcher provided."
+        )
         with pytest.raises(RuntimeError, match=msg):
             m.Launcher.create(config, SYSTEM)
 
@@ -331,41 +338,67 @@ class TestSimpleLauncher:
 
 class TestMPILauncher:
     XARGS1 = (
-        ()
-        + ("-x", "DEFAULTS_PATH")
-        + ("-x", "XDG_SESSION_PATH")
-        + ("-x", "MANDATORY_PATH")
-        + ("-x", "XDG_SEAT_PATH")
-        + ("-x", "PATH")
-        + ("-x", "PKG_CONFIG_PATH")
-        + ("-x", "CONDA_EXE")
-        + ("-x", "CONDA_PYTHON_EXE")
-        + ("-x", "CONDA_SHLVL")
-        + ("-x", "CONDA_PREFIX")
-        + ("-x", "CONDA_DEFAULT_ENV")
-        + ("-x", "CONDA_PROMPT_MODIFIER")
-        + ("-x", "NODE_BIN_PATH")
-        + ("-x", "NODE_INCLUDE_PATH")
-        + ("-x", "CONDA_PREFIX_1")
-        + ("-x", "CONDA_BACKUP_HOST")
-        + ("-x", "CONDA_TOOLCHAIN_HOST")
-        + ("-x", "CONDA_TOOLCHAIN_BUILD")
-        + ("-x", "CMAKE_PREFIX_PATH")
-        + ("-x", "CONDA_BUILD_SYSROOT")
-        + ("-x", "PYTHONDONTWRITEBYTECODE")
-        + ("-x", "PYTHONPATH")
-        + ("-x", "NCCL_LAUNCH_MODE")
-        + ("-x", "GASNET_MPI_THREAD")
-        + ("-x", "LD_LIBRARY_PATH")
+        "-x",
+        "DEFAULTS_PATH",
+        "-x",
+        "XDG_SESSION_PATH",
+        "-x",
+        "MANDATORY_PATH",
+        "-x",
+        "XDG_SEAT_PATH",
+        "-x",
+        "PATH",
+        "-x",
+        "PKG_CONFIG_PATH",
+        "-x",
+        "CONDA_EXE",
+        "-x",
+        "CONDA_PYTHON_EXE",
+        "-x",
+        "CONDA_SHLVL",
+        "-x",
+        "CONDA_PREFIX",
+        "-x",
+        "CONDA_DEFAULT_ENV",
+        "-x",
+        "CONDA_PROMPT_MODIFIER",
+        "-x",
+        "NODE_BIN_PATH",
+        "-x",
+        "NODE_INCLUDE_PATH",
+        "-x",
+        "CONDA_PREFIX_1",
+        "-x",
+        "CONDA_BACKUP_HOST",
+        "-x",
+        "CONDA_TOOLCHAIN_HOST",
+        "-x",
+        "CONDA_TOOLCHAIN_BUILD",
+        "-x",
+        "CMAKE_PREFIX_PATH",
+        "-x",
+        "CONDA_BUILD_SYSROOT",
+        "-x",
+        "PYTHONDONTWRITEBYTECODE",
+        "-x",
+        "PYTHONPATH",
+        "-x",
+        "NCCL_LAUNCH_MODE",
+        "-x",
+        "GASNET_MPI_THREAD",
+        "-x",
+        "LD_LIBRARY_PATH",
     )
 
     # some invocations have LEGATE_NEED_NETWORK in between these
 
     XARGS2 = (
-        ()
-        + ("-x", "LEGATE_MAX_DIM")
-        + ("-x", "LEGATE_MAX_FIELDS")
-        + ("-x", "REALM_BACKTRACE")
+        "-x",
+        "LEGATE_MAX_DIM",
+        "-x",
+        "LEGATE_MAX_FIELDS",
+        "-x",
+        "REALM_BACKTRACE",
     )
 
     def test_single_rank(self, genconfig: GenConfig) -> None:
@@ -377,9 +410,18 @@ class TestMPILauncher:
 
         # TODO (bv) -x env args currently too fragile to test
         assert launcher.cmd[:10] == (
-            ("mpirun",)
-            + ("-n", "1", "--npernode", "1", "--bind-to", "none")
-            + ("--mca", "mpi_warn_on_fork", "0")
+            (
+                "mpirun",
+                "-n",
+                "1",
+                "--npernode",
+                "1",
+                "--bind-to",
+                "none",
+                "--mca",
+                "mpi_warn_on_fork",
+                "0",
+            )
             # + self.XARGS1
             # + self.XARGS2
         )
@@ -406,9 +448,18 @@ class TestMPILauncher:
 
         # TODO (bv) -x env args currently too fragile to test
         assert launcher.cmd[:10] == (
-            ("mpirun",)
-            + ("-n", "1", "--npernode", "1", "--bind-to", "none")
-            + ("--mca", "mpi_warn_on_fork", "0")
+            (
+                "mpirun",
+                "-n",
+                "1",
+                "--npernode",
+                "1",
+                "--bind-to",
+                "none",
+                "--mca",
+                "mpi_warn_on_fork",
+                "0",
+            )
             # + self.XARGS1
             # + self.XARGS2
             # + ("foo", "bar")
@@ -437,9 +488,18 @@ class TestMPILauncher:
 
         # TODO (bv) -x env args currently too fragile to test
         assert launcher.cmd[:10] == (
-            ("mpirun",)
-            + ("-n", "200", "--npernode", "2", "--bind-to", "none")
-            + ("--mca", "mpi_warn_on_fork", "0")
+            (
+                "mpirun",
+                "-n",
+                "200",
+                "--npernode",
+                "2",
+                "--bind-to",
+                "none",
+                "--mca",
+                "mpi_warn_on_fork",
+                "0",
+            )
             # + self.XARGS1
             # + ("-x", "LEGATE_NEED_NETWORK")
             # + self.XARGS2
@@ -478,9 +538,18 @@ class TestMPILauncher:
 
         # TODO (bv) -x env args currently too fragile to test
         assert launcher.cmd[:10] == (
-            ("mpirun",)
-            + ("-n", "200", "--npernode", "2", "--bind-to", "none")
-            + ("--mca", "mpi_warn_on_fork", "0")
+            (
+                "mpirun",
+                "-n",
+                "200",
+                "--npernode",
+                "2",
+                "--bind-to",
+                "none",
+                "--mca",
+                "mpi_warn_on_fork",
+                "0",
+            )
             # + self.XARGS1
             # + ("-x", "LEGATE_NEED_NETWORK")
             # + self.XARGS2
@@ -500,9 +569,21 @@ class TestJSRunLauncher:
 
         assert launcher.detected_rank_id == "0"
         assert launcher.cmd == (
-            ("jsrun",)
-            + ("-n", "1", "-r", "1", "-a", "1")
-            + ("-c", "ALL_CPUS", "-g", "ALL_GPUS", "-b", "none")
+            (
+                "jsrun",
+                "-n",
+                "1",
+                "-r",
+                "1",
+                "-a",
+                "1",
+                "-c",
+                "ALL_CPUS",
+                "-g",
+                "ALL_GPUS",
+                "-b",
+                "none",
+            )
         )
 
     def test_single_rank_launcher_extra(self, genconfig: GenConfig) -> None:
@@ -521,10 +602,23 @@ class TestJSRunLauncher:
 
         assert launcher.detected_rank_id == "0"
         assert launcher.cmd == (
-            ("jsrun",)
-            + ("-n", "1", "-r", "1", "-a", "1")
-            + ("-c", "ALL_CPUS", "-g", "ALL_GPUS", "-b", "none")
-            + ("foo", "bar")
+            (
+                "jsrun",
+                "-n",
+                "1",
+                "-r",
+                "1",
+                "-a",
+                "1",
+                "-c",
+                "ALL_CPUS",
+                "-g",
+                "ALL_GPUS",
+                "-b",
+                "none",
+                "foo",
+                "bar",
+            )
         )
 
     @pytest.mark.parametrize("rank_var", m.RANK_ENV_VARS)
@@ -544,9 +638,21 @@ class TestJSRunLauncher:
 
         assert launcher.detected_rank_id == "123"
         assert launcher.cmd == (
-            ("jsrun",)
-            + ("-n", "100", "-r", "1", "-a", "2")
-            + ("-c", "ALL_CPUS", "-g", "ALL_GPUS", "-b", "none")
+            (
+                "jsrun",
+                "-n",
+                "100",
+                "-r",
+                "1",
+                "-a",
+                "2",
+                "-c",
+                "ALL_CPUS",
+                "-g",
+                "ALL_GPUS",
+                "-b",
+                "none",
+            )
         )
 
     @pytest.mark.parametrize("rank_var", m.RANK_ENV_VARS)
@@ -576,10 +682,23 @@ class TestJSRunLauncher:
 
         assert launcher.detected_rank_id == "123"
         assert launcher.cmd == (
-            ("jsrun",)
-            + ("-n", "100", "-r", "1", "-a", "2")
-            + ("-c", "ALL_CPUS", "-g", "ALL_GPUS", "-b", "none")
-            + ("foo", "bar")
+            (
+                "jsrun",
+                "-n",
+                "100",
+                "-r",
+                "1",
+                "-a",
+                "2",
+                "-c",
+                "ALL_CPUS",
+                "-g",
+                "ALL_GPUS",
+                "-b",
+                "none",
+                "foo",
+                "bar",
+            )
         )
 
 
@@ -623,7 +742,7 @@ class TestSRunLauncher:
     def test_single_rank_debugging(
         self, genconfig: GenConfig, debugger: str
     ) -> None:
-        config = genconfig(["--launcher", "srun"] + list(debugger))
+        config = genconfig(["--launcher", "srun", *list(debugger)])
 
         launcher = m.Launcher.create(config, SYSTEM)
 
@@ -707,7 +826,7 @@ class TestSRunLauncher:
         monkeypatch.setenv(name, "123")
 
         config = genconfig(
-            ["--launcher", "srun"] + list(debugger), multi_rank=(100, 2)
+            ["--launcher", "srun", *list(debugger)], multi_rank=(100, 2)
         )
         system = System()
         launcher = m.Launcher.create(config, system)

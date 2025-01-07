@@ -15,9 +15,11 @@
 from __future__ import annotations
 
 import functools
-import os.path
+import contextlib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final, Literal, cast
+
+from typing_extensions import Self
 
 from ..._lib.experimental.io.kvikio.kvikio_interface import from_file, to_file
 
@@ -29,12 +31,12 @@ if TYPE_CHECKING:
 
 
 class FileHandle:
-    """File handle for distributed IO"""
+    """File handle for distributed IO."""
 
     supported_open_flags: Final = {"r", "r+", "w", "w+", "b"}
 
     def __init__(self, file: Path | str, flags: OpenFlag = "r"):
-        """Open file for distributed IO
+        """Open file for distributed IO.
 
         The file is opened in the constructor immediately and not in a
         Legate task. This means that re-opening a file that was created
@@ -65,38 +67,41 @@ class FileHandle:
         """
         flags = cast(OpenFlag, flags.replace("b", ""))
         if flags not in self.supported_open_flags:
-            raise NotImplementedError(f"Unsupported flags: '{flags}'")
+            msg = f"Unsupported flags: '{flags}'"
+            raise NotImplementedError(msg)
         self._closed = False
-        self._filepath = str(file)
+        self._filepath = Path(file)
         self._flags = flags
 
         # We open the file here in order to create or truncate files
         # opened in "w" mode, which is required because ``TaskOpCode.WRITE``
         # always opens the file in "r+" mode.
-        with open(self._filepath, mode=flags):
+        with self._filepath.open(mode=flags):
             pass
 
     @functools.cached_property
     def size(self) -> int:
-        """File size in bytes"""
-        return os.path.getsize(self._filepath)
+        """File size in bytes."""
+        return self._filepath.stat().st_size
 
     def close(self) -> None:
-        """Deregister the file and close the file"""
+        """Deregister the file and close the file."""
         self._closed = True
 
     @property
-    def closed(self) -> bool:
+    def closed(self) -> bool:  # noqa: D102
         return self._closed
 
-    def __enter__(self) -> FileHandle:
+    def __enter__(self) -> Self:  # noqa: D105
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    def __exit__(  # noqa: D105
+        self, _exc_type: Any, _exc_val: Any, _exc_tb: Any
+    ) -> None:
         self.close()
 
     def read(self, ty: Type) -> LogicalArray:
-        r"""Reads specified buffer from the file into device or host memory
+        r"""Reads specified buffer from the file into device or host memory.
 
         Parameters
         ----------
@@ -109,13 +114,13 @@ class FileHandle:
             The array read from disk.
         """
         if self._closed:
-            raise RuntimeError("file is closed")
+            msg = "file is closed"
+            raise RuntimeError(msg)
         if "r" not in self._flags and "+" not in self._flags:
-            raise ValueError(
-                f"Cannot read a file opened with flags={self._flags}"
-            )
+            msg = f"Cannot read a file opened with flags={self._flags}"
+            raise ValueError(msg)
 
-        return from_file(self._filepath, ty)
+        return from_file(str(self._filepath), ty)
 
     def write(self, array: LogicalArray) -> None:
         r"""Writes specified buffer from device or host memory to the file.
@@ -130,14 +135,12 @@ class FileHandle:
             The array to write.
         """
         if self._closed:
-            raise RuntimeError("file is closed")
+            msg = "file is closed"
+            raise RuntimeError(msg)
         if "w" not in self._flags and "+" not in self._flags:
-            raise ValueError(
-                f"Cannot write to a file opened with flags={self._flags}"
-            )
-        try:
+            msg = f"Cannot write to a file opened with flags={self._flags}"
+            raise ValueError(msg)
+        with contextlib.suppress(AttributeError):
             del self.size  # clear the cached file size (if it exist)
-        except AttributeError:
-            pass
 
-        to_file(self._filepath, array)
+        to_file(str(self._filepath), array)

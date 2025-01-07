@@ -10,21 +10,22 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import itertools
 import math
-from pathlib import Path
+import itertools
 from typing import TYPE_CHECKING
 
-import fsspec  # type: ignore
-import h5py  # type: ignore
-import zarr  # type: ignore
-from kerchunk.hdf import SingleHdf5ToZarr  # type: ignore
+import h5py  # type: ignore # noqa: PGH003
+import zarr  # type: ignore # noqa: PGH003
+import fsspec  # type: ignore # noqa: PGH003
+from kerchunk.hdf import SingleHdf5ToZarr  # type: ignore # noqa: PGH003
 
 from ..core import Type
 from ..core.experimental.io.tile import from_tiles_by_offsets
 from ..core.experimental.io.zarr import _get_padded_shape
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from ..core import LogicalArray
 
 
@@ -36,7 +37,7 @@ from ._lib.hdf5.hdf5_interface import from_file  # noqa: F401
 def _get_virtual_dataset_names(filepath: str) -> set[str]:
     ret = set()
 
-    def visitor(name: str, obj: h5py.Dataset | h5py.Group) -> None:  # type: ignore[no-any-unimported] # noqa: E501
+    def visitor(name: str, obj: h5py.Dataset | h5py.Group) -> None:  # type: ignore[no-any-unimported]
         if getattr(obj, "is_virtual", False):
             ret.add(name)
 
@@ -47,7 +48,7 @@ def _get_virtual_dataset_names(filepath: str) -> set[str]:
 
 
 def kerchunk_read(filepath: Path | str, dataset_name: str) -> LogicalArray:
-    r"""Read an HDF5 array from disk using Kerchunk and KvikIO
+    r"""Read an HDF5 array from disk using Kerchunk and KvikIO.
 
     We use Kerchunk's ``SingleHdf5ToZarr`` to find the data chunks embedded
     in the hdf5 file. If it fails for any reason, this function fails as well.
@@ -78,18 +79,31 @@ def kerchunk_read(filepath: Path | str, dataset_name: str) -> LogicalArray:
     # Load annotations
     zarr_group = zarr.open(fsspec.get_mapper("reference://", fo=annotations))
     if not isinstance(zarr_group, zarr.Group):
-        raise ValueError("root of the HDF5 file must be a dataset")
+        msg = (
+            "root of the HDF5 file must be a dataset, "
+            f"found {type(zarr_group)}"
+        )
+        raise TypeError(msg)
 
     # Make sure `dataset_name` refer to an array and not a dataset
     zarr_ary = zarr_group[dataset_name]
     if isinstance(zarr_ary, zarr.Group):
-        raise ValueError(
+        # In this case, the user is giving us a string name for the dataset, so
+        # the "kind" of error here is that the name of the dataset is not
+        # correct. We detect this by way of a type error (the returned object
+        # is not the same type that we expect), but the actual error is that
+        # the value of the thing the user passed to us is wrong.
+        #
+        # This is why we silence ruff below.
+        msg = (
             "dataset_name must reference an array, please use the full "
             f"path to an array in the dataset: {list(zarr_ary.arrays())}"
         )
+        raise ValueError(msg)  # noqa: TRY004
 
     if zarr_ary.compressor is not None:
-        raise NotImplementedError("compressor isn't supported")
+        msg = "compressor isn't supported"
+        raise NotImplementedError(msg)
 
     # Extract offset and bytes for each chunk
     refs = annotations["refs"]
@@ -100,14 +114,13 @@ def kerchunk_read(filepath: Path | str, dataset_name: str) -> LogicalArray:
         for s, c in zip(zarr_ary.shape, zarr_ary.chunks)
     )
     for chunk_coord in itertools.product(*dims):
-        key = zarr_ary._chunk_key(chunk_coord)
+        key = zarr_ary._chunk_key(chunk_coord)  # noqa: SLF001
         try:
             _, offset, nbytes = refs[key]
         except KeyError:
             if dataset_name in _get_virtual_dataset_names(filepath):
-                raise NotImplementedError(
-                    f"Virtual dataset isn't supported: {dataset_name}"
-                )
+                msg = f"Virtual dataset isn't supported: {dataset_name}"
+                raise NotImplementedError(msg)
             raise
         offsets.append(offset)
         assert tile_nbytes == nbytes

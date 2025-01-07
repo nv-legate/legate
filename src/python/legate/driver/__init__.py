@@ -15,8 +15,10 @@ from .driver import LegateDriver
 from .launcher import Launcher
 
 
-def main() -> int:
-    import os, shlex, sys
+def main() -> int:  # noqa: D103
+    import os
+    import sys
+    import shlex
 
     from .main import legate_main as _main
 

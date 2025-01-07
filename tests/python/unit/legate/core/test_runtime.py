@@ -11,8 +11,9 @@
 
 from __future__ import annotations
 
-import atexit
+import sys
 import json
+import atexit
 from subprocess import PIPE, STDOUT, run
 
 import pytest
@@ -128,9 +129,10 @@ def test_shutdown_callback(test_case: str) -> None:
     except ModuleNotFoundError:
         cov_args = []
     proc = run(
-        ["python", "-m"]
-        + cov_args
-        + [
+        [
+            sys.executable,
+            "-m",
+            *cov_args,
             "pytest",
             __file__,
             "-k",
@@ -139,6 +141,7 @@ def test_shutdown_callback(test_case: str) -> None:
         ],
         stdout=PIPE,
         stderr=STDOUT,
+        check=False,
     )
     assert not proc.returncode, proc.stdout
 
@@ -193,6 +196,4 @@ class TestRuntimeError:
 
 
 if __name__ == "__main__":
-    import sys
-
     sys.exit(pytest.main(sys.argv))

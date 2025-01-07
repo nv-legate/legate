@@ -9,9 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 import pytest
@@ -39,7 +38,7 @@ def test_default() -> None:
 
 class TestSingleRank:
     @pytest.mark.parametrize(
-        "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
+        ("shard", "expected"), [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
         c = Config([], project=PROJECT)
@@ -86,11 +85,7 @@ class TestSingleRank:
         assert stage.spec.workers == 12
         assert (
             stage.spec.shards
-            == [
-                Shard([(0, 1)]),
-                Shard([(2, 3)]),
-                Shard([(4, 5)]),
-            ]
+            == [Shard([(0, 1)]), Shard([(2, 3)]), Shard([(4, 5)])]
             * stage.spec.workers
         )
 
@@ -131,7 +126,7 @@ class TestSingleRank:
     def test_spec_with_verbose(self) -> None:
         args = ["test.py", "--gpus", "2"]
         c = Config(args, project=PROJECT)
-        cv = Config(args + ["--verbose"], project=PROJECT)
+        cv = Config([*args, "--verbose"], project=PROJECT)
         s = FakeSystem()
 
         spec, vspec = m.GPU(c, s).spec, m.GPU(cv, s).spec
@@ -140,7 +135,7 @@ class TestSingleRank:
 
 class TestMultiRank:
     @pytest.mark.parametrize(
-        "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
+        ("shard", "expected"), [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
         c = Config([], project=PROJECT)
@@ -180,12 +175,7 @@ class TestMultiRank:
         stage = m.GPU(c, s)
         assert stage.spec.workers == 8
         assert (
-            stage.spec.shards
-            == [
-                Shard([(0,), (1,)]),
-                Shard([(2,), (3,)]),
-            ]
-            * 4
+            stage.spec.shards == [Shard([(0,), (1,)]), Shard([(2,), (3,)])] * 4
         )
 
     def test_spec_with_gpus_2(self) -> None:
@@ -205,10 +195,4 @@ class TestMultiRank:
         s = FakeSystem(gpus=4)
         stage = m.GPU(c, s)
         assert stage.spec.workers == 4
-        assert (
-            stage.spec.shards
-            == [
-                Shard([(0, 1), (2, 3)]),
-            ]
-            * 4
-        )
+        assert stage.spec.shards == [Shard([(0, 1), (2, 3)])] * 4

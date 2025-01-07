@@ -12,17 +12,20 @@ from __future__ import annotations
 
 import shutil
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 from pathlib import Path
 from shlex import quote as shlex_quote
 from types import GeneratorType
-from typing import Any, Final, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 _T = TypeVar("_T")
 
 
 class CMakeFlagBase(ABC):
-    __slots__ = "_name", "_value", "_prefix", "_type"
+    __slots__ = "_name", "_prefix", "_type", "_value"
 
     _name: Final[str]
     _prefix: Final[str]
@@ -35,7 +38,7 @@ class CMakeFlagBase(ABC):
         prefix: str = "-D",
         type_str: str = "STRING",
     ) -> None:
-        r"""Construct a CMakeFlagBase
+        r"""Construct a CMakeFlagBase.
 
         Parameters
         ----------
@@ -136,7 +139,7 @@ class CMakeFlagBase(ABC):
         unhandled types *must* raise a TypeError, and any failure to sanitized
         handled types *must* raise a ValueError.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def canonicalize(self) -> CMakeFlagBase | None:
         r"""Canonicalize the CMake variable.
@@ -169,7 +172,7 @@ class CMakeFlagBase(ABC):
         val = self.value
         return (val is not None), val
 
-    def to_command_line(self, quote: bool = False) -> str:
+    def to_command_line(self, *, quote: bool = False) -> str:
         r"""Create a command line friendly representation of the CMake
         variable.
 
@@ -196,10 +199,11 @@ class CMakeFlagBase(ABC):
         """
         val = self.value
         if val is None:
-            raise ValueError(
+            msg = (
                 f'Cannot convert "{self.name}" to command-line, '
                 "have empty value"
             )
+            raise ValueError(msg)
         if quote:
             val = shlex_quote(str(val))
         return f"{self.prefix}{self.name}:{self.type}={val}"
@@ -241,10 +245,10 @@ class CMakeList(CMakeFlagBase):
 
     def _canonicalize_cb(self) -> tuple[bool, list[str] | None]:
         if (val := self.value) is not None:
-            val = [v for v in map(lambda x: str(x).strip(), val) if v]
+            val = [v for v in (str(x).strip() for x in val) if v]
         return bool(val), val
 
-    def to_command_line(self, quote: bool = False) -> str:
+    def to_command_line(self, *, quote: bool = False) -> str:
         if (val := self.value) is None:
             val = []
         val = " ".join(map(str, val))
@@ -273,10 +277,12 @@ class CMakeBool(CMakeFlagBase):
                 case "on" | "true" | "yes" | "t" | "1":
                     return "ON"
                 case _:
-                    raise ValueError(f"Invalid boolean value {value}")
+                    m = f"Invalid boolean value {value}"
+                    raise ValueError(m)
         if isinstance(value, (bool, int)):
             if isinstance(value, int) and value not in {0, 1}:
-                raise ValueError(f"value: {value} not in [0, 1]")
+                msg = f"value: {value} not in [0, 1]"
+                raise ValueError(msg)
             return "ON" if value else "OFF"
         raise TypeError(type(value))
 
@@ -285,7 +291,7 @@ class CMakeInt(CMakeFlagBase):
     def __init__(
         self,
         name: str,
-        value: int | bool | str | float | None = None,
+        value: int | bool | str | float | None = None,  # noqa: PYI041
         prefix: str = "-D",
     ) -> None:
         super().__init__(name=name, value=value, prefix=prefix)
@@ -350,13 +356,16 @@ class CMakeExecutable(CMakeFlagBase):
             value = Path(value)
         if value.exists():
             if value.is_dir():
-                raise ValueError(f"Got a directory as an executable: {value}")
+                msg = f"Got a directory as an executable: {value}"
+                raise ValueError(msg)
         elif valtmp := shutil.which(value):
             value = Path(valtmp)
         return value
 
 
 class _CMakeVar(str):
+    __slots__ = ("__cmake_type", "__cmake_type_args", "__cmake_type_kwargs")
+
     def _set_cmake_type(
         self,
         ty: type[CMakeFlagBase],
@@ -377,5 +386,5 @@ def CMAKE_VARIABLE(
     name: str, ty: type[CMakeFlagBase], *args: Any, **kwargs: Any
 ) -> _CMakeVar:
     ret = _CMakeVar(name)
-    ret._set_cmake_type(ty, args, kwargs)
+    ret._set_cmake_type(ty, args, kwargs)  # noqa: SLF001
     return ret

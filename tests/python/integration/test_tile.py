@@ -14,21 +14,25 @@
 #
 from __future__ import annotations
 
-import math
 import re
 import sys
-from pathlib import Path
+import math
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pytest
 from numpy.testing import assert_array_equal
+
+import pytest
 
 from legate.core import LogicalArray, Type, get_legate_runtime, types as ty
 from legate.core.experimental.io.tile import from_tiles, to_tiles
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 @pytest.mark.parametrize(
-    "shape,tile_shape", [((2,), (3,)), ((2, 2), (3, 2)), ((2, 3), (2, 2))]
+    ("shape", "tile_shape"), [((2,), (3,)), ((2, 2), (3, 2)), ((2, 3), (2, 2))]
 )
 def test_read_write_tiles_error(
     tmp_path: Path, shape: tuple[int, ...], tile_shape: tuple[int, ...]
@@ -46,7 +50,7 @@ def test_read_write_tiles_error(
 
 
 @pytest.mark.parametrize(
-    "shape,tile_shape,tile_start",
+    ("shape", "tile_shape", "tile_start"),
     [
         ((2,), (2,), (1,)),
         ((4,), (2,), (0,)),

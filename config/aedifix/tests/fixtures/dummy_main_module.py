@@ -10,16 +10,19 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from collections.abc import Sequence
 from os import environ
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from ...manager import ConfigurationManager
 from .dummy_main_package import DummyMainPackage
 
-_tmp_file: Final = NamedTemporaryFile()
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from ...manager import ConfigurationManager
+
+_tmp_file: Final = NamedTemporaryFile()  # noqa: SIM115
 _tmp_path: Final = Path(_tmp_file.name)
 
 

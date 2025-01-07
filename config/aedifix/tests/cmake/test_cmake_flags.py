@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -11,10 +10,10 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import copy
 import re
-import shutil
 import sys
+import copy
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -57,7 +56,8 @@ class TestCMakeList:
         assert var.type == "STRING"
 
     def test_create_bad(self) -> None:
-        with pytest.raises(TypeError, match=re.escape(rf"{type(1)}")):
+        # looking for "<class 'int'>" here
+        with pytest.raises(TypeError, match=re.escape(rf"{int}")):
             CMakeList("foo", value=1)  # type: ignore[arg-type]
 
     def test_canonicalize(self) -> None:
@@ -140,14 +140,14 @@ class TestCMakeBool:
         assert var.type == "BOOL"
 
     def test_create_bad(self) -> None:
-        with pytest.raises(ValueError):
-            CMakeBool("foo", value="hello")
+        with pytest.raises(ValueError):  # noqa: PT011
+            _ = CMakeBool("foo", value="hello")
 
-        with pytest.raises(ValueError):
-            CMakeBool("foo", value=400)
+        with pytest.raises(ValueError):  # noqa: PT011
+            _ = CMakeBool("foo", value=400)
 
         with pytest.raises(TypeError):
-            CMakeBool("foo", value=1.0)  # type: ignore[arg-type]
+            _ = CMakeBool("foo", value=1.0)  # type: ignore[arg-type]
 
     def test_canonicalize(self) -> None:
         var = CMakeBool("foo")
@@ -248,7 +248,7 @@ class TestCMakeInt:
         assert var.type == "STRING"
 
     def test_create_bad(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             CMakeInt("foo", value="hello")
 
         with pytest.raises(TypeError):

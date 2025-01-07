@@ -12,8 +12,7 @@
 from __future__ import annotations
 
 from importlib import reload
-from types import ModuleType
-from typing import Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Callable
 
 import pytest
 
@@ -21,7 +20,11 @@ from legate.driver import Config, Launcher
 from legate.driver.config import MultiNode
 from legate.util.system import System
 
-from .util import GenConfig, GenSystem
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from types import ModuleType
+
+    from .util import GenConfig, GenSystem
 
 
 @pytest.fixture

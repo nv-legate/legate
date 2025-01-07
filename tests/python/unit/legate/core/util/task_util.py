@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import copy
 import itertools
-from collections.abc import Callable
 from typing import (
+    TYPE_CHECKING,
     Any,
     Generic,
     ParamSpec,
@@ -33,7 +33,18 @@ from legate.core import (
     get_legate_runtime,
     types as ty,
 )
-from legate.core.task import InputArray, InputStore, OutputArray, OutputStore
+
+# These need to always be imported so that runtime type-checking works
+from legate.core.task import (  # noqa: TC001
+    InputArray,
+    InputStore,
+    OutputArray,
+    OutputStore,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
@@ -68,9 +79,9 @@ def make_output_array(shape: tuple[int, ...] | None = None) -> LogicalArray:
 class ArgDescr:
     def __init__(
         self,
-        inputs: tuple[LogicalStore | LogicalArray, ...] = tuple(),
-        outputs: tuple[LogicalStore | LogicalArray, ...] = tuple(),
-        scalars: tuple[Any, ...] = tuple(),
+        inputs: tuple[LogicalStore | LogicalArray, ...] = (),
+        outputs: tuple[LogicalStore | LogicalArray, ...] = (),
+        scalars: tuple[Any, ...] = (),
         arg_order: tuple[int, ...] | None = None,
     ) -> None:
         self.inputs = inputs
@@ -210,9 +221,9 @@ class TestFunction(Protocol[_P, _T]):
 
 
 def test_function(
-    inputs: tuple[str, ...] = tuple(),
-    outputs: tuple[str, ...] = tuple(),
-    scalars: tuple[str, ...] = tuple(),
+    inputs: tuple[str, ...] = (),
+    outputs: tuple[str, ...] = (),
+    scalars: tuple[str, ...] = (),
 ) -> Callable[[Callable[_P, _T]], TestFunction[_P, _T]]:
     def wrapper(fn: Callable[_P, _T]) -> TestFunction[_P, _T]:
         fn = TYPE_CAST(TestFunction[_P, _T], fn)
@@ -248,7 +259,7 @@ def test_function(
 
 
 # so that pytest ignores this
-test_function.__test__ = False  # type: ignore
+test_function.__test__ = False  # type: ignore[attr-defined]
 
 
 @test_function()

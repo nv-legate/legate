@@ -25,7 +25,7 @@ def create_np_array_and_store(
         [tuple[int, ...], np.dtype[Any]], np.ndarray[Any, Any]
     ] = np.ndarray,
 ) -> tuple[np.ndarray[Any, Any], LogicalStore]:
-    """Create a NumPy array and a LogicalStore from it"""
+    """Create a NumPy array and a LogicalStore from it."""
     runtime = get_legate_runtime()
     dtype = legate_dtype.to_numpy_dtype()
     arr = func(shape, dtype)
@@ -79,9 +79,7 @@ def create_initialized_store(
 
 
 def create_random_points(
-    shape: tuple[int, ...],
-    dimensions: tuple[int, ...],
-    no_duplicates: bool,
+    shape: tuple[int, ...], dimensions: tuple[int, ...], no_duplicates: bool
 ) -> tuple[tuple[np.ndarray[Any, np.dtype[Any]], ...], LogicalStore]:
     store_vol = np.prod(shape)
     tgt_vol = np.prod(dimensions)
@@ -92,24 +90,20 @@ def create_random_points(
     # would essentially do `arr[ind] = val` for more than one `val` in
     # parallel and thus the semantics is ill-defined.
     if no_duplicates and store_vol > tgt_vol:
-        raise ValueError(
-            "The volume of the store must be smaller than the target volume"
-        )
+        msg = "The volume of the store must be smaller than the target volume"
+        raise ValueError(msg)
 
-    idx = [i for i in np.indices(dimensions)]
+    idx = list(np.indices(dimensions))
     points = np.stack(idx, axis=-1).reshape(tgt_vol, ndim)
     to_select = np.random.permutation(store_vol) % tgt_vol
     shuffled = points[to_select, :]
 
     store = get_legate_runtime().create_store_from_buffer(
-        ty.point_type(ndim),
-        shape,
-        shuffled,
-        read_only=True,
+        ty.point_type(ndim), shape, shuffled, read_only=True
     )
 
     coords = tuple(
         coord.squeeze()
-        for coord in np.split(shuffled.reshape(shape + (ndim,)), ndim, axis=-1)
+        for coord in np.split(shuffled.reshape((*shape, ndim)), ndim, axis=-1)
     )
     return coords, store

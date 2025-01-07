@@ -10,14 +10,13 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import multiprocessing as mp
 import os
-import platform
 import shlex
 import shutil
+import platform
+import multiprocessing as mp
 from abc import ABC, abstractmethod
 from argparse import ArgumentParser
-from collections.abc import Sequence
 from enum import Enum, IntEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal
@@ -41,6 +40,8 @@ from ..util.utility import (
 from .package import Package
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ..manager import ConfigurationManager
 
 _DEFAULT_BUILD_TYPE: Final = os.environ.get(
@@ -82,12 +83,12 @@ def _make_default_flags() -> dict[str, dict[str, list[str]]]:
         }
 
     debug_c_flags = ["-O0", "-g", "-g3"]
-    debug_cuda_flags = ["-g"] + to_cuda_flags(debug_c_flags)
+    debug_cuda_flags = ["-g", *to_cuda_flags(debug_c_flags)]
 
     release_c_flags = ["-O3"]
 
     reldeb_c_flags = debug_c_flags + release_c_flags
-    reldeb_cuda_flags = ["-g"] + to_cuda_flags(reldeb_c_flags)
+    reldeb_cuda_flags = ["-g", *to_cuda_flags(reldeb_c_flags)]
 
     return {
         "Debug": make_subdict(
@@ -184,7 +185,8 @@ class DebugConfigureValue(IntEnum):
             case self.TRACE_EXPAND:
                 return "--trace-expand"
             case _:
-                raise ValueError(f"Enum value out of bounds: {self}")
+                msg = f"Enum value out of bounds: {self}"
+                raise ValueError(msg)
 
     def to_flags(self) -> list[DebugConfigureFlag]:
         r"""Build a list of CMake flags corresponding to the current value.
@@ -357,14 +359,14 @@ class MainPackage(Package, ABC):
         "_arch_name",
         "_arch_value",
         "_arch_value_provenance",
+        "_default_arch_file_path",
+        "_proj_config_file_template",
         "_proj_dir_name",
         "_proj_dir_value",
-        "_proj_config_file_template",
         "_proj_src_dir",
-        "_default_arch_file_path",
     )
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         manager: ConfigurationManager,
         name: str,
@@ -375,7 +377,7 @@ class MainPackage(Package, ABC):
         project_config_file_template: Path,
         project_src_dir: Path | None = None,
         default_arch_file_path: Path | None = None,
-        dependencies: tuple[type[Package], ...] = tuple(),
+        dependencies: tuple[type[Package], ...] = (),
     ) -> None:
         r"""Construct the MainPackage.
 
@@ -423,27 +425,30 @@ class MainPackage(Package, ABC):
         assert arch_name.isupper()
         assert arch_name.endswith("ARCH")
         if not project_config_file_template.exists():
-            raise ValueError(
+            msg = (
                 f"Project configure file: {project_config_file_template} does "
                 "not exist"
             )
+            raise ValueError(msg)
         if not project_config_file_template.is_file():
-            raise ValueError(
+            msg = (
                 f"Project configure file: {project_config_file_template} is "
                 "not a file"
             )
+            raise ValueError(msg)
         self._arch_name = arch_name
         self._arch_value, self._arch_value_provenance = (
             self.preparse_arch_value(argv)
         )
         if not self.arch_value:
-            raise ValueError(
+            msg = (
                 f"WARNING: {self.arch_name} is set, but empty (set via "
                 f"{self.arch_value_provenance})! This is extremely dangerous, "
                 f"and WILL cause many options (e.g. {self.WITH_CLEAN.name}) "
                 "to misbehave! Please set this to a non-empty value before"
                 "continuing."
             )
+            raise ValueError(msg)
         self._proj_dir_name = project_dir_name
         self._proj_dir_value = project_dir_value.resolve(strict=True)
         self._proj_config_file_template = (
@@ -459,7 +464,7 @@ class MainPackage(Package, ABC):
     def from_argv(
         cls, manager: ConfigurationManager, argv: Sequence[str]
     ) -> MainPackage:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def arch_name(self) -> str:
@@ -544,6 +549,7 @@ class MainPackage(Package, ABC):
     def _preparse_value(
         argv: Sequence[str],
         opt_name: str,
+        *,
         bool_opt: bool = False,
         environ_name: str | None = None,
     ) -> tuple[str | None, ValueProvenance]:
@@ -576,7 +582,7 @@ class MainPackage(Package, ABC):
                 nargs="?",
                 const=True,
                 default=None,
-                type=ConfigArgument._str_to_bool,
+                type=ConfigArgument._str_to_bool,  # noqa: SLF001
                 dest=dest_name,
             )
         else:
@@ -794,19 +800,15 @@ class MainPackage(Package, ABC):
         ]
 
         def summarize_compiler(
-            name: str,
-            cmake_compiler_var: ConfigArgument,
-            compiler_attr_name: str,
-            cmake_flags_var: ConfigArgument,
-            flags_attr_name: str,
+            name: str, compiler_var: ConfigArgument, flags_var: ConfigArgument
         ) -> str:
-            cc = self.manager.get_cmake_variable(cmake_compiler_var)
+            cc = self.manager.get_cmake_variable(compiler_var)
             if cc:
                 version = self.log_execute_command([cc, "--version"]).stdout
             else:
                 version = "(unknown)"
 
-            ccflags = self.manager.get_cmake_variable(cmake_flags_var)
+            ccflags = self.manager.get_cmake_variable(flags_var)
             match ccflags:
                 case list() | tuple():
                     ccflags_str = " ".join(ccflags)
@@ -827,17 +829,11 @@ class MainPackage(Package, ABC):
             )
 
         ret.append(
-            summarize_compiler(
-                "C", self.CMAKE_C_COMPILER, "CC", self.CMAKE_C_FLAGS, "CFLAGS"
-            )
+            summarize_compiler("C", self.CMAKE_C_COMPILER, self.CMAKE_C_FLAGS)
         )
         ret.append(
             summarize_compiler(
-                "C++",
-                self.CMAKE_CXX_COMPILER,
-                "CXX",
-                self.CMAKE_CXX_FLAGS,
-                "CXXFLAGS",
+                "C++", self.CMAKE_CXX_COMPILER, self.CMAKE_CXX_FLAGS
             )
         )
         return "\n".join(ret)

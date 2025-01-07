@@ -11,11 +11,14 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterator
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ...package.main_package import DebugConfigureValue
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 ALL_DEBUG_CONFIGURE_FLAGS = (
     DebugConfigureValue.NONE,
@@ -24,12 +27,7 @@ ALL_DEBUG_CONFIGURE_FLAGS = (
     DebugConfigureValue.TRACE_EXPAND,
 )
 
-ALL_DEBUG_CMAKE_FLAGS = (
-    "",
-    "--debug-find",
-    "--trace",
-    "--trace-expand",
-)
+ALL_DEBUG_CMAKE_FLAGS = ("", "--debug-find", "--trace", "--trace-expand")
 
 
 def gen_expected_flags() -> Iterator[list[str]]:
@@ -41,7 +39,7 @@ def gen_expected_flags() -> Iterator[list[str]]:
 
 class TestDebugConfigureValue:
     @pytest.mark.parametrize(
-        "val,expected",
+        ("val", "expected"),
         list(zip(ALL_DEBUG_CONFIGURE_FLAGS, ALL_DEBUG_CMAKE_FLAGS)),
     )
     def test_flag_matches(
@@ -58,7 +56,7 @@ class TestDebugConfigureValue:
             assert str(flg) in help_str
 
     @pytest.mark.parametrize(
-        "val,expected",
+        ("val", "expected"),
         list(zip(ALL_DEBUG_CONFIGURE_FLAGS, gen_expected_flags())),
     )
     def test_to_flags(

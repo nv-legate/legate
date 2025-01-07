@@ -8,7 +8,6 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Callable, overload
@@ -16,14 +15,13 @@ from typing import Callable, overload
 from ..._lib.partitioning.constraint import ConstraintProxy
 from .py_task import PyTask
 from .type import UserFunction, VariantList
-from .util import DEFAULT_VARIANT_LIST
 
 @overload
 def task(func: UserFunction) -> PyTask: ...
 @overload
 def task(
     *,
-    variants: VariantList = DEFAULT_VARIANT_LIST,
+    variants: VariantList = ...,
     constraints: Sequence[ConstraintProxy] | None = None,
     throws_exception: bool = False,
     has_side_effect: bool = False,

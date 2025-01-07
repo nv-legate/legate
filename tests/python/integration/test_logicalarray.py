@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import numpy as np
+
 import pytest
 
 from legate.core import (
@@ -27,7 +28,7 @@ from .utils.utils import random_array_and_store
 
 class TestArrayCreation:
     @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
-    @pytest.mark.parametrize("dtype", ARRAY_TYPES + (None,), ids=str)
+    @pytest.mark.parametrize("dtype", (*ARRAY_TYPES, None), ids=str)
     def test_create_array_like(
         self, shape: tuple[int, ...], dtype: None | ty.Type
     ) -> None:
@@ -100,21 +101,15 @@ class TestPromote:
 
 class TestTranspose:
     @pytest.mark.parametrize(
-        "arr_shape, axes",
+        ("arr_shape", "axes"),
         [
             ((2, 2), (1, 0)),
             ((3, 2, 12), (2, 1, 0)),
             ((1024,), (0,)),
             ((1024, 0, 1), (0, 2, 1)),
             ((1, 2, 4, 8), (3, 0, 2, 1)),
-            (
-                range(1, LEGATE_MAX_DIM + 1),
-                range(LEGATE_MAX_DIM),
-            ),
-            (
-                range(LEGATE_MAX_DIM),
-                range(LEGATE_MAX_DIM),
-            ),
+            (range(1, LEGATE_MAX_DIM + 1), range(LEGATE_MAX_DIM)),
+            (range(LEGATE_MAX_DIM), range(LEGATE_MAX_DIM)),
         ],
         ids=str,
     )

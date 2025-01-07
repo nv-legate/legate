@@ -14,18 +14,22 @@
 #
 from __future__ import annotations
 
-import math
 import re
 import sys
-from pathlib import Path
+import math
+from typing import TYPE_CHECKING
 
-import h5py  # type: ignore
+import h5py  # type: ignore # noqa: PGH003
 import numpy as np
-import pytest
 from numpy.testing import assert_array_equal
+
+import pytest
 
 from legate.core import get_legate_runtime
 from legate.io.hdf5 import from_file, kerchunk_read
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 shape_chunks = (
     "shape,chunks",

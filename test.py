@@ -47,7 +47,7 @@ def _find_tests(prefix: Path) -> tuple[Path, list[Path]] | None:
 def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
     if not (LEGATE_ARCH := os.environ.get("LEGATE_ARCH", "").strip()):
         try:
-            from scripts.get_legate_arch import (  # type: ignore[import-not-found, unused-ignore] # noqa E501
+            from scripts.get_legate_arch import (  # type: ignore[import-not-found, unused-ignore]
                 get_legate_arch,
             )
         except ModuleNotFoundError:
@@ -87,7 +87,7 @@ class LegateProject(Project):
     pass
 
 
-def main() -> int:
+def main() -> int:  # noqa: D103
     GTEST_TESTS_DIR, GTEST_TESTS_BIN = _find_latest_cpp_test_dir()
 
     parser.set_defaults(

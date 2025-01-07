@@ -14,6 +14,7 @@ import re
 from typing import Any
 
 import numpy as np
+
 import pytest
 
 from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
@@ -23,9 +24,7 @@ from .utils.data import ARRAY_TYPES, SCALAR_VALS
 
 class TestStoreCreation:
     @pytest.mark.parametrize(
-        "val, dtype",
-        zip(SCALAR_VALS, ARRAY_TYPES),
-        ids=str,
+        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES), ids=str
     )
     def test_create_from_numpy_scalar(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
@@ -67,14 +66,7 @@ class TestStoreCreation:
             np.testing.assert_allclose(arr, exp)
 
     @pytest.mark.parametrize(
-        "shape",
-        [
-            (1, 2, 3),
-            (6,),
-            (1, 1, 1, 1),
-            (4096, 1, 5),
-        ],
-        ids=str,
+        "shape", [(1, 2, 3), (6,), (1, 1, 1, 1), (4096, 1, 5)], ids=str
     )
     def test_store_shape(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
@@ -112,7 +104,8 @@ class TestStoreCreationErrors:
         msg = "an integer is required"
         with pytest.raises(TypeError, match=msg):
             runtime.create_store(
-                ty.int32, shape=("a", "b")  # type:ignore [arg-type]
+                ty.int32,
+                shape=("a", "b"),  # type:ignore [arg-type]
             )
 
     def test_exceed_max_dim(self) -> None:

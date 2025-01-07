@@ -11,10 +11,6 @@
 
 from typing import Any
 
-from ..mapping.mapping import StoreTarget
-from ..type.type_info import Type
-from ..utilities.typedefs import Domain
-
 class InlineAllocation:
     @property
     def ptr(self) -> int: ...
@@ -26,5 +22,3 @@ class InlineAllocation:
     def __array_interface__(self) -> dict[str, Any]: ...
     @property
     def __cuda_array_interface__(self) -> dict[str, Any]: ...
-    def __str__(self) -> str: ...
-    def __repr__(self) -> str: ...

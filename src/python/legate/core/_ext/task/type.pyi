@@ -8,10 +8,8 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, Callable, Generic, Literal, TypeAlias, TypeVar
+from typing import Callable, Generic, Literal, TypeAlias, TypeVar
 
 from ..._lib.data.physical_array import PhysicalArray
 from ..._lib.data.physical_store import PhysicalStore

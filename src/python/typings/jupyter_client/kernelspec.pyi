@@ -8,8 +8,6 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from __future__ import annotations
-
 from typing import Any
 
 class KernelSpec:

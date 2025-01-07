@@ -2,10 +2,12 @@
 # dej2lint - remove jinja2 directives for lint checking
 # also should try to fix line nums in lint output
 # currently only runs on yaml files with yamllint
+from __future__ import annotations
 
-import argparse
 import re
 import sys
+import argparse
+from pathlib import Path
 
 import yaml
 from yamllint import linter
@@ -37,7 +39,7 @@ def parse_arguments():
 
 
 def process_file(file_path, config, debug):
-    with open(file_path, "r") as infile:
+    with Path(file_path).open() as infile:
         lines = infile.readlines()
 
     cleanbuf = []
@@ -67,32 +69,34 @@ def process_file(file_path, config, debug):
     cleaned_content = "\n".join(cleanbuf) + "\n"
 
     if debug:
-        print(f"Processing file: {file_path}")
-        print("---")
-        print(cleaned_content)
-        print("---")
+        print(f"Processing file: {file_path}")  # noqa: T201
+        print("---")  # noqa: T201
+        print(cleaned_content)  # noqa: T201
+        print("---")  # noqa: T201
 
     # Run the linter and print with original line numbers
     issues_found = False
     for item in linter.run(cleaned_content, config, file_path):
         issues_found = True
         origline = line_mapping.get(item.line, item.line)
-        print(
+        print(  # noqa: T201
             f"{file_path}:{origline}:{item.column}: "
             f"{item.level}: {item.message}"
         )
 
     if debug:
-        print("\nLine mapping:")
+        print("\nLine mapping:")  # noqa: T201
         for clean_line, orig_line in sorted(line_mapping.items()):
-            print(f"Clean: {clean_line} -> Original: {orig_line}")
+            print(  # noqa: T201
+                f"Clean: {clean_line} -> Original: {orig_line}"
+            )
 
     return issues_found
 
 
 def main():
     if len(sys.argv) == 1:
-        print(
+        print(  # noqa: T201
             "Error: No arguments provided. Use -h or --help for usage "
             "information."
         )

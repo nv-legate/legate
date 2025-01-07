@@ -12,25 +12,27 @@
 from __future__ import annotations
 
 import multiprocessing
-import queue
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NoReturn, Protocol
+from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, Protocol
 
 from rich.console import Group
 from rich.rule import Rule
 
-from ...util.types import ArgList, EnvDict
 from ...util.ui import section, summary
-from .. import FeatureType
-from ..config import Config
 from ..defaults import FEATURES, PROCESS_ENV
 from ..runner import Runner, TestSpec
-from ..test_system import ProcessResult, TestSystem
 from .util import MANUAL_CONFIG_ENV, Shard, StageResult, StageSpec, log_proc
 
 if TYPE_CHECKING:
+    import queue
+
     from rich.panel import Panel
+
+    from ...util.types import ArgList, EnvDict
+    from .. import FeatureType
+    from ..config import Config
+    from ..test_system import ProcessResult, TestSystem
 
 
 class TestStage(Protocol):
@@ -59,7 +61,7 @@ class TestStage(Protocol):
     result: StageResult
 
     #: Any fixed stage-specific command-line args to pass
-    args: ArgList
+    args: ClassVar[ArgList] = []
 
     runner: Runner
 
@@ -69,7 +71,7 @@ class TestStage(Protocol):
         pass
 
     def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
-        """Generate stage-specific customizations to the process env
+        """Generate stage-specific customizations to the process env.
 
         Parameters
         ----------
@@ -82,7 +84,12 @@ class TestStage(Protocol):
         """
         ...
 
-    def delay(self, shard: Shard, config: Config, system: TestSystem) -> None:
+    def delay(
+        self,
+        shard: Shard,  # noqa: ARG002
+        config: Config,  # noqa: ARG002
+        system: TestSystem,  # noqa: ARG002
+    ) -> None:
         """Wait any delay that should be applied before running the next
         test.
 
@@ -98,7 +105,7 @@ class TestStage(Protocol):
             Process execution wrapper
 
         """
-        return None
+        return
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         """Generate the command line arguments necessary to launch
@@ -241,16 +248,12 @@ class TestStage(Protocol):
             Process execution wrapper
 
         """
-
         shard = self.shards.get()
 
         stage_args = self.args + self.shard_args(shard, config)
 
         cmd = self.runner.cmd(
-            test_spec,
-            config,
-            stage_args,
-            custom_args=custom_args,
+            test_spec, config, stage_args, custom_args=custom_args
         )
 
         self.delay(shard, config, system)
@@ -276,23 +279,17 @@ class TestStage(Protocol):
             self.shards.put(shard)
 
     @staticmethod
-    def handle_multi_node_args(config: Config) -> ArgList:
+    def handle_multi_node_args(config: Config) -> ArgList:  # noqa: D102
         args: ArgList = []
 
         if config.multi_node.launcher != "none":
             args += ["--launcher", str(config.multi_node.launcher)]
 
         if config.multi_node.ranks_per_node > 1:
-            args += [
-                "--ranks-per-node",
-                str(config.multi_node.ranks_per_node),
-            ]
+            args += ["--ranks-per-node", str(config.multi_node.ranks_per_node)]
 
         if config.multi_node.nodes > 1:
-            args += [
-                "--nodes",
-                str(config.multi_node.nodes),
-            ]
+            args += ["--nodes", str(config.multi_node.nodes)]
 
         for extra in config.multi_node.launcher_extra:
             args += ["--launcher-extra=" + str(extra)]
@@ -300,13 +297,12 @@ class TestStage(Protocol):
         return args
 
     @staticmethod
-    def handle_cpu_pin_args(config: Config, shard: Shard) -> ArgList:
+    def handle_cpu_pin_args(  # noqa: D102
+        config: Config, shard: Shard
+    ) -> ArgList:
         args: ArgList = []
         if config.execution.cpu_pin != "none":
-            args += [
-                "--cpu-bind",
-                str(shard),
-            ]
+            args += ["--cpu-bind", str(shard)]
 
         return args
 
@@ -353,6 +349,6 @@ class TestStage(Protocol):
         cmd = self.runner.cmd_gdb(config)
         env = os.environ | self.env(config, system)
 
-        run(cmd, env=env)
+        run(cmd, env=env, check=False)
 
         sys.exit()

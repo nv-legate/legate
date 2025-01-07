@@ -103,9 +103,7 @@ class Runtime(Unconstructable):
         ndim: int | None = None,
     ) -> LogicalStore: ...
     def create_store_from_scalar(
-        self,
-        scalar: Scalar,
-        shape: Shape | Collection[int] | None = None,
+        self, scalar: Scalar, shape: Shape | Collection[int] | None = None
     ) -> LogicalStore: ...
     def create_store_from_buffer(
         self,

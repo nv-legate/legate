@@ -174,17 +174,19 @@ class TestScope:
             assert Scope.machine() == sliced1
 
             sliced2 = slice_if_not_singleton(sliced1)
-            with Scope():
-                with Scope(
+            with (
+                Scope(),
+                Scope(
                     priority=MAGIC_PRIORITY2,
                     exception_mode=MODE2,
                     provenance=MAGIC_PROVENANCE2,
                     machine=sliced2,
-                ):
-                    assert Scope.priority() == MAGIC_PRIORITY2
-                    assert Scope.exception_mode() == MODE2
-                    assert Scope.provenance() == MAGIC_PROVENANCE2
-                    assert Scope.machine() == sliced2
+                ),
+            ):
+                assert Scope.priority() == MAGIC_PRIORITY2
+                assert Scope.exception_mode() == MODE2
+                assert Scope.provenance() == MAGIC_PROVENANCE2
+                assert Scope.machine() == sliced2
 
             assert Scope.priority() == MAGIC_PRIORITY1
             assert Scope.exception_mode() == MODE1

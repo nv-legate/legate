@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 from . import packages
-
-from .package import Package
 from .main_package import MainPackage
+from .package import Package
+
+__all__ = ("MainPackage", "Package", "packages")

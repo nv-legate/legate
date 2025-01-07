@@ -12,24 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import annotations
 
-
-import math
 import re
 import sys
-from pathlib import Path
+import math
+from typing import TYPE_CHECKING
 
 import numpy as np
-import pytest
 from numpy.testing import assert_array_equal
+
+import pytest
 
 from legate.core import LogicalArray, Type, get_legate_runtime, types as ty
 from legate.core.experimental.io.file_handle import FileHandle, OpenFlag
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 @pytest.mark.parametrize("size", [1, 10, 100, 1000, 1024, 4096, 4096 * 10])
 def test_read_write(tmp_path: Path, size: int) -> None:
-    """Test basic read/write"""
+    """Test basic read/write."""
     filename = tmp_path / "test-file"
     a = np.arange(math.prod([size])).reshape([size])
     array = LogicalArray.from_store(
@@ -61,7 +65,7 @@ def test_read_write(tmp_path: Path, size: int) -> None:
 
 
 def test_context(tmp_path: Path) -> None:
-    """Open a FileHandle in a context"""
+    """Open a FileHandle in a context."""
     filename = tmp_path / "test-file"
     a = np.arange(math.prod([200])).reshape([200])
     data = LogicalArray.from_store(
@@ -80,7 +84,7 @@ def test_context(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "start,end",
+    ("start", "end"),
     [
         (0, 10),
         (1, 10),
@@ -90,8 +94,7 @@ def test_context(tmp_path: Path) -> None:
     ],
 )
 def test_read_write_slices(tmp_path: Path, start: int, end: int) -> None:
-    """Read and write different slices"""
-
+    """Read and write different slices."""
     filename = tmp_path / "test-file"
     a = np.arange(math.prod([10 * 4096])).reshape([10 * 4096])  # 10 page-sizes
     a[start:end] = 42
@@ -141,12 +144,14 @@ def test_bad_array_dims(tmp_path: Path) -> None:
             Type.from_numpy_dtype(a.dtype), a.shape, a, False
         )
     )
-    with FileHandle(filename, "w+") as f:
-        with pytest.raises(
+    with (
+        FileHandle(filename, "w+") as f,
+        pytest.raises(
             ValueError,
             match=re.escape("number of array dimensions must be 1 (have 2)"),
-        ):
-            f.write(data)
+        ),
+    ):
+        f.write(data)
 
 
 def test_closed_file(tmp_path: Path) -> None:

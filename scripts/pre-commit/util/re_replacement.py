@@ -12,10 +12,12 @@ from __future__ import annotations
 
 import difflib
 from argparse import ArgumentParser
-from collections.abc import Sequence
 from pathlib import Path
 from re import Match, Pattern, compile as re_compile
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class ReplacementError(Exception):
@@ -25,7 +27,7 @@ class ReplacementError(Exception):
 
 
 class Replacement:
-    __slots__ = "pattern", "ignore_re", "repl", "on_file_change"
+    __slots__ = "ignore_re", "on_file_change", "pattern", "repl"
 
     def __init__(
         self,
@@ -39,13 +41,13 @@ class Replacement:
         self.ignore_re = self._make_ignore_re(pragma_keyword)
         self.repl = self._make_repl(repl)
         if on_file_change is None:
-
-            def default_on_file_change(p: Path, s: str) -> str:
-                return s
-
-            on_file_change = default_on_file_change
+            on_file_change = self._default_on_file_change
 
         self.on_file_change = on_file_change
+
+    @staticmethod
+    def _default_on_file_change(_p: Path, s: str) -> str:
+        return s
 
     @staticmethod
     def _make_ignore_re(kwd: str) -> Pattern:
@@ -56,7 +58,7 @@ class Replacement:
 
     @staticmethod
     def _sanitize_repl(
-        repl: str | Callable[[Match], str]
+        repl: str | Callable[[Match], str],
     ) -> Callable[[Match], str]:
         if callable(repl):
             return repl
@@ -159,14 +161,14 @@ class RegexReplacement:
                     tofile="after",
                 )
                 diff = list(diff)[3:]
-                print("\n".join(diff))
+                print("\n".join(diff))  # noqa: T201
             if not self.dry_run:
                 file_path.write_text(new_text)
         return changed, errors
 
     def vprint(self, *args: Any, **kwargs: Any) -> None:
         if self.verbose:
-            print(*args, **kwargs)
+            print(*args, **kwargs)  # noqa: T201
 
     def main(self) -> int:
         self.parse_args()
@@ -187,15 +189,12 @@ class RegexReplacement:
                 self.vprint("found changes:", file_path)
                 modified.append(file_path)
             for err in errata:
-                print(
-                    "--",
-                    err.path,
-                    "requires manual intervention:",
-                    err.msg,
+                print(  # noqa: T201
+                    "--", err.path, "requires manual intervention:", err.msg
                 )
                 ret = 1
 
         mod_str = "would have modified:" if self.dry_run else "modified:"
         for file_path in modified:
-            print(mod_str, file_path)
+            print(mod_str, file_path)  # noqa: T201
         return ret

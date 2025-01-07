@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -12,13 +11,15 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from ...util.callables import classify_callable, get_calling_function
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def foo() -> Any:
@@ -67,14 +68,14 @@ class TestClassifyCallable:
         qualname, path, lineno = classify_callable(foo)
         assert qualname == "config.aedifix.tests.util.test_callables.foo"
         assert path == Path(__file__)
-        assert lineno == 24  # Unfortunately a brittle test...
+        assert lineno == 25  # Unfortunately a brittle test...
 
         qualname, path, lineno = classify_callable(Foo().method)
         assert (
             qualname == "config.aedifix.tests.util.test_callables.Foo.method"
         )
         assert path == Path(__file__)
-        assert lineno == 31  # Unfortunately a brittle test...
+        assert lineno == 32  # Unfortunately a brittle test...
 
         qualname, path, lineno = classify_callable(Foo.class_method)
         assert (
@@ -82,20 +83,20 @@ class TestClassifyCallable:
             == "config.aedifix.tests.util.test_callables.Foo.class_method"
         )
         assert path == Path(__file__)
-        assert lineno == 34  # Unfortunately a brittle test...
+        assert lineno == 35  # Unfortunately a brittle test...
 
         prop_function = Foo.prop.fget  # type: ignore[attr-defined]
         qualname, path, lineno = classify_callable(prop_function)
         assert qualname == "config.aedifix.tests.util.test_callables.Foo.prop"
         assert path == Path(__file__)
-        assert lineno == 38  # Unfortunately a brittle test...
+        assert lineno == 39  # Unfortunately a brittle test...
 
         qualname, path, lineno = classify_callable(Foo().__call__)
         assert (
             qualname == "config.aedifix.tests.util.test_callables.Foo.__call__"
         )
         assert path == Path(__file__)
-        assert lineno == 42  # Unfortunately a brittle test...
+        assert lineno == 43  # Unfortunately a brittle test...
 
 
 if __name__ == "__main__":

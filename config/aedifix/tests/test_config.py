@@ -11,12 +11,16 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ..config import ConfigFile
-from .fixtures.dummy_manager import DummyManager
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from .fixtures.dummy_manager import DummyManager
 
 
 @pytest.fixture

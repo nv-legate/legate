@@ -11,17 +11,21 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ..driver import defaults
 from .args import ArgSpec, Argument
-from .types import LauncherType
+
+if TYPE_CHECKING:
+    from .types import LauncherType
 
 __all__ = (
     "CPUS",
     "FBMEM",
     "GPUS",
-    "LAUNCHER_EXTRA",
     "LAUNCHER",
     "LAUNCHERS",
+    "LAUNCHER_EXTRA",
     "NODES",
     "NUMAMEM",
     "OMPS",

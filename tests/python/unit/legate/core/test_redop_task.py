@@ -15,14 +15,14 @@ try:
 except ModuleNotFoundError:
     cupy = None
 
-import itertools
 import re
-from typing import Any
+import itertools
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import numpy.typing as npt
+
 import pytest
-from numpy._typing import NDArray
 
 from legate.core import (
     InlineAllocation,
@@ -43,10 +43,14 @@ from legate.core.task import (
     task,
 )
 
+if TYPE_CHECKING:
+    from numpy._typing import NDArray
+
 
 def check_cupy(exc: Exception) -> None:
     if cupy is None:
-        raise RuntimeError("Need to install cupy for GPU variant") from exc
+        msg = "Need to install cupy for GPU variant"
+        raise RuntimeError(msg) from exc
 
 
 def asarray(alloc: InlineAllocation) -> NDArray[Any]:
@@ -58,9 +62,7 @@ def asarray(alloc: InlineAllocation) -> NDArray[Any]:
 
 
 class TestRedopTaskStore:
-    def create_input_args_(
-        self,
-    ) -> tuple[npt.NDArray[np.int64], LogicalStore]:
+    def create_input_args_(self) -> tuple[npt.NDArray[np.int64], LogicalStore]:
         in_arr = np.arange(10, dtype=np.int64) + 1
         in_store = get_legate_runtime().create_store_from_buffer(
             ty.int64, in_arr.shape, in_arr, False
@@ -251,4 +253,4 @@ if __name__ == "__main__":
 
     # add -s to args, we do not want pytest to capture stdout here since this
     # gobbles any C++ exceptions
-    sys.exit(pytest.main(sys.argv + ["-s"]))
+    sys.exit(pytest.main([*sys.argv, "-s"]))

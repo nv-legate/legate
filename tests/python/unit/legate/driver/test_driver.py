@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import sys
 from shlex import quote
+from typing import TYPE_CHECKING
+
+from rich.console import Console
 
 import pytest
-from pytest_mock import MockerFixture
-from rich.console import Console
 
 import legate.driver.driver as m
 from legate import install_info
@@ -25,10 +26,14 @@ from legate.driver.config import Config
 from legate.driver.launcher import RANK_ENV_VARS, Launcher
 from legate.util.shared_args import LAUNCHERS
 from legate.util.system import System
-from legate.util.types import LauncherType
 
-from ...util import Capsys
-from .util import GenConfig
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
+    from legate.util.types import LauncherType
+
+    from ...util import Capsys
+    from .util import GenConfig
 
 SYSTEM = System()
 
@@ -141,10 +146,7 @@ class TestDriver:
 
     @pytest.mark.parametrize("launch", LAUNCHERS)
     def test_format_verbose(
-        self,
-        capsys: Capsys,
-        genconfig: GenConfig,
-        launch: LauncherType,
+        self, capsys: Capsys, genconfig: GenConfig, launch: LauncherType
     ) -> None:
         # set --dry-run to avoid needing to mock anything
         config = genconfig(["--launcher", launch, "--verbose", "--dry-run"])
@@ -250,16 +252,10 @@ OPTS = (
     "--logdir",
 )
 
-FLAGS = (
-    "--profile",
-    "--spy",
-    "--log-to-file",
-    "--freeze-on-error",
-)
+FLAGS = ("--profile", "--spy", "--log-to-file", "--freeze-on-error")
 
 
 class Test_LEGATE_CONFIG:
-
     @pytest.mark.parametrize("opt", OPTS)
     def test_arg_opt_propagation(self, genconfig: GenConfig, opt: str) -> None:
         config = genconfig([opt, "10"])

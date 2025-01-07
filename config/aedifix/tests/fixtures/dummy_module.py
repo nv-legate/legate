@@ -17,7 +17,7 @@ def function() -> None:
     pass
 
 
-setattr(function, "MAGIC_NUMBER", 1)
+function.MAGIC_NUMBER = 1  # type: ignore[attr-defined]
 
 
 class Class:

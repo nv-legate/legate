@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 from ._io import vprint
@@ -22,7 +22,7 @@ from ._legate_config import get_legate_config
 
 
 def read_cmake_cache_value(pattern: str, cache_dir: Path | None = None) -> str:
-    r"""Read a CMakeCache.txt value
+    r"""Read a CMakeCache.txt value.
 
     Parameters
     ----------
@@ -50,7 +50,8 @@ def read_cmake_cache_value(pattern: str, cache_dir: Path | None = None) -> str:
         for line in filter(re_pat.match, fd):
             return line.split("=")[1].strip()
 
-    raise RuntimeError(f"ERROR: Did not find {pattern} in {file_path}")
+    msg = f"ERROR: Did not find {pattern} in {file_path}"
+    raise RuntimeError(msg)
 
 
 def fix_env() -> None:
@@ -188,10 +189,11 @@ def get_original_python_executable() -> tuple[str, dict[str, str]]:
         python_exe = str(maybe_python)
         break
     else:
-        raise RuntimeError(
+        msg = (
             "Could not locate original python installation while building "
             "under build isolation"
         )
+        raise RuntimeError(msg)
 
     remove = {"PYTHONNOUSERSITE", "PYTHONPATH"}
     env = {k: v for k, v in os.environ.items() if k not in remove}

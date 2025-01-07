@@ -9,9 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 import pytest
@@ -94,7 +93,7 @@ def test_cpu_pin_none() -> None:
 
 class TestSingleRank:
     @pytest.mark.parametrize(
-        "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
+        ("shard", "expected"), [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
         c = Config(["test.py", "--sysmem", "2000"], project=PROJECT)
@@ -128,10 +127,7 @@ class TestSingleRank:
         s = FakeSystem()
         stage = m.CPU(c, s)
         assert stage.spec.workers == 2
-        assert stage.spec.shards == [
-            Shard([(0, 1, 2)]),
-            Shard([(3, 4, 5)]),
-        ]
+        assert stage.spec.shards == [Shard([(0, 1, 2)]), Shard([(3, 4, 5)])]
 
     def test_spec_with_utility(self) -> None:
         c = Config(
@@ -140,22 +136,14 @@ class TestSingleRank:
         s = FakeSystem()
         stage = m.CPU(c, s)
         assert stage.spec.workers == 2
-        assert stage.spec.shards == [
-            Shard([(0, 1, 2)]),
-            Shard([(3, 4, 5)]),
-        ]
+        assert stage.spec.shards == [Shard([(0, 1, 2)]), Shard([(3, 4, 5)])]
 
-    def test_spec_with_requested_workers(
-        self,
-    ) -> None:
+    def test_spec_with_requested_workers(self) -> None:
         c = Config(["test.py", "--cpus", "1", "-j", "2"], project=PROJECT)
         s = FakeSystem()
         stage = m.CPU(c, s)
         assert stage.spec.workers == 2
-        assert stage.spec.shards == [
-            Shard([(0, 1)]),
-            Shard([(2, 3)]),
-        ]
+        assert stage.spec.shards == [Shard([(0, 1)]), Shard([(2, 3)])]
 
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem()
@@ -176,7 +164,7 @@ class TestSingleRank:
     def test_spec_with_verbose(self) -> None:
         args = ["test.py", "--cpus", "2"]
         c = Config(args, project=PROJECT)
-        cv = Config(args + ["--verbose"], project=PROJECT)
+        cv = Config([*args, "--verbose"], project=PROJECT)
         s = FakeSystem()
 
         spec, vspec = m.CPU(c, s).spec, m.CPU(cv, s).spec
@@ -201,9 +189,7 @@ class TestSingleRank:
             stage = m.CPU(c, s)
 
         assert stage.spec.workers == 1
-        assert stage.spec.shards == [
-            Shard([(0, 1, 2, 3)]),
-        ]
+        assert stage.spec.shards == [Shard([(0, 1, 2, 3)])]
 
 
 class TestMultiRank:
@@ -326,9 +312,7 @@ class TestMultiRank:
         s = FakeSystem(cpus=12)
         stage = m.CPU(c, s)
         assert stage.spec.workers == 1
-        assert stage.spec.shards == [
-            Shard([(0, 1), (2, 3)]),
-        ]
+        assert stage.spec.shards == [Shard([(0, 1), (2, 3)])]
 
     def test_spec_with_requested_workers_zero(self) -> None:
         s = FakeSystem(cpus=12)
@@ -409,6 +393,4 @@ class TestMultiRank:
             stage = m.CPU(c, s)
 
         assert stage.spec.workers == 1
-        assert stage.spec.shards == [
-            Shard([(0, 1, 2, 3)]),
-        ]
+        assert stage.spec.shards == [Shard([(0, 1, 2, 3)])]

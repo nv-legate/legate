@@ -9,9 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 import pytest
@@ -95,7 +94,7 @@ def test_cpu_pin_none() -> None:
 
 class TestSingleRank:
     @pytest.mark.parametrize(
-        "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
+        ("shard", "expected"), [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
         c = Config([], project=PROJECT)
@@ -214,7 +213,7 @@ class TestSingleRank:
     def test_spec_with_verbose(self) -> None:
         args = ["test.py", "--cpus", "2"]
         c = Config(args, project=PROJECT)
-        cv = Config(args + ["--verbose"], project=PROJECT)
+        cv = Config([*args, "--verbose"], project=PROJECT)
         s = FakeSystem(cpus=12)
 
         spec, vspec = m.OMP(c, s).spec, m.OMP(cv, s).spec
@@ -255,14 +254,12 @@ class TestSingleRank:
             stage = m.OMP(c, s)
 
         assert stage.spec.workers == 1
-        assert stage.spec.shards == [
-            Shard([(0, 1, 2, 3)]),
-        ]
+        assert stage.spec.shards == [Shard([(0, 1, 2, 3)])]
 
 
 class TestMultiRank:
     @pytest.mark.parametrize(
-        "shard,expected", [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
+        ("shard", "expected"), [[(2,), "2"], [(1, 2, 3), "1,2,3"]]
     )
     def test_shard_args(self, shard: tuple[int, ...], expected: str) -> None:
         c = Config([], project=PROJECT)
@@ -378,9 +375,7 @@ class TestMultiRank:
         s = FakeSystem(cpus=12)
         stage = m.OMP(c, s)
         assert stage.spec.workers == 1
-        assert stage.spec.shards == [
-            Shard([(0, 1, 2, 3, 4), (5, 6, 7, 8, 9)]),
-        ]
+        assert stage.spec.shards == [Shard([(0, 1, 2, 3, 4), (5, 6, 7, 8, 9)])]
 
     def test_spec_with_utility(self) -> None:
         c = Config(
@@ -478,6 +473,4 @@ class TestMultiRank:
             stage = m.OMP(c, s)
 
         assert stage.spec.workers == 1
-        assert stage.spec.shards == [
-            Shard([(0, 1, 2, 3)]),
-        ]
+        assert stage.spec.shards == [Shard([(0, 1, 2, 3)])]

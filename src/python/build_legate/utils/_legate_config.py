@@ -12,10 +12,13 @@ from __future__ import annotations
 
 import os
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from functools import cache
 from pathlib import Path
-from typing import Final, Generator
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 @contextmanager
@@ -26,11 +29,8 @@ def _push_legate_dir_to_sys_path() -> Generator[None, None, None]:
     try:
         yield
     finally:
-        try:
+        with suppress(ValueError):
             sys.path.remove(root_dir)
-        except ValueError:
-            # someone already removed it I guess
-            pass
 
 
 def _get_legate_dir() -> Path:
@@ -54,7 +54,7 @@ def _get_legate_arch() -> str:
 
     try:
         with _push_legate_dir_to_sys_path():
-            from scripts.get_legate_arch import (  # type: ignore[import-not-found,unused-ignore] # noqa: E501
+            from scripts.get_legate_arch import (  # type: ignore[import-not-found,unused-ignore]
                 get_legate_arch,
             )
     except ModuleNotFoundError:

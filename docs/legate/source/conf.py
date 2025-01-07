@@ -1,3 +1,4 @@
+# noqa: INP001
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -15,6 +16,7 @@
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+from __future__ import annotations
 
 import inspect
 from os import getenv
@@ -32,7 +34,7 @@ project = "NVIDIA legate"
 if "dev" in legate.__version__:
     project += f" ({legate.__version__})"
 
-copyright = "2021-2024, NVIDIA"
+copyright = "2021-2024, NVIDIA"  # noqa: A001
 author = "NVIDIA Corporation"
 
 # -- General configuration ---------------------------------------------------
@@ -66,7 +68,7 @@ html_theme_options = {
         "version_match": ".".join(legate.__version__.split(".", 2)[:2]),
     },
     "extra_footer": [
-        '<script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>'  # NOQA
+        '<script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>'  # NOQA: E501
     ],
 }
 
@@ -93,13 +95,13 @@ pygments_style = "sphinx"
 myst_heading_anchors = 3
 
 
-def dont_skip_documented_dunders(
-    app: Any,
+def _dont_skip_documented_dunders(  # noqa: PLR0913, PLR0911
+    app: Any,  # noqa: ARG001
     what: str,
     name: str,
     obj: Any,
-    skip: bool,
-    options: dict[str, Any],
+    skip: bool,  # noqa: ARG001, FBT001
+    options: dict[str, Any],  # noqa: ARG001
 ) -> bool | None:
     SKIP = True  # definitely skip the value (does not show up in docs)
     KEEP = False  # definitely do NOT skip the value (will show up in docs)
@@ -139,10 +141,12 @@ def dont_skip_documented_dunders(
         case "method":
             return KEEP
         case _:
-            print(f"====== LET AUTODOC DECIDE ({what})", name, "->", obj)
+            print(  # noqa: T201
+                f"====== LET AUTODOC DECIDE ({what})", name, "->", obj
+            )
             return LET_AUTODOC_DECIDE
 
 
-def setup(app):
+def setup(app):  # noqa: D103
     app.add_css_file("params.css")
-    app.connect("autodoc-skip-member", dont_skip_documented_dunders)
+    app.connect("autodoc-skip-member", _dont_skip_documented_dunders)

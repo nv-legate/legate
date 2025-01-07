@@ -19,7 +19,7 @@ from hello_world_cython import HelloWorld
 from legate import get_legate_runtime
 
 
-def main() -> None:
+def main() -> None:  # noqa: D103
     runtime = get_legate_runtime()
 
     lib = runtime.create_library("hello")

@@ -12,11 +12,13 @@
 from __future__ import annotations
 
 import sys
-
-import pytest
-from pytest_mock import MockerFixture
+from typing import TYPE_CHECKING
 
 import legate.driver as m
+
+if TYPE_CHECKING:
+    import pytest
+    from pytest_mock import MockerFixture
 
 # main function shadows main module
 # def test___all__() -> None:
@@ -26,9 +28,9 @@ import legate.driver as m
 
 
 def test_main(mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch) -> None:
+    import legate.util.system
     import legate.driver.config
     import legate.driver.driver
-    import legate.util.system
 
     config_spy = mocker.spy(legate.driver.config.Config, "__init__")
     system_spy = mocker.spy(legate.util.system.System, "__init__")

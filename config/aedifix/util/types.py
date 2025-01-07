@@ -11,8 +11,10 @@
 from __future__ import annotations
 
 import functools
-from collections.abc import Callable
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
@@ -20,7 +22,7 @@ _U = TypeVar("_U")
 
 
 def copy_method_signature(
-    source: Callable[Concatenate[Any, _P], _T]
+    source: Callable[Concatenate[Any, _P], _T],
 ) -> Callable[[Callable[..., _U]], Callable[Concatenate[Any, _P], _U]]:
     r"""Copy a class methods signature.
 
@@ -52,7 +54,7 @@ def copy_method_signature(
     """
 
     def wrapper(
-        target: Callable[..., _U]
+        target: Callable[..., _U],
     ) -> Callable[Concatenate[Any, _P], _U]:
         @functools.wraps(source)
         def wrapped(self: Any, /, *args: _P.args, **kwargs: _P.kwargs) -> _U:
@@ -64,7 +66,7 @@ def copy_method_signature(
 
 
 def copy_callable_signature(
-    source: Callable[_P, _T]
+    source: Callable[_P, _T],
 ) -> Callable[[Callable[..., _U]], Callable[_P, _U]]:
     r"""Copy a callable objects' signature.
 

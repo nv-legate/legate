@@ -18,6 +18,14 @@ from pathlib import Path
 
 
 def main(lib_path: Path) -> None:
+    """Run the hello world example program.
+
+    Parameters
+    ----------
+    lib_path : Path
+        The path to the compiled library containing the hello world Legate
+        task compiled from C++.
+    """
     # Deliberately in main() so that the user can run --help on the program
     # without needing to build the .so (or setup legate) first.
     from legate import get_legate_runtime
@@ -44,7 +52,7 @@ def main(lib_path: Path) -> None:
 
     # Extract that function that gets our local task ID
     hello_world_local_task_id = libhello_world.hello_world_task_id
-    hello_world_local_task_id.argtypes = tuple()
+    hello_world_local_task_id.argtypes = ()
     hello_world_local_task_id.restype = c_longlong
 
     # Finally, we have the necessary tools to create an instance of our

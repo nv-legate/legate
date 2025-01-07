@@ -13,7 +13,6 @@ from __future__ import annotations
 import shlex
 import textwrap
 from argparse import ArgumentParser, Namespace, _ArgumentGroup as ArgumentGroup
-from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -23,6 +22,8 @@ from ..util.argument_parser import ConfigArgument, ExclusiveArgumentGroup
 from ..util.exception import WrongOrderError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ..manager import ConfigurationManager
     from ..util.cl_arg import CLArg
 
@@ -36,7 +37,7 @@ class Dependencies(Namespace):
 
 
 class Package(Configurable):
-    __slots__ = "_name", "_state", "_always_enabled", "_dep_types", "_deps"
+    __slots__ = "_always_enabled", "_dep_types", "_deps", "_name", "_state"
 
     @dataclass(slots=True, frozen=True)
     class EnableState:
@@ -65,8 +66,9 @@ class Package(Configurable):
         self,
         manager: ConfigurationManager,
         name: str,
+        *,
         always_enabled: bool = False,
-        dependencies: tuple[type[Package], ...] = tuple(),
+        dependencies: tuple[type[Package], ...] = (),
     ) -> None:
         r"""Constuct a Package.
 
@@ -130,9 +132,8 @@ class Package(Configurable):
             The package dependencies.
         """
         if self._deps is None:
-            raise WrongOrderError(
-                "Must declare dependencies before accessing them"
-            )
+            msg = "Must declare dependencies before accessing them"
+            raise WrongOrderError(msg)
         return self._deps
 
     def add_options(self, parser: ArgumentParser) -> None:
@@ -151,8 +152,8 @@ class Package(Configurable):
         group = self.create_argument_group(parser)
         self.log_execute_func(self.add_package_options, group)
 
-    def add_package_options(
-        self, parser: ArgumentGroup, ignored_only: bool = False
+    def add_package_options(  # noqa: C901
+        self, parser: ArgumentGroup, *, ignored_only: bool = False
     ) -> None:
         r"""Callback to add options for each package.
 
@@ -313,7 +314,8 @@ class Package(Configurable):
 
     def declare_dependencies(self) -> None:
         r"""Set up and declare dependencies for packages. By default,
-        declares no dependencies."""
+        declares no dependencies.
+        """
         deps = {
             dep_ty.__name__: self.manager.require(self, dep_ty)
             for dep_ty in self._dep_types
@@ -337,7 +339,7 @@ class Package(Configurable):
         for attr_name in dir(self):
             try:
                 attr = getattr(self, attr_name)
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
 
             if not isinstance(attr, ConfigArgument):
@@ -440,7 +442,7 @@ class Package(Configurable):
         max_len = max(map(len, (name for name, _ in extra_lines))) + 1
 
         def fixup_extra_lines(
-            lines: Sequence[tuple[str, Any]]
+            lines: Sequence[tuple[str, Any]],
         ) -> list[tuple[str, str]]:
             # We want to align any overflow with the start of the text, so
             #

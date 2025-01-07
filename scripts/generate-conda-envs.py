@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from argparse import Action, ArgumentParser
 from dataclasses import dataclass
+from pathlib import Path
 from textwrap import indent
 from typing import Literal
 
@@ -28,7 +29,7 @@ MAX_SANITIZER_VERSION_STR = ".".join(map(str, MAX_SANITIZER_VERSION))
 
 
 def V(version: str) -> tuple[int, ...]:
-    padded_version = (version.split(".") + ["0", "0"])[:3]
+    padded_version = ([*version.split("."), "0", "0"])[:3]
     return tuple(int(x) for x in padded_version)
 
 
@@ -45,7 +46,8 @@ def normalize_platform_arch() -> str:
         case "aarch64":
             return arch
         case _:
-            raise RuntimeError(f"Unknown platform architecture: {arch}")
+            msg = f"Unknown platform architecture: {arch}"
+            raise RuntimeError(msg)
 
 
 class SectionConfig:
@@ -63,11 +65,8 @@ class SectionConfig:
         return self.header
 
     def format(self, kind: str) -> str:
-        return SECTION_TEMPLATE.format(
-            header=self.header,
-            reqs="- "
-            + "\n- ".join(self.conda if kind == "conda" else self.pip),
-        )
+        reqs = "- " + "\n- ".join(self.conda if kind == "conda" else self.pip)
+        return SECTION_TEMPLATE.format(header=self.header, reqs=reqs)
 
 
 @dataclass(frozen=True)
@@ -111,27 +110,18 @@ class CUDAConfig(SectionConfig):
                 "libcal-dev",
             )
 
-        if self.compilers:
-            if self.os == "linux":
-                if V(self.ctk_version) < (12, 0, 0):
-                    arch = normalize_platform_arch()
-                    deps += (
-                        f"nvcc_linux-{arch}={drop_patch(self.ctk_version)}",
-                    )
-                else:
-                    deps += ("cuda-nvcc",)
+        if self.compilers and self.os == "linux":
+            if V(self.ctk_version) < (12, 0, 0):
+                arch = normalize_platform_arch()
+                deps += (f"nvcc_linux-{arch}={drop_patch(self.ctk_version)}",)
+            else:
+                deps += ("cuda-nvcc",)
 
-                # gcc 11.3 is incompatible with nvcc < 11.6.
-                if V(self.ctk_version) < (11, 6, 0):
-                    deps += (
-                        "gcc<=11.2",
-                        "gxx<=11.2",
-                    )
-                else:
-                    deps += (
-                        "gcc=11.*",
-                        "gxx=11.*",
-                    )
+            # gcc 11.3 is incompatible with nvcc < 11.6.
+            if V(self.ctk_version) < (11, 6, 0):
+                deps += ("gcc<=11.2", "gxx<=11.2")
+            else:
+                deps += ("gcc=11.*", "gxx=11.*")
 
         return deps
 
@@ -273,13 +263,7 @@ class DocsConfig(SectionConfig):
 
     @property
     def conda(self) -> Reqs:
-        return (
-            "pandoc",
-            "doxygen",
-            "ipython",
-            "jinja2",
-            "markdown",
-        )
+        return ("pandoc", "doxygen", "ipython", "jinja2", "markdown")
 
     # Use pip for sphinx and breathe deps. Need Sphinx>8 for the NV theme
     # but conda breath requires Sphinx<=7.2 even though things work.
@@ -313,13 +297,7 @@ class EnvConfig:
 
     @property
     def sections(self) -> tuple[SectionConfig, ...]:
-        return (
-            self.cuda,
-            self.build,
-            self.runtime,
-            self.tests,
-            self.docs,
-        )
+        return (self.cuda, self.build, self.runtime, self.tests, self.docs)
 
     @property
     def cuda(self) -> CUDAConfig:
@@ -345,15 +323,11 @@ class EnvConfig:
 
     @property
     def filename(self) -> str:
-        return (
-            f"environment-{self.use}-{self.os}{self.cuda}{self.build}"  # noqa
-        )
+        return f"environment-{self.use}-{self.os}{self.cuda}{self.build}"
 
 
 # --- Setup -------------------------------------------------------------------
 def get_min_py() -> str:
-    from pathlib import Path
-
     try:
         import tomllib  # novermin
     except ModuleNotFoundError:
@@ -366,8 +340,10 @@ def get_min_py() -> str:
         py_ver = py_ver.replace(char, "")
 
     # PR-936: adding this as a reminder to remove the workaround after 3.11
-    if int(py_ver.split(".")[1]) >= 11:
-        raise RuntimeError("remove tomllib workaround above")
+    MIN_TOMLLIB_VERSION = 11
+    if int(py_ver.split(".")[1]) >= MIN_TOMLLIB_VERSION:
+        msg = "remove tomllib workaround above"
+        raise RuntimeError(msg)
 
     return py_ver
 
@@ -404,19 +380,19 @@ PIP_TEMPLATE = """\
 
 
 class BooleanFlag(Action):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         option_strings,
         dest,
         default,
-        required=False,
-        help="",
+        required=False,  # noqa: FBT002
+        help="",  # noqa: A002
         metavar=None,
     ):
         assert all(not opt.startswith("--no") for opt in option_strings)
 
-        def flatten(list):
-            return [item for sublist in list for item in sublist]
+        def flatten(in_list):
+            return [item for sublist in in_list for item in sublist]
 
         option_strings = flatten(
             [
@@ -441,7 +417,7 @@ class BooleanFlag(Action):
             metavar=metavar,
         )
 
-    def __call__(self, parser, namespace, values, option_string):
+    def __call__(self, parser, namespace, values, option_string):  # noqa: ARG002
         setattr(namespace, self.dest, not option_string.startswith("--no"))
 
 
@@ -450,9 +426,7 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser.add_argument(
-        "--ctk",
-        dest="ctk_version",
-        help="CTK version to generate for",
+        "--ctk", dest="ctk_version", help="CTK version to generate for"
     )
     parser.add_argument(
         "--os",
@@ -507,10 +481,7 @@ if __name__ == "__main__":
         if not selected_sections:
             return True
 
-        if selected_sections and str(section) in selected_sections:
-            return True
-
-        return False
+        return bool(selected_sections and str(section) in selected_sections)
 
     config = EnvConfig(
         "test",
@@ -544,7 +515,7 @@ if __name__ == "__main__":
     if args.sections:
         filename = config.filename + "-partial"
 
-    print(f"--- generating: {filename}.yaml")
+    print(f"--- generating: {filename}.yaml")  # noqa: T201
     out = ENV_TEMPLATE.format(
         use=config.use,
         channels=config.channels,
@@ -556,5 +527,4 @@ if __name__ == "__main__":
             else ""
         ),
     )
-    with open(f"{filename}.yaml", "w") as f:
-        f.write(out)
+    Path(f"{filename}.yaml").write_text(out)

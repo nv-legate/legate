@@ -11,8 +11,9 @@
 
 from __future__ import annotations
 
-import importlib
 import textwrap
+import importlib
+from typing import ClassVar
 
 from docutils import nodes
 from docutils.parsers.rst.directives import unchanged
@@ -46,7 +47,7 @@ class SettingsDirective(SphinxDirective):
     has_content = True
     required_arguments = 1
     optional_arguments = 1
-    option_spec = {"module": unchanged}
+    option_spec: ClassVar = {"module": unchanged}
 
     def run(self):
         obj_name = " ".join(self.arguments)
@@ -55,17 +56,19 @@ class SettingsDirective(SphinxDirective):
         try:
             module = importlib.import_module(module_name)
         except ImportError:
-            raise SphinxError(
+            msg = (
                 f"Unable to generate reference docs for {obj_name}: "
                 f"couldn't import module {module_name}"
             )
+            raise SphinxError(msg)
 
         obj = getattr(module, obj_name, None)
         if obj is None:
-            raise SphinxError(
+            msg = (
                 f"Unable to generate reference docs for {obj_name}: "
                 f"no model {obj_name} in module {module_name}"
             )
+            raise SphinxError(msg)
 
         settings = []
         for x in obj.__class__.__dict__.values():
@@ -73,8 +76,8 @@ class SettingsDirective(SphinxDirective):
                 default = "(Unset)" if x.default is _Unset else repr(x.default)
             elif isinstance(x, EnvOnlySetting):
                 default = repr(x.default)
-                if x._test_default is not _Unset:
-                    default += f" (test-mode default: {x._test_default!r})"
+                if x.test_default is not _Unset:
+                    default += f" (test-mode default: {x.test_default!r})"
             else:
                 continue
 
@@ -107,4 +110,4 @@ def setup(app):
     """Required Sphinx extension setup function."""
     app.add_directive_to_domain("py", "settings", SettingsDirective)
 
-    return dict(parallel_read_safe=True, parallel_write_safe=True)
+    return {"parallel_read_safe": True, "parallel_write_safe": True}

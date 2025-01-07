@@ -10,11 +10,12 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import random
 import re
-from typing import Any, Optional, ParamSpec, Union
+import random
+from typing import Any, ParamSpec
 
 import numpy as np
+
 import pytest
 
 import legate.core as lg
@@ -28,7 +29,10 @@ from legate.core import (
     task as lct,
     types as ty,
 )
-from legate.core.data_interface import MAX_DATA_INTERFACE_VERSION
+from legate.core.data_interface import (
+    MAX_DATA_INTERFACE_VERSION,
+    LegateDataInterfaceItem,
+)
 from legate.core.task import (
     ADD,
     InputArray,
@@ -89,7 +93,7 @@ class BaseTest:
         self.check_valid_task(task)
         assert not task.registered
         with pytest.raises(RuntimeError):
-            task.task_id  # must complete registration first
+            _ = task.task_id  # must complete registration first
 
     def check_valid_invoker(
         self, invoker: VariantInvoker, func: TestFunction[_P, None]
@@ -125,7 +129,7 @@ class TestTask(BaseTest):
     # also don't issue a fence, and hence multiple tasks may execute together
     # and potentially cause memory errors (if they misbehave).
     @pytest.mark.parametrize(
-        "in_func, func_args", zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("in_func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
     )
     @pytest.mark.parametrize("register", [True, False])
     @pytest.mark.parametrize("check_called", [True, False])
@@ -156,7 +160,7 @@ class TestTask(BaseTest):
             self.check_func_called(func)
 
     @pytest.mark.parametrize(
-        "in_func, func_args", zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("in_func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
     )
     @pytest.mark.parametrize("register", [True, False])
     @pytest.mark.parametrize("check_called", [True, False])
@@ -251,12 +255,10 @@ class TestTask(BaseTest):
         task(d=d, c=c, b=b, a=a)
 
     @pytest.mark.parametrize(
-        "in_func, func_args", zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("in_func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
     )
     def test_invoke_unhandled_args(
-        self,
-        in_func: TestFunction[_P, None],
-        func_args: ArgDescr,
+        self, in_func: TestFunction[_P, None], func_args: ArgDescr
     ) -> None:
         func = in_func.deep_clone()
         task = lct.task()(func)
@@ -274,7 +276,7 @@ class TestTask(BaseTest):
         with pytest.raises(TypeError, match=kwargs_excn_re):
             task(
                 this_argument_does_not_exist="Lorem ipsum dolor",
-                *func_args.args(),
+                *func_args.args(),  # noqa: B026
             )
 
         with pytest.raises(TypeError, match=r"too many positional arguments"):
@@ -340,13 +342,16 @@ class TestTask(BaseTest):
     def test_deferred_exception(self, ExnType: type) -> None:
         @lct.task(throws_exception=True)
         def raises_exception() -> None:
-            raise ExnType("There is no peace but the Pax Romana")
+            msg = "There is no peace but the Pax Romana"
+            raise ExnType(msg)
 
-        with pytest.raises(
-            ExnType, match=r"There is no peace but the Pax Romana"
+        with (
+            pytest.raises(
+                ExnType, match=r"There is no peace but the Pax Romana"
+            ),
+            lg.Scope(exception_mode=lg.ExceptionMode.DEFERRED),
         ):
-            with lg.Scope(exception_mode=lg.ExceptionMode.DEFERRED):
-                raises_exception()
+            raises_exception()
 
     @pytest.mark.parametrize(
         "ExnType",
@@ -355,7 +360,8 @@ class TestTask(BaseTest):
     def test_ignored_exception(self, ExnType: type) -> None:
         @lct.task(throws_exception=True)
         def raises_exception() -> None:
-            raise ExnType("There is no peace but the Pax Romana")
+            msg = "There is no peace but the Pax Romana"
+            raise ExnType(msg)
 
         with lg.Scope(exception_mode=lg.ExceptionMode.IGNORED):
             raises_exception()
@@ -366,7 +372,7 @@ class TestTask(BaseTest):
 
         @lct.task(constraints=(lg.broadcast("store", (1,)),))
         def task_func(store: OutputStore) -> None:
-            assert False, "should never get here"
+            pytest.fail("should never get here")
 
         msg = "Invalid broadcasting dimension"
         with pytest.raises(ValueError, match=msg):
@@ -501,7 +507,7 @@ class TestTask(BaseTest):
     def test_scalar_arg_mismatching_dtype(self) -> None:
         @lct.task(throws_exception=True)
         def foo(scalar: Scalar) -> None:
-            assert False, "should never get here"
+            pytest.fail("should never get here")
 
         msg = "Task expected a value of type.*Scalar.*but got.*"
         with pytest.raises(TypeError, match=msg):
@@ -644,14 +650,14 @@ class TestTask(BaseTest):
         foo_or_none_reversed(None)
 
         @lct.task
-        def foo_optional(x: Optional[InputStore] = None) -> None:
+        def foo_optional(x: InputStore | None = None) -> None:
             assert x is None
 
         foo_optional()
         foo_optional(None)
 
         @lct.task
-        def foo_union(x: Union[InputStore, None] = None) -> None:
+        def foo_union(x: InputStore | None = None) -> None:
             assert x is None
 
         foo_union()
@@ -673,14 +679,14 @@ class TestTask(BaseTest):
         foo_or_none_reversed(None)
 
         @lct.task
-        def foo_optional(x: Optional[InputArray] = None) -> None:
+        def foo_optional(x: InputArray | None = None) -> None:
             assert x is None
 
         foo_optional()
         foo_optional(None)
 
         @lct.task
-        def foo_union(x: Union[InputArray, None] = None) -> None:
+        def foo_union(x: InputArray | None = None) -> None:
             assert x is None
 
         foo_union()
@@ -703,7 +709,9 @@ class TestLegateDataInterface:
 
     def test_missing_version(self) -> None:
         class MissingVersion:
-            __legate_data_interface__: Any = {}
+            @property
+            def __legate_data_interface__(self) -> Any:
+                return {}
 
         @lct.task
         def foo(x: InputArray) -> None:
@@ -711,21 +719,19 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             TypeError,
-            match="Argument: 'x' Legate data interface missing a version number",  # noqa E501
+            match="Argument: 'x' Legate data interface missing a version number",  # noqa: E501
         ):
             foo(MissingVersion())
 
     @pytest.mark.parametrize("v", ("junk", 1.2))
     def test_bad_version(self, v: Any) -> None:
         class BadVersion:
-            __legate_data_interface__ = {
-                "version": v,
-                "data": {
-                    Field("foo", dtype=ty.int64): FakeArray(
-                        make_input_store()
-                    ),
-                },
-            }
+            @property
+            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+                return {
+                    "version": v,
+                    "data": {Field("foo", dtype=ty.int64): make_input_array()},
+                }
 
         @lct.task
         def foo(x: InputArray) -> None:
@@ -733,21 +739,19 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             TypeError,
-            match="Argument: 'x' Legate data interface version expected an integer, got",  # noqa E501
+            match="Argument: 'x' Legate data interface version expected an integer, got",  # noqa: E501
         ):
             foo(BadVersion())
 
     @pytest.mark.parametrize("v", (0, -1))
     def test_bad_low_version(self, v: int) -> None:
         class LowVersion:
-            __legate_data_interface__ = {
-                "version": v,
-                "data": {
-                    Field("foo", dtype=ty.int64): FakeArray(
-                        make_input_store()
-                    ),
-                },
-            }
+            @property
+            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+                return {
+                    "version": v,
+                    "data": {Field("foo", dtype=ty.int64): make_input_array()},
+                }
 
         @lct.task
         def foo(x: InputArray) -> None:
@@ -763,14 +767,12 @@ class TestLegateDataInterface:
         v = MAX_DATA_INTERFACE_VERSION + 1
 
         class HighVersion:
-            __legate_data_interface__ = {
-                "version": v,
-                "data": {
-                    Field("foo", dtype=ty.int64): FakeArray(
-                        make_input_store()
-                    ),
-                },
-            }
+            @property
+            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+                return {
+                    "version": v,
+                    "data": {Field("foo", dtype=ty.int64): make_input_array()},
+                }
 
         @lct.task
         def foo(x: InputArray) -> None:
@@ -778,13 +780,15 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             NotImplementedError,
-            match=f"Argument: 'x' Unsupported Legate data interface version {v}",  # noqa E501
+            match=f"Argument: 'x' Unsupported Legate data interface version {v}",  # noqa: E501
         ):
             foo(HighVersion())
 
     def test_bad_missing_fields(self) -> None:
         class MissingFields:
-            __legate_data_interface__ = {"version": 1, "data": {}}
+            @property
+            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+                return {"version": 1, "data": {}}
 
         @lct.task
         def foo(x: InputArray) -> None:
@@ -797,17 +801,15 @@ class TestLegateDataInterface:
 
     def test_bad_multiple_fields(self) -> None:
         class TooManyFields:
-            __legate_data_interface__ = {
-                "version": 1,
-                "data": {
-                    Field("foo", dtype=ty.int64): FakeArray(
-                        make_input_store()
-                    ),
-                    Field("bar", dtype=ty.int64): FakeArray(
-                        make_input_store()
-                    ),
-                },
-            }
+            @property
+            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+                return {
+                    "version": 1,
+                    "data": {
+                        Field("foo", dtype=ty.int64): make_input_array(),
+                        Field("bar", dtype=ty.int64): make_input_array(),
+                    },
+                }
 
         @lct.task
         def foo(x: InputArray) -> None:
@@ -815,7 +817,7 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             NotImplementedError,
-            match="Argument: 'x' Legate data interface objects with more than one store are unsupported",  # noqa E501
+            match="Argument: 'x' Legate data interface objects with more than one store are unsupported",  # noqa: E501
         ):
             foo(TooManyFields())
 
@@ -823,14 +825,16 @@ class TestLegateDataInterface:
     @pytest.mark.xfail
     def test_bad_nullable_fields(self) -> None:
         class NullableField:
-            __legate_data_interface__ = {
-                "version": 1,
-                "data": {
-                    Field("foo", nullable=True, dtype=ty.int64): FakeArray(
-                        make_input_store()
-                    )
-                },
-            }
+            @property
+            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+                return {
+                    "version": 1,
+                    "data": {
+                        Field(
+                            "foo", nullable=True, dtype=ty.int64
+                        ): make_input_array()
+                    },
+                }
 
         @lct.task
         def foo(x: InputArray) -> None:
@@ -838,7 +842,7 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             NotImplementedError,
-            match="Argument: 'x' Legate data interface objects with nullable fields are unsupported",  # noqa E501
+            match="Argument: 'x' Legate data interface objects with nullable fields are unsupported",  # noqa: E501
         ):
             foo(NullableField())
 
@@ -846,14 +850,12 @@ class TestLegateDataInterface:
     @pytest.mark.skip
     def test_bad_nullable_array(self) -> None:
         class NullableStore:
-            __legate_data_interface__ = {
-                "version": 1,
-                "data": {
-                    Field("foo", dtype=ty.int64): FakeArray(
-                        make_input_store(), nullable=True
-                    )
-                },
-            }
+            @property
+            def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+                return {
+                    "version": 1,
+                    "data": {Field("foo", dtype=ty.int64): make_input_array()},
+                }
 
         @lct.task
         def foo(x: InputArray) -> None:
@@ -861,7 +863,7 @@ class TestLegateDataInterface:
 
         with pytest.raises(
             NotImplementedError,
-            match="Argument: 'x' Legate data interface objects with nullable stores are unsupported",  # noqa E501
+            match="Argument: 'x' Legate data interface objects with nullable stores are unsupported",  # noqa: E501
         ):
             foo(NullableStore())
 
@@ -876,8 +878,7 @@ class TestVariantInvoker(BaseTest):
     @pytest.mark.parametrize("func", UNTYPED_FUNCS)
     def test_untyped_funcs(self, func: TestFunction[_P, None]) -> None:
         with pytest.raises(TypeError):
-            invoker = VariantInvoker(func)
-            assert callable(invoker)  # unreachable
+            _ = VariantInvoker(func)
 
     def test_validate_good(self) -> None:
         def single_input_copy(a: InputStore) -> None:
@@ -893,11 +894,11 @@ class TestVariantInvoker(BaseTest):
 
         assert not invoker.valid_signature(multi_output)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             invoker.validate_signature(multi_output)
 
     @pytest.mark.parametrize(
-        "func, func_args", zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
     )
     def test_prepare_call_good(
         self,
@@ -907,11 +908,11 @@ class TestVariantInvoker(BaseTest):
     ) -> None:
         invoker = VariantInvoker(func)
         args = func_args.inputs
-        kwargs = dict()
+        kwargs = {}
         for attr in ("outputs", "scalars"):
             if attr_vals := getattr(func, attr, None):
                 for name, val in zip(attr_vals, getattr(func_args, attr)):
-                    kwargs[name] = val
+                    kwargs[name] = val  # noqa: PERF403
         invoker.prepare_call(fake_auto_task, args, kwargs)
 
     def test_prepare_call_bad(self, fake_auto_task: FakeAutoTask) -> None:
@@ -919,14 +920,14 @@ class TestVariantInvoker(BaseTest):
 
         with pytest.raises(TypeError):
             # should be an InputStore, not int
-            invoker.prepare_call(fake_auto_task, tuple(), {"a": 1})
+            invoker.prepare_call(fake_auto_task, (), {"a": 1})
 
         with pytest.raises(TypeError):
             # should be an InputStore, not int
             invoker.prepare_call(
                 fake_auto_task,
                 tuple(
-                    1,  # type: ignore [arg-type]
+                    1  # type: ignore [arg-type]
                 ),
                 {},
             )
@@ -945,25 +946,23 @@ class TestVariantInvoker(BaseTest):
         invoker = VariantInvoker(single_input)
         with pytest.raises(TypeError):
             # no arguments given
-            invoker.prepare_call(fake_auto_task, tuple(), {})
+            invoker.prepare_call(fake_auto_task, (), {})
 
         invoker = VariantInvoker(multi_input)
         with pytest.raises(TypeError):
             # no arguments given
-            invoker.prepare_call(fake_auto_task, tuple(), {})
+            invoker.prepare_call(fake_auto_task, (), {})
 
         with pytest.raises(TypeError):
             # missing 'a'
-            invoker.prepare_call(
-                fake_auto_task, tuple(), {"b": make_input_store()}
-            )
+            invoker.prepare_call(fake_auto_task, (), {"b": make_input_store()})
 
         with pytest.raises(TypeError):
             # missing 'b'
             invoker.prepare_call(fake_auto_task, (make_input_store(),), {})
 
     @pytest.mark.parametrize(
-        "in_func, func_args", zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("in_func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
     )
     @pytest.mark.parametrize("check_called", [True, False])
     def test_invoke_auto(
@@ -995,7 +994,7 @@ class TestTaskUtil:
         lct._util.validate_variant(variant_kind)
 
     def test_validate_variant_bad(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             lct._util.validate_variant(345)  # type: ignore[arg-type]
 
 
@@ -1004,4 +1003,4 @@ if __name__ == "__main__":
 
     # add -s to args, we do not want pytest to capture stdout here since this
     # gobbles any C++ exceptions
-    sys.exit(pytest.main(sys.argv + ["-s"]))
+    sys.exit(pytest.main([*sys.argv, "-s"]))

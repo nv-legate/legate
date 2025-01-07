@@ -24,7 +24,7 @@ from legate.core import (
 
 class TestTaskTargetKind:
     def test_names(self) -> None:
-        assert set(k.name for k in TaskTarget) == {"GPU", "OMP", "CPU"}
+        assert {k.name for k in TaskTarget} == {"GPU", "OMP", "CPU"}
 
     def test_values(self) -> None:
         # Relative order is important, must match machine.h, GPU -> OMP -> CPU
@@ -39,7 +39,9 @@ class TestProcessorRange:
     def test_create_nonempty(self) -> None:
         r = ProcessorRange.create(low=1, high=3, per_node_count=1)
         assert not r.empty
-        assert r.per_node_count == 1 and r.low == 1 and r.high == 3
+        assert r.per_node_count == 1
+        assert r.low == 1
+        assert r.high == 3
         assert len(r) == 2
 
         assert r.get_node_range() == (1, 3)
@@ -47,17 +49,21 @@ class TestProcessorRange:
     def test_create_empty(self) -> None:
         r = ProcessorRange.create(low=1, high=0, per_node_count=1)
         assert r.empty
-        assert r.per_node_count == 1 and r.low == 0 and r.high == 0
+        assert r.per_node_count == 1
+        assert r.low == 0
+        assert r.high == 0
         assert len(r) == 0
 
         r = ProcessorRange.create(low=2, high=1, per_node_count=1)
         assert r.empty
-        assert r.low == 0 and r.high == 0
+        assert r.low == 0
+        assert r.high == 0
         assert len(r) == 0
 
         r = ProcessorRange.create_empty()
         assert r.empty
-        assert r.low == 0 and r.high == 0
+        assert r.low == 0
+        assert r.high == 0
         assert len(r) == 0
 
         err_msg = "Illegal to get a node range of an empty processor range"
@@ -233,8 +239,11 @@ class TestMachine:
         assert Machine().empty
         assert Machine({TaskTarget.GPU: EMPTY_RANGE}).empty
         assert not Machine(dict(zip(TARGETS, RANGES))).empty
-        assert Machine().valid_targets == tuple()
-        assert Machine({TaskTarget.GPU: EMPTY_RANGE}).valid_targets == tuple()
+        empty_tup: tuple[int, ...] = ()
+        assert Machine().valid_targets == empty_tup
+        assert (
+            Machine({TaskTarget.GPU: EMPTY_RANGE}).valid_targets == empty_tup
+        )
 
     def test_idempotent_scopes(self) -> None:
         from legate.core import get_machine
@@ -255,7 +264,7 @@ class TestMachine:
             low=1, high=0, per_node_count=rng.per_node_count
         )
         err_msg = "Empty machines cannot be used for resource scoping"
-        with pytest.raises(EmptyMachineError, match=err_msg):
+        with pytest.raises(EmptyMachineError, match=err_msg):  # noqa: SIM117
             with Machine({machine.preferred_target: empty_rng}):
                 pass
 
@@ -265,9 +274,8 @@ class TestMachine:
         machine = get_machine()
         with machine:
             err_msg = "Each machine can be set only once to the scope"
-            with pytest.raises(ValueError, match=err_msg):
-                with machine:
-                    pass
+            with pytest.raises(ValueError, match=err_msg), machine:
+                pass
 
 
 if __name__ == "__main__":

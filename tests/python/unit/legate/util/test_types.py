@@ -9,12 +9,12 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import ClassVar
 
 import legate.util.types as m
 
@@ -33,7 +33,7 @@ class Source:
     foo = 10
     bar = 10.2
     baz = "test"
-    quux = ["a", "b", "c"]
+    quux: ClassVar = ["a", "b", "c"]
     extra = (1, 2, 3)
 
 

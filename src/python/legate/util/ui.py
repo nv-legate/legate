@@ -16,11 +16,11 @@ order to generate color output. If ``rich`` is not available, plain
 text output (i.e. without ANSI color codes) will be generated.
 
 """
+
 from __future__ import annotations
 
 import shlex
 from collections.abc import Iterable
-from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 from rich import box
@@ -29,6 +29,8 @@ from rich.table import Table
 from rich.text import Text
 
 if TYPE_CHECKING:
+    from datetime import timedelta
+
     from rich.console import RenderableType, TextType
 
 Details: TypeAlias = Iterable[str]
@@ -43,9 +45,9 @@ __all__ = (
     "env",
     "error",
     "failed",
-    "table",
     "passed",
     "skipped",
+    "table",
     "timeout",
     "warn",
 )
@@ -68,10 +70,7 @@ def _format_details(
 
 
 def banner(
-    title: TextType,
-    content: RenderableType,
-    *,
-    width: int = UI_WIDTH,
+    title: TextType, content: RenderableType, *, width: int = UI_WIDTH
 ) -> Panel:
     """Generate a titled banner, with details included.
 
@@ -98,12 +97,8 @@ def banner(
     )
 
 
-def section(
-    content: RenderableType,
-    *,
-    width: int = UI_WIDTH,
-) -> Panel:
-    """Generate a section divider
+def section(content: RenderableType, *, width: int = UI_WIDTH) -> Panel:
+    """Generate a section divider.
 
     Parameters
     ----------
@@ -166,7 +161,7 @@ def warn(message: str) -> Text:
 
 
 def skipped(message: str) -> Text:
-    """Report a skipped test with a cyan [SKIP]
+    """Report a skipped test with a cyan [SKIP].
 
     Parameters
     ----------
@@ -184,7 +179,7 @@ def skipped(message: str) -> Text:
 
 
 def timeout(message: str, *, details: Details | None = None) -> Text:
-    """Report a timed-out test with a yellow [TIME]
+    """Report a timed-out test with a yellow [TIME].
 
     Parameters
     ----------
@@ -272,7 +267,7 @@ def passed(message: str, *, details: Details | None = None) -> Text:
 
 
 def table(
-    items: KeyVals, quote: bool = True, justify: Justify = "right"
+    items: KeyVals, *, quote: bool = True, justify: Justify = "right"
 ) -> Table:
     """Format a dictionary as a basic table.
 
@@ -300,12 +295,8 @@ def table(
     return table
 
 
-def env(
-    items: KeyVals,
-    *,
-    keys: Iterable[str] | None = None,
-) -> Text:
-    """Format a dictionary as a table of environment variables
+def env(items: KeyVals, *, keys: Iterable[str] | None = None) -> Text:
+    """Format a dictionary as a table of environment variables.
 
     Values are passed to shlex.quote before formatting.
 
@@ -358,11 +349,7 @@ def shell(cmd: str, *, char: str = "+") -> Text:
     return Text(f"{char}{cmd}", style="dim white")
 
 
-def summary(
-    total: int,
-    passed: int,
-    time: timedelta,
-) -> Text:
+def summary(total: int, passed: int, time: timedelta) -> Text:
     """Generate a test result summary line.
 
     The output is bold green if all tests passed, otherwise bold red.

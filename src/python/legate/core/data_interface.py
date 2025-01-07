@@ -29,17 +29,14 @@ class LegateDataInterfaceItem(TypedDict):
 
 class LegateDataInterface(Protocol):
     @property
-    def __legate_data_interface__(self) -> LegateDataInterfaceItem:
+    def __legate_data_interface__(  # noqa: D105
+        self,
+    ) -> LegateDataInterfaceItem:
         pass
 
 
 class Field:
-    def __init__(
-        self,
-        name: str,
-        dtype: Type,
-        nullable: bool = False,
-    ):
+    def __init__(self, name: str, dtype: Type, *, nullable: bool = False):
         """
         A field is metadata associated with a single array in the legate data
         interface object.
@@ -53,9 +50,9 @@ class Field:
         nullable : bool
             Indicates whether the array is nullable
         """
-
         if nullable:
-            raise NotImplementedError("Nullable array is not yet supported")
+            msg = "Nullable array is not yet supported"
+            raise NotImplementedError(msg)
 
         self._name = name
         self._dtype = dtype
@@ -64,7 +61,7 @@ class Field:
     @property
     def name(self) -> str:
         """
-        Returns the array's name
+        Returns the array's name.
 
         Returns
         -------
@@ -76,7 +73,7 @@ class Field:
     @property
     def type(self) -> Type:
         """
-        Returns the array's data type
+        Returns the array's data type.
 
         Returns
         -------
@@ -88,7 +85,7 @@ class Field:
     @property
     def nullable(self) -> bool:
         """
-        Indicates whether the array is nullable
+        Indicates whether the array is nullable.
 
         Returns
         -------
@@ -97,7 +94,7 @@ class Field:
         """
         return self._nullable
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # noqa: D105
         return f"Field({self.name!r})"
 
 
@@ -118,7 +115,7 @@ class Table(LegateDataInterface):
         The Legate data interface allows for different Legate libraries to get
         access to the base Legion primitives that back objects from different
         Legate libraries. It currently requires objects that implement it to
-        return a dictionary that contains two members:
+        return a dictionary that contains two members.
 
         Returns
         -------
@@ -139,10 +136,7 @@ class Table(LegateDataInterface):
         return result
 
     @staticmethod
-    def from_arrays(
-        names: list[str],
-        arrays: list[LogicalArray],
-    ) -> Table:
+    def from_arrays(names: list[str], arrays: list[LogicalArray]) -> Table:
         """
         Construct a Table from a list of LogicalArrays.
 
@@ -158,10 +152,11 @@ class Table(LegateDataInterface):
         Table
         """
         if len(names) != len(arrays):
-            raise ValueError(
+            msg = (
                 f"Length of names ({names}) does not match "
                 f"length of arrays ({arrays})"
             )
+            raise ValueError(msg)
         fields = [
             Field(name, array.type) for name, array in zip(names, arrays)
         ]

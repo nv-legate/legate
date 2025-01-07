@@ -9,13 +9,13 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-""" """
+from __future__ import annotations
 
 from .. import install_info as info
 
 
-def print_build_info() -> None:
-    print(
+def print_build_info() -> None:  # noqa: D103
+    print(  # noqa: T201
         f"""Legate build configuration:
   build_type : {info.build_type}
   use_openmp : {info.use_openmp}

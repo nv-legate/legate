@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
+
 import pytest
 
 from legate.core import (
@@ -108,7 +109,7 @@ class TestPyTask:
         assert np.all(out_arr == val)
 
     @pytest.mark.parametrize(
-        "val, dtype", zip(SCALAR_VALS, ARRAY_TYPES), ids=str
+        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES), ids=str
     )
     def test_legate_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
@@ -143,7 +144,7 @@ class TestPyTask:
 
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     @pytest.mark.parametrize(
-        "dtype, val", zip(ARRAY_TYPES, SCALAR_VALS), ids=str
+        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS), ids=str
     )
     def test_ndarray_scalar_arg(
         self, shape: tuple[int, ...], dtype: Type, val: Any
@@ -239,7 +240,7 @@ class TestPyTask:
         ndim = len(shape)
         indices = np.indices(shape)
         point_type = ty.point_type(ndim)
-        points = np.stack([v for v in indices], axis=indices.ndim - 1).reshape(
+        points = np.stack(list(indices), axis=indices.ndim - 1).reshape(
             (indices.size // ndim, ndim)
         )
 
@@ -249,10 +250,7 @@ class TestPyTask:
         rng = np.random.default_rng()
         rng.shuffle(func_arr)
         func_store = runtime.create_store_from_buffer(
-            point_type,
-            func_shape,
-            func_arr[: np.prod(func_shape)],
-            False,
+            point_type, func_shape, func_arr[: np.prod(func_shape)], False
         )
 
         _, range_store = utils.random_array_and_store(shape)

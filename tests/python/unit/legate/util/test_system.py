@@ -13,12 +13,15 @@ from __future__ import annotations
 
 import os
 import platform
+from typing import TYPE_CHECKING
 
 import pytest
-from pytest_mock import MockerFixture
 
 import legate.util.system as m
 from legate.util.types import CPUInfo
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
 
 def test___all__() -> None:
@@ -52,29 +55,27 @@ class TestSystem:
 
         msg = "Legate does not work on junk"
         with pytest.raises(RuntimeError, match=msg):
-            s.os
+            _ = s.os
 
     # These properties delegate to util functions, just verify plumbing
 
     def test_legate_paths(self, mocker: MockerFixture) -> None:
         mocker.patch(
-            "legate.util.system.get_legate_paths",
-            return_value="legate paths",
+            "legate.util.system.get_legate_paths", return_value="legate paths"
         )
 
         s = m.System()
 
-        assert s.legate_paths == "legate paths"  # type: ignore
+        assert s.legate_paths == "legate paths"  # type: ignore[comparison-overlap]
 
     def test_legion_paths(self, mocker: MockerFixture) -> None:
         mocker.patch(
-            "legate.util.system.get_legion_paths",
-            return_value="legion paths",
+            "legate.util.system.get_legion_paths", return_value="legion paths"
         )
 
         s = m.System()
 
-        assert s.legion_paths == "legion paths"  # type: ignore
+        assert s.legion_paths == "legion paths"  # type: ignore[comparison-overlap]
 
     def test_cpus(self) -> None:
         s = m.System()
@@ -88,12 +89,12 @@ class TestSystem:
 
         msg = "GPU execution is not available on OSX."
         with pytest.raises(RuntimeError, match=msg):
-            s.gpus
+            _ = s.gpus
 
 
 class Test_expand_range:
     def test_errors(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             m.expand_range("foo")
 
     def test_empty(self) -> None:
@@ -111,103 +112,95 @@ class Test_expand_range:
 
 class Test_extract_values:
     def test_errors(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             m.extract_values("foo")
 
     def test_empty(self) -> None:
         assert m.extract_values("") == ()
 
-    testdata_individual = [
-        ("0", (0,)),
-        ("1,2", (1, 2)),
-        ("3,5,7", (3, 5, 7)),
-    ]
-
-    @pytest.mark.parametrize("val,expected", testdata_individual)
+    @pytest.mark.parametrize(
+        ("val", "expected"),
+        [("0", (0,)), ("1,2", (1, 2)), ("3,5,7", (3, 5, 7))],
+    )
     def test_individual(self, val: str, expected: tuple[int, ...]) -> None:
         assert m.extract_values(val) == expected
 
-    testdata_individual_ordered = [
-        ("2,1", (1, 2)),
-        ("8,5,3,2", (2, 3, 5, 8)),
-        ("1,3,2,5,4,7,6", (1, 2, 3, 4, 5, 6, 7)),
-    ]
-
-    @pytest.mark.parametrize("val,expected", testdata_individual_ordered)
+    @pytest.mark.parametrize(
+        ("val", "expected"),
+        [
+            ("2,1", (1, 2)),
+            ("8,5,3,2", (2, 3, 5, 8)),
+            ("1,3,2,5,4,7,6", (1, 2, 3, 4, 5, 6, 7)),
+        ],
+    )
     def test_individual_ordered(
         self, val: str, expected: tuple[int, ...]
     ) -> None:
         assert m.extract_values(val) == expected
 
-    testdata_range = [
-        ("0-2", (0, 1, 2)),
-        ("0-2,4-5", (0, 1, 2, 4, 5)),
-        ("0-1,3-5,8-11", (0, 1, 3, 4, 5, 8, 9, 10, 11)),
-    ]
-
-    @pytest.mark.parametrize("val,expected", testdata_range)
+    @pytest.mark.parametrize(
+        ("val", "expected"),
+        [
+            ("0-2", (0, 1, 2)),
+            ("0-2,4-5", (0, 1, 2, 4, 5)),
+            ("0-1,3-5,8-11", (0, 1, 3, 4, 5, 8, 9, 10, 11)),
+        ],
+    )
     def test_range(self, val: str, expected: tuple[int, ...]) -> None:
         assert m.extract_values(val) == expected
 
-    testdata_range_ordered = [
-        ("2-3,0-1", (0, 1, 2, 3)),
-        ("0-1,4-5,2-3", (0, 1, 2, 3, 4, 5)),
-    ]
-
-    @pytest.mark.parametrize("val,expected", testdata_range_ordered)
+    @pytest.mark.parametrize(
+        ("val", "expected"),
+        [("2-3,0-1", (0, 1, 2, 3)), ("0-1,4-5,2-3", (0, 1, 2, 3, 4, 5))],
+    )
     def test_range_ordered(self, val: str, expected: tuple[int, ...]) -> None:
         assert m.extract_values(val) == expected
 
-    testdata_mixed = [
-        ("0,1-2", (0, 1, 2)),
-        ("1-2,0", (0, 1, 2)),
-        ("0,1-2,3,4-5,6", (0, 1, 2, 3, 4, 5, 6)),
-        ("5-6,4,1-3,0", (0, 1, 2, 3, 4, 5, 6)),
-    ]
-
-    @pytest.mark.parametrize("val,expected", testdata_mixed)
+    @pytest.mark.parametrize(
+        ("val", "expected"),
+        [
+            ("0,1-2", (0, 1, 2)),
+            ("1-2,0", (0, 1, 2)),
+            ("0,1-2,3,4-5,6", (0, 1, 2, 3, 4, 5, 6)),
+            ("5-6,4,1-3,0", (0, 1, 2, 3, 4, 5, 6)),
+        ],
+    )
     def test_mixed(self, val: str, expected: tuple[int, ...]) -> None:
         assert m.extract_values(val) == expected
 
 
 class Test_parse_cuda_visible_devices:
-    test_data_singleton = [
-        ("0", 8, [0]),
-        ("7", 8, [7]),
-    ]
-
     @pytest.mark.parametrize(
-        "env_string,max_gpu,expected", test_data_singleton
+        ("env_string", "max_gpu", "expected"), [("0", 8, [0]), ("7", 8, [7])]
     )
     def test_singleton(
         self, env_string: str, max_gpu: int, expected: list[int]
     ) -> None:
         assert m.parse_cuda_visible_devices(env_string, max_gpu) == expected
 
-    test_data_list = [
-        ("1,2,3", 8, [1, 2, 3]),
-        ("3,1,2", 8, [3, 1, 2]),
-    ]
-
-    @pytest.mark.parametrize("env_string,max_gpu,expected", test_data_list)
+    @pytest.mark.parametrize(
+        ("env_string", "max_gpu", "expected"),
+        [("1,2,3", 8, [1, 2, 3]), ("3,1,2", 8, [3, 1, 2])],
+    )
     def test_list(
         self, env_string: str, max_gpu: int, expected: list[int]
     ) -> None:
         assert m.parse_cuda_visible_devices(env_string, max_gpu) == expected
 
-    test_data_partial = [
-        ("1,2,-3", 8, [1, 2]),
-        ("1,2,x", 8, [1, 2]),
-        ("1,2,8", 8, [1, 2]),
-        ("1,2,-3,4", 8, [1, 2]),
-        ("1,2,x,4", 8, [1, 2]),
-        ("1,2,8,4", 8, [1, 2]),
-        ("-3,1,2", 8, []),
-        ("x,3,4", 8, []),
-        ("8,3,4", 8, []),
-    ]
-
-    @pytest.mark.parametrize("env_string,max_gpu,expected", test_data_partial)
+    @pytest.mark.parametrize(
+        ("env_string", "max_gpu", "expected"),
+        [
+            ("1,2,-3", 8, [1, 2]),
+            ("1,2,x", 8, [1, 2]),
+            ("1,2,8", 8, [1, 2]),
+            ("1,2,-3,4", 8, [1, 2]),
+            ("1,2,x,4", 8, [1, 2]),
+            ("1,2,8,4", 8, [1, 2]),
+            ("-3,1,2", 8, []),
+            ("x,3,4", 8, []),
+            ("8,3,4", 8, []),
+        ],
+    )
     def test_partial(
         self, env_string: str, max_gpu: int, expected: list[int]
     ) -> None:

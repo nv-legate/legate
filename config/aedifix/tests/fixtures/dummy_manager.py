@@ -10,13 +10,15 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from typing import Any, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 import pytest
 
 from ...manager import ConfigurationManager
 from .dummy_main_module import DummyMainModule
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 _T = TypeVar("_T")
 _P = ParamSpec("_P")
@@ -48,4 +50,4 @@ class DummyManager(ConfigurationManager):
 
 @pytest.fixture
 def manager() -> DummyManager:
-    return DummyManager(tuple(), DummyMainModule)
+    return DummyManager((), DummyMainModule)

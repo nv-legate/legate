@@ -9,9 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate driver configuration from command-line and environment.
+"""Consolidate driver configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -83,25 +82,43 @@ class Config:
         # turn everything else off
         self.user_program: str | None = None
         self.user_opts: tuple[str, ...] = ()
-        self.binding = Binding(None, None, None, None)
-        self.profiling = Profiling(False, False, False, False, "", [])
-        self.logging = Logging(None, Path(), False)
-        self.debugging = Debugging(
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
-            False,
+        self.binding = Binding(
+            cpu_bind=None, mem_bind=None, gpu_bind=None, nic_bind=None
         )
-        self.info = Info(self.verbose > 0, False)
-        self.other = Other(False, [], [], None, False, False)
+        self.profiling = Profiling(
+            profile=False,
+            cprofile=False,
+            nvprof=False,
+            nsys=False,
+            nsys_targets="",
+            nsys_extra=[],
+        )
+        self.logging = Logging(
+            user_logging_levels=None, logdir=Path(), log_to_file=False
+        )
+        self.debugging = Debugging(
+            gdb=False,
+            cuda_gdb=False,
+            memcheck=False,
+            valgrind=False,
+            freeze_on_error=False,
+            gasnet_trace=False,
+            spy=False,
+        )
+        self.info = Info(verbose=self.verbose > 0, bind_detail=False)
+        self.other = Other(
+            timing=False,
+            wrapper=[],
+            wrapper_inner=[],
+            module=None,
+            dry_run=False,
+            color=False,
+        )
 
     @cached_property
-    def run_mode(self) -> RunMode:
+    def run_mode(self) -> RunMode:  # noqa: D102
         return "python"
 
     @cached_property
-    def console(self) -> bool:
+    def console(self) -> bool:  # noqa: D102
         return True

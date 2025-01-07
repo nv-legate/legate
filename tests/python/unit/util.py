@@ -12,9 +12,12 @@
 from __future__ import annotations
 
 from itertools import chain, combinations
-from typing import Any, Iterable, Iterator, TypeAlias
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
 
 Capsys: TypeAlias = pytest.CaptureFixture[str]
 

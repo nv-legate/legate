@@ -9,21 +9,22 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
-import os
 import shutil
-from pathlib import Path, PurePath
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-from pytest_mock import MockerFixture
 
 from legate.tester import config as m, defaults
 from legate.tester.args import PIN_OPTIONS, PinOptionsType
 from legate.tester.project import Project
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
 REPO_TOP = Path(__file__).parents[4]
 PROJECT = Project()
@@ -77,7 +78,7 @@ class TestConfig:
         assert c.other.legate_install_dir is None
 
         assert c.extra_args == []
-        assert c.root_dir == PurePath(os.getcwd())
+        assert c.root_dir == Path.cwd()
         assert c.dry_run is False
         assert c.legate_path == shutil.which("legate")
 
@@ -189,20 +190,18 @@ class TestConfig:
 
     def test_extra_args(self) -> None:
         extra = ["-foo", "--bar", "--baz", "10"]
-        c = m.Config(["test.py"] + extra, project=PROJECT)
+        c = m.Config(["test.py", *extra], project=PROJECT)
         assert c.extra_args == extra
 
         # also test with --files since that option collects arguments
-        c = m.Config(["test.py", "--files", "a", "b"] + extra, project=PROJECT)
+        c = m.Config(["test.py", "--files", "a", "b", *extra], project=PROJECT)
         assert c.extra_args == extra
-        c = m.Config(
-            ["test.py"] + extra + ["--files", "a", "b"], project=PROJECT
-        )
+        c = m.Config(["test.py", *extra, "--files", "a", "b"], project=PROJECT)
         assert c.extra_args == extra
 
     def test_cov_args(self) -> None:
         cov_args = ["--cov-args", "run -a"]
-        c = m.Config(["test.py"] + cov_args, project=PROJECT)
+        c = m.Config(["test.py", *cov_args], project=PROJECT)
         assert c.other.cov_args == "run -a"
 
     def test_multi_ranks_bad_launcher(self) -> None:
@@ -256,7 +255,7 @@ class Test_test_files:
             ["test.py", "--files", "a", "b", "--last-failed"], project=PROJECT
         )
         with pytest.raises(RuntimeError):
-            c.test_files
+            _ = c.test_files
 
     @pytest.mark.parametrize("data", ("", " ", "\n", " \n "))
     def test_last_failed_empty(self, mocker: MockerFixture, data: str) -> None:
@@ -273,7 +272,7 @@ class Test_test_files:
 
     def test_last_failed(self, mocker: MockerFixture) -> None:
         mock_last_failed = mocker.mock_open(read_data="\nfoo\nbar\nbaz\n")
-        mocker.patch("builtins.open", mock_last_failed)
+        mocker.patch("pathlib.Path.open", mock_last_failed)
         c = m.Config(
             ["test.py", "--last-failed", "--root-dir", str(REPO_TOP)],
             project=PROJECT,

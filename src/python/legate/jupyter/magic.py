@@ -52,22 +52,22 @@ class LegateInfo:
 
     def __init__(self) -> None:
         if LEGATE_JUPYTER_KERNEL_SPEC_KEY not in os.environ:
-            raise RuntimeError("Cannot determine currently running kernel")
+            msg = "Cannot determine currently running kernel"
+            raise RuntimeError(msg)
 
         spec_name = os.environ[LEGATE_JUPYTER_KERNEL_SPEC_KEY]
 
         try:
             spec = KernelSpecManager().get_kernel_spec(spec_name)
         except NoSuchKernel:
-            raise RuntimeError(
-                f"Cannot find a Legate Jupyter kernel named {spec_name!r}"
-            )
+            msg = f"Cannot find a Legate Jupyter kernel named {spec_name!r}"
+            raise RuntimeError(msg)
 
         self.spec_name = spec_name
         self.config = spec.metadata[LEGATE_JUPYTER_METADATA_KEY]
 
     @property
-    def ui(self) -> Group:
+    def ui(self) -> Group:  # noqa: D102
         nodes = self.config["multi_node"]["nodes"]
         header = f"Kernel {self.spec_name!r} configured for {nodes} node(s)"
         core_table = {
@@ -93,5 +93,5 @@ class LegateInfoMagics(Magics):
         self.info = LegateInfo()
 
     @line_magic
-    def legate_info(self, line: str) -> None:
+    def legate_info(self, line: str) -> None:  # noqa: ARG002, D102
         rich_print(self.info.ui)

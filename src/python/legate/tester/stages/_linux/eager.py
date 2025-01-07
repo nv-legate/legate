@@ -39,13 +39,15 @@ class Eager(TestStage):
 
     kind: FeatureType = "eager"
 
-    args: ArgList = []
-
     def __init__(self, config: Config, system: TestSystem) -> None:
         self._init(config, system)
 
-    def stage_env(self, config: Config, system: TestSystem) -> EnvDict:
-        return dict()
+    def stage_env(
+        self,
+        config: Config,  # noqa: ARG002
+        system: TestSystem,  # noqa: ARG002
+    ) -> EnvDict:
+        return {}
 
     def shard_args(self, shard: Shard, config: Config) -> ArgList:
         return [

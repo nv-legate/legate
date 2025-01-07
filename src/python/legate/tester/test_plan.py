@@ -9,13 +9,13 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Provide a TestPlan class to coordinate multiple feature test stages.
+"""Provide a TestPlan class to coordinate multiple feature test stages."""
 
-"""
 from __future__ import annotations
 
 from datetime import timedelta
 from itertools import chain
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from rich.rule import Rule
@@ -23,13 +23,14 @@ from rich.text import Text
 
 from ..util.ui import banner, section, summary, table, warn
 from . import LAST_FAILED_FILENAME
-from .config import Config
 from .logger import LOG
 from .stages import STAGES, log_proc
-from .test_system import ProcessResult, TestSystem
 
 if TYPE_CHECKING:
     from rich.panel import Panel
+
+    from .config import Config
+    from .test_system import ProcessResult, TestSystem
 
 
 class TestPlan:
@@ -54,11 +55,11 @@ class TestPlan:
 
     def execute(self) -> int:
         """Execute the entire test run with all configured feature stages."""
-
         # This code path will exit the process
         if self._config.other.gdb:
             if len(self._stages) != 1:
-                raise ValueError("--gdb only works with a single stage")
+                msg = "--gdb only works with a single stage"
+                raise ValueError(msg)
             self._stages[0].execute(self._config, self._system)
 
         LOG.clear()
@@ -87,7 +88,6 @@ class TestPlan:
     @property
     def intro(self) -> Panel:
         """An informative banner to display at test run start."""
-
         cpus = len(self._system.cpus)
         try:
             gpus: int | str = len(self._system.gpus)
@@ -123,8 +123,8 @@ class TestPlan:
 
         """
         details = (
-            f"* {s.name: <6}: "
-            + f"{s.result.passed} / {s.result.total} passed in {s.result.time.total_seconds():0.2f}s"  # noqa E501
+            f"* {s.name: <6}: {s.result.passed} / {s.result.total} passed in "
+            f"{s.result.time.total_seconds():0.2f}s"
             for s in self._stages
         )
 
@@ -157,7 +157,7 @@ class TestPlan:
             return
 
         try:
-            with open(LAST_FAILED_FILENAME, "w") as f:
+            with Path(LAST_FAILED_FILENAME).open(mode="w") as f:
                 f.write("\n".join(sorted(str(x) for x in fails)))
         except OSError:
             warn("Couldn't write last-fails")

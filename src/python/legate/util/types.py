@@ -9,25 +9,25 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Provide types that are useful throughout the test driver code.
+"""Provide types that are useful throughout the test driver code."""
 
-"""
 from __future__ import annotations
 
 from dataclasses import Field, dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, TypeVar
 
 from .ui import table
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from rich.table import Table
 
 __all__ = (
     "ArgList",
+    "CPUInfo",
     "Command",
     "CommandPart",
-    "CPUInfo",
     "DataclassMixin",
     "DataclassProtocol",
     "EnvDict",
@@ -42,7 +42,7 @@ __all__ = (
 
 @dataclass(frozen=True)
 class CPUInfo:
-    """Encapsulate information about a single CPU"""
+    """Encapsulate information about a single CPU."""
 
     #: IDs of hypterthreading sibling cores for a given physical core
     ids: tuple[int, ...]
@@ -50,7 +50,7 @@ class CPUInfo:
 
 @dataclass(frozen=True)
 class GPUInfo:
-    """Encapsulate information about a single CPU"""
+    """Encapsulate information about a single CPU."""
 
     #: ID of the GPU to specify in test shards
     id: int
@@ -98,7 +98,7 @@ class DataclassMixin(DataclassProtocol):
     """A mixin for automatically pretty-printing a dataclass."""
 
     @property
-    def ui(self) -> Table:
+    def ui(self) -> Table:  # noqa: D102
         return table(self.__dict__, justify="left")
 
 

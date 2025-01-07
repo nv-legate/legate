@@ -8,13 +8,10 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-from __future__ import annotations
-
 from inspect import Signature
 from typing import Any
 
 from ..._lib.operation.task import AutoTask
-from ..._lib.partitioning.constraint import ConstraintProxy
 from ..._lib.task.task_context import TaskContext
 from .type import ConstraintSet, ParamList, UserFunction
 

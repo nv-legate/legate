@@ -42,25 +42,28 @@ class Python(Package):
         except (RuntimeError, FileNotFoundError) as excn:
             if self.state.disabled():
                 # Not sure how we'd get here
-                raise RuntimeError(
+                msg = (
                     "The Python package does not appear to be enabled, yet we "
                     "are in the middle of configuring it. I'm not sure how we "
                     "got here, this should not happen"
                 )
+                raise RuntimeError(msg) from excn
             # Python is requested, now to determine whether the user did
             # that or some other piece of the code
             if self.state.explicitly_enabled():
                 # If the user wants python, but we cannot find/use it, then
                 # that's a hard error
-                raise UnsatisfiableConfigurationError(
+                msg = (
                     f"{excn}. You have explicitly requested Python via "
                     f"{self.With_Python.name} {self.cl_args.with_python.value}"
-                ) from excn
+                )
+                raise UnsatisfiableConfigurationError(msg) from excn
             # Some other piece of code has set the cl_args to true
-            raise RuntimeError(
+            msg = (
                 f"{excn}. Some other package has implicitly enabled python"
                 " but could not locate active lib directories for it"
-            ) from excn
+            )
+            raise RuntimeError(msg) from excn
 
         self.lib_version = version
         self.lib_path = lib_path

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -21,7 +19,7 @@ from legate.util.system import System
 __all__ = ("main",)
 
 
-def main(argv: list[str]) -> int:
+def main(argv: list[str]) -> int:  # noqa: D103
     config = Config(argv)
     system = System()
 

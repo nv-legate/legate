@@ -16,7 +16,6 @@ from argparse import (
     ArgumentTypeError,
     _ArgumentGroup as ArgumentGroup,
 )
-from collections.abc import Callable, Sequence
 from dataclasses import (
     dataclass,
     fields as dataclasses_fields,
@@ -27,6 +26,8 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypeVar
 from .exception import LengthError
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
     from ..cmake.cmake_flags import _CMakeVar
 
 
@@ -134,7 +135,8 @@ class ConfigArgument:
                 return False
             case _:
                 pass
-        raise ArgumentTypeError(f"Boolean value expected, got '{v}'")
+        msg = f"Boolean value expected, got '{v}'"
+        raise ArgumentTypeError(msg)
 
     def add_to_argparser(self, parser: ArgumentParser | ArgumentGroup) -> None:
         r"""Add the contents of this ConfigArgument to an argument parser.
@@ -164,9 +166,9 @@ class ConfigArgument:
 
 class ExclusiveArgumentGroup:
     def __init__(
-        self, required: bool = False, **kwargs: ConfigArgument
+        self, *, required: bool = False, **kwargs: ConfigArgument
     ) -> None:
-        r"""Construct an ExclusiveArgumentGroup
+        r"""Construct an ExclusiveArgumentGroup.
 
         Parameters
         ----------
@@ -184,13 +186,15 @@ class ExclusiveArgumentGroup:
         TypeError
             If any of **kwargs is not a ConfigArgument.
         """
-        if len(kwargs) < 2:
-            raise LengthError(
-                "Must supply at least 2 arguments to exclusive group"
-            )
+        if len(kwargs) < 2:  # noqa: PLR2004
+            msg = "Must supply at least 2 arguments to exclusive group"
+            raise LengthError(msg)
         self.group = kwargs
         self.required = required
         for attr, value in kwargs.items():
             if not isinstance(value, ConfigArgument):
-                raise TypeError(f"Argument {attr} wrong type: {type(value)}")
+                # Obviously this _should_ be unreachable, but bugs happen all
+                # the time :)
+                msg = f"Argument {attr} wrong type: {type(value)}"  # type: ignore[unreachable]
+                raise TypeError(msg)
             setattr(self, attr, value)

@@ -93,16 +93,17 @@ class CMake(Package):
         # In case we have, e.g. 3.27.4-gdfbe7aa-dirty
         version = version.split("-")[0]
         if not all(num.isdigit() for num in version.split(".")):
-            raise RuntimeError(
+            msg = (
                 f"Unknown CMake version {version!r}, could not parse. "
                 'Expected <version>.split(".") to be all numeric.'
             )
+            raise RuntimeError(msg)
 
         self.log(f"CMake executable version: {version}")
         self.version = version
 
     def configure_core_cmake_variables(self) -> None:
-        r"""Configure the core cmake variables"""
+        r"""Configure the core cmake variables."""
         self.manager.set_cmake_variable(
             self.CMAKE_COMMAND, self.cl_args.cmake_executable.value
         )

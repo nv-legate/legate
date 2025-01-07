@@ -9,17 +9,17 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Utilities and helpers for implementing the Legate custom test runner.
+"""Utilities and helpers for implementing the Legate custom test runner."""
 
-"""
 from __future__ import annotations
 
 import os
-
 from dataclasses import dataclass
-from typing import Literal, TypeAlias
+from pathlib import Path
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
-from ..util.types import ArgList
+if TYPE_CHECKING:
+    from ..util.types import ArgList
 
 #: Define the available feature types for tests
 FeatureType: TypeAlias = Literal["cpus", "cuda", "eager", "openmp"]
@@ -37,9 +37,9 @@ def _compute_last_failed_filename() -> str:
     if (legate_dir := os.environ.get("LEGATE_DIR", "")) and (
         legate_arch := os.environ.get("LEGATE_ARCH", "")
     ):
-        arch_dir = os.path.join(legate_dir, legate_arch)
-        if os.path.exists(arch_dir):
-            return os.path.join(arch_dir, base_name)
+        arch_dir = Path(legate_dir) / legate_arch
+        if arch_dir.exists():
+            return str(arch_dir / base_name)
 
     return base_name
 

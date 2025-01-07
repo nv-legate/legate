@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
+
 import pytest
 
 from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
@@ -96,7 +97,9 @@ class TestStoreOps:
         runtime.issue_copy(out, store, ty.ReductionOpKind.MUL)
         np.testing.assert_allclose(out_np, exp_np)
 
-    @pytest.mark.parametrize("src_shape, tgt_shape", BROADCAST_SHAPES, ids=str)
+    @pytest.mark.parametrize(
+        ("src_shape", "tgt_shape"), BROADCAST_SHAPES, ids=str
+    )
     def test_issue_gather(
         self, src_shape: tuple[int, ...], tgt_shape: tuple[int, ...]
     ) -> None:
@@ -124,11 +127,11 @@ class TestStoreOps:
         runtime.issue_gather(out, store, ind, ty.ReductionOpKind.ADD)
         np.testing.assert_allclose(arr_np[ind_np].reshape(tgt_shape), out_np)
 
-    @pytest.mark.parametrize("tgt_shape, src_shape", BROADCAST_SHAPES, ids=str)
+    @pytest.mark.parametrize(
+        ("tgt_shape", "src_shape"), BROADCAST_SHAPES, ids=str
+    )
     def test_issue_scatter(
-        self,
-        tgt_shape: tuple[int, ...],
-        src_shape: tuple[int, ...],
+        self, tgt_shape: tuple[int, ...], src_shape: tuple[int, ...]
     ) -> None:
         runtime = get_legate_runtime()
         arr_np, store = utils.random_array_and_store(src_shape)
@@ -153,7 +156,9 @@ class TestStoreOps:
         runtime.issue_scatter(out, ind, store, ty.ReductionOpKind.ADD)
         np.testing.assert_allclose(arr_np, out_np[ind_np].reshape(src_shape))
 
-    @pytest.mark.parametrize("tgt_shape, src_shape", BROADCAST_SHAPES, ids=str)
+    @pytest.mark.parametrize(
+        ("tgt_shape", "src_shape"), BROADCAST_SHAPES, ids=str
+    )
     def test_issue_scatter_gather(
         self, src_shape: tuple[int, ...], tgt_shape: tuple[int, ...]
     ) -> None:
@@ -189,7 +194,7 @@ class TestStoreOps:
         np.testing.assert_allclose(arr_np[src_ind_np], out_np[tgt_ind_np])
 
     @pytest.mark.parametrize(
-        "dtype, val", zip(ARRAY_TYPES, SCALAR_VALS), ids=str
+        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS), ids=str
     )
     @pytest.mark.parametrize("create", [True, False])
     def test_issue_fill_scalar(
@@ -213,7 +218,7 @@ class TestStoreOps:
         assert not arr.any()
 
     @pytest.mark.parametrize(
-        "dtype, val", zip(ARRAY_TYPES, SCALAR_VALS), ids=str
+        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS), ids=str
     )
     def test_issue_fill_store(self, dtype: ty.Type, val: Any) -> None:
         runtime = get_legate_runtime()
@@ -233,7 +238,7 @@ class TestStoreOps:
 
 class TestArrayOps:
     @pytest.mark.parametrize(
-        "dtype, val", zip(ARRAY_TYPES, SCALAR_VALS), ids=str
+        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS), ids=str
     )
     @pytest.mark.parametrize("create", [True, False])
     def test_issue_fill_scalar(
@@ -249,7 +254,7 @@ class TestArrayOps:
         assert (np_arr == val).all()
 
     @pytest.mark.parametrize(
-        "dtype, val", zip(ARRAY_TYPES, SCALAR_VALS), ids=str
+        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS), ids=str
     )
     def test_issue_fill_store(self, dtype: ty.Type, val: Any) -> None:
         if val is None:
@@ -324,7 +329,7 @@ class TestStoreOpsErrors:
             runtime.issue_fill(store, val)
 
     @pytest.mark.parametrize(
-        "dtype, val",
+        ("dtype", "val"),
         [(ty.struct_type([ty.int32]), (1,)), (ty.string_type, "foo")],
         ids=str,
     )

@@ -10,8 +10,8 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-import json
 import os
+import json
 import shlex
 from typing import TypedDict
 
@@ -100,15 +100,17 @@ class CMakeConfig:
         for arg in cmake_args:
             if arg.startswith("-D"):
                 if "=" not in arg:
-                    raise ValueError(
+                    msg = (
                         f"CMake define {arg!r} not in the form '-DNAME=value'"
                     )
+                    raise ValueError(msg)
                 name, _, value = arg.partition("=")
                 if name.count(":") > 1:
-                    raise ValueError(
+                    msg = (
                         "Too many colons (:) in {arg!r}. This may be correct "
                         "in principle, but the build system expects only 1."
                     )
+                    raise ValueError(msg)
                 name = name.removeprefix("-D")
                 name = name.partition(":")[0]
                 cmake_defines[name] = value

@@ -18,13 +18,13 @@ from __future__ import annotations
 import math
 from pathlib import Path
 
-import zarr.core  # type: ignore
+import zarr.core  # type: ignore # noqa: PGH003
 
 from ... import LogicalArray, Type, get_legate_runtime
 from . import tile
 
 
-def _get_padded_shape(  # type: ignore
+def _get_padded_shape(  # type: ignore # noqa: PGH003
     zarr_ary: zarr.Array,
 ) -> tuple[tuple[int, ...], bool]:
     r"""Get a padded array that has a shape divisible by ``zarr_ary.chunks``.
@@ -58,7 +58,7 @@ def write_array(
     dirpath: Path | str,
     chunks: int | tuple[int, ...] | None = None,
 ) -> None:
-    """Write a Legate array to disk using the Zarr format
+    """Write a Legate array to disk using the Zarr format.
 
     Notes
     -----
@@ -101,7 +101,7 @@ def write_array(
 
 
 def read_array(dirpath: Path | str) -> LogicalArray:
-    """Read a Zarr array from disk in to a Legate array
+    """Read a Zarr array from disk in to a Legate array.
 
     Notes
     -----
@@ -119,13 +119,13 @@ def read_array(dirpath: Path | str) -> LogicalArray:
     LogicalArray
         The Legate array read from disk.
     """
-
     dirpath = Path(dirpath)
 
     # We use Zarr to read the meta data
     zarr_ary = zarr.open_array(dirpath, mode="r")
     if zarr_ary.compressor is not None:
-        raise NotImplementedError("compressor isn't supported")
+        msg = "compressor isn't supported"
+        raise NotImplementedError(msg)
 
     shape, padded = _get_padded_shape(zarr_ary)
     ret = tile.from_tiles(

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -56,18 +54,20 @@ def _get_ompi_config() -> tuple[int, int] | None:
     try:
         ranks, ranks_per_node = int(ranks_env), int(ranks_per_node_env)
     except ValueError:
-        raise ValueError(
+        msg = (
             "Expected OMPI_COMM_WORLD_SIZE and OMPI_COMM_WORLD_LOCAL_SIZE to "
             f"be integers, got OMPI_COMM_WORLD_SIZE={ranks_env} and "
             f"OMPI_COMM_WORLD_LOCAL_SIZE={ranks_per_node_env}"
         )
+        raise ValueError(msg)
 
     if ranks % ranks_per_node != 0:
-        raise ValueError(
+        msg = (
             "Detected incompatible ranks and ranks-per-node from "
             f"OMPI_COMM_WORLD_SIZE={ranks} and "
             f"OMPI_COMM_WORLD_LOCAL_SIZE={ranks_per_node}"
         )
+        raise ValueError(msg)
 
     return ranks // ranks_per_node, ranks_per_node
 
@@ -82,18 +82,20 @@ def _get_mv2_config() -> tuple[int, int] | None:
     try:
         ranks, ranks_per_node = int(ranks_env), int(ranks_per_node_env)
     except ValueError:
-        raise ValueError(
+        msg = (
             "Expected MV2_COMM_WORLD_SIZE and MV2_COMM_WORLD_LOCAL_SIZE to "
             f"be integers, got MV2_COMM_WORLD_SIZE={ranks_env} and "
             f"MV2_COMM_WORLD_LOCAL_SIZE={ranks_per_node_env}"
         )
+        raise ValueError(msg)
 
     if ranks % ranks_per_node != 0:
-        raise ValueError(
+        msg = (
             "Detected incompatible ranks and ranks-per-node from "
             f"MV2_COMM_WORLD_SIZE={ranks} and "
             f"MV2_COMM_WORLD_LOCAL_SIZE={ranks_per_node}"
         )
+        raise ValueError(msg)
 
     return ranks // ranks_per_node, ranks_per_node
 
@@ -105,7 +107,7 @@ _SLURM_CONFIG_ERROR = (
 )
 
 
-def _get_slurm_config() -> tuple[int, int] | None:
+def _get_slurm_config() -> tuple[int, int] | None:  # noqa: C901, PLR0911
     if not (nodes_env := getenv("SLURM_JOB_NUM_NODES")):
         return None
 
@@ -137,18 +139,20 @@ def _get_slurm_config() -> tuple[int, int] | None:
         try:
             nodes, ranks = int(nodes_env), int(ntasks_env)
         except ValueError:
-            raise ValueError(
+            msg = (
                 "Expected SLURM_JOB_NUM_NODES and SLURM_NTASKS to "
                 f"be integers, got SLURM_JOB_NUM_NODES={nodes_env} and "
                 f"SLURM_NTASKS={ntasks_env}"
             )
+            raise ValueError(msg)
 
         if ranks % nodes != 0:
-            raise ValueError(
+            msg = (
                 "Detected incompatible ranks and ranks-per-node from "
                 f"SLURM_JOB_NUM_NODES={nodes} and "
                 f"SLURM_NTASKS={ranks}"
             )
+            raise ValueError(msg)
 
         return nodes, ranks // nodes
 
@@ -157,18 +161,20 @@ def _get_slurm_config() -> tuple[int, int] | None:
         try:
             nodes, ranks = int(nodes_env), int(nprocs_env)
         except ValueError:
-            raise ValueError(
+            msg = (
                 "Expected SLURM_JOB_NUM_NODES and SLURM_NPROCS to "
                 f"be integers, got SLURM_JOB_NUM_NODES={nodes_env} and "
                 f"SLURM_NPROCS={nprocs_env}"
             )
+            raise ValueError(msg)
 
         if ranks % nodes != 0:
-            raise ValueError(
+            msg = (
                 "Detected incompatible ranks and ranks-per-node from "
                 f"SLURM_JOB_NUM_NODES={nodes} and "
                 f"SLURM_NPROCS={ranks}"
             )
+            raise ValueError(msg)
 
         return nodes, ranks // nodes
 
@@ -338,7 +344,7 @@ profiling.add_argument(
 profiling.add_argument(
     "--nsys-targets",
     dest="nsys_targets",
-    default="cublas,cuda,cudnn,nvtx,ucx",
+    default=defaults.NSYS_TARGETS,
     required=False,
     help="Specify profiling targets for Nsight Systems "
     "[legate-only, not supported with standard Python invocation]",
@@ -559,11 +565,7 @@ other.add_argument(
     "[legate-only, not supported with standard Python invocation]",
 )
 
-other.add_argument(
-    "--version",
-    action="version",
-    version=__version__,
-)
+other.add_argument("--version", action="version", version=__version__)
 
 other.add_argument(
     "--info",

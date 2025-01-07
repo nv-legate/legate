@@ -12,14 +12,16 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import call
 
-from pytest_mock import MockerFixture
-
-import legate.driver.defaults as defaults
 import legate.jupyter.config as m
+from legate.driver import defaults
 from legate.driver.config import Core, Memory, MultiNode
 from legate.util.types import DataclassMixin
+
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
 
 
 class TestKernel:
@@ -50,30 +52,19 @@ class TestConfig:
             launcher_extra=[],
         )
         assert c.core == m.Core(
-            cpus=None,
-            gpus=None,
-            omps=None,
-            ompthreads=None,
-            utility=None,
+            cpus=None, gpus=None, omps=None, ompthreads=None, utility=None
         )
-        c.memory == m.Memory(
-            sysmem=None,
-            numamem=None,
-            fbmem=None,
-            zcmem=None,
-            regmem=None,
+        assert c.memory == m.Memory(
+            sysmem=None, numamem=None, fbmem=None, zcmem=None, regmem=None
         )
 
         # These are all "turned off"
 
         assert c.binding == m.Binding(
-            cpu_bind=None,
-            mem_bind=None,
-            gpu_bind=None,
-            nic_bind=None,
+            cpu_bind=None, mem_bind=None, gpu_bind=None, nic_bind=None
         )
 
-        c.profiling == m.Profiling(
+        assert c.profiling == m.Profiling(
             profile=False,
             cprofile=False,
             nvprof=False,
@@ -83,9 +74,7 @@ class TestConfig:
         )
 
         assert c.logging == m.Logging(
-            user_logging_levels=None,
-            logdir=Path("."),
-            log_to_file=False,
+            user_logging_levels=None, logdir=Path(), log_to_file=False
         )
 
         assert c.debugging == m.Debugging(

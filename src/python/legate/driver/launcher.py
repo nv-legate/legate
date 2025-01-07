@@ -89,7 +89,7 @@ class Launcher:
                     self.detected_rank_id = system.env[var]
                     break
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: object) -> bool:  # noqa: D105
         return (
             isinstance(other, type(self))
             and self.kind == other.kind
@@ -109,6 +109,7 @@ class Launcher:
             system : System
 
         Returns
+        -------
             Launcher
 
         """
@@ -122,7 +123,8 @@ class Launcher:
         if kind == "srun":
             return SRunLauncher(config, system)
 
-        raise RuntimeError(f"Unsupported launcher: {kind}")
+        msg = f"Unsupported launcher: {kind}"  # type: ignore[unreachable]
+        raise RuntimeError(msg)
 
     # Slightly annoying, but it is helpful for testing to avoid importing
     # legate unless necessary, so defined these two as properties since the
@@ -151,7 +153,7 @@ class Launcher:
             name.startswith(prefix) for prefix in LAUNCHER_VAR_PREFIXES
         )
 
-    def _compute_env(self) -> tuple[EnvDict, set[str]]:
+    def _compute_env(self) -> tuple[EnvDict, set[str]]:  # noqa: C901
         config = self._config
         system = self._system
 
@@ -231,9 +233,10 @@ class Launcher:
         if system.env.get("PYTHONFAULTHANDLER", "") == "":
             env["REALM_BACKTRACE"] = "1"
         elif "REALM_BACKTRACE" in system.env:
-            raise RuntimeError(
+            msg = (
                 "REALM_BACKTRACE and PYTHONFAULTHANDLER should not be both set"
             )
+            raise RuntimeError(msg)
 
         if "CUTENSOR_LOG_LEVEL" not in system.env:
             env["CUTENSOR_LOG_LEVEL"] = "1"
@@ -299,9 +302,9 @@ class MPILauncher(Launcher):
 
         # hack: the launcher.env does not know about what the driver does with
         # LEGATE_CONFIG, but we do need to make sure it gets forwarded
-        vars = set(self.env).union({"LEGATE_CONFIG"})
+        env_vars = set(self.env).union({"LEGATE_CONFIG"})
 
-        for var in sorted(vars):
+        for var in sorted(env_vars):
             if self.is_launcher_var(var):
                 cmd += ["-x", var]
 
@@ -311,8 +314,7 @@ class MPILauncher(Launcher):
 class JSRunLauncher(Launcher):
     """A Launcher subclass to use jsrun [1] for launching Legate processes.
 
-    [1] https://www.ibm.com/docs/en/spectrum-lsf/10.1.0?topic=SSWRJV_10.1.0/jsm/jsrun.html  # noqa
-
+    [1] https://www.ibm.com/docs/en/spectrum-lsf/10.1.0?topic=SSWRJV_10.1.0/jsm/jsrun.html
     """
 
     kind: LauncherType = "jsrun"

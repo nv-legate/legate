@@ -13,15 +13,17 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
-
-from pytest_mock import MockerFixture
+from typing import TYPE_CHECKING
 
 import legate.jupyter.kernel as m
 from legate.driver import LegateDriver
 from legate.jupyter.config import Config
 from legate.util.system import System
 
-from ...util import Capsys
+if TYPE_CHECKING:
+    from pytest_mock import MockerFixture
+
+    from ...util import Capsys
 
 
 def test_LEGATE_JUPYTER_KERNEL_SPEC_KEY() -> None:
@@ -50,11 +52,11 @@ class Test_generate_kernel_spec:
         )
 
         assert spec.display_name == config.kernel.display_name
-        assert spec.language == "python"  # type: ignore
-        assert spec.argv[:-3] == list(driver.cmd)  # type: ignore
-        assert spec.argv[-3].endswith("_legion_kernel.py")  # type: ignore
-        assert spec.argv[-2:] == ["-f", "{connection_file}"]  # type: ignore
-        assert spec.env == expected_env  # type: ignore
+        assert spec.language == "python"  # type: ignore[attr-defined]
+        assert spec.argv[:-3] == list(driver.cmd)  # type: ignore[attr-defined]
+        assert spec.argv[-3].endswith("_legion_kernel.py")  # type: ignore[attr-defined]
+        assert spec.argv[-2:] == ["-f", "{connection_file}"]  # type: ignore[attr-defined]
+        assert spec.env == expected_env  # type: ignore[attr-defined]
         assert m.LEGATE_JUPYTER_METADATA_KEY in spec.metadata
         metadata = spec.metadata[m.LEGATE_JUPYTER_METADATA_KEY]
         assert metadata == {

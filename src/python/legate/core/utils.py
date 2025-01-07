@@ -21,17 +21,18 @@ from ._ext.utils.ordered_set import OrderedSet  # noqa: F401
 
 
 class AnyCallable(Protocol):
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:  # noqa: D102
         pass
 
 
 class ShutdownCallback(Protocol):
-    def __call__(self) -> None:
+    def __call__(self) -> None:  # noqa: D102
         pass
 
 
-def capture_traceback_repr(
-    skip_legate_frames: bool = True,
+def capture_traceback_repr(  # noqa: D103
+    *,
+    skip_legate_frames: bool = True,  # noqa: ARG001
 ) -> str | None:
     tb = None
     for frame, _ in traceback.walk_stack(None):
@@ -46,18 +47,18 @@ def capture_traceback_repr(
     return "".join(traceback.format_tb(tb)) if tb is not None else None
 
 
-def dlopen_no_autoclose(ffi: Any, lib_path: str) -> Any:
+def dlopen_no_autoclose(ffi: Any, lib_path: str) -> Any:  # noqa: D103
     # Use an already-opened library handle, which cffi will convert to a
     # regular FFI object (using the definitions previously added using
     # ffi.cdef), but will not automatically dlclose() on collection.
     lib = CDLL(lib_path, mode=RTLD_GLOBAL)
-    return ffi.dlopen(ffi.cast("void *", lib._handle))
+    return ffi.dlopen(ffi.cast("void *", lib._handle))  # noqa: SLF001
 
 
 class Annotation:
     def __init__(self, pairs: dict[str, str]) -> None:
         """
-        Constructs a new annotation object
+        Constructs a new annotation object.
 
         Parameters
         ----------
@@ -67,11 +68,13 @@ class Annotation:
         # self._annotation = runtime.annotation
         self._pairs = pairs
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> None:  # noqa: D105
         pass
         # self._annotation.update(**self._pairs)
 
-    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+    def __exit__(  # noqa: D105
+        self, _exc_type: Any, _exc_value: Any, _traceback: Any
+    ) -> None:
         pass
         # for key in self._pairs.keys():
         #    self._annotation.remove(key)

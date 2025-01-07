@@ -8,7 +8,6 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
-from __future__ import annotations
 
 from collections.abc import Sequence
 from typing import Any, Final
@@ -21,7 +20,7 @@ from .invoker import VariantInvoker
 from .type import UserFunction, VariantList
 
 class PyTask:
-    UNREGISTERED_ID: Final = LocalTaskID(-1)
+    UNREGISTERED_ID: Final = ...
 
     def __init__(
         self,

@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import re
 import sys
+import contextlib
 from pathlib import Path
 
 from .types import LegatePaths, LegionPaths
@@ -38,7 +39,7 @@ def assert_dir_exists(path: Path) -> None:
 
 
 def read_c_define(header_path: Path, name: str) -> str | None:
-    """Open a C header file and read the value of a #define
+    """Open a C header file and read the value of a #define.
 
     Parameters
     ----------
@@ -54,13 +55,13 @@ def read_c_define(header_path: Path, name: str) -> str | None:
 
     """
     try:
-        with open(header_path, "r") as f:
+        with header_path.open() as f:
             lines = (line for line in f if line.startswith("#define"))
             for line in lines:
                 tokens = line.split(" ")
                 if tokens[1].strip() == name:
                     return tokens[2].strip()
-    except IOError:
+    except OSError:
         pass
 
     return None
@@ -87,12 +88,13 @@ def read_cmake_cache_value(file_path: Path, pattern: str) -> str:
         RuntimeError, if the value is not found
 
     """
-    with open(file_path, encoding="utf-8") as f:
+    with file_path.open() as f:
         for line in f:
             if re.match(pattern, line):
                 return line.strip().split("=")[1]
 
-    raise RuntimeError(f"Could not find value for {pattern} in {file_path}")
+    msg = f"Could not find value for {pattern} in {file_path}"
+    raise RuntimeError(msg)
 
 
 def is_legate_path_in_src_tree(path: Path) -> bool:
@@ -162,13 +164,11 @@ def get_legate_build_dir_from_skbuild_dir(skbuild_dir: Path) -> Path | None:
     assert_dir_exists(skbuild_dir)
     cmake_cache_txt = skbuild_dir / "CMakeCache.txt"
     if not cmake_cache_txt.exists():
-        raise RuntimeError(
-            f"scikit-build-core CMakeCache does not exist: {cmake_cache_txt}"
-        )
+        msg = f"scikit-build-core CMakeCache does not exist: {cmake_cache_txt}"
+        raise RuntimeError(msg)
 
     legate_found_method = read_cmake_cache_value(
-        cmake_cache_txt,
-        "_legate_FOUND_METHOD:INTERNAL=",
+        cmake_cache_txt, "_legate_FOUND_METHOD:INTERNAL="
     )
     match legate_found_method:
         case "SELF_BUILT":
@@ -246,7 +246,7 @@ def get_legate_build_dir(legate_parent_dir: Path) -> Path | None:
 
 
 def get_legate_paths() -> LegatePaths:
-    """Determine all the important runtime paths for Legate
+    """Determine all the important runtime paths for Legate.
 
     Returns
     -------
@@ -294,9 +294,8 @@ def get_legate_paths() -> LegatePaths:
             legate_lib_path = prefix_dir / "lib"
             assert_dir_exists(legate_lib_path)
         else:
-            raise RuntimeError(
-                f"Unhandled legate module install location: {legate_mod_dir}"
-            )
+            msg = f"Unhandled legate module install location: {legate_mod_dir}"
+            raise RuntimeError(msg)
 
         assert_file_exists(bind_sh_path)
         return LegatePaths(
@@ -340,7 +339,7 @@ def get_legate_paths() -> LegatePaths:
 
 
 def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
-    """Determine all the important runtime paths for Legion
+    """Determine all the important runtime paths for Legion.
 
     Parameters
     ----------
@@ -352,7 +351,6 @@ def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
         LegionPaths
 
     """
-
     # Construct and return paths needed to interact with legion, accounting
     # for multiple ways Legion and legate may be configured or installed.
     #
@@ -387,7 +385,8 @@ def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
 
         # NB: for-else clause! (executes if NO loop break)
         else:
-            raise RuntimeError("could not determine legion module location")
+            msg = "could not determine legion module location"
+            raise RuntimeError(msg)
 
         legion_bin_path = legion_dir / "bin"
         legion_include_path = legion_dir / "include"
@@ -436,7 +435,7 @@ def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
     finally:
         # Hopefully at this point we have a valid cmake_cache_txt with a
         # valid Legion_SOURCE_DIR and Legion_BINARY_DIR
-        try:
+        with contextlib.suppress(Exception):
             # If Legion_SOURCE_DIR and Legion_BINARY_DIR are in CMakeCache.txt,
             # return the paths to Legion in the legate build dir.
             legion_source_dir = Path(
@@ -453,7 +452,7 @@ def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
             legion_runtime_dir = legion_binary_dir / "runtime"
             legion_bindings_dir = legion_source_dir / "bindings"
 
-            return LegionPaths(
+            return LegionPaths(  # noqa: B012
                 legion_bin_path=legion_binary_dir / "bin",
                 legion_lib_path=legion_binary_dir / "lib",
                 realm_defines_h=legion_runtime_dir / "realm_defines.h",
@@ -463,8 +462,6 @@ def get_legion_paths(legate_paths: LegatePaths) -> LegionPaths:
                 legion_module=legion_bindings_dir / "python" / "build" / "lib",
                 legion_jupyter_module=legion_source_dir / "jupyter_notebook",
             )
-        except Exception:
-            pass
 
     # Otherwise return the installation paths.
     return installed_legion_paths(Path(sys.argv[0]).parents[1])

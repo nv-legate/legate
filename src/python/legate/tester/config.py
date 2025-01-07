@@ -9,21 +9,21 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate test configuration from command-line and environment.
+"""Consolidate test configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
-import json
 import os
+import sys
+import json
 import shlex
 import shutil
+import operator
+import functools
 import subprocess
-import sys
-from argparse import Namespace
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from rich import reconfigure
 
@@ -35,7 +35,11 @@ from ..util.types import (
 )
 from . import LAST_FAILED_FILENAME, FeatureType, defaults
 from .args import PinOptionsType, parser
-from .project import Project
+
+if TYPE_CHECKING:
+    from argparse import Namespace
+
+    from .project import Project
 
 
 @dataclass(frozen=True)
@@ -62,13 +66,15 @@ class MultiNode(DataclassMixin):
     launcher_extra: list[str]
     mpi_output_filename: str | None
 
-    def __post_init__(self, **kw: dict[str, Any]) -> None:
+    def __post_init__(self, **kw: dict[str, Any]) -> None:  # noqa: D105
         # fix up launcher_extra to automatically handle quoted strings with
         # internal whitespace, have to use __setattr__ for frozen
         # https://docs.python.org/3/library/dataclasses.html#frozen-instances
         if self.launcher_extra:
-            ex: list[str] = sum(
-                (shlex.split(x) for x in self.launcher_extra), []
+            ex: list[str] = functools.reduce(
+                operator.iadd,
+                (shlex.split(x) for x in self.launcher_extra),
+                [],
             )
             object.__setattr__(self, "launcher_extra", ex)
 
@@ -133,7 +139,7 @@ class Config:
         self.other.legate_install_dir = self._compute_legate_install_dir(args)
 
         # test selection
-        self.examples = False if args.cov_bin else True
+        self.examples = not args.cov_bin
         self.integration = True
         self.files = args.files
         self.last_failed = args.last_failed
@@ -142,22 +148,24 @@ class Config:
         self.gtest_tests = self._compute_gtest_tests(args)
 
         if self.multi_node.nodes > 1 and self.multi_node.launcher == "none":
-            raise RuntimeError(
+            msg = (
                 "Requested multi-node configuration with "
                 f"--nodes {self.multi_node.nodes} but did not specify a "
                 "launcher. Must use --launcher to specify a launcher."
             )
+            raise RuntimeError(msg)
 
         if (
             self.multi_node.ranks_per_node > 1
             and self.multi_node.launcher == "none"
         ):
-            raise RuntimeError(
+            msg = (
                 "Requested multi-rank configuration with "
                 f"--ranks-per-node {self.multi_node.ranks_per_node} but did "
                 "not specify a launcher. Must use --launcher to specify a "
                 "launcher."
             )
+            raise RuntimeError(msg)
 
         color_system = "auto" if self.other.color else None
         reconfigure(soft_wrap=True, color_system=color_system)
@@ -179,7 +187,7 @@ class Config:
             return Path(self.test_root)
 
         # if not explicitly given, just use cwd assuming we are at a repo top
-        return Path(os.getcwd())
+        return Path.cwd()
 
     @property
     def test_files(self) -> tuple[Path, ...]:
@@ -191,14 +199,14 @@ class Config:
 
         """
         if self.files and self.last_failed:
-            raise RuntimeError("Cannot specify both --files and --last-failed")
+            msg = "Cannot specify both --files and --last-failed"
+            raise RuntimeError(msg)
 
         if self.files is not None:
             return self.files
 
-        if self.last_failed:
-            if last_failed := self._read_last_failed():
-                return last_failed
+        if self.last_failed and (last_failed := self._read_last_failed()):
+            return last_failed
 
         files = []
 
@@ -224,7 +232,7 @@ class Config:
 
     @property
     def legate_path(self) -> str:
-        """Computed path to the legate driver script"""
+        """Computed path to the legate driver script."""
         if not hasattr(self, "legate_path_"):
 
             def compute_legate_path() -> str:
@@ -266,7 +274,7 @@ class Config:
         if args.legate_install_dir:
             self._legate_source = "cmd"
             return Path(args.legate_install_dir)
-        elif "LEGATE_INSTALL_DIR" in os.environ:
+        if "LEGATE_INSTALL_DIR" in os.environ:
             self._legate_source = "env"
             return Path(os.environ["LEGATE_INSTALL_DIR"])
         self._legate_source = "install"
@@ -274,8 +282,8 @@ class Config:
 
     def _read_last_failed(self) -> tuple[Path, ...]:
         try:
-            with open(LAST_FAILED_FILENAME) as f:
-                lines = (line.strip() for line in f.readlines())
+            with Path(LAST_FAILED_FILENAME).open() as f:
+                lines = (line.strip() for line in f)
                 return tuple(Path(line) for line in lines if line)
         except OSError:
             return ()
@@ -300,13 +308,14 @@ class Config:
             json.dump(test_names, fd)
 
     def _compute_gtest_tests_single(
-        self, gtest_file: Path | str, args: Namespace
+        self,
+        gtest_file: Path | str,
+        args: Namespace,  # noqa: ARG002
     ) -> list[str]:
         gtest_file = Path(gtest_file).resolve()
         if not gtest_file.exists():
-            raise ValueError(
-                f"gtest binary: '{gtest_file}' does not appear to exist"
-            )
+            msg = f"gtest binary: '{gtest_file}' does not appear to exist"
+            raise ValueError(msg)
 
         cache_file = gtest_file.parent / (gtest_file.name + ".cached_gtests")
         if cached_tests := self._get_cached_tests(gtest_file, cache_file):
@@ -336,11 +345,11 @@ class Config:
                 env=env,
             )
         except subprocess.CalledProcessError as cpe:
-            print("Failed to fetch GTest tests")
+            print("Failed to fetch GTest tests")  # noqa: T201
             if cpe.stdout:
-                print(f"stdout:\n{cpe.stdout.decode()}")
+                print(f"stdout:\n{cpe.stdout.decode()}")  # noqa: T201
             if cpe.stderr:
-                print(f"stderr:\n{cpe.stderr.decode()}")
+                print(f"stderr:\n{cpe.stderr.decode()}")  # noqa: T201
             raise
 
         result = cmd_out.decode(sys.stdout.encoding).splitlines()
@@ -367,7 +376,6 @@ class Config:
     def _filter_gtests(
         self, test_names: list[str], args: Namespace
     ) -> list[str]:
-
         skip_list = args.gtest_skip_list
         gtest_filter = args.gtest_filter
         is_parallel = (

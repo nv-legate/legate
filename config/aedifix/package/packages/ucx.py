@@ -61,9 +61,10 @@ class UCX(Package):
             The summary of UCX.
         """
         lines = []
-        if self.state.enabled():
-            if root_dir := self.manager.get_cmake_variable(self.UCX_ROOT):
-                lines.append(("Root dir", root_dir))
+        if self.state.enabled() and (
+            root_dir := self.manager.get_cmake_variable(self.UCX_ROOT)
+        ):
+            lines.append(("Root dir", root_dir))
         return self.create_package_summary(lines)
 
 

@@ -14,6 +14,7 @@ import re
 from typing import Any
 
 import numpy as np
+
 import pytest
 
 from legate.core import LEGATE_MAX_DIM, get_legate_runtime, types as ty
@@ -21,7 +22,7 @@ from legate.core import LEGATE_MAX_DIM, get_legate_runtime, types as ty
 
 class TestLogicalStoreOperation:
     @pytest.mark.parametrize(
-        "arr_shape, dim, shape",
+        ("arr_shape", "dim", "shape"),
         [
             ((1, 0, 4), 1, (0,)),
             ((1024,), 0, (256, 4)),
@@ -40,7 +41,7 @@ class TestLogicalStoreOperation:
         ids=str,
     )
     def test_delinearize(
-        self, arr_shape: tuple[int], dim: int, shape: tuple[int]
+        self, arr_shape: tuple[int, ...], dim: int, shape: tuple[int, ...]
     ) -> None:
         runtime = get_legate_runtime()
         arr = np.zeros(arr_shape, dtype=np.int16)
@@ -57,15 +58,9 @@ class TestLogicalStoreOperation:
         np.testing.assert_allclose(delin_arr, reshaped)
 
     @pytest.mark.parametrize(
-        "shape",
-        [
-            (2, 4, 6, 8),
-            (7, 4, 3, 9),
-            (500, 2, 2, 2),
-        ],
-        ids=str,
+        "shape", [(2, 4, 6, 8), (7, 4, 3, 9), (500, 2, 2, 2)], ids=str
     )
-    def test_partition_by_tiling(self, shape: tuple[int]) -> None:
+    def test_partition_by_tiling(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         # test might crash when there are still running tasks, block until done
         # [error 397] LEGION ERROR: Attempted an external attach operation on
@@ -93,7 +88,7 @@ class TestLogicalStoreOperation:
         np.testing.assert_allclose(child_store_arr, arr_p)
 
     @pytest.mark.parametrize(
-        "arr_shape, dim, index",
+        ("arr_shape", "dim", "index"),
         [
             ((2, 2), 1, 0),
             ((3, 2, 12), 2, 5),
@@ -108,7 +103,7 @@ class TestLogicalStoreOperation:
         ids=str,
     )
     def test_project(
-        self, arr_shape: tuple[int], dim: int, index: int
+        self, arr_shape: tuple[int, ...], dim: int, index: int
     ) -> None:
         runtime = get_legate_runtime()
         arr = np.zeros(arr_shape, dtype=np.float64)
@@ -123,7 +118,7 @@ class TestLogicalStoreOperation:
         np.testing.assert_allclose(arr.take(index, dim), projected_arr)
 
     @pytest.mark.parametrize(
-        "shape, dim",
+        ("shape", "dim"),
         [
             # TODO(yimoj) [issue 498]
             # crashes application when inline allocation is accessed
@@ -131,7 +126,7 @@ class TestLogicalStoreOperation:
             # Legion::Domain::operator Legion::Rect<DIM, T>() const
             # [with int DIM = 1; T = long long int; Legion::Rect<DIM, T> =
             # Realm::Rect<1, long long int>]: Assertion `DIM == dim' failed.
-            pytest.param(tuple(), 0, marks=pytest.mark.xfail(run=False)),
+            pytest.param((), 0, marks=pytest.mark.xfail(run=False)),
             ((1,), 0),
             ((1, 2, 3), 2),
             ((1024, 1, 1), 2),
@@ -140,7 +135,9 @@ class TestLogicalStoreOperation:
         ids=str,
     )
     @pytest.mark.parametrize("size", [0, 1, 252, 1024], ids=str)
-    def test_promote(self, shape: tuple[int], dim: int, size: int) -> None:
+    def test_promote(
+        self, shape: tuple[int, ...], dim: int, size: int
+    ) -> None:
         runtime = get_legate_runtime()
         arr = np.zeros(shape, dtype=np.int16)
         store = runtime.create_store_from_buffer(
@@ -189,25 +186,21 @@ class TestLogicalStoreOperation:
         np.testing.assert_allclose(new_arr, np.sort(arr))
 
     @pytest.mark.parametrize(
-        "arr_shape, axes",
+        ("arr_shape", "axes"),
         [
             ((2, 2), (1, 0)),
             ((3, 2, 12), (2, 1, 0)),
             ((1024,), (0,)),
             ((1024, 0, 1), (0, 2, 1)),
             ((1, 2, 4, 8), (3, 0, 2, 1)),
-            (
-                range(1, LEGATE_MAX_DIM + 1),
-                range(LEGATE_MAX_DIM),
-            ),
-            (
-                range(LEGATE_MAX_DIM),
-                range(LEGATE_MAX_DIM),
-            ),
+            (range(1, LEGATE_MAX_DIM + 1), range(LEGATE_MAX_DIM)),
+            (range(LEGATE_MAX_DIM), range(LEGATE_MAX_DIM)),
         ],
         ids=str,
     )
-    def test_transpose(self, arr_shape: tuple[int], axes: tuple[int]) -> None:
+    def test_transpose(
+        self, arr_shape: tuple[int, ...], axes: tuple[int, ...]
+    ) -> None:
         runtime = get_legate_runtime()
         arr = np.random.rand(*arr_shape)
         store = runtime.create_store_from_buffer(
@@ -221,7 +214,7 @@ class TestLogicalStoreOperation:
         np.testing.assert_allclose(store_arr, arr_t)
 
     @pytest.mark.parametrize(
-        "arr_shape, dim, start, stop",
+        ("arr_shape", "dim", "start", "stop"),
         [
             ((2, 2), 1, None, 1),
             ((3, 2, 12), 2, 7, 5),
@@ -250,11 +243,16 @@ class TestLogicalStoreOperation:
         ids=str,
     )
     def test_slice(
-        self, arr_shape: tuple[int], dim: int, start: int, stop: int
+        self,
+        arr_shape: tuple[int, ...],
+        dim: int,
+        start: int | None,
+        stop: int | None,
     ) -> None:
         runtime = get_legate_runtime()
         arr = np.random.rand(*arr_shape)
-        arr_slice = f"arr[{':,' * dim}{start}:{stop}]"
+        slice_expr = (*(slice(None) for _ in range(dim)), slice(start, stop))
+        expected = arr[slice_expr]
 
         store = runtime.create_store_from_buffer(
             ty.float64, arr.shape, arr, False
@@ -263,7 +261,7 @@ class TestLogicalStoreOperation:
         sliced_arr = np.asarray(
             sliced_store.get_physical_store().get_inline_allocation()
         )
-        np.testing.assert_allclose(eval(arr_slice), sliced_arr)
+        np.testing.assert_allclose(sliced_arr, expected)
 
 
 class TestLogicalStoreOperationErrors:

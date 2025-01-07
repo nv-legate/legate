@@ -11,8 +11,8 @@
 
 from __future__ import annotations
 
-import argparse
 import shlex
+import argparse
 from typing import TYPE_CHECKING
 
 from rich import print as rich_print
@@ -40,10 +40,11 @@ def cmd_bind(
     ranks = config.multi_node.ranks
 
     if ranks > 1 and len(install_info.networks) == 0:
-        raise RuntimeError(
+        msg = (
             "multi-rank run was requested, but Legate was not built with "
             "networking support"
         )
+        raise RuntimeError(msg)
 
     if launcher.kind == "none":
         bind_launcher_arg = "local" if ranks == 1 else "auto"
@@ -78,11 +79,13 @@ def cmd_bind(
     if config.info.bind_detail:
         opts += ("--debug",)
 
-    return opts + ("--",)
+    return (*opts, "--")
 
 
 def cmd_gdb(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     if not config.debugging.gdb:
         return ()
@@ -95,7 +98,9 @@ def cmd_gdb(
 
 
 def cmd_cuda_gdb(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     if not config.debugging.cuda_gdb:
         return ()
@@ -110,7 +115,9 @@ def cmd_cuda_gdb(
 
 
 def cmd_nvprof(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     if not config.profiling.nvprof:
         return ()
@@ -124,7 +131,9 @@ def cmd_nvprof(
 
 
 def cmd_nsys(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     if not config.profiling.nsys:
         return ()
@@ -141,10 +150,11 @@ def cmd_nsys(
     nsys_parsed_args, unparsed = parser.parse_known_args(extra)
 
     if nsys_parsed_args.targets:
-        raise RuntimeError(
+        msg = (
             "please pass targets as arguments to --nsys"
             "rather than using --nsys-extra"
         )
+        raise RuntimeError(msg)
 
     opts: CommandPart = ("nsys", "profile", "-t", targets, "-o", log_path)
     opts += tuple(extra)
@@ -155,7 +165,9 @@ def cmd_nsys(
 
 
 def cmd_valgrind(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     valgrind = config.debugging.valgrind
 
@@ -163,7 +175,9 @@ def cmd_valgrind(
 
 
 def cmd_memcheck(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     memcheck = config.debugging.memcheck
 
@@ -171,13 +185,16 @@ def cmd_memcheck(
 
 
 def cmd_module(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     module = config.other.module
     cprofile = config.profiling.cprofile
 
     if cprofile and module is not None:
-        raise ValueError("Only one of --module or --cprofile may be used")
+        msg = "Only one of --module or --cprofile may be used"
+        raise ValueError(msg)
 
     if module is not None:
         return ("-m", module)
@@ -193,7 +210,9 @@ def cmd_module(
 
 
 def cmd_wrapper(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     if not config.other.wrapper:
         return ()
@@ -207,7 +226,9 @@ def cmd_wrapper(
 
 
 def cmd_wrapper_inner(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     if not config.other.wrapper_inner:
         return ()
@@ -221,19 +242,25 @@ def cmd_wrapper_inner(
 
 
 def cmd_user_program(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     return () if config.user_program is None else (config.user_program,)
 
 
 def cmd_user_opts(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     return config.user_opts
 
 
 def cmd_python(
-    config: ConfigProtocol, system: System, launcher: Launcher
+    config: ConfigProtocol,  # noqa: ARG001
+    system: System,  # noqa: ARG001
+    launcher: Launcher,  # noqa: ARG001
 ) -> CommandPart:
     return ("python",)
 
@@ -254,7 +281,8 @@ _CMD_PARTS_PRE = (
     cmd_wrapper_inner,
 )
 
-CMD_PARTS_PYTHON = _CMD_PARTS_PRE + (
+CMD_PARTS_PYTHON = (
+    *_CMD_PARTS_PRE,
     # Executable name that will get stripped by the runtime
     cmd_python,
     cmd_module,
@@ -264,7 +292,8 @@ CMD_PARTS_PYTHON = _CMD_PARTS_PRE + (
     cmd_user_opts,
 )
 
-CMD_PARTS_EXEC = _CMD_PARTS_PRE + (
+CMD_PARTS_EXEC = (
+    *_CMD_PARTS_PRE,
     # Now we're ready to build the actual command to run
     cmd_user_program,
     # Append user flags so they can override whatever we provided

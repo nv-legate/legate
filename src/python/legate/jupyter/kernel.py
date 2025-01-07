@@ -9,18 +9,16 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-"""Consolidate driver configuration from command-line and environment.
+"""Consolidate driver configuration from command-line and environment."""
 
-"""
 from __future__ import annotations
 
-import json
-import os
 import sys
+import json
 from dataclasses import asdict
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 from jupyter_client.kernelspec import (
     KernelSpec,
@@ -28,10 +26,12 @@ from jupyter_client.kernelspec import (
     NoSuchKernel,
 )
 
-from legate.driver import LegateDriver
-from legate.jupyter.config import Config
-from legate.util.types import ArgList
 from legate.util.ui import error
+
+if TYPE_CHECKING:
+    from legate.driver import LegateDriver
+    from legate.jupyter.config import Config
+    from legate.util.types import ArgList
 
 
 class LegateMetadata(TypedDict):
@@ -45,9 +45,11 @@ LEGATE_JUPYTER_KERNEL_SPEC_KEY = "__LEGATE_JUPYTER_KERNEL_SPEC__"
 LEGATE_JUPYTER_METADATA_KEY: Literal["legate"] = "legate"
 
 
-def generate_kernel_spec(driver: LegateDriver, config: Config) -> KernelSpec:
+def generate_kernel_spec(  # noqa: D103
+    driver: LegateDriver, config: Config
+) -> KernelSpec:
     legion_kernel = Path(__file__).parent / "_legion_kernel.py"
-    argv = list(driver.cmd) + [str(legion_kernel), "-f", "{connection_file}"]
+    argv = [*list(driver.cmd), str(legion_kernel), "-f", "{connection_file}"]
 
     env = {k: v for k, v in driver.env.items() if k in driver.custom_env_vars}
 
@@ -76,7 +78,9 @@ def generate_kernel_spec(driver: LegateDriver, config: Config) -> KernelSpec:
     )
 
 
-def install_kernel_spec(spec: KernelSpec, config: Config) -> None:
+def install_kernel_spec(  # noqa: D103
+    spec: KernelSpec, config: Config
+) -> None:
     ksm = KernelSpecManager()
 
     spec_name = config.kernel.spec_name
@@ -94,17 +98,20 @@ def install_kernel_spec(spec: KernelSpec, config: Config) -> None:
             f"running: 'jupyter kernelspec uninstall {spec_name.lower()}', "
             "or choose a new kernel name."
         )
-        print(msg)
+        print(msg)  # noqa: T201
         sys.exit(1)
 
     with TemporaryDirectory() as tmpdir:
-        os.chmod(tmpdir, 0o755)
-        with open(Path(tmpdir).joinpath("kernel.json"), "w") as f:
+        tmpdir_path = Path(tmpdir)
+        tmpdir_path.chmod(0o755)
+        with tmpdir_path.joinpath("kernel.json").open(mode="w") as f:
             out = json.dumps(spec.to_dict(), sort_keys=True, indent=2)
             if config.verbose > 0:
-                print(f"Wrote kernel spec file {spec_name}/kernel.json\n")
+                print(  # noqa: T201
+                    f"Wrote kernel spec file {spec_name}/kernel.json\n"
+                )
             if config.verbose > 1:
-                print(f"\n{out}\n")
+                print(f"\n{out}\n")  # noqa: T201
             f.write(out)
 
         try:
@@ -114,7 +121,7 @@ def install_kernel_spec(spec: KernelSpec, config: Config) -> None:
                 user=config.kernel.user,
                 prefix=config.kernel.prefix,
             )
-            print(
+            print(  # noqa: T201
                 f"Jupyter kernel spec {spec_name} ({display_name}) "
                 "has been installed"
             )
@@ -123,5 +130,5 @@ def install_kernel_spec(spec: KernelSpec, config: Config) -> None:
                 "Failed to install the Jupyter kernel spec "
                 f"{spec_name} ({display_name}) with error: {e}"
             )
-            print(msg)
+            print(msg)  # noqa: T201
             sys.exit(1)

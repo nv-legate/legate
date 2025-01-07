@@ -11,12 +11,13 @@
 
 from __future__ import annotations
 
-import multiprocessing
 import os
-import platform
 import sys
+import platform
+import multiprocessing
 from functools import cached_property
 from itertools import chain
+from pathlib import Path
 
 from .fs import get_legate_paths, get_legion_paths
 from .types import CPUInfo, GPUInfo, LegatePaths, LegionPaths
@@ -32,7 +33,7 @@ class System:
 
     @cached_property
     def legate_paths(self) -> LegatePaths:
-        """All the current runtime Legate Paths
+        """All the current runtime Legate Paths.
 
         Returns
         -------
@@ -43,7 +44,7 @@ class System:
 
     @cached_property
     def legion_paths(self) -> LegionPaths:
-        """All the current runtime Legion Paths
+        """All the current runtime Legion Paths.
 
         Returns
         -------
@@ -54,7 +55,7 @@ class System:
 
     @cached_property
     def os(self) -> str:
-        """The OS for this system
+        """The OS for this system.
 
         Raises
         ------
@@ -66,30 +67,30 @@ class System:
 
         """
         if (os := platform.system()) not in {"Linux", "Darwin"}:
-            raise RuntimeError(f"Legate does not work on {os}")
+            msg = f"Legate does not work on {os}"
+            raise RuntimeError(msg)
         return os
 
     @cached_property
     def cpus(self) -> tuple[CPUInfo, ...]:
         """A list of CPUs on the system."""
-
+        # Need to use if->elif pattern (instead of several if with early
+        # return) for mypy not to warn that either the linux or macOS path is
+        # "unreachable".
         if sys.platform.startswith("darwin"):
             N = multiprocessing.cpu_count()
-            return tuple(CPUInfo((i,)) for i in range(N))
+            ret = ((i,) for i in range(N))
         elif sys.platform.startswith("linux"):
             all_sets = linux_load_sibling_sets()
-
-            available_sets = (
-                s for s in all_sets if s[0] in os.sched_getaffinity(0)
-            )
-            return tuple(CPUInfo(x) for x in sorted(available_sets))
+            affinity = os.sched_getaffinity(0)
+            ret = sorted(s for s in all_sets if s[0] in affinity)
         else:
             raise NotImplementedError(sys.platform)
+        return tuple(map(CPUInfo, ret))
 
     @cached_property
     def gpus(self) -> tuple[GPUInfo, ...]:
         """A list of GPUs on the system, including total memory information."""
-
         try:
             # This pynvml import is protected inside this method so that in
             # case pynvml is not installed, tests stages that don't need gpu
@@ -111,12 +112,13 @@ class System:
             pynvml.nvmlInit()
         except Exception:
             if platform.system() == "Darwin":
-                raise RuntimeError("GPU execution is not available on OSX.")
-            else:
-                raise RuntimeError(
-                    "GPU detection failed. Make sure nvml and pynvml are "
-                    "both installed."
-                )
+                msg = "GPU execution is not available on OSX."
+                raise RuntimeError(msg)
+            msg = (
+                "GPU detection failed. Make sure nvml and pynvml are "
+                "both installed."
+            )
+            raise RuntimeError(msg)
 
         num_gpus = pynvml.nvmlDeviceGetCount()
 
@@ -148,9 +150,9 @@ class System:
 
 def expand_range(value: str) -> tuple[int, ...]:
     if value == "":
-        return tuple()
+        return ()
     if "-" not in value:
-        return tuple((int(value),))
+        return (int(value),)
     start, stop = value.split("-")
 
     return tuple(range(int(start), int(stop) + 1))
@@ -171,9 +173,9 @@ def linux_load_sibling_sets() -> set[tuple[int, ...]]:
 
     sibling_sets: set[tuple[int, ...]] = set()
     for i in range(N):
-        with open(
+        with Path(
             f"/sys/devices/system/cpu/cpu{i}/topology/thread_siblings_list"
-        ) as fd:
+        ).open() as fd:
             line = fd.read()
         sibling_sets.add(extract_values(line.strip()))
 

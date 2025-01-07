@@ -12,9 +12,10 @@
 specific features on OSX.
 
 """
+
 from __future__ import annotations
 
 from .cpu import CPU
-from .gpu import GPU
 from .eager import Eager
+from .gpu import GPU
 from .omp import OMP

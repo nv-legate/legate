@@ -1,4 +1,3 @@
-#! /usr/bin/env legate
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
@@ -9,10 +8,12 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
+from __future__ import annotations
 
 import sys
 import textwrap
 from argparse import REMAINDER, ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
 
 KNOWN_PATCHES = {"numpy": "cupynumeric"}
 
@@ -64,21 +65,23 @@ parser.add_argument(
 )
 
 
-def do_patch(name: str, verbose: bool = False) -> None:
+def do_patch(name: str, *, verbose: bool = False) -> None:  # noqa: D103
     if name not in KNOWN_PATCHES:
-        raise ValueError(f"No patch available for module {name}")
+        msg = f"No patch available for module {name}"
+        raise ValueError(msg)
 
     cuname = KNOWN_PATCHES[name]
     try:
         module = __import__(cuname)
         sys.modules[name] = module
         if verbose:
-            print(f"lgpatch: patched {name} -> {cuname}")
+            print(f"lgpatch: patched {name} -> {cuname}")  # noqa: T201
     except ImportError:
-        raise RuntimeError(f"Could not import patch module {cuname}")
+        msg = f"Could not import patch module {cuname}"
+        raise RuntimeError(msg)
 
 
-def main() -> None:
+def main() -> None:  # noqa: D103
     args = parser.parse_args()
 
     if len(args.prog) == 0:
@@ -86,15 +89,17 @@ def main() -> None:
         sys.exit()
 
     if len(args.patch) == 0:
-        print("WARNING: lgpatch called without any --patch options")
+        print(  # noqa: T201
+            "WARNING: lgpatch called without any --patch options"
+        )
 
     for name in set(args.patch):
-        do_patch(name, args.verbose)
+        do_patch(name, verbose=args.verbose)
 
     sys.argv[:] = args.prog
 
-    with open(args.prog[0]) as f:
-        exec(f.read(), {"__name__": "__main__"})
+    with Path(args.prog[0]).open() as f:
+        exec(f.read(), {"__name__": "__main__"})  # noqa: S102
 
 
 if __name__ == "__main__":

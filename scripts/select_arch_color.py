@@ -52,7 +52,9 @@ def select_arch_color(arch_value: str) -> str:
 def main() -> None:
     from os import environ
 
-    print(select_arch_color(environ.get("LEGATE_ARCH", "")), end="")
+    print(  # noqa: T201
+        select_arch_color(environ.get("LEGATE_ARCH", "")), end=""
+    )
 
 
 if __name__ == "__main__":

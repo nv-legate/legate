@@ -9,6 +9,7 @@
 # disclosure or distribution of this material and related documentation
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
+from __future__ import annotations
 
 import sys
 
@@ -19,32 +20,32 @@ if sys.version_info < MIN_PY:
     banner_sep = "*"
     banner = banner_sep * banner_len
 
-    def banner_print(line):
-        print(banner_sep + line.center(banner_len - 2) + banner_sep)
+    def _banner_print(line):
+        print(banner_sep + line.center(banner_len - 2) + banner_sep)  # noqa: T201
 
-    print(banner)
-    banner_print(
+    print(banner)  # noqa: T201
+    _banner_print(
         "Python version "
         + ".".join(map(str, MIN_PY))
         + "+ is required to run configure"
     )
     info = sys.version_info
-    banner_print(
+    _banner_print(
         "Current Python version: "
         + ".".join(map(str, [info.major, info.minor, info.micro]))
     )
-    print(banner)
+    print(banner)  # noqa: T201
     sys.exit(1)
 
-import os  # noqa E402
+import os  # noqa: E402
 
-sys.path.insert(0, os.path.abspath("config"))
+sys.path.insert(0, os.path.abspath("config"))  # noqa: PTH100
 
-from config.aedifix.main import basic_configure  # noqa E402
-from config.legate_internal.main_package import Legate  # noqa E402
+from config.aedifix.main import basic_configure  # noqa: E402
+from config.legate_internal.main_package import Legate  # noqa: E402
 
 
-def main():
+def main():  # noqa: D103
     return basic_configure(tuple(sys.argv[1:]), Legate)
 
 

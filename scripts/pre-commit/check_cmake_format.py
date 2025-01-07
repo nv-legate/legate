@@ -11,10 +11,10 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+import sys
 import json
 import shutil
 import subprocess
-import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, Namespace
 from pathlib import Path
 from typing import Any
@@ -71,11 +71,11 @@ def handle_file(
         except KeyError:
             format_data[fn] = spec
             updated = True
-            print("Adding missing function:", fn)
+            print("Adding missing function:", fn)  # noqa: T201
             continue
 
         if cur != spec:
-            print("Updating function:", fn)
+            print("Updating function:", fn)  # noqa: T201
             format_data[fn] = spec
             updated = True
 

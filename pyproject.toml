@@ -104,26 +104,26 @@ experimental = true  # needed for install-dir = "/data"
 [tool.scikit-build.wheel.packages]
 "legate" = "src/python/legate"
 
-[tool.black]
-line-length = 79
-target-version = ["py310"]
-include = '\.py?$'
-exclude = '''
-/(
-    \.eggs |
-    \.git |
-    \.mypy_cache |
-    \.tox |
-    \.venv |
-    _build |
-    buck-out |
-    build |
-    dist |
-    arch-.* |
-    .*-arch |
-    .*venv
-)/
-'''
+# [tool.black]
+# line-length = 79
+# target-version = ["py310"]
+# include = '\.py?$'
+# exclude = '''
+# /(
+#     \.eggs |
+#     \.git |
+#     \.mypy_cache |
+#     \.tox |
+#     \.venv |
+#     _build |
+#     buck-out |
+#     build |
+#     dist |
+#     arch-.* |
+#     .*-arch |
+#     .*venv
+# )/
+# '''
 
 [tool.coverage.report]
 exclude_lines = [
@@ -196,38 +196,186 @@ markers = [
 ]
 filterwarnings = ["error"]
 
-[tool.isort]
-line_length = 79
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-combine_as_imports = true
-order_by_type = true
-known_third_party = ["numpy"]
-known_first_party = ["legate"]
-default_section = "THIRDPARTY"
-sections = [
-    "FUTURE",
-    "STDLIB",
-    "THIRDPARTY",
-    "FIRSTPARTY",
-    "LOCALFOLDER"
+# [tool.isort]
+# line_length = 79
+# multi_line_output = 3
+# include_trailing_comma = true
+# force_grid_wrap = 0
+# combine_as_imports = true
+# order_by_type = true
+# known_third_party = ["numpy"]
+# known_first_party = ["legate"]
+# default_section = "THIRDPARTY"
+# sections = [
+#     "FUTURE",
+#     "STDLIB",
+#     "THIRDPARTY",
+#     "FIRSTPARTY",
+#     "LOCALFOLDER"
+# ]
+# skip = [
+#     ".eggs",
+#     ".git",
+#     ".mypy_cache",
+#     ".tox",
+#     ".venv",
+#     "_build",
+#     "build",
+#     "dist",
+#     "__init__.py"
+# ]
+# skip_glob = [
+#    "install/*",
+#    "arch-*",
+#    "venv*",
+#    "*-arch",
+#    "*venv",
+# ]
+
+[tool.ruff]
+cache-dir = "./.cache/ruff"
+extend-exclude = [
+    "arch-*",
+    "*-arch",
+    "venv",
+    "*venv",
+    "config/aedifix/templates/*",
+    "src/cmake/templates/*",
 ]
-skip = [
-    ".eggs",
-    ".git",
-    ".mypy_cache",
-    ".tox",
-    ".venv",
-    "_build",
-    "build",
-    "dist",
-    "__init__.py"
+line-length = 79
+src = [".", "src/python/legate"]
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    # Don't warn about missing trailing commas, the formatter will insert those for us.
+    "COM812",
+    # Don't care about annotations, we let mypy do that for us.
+    "ANN",
+    # Allow TODO's.
+    "FIX",
+    # Ruff is a bit too opinionated about the format of TODO statements.
+    "TD",
+    # We well and truly don't care about timezones
+    "DTZ",
+    "BLE001",
+    # Keep commented-out code for now, there are false-positives.
+    "ERA001",
+    # Allow use of assert.
+    "S101",
+    # Always prefer absolute imports...
+    "TID252",
+    # Many false positives.
+    "S603",
+    # Disable the naming-convention checks. This is "dangerous" insofar that we need to
+    # manually enforce this, but there are so many manual (but reasonable!) violations in
+    # there currently that littering the repo with noqa N80 seems dumb.
+    "N80",
+    "N81",
+    # We don't document modules
+    "D100",
+    "D101",
+    "D104",
+    # We want a blank line after descriptions, but this has false positives when it comes
+    # to summaries that are ever so slightly longer than 1 line.
+    "D205",
+    # Imperative mood checker is a bit finnicky
+    "D401",
+    # We don't care if hashes are cryptographically secure
+    "S311",
+    # We don't care about using absolute paths for all executables. When we say "run conda
+    # foo bar baz", we don't care where conda came from
+    "S607",
+    # Let mypy type-check the __enter__ and __exit__ functions
+    "PYI036",
+    # We don't always *need* to `raise NewException(...) from old_exn`
+    "B904",
+    # Let the formatter concatenate strings
+    "ISC001",
 ]
-skip_glob = [
-   "install/*",
-   "arch-*",
-   "venv*",
-   "*-arch",
-   "*venv",
+
+[tool.ruff.lint.extend-per-file-ignores]
+"__init__.py" = [
+    "F401",
 ]
+
+"scripts/**/*.py" = [
+    "D10",
+]
+
+"config/**/*.py" = [
+    "D101",
+    "D102",
+    "D103",
+    "D105",
+    "D106",
+    # OK to pass raw boolean params in config, as this is usually done when setting cmake
+    # variables
+    "FBT003",
+]
+
+"**/tests/**/*.py" = [
+    # asserts allowed in tests...
+    "S101",
+    # Don't care about booleans as positional arguments in tests, e.g. via
+    # @pytest.mark.parametrize()
+    "FBT",
+    # Test modules don't need docstrings...
+    "D100",
+    # ...and neither do classes...
+    "D101",
+    # ...or methods...
+    "D102",
+    # ...or functions...
+    "D103",
+    # ...or packages...
+    "D104",
+    # ...or magic methods...
+    "D105",
+    # ...or nested classes...
+    "D106",
+    # ...or __init__ statements
+    "D107",
+    # Tests are allowed to access private members
+    "SLF001",
+    # TODO(jfaibussowit) enable this eventually...
+    "PT007",
+    # Ignore magic values in tests, there are simply far too many to fix...
+    "PLR2004",
+    # Tests can have unused function params, since they might be fixtures
+    "ARG001",
+    "ARG002",
+    # Tests can have a lot of arguments if many of them are fixtures
+    "PLR0913",
+    # OK to use np.random.random, we don't care about using the new Generator class
+    "NPY002",
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+parametrize-values-type = "tuple"
+
+[tool.ruff.lint.isort.sections]
+testing = ["pytest", "pytest_mock"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["numpy"]
+known-first-party = ["legate"]
+length-sort-straight = true
+combine-as-imports = true
+split-on-trailing-comma = false
+required-imports = ["from __future__ import annotations"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "testing",
+    "first-party",
+    "local-folder",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+ignore-decorators = ["typing.overload"]

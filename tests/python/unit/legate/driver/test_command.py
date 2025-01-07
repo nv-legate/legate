@@ -11,25 +11,25 @@
 
 from __future__ import annotations
 
-import argparse
 import sys
+import argparse
+from typing import TYPE_CHECKING
 
 import pytest
 
 import legate.driver.command as m
 from legate import install_info
 from legate.driver.launcher import RANK_ENV_VARS
-from legate.util.types import LauncherType
 
-from ...util import Capsys
-from .util import GenObjs
+if TYPE_CHECKING:
+    from legate.util.types import LauncherType
+
+    from ...util import Capsys
+    from .util import GenObjs
 
 
 def test___all__() -> None:
-    assert m.__all__ == (
-        "CMD_PARTS_EXEC",
-        "CMD_PARTS_PYTHON",
-    )
+    assert m.__all__ == ("CMD_PARTS_EXEC", "CMD_PARTS_PYTHON")
 
 
 def test_LEGATE_GLOBAL_RANK_SUBSTITUTION() -> None:
@@ -37,7 +37,7 @@ def test_LEGATE_GLOBAL_RANK_SUBSTITUTION() -> None:
 
 
 def test_CMD_PARTS() -> None:
-    assert m.CMD_PARTS_EXEC == (
+    assert (
         m.cmd_bind,
         m.cmd_wrapper,
         m.cmd_gdb,
@@ -49,9 +49,9 @@ def test_CMD_PARTS() -> None:
         m.cmd_wrapper_inner,
         m.cmd_user_program,
         m.cmd_user_opts,
-    )
+    ) == m.CMD_PARTS_EXEC
 
-    assert m.CMD_PARTS_PYTHON == (
+    assert (
         m.cmd_bind,
         m.cmd_wrapper,
         m.cmd_gdb,
@@ -65,7 +65,7 @@ def test_CMD_PARTS() -> None:
         m.cmd_module,
         m.cmd_user_program,
         m.cmd_user_opts,
-    )
+    ) == m.CMD_PARTS_PYTHON
 
 
 class Test_cmd_bind:
@@ -103,11 +103,7 @@ class Test_cmd_bind:
 
     @pytest.mark.parametrize("launch", ("none", "mpirun", "jsrun", "srun"))
     @pytest.mark.skipif(not install_info.use_cuda, reason="no CUDA support")
-    def test_combo_local(
-        self,
-        genobjs: GenObjs,
-        launch: LauncherType,
-    ) -> None:
+    def test_combo_local(self, genobjs: GenObjs, launch: LauncherType) -> None:
         all_binds = [
             "--cpu-bind",
             "1",
@@ -206,9 +202,7 @@ class Test_cmd_bind:
         monkeypatch.setattr(install_info, "networks", [])
 
         config, system, launcher = genobjs(
-            ["--launcher", launch],
-            multi_rank=(2, 2),
-            rank_env={rank_var: "1"},
+            ["--launcher", launch], multi_rank=(2, 2), rank_env={rank_var: "1"}
         )
 
         msg = (
@@ -332,9 +326,7 @@ class Test_cmd_nvprof:
 
     @pytest.mark.parametrize("launch", ("mpirun", "jsrun", "srun"))
     def test_multi_rank_with_launcher(
-        self,
-        genobjs: GenObjs,
-        launch: str,
+        self, genobjs: GenObjs, launch: str
     ) -> None:
         config, system, launcher = genobjs(
             ["--nvprof", "--logdir", "foo", "--launcher", launch],
@@ -399,7 +391,7 @@ class Test_cmd_nsys:
     def test_explicit_sample(
         self, genobjs: GenObjs, nsys_extra: list[str]
     ) -> None:
-        args = ["--nsys"] + nsys_extra
+        args = ["--nsys", *nsys_extra]
         config, system, launcher = genobjs(args)
         result = m.cmd_nsys(config, system, launcher)
 
@@ -520,13 +512,7 @@ class Test_cmd_nsys:
         self, genobjs: GenObjs, rank_var: str, rank: str
     ) -> None:
         config, system, launcher = genobjs(
-            [
-                "--nsys",
-                "--logdir",
-                "foo",
-                "--nsys-targets",
-                "foo,bar",
-            ],
+            ["--nsys", "--logdir", "foo", "--nsys-targets", "foo,bar"],
             multi_rank=(2, 2),
             rank_env={rank_var: rank},
         )
@@ -691,7 +677,7 @@ class Test_cmd_user_opts:
     @pytest.mark.parametrize("opts", USER_OPTS, ids=str)
     @pytest.mark.skipif(not install_info.use_cuda, reason="no CUDA support")
     def test_with_legate_opts(self, genobjs: GenObjs, opts: list[str]) -> None:
-        args = ["--verbose", "--gpus", "2"] + opts
+        args = ["--verbose", "--gpus", "2", *opts]
         config, system, launcher = genobjs(args, fake_module=None)
 
         user_opts = m.cmd_user_opts(config, system, launcher)
