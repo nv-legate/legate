@@ -28,8 +28,9 @@ TEST_F(TracedExceptionBaseUnit, Base)
   const auto exn          = legate::detail::TracedException<std::runtime_error>{orig_msg.data()};
   const auto& base        = static_cast<const legate::detail::TracedExceptionBase&>(exn);
 
-  ASSERT_EQ(base.what(), exn.what());
-  ASSERT_EQ(base.what_sv(), base.what());
+  ASSERT_EQ(base.raw_what_sv(), orig_msg);
+  ASSERT_EQ(base.traced_what(), exn.what());
+  ASSERT_EQ(base.traced_what_sv(), exn.what());
 }
 
 }  // namespace traced_exception_test

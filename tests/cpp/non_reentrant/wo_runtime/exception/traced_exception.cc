@@ -53,10 +53,6 @@ TYPED_TEST_SUITE(TracedExceptionConstruct, ExceptionConstructTypeList, );
 
 TYPED_TEST(TracedExceptionConstruct, Basic) { ASSERT_THROW(throw_exn<TypeParam>(), TypeParam); }
 
-namespace {
-
-}  // namespace
-
 class TracedExceptionUnit : public TracedExceptionFixture {};
 
 TEST_F(TracedExceptionUnit, Stacktrace)
@@ -65,8 +61,34 @@ TEST_F(TracedExceptionUnit, Stacktrace)
   using exn_type          = std::logic_error;
   const auto exn          = legate::detail::TracedException<std::logic_error>{orig_msg.data()};
 
-  ASSERT_THAT(exn.what(),
-              MatchesStackTrace<const std::type_info&>(typeid(exn_type), orig_msg, __FILE__));
+  ASSERT_THAT(
+    exn.what(),
+    MatchesStackTrace(
+      std::array{std::cref(typeid(exn_type))}, std::array{orig_msg}, std::array{__FILE__}));
+}
+
+TEST_F(TracedExceptionUnit, Nested)
+{
+  constexpr auto child_msg  = std::string_view{"child message"};
+  using child_type          = std::logic_error;
+  constexpr auto parent_msg = std::string_view{"parent message"};
+  using parent_type         = std::overflow_error;
+
+  try {
+    try {
+      throw legate::detail::TracedException<child_type>{child_msg.data()};
+    } catch (const std::exception&) {
+      throw legate::detail::TracedException<parent_type>{parent_msg.data()};
+    }
+  } catch (const std::exception& e) {
+    ASSERT_THAT(
+      e.what(),
+      MatchesStackTrace(std::array{std::cref(typeid(child_type)), std::cref(typeid(parent_type))},
+                        std::array{child_msg, parent_msg},
+                        std::array{__FILE__, __FILE__}));
+  } catch (...) {
+    GTEST_FAIL() << "Failed to catch traced exception";
+  }
 }
 
 }  // namespace traced_exception_test

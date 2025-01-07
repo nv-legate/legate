@@ -19,19 +19,20 @@
 #include <fmt/format.h>
 #include <iostream>
 #include <sstream>
-#include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 namespace legate::detail {
 
 void abort_handler(std::string_view file, std::string_view func, int line, std::stringstream* ss)
 {
-  const std::array<std::string, 2> exn_messages = {
-    fmt::format("Legate called abort at {}:{} in {}()", file, line, func), std::move(*ss).str()};
+  const std::array<ErrorDescription, 1> errs = {ErrorDescription{
+    std::vector{fmt::format("Legate called abort at {}:{} in {}()", file, line, func),
+                std::move(*ss).str()},
+    cpptrace::stacktrace::current(/* skip */ 1)}};
 
-  std::cerr << make_error_message({exn_messages.begin(), exn_messages.end()},
-                                  cpptrace::stacktrace::current(/* skip */ 1))
+  std::cerr << make_error_message({errs.cbegin(), errs.cend()})
             << std::endl;  // NOLINT(performance-avoid-endl)
   comm::coll::abort();
 }

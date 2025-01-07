@@ -66,7 +66,8 @@ TEST_F(TerminateHandlerDeathTest, Basic)
 
   ASSERT_EXIT(throw_and_terminate<exn_ty>(text),
               ::testing::KilledBySignal(SIGABRT),
-              MatchesStackTrace<const std::type_info&>(typeid(exn_ty), text, __FILE__));
+              MatchesStackTrace(
+                std::array{std::cref(typeid(exn_ty))}, std::array{text}, std::array{__FILE__}));
 }
 
 TEST_F(TerminateHandlerDeathTest, Nested)
@@ -87,13 +88,11 @@ TEST_F(TerminateHandlerDeathTest, Nested)
   const auto& nested_type_id = throw_nested_exception(
     [](const std::exception& exn) -> const std::type_info& { return typeid(exn); });
 
-  EXPECT_EXIT(
-    throw_nested_exception([](auto&&) { std::terminate(); }),
-    ::testing::KilledBySignal(SIGABRT),
-    ::testing::AllOf(
-      ::testing::HasSubstr(fmt::format("LEGATE ERROR: {}: TOP", nested_type_id)),
-      ::testing::HasSubstr("LEGATE ERROR: Above exception also contained nested exception(s):"),
-      ::testing::HasSubstr("LEGATE ERROR: #1 std::runtime_error: BOTTOM")));
+  EXPECT_EXIT(throw_nested_exception([](const auto&) { std::terminate(); }),
+              ::testing::KilledBySignal(SIGABRT),
+              ::testing::AllOf(
+                ::testing::HasSubstr("LEGATE ERROR: #0 std::runtime_error: BOTTOM"),
+                ::testing::HasSubstr(fmt::format("LEGATE ERROR: #1 {}: TOP", nested_type_id))));
 }
 
 }  // namespace traced_exception_test

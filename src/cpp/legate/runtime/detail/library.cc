@@ -156,11 +156,11 @@ void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo>
     try {
       return get_task_id(local_task_id);
     } catch (const std::out_of_range&) {
-      std::throw_with_nested(
-        std::out_of_range{fmt::format("Task {} is invalid for library '{}' (max local task id: {})",
-                                      local_task_id,
-                                      get_library_name(),
-                                      task_scope_.size() - 1)});
+      throw TracedException<std::out_of_range>{
+        fmt::format("Task {} is invalid for library '{}' (max local task id: {})",
+                    local_task_id,
+                    get_library_name(),
+                    task_scope_.size() - 1)};
     }
   }();
 

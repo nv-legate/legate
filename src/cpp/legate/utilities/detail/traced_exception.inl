@@ -14,28 +14,30 @@
 
 #include <legate/utilities/detail/traced_exception.h>
 
+#include <exception>
+#include <utility>
+
 namespace legate::detail {
 
-inline const char* TracedExceptionBase::what() const noexcept { return what_.c_str(); }
-
-inline std::string_view TracedExceptionBase::what_sv() const noexcept { return what_; }
-
-inline std::exception_ptr TracedExceptionBase::original_exception() const noexcept { return orig_; }
+inline const TracedExceptionBase::Impl* TracedExceptionBase::impl() const noexcept
+{
+  return impl_.get();
+}
 
 // ==========================================================================================
 
 template <typename T>
 template <typename... U>
-constexpr TracedException<T>::TracedException(U&&... args)
+TracedException<T>::TracedException(U&&... args)
   : T{std::forward<U>(args)...},
-    TracedExceptionBase{std::make_exception_ptr(static_cast<const T&>(*this)), typeid(T), T::what()}
+    TracedExceptionBase{std::make_exception_ptr(static_cast<const T&>(*this)), /* skip_frames */ 1}
 {
 }
 
 template <typename T>
 inline const char* TracedException<T>::what() const noexcept
 {
-  return TracedExceptionBase::what();
+  return TracedExceptionBase::traced_what();
 }
 
 // ==========================================================================================

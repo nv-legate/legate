@@ -27,8 +27,21 @@
 #include <string>
 #include <string_view>
 #include <sys/utsname.h>
+#include <vector>
 
 namespace legate::detail {
+
+ErrorDescription::ErrorDescription(std::string single_line, cpptrace::stacktrace stack_trace)
+  : ErrorDescription{std::vector{std::move(single_line)}, std::move(stack_trace)}
+{
+}
+
+ErrorDescription::ErrorDescription(std::vector<std::string> lines, cpptrace::stacktrace stack_trace)
+  : message_lines{std::move(lines)}, trace{std::move(stack_trace)}
+{
+}
+
+// ==========================================================================================
 
 namespace {
 
@@ -102,9 +115,7 @@ void add_traceback(std::string_view PREFIX,
                    const cpptrace::stacktrace& trace,
                    std::string* ret)
 {
-  fmt::format_to(std::back_inserter(*ret),
-                 "{} Stack trace (most recent call first, top-most exception only):\n",
-                 PREFIX);
+  fmt::format_to(std::back_inserter(*ret), "{} Stack trace (most recent call first):\n", PREFIX);
   if (trace.empty()) {
     fmt::format_to(std::back_inserter(*ret), "{} <unknown stack trace>\n", PREFIX);
     return;
@@ -137,10 +148,36 @@ void add_traceback(std::string_view PREFIX,
   }
 }
 
+void add_error_summary(std::string_view PREFIX,
+                       bool USE_COLOR,
+                       Span<const ErrorDescription> errs,
+                       std::string* ret)
+{
+  static const auto EMPTY_LINE        = fmt::format("{}\n", PREFIX);
+  static const auto NESTED_DISCLAIMER = fmt::format(
+    "{} The above exception was caught and rethrown with the following additional "
+    "information\n",
+    PREFIX);
+
+  fmt::format_to(std::back_inserter(*ret),
+                 "{} Exception stack contains {} exception(s) (bottom-most exception first):\n",
+                 PREFIX,
+                 errs.size());
+  for (auto&& [idx, descr] : enumerate(errs)) {
+    ret->append(EMPTY_LINE);
+    if (idx) {
+      ret->append(NESTED_DISCLAIMER);
+    }
+    for (auto&& line : descr.message_lines) {
+      fmt::format_to(std::back_inserter(*ret), "{} #{} {}\n", PREFIX, idx, line);
+    }
+    add_traceback(PREFIX, USE_COLOR, descr.trace, ret);
+  }
+}
+
 }  // namespace
 
-std::string make_error_message(Span<const std::string> message_lines,
-                               const cpptrace::stacktrace& trace)
+std::string make_error_message(Span<const ErrorDescription> errs)
 {
   // If any of this throws an exception, we are basically screwed
   static const auto USE_COLOR              = detect_use_color();
@@ -151,7 +188,7 @@ std::string make_error_message(Span<const std::string> message_lines,
   static const auto LEGATE_VERSION_SUMMARY = legate_version_summary(PREFIX);
   static const auto LEGION_VERSION_SUMMARY = legion_version_summary(PREFIX);
   static const auto CONFIGURE_SUMMARY      = configure_summary(PREFIX);
-  constexpr auto FIVE_KB                   = 5 * 1024;
+  constexpr auto TEN_KB                    = 10 * 1024;
 
   std::string ret;
 
@@ -159,16 +196,13 @@ std::string make_error_message(Span<const std::string> message_lines,
   // clear 5-6Kb in a single string here, so best to reserve this beast upfront. Note: the goal
   // is not performance, but to avoid fragmentation and subsequently running out of memory (if
   // that's even possible) due to constantly realloc-ing the buffer.
-  ret.reserve(FIVE_KB);
+  ret.reserve(TEN_KB);
   ret += RULER;
-  for (auto&& m : message_lines) {
-    fmt::format_to(std::back_inserter(ret), "{} {}\n", PREFIX, m);
-  }
   ret += SYSTEM_SUMMARY;
   ret += LEGATE_VERSION_SUMMARY;
   ret += LEGION_VERSION_SUMMARY;
   ret += CONFIGURE_SUMMARY;
-  add_traceback(PREFIX, USE_COLOR, trace, &ret);
+  add_error_summary(PREFIX, USE_COLOR, errs, &ret);
   ret += RULER;
   return ret;
 }

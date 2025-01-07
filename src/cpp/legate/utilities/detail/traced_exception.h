@@ -12,11 +12,11 @@
 
 #pragma once
 
+#include <cstddef>
 #include <exception>
+#include <memory>
 #include <new>
-#include <string>
 #include <string_view>
-#include <typeinfo>
 
 namespace legate::detail {
 
@@ -41,15 +41,46 @@ namespace legate::detail {
  * traced exceptions.
  */
 class TracedExceptionBase {
+  class Impl;
+
  public:
   /**
    * @brief Construct a TracedExceptionBase.
    *
    * @param ptr An exception pointer to the original exception object.
-   * @param exn_ty The type info of the original exception object.
-   * @param args The arguments to construct the underlying exception object for TracedException.
+   * @param skip_frames The number of stacktrace frames to skip.
+   * @param nested An optional nested exception to associate with this exception.
+   *
+   * `TracedExceptionBase` will add additional skip frames for each constructor/function-call
+   * made by it, so the user should not try to account for that. The user should only try to
+   * account for its immediate frames. So if a `TracedExceptionBase` object is constructed via
+   * the path `interesting() -> foo() -> bar() -> TracedExceptionBase`, then `skip_frames`
+   * should be 2.
+   *
+   * `nested` is used in a very similar fashion to Pythons nested exceptions (`raise Foo from
+   * Bar`). In this case, `nested` would be an exception pointer to `Bar`:
+   * @code{.cpp}
+   * try {
+   *   // ...
+   * } catch (const std::exception& e) {
+   *   throw TracedExceptionBase{..., std::make_exception_ptr(e)};
+   * }
+   * @endcode
    */
-  TracedExceptionBase(std::exception_ptr ptr, const std::type_info& exn_ty, std::string_view what);
+  explicit TracedExceptionBase(const std::exception_ptr& ptr, std::size_t skip_frames);
+
+  TracedExceptionBase(const TracedExceptionBase&)                = default;
+  TracedExceptionBase& operator=(const TracedExceptionBase&)     = default;
+  TracedExceptionBase(TracedExceptionBase&&) noexcept            = default;
+  TracedExceptionBase& operator=(TracedExceptionBase&&) noexcept = default;
+  ~TracedExceptionBase();
+
+  /**
+   * @brief Get the raw, unformatted exception message.
+   *
+   * @return The original exception message without any nested exceptions or traces.
+   */
+  [[nodiscard]] std::string_view raw_what_sv() const noexcept;
 
   /**
    * @brief Get the formatted exception message in c_str() form.
@@ -57,29 +88,20 @@ class TracedExceptionBase {
    * @return The formatted exception containing the stack strace, suitable for derived class
    * what() methods.
    */
-  [[nodiscard]] const char* what() const noexcept;
+  [[nodiscard]] const char* traced_what() const noexcept;
 
   /**
-   * @brief Get the formatted exception message.
+   * @brief Get the formatted exception message in string_view form.
    *
-   * @return The formatted exception containing the stack strace.
+   * @return The formatted exception containing the stack strace, suitable for derived class
+   * what() methods.
    */
-  [[nodiscard]] std::string_view what_sv() const noexcept;
+  [[nodiscard]] std::string_view traced_what_sv() const noexcept;
 
-  /**
-   * @brief Get the original exception being traced.
-   *
-   * @return The original exception.
-   */
-  [[nodiscard]] std::exception_ptr original_exception() const noexcept;
+  [[nodiscard]] const Impl* impl() const noexcept;
 
  private:
-  [[nodiscard]] static std::string make_error_message_(const std::type_info& exn_ty,
-                                                       std::string_view what,
-                                                       std::size_t skip_frames);
-
-  std::exception_ptr orig_{};
-  std::string what_{};
+  std::shared_ptr<Impl> impl_;
 };
 
 /**
@@ -91,12 +113,12 @@ template <typename T>
 class TracedException : public T, public TracedExceptionBase {
  public:
   /**
-   * @brief Construct a TracedException
+   * @brief Construct a TracedException.
    *
    * @param args The arguments to construct the underlying exception object for TracedException.
    */
   template <typename... U>
-  constexpr explicit TracedException(U&&... args);
+  explicit TracedException(U&&... args);
 
   /**
    * @brief Get the formatted exception message.
@@ -104,9 +126,6 @@ class TracedException : public T, public TracedExceptionBase {
    * @return The formatted exception containing the stack strace.
    */
   [[nodiscard]] const char* what() const noexcept override;
-
- private:
-  std::string what_{};
 };
 
 template <typename T>

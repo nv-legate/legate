@@ -492,7 +492,7 @@ void throw_cuda_driver_error(CUresult result,
   try {
     error_str =
       legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->get_error_string(result);
-  } catch (const std::exception& exn) {
+  } catch (...) {
     error_str = "unknown error occurred";
   }
 
@@ -501,7 +501,7 @@ void throw_cuda_driver_error(CUresult result,
   try {
     error_name =
       legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->get_error_name(result);
-  } catch (const std::exception& exn) {
+  } catch (...) {
     error_name = "unknown error";
   }
 

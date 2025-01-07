@@ -14,12 +14,21 @@
 
 #include <legate/utilities/span.h>
 
-#include <cpptrace/forward.hpp>
+#include <cpptrace/basic.hpp>
 #include <string>
+#include <vector>
 
 namespace legate::detail {
 
-std::string make_error_message(Span<const std::string> message_lines,
-                               const cpptrace::stacktrace& trace);
+class ErrorDescription {
+ public:
+  explicit ErrorDescription(std::string single_line, cpptrace::stacktrace stack_trace = {});
+  ErrorDescription(std::vector<std::string> lines, cpptrace::stacktrace stack_trace);
+
+  std::vector<std::string> message_lines{};
+  cpptrace::stacktrace trace{};
+};
+
+[[nodiscard]] std::string make_error_message(Span<const ErrorDescription> errs);
 
 }  // namespace legate::detail

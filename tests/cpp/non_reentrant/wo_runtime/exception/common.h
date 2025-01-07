@@ -12,8 +12,12 @@
 
 #pragma once
 
+#include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/zip.h>
+
 #include <algorithm>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <fmt/std.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -24,7 +28,6 @@
 #include <utilities/env.h>
 #include <utilities/utilities.h>
 #include <vector>
-
 namespace traced_exception_test {
 
 class TracedExceptionFixture : public DefaultFixture {
@@ -74,10 +77,11 @@ inline void TracedExceptionFixture::TearDown()
 }
 
 MATCHER_P3(MatchesStackTrace,  // NOLINT
-           exn_type_info,      // NOLINT
-           exn_message,        // NOLINT
-           file_name,          // NOLINT
-           fmt::format("matches the legate stack trace (with message '{}')", exn_message))
+           exn_type_infos,     // NOLINT
+           exn_messages,       // NOLINT
+           file_names,         // NOLINT
+           fmt::format("matches the legate stack trace (with message(s) [{}])",
+                       fmt::join(exn_messages, ", ")))
 {
   using ::testing::MatchesRegex;
   using ::testing::StartsWith;
@@ -88,6 +92,8 @@ MATCHER_P3(MatchesStackTrace,  // NOLINT
     return *it;
   };
 
+  EXPECT_EQ(exn_type_infos.size(), exn_messages.size());
+  EXPECT_EQ(exn_type_infos.size(), file_names.size());
   EXPECT_FALSE(lines.empty());
   // If cpptrace encounters an error when trying to gather a stack trace (such as failing to
   // read debug symbols from system libraries), it prints a bunch of error messages:
@@ -103,30 +109,55 @@ MATCHER_P3(MatchesStackTrace,  // NOLINT
 
   EXPECT_NE(it, lines.end()) << "did not find a legate stack trace";
   EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: [=]+"));
-  EXPECT_EQ(deref(it++), fmt::format("LEGATE ERROR: {}: {}", exn_type_info, exn_message));
   EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: System: .*"));
   EXPECT_THAT(deref(it++),
               MatchesRegex(R"(LEGATE ERROR: Legate version: [0-9]+.[0-9]+.[0-9]+ \([A-z0-9]+\))"));
   EXPECT_THAT(deref(it++),
               MatchesRegex(R"(LEGATE ERROR: Legion version: [0-9]+.[0-9]+.[0-9]+ \([A-z0-9]+\))"));
   EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: Configure options: .*"));
-  EXPECT_EQ(deref(it++),
-            "LEGATE ERROR: Stack trace (most recent call first, top-most exception only):");
+  EXPECT_THAT(
+    deref(it++),
+    MatchesRegex(
+      R"(LEGATE ERROR: Exception stack contains [0-9]+ exception\(s\) \(bottom\-most exception first\):)"));
+  EXPECT_EQ(deref(it++), "LEGATE ERROR:");
 
-  auto found = false;
+  for (auto&& [idx, rest] : legate::detail::enumerate(
+         legate::detail::zip_equal(exn_type_infos, exn_messages, file_names))) {
+    auto&& [ty_info, exn_mess, file_name] = rest;
 
-  for (; it != lines.end(); ++it) {
-    EXPECT_THAT(*it, StartsWith("LEGATE ERROR: "));
-    if (it->find(file_name) != std::string::npos) {
-      found = true;
+    if (idx) {
+      EXPECT_EQ(deref(it++),
+                "LEGATE ERROR: The above exception was caught and rethrown with the following "
+                "additional information");
+    }
+    EXPECT_EQ(
+      deref(it++),
+      fmt::format(
+        "LEGATE ERROR: #{} {}: {}", idx, static_cast<const std::type_info&>(ty_info), exn_mess));
+    EXPECT_EQ(deref(it++), "LEGATE ERROR: Stack trace (most recent call first):");
+
+    auto found = false;
+
+    for (; it != lines.end(); ++it) {
+      auto&& val = deref(it);
+
+      EXPECT_THAT(val, StartsWith("LEGATE ERROR:"));
+      if (val.find(file_name) != std::string::npos) {
+        found = true;
+      }
+      if (val == "LEGATE ERROR:") {
+        ++it;
+        break;
+      }
+    }
+
+    if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+      // Can only reliably expect to find the file name in the stack trace in debug mode. Release
+      // builds will likely have stripped this out.
+      EXPECT_TRUE(found);
     }
   }
 
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    // Can only reliably expect to find the file name in the stack trace in debug mode. Release
-    // builds will likely have stripped this out.
-    EXPECT_TRUE(found);
-  }
   EXPECT_THAT(lines.back(), MatchesRegex("LEGATE ERROR: [=]+"));
   return true;
 }

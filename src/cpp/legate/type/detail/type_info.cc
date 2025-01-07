@@ -362,7 +362,7 @@ InternalSharedPtr<Type> primitive_type(Type::Code code)
         std::back_inserter(result), "<unknown type code: {}>", traits::detail::to_underlying(code));
     }
     fmt::format_to(std::back_inserter(result), " is not a valid type code for a primitive type");
-    std::throw_with_nested(std::invalid_argument{result});
+    throw TracedException<std::invalid_argument>{std::move(result)};
   }
 
   const auto [it, inserted] = cache.try_emplace(code);
