@@ -161,10 +161,14 @@ calls into NCCL either directly or through some other Legate library.
     endif()
     file(READ "${LEGATE_CMAKE_DIR}/versions/legion_version.json" json_data)
     string(JSON version GET "${json_data}" "packages" "Legion" "version")
-    string(JSON shallow GET "${json_data}" "packages" "Legion" "git_shallow")
-    string(JSON exclude_from_all GET "${json_data}" "packages" "Legion"
-           "exclude_from_all")
-    if(exclude_from_all MATCHES ".*NOTFOUND")
+    string(JSON shallow ERROR_VARIABLE err GET "${json_data}" "packages" "Legion"
+           "git_shallow")
+    if(err)
+      set(shallow FALSE)
+    endif()
+    string(JSON exclude_from_all ERROR_VARIABLE err GET "${json_data}" "packages"
+           "Legion" "exclude_from_all")
+    if(err)
       set(exclude_from_all OFF)
     endif()
   endif()
