@@ -17,10 +17,11 @@
 #include "legate/data/detail/scalar.h"
 #include "legate/operation/detail/operation.h"
 #include "legate/partitioning/constraint.h"
-#include "legate/partitioning/detail/partitioner.h"
 #include "legate/utilities/internal_shared_ptr.h"
+#include <legate/partitioning/detail/partitioner.h>
 
-#include <memory>
+#include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -28,18 +29,22 @@
 #include <vector>
 
 namespace legate {
+
 class Scalar;
+class VariantInfo;
+
 }  // namespace legate
 
 namespace legate::detail {
+
 class CommunicatorFactory;
 class ConstraintSolver;
 class Library;
-class Strategy;
 
 class Task : public Operation {
  protected:
   Task(const Library* library,
+       const VariantInfo& variant_info,
        LocalTaskID task_id,
        std::uint64_t unique_id,
        std::int32_t priority,
@@ -119,6 +124,7 @@ class Task : public Operation {
 class AutoTask final : public Task {
  public:
   AutoTask(const Library* library,
+           const VariantInfo& variant_info,
            LocalTaskID task_id,
            std::uint64_t unique_id,
            std::int32_t priority,
@@ -156,6 +162,7 @@ class AutoTask final : public Task {
 class ManualTask final : public Task {
  public:
   ManualTask(const Library* library,
+             const VariantInfo& variant_info,
              LocalTaskID task_id,
              const Domain& launch_domain,
              std::uint64_t unique_id,
@@ -186,7 +193,7 @@ class ManualTask final : public Task {
   [[nodiscard]] Kind kind() const override;
 
  private:
-  std::unique_ptr<Strategy> strategy_{};
+  Strategy strategy_{};
 };
 
 }  // namespace legate::detail

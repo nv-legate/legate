@@ -92,16 +92,6 @@ std::string log_mappable(const Legion::Mappable& mappable, bool prefix_only = fa
 
 }  // namespace
 
-Legion::VariantID BaseMapper::select_task_variant_(Legion::Mapping::MapperContext ctx,
-                                                   const Legion::Task& task,
-                                                   const Processor& proc)
-{
-  const auto variant = find_variant_(ctx, task, proc.kind());
-
-  LEGATE_CHECK(variant.has_value());
-  return *variant;
-}
-
 // ==========================================================================================
 
 BaseMapper::BaseMapper()
@@ -206,7 +196,7 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
                                      const Legion::Task& task,
                                      TaskOptions& output)
 {
-  Task legate_task{&task, runtime, ctx};
+  const auto legate_task = Task{&task, runtime, ctx};
 
   {
     auto get_stores = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
@@ -217,25 +207,8 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
       task, legate_task, get_stores, &output.check_collective_regions);
   }
 
-  const auto target = [&] {
-    const auto& machine_desc = legate_task.machine();
-    const auto& targets      = machine_desc.valid_targets();
-    const auto it            = std::find_if(
-      targets.begin(), targets.end(), [&](TaskTarget tgt) { return has_variant_(ctx, task, tgt); });
-
-    if (it == targets.end()) {
-      LEGATE_ABORT("Task ",
-                   task.get_task_name(),
-                   "[",
-                   task.get_provenance_string(),
-                   "] does not have a valid variant for this resource configuration: ",
-                   machine_desc);
-    }
-    return *it;
-  }();
-
   // The initial processor just needs to have the same kind as the eventual target of this task
-  output.initial_proc = local_machine_.procs(target).front();
+  output.initial_proc = local_machine_.procs(legate_task.target()).front();
 
   // We never want valid instances
   output.valid_instances = false;
@@ -274,13 +247,14 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
   output.slices.reserve(input.domain.get_volume());
 
   // Get the domain for the sharding space also
-  Domain sharding_domain = task.index_domain;
-  if (task.sharding_space.exists()) {
-    sharding_domain = runtime->get_index_space_domain(ctx, task.sharding_space);
-  }
+  const auto [lo, hi] = [&]() -> std::pair<DomainPoint, DomainPoint> {
+    const auto& space = task.sharding_space;
+    const auto& domain =
+      space.exists() ? runtime->get_index_space_domain(ctx, space) : task.index_domain;
 
-  const auto lo                = key_functor->project_point(sharding_domain.lo());
-  const auto hi                = key_functor->project_point(sharding_domain.hi());
+    return {key_functor->project_point(domain.lo()), key_functor->project_point(domain.hi())};
+  }();
+
   const auto start_proc_id     = machine_desc.processor_range().low;
   const auto total_tasks_count = legate::detail::linearize(lo, hi, hi) + 1;
 
@@ -295,51 +269,6 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
                                false /*recurse*/,
                                false /*stealable*/);
   }
-}
-
-bool BaseMapper::has_variant_(Legion::Mapping::MapperContext ctx,
-                              const Legion::Task& task,
-                              TaskTarget target)
-{
-  return find_variant_(ctx, task, to_kind(target)).has_value();
-}
-
-std::optional<Legion::VariantID> BaseMapper::find_variant_(Legion::Mapping::MapperContext ctx,
-                                                           const Legion::Task& task,
-                                                           Processor::Kind kind)
-{
-  const auto key            = VariantCacheKey{task.task_id, kind};
-  const auto old_cache_size = variants_.size();
-
-  if (const auto it = variants_.find(key); it != variants_.end()) {
-    return it->second;
-  }
-
-  std::vector<Legion::VariantID> avail_variants;
-
-  runtime->find_valid_variants(ctx, key.first, avail_variants, key.second);
-  if (variants_.size() != old_cache_size) {
-    // If the size has changed, that means that while we made the runtime call another mapper
-    // call pre-empted us and ran this function. It's not guaranteed, but there is a
-    // possibility that the call filled out the exact value we are looking for, so check the
-    // cache one more time...
-    if (const auto it = variants_.find(key); it != variants_.end()) {
-      return it->second;
-    }
-  }
-  // ...otherwise a true miss. Insert our new value into the cache
-  std::optional<Legion::VariantID> ret = std::nullopt;
-
-  for (auto vid : avail_variants) {
-    LEGATE_ASSERT(vid > 0);
-    switch (VariantCode{vid}) {
-      case VariantCode::CPU: [[fallthrough]];
-      case VariantCode::OMP: [[fallthrough]];
-      case VariantCode::GPU: ret = vid; break;
-      default: LEGATE_ABORT("Unhandled variant kind ", vid);  // unhandled variant kind
-    }
-  }
-  return variants_.emplace(key, std::move(ret)).first->second;
 }
 
 namespace {
@@ -682,11 +611,10 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   // Should never be mapping the top-level task here
   LEGATE_CHECK(task.get_depth() > 0);
 
+  auto legate_task = Task{&task, runtime, ctx};
+
   // Let's populate easy outputs first
-  output.chosen_variant = select_task_variant_(ctx, task, task.target_proc);
-
-  Task legate_task{&task, runtime, ctx};
-
+  output.chosen_variant     = legate_task.legion_task_variant();
   output.task_priority      = legate_task.priority();
   output.copy_fill_priority = legate_task.priority();
 
@@ -757,10 +685,9 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
     }
 
     for (auto req_idx : mapping->requirement_indices()) {
-      if (task.regions[req_idx].privilege != LEGION_READ_ONLY) {
-        continue;
+      if (task.regions[req_idx].privilege == LEGION_READ_ONLY) {
+        output.untracked_valid_regions.insert(req_idx);
       }
-      output.untracked_valid_regions.insert(req_idx);
     }
   }
 }
@@ -1384,10 +1311,10 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
 
 void BaseMapper::select_task_variant(Legion::Mapping::MapperContext ctx,
                                      const Legion::Task& task,
-                                     const SelectVariantInput& input,
+                                     const SelectVariantInput& /* input */,
                                      SelectVariantOutput& output)
 {
-  output.chosen_variant = select_task_variant_(ctx, task, input.processor);
+  output.chosen_variant = Task{&task, runtime, ctx}.legion_task_variant();
 }
 
 void BaseMapper::postmap_task(Legion::Mapping::MapperContext /*ctx*/,
@@ -1535,7 +1462,7 @@ void BaseMapper::legate_select_sources_(
   });
   // Record all instances from the one of the largest bandwidth to that of the smallest
   for (auto&& source : all_sources) {
-    ranking.emplace_back(source.instance);
+    ranking.emplace_back(std::move(source.instance));
   }
 }
 

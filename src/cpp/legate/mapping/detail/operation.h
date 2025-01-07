@@ -72,6 +72,7 @@ class Task : public Mappable {
   [[nodiscard]] const Domain& get_launch_domain() const;
 
   [[nodiscard]] TaskTarget target() const;
+  [[nodiscard]] Legion::VariantID legion_task_variant() const;
 
   [[nodiscard]] bool can_raise_exception() const;
 

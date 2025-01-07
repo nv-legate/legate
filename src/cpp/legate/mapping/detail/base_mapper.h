@@ -299,13 +299,6 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
   [[nodiscard]] static Legion::ShardingID find_mappable_sharding_functor_id_(
     const Legion::Mappable& mappable);
 
-  [[nodiscard]] bool has_variant_(Legion::Mapping::MapperContext ctx,
-                                  const Legion::Task& task,
-                                  TaskTarget target);
-  [[nodiscard]] std::optional<Legion::VariantID> find_variant_(Legion::Mapping::MapperContext ctx,
-                                                               const Legion::Task& task,
-                                                               Processor::Kind kind);
-
   [[nodiscard]] Legion::ShardingID find_sharding_functor_by_key_store_projection_(
     const std::vector<Legion::RegionRequirement>& requirements);
 
@@ -325,10 +318,6 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
 
   std::unordered_map<Legion::Mapping::PhysicalInstance, std::string> creating_operation_{};
   LocalMachine local_machine_{};
-
-  [[nodiscard]] Legion::VariantID select_task_variant_(Legion::Mapping::MapperContext ctx,
-                                                       const Legion::Task& task,
-                                                       const Processor& proc);
 
   std::string mapper_name_{};
 };

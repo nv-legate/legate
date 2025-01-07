@@ -28,6 +28,8 @@ enum class GlobalRedopID : int /* A.K.A. Legion::ReductionOpID */;
 enum class ImageComputationHint : std::uint8_t;
 
 class Type;
+class TaskInfo;
+class VariantInfo;
 
 }  // namespace legate
 
@@ -47,6 +49,12 @@ class BasicZStringView;
 using ZStringView = BasicZStringView<char, std::char_traits<char>>;
 
 }  // namespace legate::detail
+
+namespace legate::mapping::detail {
+
+class Machine;
+
+}  // namespace legate::mapping::detail
 
 namespace fmt {
 
@@ -134,6 +142,22 @@ struct formatter<legate::detail::LogicalRegionField> : formatter<std::string> {
 template <>
 struct formatter<legate::detail::Storage> : formatter<std::string> {
   format_context::iterator format(const legate::detail::Storage& s, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::TaskInfo> : formatter<std::string> {
+  format_context::iterator format(const legate::TaskInfo& info, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::VariantInfo> : formatter<std::string> {
+  format_context::iterator format(const legate::VariantInfo& info, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::mapping::detail::Machine> : formatter<std::string> {
+  format_context::iterator format(const legate::mapping::detail::Machine& machine,
+                                  format_context& ctx) const;
 };
 
 }  // namespace fmt

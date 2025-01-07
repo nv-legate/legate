@@ -15,11 +15,7 @@
 #include "legate/runtime/detail/library.h"
 #include "legate/utilities/detail/core_ids.h"
 #include "legate/utilities/detail/deserializer.h"
-#include <legate/utilities/detail/traced_exception.h>
-
-#include <fmt/format.h>
-#include <fmt/ostream.h>
-#include <stdexcept>
+#include <legate/mapping/detail/mapping.h>
 
 namespace legate::mapping::detail {
 
@@ -56,17 +52,12 @@ LocalTaskID Task::task_id() const
   return library()->get_local_task_id(static_cast<GlobalTaskID>(task_->task_id));
 }
 
-TaskTarget Task::target() const
+Legion::VariantID Task::legion_task_variant() const
 {
-  switch (const auto kind = task_->target_proc.kind()) {
-    case Processor::LOC_PROC: return TaskTarget::CPU;
-    case Processor::TOC_PROC: return TaskTarget::GPU;
-    case Processor::OMP_PROC: return TaskTarget::OMP;
-    default:
-      throw legate::detail::TracedException<std::invalid_argument>{
-        fmt::format("Invalid task target: {}", fmt::streamed(kind))};
-  }
+  return traits::detail::to_underlying(to_variant_code(target()));
 }
+
+// ==========================================================================================
 
 Copy::Copy(const Legion::Copy* copy,
            Legion::Mapping::MapperRuntime* runtime,

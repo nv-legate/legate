@@ -29,7 +29,8 @@
 #include "legate/type/detail/type_info.h"
 #include "legate/utilities/detail/core_ids.h"
 #include "legate/utilities/detail/zip.h"
-#include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/task/task_info.h>
+#include <legate/utilities/assert.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <algorithm>
@@ -43,6 +44,7 @@ namespace legate::detail {
 ////////////////////////////////////////////////////
 
 Task::Task(const Library* library,
+           const VariantInfo& variant_info,
            LocalTaskID task_id,
            std::uint64_t unique_id,
            std::int32_t priority,
@@ -51,12 +53,7 @@ Task::Task(const Library* library,
   : Operation{unique_id, priority, std::move(machine)},
     library_{library},
     task_id_{task_id},
-    can_elide_device_ctx_sync_{[&] {
-      const auto variant =
-        this->library()->find_task(local_task_id())->find_variant(VariantCode::GPU);
-
-      return variant.has_value() && variant->get().options.elide_device_ctx_sync;
-    }()},
+    can_elide_device_ctx_sync_{variant_info.options.elide_device_ctx_sync},
     can_inline_launch_{can_inline_launch}
 {
 }
@@ -101,21 +98,20 @@ void Task::inline_launch_() const
 {
   const auto processor_kind = Runtime::get_runtime()->get_executing_processor().kind();
   const auto variant_code   = mapping::detail::to_variant_code(processor_kind);
-  const auto* task_info     = library()->find_task(local_task_id());
   const auto body           = [&] {
-    const auto variant = task_info->find_variant(variant_code);
+    const auto variant = library()->find_task(local_task_id())->find_variant(variant_code);
 
     LEGATE_ASSERT(variant.has_value());
     return variant->get().body;  // NOLINT(bugprone-unchecked-optional-access)
   }();
 
-  inline_task_body(*this, task_info->name(), variant_code, body);
+  inline_task_body(*this, variant_code, body);
 }
 
 void Task::legion_launch_(Strategy* strategy_ptr)
 {
   auto& strategy       = *strategy_ptr;
-  auto launcher        = detail::TaskLauncher{library_, machine_, provenance(), local_task_id()};
+  auto launcher        = detail::TaskLauncher{library(), machine(), provenance(), local_task_id()};
   auto&& launch_domain = strategy.launch_domain(this);
 
   launcher.set_priority(priority());
@@ -144,14 +140,15 @@ void Task::legion_launch_(Strategy* strategy_ptr)
 
   // Add communicators
   if (launch_domain.is_valid() && launch_domain.get_volume() > 1) {
-    for (auto* factory : communicator_factories_) {
-      auto target = machine_.preferred_target();
+    const auto target           = machine().preferred_target();
+    const auto& processor_range = machine().processor_range();
 
+    for (auto* factory : communicator_factories_) {
       if (!factory->is_supported_target(target)) {
         continue;
       }
-      auto& processor_range = machine_.processor_range();
-      auto communicator     = factory->find_or_create(target, processor_range, launch_domain);
+
+      const auto communicator = factory->find_or_create(target, processor_range, launch_domain);
 
       launcher.add_communicator(communicator);
       if (factory->needs_barrier()) {
@@ -311,7 +308,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
 
 std::string Task::to_string(bool show_provenance) const
 {
-  auto result = fmt::format("{}:{}", library_->get_task_name(local_task_id()), unique_id_);
+  auto result = fmt::format("{}:{}", library()->get_task_name(local_task_id()), unique_id_);
 
   if (!provenance().empty() && show_provenance) {
     fmt::format_to(std::back_inserter(result), "[{}]", provenance());
@@ -465,7 +462,7 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
 
   auto* runtime  = Runtime::get_runtime();
   auto* core_lib = runtime->core_library();
-  auto launcher  = detail::TaskLauncher{core_lib, machine_, provenance(), FixupRanges::TASK_ID};
+  auto launcher  = detail::TaskLauncher{core_lib, machine(), provenance(), FixupRanges::TASK_ID};
 
   launcher.set_priority(priority());
 
@@ -483,15 +480,21 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
 ////////////////////////////////////////////////////
 
 ManualTask::ManualTask(const Library* library,
+                       const VariantInfo& variant_info,
                        LocalTaskID task_id,
                        const Domain& launch_domain,
                        std::uint64_t unique_id,
                        std::int32_t priority,
                        mapping::detail::Machine machine)
-  : Task{library, task_id, unique_id, priority, std::move(machine), /* can_inline_launch */ false},
-    strategy_{std::make_unique<detail::Strategy>()}
+  : Task{library,
+         variant_info,
+         task_id,
+         unique_id,
+         priority,
+         std::move(machine),
+         /* can_inline_launch */ false}
 {
-  strategy_->set_launch_domain(this, launch_domain);
+  strategy_.set_launch_domain(this, launch_domain);
 }
 
 void ManualTask::add_input(const InternalSharedPtr<LogicalStore>& store)
@@ -566,21 +569,21 @@ void ManualTask::add_store_(std::vector<ArrayArg>& store_args,
                             InternalSharedPtr<Partition> partition,
                             std::optional<SymbolicPoint> projection)
 {
-  auto partition_symbol = declare_partition();
+  const auto* partition_symbol = declare_partition();
   auto& arg =
     store_args.emplace_back(make_internal_shared<BaseLogicalArray>(store), std::move(projection));
   const auto unbound = store->unbound();
 
   arg.mapping.insert({store, partition_symbol});
   if (unbound) {
-    auto* runtime    = detail::Runtime::get_runtime();
-    auto field_space = runtime->create_field_space();
-    auto field_id =
+    auto* const runtime = detail::Runtime::get_runtime();
+    auto field_space    = runtime->create_field_space();
+    const auto field_id =
       runtime->allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
 
-    strategy_->insert(partition_symbol, std::move(partition), field_space, field_id);
+    strategy_.insert(partition_symbol, std::move(partition), std::move(field_space), field_id);
   } else {
-    strategy_->insert(partition_symbol, std::move(partition));
+    strategy_.insert(partition_symbol, std::move(partition));
   }
 }
 

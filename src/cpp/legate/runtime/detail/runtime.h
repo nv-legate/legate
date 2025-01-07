@@ -54,6 +54,13 @@
 #include <variant>
 #include <vector>
 
+namespace legate {
+
+class TaskInfo;
+class VariantInfo;
+
+}  // namespace legate
+
 namespace legate::mapping {
 
 class Mapper;
@@ -94,8 +101,6 @@ class Runtime {
 
   void initialize(Legion::Context legion_context);
 
-  [[nodiscard]] mapping::detail::Machine slice_machine_for_task(const Library* library,
-                                                                LocalTaskID task_id) const;
   [[nodiscard]] InternalSharedPtr<AutoTask> create_task(const Library* library,
                                                         LocalTaskID task_id);
   [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library* library,
@@ -143,6 +148,9 @@ class Runtime {
     InternalSharedPtr<LogicalArray> vardata);
 
  private:
+  [[nodiscard]] std::pair<mapping::detail::Machine, const VariantInfo&> slice_machine_for_task_(
+    const TaskInfo& info) const;
+
   [[nodiscard]] InternalSharedPtr<StructLogicalArray> create_struct_array_(
     const InternalSharedPtr<Shape>& shape,
     InternalSharedPtr<Type> type,

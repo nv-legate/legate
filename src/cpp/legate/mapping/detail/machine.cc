@@ -15,6 +15,7 @@
 #include "legate/utilities/detail/buffer_builder.h"
 #include "legate/utilities/detail/env.h"
 #include "legate/utilities/detail/env_defaults.h"
+#include <legate/mapping/detail/mapping.h>
 
 #include "realm/network.h"
 
@@ -35,7 +36,7 @@ Machine::Machine(std::map<TaskTarget, ProcessorRange> ranges) : processor_ranges
   for (auto&& [target, processor_range] : processor_ranges()) {
     if (!processor_range.empty()) {
       preferred_target_ = target;
-      return;
+      break;
     }
   }
 }
@@ -71,6 +72,9 @@ const std::vector<TaskTarget>& Machine::valid_targets() const
       if (!range.empty()) {
         vec.push_back(target);
       }
+    }
+    if (!vec.empty()) {
+      LEGATE_ASSERT(vec.front() == preferred_target());
     }
   }
   return *valid_targets_;
@@ -175,6 +179,8 @@ bool Machine::empty() const
     return rng.second.empty();
   });
 }
+
+VariantCode Machine::preferred_variant() const { return to_variant_code(preferred_target()); }
 
 std::ostream& operator<<(std::ostream& os, const Machine& machine)
 {

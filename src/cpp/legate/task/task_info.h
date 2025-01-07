@@ -58,6 +58,8 @@ class VariantInfo {
   {
   }
 
+  [[nodiscard]] std::string to_string() const;
+
   VariantImpl body{};
   Legion::CodeDescriptor code_desc{};
   VariantOptions options{};
@@ -130,6 +132,8 @@ class TaskInfo {
                     VariantCode vid,
                     const VariantOptions* callsite_options,
                     Legion::CodeDescriptor&& descr);
+
+  [[nodiscard]] std::string to_string() const;
 
  private:
   friend std::ostream& operator<<(std::ostream& os, const TaskInfo& info);

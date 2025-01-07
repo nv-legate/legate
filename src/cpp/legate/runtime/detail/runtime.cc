@@ -283,31 +283,34 @@ void Runtime::initialize(Legion::Context legion_context)
   comm::register_builtin_communicator_factories(core_library());
 }
 
-mapping::detail::Machine Runtime::slice_machine_for_task(const Library* library,
-                                                         LocalTaskID task_id) const
+std::pair<mapping::detail::Machine, const VariantInfo&> Runtime::slice_machine_for_task_(
+  const TaskInfo& info) const
 {
-  const auto* task_info = library->find_task(task_id);
-  auto sliced           = get_machine().only_if([&](mapping::TaskTarget t) {
-    return task_info->find_variant(mapping::detail::to_variant_code(t)).has_value();
+  const auto& machine = get_machine();
+  auto sliced         = machine.only_if([&](mapping::TaskTarget t) {
+    return info.find_variant(mapping::detail::to_variant_code(t)).has_value();
   });
 
   if (sliced.empty()) {
     throw TracedException<std::invalid_argument>{
-      fmt::format("Task {} ({}) of library {} does not have any valid variant for the current "
-                  "machine configuration",
-                  task_id,
-                  task_info->name(),
-                  library->get_library_name())};
+      fmt::format("Task {} does not have any valid variant for the current "
+                  "machine configuration {}",
+                  info,
+                  machine)};
   }
-  return sliced;
+
+  const auto variant = info.find_variant(sliced.preferred_variant());
+
+  LEGATE_ASSERT(variant.has_value());
+  return {sliced, *variant};  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 // This function should be moved to the library context
 InternalSharedPtr<AutoTask> Runtime::create_task(const Library* library, LocalTaskID task_id)
 {
-  auto machine = slice_machine_for_task(library, task_id);
-  auto task    = make_internal_shared<AutoTask>(
-    library, task_id, current_op_id_(), scope().priority(), std::move(machine));
+  auto&& [machine, vinfo] = slice_machine_for_task_(*library->find_task(task_id));
+  auto task               = make_internal_shared<AutoTask>(
+    library, vinfo, task_id, current_op_id_(), scope().priority(), std::move(machine));
   increment_op_id_();
   return task;
 }
@@ -319,9 +322,14 @@ InternalSharedPtr<ManualTask> Runtime::create_task(const Library* library,
   if (launch_domain.empty()) {
     throw TracedException<std::invalid_argument>{"Launch domain must not be empty"};
   }
-  auto machine = slice_machine_for_task(library, task_id);
-  auto task    = make_internal_shared<ManualTask>(
-    library, task_id, launch_domain, current_op_id_(), scope().priority(), std::move(machine));
+  auto&& [machine, vinfo] = slice_machine_for_task_(*library->find_task(task_id));
+  auto task               = make_internal_shared<ManualTask>(library,
+                                               vinfo,
+                                               task_id,
+                                               launch_domain,
+                                               current_op_id_(),
+                                               scope().priority(),
+                                               std::move(machine));
   increment_op_id_();
   return task;
 }
@@ -470,7 +478,7 @@ void Runtime::tree_reduce(const Library* library,
     throw TracedException<std::runtime_error>{"Multi-dimensional stores are not supported"};
   }
 
-  auto machine = slice_machine_for_task(library, task_id);
+  auto&& [machine, _] = slice_machine_for_task_(*library->find_task(task_id));
 
   submit(make_internal_shared<Reduce>(library,
                                       std::move(store),
@@ -1327,9 +1335,8 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result,
 {
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
-  auto variant =
-    static_cast<Legion::MappingTagID>(mapping::detail::to_variant_code(machine.preferred_target()));
-  auto launcher = TaskLauncher{
+  auto variant        = static_cast<Legion::MappingTagID>(machine.preferred_variant());
+  auto launcher       = TaskLauncher{
     core_library(), machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
 
   launcher.add_future(result);
@@ -1345,9 +1352,8 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
 {
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
-  auto variant =
-    static_cast<Legion::MappingTagID>(mapping::detail::to_variant_code(machine.preferred_target()));
-  auto launcher = TaskLauncher{
+  auto variant        = static_cast<Legion::MappingTagID>(machine.preferred_variant());
+  auto launcher       = TaskLauncher{
     core_library(), machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
 
   launcher.add_future_map(result);

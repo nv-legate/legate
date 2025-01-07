@@ -67,6 +67,7 @@ class Machine {
   [[nodiscard]] bool empty() const;
 
   [[nodiscard]] TaskTarget preferred_target() const;
+  [[nodiscard]] VariantCode preferred_variant() const;
   [[nodiscard]] const std::map<TaskTarget, ProcessorRange>& processor_ranges() const;
 
  private:

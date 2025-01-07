@@ -63,11 +63,13 @@ Task::scalar_reductions() const
 // ==========================================================================================
 
 inline AutoTask::AutoTask(const Library* library,
+                          const VariantInfo& variant_info,
                           LocalTaskID task_id,
                           std::uint64_t unique_id,
                           std::int32_t priority,
                           mapping::detail::Machine machine)
   : Task{library,
+         variant_info,
          task_id,
          unique_id,
          priority,
@@ -83,7 +85,7 @@ inline Operation::Kind AutoTask::kind() const { return Kind::AUTO_TASK; }
 // TODO(wonchanl): Needs to validate interfering store accesses in this method
 inline void ManualTask::validate() {}
 
-inline void ManualTask::launch() { launch_task_(strategy_.get()); }
+inline void ManualTask::launch() { launch_task_(&strategy_); }
 
 inline Operation::Kind ManualTask::kind() const { return Kind::MANUAL_TASK; }
 

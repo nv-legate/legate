@@ -241,10 +241,7 @@ void handle_return_values(const Task& task,
 
 }  // namespace
 
-void inline_task_body(const Task& task,
-                      std::string_view task_name,
-                      VariantCode variant_code,
-                      VariantImpl variant_impl)
+void inline_task_body(const Task& task, VariantCode variant_code, VariantImpl variant_impl)
 {
   const auto _ = [] {
     const auto runtime = Runtime::get_runtime();
@@ -252,7 +249,7 @@ void inline_task_body(const Task& task,
     runtime->inline_task_start();
     return legate::make_scope_guard([=]() noexcept { runtime->inline_task_end(); });
   }();
-  const auto get_task_name = [&] { return task_name; };
+  const auto get_task_name = [&] { return task.library()->get_task_name(task.local_task_id()); };
   const auto _1 =
     task_detail::make_nvtx_range(get_task_name, [&] { return task.provenance().as_string_view(); });
   static_cast<void>(_1);

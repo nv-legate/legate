@@ -52,6 +52,8 @@ inline const Domain& Task::get_launch_domain() const { return task_->index_domai
 
 inline bool Task::can_raise_exception() const { return can_raise_exception_; }
 
+inline TaskTarget Task::target() const { return machine().preferred_target(); }
+
 // ==========================================================================================
 
 inline const std::vector<Store>& Copy::inputs() const { return inputs_; }

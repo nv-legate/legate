@@ -12,7 +12,6 @@
 
 #include "legate/task/task_info.h"
 
-#include "legate/runtime/detail/runtime.h"
 #include "legate/utilities/detail/formatters.h"
 #include "legate/utilities/detail/zstring_view.h"
 #include "legate/utilities/typedefs.h"
@@ -20,7 +19,8 @@
 
 #include <array>
 #include <fmt/format.h>
-#include <sstream>
+#include <fmt/ostream.h>
+#include <iostream>
 #include <stdexcept>
 
 namespace legate {
@@ -35,6 +35,13 @@ constexpr std::array<Processor::Kind, 4> VARIANT_PROC_KINDS = {Processor::Kind::
                                                                Processor::Kind::OMP_PROC};
 
 }  // namespace
+
+std::string VariantInfo::to_string() const
+{
+  return fmt::format("{:x}, {}", reinterpret_cast<std::uintptr_t>(body), fmt::streamed(options));
+}
+
+// ==========================================================================================
 
 class TaskInfo::Impl {
  public:
@@ -99,7 +106,7 @@ void TaskInfo::Impl::register_task(GlobalTaskID task_id) const
   for (auto&& [vcode, vinfo] : variants()) {
     const auto vid = traits::detail::to_underlying(vcode);
     auto&& options = vinfo.options;
-    Legion::TaskVariantRegistrar registrar{
+    auto registrar = Legion::TaskVariantRegistrar{
       static_cast<Legion::TaskID>(task_id),
       false /*global*/,
       VARIANT_NAMES[vid].data()  // NOLINT(bugprone-suspicious-stringview-data-usage)
@@ -190,29 +197,21 @@ bool TaskInfo::has_variant(VariantCode vid) const { return find_variant(vid).has
 
 void TaskInfo::register_task(GlobalTaskID task_id) { impl_->register_task(task_id); }
 
-namespace {
-
-std::ostream& operator<<(std::ostream& os, const VariantInfo& info)
+std::string TaskInfo::to_string() const
 {
-  std::stringstream ss;
+  std::string ret;
 
-  // use ss instead of piping directly to ostream because showbase and hex are permanent
-  // modifiers.
-  ss << std::showbase << std::hex << reinterpret_cast<std::uintptr_t>(info.body) << ","
-     << info.options;
-  os << std::move(ss).str();
-  return os;
+  fmt::format_to(std::back_inserter(ret), "{} {{", name());
+  for (auto&& [vid, vinfo] : impl_->variants()) {
+    fmt::format_to(std::back_inserter(ret), "{}:[{}],", vid, vinfo);
+  }
+  ret += '}';
+  return ret;
 }
-
-}  // namespace
 
 std::ostream& operator<<(std::ostream& os, const TaskInfo& info)
 {
-  os << info.name() << " {";
-  for (auto&& [vid, vinfo] : info.impl_->variants()) {
-    os << fmt::format("{}", vid) << ":[" << vinfo << "],";
-  }
-  os << "}";
+  os << info.to_string();
   return os;
 }
 

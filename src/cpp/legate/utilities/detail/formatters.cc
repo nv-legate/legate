@@ -23,6 +23,8 @@
 #include "legate/utilities/detail/zstring_view.h"
 #include "legate/utilities/macros.h"
 #include "legate/utilities/typedefs.h"
+#include <legate/mapping/detail/machine.h>
+#include <legate/task/task_info.h>
 
 #include <fmt/format.h>
 
@@ -138,6 +140,24 @@ format_context::iterator formatter<legate::detail::Storage>::format(
   const legate::detail::Storage& s, format_context& ctx) const
 {
   return formatter<std::string>::format(s.to_string(), ctx);
+}
+
+format_context::iterator formatter<legate::TaskInfo>::format(const legate::TaskInfo& info,
+                                                             format_context& ctx) const
+{
+  return formatter<std::string>::format(info.to_string(), ctx);
+}
+
+format_context::iterator formatter<legate::VariantInfo>::format(const legate::VariantInfo& info,
+                                                                format_context& ctx) const
+{
+  return formatter<std::string>::format(info.to_string(), ctx);
+}
+
+format_context::iterator formatter<legate::mapping::detail::Machine>::format(
+  const legate::mapping::detail::Machine& machine, format_context& ctx) const
+{
+  return formatter<std::string>::format(machine.to_string(), ctx);
 }
 
 }  // namespace fmt
