@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -194,7 +194,6 @@ set(with_runtime_SRC
     unit/library.cc
     unit/machine.cc
     unit/mapping.cc
-    unit/physical_store.cc
     unit/registration.cc
     unit/runtime.cc
     unit/scalar.cc
@@ -225,6 +224,16 @@ set(with_runtime_SRC
     unit/physical_array/fill_array.cc
     unit/physical_array/fill_list_array.cc
     unit/physical_array/fill_string_array.cc
+    unit/physical_store/create_bound_store.cc
+    unit/physical_store/create_by_physical_array.cc
+    unit/physical_store/create_future_store.cc
+    unit/physical_store/create_unbound_store.cc
+    unit/physical_store/inline_allocation.cc
+    unit/physical_store/read_accessor.cc
+    unit/physical_store/read_write_accessor.cc
+    unit/physical_store/reduce_accessor.cc
+    unit/physical_store/transform.cc
+    unit/physical_store/write_accessor.cc
     unit/type/binary_type.cc
     unit/type/fixed_array_type.cc
     unit/type/list_type.cc

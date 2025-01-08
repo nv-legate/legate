@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -254,7 +254,7 @@ class PhysicalStore {
    * buffer is legal; the runtime uses the passed extents as the extents of this store. The size of
    * the buffer must be at least as big as `extents * type().size()`.
    *
-   * @snippet unit/physical_store.cc Bind an untyped buffer to an unbound store
+   * @snippet unit/physical_store/create_unbound_store.cc Bind an untyped buffer to an unbound store
    */
   void bind_untyped_data(Buffer<std::int8_t, 1>& buffer, const Point<1>& extents) const;
 
