@@ -24,15 +24,17 @@ include("${LEGATE_CMAKE_DIR}/Modules/legate_options.cmake")
 rapids_cmake_write_version_file(${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/version.h
                                 PREFIX LEGATE)
 
-message(STATUS "Symlinking compile_commands.json to root directory")
-file(CREATE_LINK
-     # Using CMAKE_BINARY_DIR vs CMAKE_CURRENT_BINARY_DIR is intentional. If we use
-     # CURRENT_BINARY_DIR, then it breaks anytime someone uses add_subdirectory(), since
-     # cmake always puts the compile_commands.json in the top-level build dir (not in the
-     # sub tree)
-     "${CMAKE_BINARY_DIR}/compile_commands.json"
-     "${LEGATE_DIR}/compile_commands.json"
-     SYMBOLIC)
+if(PROJECT_IS_TOP_LEVEL)
+  message(STATUS "Symlinking compile_commands.json to root directory")
+  file(CREATE_LINK
+       # Using CMAKE_BINARY_DIR vs CMAKE_CURRENT_BINARY_DIR is intentional. If we use
+       # CURRENT_BINARY_DIR, then it breaks anytime someone uses add_subdirectory(), since
+       # cmake always puts the compile_commands.json in the top-level build dir (not in
+       # the sub tree)
+       "${CMAKE_BINARY_DIR}/compile_commands.json"
+       "${LEGATE_DIR}/compile_commands.json"
+       SYMBOLIC)
+endif()
 
 # ########################################################################################
 # * Dependencies -------------------------------------------------------------
@@ -935,9 +937,11 @@ add_custom_target(generate_install_info_py ALL
                   BYPRODUCTS "${LEGATE_DIR}/src/python/legate/install_info.py"
                   COMMENT "Generate install_info.py")
 
-include("${LEGATE_CMAKE_DIR}/Modules/uninstall.cmake")
+if(PROJECT_IS_TOP_LEVEL)
+  include("${LEGATE_CMAKE_DIR}/Modules/uninstall.cmake")
 
-legate_uninstall_target(TARGET uninstall)
+  legate_uninstall_target(TARGET uninstall)
+endif()
 
 # This call must come LAST because cpm_licenses_create_disclaimer_target only works
 # properly if it is called after all thirdparty packages have been downloaded.  Do not
