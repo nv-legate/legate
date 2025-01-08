@@ -1630,27 +1630,13 @@ void handle_realm_default_args()
   // Must populate this before we handle Legate args as it expects to read its values.
   Config::parse();
   if (!Legion::Runtime::has_runtime()) {
-    try {
-      handle_realm_default_args();
-    } catch (const std::exception& e) {
-      // Cannot use log_legate() since Legion loggers silently swallow the messages if Legion
-      // has not yet been set up.
-      throw TracedException<std::runtime_error>{
-        fmt::format("failed to handle realm arguments: {}", e.what())};
-    }
+    handle_realm_default_args();
 
     int dummy_argc    = 0;
     char** dummy_argv = nullptr;
 
     Legion::Runtime::initialize(&dummy_argc, &dummy_argv, /*filter=*/false, /*parse=*/false);
-    try {
-      handle_legate_args();
-    } catch (const std::exception& e) {
-      // Cannot use log_legate() since Legion loggers silently swallow the messages if Legion
-      // has not yet been set up.
-      throw TracedException<std::runtime_error>{
-        fmt::format("failed to handle legate arguments: {}", e.what())};
-    }
+    handle_legate_args();
   }
 
   // Do these after handle_legate_args()

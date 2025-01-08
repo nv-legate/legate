@@ -49,7 +49,6 @@ class TracedExceptionBase {
    *
    * @param ptr An exception pointer to the original exception object.
    * @param skip_frames The number of stacktrace frames to skip.
-   * @param nested An optional nested exception to associate with this exception.
    *
    * `TracedExceptionBase` will add additional skip frames for each constructor/function-call
    * made by it, so the user should not try to account for that. The user should only try to
@@ -57,15 +56,8 @@ class TracedExceptionBase {
    * the path `interesting() -> foo() -> bar() -> TracedExceptionBase`, then `skip_frames`
    * should be 2.
    *
-   * `nested` is used in a very similar fashion to Pythons nested exceptions (`raise Foo from
-   * Bar`). In this case, `nested` would be an exception pointer to `Bar`:
-   * @code{.cpp}
-   * try {
-   *   // ...
-   * } catch (const std::exception& e) {
-   *   throw TracedExceptionBase{..., std::make_exception_ptr(e)};
-   * }
-   * @endcode
+   * This class, on construction, will automatically detect any pending exceptions and "chain"
+   * the current exception from it.
    */
   explicit TracedExceptionBase(const std::exception_ptr& ptr, std::size_t skip_frames);
 
