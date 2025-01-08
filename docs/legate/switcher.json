@@ -6,6 +6,7 @@
     },
     {
         "name": "24.11",
+        "preferred": true,
         "url": "https://docs.nvidia.com/legate/24.11/",
         "version": "24.11"
     }

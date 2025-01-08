@@ -70,6 +70,7 @@ html_theme_options = {
     "extra_footer": [
         '<script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>'  # NOQA: E501
     ],
+    "show_version_warning_banner": True,
 }
 
 # -- Options for extensions --------------------------------------------------
