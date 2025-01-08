@@ -23,6 +23,29 @@
 
 namespace legate::detail {
 
+// clang++ 18.x throws a warning that it cannot see the instantiation of template
+// class ElementWiseMin/Max
+// So, adding extern refs to such explicit instantiations
+//
+// Relevant compiler error log:
+// src/cpp/legate/partitioning/detail/partitioning_tasks_cuda.cc:82:51: error:
+// instantiation of variable 'legate::detail::ElementWiseMin<1>::identity' required
+// here, but no definition is available [-Werror,-Wundefined-var-template]
+//    82 |       auto ident_lo = ElementWiseMin<POINT_NDIM>::identity;
+// src/cpp/legate/partitioning/detail/partitioning_tasks_cuda.cc:82:51: note: add
+// an explicit instantiation declaration to suppress this warning if
+// 'legate::detail::ElementWiseMin<1>::identity' is explicitly instantiated in
+// another translation unit
+//    82 |       auto ident_lo = ElementWiseMin<POINT_NDIM>::identity;
+//
+#define LEGATE_ADD_ELEMENTWISE_OP_INST_REF(N)                 \
+  extern template const Point<N> ElementWiseMin<N>::identity; \
+  extern template const Point<N> ElementWiseMax<N>::identity;
+
+LEGION_FOREACH_N(LEGATE_ADD_ELEMENTWISE_OP_INST_REF)
+
+#undef LEGATE_ADD_ELEMENTWISE_OP_INST_REF
+
 namespace {
 
 [[nodiscard]] constexpr std::size_t round_div(std::size_t x, std::size_t d)
