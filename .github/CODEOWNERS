@@ -1,18 +1,20 @@
 # Global
-* @magnatelee
-* @Jacobfaib
+CODEOWNERS @magnatelee @manopapad @Jacobfaib
+* @magnatelee @Jacobfaib
 
 # Python
-legate @magnatelee
-legate/timing @magnatelee
-legate/driver @bryevdv
-legate/tester @bryevdv
-legate/util @bryevdv
-legate/jupyter @eddy16112
+src/python @bryevdv
+src/python/legate/jupyter @eddy16112
+src/python/legate/core @magnatelee @Jacobfaib
 
 # cmake
-*.cmake @Jacobfaib
-CMakeLists.txt @Jacobfaib
+src/cmake @Jacobfaib @cryos
+*.cmake @Jacobfaib @cryos
+CMakeLists.txt @Jacobfaib @cryos
+
+# configure
+config/ @Jacobfaib @bryevdv
+configure @Jacobfaib @bryevdv
 
 # CI
 .github/ @sandeepd-nv @mag1cp1n @m3vaz @marcinz
@@ -21,7 +23,7 @@ conda @sandeepd-nv @mag1cp1n @m3vaz @marcinz
 scripts/ @sandeepd-nv @mag1cp1n @m3vaz @marcinz
 
 # cpp
-src/ @magnatelee @Jacobfaib
+src/cpp @magnatelee @Jacobfaib
 
 # docs
 docs/ @bryevdv @magnatelee
