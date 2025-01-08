@@ -101,7 +101,6 @@ esac
   # ${PREFIX} is set by conda build. Ignore shellcheck warning.
   # shellcheck disable=SC2154
   export OPENSSL_DIR="${PREFIX}"
-  export CUDAFLAGS="-isystem ${PREFIX}/include -L${PREFIX}/lib"
   # shellcheck disable=SC2154
   LEGATE_DIR="$(${PYTHON} ./scripts/get_legate_dir.py)"
   export LEGATE_DIR
@@ -137,7 +136,6 @@ function configure_legate()
   # shellcheck disable=SC2154
   ./configure \
     --LEGATE_ARCH="${LEGATE_ARCH}" \
-    --CUDAFLAGS="${CUDAFLAGS}" \
     --with-python \
     --with-cc="${CC}" \
     --with-cxx="${CXX}" \

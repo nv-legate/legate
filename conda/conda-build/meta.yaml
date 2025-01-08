@@ -86,6 +86,7 @@ build:
   number: {{ build_number }}
   missing_dso_whitelist:
     - '*libcuda.so*'
+    - '*libgtest.so*'
 
   string: "cuda{{ cuda_major }}_py{{ py_version }}{{ git_describe_hash }}_{{ PKG_BUILDNUM }}{{ network_tag }}{{ cpu_gpu_tag }}{{ debug_tag }}{{ upload_tag }}"
   script_env:
@@ -123,8 +124,9 @@ build:
 {% else %}
       - {{ name|lower }} ={{ version }} =*_gpu*
 {% endif %}
-  # prevent nccl from pulling in cudatoolkit
-  ignore_run_exports:
+  ignore_run_exports_from:
+    - cuda-nvcc
+    - rich
 {% if network == 'gex' %}
     - openmpi
 {% endif %}
@@ -133,9 +135,11 @@ build:
 {% if "clangxx" in compiler("cxx") %}
   {% set compiler_version = 16 %}
   {% set sanitizer_lib = "compiler-rt" %}
+  {% set openmp_lib = "llvm-openmp" %}
 {% elif "gxx" in compiler("cxx") %}
   {% set compiler_version = 11.2 %}
   {% set sanitizer_lib = "libsanitizer" %}
+  {% set openmp_lib = "_openmp_mutex" %}
 {% endif %}
 
 requirements:
@@ -149,23 +153,27 @@ requirements:
     - {{ compiler('cxx') }} ={{ compiler_version }}  # [linux]
     - {{ compiler('c') }}         # [osx]
     - {{ compiler('cxx') }}       # [osx]
-    - libhwloc =* =*default*
-{% if gpu_enabled_bool %}
-    - cuda-nvcc ={{ cuda_version }}
-{% endif %}
     - doxygen
+{% if gpu_enabled_bool %}
+    - cuda-version ={{ cuda_version }}
+    # these are all constrained by cuda-version
+    - {{ compiler('cuda') }}
+    # cupti is only in the build section for headers, not in the host section
+    - cuda-cupti-dev
+    # Cufile an NVML are not detected by our build system if we don't list them here
+    # because of the include diretory structure.
+    - libcufile-dev
+    - cuda-nvml-dev
+{% endif %}
 
   # Libraries and header files (C/C++).
   host:
     - zlib
     - python
     - cython >=3.0.1
-    - llvm-openmp
-    - rich
     - scikit-build-core
     - setuptools_scm
-    - elfutils  # [linux]
-    - libhwloc =* =*default*
+    - rich
     - hdf5
 {% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
@@ -178,30 +186,23 @@ requirements:
     - cuda-nvtx-dev
     - cuda-nvml-dev
     - cuda-driver-dev
-    - cuda-cupti-dev
-    - libcublas-dev
-    - libcufft-dev
-    - libcurand-dev
-    - libcusolver-dev
     - libcufile-dev
     - libcal-dev
 {% endif %}
 {% if network == 'ucx' %}
-    - ucx >=1.16
+    - ucx >=1.17
 {% endif %}
     - openmpi <5
 
   # Runtime python dependencies
   run:
-    - cffi
-    - llvm-openmp
-    - rich
     - numpy {{ numpy_version }}
-    - elfutils  # [linux]
-    - libhwloc =* =*default*
     - zarr
     - fsspec
     - kerchunk
+    - zstd
+    - pynvml
+    - {{ openmp_lib }}
 {% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
@@ -215,15 +216,9 @@ requirements:
     # The floor on __cuda makes this stricter than the default constraint that comes through
     # depending on 'cuda-version' alone.
     - __cuda >={{ cuda_version }}
-    # all other CUDA dependencies are constrained by cuda-version
-    - cuda-cudart
-    - nccl
 {% endif %}
-{% if network == 'ucx' %}
-    - ucx >=1.16
-{% endif %}
-{% if network != 'gex' %}
-    - openmpi <5
+{% if not upload_enabled_bool %}
+    - rich
 {% endif %}
 
   run_constrained:

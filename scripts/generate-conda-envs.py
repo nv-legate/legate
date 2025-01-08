@@ -95,18 +95,11 @@ class CUDAConfig(SectionConfig):
             deps += (
                 "cuda-cccl",  # no cuda-cccl-dev package exists
                 "cuda-cudart-dev",
-                "cuda-cudart-static",
                 "cuda-driver-dev",
                 "cuda-nvml-dev",
                 "cuda-nvtx-dev",
                 "cuda-cupti-dev",
-                "libcublas-dev",
-                "libcufft-dev",
                 "libcufile-dev",
-                "libcurand-dev",
-                "libcusolver-dev",
-                "libcusparse-dev",
-                "libnvjitlink-dev",
                 "libcal-dev",
             )
 

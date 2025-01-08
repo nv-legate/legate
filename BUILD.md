@@ -197,12 +197,6 @@ The following additional CUDA libraries are required, for use by legate or
 downstream libraries. Unless noted otherwise, these are included in the conda
 environment file.
 
-- `cublas`
-- `cufft`
-- `curand` (can optionally be used for its host fallback implementations even
-  when building without CUDA support)
-- `cusolver`
-- `cutensor`
 - `nccl`
 - `nvml`
 - `nvtx`
