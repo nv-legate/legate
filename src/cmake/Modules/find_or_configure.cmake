@@ -16,7 +16,8 @@ function(legate_find_or_configure_init)
   set(legate_DEP_INSTALL_LIBDIR "${CMAKE_INSTALL_LIBDIR}/legate/deps" PARENT_SCOPE)
   set(legate_DEP_INSTALL_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/deps"
       PARENT_SCOPE)
-  set(legate_DEP_INSTALL_BINDIR "${CMAKE_INSTALL_BINDIR}/legate/deps" PARENT_SCOPE)
+  set(legate_DEP_INSTALL_BINDIR
+      "${CMAKE_INSTALL_DATAROOTDIR}/legate/${CMAKE_INSTALL_BINDIR}" PARENT_SCOPE)
   set(legate_FIND_OR_CONFIGURE_INIT ON PARENT_SCOPE)
 endfunction()
 
