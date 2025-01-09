@@ -988,7 +988,7 @@ class TestVariantInvoker(BaseTest):
 
 
 class TestTaskUtil:
-    @pytest.mark.parametrize("variant_kind", sorted(lct._util.KNOWN_VARIANTS))
+    @pytest.mark.parametrize("variant_kind", tuple(VariantCode))
     def test_validate_variant_good(self, variant_kind: VariantCode) -> None:
         assert isinstance(variant_kind, VariantCode)
         lct._util.validate_variant(variant_kind)

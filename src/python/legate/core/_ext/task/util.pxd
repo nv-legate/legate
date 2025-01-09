@@ -11,9 +11,6 @@
 from __future__ import annotations
 
 from ..._lib.utilities.typedefs cimport VariantCode
-from .type cimport VariantList
 
-
-cdef VariantList DEFAULT_VARIANT_LIST
 
 cpdef void validate_variant(VariantCode kind)

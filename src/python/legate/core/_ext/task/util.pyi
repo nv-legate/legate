@@ -10,16 +10,11 @@
 # its affiliates is strictly prohibited.
 
 from collections.abc import Callable
-from typing import Any, Final, TypeVar
+from typing import Any, TypeVar
 
 from ..._lib.utilities.typedefs import VariantCode
-from .type import VariantList
 
 _T = TypeVar("_T")
-
-KNOWN_VARIANTS: Final[set[VariantCode]] = ...
-
-DEFAULT_VARIANT_LIST: Final[VariantList] = ...
 
 def validate_variant(kind: VariantCode) -> None: ...
 def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]: ...

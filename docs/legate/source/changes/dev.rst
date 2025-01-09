@@ -65,6 +65,8 @@ C++
 .. rubric:: Utilities
 
 - Remove ``legate::comm::coll::collInit()`` and ``legate::comm::coll::collFinalize()``.
+- Remove ``legate::VariantCode::NONE``, and ``LEGATE_VARIANT_NONE``. They served no
+  purpose and were not used.
 
 .. rubric:: I/O
 
@@ -93,6 +95,8 @@ Python
 .. rubric:: Runtime
 
 .. rubric:: Utilities
+
+- Remove ``legate.core.VariantCode.NONE``. It served no purpose and was never used.
 
 .. rubric:: I/O
 

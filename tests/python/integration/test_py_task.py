@@ -22,6 +22,7 @@ from legate.core import (
     Scalar,
     TaskTarget,
     Type,
+    VariantCode,
     bloat,
     get_legate_runtime,
     image,
@@ -98,7 +99,7 @@ class TestPyTask:
         np.testing.assert_allclose(out_arr, arr)
 
     def test_python_scalar_arg(self) -> None:
-        @task(variants=tuple(tasks.KNOWN_VARIANTS))
+        @task(variants=tuple(VariantCode))
         def fill_task(val: int, out: OutputStore) -> None:
             out_arr = tasks.asarray(out.get_inline_allocation())
             out_arr.fill(val)
@@ -128,7 +129,7 @@ class TestPyTask:
             np.testing.assert_allclose(arr_np, out_np)
 
     def test_scalar_arg(self) -> None:
-        @task(variants=tuple(tasks.KNOWN_VARIANTS))
+        @task(variants=tuple(VariantCode))
         def fill_int_task(out: tasks.OutputArray, val: int) -> None:
             out_arr = tasks.asarray(out.data().get_inline_allocation())
             out_arr.fill(val)
@@ -230,7 +231,7 @@ class TestPyTask:
         self, hint: ImageComputationHint
     ) -> None:
         py_task = task(
-            variants=tuple(tasks.KNOWN_VARIANTS),
+            variants=tuple(VariantCode),
             constraints=(image("func_store", "range_store", hint),),
         )(tasks.basic_image_task)
 
@@ -275,7 +276,7 @@ class TestPyTask:
         low_offsets = tuple(np.random.randint(1, 6) for _ in shape)
         high_offsets = low_offsets[::-1]
         bloat_task = task(
-            variants=tuple(tasks.KNOWN_VARIANTS),
+            variants=tuple(VariantCode),
             constraints=(
                 bloat("in_store", "bloat_store", low_offsets, high_offsets),
             ),

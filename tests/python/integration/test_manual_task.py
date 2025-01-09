@@ -21,6 +21,7 @@ from legate.core import (
     Scalar,
     Scope,
     TaskTarget,
+    VariantCode,
     get_legate_runtime,
     track_provenance,
     types as ty,
@@ -288,7 +289,7 @@ class TestManualTask:
         def increment() -> None:
             obj.val += 1
 
-        @task(variants=tuple(tasks.KNOWN_VARIANTS))
+        @task(variants=tuple(VariantCode))
         def foo_task() -> None:
             increment()
 

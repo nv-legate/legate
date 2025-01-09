@@ -14,16 +14,11 @@ from collections.abc import Callable
 from typing import Any, TypeVar
 
 from ..._lib.utilities.typedefs cimport VariantCode
-from .type cimport VariantList
 
+# needed for "kind not in VariantCode"
 
-cdef set[VariantCode] _KNOWN_VARIANTS = {
-    VariantCode.CPU, VariantCode.GPU, VariantCode.OMP
-}
-# for python export
-KNOWN_VARIANTS = _KNOWN_VARIANTS
+from ..._lib.utilities.typedefs import VariantCode as PyVariantCode
 
-cdef VariantList DEFAULT_VARIANT_LIST = (VariantCode.CPU,)
 
 cdef object _T = TypeVar("_T")
 
@@ -40,7 +35,7 @@ cpdef void validate_variant(VariantCode kind):
     ValueError
         If ``kind`` is an unknown variant kind.
     """
-    if kind not in _KNOWN_VARIANTS:
+    if kind not in PyVariantCode:
         raise ValueError(f"Unknown variant kind: {kind}")
 
 

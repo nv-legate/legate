@@ -74,7 +74,6 @@ format_context::iterator formatter<legate::VariantCode>::format(legate::VariantC
   switch (variant) {
 #define LEGATE_VARIANT_CASE(x) \
   case legate::VariantCode::x: name = #x "_VARIANT"; break
-    LEGATE_VARIANT_CASE(NONE);
     LEGATE_VARIANT_CASE(CPU);
     LEGATE_VARIANT_CASE(GPU);
     LEGATE_VARIANT_CASE(OMP);

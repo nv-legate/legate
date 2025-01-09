@@ -24,6 +24,7 @@ from legate.core import (
     Scalar,
     Scope,
     TaskTarget,
+    VariantCode,
     bloat,
     get_legate_runtime,
     image,
@@ -291,7 +292,7 @@ class TestAutoTask:
         def increment() -> None:
             obj.val += 1
 
-        @task(variants=tuple(tasks.KNOWN_VARIANTS))
+        @task(variants=tuple(VariantCode))
         def foo_task() -> None:
             increment()
 
@@ -382,9 +383,7 @@ class TestAutoTaskConstraints:
         ids=str,
     )
     def test_image_constraint(self, hint: ImageComputationHint) -> None:
-        image_task = task(variants=tuple(tasks.KNOWN_VARIANTS))(
-            tasks.basic_image_task
-        )
+        image_task = task(variants=tuple(VariantCode))(tasks.basic_image_task)
 
         runtime = get_legate_runtime()
         shape = (5, 4096, 5)
@@ -446,9 +445,7 @@ class TestAutoTaskConstraints:
 
     @pytest.mark.parametrize("shape", SHAPES + LARGE_SHAPES, ids=str)
     def test_bloat_constraints(self, shape: tuple[int, ...]) -> None:
-        bloat_task = task(variants=tuple(tasks.KNOWN_VARIANTS))(
-            tasks.basic_bloat_task
-        )
+        bloat_task = task(variants=tuple(VariantCode))(tasks.basic_bloat_task)
 
         low_offsets = tuple(np.random.randint(1, 6) for _ in shape)
 

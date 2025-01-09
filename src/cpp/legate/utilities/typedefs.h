@@ -44,16 +44,13 @@ using ShutdownCallback  = std::function<void(void)>;
 
 // The size of this enum is deliberate
 enum class VariantCode : Legion::VariantID {  // NOLINT(performance-enum-size)
-  NONE,
-  CPU,
+  CPU = 1,                                    // To match Legion, where '0' is the 'None' variant
   GPU,
-  OMP,
+  OMP
 };
 
 using LegateVariantCode [[deprecated("since 24.11: use legate::VariantCode instead")]] =
   VariantCode;
-
-using LegateMainFnPtr = void (*)(std::int32_t, char**);
 
 using Logger = Legion::Logger;
 
@@ -413,8 +410,6 @@ struct hash<legate::Memory> {
 }  // namespace std
 
 // backwards-compat workaround, should not use
-[[deprecated("since 24.11: using legate::VariantCode::NONE instead")]] inline constexpr auto
-  LEGATE_NO_VARIANT = legate::VariantCode::NONE;
 [[deprecated("since 24.11: using legate::VariantCode::CPU instead")]] inline constexpr auto
   LEGATE_CPU_VARIANT = legate::VariantCode::CPU;
 [[deprecated("since 24.11: using legate::VariantCode::GPU instead")]] inline constexpr auto

@@ -20,8 +20,7 @@ except ModuleNotFoundError:
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from legate.core import InlineAllocation, Scalar, align, broadcast
-from legate.core._ext.task.util import KNOWN_VARIANTS
+from legate.core import InlineAllocation, Scalar, VariantCode, align, broadcast
 from legate.core.task import (
     ADD,
     InputArray,
@@ -73,12 +72,12 @@ def numpy_or_cupy(alloc: InlineAllocation) -> ModuleType:
     return np
 
 
-@task(variants=tuple(KNOWN_VARIANTS))
+@task(variants=tuple(VariantCode))
 def basic_task() -> None:
     pass
 
 
-@task(variants=tuple(KNOWN_VARIANTS))
+@task(variants=tuple(VariantCode))
 def zeros_task(out: OutputStore) -> None:
     lib = numpy_or_cupy(out.get_inline_allocation())
     out_arr = lib.asarray(out.get_inline_allocation())
@@ -86,8 +85,7 @@ def zeros_task(out: OutputStore) -> None:
 
 
 @task(
-    variants=tuple(KNOWN_VARIANTS),
-    constraints=(align("in_store", "out_store"),),
+    variants=tuple(VariantCode), constraints=(align("in_store", "out_store"),)
 )
 def copy_store_task(in_store: InputStore, out_store: OutputStore) -> None:
     in_arr_np = asarray(in_store.get_inline_allocation())
@@ -95,7 +93,7 @@ def copy_store_task(in_store: InputStore, out_store: OutputStore) -> None:
     out_arr_np[:] = in_arr_np[:]
 
 
-@task(variants=tuple(KNOWN_VARIANTS))
+@task(variants=tuple(VariantCode))
 def partition_to_store_task(partition: InputStore, out: OutputStore) -> None:
     arr = asarray(partition.get_inline_allocation())
     out_arr = asarray(out.get_inline_allocation())
@@ -103,7 +101,7 @@ def partition_to_store_task(partition: InputStore, out: OutputStore) -> None:
 
 
 @task(
-    variants=tuple(KNOWN_VARIANTS),
+    variants=tuple(VariantCode),
     constraints=(broadcast("arg1"), broadcast("arg2"), broadcast("out")),
 )
 def mixed_sum_task(
@@ -115,7 +113,7 @@ def mixed_sum_task(
     out_arr_np[:] = arr1_np + arr2_np
 
 
-@task(variants=tuple(KNOWN_VARIANTS))
+@task(variants=tuple(VariantCode))
 def fill_task(out: OutputArray, val: Scalar) -> None:
     out_arr_np = asarray(out)
     v = val.value()
@@ -125,7 +123,7 @@ def fill_task(out: OutputArray, val: Scalar) -> None:
 
 
 @task(
-    variants=tuple(KNOWN_VARIANTS),
+    variants=tuple(VariantCode),
     constraints=(broadcast("out"),),
     throws_exception=True,
 )
@@ -140,14 +138,14 @@ def copy_np_array_task(
         out_arr[:] = cupy.asarray(np_arr)[:]
 
 
-@task(variants=tuple(KNOWN_VARIANTS))
+@task(variants=tuple(VariantCode))
 def array_sum_task(store: InputStore, out: ReductionStore[ADD]) -> None:
     out_arr = asarray(out.get_inline_allocation())
     store_arr = asarray(store.get_inline_allocation())
     out_arr[:] = store_arr.sum()
 
 
-@task(variants=tuple(KNOWN_VARIANTS))
+@task(variants=tuple(VariantCode))
 def repeat_task(
     store: InputStore, out: OutputStore, repeats: tuple[int, ...]
 ) -> None:

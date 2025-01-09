@@ -60,7 +60,6 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
         pass
 
     cpdef enum class VariantCode:
-        NONE
         CPU
         GPU
         OMP

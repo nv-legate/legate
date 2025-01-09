@@ -15,8 +15,8 @@ from libcpp cimport bool
 from collections.abc import Callable, Sequence
 
 from ..._lib.partitioning.constraint cimport ConstraintProxy
+from ..._lib.utilities.typedefs cimport VariantCode
 from .type cimport VariantList
-from .util cimport DEFAULT_VARIANT_LIST
 
 # imports are deliberate here, we want the python objects. Technically not true
 # for PyTask, but cimporting it results in:
@@ -29,9 +29,13 @@ from .util cimport DEFAULT_VARIANT_LIST
 #         __pyx_v_func);
 #
 # So I guess we import it.
+
 from .py_task import PyTask
 from .type import UserFunction
 from .util import dynamic_docstring
+
+
+cdef tuple[VariantCode, ...] DEFAULT_VARIANT_LIST = (VariantCode.CPU,)
 
 
 @dynamic_docstring(DEFAULT_VARIANT_LIST=DEFAULT_VARIANT_LIST)
