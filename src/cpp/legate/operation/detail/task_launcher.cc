@@ -49,16 +49,17 @@ void TaskLauncher::add_scalar(InternalSharedPtr<Scalar> scalar)
   scalars_.emplace_back(std::move(scalar));
 }
 
-void TaskLauncher::add_future(const Legion::Future& future) { futures_.push_back(future); }
+void TaskLauncher::add_future(Legion::Future future) { futures_.push_back(std::move(future)); }
 
-void TaskLauncher::add_future_map(const Legion::FutureMap& future_map)
+void TaskLauncher::add_future_map(Legion::FutureMap future_map)
 {
-  future_maps_.push_back(future_map);
+  future_maps_.push_back(std::move(future_map));
 }
 
-void TaskLauncher::add_communicator(const Legion::FutureMap& communicator)
+void TaskLauncher::add_communicator(Legion::FutureMap communicator)
 {
-  communicators_.push_back(communicator);
+  communicators_.push_back(std::move(communicator));
+  set_concurrent(true);
 }
 
 namespace {
@@ -160,7 +161,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
     index_task.point_futures.emplace_back(communicator);
   }
 
-  index_task.concurrent = concurrent_ || !communicators_.empty();
+  index_task.concurrent = concurrent_;
 
   auto result = runtime->dispatch(index_task, output_requirements);
 

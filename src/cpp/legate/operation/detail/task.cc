@@ -53,6 +53,7 @@ Task::Task(const Library* library,
   : Operation{unique_id, priority, std::move(machine)},
     library_{library},
     task_id_{task_id},
+    concurrent_{variant_info.options.concurrent},
     can_elide_device_ctx_sync_{variant_info.options.elide_device_ctx_sync},
     can_inline_launch_{can_inline_launch}
 {
@@ -75,7 +76,12 @@ void Task::throws_exception(bool can_throw_exception)
 void Task::add_communicator(std::string_view name)
 {
   auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
-  communicator_factories_.push_back(comm_mgr->find_factory(std::move(name)));
+  auto* factory  = comm_mgr->find_factory(name);
+
+  if (factory->is_supported_target(machine().preferred_target())) {
+    communicator_factories_.push_back(factory);
+    set_concurrent(true);
+  }
 }
 
 void Task::record_scalar_output(InternalSharedPtr<LogicalStore> store)
@@ -144,13 +150,7 @@ void Task::legion_launch_(Strategy* strategy_ptr)
     const auto& processor_range = machine().processor_range();
 
     for (auto* factory : communicator_factories_) {
-      if (!factory->is_supported_target(target)) {
-        continue;
-      }
-
-      const auto communicator = factory->find_or_create(target, processor_range, launch_domain);
-
-      launcher.add_communicator(communicator);
+      launcher.add_communicator(factory->find_or_create(target, processor_range, launch_domain));
       if (factory->needs_barrier()) {
         launcher.set_insert_barrier(true);
       }

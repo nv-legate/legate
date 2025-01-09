@@ -46,9 +46,9 @@ class TaskLauncher {
   void add_reduction(std::unique_ptr<Analyzable> arg);
   void add_scalar(InternalSharedPtr<Scalar> scalar);
 
-  void add_future(const Legion::Future& future);
-  void add_future_map(const Legion::FutureMap& future_map);
-  void add_communicator(const Legion::FutureMap& communicator);
+  void add_future(Legion::Future future);
+  void add_future_map(Legion::FutureMap future_map);
+  void add_communicator(Legion::FutureMap communicator);
 
   void set_priority(std::int32_t priority);
   void set_side_effect(bool has_side_effect);
