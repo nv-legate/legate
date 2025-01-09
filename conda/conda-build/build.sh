@@ -64,7 +64,7 @@ function preamble()
     configure_args+=(--with-openmp)
   fi
 
-  if [[ "${upload_enabled:-false}" == 'false' ]]; then
+  if [[ "${UPLOAD_ENABLED:-0}" == '0' ]]; then
     configure_args+=(--with-tests)
     configure_args+=(--with-benchmarks)
   fi

@@ -69,6 +69,8 @@ build_legate_release() {
     # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to
     # only explicit warnings. If you want more verbose output, set this to 2 or higher.
     export CONDA_VERBOSITY=0
+    # Use the new .conda format.
+    conda config --set conda_build.pkg_format 2
     # For whatever reason, the default buffering of conda/mamba is not sufficient, and
     # leads to garbled output in CI (mixing conda output and whatever build.sh prints). So
     # we need to force unbuffered output.
