@@ -94,9 +94,8 @@ INSTANTIATE_TEST_SUITE_P(FormatterUnit,
                          FormatVariantCode,
                          ::testing::Values(std::make_tuple(legate::VariantCode::CPU, "CPU_VARIANT"),
                                            std::make_tuple(legate::VariantCode::GPU, "GPU_VARIANT"),
-                                           std::make_tuple(legate::VariantCode::OMP, "OMP_VARIANT"),
-                                           std::make_tuple(legate::VariantCode::NONE,
-                                                           "NONE_VARIANT")));
+                                           std::make_tuple(legate::VariantCode::OMP,
+                                                           "OMP_VARIANT")));
 
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
