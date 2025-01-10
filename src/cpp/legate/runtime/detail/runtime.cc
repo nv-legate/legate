@@ -683,10 +683,10 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Type> ty
 {
   check_dimensionality_(dim);
   auto storage = make_internal_shared<detail::Storage>(make_internal_shared<Shape>(dim),
-                                                       std::move(type),
+                                                       type->size(),
                                                        optimize_scalar,
                                                        get_provenance().as_string_view());
-  return make_internal_shared<LogicalStore>(std::move(storage));
+  return make_internal_shared<LogicalStore>(std::move(storage), std::move(type));
 }  // namespace
 
 // shape can be unbound in this function, so we shouldn't use the same validation as the other
@@ -702,8 +702,8 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(InternalSharedPtr<Shape> s
   }
   check_dimensionality_(shape->ndim());
   auto storage = make_internal_shared<detail::Storage>(
-    std::move(shape), std::move(type), optimize_scalar, get_provenance().as_string_view());
-  return make_internal_shared<LogicalStore>(std::move(storage));
+    std::move(shape), type->size(), optimize_scalar, get_provenance().as_string_view());
+  return make_internal_shared<LogicalStore>(std::move(storage), std::move(type));
 }
 
 // Reserving the right to make this non-const in the future
@@ -717,8 +717,8 @@ InternalSharedPtr<LogicalStore> Runtime::create_store(const Scalar& scalar,
   }
   auto future  = Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
   auto storage = make_internal_shared<detail::Storage>(
-    std::move(shape), scalar.type(), future, get_provenance().as_string_view());
-  return make_internal_shared<detail::LogicalStore>(std::move(storage));
+    std::move(shape), future, get_provenance().as_string_view());
+  return make_internal_shared<detail::LogicalStore>(std::move(storage), scalar.type());
 }
 
 InternalSharedPtr<LogicalStore> Runtime::create_store(

@@ -152,9 +152,34 @@ class LogicalStore {
   /**
    * @brief Indicates whether the store is transformed
    *
-   * @return `true` if the store is transformed, false otherwise
+   * @return `true` if the store is transformed, `false` otherwise
    */
   [[nodiscard]] bool transformed() const;
+
+  /**
+   * @brief Reinterpret the underlying data of a `LogicalStore` byte-for-byte as another type.
+   *
+   * @param type The new type to interpret the data as.
+   *
+   * @return The reinterpreted store.
+   *
+   * The size and alignment of the new type must match that of the existing type.
+   *
+   * The reinterpreted store will share the same underlying storage as the original, and
+   * therefore any writes to one will also be reflected in the other. No type conversions of
+   * any kind are performed across the stores, the bytes are interpreted as-is. In effect,
+   * if one were to model a `LogicalStore` as a pointer to an array, then this routine is
+   * equivalent to `reinterpret_cast`-ing the pointer.
+   *
+   * Example:
+   * @snippet unit/logical_store/reinterpret_as.cc Reinterpret store data
+   *
+   * @throw std::invalid_argument If the size (in bytes) of the new type does not match that of
+   * the old type.
+   * @throw std::invalid_argument If the alignment of the new type does not match that of the
+   * old type.
+   */
+  [[nodiscard]] LogicalStore reinterpret_as(const Type& type) const;
 
   /**
    * @brief Adds an extra dimension to the store.

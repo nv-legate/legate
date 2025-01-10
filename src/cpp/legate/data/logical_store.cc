@@ -58,6 +58,11 @@ bool LogicalStore::overlaps(const LogicalStore& other) const
   return impl()->overlaps(other.impl());
 }
 
+LogicalStore LogicalStore::reinterpret_as(const Type& type) const
+{
+  return LogicalStore{impl()->reinterpret_as(type.impl())};
+}
+
 LogicalStore LogicalStore::promote(std::int32_t extra_dim, std::size_t dim_size) const
 {
   return LogicalStore{impl()->promote(extra_dim, dim_size)};

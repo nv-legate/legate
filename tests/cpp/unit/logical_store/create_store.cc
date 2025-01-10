@@ -261,7 +261,7 @@ TEST_F(LogicalStoreCreateUnit, BoundStoreToString)
   ASSERT_THAT(
     bound_store.to_string(),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \[1\], storage: Storage\([0-9]+\) \{kind: Future, type: int32, level: [0-9]+\}\})"));
+      R"(Store\([0-9]+\) \{shape: \[1\], type: int32, storage: Storage\([0-9]+\) \{kind: Future, level: [0-9]+\}\})"));
 }
 
 TEST_F(LogicalStoreCreateUnit, TransformedBoundStoreToString)
@@ -273,7 +273,7 @@ TEST_F(LogicalStoreCreateUnit, TransformedBoundStoreToString)
   ASSERT_THAT(
     promoted.to_string(),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \[5, 1\], transform: Promote\(extra_dim: 0, dim_size: 5\), storage: Storage\([0-9]+\) \{kind: Future, type: int32, level: [0-9]+\}\})"));
+      R"(Store\([0-9]+\) \{shape: \[5, 1\], transform: Promote\(extra_dim: 0, dim_size: 5\), type: int32, storage: Storage\([0-9]+\) \{kind: Future, level: [0-9]+\}\})"));
 }
 
 TEST_F(LogicalStoreCreateUnit, UnboundStoreToString)
@@ -284,7 +284,7 @@ TEST_F(LogicalStoreCreateUnit, UnboundStoreToString)
   ASSERT_THAT(
     unbound_store.to_string(),
     ::testing::MatchesRegex(
-      R"(Store\([0-9]+\) \{shape: \(unbound\), storage: Storage\([0-9]+\) \{kind: Region, type: int64, level: [0-9]+, region: unbound\}\})"));
+      R"(Store\([0-9]+\) \{shape: \(unbound\), type: int64, storage: Storage\([0-9]+\) \{kind: Region, level: [0-9]+, region: unbound\}\})"));
 }
 
 }  // namespace logical_store_create_test

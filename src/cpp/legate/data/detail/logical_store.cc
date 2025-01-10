@@ -45,28 +45,31 @@ namespace legate::detail {
 ////////////////////////////////////////////////////
 
 Storage::Storage(InternalSharedPtr<Shape> shape,
-                 InternalSharedPtr<Type> type,
+                 std::uint32_t field_size,
                  bool optimize_scalar,
                  std::string_view provenance)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     unbound_{shape->unbound()},
     shape_{std::move(shape)},
-    type_{std::move(type)},
+    kind_{[&] {
+      if (optimize_scalar) {
+        if (unbound()) {
+          return Kind::FUTURE_MAP;
+        }
+        // We should not blindly check the shape volume as it would flush the scheduling window
+        if (this->shape()->ready() && (this->shape()->volume() == 1)) {
+          return Kind::FUTURE;
+        }
+      }
+      return Kind::REGION_FIELD;
+    }()},
     provenance_{std::move(provenance)},
     offsets_{legate::full(dim(), std::int64_t{0})}
 {
-  // We should not blindly check the shape volume as it would flush the scheduling window
-  if (optimize_scalar) {
-    if (shape_->unbound()) {
-      kind_ = Kind::FUTURE_MAP;
-    } else if (shape_->ready() && volume() == 1) {
-      kind_ = Kind::FUTURE;
-    }
-  }
-
   if (kind_ == Kind::REGION_FIELD && !unbound()) {
     auto* runtime = Runtime::get_runtime();
-    region_field_ = runtime->create_region_field(this->shape(), this->type()->size());
+
+    region_field_ = runtime->create_region_field(this->shape(), field_size);
     runtime->attach_alloc_info(get_region_field(), this->provenance());
   }
 
@@ -75,13 +78,9 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
   }
 }
 
-Storage::Storage(InternalSharedPtr<Shape> shape,
-                 InternalSharedPtr<Type> type,
-                 Legion::Future future,
-                 std::string_view provenance)
+Storage::Storage(InternalSharedPtr<Shape> shape, Legion::Future future, std::string_view provenance)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     shape_{std::move(shape)},
-    type_{std::move(type)},
     kind_{Kind::FUTURE},
     provenance_{std::move(provenance)},
     offsets_{legate::full(dim(), std::int64_t{0})},
@@ -93,13 +92,11 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
 }
 
 Storage::Storage(tuple<std::uint64_t> extents,
-                 InternalSharedPtr<Type> type,
                  InternalSharedPtr<StoragePartition> parent,
                  tuple<std::uint64_t> color,
                  tuple<std::int64_t> offsets)
   : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
     shape_{make_internal_shared<Shape>(std::move(extents))},
-    type_{std::move(type)},
     level_{parent->level() + 1},
     parent_{std::move(parent)},
     color_{std::move(color)},
@@ -411,8 +408,7 @@ std::string Storage::to_string() const
     LEGATE_UNREACHABLE();
   }();
 
-  auto result =
-    fmt::format("Storage({}) {{kind: {}, type: {}, level: {}", id(), kind_str, *type(), level());
+  auto result = fmt::format("Storage({}) {{kind: {}, level: {}", id(), kind_str, level());
 
   if (kind() == Kind::REGION_FIELD) {
     if (unbound()) {
@@ -460,7 +456,7 @@ InternalSharedPtr<Storage> StoragePartition::get_child_storage(
   auto child_extents = tiling->get_child_extents(parent_->extents(), color);
   auto child_offsets = tiling->get_child_offsets(color);
   return make_internal_shared<Storage>(
-    std::move(child_extents), parent_->type(), self, std::move(color), std::move(child_offsets));
+    std::move(child_extents), self, std::move(color), std::move(child_offsets));
 }
 
 InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(
@@ -496,11 +492,11 @@ bool StoragePartition::is_disjoint_for(const Domain& launch_domain) const
 
 namespace {
 
-void assert_fixed_storage_size(const InternalSharedPtr<Storage>& storage)
+void assert_fixed_storage_size(const InternalSharedPtr<Type>& type)
 {
-  if (storage->type()->variable_size()) {
+  if (type->variable_size()) {
     throw TracedException<std::invalid_argument>{
-      fmt::format("Store cannot be created with variable size type {}", *(storage->type()))};
+      fmt::format("Store cannot be created with variable size type {}", *type)};
   }
 }
 
@@ -512,13 +508,14 @@ void assert_fixed_storage_size(const InternalSharedPtr<Storage>& storage)
 
 }  // namespace
 
-LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage)
+LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr<Type> type)
   : store_id_{Runtime::get_runtime()->get_unique_store_id()},
+    type_{std::move(type)},
     shape_{storage->shape()},
     storage_{std::move(storage)},
     transform_{make_internal_shared<TransformStack>()}
 {
-  assert_fixed_storage_size(get_storage());
+  assert_fixed_storage_size(this->type());
   LEGATE_ASSERT(transform_ != nullptr);
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -527,13 +524,15 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage)
 
 LogicalStore::LogicalStore(tuple<std::uint64_t> extents,
                            InternalSharedPtr<Storage> storage,
+                           InternalSharedPtr<Type> type,
                            InternalSharedPtr<TransformStack> transform)
   : store_id_{Runtime::get_runtime()->get_unique_store_id()},
+    type_{std::move(type)},
     shape_{make_internal_shared<Shape>(std::move(extents))},
     storage_{std::move(storage)},
     transform_{std::move(transform)}
 {
-  assert_fixed_storage_size(get_storage());
+  assert_fixed_storage_size(this->type());
   LEGATE_ASSERT(transform_ != nullptr);
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -564,6 +563,23 @@ void LogicalStore::set_future_map(Legion::FutureMap future_map, std::size_t scal
   get_storage()->set_future_map(std::move(future_map), scalar_offset);
 }
 
+InternalSharedPtr<LogicalStore> LogicalStore::reinterpret_as(InternalSharedPtr<Type> type) const
+{
+  if (type->size() != this->type()->size()) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Cannot reinterpret a {}-backed store as {}, size of the types must be equal",
+                  *type,
+                  *(this->type()))};
+  }
+  if (type->alignment() != this->type()->alignment()) {
+    throw TracedException<std::invalid_argument>{fmt::format(
+      "Cannot reinterpret a {}-backed store as {}, alignment of the types must be equal",
+      *type,
+      *(this->type()))};
+  }
+  return make_internal_shared<LogicalStore>(get_storage(), std::move(type));
+}
+
 InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, std::size_t dim_size)
 {
   if (extra_dim < 0 || extra_dim > static_cast<std::int32_t>(dim())) {
@@ -573,7 +589,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::promote(std::int32_t extra_dim, st
 
   auto new_extents = extents().insert(extra_dim, dim_size);
   auto transform   = stack(transform_, std::make_unique<Promote>(extra_dim, dim_size));
-  return make_internal_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
+  return make_internal_shared<LogicalStore>(
+    std::move(new_extents), storage_, type(), std::move(transform));
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64_t index)
@@ -599,7 +616,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::project(std::int32_t d, std::int64
                       transform->invert_extents(new_extents),
                       transform->invert_point(legate::full<std::int64_t>(new_extents.size(), 0)));
   return make_internal_shared<LogicalStore>(
-    std::move(new_extents), std::move(substorage), std::move(transform));
+    std::move(new_extents), std::move(substorage), type(), std::move(transform));
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<LogicalStore>& self,
@@ -659,7 +676,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
                       transform->invert_extents(exts),
                       transform->invert_point(legate::full<std::int64_t>(exts.size(), 0)));
   return make_internal_shared<LogicalStore>(
-    std::move(exts), std::move(substorage), std::move(transform));
+    std::move(exts), std::move(substorage), type(), std::move(transform));
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t> axes)
@@ -682,7 +699,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t
 
   auto new_extents = extents().map(axes);
   auto transform   = stack(transform_, std::make_unique<Transpose>(std::move(axes)));
-  return make_internal_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
+  return make_internal_shared<LogicalStore>(
+    std::move(new_extents), storage_, type(), std::move(transform));
 }
 
 InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
@@ -722,7 +740,8 @@ InternalSharedPtr<LogicalStore> LogicalStore::delinearize(std::int32_t dim,
   }
 
   auto transform = stack(transform_, std::make_unique<Delinearize>(dim, std::move(sizes)));
-  return make_internal_shared<LogicalStore>(std::move(new_extents), storage_, std::move(transform));
+  return make_internal_shared<LogicalStore>(
+    std::move(new_extents), storage_, type(), std::move(transform));
 }
 
 InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
@@ -1132,7 +1151,7 @@ std::string LogicalStore::to_string() const
   if (!transform_->identity()) {
     fmt::format_to(std::back_inserter(result), ", transform: {}", fmt::streamed(*transform_));
   }
-  fmt::format_to(std::back_inserter(result), ", storage: {}}}", *get_storage());
+  fmt::format_to(std::back_inserter(result), ", type: {}, storage: {}}}", *type(), *get_storage());
   return result;
 }
 
@@ -1204,7 +1223,7 @@ InternalSharedPtr<LogicalStore> LogicalStorePartition::get_child_store(
   }
 
   return make_internal_shared<LogicalStore>(
-    std::move(child_extents), std::move(child_storage), std::move(transform));
+    std::move(child_extents), std::move(child_storage), store_->type(), std::move(transform));
 }
 
 std::unique_ptr<StoreProjection> LogicalStorePartition::create_store_projection(

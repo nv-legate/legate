@@ -217,6 +217,7 @@ set(with_runtime_SRC
     unit/logical_store/promote.cc
     unit/logical_store/slice.cc
     unit/logical_store/transpose.cc
+    unit/logical_store/reinterpret_as.cc
     unit/physical_array/create_array.cc
     unit/physical_array/create_list_array.cc
     unit/physical_array/create_string_array.cc

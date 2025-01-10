@@ -27,6 +27,9 @@ C++
 
 .. rubric:: Data
 
+- Add ``legate::LogicalStore::reinterpret_as()`` to reinterpret the underlying buffer of a
+  ``LogicalStore`` as another data-type.
+
 .. rubric:: Mapping
 
 - Add ``legate::mapping::Mapper::allocation_pool_size()``. Legate mappers are

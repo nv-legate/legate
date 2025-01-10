@@ -30,8 +30,6 @@ inline std::size_t Storage::volume() const { return shape()->volume(); }
 
 inline std::uint32_t Storage::dim() const { return shape()->ndim(); }
 
-inline const InternalSharedPtr<Type>& Storage::type() const { return type_; }
-
 inline Storage::Kind Storage::kind() const { return kind_; }
 
 inline std::int32_t Storage::level() const { return level_; }
@@ -91,7 +89,7 @@ inline bool LogicalStore::has_scalar_storage() const
   return get_storage()->kind() != Storage::Kind::REGION_FIELD;
 }
 
-inline const InternalSharedPtr<Type>& LogicalStore::type() const { return get_storage()->type(); }
+inline const InternalSharedPtr<Type>& LogicalStore::type() const { return type_; }
 
 inline bool LogicalStore::transformed() const { return !transform_->identity(); }
 

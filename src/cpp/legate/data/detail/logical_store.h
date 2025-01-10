@@ -50,17 +50,13 @@ class Storage {
 
   // Create a RegionField-backed or a Future-backed storage.
   Storage(InternalSharedPtr<Shape> shape,
-          InternalSharedPtr<Type> type,
+          std::uint32_t field_size,
           bool optimize_scalar,
           std::string_view provenance);
   // Create a Future-backed storage. Initialized eagerly.
-  Storage(InternalSharedPtr<Shape> shape,
-          InternalSharedPtr<Type> type,
-          Legion::Future future,
-          std::string_view provenance);
+  Storage(InternalSharedPtr<Shape> shape, Legion::Future future, std::string_view provenance);
   // Create a RegionField-backed sub-storage.
   Storage(tuple<std::uint64_t> extents,
-          InternalSharedPtr<Type> type,
           InternalSharedPtr<StoragePartition> parent,
           tuple<std::uint64_t> color,
           tuple<std::int64_t> offsets);
@@ -78,7 +74,6 @@ class Storage {
   [[nodiscard]] std::size_t volume() const;
   [[nodiscard]] std::uint32_t dim() const;
   [[nodiscard]] bool overlaps(const InternalSharedPtr<Storage>& other) const;
-  [[nodiscard]] const InternalSharedPtr<Type>& type() const;
   [[nodiscard]] Kind kind() const;
   [[nodiscard]] std::int32_t level() const;
   [[nodiscard]] std::size_t scalar_offset() const;
@@ -128,7 +123,6 @@ class Storage {
   bool unbound_{};
   bool destroyed_out_of_order_{};  // only relevant on the root Storage
   InternalSharedPtr<Shape> shape_{};
-  InternalSharedPtr<Type> type_{};
   Kind kind_{Kind::REGION_FIELD};
   std::string_view provenance_{};  // only relevant on the root Storage
 
@@ -180,11 +174,12 @@ class StoragePartition {
 
 class LogicalStore {
  public:
-  explicit LogicalStore(InternalSharedPtr<Storage> storage);
+  LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr<Type> type);
   // This constructor is invoked exclusively by store transformations that construct stores from
   // immediate extents.
   LogicalStore(tuple<std::uint64_t> extents,
                InternalSharedPtr<Storage> storage,
+               InternalSharedPtr<Type> type,
                InternalSharedPtr<TransformStack> transform);
 
   LogicalStore(LogicalStore&& other) noexcept            = default;
@@ -211,6 +206,8 @@ class LogicalStore {
   void set_region_field(InternalSharedPtr<LogicalRegionField> region_field);
   void set_future(Legion::Future future, std::size_t scalar_offset = 0);
   void set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset = 0);
+
+  [[nodiscard]] InternalSharedPtr<LogicalStore> reinterpret_as(InternalSharedPtr<Type> type) const;
 
   [[nodiscard]] InternalSharedPtr<LogicalStore> promote(std::int32_t extra_dim,
                                                         std::size_t dim_size);
@@ -333,6 +330,7 @@ class LogicalStore {
 
  private:
   std::uint64_t store_id_{};
+  InternalSharedPtr<Type> type_{};
   InternalSharedPtr<Shape> shape_{};
   InternalSharedPtr<Storage> storage_{};
   InternalSharedPtr<TransformStack> transform_{};
