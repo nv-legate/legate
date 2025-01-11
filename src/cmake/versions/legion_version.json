@@ -19,6 +19,11 @@
                     "file": "${current_json_dir}/../patches/legion_redop.diff",
                     "fixed_in": "",
                     "issue": "legion half"
+                },
+                {
+                    "file": "${current_json_dir}/../patches/legion_install_include_dir.diff",
+                    "fixed_in": "",
+                    "issue": "legion installed include dir"
                 }
             ],
             "version": "24.09.0"
