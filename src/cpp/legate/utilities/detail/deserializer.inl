@@ -53,13 +53,6 @@ inline T BaseDeserializer<Deserializer>::unpack()
 }
 
 template <typename Deserializer>
-template <typename T, std::enable_if_t<std::is_enum_v<T>>*>
-void BaseDeserializer<Deserializer>::unpack_impl(T& value)
-{
-  value = T{static_cast<Deserializer*>(this)->template unpack<std::underlying_type_t<T>>()};
-}
-
-template <typename Deserializer>
 template <typename T, std::enable_if_t<type_code_of_v<T> != Type::Code::NIL>*>
 void BaseDeserializer<Deserializer>::unpack_impl(T& value)
 {

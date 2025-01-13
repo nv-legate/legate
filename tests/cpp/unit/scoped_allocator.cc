@@ -50,13 +50,12 @@ bool check_alignment(const void* buffer, std::size_t alignment)
 
 /*static*/ void DeallocateTask::cpu_variant(legate::TaskContext context)
 {
-  auto kind      = context.scalar(0).value<std::uint64_t>();
+  auto kind      = context.scalar(0).value<legate::Memory::Kind>();
   auto scoped    = context.scalar(1).value<bool>();
   auto alignment = context.scalar(2).value<std::uint64_t>();
   auto bytes     = context.scalar(3).value<std::uint64_t>();
-  auto allocator =
-    legate::ScopedAllocator{static_cast<legate::Memory::Kind>(kind), scoped, alignment};
-  auto* buffer = allocator.allocate(bytes);
+  auto allocator = legate::ScopedAllocator{kind, scoped, alignment};
+  auto* buffer   = allocator.allocate(bytes);
 
   if (0 == bytes) {
     ASSERT_EQ(buffer, nullptr);
@@ -68,13 +67,12 @@ bool check_alignment(const void* buffer, std::size_t alignment)
 
 /*static*/ void DoubleDeallocateTask::cpu_variant(legate::TaskContext context)
 {
-  auto kind      = context.scalar(0).value<std::uint64_t>();
+  auto kind      = context.scalar(0).value<legate::Memory::Kind>();
   auto scoped    = context.scalar(1).value<bool>();
   auto alignment = context.scalar(2).value<std::uint64_t>();
   auto bytes     = context.scalar(3).value<std::uint64_t>();
-  auto allocator =
-    legate::ScopedAllocator{static_cast<legate::Memory::Kind>(kind), scoped, alignment};
-  auto* buffer = allocator.allocate(bytes);
+  auto allocator = legate::ScopedAllocator{kind, scoped, alignment};
+  auto* buffer   = allocator.allocate(bytes);
 
   if (0 == bytes) {
     ASSERT_EQ(buffer, nullptr);
@@ -87,13 +85,12 @@ bool check_alignment(const void* buffer, std::size_t alignment)
 
 /*static*/ void InvalidAllocateTask::cpu_variant(legate::TaskContext context)
 {
-  auto kind      = context.scalar(0).value<std::uint64_t>();
+  auto kind      = context.scalar(0).value<legate::Memory::Kind>();
   auto scoped    = context.scalar(1).value<bool>();
   auto alignment = context.scalar(2).value<std::uint64_t>();
   auto bytes     = context.scalar(3).value<std::uint64_t>();
-  auto allocator =
-    legate::ScopedAllocator{static_cast<legate::Memory::Kind>(kind), scoped, alignment};
-  auto* buffer = allocator.allocate(bytes);
+  auto allocator = legate::ScopedAllocator{kind, scoped, alignment};
+  auto* buffer   = allocator.allocate(bytes);
 
   if (0 == bytes) {
     ASSERT_EQ(buffer, nullptr);
@@ -157,7 +154,7 @@ void test_deallocate(legate::LocalTaskID task_id,
   auto part    = task.declare_partition();
 
   static_cast<void>(part);
-  task.add_scalar_arg(legate::Scalar{static_cast<std::uint64_t>(kind)});
+  task.add_scalar_arg(legate::Scalar{kind});
   task.add_scalar_arg(legate::Scalar{scoped});
   task.add_scalar_arg(legate::Scalar{alignment});
   task.add_scalar_arg(legate::Scalar{bytes});

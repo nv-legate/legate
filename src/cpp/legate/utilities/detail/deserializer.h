@@ -47,9 +47,6 @@ class BaseDeserializer {
   template <typename T>
   [[nodiscard]] T unpack();
 
-  template <typename T, std::enable_if_t<std::is_enum_v<T>>* = nullptr>
-  void unpack_impl(T& value);
-
   template <typename T, std::enable_if_t<type_code_of_v<T> != Type::Code::NIL>* = nullptr>
   void unpack_impl(T& value);
 

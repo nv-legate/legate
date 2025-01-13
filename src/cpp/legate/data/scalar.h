@@ -103,8 +103,7 @@ class Scalar {
               !std::is_convertible_v<T, std::string> &&  // NOLINT(modernize-type-traits)
               !std::is_same_v<std::decay_t<T>,           // NOLINT(modernize-type-traits
                               InternalSharedPtr<detail::Scalar>>>>
-
-  explicit Scalar(T value);
+  explicit Scalar(const T& value);
 
   /**
    * @brief Creates an owned `Scalar` of a specified type from a scalar value
@@ -115,7 +114,7 @@ class Scalar {
    * @param value A scalar value to create a `Scalar` with
    */
   template <typename T>
-  Scalar(T value, const Type& type);
+  Scalar(const T& value, const Type& type);
 
   /**
    * @brief Creates an owned `Scalar` from a `std::string_view`. The value from the
@@ -241,7 +240,7 @@ class Scalar {
   Scalar(detail::Scalar* impl, private_tag);
 
   template <typename T>
-  Scalar(T value, private_tag);
+  Scalar(const T& value, private_tag);
 
   friend class AutoTask;
   friend class ManualTask;

@@ -144,11 +144,10 @@ class UnboundStoreBindTask : public legate::LegateTask<UnboundStoreBindTask> {
 
 /*static*/ void UnboundStoreBindTask::cpu_variant(legate::TaskContext context)
 {
-  auto store      = context.output(0).data();
-  auto op_code    = context.scalar(0).value<std::uint32_t>();
-  const auto code = static_cast<UnboundStoreOpCode>(op_code);
+  auto store   = context.output(0).data();
+  auto op_code = context.scalar(0).value<UnboundStoreOpCode>();
 
-  legate::double_dispatch(store.dim(), store.code(), UnboundStoreBindFn{}, store, code);
+  legate::double_dispatch(store.dim(), store.code(), UnboundStoreBindFn{}, store, op_code);
 }
 
 class Config {
@@ -208,7 +207,7 @@ void bind_unbound_store_by_task(UnboundStoreOpCode op_code,
   auto task          = runtime->create_task(context, UnboundStoreBindTask::TASK_ID);
 
   task.add_output(logical_store);
-  task.add_scalar_arg(legate::Scalar{static_cast<std::uint32_t>(op_code)});
+  task.add_scalar_arg(legate::Scalar{op_code});
   runtime->submit(std::move(task));
 
   // Turns out to be a bound store here

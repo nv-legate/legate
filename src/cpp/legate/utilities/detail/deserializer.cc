@@ -71,9 +71,7 @@ std::vector<InternalSharedPtr<PhysicalArray>> TaskDeserializer::unpack_arrays()
 
 InternalSharedPtr<PhysicalArray> TaskDeserializer::unpack_array()
 {
-  auto kind = static_cast<ArrayKind>(unpack<std::underlying_type_t<ArrayKind>>());
-
-  switch (kind) {
+  switch (unpack<ArrayKind>()) {
     case ArrayKind::BASE: return unpack_base_array();
     case ArrayKind::LIST: return unpack_list_array();
     case ArrayKind::STRUCT: return unpack_struct_array();
@@ -92,7 +90,7 @@ InternalSharedPtr<BasePhysicalArray> TaskDeserializer::unpack_base_array()
 InternalSharedPtr<ListPhysicalArray> TaskDeserializer::unpack_list_array()
 {
   auto type = unpack_type_();
-  static_cast<void>(unpack<std::underlying_type_t<ArrayKind>>());  // Unpack kind
+  static_cast<void>(unpack<ArrayKind>());  // Unpack kind
   auto descriptor = unpack_base_array();
   auto vardata    = unpack_array();
   return make_internal_shared<ListPhysicalArray>(
@@ -226,13 +224,10 @@ std::vector<InternalSharedPtr<Array>> TaskDeserializer::unpack_arrays()
 
 InternalSharedPtr<Array> TaskDeserializer::unpack_array()
 {
-  using ArrayKind = legate::detail::ArrayKind;
-  auto kind       = static_cast<ArrayKind>(unpack<std::underlying_type_t<ArrayKind>>());
-
-  switch (kind) {
-    case ArrayKind::BASE: return unpack_base_array();
-    case ArrayKind::LIST: return unpack_list_array();
-    case ArrayKind::STRUCT: return unpack_struct_array();
+  switch (unpack<legate::detail::ArrayKind>()) {
+    case legate::detail::ArrayKind::BASE: return unpack_base_array();
+    case legate::detail::ArrayKind::LIST: return unpack_list_array();
+    case legate::detail::ArrayKind::STRUCT: return unpack_struct_array();
   }
   return {};
 }
@@ -249,7 +244,7 @@ InternalSharedPtr<BaseArray> TaskDeserializer::unpack_base_array()
 InternalSharedPtr<ListArray> TaskDeserializer::unpack_list_array()
 {
   auto type = unpack_type_();
-  static_cast<void>(unpack<std::underlying_type_t<legate::detail::ArrayKind>>());  // Unpack kind
+  static_cast<void>(unpack<legate::detail::ArrayKind>());  // Unpack kind
   auto descriptor = unpack_base_array();
   auto vardata    = unpack_array();
   return make_internal_shared<ListArray>(

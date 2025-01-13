@@ -57,7 +57,7 @@ inline std::uint64_t canonical_value_of(std::size_t v) noexcept { return std::ui
 }  // namespace detail
 
 template <typename T>
-Scalar::Scalar(T value, private_tag)
+Scalar::Scalar(const T& value, private_tag)
   : Scalar{create_impl_(
              primitive_type(detail::canonical_type_code_of<T>()), std::addressof(value), true),
            private_tag{}}
@@ -66,12 +66,12 @@ Scalar::Scalar(T value, private_tag)
 }
 
 template <typename T, typename SFINAE>
-Scalar::Scalar(T value) : Scalar{detail::canonical_value_of(std::move(value)), private_tag{}}
+Scalar::Scalar(const T& value) : Scalar{detail::canonical_value_of(value), private_tag{}}
 {
 }
 
 template <typename T>
-Scalar::Scalar(T value, const Type& type)
+Scalar::Scalar(const T& value, const Type& type)
   : Scalar{checked_create_impl_(type, std::addressof(value), true, sizeof(T)), private_tag{}}
 {
 }

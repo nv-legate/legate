@@ -59,6 +59,31 @@ C++
 
 .. rubric:: Types
 
+- Add support for enums to ``legate::type_code_of``. ``legate::type_code_of`` will now
+  unwrap the type to its underlying type if it is an enum. As a result, many objects (like
+  ``legate::Scalar``) now natively support enums. For example, what previously required:
+
+  .. code-block:: cpp
+
+     enum class MyEnum { FOO };
+
+     auto scal = legate::Scalar{
+       static_cast<std::underlying_type_t<MyEnum>>(MyEnum::FOO)
+     };
+
+     auto value = scal.value<std::underlying_type_t<MyEnum>>();
+
+  May now be done directly:
+
+  .. code-block:: cpp
+
+     enum class MyEnum { FOO };
+
+     auto scal = legate::Scalar{MyEnum::FOO};
+
+     auto value = scal.value<MyEnum>();
+
+
 .. rubric:: Runtime
 
 - Deprecate ``legate::start(argc, argv)``. Users should use the argument-less version

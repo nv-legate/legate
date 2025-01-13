@@ -25,12 +25,11 @@ constexpr std::uint64_t OVER_ALIGNMENT = 128;
 class BufferFn {
  public:
   template <std::int32_t DIM>
-  void operator()(std::uint64_t bytes, std::uint64_t kind, std::uint64_t alignment)
+  void operator()(std::uint64_t bytes, legate::Memory::Kind kind, std::uint64_t alignment) const
   {
     switch (DIM) {
       case 1: {
-        auto buffer = legate::create_buffer<std::uint64_t>(
-          bytes, static_cast<legate::Memory::Kind>(kind), alignment);
+        auto buffer = legate::create_buffer<std::uint64_t>(bytes, kind, alignment);
         auto memory = buffer.get_instance().get_location();
         EXPECT_TRUE(memory.exists());
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
@@ -40,8 +39,8 @@ class BufferFn {
         break;
       }
       default: {
-        auto buffer = legate::create_buffer<std::uint64_t, DIM>(
-          legate::Point<DIM>(bytes), static_cast<legate::Memory::Kind>(kind), alignment);
+        auto buffer =
+          legate::create_buffer<std::uint64_t, DIM>(legate::Point<DIM>{bytes}, kind, alignment);
         auto memory = buffer.get_instance().get_location();
         EXPECT_TRUE(memory.exists());
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
@@ -64,7 +63,7 @@ struct BufferTask : public legate::LegateTask<BufferTask> {
 {
   auto dim       = context.scalar(0).value<std::int32_t>();
   auto bytes     = context.scalar(1).value<std::uint64_t>();
-  auto kind      = context.scalar(2).value<std::uint64_t>();
+  auto kind      = context.scalar(2).value<legate::Memory::Kind>();
   auto alignment = context.scalar(3).value<std::size_t>();
   legate::dim_dispatch(dim, BufferFn{}, bytes, kind, alignment);
 }
@@ -111,7 +110,7 @@ void test_buffer(std::int32_t dim,
 
   task.add_scalar_arg(legate::Scalar{dim});
   task.add_scalar_arg(legate::Scalar{bytes});
-  task.add_scalar_arg(legate::Scalar{static_cast<std::uint64_t>(kind)});
+  task.add_scalar_arg(legate::Scalar{kind});
   task.add_scalar_arg(legate::Scalar{alignment});
   runtime->submit(std::move(task));
 }

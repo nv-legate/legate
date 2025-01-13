@@ -55,7 +55,7 @@ namespace legate {
 // namespace
 namespace type_code_of_detail {
 
-template <typename T>
+template <typename T, typename SFINAE = void>
 struct type_code_of  // NOLINT(readability-identifier-naming)
   : std::integral_constant<Type::Code, Type::Code::NIL> {};
 
@@ -104,6 +104,10 @@ struct type_code_of<T*> : std::integral_constant<Type::Code, Type::Code::UINT64>
   static_assert(sizeof(T*) == sizeof(std::uint64_t));
   static_assert(alignof(T*) == alignof(std::uint64_t));
 };
+
+template <typename T>
+struct type_code_of<T, std::enable_if_t<std::is_enum_v<T>>>
+  : type_code_of<std::underlying_type_t<T>> {};
 
 }  // namespace type_code_of_detail
 

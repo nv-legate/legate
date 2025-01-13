@@ -44,6 +44,14 @@ const complex<double> COMPLEX_DOUBLE_VALUE{0, 1};
 // NOLINTEND(cert-err58-cpp)
 constexpr std::uint32_t DATA_SIZE = 10;
 
+enum class SmallEnumType : std::uint8_t { FOO };
+enum class BigEnumType : std::int64_t {
+  // These values are there only to ensure that clang-tidy does not complain about using too
+  // small an underlying type for the enum
+  FOO = std::numeric_limits<std::int64_t>::max(),
+  BAR = std::numeric_limits<std::int64_t>::min()
+};
+
 struct PaddingStructData {
   bool bool_data;
   std::int32_t int32_data;
@@ -353,6 +361,8 @@ TEST_F(ScalarUnit, CreateWithValue)
   check_type(FLOAT16_VALUE, legate::float16());
   check_type(COMPLEX_FLOAT_VALUE, legate::complex64());
   check_type(COMPLEX_DOUBLE_VALUE, legate::complex128());
+  check_type(SmallEnumType::FOO, legate::uint8());
+  check_type(BigEnumType::BAR, legate::int64());
 }
 
 TEST_F(ScalarUnit, CreateWithBinaryTypePadding)
