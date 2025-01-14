@@ -1,5 +1,5 @@
 #=============================================================================
-# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
 # NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -274,6 +274,7 @@ list(APPEND
      legate/cuda/detail/cuda_driver_api.cc
      legate/cuda/detail/module_manager.cc
      legate/data/allocator.cc
+     legate/data/buffer.cc
      legate/data/external_allocation.cc
      legate/data/logical_array.cc
      legate/data/logical_store.cc

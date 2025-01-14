@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -28,6 +28,12 @@
  */
 
 namespace legate {
+
+namespace detail {
+
+void check_alignment(std::size_t alignment);
+
+}  // namespace detail
 
 /**
  * @addtogroup data
@@ -87,6 +93,7 @@ template <typename VAL, std::int32_t DIM>
                                              std::size_t alignment = DEFAULT_ALIGNMENT)
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
+  detail::check_alignment(alignment);
 
   if (Memory::Kind::NO_MEMKIND == kind) {
     kind = find_memory_kind_for_executing_processor(false);

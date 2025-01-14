@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  * SPDX-License-Identifier: LicenseRef-NvidiaProprietary
  *
  * NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
@@ -53,9 +53,12 @@ class BufferFn {
   }
 };
 
-struct BufferTask : public legate::LegateTask<BufferTask> {
+class BufferTask : public legate::LegateTask<BufferTask> {
+ public:
   static constexpr auto TASK_ID = legate::LocalTaskID{0};
+
   static void cpu_variant(legate::TaskContext context);
+
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
@@ -123,23 +126,25 @@ TEST_P(BufferTaskTest, CreateBuffer)
   test_buffer(dim, bytes, memtype, alignment);
 }
 
-TEST_F(BufferUnit, BytesNegativeTest)
+TEST_F(BufferUnit, Size)
 {
-  // TODO(joyshennv): issue #1334
-  // ASSERT_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
-  //         legate::Point<1>(-1), legate::Memory::SYSTEM_MEM, 16)), std::runtime_error);
+  ASSERT_NO_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
+    legate::Point<1>{-1}, legate::Memory::SYSTEM_MEM, alignof(std::max_align_t))));
+  ASSERT_NO_THROW(
+    static_cast<void>(legate::create_buffer<std::uint64_t>(0, legate::Memory::SYSTEM_MEM)));
 }
 
-TEST_F(BufferUnit, AlignmentNegativeTest)
+TEST_F(BufferUnit, BadAlignment)
 {
-  // TODO(joyshennv): issue #1334
-  // ASSERT_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
-  //         ALLOCATE_BYTES, legate::Memory::SYSTEM_MEM, -1)), std::runtime_error);
-
-  // ASSERT_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
-  //         ALLOCATE_BYTES, legate::Memory::SYSTEM_MEM, 3)), std::runtime_error);
-
-  // ASSERT_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
-  //         ALLOCATE_BYTES, legate::Memory::SYSTEM_MEM, 0)), std::runtime_error);
+  ASSERT_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
+                 ALLOCATE_BYTES, legate::Memory::SYSTEM_MEM, -1)),
+               std::domain_error);
+  ASSERT_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
+                 ALLOCATE_BYTES, legate::Memory::SYSTEM_MEM, 3)),
+               std::domain_error);
+  ASSERT_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
+                 ALLOCATE_BYTES, legate::Memory::SYSTEM_MEM, 0)),
+               std::domain_error);
 }
+
 }  // namespace buffer_test
