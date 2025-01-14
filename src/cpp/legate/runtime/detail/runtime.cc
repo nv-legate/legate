@@ -270,8 +270,8 @@ void Runtime::initialize(Legion::Context legion_context)
 
   initialized_    = true;
   legion_context_ = std::move(legion_context);
-  cu_driver_.emplace();
-  cu_mod_manager_.emplace();
+  cu_driver_      = make_internal_shared<cuda::detail::CUDADriverAPI>();
+  cu_mod_manager_.emplace(cu_driver_);
   comm::coll::init();
   field_manager_ = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
                                               : std::make_unique<FieldManager>();
@@ -521,6 +521,14 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
   if (submitted->needs_flush() || operations_.size() >= window_size_) {
     flush_scheduling_window();
   }
+}
+
+/*static*/ void Runtime::launch_immediately(const InternalSharedPtr<Operation>& op)
+{
+  // This function shouldn't be called if the operation needs to go through the full pipeline
+  LEGATE_ASSERT(!op->needs_partitioning());
+
+  op->launch();
 }
 
 void Runtime::schedule_(std::vector<InternalSharedPtr<Operation>>&& operations)
@@ -1149,7 +1157,9 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
 
   task->add_input(create_store_partition(store, partition, std::nullopt), std::nullopt);
   task->add_output(output);
-  submit(std::move(task));
+  // Directly launch the partitioning task, instead of going through the scheduling pipeline,
+  // because this function is invoked only when the partition is immediately needed.
+  launch_immediately(std::move(task));
 
   auto domains     = output->get_future_map();
   auto color_space = find_or_create_index_space(launch_domain);
@@ -2028,13 +2038,7 @@ CUstream Runtime::get_cuda_stream() const
   return nullptr;
 }
 
-const cuda::detail::CUDADriverAPI* Runtime::get_cuda_driver_api()
-{
-  // This needs to be initialized in a thread-safe manner, so we do it in
-  // Runtime::initialize(). Hence, we want this to throw if it is accessed before then, because
-  // we can't guarantee it's threadsafe (and don't want to wrap this in some kind of mutex...).
-  return &cu_driver_.value();  // NOLINT(bugprone-unchecked-optional-access)
-}
+const cuda::detail::CUDADriverAPI* Runtime::get_cuda_driver_api() { return cu_driver_.get(); }
 
 cuda::detail::CUDAModuleManager* Runtime::get_cuda_module_manager()
 {

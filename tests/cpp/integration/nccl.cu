@@ -37,8 +37,9 @@ constexpr std::size_t SIZE = 100;
   } while (0)
 
 struct NCCLTester : public legate::LegateTask<NCCLTester> {
-  static constexpr auto TASK_ID             = legate::LocalTaskID{0};
-  static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static constexpr auto GPU_VARIANT_OPTIONS =
+    legate::VariantOptions{}.with_concurrent(true).with_has_allocations(true);
 
   static void gpu_variant(legate::TaskContext context)
   {

@@ -32,12 +32,15 @@ std::unordered_map<const void*, CUlibrary>& CUDAModuleManager::libraries_() noex
 
 // ==========================================================================================
 
+CUDAModuleManager::CUDAModuleManager(InternalSharedPtr<CUDADriverAPI> driver_api)
+  : driver_api_{std::move(driver_api)}
+{
+}
+
 CUDAModuleManager::~CUDAModuleManager() noexcept
 {
-  const auto* api = legate::detail::Runtime::get_runtime()->get_cuda_driver_api();
-
   for (auto&& [_, cu_lib] : libraries_()) {
-    api->library_unload(&cu_lib);
+    driver_api_->library_unload(&cu_lib);
   }
 }
 

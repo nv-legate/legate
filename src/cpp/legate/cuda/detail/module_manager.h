@@ -13,6 +13,7 @@
 #pragma once
 
 #include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>
 
 #include <mutex>
@@ -23,6 +24,7 @@ namespace legate::cuda::detail {
 
 class CUDAModuleManager {
  public:
+  explicit CUDAModuleManager(InternalSharedPtr<CUDADriverAPI> driver_api);
   ~CUDAModuleManager() noexcept;
 
   [[nodiscard]] static const std::pair<Span<CUjit_option>, Span<void*>>& default_jit_options();
@@ -42,6 +44,12 @@ class CUDAModuleManager {
 
   std::mutex mut_{};
   std::unordered_map<const void*, CUlibrary> libs_{};
+  // Holding a reference to the CUDADriverAPI object here to keep it alive, instead of accessing it
+  // through the runtime, for the following reason: when the program aborts before legate::finish is
+  // invoked, the destructor of CUDAModuleManager is called as part of tearing down the singleton
+  // Runtime object, and inside the destructor, calling Runtime::get_runtime would try to
+  // reinitialized the Runtime, as RuntimeManager::rt_ had already been reset by the destructor.
+  InternalSharedPtr<CUDADriverAPI> driver_api_{};
 };
 
 }  // namespace legate::cuda::detail

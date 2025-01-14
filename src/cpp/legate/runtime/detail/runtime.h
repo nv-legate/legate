@@ -134,6 +134,7 @@ class Runtime {
                    std::int32_t radix);
   void flush_scheduling_window();
   void submit(InternalSharedPtr<Operation> op);
+  static void launch_immediately(const InternalSharedPtr<Operation>& op);
   void concurrent_task_barrier();
 
   [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(const InternalSharedPtr<Shape>& shape,
@@ -442,7 +443,7 @@ class Runtime {
 
   std::optional<MapperManager> mapper_manager_{};
 
-  std::optional<cuda::detail::CUDADriverAPI> cu_driver_{};
+  InternalSharedPtr<cuda::detail::CUDADriverAPI> cu_driver_{};
   std::optional<cuda::detail::CUDAModuleManager> cu_mod_manager_{};
 };
 
