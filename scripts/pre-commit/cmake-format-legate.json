@@ -208,6 +208,7 @@
             },
             "legate_configure_test": {
                 "kwargs": {
+                    "ADDITIONAL_TARGETS": "+",
                     "GPUS": 1,
                     "NAME": 1,
                     "PERCENT": 1,

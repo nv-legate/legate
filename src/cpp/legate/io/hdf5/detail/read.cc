@@ -16,15 +16,11 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/type_info.h>  // for Type::Code formatter
 #include <legate/type/type_traits.h>
-#include <legate/utilities/abort.h>
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <highfive/H5File.hpp>
-#include <highfive/H5PropertyList.hpp>
-
-#include <hdf5.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -37,26 +33,32 @@ namespace legate::io::hdf5::detail {
 
 namespace {
 
-template <typename T>
 void read_hdf5_file(const HDF5GlobalLock&,
                     const HighFive::DataSet& dataset,
-                    T* dst,
                     const std::vector<std::size_t>& offset,
-                    const std::vector<std::size_t>& count)
+                    const std::vector<std::size_t>& count,
+                    void* dst)
 {
   auto&& dspace = dataset.getSpace();
+  // Re-use the datatype that we get from the dataset. In this case, HDF5 will simply believe
+  // that `dst` points to what we claim it does.
+  //
+  // We do this because we have already selected the appropriate datatype while launching the
+  // task, so we don't want HDF5 to get too fancy on us. For example, when the data is stored
+  // as OPAQUE, we try to read it as std::byte. In this case HDF5 would complain because it (by
+  // design) does not know how to convert OPAQUE to std::byte, but we know that this is in fact
+  // the right type to read with.
+  auto&& dtype = dataset.getDataType();
 
   // Handle scalar & null dataspaces
   if (0 == dspace.getNumberDimensions()) {
     // Scalar
     if (1 == dspace.getElementCount()) {
-      dataset.read_raw(dst);
+      dataset.read_raw(dst, dtype);
     }
   } else {
     // Read selected part of the hdf5 file
-    auto&& src = dataset.select(offset, count);
-
-    src.read_raw(dst);
+    dataset.select(offset, count).read_raw(dst, dtype);
   }
 }
 
@@ -78,9 +80,14 @@ class HDF5ReadFn {
   template <legate::Type::Code CODE,
             std::int32_t DIM,
             std::enable_if_t<IS_SUPPORTED<CODE>>* = nullptr>  // NOLINT(google-readability-casting)
-  void operator()(const legate::TaskContext& context, legate::PhysicalStore* store, bool is_device)
+  void operator()(const legate::TaskContext& context,
+                  legate::PhysicalStore* store,
+                  bool is_device) const
   {
-    using DTYPE = legate::type_of_t<CODE>;
+    // TODO(jfaibussowit)
+    // Remove this once binary type access is merged
+    using DTYPE =
+      std::conditional_t<CODE == Type::Code::BINARY, std::byte, legate::type_of_t<CODE>>;
 
     auto&& shape = store->shape<DIM>();
 
@@ -102,30 +109,37 @@ class HDF5ReadFn {
 
     const auto gds_on = legate::detail::LEGATE_IO_USE_VFD_GDS.get().value_or(false);
 
-    auto&& filepath     = context.scalar(0).value<std::string>();
-    auto&& dataset_name = context.scalar(1).value<std::string>();
-    auto* dst           = store->write_accessor<DTYPE, DIM>().ptr(shape);
+    const auto filepath     = context.scalar(0).value<std::string_view>();
+    const auto dataset_name = context.scalar(1).value<std::string_view>();
+    auto* dst               = store
+                  ->write_accessor<DTYPE,
+                                   DIM,
+                                   // TODO(jfaibussowit)
+                                   // Remove this once binary type access is merged
+                                   /* VALIDATE_TYPE */ CODE != Type::Code::BINARY>()
+                  .ptr(shape);
 
     // Open selected part of the hdf5 file
-    const auto f       = open_hdf5_file({}, filepath, gds_on);
-    const auto dataset = f.getDataSet(dataset_name);
+    const auto f       = open_hdf5_file({}, std::string{filepath}, gds_on);
+    const auto dataset = f.getDataSet(std::string{dataset_name});
 
     if (is_device) {
       if (gds_on) {
-        read_hdf5_file({}, dataset, dst, offset, count);
+        read_hdf5_file({}, dataset, offset, count, dst);
       } else {
         // Otherwise, we read into a bounce buffer
         auto bounce_buffer = create_buffer<DTYPE>(total_count, Memory::Z_COPY_MEM);
+        auto* ptr          = bounce_buffer.ptr(0);
         auto stream        = context.get_task_stream();
 
-        read_hdf5_file({}, dataset, bounce_buffer.ptr(0), offset, count);
+        read_hdf5_file({}, dataset, offset, count, ptr);
         // And then copy from the bounce buffer to the GPU
         legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->mem_cpy_async(
-          dst, bounce_buffer.ptr(0), shape.volume() * sizeof(DTYPE), stream);
+          dst, ptr, shape.volume() * sizeof(DTYPE), stream);
       }
     } else {
       // When running on a CPU, we read directly into the destination memory
-      read_hdf5_file({}, dataset, dst, offset, count);
+      read_hdf5_file({}, dataset, offset, count, dst);
     }
   }
 
@@ -141,11 +155,44 @@ class HDF5ReadFn {
  private:
 };
 
+// TODO(jfaibussowit)
+// Remove this and merge https://github.com/nv-legate/legate.internal/pull/1604
+template <std::int32_t DIM>
+class TypeDispatcher : public legate::detail::InnerTypeDispatchFn<DIM> {
+ public:
+  using base = legate::detail::InnerTypeDispatchFn<DIM>;
+
+  template <typename Functor, typename... Fnargs>
+  constexpr decltype(auto) operator()(legate::Type::Code code, Functor&& f, Fnargs&&... args)
+  {
+    if (code == legate::Type::Code::BINARY) {
+      return f.template operator()<legate::Type::Code::BINARY, DIM>(std::forward<Fnargs>(args)...);
+    }
+    return static_cast<base&>(*this)(code, std::forward<Functor>(f), std::forward<Fnargs>(args)...);
+  }
+};
+
 void task_body(const legate::TaskContext& context, bool is_device)
 {
   auto store = context.output(0).data();
 
-  legate::double_dispatch(store.dim(), store.code(), HDF5ReadFn{}, context, &store, is_device);
+  // The below is just an unrolled
+  //
+  // legate::double_dispatch(store.dim(), store.code(), HDF5ReadFn{}, context, &store,
+  // is_device);
+  //
+  // because  double_dispatch() does not support Type::Code::BINARY yet, and it won't until
+  // https://github.com/nv-legate/legate.internal/pull/1604 is resolved/merged. This cludge was
+  // done for the 25.01 release.
+
+#define TYPE_DISPATCH(__dim__) \
+  case __dim__:                \
+    return TypeDispatcher<__dim__>{}(store.code(), HDF5ReadFn{}, context, &store, is_device);
+
+  switch (const auto dim = store.dim()) {
+    LEGION_FOREACH_N(TYPE_DISPATCH);
+    default: legate::detail::throw_unsupported_dim(dim);
+  }
 }
 
 }  // namespace

@@ -34,7 +34,7 @@ set(unique_src "")
 function(legate_configure_test)
   set(options)
   set(one_value NAME GPUS PERCENT)
-  set(multi_value SOURCES)
+  set(multi_value SOURCES ADDITIONAL_TARGETS)
   cmake_parse_arguments(_LEGATE_TEST "${options}" "${one_value}" "${multi_value}" ${ARGN})
 
   if(NOT _LEGATE_TEST_NAME)
@@ -72,7 +72,8 @@ function(legate_configure_test)
                                 # This is not done automatically for us, since fmt is a
                                 # PRIVATE dependency of legate (as it is not found in any
                                 # public includes).
-                                fmt::fmt-header-only)
+                                fmt::fmt-header-only
+                                ${_LEGATE_TEST_ADDITIONAL_TARGETS})
 
   if(Legion_USE_CUDA)
     target_link_libraries(${_LEGATE_TEST_NAME} PRIVATE NCCL::NCCL)
@@ -80,6 +81,24 @@ function(legate_configure_test)
 
   legate_add_target_compile_option(${_LEGATE_TEST_NAME} CXX PRIVATE legate_CXX_OPTIONS)
   legate_add_target_compile_option(${_LEGATE_TEST_NAME} CUDA PRIVATE legate_CUDA_OPTIONS)
+
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # In classic conda fashion, it sets a bunch of environment variables for you but as
+    # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE
+    # because GCC and clang error with:
+    #
+    # cmake-format: off
+    # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
+    # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+    # [-Werror=cpp]
+    # 330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+    #     |    ^~~~~~~
+    # cmake-format: on
+    #
+    # Thanks conda, such a great help!
+    list(APPEND legate_CXX_FLAGS -U_FORTIFY_SOURCE)
+    list(APPEND legate_CUDA_FLAGS -U_FORTIFY_SOURCE)
+  endif()
 
   legate_add_target_compile_option(${_LEGATE_TEST_NAME} CXX PRIVATE legate_CXX_FLAGS)
   legate_add_target_compile_option(${_LEGATE_TEST_NAME} CUDA PRIVATE legate_CUDA_FLAGS)
@@ -243,6 +262,7 @@ set(with_runtime_SRC
     unit/type/struct_type.cc
     unit/type/type_features.cc
     unit/type/type_traits.cc
+    unit/io/hdf5/read.cc
     # experimental
     experimental/stl/elementwise.cc
     experimental/stl/fill.cc
@@ -288,7 +308,8 @@ set(non_reentrant_wo_runtime_SRC
     non_reentrant/wo_runtime/exception/terminate_handler.cc)
 
 legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
-                                                      ${with_runtime_SRC})
+                                                      ${with_runtime_SRC}
+                      ADDITIONAL_TARGETS HighFive::HighFive)
 legate_configure_test(NAME tests_wo_runtime SOURCES main_wo_runtime_init.cc
                                                     ${wo_runtime_SRC})
 legate_configure_test(NAME tests_non_reentrant_with_runtime
@@ -299,9 +320,11 @@ legate_configure_test(NAME tests_non_reentrant_wo_runtime
 if(Legion_USE_CUDA)
   set(gpu_SRC integration/nccl.cu)
 
-  legate_configure_test(NAME tests_with_gpus SOURCES main_with_runtime_init.cc
-                                                     ${with_runtime_SRC} ${gpu_SRC} GPUS 1
-                        PERCENT 30)
+  legate_configure_test(NAME tests_with_gpus
+                        SOURCES main_with_runtime_init.cc ${with_runtime_SRC} ${gpu_SRC}
+                        GPUS 1
+                        PERCENT 30
+                        ADDITIONAL_TARGETS HighFive::HighFive)
 endif()
 
 rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing

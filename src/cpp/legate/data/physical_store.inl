@@ -290,12 +290,9 @@ void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents)
 template <typename T>
 void PhysicalStore::check_accessor_type_() const
 {
-  constexpr auto in_type = type_code_of_v<T>;
-
-  if (in_type == this->code()) {
-    return;
+  if (constexpr auto in_type = type_code_of_v<T>; in_type != code()) {
+    check_accessor_type_(in_type, sizeof(T));
   }
-  check_accessor_type_(in_type, sizeof(T));
 }
 
 template <typename ACC, typename T, std::int32_t DIM>

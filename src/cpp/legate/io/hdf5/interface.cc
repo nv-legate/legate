@@ -84,7 +84,8 @@ namespace {
             fmt::format("unhandled floating point size: {}", s)};
       }
     }
-    case HighFive::DataTypeClass::BitField:
+    case HighFive::DataTypeClass::BitField: [[fallthrough]];
+    case HighFive::DataTypeClass::Opaque:
       return legate::binary_type(static_cast<std::uint32_t>(dtype.getSize()));
     case HighFive::DataTypeClass::String: return legate::string_type();
     case HighFive::DataTypeClass::Invalid: return legate::null_type();
