@@ -29,7 +29,7 @@ class TaskReturn {
   void pack(void* buffer) const;
 
   // Calls the Legion postamble with an instance that packs all return values
-  void finalize(Legion::Context legion_context) const;
+  void finalize(Legion::Context legion_context, bool skip_device_ctx_sync) const;
 
  private:
   std::vector<ReturnValue> return_values_{};

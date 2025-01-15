@@ -59,7 +59,7 @@ void TaskReturn::pack(void* buffer) const
   }
 }
 
-void TaskReturn::finalize(Legion::Context legion_context) const
+void TaskReturn::finalize(Legion::Context legion_context, bool skip_device_ctx_sync) const
 {
   if (return_values_.empty()) {
     Legion::Runtime::legion_task_postamble(legion_context);
@@ -70,14 +70,16 @@ void TaskReturn::finalize(Legion::Context legion_context) const
     return;
   }
 
-  auto* runtime   = detail::Runtime::get_runtime();
-  const auto kind = runtime->get_executing_processor().kind();
-  // FIXME: We don't currently have a good way to defer the return value packing on GPUs,
-  //        as doing so would require the packing to be chained up with all preceding kernels,
-  //        potentially launched with different streams, within the task. Until we find
-  //        the right approach, we simply synchronize the device before proceeding.
-  if (kind == Processor::TOC_PROC) {
-    runtime->get_cuda_driver_api()->ctx_synchronize();
+  if (!skip_device_ctx_sync) {
+    auto* runtime   = detail::Runtime::get_runtime();
+    const auto kind = runtime->get_executing_processor().kind();
+    // FIXME: We don't currently have a good way to defer the return value packing on GPUs,
+    //        as doing so would require the packing to be chained up with all preceding kernels,
+    //        potentially launched with different streams, within the task. Until we find
+    //        the right approach, we simply synchronize the device before proceeding.
+    if (kind == Processor::TOC_PROC) {
+      runtime->get_cuda_driver_api()->ctx_synchronize();
+    }
   }
 
   auto return_buffer = Legion::UntypedDeferredValue{buffer_size(),

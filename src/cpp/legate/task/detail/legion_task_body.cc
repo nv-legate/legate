@@ -75,11 +75,12 @@ namespace {
   // when the number of subregions isn't a multiple of the chosen radix.
   // To simplify the programming mode, we filter out those "invalid" stores out.
   if (task->tag == static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)) {
-    ret.inputs.erase(
-      std::remove_if(ret.inputs.begin(),
-                     ret.inputs.end(),
-                     [](const InternalSharedPtr<PhysicalArray>& inp) { return !inp->valid(); }),
-      ret.inputs.end());
+    constexpr auto is_invalid_array = [](const InternalSharedPtr<PhysicalArray>& inp) {
+      return !inp->valid();
+    };
+
+    ret.inputs.erase(std::remove_if(ret.inputs.begin(), ret.inputs.end(), is_invalid_array),
+                     ret.inputs.end());
   }
 
   // CUDA drivers < 520 have a bug that causes deadlock under certain circumstances
@@ -105,11 +106,12 @@ LegionTaskContext::LegionTaskContext(const Legion::Task* legion_task,
     machine_{std::move(machine)}
 {
   // If the task is running on a GPU, AND there is at least one scalar store for reduction,
-  // then we need to wait for all the host-to-device copies for initialization to finish.
+  // then we need to wait for all the host-to-device copies for initialization to finish,
+  // UNLESS the user has promised to use the task stream. In that case we can skip this sync.
   constexpr auto is_scalar_store = [](const InternalSharedPtr<PhysicalArray>& array) {
     return array->data()->is_future();
   };
-  if (LEGATE_DEFINED(LEGATE_USE_CUDA) &&
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA) && !can_elide_device_ctx_sync() &&
       (legion_task_().current_proc.kind() == Processor::Kind::TOC_PROC) &&
       std::any_of(reductions().begin(), reductions().end(), is_scalar_store)) {
     Runtime::get_runtime()->get_cuda_driver_api()->ctx_synchronize();
@@ -233,7 +235,7 @@ void legion_task_body(VariantImpl variant_impl,
   const auto return_values = legion_task_ctx.pack_return_values(exception);
 
   // Legion postamble
-  return_values.finalize(legion_context);
+  return_values.finalize(legion_context, legion_task_ctx.can_elide_device_ctx_sync());
 }
 
 }  // namespace legate::detail
