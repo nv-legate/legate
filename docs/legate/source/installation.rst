@@ -108,39 +108,94 @@ you will need to compile and install the Legate MPI wrapper locally on your
 machine. See :ref:`FAQ<mpi_wrapper_faq>` for more information on why this is
 needed.
 
-Assuming Legate is installed to a directory called ``INSTALL_PREFIX``, to build
-and install the wrappers simply run the following:
+Assume Legate is already installed in a conda environment named ``myenv``. We
+need to activate this environment and install the wrapper packages that contain
+the scripts necessary to build the wrappers (note the custom channel
+``legate/label/gex`` in the install command):
 
 .. code-block:: sh
 
-   $ INSTALL_PREFIX/share/legate/mpi_wrapper/install.bash
+    $ conda activate myenv
+    $ conda install -c conda-forge -c legate/label/gex legate-mpi-wrapper
 
-This command will build and install the MPI wrappers to the default
-installation prefix. In order to build and install the wrappers you will
-need to have:
+When the wrapper package is installed, the instructions for building the wrapper
+are displayed:
+
+.. code-block:: sh
+
+    To finish configuring the Legate MPI wrapper, activate your environment and run /path-to-myenv/mpi-wrapper/build-mpi-wrapper.sh
+
+To build the wrapper, first activate the ``myenv`` environment:
+
+.. code-block:: sh
+
+    $ conda activate myenv
+
+
+    --------------------- CONDA/MPI_WRAPPER/ACTIVATE.SH -----------------------
+
+    LEGATE_MPI_WRAPPER=
+
+Note that when the environment is activated without the wrapper built, the
+activation script for the wrapper package sets the ``LEGATE_MPI_WRAPPER``
+environment variable to an empty value, since there is no wrapper shared library
+to find yet.
+
+After the environment is activated, we can build the MPI wrapper:
+
+.. code-block:: sh
+
+    $ /path-to-myenv/mpi-wrapper/build-mpi-wrapper.sh
+
+In order to build and install the wrapper you will need to have:
 
 - CMake (at least version 3.0).
 - A C++ compiler.
 - A local installation of MPI.
-- Write access to the installation prefix.
+- Write access to the conda environment.
 
-There are several influential environment variables that users may set in order
+You can specify a compiler to the build script using the ``-c`` option.
+Additionally, there are several environment variables that you can set in order
 to control the build and installation process:
 
 - ``CMAKE``: name or path to the ``cmake`` executable.
-- ``CMAKE_INSTALL_PREFIX``, ``PREFIX``, or ``DESTDIR``: path to which the MPI
-  wrappers should be installed. If one or more of these variables is set and
-  not empty, they are preferred in the order listed. That is,
-  ``CMAKE_INSTALL_PREFIX`` will be preferred over ``PREFIX``, which is
-  preferred over ``DESTDIR``.
-- ``CMAKE_ARGS`` or ``CMAKE_CONFIGURE_ARGS``: if set, arguments to be passed
-  to the initial CMake configure command. If both are set,
-  ``CMAKE_CONFIGURE_ARGS`` is preferred over ``CMAKE_ARGS``.
+- ``CMAKE_ARGS`` or ``CMAKE_CONFIGURE_ARGS``: if set, arguments to be passed to
+  the initial CMake configure command. If both are set, ``CMAKE_CONFIGURE_ARGS``
+  is preferred over ``CMAKE_ARGS``.
 - ``CMAKE_BUILD_ARGS``: if set, arguments to be passed to the CMake build
   command.
 - ``CMAKE_INSTALL_ARGS``: if set, arguments to be passed to the CMake install
   command.
 
+Once the wrapper is built, reactivate the environment to set the necessary
+environment variables:
+
+.. code-block:: sh
+
+    $ conda deactivate
+
+
+    --------------------- CONDA/MPI_WRAPPER/DEACTIVATE.SH -----------------------
+
+    +++ unset LEGATE_MPI_WRAPPER
+    +++ set +x
+    $ conda activate myenv
+
+
+    --------------------- CONDA/MPI_WRAPPER/ACTIVATE.SH -----------------------
+
+    LEGATE_MPI_WRAPPER=/path-to-myenv/mpi-wrapper/lib64/liblgcore_mpi_wrapper.so
+
+Note that the activation script now successfully located the MPI wrapper shared
+library.
+
+It might also be useful to remove the MPI conda package that Legate was compiled
+against (typically ``openmpi``), to make sure that there is only one choice of
+MPI to use:
+
+```
+conda uninstall --force openmpi
+```
 
 Installation of the Legate IPython Kernel
 -----------------------------------------
