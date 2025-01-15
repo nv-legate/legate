@@ -539,6 +539,7 @@ other.add_argument(
     dest="module",
     default=None,
     required=False,
+    nargs=REMAINDER,
     help="Specify a Python module to load before running. Only applicable "
     "when run mode is 'python' (i.e. when running Python scripts). "
     "[legate-only, not supported with standard Python invocation]",

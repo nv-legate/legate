@@ -630,11 +630,11 @@ class Test_cmd_module:
         assert result == ()
 
     def test_with_module(self, genobjs: GenObjs) -> None:
-        config, system, launcher = genobjs(["--module", "foo"])
+        config, system, launcher = genobjs(["--module", "bar"])
 
         result = m.cmd_module(config, system, launcher)
 
-        assert result == ("-m", "foo")
+        assert result == ("-m", "bar", "foo.py")
 
     def test_with_cprofile(self, genobjs: GenObjs) -> None:
         config, system, launcher = genobjs(["--cprofile"])
@@ -648,7 +648,7 @@ class Test_cmd_module:
         assert result == ("-m", "cProfile", "-o", log_path)
 
     def test_module_and_cprofile_error(self, genobjs: GenObjs) -> None:
-        config, system, launcher = genobjs(["--module", "foo", "--cprofile"])
+        config, system, launcher = genobjs(["--cprofile", "--module", "foo"])
 
         err = "Only one of --module or --cprofile may be used"
         with pytest.raises(ValueError, match=err):

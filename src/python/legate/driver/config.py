@@ -147,7 +147,7 @@ class Other(DataclassMixin):
     timing: bool
     wrapper: list[str]
     wrapper_inner: list[str]
-    module: str | None
+    module: list[str] | None
     dry_run: bool
     color: bool
 
@@ -225,7 +225,11 @@ class Config:
     @cached_property
     def console(self) -> bool:
         """Whether we are starting Legate as an interactive console."""
-        return self.user_program is None and self.run_mode == "python"
+        return (
+            self.user_program is None
+            and not self.other.module
+            and self.run_mode == "python"
+        )
 
     @cached_property
     def run_mode(self) -> RunMode:  # noqa: D102

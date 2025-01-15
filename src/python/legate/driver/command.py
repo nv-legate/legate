@@ -197,7 +197,7 @@ def cmd_module(
         raise ValueError(msg)
 
     if module is not None:
-        return ("-m", module)
+        return ("-m", *module)
 
     if cprofile:
         log_path = str(

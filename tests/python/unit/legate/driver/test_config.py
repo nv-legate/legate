@@ -337,6 +337,7 @@ class TestConfig:
         [],
         ["-a"],
         ["-a", "-b", "1", "--long"],
+        ["--cpus=2"],
     )
 
     @pytest.mark.parametrize("opts", USER_OPTS)
@@ -361,6 +362,8 @@ class TestConfig:
         c = m.Config(["legate", "--run-mode", "exec", "prog", *opts])
 
         assert c.user_opts == tuple(opts)
+        assert c.user_program == "prog"
+        assert c.other.module is None
         assert c.run_mode == "exec"
         assert not c.console
 
@@ -380,7 +383,9 @@ class TestConfig:
             ]
         )
 
-        assert c.user_opts == tuple(opts)
+        assert c.user_opts == ()
+        assert c.user_program is None
+        assert c.other.module == ["mod", "prog", *opts]
         assert c.run_mode == "python"
         assert not c.console
 
@@ -391,6 +396,8 @@ class TestConfig:
         c = m.Config(["legate", "--run-mode", "python", "prog", *opts])
 
         assert c.user_opts == tuple(opts)
+        assert c.user_program == "prog"
+        assert c.other.module is None
         assert c.run_mode == "python"
         assert not c.console
 
@@ -398,13 +405,17 @@ class TestConfig:
         c = m.Config(["legate", "--run-mode", "python", "--module", "mod"])
 
         assert c.user_opts == ()
+        assert c.user_program is None
+        assert c.other.module == ["mod"]
         assert c.run_mode == "python"
-        assert c.console
+        assert not c.console
 
     def test_python_run_mode_no_prog_no_module(self) -> None:
         c = m.Config(["legate", "--run-mode", "python"])
 
         assert c.user_opts == ()
+        assert c.user_program is None
+        assert c.other.module is None
         assert c.run_mode == "python"
         assert c.console
 
@@ -416,8 +427,9 @@ class TestConfig:
             ["legate", "--gpus", "2", "--module", "mod", "script.py", *opts]
         )
 
-        assert c.user_opts == tuple(opts)
-        assert c.user_program == "script.py"
+        assert c.user_opts == ()
+        assert c.user_program is None
+        assert c.other.module == ["mod", "script.py", *opts]
         assert c.run_mode == "python"
         assert not c.console
 
@@ -429,6 +441,7 @@ class TestConfig:
 
         assert c.user_opts == tuple(opts)
         assert c.user_program == "script.py"
+        assert c.other.module is None
         assert c.run_mode == "python"
         assert not c.console
 
@@ -440,8 +453,9 @@ class TestConfig:
             ["legate", "--gpus", "2", "--module", "mod", "prog", *opts]
         )
 
-        assert c.user_opts == tuple(opts)
-        assert c.user_program == "prog"
+        assert c.user_opts == ()
+        assert c.user_program is None
+        assert c.other.module == ["mod", "prog", *opts]
         assert c.run_mode == "python"
         assert not c.console
 
@@ -453,6 +467,7 @@ class TestConfig:
 
         assert c.user_opts == tuple(opts)
         assert c.user_program == "prog"
+        assert c.other.module is None
         assert c.run_mode == "exec"
         assert not c.console
 
@@ -460,13 +475,17 @@ class TestConfig:
         c = m.Config(["legate", "--module", "mod"])
 
         assert c.user_opts == ()
+        assert c.user_program is None
+        assert c.other.module == ["mod"]
         assert c.run_mode == "python"
-        assert c.console
+        assert not c.console
 
     def test_default_run_mode_no_prog_no_module(self) -> None:
         c = m.Config(["legate"])
 
         assert c.user_opts == ()
+        assert c.user_program is None
+        assert c.other.module is None
         assert c.run_mode == "python"
         assert c.console
 
