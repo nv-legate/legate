@@ -1824,9 +1824,10 @@ void BaseMapper::select_sharding_functor(Legion::Mapping::MapperContext /*ctx*/,
 
 void BaseMapper::configure_context(Legion::Mapping::MapperContext /*ctx*/,
                                    const Legion::Task& /*task*/,
-                                   ContextConfigOutput& /*output*/)
+                                   ContextConfigOutput& output)
 {
-  // Use the defaults currently
+  // Turn off the automatic tracing for now. Use the default otherwise.
+  output.auto_tracing_enabled = false;
 }
 
 void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/,
