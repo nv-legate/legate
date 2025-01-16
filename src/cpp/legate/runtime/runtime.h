@@ -56,6 +56,51 @@ class Runtime;
 }  // namespace detail
 
 /**
+ * @brief Exception thrown during Legate startup when configuration fails.
+ *
+ * This exception implies that the Legate runtime failed to start. The error behind this exception
+ * is most likely not recoverable, and restarting the Legate runtime in the same process will likely
+ * fail.
+ *
+ * The underlying issue is likely that the caller requested a resource that does not exist on the
+ * current machine, or is not supported by the current build of Legate (e.g. requested GPUs in a
+ * CPU-only build of Legate). The caller should adjust the options specified in ``LEGATE_CONFIG``
+ * before restarting the application and calling ``legate::start`` again.
+ */
+class ConfigurationError : public std::runtime_error {
+ public:
+  /**
+   * @brief Create a `ConfigurationError` with the given explanatory message.
+   *
+   * @param msg The explanatory message
+   */
+  explicit ConfigurationError(std::string_view msg);
+};
+
+/**
+ * @brief Exception thrown during Legate startup when the automatic configuration heuristics fail.
+ *
+ * This exception implies that the Legate runtime failed to start. The error behind this exception
+ * is most likely not recoverable, and restarting the Legate runtime in the same process will likely
+ * fail.
+ *
+ * The underlying issue is that Legate was unable to synthesize a suitable configuration, either
+ * because hardware detection failed, or the detected resources were not enough to compute a sane
+ * configuration. The caller should manually specify the configuration using ``LEGATE_CONFIG``,
+ * and/or disable automatic configuration altogether with ``LEGATE_AUTO_CONFIG=0``, before
+ * restarting the application and calling ``legate::start`` again.
+ */
+class AutoConfigurationError : public std::runtime_error {
+ public:
+  /**
+   * @brief Create an `AutoConfigurationError` with the given explanatory message.
+   *
+   * @param msg The explanatory message
+   */
+  explicit AutoConfigurationError(std::string_view msg);
+};
+
+/**
  * @brief Class that implements the Legate runtime
  *
  * The legate runtime provides common services, including as library registration,
@@ -690,7 +735,8 @@ start(std::int32_t argc, char* argv[]);
  * This makes the runtime ready to accept requests made via its APIs. It may be called any
  * number of times, only the first call has any effect.
  *
- * @throw std::runtime_error If the Legate runtime fails to start.
+ * @throw ConfigurationError If runtime configuration fails.
+ * @throw AutoConfigurationError If the automatic configuration heuristics fail.
  */
 void start();
 

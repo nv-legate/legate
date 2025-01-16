@@ -183,7 +183,7 @@ system memory, so there will be enough resources for both.
 Even with the above change contention remains an issue, as the processes may end
 up overlapping on their use of CPU cores. To work around this, you can
 explicitly partition CPU cores between the processes running on the same node,
-using the ``--cpus-bind`` ``legate`` option:
+using the ``--cpu-bind`` ``legate`` option:
 
 .. code-block:: sh
 

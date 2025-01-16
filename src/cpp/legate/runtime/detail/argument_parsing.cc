@@ -16,6 +16,7 @@
 
 #include "legate/mapping/detail/base_mapper.h"
 #include "legate/runtime/detail/config.h"
+#include "legate/runtime/runtime.h"
 #include "legate/utilities/detail/env.h"
 #include "legate/utilities/detail/zstring_view.h"
 #include "legate/utilities/macros.h"
@@ -192,10 +193,7 @@ void try_set_property(Realm::Runtime* runtime,
 {
   const auto value = var.value.value();
 
-  if (value < 0) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("unable to set {} to {}", var.flag, value)};
-  }
+  LEGATE_CHECK(value >= 0);
 
   auto* const config = runtime->get_module_config(module_name);
 
@@ -205,12 +203,12 @@ void try_set_property(Realm::Runtime* runtime,
       return;
     }
 
-    throw TracedException<std::runtime_error>{
-      fmt::format("unable to set {} (the {} module is not available)", var.flag, module_name)};
+    throw TracedException<ConfigurationError>{
+      fmt::format("Unable to set {} (the {} module is not available).", var.flag, module_name)};
   }
 
   if (!config->set_property(property_name, value)) {
-    throw TracedException<std::runtime_error>{fmt::format("unable to set {}", var.flag)};
+    throw TracedException<ConfigurationError>{fmt::format("Unable to set {}.", var.flag)};
   }
 }
 
@@ -230,8 +228,8 @@ void autoconfigure_gpus(const Realm::ModuleConfig* cuda, ScaledVar<std::int32_t>
   if (Config::auto_config && cuda != nullptr) {
     // use all available GPUs
     if (!cuda->get_resource("gpu", auto_gpus)) {
-      throw TracedException<std::runtime_error>{
-        "Auto-configuration failed: CUDA Realm module could not determine the number of GPUs"};
+      throw TracedException<AutoConfigurationError>{
+        "CUDA Realm module could not determine the number of GPUs."};
     }
   }  // otherwise don't allocate any GPUs
   gpus->set(auto_gpus);
@@ -255,9 +253,8 @@ void autoconfigure_fbmem(const Realm::ModuleConfig* cuda,
     std::size_t res_fbmem;
 
     if (!cuda->get_resource("fbmem", res_fbmem)) {
-      throw TracedException<std::runtime_error>{
-        "Auto-configuration failed: CUDA Realm module could not determine the available GPU "
-        "memory"};
+      throw TracedException<AutoConfigurationError>{
+        "CUDA Realm module could not determine the available GPU memory."};
     }
 
     using T = std::decay_t<decltype(*fbmem)>::value_type;
@@ -305,7 +302,7 @@ void autoconfigure_numamem(const std::vector<std::size_t>& numa_mems,
     return;
   }
 
-  if (omps <= 0 || numa_mems.empty()) {
+  if (omps <= 0 || numa_mems.empty() || omps % numa_mems.size() != 0) {
     numamem->set(0);
     return;
   }
@@ -353,14 +350,12 @@ void autoconfigure_cpus(const Realm::ModuleConfig* core,
   int res_num_cpus{};
 
   if (!core->get_resource("cpu", res_num_cpus)) {
-    throw TracedException<std::runtime_error>{
-      "Auto-configuration failed: Core Realm module could not determine the number of CPU "
-      "cores"};
+    throw TracedException<AutoConfigurationError>{
+      "Core Realm module could not determine the number of CPU cores."};
   }
   if (res_num_cpus == 0) {
-    throw TracedException<std::runtime_error>{
-      "Auto-configuration failed: Core Realm module detected 0 CPU cores while configuring "
-      "CPUs"};
+    throw TracedException<AutoConfigurationError>{
+      "Core Realm module detected 0 CPU cores while configuring CPUs."};
   }
 
   using T = std::decay_t<decltype(*cpus)>::value_type;
@@ -368,9 +363,9 @@ void autoconfigure_cpus(const Realm::ModuleConfig* core,
   const T auto_cpus = res_num_cpus - util - gpus;
 
   if (auto_cpus <= 0) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Auto-configuration failed: No CPU cores left to allocate to CPU processors. "
-                  "Have {}, but need {} for utility processors, and {} for GPU processors.",
+    throw TracedException<AutoConfigurationError>{
+      fmt::format("No CPU cores left to allocate to CPU processors. Have {}, but need {} for "
+                  "utility processors, and {} for GPU processors.",
                   res_num_cpus,
                   util,
                   gpus)};
@@ -397,9 +392,8 @@ void autoconfigure_sysmem(const Realm::ModuleConfig* core,
   std::size_t res_sysmem_size{};
 
   if (!core->get_resource("sysmem", res_sysmem_size)) {
-    throw TracedException<std::runtime_error>{
-      "Auto-configuration failed: Core Realm module could not determine the available system "
-      "memory"};
+    throw TracedException<AutoConfigurationError>{
+      "Core Realm module could not determine the available system memory."};
   }
 
   const auto auto_sysmem =
@@ -434,29 +428,28 @@ void autoconfigure_ompthreads(const Realm::ModuleConfig* core,
   int res_num_cpus{};
 
   if (!core->get_resource("cpu", res_num_cpus)) {
-    throw TracedException<std::runtime_error>{
-      "Auto-configuration failed: Core Realm module could not determine the number of CPU "
-      "cores"};
+    throw TracedException<AutoConfigurationError>{
+      "Core Realm module could not determine the number of CPU cores."};
   }
   if (res_num_cpus == 0) {
-    throw TracedException<std::runtime_error>{
-      "Auto-configuration failed: Core Realm module detected 0 CPU cores while configuring "
-      "number of OpenMP threads"};
+    throw TracedException<AutoConfigurationError>{
+      "Core Realm module detected 0 CPU cores while configuring the number of OpenMP threads."};
   }
 
   const auto auto_ompthreads =
     static_cast<T>(std::floor((res_num_cpus - cpus - util - gpus) / omps));
 
   if (auto_ompthreads <= 0) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("Auto-configuration failed: Not enough CPU cores to split across {} OpenMP "
-                  "processors. Have {}, but need {} for CPU processors, {} for utility "
-                  "processors, and {} for GPU processors.",
+    throw TracedException<AutoConfigurationError>{
+      fmt::format("Not enough CPU cores to split across {} OpenMP processor(s). Have {}, but need "
+                  "{} for CPU processors, {} for utility processors, {} for GPU processors, and at "
+                  "least {} for OpenMP processors (1 core each).",
                   omps,
                   res_num_cpus,
                   cpus,
                   util,
-                  gpus)};
+                  gpus,
+                  omps)};
   }
   ompthreads->set(auto_ompthreads);
 }
@@ -474,9 +467,7 @@ void autoconfigure(Realm::Runtime* rt,
   const auto* core = rt->get_module_config("core");
 
   // ensure core module
-  if (core == nullptr) {
-    throw TracedException<std::runtime_error>{"core module config is missing"};
-  }
+  LEGATE_CHECK(core != nullptr);
 
   const auto* cuda   = rt->get_module_config("cuda");
   const auto* openmp = rt->get_module_config("openmp");
@@ -566,10 +557,7 @@ void set_openmp_config_properties(Realm::Runtime* rt,
   if (omps.value.value() > 0) {
     const auto num_threads = ompthreads.value.value();
 
-    if (num_threads <= 0) {
-      throw TracedException<std::invalid_argument>{
-        fmt::format("{} configured with zero threads: {}", omps.flag, num_threads)};
-    }
+    LEGATE_CHECK(num_threads > 0);
     LEGATE_NEED_OPENMP.set(true);
     Config::num_omp_threads = num_threads;
   }
@@ -590,7 +578,9 @@ void set_legion_default_args(std::string log_dir,
                              bool profile,
                              bool spy,
                              bool freeze_on_error,
-                             bool log_to_file)
+                             bool log_to_file,
+                             std::int32_t omps,
+                             std::int64_t numamem)
 {
   auto log_path = normalize_log_dir(std::move(log_dir));
 
@@ -598,6 +588,16 @@ void set_legion_default_args(std::string log_dir,
 
   // some values have to be passed via env var
   args_ss << "-lg:local 0 ";
+
+  if (omps >= 1 && numamem <= 0) {
+    // Realm will try to allocate OpenMP groups in a NUMA-aligned way, even if NUMA detection
+    // failed (in which case the auto-configuration system set --numamem 0), resulting in a warning.
+    // Just tell it to not bother, so we suppress the warning.
+    // Technically speaking it might be useful to enable NUMA-aligned OpenMP group instantiation
+    // in cases where NUMA is available, but we're explicitly requesting no NUMA-aligned memory,
+    // i.e. the user set --numamem 0.
+    args_ss << "-ll:onuma 0 ";
+  }
 
   const auto add_logger = [&](std::string_view item) {
     if (!log_levels.empty()) {
@@ -814,10 +814,7 @@ void handle_legate_args()
   auto rt = Realm::Runtime::get_runtime();
 
   // ensure sensible utility
-  if (const auto nutil = util.value.value(); nutil < 1) {
-    throw TracedException<std::invalid_argument>{
-      fmt::format("{} must be at least 1 (have {})", util.flag, nutil)};
-  }
+  util.value.set(std::max(1, util.value.value()));
 
   autoconfigure(&rt, &util, &cpus, &gpus, &omps, &ompthreads, &sysmem, &fbmem, &numamem);
 
@@ -852,7 +849,9 @@ void handle_legate_args()
                           profile.value,
                           spy.value,
                           freeze_on_error.value,
-                          log_to_file.value);
+                          log_to_file.value,
+                          omps.value.value(),
+                          numamem.value.value());
 }
 
 }  // namespace legate::detail

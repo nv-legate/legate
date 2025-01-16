@@ -89,6 +89,8 @@ C++
 - Deprecate ``legate::start(argc, argv)``. Users should use the argument-less version
   ``legate::start()`` instead. The values of ``argc`` and ``argv`` were always ignored, so
   this change has no runtime effect.
+- Add exception types ``legate::ConfigurationError`` and
+  ``legate::AutoConfigurationError`` to signal Legate configuration failures.
 
 .. rubric:: Utilities
 
