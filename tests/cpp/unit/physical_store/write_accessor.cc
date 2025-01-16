@@ -21,6 +21,7 @@ namespace physical_store_write_accessor_test {
 namespace {
 
 constexpr std::uint64_t UINT64_VALUE = 1;
+constexpr float FLOAT_VALUE          = 42.0F;
 
 class WriteAccessorFn {
  public:
@@ -96,12 +97,13 @@ class Config {
   }
 };
 
-void test_write_accessor_by_task(legate::LogicalStore& logical_store)
+void test_write_accessor_by_task(legate::LogicalStore& logical_store, legate::Scalar& scalar)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(context, WriteAccessorTestTask::TASK_ID);
 
+  runtime->issue_fill(logical_store, scalar);
   task.add_output(logical_store);
   runtime->submit(std::move(task));
 }
@@ -143,27 +145,33 @@ class PhysicalStoreWriteAccessorUnit : public RegisterOnceFixture<Config> {};
 
 class BoundStoreWriteAccessorTest
   : public PhysicalStoreWriteAccessorUnit,
-    public ::testing::WithParamInterface<std::tuple<legate::Shape, legate::Type>> {};
+    public ::testing::WithParamInterface<std::tuple<legate::Shape, legate::Type, legate::Scalar>> {
+};
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-std::vector<std::tuple<legate::Shape, legate::Type>> write_accessor_cases()
+std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> write_accessor_cases()
 {
-  std::vector<std::tuple<legate::Shape, legate::Type>> cases = {
-    {legate::Shape{10}, legate::uint32()},
-    {legate::Shape{20, 10}, legate::bool_()},
-    {legate::Shape{5, 2, 4}, legate::float16()},
-    {legate::Shape{1, 10, 6, 8}, legate::float32()},
+  std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> cases = {
+    {legate::Shape{1}, legate::uint32(), legate::Scalar{std::uint32_t{1}}},
+    {legate::Shape{2, 2}, legate::bool_(), legate::Scalar{true}},
+    {legate::Shape{1, 2, 4}, legate::float16(), legate::Scalar{static_cast<__half>(FLOAT_VALUE)}},
+    {legate::Shape{1, 4, 2, 3}, legate::float32(), legate::Scalar{float{FLOAT_VALUE}}},
   };
 
 #if LEGATE_MAX_DIM >= 5
-  cases.emplace_back(legate::Shape{9, 8, 7, 6, 5}, legate::float64());
+  cases.emplace_back(
+    legate::Shape{1, 2, 5, 3, 4}, legate::float64(), legate::Scalar{double{FLOAT_VALUE}});
 #endif
 #if LEGATE_MAX_DIM >= 6
-  cases.emplace_back(legate::Shape{1, 2, 3, 4, 5, 6}, legate::complex64());
+  cases.emplace_back(legate::Shape{1, 2, 3, 4, 5, 6},
+                     legate::complex64(),
+                     legate::Scalar{complex<float>{FLOAT_VALUE, FLOAT_VALUE}});
 #endif
 #if LEGATE_MAX_DIM >= 7
-  cases.emplace_back(legate::Shape{1, 1, 1, 1, 1, 1, 1}, legate::complex128());
+  cases.emplace_back(legate::Shape{1, 1, 1, 1, 1, 1, 1},
+                     legate::complex128(),
+                     legate::Scalar{complex<double>{FLOAT_VALUE, FLOAT_VALUE}});
 #endif
 
   return cases;
@@ -186,22 +194,22 @@ std::vector<std::int32_t> generate_axes(std::uint32_t n)
 
 TEST_P(BoundStoreWriteAccessorTest, BoundStore)
 {
-  auto [shape, type] = GetParam();
-  auto runtime       = legate::Runtime::get_runtime();
-  auto logical_store = runtime->create_store(shape, type);
+  auto [shape, type, scalar] = GetParam();
+  auto runtime               = legate::Runtime::get_runtime();
+  auto logical_store         = runtime->create_store(shape, type);
 
-  test_write_accessor_by_task(logical_store);
+  test_write_accessor_by_task(logical_store, scalar);
 }
 
 TEST_P(BoundStoreWriteAccessorTest, TransformedBoundStore)
 {
-  auto [shape, type] = GetParam();
-  auto runtime       = legate::Runtime::get_runtime();
-  auto logical_store = runtime->create_store(shape, type);
-  auto axes          = generate_axes(shape.ndim());
+  auto [shape, type, scalar] = GetParam();
+  auto runtime               = legate::Runtime::get_runtime();
+  auto logical_store         = runtime->create_store(shape, type);
+  auto axes                  = generate_axes(shape.ndim());
 
   logical_store = logical_store.transpose(std::move(axes));
-  test_write_accessor_by_task(logical_store);
+  test_write_accessor_by_task(logical_store, scalar);
 }
 
 TEST_F(PhysicalStoreWriteAccessorUnit, FutureStoreWithTask)
@@ -210,7 +218,7 @@ TEST_F(PhysicalStoreWriteAccessorUnit, FutureStoreWithTask)
   auto scalar        = legate::Scalar{UINT64_VALUE};
   auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE});
 
-  test_write_accessor_by_task(logical_store);
+  test_write_accessor_by_task(logical_store, scalar);
 }
 
 TEST_F(PhysicalStoreWriteAccessorUnit, FutureStore)

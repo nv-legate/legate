@@ -21,6 +21,7 @@ namespace physical_store_reduce_accessor_test {
 namespace {
 
 constexpr std::uint64_t UINT64_VALUE = 1;
+constexpr float FLOAT_VALUE          = 99.0F;
 
 class ReduceAccessorFn {
  public:
@@ -103,12 +104,13 @@ class Config {
   }
 };
 
-void test_reduce_accessor_by_task(legate::LogicalStore& logical_store)
+void test_reduce_accessor_by_task(legate::LogicalStore& logical_store, legate::Scalar& scalar)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(context, ReduceAccessorTestTask::TASK_ID);
 
+  runtime->issue_fill(logical_store, scalar);
   task.add_reduction(logical_store, legate::ReductionOpKind::ADD);
   runtime->submit(std::move(task));
 }
@@ -151,27 +153,32 @@ class PhysicalStoreReduceAccessorUnit : public RegisterOnceFixture<Config> {};
 
 class BoundStoreReduceAccessorTest
   : public PhysicalStoreReduceAccessorUnit,
-    public ::testing::WithParamInterface<std::tuple<legate::Shape, legate::Type>> {};
+    public ::testing::WithParamInterface<std::tuple<legate::Shape, legate::Type, legate::Scalar>> {
+};
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-std::vector<std::tuple<legate::Shape, legate::Type>> reduce_accessor_cases()
+std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> reduce_accessor_cases()
 {
-  std::vector<std::tuple<legate::Shape, legate::Type>> cases = {
-    {legate::Shape{70}, legate::uint64()},
-    {legate::Shape{2, 8}, legate::bool_()},
-    {legate::Shape{1, 3, 2}, legate::int16()},
-    {legate::Shape{4, 6, 7, 8}, legate::float32()},
+  std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> cases = {
+    {legate::Shape{1}, legate::uint64(), legate::Scalar{std::uint64_t{1}}},
+    {legate::Shape{2, 2}, legate::bool_(), legate::Scalar{false}},
+    {legate::Shape{1, 3, 2}, legate::int16(), legate::Scalar{std::int16_t{1}}},
+    {legate::Shape{2, 1, 5, 3}, legate::float32(), legate::Scalar{float{FLOAT_VALUE}}},
   };
 
 #if LEGATE_MAX_DIM >= 5
-  cases.emplace_back(legate::Shape{2, 1, 7, 5, 3}, legate::float64());
+  cases.emplace_back(
+    legate::Shape{2, 1, 7, 5, 3}, legate::float64(), legate::Scalar{double{FLOAT_VALUE}});
 #endif
 #if LEGATE_MAX_DIM >= 6
-  cases.emplace_back(legate::Shape{6, 1, 4, 6, 3, 9}, legate::int32());
+  cases.emplace_back(
+    legate::Shape{6, 1, 4, 6, 3, 9}, legate::int32(), legate::Scalar{std::int32_t{2}});
 #endif
 #if LEGATE_MAX_DIM >= 7
-  cases.emplace_back(legate::Shape{5, 1, 5, 1, 6, 1, 6}, legate::complex128());
+  cases.emplace_back(legate::Shape{5, 1, 5, 1, 6, 1, 6},
+                     legate::complex128(),
+                     legate::Scalar{complex<double>{FLOAT_VALUE, FLOAT_VALUE}});
 #endif
 
   return cases;
@@ -194,22 +201,22 @@ std::vector<std::int32_t> generate_axes(std::uint32_t n)
 
 TEST_P(BoundStoreReduceAccessorTest, BoundStore)
 {
-  auto [shape, type] = GetParam();
-  auto runtime       = legate::Runtime::get_runtime();
-  auto logical_store = runtime->create_store(shape, type);
+  auto [shape, type, scalar] = GetParam();
+  auto runtime               = legate::Runtime::get_runtime();
+  auto logical_store         = runtime->create_store(shape, type);
 
-  test_reduce_accessor_by_task(logical_store);
+  test_reduce_accessor_by_task(logical_store, scalar);
 }
 
 TEST_P(BoundStoreReduceAccessorTest, TransformedBoundStore)
 {
-  auto [shape, type] = GetParam();
-  auto runtime       = legate::Runtime::get_runtime();
-  auto logical_store = runtime->create_store(shape, type);
-  auto axes          = generate_axes(shape.ndim());
+  auto [shape, type, scalar] = GetParam();
+  auto runtime               = legate::Runtime::get_runtime();
+  auto logical_store         = runtime->create_store(shape, type);
+  auto axes                  = generate_axes(shape.ndim());
 
   logical_store = logical_store.transpose(std::move(axes));
-  test_reduce_accessor_by_task(logical_store);
+  test_reduce_accessor_by_task(logical_store, scalar);
 }
 
 TEST_F(PhysicalStoreReduceAccessorUnit, FutureStoreWithTask)
@@ -218,7 +225,7 @@ TEST_F(PhysicalStoreReduceAccessorUnit, FutureStoreWithTask)
   auto scalar        = legate::Scalar{UINT64_VALUE};
   auto logical_store = runtime->create_store(legate::Scalar{UINT64_VALUE});
 
-  test_reduce_accessor_by_task(logical_store);
+  test_reduce_accessor_by_task(logical_store, scalar);
 }
 
 TEST_F(PhysicalStoreReduceAccessorUnit, FutureStore)

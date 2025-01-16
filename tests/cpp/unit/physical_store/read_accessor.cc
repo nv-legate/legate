@@ -168,19 +168,19 @@ class BoundStoreReadAccessorTest
 std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> read_accessor_cases()
 {
   std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> cases = {
-    {legate::Shape{10},
-     legate::uint32(),
-     legate::Scalar{static_cast<std::uint32_t>(100), legate::uint32()}},
-    {legate::Shape{5, 7}, legate::bool_(), legate::Scalar{true}},
-    {legate::Shape{10, 1, 30}, legate::float16(), legate::Scalar{static_cast<__half>(FLOAT_VALUE)}},
-    {legate::Shape{3, 4, 6, 8}, legate::float32(), legate::Scalar{FLOAT_VALUE}},
+    {legate::Shape{1}, legate::uint32(), legate::Scalar{std::uint32_t{100}, legate::uint32()}},
+    {legate::Shape{3, 3}, legate::bool_(), legate::Scalar{true}},
+    {legate::Shape{2, 1, 5}, legate::float16(), legate::Scalar{static_cast<__half>(FLOAT_VALUE)}},
+    {legate::Shape{3, 4, 1, 2}, legate::float32(), legate::Scalar{FLOAT_VALUE}},
   };
 
 #if LEGATE_MAX_DIM >= 5
-  cases.emplace_back(legate::Shape{9, 8, 7, 6, 5}, legate::uint64(), legate::Scalar{90UL});
+  cases.emplace_back(
+    legate::Shape{1, 2, 5, 7, 5}, legate::uint64(), legate::Scalar{std::uint64_t{90}});
 #endif
 #if LEGATE_MAX_DIM >= 6
-  cases.emplace_back(legate::Shape{1, 2, 3, 4, 5, 6}, legate::int32(), legate::Scalar{20});
+  cases.emplace_back(
+    legate::Shape{1, 2, 3, 4, 5, 6}, legate::int32(), legate::Scalar{std::int32_t{20}});
 #endif
 #if LEGATE_MAX_DIM >= 7
   cases.emplace_back(legate::Shape{1, 1, 1, 1, 1, 1, 1},
