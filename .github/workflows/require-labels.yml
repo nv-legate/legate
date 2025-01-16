@@ -8,6 +8,7 @@ concurrency:
 on:
   pull_request:
     types: [opened, labeled, unlabeled, synchronize]
+  merge_group:
 jobs:
   label:
     runs-on: ubuntu-latest
