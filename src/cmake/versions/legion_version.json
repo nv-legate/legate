@@ -24,6 +24,11 @@
                     "file": "${current_json_dir}/../patches/legion_install_include_dir.diff",
                     "fixed_in": "",
                     "issue": "legion installed include dir"
+                },
+                {
+                    "file": "${current_json_dir}/../patches/legion_install_tools_option.diff",
+                    "fixed_in": "",
+                    "issue": "legion option to install support tools"
                 }
             ],
             "version": "24.09.0"

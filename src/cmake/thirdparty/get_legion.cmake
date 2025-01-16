@@ -111,6 +111,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           # We never want local fields
                           "Legion_DEFAULT_LOCAL_FIELDS 0"
                           "Legion_HIJACK_CUDART OFF"
+                          "Legion_INSTALL_PYTHON_PROFILER OFF"
                           "CMAKE_INSTALL_BINDIR ${legate_DEP_INSTALL_BINDIR}"
                           "CMAKE_INSTALL_INCLUDEDIR ${legate_DEP_INSTALL_INCLUDEDIR}"
                           "CMAKE_INSTALL_LIBDIR ${legate_DEP_INSTALL_LIBDIR}"
