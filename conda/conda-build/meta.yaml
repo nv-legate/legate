@@ -197,7 +197,8 @@ requirements:
   # Runtime python dependencies
   run:
     - numpy {{ numpy_version }}
-    - zarr
+    # FIXME(wonchanl): Kerchunk needs to be updated for Zarr v3
+    - zarr <3
     - fsspec
     - kerchunk
     - zstd
