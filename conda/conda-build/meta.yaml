@@ -218,9 +218,7 @@ requirements:
     # depending on 'cuda-version' alone.
     - __cuda >={{ cuda_version }}
 {% endif %}
-{% if not upload_enabled_bool %}
     - rich
-{% endif %}
 
   run_constrained:
     - __glibc >=2.17  # [linux]

@@ -191,12 +191,6 @@ class Launcher:
             env["UCX_CUDA_COPY_MAX_REG_RATIO"] = "1.0"
             env["UCX_RCACHE_PURGE_ON_FORK"] = "n"
 
-            # Link to the UCX bootstrap plugin
-            env["REALM_UCP_BOOTSTRAP_PLUGIN"] = str(
-                system.legion_paths.legion_lib_path
-                / "realm_ucp_bootstrap_mpi.so"
-            )
-
         if config.multi_node.ranks > 1:
             assert "LEGATE_NEED_NETWORK" not in system.env
             env["LEGATE_NEED_NETWORK"] = "1"
