@@ -14,6 +14,7 @@ from libcpp cimport bool
 from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
+from ..mapping.mapping cimport StoreTarget
 from ..type.type_info cimport _Type
 from ..utilities.shared_ptr cimport _SharedPtr
 from ..utilities.tuple cimport _tuple
@@ -47,6 +48,7 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         ) except+
         _PhysicalStore get_physical_store() except+
         void detach()
+        void offload_to(StoreTarget) except+
         std_string to_string()
         bool equal_storage(const _LogicalStore&) const
         const _SharedPtr[_LogicalStoreImpl]& impl() const
@@ -76,6 +78,7 @@ cdef class LogicalStore(Unconstructable):
     cpdef LogicalStorePartition partition_by_tiling(self, object shape)
     cpdef PhysicalStore get_physical_store(self)
     cpdef void detach(self)
+    cpdef void offload_to(self, StoreTarget target_mem)
     cpdef bool equal_storage(self, LogicalStore other)
 
 

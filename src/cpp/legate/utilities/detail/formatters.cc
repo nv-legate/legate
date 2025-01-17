@@ -24,6 +24,7 @@
 #include "legate/utilities/macros.h"
 #include "legate/utilities/typedefs.h"
 #include <legate/mapping/detail/machine.h>
+#include <legate/mapping/mapping.h>
 #include <legate/task/task_info.h>
 
 #include <fmt/format.h>
@@ -157,6 +158,37 @@ format_context::iterator formatter<legate::mapping::detail::Machine>::format(
   const legate::mapping::detail::Machine& machine, format_context& ctx) const
 {
   return formatter<std::string>::format(machine.to_string(), ctx);
+}
+
+format_context::iterator formatter<legate::mapping::TaskTarget>::format(
+  legate::mapping::TaskTarget target, format_context& ctx) const
+{
+  string_view name = "(unknown)";
+  switch (target) {
+#define LEGATE_TASK_TARGET_CASE(x) \
+  case legate::mapping::TaskTarget::x: name = #x; break
+    LEGATE_TASK_TARGET_CASE(GPU);
+    LEGATE_TASK_TARGET_CASE(CPU);
+    LEGATE_TASK_TARGET_CASE(OMP);
+#undef LEGATE_TASK_TARGET_CASE
+  }
+  return formatter<string_view>::format(name, ctx);
+}
+
+format_context::iterator formatter<legate::mapping::StoreTarget>::format(
+  legate::mapping::StoreTarget target, format_context& ctx) const
+{
+  string_view name = "(unknown)";
+  switch (target) {
+#define LEGATE_STORE_TARGET_CASE(x) \
+  case legate::mapping::StoreTarget::x: name = #x; break
+    LEGATE_STORE_TARGET_CASE(FBMEM);
+    LEGATE_STORE_TARGET_CASE(ZCMEM);
+    LEGATE_STORE_TARGET_CASE(SYSMEM);
+    LEGATE_STORE_TARGET_CASE(SOCKETMEM);
+#undef LEGATE_STORE_TARGET_CASE
+  }
+  return formatter<string_view>::format(name, ctx);
 }
 
 }  // namespace fmt

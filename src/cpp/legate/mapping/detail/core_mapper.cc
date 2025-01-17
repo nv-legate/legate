@@ -13,6 +13,7 @@
 #include "legate/mapping/detail/core_mapper.h"
 
 #include "legate/mapping/detail/machine.h"
+#include "legate/mapping/detail/mapping.h"
 #include "legate/mapping/operation.h"
 #include "legate/runtime/detail/config.h"
 #include "legate/task/variant_options.h"
@@ -43,8 +44,24 @@ class CoreMapper final : public Mapper {
 };
 
 std::vector<legate::mapping::StoreMapping> CoreMapper::store_mappings(
-  const legate::mapping::Task&, const std::vector<StoreTarget>&)
+  const legate::mapping::Task& task, const std::vector<StoreTarget>& /*options*/)
 {
+  if (task.task_id() == legate::LocalTaskID{legate::detail::CoreTask::OFFLOAD_TO}) {
+    const auto mem_target = task.scalar(0).value<StoreTarget>();
+    std::vector<mapping::StoreMapping> mappings;
+    LEGATE_ASSERT(task.num_inputs() > 0);
+    LEGATE_ASSERT(task.num_inputs() == task.num_outputs());
+    // Offload task has the same inputs as outputs so mapping
+    // just the inputs should be sufficient
+    for (std::size_t i = 0; i < task.num_inputs(); ++i) {
+      for (const auto& store : task.input(i).stores()) {
+        mappings.emplace_back(mapping::StoreMapping::default_mapping(store, mem_target));
+      }
+    }
+    LEGATE_ASSERT(!mappings.empty());
+    return mappings;
+  }
+
   return {};
 }
 

@@ -249,6 +249,44 @@ class LogicalArray {
    */
   [[nodiscard]] StringLogicalArray as_string_array() const;
 
+  /**
+   * @brief Offload array to specified target memory.
+   *
+   * @param target_mem The target memory.
+   *
+   * Copies the array to the specified memory, if necessary, and marks it as the
+   * most up-to-date copy, allowing the runtime to discard any copies in other
+   * memories.
+   *
+   * Main usage is to free up space in one kind of memory by offloading resident
+   * arrays and stores to another kind of memory. For example, after a GPU task
+   * that reads or writes to an array, users can manually free up Legate's GPU
+   * memory by offloading the array to host memory.
+   *
+   * All the stores that comprise the array are offloaded, i.e., the data store,
+   * the null mask, and child arrays, etc.
+   *
+   * Currently, the runtime does not validate if the target memory has enough
+   * capacity or free space at the point of launching or executing the offload
+   * operation. The program will most likely crash if there isn't enough space in
+   * the target memory. The user is therefore encouraged to offload to a memory
+   * type that is likely to have sufficient space.
+   *
+   * This should not be treated as a prefetch call as it offers little benefit to
+   * that end. The runtime will ensure that data for a task is resident in the
+   * required memory before the task begins executing.
+   *
+   * If this array is backed by another array, e.g., if this array is a slice
+   * or some other transform of another array, then both the arrays will be
+   * offloaded due to being backed by the same memory.
+   *
+   * @snippet unit/logical_store/offload_to.cc offload-to-host
+   *
+   * @throws std::invalid_argument If Legate was not configured to
+   * support `target_mem`.
+   */
+  void offload_to(mapping::StoreTarget target_mem) const;
+
   LogicalArray() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   explicit LogicalArray(InternalSharedPtr<detail::LogicalArray> impl);

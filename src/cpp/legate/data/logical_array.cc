@@ -14,6 +14,7 @@
 
 #include "legate/data/detail/logical_array.h"
 #include "legate/data/detail/user_storage_tracker.h"
+#include "legate/runtime/detail/runtime.h"
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>
@@ -105,6 +106,11 @@ StringLogicalArray LogicalArray::as_string_array() const
     throw detail::TracedException<std::invalid_argument>{"Array is not a string array"};
   }
   return StringLogicalArray{impl()};
+}
+
+void LogicalArray::offload_to(mapping::StoreTarget target_mem) const
+{
+  detail::Runtime::get_runtime()->offload_to(target_mem, impl());
 }
 
 LogicalArray::LogicalArray(InternalSharedPtr<detail::LogicalArray> impl)

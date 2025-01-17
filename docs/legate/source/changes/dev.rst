@@ -27,6 +27,11 @@ C++
 
 .. rubric:: Data
 
+- Add ``legate::LogicalStore::offload_to()`` and
+  ``legate::LogicalArray::offload_to()`` to allow offloading a store, or
+  an array, to a particular memory kind, such that any copies in other
+  memories are discarded.
+
 - Add ``legate::LogicalStore::reinterpret_as()`` to reinterpret the underlying buffer of a
   ``LogicalStore`` as another data-type.
 
@@ -113,6 +118,11 @@ Python
   to only the first rank (default is output for all ranks).
 
 .. rubric:: Data
+
+- Add ``legate.core.LogicalStore.offload_to()`` and
+  ``legate.core.LogicalArray.offload_to()`` to allow offloading a store, or an
+  array, to a particular memory kind, such that any copies in other memories are
+  discarded.
 
 .. rubric:: Mapping
 

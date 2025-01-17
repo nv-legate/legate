@@ -16,6 +16,7 @@ from libcpp.vector cimport vector as std_vector
 
 from ...data_interface import Field, LegateDataInterfaceItem
 
+from ..mapping.mapping cimport StoreTarget
 from ..runtime.runtime cimport get_legate_runtime
 from ..type.type_info cimport Type
 from ..utilities.unconstructable cimport Unconstructable
@@ -624,6 +625,22 @@ cdef class LogicalStore(Unconstructable):
         """
         with nogil:
             self._handle.detach()
+
+    cpdef void offload_to(self, StoreTarget target_mem):
+        r"""
+        Offload store to specified target memory. This call copies the store to
+        the specified target memory and makes the copy exclusive to that
+        memory, thus allowing the runtime to discard any other copies and make
+        space in other memories.
+
+        Parameters
+        ----------
+        target_mem : StoreTarget
+            The target memory to offload to
+
+        """
+        with nogil:
+            self._handle.offload_to(target_mem)
 
     cpdef bool equal_storage(self, LogicalStore other):
         r"""

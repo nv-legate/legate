@@ -407,6 +407,15 @@ class LogicalStore {
   void detach();
 
   /**
+   * @brief Offload store to specified target memory.
+   *
+   * @param target_mem The target memory.
+   *
+   * @see `LogicalArray::offload_to()`.
+   */
+  void offload_to(mapping::StoreTarget target_mem);
+
+  /**
    * @brief Determine whether two stores refer to the same memory.
    *
    * @param other The `LogicalStore` to compare with.

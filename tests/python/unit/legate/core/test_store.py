@@ -12,7 +12,15 @@ from __future__ import annotations
 
 import pytest
 
-from legate.core import Scalar, get_legate_runtime, types as ty
+from legate.core import (
+    Scalar,
+    StoreTarget,
+    TaskTarget,
+    VariantCode,
+    get_legate_runtime,
+    types as ty,
+)
+from legate.core.task import OutputStore, task
 
 
 class Test_store_creation:
@@ -168,6 +176,35 @@ class Test_store_invalid_transform:
         store = runtime.create_store(ty.int64)
         with pytest.raises(ValueError):  # noqa: PT011
             store.promote(1, 1)
+
+
+def get_num_gpus_() -> int:
+    machine = get_legate_runtime().get_machine()
+    return len(machine.only(TaskTarget.GPU))
+
+
+class Test_offload_to:
+    @pytest.mark.skipif(get_num_gpus_() == 0, reason="No GPUs found")
+    def test_host_offload(self) -> None:
+        runtime = get_legate_runtime()
+        # TODO(amberhassaan): This test either needs access to the amount of
+        # fbmem allotted to Legate runtime or it needs to be run with Legate
+        # configured with a known amount of fbmem so that a big enough store
+        # can be created that will necessitate offloading.
+        one_gig = 1024 * 1024 * 1024
+        shape = (4 * one_gig,)
+        # two stores too big for the GPU memory
+        store1 = runtime.create_store(dtype=ty.int8, shape=shape)
+        store2 = runtime.create_store(dtype=ty.int8, shape=shape)
+
+        # launch two tasks that access the GPU memory
+        @task(variants=(VariantCode.GPU,))
+        def task_gpu(store: OutputStore) -> None:
+            pass
+
+        task_gpu(store1)
+        store1.offload_to(StoreTarget.SYSMEM)
+        task_gpu(store2)
 
 
 if __name__ == "__main__":

@@ -50,6 +50,13 @@ using ZStringView = BasicZStringView<char, std::char_traits<char>>;
 
 }  // namespace legate::detail
 
+namespace legate::mapping {
+
+enum class TaskTarget : std::uint8_t;
+enum class StoreTarget : std::uint8_t;
+
+}  // namespace legate::mapping
+
 namespace legate::mapping::detail {
 
 class Machine;
@@ -158,6 +165,16 @@ template <>
 struct formatter<legate::mapping::detail::Machine> : formatter<std::string> {
   format_context::iterator format(const legate::mapping::detail::Machine& machine,
                                   format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::mapping::TaskTarget> : formatter<std::string_view> {
+  format_context::iterator format(legate::mapping::TaskTarget, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::mapping::StoreTarget> : formatter<std::string_view> {
+  format_context::iterator format(legate::mapping::StoreTarget target, format_context& ctx) const;
 };
 
 }  // namespace fmt

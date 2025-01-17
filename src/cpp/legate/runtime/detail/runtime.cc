@@ -47,6 +47,7 @@
 #include "legate/runtime/detail/library.h"
 #include "legate/runtime/detail/shard.h"
 #include "legate/runtime/runtime.h"
+#include "legate/runtime/scope.h"
 #include "legate/task/detail/legion_task.h"
 #include "legate/task/detail/legion_task_body.h"
 #include "legate/task/detail/task.h"
@@ -490,6 +491,63 @@ void Runtime::tree_reduce(const Library* library,
                                       std::move(machine)));
   increment_op_id_();
 }
+
+namespace {
+// OffloadTo is an empty task that runs with Read/Write permissions on its data,
+// so that the data ends up getting copied to the target memory. Additionally, we
+// modify the core-mapper to map the data to the specified target memory in
+// `Runtime::offload_to()` for this task. This invalidates any other copies of the
+// data in other memories and thus, frees up space.
+class OffloadTo : public LegateTask<OffloadTo> {
+ public:
+  static constexpr auto TASK_ID = LocalTaskID{CoreTask::OFFLOAD_TO};
+
+  // Task body left empty because there is no computation to do. This task
+  // triggers a data movement because of its R/W privileges
+  static void cpu_variant(legate::TaskContext) {}
+
+  static void gpu_variant(legate::TaskContext) {}
+
+  static void omp_variant(legate::TaskContext) {}  // namespace
+};
+
+}  // namespace
+
+void Runtime::offload_to(mapping::StoreTarget target_mem,
+                         const InternalSharedPtr<LogicalArray>& array)
+{
+  const auto target_proc = mapping::detail::get_matching_task_target(target_mem);
+
+  switch (target_proc) {
+    case mapping::TaskTarget::GPU: {
+      if constexpr (!LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+        throw TracedException<std::invalid_argument>{
+          fmt::format("Cannot offload to {} without GPU/CUDA Support", target_mem)};
+      }
+      break;
+    }
+    case mapping::TaskTarget::CPU: [[fallthrough]];
+    case mapping::TaskTarget::OMP: break;
+  }
+
+  const auto scope = legate::Scope{legate::mapping::Machine{get_machine()}.only(target_proc)};
+  auto task        = create_task(core_library(), OffloadTo::TASK_ID);
+
+  task->add_scalar_arg(legate::Scalar{target_mem}.impl());
+
+  // Ask for Read/Write privileges so that data is copied to the target_mem and
+  // invalidated in other memories if any other copies exist.
+  std::ignore = task->add_input(array);
+  std::ignore = task->add_output(array);
+
+  submit(std::move(task));
+  // A mapping fence is issued here to prevent subsequent tasks from being mapped
+  // and possibly creating new allocations on target_mem before the offload task
+  // has had a chance to run. The fence is necessary because downstream tasks may
+  // not have any data dependencies with the offload task and therefore, have no
+  // guarantees on their mapping order.
+  issue_mapping_fence();
+}  // namespace
 
 void Runtime::flush_scheduling_window()
 {
@@ -1932,6 +1990,7 @@ void register_legate_core_tasks(Library* core_lib)
   register_partitioning_tasks(core_lib);
   comm::register_tasks(core_lib);
   legate::experimental::io::detail::register_tasks();
+  OffloadTo::register_variants(legate::Library{core_lib});
 }
 
 namespace {

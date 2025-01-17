@@ -229,6 +229,7 @@ set(with_runtime_SRC
     unit/logical_store/create_store.cc
     unit/logical_store/delinearize.cc
     unit/logical_store/equal_storage.cc
+    unit/logical_store/offload_to.cc
     unit/logical_store/overlaps.cc
     unit/logical_store/partition.cc
     unit/logical_store/physical_store.cc

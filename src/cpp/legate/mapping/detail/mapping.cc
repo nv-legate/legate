@@ -39,6 +39,18 @@ TaskTarget to_target(Processor::Kind kind)
   return TaskTarget::CPU;
 }
 
+TaskTarget get_matching_task_target(StoreTarget target)
+{
+  switch (target) {
+    case StoreTarget::ZCMEM: [[fallthrough]];
+    case StoreTarget::FBMEM: return TaskTarget::GPU;
+    case StoreTarget::SOCKETMEM: return TaskTarget::OMP;
+    case StoreTarget::SYSMEM: return TaskTarget::CPU;
+  }
+  LEGATE_ABORT("Unhandled StoreTarget: ", target);
+  return TaskTarget::CPU;
+}
+
 StoreTarget to_target(Memory::Kind kind)
 {
   switch (kind) {

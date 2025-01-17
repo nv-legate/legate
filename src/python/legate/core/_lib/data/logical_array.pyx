@@ -16,6 +16,7 @@ from libcpp.vector cimport vector as std_vector
 
 from ...data_interface import Field, LegateDataInterfaceItem
 
+from ..mapping.mapping cimport StoreTarget
 from ..runtime.runtime cimport get_legate_runtime
 from ..type.type_info cimport Type
 from ..utilities.unconstructable cimport Unconstructable
@@ -475,6 +476,22 @@ cdef class LogicalArray(Unconstructable):
         :rtype: int
         """
         return <uintptr_t> &self._handle
+
+    cpdef void offload_to(self, StoreTarget target_mem):
+        r"""
+        Offload array to specified target memory. This call copies the array to
+        the specified target memory and makes the copy exclusive to that
+        memory, thus allowing the runtime to discard any other copies and make
+        space in other memories.
+
+        Parameters
+        ----------
+        target_mem : StoreTarget
+            The target memory to offload to
+
+        """
+        with nogil:
+            self._handle.offload_to(target_mem)
 
 
 cdef _LogicalArray to_cpp_logical_array(object array_or_store):

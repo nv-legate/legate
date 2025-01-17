@@ -25,6 +25,8 @@ namespace legate::mapping::detail {
 
 [[nodiscard]] TaskTarget to_target(Processor::Kind kind);
 
+[[nodiscard]] TaskTarget get_matching_task_target(StoreTarget target);
+
 [[nodiscard]] StoreTarget to_target(Memory::Kind kind);
 
 [[nodiscard]] Processor::Kind to_kind(TaskTarget target);

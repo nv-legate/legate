@@ -14,6 +14,7 @@
 
 #include "legate/data/detail/logical_store.h"
 #include "legate/data/detail/user_storage_tracker.h"
+#include "legate/data/logical_array.h"
 #include "legate/data/physical_store.h"
 
 namespace legate {
@@ -111,6 +112,12 @@ const SharedPtr<detail::LogicalStore>& LogicalStore::impl() const { return impl_
 // This method must be non-const
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::detach() { impl()->detach(); }
+
+void LogicalStore::offload_to(mapping::StoreTarget target_mem)
+{
+  const LogicalArray array{*this};
+  array.offload_to(target_mem);
+}
 
 LogicalStore::~LogicalStore() noexcept = default;
 

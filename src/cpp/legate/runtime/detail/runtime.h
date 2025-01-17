@@ -132,6 +132,10 @@ class Runtime {
                    InternalSharedPtr<LogicalStore> store,
                    InternalSharedPtr<LogicalStore> out_store,
                    std::int32_t radix);
+
+  // also used for offloading stores
+  void offload_to(mapping::StoreTarget target_mem, const InternalSharedPtr<LogicalArray>& array);
+
   void flush_scheduling_window();
   void submit(InternalSharedPtr<Operation> op);
   static void launch_immediately(const InternalSharedPtr<Operation>& op);

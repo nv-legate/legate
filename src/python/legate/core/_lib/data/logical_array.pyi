@@ -13,6 +13,7 @@ from collections.abc import Collection
 from typing import Any
 
 from ...data_interface import LegateDataInterfaceItem
+from ..mapping.mapping import StoreTarget
 from ..type.type_info import Type
 from ..utilities.unconstructable import Unconstructable
 from .logical_store import LogicalStore
@@ -65,3 +66,4 @@ class LogicalArray(Unconstructable):
     def get_physical_array(self) -> PhysicalArray: ...
     @property
     def raw_handle(self) -> int: ...
+    def offload_to(self, target_mem: StoreTarget) -> None: ...
