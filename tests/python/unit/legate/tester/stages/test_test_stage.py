@@ -90,7 +90,8 @@ class TestTestStage:
         assert "Passed 1 of 1 tests (100.0%)" in outro
         assert "2.12" in outro
 
-    def test_env(self) -> None:
+    def test_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("LEGATE_CONFIG", raising=False)
         c = Config([], project=PROJECT)
         s = FakeSystem()
         stage = MockTestStage(c, s)
@@ -125,7 +126,11 @@ class TestTestStage:
         assert env == expected
 
     @pytest.mark.parametrize("feature", defaults.FEATURES)
-    def test_env_with_custom_project(self, feature: FeatureType) -> None:
+    def test_env_with_custom_project(
+        self, feature: FeatureType, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("LEGATE_CONFIG", raising=False)
+
         class CustomProj(Project):
             def stage_env(self, feature: FeatureType) -> EnvDict:
                 return {"feature": feature}
