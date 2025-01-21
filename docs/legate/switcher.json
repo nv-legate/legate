@@ -6,8 +6,13 @@
     },
     {
         "name": "24.11",
-        "preferred": true,
         "url": "https://docs.nvidia.com/legate/24.11/",
         "version": "24.11"
+    },
+    {
+        "name": "25.01",
+        "preferred": true,
+        "url": "https://docs.nvidia.com/legate/25.01/",
+        "version": "25.01"
     }
 ]
