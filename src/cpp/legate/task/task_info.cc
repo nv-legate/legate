@@ -115,8 +115,7 @@ void TaskInfo::Impl::register_task(GlobalTaskID task_id) const
 
     registrar.add_constraint(Legion::ProcessorConstraint{VARIANT_PROC_KINDS[vid]});
     options.populate_registrar(registrar);
-    runtime->register_task_variant(
-      registrar, vinfo.code_desc, nullptr, 0, options.return_size, vid);
+    runtime->register_task_variant(registrar, vinfo.code_desc, nullptr, 0, 0, vid, false);
   }
 }
 

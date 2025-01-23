@@ -235,9 +235,9 @@ TEST_F(Library, VariantOptions)
   ASSERT_EQ(lib1.get_default_variant_options(), default_options1);
 
   const std::map<legate::VariantCode, legate::VariantOptions> default_options2 = {
-    {legate::VariantCode::CPU, legate::VariantOptions{}.with_return_size(1234)},
+    {legate::VariantCode::CPU, legate::VariantOptions{}.with_has_allocations(true)},
     {legate::VariantCode::GPU,
-     legate::VariantOptions{}.with_concurrent(true).with_return_size(7355608)}};
+     legate::VariantOptions{}.with_concurrent(true).with_elide_device_ctx_sync(true)}};
   const auto lib2 = runtime->create_library("test_library.bar", {}, nullptr, default_options2);
 
   // Creation of lib2 should not affect lib1

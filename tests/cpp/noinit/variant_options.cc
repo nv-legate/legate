@@ -23,13 +23,9 @@ TEST_F(VariantOptions, Basic)
 {
   legate::VariantOptions options;
   EXPECT_EQ(options.concurrent, false);
-  EXPECT_EQ(options.return_size, legate::LEGATE_MAX_SIZE_SCALAR_RETURN);
 
   options.with_concurrent(true);
   EXPECT_EQ(options.concurrent, true);
-
-  options.with_return_size(256);  // NOLINT(readability-magic-numbers)
-  EXPECT_EQ(options.return_size, 256);
 }
 
 }  // namespace variant_options_test

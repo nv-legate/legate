@@ -151,9 +151,9 @@ class Task {
   Task(Task&&)                 = delete;
   Task& operator=(Task&&)      = delete;
 
- private:
-  [[nodiscard]] const detail::Task* impl_() const noexcept;
+  [[nodiscard]] const detail::Task* impl() const noexcept;
 
+ private:
   const detail::Task* pimpl_{};
 };
 

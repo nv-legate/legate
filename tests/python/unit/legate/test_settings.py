@@ -32,6 +32,7 @@ _expected_settings = (
     "field_reuse_frac",
     "field_reuse_freq",
     "disable_mpi",
+    "max_exception_size",
 )
 
 ENV_HEADER = (
@@ -72,6 +73,7 @@ _settings_with_test_defaults = (
     "window_size",
     "field_reuse_frac",
     "field_reuse_freq",
+    "max_exception_size",
 )
 
 

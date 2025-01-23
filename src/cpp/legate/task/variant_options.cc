@@ -32,7 +32,10 @@ std::ostream& operator<<(std::ostream& os, const VariantOptions& options)
   if (options.has_allocations) {
     os << "has_allocations,";
   }
-  os << options.return_size << ")";
+  if (options.elide_device_ctx_sync) {
+    os << "elide_device_ctx_sync";
+  }
+  os << ")";
   return os;
 }
 

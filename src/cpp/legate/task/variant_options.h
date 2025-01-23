@@ -28,10 +28,6 @@ namespace legate {
  * @{
  */
 
-// Each scalar output store can take up to 12 bytes, so in the worst case there can be only up to
-// 341 scalar output stores.
-inline constexpr std::size_t LEGATE_MAX_SIZE_SCALAR_RETURN = 4096;
-
 /**
  * @brief A helper class for specifying variant options
  */
@@ -46,10 +42,6 @@ class VariantOptions {
    * during execution. `false` by default.
    */
   bool has_allocations{false};
-  /**
-   * @brief Maximum aggregate size for scalar output values. 4096 by default.
-   */
-  std::size_t return_size{LEGATE_MAX_SIZE_SCALAR_RETURN};
 
   /**
    * @brief Whether this variant can skip device context synchronization after completion.
@@ -74,12 +66,6 @@ class VariantOptions {
    * @param `concurrent` A new value for the `concurrent` flag
    */
   constexpr VariantOptions& with_concurrent(bool concurrent);
-  /**
-   * @brief Sets a maximum aggregate size for scalar output values
-   *
-   * @param `return_size` A new maximum aggregate size for scalar output values
-   */
-  constexpr VariantOptions& with_return_size(std::size_t return_size);
   /**
    * @brief Changes the value of the `has_allocations` flag
    *

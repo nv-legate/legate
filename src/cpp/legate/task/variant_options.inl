@@ -22,12 +22,6 @@ constexpr VariantOptions& VariantOptions::with_concurrent(bool _concurrent)
   return *this;
 }
 
-constexpr VariantOptions& VariantOptions::with_return_size(std::size_t _return_size)
-{
-  return_size = _return_size;
-  return *this;
-}
-
 constexpr VariantOptions& VariantOptions::with_has_allocations(bool _has_allocations)
 {
   has_allocations = _has_allocations;
@@ -42,8 +36,8 @@ constexpr VariantOptions& VariantOptions::with_elide_device_ctx_sync(bool elide_
 
 constexpr bool VariantOptions::operator==(const VariantOptions& other) const
 {
-  return concurrent == other.concurrent && return_size == other.return_size &&
-         has_allocations == other.has_allocations;
+  return concurrent == other.concurrent && has_allocations == other.has_allocations &&
+         elide_device_ctx_sync == other.elide_device_ctx_sync;
 }
 
 constexpr bool VariantOptions::operator!=(const VariantOptions& other) const

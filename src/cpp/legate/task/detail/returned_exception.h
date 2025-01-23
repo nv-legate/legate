@@ -70,6 +70,8 @@ class ReturnedException {
 
   [[nodiscard]] static ReturnedException construct_from_buffer(const void* buf);
 
+  [[nodiscard]] static std::uint32_t max_size();
+
  private:
   template <typename T>
   [[nodiscard]] static ReturnedException construct_specific_from_buffer_(const void* buf);

@@ -127,16 +127,11 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SHOW_PROGRESS);
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_EMPTY_TASK);
 
 /**
- * @var LEGATE_SYNC_STREAM_VIEW
+ * @var LEGATE_TEST
  *
- * @brief Instructs Legate to synchronize CUDA streams before destruction. Possible values: 0, 1.
- *
- * This variable may be enabled to debug asynchronous issues with CUDA streams. A program which
- * produces different results with this variable enabled and disabled very likely has a race
- * condition between streams. This is especially useful when combined with
- * CUDA_LAUNCH_BLOCKING.
+ * @brief Enables "testing" mode in Legate. Possible values: 0, 1.
  */
-LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SYNC_STREAM_VIEW);
+LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_TEST);
 
 /**
  * @var LEGATE_LOG_MAPPING
@@ -253,6 +248,17 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_INLINE_TASK_LAUNCH);
  * up file storage and extraction. By default, it is off.
  */
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_IO_USE_VFD_GDS);
+
+/**
+ * @var LEGATE_MAX_EXCEPTION_SIZE
+ *
+ * @brief Maximum size in bytes for exceptions that can be raised by tasks.
+ * Possible values: a 32-bit integer
+ *
+ * Legate needs an upper bound on the size of exception that can be raised by a task. By default,
+ * the maximum exception size is 4096 bytes.
+ */
+LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_MAX_EXCEPTION_SIZE);
 
 #undef LEGATE_CHECK_ENV_VAR_DOCS
 

@@ -19,6 +19,9 @@
 
 #include "legate/utilities/macros.h"
 
+#define LEGATE_MAX_EXCEPTION_SIZE_DEFAULT 4096
+#define LEGATE_MAX_EXCEPTION_SIZE_TEST 4096
+
 // 1 << 20 (need actual number for python to parse)
 #define LEGATE_MIN_GPU_CHUNK_DEFAULT 1048576
 #define LEGATE_MIN_GPU_CHUNK_TEST 2

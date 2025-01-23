@@ -14,6 +14,7 @@
 
 #include "legate/task/detail/exception.h"
 #include "legate/task/detail/returned_exception_common.h"
+#include <legate/task/detail/returned_exception.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <cstddef>
@@ -100,9 +101,18 @@ void ReturnedPythonException::legion_deserialize(const void* buffer)
 ReturnValue ReturnedPythonException::pack() const
 {
   const auto buffer_size = legion_buffer_size();
-  const auto mem_kind    = find_memory_kind_for_executing_processor();
-  auto buffer            = Legion::UntypedDeferredValue{buffer_size, mem_kind};
-  const auto acc         = AccessorWO<std::int8_t, 1>{buffer, buffer_size, false};
+
+  if (buffer_size > ReturnedException::max_size()) {
+    throw TracedException<std::runtime_error>{
+      fmt::format("The size of raised exception ({}) exceeds the maximum number of exception ({}). "
+                  "Please increase the value for LEGATE_MAX_EXCEPTION_SIZE.",
+                  buffer_size,
+                  ReturnedException::max_size())};
+  }
+
+  const auto mem_kind = find_memory_kind_for_executing_processor();
+  auto buffer         = Legion::UntypedDeferredValue{buffer_size, mem_kind};
+  const auto acc      = AccessorWO<std::int8_t, 1>{buffer, buffer_size, false};
 
   legion_serialize(acc.ptr(0));
   // No alignment for returned exceptions, as they are always memcpy-ed

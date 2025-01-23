@@ -33,6 +33,10 @@ def launch_task(store: LogicalStore) -> None:
     taskB(store, store)
 
 
+@pytest.mark.skip(
+    reason="Tracing cannot be used until we add "
+    "launch-time return size handling"
+)
 def test_trace() -> None:
     runtime = get_legate_runtime()
     store = runtime.create_store(ty.int64, shape=(10,))

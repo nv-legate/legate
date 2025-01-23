@@ -15,6 +15,8 @@
 #include "legate/runtime/detail/library.h"
 #include "legate/utilities/assert.h"
 #include "legate/utilities/detail/core_ids.h"
+#include "legate/utilities/detail/env.h"
+#include "legate/utilities/detail/env_defaults.h"
 #include "legate/utilities/detail/type_traits.h"
 
 #include <cstddef>
@@ -102,6 +104,13 @@ void ReturnedException::throw_exception()
   }
   LEGATE_ABORT("Unhandled exception kind: ", traits::detail::to_underlying(kind));
   LEGATE_UNREACHABLE();
+}
+
+/*static*/ std::uint32_t ReturnedException::max_size()
+{
+  static const auto MAX_SIZE = LEGATE_MAX_EXCEPTION_SIZE.get(LEGATE_MAX_EXCEPTION_SIZE_DEFAULT,
+                                                             LEGATE_MAX_EXCEPTION_SIZE_TEST);
+  return MAX_SIZE;
 }
 
 // ==========================================================================================

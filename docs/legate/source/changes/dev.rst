@@ -15,6 +15,9 @@ Changes: Latest Development Version
 
 .. rubric:: General
 
+- Add an environment variable ``LEGATE_MAX_EXCEPTION_SIZE`` that determines the maximum number of
+  bytes for an exception that can be raised by a task
+
 C++
 ---
 
@@ -27,6 +30,8 @@ C++
 .. rubric:: Partitioning
 
 .. rubric:: Tasks
+
+- Remove ``legate::VariantOptions::return_size``.
 
 .. rubric:: Types
 

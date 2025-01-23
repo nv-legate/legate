@@ -40,9 +40,7 @@ class Config {
   static constexpr std::string_view LIBRARY_NAME = "test_region_manager";
   static void registration_callback(legate::Library library)
   {
-    auto options =
-      legate::VariantOptions{}.with_return_size(8192);  // NOLINT(readability-magic-numbers)
-    TesterTask::register_variants(library, {{legate::VariantCode::CPU, options}});
+    TesterTask::register_variants(library);
   }
 };
 

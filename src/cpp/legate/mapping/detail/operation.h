@@ -76,6 +76,8 @@ class Task : public Mappable {
 
   [[nodiscard]] bool can_raise_exception() const;
 
+  [[nodiscard]] const Legion::Task* legion_task() const;
+
  private:
   const Legion::Task* task_{};
   legate::detail::Library* library_{};

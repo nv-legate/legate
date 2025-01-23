@@ -28,6 +28,7 @@
 #include "legate/utilities/detail/store_iterator_cache.h"
 #include "legate/utilities/detail/type_traits.h"
 #include "legate/utilities/detail/zip.h"
+#include <legate/task/detail/returned_exception.h>
 #include <legate/utilities/detail/linearize.h>
 
 #include "mappers/mapping_utilities.h"
@@ -481,11 +482,7 @@ void map_unbound_stores(const std::vector<std::unique_ptr<StoreMapping>>& mappin
   }
 }
 
-[[nodiscard]] std::size_t calculate_legate_allocation_size(Legion::Mapping::MapperRuntime* runtime,
-                                                           Legion::Mapping::MapperContext ctx,
-                                                           const Legion::Task& task,
-                                                           const Task& legate_task,
-                                                           const VariantInfo& vinfo)
+[[nodiscard]] std::size_t calculate_legate_allocation_size(const Task& legate_task)
 {
   auto&& all_arrays = {std::cref(legate_task.inputs()),
                        std::cref(legate_task.outputs()),
@@ -520,28 +517,9 @@ void map_unbound_stores(const std::vector<std::unique_ptr<StoreMapping>>& mappin
   // the pool size calculated so far to take the return buffer size into account.
   const auto size = layout.total_size() * 2;
 
-  // If the aggregate size of buffers is greater than the return size of the variant, raise an
-  // error
-  //
-  // TODO(wonchanl): the task can still exceed the return size if it has an exception string
-  // longer than the specified return size minus the space reserved for scalar returns. Currently,
-  // Legate defers the error handling to Legion in this case, but ideally Legate should handle it.
-  if (size > vinfo.options.return_size) {
-    LEGATE_ABORT(fmt::format(
-      "Necessary pool size ({} bytes) exceeds the specified return size ({} bytes) of task {}[{}]",
-      size,
-      vinfo.options.return_size,
-      Legion::Mapping::Utilities::to_string(runtime, ctx, task),
-      task.get_provenance_string()));
-  }
-
-  // If the task can raise an exception, we reserve space for the serialized exception by
-  // requesting a pool as big as the return size
-  //
-  // TODO(wonchanl): this return size business is brittle and also inscrutable for users because
-  // they don't necessarily know what constitutes the buffer returned from a variant. Legate
-  // should instead infer the right return size based on a task signature.
-  return legate_task.can_raise_exception() ? vinfo.options.return_size : size;
+  // If the task can raise an exception, we reserve extra space for the serialized exception
+  return size + (static_cast<std::size_t>(legate_task.can_raise_exception()) *
+                 legate::detail::ReturnedException::max_size());
 }
 
 void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
@@ -562,8 +540,7 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   auto&& vinfo = maybe_vinfo->get();
 
-  const auto legate_alloc_size =
-    calculate_legate_allocation_size(runtime, ctx, task, *legate_task, vinfo);
+  const auto legate_alloc_size = calculate_legate_allocation_size(*legate_task);
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     logger->debug() << "Task " << Legion::Mapping::Utilities::to_string(runtime, ctx, task)
@@ -1834,7 +1811,7 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
                                           const FutureMapReductionInput& input,
                                           FutureMapReductionOutput& output)
 {
-  output.serdez_upper_bound = LEGATE_MAX_SIZE_SCALAR_RETURN;
+  output.serdez_upper_bound = legate::detail::ReturnedException::max_size();
   auto& dest_memories       = output.destination_memories;
 
   if (local_machine_.has_gpus()) {

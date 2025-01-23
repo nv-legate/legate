@@ -195,5 +195,18 @@ class LegateRuntimeSettings(Settings):
         """,
     )
 
+    max_exception_size: EnvOnlySetting[int] = EnvOnlySetting(
+        "max_exception_size",
+        "LEGATE_MAX_EXCEPTION_SIZE",
+        default=4096,
+        test_default=4096,
+        convert=convert_int,
+        help="""
+        Maximum size in bytes for exceptions that can be raised by tasks.
+
+        This is a read-only environment variable setting used by the runtime.
+        """,
+    )
+
 
 settings = LegateRuntimeSettings()

@@ -263,8 +263,9 @@ class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
  public:
   static constexpr auto TASK_ID             = legate::LocalTaskID{0};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
-  static constexpr auto OMP_VARIANT_OPTIONS = legate::VariantOptions{}.with_return_size(4567);
-  static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_return_size(1234);
+  static constexpr auto OMP_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
+  static constexpr auto GPU_VARIANT_OPTIONS =
+    legate::VariantOptions{}.with_elide_device_ctx_sync(true);
 
   static void cpu_variant(legate::TaskContext) {}
   static void omp_variant(legate::TaskContext) {}
