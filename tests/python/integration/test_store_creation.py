@@ -37,7 +37,7 @@ class TestStoreCreation:
             store.get_physical_store().get_inline_allocation()
         )
         if isinstance(val, bytes):
-            assert arr_np.all() == arr_store.all()
+            assert (arr_np == arr_store).all()
         else:
             assert np.allclose(arr_np, arr_store)
 
@@ -61,7 +61,7 @@ class TestStoreCreation:
 
         exp = np.zeros(dtype=dtype.to_numpy_dtype(), shape=shape)
         if dtype.code == ty.TypeCode.BINARY:
-            assert arr.all() == exp.all()
+            assert (arr == exp).all()
         else:
             np.testing.assert_allclose(arr, exp)
 

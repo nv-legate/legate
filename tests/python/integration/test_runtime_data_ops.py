@@ -45,7 +45,7 @@ class TestStoreOps:
             assert out_np.all() != arr_np.all()
         runtime.issue_copy(out, store)
         if dtype.code == ty.TypeCode.BINARY:
-            assert out_np.all() == arr_np.all()
+            assert (out_np == arr_np).all()
         else:
             np.testing.assert_allclose(out_np, arr_np)
 
