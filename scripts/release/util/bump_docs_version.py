@@ -51,7 +51,10 @@ def rotate_switcher(ctx: Context) -> None:
         )
         raise ValueError(m)
 
-    if not (preferred := last_release.pop("preferred")):
+    # error: Key "preferred" of TypedDict "SwitcherData" cannot be deleted
+    #
+    # Yes it can
+    if not (preferred := last_release.pop("preferred")):  # type: ignore[misc]
         m = (
             "Last release was not preferred. Expected 'preferred': true, "
             f"found {preferred!r}"

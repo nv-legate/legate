@@ -18,19 +18,7 @@ if TYPE_CHECKING:
     from .context import Context
 
 
-def _to_full_version(version: str, *, extra_zeros: bool = False) -> str:
-    null_ver = "0"
-    if extra_zeros:
-        null_ver += "0"
-
-    tmp = version.split(".")
-    MAX_VER_LEN = 3
-    while len(tmp) < MAX_VER_LEN:
-        tmp.append(null_ver)
-    return ".".join(tmp)
-
-
-def bump_cmakelists_version(ctx: Context) -> None:
+def bump_cmakelists_version(ctx: Context, version: str) -> None:
     cmakelists = ctx.legate_dir / "src" / "CMakeLists.txt"
     ctx.vprint(f"Opening {cmakelists}")
     assert cmakelists.is_file()
@@ -50,7 +38,7 @@ def bump_cmakelists_version(ctx: Context) -> None:
         m = f"Failed to find project() call for legate in {cmakelists}"
         raise ValueError(m)
 
-    full_version = _to_full_version(ctx.release_version, extra_zeros=True)
+    full_version = ctx.to_full_version(version, extra_zeros=True)
     lines[line_idx] = re.sub(
         r"VERSION\s+\d+\.\d+\.\d+", f"VERSION {full_version}", lines[line_idx]
     )
@@ -59,7 +47,7 @@ def bump_cmakelists_version(ctx: Context) -> None:
     ctx.vprint(f"Updated {cmakelists}")
 
 
-def bump_legion_version(ctx: Context) -> None:
+def bump_legion_version(ctx: Context, version: str) -> None:
     legion_version = (
         ctx.legate_dir / "src" / "cmake" / "versions" / "legion_version.json"
     )
@@ -70,9 +58,9 @@ def bump_legion_version(ctx: Context) -> None:
 
     lg_data = data["packages"]["Legion"]
     assert "version" in lg_data
-    lg_data["version"] = _to_full_version(ctx.release_version)
+    lg_data["version"] = ctx.to_full_version(version)
 
     if not ctx.dry_run:
         with legion_version.open(mode="w") as fd:
-            json.dump(data, fd)
+            json.dump(data, fd, indent=4)
     ctx.vprint(f"Updated {legion_version}")

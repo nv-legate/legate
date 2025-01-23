@@ -91,8 +91,19 @@ class TestStoreOps:
         )
         # recreate the np arrays to get expected muliply result since the
         # stores have different shapes to the original arrays
-        arr_np = np.asarray(store.get_physical_store().get_inline_allocation())
-        out_np = np.asarray(out.get_physical_store().get_inline_allocation())
+        #
+        # Depending on the numpy version, mypy says:
+        #
+        # "ndarray[tuple[int, ...], dtype[float64]]", variable has type
+        # "ndarray[tuple[int, int], dtype[float64]]")
+        #
+        # Be quiet mypy
+        arr_np = np.asarray(  # type: ignore[assignment, unused-ignore]
+            store.get_physical_store().get_inline_allocation()
+        )
+        out_np = np.asarray(  # type: ignore[assignment, unused-ignore]
+            out.get_physical_store().get_inline_allocation()
+        )
         exp_np = arr_np * out_np
         runtime.issue_copy(out, store, ty.ReductionOpKind.MUL)
         np.testing.assert_allclose(out_np, exp_np)

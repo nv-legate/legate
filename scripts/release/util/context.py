@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Literal
 
 sys.path.append(str(Path(__file__).parents[2]))
 
-from get_legate_dir import get_legate_dir
+from get_legate_dir import get_legate_dir  # type: ignore[import-not-found]
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-Mode = Literal["pre-cut", "post-cut"]
+Mode = Literal["pre-cut", "post-cut-release-branch", "post-cut-main-branch"]
 
 
 class Context:
@@ -53,6 +53,18 @@ class Context:
     @property
     def next_version(self) -> str:
         return self._next_version
+
+    @staticmethod
+    def to_full_version(version: str, *, extra_zeros: bool = False) -> str:
+        null_ver = "0"
+        if extra_zeros:
+            null_ver += "0"
+
+        tmp = version.split(".")
+        MAX_VER_LEN = 3
+        while len(tmp) < MAX_VER_LEN:
+            tmp.append(null_ver)
+        return ".".join(tmp)
 
     @property
     def legate_dir(self) -> Path:
