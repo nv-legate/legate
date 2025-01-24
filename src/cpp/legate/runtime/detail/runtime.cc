@@ -1995,15 +1995,27 @@ void register_legate_core_tasks(Library* core_lib)
 
 namespace {
 
-#define BUILTIN_REDOP_ID(OP, TYPE_CODE)                                            \
-  static_cast<GlobalRedopID>(LEGION_REDOP_BASE +                                   \
-                             (static_cast<std::int64_t>(OP) * LEGION_TYPE_TOTAL) + \
-                             static_cast<std::int64_t>(TYPE_CODE))
+[[nodiscard]] constexpr GlobalRedopID builtin_redop_id(ReductionOpKind op, Type::Code type_code)
+{
+  return static_cast<GlobalRedopID>(
+    LEGION_REDOP_BASE +
+    // FIXME(wonchanl): It's beyond my comprehension why this issue hasn't been triggered by any of
+    // our tests until now, cause these reduction op IDs haven't changed since the beginning. In the
+    // long run, we should register these built-in operators ourselves in Legate, instead of relying
+    // on an equation that is loosely shared by Legate and Legion.
+    //
+    // We need to special-case the logical-AND reduction for booleans, as it is registered as a
+    // prod reduction on the Legion side...
+    (traits::detail::to_underlying(
+       (type_code == Type::Code::BOOL && op == ReductionOpKind::AND) ? ReductionOpKind::MUL : op) *
+     LEGION_TYPE_TOTAL) +
+    traits::detail::to_underlying(type_code));
+}
 
 #define RECORD(OP, TYPE_CODE)                           \
   PrimitiveType{TYPE_CODE}.record_reduction_operator(   \
     traits::detail::to_underlying(ReductionOpKind::OP), \
-    BUILTIN_REDOP_ID(ReductionOpKind::OP, TYPE_CODE));
+    builtin_redop_id(ReductionOpKind::OP, TYPE_CODE));
 
 #define RECORD_INT(OP)           \
   RECORD(OP, Type::Code::BOOL)   \
