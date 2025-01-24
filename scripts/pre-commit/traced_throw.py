@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -90,7 +90,7 @@ def is_ignored_exception_type(re_match: Match) -> bool:
     return re_match.group("exn_type").startswith(IGNORED_EXCEPTION_TYPES)
 
 
-def wrap_throw(re_match: Match) -> str:
+def wrap_throw(_path: Path, re_match: Match) -> str:
     if is_in_comment(re_match) or is_ignored_exception_type(re_match):
         return re_match[0]
 

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -17,7 +17,7 @@ from re import Match, Pattern, compile as re_compile
 from typing import TYPE_CHECKING, Any, Callable
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Container, Sequence
 
 
 class ReplacementError(Exception):
@@ -32,7 +32,7 @@ class Replacement:
     def __init__(
         self,
         pattern: str,
-        repl: str | Callable[[Match], str],
+        repl: str | Callable[[Path, Match], str],
         pragma_keyword: str,
         flags: int = 0,
         on_file_change: Callable[[Path, str], str] | None = None,
@@ -58,30 +58,33 @@ class Replacement:
 
     @staticmethod
     def _sanitize_repl(
-        repl: str | Callable[[Match], str],
-    ) -> Callable[[Match], str]:
+        repl: str | Callable[[Path, Match], str],
+    ) -> Callable[[Path, Match], str]:
         if callable(repl):
             return repl
 
-        def str_repl_wrap(re_match: Match) -> str:
+        def str_repl_wrap(_path: Path, re_match: Match) -> str:
             return re_match.expand(repl)
 
         return str_repl_wrap
 
     def _make_repl(
         self, repl: str | Callable[[Match], str]
-    ) -> Callable[[Match], str]:
+    ) -> Callable[[Path], Callable[[Match], str]]:
         repl = self._sanitize_repl(repl)
 
-        def repl_wrap(re_match: Match) -> str:
-            if self.is_silenced(re_match):
-                return re_match[0]
-            return repl(re_match)
+        def closure(path: Path) -> Callable[[Match], str]:
+            def repl_wrap(re_match: Match) -> str:
+                if self.is_silenced(re_match):
+                    return re_match[0]
+                return repl(path, re_match)
 
-        return repl_wrap
+            return repl_wrap
 
-    def replace(self, text: str) -> str:
-        return self.pattern.sub(self.repl, text)
+        return closure
+
+    def replace(self, path: Path, text: str) -> str:
+        return self.pattern.sub(self.repl(path), text)
 
     def is_silenced(self, re_match: Match) -> bool:
         string = re_match.string
@@ -94,8 +97,26 @@ class Replacement:
 
 
 class RegexReplacement:
+    __slots__ = (
+        "allowed_suffixes",
+        "description",
+        "dry_run",
+        "files",
+        "replacements",
+        "verbose",
+    )
+
+    class AllSuffixesImpl:
+        def __contains__(self, item: Any) -> bool:
+            return True
+
+    AllSuffixes = AllSuffixesImpl()
+
     def __init__(
-        self, description: str, replacements: Sequence[Replacement]
+        self,
+        description: str,
+        replacements: Sequence[Replacement],
+        allowed_suffixes: Container[str] | None = None,
     ) -> None:
         assert len(replacements)
         self.description = description
@@ -103,6 +124,19 @@ class RegexReplacement:
         self.files = []
         self.dry_run = False
         self.verbose = False
+        if allowed_suffixes is None:
+            allowed_suffixes = {
+                ".h",
+                ".hpp",
+                ".inl",
+                ".cc",
+                ".cpp",
+                ".cxx",
+                ".cu",
+                ".cuh",
+            }
+
+        self.allowed_suffixes = allowed_suffixes
 
     def parse_args(self) -> None:
         parser = ArgumentParser(description=self.description)
@@ -123,10 +157,9 @@ class RegexReplacement:
         )
         opts = parser.parse_args()
 
-        # convert a directory to recursive list of files, note this is a
-        # generator now
+        # convert a directory to recursive list of files
         if len(opts.files) == 1 and opts.files[0].is_dir():
-            opts.files = opts.files[0].rglob("*")
+            opts.files = list(opts.files[0].rglob("*"))
 
         self.files = opts.files
         self.dry_run = opts.dry_run
@@ -135,12 +168,17 @@ class RegexReplacement:
     def handle_file(
         self, file_path: Path
     ) -> tuple[bool, list[ReplacementError]]:
-        orig_text = file_path.read_text()
+        try:
+            orig_text = file_path.read_text()
+        except UnicodeDecodeError as e:
+            m = f"Unable to decode {file_path}"
+            raise ValueError(m) from e
+
         old_text = orig_text
         changed = False
         errors = []
         for repl in self.replacements:
-            new_text = repl.replace(old_text)
+            new_text = repl.replace(file_path, old_text)
             if new_text == old_text:
                 continue
 
@@ -174,7 +212,7 @@ class RegexReplacement:
         self.parse_args()
 
         modified = []
-        allowed_suff = {".h", ".hpp", ".inl", ".cc", ".cpp", ".cu", ".cuh"}
+        allowed_suff = self.allowed_suffixes
         ret = 0
         for file_path in self.files:
             if (file_path.suffix not in allowed_suff) or (

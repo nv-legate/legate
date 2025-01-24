@@ -36,6 +36,13 @@ repos:
         language: script
         types_or: [c++, c, cuda]
         stages: [pre-commit]
+      - id: copyright
+        name: copyright
+        description: 'Check that year is correct for copyright notices'
+        entry: ./scripts/pre-commit/copyright.py
+        language: python
+        exclude: '.*\.(png|pdf)'
+        types_or: [file, text]
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: 'v19.1.5'
     hooks:

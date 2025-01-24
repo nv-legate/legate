@@ -1,5 +1,5 @@
 # noqa: INP001
-# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES.
 #                         All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NvidiaProprietary
 #
@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import inspect
+from datetime import datetime
 from os import getenv
 from typing import Any
 
@@ -34,7 +35,7 @@ project = "NVIDIA legate"
 if "dev" in legate.__version__:
     project += f" ({legate.__version__})"
 
-copyright = "2021-2024, NVIDIA"  # noqa: A001
+copyright = f"2021-{datetime.now().year}, NVIDIA"  # noqa: A001
 author = "NVIDIA Corporation"
 
 # -- General configuration ---------------------------------------------------
