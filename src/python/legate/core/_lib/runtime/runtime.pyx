@@ -26,7 +26,8 @@ import json
 import pickle
 import sys
 from collections.abc import Collection
-from typing import Any
+from contextlib import contextmanager
+from typing import Any, Iterator
 
 from ..data.external_allocation cimport _ExternalAllocation, create_from_buffer
 from ..data.logical_array cimport (
@@ -1082,6 +1083,11 @@ cdef class Runtime(Unconstructable):
         global _shutdown_manager
         _shutdown_manager.add_shutdown_callback(callback)
 
+    cdef void start_profiling_range(self):
+        self.start_profiling_range()
+
+    cdef void stop_profiling_range(self, std_string_view provenance):
+        self.stop_profiling_range(provenance)
 
 cdef Runtime initialize():
     start()
@@ -1220,6 +1226,36 @@ cdef void _cleanup_legate_runtime():
     _runtime.finish()
     _runtime = None
     gc.collect()
+
+
+@contextmanager
+def ProfileRange(provenance: str) -> Iterator[None]:
+    r"""
+    Generate a sub-box in the profiler output.
+
+    Parameters
+    ----------
+    provenance : str
+        User-supplied provenance string to annotate the profiler output
+
+    .. code-block:: python
+
+        @task
+        def foo():
+            # do stuff
+            with ProfileRange("range1"):
+                # do stuff, to appear under a sub-box within foo's overall box
+            # do stuff
+
+    """
+    cdef std_string_view _provenance = std_string_view_from_py(
+        provenance
+    )
+    get_legate_runtime().start_profiling_range()
+    try:
+        yield
+    finally:
+        get_legate_runtime().stop_profiling_range(_provenance)
 
 
 atexit.register(_cleanup_legate_runtime)

@@ -701,6 +701,18 @@ class Runtime {
    */
   [[nodiscard]] static Runtime* get_runtime();
 
+  /**
+   * @brief Start a Legion profiling range
+   */
+  void start_profiling_range();
+
+  /**
+   * @brief Stop a Legion profiling range
+   *
+   * @param provenance User-supplied provenance string
+   */
+  void stop_profiling_range(std::string_view provenance);
+
   [[nodiscard]] detail::Runtime* impl();
 
   [[nodiscard]] const detail::Runtime* impl() const;

@@ -44,6 +44,7 @@ from ._lib.partitioning.constraint import (
 from ._lib.runtime.exception_mode import ExceptionMode
 from ._lib.runtime.library import Library
 from ._lib.runtime.runtime import (
+    ProfileRange,
     Runtime,
     get_legate_runtime,
     get_machine,

@@ -37,6 +37,14 @@ C++
 
 .. rubric:: Runtime
 
+- Deprecate ``legate::start(argc, argv)``. Users should use the argument-less version
+  ``legate::start()`` instead. The values of ``argc`` and ``argv`` were always ignored, so
+  this change has no runtime effect.
+- Add exception types ``legate::ConfigurationError`` and
+  ``legate::AutoConfigurationError`` to signal Legate configuration failures.
+- Add ``legate::Runtime::start_profiling_range`` and
+  ``legate::Runtime::stop_profiling_range`` to create Legion profile ranges.
+
 .. rubric:: Utilities
 
 .. rubric:: I/O
@@ -54,6 +62,9 @@ Python
 .. rubric:: Partitioning
 
 .. rubric:: Tasks
+
+- Add ``legate.core.ProfileRange`` context manager to activate the API for
+  generating sub-boxes on the profiler.
 
 .. rubric:: Types
 

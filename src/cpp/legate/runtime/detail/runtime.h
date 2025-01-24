@@ -139,7 +139,6 @@ class Runtime {
   void flush_scheduling_window();
   void submit(InternalSharedPtr<Operation> op);
   static void launch_immediately(const InternalSharedPtr<Operation>& op);
-  void concurrent_task_barrier();
 
   [[nodiscard]] InternalSharedPtr<LogicalArray> create_array(const InternalSharedPtr<Shape>& shape,
                                                              InternalSharedPtr<Type> type,
@@ -381,6 +380,9 @@ class Runtime {
 
   [[nodiscard]] Legion::Runtime* get_legion_runtime();
   [[nodiscard]] Legion::Context get_legion_context();
+
+  void start_profiling_range();
+  void stop_profiling_range(std::string_view provenance);
 
  private:
   static void initialize_core_library_callback_(

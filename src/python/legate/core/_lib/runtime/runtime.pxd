@@ -204,6 +204,10 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         uint32_t node_count()
         uint32_t node_id()
         _Machine get_machine() const
+
+        void start_profiling_range()
+        void stop_profiling_range(std_string_view)
+
         _RuntimeImpl* impl() const
 
         @staticmethod
@@ -307,6 +311,8 @@ cdef class Runtime(Unconstructable):
     cpdef Machine get_machine(self)
     cpdef void finish(self)
     cpdef void add_shutdown_callback(self, object callback)
+    cdef void start_profiling_range(self)
+    cdef void stop_profiling_range(self, std_string_view provenance)
 
 cdef void raise_pending_exception()
 cpdef Runtime get_legate_runtime()

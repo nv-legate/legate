@@ -1757,6 +1757,20 @@ void handle_realm_default_args()
   Runtime::get_runtime()->initialize(legion_context);
 }
 
+void Runtime::start_profiling_range()
+{
+  auto legion_runtime = get_legion_runtime();
+  auto legion_context = Legion::Runtime::get_context();
+  legion_runtime->start_profiling_range(legion_context);
+}
+
+void Runtime::stop_profiling_range(std::string_view provenance)
+{
+  auto legion_runtime = get_legion_runtime();
+  auto legion_context = Legion::Runtime::get_context();
+  legion_runtime->stop_profiling_range(legion_context, std::string{provenance}.c_str());
+}
+
 namespace {
 
 class RuntimeManager {

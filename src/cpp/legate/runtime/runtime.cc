@@ -365,6 +365,13 @@ std::optional<Runtime> the_public_runtime{};
   return &*the_public_runtime;
 }
 
+void Runtime::start_profiling_range() { impl()->start_profiling_range(); }
+
+void Runtime::stop_profiling_range(std::string_view provenance)
+{
+  impl()->stop_profiling_range(provenance);
+}
+
 void start()
 {
   if (has_started()) {

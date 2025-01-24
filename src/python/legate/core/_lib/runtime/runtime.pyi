@@ -9,7 +9,8 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Collection, Iterator
+from contextlib import contextmanager
 from typing import Any
 
 from ...utils import AnyCallable, ShutdownCallback
@@ -137,3 +138,5 @@ def track_provenance(
     nested: bool = False,
 ) -> Callable[[AnyCallable], AnyCallable]: ...
 def is_running_in_task() -> bool: ...
+@contextmanager
+def ProfileRange(provenance: str) -> Iterator[None]: ...
