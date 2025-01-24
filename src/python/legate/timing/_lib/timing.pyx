@@ -19,17 +19,20 @@ cdef class PyTime(Unconstructable):
     @staticmethod
     def measure_microseconds() -> PyTime:
         cdef PyTime result = PyTime.__new__(PyTime)
-        result._time = std_move(measure_microseconds())
+        with nogil:
+            result._time = std_move(measure_microseconds())
         return result
 
     @staticmethod
     def measure_nanoseconds() -> PyTime:
         cdef PyTime result = PyTime.__new__(PyTime)
-        result._time = std_move(measure_nanoseconds())
+        with nogil:
+            result._time = std_move(measure_nanoseconds())
         return result
 
     cpdef int64_t value(self):
-        return self._time.value()
+        with nogil:
+            return self._time.value()
 
     def __int__(self) -> int:
         return self.value()
