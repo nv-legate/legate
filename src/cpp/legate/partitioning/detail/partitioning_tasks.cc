@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/partitioning/detail/partitioning_tasks.h"
+#include <legate/partitioning/detail/partitioning_tasks.h>
 
-#include "legate/task/task_context.h"
-#include "legate/utilities/dispatch.h"
+#include <legate/task/task_context.h>
+#include <legate/utilities/dispatch.h>
 
 #include <limits>
 

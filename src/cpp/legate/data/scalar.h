@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "legate/type/type_traits.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
-#include "legate/utilities/span.h"
-#include "legate/utilities/tuple.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/type/type_traits.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/span.h>
+#include <legate/utilities/tuple.h>
+#include <legate/utilities/typedefs.h>
 
 #include <memory>
 #include <string_view>
@@ -264,4 +264,4 @@ class Scalar {
 
 }  // namespace legate
 
-#include "legate/data/scalar.inl"
+#include <legate/data/scalar.inl>

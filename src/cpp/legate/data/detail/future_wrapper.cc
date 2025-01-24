@@ -10,13 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/future_wrapper.h"
+#include <legate/data/detail/future_wrapper.h>
 
-#include "legate/mapping/detail/mapping.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/dispatch.h"
-#include "legate/utilities/machine.h"
-#include "legate/utilities/macros.h"
+#include <legate/mapping/detail/mapping.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/dispatch.h>
+#include <legate/utilities/machine.h>
+#include <legate/utilities/macros.h>
 
 #include <cstring>
 #include <utility>

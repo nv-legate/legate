@@ -10,20 +10,20 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/task_context.h"
+#include <legate/task/detail/task_context.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/data/detail/physical_store.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/store_iterator_cache.h"
-#include "legate/utilities/macros.h"
+#include <legate/data/detail/physical_store.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/store_iterator_cache.h>
+#include <legate/utilities/macros.h>
 
 #include <algorithm>
 #include <iterator>
 
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
-#include "legate/runtime/detail/config.h"
+#include <legate/runtime/detail/config.h>
 
 #include <omp.h>
 #else

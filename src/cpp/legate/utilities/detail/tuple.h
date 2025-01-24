@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/tuple.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/utilities/tuple.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 #include <cstdint>

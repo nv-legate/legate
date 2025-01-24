@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/utilities/machine.h"
-#include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/machine.h>
+#include <legate/utilities/typedefs.h>
 
-#include "legion.h"
+#include <legion.h>
 
 #include <cstddef>
 #include <cstdint>

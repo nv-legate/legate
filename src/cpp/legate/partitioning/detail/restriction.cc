@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/partitioning/detail/restriction.h"
+#include <legate/partitioning/detail/restriction.h>
 
-#include "legate/utilities/detail/zip.h"
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/zip.h>
 
 #include <algorithm>
 #include <stdexcept>

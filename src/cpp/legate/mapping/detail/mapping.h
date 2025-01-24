@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/mapping/detail/store.h"
-#include "legate/mapping/mapping.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/mapping/detail/store.h>
+#include <legate/mapping/mapping.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 #include <memory>
@@ -77,4 +77,4 @@ class StoreMapping {
 
 }  // namespace legate::mapping::detail
 
-#include "legate/mapping/detail/mapping.inl"
+#include <legate/mapping/detail/mapping.inl>

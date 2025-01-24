@@ -10,20 +10,22 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <legate/io/hdf5/interface.h>
+
 #include <legate/data/scalar.h>
 #include <legate/data/shape.h>
 #include <legate/experimental/io/detail/library.h>
 #include <legate/io/hdf5/detail/read.h>
 #include <legate/io/hdf5/detail/util.h>
-#include <legate/io/hdf5/interface.h>
 #include <legate/runtime/runtime.h>
 #include <legate/type/type_info.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <highfive/H5DataSet.hpp>
 
-#include <filesystem>
 #include <fmt/format.h>
+
+#include <filesystem>
 #include <stdexcept>
 #include <string_view>
 #include <system_error>

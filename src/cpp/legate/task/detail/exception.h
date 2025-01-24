@@ -72,4 +72,4 @@ class PythonTaskException : public TaskException {
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/exception.inl"
+#include <legate/task/detail/exception.inl>

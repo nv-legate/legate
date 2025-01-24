@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/utilities/detail/env.h"
+#include <legate.h>
 
-#include "legate.h"
+#include <legate/utilities/detail/env.h>
 
 #include <gtest/gtest.h>
 

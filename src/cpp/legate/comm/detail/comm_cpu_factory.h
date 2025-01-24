@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/mapping/mapping.h"
-#include "legate/runtime/detail/communicator_manager.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/mapping/mapping.h>
+#include <legate/runtime/detail/communicator_manager.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 
@@ -50,4 +50,4 @@ class Factory final : public detail::CommunicatorFactory {
 
 }  // namespace legate::detail::comm::cpu
 
-#include "legate/comm/detail/comm_cpu_factory.inl"
+#include <legate/comm/detail/comm_cpu_factory.inl>

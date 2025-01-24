@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 
@@ -119,4 +119,4 @@ std::ostream& operator<<(std::ostream& os, const VariantOptions& options);
 
 }  // namespace legate
 
-#include "legate/task/variant_options.inl"
+#include <legate/task/variant_options.inl>

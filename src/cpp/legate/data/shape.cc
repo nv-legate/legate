@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/shape.h"
+#include <legate/data/shape.h>
 
-#include "legate/data/detail/shape.h"
+#include <legate/data/detail/shape.h>
 
 #include <cstddef>
 #include <cstdint>

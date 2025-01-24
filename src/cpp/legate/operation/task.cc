@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/task.h"
+#include <legate/operation/task.h>
 
-#include "legate/operation/detail/task.h"
+#include <legate/operation/detail/task.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>

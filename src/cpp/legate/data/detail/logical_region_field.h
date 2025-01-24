@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "legate/data/detail/attachment.h"
-#include "legate/data/detail/external_allocation.h"
-#include "legate/data/detail/region_field.h"
-#include "legate/data/shape.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/attachment.h>
+#include <legate/data/detail/external_allocation.h>
+#include <legate/data/detail/region_field.h>
+#include <legate/data/shape.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
-#include "legion.h"
+#include <legion.h>
 
 #include <functional>
 #include <memory>
@@ -148,4 +148,4 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/logical_region_field.inl"
+#include <legate/data/detail/logical_region_field.inl>

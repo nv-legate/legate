@@ -82,4 +82,4 @@ class TaskException : public std::exception {
 
 }  // namespace legate
 
-#include "legate/task/exception.inl"
+#include <legate/task/exception.inl>

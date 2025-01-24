@@ -14,8 +14,8 @@
 
 #include <legate_defines.h>
 
-#include "legate/utilities/cpp_version.h"
-#include "legate/utilities/detail/zip.h"
+#include <legate/utilities/cpp_version.h>
+#include <legate/utilities/detail/zip.h>
 
 #include <cstddef>
 
@@ -79,4 +79,4 @@ template <typename T>
 
 }  // namespace legate::detail
 
-#include "legate/utilities/detail/enumerate.inl"
+#include <legate/utilities/detail/enumerate.inl>

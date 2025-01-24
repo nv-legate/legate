@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/task/detail/task_return_layout.h"
+#include <legate/task/detail/task_return_layout.h>
 
 namespace legate::detail {
 

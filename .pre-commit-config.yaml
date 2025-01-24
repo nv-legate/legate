@@ -24,6 +24,18 @@ repos:
         exclude: '^src/cmake/patches/.*\.diff$'
         # handled by clang-format
         exclude_types: [c, c++, cuda]
+  # These hooks perform formatting or other related changes, and therefore should run
+  # before clang-format and clang-tidy do. This way, if they do make changes, we can do
+  # them and the formatting changes in 1 pass instead of multiple.
+  - repo: local
+    hooks:
+      - id: angle-includes
+        name: angle-includes
+        description: "Transform '' includes to <>"
+        entry: ./scripts/pre-commit/angle_includes.py
+        language: script
+        types_or: [c++, c, cuda]
+        stages: [pre-commit]
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: 'v19.1.5'
     hooks:

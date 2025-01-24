@@ -13,7 +13,7 @@
 #pragma once
 
 // Useful for IDEs
-#include "legate/data/physical_array.h"
+#include <legate/data/physical_array.h>
 
 #include <utility>
 

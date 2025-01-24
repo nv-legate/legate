@@ -12,17 +12,17 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
+#include <legate.h>
 
-#include "config.hpp"
-#include "legate.h"
-#include "meta.hpp"
-#include "type_traits.hpp"
+#include <legate/experimental/stl/detail/config.hpp>
+#include <legate/experimental/stl/detail/meta.hpp>
+#include <legate/experimental/stl/detail/type_traits.hpp>
+#include <legate/utilities/assert.h>
 
 #include <iterator>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 /**
  * @cond
@@ -130,4 +130,4 @@ void static_assert_iterator_category(const It&)
  * @endcond
  */
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

@@ -10,19 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/shape.h"
-#include "legate/operation/detail/execution_fence.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/utilities/detail/formatters.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/data/detail/shape.h>
+#include <legate/operation/detail/execution_fence.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <fmt/format.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 namespace formatter_test {
 

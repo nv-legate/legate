@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/scalar.h"
+#include <legate/data/detail/scalar.h>
 
-#include "legate/type/detail/type_info.h"
+#include <legate/type/detail/type_info.h>
 
 #include <cstddef>
 #include <cstdint>

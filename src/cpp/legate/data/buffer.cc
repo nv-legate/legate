@@ -11,10 +11,12 @@
  */
 
 #include <legate/data/buffer.h>
+
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <cstddef>
 #include <fmt/format.h>
+
+#include <cstddef>
 #include <stdexcept>
 
 namespace legate::detail {

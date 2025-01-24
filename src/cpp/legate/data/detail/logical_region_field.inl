@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_region_field.h"
+#include <legate/data/detail/logical_region_field.h>
 
 #include <utility>
 

@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/data/detail/scalar.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/operation/detail/launcher_arg.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/zstring_view.h"
+#include <legate/data/detail/scalar.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/operation/detail/launcher_arg.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/zstring_view.h>
 
 #include <memory>
 #include <vector>
@@ -101,4 +101,4 @@ class TaskLauncher {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/task_launcher.inl"
+#include <legate/operation/detail/task_launcher.inl>

@@ -10,11 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate.h"
-#include "legate/experimental/stl/detail/registrar.hpp"
-#include "utilities/utilities.h"
+#include <legate.h>
+
+#include <legate/experimental/stl/detail/registrar.hpp>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 int main(int argc, char** argv)
 {

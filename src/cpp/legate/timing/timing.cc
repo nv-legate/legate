@@ -10,15 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/timing/timing.h"
+#include <legate/timing/timing.h>
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/data/physical_store.h"
-#include "legate/operation/detail/timing.h"
-#include "legate/runtime/detail/runtime.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/physical_store.h>
+#include <legate/operation/detail/timing.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
-#include "legion.h"
+#include <legion.h>
 
 #include <optional>
 #include <stdexcept>

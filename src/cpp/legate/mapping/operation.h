@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/data/scalar.h"
-#include "legate/mapping/array.h"
+#include <legate/data/scalar.h>
+#include <legate/mapping/array.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <vector>
@@ -161,4 +161,4 @@ class Task {
 
 }  // namespace legate::mapping
 
-#include "legate/mapping/operation.inl"
+#include <legate/mapping/operation.inl>

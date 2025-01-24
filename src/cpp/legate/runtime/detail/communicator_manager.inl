@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/runtime/detail/communicator_manager.h"
+#include <legate/runtime/detail/communicator_manager.h>
 
 namespace legate::detail {
 

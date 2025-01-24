@@ -10,12 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/detail/operation.h"
+#include <legate/mapping/detail/operation.h>
 
-#include "legate/runtime/detail/library.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/deserializer.h"
 #include <legate/mapping/detail/mapping.h>
+#include <legate/runtime/detail/library.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/deserializer.h>
 
 namespace legate::mapping::detail {
 

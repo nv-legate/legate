@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "legate/mapping/detail/machine.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/mapping/detail/machine.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 namespace legate::detail {
 
@@ -53,4 +53,4 @@ class Reduce final : public Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/reduce.inl"
+#include <legate/operation/detail/reduce.inl>

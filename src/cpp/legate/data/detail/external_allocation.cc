@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/external_allocation.h"
+#include <legate/data/detail/external_allocation.h>
 
 namespace legate::detail {
 

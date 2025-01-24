@@ -12,14 +12,14 @@
 
 #pragma once
 
-#include "legate/utilities/memory.h"
+#include <legate/utilities/memory.h>
 
-#include "utilities/utilities.h"
+#include <gtest/gtest.h>
 
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <gtest/gtest.h>
+#include <utilities/utilities.h>
 #include <vector>
 
 namespace shared_from_this_enabled_test {

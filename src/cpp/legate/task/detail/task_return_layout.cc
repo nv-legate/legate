@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/task_return_layout.h"
+#include <legate/task/detail/task_return_layout.h>
 
-#include "legate/utilities/detail/deserializer.h"
+#include <legate/utilities/detail/deserializer.h>
 
 #include <limits>
 #include <memory>

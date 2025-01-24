@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include "meta.hpp"
+#include <legate/experimental/stl/detail/meta.hpp>
 
 #include <type_traits>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 /**
  * @cond
@@ -67,4 +67,4 @@ using const_if_t = meta::if_c<MakeConst, const Type, Type>;
  * @endcond
  */
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

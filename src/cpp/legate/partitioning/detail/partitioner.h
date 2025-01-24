@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/data/shape.h"
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/utilities/hash.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/span.h"
+#include <legate/data/shape.h>
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/utilities/hash.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/span.h>
 
 #include <memory>
 #include <optional>
@@ -81,4 +81,4 @@ class Partitioner {
 
 }  // namespace legate::detail
 
-#include "legate/partitioning/detail/partitioner.inl"
+#include <legate/partitioning/detail/partitioner.inl>

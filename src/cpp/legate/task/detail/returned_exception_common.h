@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
-#include "legate/utilities/detail/deserializer.h"
+#include <legate/utilities/assert.h>
+#include <legate/utilities/detail/deserializer.h>
 
 #include <cstddef>
 #include <cstdint>

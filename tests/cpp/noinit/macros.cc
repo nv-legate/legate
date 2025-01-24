@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/macros.h"
+#include <legate/utilities/macros.h>
 
 #include <string_view>
 

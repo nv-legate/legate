@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/store.h"
+#include <legate/mapping/store.h>
 
-#include "legate/mapping/detail/store.h"
+#include <legate/mapping/detail/store.h>
 
 namespace legate::mapping {
 

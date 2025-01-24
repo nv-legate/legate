@@ -14,8 +14,8 @@
 
 #include <legate_defines.h>
 
-#include "legate/utilities/assert.h"
-#include "legate/utilities/detail/shared_ptr_control_block.h"
+#include <legate/utilities/assert.h>
+#include <legate/utilities/detail/shared_ptr_control_block.h>
 
 #include <memory>
 #include <type_traits>

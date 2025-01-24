@@ -10,22 +10,22 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/formatters.h"
+#include <legate/utilities/detail/formatters.h>
 
-#include "legate/data/detail/logical_region_field.h"
-#include "legate/data/detail/logical_store.h"
-#include "legate/data/detail/shape.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/partitioning/constraint.h"
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/type/detail/type_info.h"
-#include "legate/type/type_info.h"
-#include "legate/utilities/detail/zstring_view.h"
-#include "legate/utilities/macros.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/shape.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/mapping.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/partitioning/constraint.h>
+#include <legate/partitioning/detail/constraint.h>
 #include <legate/task/task_info.h>
+#include <legate/type/detail/type_info.h>
+#include <legate/type/type_info.h>
+#include <legate/utilities/detail/zstring_view.h>
+#include <legate/utilities/macros.h>
+#include <legate/utilities/typedefs.h>
 
 #include <fmt/format.h>
 

@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/partitioning/detail/partitioning_tasks.h"
-#include "legate/task/task_context.h"
-#include "legate/utilities/detail/omp_thread_local_storage.h"
-#include "legate/utilities/detail/unravel.h"
+#include <legate/partitioning/detail/partitioning_tasks.h>
+#include <legate/task/task_context.h>
+#include <legate/utilities/detail/omp_thread_local_storage.h>
+#include <legate/utilities/detail/unravel.h>
 
 #include <omp.h>
 

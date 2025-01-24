@@ -10,17 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/deserializer.h"
+#include <legate/utilities/detail/deserializer.h>
 
-#include "legate/data/detail/physical_store.h"
-#include "legate/data/physical_store.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/physical_store.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/typedefs.h>
 
-#include "legion/legion_c.h"
-#include "legion/legion_c_util.h"
+#include <legion/legion_c.h>
+#include <legion/legion_c_util.h>
 
 #include <fmt/format.h>
+
 #include <stdexcept>
 
 namespace legate::detail {

@@ -10,18 +10,19 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/detail/machine.h"
+#include <legate/mapping/detail/machine.h>
 
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/detail/env.h"
-#include "legate/utilities/detail/env_defaults.h"
 #include <legate/mapping/detail/mapping.h>
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/env_defaults.h>
 
-#include "realm/network.h"
+#include <realm/network.h>
 
-#include <algorithm>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+
+#include <algorithm>
 #include <type_traits>
 #include <utility>
 

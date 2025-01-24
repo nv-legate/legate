@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/task/task_context.h"
+#include <legate/task/task_context.h>
 
 namespace legate {
 

@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/task/detail/return_value.h"
-#include "legate/task/detail/returned_exception_common.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/span.h"
+#include <legate/task/detail/return_value.h>
+#include <legate/task/detail/returned_exception_common.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/span.h>
 
 #include <cstddef>
 #include <memory>
@@ -109,4 +109,4 @@ class ReturnedPythonException {
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/returned_python_exception.inl"
+#include <legate/task/detail/returned_python_exception.inl>

@@ -10,18 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate/utilities/detail/error.h>
 #include <legate/utilities/detail/traced_exception.h>
+
+#include <legate/utilities/detail/error.h>
 #include <legate/utilities/span.h>
 
-#include <atomic>
+#include <fmt/format.h>
+#include <fmt/std.h>
+
 #include <cpptrace/basic.hpp>
 #include <cpptrace/from_current.hpp>
+
+#include <atomic>
 #include <cstddef>
 #include <cstdlib>
 #include <exception>
-#include <fmt/format.h>
-#include <fmt/std.h>
 #include <iostream>
 #include <optional>
 #include <string>

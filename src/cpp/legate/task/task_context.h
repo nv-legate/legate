@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/comm/communicator.h"
-#include "legate/data/physical_array.h"
-#include "legate/data/scalar.h"
-#include "legate/mapping/machine.h"
-#include "legate/mapping/mapping.h"
+#include <legate/comm/communicator.h>
+#include <legate/data/physical_array.h>
+#include <legate/data/scalar.h>
+#include <legate/mapping/machine.h>
+#include <legate/mapping/mapping.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <string_view>
@@ -267,4 +267,4 @@ class TaskContext {
 
 }  // namespace legate
 
-#include "legate/task/task_context.inl"
+#include <legate/task/task_context.inl>

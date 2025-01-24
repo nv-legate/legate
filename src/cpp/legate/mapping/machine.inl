@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/mapping/machine.h"
-#include "legate/utilities/hash.h"
+#include <legate/mapping/machine.h>
+#include <legate/utilities/hash.h>
 
 #include <algorithm>
 

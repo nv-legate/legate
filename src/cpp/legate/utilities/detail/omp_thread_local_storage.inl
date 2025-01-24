@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/detail/omp_thread_local_storage.h"
+#include <legate/utilities/detail/omp_thread_local_storage.h>
 
 namespace legate::detail {
 

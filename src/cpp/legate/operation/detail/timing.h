@@ -14,9 +14,9 @@
 
 #include <legate_defines.h>
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/utilities/macros.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/utilities/macros.h>
 
 #include <cstdint>
 
@@ -47,4 +47,4 @@ class Timing final : public Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/timing.inl"
+#include <legate/operation/detail/timing.inl>

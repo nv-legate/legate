@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/experimental/stl.hpp"
-#include "utilities/utilities.h"
+#include <legate/experimental/stl.hpp>
+
+#include <gtest/gtest.h>
 
 #include <functional>
-#include <gtest/gtest.h>
 #include <numeric>
+#include <utilities/utilities.h>
 
 using STL = DefaultFixture;
 

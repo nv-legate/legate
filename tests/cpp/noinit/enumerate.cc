@@ -10,15 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/enumerate.h"
+#include <legate/utilities/detail/enumerate.h>
 
-#include "utilities/utilities.h"
+#include <gtest/gtest.h>
 
 #include <cstddef>
 #include <deque>
-#include <gtest/gtest.h>
 #include <list>
 #include <tuple>
+#include <utilities/utilities.h>
 #include <vector>
 
 namespace {

@@ -10,14 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/transform.h"
+#include <legate/data/detail/transform.h>
 
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/detail/core_ids.h"
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <algorithm>
 #include <fmt/format.h>
+
+#include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <stdexcept>

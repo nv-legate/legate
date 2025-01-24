@@ -14,7 +14,7 @@
 
 #include <legate_defines.h>
 
-#include "legate/utilities/macros.h"
+#include <legate/utilities/macros.h>
 
 /**
  * @cond

@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate.h"
+#include <legate.h>
 
 #include <benchmark/benchmark.h>
 #include <iostream>

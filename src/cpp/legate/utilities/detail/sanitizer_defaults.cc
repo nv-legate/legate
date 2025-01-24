@@ -12,9 +12,9 @@
 
 #ifndef DOXYGEN
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/utilities/macros.h"
+#include <legate/utilities/macros.h>
 
 extern "C" {
 

@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/mapping.h"
+#include <legate/mapping/mapping.h>
 
-#include "legate/mapping/detail/mapping.h"
-#include "legate/mapping/detail/store.h"
+#include <legate/mapping/detail/mapping.h>
+#include <legate/mapping/detail/store.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>

@@ -10,30 +10,31 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/logical_store.h"
+#include <legate/data/detail/logical_store.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/data/detail/physical_store.h"
-#include "legate/data/detail/transform.h"
-#include "legate/operation/detail/launcher_arg.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/operation/projection.h"
-#include "legate/partitioning/detail/partition.h"
-#include "legate/partitioning/detail/partitioner.h"
-#include "legate/runtime/detail/partition_manager.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/type/detail/type_info.h"
-#include "legate/utilities/detail/enumerate.h"
-#include "legate/utilities/detail/formatters.h"
-#include "legate/utilities/detail/tuple.h"
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/transform.h>
+#include <legate/operation/detail/launcher_arg.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/operation/projection.h>
+#include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partitioner.h>
+#include <legate/runtime/detail/partition_manager.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/type/detail/type_info.h>
+#include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/tuple.h>
 
-#include <algorithm>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
+
+#include <algorithm>
 #include <numeric>
 #include <stdexcept>
 #include <utility>

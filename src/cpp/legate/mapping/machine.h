@@ -14,10 +14,10 @@
 
 #include <legate_defines.h>
 
-#include "legate/mapping/mapping.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
+#include <legate/mapping/mapping.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -320,4 +320,4 @@ std::ostream& operator<<(std::ostream& stream, const Machine& machine);
 
 }  // namespace legate::mapping
 
-#include "legate/mapping/machine.inl"
+#include <legate/mapping/machine.inl>

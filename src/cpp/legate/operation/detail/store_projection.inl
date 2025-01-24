@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/store_projection.h"
+#include <legate/operation/detail/store_projection.h>
 
 namespace legate::detail {
 

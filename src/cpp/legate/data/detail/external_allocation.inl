@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/detail/external_allocation.h"
+#include <legate/data/detail/external_allocation.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>

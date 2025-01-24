@@ -63,4 +63,4 @@ class Slice {
 
 }  // namespace legate
 
-#include "legate/data/slice.inl"
+#include <legate/data/slice.inl>

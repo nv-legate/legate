@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/machine.h"
+#include <legate/utilities/machine.h>
 
-#include "legate/runtime/detail/config.h"
-#include "legate/runtime/detail/runtime.h"
+#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>

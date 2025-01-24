@@ -10,17 +10,17 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/detail/mpi_network.h"
+#include <legate/comm/detail/mpi_network.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/comm/detail/logger.h"
-#include "legate/comm/detail/mpi_interface.h"
-#include "legate/utilities/macros.h"
-#include "legate/utilities/scope_guard.h"
-#include "legate/utilities/span.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/comm/detail/logger.h>
+#include <legate/comm/detail/mpi_interface.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/macros.h>
+#include <legate/utilities/scope_guard.h>
+#include <legate/utilities/span.h>
+#include <legate/utilities/typedefs.h>
 
 #include <algorithm>
 #include <cstddef>

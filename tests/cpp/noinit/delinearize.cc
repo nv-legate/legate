@@ -10,11 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <legate.h>
+
 #include <legate/utilities/detail/linearize.h>
 
 #include <fmt/format.h>
+
 #include <gtest/gtest.h>
-#include <legate.h>
+
 #include <string>
 #include <type_traits>
 #include <utilities/utilities.h>

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/task/exception.h"
+#include <legate/task/exception.h>
 
 #include <utility>
 

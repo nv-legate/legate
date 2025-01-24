@@ -12,19 +12,19 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_region_field.h"
-#include "legate/data/detail/physical_store.h"
-#include "legate/data/detail/shape.h"
-#include "legate/data/physical_store.h"
-#include "legate/data/slice.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/operation/detail/launcher_arg.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/operation/projection.h"
-#include "legate/partitioning/detail/partition.h"
-#include "legate/partitioning/detail/restriction.h"
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/shape.h>
+#include <legate/data/physical_store.h>
+#include <legate/data/slice.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/operation/detail/launcher_arg.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/operation/projection.h>
+#include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/restriction.h>
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <memory>
 #include <optional>
@@ -398,4 +398,4 @@ class LogicalStorePartition {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/logical_store.inl"
+#include <legate/data/detail/logical_store.inl>

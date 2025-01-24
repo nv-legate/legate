@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/cuda/detail/cuda_driver_api.h"
+#include <legate/cuda/detail/cuda_driver_api.h>
 
 #include <memory>
 

@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/data/detail/external_allocation.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/external_allocation.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
-#include "legion.h"
+#include <legion.h>
 
 #include <memory>
 #include <optional>
@@ -55,4 +55,4 @@ class Attachment {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/attachment.inl"
+#include <legate/data/detail/attachment.inl>

@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <optional>
 
@@ -49,4 +49,4 @@ class Copy final : public Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/copy.inl"
+#include <legate/operation/detail/copy.inl>

@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/detail/type_traits.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 namespace legate {
 
@@ -236,4 +236,4 @@ struct hash<legate::SharedPtr<T>> {  // NOLINT(cert-dcl58-cpp) extending std::ha
 
 }  // namespace std
 
-#include "legate/utilities/shared_ptr.inl"
+#include <legate/utilities/shared_ptr.inl>

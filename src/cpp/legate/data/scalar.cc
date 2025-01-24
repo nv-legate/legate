@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/scalar.h"
+#include <legate/data/detail/scalar.h>
 
-#include "legate/data/scalar.h"
+#include <legate/data/scalar.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+
 #include <stdexcept>
 #include <utility>
 

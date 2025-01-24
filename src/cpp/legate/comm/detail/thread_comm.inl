@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/comm/detail/thread_comm.h"
+#include <legate/comm/detail/thread_comm.h>
 
 namespace legate::detail::comm::coll {
 

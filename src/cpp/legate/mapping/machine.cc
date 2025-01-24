@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/machine.h"
+#include <legate/mapping/machine.h>
 
-#include "legate/mapping/detail/machine.h"
+#include <legate/mapping/detail/machine.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+
 #include <iostream>
 #include <stdexcept>
 #include <utility>

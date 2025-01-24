@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/library.h"
+#include <legate/runtime/library.h>
 
-#include "legate/runtime/detail/library.h"
+#include <legate/runtime/detail/library.h>
 
 namespace legate {
 

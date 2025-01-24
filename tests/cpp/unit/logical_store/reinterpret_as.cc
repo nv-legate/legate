@@ -10,10 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <legate.h>
+
+#include <gtest/gtest.h>
+
 #include <cstdint>
 #include <cstring>
-#include <gtest/gtest.h>
-#include <legate.h>
 #include <stdexcept>
 #include <utilities/utilities.h>
 

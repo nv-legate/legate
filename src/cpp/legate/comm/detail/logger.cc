@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/detail/logger.h"
+#include <legate/comm/detail/logger.h>
 
 namespace legate::detail::comm::coll {
 

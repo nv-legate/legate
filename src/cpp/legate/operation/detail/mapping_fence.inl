@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/mapping_fence.h"
+#include <legate/operation/detail/mapping_fence.h>
 
 namespace legate::detail {
 

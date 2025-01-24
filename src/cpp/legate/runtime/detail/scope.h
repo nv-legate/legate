@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/mapping/detail/machine.h"
-#include "legate/runtime/exception_mode.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/zstring_view.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/mapping/detail/machine.h>
+#include <legate/runtime/exception_mode.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/zstring_view.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>
 #include <string>
@@ -46,4 +46,4 @@ class Scope {
 
 }  // namespace legate::detail
 
-#include "legate/runtime/detail/scope.inl"
+#include <legate/runtime/detail/scope.inl>

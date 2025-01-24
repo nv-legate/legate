@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/utilities/hash.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/utilities/hash.h>
+#include <legate/utilities/typedefs.h>
 
-#include "legion.h"
+#include <legion.h>
 
 #include <functional>
 #include <tuple>

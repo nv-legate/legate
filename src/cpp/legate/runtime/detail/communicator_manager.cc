@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/communicator_manager.h"
+#include <legate/runtime/detail/communicator_manager.h>
 
-#include "legate/runtime/detail/runtime.h"
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+
 #include <stdexcept>
 
 namespace legate::detail {

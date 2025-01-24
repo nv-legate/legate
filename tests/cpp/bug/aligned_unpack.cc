@@ -10,13 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/scalar.h"
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/detail/deserializer.h"
-
-#include "utilities/utilities.h"
+#include <legate/data/detail/scalar.h>
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/deserializer.h>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 namespace aligned_unpack_test {
 

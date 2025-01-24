@@ -10,20 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/type/detail/type_info.h"
+#include <legate/type/detail/type_info.h>
 
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/detail/enumerate.h"
-#include "legate/utilities/detail/type_traits.h"
-#include "legate/utilities/detail/zstring_view.h"
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/detail/zstring_view.h>
+
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <exception>
-#include <fmt/format.h>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>

@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "legate/runtime/library.h"
-#include "legate/task/task_info.h"
-#include "legate/task/variant_helper.h"
-#include "legate/task/variant_options.h"
-#include "legate/utilities/detail/zstring_view.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/runtime/library.h>
+#include <legate/task/task_info.h>
+#include <legate/task/variant_helper.h>
+#include <legate/task/variant_options.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/detail/zstring_view.h>
+#include <legate/utilities/typedefs.h>
 
 #include <map>
 #include <memory>
@@ -144,4 +144,4 @@ class LegateTask {  // NOLINT(bugprone-crtp-constructor-accessibility)
 
 }  // namespace legate
 
-#include "legate/task/task.inl"
+#include <legate/task/task.inl>

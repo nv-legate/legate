@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/task/detail/return_value.h"
+#include <legate/task/detail/return_value.h>
 
 #include <cstdint>
 #include <vector>
@@ -51,4 +51,4 @@ class TaskReturnLayoutForPack : private TaskReturnLayoutForUnpack {
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/task_return_layout.inl"
+#include <legate/task/detail/task_return_layout.inl>

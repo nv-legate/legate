@@ -12,14 +12,14 @@
 
 #pragma once
 
-#include "legate/data/scalar.h"
-#include "legate/mapping/detail/array.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/mapping/detail/store.h"
-#include "legate/mapping/mapping.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/deserializer.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/scalar.h>
+#include <legate/mapping/detail/array.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/mapping/detail/store.h>
+#include <legate/mapping/mapping.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/deserializer.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -113,4 +113,4 @@ class Copy : public Mappable {
 
 }  // namespace legate::mapping::detail
 
-#include "legate/mapping/detail/operation.inl"
+#include <legate/mapping/detail/operation.inl>

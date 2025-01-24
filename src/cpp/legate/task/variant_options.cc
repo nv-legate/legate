@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/variant_options.h"
+#include <legate/task/variant_options.h>
 
 namespace legate {
 

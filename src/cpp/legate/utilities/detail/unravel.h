@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/cuda/cuda.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/cuda/cuda.h>
+#include <legate/utilities/typedefs.h>
 
 #include <array>
 #include <cstdint>
@@ -40,4 +40,4 @@ class Unravel {
 
 }  // namespace legate::detail
 
-#include "legate/utilities/detail/unravel.inl"
+#include <legate/utilities/detail/unravel.inl>

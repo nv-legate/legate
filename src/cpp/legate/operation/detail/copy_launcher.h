@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/mapping/detail/machine.h"
-#include "legate/operation/detail/launcher_arg.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/utilities/detail/core_ids.h"
+#include <legate/mapping/detail/machine.h>
+#include <legate/operation/detail/launcher_arg.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/utilities/detail/core_ids.h>
 
 #include <memory>
 #include <vector>
@@ -106,4 +106,4 @@ class CopyLauncher {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/copy_launcher.inl"
+#include <legate/operation/detail/copy_launcher.inl>

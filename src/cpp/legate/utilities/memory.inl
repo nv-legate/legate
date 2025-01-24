@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/memory.h"
+#include <legate/utilities/memory.h>
 
 namespace legate {
 

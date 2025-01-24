@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/detail/region_field.h"
+#include <legate/data/detail/region_field.h>
 
 namespace legate::detail {
 

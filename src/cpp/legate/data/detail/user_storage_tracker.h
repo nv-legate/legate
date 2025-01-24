@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
 
 namespace legate::detail {
 

@@ -12,9 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/macros.h"
-
-#include "config.hpp"  // includes <version>
+#include <legate/experimental/stl/detail/config.hpp>  // includes <version>
+#include <legate/utilities/macros.h>
 
 #if __has_include(<span>)
 #if defined(__cpp_lib_span) && __cpp_lib_span >= 202002L
@@ -29,7 +28,7 @@
 #else
 
 #define TCB_SPAN_NAMESPACE_NAME std
-#include "tcb/span.hpp"
+#include <tcb/span.hpp>
 // We define this on purpose so that downstream libs can pretend we have span
 // NOLINTNEXTLINE
 #define __cpp_lib_span 1

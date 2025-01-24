@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/task.h"
+#include <legate/task/detail/task.h>
 
-#include "legate/runtime/detail/config.h"
+#include <legate/runtime/detail/config.h>
 
 #include <cstdint>
 #include <ios>

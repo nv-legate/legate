@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/comm/detail/backend_network.h"
-#include "legate/comm/detail/thread_comm.h"
+#include <legate/comm/detail/backend_network.h>
+#include <legate/comm/detail/thread_comm.h>
 
 #include <memory>
 #include <vector>

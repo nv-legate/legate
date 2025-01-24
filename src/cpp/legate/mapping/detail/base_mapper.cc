@@ -10,36 +10,36 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/detail/base_mapper.h"
+#include <legate/mapping/detail/base_mapper.h>
 
-#include "legate/mapping/detail/instance_manager.h"
-#include "legate/mapping/detail/mapping.h"
-#include "legate/mapping/detail/operation.h"
-#include "legate/mapping/detail/store.h"
-#include "legate/mapping/operation.h"
-#include "legate/runtime/detail/projection.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/runtime/detail/shard.h"
-#include "legate/task/detail/task_return.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/enumerate.h"
-#include "legate/utilities/detail/env.h"
-#include "legate/utilities/detail/formatters.h"
-#include "legate/utilities/detail/store_iterator_cache.h"
-#include "legate/utilities/detail/type_traits.h"
-#include "legate/utilities/detail/zip.h"
+#include <legate/mapping/detail/instance_manager.h>
+#include <legate/mapping/detail/mapping.h>
+#include <legate/mapping/detail/operation.h>
+#include <legate/mapping/detail/store.h>
+#include <legate/mapping/operation.h>
+#include <legate/runtime/detail/projection.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/detail/shard.h>
 #include <legate/task/detail/returned_exception.h>
+#include <legate/task/detail/task_return.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/linearize.h>
+#include <legate/utilities/detail/store_iterator_cache.h>
+#include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/detail/zip.h>
 
-#include "mappers/mapping_utilities.h"
+#include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <fmt/format.h>
-#include <fmt/ranges.h>
 #include <functional>
 #include <limits>
+#include <mappers/mapping_utilities.h>
 #include <sstream>
 #include <tuple>
 #include <unordered_map>

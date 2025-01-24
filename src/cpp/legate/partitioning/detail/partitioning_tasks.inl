@@ -14,9 +14,9 @@
 
 #include <legate_defines.h>
 
-#include "legate/partitioning/detail/partitioning_tasks.h"
+#include <legate/partitioning/detail/partitioning_tasks.h>
 
-#include "legion/legion_redop.h"
+#include <legion/legion_redop.h>
 
 namespace legate::detail {
 

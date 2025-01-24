@@ -10,14 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/buffer_builder.h"
+#include <legate/utilities/detail/buffer_builder.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <cstring>
 #include <fmt/format.h>
+
+#include <cstring>
 #include <memory>
 #include <stdexcept>
 

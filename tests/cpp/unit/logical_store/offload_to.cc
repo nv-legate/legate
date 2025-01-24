@@ -10,14 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <legate.h>
+
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 
-#include "utilities/utilities.h"
-
 #include <fmt/format.h>
+
 #include <gtest/gtest.h>
-#include <legate.h>
+
+#include <utilities/utilities.h>
 
 namespace test_host_offload {
 

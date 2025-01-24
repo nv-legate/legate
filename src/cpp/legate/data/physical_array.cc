@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/physical_array.h"
+#include <legate/data/physical_array.h>
 
-#include "legate/data/detail/array_kind.h"
-#include "legate/data/detail/physical_array.h"
-#include "legate/data/physical_store.h"
-#include "legate/type/type_info.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/detail/array_kind.h>
+#include <legate/data/detail/physical_array.h>
+#include <legate/data/physical_store.h>
+#include <legate/type/type_info.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 #include <stdexcept>

@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "legate/data/detail/scalar.h"
-#include "legate/mapping/mapping.h"
-#include "legate/runtime/resource.h"
-#include "legate/task/task_info.h"
-#include "legate/utilities/detail/zstring_view.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/detail/scalar.h>
+#include <legate/mapping/mapping.h>
+#include <legate/runtime/resource.h>
+#include <legate/task/task_info.h>
+#include <legate/utilities/detail/zstring_view.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/typedefs.h>
 
 #include <memory>
 #include <string>
@@ -117,4 +117,4 @@ class Library {
 
 }  // namespace legate::detail
 
-#include "legate/runtime/detail/library.inl"
+#include <legate/runtime/detail/library.inl>

@@ -10,17 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/runtime.h"
+#include <legate/runtime/runtime.h>
 
-#include "legate/data/detail/shape.h"
-#include "legate/operation/detail/task.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/runtime/scope.h"
-#include "legate/utilities/detail/tuple.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/shape.h>
+#include <legate/operation/detail/task.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/scope.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/tuple.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <fmt/core.h>
+
 #include <optional>
 #include <stdexcept>
 

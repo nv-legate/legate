@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/coll.h"
+#include <legate/comm/coll.h>
 
-#include "legate/comm/detail/backend_network.h"
-#include "legate/comm/detail/logger.h"
-#include "legate/utilities/abort.h"
+#include <legate/comm/detail/backend_network.h>
+#include <legate/comm/detail/logger.h>
+#include <legate/utilities/abort.h>
 
 namespace coll_detail = legate::detail::comm::coll;
 

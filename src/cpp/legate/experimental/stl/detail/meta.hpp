@@ -12,15 +12,14 @@
 
 #pragma once
 
-#include "legate/utilities/detail/type_traits.h"
-
-#include "config.hpp"
+#include <legate/experimental/stl/detail/config.hpp>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <cstdint>
 #include <utility>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 /**
  * @cond
@@ -171,4 +170,4 @@ using fill_n = eval<detail::fill_n_<std::make_index_sequence<Count>>, Value, Con
  * @endcond
  */
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

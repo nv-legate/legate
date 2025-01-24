@@ -14,20 +14,20 @@
  *
  */
 
-#include "legate/operation/detail/reduce.h"
+#include <legate/operation/detail/reduce.h>
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/operation/detail/task_launcher.h"
-#include "legate/operation/projection.h"
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/partitioning/detail/constraint_solver.h"
-#include "legate/partitioning/detail/partition.h"
-#include "legate/partitioning/detail/partitioner.h"
-#include "legate/runtime/detail/library.h"
-#include "legate/runtime/detail/region_manager.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/core_ids.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/operation/detail/task_launcher.h>
+#include <legate/operation/projection.h>
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/partitioning/detail/constraint_solver.h>
+#include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partitioner.h>
+#include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/region_manager.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/core_ids.h>
 
 namespace legate::detail {
 

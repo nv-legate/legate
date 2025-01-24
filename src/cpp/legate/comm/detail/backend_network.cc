@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/detail/backend_network.h"
+#include <legate/comm/detail/backend_network.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/utilities/assert.h"
-#include "legate/utilities/detail/env.h"
-#include "legate/utilities/macros.h"
+#include <legate/utilities/assert.h>
+#include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/macros.h>
 
 #include <cstdlib>
 #include <cstring>

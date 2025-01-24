@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/detail/instance_manager.h"
+#include <legate/mapping/detail/instance_manager.h>
 
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/dispatch.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/dispatch.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <algorithm>
 #include <iostream>

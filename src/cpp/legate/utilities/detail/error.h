@@ -15,6 +15,7 @@
 #include <legate/utilities/span.h>
 
 #include <cpptrace/basic.hpp>
+
 #include <string>
 #include <vector>
 

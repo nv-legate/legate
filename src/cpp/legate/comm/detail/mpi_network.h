@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/comm/coll_comm.h"
-#include "legate/comm/detail/backend_network.h"
-#include "legate/comm/detail/mpi_interface.h"
+#include <legate/comm/coll_comm.h>
+#include <legate/comm/detail/backend_network.h>
+#include <legate/comm/detail/mpi_interface.h>
 
 #include <vector>
 

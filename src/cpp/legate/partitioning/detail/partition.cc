@@ -10,19 +10,20 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/partitioning/detail/partition.h"
+#include <legate/partitioning/detail/partition.h>
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/runtime/detail/partition_manager.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/type/detail/type_info.h"
-#include "legate/utilities/detail/tuple.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/runtime/detail/partition_manager.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/type/detail/type_info.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/tuple.h>
 
-#include <algorithm>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #include <fmt/ranges.h>
+
+#include <algorithm>
 #include <functional>
 #include <stdexcept>
 

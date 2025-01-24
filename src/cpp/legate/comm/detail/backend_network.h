@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/comm/coll_comm.h"
+#include <legate/comm/coll_comm.h>
 
 #include <cstddef>
 #include <memory>

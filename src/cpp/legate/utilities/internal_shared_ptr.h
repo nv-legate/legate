@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/utilities/detail/shared_ptr_control_block.h"
-#include "legate/utilities/detail/type_traits.h"
-#include "legate/utilities/macros.h"
+#include <legate/utilities/detail/shared_ptr_control_block.h>
+#include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/macros.h>
 
 #include <memory>
 #include <string>
@@ -472,4 +472,4 @@ struct hash<legate::InternalSharedPtr<T>> {  // NOLINT(cert-dcl58-cpp) extending
 
 }  // namespace std
 
-#include "legate/utilities/internal_shared_ptr.inl"
+#include <legate/utilities/internal_shared_ptr.inl>

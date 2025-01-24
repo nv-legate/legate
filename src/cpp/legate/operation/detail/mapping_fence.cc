@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/mapping_fence.h"
+#include <legate/operation/detail/mapping_fence.h>
 
-#include "legate/runtime/detail/runtime.h"
+#include <legate/runtime/detail/runtime.h>
 
 namespace legate::detail {
 

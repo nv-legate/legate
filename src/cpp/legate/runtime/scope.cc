@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/scope.h"
+#include <legate/runtime/scope.h>
 
-#include "legate/runtime/detail/runtime.h"
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <optional>

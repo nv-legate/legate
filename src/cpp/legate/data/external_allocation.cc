@@ -10,23 +10,24 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/external_allocation.h"
+#include <legate/data/external_allocation.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/data/detail/external_allocation.h"
-#include "legate/runtime/detail/runtime.h"
+#include <legate/data/detail/external_allocation.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
-#include "realm/instance.h"
+#include <realm/instance.h>
 
 #include <stdexcept>
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include "realm/cuda/cuda_access.h"
+#include <realm/cuda/cuda_access.h>
 #endif
 
 #include <fmt/format.h>
+
 #include <memory>
 
 namespace legate {

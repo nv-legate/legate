@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "legate/mapping/detail/instance_manager.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/mapping/detail/mapping.h"
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/mapping/detail/instance_manager.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/mapping/detail/mapping.h>
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/typedefs.h>
 
-#include "legion.h"
+#include <legion.h>
 
 #include <memory>
 #include <optional>
@@ -324,4 +324,4 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
 
 }  // namespace legate::mapping::detail
 
-#include "legate/mapping/detail/base_mapper.inl"
+#include <legate/mapping/detail/base_mapper.inl>

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/cpp_version.h"
+#include <legate/utilities/cpp_version.h>
 
 #include <type_traits>
 

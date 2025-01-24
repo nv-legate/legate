@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/data/scalar.h"
-#include "legate/mapping/store.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
+#include <legate/data/scalar.h>
+#include <legate/mapping/store.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
 
 #include <iosfwd>
 #include <memory>
@@ -566,4 +566,4 @@ class Mapper {
 
 }  // namespace legate::mapping
 
-#include "legate/mapping/mapping.inl"
+#include <legate/mapping/mapping.inl>

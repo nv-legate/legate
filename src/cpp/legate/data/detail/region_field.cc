@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/region_field.h"
+#include <legate/data/detail/region_field.h>
 
-#include "legate/mapping/detail/mapping.h"
-#include "legate/utilities/dispatch.h"
+#include <legate/mapping/detail/mapping.h>
+#include <legate/utilities/dispatch.h>
 
 namespace legate::detail {
 

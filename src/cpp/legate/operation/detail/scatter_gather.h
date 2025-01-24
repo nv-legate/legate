@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/partitioning/constraint.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/partitioning/constraint.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <optional>
 
@@ -58,4 +58,4 @@ class ScatterGather final : public Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/scatter_gather.inl"
+#include <legate/operation/detail/scatter_gather.inl>

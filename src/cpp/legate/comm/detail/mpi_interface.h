@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/abort.h"
-#include "legate/utilities/macros.h"
+#include <legate/utilities/abort.h>
+#include <legate/utilities/macros.h>
 
 // Cannot use #include <legate_mpi_wrapper/mpi_wrapper_types.h> here because -- depending on whether
 // we have MPI or not -- the MPI wrapper CMake target might not have been defined, and hence,

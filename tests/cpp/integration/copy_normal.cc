@@ -10,13 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/type/type_info.h"
+#include <legate.h>
 
-#include "copy_util.inl"
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/type/type_info.h>
 
 #include <gtest/gtest.h>
+
+#include <integration/copy_util.inl>
+#include <utilities/utilities.h>
 
 // extern so that compilers don't also complain that function is unused!
 extern void silence_unused_function_warnings()

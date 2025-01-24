@@ -10,8 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate/data/buffer.h>
 #include <legate/experimental/io/detail/mapper.h>
+
+#include <legate/data/buffer.h>
 #include <legate/mapping/operation.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/env.h>

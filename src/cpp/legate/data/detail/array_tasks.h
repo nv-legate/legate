@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/task.h"
-#include "legate/task/variant_options.h"
-#include "legate/utilities/detail/core_ids.h"
+#include <legate/task/task.h>
+#include <legate/task/variant_options.h>
+#include <legate/utilities/detail/core_ids.h>
 
 namespace legate::detail {
 

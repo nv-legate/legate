@@ -13,6 +13,7 @@
 #pragma once
 
 #include <fmt/format.h>
+
 #include <string>
 #include <type_traits>
 

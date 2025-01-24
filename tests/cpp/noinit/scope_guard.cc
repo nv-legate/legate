@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/scope_guard.h"
-
-#include "utilities/utilities.h"
+#include <legate/utilities/scope_guard.h>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 namespace legate_scope_guard_test {
 

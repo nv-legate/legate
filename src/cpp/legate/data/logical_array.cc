@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/logical_array.h"
+#include <legate/data/logical_array.h>
 
-#include "legate/data/detail/logical_array.h"
-#include "legate/data/detail/user_storage_tracker.h"
-#include "legate/runtime/detail/runtime.h"
+#include <legate/data/detail/logical_array.h>
+#include <legate/data/detail/user_storage_tracker.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>

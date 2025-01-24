@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/typedefs.h"
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 
@@ -43,4 +43,4 @@ class ReturnValue {
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/return_value.inl"
+#include <legate/task/detail/return_value.inl>

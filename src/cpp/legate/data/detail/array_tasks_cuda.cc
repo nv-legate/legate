@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/cuda/cuda.h"
-#include "legate/cuda/detail/cuda_driver_api.h"
-#include "legate/data/detail/array_tasks.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/task/task_context.h"
+#include <legate/cuda/cuda.h>
+#include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/data/detail/array_tasks.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/task/task_context.h>
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
 #include <legate/generated/fatbin/fixup_ranges_fatbin.h>

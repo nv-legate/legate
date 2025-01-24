@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "store.hpp"
+#include <legate/experimental/stl/detail/store.hpp>
 
 // Include this last
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -47,4 +47,4 @@ void fill(Range&& output, value_type_of_t<Range> val)
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

@@ -14,12 +14,12 @@
 
 #include <legate_defines.h>
 
-#include "legate/data/physical_store.h"
-#include "legate/type/type_info.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/physical_store.h>
+#include <legate/type/type_info.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 
@@ -215,4 +215,4 @@ class StringPhysicalArray : public PhysicalArray {
 
 }  // namespace legate
 
-#include "legate/data/physical_array.inl"
+#include <legate/data/physical_array.inl>

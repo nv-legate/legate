@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "task_simple.h"
+#include <integration/tasks/task_simple.h>
 
 #include <gtest/gtest.h>
 

@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/typedefs.h>
 
 namespace legate::detail {
 
@@ -62,4 +62,4 @@ class StoreProjection final : public BaseStoreProjection {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/store_projection.inl"
+#include <legate/operation/detail/store_projection.inl>

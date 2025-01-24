@@ -14,11 +14,11 @@
 
 #include <legate_defines.h>
 
-#include "legate/utilities/shared_ptr.h"
-#include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/typedefs.h>
 
-#include "legion/legion_config.h"
+#include <legion/legion_config.h>
 
 #include <iosfwd>
 #include <string>
@@ -570,4 +570,4 @@ std::ostream& operator<<(std::ostream&, const Type&);
 
 }  // namespace legate
 
-#include "legate/type/type_info.inl"
+#include <legate/type/type_info.inl>

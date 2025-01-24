@@ -12,18 +12,17 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
-
-#include "get_logical_store.hpp"
-#include "iterator.hpp"
-#include "mdspan.hpp"
-#include "ranges.hpp"
-#include "stlfwd.hpp"
+#include <legate/experimental/stl/detail/get_logical_store.hpp>
+#include <legate/experimental/stl/detail/iterator.hpp>
+#include <legate/experimental/stl/detail/mdspan.hpp>
+#include <legate/experimental/stl/detail/ranges.hpp>
+#include <legate/experimental/stl/detail/stlfwd.hpp>
+#include <legate/utilities/assert.h>
 
 #include <numeric>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -488,4 +487,4 @@ struct ValueTypeOf<SliceView<ElementType, Dim, SlicePolicy>> {
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

@@ -12,16 +12,15 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
-
-#include "config.hpp"
-#include "utility.hpp"
+#include <legate/experimental/stl/detail/config.hpp>
+#include <legate/experimental/stl/detail/utility.hpp>
+#include <legate/utilities/assert.h>
 
 #include <functional>
 #include <tuple>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -124,4 +123,4 @@ template <std::size_t Count, typename Function>
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

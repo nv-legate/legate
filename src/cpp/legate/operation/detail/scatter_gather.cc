@@ -10,16 +10,17 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/scatter_gather.h"
+#include <legate/operation/detail/scatter_gather.h>
 
-#include "legate/operation/detail/copy_launcher.h"
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/partitioning/detail/constraint_solver.h"
-#include "legate/partitioning/detail/partition.h"
-#include "legate/partitioning/detail/partitioner.h"
+#include <legate/operation/detail/copy_launcher.h>
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/partitioning/detail/constraint_solver.h>
+#include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/partitioner.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+
 #include <stdexcept>
 
 namespace legate::detail {

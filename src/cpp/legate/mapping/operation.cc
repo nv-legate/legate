@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/operation.h"
+#include <legate/mapping/operation.h>
 
-#include "legate/mapping/detail/array.h"
-#include "legate/mapping/detail/operation.h"
+#include <legate/mapping/detail/array.h>
+#include <legate/mapping/detail/operation.h>
 
 namespace legate::mapping {
 

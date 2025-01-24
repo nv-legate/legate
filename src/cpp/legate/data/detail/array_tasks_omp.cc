@@ -10,8 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/array_tasks.h"
-#include "legate/task/task_context.h"
+#include <legate/data/detail/array_tasks.h>
+#include <legate/task/task_context.h>
 
 namespace legate::detail {
 

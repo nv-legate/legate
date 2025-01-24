@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/detail/store.h"
+#include <legate/mapping/detail/store.h>
 
-#include "legate/data/detail/transform.h"
+#include <legate/data/detail/transform.h>
 
 #include <utility>
 

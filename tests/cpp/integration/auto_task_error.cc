@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate.h"
-#include "tasks/task_simple.h"
-#include "utilities/utilities.h"
+#include <legate.h>
 
 #include <gtest/gtest.h>
+
+#include <integration/tasks/task_simple.h>
+#include <utilities/utilities.h>
 
 namespace auto_task_test {
 

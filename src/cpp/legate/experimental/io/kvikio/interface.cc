@@ -10,22 +10,24 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <legate/experimental/io/kvikio/interface.h>
+
 #include <legate/data/shape.h>
 #include <legate/experimental/io/detail/library.h>
 #include <legate/experimental/io/kvikio/detail/basic.h>
 #include <legate/experimental/io/kvikio/detail/tile.h>
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
-#include <legate/experimental/io/kvikio/interface.h>
 #include <legate/runtime/runtime.h>
 #include <legate/type/type_info.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zip.h>
 
-#include <cstdint>
-#include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <fmt/std.h>
+
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <optional>
 #include <stdexcept>

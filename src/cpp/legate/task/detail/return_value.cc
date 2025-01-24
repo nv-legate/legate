@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/return_value.h"
+#include <legate/task/detail/return_value.h>
 
 #include <cstring>
 

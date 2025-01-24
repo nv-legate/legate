@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/detail/future_wrapper.h"
+#include <legate/data/detail/future_wrapper.h>
 
 namespace legate::detail {
 

@@ -12,13 +12,14 @@
 
 #pragma once
 
-#include "stlfwd.hpp"
+#include <legate/experimental/stl/detail/stlfwd.hpp>
 /////////////////
-#include "get_logical_store.hpp"
-#include "legate.h"
-#include "mdspan.hpp"
-#include "slice.hpp"
-#include "span.hpp"
+#include <legate.h>
+
+#include <legate/experimental/stl/detail/get_logical_store.hpp>
+#include <legate/experimental/stl/detail/mdspan.hpp>
+#include <legate/experimental/stl/detail/slice.hpp>
+#include <legate/experimental/stl/detail/span.hpp>
 
 #include <array>
 #include <cstddef>
@@ -28,7 +29,7 @@
 #include <type_traits>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -688,4 +689,4 @@ template <typename SlicePolicy, typename ElementType, std::int32_t Dim>
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

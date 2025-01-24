@@ -10,10 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <legate/comm/detail/coll.h>
+
 #include <legate_defines.h>
 
 #include <legate/comm/detail/backend_network.h>
-#include <legate/comm/detail/coll.h>
 #include <legate/comm/detail/local_network.h>
 #include <legate/comm/detail/mpi_network.h>
 #include <legate/utilities/assert.h>

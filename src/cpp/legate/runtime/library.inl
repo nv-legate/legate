@@ -15,9 +15,9 @@
 // Useful for IDEs
 #include <legate_defines.h>
 
-#include "legate/runtime/library.h"
-#include "legate/utilities/macros.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/runtime/library.h>
+#include <legate/utilities/macros.h>
+#include <legate/utilities/typedefs.h>
 
 namespace legate::detail {
 

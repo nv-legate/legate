@@ -10,18 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/detail/comm_cpu.h"
+#include <legate/comm/detail/comm_cpu.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/comm/coll_comm.h"
-#include "legate/comm/detail/backend_network.h"
-#include "legate/comm/detail/comm_local.h"
-#include "legate/comm/detail/comm_mpi.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/runtime/library.h"
-#include "legate/utilities/macros.h"
+#include <legate/comm/coll_comm.h>
+#include <legate/comm/detail/backend_network.h>
+#include <legate/comm/detail/comm_local.h>
+#include <legate/comm/detail/comm_mpi.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/library.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/macros.h>
 
 #include <stdexcept>
 

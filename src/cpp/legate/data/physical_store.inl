@@ -13,7 +13,7 @@
 #pragma once
 
 // Useful for IDEs
-#include "legate/data/physical_store.h"
+#include <legate/data/physical_store.h>
 
 namespace legate::detail::store_detail {
 

@@ -10,19 +10,22 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <legate/utilities/detail/error.h>
+
 #include <legate_defines.h>
 
 #include <legate/utilities/detail/enumerate.h>
-#include <legate/utilities/detail/error.h>
 #include <legate/utilities/span.h>
 #include <legate/version.h>
 
-#include <cpptrace/basic.hpp>
-#include <cpptrace/utils.hpp>
-#include <cstddef>
-#include <cstdlib>
 #include <fmt/color.h>
 #include <fmt/format.h>
+
+#include <cpptrace/basic.hpp>
+#include <cpptrace/utils.hpp>
+
+#include <cstddef>
+#include <cstdlib>
 #include <iterator>
 #include <string>
 #include <string_view>

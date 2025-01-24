@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/detail/local_network.h"
+#include <legate/comm/detail/local_network.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/comm/coll.h"
-#include "legate/comm/detail/logger.h"
-#include "legate/utilities/assert.h"
-#include "legate/utilities/macros.h"
+#include <legate/comm/coll.h>
+#include <legate/comm/detail/logger.h>
+#include <legate/utilities/assert.h>
+#include <legate/utilities/macros.h>
 
 #include <cstdio>
 #include <cstdlib>

@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate.h"
+#include <legate.h>
 
 namespace type_traits_test {
 

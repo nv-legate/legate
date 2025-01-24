@@ -14,10 +14,10 @@
 
 #include <legate_defines.h>
 
-#include "legate/data/scalar.h"
-#include "legate/task/variant_options.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/scalar.h>
+#include <legate/task/variant_options.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/typedefs.h>
 
 #include <map>
 #include <memory>
@@ -181,4 +181,4 @@ class Library {
 
 }  // namespace legate
 
-#include "legate/runtime/library.inl"
+#include <legate/runtime/library.inl>

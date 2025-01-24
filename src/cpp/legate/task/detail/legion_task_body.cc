@@ -10,22 +10,22 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/legion_task_body.h"
+#include <legate/task/detail/legion_task_body.h>
 
-#include "legate/comm/communicator.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/task/detail/return_value.h"
-#include "legate/task/detail/returned_exception.h"
-#include "legate/task/detail/task.h"
-#include "legate/task/detail/task_context.h"
-#include "legate/task/detail/task_return.h"
-#include "legate/task/task_context.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/deserializer.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/comm/communicator.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/task/detail/return_value.h>
+#include <legate/task/detail/returned_exception.h>
+#include <legate/task/detail/task.h>
+#include <legate/task/detail/task_context.h>
+#include <legate/task/detail/task_return.h>
+#include <legate/task/task_context.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/deserializer.h>
+#include <legate/utilities/typedefs.h>
 
-#include "realm/cuda/cuda_module.h"
+#include <realm/cuda/cuda_module.h>
 
 #include <algorithm>
 #include <cstddef>

@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/attach.h"
+#include <legate/operation/detail/attach.h>
 
-#include "legate/runtime/detail/runtime.h"
+#include <legate/runtime/detail/runtime.h>
 
 namespace legate::detail {
 

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/type/detail/type_info.h"
+#include <legate/type/detail/type_info.h>
 
 namespace legate::detail {
 

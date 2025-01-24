@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/detail/enumerate.h"
+#include <legate/utilities/detail/enumerate.h>
 
 #include <limits>
 

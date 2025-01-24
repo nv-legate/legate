@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/data/detail/scalar.h"
-#include "legate/data/scalar.h"
-#include "legate/type/type_traits.h"
+#include <legate/data/detail/scalar.h>
+#include <legate/data/scalar.h>
+#include <legate/type/type_traits.h>
 
 #include <utility>
 

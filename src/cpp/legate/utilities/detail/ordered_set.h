@@ -35,4 +35,4 @@ class ordered_set {  // NOLINT(readability-identifier-naming)
 
 }  // namespace legate
 
-#include "legate/utilities/detail/ordered_set.inl"
+#include <legate/utilities/detail/ordered_set.inl>

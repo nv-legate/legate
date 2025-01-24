@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/data/buffer.h"
-#include "legate/utilities/macros.h"
 #include <legate/cuda/detail/cuda_driver_types.h>
+#include <legate/data/buffer.h>
+#include <legate/utilities/macros.h>
 
 namespace legate::detail {
 

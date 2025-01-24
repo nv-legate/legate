@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/detail/array.h"
+#include <legate/mapping/detail/array.h>
 
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <algorithm>
 #include <fmt/format.h>
+
+#include <algorithm>
 #include <stdexcept>
 
 namespace legate::mapping::detail {

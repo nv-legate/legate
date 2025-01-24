@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/internal_shared_ptr.h"
-
-#include "utilities/utilities.h"
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 using BasicSharedPtrTypeList = ::testing::Types<std::int8_t, std::int32_t, std::uint64_t>;
 

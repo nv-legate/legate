@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/mapping/mapping.h"
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/hash.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/mapping/mapping.h>
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/hash.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <iosfwd>
 #include <map>
@@ -197,4 +197,4 @@ class ReductionInstanceManager final : public BaseInstanceManager {
 
 }  // namespace legate::mapping::detail
 
-#include "legate/mapping/detail/instance_manager.inl"
+#include <legate/mapping/detail/instance_manager.inl>

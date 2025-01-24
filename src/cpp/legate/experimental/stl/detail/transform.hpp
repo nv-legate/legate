@@ -12,13 +12,12 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
-
-#include "launch_task.hpp"
-#include "store.hpp"
+#include <legate/experimental/stl/detail/launch_task.hpp>
+#include <legate/experimental/stl/detail/store.hpp>
+#include <legate/utilities/assert.h>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -137,4 +136,4 @@ void transform(InputRange1&& input1, InputRange2&& input2, OutputRange&& output,
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

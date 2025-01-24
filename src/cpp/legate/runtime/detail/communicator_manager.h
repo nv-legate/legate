@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/mapping/detail/machine.h"
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/hash.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/mapping/detail/machine.h>
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/hash.h>
+#include <legate/utilities/typedefs.h>
 
 #include <map>
 #include <memory>
@@ -94,4 +94,4 @@ class CommunicatorManager {
 
 }  // namespace legate::detail
 
-#include "legate/runtime/detail/communicator_manager.inl"
+#include <legate/runtime/detail/communicator_manager.inl>

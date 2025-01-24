@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/task/detail/returned_exception.h"
+#include <legate/task/detail/returned_exception.h>
 
 namespace legate::detail {
 

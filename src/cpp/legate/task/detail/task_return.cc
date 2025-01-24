@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/task_return.h"
+#include <legate/task/detail/task_return.h>
 
-#include "legate/cuda/cuda.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/task/detail/returned_exception_common.h"
-#include "legate/utilities/detail/zip.h"
-#include "legate/utilities/machine.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/cuda/cuda.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/task/detail/returned_exception_common.h>
+#include <legate/utilities/detail/zip.h>
+#include <legate/utilities/machine.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 #include <cstdint>

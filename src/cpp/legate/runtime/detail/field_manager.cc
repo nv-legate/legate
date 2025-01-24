@@ -10,12 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/field_manager.h"
+#include <legate/runtime/detail/field_manager.h>
 
-#include "legate/data/detail/logical_region_field.h"
-#include "legate/runtime/detail/config.h"
-#include "legate/runtime/detail/region_manager.h"
-#include "legate/runtime/detail/runtime.h"
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/region_manager.h>
+#include <legate/runtime/detail/runtime.h>
 
 namespace legate::detail {
 

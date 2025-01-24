@@ -12,36 +12,36 @@
 
 #pragma once
 
-#include "legate/cuda/detail/cuda_driver_api.h"
-#include "legate/cuda/detail/module_manager.h"
-#include "legate/data/detail/logical_region_field.h"
-#include "legate/data/detail/scalar.h"
-#include "legate/data/detail/shape.h"
-#include "legate/data/external_allocation.h"
-#include "legate/data/logical_store.h"
-#include "legate/mapping/detail/instance_manager.h"
-#include "legate/mapping/detail/mapping.h"
-#include "legate/mapping/machine.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/operation/detail/timing.h"
-#include "legate/runtime/detail/communicator_manager.h"
-#include "legate/runtime/detail/consensus_match_result.h"
-#include "legate/runtime/detail/field_manager.h"
-#include "legate/runtime/detail/library.h"
-#include "legate/runtime/detail/mapper_manager.h"
-#include "legate/runtime/detail/partition_manager.h"
-#include "legate/runtime/detail/projection.h"
-#include "legate/runtime/detail/region_manager.h"
-#include "legate/runtime/detail/scope.h"
-#include "legate/runtime/resource.h"
-#include "legate/task/detail/returned_exception.h"
-#include "legate/type/type_info.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/detail/zstring_view.h"
-#include "legate/utilities/hash.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/cuda/detail/cuda_driver_types.h>
+#include <legate/cuda/detail/module_manager.h>
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/data/detail/scalar.h>
+#include <legate/data/detail/shape.h>
+#include <legate/data/external_allocation.h>
+#include <legate/data/logical_store.h>
+#include <legate/mapping/detail/instance_manager.h>
+#include <legate/mapping/detail/mapping.h>
+#include <legate/mapping/machine.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/operation/detail/timing.h>
+#include <legate/runtime/detail/communicator_manager.h>
+#include <legate/runtime/detail/consensus_match_result.h>
+#include <legate/runtime/detail/field_manager.h>
+#include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/mapper_manager.h>
+#include <legate/runtime/detail/partition_manager.h>
+#include <legate/runtime/detail/projection.h>
+#include <legate/runtime/detail/region_manager.h>
+#include <legate/runtime/detail/scope.h>
+#include <legate/runtime/resource.h>
+#include <legate/task/detail/returned_exception.h>
+#include <legate/type/type_info.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/detail/zstring_view.h>
+#include <legate/utilities/hash.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <list>
 #include <map>
@@ -458,4 +458,4 @@ class Runtime {
 
 }  // namespace legate::detail
 
-#include "legate/runtime/detail/runtime.inl"
+#include <legate/runtime/detail/runtime.inl>

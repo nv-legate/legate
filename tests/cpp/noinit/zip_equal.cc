@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/zip.h"
-
-#include "noinit/zip_common.h"
+#include <legate/utilities/detail/zip.h>
 
 #include <gtest/gtest.h>
+
+#include <noinit/zip_common.h>
 #include <utility>
 
 namespace zip_longest_test {

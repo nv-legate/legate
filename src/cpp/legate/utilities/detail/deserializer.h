@@ -12,21 +12,21 @@
 
 #pragma once
 
-#include "legate/comm/communicator.h"
-#include "legate/data/detail/physical_array.h"
-#include "legate/data/detail/physical_store.h"
-#include "legate/data/detail/scalar.h"
-#include "legate/data/detail/transform.h"
-#include "legate/data/physical_store.h"
-#include "legate/data/scalar.h"
-#include "legate/mapping/detail/array.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/mapping/detail/store.h"
-#include "legate/type/detail/type_info.h"
-#include "legate/type/type_traits.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/span.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/comm/communicator.h>
+#include <legate/data/detail/physical_array.h>
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/detail/scalar.h>
+#include <legate/data/detail/transform.h>
+#include <legate/data/physical_store.h>
+#include <legate/data/scalar.h>
+#include <legate/mapping/detail/array.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/mapping/detail/store.h>
+#include <legate/type/detail/type_info.h>
+#include <legate/type/type_traits.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/span.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -161,4 +161,4 @@ class CopyDeserializer : public legate::detail::BaseDeserializer<CopyDeserialize
 
 }  // namespace legate::mapping::detail
 
-#include "legate/utilities/detail/deserializer.inl"
+#include <legate/utilities/detail/deserializer.inl>

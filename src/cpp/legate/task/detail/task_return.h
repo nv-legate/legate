@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/task/detail/return_value.h"
-#include "legate/task/detail/task_return_layout.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/task/detail/return_value.h>
+#include <legate/task/detail/task_return_layout.h>
+#include <legate/utilities/typedefs.h>
 
 #include <vector>
 
@@ -38,4 +38,4 @@ class TaskReturn {
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/task_return.inl"
+#include <legate/task/detail/task_return.inl>

@@ -10,14 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/enumerate.h"
-#include "legate/utilities/detail/zip.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/zip.h>
 
 #include <gtest/gtest.h>
+
 #include <string_view>
+#include <utilities/utilities.h>
 
 namespace multiscalarout {
 

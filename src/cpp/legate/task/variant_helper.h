@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/task/task_info.h"
-#include "legate/task/variant_options.h"
-#include "legate/utilities/detail/type_traits.h"
+#include <legate/task/task_info.h>
+#include <legate/task/variant_options.h>
+#include <legate/utilities/detail/type_traits.h>
 
-#include "legion.h"
+#include <legion.h>
 
 #include <optional>
 #include <string_view>

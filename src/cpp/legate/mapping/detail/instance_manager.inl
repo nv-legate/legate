@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/mapping/detail/instance_manager.h"
+#include <legate/mapping/detail/instance_manager.h>
 
 #include <utility>
 

@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/task/detail/return_value.h"
-#include "legate/task/detail/returned_cpp_exception.h"
-#include "legate/task/detail/returned_python_exception.h"
+#include <legate/task/detail/return_value.h>
+#include <legate/task/detail/returned_cpp_exception.h>
+#include <legate/task/detail/returned_python_exception.h>
 
 #include <cstddef>
 #include <string>
@@ -81,4 +81,4 @@ class ReturnedException {
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/returned_exception.inl"
+#include <legate/task/detail/returned_exception.inl>

@@ -16,7 +16,7 @@
 //
 // INCLUDE GUARDS ARE NOT NEEDED IN THIS HEADER
 
-#include "legate/utilities/macros.h"
+#include <legate/utilities/macros.h>
 
 #if !LEGATE_DEFINED(LEGATE_STL_DETAIL_PREFIX_INCLUDED)
 #error "Did you forget to add prefix.hpp at the top of the file?"

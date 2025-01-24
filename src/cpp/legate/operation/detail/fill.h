@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/operation/detail/operation.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/operation/detail/operation.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <variant>
 
@@ -50,4 +50,4 @@ class Fill final : public Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/fill.inl"
+#include <legate/operation/detail/fill.inl>

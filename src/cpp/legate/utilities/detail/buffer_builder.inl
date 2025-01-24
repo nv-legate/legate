@@ -13,7 +13,7 @@
 #pragma once
 
 // Useful for IDEs
-#include "legate/utilities/detail/buffer_builder.h"
+#include <legate/utilities/detail/buffer_builder.h>
 
 namespace legate::detail {
 

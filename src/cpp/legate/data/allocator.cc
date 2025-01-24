@@ -10,15 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/allocator.h"
+#include <legate/data/allocator.h>
 
-#include "legate/data/buffer.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/buffer.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/typedefs.h>
+
+#include <fmt/format.h>
 
 #include <cstddef>
 #include <cstdint>
-#include <fmt/format.h>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>

@@ -10,14 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/zip.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/utilities/detail/zip.h>
+
+#include <fmt/format.h>
+
+#include <gtest/gtest.h>
 
 #include <array>
-#include <fmt/format.h>
-#include <gtest/gtest.h>
+#include <utilities/utilities.h>
 
 namespace register_variants {
 

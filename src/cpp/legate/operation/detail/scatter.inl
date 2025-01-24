@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/scatter.h"
+#include <legate/operation/detail/scatter.h>
 
 namespace legate::detail {
 

@@ -12,15 +12,14 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
-
-#include "functional.hpp"
-#include "reduce.hpp"
-#include "stlfwd.hpp"
-#include "transform.hpp"
+#include <legate/experimental/stl/detail/functional.hpp>
+#include <legate/experimental/stl/detail/reduce.hpp>
+#include <legate/experimental/stl/detail/stlfwd.hpp>
+#include <legate/experimental/stl/detail/transform.hpp>
+#include <legate/utilities/assert.h>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -216,4 +215,4 @@ template <typename InputRange1,
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

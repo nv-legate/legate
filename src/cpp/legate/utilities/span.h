@@ -108,4 +108,4 @@ class Span {
 
 }  // namespace legate
 
-#include "legate/utilities/span.inl"
+#include <legate/utilities/span.inl>

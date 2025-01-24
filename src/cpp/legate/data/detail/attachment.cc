@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/attachment.h"
+#include <legate/data/detail/attachment.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/runtime/detail/runtime.h"
+#include <legate/runtime/detail/runtime.h>
 
 #include <exception>
 #include <memory>

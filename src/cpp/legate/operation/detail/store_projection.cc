@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/store_projection.h"
+#include <legate/operation/detail/store_projection.h>
 
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/core_ids.h"
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/core_ids.h>
 
 namespace legate::detail {
 

@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/type/type_info.h"
-#include "legate/utilities/macros.h"
+#include <legate/type/type_info.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/macros.h>
 
 #include <climits>
 #include <cstdint>
@@ -31,11 +31,11 @@
 #ifdef LEGION_REDOP_HALF
 #define COMPLEX_HALF
 #endif
-#include "mathtypes/complex.h"
+#include <mathtypes/complex.h>
 #endif
 
 #ifdef LEGION_REDOP_HALF
-#include "mathtypes/half.h"
+#include <mathtypes/half.h>
 #endif
 
 /**

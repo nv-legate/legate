@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/cpp_version.h"
+#include <legate/utilities/cpp_version.h>
 
 #include <cstddef>
 #include <iterator>
@@ -264,4 +264,4 @@ template <typename... T>
 
 }  // namespace legate::detail
 
-#include "legate/utilities/detail/zip.inl"
+#include <legate/utilities/detail/zip.inl>

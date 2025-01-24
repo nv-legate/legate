@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/mapping/operation.h"
+#include <legate/mapping/operation.h>
 
 namespace legate::mapping {
 

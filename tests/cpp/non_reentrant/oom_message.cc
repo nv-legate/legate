@@ -10,13 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/env.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/utilities/detail/env.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 namespace oom_message {
 

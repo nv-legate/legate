@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate.h>
 
 #include <gtest/gtest.h>
+
 #include <map>
+#include <utilities/utilities.h>
 
 namespace test_task_store {
 

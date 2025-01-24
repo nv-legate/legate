@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/timing/timing.h"
+#include <legate/timing/timing.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate.h>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 namespace {
 

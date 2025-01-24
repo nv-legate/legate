@@ -10,13 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/internal_shared_ptr.h"
-
-#include "utilities/utilities.h"
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <gtest/gtest.h>
+
 #include <numeric>
 #include <unordered_set>
+#include <utilities/utilities.h>
 #include <vector>
 
 namespace enable_shared_from_this_tests {

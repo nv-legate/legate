@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/returned_exception.h"
+#include <legate/task/detail/returned_exception.h>
 
-#include "legate/runtime/detail/library.h"
-#include "legate/utilities/assert.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/env.h"
-#include "legate/utilities/detail/env_defaults.h"
-#include "legate/utilities/detail/type_traits.h"
+#include <legate/runtime/detail/library.h>
+#include <legate/utilities/assert.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/env_defaults.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <cstddef>
 #include <cstring>

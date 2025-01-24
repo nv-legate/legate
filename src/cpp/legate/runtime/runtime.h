@@ -12,16 +12,16 @@
 
 #pragma once
 
-#include "legate/data/external_allocation.h"
-#include "legate/data/logical_array.h"
-#include "legate/data/logical_store.h"
-#include "legate/data/shape.h"
-#include "legate/mapping/machine.h"
-#include "legate/operation/task.h"
-#include "legate/runtime/library.h"
-#include "legate/runtime/resource.h"
-#include "legate/task/variant_options.h"
-#include "legate/type/type_info.h"
+#include <legate/data/external_allocation.h>
+#include <legate/data/logical_array.h>
+#include <legate/data/logical_store.h>
+#include <legate/data/shape.h>
+#include <legate/mapping/machine.h>
+#include <legate/operation/task.h>
+#include <legate/runtime/library.h>
+#include <legate/runtime/resource.h>
+#include <legate/task/variant_options.h>
+#include <legate/type/type_info.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>
@@ -813,4 +813,4 @@ void register_shutdown_callback(T&& callback);
 
 }  // namespace legate
 
-#include "legate/runtime/runtime.inl"
+#include <legate/runtime/runtime.inl>

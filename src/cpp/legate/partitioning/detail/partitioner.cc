@@ -10,15 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/partitioning/detail/partitioner.h"
+#include <legate/partitioning/detail/partitioner.h>
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/partitioning/detail/constraint_solver.h"
-#include "legate/partitioning/detail/partition.h"
-#include "legate/runtime/detail/config.h"
-#include "legate/runtime/detail/region_manager.h"
-#include "legate/runtime/detail/runtime.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/partitioning/detail/constraint_solver.h>
+#include <legate/partitioning/detail/partition.h>
+#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/region_manager.h>
+#include <legate/runtime/detail/runtime.h>
 
 #include <algorithm>
 #include <tuple>

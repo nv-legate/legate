@@ -12,23 +12,23 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
-#include "legate/utilities/macros.h"
+#include <legate.h>
 
-#include "functional.hpp"
-#include "legate.h"
-#include "meta.hpp"
-#include "registrar.hpp"
-#include "slice.hpp"
-#include "store.hpp"
-#include "utility.hpp"
+#include <legate/experimental/stl/detail/functional.hpp>
+#include <legate/experimental/stl/detail/meta.hpp>
+#include <legate/experimental/stl/detail/registrar.hpp>
+#include <legate/experimental/stl/detail/slice.hpp>
+#include <legate/experimental/stl/detail/store.hpp>
+#include <legate/experimental/stl/detail/utility.hpp>
+#include <legate/utilities/assert.h>
+#include <legate/utilities/macros.h>
 
 #include <atomic>
 #include <iterator>
 #include <vector>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -1349,4 +1349,4 @@ void launch_task(Params... params);
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

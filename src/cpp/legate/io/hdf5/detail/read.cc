@@ -11,6 +11,7 @@
  */
 
 #include <legate/io/hdf5/detail/read.h>
+
 #include <legate/io/hdf5/detail/util.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
@@ -22,9 +23,10 @@
 
 #include <highfive/H5File.hpp>
 
+#include <fmt/format.h>
+
 #include <cstddef>
 #include <cstdint>
-#include <fmt/format.h>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>

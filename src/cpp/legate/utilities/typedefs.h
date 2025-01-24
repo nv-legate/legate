@@ -16,7 +16,7 @@
 
 #include <legate/utilities/detail/doxygen.h>
 
-#include "legion.h"
+#include <legion.h>
 
 #include <cstddef>
 #include <cstdint>

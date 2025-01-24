@@ -10,18 +10,19 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/env.h"
+#include <legate/utilities/detail/env.h>
 
-#include "legate/utilities/assert.h"             // LEGATE_LIKELY()
-#include "legate/utilities/detail/formatters.h"  // to format ZStringView
-#include "legate/utilities/detail/zstring_view.h"
+#include <legate/utilities/assert.h>             // LEGATE_LIKELY()
+#include <legate/utilities/detail/formatters.h>  // to format ZStringView
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/zstring_view.h>
+
+#include <fmt/format.h>
 
 #include <cerrno>
 #include <charconv>
 #include <cstdlib>
 #include <cstring>
-#include <fmt/format.h>
 #include <limits>
 #include <mutex>
 #include <stdexcept>

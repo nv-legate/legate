@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/mapping/detail/mapping.h"
+#include <legate/mapping/detail/mapping.h>
 
 #include <utility>
 

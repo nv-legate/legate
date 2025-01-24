@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/type/detail/type_info.h"
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/type/detail/type_info.h>
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <string_view>
 
@@ -60,4 +60,4 @@ class Scalar {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/scalar.inl"
+#include <legate/data/detail/scalar.inl>

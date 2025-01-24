@@ -135,7 +135,7 @@ struct hash<legate::detail::BasicZStringView<CharT, TraitsT>> {  // NOLINT(cert-
 
 }  // namespace std
 
-#include "legate/utilities/detail/zstring_view.inl"
+#include <legate/utilities/detail/zstring_view.inl>
 
 namespace legate::detail {
 

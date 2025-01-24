@@ -12,11 +12,11 @@
 
 #define LEGATE_SILENCE_STREAM_POOL_DEPRECATION_PRIVATE 1
 
-#include "legate/cuda/stream_pool.h"
+#include <legate/cuda/stream_pool.h>
 
-#include "legate/cuda/detail/cuda_driver_api.h"
-#include "legate/runtime/detail/config.h"
-#include "legate/runtime/detail/runtime.h"
+#include <legate/cuda/detail/cuda_driver_api.h>
+#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/runtime.h>
 
 namespace legate::cuda {
 

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/detail/zstring_view.h"
+#include <legate/utilities/detail/zstring_view.h>
 
 #include <cstdint>
 #include <optional>
@@ -148,4 +148,4 @@ LEGATE_DEFINE_ENV_VAR(bool, LEGATE_INLINE_TASK_LAUNCH);
 #define LEGATE_CHECK_ENV_VAR_DOCS(name) \
   static_assert(legate::detail::ZStringView{legate::detail::name} == #name)
 
-#include "legate/utilities/env.h"
+#include <legate/utilities/env.h>

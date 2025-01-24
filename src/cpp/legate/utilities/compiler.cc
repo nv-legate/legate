@@ -13,6 +13,7 @@
 #include <legate/utilities/compiler.h>
 
 #include <fmt/std.h>
+
 #include <string>
 #include <typeinfo>
 

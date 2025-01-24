@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legion.h"
+#include <legion.h>
 
 namespace legate::detail {
 

@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/partitioning/detail/restriction.h"
-#include "legate/utilities/detail/ordered_set.h"
-#include "legate/utilities/hash.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/partitioning/detail/restriction.h>
+#include <legate/utilities/detail/ordered_set.h>
+#include <legate/utilities/hash.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <deque>
 #include <memory>
@@ -76,4 +76,4 @@ class ConstraintSolver {
 
 }  // namespace legate::detail
 
-#include "legate/partitioning/detail/constraint_solver.inl"
+#include <legate/partitioning/detail/constraint_solver.inl>

@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/mapping/mapping.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
+#include <legate/mapping/mapping.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
 
 #include <functional>
 #include <optional>
@@ -243,4 +243,4 @@ class ExternalAllocation {
 
 }  // namespace legate
 
-#include "legate/data/external_allocation.inl"
+#include <legate/data/external_allocation.inl>

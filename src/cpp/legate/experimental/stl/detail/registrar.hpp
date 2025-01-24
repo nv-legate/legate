@@ -12,15 +12,15 @@
 
 #pragma once
 
-#include <legate/utilities/detail/traced_exception.h>
+#include <legate.h>
 
-#include "config.hpp"
-#include "legate.h"
+#include <legate/experimental/stl/detail/config.hpp>
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -92,4 +92,4 @@ class initialize_library {  // NOLINT(readability-identifier-naming)
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

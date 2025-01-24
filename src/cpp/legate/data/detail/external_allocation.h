@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/data/external_allocation.h"
-#include "legate/mapping/mapping.h"
+#include <legate/data/external_allocation.h>
+#include <legate/mapping/mapping.h>
 
-#include "legion.h"
-#include "realm/instance.h"
+#include <legion.h>
+#include <realm/instance.h>
 
 #include <memory>
 #include <optional>
@@ -56,4 +56,4 @@ class ExternalAllocation {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/external_allocation.inl"
+#include <legate/data/detail/external_allocation.inl>

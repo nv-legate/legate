@@ -10,15 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/detail/comm_local.h"
+#include <legate/comm/detail/comm_local.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/comm/coll.h"
-#include "legate/comm/detail/comm_cpu_factory.h"
-#include "legate/task/detail/legion_task.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/macros.h"
+#include <legate/comm/coll.h>
+#include <legate/comm/detail/comm_cpu_factory.h>
+#include <legate/task/detail/legion_task.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/macros.h>
 
 #include <cstddef>
 #include <memory>

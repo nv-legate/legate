@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/cuda/detail/cuda_driver_api.h"
+#include <legate/cuda/detail/cuda_driver_api.h>
 
-#include "legate/utilities/detail/env.h"
+#include <legate/utilities/detail/env.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
 #include <optional>
 #include <stdexcept>
 #include <string>

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/operation.h"
+#include <legate/operation/detail/operation.h>
 
 #include <cstdint>
 
@@ -33,4 +33,4 @@ class Discard final : public Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/discard.inl"
+#include <legate/operation/detail/discard.inl>

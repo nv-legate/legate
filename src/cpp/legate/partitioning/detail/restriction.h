@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/tuple.h"
+#include <legate/utilities/tuple.h>
 
 namespace legate::detail {
 

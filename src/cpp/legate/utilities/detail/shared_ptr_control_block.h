@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/detail/compressed_pair.h"
+#include <legate/utilities/detail/compressed_pair.h>
 
 #include <atomic>
 #include <cstddef>
@@ -160,4 +160,4 @@ template <typename U, typename Alloc, typename P, typename... Args>
 
 }  // namespace legate::detail
 
-#include "legate/utilities/detail/shared_ptr_control_block.inl"
+#include <legate/utilities/detail/shared_ptr_control_block.inl>

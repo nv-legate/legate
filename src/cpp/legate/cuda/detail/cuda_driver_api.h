@@ -192,4 +192,4 @@ class CUDADriverError : public std::runtime_error {
 
 }  // namespace legate::cuda::detail
 
-#include "legate/cuda/detail/cuda_driver_api.inl"
+#include <legate/cuda/detail/cuda_driver_api.inl>

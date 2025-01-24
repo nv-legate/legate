@@ -15,12 +15,14 @@
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/zip.h>
 
-#include <algorithm>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <fmt/std.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <algorithm>
 #include <optional>
 #include <string>
 #include <string_view>

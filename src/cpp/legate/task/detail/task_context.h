@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "legate/comm/communicator.h"
-#include "legate/data/detail/physical_array.h"
-#include "legate/data/scalar.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/task/detail/returned_exception.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/comm/communicator.h>
 #include <legate/cuda/detail/cuda_driver_types.h>
+#include <legate/data/detail/physical_array.h>
+#include <legate/data/scalar.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/task/detail/returned_exception.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <optional>
 #include <string_view>
@@ -91,4 +91,4 @@ class TaskContext {
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/task_context.inl"
+#include <legate/task/detail/task_context.inl>

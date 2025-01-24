@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/mapping/mapping.h"
+#include <legate.h>
 
-#include "legate.h"
+#include <legate/mapping/mapping.h>
 
 namespace task::simple {
 

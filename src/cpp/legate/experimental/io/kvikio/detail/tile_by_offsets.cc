@@ -10,8 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate/data/physical_store.h>
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
+
+#include <legate/data/physical_store.h>
 #include <legate/type/type_info.h>
 #include <legate/utilities/detail/linearize.h>
 #include <legate/utilities/dispatch.h>

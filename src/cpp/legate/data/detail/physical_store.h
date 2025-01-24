@@ -12,14 +12,14 @@
 
 #pragma once
 
-#include "legate/data/detail/future_wrapper.h"
-#include "legate/data/detail/region_field.h"
-#include "legate/data/detail/transform.h"
-#include "legate/data/inline_allocation.h"
-#include "legate/mapping/mapping.h"
-#include "legate/task/detail/return_value.h"
-#include "legate/type/detail/type_info.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/future_wrapper.h>
+#include <legate/data/detail/region_field.h>
+#include <legate/data/detail/transform.h>
+#include <legate/data/inline_allocation.h>
+#include <legate/mapping/mapping.h>
+#include <legate/task/detail/return_value.h>
+#include <legate/type/detail/type_info.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>
 
@@ -148,4 +148,4 @@ class PhysicalStore {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/physical_store.inl"
+#include <legate/data/detail/physical_store.inl>

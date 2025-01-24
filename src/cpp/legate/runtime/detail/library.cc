@@ -10,16 +10,17 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/library.h"
+#include <legate/runtime/detail/library.h>
 
-#include "legate/mapping/mapping.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/runtime/runtime.h"
-#include "legate/utilities/detail/type_traits.h"
+#include <legate/mapping/mapping.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/type_traits.h>
+
+#include <fmt/format.h>
 
 #include <exception>
-#include <fmt/format.h>
 #include <stdexcept>
 
 namespace legate::detail {

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/comm/communicator.h"
+#include <legate/comm/communicator.h>
 
 #include <utility>
 

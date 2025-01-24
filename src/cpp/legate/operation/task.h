@@ -14,14 +14,14 @@
 
 #include <legate_defines.h>
 
-#include "legate/data/logical_array.h"
-#include "legate/data/logical_store.h"
-#include "legate/data/scalar.h"
-#include "legate/operation/projection.h"
-#include "legate/partitioning/constraint.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
+#include <legate/data/logical_array.h>
+#include <legate/data/logical_store.h>
+#include <legate/data/scalar.h>
+#include <legate/operation/projection.h>
+#include <legate/partitioning/constraint.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
 
 #include <string_view>
 #include <type_traits>
@@ -412,4 +412,4 @@ class ManualTask {
 
 }  // namespace legate
 
-#include "legate/operation/task.inl"
+#include <legate/operation/task.inl>

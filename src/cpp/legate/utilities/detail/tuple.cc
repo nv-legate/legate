@@ -10,14 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/tuple.h"
+#include <legate/utilities/detail/tuple.h>
 
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <algorithm>
-#include <cstdint>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+
+#include <algorithm>
+#include <cstdint>
 #include <stdexcept>
 
 namespace legate::detail {

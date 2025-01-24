@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/index_attach.h"
+#include <legate/operation/detail/index_attach.h>
 
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/zip.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/zip.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>
 

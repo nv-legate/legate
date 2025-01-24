@@ -12,10 +12,11 @@
 
 #pragma once
 
-#include "legate/utilities/detail/env.h"
+#include <legate/utilities/detail/env.h>
+
+#include <gtest/gtest.h>
 
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <mutex>
 #include <optional>
 #include <string>

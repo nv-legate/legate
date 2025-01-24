@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/operation/projection.h"
-#include "legate/utilities/tuple.h"
+#include <legate/operation/projection.h>
+#include <legate/utilities/tuple.h>
 
 #include <functional>
 #include <iosfwd>

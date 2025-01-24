@@ -12,13 +12,14 @@
 
 #pragma once
 
-#include "config.hpp"
-#include "legate.h"
+#include <legate.h>
+
+#include <legate/experimental/stl/detail/config.hpp>
 
 #include <utility>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // get_logical_store
@@ -73,4 +74,4 @@ LogicalStore get_logical_store(StoreLike&& store_like);
 }  // namespace legate::experimental::stl
 #endif
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

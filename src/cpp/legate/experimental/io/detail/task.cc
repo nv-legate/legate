@@ -10,8 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate/experimental/io/detail/library.h>
 #include <legate/experimental/io/detail/task.h>
+
+#include <legate/experimental/io/detail/library.h>
 #include <legate/experimental/io/kvikio/detail/basic.h>
 #include <legate/experimental/io/kvikio/detail/tile.h>
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>

@@ -12,15 +12,14 @@
 
 #pragma once
 
-#include "legate/utilities/detail/compressed_pair.h"
-
-#include "config.hpp"
-#include "utility.hpp"
+#include <legate/experimental/stl/detail/config.hpp>
+#include <legate/experimental/stl/detail/utility.hpp>
+#include <legate/utilities/detail/compressed_pair.h>
 
 #include <iterator>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -226,4 +225,4 @@ class affine_map {  // NOLINT(readability-identifier-naming)
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

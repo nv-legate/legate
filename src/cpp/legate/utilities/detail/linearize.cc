@@ -11,6 +11,7 @@
  */
 
 #include <legate/utilities/detail/linearize.h>
+
 #include <legate/utilities/dispatch.h>
 
 #include <cstddef>

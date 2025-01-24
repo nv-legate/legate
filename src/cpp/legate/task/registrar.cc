@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/registrar.h"
+#include <legate/task/registrar.h>
 
-#include "legate/runtime/detail/library.h"
-#include "legate/task/task_info.h"
+#include <legate/runtime/detail/library.h>
+#include <legate/task/task_info.h>
 
 #include <utility>
 #include <vector>

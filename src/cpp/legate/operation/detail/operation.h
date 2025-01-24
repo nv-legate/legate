@@ -12,18 +12,19 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/formatters.h"
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/detail/zstring_view.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/detail/zstring_view.h>
+#include <legate/utilities/internal_shared_ptr.h>
+
+#include <fmt/format.h>
 
 #include <deque>
-#include <fmt/format.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -113,7 +114,7 @@ class Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/operation.inl"
+#include <legate/operation/detail/operation.inl>
 
 namespace fmt {
 

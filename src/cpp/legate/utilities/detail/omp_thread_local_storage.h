@@ -41,4 +41,4 @@ class OMPThreadLocalStorage {
 
 }  // namespace legate::detail
 
-#include "legate/utilities/detail/omp_thread_local_storage.inl"
+#include <legate/utilities/detail/omp_thread_local_storage.inl>

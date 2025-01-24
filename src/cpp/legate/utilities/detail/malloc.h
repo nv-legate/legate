@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
+#include <legate/utilities/assert.h>
 
 #include <cstddef>
 #include <cstdlib>

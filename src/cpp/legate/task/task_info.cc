@@ -10,16 +10,17 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/task_info.h"
+#include <legate/task/task_info.h>
 
-#include "legate/utilities/detail/formatters.h"
-#include "legate/utilities/detail/zstring_view.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/zstring_view.h>
+#include <legate/utilities/typedefs.h>
 
-#include <array>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+
+#include <array>
 #include <iostream>
 #include <stdexcept>
 

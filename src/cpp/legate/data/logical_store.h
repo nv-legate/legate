@@ -14,13 +14,13 @@
 
 #include <legate_defines.h>
 
-#include "legate/data/physical_store.h"
-#include "legate/data/shape.h"
-#include "legate/data/slice.h"
-#include "legate/type/type_info.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
+#include <legate/data/physical_store.h>
+#include <legate/data/shape.h>
+#include <legate/data/slice.h>
+#include <legate/type/type_info.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
 
 #include <utility>
 #include <vector>
@@ -482,4 +482,4 @@ class LogicalStorePartition {
 
 }  // namespace legate
 
-#include "legate/data/logical_store.inl"
+#include <legate/data/logical_store.inl>

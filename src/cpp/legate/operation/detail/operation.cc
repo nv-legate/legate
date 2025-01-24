@@ -10,15 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/operation.h"
+#include <legate/operation/detail/operation.h>
 
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/partitioning/detail/partitioner.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/formatters.h"
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/partitioning/detail/partitioner.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+
 #include <stdexcept>
 
 namespace legate::detail {

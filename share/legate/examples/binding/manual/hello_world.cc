@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <legate.h>
+
 #include <cstdint>
 #include <iostream>
-#include <legate.h>
 
 namespace hello_world {
 

@@ -36,7 +36,7 @@ class DefaultDelete {
 
 }  // namespace legate
 
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
 
-#include "legate/utilities/memory.inl"
+#include <legate/utilities/memory.inl>

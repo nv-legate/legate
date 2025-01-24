@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/mapping/mapping.h"
+#include <legate/mapping/mapping.h>
 
 #include <vector>
 
@@ -43,4 +43,4 @@ class DefaultMapper final : public Mapper {  // NOLINT(bugprone-forward-declarat
 
 }  // namespace legate::mapping::detail
 
-#include "legate/mapping/detail/default_mapper.inl"
+#include <legate/mapping/detail/default_mapper.inl>

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/gather.h"
+#include <legate/operation/detail/gather.h>
 
 namespace legate::detail {
 

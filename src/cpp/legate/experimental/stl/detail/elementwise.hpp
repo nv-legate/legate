@@ -12,16 +12,16 @@
 
 #pragma once
 
-#include "config.hpp"
-#include "stlfwd.hpp"
-#include "store.hpp"
+#include <legate/experimental/stl/detail/config.hpp>
+#include <legate/experimental/stl/detail/stlfwd.hpp>
+#include <legate/experimental/stl/detail/store.hpp>
 
 #include <cstdint>
 #include <functional>
 #include <utility>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 namespace detail {
@@ -147,4 +147,4 @@ template <typename Function>
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

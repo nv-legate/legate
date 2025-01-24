@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/projection.h"
+#include <legate/operation/projection.h>
 
-#include "legate/utilities/hash.h"
+#include <legate/utilities/hash.h>
 
 #include <fmt/format.h>
 

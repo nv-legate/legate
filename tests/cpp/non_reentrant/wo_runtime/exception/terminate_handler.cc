@@ -12,13 +12,14 @@
 
 #include <legate/utilities/detail/traced_exception.h>
 
-#include "common.h"
-
-#include <exception>
 #include <fmt/format.h>
 #include <fmt/std.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <exception>
+#include <non_reentrant/wo_runtime/exception/common.h>
 #include <stdexcept>
 #include <utilities/utilities.h>
 

@@ -10,13 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/config.h"
+#include <legate/runtime/detail/config.h>
 
-#include "legate/utilities/detail/env.h"
+#include <legate.h>
 
-#include "legate.h"
+#include <legate/utilities/detail/env.h>
 
 #include <gtest/gtest.h>
+
 #include <utilities/env.h>
 
 namespace config_test {

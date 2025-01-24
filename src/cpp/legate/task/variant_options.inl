@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/task/variant_options.h"
+#include <legate/task/variant_options.h>
 
 namespace legate {
 

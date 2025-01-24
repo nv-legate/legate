@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/logical_array.h"
+#include <legate/data/logical_array.h>
 
 namespace legate {
 

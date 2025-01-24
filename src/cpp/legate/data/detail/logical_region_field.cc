@@ -10,15 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/logical_region_field.h"
+#include <legate/data/detail/logical_region_field.h>
 
-#include "legate/partitioning/detail/partition.h"
-#include "legate/runtime/detail/field_manager.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/tuple.h"
+#include <legate/partitioning/detail/partition.h>
+#include <legate/runtime/detail/field_manager.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/tuple.h>
 
 #include <fmt/format.h>
+
 #include <stdexcept>
 
 namespace legate::detail {

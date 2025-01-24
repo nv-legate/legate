@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/cuda/detail/nvtx.h"
-#include "legate/task/detail/returned_exception.h"
-#include "legate/task/task_context.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/cuda/detail/nvtx.h>
+#include <legate/task/detail/returned_exception.h>
+#include <legate/task/task_context.h>
+#include <legate/utilities/typedefs.h>
 
 #include <optional>
 #include <string_view>
@@ -44,4 +44,4 @@ template <typename T, typename U>
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/task.inl"
+#include <legate/task/detail/task.inl>

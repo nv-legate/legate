@@ -10,17 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/returned_cpp_exception.h"
+#include <legate/task/detail/returned_cpp_exception.h>
 
-#include "legate/task/exception.h"
-#include "legate/utilities/detail/formatters.h"
 #include <legate/task/detail/returned_exception.h>
+#include <legate/task/exception.h>
+#include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
+
+#include <fmt/format.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <fmt/format.h>
 #include <limits>
 #include <stdexcept>
 #include <string>

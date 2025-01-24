@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/utilities/detail/formatters.h"
-#include "legate/utilities/tuple.h"
+#include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/tuple.h>
 
-#include "legion.h"
+#include <legion.h>
 
 #include <cstdint>
 #include <string>
@@ -59,4 +59,4 @@ class Shape {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/shape.inl"
+#include <legate/data/detail/shape.inl>

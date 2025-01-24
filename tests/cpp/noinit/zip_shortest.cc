@@ -10,14 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/zip.h"
+#include <legate/utilities/detail/zip.h>
 
-#include "noinit/zip_common.h"
+#include <gtest/gtest.h>
 
 #include <forward_list>
-#include <gtest/gtest.h>
 #include <list>
 #include <map>
+#include <noinit/zip_common.h>
 #include <type_traits>
 #include <utility>
 #include <vector>

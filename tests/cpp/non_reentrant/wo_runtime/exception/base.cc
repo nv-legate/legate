@@ -12,9 +12,9 @@
 
 #include <legate/utilities/detail/traced_exception.h>
 
-#include "common.h"
-
 #include <gtest/gtest.h>
+
+#include <non_reentrant/wo_runtime/exception/common.h>
 #include <stdexcept>
 #include <string_view>
 

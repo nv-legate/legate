@@ -19,7 +19,7 @@
 #include <type_traits>
 
 // Useful for IDEs
-#include "legate/data/scalar.h"
+#include <legate/data/scalar.h>
 
 namespace legate {
 

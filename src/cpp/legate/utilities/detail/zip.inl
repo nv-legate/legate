@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/utilities/detail/type_traits.h"
-#include "legate/utilities/detail/zip.h"
-#include "legate/utilities/macros.h"
+#include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/detail/zip.h>
+#include <legate/utilities/macros.h>
 
 namespace legate::detail {
 

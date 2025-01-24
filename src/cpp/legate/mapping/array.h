@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/mapping/store.h"
-#include "legate/type/type_info.h"
+#include <legate/mapping/store.h>
+#include <legate/type/type_info.h>
 
 namespace legate::mapping::detail {
 class Array;
@@ -84,4 +84,4 @@ class Array {
 
 }  // namespace legate::mapping
 
-#include "legate/mapping/array.inl"
+#include <legate/mapping/array.inl>

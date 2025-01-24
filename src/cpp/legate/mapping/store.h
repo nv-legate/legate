@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/typedefs.h>
 
 /**
  * @file
@@ -110,4 +110,4 @@ class Store {
 
 }  // namespace legate::mapping
 
-#include "legate/mapping/store.inl"
+#include <legate/mapping/store.inl>

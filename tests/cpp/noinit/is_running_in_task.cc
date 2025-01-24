@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate.h"
+#include <legate.h>
 
 #include <gtest/gtest.h>
+
 #include <thread>
 
 namespace test_is_running_in_task_noinit {

@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/release_region_field.h"
+#include <legate/operation/detail/release_region_field.h>
 
-#include "legate/runtime/detail/runtime.h"
+#include <legate/runtime/detail/runtime.h>
 
 namespace legate::detail {
 

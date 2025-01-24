@@ -12,11 +12,11 @@
 
 #include <legate/utilities/detail/traced_exception.h>
 
-#include "common.h"
-
-#include <cstddef>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <cstddef>
+#include <non_reentrant/wo_runtime/exception/common.h>
 #include <stdexcept>
 #include <string>
 #include <string_view>

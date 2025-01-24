@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/runtime/runtime.h"
+#include <legate/runtime/runtime.h>
 
 #include <type_traits>
 

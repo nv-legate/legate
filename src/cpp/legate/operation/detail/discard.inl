@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/discard.h"
+#include <legate/operation/detail/discard.h>
 
 namespace legate::detail {
 

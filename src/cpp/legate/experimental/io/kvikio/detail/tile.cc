@@ -11,16 +11,18 @@
  */
 
 #include <legate/experimental/io/kvikio/detail/tile.h>
+
 #include <legate/type/type_traits.h>
 #include <legate/utilities/dispatch.h>
 #include <legate/utilities/span.h>
 
 #include <kvikio/file_handle.hpp>
 
+#include <fmt/ranges.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
-#include <fmt/ranges.h>
 #include <string_view>
 #include <utility>
 

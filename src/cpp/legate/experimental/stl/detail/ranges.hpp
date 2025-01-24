@@ -12,16 +12,16 @@
 
 #pragma once
 
-#include "config.hpp"
-#include "meta.hpp"
-#include "type_traits.hpp"
+#include <legate/experimental/stl/detail/config.hpp>
+#include <legate/experimental/stl/detail/meta.hpp>
+#include <legate/experimental/stl/detail/type_traits.hpp>
 
 #if LEGATE_STL_HAS_STD_RANGES()
 
 #include <ranges>
 
 // Include this last
-#include "prefix.hpp"
+#include <prefix.hpp>
 
 /**
  * @cond
@@ -49,7 +49,7 @@ using std::ranges::sentinel_t;
 #include <iterator>
 
 // Include this last
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 /**
  * @cond
@@ -266,4 +266,4 @@ using as_range_t = call_result_c_t<as_range, T>;
  * @endcond
  */
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

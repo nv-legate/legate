@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/comm/detail/pthread_barrier.h"
+#include <legate/comm/detail/pthread_barrier.h>
 
 #include <atomic>
 #include <cstdint>
@@ -46,4 +46,4 @@ class ThreadComm {
 
 }  // namespace legate::detail::comm::coll
 
-#include "legate/comm/detail/thread_comm.inl"
+#include <legate/comm/detail/thread_comm.inl>

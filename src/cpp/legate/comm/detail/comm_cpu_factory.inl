@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/comm/coll.h"
-#include "legate/comm/detail/comm_cpu_factory.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/operation/detail/task_launcher.h"
+#include <legate/comm/coll.h>
 #include <legate/comm/detail/backend_network.h>
+#include <legate/comm/detail/comm_cpu_factory.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/operation/detail/task_launcher.h>
 
 namespace legate::detail::comm::cpu {
 

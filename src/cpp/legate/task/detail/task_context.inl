@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/task/detail/task_context.h"
+#include <legate/task/detail/task_context.h>
 
 #include <utility>
 

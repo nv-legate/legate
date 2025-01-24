@@ -14,12 +14,12 @@
 
 #include <legate_defines.h>
 
-#include "legate/data/shape.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/memory.h"
-#include "legate/utilities/shared_ptr.h"
-#include "legate/utilities/tuple.h"
+#include <legate/data/shape.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/memory.h>
+#include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/tuple.h>
 
 #include <string>
 
@@ -244,4 +244,4 @@ enum class ImageComputationHint : std::uint8_t {
 
 }  // namespace legate
 
-#include "legate/partitioning/constraint.inl"
+#include <legate/partitioning/constraint.inl>

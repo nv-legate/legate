@@ -13,8 +13,8 @@
 #pragma once
 
 // Useful for IDEs
-#include "legate/runtime/detail/consensus_match_result.h"
-#include "legate/utilities/assert.h"
+#include <legate/runtime/detail/consensus_match_result.h>
+#include <legate/utilities/assert.h>
 
 namespace legate::detail {
 

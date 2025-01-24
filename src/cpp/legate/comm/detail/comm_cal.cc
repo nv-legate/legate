@@ -10,21 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/detail/comm_cal.h"
+#include <legate/comm/detail/comm_cal.h>
 
-#include "legate/comm/coll.h"
-#include "legate/cuda/cuda.h"
-#include "legate/data/buffer.h"
-#include "legate/operation/detail/task_launcher.h"
-#include "legate/runtime/detail/communicator_manager.h"
-#include "legate/runtime/detail/library.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/runtime/runtime.h"
-#include "legate/task/detail/legion_task.h"
-#include "legate/utilities/assert.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/comm/coll.h>
+#include <legate/cuda/cuda.h>
 #include <legate/cuda/detail/nvtx.h>
+#include <legate/data/buffer.h>
+#include <legate/operation/detail/task_launcher.h>
+#include <legate/runtime/detail/communicator_manager.h>
+#include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/runtime/runtime.h>
+#include <legate/task/detail/legion_task.h>
+#include <legate/utilities/assert.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cal.h>
 #include <cstdint>

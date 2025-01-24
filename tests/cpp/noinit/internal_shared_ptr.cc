@@ -14,10 +14,9 @@
 #include <gtest/gtest.h>
 #define LEGATE_INTERNAL_SHARED_PTR_TESTS 1
 //
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/utilities/internal_shared_ptr.h>
 
-#include "shared_ptr_util.h"
-
+#include <noinit/shared_ptr_util.h>
 #include <stdexcept>
 #include <thread>
 

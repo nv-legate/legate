@@ -13,7 +13,7 @@
 #pragma once
 
 // Useful for IDEs
-#include "legate/runtime/detail/runtime.h"
+#include <legate/runtime/detail/runtime.h>
 
 namespace legate::detail {
 

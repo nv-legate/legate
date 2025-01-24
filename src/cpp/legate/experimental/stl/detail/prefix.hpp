@@ -18,7 +18,7 @@
 
 #include <legate_defines.h>
 
-#include "legate/utilities/macros.h"
+#include <legate/utilities/macros.h>
 
 #if !LEGATE_DEFINED(LEGATE_STL_DETAIL_CONFIG_INCLUDED)
 #error "config.hpp must be included before prefix.hpp"

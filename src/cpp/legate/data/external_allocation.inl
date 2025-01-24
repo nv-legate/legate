@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/external_allocation.h"
+#include <legate/data/external_allocation.h>
 
 namespace legate {
 

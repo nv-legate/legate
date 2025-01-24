@@ -10,18 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/detail/comm_mpi.h"
+#include <legate/comm/detail/comm_mpi.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/comm/coll.h"
-#include "legate/comm/coll_comm.h"
-#include "legate/comm/detail/backend_network.h"
-#include "legate/comm/detail/comm_cpu_factory.h"
-#include "legate/comm/detail/mpi_interface.h"
-#include "legate/task/detail/legion_task.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/macros.h"
+#include <legate/comm/coll.h>
+#include <legate/comm/coll_comm.h>
+#include <legate/comm/detail/backend_network.h>
+#include <legate/comm/detail/comm_cpu_factory.h>
+#include <legate/comm/detail/mpi_interface.h>
+#include <legate/task/detail/legion_task.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/macros.h>
 
 #include <algorithm>
 #include <cstddef>

@@ -10,23 +10,23 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/inline_task_body.h"
+#include <legate/task/detail/inline_task_body.h>
 
-#include "legate/comm/communicator.h"
-#include "legate/data/detail/physical_array.h"
-#include "legate/data/detail/scalar.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/operation/detail/task.h"
-#include "legate/runtime/detail/library.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/task/detail/task.h"
-#include "legate/task/detail/task_context.h"
-#include "legate/task/task_context.h"
-#include "legate/utilities/assert.h"
-#include "legate/utilities/detail/store_iterator_cache.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/scope_guard.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/comm/communicator.h>
+#include <legate/data/detail/physical_array.h>
+#include <legate/data/detail/scalar.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/operation/detail/task.h>
+#include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/task/detail/task.h>
+#include <legate/task/detail/task_context.h>
+#include <legate/task/task_context.h>
+#include <legate/utilities/assert.h>
+#include <legate/utilities/detail/store_iterator_cache.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/scope_guard.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 #include <cstdint>

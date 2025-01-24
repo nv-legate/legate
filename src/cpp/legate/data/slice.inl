@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/slice.h"
+#include <legate/data/slice.h>
 
 namespace legate {
 

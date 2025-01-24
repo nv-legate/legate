@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/partitioning/constraint.h"
+#include <legate/partitioning/constraint.h>
 
-#include "legate/partitioning/detail/constraint.h"
+#include <legate/partitioning/detail/constraint.h>
 
 namespace legate {
 

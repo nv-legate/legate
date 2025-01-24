@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "copy_util.inl"
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate.h>
 
 #include <gtest/gtest.h>
+
+#include <integration/copy_util.inl>
+#include <utilities/utilities.h>
 
 namespace copy_gather_scatter {
 

@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/task.h"
+#include <legate/task/task.h>
 
-#include "legate/task/detail/legion_task_body.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/task/detail/legion_task_body.h>
+#include <legate/utilities/typedefs.h>
 
 #include <optional>
 

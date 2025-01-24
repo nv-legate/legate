@@ -10,18 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/task_launcher.h"
+#include <legate/operation/detail/task_launcher.h>
 
-#include "legate/data/detail/logical_region_field.h"
-#include "legate/data/detail/logical_store.h"
-#include "legate/operation/detail/launcher_arg.h"
-#include "legate/operation/detail/req_analyzer.h"
-#include "legate/runtime/detail/library.h"
-#include "legate/runtime/detail/partition_manager.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/type/detail/type_info.h"
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/detail/enumerate.h"
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/data/detail/logical_store.h>
+#include <legate/operation/detail/launcher_arg.h>
+#include <legate/operation/detail/req_analyzer.h>
+#include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/partition_manager.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/type/detail/type_info.h>
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/enumerate.h>
 
 #include <cstdint>
 #include <optional>

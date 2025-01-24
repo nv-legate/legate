@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "legate/data/detail/transform.h"
-#include "legate/mapping/detail/machine.h"
-#include "legate/partitioning/constraint.h"
-#include "legate/partitioning/detail/restriction.h"
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/detail/transform.h>
+#include <legate/mapping/detail/machine.h>
+#include <legate/partitioning/constraint.h>
+#include <legate/partitioning/detail/restriction.h>
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/typedefs.h>
 
 #include <iosfwd>
 #include <memory>
@@ -277,4 +277,4 @@ std::ostream& operator<<(std::ostream& out, const Partition& partition);
 
 }  // namespace legate::detail
 
-#include "legate/partitioning/detail/partition.inl"
+#include <legate/partitioning/detail/partition.inl>

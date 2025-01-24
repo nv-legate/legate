@@ -13,8 +13,8 @@
 #pragma once
 
 // Useful for IDEs
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/deserializer.h"
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/deserializer.h>
 
 #include <cstddef>
 #include <cstdint>

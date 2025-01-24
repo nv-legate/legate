@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 #include <functional>

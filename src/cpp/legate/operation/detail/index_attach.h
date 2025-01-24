@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/data/detail/external_allocation.h"
-#include "legate/data/detail/logical_region_field.h"
-#include "legate/mapping/detail/mapping.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/external_allocation.h>
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/mapping/detail/mapping.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>
 #include <vector>
@@ -46,4 +46,4 @@ class IndexAttach final : public Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/index_attach.inl"
+#include <legate/operation/detail/index_attach.inl>

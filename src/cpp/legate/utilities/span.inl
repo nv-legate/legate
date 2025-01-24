@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
-#include "legate/utilities/span.h"
+#include <legate/utilities/assert.h>
+#include <legate/utilities/span.h>
 
 #include <iterator>
 #include <type_traits>

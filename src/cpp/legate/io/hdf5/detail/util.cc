@@ -10,9 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
+#include <legate/io/hdf5/detail/util.h>
+
 #include <legate_defines.h>
 
-#include <legate/io/hdf5/detail/util.h>
 #include <legate/utilities/abort.h>
 #include <legate/utilities/macros.h>
 

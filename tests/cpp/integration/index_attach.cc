@@ -10,22 +10,25 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/data/external_allocation.h"
-#include "legate/mapping/mapping.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/external_allocation.h>
+#include <legate/mapping/mapping.h>
+
+#include <utilities/utilities.h>
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include "legate/cuda/cuda.h"
+#include <legate/cuda/cuda.h>
 
 #include <cuda_runtime.h>
 #endif
 
-#include <cstring>
 #include <fmt/format.h>
+
 #include <gtest/gtest.h>
+
+#include <cstring>
 #include <stdexcept>
 #include <vector>
 

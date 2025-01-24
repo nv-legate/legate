@@ -9,14 +9,15 @@
  * without an express license agreement from NVIDIA CORPORATION or
  * its affiliates is strictly prohibited.
  */
-#include "legate/utilities/detail/strtoll.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/utilities/detail/strtoll.h>
+
+#include <gtest/gtest.h>
 
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <unistd.h>
+#include <utilities/utilities.h>
 
 namespace death_example {
 

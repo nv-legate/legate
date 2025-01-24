@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/type/detail/type_info.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/type/detail/type_info.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/typedefs.h>
 
 #include <tuple>
 #include <vector>
@@ -139,4 +139,4 @@ class Store {
 
 }  // namespace legate::mapping::detail
 
-#include "legate/mapping/detail/store.inl"
+#include <legate/mapping/detail/store.inl>

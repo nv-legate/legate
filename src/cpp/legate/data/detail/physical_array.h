@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/data/detail/array_kind.h"
-#include "legate/data/detail/physical_store.h"
-#include "legate/data/physical_array.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/array_kind.h>
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/physical_array.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <vector>
 
@@ -127,4 +127,4 @@ class StructPhysicalArray final : public PhysicalArray {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/physical_array.inl"
+#include <legate/data/detail/physical_array.inl>

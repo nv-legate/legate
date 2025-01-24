@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate.h"
+#include <legate.h>
 
 namespace logical_array_util_test {
 

@@ -68,4 +68,4 @@ template <int DIM, typename ACC>
 
 }  // namespace legate
 
-#include "legate/utilities/debug.inl"
+#include <legate/utilities/debug.inl>

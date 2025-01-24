@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/typedefs.h"
+#include <legate/utilities/typedefs.h>
 
 #include <utility>
 #include <vector>

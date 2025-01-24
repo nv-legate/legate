@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/partitioning/detail/constraint_solver.h"
+#include <legate/partitioning/detail/constraint_solver.h>
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/partitioning/detail/partitioner.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/partitioning/detail/partitioner.h>
 
 #include <type_traits>
 

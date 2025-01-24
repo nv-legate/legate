@@ -10,19 +10,20 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/cuda/detail/cuda_driver_api.h"
+#include <legate/cuda/detail/cuda_driver_api.h>
 
 #include <legate_defines.h>
 
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/assert.h"
-#include "legate/utilities/detail/env.h"
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/assert.h>
+#include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/macros.h>
 
-#include <dlfcn.h>
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+
+#include <dlfcn.h>
 #include <regex>
 #include <stdexcept>
 #include <type_traits>

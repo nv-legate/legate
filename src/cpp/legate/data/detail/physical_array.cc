@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/physical_array.h"
+#include <legate/data/detail/physical_array.h>
 
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+
 #include <stdexcept>
 
 namespace legate::detail {

@@ -10,15 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/physical_store.h"
+#include <legate/data/detail/physical_store.h>
 
-#include "legate/data/buffer.h"
-#include "legate/mapping/detail/mapping.h"
-#include "legate/utilities/dispatch.h"
+#include <legate/data/buffer.h>
+#include <legate/mapping/detail/mapping.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/dispatch.h>
+
+#include <fmt/format.h>
 
 #include <cstring>  // std::memcpy
-#include <fmt/format.h>
 #include <stdexcept>
 
 namespace legate::detail {

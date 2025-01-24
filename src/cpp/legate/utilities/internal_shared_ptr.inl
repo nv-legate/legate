@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/utilities/assert.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/utilities/assert.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstddef>
 #include <memory>

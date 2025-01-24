@@ -14,14 +14,14 @@
 
 #include <legate_defines.h>
 
-#include "legate/data/buffer.h"
-#include "legate/data/inline_allocation.h"
-#include "legate/mapping/mapping.h"
-#include "legate/type/type_traits.h"
-#include "legate/utilities/dispatch.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
+#include <legate/data/buffer.h>
+#include <legate/data/inline_allocation.h>
+#include <legate/mapping/mapping.h>
+#include <legate/type/type_traits.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/dispatch.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
 
 /**
  * @file
@@ -425,4 +425,4 @@ class PhysicalStore {
 
 }  // namespace legate
 
-#include "legate/data/physical_store.inl"
+#include <legate/data/physical_store.inl>

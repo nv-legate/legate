@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/partitioning/detail/partition.h"
+#include <legate/partitioning/detail/partition.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>

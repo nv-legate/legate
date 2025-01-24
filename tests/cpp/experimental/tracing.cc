@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/experimental/trace.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/experimental/trace.h>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 namespace tracing_test {
 

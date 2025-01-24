@@ -13,7 +13,7 @@
 #pragma once
 
 // Useful for IDEs
-#include "legate/task/detail/legion_task.h"
+#include <legate/task/detail/legion_task.h>
 
 namespace legate::detail {
 

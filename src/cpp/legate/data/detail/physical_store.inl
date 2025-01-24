@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/data/detail/physical_store.h"
-#include "legate/utilities/machine.h"
+#include <legate/data/detail/physical_store.h>
+#include <legate/utilities/machine.h>
 
 #include <utility>
 

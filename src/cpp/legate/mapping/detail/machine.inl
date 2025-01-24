@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/mapping/detail/machine.h"
+#include <legate/mapping/detail/machine.h>
 
 namespace legate::mapping::detail {
 

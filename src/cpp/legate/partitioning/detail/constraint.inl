@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/utilities/hash.h"
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/utilities/hash.h>
 
 namespace legate::detail {
 

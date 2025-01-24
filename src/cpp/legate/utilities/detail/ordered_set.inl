@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/detail/ordered_set.h"
+#include <legate/utilities/detail/ordered_set.h>
 
 namespace legate {
 

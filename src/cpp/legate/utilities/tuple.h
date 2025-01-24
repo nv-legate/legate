@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/utilities/detail/type_traits.h"
-#include "legate/utilities/hash.h"
+#include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/hash.h>
 
 #include <cstdint>
 #include <initializer_list>
@@ -155,4 +155,4 @@ template <typename FUNC, typename T1, typename T2>
 
 }  // namespace legate
 
-#include "legate/utilities/tuple.inl"
+#include <legate/utilities/tuple.inl>

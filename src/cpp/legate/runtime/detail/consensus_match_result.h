@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legion.h"
+#include <legion.h>
 
 #include <vector>
 
@@ -44,4 +44,4 @@ class ConsensusMatchResult {
 
 }  // namespace legate::detail
 
-#include "legate/runtime/detail/consensus_match_result.inl"
+#include <legate/runtime/detail/consensus_match_result.inl>

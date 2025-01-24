@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/detail/zstring_view.h"
+#include <legate/utilities/detail/zstring_view.h>
 
 #include <type_traits>
 

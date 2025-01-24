@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_region_field.h"
-#include "legate/data/detail/shape.h"
-#include "legate/runtime/detail/consensus_match_result.h"
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/data/detail/shape.h>
+#include <legate/runtime/detail/consensus_match_result.h>
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -114,4 +114,4 @@ class ConsensusMatchingFieldManager final : public FieldManager {
 
 }  // namespace legate::detail
 
-#include "legate/runtime/detail/field_manager.inl"
+#include <legate/runtime/detail/field_manager.inl>

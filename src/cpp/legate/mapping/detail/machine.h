@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/mapping/machine.h"
-#include "legate/mapping/mapping.h"
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/mapping/machine.h>
+#include <legate/mapping/mapping.h>
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 #include <iosfwd>
@@ -158,4 +158,4 @@ class LocalMachine {
 
 }  // namespace legate::mapping::detail
 
-#include "legate/mapping/detail/machine.inl"
+#include <legate/mapping/detail/machine.inl>

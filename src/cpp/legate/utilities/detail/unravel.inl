@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/detail/unravel.h"
+#include <legate/utilities/detail/unravel.h>
 
 namespace legate::detail {
 

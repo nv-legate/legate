@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/scope_guard.h"
+#include <legate/utilities/scope_guard.h>
 
 #include <exception>
 

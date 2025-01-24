@@ -12,9 +12,10 @@
 
 #pragma once
 
+#include <gtest/gtest.h>
+
 #include <deque>
 #include <forward_list>
-#include <gtest/gtest.h>
 #include <list>
 #include <map>
 #include <type_traits>

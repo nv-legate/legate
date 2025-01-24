@@ -10,13 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/shard.h"
+#include <legate/runtime/detail/shard.h>
 
-#include "legate/runtime/detail/library.h"
-#include "legate/runtime/detail/projection.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/type_traits.h"
+#include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/projection.h>
+#include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/linearize.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <algorithm>
 #include <mutex>

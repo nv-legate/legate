@@ -12,12 +12,12 @@
 
 #pragma once
 
-#include "legate/data/shape.h"
-#include "legate/partitioning/detail/restriction.h"
-#include "legate/runtime/detail/projection.h"
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/shape.h>
+#include <legate/partitioning/detail/restriction.h>
+#include <legate/runtime/detail/projection.h>
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/typedefs.h>
 
 #include <iosfwd>
 #include <memory>
@@ -311,4 +311,4 @@ std::ostream& operator<<(std::ostream& out, const Transform& transform);
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/transform.inl"
+#include <legate/data/detail/transform.inl>

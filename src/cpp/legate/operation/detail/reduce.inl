@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/reduce.h"
+#include <legate/operation/detail/reduce.h>
 
 namespace legate::detail {
 

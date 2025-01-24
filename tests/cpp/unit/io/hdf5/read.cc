@@ -16,16 +16,18 @@
 #define HIGHFIVE_CXX_STD LEGATE_CPP_MIN_VERSION
 #endif
 
+#include <legate.h>
+
 #include <legate/io/hdf5/interface.h>
 
 #include <highfive/H5DataType.hpp>
 #include <highfive/H5File.hpp>
 
+#include <gtest/gtest.h>
+
 #include <array>
 #include <cstddef>
 #include <filesystem>
-#include <gtest/gtest.h>
-#include <legate.h>
 #include <string_view>
 #include <utilities/utilities.h>
 

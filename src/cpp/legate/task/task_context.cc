@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/task_context.h"
+#include <legate/task/task_context.h>
 
-#include "legate/mapping/detail/mapping.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/task/detail/task_context.h"
+#include <legate/mapping/detail/mapping.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/task/detail/task_context.h>
 
 #include <type_traits>
 

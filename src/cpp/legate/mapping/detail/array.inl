@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/mapping/detail/array.h"
+#include <legate/mapping/detail/array.h>
 
 namespace legate::mapping::detail {
 

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/cuda/cuda.h"
+#include <legate/cuda/cuda.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <optional>
@@ -124,4 +124,4 @@ class LEGATE_STREAM_POOL_DEPRECATED StreamPool {
 
 }  // namespace legate::cuda
 
-#include "legate/cuda/stream_pool.inl"
+#include <legate/cuda/stream_pool.inl>

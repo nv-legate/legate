@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/data/detail/array_kind.h"
-#include "legate/mapping/detail/store.h"
-#include "legate/type/detail/type_info.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/array_kind.h>
+#include <legate/mapping/detail/store.h>
+#include <legate/type/detail/type_info.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <vector>
 
@@ -123,4 +123,4 @@ class StructArray final : public Array {
 
 }  // namespace legate::mapping::detail
 
-#include "legate/mapping/detail/array.inl"
+#include <legate/mapping/detail/array.inl>

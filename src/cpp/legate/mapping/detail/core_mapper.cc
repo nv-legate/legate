@@ -10,22 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/detail/core_mapper.h"
+#include <legate/mapping/detail/core_mapper.h>
 
-#include "legate/mapping/detail/machine.h"
-#include "legate/mapping/detail/mapping.h"
-#include "legate/mapping/operation.h"
-#include "legate/runtime/detail/config.h"
-#include "legate/task/variant_options.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/env_defaults.h"
-#include "legate/utilities/detail/type_traits.h"
-#include "legate/utilities/dispatch.h"
-#include "legate/utilities/env.h"
+#include <legate/mapping/detail/machine.h>
+#include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/detail/operation.h>
+#include <legate/mapping/operation.h>
+#include <legate/runtime/detail/config.h>
+#include <legate/task/variant_options.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/env_defaults.h>
+#include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/dispatch.h>
+#include <legate/utilities/env.h>
 
 #include <cstdlib>
-#include <fmt/format.h>
 #include <memory>
 #include <vector>
 

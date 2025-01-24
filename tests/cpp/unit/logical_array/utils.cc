@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "utils.h"
+#include <unit/logical_array/utils.h>
 
-#include "legate.h"
+#include <legate.h>
 
 namespace logical_array_util_test {
 

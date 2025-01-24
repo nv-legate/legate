@@ -10,16 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/comm/detail/comm.h"
+#include <legate/comm/detail/comm.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/comm/detail/comm_cal.h"
-#include "legate/comm/detail/comm_cpu.h"
-#include "legate/comm/detail/comm_nccl.h"
-#include "legate/utilities/detail/env.h"
-#include "legate/utilities/detail/env_defaults.h"
-#include "legate/utilities/macros.h"
+#include <legate/comm/detail/comm_cal.h>
+#include <legate/comm/detail/comm_cpu.h>
+#include <legate/comm/detail/comm_nccl.h>
+#include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/env_defaults.h>
+#include <legate/utilities/macros.h>
 
 namespace legate::detail::comm {
 

@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/type/type_info.h"
+#include <legate/type/type_info.h>
 
-#include "legate/type/detail/type_info.h"
+#include <legate/type/detail/type_info.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <iostream>

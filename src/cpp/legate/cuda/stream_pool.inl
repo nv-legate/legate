@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/cuda/stream_pool.h"
+#include <legate/cuda/stream_pool.h>
 
 #include <utility>
 

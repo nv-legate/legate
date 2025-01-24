@@ -14,11 +14,10 @@
 
 #include <legate_defines.h>
 
-#include "legate/cuda/cuda.h"
-#include "legate/utilities/assert.h"
-#include "legate/utilities/macros.h"
-
-#include "config.hpp"  // includes <version>
+#include <legate/cuda/cuda.h>
+#include <legate/experimental/stl/detail/config.hpp>  // includes <version>
+#include <legate/utilities/assert.h>
+#include <legate/utilities/macros.h>
 
 #if __has_include(<mdspan>)
 #if defined(__cpp_lib_mdspan) && __cpp_lib_mdspan >= 202207L
@@ -41,7 +40,7 @@ LEGATE_PRAGMA_EDG_IGNORE(
   20014);  // calling a __host__ function [...] from a __host__ __device__
            // function is not allowed
 
-#include "span.hpp"  // this header must come before mdspan.hpp
+#include <legate/experimental/stl/detail/span.hpp>  // this header must come before mdspan.hpp
 
 // Blame Kokkos for these uses of reserved identifiers...
 // NOLINTBEGIN
@@ -67,11 +66,11 @@ LEGATE_PRAGMA_POP();
 #endif  // LEGATE_STL_HAS_STD_MDSPAN
 
 // Legate includes:
-#include "legate/cuda/cuda.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "meta.hpp"
-#include "type_traits.hpp"
+#include <legate/cuda/cuda.h>
+#include <legate/experimental/stl/detail/meta.hpp>
+#include <legate/experimental/stl/detail/type_traits.hpp>
 
 // NVIDIA includes:
 #include <nv/target>
@@ -83,7 +82,7 @@ LEGATE_PRAGMA_POP();
 #include <type_traits>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 namespace detail {
@@ -573,4 +572,4 @@ LEGATE_HOST_DEVICE void assign(std::mdspan<LeftElement, Extent, Layout, LeftAcce
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

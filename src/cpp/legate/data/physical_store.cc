@@ -10,13 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/physical_store.h"
+#include <legate/data/physical_store.h>
 
-#include "legate/data/detail/physical_store.h"
-#include "legate/data/physical_array.h"
+#include <legate/data/detail/physical_store.h>
+#include <legate/data/physical_array.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
+
 #include <stdexcept>
 
 namespace legate {

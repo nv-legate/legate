@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/region_manager.h"
+#include <legate/runtime/detail/region_manager.h>
 
-#include "legate/runtime/detail/field_manager.h"
-#include "legate/runtime/detail/runtime.h"
+#include <legate/runtime/detail/field_manager.h>
+#include <legate/runtime/detail/runtime.h>
 
 #include <utility>
 

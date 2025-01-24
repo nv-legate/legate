@@ -11,6 +11,7 @@
  */
 
 #include <legate/partitioning/detail/partitioning_tasks.h>
+#include <legate/utilities/detail/cuda_reduction_buffer.cuh>
 #include <legate/utilities/detail/unravel.h>
 #include <legate/utilities/typedefs.h>
 
@@ -18,7 +19,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <legate/utilities/detail/cuda_reduction_buffer.cuh>
 
 namespace {
 

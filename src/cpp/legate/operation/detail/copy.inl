@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/copy.h"
+#include <legate/operation/detail/copy.h>
 
 namespace legate::detail {
 

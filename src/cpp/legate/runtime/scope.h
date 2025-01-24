@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/machine.h"
-#include "legate/runtime/exception_mode.h"
-#include "legate/utilities/memory.h"
+#include <legate/mapping/machine.h>
+#include <legate/runtime/exception_mode.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/memory.h>
 
 #include <cstdint>
 #include <memory>

@@ -10,27 +10,28 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/argument_parsing.h"
+#include <legate/runtime/detail/argument_parsing.h>
 
-#include "legate_defines.h"
+#include <legate_defines.h>
 
-#include "legate/mapping/detail/base_mapper.h"
-#include "legate/runtime/detail/config.h"
-#include "legate/runtime/runtime.h"
-#include "legate/utilities/detail/env.h"
-#include "legate/utilities/detail/zstring_view.h"
-#include "legate/utilities/macros.h"
-#include "legate/version.h"
+#include <legate/mapping/detail/base_mapper.h>
+#include <legate/runtime/detail/config.h>
+#include <legate/runtime/runtime.h>
+#include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/zstring_view.h>
+#include <legate/utilities/macros.h>
+#include <legate/version.h>
 
 #include <legion.h>
+
+#include <fmt/format.h>
 
 #include <argparse/argparse.hpp>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
-#include <fmt/format.h>
 #include <iostream>
 #include <limits>
 #include <sstream>

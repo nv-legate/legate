@@ -10,12 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/logical_store.h"
+#include <legate/data/logical_store.h>
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/data/detail/user_storage_tracker.h"
-#include "legate/data/logical_array.h"
-#include "legate/data/physical_store.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/user_storage_tracker.h>
+#include <legate/data/logical_array.h>
+#include <legate/data/physical_store.h>
 
 namespace legate {
 

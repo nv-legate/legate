@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/detail/physical_array.h"
+#include <legate/data/detail/physical_array.h>
 
 namespace legate::detail {
 

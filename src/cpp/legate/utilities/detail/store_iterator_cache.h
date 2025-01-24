@@ -32,4 +32,4 @@ class StoreIteratorCache {
 
 }  // namespace legate::detail
 
-#include "legate/utilities/detail/store_iterator_cache.inl"
+#include <legate/utilities/detail/store_iterator_cache.inl>

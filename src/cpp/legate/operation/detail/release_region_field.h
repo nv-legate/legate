@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_region_field.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>
 
@@ -39,4 +39,4 @@ class ReleaseRegionField final : public Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/release_region_field.inl"
+#include <legate/operation/detail/release_region_field.inl>

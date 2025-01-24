@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/operation.h"
+#include <legate/operation/detail/operation.h>
 
 #include <cstdint>
 
@@ -32,4 +32,4 @@ class ExecutionFence final : public Operation {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/execution_fence.inl"
+#include <legate/operation/detail/execution_fence.inl>

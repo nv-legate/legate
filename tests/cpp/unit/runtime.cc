@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/shape.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/data/detail/shape.h>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 namespace test_runtime {
 

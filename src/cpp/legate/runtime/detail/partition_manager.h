@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/data/shape.h"
-#include "legate/partitioning/detail/partition.h"
-#include "legate/partitioning/detail/restriction.h"
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/hash.h"
+#include <legate/data/shape.h>
+#include <legate/partitioning/detail/partition.h>
+#include <legate/partitioning/detail/restriction.h>
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/hash.h>
 
 #include <map>
 #include <tuple>

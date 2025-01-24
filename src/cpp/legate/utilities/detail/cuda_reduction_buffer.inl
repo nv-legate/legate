@@ -13,7 +13,6 @@
 #pragma once
 
 #include <legate/runtime/detail/runtime.h>
-
 #include <legate/utilities/detail/cuda_reduction_buffer.cuh>
 
 namespace legate::detail {

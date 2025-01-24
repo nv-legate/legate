@@ -14,10 +14,10 @@
 
 #include <legate_defines.h>
 
-#include "legate/cuda/cuda.h"
-#include "legate/utilities/assert.h"
-#include "legate/utilities/debug.h"
-#include "legate/utilities/macros.h"
+#include <legate/cuda/cuda.h>
+#include <legate/utilities/assert.h>
+#include <legate/utilities/debug.h>
+#include <legate/utilities/macros.h>
 
 #include <sstream>
 

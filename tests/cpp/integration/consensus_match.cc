@@ -10,13 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/runtime.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/runtime/detail/runtime.h>
+
+#include <gtest/gtest.h>
 
 #include <cstring>
-#include <gtest/gtest.h>
+#include <utilities/utilities.h>
 
 namespace consensus_match {
 

@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate_defines.h"  // LEGATE_USE_DEBUG
+#include <legate_defines.h>  // LEGATE_USE_DEBUG
 
-#include "legate/utilities/abort.h"
-#include "legate/utilities/cpp_version.h"
-#include "legate/utilities/macros.h"
+#include <legate/utilities/abort.h>
+#include <legate/utilities/cpp_version.h>
+#include <legate/utilities/macros.h>
 
 #ifndef __has_builtin
 #define __has_builtin(x) 0

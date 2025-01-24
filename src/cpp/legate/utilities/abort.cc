@@ -10,13 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate/comm/detail/coll.h>
 #include <legate/utilities/abort.h>
+
+#include <legate/comm/detail/coll.h>
 #include <legate/utilities/detail/error.h>
 
-#include <array>
-#include <cpptrace/basic.hpp>
 #include <fmt/format.h>
+
+#include <cpptrace/basic.hpp>
+
+#include <array>
 #include <iostream>
 #include <sstream>
 #include <string_view>

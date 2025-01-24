@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/shared_ptr.h"
+#include <legate/utilities/shared_ptr.h>
 
-#include "shared_ptr_util.h"
+#include <noinit/shared_ptr_util.h>
 
 template <typename T>
 struct SharedPtrUnit : BasicSharedPtrUnit<T> {};

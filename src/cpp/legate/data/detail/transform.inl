@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/detail/transform.h"
+#include <legate/data/detail/transform.h>
 
 #include <utility>
 

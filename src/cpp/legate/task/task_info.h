@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/runtime/library.h"
-#include "legate/utilities/detail/type_traits.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/runtime/library.h>
+#include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/typedefs.h>
 
 #include <functional>
 #include <iosfwd>
@@ -145,4 +145,4 @@ class TaskInfo {
 
 }  // namespace legate
 
-#include "legate/task/task_info.inl"
+#include <legate/task/task_info.inl>

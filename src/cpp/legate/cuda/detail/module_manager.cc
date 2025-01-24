@@ -11,11 +11,13 @@
  */
 
 #include <legate/cuda/detail/module_manager.h>
+
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <array>
 #include <fmt/format.h>
+
+#include <array>
 #include <stdexcept>
 
 namespace legate::cuda::detail {

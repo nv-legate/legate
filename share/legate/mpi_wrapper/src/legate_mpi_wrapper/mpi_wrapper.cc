@@ -11,6 +11,7 @@
  */
 
 #include <legate_mpi_wrapper/mpi_wrapper.h>
+
 #include <mpi.h>
 
 // Cannot do if defined(FOO) && FOO >= ... because preprocessor short-circuiting was not

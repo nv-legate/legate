@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/data/shape.h"
-#include "legate/partitioning/constraint.h"
-#include "legate/utilities/detail/formatters.h"
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/tuple.h"
+#include <legate/data/shape.h>
+#include <legate/partitioning/constraint.h>
+#include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/tuple.h>
 
 #include <string>
 #include <vector>
@@ -215,4 +215,4 @@ class BloatConstraint final : public Constraint {
 
 }  // namespace legate::detail
 
-#include "legate/partitioning/detail/constraint.inl"
+#include <legate/partitioning/detail/constraint.inl>

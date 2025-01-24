@@ -12,12 +12,13 @@
 
 #pragma once
 
-#include "functional.hpp"
-#include "launch_task.hpp"
-#include "legate.h"
+#include <legate.h>
+
+#include <legate/experimental/stl/detail/functional.hpp>
+#include <legate/experimental/stl/detail/launch_task.hpp>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 
@@ -93,4 +94,4 @@ void for_each(Input&& input, Function&& fn)
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>

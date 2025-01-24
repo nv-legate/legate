@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/mapping/detail/machine.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/utilities/detail/core_ids.h"
+#include <legate/mapping/detail/machine.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/utilities/detail/core_ids.h>
 
 namespace legate::detail {
 
@@ -43,4 +43,4 @@ class FillLauncher {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/fill_launcher.inl"
+#include <legate/operation/detail/fill_launcher.inl>

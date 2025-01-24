@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "legate/data/detail/array_kind.h"
-#include "legate/data/detail/logical_store.h"
-#include "legate/data/detail/shape.h"
-#include "legate/data/detail/user_storage_tracker.h"
-#include "legate/operation/detail/launcher_arg.h"
-#include "legate/operation/projection.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/array_kind.h>
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/shape.h>
+#include <legate/data/detail/user_storage_tracker.h>
+#include <legate/operation/detail/launcher_arg.h>
+#include <legate/operation/projection.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <memory>
 #include <optional>
@@ -277,4 +277,4 @@ class StructLogicalArray final : public LogicalArray {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/logical_array.inl"
+#include <legate/data/detail/logical_array.inl>

@@ -10,15 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/fill_launcher.h"
+#include <legate/operation/detail/fill_launcher.h>
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/mapping/machine.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/runtime/detail/library.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/buffer_builder.h"
-#include "legate/utilities/detail/core_ids.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/mapping/machine.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/core_ids.h>
 
 namespace legate::detail {
 

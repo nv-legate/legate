@@ -15,10 +15,10 @@
 // Useful for IDEs
 #include <legate_defines.h>
 
-#include "legate/utilities/detail/zip.h"
-#include "legate/utilities/tuple.h"
 #include <legate/utilities/assert.h>
+#include <legate/utilities/detail/zip.h>
 #include <legate/utilities/macros.h>
+#include <legate/utilities/tuple.h>
 
 #include <algorithm>
 #include <functional>

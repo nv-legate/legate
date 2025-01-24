@@ -10,15 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/library.h"
+#include <legate/runtime/detail/library.h>
 
-#include "legate/utilities/detail/strtoll.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/utilities/detail/strtoll.h>
 
 #include <gtest/gtest.h>
+
 #include <string_view>
+#include <utilities/utilities.h>
 
 namespace test_library {
 

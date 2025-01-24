@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/partitioning/detail/constraint_solver.h"
+#include <legate/partitioning/detail/constraint_solver.h>
 
 namespace legate::detail {
 

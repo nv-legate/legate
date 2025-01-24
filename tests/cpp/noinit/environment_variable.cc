@@ -10,20 +10,21 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/env.h"
-#include "legate/utilities/detail/zstring_view.h"
+#include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/zstring_view.h>
 
-#include "utilities/env.h"
-#include "utilities/utilities.h"
+#include <fmt/format.h>
+
+#include <gtest/gtest.h>
 
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
 #include <deque>
-#include <fmt/format.h>
-#include <gtest/gtest.h>
 #include <random>
 #include <string>
+#include <utilities/env.h>
+#include <utilities/utilities.h>
 
 namespace environment_variable_test {
 

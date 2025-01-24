@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/config.h"
+#include <legate/runtime/detail/config.h>
 
-#include "legate/utilities/assert.h"
-#include "legate/utilities/detail/env.h"
+#include <legate/utilities/assert.h>
+#include <legate/utilities/detail/env.h>
 
 namespace legate::detail {
 

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/task/detail/return_value.h"
+#include <legate/task/detail/return_value.h>
 
 namespace legate::detail {
 

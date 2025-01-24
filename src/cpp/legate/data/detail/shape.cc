@@ -10,14 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/shape.h"
+#include <legate/data/detail/shape.h>
 
-#include "legate/data/shape.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/tuple.h"
+#include <legate/data/shape.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/tuple.h>
 
 #include <fmt/ranges.h>
+
 #include <stdexcept>
 
 namespace legate::detail {

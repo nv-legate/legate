@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/detail/zstring_view.h"
+#include <legate/utilities/detail/zstring_view.h>
 
 #include <legion.h>
 #include <legion/legion_mapping.h>
@@ -40,4 +40,4 @@ class MapperManager {
 
 }  // namespace legate::detail
 
-#include "legate/runtime/detail/mapper_manager.inl"
+#include <legate/runtime/detail/mapper_manager.inl>

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/projection.h"
+#include <legate/operation/projection.h>
 
 namespace legate {
 

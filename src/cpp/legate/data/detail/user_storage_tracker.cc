@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/user_storage_tracker.h"
+#include <legate/data/detail/user_storage_tracker.h>
 
 namespace legate::detail {
 

@@ -10,10 +10,10 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/utilities/detail/tuple.h"
+#include <legate.h>
 
-#include "legate.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/utilities/detail/tuple.h>
 
 namespace {
 

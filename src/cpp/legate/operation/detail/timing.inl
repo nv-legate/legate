@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/timing.h"
+#include <legate/operation/detail/timing.h>
 
 namespace legate::detail {
 

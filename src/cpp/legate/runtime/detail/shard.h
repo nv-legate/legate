@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/mapping/machine.h"
+#include <legate/mapping/machine.h>
 
-#include "legion.h"
+#include <legion.h>
 
 namespace legate::detail {
 

@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/mapping/detail/machine.h"
-#include "legate/task/detail/returned_exception.h"
-#include "legate/task/detail/task_context.h"
-#include "legate/task/detail/task_return.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/mapping/detail/machine.h>
+#include <legate/task/detail/returned_exception.h>
+#include <legate/task/detail/task_context.h>
+#include <legate/task/detail/task_return.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 #include <optional>

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/detail/store_iterator_cache.h"
+#include <legate/utilities/detail/store_iterator_cache.h>
 
 namespace legate::detail {
 

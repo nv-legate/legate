@@ -10,16 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/partition_manager.h"
+#include <legate/runtime/detail/partition_manager.h>
 
-#include "legate/mapping/detail/machine.h"
-#include "legate/partitioning/detail/partition.h"
-#include "legate/runtime/detail/library.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/utilities/detail/enumerate.h"
-#include "legate/utilities/detail/env.h"
-#include "legate/utilities/detail/env_defaults.h"
-#include "legate/utilities/detail/zip.h"
+#include <legate/mapping/detail/machine.h>
+#include <legate/partitioning/detail/partition.h>
+#include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/enumerate.h>
+#include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/env_defaults.h>
+#include <legate/utilities/detail/zip.h>
 
 #include <algorithm>
 #include <cmath>

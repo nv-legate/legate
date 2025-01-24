@@ -10,13 +10,14 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate.h>
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <cstring>
-#include <gtest/gtest.h>
 #include <tuple>
+#include <utilities/utilities.h>
 
 namespace fill_test {
 

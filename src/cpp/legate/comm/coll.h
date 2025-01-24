@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/comm/coll_comm.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/comm/coll_comm.h>
+#include <legate/utilities/typedefs.h>
 
 namespace legate::comm::coll {
 

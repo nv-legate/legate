@@ -10,12 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/logical_store.h"
+#include <legate.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate/data/detail/logical_store.h>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 namespace image_constraints {
 

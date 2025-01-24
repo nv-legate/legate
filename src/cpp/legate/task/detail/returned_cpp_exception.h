@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/task/detail/return_value.h"
-#include "legate/task/detail/returned_exception_common.h"
-#include "legate/utilities/detail/zstring_view.h"
+#include <legate/task/detail/return_value.h>
+#include <legate/task/detail/returned_exception_common.h>
+#include <legate/utilities/detail/zstring_view.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -49,4 +49,4 @@ class ReturnedCppException {
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/returned_cpp_exception.inl"
+#include <legate/task/detail/returned_cpp_exception.inl>

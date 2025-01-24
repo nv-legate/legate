@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_array.h"
-#include "legate/data/detail/logical_store.h"
-#include "legate/data/detail/scalar.h"
-#include "legate/operation/detail/operation.h"
-#include "legate/partitioning/constraint.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/logical_array.h>
+#include <legate/data/detail/logical_store.h>
+#include <legate/data/detail/scalar.h>
+#include <legate/operation/detail/operation.h>
+#include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>
 #include <optional>
@@ -198,4 +198,4 @@ class ManualTask final : public Task {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/task.inl"
+#include <legate/operation/detail/task.inl>

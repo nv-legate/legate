@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/mapping/detail/store.h"
+#include <legate/mapping/detail/store.h>
 
 namespace legate::mapping::detail {
 

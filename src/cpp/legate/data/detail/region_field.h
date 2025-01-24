@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/data/inline_allocation.h"
-#include "legate/mapping/mapping.h"
+#include <legate/data/inline_allocation.h>
+#include <legate/mapping/mapping.h>
 
 #include <cstdint>
 #include <optional>
@@ -62,4 +62,4 @@ class RegionField {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/region_field.inl"
+#include <legate/data/detail/region_field.inl>

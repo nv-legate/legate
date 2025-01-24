@@ -67,23 +67,32 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex:           '^("|<)legate_defines\.h("|>)'
     Priority:        1
-  - Regex:           '^("|<)legate/.*\.h("|>)'
+  - Regex:           '^("|<)legate\.h("|>)'
     Priority:        2
+  - Regex:           '^("|<)legate/.*\.(cu)?hp*("|>)'
+    Priority:        10
   - Regex:           '^("|<)stl/.*\.h("|>)'
-    Priority:        3
+    Priority:        20
   - Regex:           '^("|<)(legion|realm).*'
-    Priority:        4
+    Priority:        30
   - Regex:           '^("|<)kvikio.*'
-    Priority:        5
+    Priority:        40
   - Regex:           '^("|<)highfive.*'
-    Priority:        6
+    Priority:        51
   - Regex:           '^("|<)hdf5.*'
-    Priority:        7
+    Priority:        62
+  - Regex:           '^("|<)fmt.*'
+    Priority:        63
+  - Regex:           '^("|<)cpptrace.*'
+    Priority:        64
+  - Regex:           '^("|<)(gtest|gmock).*'
+    Priority:        65
   - Regex:           '^".*'
-    Priority:        8
+    Priority:        100
   - Regex:           '^<.*'
-    Priority:        99
+    Priority:        200
 IncludeIsMainRegex: '([-_](test|unittest))?$'
+MainIncludeChar: Any
 # yamllint enable rule:colons
 IndentCaseLabels: true
 IndentPPDirectives: None

@@ -65,4 +65,4 @@ class Communicator {
 
 }  // namespace legate::comm
 
-#include "legate/comm/communicator.inl"
+#include <legate/comm/communicator.inl>

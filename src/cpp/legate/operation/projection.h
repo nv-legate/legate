@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/utilities/tuple.h"
-#include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/tuple.h>
+#include <legate/utilities/typedefs.h>
 
 #include <functional>
 #include <iosfwd>
@@ -139,4 +139,4 @@ using SymbolicPoint = tuple<SymbolicExpr>;
 
 }  // namespace legate
 
-#include "legate/operation/projection.inl"
+#include <legate/operation/projection.inl>

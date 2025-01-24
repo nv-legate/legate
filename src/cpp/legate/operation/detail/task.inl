@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/operation/detail/task.h"
-#include "legate/runtime/detail/config.h"
+#include <legate/operation/detail/task.h>
+#include <legate/runtime/detail/config.h>
 
 namespace legate::detail {
 

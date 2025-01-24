@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/debug.h"
+#include <legate/utilities/debug.h>
 
-#include "legate/type/type_traits.h"
-#include "legate/utilities/dispatch.h"
 #include <legate/data/physical_store.h>
+#include <legate/type/type_traits.h>
+#include <legate/utilities/dispatch.h>
 
 namespace legate {
 

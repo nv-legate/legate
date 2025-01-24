@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate.h"
-#include "utilities/utilities.h"
-#include "utils.h"
+#include <legate.h>
 
 #include <gtest/gtest.h>
+
+#include <unit/logical_array/utils.h>
+#include <utilities/utilities.h>
 
 namespace logical_array_create_test {
 

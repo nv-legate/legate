@@ -10,8 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zip.h>
+
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>
 

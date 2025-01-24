@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "legate/task/task.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/task/task.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstddef>
 
@@ -44,4 +44,4 @@ class LegionTask : private LegateTask<T> {  // NOLINT(bugprone-crtp-constructor-
 
 }  // namespace legate::detail
 
-#include "legate/task/detail/legion_task.inl"
+#include <legate/task/detail/legion_task.inl>

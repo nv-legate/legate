@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/partitioning/detail/partitioner.h"
+#include <legate/partitioning/detail/partitioner.h>
 
 namespace legate::detail {
 

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/task/detail/returned_python_exception.h"
+#include <legate/task/detail/returned_python_exception.h>
 
 #include <utility>
 

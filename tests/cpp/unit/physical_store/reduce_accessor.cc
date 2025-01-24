@@ -10,11 +10,12 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate.h>
 
 #include <gtest/gtest.h>
+
 #include <numeric>
+#include <utilities/utilities.h>
 
 namespace physical_store_reduce_accessor_test {
 

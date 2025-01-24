@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/operation/detail/launcher_arg.h"
+#include <legate/operation/detail/launcher_arg.h>
 
 namespace legate::detail {
 

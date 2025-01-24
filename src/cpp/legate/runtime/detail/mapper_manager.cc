@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/mapper_manager.h"
+#include <legate/runtime/detail/mapper_manager.h>
 
-#include "legate/mapping/detail/base_mapper.h"
-#include "legate/runtime/detail/config.h"
-#include "legate/runtime/detail/runtime.h"
+#include <legate/mapping/detail/base_mapper.h>
+#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/runtime.h>
 
 #include <mappers/logging_wrapper.h>
 

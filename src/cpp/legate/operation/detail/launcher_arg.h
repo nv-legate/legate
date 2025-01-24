@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/data/detail/scalar.h"
-#include "legate/data/scalar.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/scalar.h>
+#include <legate/data/scalar.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <memory>
 #include <optional>
@@ -207,4 +207,4 @@ class StructArrayArg final : public Analyzable {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/launcher_arg.inl"
+#include <legate/operation/detail/launcher_arg.inl>

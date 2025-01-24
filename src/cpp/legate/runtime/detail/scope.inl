@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/runtime/detail/scope.h"
+#include <legate/runtime/detail/scope.h>
 
 #include <utility>
 

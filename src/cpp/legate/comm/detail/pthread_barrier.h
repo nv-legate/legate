@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "legate/utilities/abort.h"
-#include "legate/utilities/macros.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/utilities/abort.h>
+#include <legate/utilities/macros.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cerrno>
 #include <cstring>  // std::strerror

@@ -10,17 +10,19 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/debug.h"
+#include <legate/utilities/debug.h>
 
-#include "legate.h"
-#include "utilities/utilities.h"
+#include <legate.h>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-#include "legate/cuda/cuda.h"
+#include <legate/cuda/cuda.h>
+
+#include <fmt/format.h>
 
 #include <cuda_runtime.h>
-#include <fmt/format.h>
 #endif
 
 namespace debug_test {

@@ -10,13 +10,13 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/fill.h"
+#include <legate/operation/detail/fill.h>
 
-#include "legate/data/detail/logical_store.h"
-#include "legate/operation/detail/fill_launcher.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/partitioning/detail/constraint_solver.h"
-#include "legate/partitioning/detail/partitioner.h"
+#include <legate/data/detail/logical_store.h>
+#include <legate/operation/detail/fill_launcher.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/partitioning/detail/constraint_solver.h>
+#include <legate/partitioning/detail/partitioner.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>

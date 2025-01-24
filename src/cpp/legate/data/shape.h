@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/utilities/internal_shared_ptr.h"
-#include "legate/utilities/shared_ptr.h"
-#include "legate/utilities/tuple.h"
-#include "legate/utilities/typedefs.h"
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/tuple.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 #include <initializer_list>
@@ -199,4 +199,4 @@ class Shape {
 
 }  // namespace legate
 
-#include "legate/data/shape.inl"
+#include <legate/data/shape.inl>

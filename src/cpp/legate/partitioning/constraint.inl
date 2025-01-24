@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/partitioning/constraint.h"
+#include <legate/partitioning/constraint.h>
 
 namespace legate {
 

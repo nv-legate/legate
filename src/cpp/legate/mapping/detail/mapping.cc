@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/detail/mapping.h"
+#include <legate/mapping/detail/mapping.h>
 
-#include "legate/utilities/detail/type_traits.h"
+#include <legate/utilities/detail/type_traits.h>
 
 #include <algorithm>
 #include <cstddef>

@@ -10,8 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <iostream>
 #include <legate.h>
+
+#include <iostream>
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 #include <cstdint>
 #include <pybind11/pybind11.h>

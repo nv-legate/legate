@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "legate/data/detail/logical_region_field.h"
-#include "legate/operation/detail/store_projection.h"
-#include "legate/utilities/detail/hash.h"
-#include "legate/utilities/hash.h"
-#include "legate/utilities/internal_shared_ptr.h"
+#include <legate/data/detail/logical_region_field.h>
+#include <legate/operation/detail/store_projection.h>
+#include <legate/utilities/detail/hash.h>
+#include <legate/utilities/hash.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <map>
 #include <set>
@@ -175,4 +175,4 @@ class StoreAnalyzer {
 
 }  // namespace legate::detail
 
-#include "legate/operation/detail/req_analyzer.inl"
+#include <legate/operation/detail/req_analyzer.inl>

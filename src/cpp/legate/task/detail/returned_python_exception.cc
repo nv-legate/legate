@@ -10,17 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/task/detail/returned_python_exception.h"
+#include <legate/task/detail/returned_python_exception.h>
 
-#include "legate/task/detail/exception.h"
-#include "legate/task/detail/returned_exception_common.h"
+#include <legate/task/detail/exception.h>
 #include <legate/task/detail/returned_exception.h>
+#include <legate/task/detail/returned_exception_common.h>
 #include <legate/utilities/detail/traced_exception.h>
+
+#include <fmt/format.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <fmt/format.h>
 #include <limits>
 #include <memory>
 #include <stdexcept>

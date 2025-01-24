@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/task/task.h"
-#include "legate/task/variant_options.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/task/task.h>
+#include <legate/task/variant_options.h>
+#include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 
@@ -87,4 +87,4 @@ void register_partitioning_tasks(Library* core_lib);
 
 }  // namespace legate::detail
 
-#include "legate/partitioning/detail/partitioning_tasks.inl"
+#include <legate/partitioning/detail/partitioning_tasks.inl>

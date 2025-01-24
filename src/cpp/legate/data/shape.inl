@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/data/shape.inl"
+#include <legate/data/shape.inl>
 
 namespace legate {
 

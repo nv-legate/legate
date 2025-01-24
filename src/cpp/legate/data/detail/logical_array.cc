@@ -10,17 +10,18 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/data/detail/logical_array.h"
+#include <legate/data/detail/logical_array.h>
 
-#include "legate/data/detail/physical_array.h"
-#include "legate/operation/detail/launcher_arg.h"
-#include "legate/operation/detail/task.h"
-#include "legate/partitioning/detail/constraint.h"
-#include "legate/partitioning/detail/constraint_solver.h"
+#include <legate/data/detail/physical_array.h>
+#include <legate/operation/detail/launcher_arg.h>
+#include <legate/operation/detail/task.h>
+#include <legate/partitioning/detail/constraint.h>
+#include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/utilities/detail/traced_exception.h>
 
-#include <algorithm>
 #include <fmt/format.h>
+
+#include <algorithm>
 #include <iterator>
 #include <stdexcept>
 

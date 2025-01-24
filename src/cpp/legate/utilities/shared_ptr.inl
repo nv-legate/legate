@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "legate/utilities/shared_ptr.h"
+#include <legate/utilities/shared_ptr.h>
 
 namespace legate {
 

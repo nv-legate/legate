@@ -10,16 +10,16 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/cuda/cuda.h"
-#include "legate/partitioning/detail/partitioning_tasks.h"
-#include "legate/task/task_context.h"
-#include "legate/utilities/detail/unravel.h"
+#include <legate/cuda/cuda.h>
 #include <legate/generated/fatbin/partitioning_tasks_fatbin.h>
+#include <legate/partitioning/detail/partitioning_tasks.h>
+#include <legate/task/task_context.h>
+#include <legate/utilities/detail/cuda_reduction_buffer.cuh>
+#include <legate/utilities/detail/unravel.h>
 
-#include "legate/utilities/detail/cuda_reduction_buffer.cuh"
+#include <fmt/format.h>
 
 #include <cstring>
-#include <fmt/format.h>
 
 namespace legate::detail {
 

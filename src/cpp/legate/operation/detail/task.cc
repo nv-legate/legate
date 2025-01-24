@@ -10,31 +10,32 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/operation/detail/task.h"
+#include <legate/operation/detail/task.h>
 
 #include <legate_defines.h>
 
-#include "legate/data/detail/array_tasks.h"
-#include "legate/mapping/detail/mapping.h"
-#include "legate/operation/detail/launcher_arg.h"
-#include "legate/operation/detail/task_launcher.h"
-#include "legate/partitioning/detail/constraint_solver.h"
-#include "legate/partitioning/detail/partition.h"
-#include "legate/runtime/detail/communicator_manager.h"
-#include "legate/runtime/detail/library.h"
-#include "legate/runtime/detail/region_manager.h"
-#include "legate/runtime/detail/runtime.h"
-#include "legate/task/detail/inline_task_body.h"
-#include "legate/task/detail/task_return_layout.h"
-#include "legate/type/detail/type_info.h"
-#include "legate/utilities/detail/core_ids.h"
-#include "legate/utilities/detail/zip.h"
+#include <legate/data/detail/array_tasks.h>
+#include <legate/mapping/detail/mapping.h>
+#include <legate/operation/detail/launcher_arg.h>
+#include <legate/operation/detail/task_launcher.h>
+#include <legate/partitioning/detail/constraint_solver.h>
+#include <legate/partitioning/detail/partition.h>
+#include <legate/runtime/detail/communicator_manager.h>
+#include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/region_manager.h>
+#include <legate/runtime/detail/runtime.h>
+#include <legate/task/detail/inline_task_body.h>
+#include <legate/task/detail/task_return_layout.h>
 #include <legate/task/task_info.h>
+#include <legate/type/detail/type_info.h>
 #include <legate/utilities/assert.h>
+#include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/zip.h>
+
+#include <fmt/format.h>
 
 #include <algorithm>
-#include <fmt/format.h>
 #include <stdexcept>
 
 namespace legate::detail {

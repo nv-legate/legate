@@ -15,8 +15,8 @@
 // Useful for IDEs
 #include <legate_defines.h>
 
-#include "legate/task/registrar.h"
-#include "legate/task/task.h"
+#include <legate/task/registrar.h>
+#include <legate/task/task.h>
 #include <legate/utilities/compiler.h>
 
 namespace legate {

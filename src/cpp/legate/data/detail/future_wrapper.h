@@ -12,10 +12,10 @@
 
 #pragma once
 
-#include "legate/data/inline_allocation.h"
-#include "legate/mapping/mapping.h"
-#include "legate/task/detail/return_value.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/data/inline_allocation.h>
+#include <legate/mapping/mapping.h>
+#include <legate/task/detail/return_value.h>
+#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 
@@ -67,4 +67,4 @@ class FutureWrapper {
 
 }  // namespace legate::detail
 
-#include "legate/data/detail/future_wrapper.inl"
+#include <legate/data/detail/future_wrapper.inl>

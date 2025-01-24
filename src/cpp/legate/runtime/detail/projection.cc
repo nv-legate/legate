@@ -10,14 +10,15 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/runtime/detail/projection.h"
+#include <legate/runtime/detail/projection.h>
 
-#include "legate/runtime/detail/library.h"
-#include "legate/utilities/dispatch.h"
-#include "legate/utilities/typedefs.h"
+#include <legate/runtime/detail/library.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/dispatch.h>
+#include <legate/utilities/typedefs.h>
 
 #include <fmt/format.h>
+
 #include <mutex>
 #include <stdexcept>
 #include <unordered_map>

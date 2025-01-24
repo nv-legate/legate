@@ -10,9 +10,9 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/mapping/array.h"
+#include <legate/mapping/array.h>
 
-#include "legate/mapping/detail/array.h"
+#include <legate/mapping/detail/array.h>
 
 namespace legate::mapping {
 

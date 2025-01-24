@@ -10,11 +10,11 @@
  * its affiliates is strictly prohibited.
  */
 
-#include "legate/utilities/detail/tuple.h"
-
-#include "utilities/utilities.h"
+#include <legate/utilities/detail/tuple.h>
 
 #include <gtest/gtest.h>
+
+#include <utilities/utilities.h>
 
 namespace to_domain_test {
 

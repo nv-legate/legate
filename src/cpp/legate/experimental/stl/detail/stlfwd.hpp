@@ -28,9 +28,9 @@
 // implementation, and for whatever reason, this is picked up by the compiler, and used
 // instead. You can verify this by compiling the following program:
 //
-// #include "realm/utils.h"
-// #include "realm/instance.h"
-// #include "tcb/span.hpp"
+// #include <realm/utils.h>
+// #include <realm/instance.h>
+// #include <tcb/span.hpp>
 //
 // int main()
 // {
@@ -46,25 +46,25 @@
 // /Users/jfaibussowit/soft/nv/legate.core.internal/build/debug-sanitizer-clang/_deps/span-src/include/tcb/span.hpp:148:7:
 // note: template is declared here class span;
 //       ^
-#include "span.hpp"
+#include <legate/experimental/stl/detail/span.hpp>
 //
 
 #include <legate_defines.h>
 
-#include "legate/utilities/macros.h"
+#include <legate.h>
 
-#include "config.hpp"
-#include "legate.h"
+#include <legate/experimental/stl/detail/config.hpp>
+#include <legate/utilities/macros.h>
 
 // As of 3/14/2024, this include causes shadow warnings in GPU debug mode compilation
 LEGATE_PRAGMA_PUSH();
 LEGATE_PRAGMA_GCC_IGNORE("-Wmaybe-uninitialized");
-#include "mdspan.hpp"
+#include <legate/experimental/stl/detail/mdspan.hpp>
 LEGATE_PRAGMA_POP();
 
-#include "meta.hpp"
-#include "ranges.hpp"
-#include "type_traits.hpp"
+#include <legate/experimental/stl/detail/meta.hpp>
+#include <legate/experimental/stl/detail/ranges.hpp>
+#include <legate/experimental/stl/detail/type_traits.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -72,7 +72,7 @@ LEGATE_PRAGMA_POP();
 #include <type_traits>
 
 // Include this last:
-#include "prefix.hpp"
+#include <legate/experimental/stl/detail/prefix.hpp>
 
 namespace legate::experimental::stl {
 /**
@@ -407,4 +407,4 @@ inline constexpr bool legate_reduction =  // NOLINT(readability-identifier-namin
 
 }  // namespace legate::experimental::stl
 
-#include "suffix.hpp"
+#include <legate/experimental/stl/detail/suffix.hpp>
