@@ -492,9 +492,14 @@ cdef class AutoTask(Unconstructable):
     @property
     def raw_handle(self) -> uintptr_t:
         r"""
-        Get the raw C++ pointer to the underlying class instance as an integer
+        Get a handle to the C++ ``AutoTask`` object. This property is an
+        escape-hatch that exists out of necessity. We make no guarantees about
+        its type, behavior, or other properties except for the fact that it
+        represents an opaque handle to the underlying C++ object.
 
-        :returns: The pointer to the C++ `AutoTask`.
+        Currently, it returns the raw pointer to the C++ object.
+
+        :returns: A handle to the C++ object.
         :rtype: int
         """
         return <uintptr_t> &self._handle
@@ -769,9 +774,14 @@ cdef class ManualTask(Unconstructable):
     @property
     def raw_handle(self) -> uintptr_t:
         r"""
-        Get the raw C++ pointer to the underlying class instance as an integer.
+        Get a handle to the C++ ``ManualTask`` object. This property is an
+        escape-hatch that exists out of necessity. We make no guarantees about
+        its type, behavior, or other properties except for the fact that it
+        represents an opaque handle to the underlying C++ object.
 
-        :returns: The raw pointer to the C++ `ManualTask`.
+        Currently, it returns the raw pointer to the C++ object.
+
+        :returns: A handle to the C++ object.
         :rtype: int
         """
         return <uintptr_t> &self._handle

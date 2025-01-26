@@ -677,9 +677,14 @@ cdef class LogicalStore(Unconstructable):
     @property
     def raw_handle(self) -> uintptr_t:
         r"""
-        Get a pointer to the raw C++ `LogicalStore` object.
+        Get a handle to the C++ ``LogicalStore`` object. This property is an
+        escape-hatch that exists out of necessity. We make no guarantees about
+        its type, behavior, or other properties except for the fact that it
+        represents an opaque handle to the underlying C++ object.
 
-        :returns: The pointer to the raw C++ `LogicalStore` object.
+        Currently, it returns the raw pointer to the C++ object.
+
+        :returns: A handle to the C++ object.
         :rtype: int
         """
         return <uintptr_t> &self._handle
