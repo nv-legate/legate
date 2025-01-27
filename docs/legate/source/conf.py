@@ -29,6 +29,8 @@ SWITCHER_PROD = "https://docs.nvidia.com/legate/switcher.json"
 SWITCHER_DEV = "http://localhost:8000/legate/switcher.json"
 JSON_URL = SWITCHER_DEV if getenv("SWITCHER_DEV") == "1" else SWITCHER_PROD
 
+ANNOTATE = getenv("LEGATE_ANNOTATION_DOCS") == "1"
+
 # -- Project information -----------------------------------------------------
 
 project = "NVIDIA legate"
@@ -150,5 +152,7 @@ def _dont_skip_documented_dunders(  # noqa: PLR0913, PLR0911
 
 
 def setup(app):  # noqa: D103
+    if ANNOTATE:
+        app.add_js_file("https://hypothes.is/embed.js", kind="hypothesis")
     app.add_css_file("params.css")
     app.connect("autodoc-skip-member", _dont_skip_documented_dunders)

@@ -180,8 +180,18 @@ doxygen:
 ## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: docs
+docs: export LEGATE_AUTO_CONFIG=0
 docs: doxygen
 	@$(LEGATE_BUILD_COMMAND) --target Sphinx $(LEGATE_CMAKE_ARGS)
+
+## Build combined Sphinx documentation with the hypothes.is annotation overlay.
+##
+## Options:
+## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
+##
+.PHONY: docs-dev
+docs-dev: export LEGATE_ANNOTATION_DOCS=1
+docs-dev: docs
 
 ## Serve combined Sphinx documentation.
 ##
