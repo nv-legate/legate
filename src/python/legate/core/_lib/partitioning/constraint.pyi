@@ -11,7 +11,7 @@
 
 from collections.abc import Callable, Collection
 from enum import IntEnum, unique
-from typing import Any, overload
+from typing import Any, cast, overload
 
 from ..utilities.unconstructable import Unconstructable
 
@@ -29,9 +29,9 @@ class ConstraintProxy:
 
 @unique
 class ImageComputationHint(IntEnum):
-    NO_HINT: int
-    MIN_MAX: int
-    FIRST_LAST: int
+    NO_HINT = cast(int, ...)
+    MIN_MAX = cast(int, ...)
+    FIRST_LAST = cast(int, ...)
 
 @overload
 def align(lhs: Variable, rhs: Variable) -> Constraint: ...

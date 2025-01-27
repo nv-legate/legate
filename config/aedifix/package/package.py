@@ -170,8 +170,7 @@ class Package(Configurable):
         def handle_cmake_var(attr: _CMakeVar) -> None:
             cmake_ty = attr.__config_cmake_type__()
             self.log(
-                f'Registering CMake variable "{attr}" for {self!r}: '
-                f"{cmake_ty}"
+                f'Registering CMake variable "{attr}" for {self!r}: {cmake_ty}'
             )
             # have found a special attribute
             self.manager.register_cmake_variable(cmake_ty)
@@ -358,9 +357,9 @@ class Package(Configurable):
                 )
                 primary_attr = attr
 
-        assert (
-            primary_attr is not None
-        ), f"Never found primary config argument for {self.name}"
+        assert primary_attr is not None, (
+            f"Never found primary config argument for {self.name}"
+        )
 
         # The primary attribute, if set, should ultimately control whether the
         # package is enabled or disabled, so we check it first

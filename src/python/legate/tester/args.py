@@ -319,8 +319,7 @@ other.add_argument(
     "--cov-bin",
     default=None,
     help=(
-        "coverage binary location, "
-        "e.g. /conda_path/envs/env_name/bin/coverage"
+        "coverage binary location, e.g. /conda_path/envs/env_name/bin/coverage"
     ),
 )
 

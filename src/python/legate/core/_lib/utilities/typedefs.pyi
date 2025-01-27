@@ -10,7 +10,7 @@
 # its affiliates is strictly prohibited.
 
 from enum import IntEnum
-from typing import NewType
+from typing import NewType, cast
 
 LocalTaskID = NewType("LocalTaskID", int)
 GlobalTaskID = NewType("GlobalTaskID", int)
@@ -19,10 +19,9 @@ LocalRedopID = NewType("LocalRedopID", int)
 GlobalRedopID = NewType("GlobalRedopID", int)
 
 class VariantCode(IntEnum):
-    NONE: int
-    CPU: int
-    GPU: int
-    OMP: int
+    CPU = cast(int, ...)
+    GPU = cast(int, ...)
+    OMP = cast(int, ...)
 
 class DomainPoint:
     def __init__(self) -> None: ...

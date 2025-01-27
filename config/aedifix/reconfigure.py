@@ -62,9 +62,9 @@ class Reconfigure(Configurable):
     @staticmethod
     def get_import_line(main_package_type: type) -> tuple[str, str]:
         main_package_module = inspect.getmodule(main_package_type)
-        assert (
-            main_package_module is not None
-        ), "Could not determine module containing the main package!"
+        assert main_package_module is not None, (
+            "Could not determine module containing the main package!"
+        )
         assert main_package_module.__package__
         return main_package_module.__name__, main_package_type.__name__
 

@@ -43,20 +43,44 @@ repos:
         language: python
         exclude: '.*\.(png|pdf)'
         types_or: [file, text]
+      - id: legate-assert
+        name: legate-assert
+        description: 'Find uses of assert() that should be using LegateAssert()'
+        entry: ./scripts/pre-commit/legate_assert.py
+        language: python
+        'types_or': [c++, c, cuda]
+        stages: [pre-commit]
+        exclude: '^(src/cpp/legate/utilities/assert\.h|src/cpp/legate/utilities/abort.h)$'
+      - id: c-begone
+        name: c-begone
+        description: 'Convert C standard library functions and types to C++ equivalent'
+        entry: ./scripts/pre-commit/c_begone.py
+        language: python
+        'types_or': [c++, c, cuda]
+        stages: [pre-commit]
+        exclude: '^(src/cpp/legate/utilities/abort.h|share/legate/mpi_wrapper/.*)$'
+      - id: traced-throw
+        name: traced-throw
+        description: 'Convert throw statements to throwing legate TracedException'
+        entry: ./scripts/pre-commit/traced_throw.py
+        language: python
+        'types_or': [c++, c, cuda]
+        stages: [pre-commit]
+        exclude: '^tests/cpp/.*$'
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v19.1.5'
+    rev: 'v19.1.7'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
         types_or: []
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.3
+    rev: v0.9.3
     hooks:
       - id: ruff-format
       - id: ruff
         args: ["--config=./pyproject.toml", "--fix"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.13.0'
+    rev: 'v1.14.1'
     hooks:
       - id: mypy
         pass_filenames: false
@@ -78,7 +102,7 @@ repos:
       - id: shellcheck
         args: ['--rcfile', './scripts/pre-commit/shellcheckrc']
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.4
+    rev: v1.7.7
     hooks:
       - id: actionlint
         types: [yaml]
@@ -93,36 +117,8 @@ repos:
         entry: ./scripts/pre-commit/legate_defined.sh
         language: script
         'types_or': [c++, c, cuda]
-        require_serial: false
         stages: [pre-commit]
         exclude: '^(src/cpp/legate/experimental/stl/detail/config\.hpp|src/cpp/legate/utilities/compiler\.h|share/legate/mpi_wrapper/.*|src/cpp/legate/utilities/env.h)$'
-      - id: legate-assert
-        name: legate-assert
-        description: 'Find uses of assert() that should be using LegateAssert()'
-        entry: ./scripts/pre-commit/legate_assert.py
-        language: python
-        'types_or': [c++, c, cuda]
-        require_serial: false
-        stages: [pre-commit]
-        exclude: '^(src/cpp/legate/utilities/assert\.h|src/cpp/legate/utilities/abort.h)$'
-      - id: c-begone
-        name: c-begone
-        description: 'Convert C standard library functions and types to C++ equivalent'
-        entry: ./scripts/pre-commit/c_begone.py
-        language: python
-        'types_or': [c++, c, cuda]
-        require_serial: false
-        stages: [pre-commit]
-        exclude: '^(src/cpp/legate/utilities/abort.h|share/legate/mpi_wrapper/.*)$'
-      - id: traced-throw
-        name: traced-throw
-        description: 'Convert throw statements to throwing legate TracedException'
-        entry: ./scripts/pre-commit/traced_throw.py
-        language: python
-        'types_or': [c++, c, cuda]
-        require_serial: false
-        stages: [pre-commit]
-        exclude: '^tests/cpp/.*$'
       - id: no-default
         name: no-default
         description: "Ban the use of default: in switch statements"
@@ -143,7 +139,6 @@ repos:
         additional_dependencies:
           - cmakelang==0.6.13
         verbose: true
-        require_serial: true
       - id: cmake-lint
         name: cmake-lint
         entry: ./scripts/pre-commit/cmake-format.bash cmake-lint
@@ -154,14 +149,12 @@ repos:
         additional_dependencies:
           - cmakelang==0.6.13
         verbose: true
-        require_serial: true
       - id: dej2lint
         name: dej2lint
         description: 'Run yamllint on meta.yaml files, removing Jinja2 directives'
         entry: python scripts/pre-commit/dej2lint.py
         language: python
         files: meta\.yaml$
-        require_serial: true
         args: ['-c', './scripts/pre-commit/yamllint.yml']
         additional_dependencies: ['yamllint']
       - id: check_cmake_format

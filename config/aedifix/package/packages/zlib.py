@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+# ruff: noqa: A005
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 

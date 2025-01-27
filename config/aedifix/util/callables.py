@@ -213,9 +213,9 @@ def classify_callable(
         func_obj = fn.__func__
     elif inspect.isfunction(fn):
         module = inspect.getmodule(fn)
-        assert (
-            module is not None
-        ), f"Could not determine host module for function {fn}"
+        assert module is not None, (
+            f"Could not determine host module for function {fn}"
+        )
         if fully_qualify:
             qualname = f"{module.__name__}.{fn.__qualname__}"
         else:
@@ -225,8 +225,8 @@ def classify_callable(
         raise TypeError(fn)
 
     src_file = inspect.getsourcefile(fn)
-    assert (
-        src_file is not None
-    ), f"Could not determine source file for function {fn}"
+    assert src_file is not None, (
+        f"Could not determine source file for function {fn}"
+    )
     lineno = func_obj.__code__.co_firstlineno
     return qualname, Path(src_file), lineno

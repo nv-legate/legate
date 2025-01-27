@@ -10,6 +10,7 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+# ruff: noqa: A005
 from ._lib.type.type_info import (
     FixedArrayType,
     ReductionOpKind,

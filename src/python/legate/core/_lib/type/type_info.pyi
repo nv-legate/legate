@@ -9,7 +9,7 @@
 # its affiliates is strictly prohibited.
 
 from enum import IntEnum
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from numpy.typing import DTypeLike
@@ -17,35 +17,35 @@ from numpy.typing import DTypeLike
 from ..utilities.typedefs import GlobalRedopID
 
 class TypeCode(IntEnum):
-    NIL: int
-    BOOL: int
-    INT8: int
-    INT16: int
-    INT32: int
-    INT64: int
-    UINT8: int
-    UINT16: int
-    UINT32: int
-    UINT64: int
-    FLOAT16: int
-    FLOAT32: int
-    FLOAT64: int
-    COMPLEX64: int
-    COMPLEX128: int
-    BINARY: int
-    FIXED_ARRAY: int
-    STRUCT: int
-    STRING: int
-    LIST: int
+    NIL = cast(int, ...)
+    BOOL = cast(int, ...)
+    INT8 = cast(int, ...)
+    INT16 = cast(int, ...)
+    INT32 = cast(int, ...)
+    INT64 = cast(int, ...)
+    UINT8 = cast(int, ...)
+    UINT16 = cast(int, ...)
+    UINT32 = cast(int, ...)
+    UINT64 = cast(int, ...)
+    FLOAT16 = cast(int, ...)
+    FLOAT32 = cast(int, ...)
+    FLOAT64 = cast(int, ...)
+    COMPLEX64 = cast(int, ...)
+    COMPLEX128 = cast(int, ...)
+    BINARY = cast(int, ...)
+    FIXED_ARRAY = cast(int, ...)
+    STRUCT = cast(int, ...)
+    STRING = cast(int, ...)
+    LIST = cast(int, ...)
 
 class ReductionOpKind(IntEnum):
-    ADD: int
-    MUL: int
-    MAX: int
-    MIN: int
-    OR: int
-    AND: int
-    XOR: int
+    ADD = cast(int, ...)
+    MUL = cast(int, ...)
+    MAX = cast(int, ...)
+    MIN = cast(int, ...)
+    OR = cast(int, ...)
+    AND = cast(int, ...)
+    XOR = cast(int, ...)
 
 class Type:
     @staticmethod

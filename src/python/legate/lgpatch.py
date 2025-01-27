@@ -25,7 +25,7 @@ Patch existing libraries with legate equivalents.
 
 Currently the following patching can be applied:
 
-{newline.join(f'    {key} -> {value}' for key, value in KNOWN_PATCHES.items())}
+{newline.join(f"    {key} -> {value}" for key, value in KNOWN_PATCHES.items())}
 
 """
 )

@@ -571,9 +571,9 @@ class MainPackage(Package, ABC):
         AssertionError
             If `opt_name` does not start with a '-'.
         """
-        assert opt_name.startswith(
-            "-"
-        ), f"Option name '{opt_name}' must start with '-'"
+        assert opt_name.startswith("-"), (
+            f"Option name '{opt_name}' must start with '-'"
+        )
         dest_name = flag_to_dest(opt_name)
         parser = ArgumentParser(add_help=False)
         if bool_opt:

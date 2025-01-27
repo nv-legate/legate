@@ -15,7 +15,7 @@ import pytest
 
 from legate.core import types as ty
 
-from .util.types import _PRIMITIVES
+from .util.type_util import _PRIMITIVES
 
 _PRIMITIVES_UIDS = {pty.uid for pty in _PRIMITIVES}
 

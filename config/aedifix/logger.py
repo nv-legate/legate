@@ -507,8 +507,7 @@ class Logger:
         src = self.file_path
         if src == dest:
             self.log_file(
-                f"Destination log path ({dest}) same as source, "
-                "not copying!"
+                f"Destination log path ({dest}) same as source, not copying!"
             )
             return dest
         self.log_file(f"Copying file log from {src} to {dest}")

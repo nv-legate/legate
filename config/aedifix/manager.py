@@ -309,8 +309,7 @@ class ConfigurationManager:
                     "found in os.environ"
                 )
                 self.log(
-                    f"{arch_name} found in environment: "
-                    f'"{environ[arch_name]}"'
+                    f'{arch_name} found in environment: "{environ[arch_name]}"'
                 )
             case ValueProvenance.GENERATED:
                 self.log(f"{arch_name} was generated")
@@ -436,9 +435,9 @@ class ConfigurationManager:
         self._module_map = {
             type(conf_obj): idx for idx, conf_obj in enumerate(self._modules)
         }
-        assert len(self._module_map) == len(
-            self._modules
-        ), "Duplicate modules!"
+        assert len(self._module_map) == len(self._modules), (
+            "Duplicate modules!"
+        )
 
         # pre-populate the topologicalsorter so that modules which are never
         # "required" are properly encoded with no dependencies

@@ -19,7 +19,7 @@ import pytest
 
 from legate.core import Type, TypeCode, types as ty
 
-from .util.types import _PRIMITIVES
+from .util.type_util import _PRIMITIVES
 
 if TYPE_CHECKING:
     from numpy.typing import DTypeLike

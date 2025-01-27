@@ -10,16 +10,17 @@
 # its affiliates is strictly prohibited.
 
 from enum import IntEnum, unique
+from typing import cast
 
 @unique
 class TaskTarget(IntEnum):
-    GPU: int
-    OMP: int
-    CPU: int
+    GPU = cast(int, ...)
+    OMP = cast(int, ...)
+    CPU = cast(int, ...)
 
 @unique
 class StoreTarget(IntEnum):
-    SYSMEM: int
-    FBMEM: int
-    ZCMEM: int
-    SOCKETMEM: int
+    SYSMEM = cast(int, ...)
+    FBMEM = cast(int, ...)
+    ZCMEM = cast(int, ...)
+    SOCKETMEM = cast(int, ...)

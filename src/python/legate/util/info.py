@@ -20,7 +20,7 @@ def print_build_info() -> None:  # noqa: D103
   build_type : {info.build_type}
   use_openmp : {info.use_openmp}
   use_cuda   : {info.use_cuda}
-  networks   : {','.join(info.networks) if info.networks else ''}
+  networks   : {",".join(info.networks) if info.networks else ""}
   conduit    : {info.conduit}
 """
     )

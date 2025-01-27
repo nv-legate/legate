@@ -10,9 +10,10 @@
 # its affiliates is strictly prohibited.
 
 from enum import IntEnum, unique
+from typing import cast
 
 @unique
 class ExceptionMode(IntEnum):
-    IMMEDIATE: int
-    DEFERRED: int
-    IGNORED: int
+    IMMEDIATE = cast(int, ...)
+    DEFERRED = cast(int, ...)
+    IGNORED = cast(int, ...)

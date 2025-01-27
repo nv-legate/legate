@@ -470,12 +470,12 @@ def partition_argv(argv: Iterable[str]) -> tuple[list[str], list[str]]:
 CMAKE_TEMPLATES_DIR: Final = Path(__file__).resolve().parents[1] / "templates"
 CMAKE_CONFIGURE_FILE: Final = CMAKE_TEMPLATES_DIR / "configure_file.cmake"
 
-assert (
-    CMAKE_CONFIGURE_FILE.exists()
-), f"Cmake configure file {CMAKE_CONFIGURE_FILE} does not exist"
-assert (
-    CMAKE_CONFIGURE_FILE.is_file()
-), f"Cmake configure file {CMAKE_CONFIGURE_FILE} is not a file"
+assert CMAKE_CONFIGURE_FILE.exists(), (
+    f"Cmake configure file {CMAKE_CONFIGURE_FILE} does not exist"
+)
+assert CMAKE_CONFIGURE_FILE.is_file(), (
+    f"Cmake configure file {CMAKE_CONFIGURE_FILE} is not a file"
+)
 
 
 def cmake_configure_file(

@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+# ruff: noqa: A005
 from dataclasses import Field, dataclass
 from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeAlias, TypeVar
 

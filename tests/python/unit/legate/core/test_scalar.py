@@ -18,7 +18,7 @@ import pytest
 
 from legate.core import Scalar, types as ty
 
-from .util.types import _PRIMITIVES
+from .util.type_util import _PRIMITIVES
 
 
 @pytest.fixture
