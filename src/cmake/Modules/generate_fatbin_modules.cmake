@@ -96,7 +96,7 @@ function(legate_generate_fatbin_modules)
     endif()
 
     if(cuda_flags)
-      legate_add_target_compile_option("${fatbin_target_name}" CUDA PRIVATE cuda_flags)
+      legate_add_target_compile_options("${fatbin_target_name}" CUDA PRIVATE cuda_flags)
     endif()
 
     cmake_path(GET src STEM fatbin_var_name)

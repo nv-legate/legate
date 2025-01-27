@@ -228,271 +228,21 @@ legate_find_or_configure(PACKAGE cpm_licenses)
 # ########################################################################################
 # * legate --------------------------------------------------------------
 
-include("${LEGATE_CMAKE_DIR}/Modules/generate_sanitizer_options.cmake")
-
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
-  DELIM [[:]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/asan_default_options.h"
-)
-
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt
-  DELIM [[\n]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/lsan_suppressions.h"
-)
-
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt
-  DELIM [[:]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/ubsan_default_options.h"
-)
-
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt
-  DELIM [[\n]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tsan_suppressions.h"
-)
-legate_generate_sanitizer_options(
-  SRC ${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt
-  DELIM [[:]]
-  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tsan_default_options.h"
-)
-
-list(APPEND
-     legate_SOURCES
-     # core
-     legate/comm/coll.cc
-     legate/comm/detail/coll.cc
-     legate/comm/detail/backend_network.cc
-     legate/comm/detail/comm.cc
-     legate/comm/detail/comm_cpu.cc
-     legate/comm/detail/comm_local.cc
-     legate/comm/detail/local_network.cc
-     legate/comm/detail/logger.cc
-     legate/comm/detail/thread_comm.cc
-     legate/cuda/stream_pool.cc
-     legate/cuda/detail/cuda_driver_api.cc
-     legate/cuda/detail/module_manager.cc
-     legate/data/allocator.cc
-     legate/data/buffer.cc
-     legate/data/external_allocation.cc
-     legate/data/logical_array.cc
-     legate/data/logical_store.cc
-     legate/data/scalar.cc
-     legate/data/shape.cc
-     legate/data/physical_array.cc
-     legate/data/physical_store.cc
-     legate/data/detail/array_tasks.cc
-     legate/data/detail/attachment.cc
-     legate/data/detail/external_allocation.cc
-     legate/data/detail/logical_array.cc
-     legate/data/detail/logical_region_field.cc
-     legate/data/detail/logical_store.cc
-     legate/data/detail/scalar.cc
-     legate/data/detail/physical_array.cc
-     legate/data/detail/physical_store.cc
-     legate/data/detail/shape.cc
-     legate/data/detail/transform.cc
-     legate/data/detail/future_wrapper.cc
-     legate/data/detail/region_field.cc
-     legate/data/detail/user_storage_tracker.cc
-     legate/experimental/trace.cc
-     legate/mapping/array.cc
-     legate/mapping/machine.cc
-     legate/mapping/mapping.cc
-     legate/mapping/operation.cc
-     legate/mapping/store.cc
-     legate/mapping/detail/array.cc
-     legate/mapping/detail/base_mapper.cc
-     legate/mapping/detail/core_mapper.cc
-     legate/mapping/detail/instance_manager.cc
-     legate/mapping/detail/machine.cc
-     legate/mapping/detail/mapping.cc
-     legate/mapping/detail/operation.cc
-     legate/mapping/detail/store.cc
-     legate/operation/projection.cc
-     legate/operation/task.cc
-     legate/operation/detail/attach.cc
-     legate/operation/detail/copy.cc
-     legate/operation/detail/copy_launcher.cc
-     legate/operation/detail/discard.cc
-     legate/operation/detail/execution_fence.cc
-     legate/operation/detail/fill.cc
-     legate/operation/detail/fill_launcher.cc
-     legate/operation/detail/gather.cc
-     legate/operation/detail/index_attach.cc
-     legate/operation/detail/mapping_fence.cc
-     legate/operation/detail/launcher_arg.cc
-     legate/operation/detail/operation.cc
-     legate/operation/detail/store_projection.cc
-     legate/operation/detail/reduce.cc
-     legate/operation/detail/release_region_field.cc
-     legate/operation/detail/req_analyzer.cc
-     legate/operation/detail/scatter.cc
-     legate/operation/detail/scatter_gather.cc
-     legate/operation/detail/task.cc
-     legate/operation/detail/task_launcher.cc
-     legate/operation/detail/timing.cc
-     legate/partitioning/constraint.cc
-     legate/partitioning/detail/constraint.cc
-     legate/partitioning/detail/constraint_solver.cc
-     legate/partitioning/detail/partition.cc
-     legate/partitioning/detail/partitioner.cc
-     legate/partitioning/detail/partitioning_tasks.cc
-     legate/partitioning/detail/restriction.cc
-     legate/runtime/library.cc
-     legate/runtime/runtime.cc
-     legate/runtime/scope.cc
-     legate/runtime/detail/communicator_manager.cc
-     legate/runtime/detail/field_manager.cc
-     legate/runtime/detail/library.cc
-     legate/runtime/detail/partition_manager.cc
-     legate/runtime/detail/projection.cc
-     legate/runtime/detail/region_manager.cc
-     legate/runtime/detail/runtime.cc
-     legate/runtime/detail/shard.cc
-     legate/runtime/detail/config.cc
-     legate/runtime/detail/mapper_manager.cc
-     legate/runtime/detail/argument_parsing.cc
-     legate/task/registrar.cc
-     legate/task/task.cc
-     legate/task/task_context.cc
-     legate/task/task_info.cc
-     legate/task/variant_options.cc
-     legate/task/detail/return_value.cc
-     legate/task/detail/returned_exception.cc
-     legate/task/detail/returned_cpp_exception.cc
-     legate/task/detail/returned_python_exception.cc
-     legate/task/detail/task_context.cc
-     legate/task/detail/inline_task_body.cc
-     legate/task/detail/legion_task_body.cc
-     legate/task/detail/task.cc
-     legate/task/detail/task_return.cc
-     legate/task/detail/task_return_layout.cc
-     legate/type/type_info.cc
-     legate/type/detail/type_info.cc
-     legate/utilities/debug.cc
-     legate/utilities/machine.cc
-     legate/utilities/internal_shared_ptr.cc
-     legate/utilities/compiler.cc
-     legate/utilities/abort.cc
-     legate/utilities/dispatch.cc
-     legate/utilities/detail/buffer_builder.cc
-     legate/utilities/detail/env.cc
-     legate/utilities/detail/tuple.cc
-     legate/utilities/detail/deserializer.cc
-     legate/utilities/detail/formatters.cc
-     legate/utilities/detail/traced_exception.cc
-     legate/utilities/detail/zip.cc
-     legate/utilities/detail/linearize.cc
-     legate/utilities/detail/error.cc
-     legate/timing/timing.cc
-     # stl
-     legate/experimental/stl/detail/clang_tidy_dummy.cpp
-     # io
-     legate/io/hdf5/detail/read.cc
-     legate/io/hdf5/detail/util.cc
-     legate/io/hdf5/interface.cc
-     legate/experimental/io/kvikio/detail/basic.cc
-     legate/experimental/io/kvikio/detail/tile.cc
-     legate/experimental/io/kvikio/detail/tile_by_offsets.cc
-     legate/experimental/io/kvikio/interface.cc
-     legate/experimental/io/detail/task.cc
-     legate/experimental/io/detail/library.cc
-     legate/experimental/io/detail/mapper.cc)
-
-if(legate_ENABLE_SANITIZERS)
-  list(APPEND legate_SOURCES legate/utilities/detail/sanitizer_defaults.cc)
-endif()
-
-if(Legion_NETWORKS)
-  list(APPEND legate_SOURCES legate/comm/detail/mpi_network.cc
-       legate/comm/detail/mpi_interface.cc legate/comm/detail/comm_mpi.cc)
-endif()
-
-if(Legion_USE_OpenMP)
-  list(APPEND legate_SOURCES legate/data/detail/array_tasks_omp.cc
-       legate/partitioning/detail/partitioning_tasks_omp.cc)
-endif()
-
-if(legate_USE_CAL)
-  list(APPEND legate_SOURCES legate/comm/detail/comm_cal.cc)
-endif()
-
-if(Legion_USE_CUDA)
-  list(APPEND legate_SOURCES legate/comm/detail/comm_nccl.cc
-       legate/data/detail/array_tasks_cuda.cc
-       legate/partitioning/detail/partitioning_tasks_cuda.cc)
-
-  include("${LEGATE_CMAKE_DIR}/Modules/generate_fatbin_modules.cmake")
-
-  legate_generate_fatbin_modules(DEST_DIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/fatbin"
-                                 GENERATED_SOURCES_VAR fatbin_src
-                                 SOURCES legate/data/detail/fixup_ranges_fatbin.cu
-                                         legate/data/detail/offsets_to_ranges_fatbin.cu
-                                         legate/data/detail/ranges_to_offsets_fatbin.cu
-                                         legate/partitioning/detail/partitioning_tasks_fatbin.cu
-                                 EXTRA_FLAGS ${legate_CUDA_FLAGS})
-
-  list(APPEND legate_SOURCES ${fatbin_src})
-endif()
-
-include("${LEGATE_CMAKE_DIR}/Modules/generate_git_revision_file.cmake")
-
-legate_generate_git_revision_file(
-  GENERATED_SRC_VAR git_revision_src EXTRA_TARGETS Legion::Legion
-  EXTRA_TARGETS_PREFIX LEGION)
-
-list(APPEND legate_SOURCES ${git_revision_src})
-
-set(legate_CXX_PRIVATE_OPTIONS "")
-set(legate_CXX_PUBLIC_OPTIONS "")
-set(legate_LINKER_OPTIONS "")
-
-include("${LEGATE_CMAKE_DIR}/Modules/set_cpu_arch_flags.cmake")
-
-set_cpu_arch_flags(legate_CXX_PRIVATE_OPTIONS)
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  # In classic conda fashion, it sets a bunch of environment variables for you but as
-  # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE because
-  # GCC and clang error with:
-  #
-  # cmake-format: off
-  # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
-  # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
-  # [-Werror=cpp]
-  # 330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
-  #     |    ^~~~~~~
-  # cmake-format: on
-  #
-  # Thanks conda, such a great help!
-  list(APPEND legate_CXX_PRIVATE_OPTIONS -U_FORTIFY_SOURCE)
-endif()
-
-# Change THRUST_DEVICE_SYSTEM for `.cpp` files If we include Thrust in "CUDA mode" in .cc
-# files, that ends up pulling the definition of __half from the CUDA toolkit, and Legion
-# defines a custom __half when compiling outside of nvcc (because CUDA's __half doesn't
-# define any __host__ functions), which causes a conflict.
-if(Legion_USE_OpenMP)
-  rapids_find_package(OpenMP
-                      GLOBAL_TARGETS OpenMP::OpenMP_CXX
-                      BUILD_EXPORT_SET legate-exports
-                      INSTALL_EXPORT_SET legate-exports
-                      COMPONENTS CXX
-                      FIND_ARGS
-                      REQUIRED)
-
-  list(APPEND legate_CXX_PUBLIC_OPTIONS -UTHRUST_DEVICE_SYSTEM)
-  list(APPEND legate_CXX_PUBLIC_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_OMP)
-else()
-  list(APPEND legate_CXX_PUBLIC_OPTIONS -UTHRUST_DEVICE_SYSTEM)
-  list(APPEND legate_CXX_PUBLIC_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
-endif()
-
-add_library(legate ${legate_SOURCES})
+add_library(legate)
 add_library(legate::legate ALIAS legate)
+
+# Define this property here because it directly relates to the legate target. Targets
+# linking against legate, which have this property defined, will also inherit the private
+# flags of Legate. This is used to propagate these in a selective manner. For example, the
+# tests, Cython bindings, and the benchmarks all have this property defined.
+#
+# Use of this property, however, is brittle, and it is very easy to forget to set this
+# property where it should be. For that reason, we define the property here, and also
+# check its existence on a few targets which we know must have it. That is the best we can
+# do...
+define_property(TARGET PROPERTY LEGATE_INTERNAL_TARGET
+                BRIEF_DOCS "A boolean property indicating that a target is internal to "
+                           "the legate build")
 
 # For whatever reason cmake-format craps out when formatting the below, so much so that
 # cmake-lint then ultimately complains with:
@@ -556,16 +306,278 @@ target_link_libraries(legate
                               $<TARGET_NAME_IF_EXISTS:CAL::CAL>
                               $<TARGET_NAME_IF_EXISTS:conda_env>)
 
+include("${LEGATE_CMAKE_DIR}/Modules/generate_sanitizer_options.cmake")
+
+legate_generate_sanitizer_options(
+  SRC ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
+  DELIM [[:]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/asan_default_options.h"
+)
+
+legate_generate_sanitizer_options(
+  SRC ${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt
+  DELIM [[\n]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/lsan_suppressions.h"
+)
+
+legate_generate_sanitizer_options(
+  SRC ${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt
+  DELIM [[:]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/ubsan_default_options.h"
+)
+
+legate_generate_sanitizer_options(
+  SRC ${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt
+  DELIM [[\n]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tsan_suppressions.h"
+)
+legate_generate_sanitizer_options(
+  SRC ${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt
+  DELIM [[:]]
+  DEST "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tsan_default_options.h"
+)
+
+target_sources(legate
+               PRIVATE # core
+                       legate/comm/coll.cc
+                       legate/comm/detail/coll.cc
+                       legate/comm/detail/backend_network.cc
+                       legate/comm/detail/comm.cc
+                       legate/comm/detail/comm_cpu.cc
+                       legate/comm/detail/comm_local.cc
+                       legate/comm/detail/local_network.cc
+                       legate/comm/detail/logger.cc
+                       legate/comm/detail/thread_comm.cc
+                       legate/cuda/stream_pool.cc
+                       legate/cuda/detail/cuda_driver_api.cc
+                       legate/cuda/detail/module_manager.cc
+                       legate/data/allocator.cc
+                       legate/data/buffer.cc
+                       legate/data/external_allocation.cc
+                       legate/data/logical_array.cc
+                       legate/data/logical_store.cc
+                       legate/data/scalar.cc
+                       legate/data/shape.cc
+                       legate/data/physical_array.cc
+                       legate/data/physical_store.cc
+                       legate/data/detail/array_tasks.cc
+                       legate/data/detail/attachment.cc
+                       legate/data/detail/external_allocation.cc
+                       legate/data/detail/logical_array.cc
+                       legate/data/detail/logical_region_field.cc
+                       legate/data/detail/logical_store.cc
+                       legate/data/detail/scalar.cc
+                       legate/data/detail/physical_array.cc
+                       legate/data/detail/physical_store.cc
+                       legate/data/detail/shape.cc
+                       legate/data/detail/transform.cc
+                       legate/data/detail/future_wrapper.cc
+                       legate/data/detail/region_field.cc
+                       legate/data/detail/user_storage_tracker.cc
+                       legate/experimental/trace.cc
+                       legate/mapping/array.cc
+                       legate/mapping/machine.cc
+                       legate/mapping/mapping.cc
+                       legate/mapping/operation.cc
+                       legate/mapping/store.cc
+                       legate/mapping/detail/array.cc
+                       legate/mapping/detail/base_mapper.cc
+                       legate/mapping/detail/core_mapper.cc
+                       legate/mapping/detail/instance_manager.cc
+                       legate/mapping/detail/machine.cc
+                       legate/mapping/detail/mapping.cc
+                       legate/mapping/detail/operation.cc
+                       legate/mapping/detail/store.cc
+                       legate/operation/projection.cc
+                       legate/operation/task.cc
+                       legate/operation/detail/attach.cc
+                       legate/operation/detail/copy.cc
+                       legate/operation/detail/copy_launcher.cc
+                       legate/operation/detail/discard.cc
+                       legate/operation/detail/execution_fence.cc
+                       legate/operation/detail/fill.cc
+                       legate/operation/detail/fill_launcher.cc
+                       legate/operation/detail/gather.cc
+                       legate/operation/detail/index_attach.cc
+                       legate/operation/detail/mapping_fence.cc
+                       legate/operation/detail/launcher_arg.cc
+                       legate/operation/detail/operation.cc
+                       legate/operation/detail/store_projection.cc
+                       legate/operation/detail/reduce.cc
+                       legate/operation/detail/release_region_field.cc
+                       legate/operation/detail/req_analyzer.cc
+                       legate/operation/detail/scatter.cc
+                       legate/operation/detail/scatter_gather.cc
+                       legate/operation/detail/task.cc
+                       legate/operation/detail/task_launcher.cc
+                       legate/operation/detail/timing.cc
+                       legate/partitioning/constraint.cc
+                       legate/partitioning/detail/constraint.cc
+                       legate/partitioning/detail/constraint_solver.cc
+                       legate/partitioning/detail/partition.cc
+                       legate/partitioning/detail/partitioner.cc
+                       legate/partitioning/detail/partitioning_tasks.cc
+                       legate/partitioning/detail/restriction.cc
+                       legate/runtime/library.cc
+                       legate/runtime/runtime.cc
+                       legate/runtime/scope.cc
+                       legate/runtime/detail/communicator_manager.cc
+                       legate/runtime/detail/field_manager.cc
+                       legate/runtime/detail/library.cc
+                       legate/runtime/detail/partition_manager.cc
+                       legate/runtime/detail/projection.cc
+                       legate/runtime/detail/region_manager.cc
+                       legate/runtime/detail/runtime.cc
+                       legate/runtime/detail/shard.cc
+                       legate/runtime/detail/config.cc
+                       legate/runtime/detail/mapper_manager.cc
+                       legate/runtime/detail/argument_parsing.cc
+                       legate/task/registrar.cc
+                       legate/task/task.cc
+                       legate/task/task_context.cc
+                       legate/task/task_info.cc
+                       legate/task/variant_options.cc
+                       legate/task/detail/return_value.cc
+                       legate/task/detail/returned_exception.cc
+                       legate/task/detail/returned_cpp_exception.cc
+                       legate/task/detail/returned_python_exception.cc
+                       legate/task/detail/task_context.cc
+                       legate/task/detail/inline_task_body.cc
+                       legate/task/detail/legion_task_body.cc
+                       legate/task/detail/task.cc
+                       legate/task/detail/task_return.cc
+                       legate/task/detail/task_return_layout.cc
+                       legate/type/type_info.cc
+                       legate/type/detail/type_info.cc
+                       legate/utilities/debug.cc
+                       legate/utilities/machine.cc
+                       legate/utilities/internal_shared_ptr.cc
+                       legate/utilities/compiler.cc
+                       legate/utilities/abort.cc
+                       legate/utilities/dispatch.cc
+                       legate/utilities/detail/buffer_builder.cc
+                       legate/utilities/detail/env.cc
+                       legate/utilities/detail/tuple.cc
+                       legate/utilities/detail/deserializer.cc
+                       legate/utilities/detail/formatters.cc
+                       legate/utilities/detail/traced_exception.cc
+                       legate/utilities/detail/zip.cc
+                       legate/utilities/detail/linearize.cc
+                       legate/utilities/detail/error.cc
+                       legate/timing/timing.cc
+                       # stl
+                       legate/experimental/stl/detail/clang_tidy_dummy.cpp
+                       # io
+                       legate/io/hdf5/detail/read.cc
+                       legate/io/hdf5/detail/util.cc
+                       legate/io/hdf5/interface.cc
+                       legate/experimental/io/kvikio/detail/basic.cc
+                       legate/experimental/io/kvikio/detail/tile.cc
+                       legate/experimental/io/kvikio/detail/tile_by_offsets.cc
+                       legate/experimental/io/kvikio/interface.cc
+                       legate/experimental/io/detail/task.cc
+                       legate/experimental/io/detail/library.cc
+                       legate/experimental/io/detail/mapper.cc)
+
+if(legate_ENABLE_SANITIZERS)
+  target_sources(legate PRIVATE legate/utilities/detail/sanitizer_defaults.cc)
+endif()
+
+if(Legion_NETWORKS)
+  target_sources(legate
+                 PRIVATE legate/comm/detail/mpi_network.cc
+                         legate/comm/detail/mpi_interface.cc
+                         legate/comm/detail/comm_mpi.cc)
+endif()
+
+if(Legion_USE_OpenMP)
+  target_sources(legate PRIVATE legate/data/detail/array_tasks_omp.cc
+                                legate/partitioning/detail/partitioning_tasks_omp.cc)
+endif()
+
+if(legate_USE_CAL)
+  target_sources(legate PRIVATE legate/comm/detail/comm_cal.cc)
+endif()
+
+if(Legion_USE_CUDA)
+  target_sources(legate
+                 PRIVATE legate/comm/detail/comm_nccl.cc
+                         legate/data/detail/array_tasks_cuda.cc
+                         legate/partitioning/detail/partitioning_tasks_cuda.cc)
+
+  include("${LEGATE_CMAKE_DIR}/Modules/generate_fatbin_modules.cmake")
+
+  legate_generate_fatbin_modules(DEST_DIR "${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/generated/fatbin"
+                                 GENERATED_SOURCES_VAR fatbin_src
+                                 SOURCES legate/data/detail/fixup_ranges_fatbin.cu
+                                         legate/data/detail/offsets_to_ranges_fatbin.cu
+                                         legate/data/detail/ranges_to_offsets_fatbin.cu
+                                         legate/partitioning/detail/partitioning_tasks_fatbin.cu
+                                 EXTRA_FLAGS ${legate_CUDA_FLAGS})
+
+  target_sources(legate PRIVATE ${fatbin_src})
+endif()
+
+include("${LEGATE_CMAKE_DIR}/Modules/generate_git_revision_file.cmake")
+
+legate_generate_git_revision_file(
+  GENERATED_SRC_VAR git_revision_src EXTRA_TARGETS Legion::Legion
+  EXTRA_TARGETS_PREFIX LEGION)
+
+target_sources(legate PRIVATE ${git_revision_src})
+
+set(legate_CXX_PUBLIC_OPTIONS "")
+
+include("${LEGATE_CMAKE_DIR}/Modules/set_cpu_arch_flags.cmake")
+
+set_cpu_arch_flags(legate_CXX_FLAGS)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # In classic conda fashion, it sets a bunch of environment variables for you but as
+  # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE because
+  # GCC and clang error with:
+  #
+  # cmake-format: off
+  # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
+  # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+  # [-Werror=cpp]
+  # 330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+  #     |    ^~~~~~~
+  # cmake-format: on
+  #
+  # Thanks conda, such a great help!
+  list(APPEND legate_CXX_FLAGS -U_FORTIFY_SOURCE)
+endif()
+
+# Change THRUST_DEVICE_SYSTEM for `.cpp` files If we include Thrust in "CUDA mode" in .cc
+# files, that ends up pulling the definition of __half from the CUDA toolkit, and Legion
+# defines a custom __half when compiling outside of nvcc (because CUDA's __half doesn't
+# define any __host__ functions), which causes a conflict.
+if(Legion_USE_OpenMP)
+  rapids_find_package(OpenMP
+                      GLOBAL_TARGETS OpenMP::OpenMP_CXX
+                      BUILD_EXPORT_SET legate-exports
+                      INSTALL_EXPORT_SET legate-exports
+                      COMPONENTS CXX
+                      FIND_ARGS
+                      REQUIRED)
+
+  list(APPEND legate_CXX_PUBLIC_OPTIONS -UTHRUST_DEVICE_SYSTEM)
+  list(APPEND legate_CXX_PUBLIC_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_OMP)
+else()
+  list(APPEND legate_CXX_PUBLIC_OPTIONS -UTHRUST_DEVICE_SYSTEM)
+  list(APPEND legate_CXX_PUBLIC_OPTIONS -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CPP)
+endif()
+
 # ########################################################################################
 # * Custom User Flags --------------------------------------------------------
 
 include("${LEGATE_CMAKE_DIR}/Modules/utilities.cmake")
 
-legate_add_target_compile_option(legate CXX PRIVATE legate_CXX_PRIVATE_OPTIONS)
-legate_add_target_compile_option(legate CXX PUBLIC legate_CXX_PUBLIC_OPTIONS)
-legate_add_target_compile_option(legate CXX PRIVATE legate_CXX_FLAGS)
+legate_add_target_compile_options(legate CXX PUBLIC legate_CXX_PUBLIC_OPTIONS)
+legate_add_target_compile_options(legate CXX PRIVATE legate_CXX_FLAGS)
 
-legate_add_target_link_option(legate PUBLIC legate_LINKER_FLAGS)
+legate_add_target_link_options(legate PUBLIC legate_LINKER_FLAGS)
 
 if(APPLE)
   # See https://github.com/NVIDIA/cccl/pull/2444
@@ -594,7 +606,8 @@ include("${LEGATE_CMAKE_DIR}/Modules/clang_tidy.cmake")
 
 legate_add_tidy_diff_target()
 
-foreach(src IN LISTS legate_SOURCES)
+get_target_property(legate_src legate SOURCES)
+foreach(src IN LISTS legate_src)
   legate_add_tidy_target(SOURCE "${src}")
 endforeach()
 

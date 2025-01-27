@@ -150,7 +150,7 @@ function(legate_target_get_target_dependencies)
   set(${_LEGATE_RESULT_VAR} "${out_list}" PARENT_SCOPE)
 endfunction()
 
-macro(legate_add_target_compile_option TARGET_NAME OPTION_LANG VIS OPTION_NAME)
+function(legate_add_target_compile_options TARGET_NAME OPTION_LANG VIS OPTION_NAME)
   if(NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
     # Using this form of separate_arguments() makes sure that quotes are respected when
     # the list is formed. Otherwise stuff like
@@ -164,17 +164,40 @@ macro(legate_add_target_compile_option TARGET_NAME OPTION_LANG VIS OPTION_NAME)
     # which is obviously not what we wanted
     separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
   endif()
-  if(${OPTION_NAME})
-    target_compile_options(${TARGET_NAME} ${VIS}
-                           "$<$<COMPILE_LANGUAGE:${OPTION_LANG}>:${${OPTION_NAME}}>")
-  endif()
-endmacro()
 
-macro(legate_add_target_link_option TARGET_NAME VIS OPTION_NAME)
+  set(lang_flags "$<$<COMPILE_LANGUAGE:${OPTION_LANG}>:${${OPTION_NAME}}>")
+  target_compile_options("${TARGET_NAME}" "${VIS}" "${lang_flags}")
+  # This is a nifty hack. We want to expose otherwise private flags to "private" targets
+  # (for example, the tests, or cython bindings), but not expose them to other downstream
+  # users.
+  #
+  # To achieve this, we add the same private flags as INTERFACE, with the caveat that they
+  # are only activated if the *linked* target has a special LEGATE_INTERNAL_TARGET
+  # property.
+  #
+  # If it does, we add the flags, if not, this has no effect.
+  get_property(internal_prop_defined TARGET NONE PROPERTY LEGATE_INTERNAL_TARGET DEFINED)
+  if(NOT internal_prop_defined)
+    message(FATAL_ERROR "LEGATE_INTERNAL_TARGET was not defined as a property yet. "
+                        "Probably some kind of refactoring has taken place and may have "
+                        "caused this property to not be defined where it should be. See "
+                        "the corresponding define_property() call in "
+                        "src/cpp/CMakeLists.txt for more info")
+  endif()
+  if("${VIS}" STREQUAL "PRIVATE")
+    set(has_prop "$<BOOL:$<TARGET_PROPERTY:LEGATE_INTERNAL_TARGET>>")
+    set(lang_flags_if_has_secret_prop "$<${has_prop}:${lang_flags}>")
+    target_compile_options("${TARGET_NAME}"
+                           INTERFACE "$<BUILD_INTERFACE:${lang_flags_if_has_secret_prop}>"
+    )
+  endif()
+endfunction()
+
+function(legate_add_target_link_options TARGET_NAME VIS OPTION_NAME)
   if(NOT ("${${OPTION_NAME}}" MATCHES ".*;.*"))
     separate_arguments(${OPTION_NAME} NATIVE_COMMAND "${${OPTION_NAME}}")
   endif()
   if(${OPTION_NAME})
-    target_link_options(${TARGET_NAME} ${VIS} "${${OPTION_NAME}}")
+    target_link_options("${TARGET_NAME}" "${VIS}" "${${OPTION_NAME}}")
   endif()
-endmacro()
+endfunction()

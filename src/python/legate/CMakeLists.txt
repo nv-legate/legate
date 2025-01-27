@@ -98,6 +98,7 @@ function(legate_create_cython_modules)
                                INSTALL_DIR "${skbuild_platlib_relpath}/${rel_path}")
 
   foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
+    set_target_properties(${target} PROPERTIES LEGATE_INTERNAL_TARGET TRUE)
     target_compile_features(${target} PRIVATE cxx_std_${CMAKE_CXX_STANDARD})
     # Mark python headers as system (in case user has added warning flags, we don't want
     # the python headers to trigger them)

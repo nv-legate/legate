@@ -29,7 +29,8 @@ function(legate_configure_benchmark)
                         PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
                                    BUILD_RPATH_USE_ORIGIN TRUE
-                                   INSTALL_RPATH_USE_LINK_PATH TRUE)
+                                   INSTALL_RPATH_USE_LINK_PATH TRUE
+                                   LEGATE_INTERNAL_TARGET TRUE)
 
   set_property(TARGET ${_LEGATE_BM_TARGET} APPEND
                PROPERTY INSTALL_RPATH
@@ -40,14 +41,6 @@ function(legate_configure_benchmark)
   if(Legion_USE_CUDA)
     target_link_libraries(${_LEGATE_BM_TARGET} PRIVATE NCCL::NCCL)
   endif()
-
-  legate_add_target_compile_option(${_LEGATE_BM_TARGET} CXX PRIVATE legate_CXX_OPTIONS)
-  legate_add_target_compile_option(${_LEGATE_BM_TARGET} CUDA PRIVATE legate_CUDA_OPTIONS)
-
-  legate_add_target_compile_option(${_LEGATE_BM_TARGET} CXX PRIVATE legate_CXX_FLAGS)
-  legate_add_target_compile_option(${_LEGATE_BM_TARGET} CUDA PRIVATE legate_CUDA_FLAGS)
-
-  legate_add_target_link_option(${_LEGATE_BM_TARGET} PRIVATE legate_LINKER_FLAGS)
 
   legate_install_debug_symbols(TARGET ${_LEGATE_BM_TARGET}
                                INSTALL_DIR "${CMAKE_INSTALL_BINDIR}")

@@ -53,7 +53,8 @@ function(legate_configure_test)
                         PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                    "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}>"
                                    BUILD_RPATH_USE_ORIGIN TRUE
-                                   INSTALL_RPATH_USE_LINK_PATH TRUE)
+                                   INSTALL_RPATH_USE_LINK_PATH TRUE
+                                   LEGATE_INTERNAL_TARGET TRUE)
 
   set(install_rpaths "${legate_PLATFORM_RPATH_ORIGIN}/../${CMAKE_INSTALL_LIBDIR}"
                      "${legate_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}")
@@ -78,32 +79,6 @@ function(legate_configure_test)
   if(Legion_USE_CUDA)
     target_link_libraries(${_LEGATE_TEST_NAME} PRIVATE NCCL::NCCL)
   endif()
-
-  legate_add_target_compile_option(${_LEGATE_TEST_NAME} CXX PRIVATE legate_CXX_OPTIONS)
-  legate_add_target_compile_option(${_LEGATE_TEST_NAME} CUDA PRIVATE legate_CUDA_OPTIONS)
-
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # In classic conda fashion, it sets a bunch of environment variables for you but as
-    # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE
-    # because GCC and clang error with:
-    #
-    # cmake-format: off
-    # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
-    # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
-    # [-Werror=cpp]
-    # 330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
-    #     |    ^~~~~~~
-    # cmake-format: on
-    #
-    # Thanks conda, such a great help!
-    list(APPEND legate_CXX_FLAGS -U_FORTIFY_SOURCE)
-    list(APPEND legate_CUDA_FLAGS -U_FORTIFY_SOURCE)
-  endif()
-
-  legate_add_target_compile_option(${_LEGATE_TEST_NAME} CXX PRIVATE legate_CXX_FLAGS)
-  legate_add_target_compile_option(${_LEGATE_TEST_NAME} CUDA PRIVATE legate_CUDA_FLAGS)
-
-  legate_add_target_link_option(${_LEGATE_TEST_NAME} PRIVATE legate_LINKER_FLAGS)
 
   rapids_test_add(NAME ${_LEGATE_TEST_NAME}
                   COMMAND ${_LEGATE_TEST_NAME}

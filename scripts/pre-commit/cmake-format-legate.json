@@ -145,12 +145,12 @@
                     "nargs": "1+"
                 }
             },
-            "legate_add_target_compile_option": {
+            "legate_add_target_compile_options": {
                 "pargs": {
                     "nargs": 4
                 }
             },
-            "legate_add_target_link_option": {
+            "legate_add_target_link_options": {
                 "pargs": {
                     "nargs": 3
                 }
