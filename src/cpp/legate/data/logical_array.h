@@ -361,5 +361,3 @@ class StringLogicalArray : public LogicalArray {
 /** @} */
 
 }  // namespace legate
-
-#include <legate/data/logical_array.inl>

@@ -61,7 +61,6 @@ Scalar::Scalar(const T& value, private_tag)
   : Scalar{create_impl_(
              primitive_type(detail::canonical_type_code_of<T>()), std::addressof(value), true),
            private_tag{}}
-
 {
 }
 
@@ -132,39 +131,36 @@ Legion::DomainPoint Scalar::value<Legion::DomainPoint>() const;
 template <typename VAL>
 Span<const VAL> Scalar::values() const
 {
-  auto ty = type();
-  if (ty.code() == Type::Code::FIXED_ARRAY) {
-    auto arr_type  = ty.as_fixed_array_type();
-    auto elem_type = arr_type.element_type();
-    if (sizeof(VAL) != elem_type.size()) {
-      throw_invalid_size_exception_(elem_type.size(), sizeof(VAL));
+  const auto ty = type();
+
+  switch (const auto code = ty.code()) {
+    case Type::Code::FIXED_ARRAY: {
+      const auto [ptr, size] = make_fixed_array_values_(sizeof(VAL));
+
+      return {static_cast<const VAL*>(ptr), size};
     }
-    auto size = arr_type.num_elements();
-    return {reinterpret_cast<const VAL*>(ptr()), size};
+    case Type::Code::STRING: {
+      using char_type = typename type_of_t<Type::Code::STRING>::value_type;
+
+      if constexpr (std::is_same_v<VAL, bool>) {
+        throw_invalid_type_conversion_exception_("string", "Span<bool>");
+      }
+      if constexpr (sizeof(VAL) != sizeof(char_type)) {
+        throw_invalid_span_conversion_exception_(code, "size", sizeof(char_type), sizeof(VAL));
+      }
+      if constexpr (alignof(VAL) != alignof(char_type)) {
+        throw_invalid_span_conversion_exception_(
+          code, "alignment", alignof(char_type), alignof(VAL));
+      }
+
+      const auto [ptr, size] = make_string_values_();
+
+      return {static_cast<const VAL*>(ptr), size};
+    }
+    case Type::Code::NIL: return {nullptr, 0};
+    default: break;
   }
 
-  if (ty.code() == Type::Code::STRING) {
-    using char_type = typename type_of_t<Type::Code::STRING>::value_type;
-
-    if constexpr (std::is_same_v<VAL, bool>) {
-      throw_invalid_type_conversion_exception_("string", "Span<bool>");
-    }
-    if constexpr (sizeof(VAL) != sizeof(char_type)) {
-      throw_invalid_span_conversion_exception_(ty.code(), "size", sizeof(char_type), sizeof(VAL));
-    }
-    if constexpr (alignof(VAL) != alignof(char_type)) {
-      throw_invalid_span_conversion_exception_(
-        ty.code(), "alignment", alignof(char_type), alignof(VAL));
-    }
-
-    auto data         = ptr();
-    auto len          = *static_cast<const std::uint32_t*>(data);
-    const auto* begin = static_cast<const char*>(data) + sizeof(std::uint32_t);
-    return {reinterpret_cast<const VAL*>(begin), len};
-  }
-  if (ty.code() == Type::Code::NIL) {
-    return {nullptr, 0};
-  }
   if (sizeof(VAL) != ty.size()) {
     throw_invalid_size_exception_(ty.size(), sizeof(VAL));
   }
@@ -174,9 +170,5 @@ Span<const VAL> Scalar::values() const
 inline const SharedPtr<detail::Scalar>& Scalar::impl() { return impl_; }
 
 inline const SharedPtr<detail::Scalar>& Scalar::impl() const { return impl_; }
-
-// ==========================================================================================
-
-inline Scalar null() { return {}; }
 
 }  // namespace legate

@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <legate/data/detail/shape.h>
+
 namespace legate::detail {
 
 inline Shape::Shape(std::uint32_t dim) : dim_{dim} {}

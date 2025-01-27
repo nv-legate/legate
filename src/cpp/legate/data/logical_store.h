@@ -481,5 +481,3 @@ class LogicalStorePartition {
 /** @} */
 
 }  // namespace legate
-
-#include <legate/data/logical_store.inl>

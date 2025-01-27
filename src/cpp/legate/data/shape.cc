@@ -25,12 +25,14 @@ Shape::Shape(tuple<std::uint64_t> extents)
 {
 }
 
-const tuple<std::uint64_t>& Shape::extents() const { return impl_->extents(); }
+const tuple<std::uint64_t>& Shape::extents() const { return impl()->extents(); }
 
-std::uint32_t Shape::ndim() const { return impl_->ndim(); }
+std::size_t Shape::volume() const { return impl()->volume(); }
 
-std::string Shape::to_string() const { return impl_->to_string(); }
+std::uint32_t Shape::ndim() const { return impl()->ndim(); }
 
-bool Shape::operator==(const Shape& other) const { return *impl_ == *other.impl_; }
+std::string Shape::to_string() const { return impl()->to_string(); }
+
+bool Shape::operator==(const Shape& other) const { return *impl() == *other.impl(); }
 
 }  // namespace legate

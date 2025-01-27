@@ -45,8 +45,10 @@
 #include <legate/partitioning/detail/partitioning_tasks.h>
 #include <legate/runtime/detail/argument_parsing.h>
 #include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/field_manager.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/shard.h>
+#include <legate/runtime/resource.h>
 #include <legate/runtime/runtime.h>
 #include <legate/runtime/scope.h>
 #include <legate/task/detail/legion_task.h>
@@ -1817,6 +1819,11 @@ RuntimeManager the_runtime{};
 
 /*static*/ Runtime* Runtime::get_runtime() { return the_runtime.get(); }
 
+void Runtime::register_shutdown_callback(ShutdownCallback callback)
+{
+  callbacks_.emplace_back(std::move(callback));
+}
+
 std::int32_t Runtime::finish()
 {
   if (!has_started()) {
@@ -2143,6 +2150,13 @@ const MapperManager& Runtime::get_mapper_manager_() const
   }
   return *mapper_manager_;
   // NOLINTEND(bugprone-unchecked-optional-access)
+}
+
+Processor Runtime::get_executing_processor() const
+{
+  // Cannot use member legion_context_ here since we may be calling this function from within a
+  // task, where the context will have changed.
+  return legion_runtime_->get_executing_processor(Legion::Runtime::get_context());
 }
 
 Legion::MapperID Runtime::mapper_id() const { return get_mapper_manager_().mapper_id(); }

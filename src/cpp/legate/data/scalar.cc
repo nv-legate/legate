@@ -22,6 +22,26 @@
 
 namespace legate {
 
+std::pair<const void*, std::uint32_t> Scalar::make_fixed_array_values_(std::size_t sizeof_val) const
+{
+  const auto arr_type = type().as_fixed_array_type();
+
+  if (const auto elem_type = arr_type.element_type(); sizeof_val != elem_type.size()) {
+    throw_invalid_size_exception_(elem_type.size(), sizeof_val);
+  }
+
+  return {ptr(), arr_type.num_elements()};
+}
+
+std::pair<const void*, std::uint32_t> Scalar::make_string_values_() const
+{
+  const auto sv = value<std::string_view>();
+
+  return {sv.data(), sv.size()};
+}
+
+// ------------------------------------------------------------------------------------------
+
 Scalar::Scalar(InternalSharedPtr<detail::Scalar> impl) : impl_{std::move(impl)} {}
 
 Scalar::Scalar(std::unique_ptr<detail::Scalar> impl) : impl_{std::move(impl)} {}
@@ -125,5 +145,9 @@ const void* Scalar::ptr() const { return impl_->data(); }
 }
 
 Scalar::Scalar(detail::Scalar* impl, private_tag) : impl_{impl} {}
+
+// ==========================================================================================
+
+Scalar null() { return {}; }
 
 }  // namespace legate

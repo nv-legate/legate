@@ -42,6 +42,8 @@ Type LogicalArray::type() const { return Type{impl()->type()}; }
 
 Shape LogicalArray::shape() const { return Shape{impl()->shape()}; }
 
+const tuple<std::uint64_t>& LogicalArray::extents() const { return shape().extents(); }
+
 std::size_t LogicalArray::volume() const { return impl()->volume(); }
 
 bool LogicalArray::unbound() const { return impl()->unbound(); }
@@ -134,6 +136,11 @@ const SharedPtr<detail::LogicalArray>& LogicalArray::impl() const { return impl_
 
 // ==========================================================================================
 
+ListLogicalArray::ListLogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
+  : LogicalArray{std::move(impl)}
+{
+}
+
 LogicalArray ListLogicalArray::descriptor() const
 {
   return LogicalArray{static_cast<const detail::ListLogicalArray*>(impl().get())->descriptor()};
@@ -145,6 +152,11 @@ LogicalArray ListLogicalArray::vardata() const
 }
 
 // ==========================================================================================
+
+StringLogicalArray::StringLogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
+  : LogicalArray{std::move(impl)}
+{
+}
 
 LogicalArray StringLogicalArray::offsets() const
 {

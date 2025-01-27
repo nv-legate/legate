@@ -56,82 +56,25 @@ namespace legate {
 template <typename T, int DIM, bool VALIDATE_TYPE>
 AccessorRO<T, DIM> PhysicalStore::read_accessor() const
 {
-  static_assert(DIM <= LEGATE_MAX_DIM);
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension_(DIM);
-    check_accessor_type_<T>();
-  }
-
-  if (is_future()) {
-    if (is_read_only_future_()) {
-      return {get_future_(),
-              shape<DIM>(),
-              Memory::Kind::NO_MEMKIND,
-              sizeof(T),
-              false,
-              false,
-              nullptr,
-              get_field_offset_()};
-    }
-    return {get_buffer_(), shape<DIM>(), sizeof(T), false};
-  }
-
-  return create_field_accessor_<AccessorRO<T, DIM>, T, DIM>(shape<DIM>());
+  return read_accessor<T, DIM, VALIDATE_TYPE>(shape<DIM>());
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
 AccessorWO<T, DIM> PhysicalStore::write_accessor() const
 {
-  static_assert(DIM <= LEGATE_MAX_DIM);
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension_(DIM);
-    check_accessor_type_<T>();
-  }
-
-  check_write_access_();
-
-  if (is_future()) {
-    return {get_buffer_(), shape<DIM>(), sizeof(T), false};
-  }
-
-  return create_field_accessor_<AccessorWO<T, DIM>, T, DIM>(shape<DIM>());
+  return write_accessor<T, DIM, VALIDATE_TYPE>(shape<DIM>());
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
 AccessorRW<T, DIM> PhysicalStore::read_write_accessor() const
 {
-  static_assert(DIM <= LEGATE_MAX_DIM);
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension_(DIM);
-    check_accessor_type_<T>();
-  }
-
-  check_write_access_();
-
-  if (is_future()) {
-    return {get_buffer_(), shape<DIM>(), sizeof(T), false};
-  }
-
-  return create_field_accessor_<AccessorRW<T, DIM>, T, DIM>(shape<DIM>());
+  return read_write_accessor<T, DIM, VALIDATE_TYPE>(shape<DIM>());
 }
 
 template <typename OP, bool EXCLUSIVE, int DIM, bool VALIDATE_TYPE>
 AccessorRD<OP, EXCLUSIVE, DIM> PhysicalStore::reduce_accessor() const
 {
-  using T = typename OP::LHS;
-  static_assert(DIM <= LEGATE_MAX_DIM);
-  if constexpr (VALIDATE_TYPE) {
-    check_accessor_dimension_(DIM);
-    check_accessor_type_<T>();
-  }
-
-  check_reduction_access_();
-
-  if (is_future()) {
-    return {get_buffer_(), shape<DIM>(), false, nullptr, 0, sizeof(T), false};
-  }
-
-  return create_reduction_accessor_<AccessorRD<OP, EXCLUSIVE, DIM>, T, DIM>(shape<DIM>());
+  return reduce_accessor<OP, EXCLUSIVE, DIM, VALIDATE_TYPE>(shape<DIM>());
 }
 
 template <typename T, int DIM, bool VALIDATE_TYPE>
@@ -267,7 +210,7 @@ VAL PhysicalStore::scalar() const
     return *static_cast<const VAL*>(get_untyped_pointer_from_future_());
   }
 
-  return get_buffer_().operator Legion::DeferredValue<VAL>().read();
+  return static_cast<const Legion::DeferredValue<VAL>&>(get_buffer_()).read();
 }
 
 template <typename T, std::int32_t DIM>

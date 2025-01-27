@@ -20,15 +20,10 @@ namespace legate::detail {
 template <typename T>
 ConsensusMatchResult<T> Runtime::issue_consensus_match(std::vector<T>&& input)
 {
-  return {std::move(input), legion_context_, legion_runtime_};
+  return {std::move(input), get_legion_context(), get_legion_runtime()};
 }
 
 inline bool Runtime::initialized() const { return initialized_; }
-
-inline void Runtime::register_shutdown_callback(ShutdownCallback callback)
-{
-  callbacks_.emplace_back(std::move(callback));
-}
 
 inline const Library* Runtime::core_library() const { return core_library_; }
 
@@ -94,13 +89,6 @@ inline const mapping::detail::LocalMachine& Runtime::local_machine() const
 inline std::uint32_t Runtime::node_count() const { return local_machine().total_nodes; }
 
 inline std::uint32_t Runtime::node_id() const { return local_machine().node_id; }
-
-inline Processor Runtime::get_executing_processor() const
-{
-  // Cannot use member legion_context_ here since we may be calling this function from within a
-  // task, where the context will have changed.
-  return legion_runtime_->get_executing_processor(Legion::Runtime::get_context());
-}
 
 inline bool Runtime::executing_inline_task() const noexcept { return executing_inline_task_; }
 

@@ -23,6 +23,7 @@
 #include <memory>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 /**
@@ -234,6 +235,11 @@ class Scalar {
                                                                     std::string_view kind,
                                                                     std::size_t expected,
                                                                     std::size_t actual);
+
+  [[nodiscard]] std::pair<const void*, std::uint32_t> make_fixed_array_values_(
+    std::size_t sizeof_val) const;
+
+  [[nodiscard]] std::pair<const void*, std::uint32_t> make_string_values_() const;
 
   struct private_tag {};
 

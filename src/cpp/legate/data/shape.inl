@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include <legate/data/shape.inl>
+#include <legate/data/shape.h>
 
 namespace legate {
 
-inline Shape::Shape() : Shape(tuple<std::uint64_t>{}) {}
+inline Shape::Shape() : Shape{tuple<std::uint64_t>{}} {}
 
 inline Shape::Shape(std::vector<std::uint64_t> extents)
   : Shape{tuple<std::uint64_t>{std::move(extents)}}
@@ -27,8 +27,6 @@ inline Shape::Shape(std::initializer_list<std::uint64_t> extents)
   : Shape{tuple<std::uint64_t>{std::move(extents)}}
 {
 }
-
-inline std::size_t Shape::volume() const { return extents().volume(); }
 
 inline std::uint64_t Shape::operator[](std::uint32_t idx) const { return extents()[idx]; }
 

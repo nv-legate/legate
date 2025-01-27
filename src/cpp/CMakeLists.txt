@@ -638,9 +638,7 @@ install(FILES legate/data/allocator.h
               legate/data/external_allocation.inl
               legate/data/inline_allocation.h
               legate/data/logical_array.h
-              legate/data/logical_array.inl
               legate/data/logical_store.h
-              legate/data/logical_store.inl
               legate/data/physical_array.h
               legate/data/physical_array.inl
               legate/data/physical_store.h

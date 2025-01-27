@@ -46,6 +46,8 @@ Type LogicalStore::type() const { return Type{impl()->type()}; }
 
 Shape LogicalStore::shape() const { return Shape{impl()->shape()}; }
 
+const tuple<std::uint64_t>& LogicalStore::extents() const { return shape().extents(); }
+
 std::size_t LogicalStore::volume() const { return impl()->volume(); }
 
 bool LogicalStore::unbound() const { return impl()->unbound(); }
