@@ -260,7 +260,7 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::child(std::uint32_t index) con
   switch (index) {
     case 0: return descriptor_;
     case 1: return vardata_;
-    default: {
+    default: {  // legate-lint: no-switch-default
       throw TracedException<std::out_of_range>{
         fmt::format("List array does not have child {}", index)};
       break;

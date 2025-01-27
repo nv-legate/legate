@@ -82,9 +82,14 @@ class InnerTypeDispatchFn {
       case Type::Code::COMPLEX128: {
         return f.template operator()<Type::Code::COMPLEX128, DIM>(std::forward<Fnargs>(args)...);
       }
-      default: throw_unsupported_type_code(code);
+      case Type::Code::NIL: [[fallthrough]];
+      case Type::Code::BINARY: [[fallthrough]];
+      case Type::Code::FIXED_ARRAY: [[fallthrough]];
+      case Type::Code::STRUCT: [[fallthrough]];
+      case Type::Code::STRING: [[fallthrough]];
+      case Type::Code::LIST: break;
     }
-    return f.template operator()<Type::Code::BOOL, DIM>(std::forward<Fnargs>(args)...);
+    throw_unsupported_type_code(code);
   }
 };
 
@@ -138,7 +143,7 @@ class InnerDimDispatchFn {
         return f.template operator()<DIM, 9>(std::forward<Fnargs>(args)...);
       }
 #endif
-      default: throw_unsupported_dim(dim);
+      default: throw_unsupported_dim(dim);  // legate-lint: no-switch-default
     }
     return f.template operator()<DIM, 1>(std::forward<Fnargs>(args)...);
   }
@@ -213,7 +218,7 @@ constexpr decltype(auto) double_dispatch(int dim, Type::Code code, Functor f, Fn
       return detail::InnerTypeDispatchFn<9>{}(code, f, std::forward<Fnargs>(args)...);
     }
 #endif
-    default: detail::throw_unsupported_dim(dim);
+    default: detail::throw_unsupported_dim(dim);  // legate-lint: no-switch-default
   }
   return detail::InnerTypeDispatchFn<1>{}(code, f, std::forward<Fnargs>(args)...);
 }
@@ -280,7 +285,7 @@ constexpr decltype(auto) double_dispatch(int dim1, int dim2, Functor f, Fnargs&&
       return detail::InnerDimDispatchFn<9>{}(dim2, f, std::forward<Fnargs>(args)...);
     }
 #endif
-    default: detail::throw_unsupported_dim(dim1);
+    default: detail::throw_unsupported_dim(dim1);  // legate-lint: no-switch-default
   }
   return detail::InnerDimDispatchFn<1>{}(dim2, f, std::forward<Fnargs>(args)...);
 }
@@ -346,7 +351,7 @@ constexpr decltype(auto) dim_dispatch(int dim, Functor f, Fnargs&&... args)
       return f.template operator()<9>(std::forward<Fnargs>(args)...);
     }
 #endif
-    default: detail::throw_unsupported_dim(dim);
+    default: detail::throw_unsupported_dim(dim);  // legate-lint: no-switch-default
   }
   return f.template operator()<1>(std::forward<Fnargs>(args)...);
 }
@@ -409,9 +414,14 @@ constexpr decltype(auto) type_dispatch(Type::Code code, Functor&& f, Fnargs&&...
     case Type::Code::COMPLEX128: {
       return f.template operator()<Type::Code::COMPLEX128>(std::forward<Fnargs>(args)...);
     }
-    default: detail::throw_unsupported_type_code(code);
+    case Type::Code::NIL: [[fallthrough]];
+    case Type::Code::BINARY: [[fallthrough]];
+    case Type::Code::FIXED_ARRAY: [[fallthrough]];
+    case Type::Code::STRUCT: [[fallthrough]];
+    case Type::Code::STRING: [[fallthrough]];
+    case Type::Code::LIST: break;
   }
-  return f.template operator()<Type::Code::BOOL>(std::forward<Fnargs>(args)...);
+  detail::throw_unsupported_type_code(code);
 }
 
 /** @} */

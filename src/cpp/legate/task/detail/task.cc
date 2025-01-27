@@ -33,16 +33,20 @@ void show_progress(const DomainPoint& index_point,
 
   const auto exec_proc     = runtime->get_executing_processor(ctx);
   const auto proc_kind_str = [&]() -> std::string_view {
-    switch (const auto kind = exec_proc.kind()) {
-      case Processor::LOC_PROC: return "CPU";
-      case Processor::TOC_PROC: return "GPU";
-      case Processor::OMP_PROC: return "OpenMP";
-      case Processor::PY_PROC: return "Python";
-      default:
-        LEGATE_ABORT("Unhandled processor kind: ", legate::traits::detail::to_underlying(kind));
-        break;
+    const auto kind = exec_proc.kind();
+
+    switch (kind) {
+      case Processor::Kind::LOC_PROC: return "CPU";
+      case Processor::Kind::TOC_PROC: return "GPU";
+      case Processor::Kind::OMP_PROC: return "OpenMP";
+      case Processor::Kind::PY_PROC: return "Python";
+      case Processor::Kind::NO_KIND: [[fallthrough]];
+      case Processor::Kind::UTIL_PROC: [[fallthrough]];
+      case Processor::Kind::IO_PROC: [[fallthrough]];
+      case Processor::Kind::PROC_GROUP: [[fallthrough]];
+      case Processor::Kind::PROC_SET: break;
     }
-    return "";
+    LEGATE_ABORT("Unhandled processor kind: ", legate::traits::detail::to_underlying(kind));
   }();
 
   std::stringstream point_str;

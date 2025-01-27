@@ -83,7 +83,7 @@ InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(std::uint32_t index) c
   switch (index) {
     case 0: return descriptor();
     case 1: return vardata();
-    default: {
+    default: {  // legate-lint: no-switch-default
       throw TracedException<std::out_of_range>{
         fmt::format("List array does not have child {}", index)};
       break;

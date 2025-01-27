@@ -93,7 +93,6 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
         case TaskDataMode::INPUT: return context.input(0).data(); break;
         case TaskDataMode::OUTPUT: return context.output(0).data(); break;
         case TaskDataMode::REDUCTION: return context.reduction(0).data(); break;
-        default: break;
       }
       LEGATE_ABORT("Invalid data mode");
     }();
@@ -130,7 +129,6 @@ class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
           acc[*it].reduce(value);
         }
       } break;
-      default: break;
     }
   }
 };

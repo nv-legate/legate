@@ -487,11 +487,8 @@ mpi::detail::MPIInterface::MPI_Datatype MPINetwork::dtype_to_mpi_dtype_(
     case legate::comm::coll::CollDataType::CollDouble: {
       return MPIInterface::MPI_DOUBLE();
     }
-    default: {
-      LEGATE_ABORT("Unknown datatype");
-      return MPIInterface::MPI_BYTE();
-    }
   }
+  LEGATE_ABORT("Unknown datatype");
 }
 
 namespace {

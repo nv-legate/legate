@@ -19,7 +19,9 @@
 #include <legate/io/hdf5/detail/util.h>
 #include <legate/runtime/runtime.h>
 #include <legate/type/type_info.h>
+#include <legate/utilities/abort.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <highfive/H5DataSet.hpp>
 
@@ -55,16 +57,17 @@ namespace {
   constexpr std::size_t _32_BIT = 4;  // 4 bytes
   constexpr std::size_t _64_BIT = 8;  // 8 bytes
 
-  auto&& dtype = dset.getDataType();
+  auto&& dtype      = dset.getDataType();
+  const auto dclass = dtype.getClass();
 
-  switch (dtype.getClass()) {
+  switch (dclass) {
     case HighFive::DataTypeClass::Integer: {
       switch (const auto s = dtype.getSize()) {
         case _8_BIT: return legate::int8();
         case _16_BIT: return legate::int16();
         case _32_BIT: return legate::int32();
         case _64_BIT: return legate::int64();
-        default:
+        default:  // legate-lint: no-switch-default
           throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
             fmt::format("unhandled integer size: {}", s)};
       }
@@ -81,7 +84,7 @@ namespace {
             s)};
         case _32_BIT: return legate::float32();
         case _64_BIT: return legate::float64();
-        default:
+        default:  // legate-lint: no-switch-default
           throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
             fmt::format("unhandled floating point size: {}", s)};
       }
@@ -90,11 +93,20 @@ namespace {
     case HighFive::DataTypeClass::Opaque:
       return legate::binary_type(static_cast<std::uint32_t>(dtype.getSize()));
     case HighFive::DataTypeClass::String: return legate::string_type();
-    case HighFive::DataTypeClass::Invalid: return legate::null_type();
-    default:
+    case HighFive::DataTypeClass::Invalid: {
+      return legate::null_type();
+    }
+      // Unhandled types
+    case HighFive::DataTypeClass::Time: [[fallthrough]];
+    case HighFive::DataTypeClass::Compound: [[fallthrough]];
+    case HighFive::DataTypeClass::Reference: [[fallthrough]];
+    case HighFive::DataTypeClass::Enum: [[fallthrough]];
+    case HighFive::DataTypeClass::VarLen: [[fallthrough]];
+    case HighFive::DataTypeClass::Array:
       throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
         fmt::format("unsupported HDF5 datatype: {}", dtype.string())};
   }
+  LEGATE_ABORT("Unhandled HDF5 Datatype ", traits::detail::to_underlying(dclass));
 }
 
 [[nodiscard]] Shape deduce_shape_from_dataset(const detail::HDF5GlobalLock&,

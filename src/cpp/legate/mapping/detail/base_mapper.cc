@@ -68,7 +68,12 @@ const std::vector<StoreTarget>& default_store_targets(Processor::Kind kind,
       static const std::vector<StoreTarget> targets = {StoreTarget::SYSMEM};
       return targets;
     }
-    default: break;
+    case Processor::Kind::NO_KIND: [[fallthrough]];
+    case Processor::Kind::UTIL_PROC: [[fallthrough]];
+    case Processor::Kind::IO_PROC: [[fallthrough]];
+    case Processor::Kind::PY_PROC: [[fallthrough]];
+    case Processor::Kind::PROC_GROUP: [[fallthrough]];
+    case Processor::Kind::PROC_SET: break;
   }
   LEGATE_ABORT(
     "Could not find ProcessorKind ", static_cast<int>(kind), " in default store targets");

@@ -155,7 +155,7 @@ Arg<T>::Arg(std::string_view f, T init) : flag{f}, value{std::move(init)}
         command.remove_prefix(1);
         continue;
       }
-      default:
+      default:  // legate-lint: no-switch-default
         arglen = command.find(' ');
         if (arglen == std::string_view::npos) {
           arglen = command.size();

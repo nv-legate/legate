@@ -57,7 +57,7 @@ const char* cal_get_error_message(calError_t error)
     case CAL_ERROR_CUDA: return "Error in CUDA runtime/driver API";
     case CAL_ERROR_UCC: return "Error in UCC call";
     case CAL_ERROR_NOT_SUPPORTED: return "Requested configuration or parameters are not supported";
-    default: return "Unknown error code";
+    default: return "Unknown error code";  // legate-lint: no-switch-default
   }
 }
 

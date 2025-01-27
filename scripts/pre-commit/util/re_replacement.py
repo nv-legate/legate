@@ -14,7 +14,7 @@ import difflib
 from argparse import ArgumentParser
 from pathlib import Path
 from re import Match, Pattern, compile as re_compile
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Final
 
 if TYPE_CHECKING:
     from collections.abc import Container, Sequence
@@ -110,7 +110,19 @@ class RegexReplacement:
         def __contains__(self, item: Any) -> bool:
             return True
 
-    AllSuffixes = AllSuffixesImpl()
+    AllSuffixes: Final = AllSuffixesImpl()
+
+    CppSuffixes: Final = {
+        ".h",
+        ".hpp",
+        ".inl",
+        ".cc",
+        ".cpp",
+        ".cxx",
+        ".cu",
+        ".cuh",
+        ".cuinl",
+    }
 
     def __init__(
         self,
@@ -125,16 +137,7 @@ class RegexReplacement:
         self.dry_run = False
         self.verbose = False
         if allowed_suffixes is None:
-            allowed_suffixes = {
-                ".h",
-                ".hpp",
-                ".inl",
-                ".cc",
-                ".cpp",
-                ".cxx",
-                ".cu",
-                ".cuh",
-            }
+            allowed_suffixes = self.CppSuffixes
 
         self.allowed_suffixes = allowed_suffixes
 
@@ -175,10 +178,15 @@ class RegexReplacement:
             raise ValueError(m) from e
 
         old_text = orig_text
+        new_text = old_text
         changed = False
         errors = []
         for repl in self.replacements:
-            new_text = repl.replace(file_path, old_text)
+            try:
+                new_text = repl.replace(file_path, old_text)
+            except ReplacementError as exn:
+                errors.append(exn)
+
             if new_text == old_text:
                 continue
 

@@ -273,7 +273,9 @@ tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detai
     switch (ndim) {
       case 1: return compute_shape_1d(max_pieces, *shape_2);
       case 2: return compute_shape_2d(volume_2, max_pieces, shape_2);
-      default: return compute_shape_nd(get_factors(machine), ndim, max_pieces, *shape_2);
+      default: {  // legate-lint: no-switch-default
+        return compute_shape_nd(get_factors(machine), ndim, max_pieces, *shape_2);
+      }
     }
   }(&temp_shape, volume);
 

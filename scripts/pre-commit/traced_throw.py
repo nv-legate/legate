@@ -16,18 +16,8 @@ from pathlib import Path
 from re import Match, sub as re_sub
 from typing import Final
 
+from util.match_util import is_header, is_in_comment, is_publically_accessible
 from util.re_replacement import RegexReplacement, Replacement, ReplacementError
-
-
-def is_header(path: Path) -> bool:
-    return any(
-        suff == path.suffix
-        for suff in (".h", ".inl", ".cuh", ".cuinl", ".hpp", ".inc", ".HH")
-    )
-
-
-def is_publically_accessible(path: Path) -> bool:
-    return "detail" not in path.parts
 
 
 def _get_traced_exception_header() -> Path:
@@ -64,14 +54,6 @@ def update_headers(path: Path, text: str) -> str:
         text,
         count=1,
     )
-
-
-def is_in_comment(re_match: Match) -> bool:
-    string = re_match.string
-    prev_end = re_match.start()
-    line_begin = string.rindex("\n", 0, prev_end) + 1
-    line_prefix = string[line_begin:prev_end]
-    return line_prefix.lstrip().startswith(("//", "/*", "*"))
 
 
 def _make_legate_symbol(sym: str) -> tuple[str, str, str]:

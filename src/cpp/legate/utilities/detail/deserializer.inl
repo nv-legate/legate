@@ -272,7 +272,8 @@ InternalSharedPtr<TransformStack> BaseDeserializer<Deserializer>::unpack_transfo
 template <typename Deserializer>
 InternalSharedPtr<Type> BaseDeserializer<Deserializer>::unpack_type_()
 {
-  auto code = unpack<Type::Code>();
+  const auto code = unpack<Type::Code>();
+
   switch (code) {
     case Type::Code::FIXED_ARRAY: {
       auto uid  = unpack<std::uint32_t>();
@@ -353,7 +354,6 @@ InternalSharedPtr<Type> BaseDeserializer<Deserializer>::unpack_type_()
     case Type::Code::STRING: {
       return make_internal_shared<StringType>();
     }
-    default: break;
   }
   LEGATE_ABORT("unhandled type code: ", legate::traits::detail::to_underlying(code));
   return {};

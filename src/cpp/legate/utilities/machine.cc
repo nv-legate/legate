@@ -26,16 +26,22 @@ Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible)
     throw detail::TracedException<std::runtime_error>{"Runtime has not started"};
   }
 
-  switch (const auto kind = detail::Runtime::get_runtime()->get_executing_processor().kind()) {
+  const auto kind = detail::Runtime::get_runtime()->get_executing_processor().kind();
+
+  switch (kind) {
     case Processor::Kind::LOC_PROC: return Memory::Kind::SYSTEM_MEM;
     case Processor::Kind::TOC_PROC:
       return host_accessible ? Memory::Kind::Z_COPY_MEM : Memory::Kind::GPU_FB_MEM;
     case Processor::Kind::OMP_PROC:
       return detail::Config::has_socket_mem ? Memory::Kind::SOCKET_MEM : Memory::Kind::SYSTEM_MEM;
     case Processor::Kind::PY_PROC: return Memory::Kind::SYSTEM_MEM;
-    default: LEGATE_ABORT("Unknown processor kind ", kind);
+    case Processor::Kind::NO_KIND: [[fallthrough]];
+    case Processor::Kind::UTIL_PROC: [[fallthrough]];
+    case Processor::Kind::IO_PROC: [[fallthrough]];
+    case Processor::Kind::PROC_GROUP: [[fallthrough]];
+    case Processor::Kind::PROC_SET: break;
   }
-  return Memory::Kind::SYSTEM_MEM;
+  LEGATE_ABORT("Unknown processor kind ", kind);
 }
 
 }  // namespace legate

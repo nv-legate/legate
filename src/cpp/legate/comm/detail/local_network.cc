@@ -254,11 +254,8 @@ std::size_t LocalNetwork::get_dtype_size_(legate::comm::coll::CollDataType dtype
     case legate::comm::coll::CollDataType::CollDouble: {
       return sizeof(double);
     }
-    default: {
-      LEGATE_ABORT("Unknown datatype");
-      return 0;
-    }
   }
+  LEGATE_ABORT("Unknown datatype");
 }
 
 void LocalNetwork::reset_local_buffer_(legate::comm::coll::CollComm global_comm)

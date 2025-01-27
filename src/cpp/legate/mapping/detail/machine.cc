@@ -248,9 +248,12 @@ LocalMachine::LocalMachine()
         omps_.push_back(proc);
         continue;
       }
-      default: {
-        continue;
-      }
+      case Processor::NO_KIND: [[fallthrough]];
+      case Processor::UTIL_PROC: [[fallthrough]];
+      case Processor::IO_PROC: [[fallthrough]];
+      case Processor::PROC_GROUP: [[fallthrough]];
+      case Processor::PROC_SET: [[fallthrough]];
+      case Processor::PY_PROC: continue;
     }
   }
 
@@ -430,9 +433,8 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
     case StoreTarget::FBMEM: return frame_buffers().at(proc);
     case StoreTarget::ZCMEM: return zerocopy_memory();
     case StoreTarget::SOCKETMEM: return socket_memories().at(proc);
-    default: LEGATE_ABORT("invalid StoreTarget: ", legate::traits::detail::to_underlying(target));
   }
-  return Legion::Memory::NO_MEMORY;
+  LEGATE_ABORT("invalid StoreTarget: ", legate::traits::detail::to_underlying(target));
 }
 
 std::uint32_t LocalMachine::g2c_multi_hop_bandwidth(Memory gpu_mem, Memory cpu_mem) const

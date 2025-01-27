@@ -81,7 +81,7 @@ InternalSharedPtr<Array> ListArray::child(std::uint32_t index) const
   switch (index) {
     case 0: return descriptor();
     case 1: return vardata();
-    default: {
+    default: {  // legate-lint: no-switch-default
       throw legate::detail::TracedException<std::out_of_range>{
         fmt::format("List array does not have child {}", index)};
       break;

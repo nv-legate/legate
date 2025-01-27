@@ -244,9 +244,8 @@ void ConstraintSolver::solve_dependent_constraints(Strategy& strategy)
         solve_bloat_constraint(static_cast<const BloatConstraint*>(constraint.get()));
         break;
       }
-      default: {
-        continue;
-      }
+      case Constraint::Kind::ALIGNMENT: [[fallthrough]];
+      case Constraint::Kind::BROADCAST: continue;
     }
   }
 }

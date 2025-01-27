@@ -121,7 +121,7 @@ std::optional<std::size_t> CoreMapper::allocation_pool_size(
         legate::is_rect_type(type) ? legate::ndim_rect_type(type) : legate::ndim_point_type(type);
       return legate::dim_dispatch(ndim, AlignOfPointType{}) * 2;
     }
-    default: break;
+    default: break;  // legate-lint: no-switch-default
   }
   LEGATE_ABORT(fmt::format("unhandled core task id: {}", task_id));
   return std::nullopt;

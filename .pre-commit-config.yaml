@@ -123,6 +123,16 @@ repos:
         require_serial: false
         stages: [pre-commit]
         exclude: '^tests/cpp/.*$'
+      - id: no-default
+        name: no-default
+        description: "Ban the use of default: in switch statements"
+        entry: ./scripts/pre-commit/no_default.py
+        language: python
+        'types_or': [c++, c, cuda]
+        stages: [pre-commit]
+        exclude: '^tests/cpp/.*$'
+        additional_dependencies:
+          - rich
       - id: cmake-format
         name: cmake-format
         entry: ./scripts/pre-commit/cmake-format.bash cmake-format

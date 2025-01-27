@@ -193,7 +193,9 @@ void task_body(const legate::TaskContext& context, bool is_device)
 
   switch (const auto dim = store.dim()) {
     LEGION_FOREACH_N(TYPE_DISPATCH);
-    default: legate::detail::throw_unsupported_dim(dim);
+    default: {  // legate-lint: no-switch-default
+      legate::detail::throw_unsupported_dim(dim);
+    }
   }
 }
 

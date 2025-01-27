@@ -34,9 +34,13 @@ TaskTarget to_target(Processor::Kind kind)
       // correct. This is "safe" to do because the only caller that might pass PY_PROC is the
       // inline task launch.
     case Processor::Kind::PY_PROC: return TaskTarget::CPU;
-    default: LEGATE_ABORT("Unhandled Processor::Kind ", traits::detail::to_underlying(kind));
+    case Processor::Kind::NO_KIND: [[fallthrough]];
+    case Processor::Kind::UTIL_PROC: [[fallthrough]];
+    case Processor::Kind::IO_PROC: [[fallthrough]];
+    case Processor::Kind::PROC_GROUP: [[fallthrough]];
+    case Processor::Kind::PROC_SET: break;
   }
-  return TaskTarget::CPU;
+  LEGATE_ABORT("Unhandled Processor::Kind ", traits::detail::to_underlying(kind));
 }
 
 TaskTarget get_matching_task_target(StoreTarget target)
@@ -48,7 +52,6 @@ TaskTarget get_matching_task_target(StoreTarget target)
     case StoreTarget::SYSMEM: return TaskTarget::CPU;
   }
   LEGATE_ABORT("Unhandled StoreTarget: ", target);
-  return TaskTarget::CPU;
 }
 
 StoreTarget to_target(Memory::Kind kind)
@@ -58,9 +61,19 @@ StoreTarget to_target(Memory::Kind kind)
     case Memory::Kind::GPU_FB_MEM: return StoreTarget::FBMEM;
     case Memory::Kind::Z_COPY_MEM: return StoreTarget::ZCMEM;
     case Memory::Kind::SOCKET_MEM: return StoreTarget::SOCKETMEM;
-    default: LEGATE_ABORT("Unhandled Processor::Kind ", traits::detail::to_underlying(kind));
+    case Memory::Kind::NO_MEMKIND: [[fallthrough]];
+    case Memory::Kind::GLOBAL_MEM: [[fallthrough]];
+    case Memory::Kind::REGDMA_MEM: [[fallthrough]];
+    case Memory::Kind::DISK_MEM: [[fallthrough]];
+    case Memory::Kind::HDF_MEM: [[fallthrough]];
+    case Memory::Kind::FILE_MEM: [[fallthrough]];
+    case Memory::Kind::LEVEL3_CACHE: [[fallthrough]];
+    case Memory::Kind::LEVEL2_CACHE: [[fallthrough]];
+    case Memory::Kind::LEVEL1_CACHE: [[fallthrough]];
+    case Memory::Kind::GPU_MANAGED_MEM: [[fallthrough]];
+    case Memory::Kind::GPU_DYNAMIC_MEM: break;
   }
-  return StoreTarget::SYSMEM;
+  LEGATE_ABORT("Unhandled Processor::Kind ", traits::detail::to_underlying(kind));
 }
 
 Processor::Kind to_kind(TaskTarget target)
@@ -70,7 +83,7 @@ Processor::Kind to_kind(TaskTarget target)
     case TaskTarget::OMP: return Processor::Kind::OMP_PROC;
     case TaskTarget::CPU: return Processor::Kind::LOC_PROC;
   }
-  return Processor::Kind::LOC_PROC;
+  LEGATE_ABORT("Unhandled TaskTarget ", traits::detail::to_underlying(target));
 }
 
 Memory::Kind to_kind(StoreTarget target)
@@ -81,7 +94,7 @@ Memory::Kind to_kind(StoreTarget target)
     case StoreTarget::ZCMEM: return Memory::Kind::Z_COPY_MEM;
     case StoreTarget::SOCKETMEM: return Memory::Kind::SOCKET_MEM;
   }
-  return Memory::Kind::SYSTEM_MEM;
+  LEGATE_ABORT("Unhandled StoreTarget ", traits::detail::to_underlying(target));
 }
 
 VariantCode to_variant_code(TaskTarget target)
@@ -91,7 +104,7 @@ VariantCode to_variant_code(TaskTarget target)
     case TaskTarget::OMP: return VariantCode::OMP;
     case TaskTarget::CPU: return VariantCode::CPU;
   }
-  return VariantCode::CPU;
+  LEGATE_ABORT("Unhandled TaskTarget ", traits::detail::to_underlying(target));
 }
 
 VariantCode to_variant_code(Processor::Kind kind) { return to_variant_code(to_target(kind)); }
