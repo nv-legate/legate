@@ -21,17 +21,17 @@ from ..utilities.typedefs cimport _Domain, _DomainPoint
 
 cdef extern from "legate/data/shape.h" namespace "legate" nogil:
     cdef cppclass _Shape "legate::Shape":
-        _Shape()
-        _Shape(const _tuple[uint64_t]&)
-        _Shape(const std_vector[uint64_t]&)
+        _Shape() except+
+        _Shape(const _tuple[uint64_t]&) except+
+        _Shape(const std_vector[uint64_t]&) except+
 
         _tuple[uint64_t] extents() except+
         size_t volume() except+
-        uint32_t ndim() const
+        uint32_t ndim() except+
 
-        std_string to_string()
+        std_string to_string() except+
 
-        bool operator==(const _Shape&) const
+        bool operator==(const _Shape&) except+
 
 
 cdef class Shape:

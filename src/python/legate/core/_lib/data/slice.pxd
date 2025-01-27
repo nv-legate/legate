@@ -17,8 +17,8 @@ cdef extern from "legate/data/slice.h" namespace "legate" nogil:
     cdef std_optional[int64_t] OPEN "legate::Slice::OPEN"
 
     cdef cppclass _Slice "legate::Slice":
-        _Slice()
-        _Slice(std_optional[int64_t], std_optional[int64_t])
+        _Slice() except+
+        _Slice(std_optional[int64_t], std_optional[int64_t]) except+
 
 
 cdef _Slice from_python_slice(slice sl)

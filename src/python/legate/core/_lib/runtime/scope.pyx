@@ -11,7 +11,10 @@
 
 from libc.stdint cimport int32_t
 from libcpp cimport bool
-from libcpp.optional cimport nullopt as std_nullopt
+from libcpp.optional cimport (
+    nullopt as std_nullopt,
+    make_optional as std_make_optional
+)
 
 from typing import Any
 
@@ -45,7 +48,7 @@ cdef class Scope:
                 "Each Scope object can be used only once as a context manager"
             )
 
-        self._handle = _Scope()
+        self._handle = std_make_optional[_Scope]()
         self._handle.value().set_priority(self._priority)
         self._handle.value().set_exception_mode(self._exception_mode)
         if self._provenance is not None:

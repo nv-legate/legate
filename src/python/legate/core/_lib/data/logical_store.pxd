@@ -27,17 +27,17 @@ from .slice cimport _Slice
 
 cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
     cdef cppclass _LogicalStore "legate::LogicalStore":
-        _LogicalStore()
-        _LogicalStore(const _LogicalStore&)
-        int32_t dim()
-        bool has_scalar_storage()
-        bool overlaps(const _LogicalStore&)
-        _Type type()
-        _Shape shape()
+        _LogicalStore() except+
+        _LogicalStore(const _LogicalStore&) except+
+        int32_t dim() except+
+        bool has_scalar_storage() except+
+        bool overlaps(const _LogicalStore&) except+
+        _Type type() except+
+        _Shape shape() except+
         const _tuple[uint64_t]& extents() except+
         size_t volume() except+
-        bool unbound()
-        bool transformed()
+        bool unbound() except+
+        bool transformed() except+
         _LogicalStore promote(int32_t, size_t) except+
         _LogicalStore project(int32_t, int64_t) except+
         _LogicalStore slice(int32_t, _Slice) except+
@@ -47,16 +47,16 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
             std_vector[uint64_t] tile_shape
         ) except+
         _PhysicalStore get_physical_store() except+
-        void detach()
+        void detach() except+
         void offload_to(StoreTarget) except+
-        std_string to_string()
-        bool equal_storage(const _LogicalStore&) const
-        const _SharedPtr[_LogicalStoreImpl]& impl() const
+        std_string to_string() except+
+        bool equal_storage(const _LogicalStore&) except+
+        const _SharedPtr[_LogicalStoreImpl]& impl() except+
 
     cdef cppclass _LogicalStorePartition "legate::LogicalStorePartition":
-        _LogicalStorePartition()
-        _LogicalStorePartition(const _LogicalStorePartition&)
-        _LogicalStore store()
+        _LogicalStorePartition() except+
+        _LogicalStorePartition(const _LogicalStorePartition&) except+
+        _LogicalStore store() except+
         const _tuple[uint64_t]& color_shape() except+
         _LogicalStore get_child_store(const _tuple[uint64_t]&) except+
 

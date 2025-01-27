@@ -23,20 +23,20 @@ from .detail.task_context cimport _TaskContextImpl
 
 cdef extern from "legate/task/task_context.h" namespace "legate" nogil:
     cdef cppclass _TaskContext "legate::TaskContext":
-        _TaskContextImpl* impl() const
-        _GlobalTaskID task_id() const
-        VariantCode variant_kind() const
+        _TaskContextImpl* impl() except+
+        _GlobalTaskID task_id() except+
+        VariantCode variant_kind() except+
 
-        _PhysicalArray input(uint32_t) const
-        _PhysicalArray output(uint32_t) const
-        _PhysicalArray reduction(uint32_t) const
-        _Scalar scalar(uint32_t) const
-        size_t num_inputs() const
-        size_t num_outputs() const
-        size_t num_reductions() const
-        const std_vector[_Scalar]& scalars() except +
-        size_t num_scalars() const
-        bool can_raise_exception() const
+        _PhysicalArray input(uint32_t) except+
+        _PhysicalArray output(uint32_t) except+
+        _PhysicalArray reduction(uint32_t) except+
+        _Scalar scalar(uint32_t) except+
+        size_t num_inputs() except+
+        size_t num_outputs() except+
+        size_t num_reductions() except+
+        const std_vector[_Scalar]& scalars() except+
+        size_t num_scalars() except+
+        bool can_raise_exception() except+
 
 
 cdef class TaskContext(Unconstructable):

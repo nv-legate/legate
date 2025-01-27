@@ -29,28 +29,28 @@ from ..utilities.typedefs cimport __half
 
 cdef extern from "legate/data/scalar.h" namespace "legate" nogil:
     cdef cppclass _Scalar "legate::Scalar":
-        _Scalar()
-        _Scalar(cpp_bool, _Type)
-        _Scalar(int8_t, _Type)
-        _Scalar(int16_t, _Type)
-        _Scalar(int32_t, _Type)
-        _Scalar(int64_t, _Type)
-        _Scalar(uint8_t, _Type)
-        _Scalar(uint16_t, _Type)
-        _Scalar(uint32_t, _Type)
-        _Scalar(uint64_t, _Type)
-        _Scalar(__half, _Type)
-        _Scalar(float, _Type)
-        _Scalar(double, _Type)
-        _Scalar(std_complex[float], _Type)
-        _Scalar(std_complex[double], _Type)
-        _Scalar(_Scalar)
-        _Scalar(std_string_view)
-        _Scalar(_Type, const char*, cpp_bool)
-        _Type type() const
-        size_t size() const
-        T value[T]() except +
-        const void* ptr() const
+        _Scalar() except+
+        _Scalar(cpp_bool, _Type) except+
+        _Scalar(int8_t, _Type) except+
+        _Scalar(int16_t, _Type) except+
+        _Scalar(int32_t, _Type) except+
+        _Scalar(int64_t, _Type) except+
+        _Scalar(uint8_t, _Type) except+
+        _Scalar(uint16_t, _Type) except+
+        _Scalar(uint32_t, _Type) except+
+        _Scalar(uint64_t, _Type) except+
+        _Scalar(__half, _Type) except+
+        _Scalar(float, _Type) except+
+        _Scalar(double, _Type) except+
+        _Scalar(std_complex[float], _Type) except+
+        _Scalar(std_complex[double], _Type) except+
+        _Scalar(_Scalar) except+
+        _Scalar(std_string_view) except+
+        _Scalar(_Type, const char*, cpp_bool) except+
+        _Type type() except+
+        size_t size() except+
+        T value[T]() except+
+        const void* ptr() except+
 
 
 cdef class Scalar:

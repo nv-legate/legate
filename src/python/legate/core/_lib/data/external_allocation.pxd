@@ -20,16 +20,16 @@ cdef extern from "legate/data/external_allocation.h" namespace "legate" nogil:
         pass
 
     cdef cppclass _ExternalAllocation "legate::ExternalAllocation":
-        _ExternalAllocation()
-        bool read_only() const
-        TaskTarget target() const
-        void* ptr() const
-        size_t size() const
+        _ExternalAllocation() except+
+        bool read_only() except+
+        TaskTarget target() except+
+        void* ptr() except+
+        size_t size() except+
 
         @staticmethod
         _ExternalAllocation create_sysmem(
             void*, size_t, bool, std_optional[_Deleter]
-        )
+        ) except+
 
 
 cdef _ExternalAllocation create_from_buffer(

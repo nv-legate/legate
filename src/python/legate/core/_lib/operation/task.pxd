@@ -31,27 +31,27 @@ from .projection cimport _SymbolicPoint
 
 cdef extern from "legate/operation/task.h" namespace "legate" nogil:
     cdef cppclass _AutoTask "legate::AutoTask":
-        _AutoTask()
-        _AutoTask(const _AutoTask&)
+        _AutoTask() except+
+        _AutoTask(const _AutoTask&) except+
         _Variable add_input(_LogicalArray) except+
         _Variable add_input(_LogicalArray, _Variable) except+
         _Variable add_output(_LogicalArray) except+
         _Variable add_output(_LogicalArray, _Variable) except+
         _Variable add_reduction(_LogicalArray, int32_t) except+
         _Variable add_reduction(_LogicalArray, int32_t, _Variable) except+
-        void add_scalar_arg(const _Scalar& scalar)
-        void add_constraint(_Constraint)
+        void add_scalar_arg(const _Scalar& scalar) except+
+        void add_constraint(_Constraint) except+
         _Variable find_or_declare_partition(_LogicalArray) except+
         _Variable declare_partition() except+
-        std_string_view provenance() const
-        void set_concurrent(bool)
-        void set_side_effect(bool)
-        void throws_exception(bool)
+        std_string_view provenance() except+
+        void set_concurrent(bool) except+
+        void set_side_effect(bool) except+
+        void throws_exception(bool) except+
         void add_communicator(std_string_view) except+
 
     cdef cppclass _ManualTask "legate::ManualTask":
-        _ManualTask()
-        _ManualTask(const _ManualTask&)
+        _ManualTask() except+
+        _ManualTask(const _ManualTask&) except+
         void add_input(_LogicalStore) except+
         void add_input(
             _LogicalStorePartition, std_optional[_SymbolicPoint]
@@ -64,11 +64,11 @@ cdef extern from "legate/operation/task.h" namespace "legate" nogil:
         void add_reduction(
             _LogicalStorePartition, int32_t, std_optional[_SymbolicPoint]
         ) except+
-        void add_scalar_arg(const _Scalar& scalar)
-        std_string_view provenance() const
-        void set_concurrent(bool)
-        void set_side_effect(bool)
-        void throws_exception(bool)
+        void add_scalar_arg(const _Scalar& scalar) except+
+        std_string_view provenance() except+
+        void set_concurrent(bool) except+
+        void set_side_effect(bool) except+
+        void throws_exception(bool) except+
         void add_communicator(std_string_view) except+
 
 

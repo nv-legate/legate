@@ -668,7 +668,11 @@ cpdef Type binary_type(uint32_t size):
     Type
         The binary type.
     """
-    return Type.from_handle(_binary_type(size))
+    cdef _Type ty
+
+    with nogil:
+        ty = _binary_type(size)
+    return Type.from_handle(std_move(ty))
 
 
 cpdef FixedArrayType array_type(Type element_type, uint32_t N):
@@ -687,9 +691,11 @@ cpdef FixedArrayType array_type(Type element_type, uint32_t N):
     FixedArrayType
         The fixed array type.
     """
-    return <FixedArrayType> Type.from_handle(
-        _fixed_array_type(element_type._handle, N)
-    )
+    cdef _FixedArrayType type
+
+    with nogil:
+        type = _fixed_array_type(element_type._handle, N)
+    return FixedArrayType.from_handle(std_move(type))
 
 
 cpdef StructType struct_type(list field_types, bool align = False):
@@ -708,7 +714,7 @@ cpdef StructType struct_type(list field_types, bool align = False):
     StructType
         The structure type.
     """
-    cdef std_vector[_Type] types = std_vector[_Type]()
+    cdef std_vector[_Type] types
     cdef Type field_type
 
     types.reserve(len(field_types))
@@ -716,9 +722,12 @@ cpdef StructType struct_type(list field_types, bool align = False):
         types.push_back(
             (<Type> field_type)._handle
         )
-    return <StructType> Type.from_handle(
-        _struct_type(std_move(types), align)
-    )
+
+    cdef _StructType stype
+
+    with nogil:
+        stype = _struct_type(std_move(types), align)
+    return StructType.from_handle(std_move(stype))
 
 
 cpdef FixedArrayType point_type(int32_t ndim):
@@ -735,7 +744,11 @@ cpdef FixedArrayType point_type(int32_t ndim):
     FixedArrayType
         The point type.
     """
-    return FixedArrayType.from_handle(_point_type(ndim))
+    cdef _FixedArrayType type
+
+    with nogil:
+        type = _point_type(ndim)
+    return FixedArrayType.from_handle(std_move(type))
 
 
 cpdef StructType rect_type(int32_t ndim):
@@ -752,4 +765,8 @@ cpdef StructType rect_type(int32_t ndim):
     StructType
         The rect type.
     """
-    return StructType.from_handle(_rect_type(ndim))
+    cdef _StructType type
+
+    with nogil:
+        type = _rect_type(ndim)
+    return StructType.from_handle(std_move(type))

@@ -20,18 +20,18 @@ from collections.abc import Iterable
 
 cdef extern from "legate/partitioning/constraint.h" namespace "legate" nogil:
     cdef cppclass _Variable "legate::Variable":
-        _Variable()
-        _Variable(const _Variable&)
-        std_string to_string() const
+        _Variable() except+
+        _Variable(const _Variable&) except+
+        std_string to_string() except+
 
     cdef cppclass _Constraint "legate::Constraint":
-        _Constraint()
-        _Constraint(const _Constraint&)
-        std_string to_string() const
+        _Constraint() except+
+        _Constraint(const _Constraint&) except+
+        std_string to_string() except+
 
-    cdef _Constraint _align "align" (_Variable, _Variable)
+    cdef _Constraint _align "align" (_Variable, _Variable) except+
 
-    cdef _Constraint _broadcast "broadcast" (_Variable)
+    cdef _Constraint _broadcast "broadcast" (_Variable) except+
 
     cdef _Constraint _broadcast "broadcast" (
         _Variable, _tuple[uint32_t]
@@ -44,15 +44,15 @@ cdef extern from "legate/partitioning/constraint.h" namespace "legate" nogil:
 
     cdef _Constraint _image "image" (
         _Variable, _Variable, ImageComputationHint
-    )
+    ) except+
 
     cdef _Constraint _scale "scale" (
         _tuple[uint64_t], _Variable, _Variable
-    )
+    ) except+
 
     cdef _Constraint _bloat "bloat" (
         _Variable, _Variable, _tuple[uint64_t], _tuple[uint64_t]
-    )
+    ) except+
 
 
 cdef class Variable(Unconstructable):

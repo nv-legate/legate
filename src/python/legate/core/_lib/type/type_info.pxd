@@ -80,59 +80,61 @@ cdef extern from "legate/type/type_info.h" namespace "legate" nogil:
 
     cdef cppclass _Type "legate::Type":
         ctypedef TypeCode Code
-        _Type.Code code()
+        _Type.Code code() except+
         uint32_t size() except+
-        uint32_t alignment()
-        int32_t uid()
-        bool variable_size()
-        std_string to_string()
-        bool is_primitive()
-        _FixedArrayType as_fixed_array_type()
-        _StructType as_struct_type()
+        uint32_t alignment() except+
+        int32_t uid() except+
+        bool variable_size() except+
+        std_string to_string() except+
+        bool is_primitive() except+
+        _FixedArrayType as_fixed_array_type() except+
+        _StructType as_struct_type() except+
         void record_reduction_operator(int32_t, _GlobalRedopID) except+
         _GlobalRedopID find_reduction_operator(int32_t) except+
-        bool operator==(const _Type&) const
+        bool operator==(const _Type&) except+
 
-    cdef cppclass _FixedArrayType(_Type):
-        uint32_t num_elements()
-        _Type element_type()
+    cdef cppclass _FixedArrayType "legate::FixedArrayType" (_Type):
+        uint32_t num_elements() except+
+        _Type element_type() except+
 
-    cdef cppclass _StructType(_Type):
-        uint32_t num_fields()
-        _Type field_type(uint32_t)
-        bool aligned()
-        std_vector[uint32_t] offsets() const
+    cdef cppclass _StructType "legate::StructType" (_Type):
+        uint32_t num_fields() except+
+        _Type field_type(uint32_t) except+
+        bool aligned() except+
+        std_vector[uint32_t] offsets() except+
 
-    cdef _Type _string_type "legate::string_type" ()
+    cdef _Type _string_type "legate::string_type" () except+
 
-    cdef _Type _binary_type "legate::binary_type" (uint32_t size)
+    cdef _Type _binary_type "legate::binary_type" (uint32_t size) except+
 
-    cdef _Type _null_type "legate::null_type" ()
+    cdef _Type _null_type "legate::null_type" () except+
 
-    cdef _Type _bool "legate::bool_" ()
-    cdef _Type _int8 "legate::int8" ()
-    cdef _Type _int16 "legate::int16" ()
-    cdef _Type _int32 "legate::int32" ()
-    cdef _Type _int64 "legate::int64" ()
-    cdef _Type _uint8 "legate::uint8" ()
-    cdef _Type _uint16 "legate::uint16" ()
-    cdef _Type _uint32 "legate::uint32" ()
-    cdef _Type _uint64 "legate::uint64" ()
-    cdef _Type _float16 "legate::float16" ()
-    cdef _Type _float32 "legate::float32" ()
-    cdef _Type _float64 "legate::float64" ()
-    cdef _Type _complex64 "legate::complex64" ()
-    cdef _Type _complex128 "legate::complex128" ()
+    cdef _Type _bool "legate::bool_" () except+
+    cdef _Type _int8 "legate::int8" () except+
+    cdef _Type _int16 "legate::int16" () except+
+    cdef _Type _int32 "legate::int32" () except+
+    cdef _Type _int64 "legate::int64" () except+
+    cdef _Type _uint8 "legate::uint8" () except+
+    cdef _Type _uint16 "legate::uint16" () except+
+    cdef _Type _uint32 "legate::uint32" () except+
+    cdef _Type _uint64 "legate::uint64" () except+
+    cdef _Type _float16 "legate::float16" () except+
+    cdef _Type _float32 "legate::float32" () except+
+    cdef _Type _float64 "legate::float64" () except+
+    cdef _Type _complex64 "legate::complex64" () except+
+    cdef _Type _complex128 "legate::complex128" () except+
 
-    cdef _FixedArrayType _point_type "legate::point_type"(uint32_t ndim)
+    cdef _FixedArrayType _point_type "legate::point_type" (
+        uint32_t ndim
+    ) except+
 
-    cdef _StructType _rect_type "legate::rect_type"(uint32_t ndim)
+    cdef _StructType _rect_type "legate::rect_type"(uint32_t ndim) except+
 
-    cdef _Type _fixed_array_type "legate::fixed_array_type" (
+    cdef _FixedArrayType _fixed_array_type "legate::fixed_array_type" (
         _Type element_type, uint32_t N
     ) except+
 
-    cdef _Type _struct_type "legate::struct_type" (
+    cdef _StructType _struct_type "legate::struct_type" (
         std_vector[_Type] field_types, bool
     ) except+
 

@@ -30,45 +30,45 @@ cdef extern from "legate/mapping/machine.h" namespace "legate::mapping" nogil:
         uint32_t low
         uint32_t high
         uint32_t per_node_count
-        uint32_t count()
-        bool empty()
-        _ProcessorRange slice(uint32_t, uint32_t)
+        uint32_t count() except+
+        bool empty() except+
+        _ProcessorRange slice(uint32_t, uint32_t) except+
         _NodeRange get_node_range() except+
-        std_string to_string()
-        _ProcessorRange()
-        _ProcessorRange(uint32_t, uint32_t, uint32_t)
-        _ProcessorRange(const _ProcessorRange&)
+        std_string to_string() except+
+        _ProcessorRange() except+
+        _ProcessorRange(uint32_t, uint32_t, uint32_t) except+
+        _ProcessorRange(const _ProcessorRange&) except+
         _ProcessorRange operator&(const _ProcessorRange&) except+
-        bool operator==(const _ProcessorRange&)
-        bool operator!=(const _ProcessorRange&)
-        bool operator<(const _ProcessorRange&)
+        bool operator==(const _ProcessorRange&) except+
+        bool operator!=(const _ProcessorRange&) except+
+        bool operator<(const _ProcessorRange&) except+
 
     cdef cppclass _Machine "legate::mapping::Machine":
-        _Machine()
-        _Machine(_Machine)
-        _Machine(const _Machine&)
-        _Machine(std_map[TaskTarget, _ProcessorRange] ranges)
-        TaskTarget preferred_target() const
-        _ProcessorRange processor_range() const
-        _ProcessorRange processor_range(TaskTarget target) const
-        const std_vector[TaskTarget]& valid_targets() const
+        _Machine() except+
+        _Machine(_Machine) except+
+        _Machine(const _Machine&) except+
+        _Machine(std_map[TaskTarget, _ProcessorRange] ranges) except+
+        TaskTarget preferred_target() except+
+        _ProcessorRange processor_range() except+
+        _ProcessorRange processor_range(TaskTarget target) except+
+        const std_vector[TaskTarget]& valid_targets() except+
         std_vector[TaskTarget] valid_targets_except(
             const std_set[TaskTarget]&
-        ) const
-        uint32_t count() const
-        uint32_t count(TaskTarget) const
+        ) except+
+        uint32_t count() except+
+        uint32_t count(TaskTarget) except+
 
-        std_string to_string() const
-        _Machine only(TaskTarget) const
-        _Machine only(const std_vector[TaskTarget]&) const
-        _Machine slice(uint32_t, uint32_t, TaskTarget, bool) const
-        _Machine slice(uint32_t, uint32_t, bool) const
-        _Machine operator[](TaskTarget target) const
-        _Machine operator[](const std_vector[TaskTarget]&) const
-        bool operator==(const _Machine&) const
-        bool operator!=(const _Machine&) const
+        std_string to_string() except+
+        _Machine only(TaskTarget) except+
+        _Machine only(const std_vector[TaskTarget]&) except+
+        _Machine slice(uint32_t, uint32_t, TaskTarget, bool) except+
+        _Machine slice(uint32_t, uint32_t, bool) except+
+        _Machine operator[](TaskTarget target) except+
+        _Machine operator[](const std_vector[TaskTarget]&) except+
+        bool operator==(const _Machine&) except+
+        bool operator!=(const _Machine&) except+
         _Machine operator&(const _Machine&) except+
-        bool empty() const
+        bool empty() except+
 
 
 cdef class ProcessorRange:

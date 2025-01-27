@@ -43,18 +43,18 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
         pass
 
     cdef cppclass _DomainPoint "legate::DomainPoint":
-        _DomainPoint()
-        int32_t get_dim()
-        int64_t& operator[](int32_t)
-        bool operator==(const _DomainPoint&)
+        _DomainPoint() except+
+        int32_t get_dim() except+
+        int64_t& operator[](int32_t) except+
+        bool operator==(const _DomainPoint&) except+
 
     cdef cppclass _Domain "legate::Domain":
-        _Domain()
-        _Domain(const _DomainPoint&, const _DomainPoint)
-        int32_t get_dim()
-        _DomainPoint lo()
-        _DomainPoint hi()
-        bool operator==(const _Domain&)
+        _Domain() except+
+        _Domain(const _DomainPoint&, const _DomainPoint) except+
+        int32_t get_dim() except+
+        _DomainPoint lo() except+
+        _DomainPoint hi() except+
+        bool operator==(const _Domain&) except+
 
     cdef cppclass _Processor "legate::Processor":
         pass
@@ -66,10 +66,10 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
 
 # note missing nogil!
 cdef extern from "legate/utilities/typedefs.h" namespace "legate":
-    ctypedef void (*VariantImpl)(_TaskContext) except +
+    ctypedef void (*VariantImpl)(_TaskContext) except+
     ctypedef void (*TaskFuncPtr "legate::Processor::TaskFuncPtr")(
         const void *, size_t, const void *, size_t, _Processor
-    ) except +
+    ) except+
 
 cdef class DomainPoint:
     cdef _DomainPoint _handle

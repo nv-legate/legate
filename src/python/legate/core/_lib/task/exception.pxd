@@ -15,8 +15,8 @@ from libcpp.string cimport string as std_string
 
 cdef extern from "legate/task/exception.h" namespace "legate" nogil:
     cdef cppclass _TaskException "legate::TaskException":
-        _TaskException(int32_t, std_string)
-        _TaskException(std_string)
-        const char* what()
-        int32_t index()
-        std_string error_message()
+        _TaskException(int32_t, std_string) except+
+        _TaskException(std_string) except+
+        const char* what() except+
+        int32_t index() except+
+        std_string error_message() except+

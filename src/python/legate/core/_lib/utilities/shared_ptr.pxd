@@ -11,5 +11,5 @@
 
 cdef extern from "legate/utilities/shared_ptr.h" namespace "legate" nogil:
     cdef cppclass _SharedPtr "legate::SharedPtr" [T]:
-        _SharedPtr() noexcept
-        T* get() const
+        _SharedPtr() except+
+        T* get() except+

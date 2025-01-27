@@ -31,20 +31,20 @@ cdef extern from "legate/task/task_info.h" namespace "legate" nogil:
         pass
 
     cdef cppclass _TaskInfo "legate::TaskInfo":
-        _TaskInfo(std_string)
+        _TaskInfo(std_string) except+
         std_optional[std_reference_wrapper[const _VariantInfo]] \
-            find_variant(VariantCode) const
-        std_string_view  name() const
+            find_variant(VariantCode) except+
+        std_string_view  name() except+
         # add_variant's final argument is defaulted in C++, this is the only
         # way I knew how to do the same in Cython. = {}, = (), or
         # = std_map[...]() all did not work...
-        void add_variant(VariantCode, VariantImpl, TaskFuncPtr) except +
+        void add_variant(VariantCode, VariantImpl, TaskFuncPtr) except+
         void add_variant(
             VariantCode,
             VariantImpl,
             TaskFuncPtr,
             const std_map[VariantCode, _VariantOptions]&
-        ) except +
+        ) except+
 
 cdef class TaskInfo(Unconstructable):
     cdef:

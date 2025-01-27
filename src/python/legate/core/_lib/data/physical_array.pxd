@@ -20,10 +20,10 @@ from .physical_store cimport PhysicalStore, _PhysicalStore
 
 cdef extern from "legate/data/physical_array.h" namespace "legate" nogil:
     cdef cppclass _PhysicalArray "legate::PhysicalArray":
-        bool nullable()
-        int32_t dim()
-        _Type type()
-        bool nested()
+        bool nullable() except+
+        int32_t dim() except+
+        _Type type() except+
+        bool nested() except+
         _PhysicalStore data() except+
         _PhysicalStore null_mask() except+
         _PhysicalArray child(uint32_t index) except+

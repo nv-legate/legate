@@ -241,6 +241,8 @@ class Type {
  */
 class FixedArrayType : public Type {
  public:
+  FixedArrayType() = LEGATE_DEFAULT_WHEN_CYTHON;
+
   /**
    * @brief Returns the number of elements
    *
@@ -262,6 +264,8 @@ class FixedArrayType : public Type {
  */
 class StructType : public Type {
  public:
+  StructType() = LEGATE_DEFAULT_WHEN_CYTHON;
+
   /**
    * @brief Returns the number of fields
    *
@@ -298,6 +302,8 @@ class StructType : public Type {
  */
 class ListType : public Type {
  public:
+  ListType() = LEGATE_DEFAULT_WHEN_CYTHON;
+
   /**
    * @brief Returns the element type
    *

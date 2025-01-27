@@ -198,26 +198,26 @@ cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
         void prefetch_bloated_instances(
             const _LogicalStore, _tuple[uint64_t], _tuple[uint64_t], bool
         ) except+
-        void issue_mapping_fence()
-        void issue_execution_fence(bool)
+        void issue_mapping_fence() except+
+        void issue_execution_fence(bool) except+
         void raise_pending_exception() except +handle_legate_exception
-        uint32_t node_count()
-        uint32_t node_id()
-        _Machine get_machine() const
+        uint32_t node_count() except+
+        uint32_t node_id() except+
+        _Machine get_machine() except+
 
-        void start_profiling_range()
-        void stop_profiling_range(std_string_view)
+        void start_profiling_range() except+
+        void stop_profiling_range(std_string_view) except+
 
-        _RuntimeImpl* impl() const
+        _RuntimeImpl* impl() except+
 
         @staticmethod
-        _Runtime* get_runtime()
+        _Runtime* get_runtime() except+
 
     cdef void start() except+
 
     cdef int32_t finish() except+
 
-    cdef bool _is_running_in_task "legate::is_running_in_task"()
+    cdef bool _is_running_in_task "legate::is_running_in_task"() except+
 
 
 cdef class Runtime(Unconstructable):

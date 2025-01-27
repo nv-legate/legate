@@ -25,15 +25,15 @@ from .slice cimport _Slice
 
 cdef extern from "legate/data/logical_array.h" namespace "legate" nogil:
     cdef cppclass _LogicalArray "legate::LogicalArray":
-        int32_t dim()
-        _Type type()
-        _Shape shape()
+        int32_t dim() except+
+        _Type type() except+
+        _Shape shape() except+
         const _tuple[uint64_t]& extents() except+
         size_t volume() except+
-        bool unbound()
-        bool nullable()
-        bool nested()
-        uint32_t num_children()
+        bool unbound() except+
+        bool nullable() except+
+        bool nested() except+
+        uint32_t num_children() except+
         _LogicalArray promote(int32_t, size_t) except+
         _LogicalArray project(int32_t, int64_t) except+
         _LogicalArray slice(int32_t, _Slice) except+
@@ -45,8 +45,8 @@ cdef extern from "legate/data/logical_array.h" namespace "legate" nogil:
         _PhysicalArray get_physical_array() except+
         void offload_to(StoreTarget) except+
         _LogicalArray()
-        _LogicalArray(const _LogicalStore&)
-        _LogicalArray(const _LogicalArray&)
+        _LogicalArray(const _LogicalStore&) except+
+        _LogicalArray(const _LogicalArray&) except+
 
 
 cdef class LogicalArray(Unconstructable):

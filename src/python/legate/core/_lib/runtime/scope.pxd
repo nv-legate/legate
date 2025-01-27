@@ -20,7 +20,7 @@ from .exception_mode cimport ExceptionMode
 
 cdef extern from "legate/runtime/scope.h" namespace "legate" nogil:
     cdef cppclass _Scope "legate::Scope":
-        _Scope()
+        _Scope() except+
 
         void set_priority(int32_t) except+
         void set_exception_mode(ExceptionMode) except+
@@ -28,16 +28,16 @@ cdef extern from "legate/runtime/scope.h" namespace "legate" nogil:
         void set_machine(_Machine) except+
 
         @staticmethod
-        int32_t priority()
+        int32_t priority() except+
 
         @staticmethod
-        ExceptionMode exception_mode()
+        ExceptionMode exception_mode() except+
 
         @staticmethod
-        std_string_view provenance()
+        std_string_view provenance() except+
 
         @staticmethod
-        _Machine machine()
+        _Machine machine() except+
 
 
 cdef class Scope:

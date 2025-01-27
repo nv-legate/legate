@@ -19,21 +19,21 @@ from ..utilities.unconstructable cimport Unconstructable
 
 cdef extern from "legate/operation/projection.h" namespace "legate" nogil:
     cdef cppclass _SymbolicExpr "legate::SymbolicExpr":
-        _SymbolicExpr()
-        _SymbolicExpr(int32_t)
-        _SymbolicExpr(int32_t, int32_t)
-        _SymbolicExpr(int32_t, int32_t, int32_t)
-        int32_t dim() const
-        int32_t weight() const
-        int32_t offset() const
-        bool is_identity(int32_t) const
-        bool operator==(const _SymbolicExpr&) const
-        _SymbolicExpr operator*(int32_t other) const
-        _SymbolicExpr operator+(int32_t other) const
-        std_string to_string() const
+        _SymbolicExpr() except+
+        _SymbolicExpr(int32_t) except+
+        _SymbolicExpr(int32_t, int32_t) except+
+        _SymbolicExpr(int32_t, int32_t, int32_t) except+
+        int32_t dim() except+
+        int32_t weight() except+
+        int32_t offset() except+
+        bool is_identity(int32_t) except+
+        bool operator==(const _SymbolicExpr&) except+
+        _SymbolicExpr operator*(int32_t other) except+
+        _SymbolicExpr operator+(int32_t other) except+
+        std_string to_string() except+
 
-    cdef _SymbolicExpr _dimension "legate::dimension" (int32_t)
-    cdef _SymbolicExpr _constant "legate::constant" (int32_t)
+    cdef _SymbolicExpr _dimension "legate::dimension" (int32_t) except+
+    cdef _SymbolicExpr _constant "legate::constant" (int32_t) except+
 
 
 ctypedef _tuple[_SymbolicExpr] _SymbolicPoint

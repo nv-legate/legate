@@ -21,11 +21,11 @@ from .inline_allocation cimport InlineAllocation, _InlineAllocation
 
 cdef extern from "legate/data/physical_store.h" namespace "legate" nogil:
     cdef cppclass _PhysicalStore "legate::PhysicalStore":
-        int32_t dim()
-        _Type type()
-        _Domain domain()
+        int32_t dim() except+
+        _Type type() except+
+        _Domain domain() except+
         _InlineAllocation get_inline_allocation() except+
-        StoreTarget target()
+        StoreTarget target() except+
 
 
 cdef class PhysicalStore(Unconstructable):
