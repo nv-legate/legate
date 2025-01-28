@@ -31,6 +31,8 @@ namespace legate::mapping::detail {
 
 [[nodiscard]] Processor::Kind to_kind(TaskTarget target);
 
+[[nodiscard]] Processor::Kind to_kind(VariantCode code);
+
 [[nodiscard]] Memory::Kind to_kind(StoreTarget target);
 
 [[nodiscard]] VariantCode to_variant_code(TaskTarget target);

@@ -10,7 +10,6 @@
 # its affiliates is strictly prohibited.
 
 from libc.stdint cimport int64_t
-from libcpp.memory cimport unique_ptr as std_unique_ptr
 
 from ..data.scalar cimport Scalar, _Scalar
 from ..task.task_info cimport TaskInfo, _TaskInfo
@@ -32,7 +31,7 @@ cdef extern from "legate/runtime/library.h" namespace "legate" nogil:
         _GlobalTaskID get_task_id(_LocalTaskID) except+
         _GlobalRedopID get_reduction_op_id(_LocalRedopID) except+
         _Scalar get_tunable(int64_t, _Type) except+
-        void register_task(_LocalTaskID, std_unique_ptr[_TaskInfo]) except+
+        void register_task(_LocalTaskID, const _TaskInfo&) except+
 
 
 cdef class Library(Unconstructable):

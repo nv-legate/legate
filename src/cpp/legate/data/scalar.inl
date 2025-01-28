@@ -158,7 +158,27 @@ Span<const VAL> Scalar::values() const
       return {static_cast<const VAL*>(ptr), size};
     }
     case Type::Code::NIL: return {nullptr, 0};
-    default: break;
+    case Type::Code::BOOL: [[fallthrough]];
+    case Type::Code::INT8: [[fallthrough]];
+    case Type::Code::INT16: [[fallthrough]];
+    case Type::Code::INT32: [[fallthrough]];
+    case Type::Code::INT64: [[fallthrough]];
+    case Type::Code::UINT8: [[fallthrough]];
+    case Type::Code::UINT16: [[fallthrough]];
+    case Type::Code::UINT32: [[fallthrough]];
+    case Type::Code::UINT64: [[fallthrough]];
+    case Type::Code::FLOAT16: [[fallthrough]];
+    case Type::Code::FLOAT32: [[fallthrough]];
+    case Type::Code::FLOAT64: [[fallthrough]];
+    case Type::Code::COMPLEX64: [[fallthrough]];
+    case Type::Code::COMPLEX128: [[fallthrough]];
+    case Type::Code::BINARY:
+      [[fallthrough]];
+      // TODO(jfaibussowit)
+      // STRUCT and LIST should very likely be handled differently, I cannot imagine that
+      // casting a pointer to the data is sufficient to properly handle these
+    case Type::Code::STRUCT: [[fallthrough]];
+    case Type::Code::LIST: break;
   }
 
   if (sizeof(VAL) != ty.size()) {

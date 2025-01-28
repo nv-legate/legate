@@ -15,12 +15,13 @@
 #include <legate_defines.h>
 
 #include <legate/data/scalar.h>
+#include <legate/task/task_info.h>
 #include <legate/task/variant_options.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/typedefs.h>
 
+#include <cstdint>
 #include <map>
-#include <memory>
 #include <string_view>
 
 /**
@@ -39,7 +40,6 @@ namespace legate {
  * @{
  */
 
-class TaskInfo;
 class Runtime;
 
 /**
@@ -151,8 +151,33 @@ class Library {
   template <typename REDOP>
   [[nodiscard]] GlobalRedopID register_reduction_operator(LocalRedopID redop_id);
 
-  void register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
-  [[nodiscard]] const TaskInfo* find_task(LocalTaskID local_task_id) const;
+  /**
+   * @brief Register a task with the library.
+   *
+   * @param local_task_id The library-local task ID to assign for this task.
+   * @param task_info The `TaskInfo` object describing the task.
+   *
+   * @throws std::out_of_range If the chosen local task ID exceeds the maximum local task ID
+   * for the library.
+   * @throws std::invalid_argument If the task (or another task with the same `local_task_id`)
+   * has already been registered with the library.
+   *
+   * @see `find_task()`
+   */
+  void register_task(LocalTaskID local_task_id, const TaskInfo& task_info);
+
+  /**
+   * @brief Look up a task registered with the library.
+   *
+   * @param local_task_id The task ID to find.
+   *
+   * @return The `TaskInfo` object describing the task.
+   *
+   * @throws std::out_of_range If the task could not be found.
+   *
+   * @see `register_task()`
+   */
+  [[nodiscard]] TaskInfo find_task(LocalTaskID local_task_id) const;
 
   [[nodiscard]] const std::map<VariantCode, VariantOptions>& get_default_variant_options() const;
 

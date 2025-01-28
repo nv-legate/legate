@@ -129,7 +129,7 @@ class LegateTask {  // NOLINT(bugprone-crtp-constructor-accessibility)
   friend class detail::VariantHelper;
 
   // A helper to find and register all variants of a task
-  [[nodiscard]] static std::unique_ptr<TaskInfo> create_task_info_(
+  [[nodiscard]] static TaskInfo create_task_info_(
     const Library& lib, const std::map<VariantCode, VariantOptions>& all_options);
 
   template <VariantImpl variant_fn, VariantCode variant_kind>

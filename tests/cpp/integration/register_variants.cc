@@ -280,7 +280,7 @@ TEST_F(RegisterVariants, DefaultVariantOptions)
 
   DefaultOptionsTask::register_variants(library);
 
-  const auto* task_info = library.find_task(DefaultOptionsTask::TASK_ID);
+  const auto task_info = library.find_task(DefaultOptionsTask::TASK_ID);
   // This test checks that the defaults in <XXX>_VARIANT_OPTIONS override the "normal"
   // defaults. Obviously, we cannot properly test that if the normal defaults match that of
   // DefaultOptionsTask::<XXX>_VARIANT_OPTIONS.
@@ -295,12 +295,12 @@ TEST_F(RegisterVariants, DefaultVariantOptions)
                                   DefaultOptionsTask::GPU_VARIANT_OPTIONS};
 
   for (auto&& [variant_kind, default_options] : legate::detail::zip_equal(variant_kinds, options)) {
-    const auto variant = task_info->find_variant(variant_kind);
+    const auto variant = task_info.find_variant(variant_kind);
 
     ASSERT_TRUE(variant.has_value());
     // We do check it, immediately above! But for some reason clang-tidy doesn't clock that...
     // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-    ASSERT_EQ(variant->get().options, default_options);
+    ASSERT_EQ(variant->options(), default_options);
   }
 }
 

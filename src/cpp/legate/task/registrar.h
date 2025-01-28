@@ -13,7 +13,6 @@
 #pragma once
 
 #include <legate/utilities/detail/doxygen.h>
-#include <legate/utilities/typedefs.h>
 
 #include <cstdint>
 #include <functional>
@@ -26,6 +25,10 @@
 
 namespace legate {
 
+enum class LocalTaskID : std::int64_t;
+
+template <typename T>
+class LegateTask;  // NOLINT(bugprone-crtp-constructor-accessibility)
 class TaskInfo;
 class Library;
 
@@ -86,12 +89,9 @@ class TaskRegistrar {
    * @brief Registers all tasks recorded in this registrar. Typically invoked in a registration
    * callback of a library.
    *
-   * @param library Library that owns this registrar
+   * @param library Library that owns this registrar.
    */
   void register_all_tasks(Library& library);
-
-  [[deprecated("since 24.11: Use register_all_tasks() instead")]] void record_task(
-    LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
 
   class RecordTaskKey {
     RecordTaskKey() = default;
@@ -102,8 +102,8 @@ class TaskRegistrar {
   };
 
   void record_task(RecordTaskKey,
-                   LocalTaskID local_task_id,
-                   std::function<std::unique_ptr<TaskInfo>(const Library&)> deferred_task_info);
+                   legate::LocalTaskID local_task_id,
+                   std::function<TaskInfo(const Library&)> deferred_task_info);
 
  private:
   class Impl;

@@ -50,10 +50,10 @@ void check_options(const legate::Library& library,
                    legate::LocalTaskID task_id,
                    const legate::VariantOptions& options_to_match)
 {
-  auto&& vinfo = library.find_task(task_id)->find_variant(legate::VariantCode::CPU);
+  auto&& vinfo = library.find_task(task_id).find_variant(legate::VariantCode::CPU);
   ASSERT_TRUE(vinfo.has_value());
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(vinfo->get().options, options_to_match);
+  EXPECT_EQ(vinfo->options(), options_to_match);
 }
 
 using VariantOptionsPrecedence = DefaultFixture;

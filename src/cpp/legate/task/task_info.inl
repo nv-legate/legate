@@ -16,27 +16,24 @@
 
 namespace legate {
 
-// NOLINTBEGIN(readability-identifier-naming)
+inline const SharedPtr<detail::TaskInfo>& TaskInfo::impl() const { return impl_; }
+
+inline TaskInfo::TaskInfo(InternalSharedPtr<detail::TaskInfo> impl) : impl_{std::move(impl)} {}
+
 template <typename T>
-void TaskInfo::add_variant_(AddVariantKey,
-                            Library library,
+void TaskInfo::add_variant_(AddVariantKey,  // NOLINT(readability-identifier-naming)
+                            const Library& library,
                             VariantCode vid,
                             LegionVariantImpl<T> /*body*/,
                             Processor::TaskFuncPtr entry,
                             const VariantOptions* decl_options,
                             const std::map<VariantCode, VariantOptions>& registration_options)
-// NOLINTEND(readability-identifier-naming)
 {
   // TODO(wonchanl): pass a null pointer as the body here as the function does not have the type
   // signature for Legate task variants. In the future we should extend VariantInfo so we can
   // distinguish Legate tasks from Legion tasks.
-  add_variant_(AddVariantKey{},
-               std::move(library),
-               vid,
-               VariantImpl{},
-               entry,
-               decl_options,
-               registration_options);
+  add_variant_(
+    AddVariantKey{}, library, vid, VariantImpl{}, entry, decl_options, registration_options);
 }
 
 }  // namespace legate

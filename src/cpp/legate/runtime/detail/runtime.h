@@ -29,10 +29,13 @@
 #include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/scope.h>
 #include <legate/task/detail/returned_exception.h>
+#include <legate/task/variant_options.h>
+#include <legate/type/type_info.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/hash.h>
 #include <legate/utilities/detail/zstring_view.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/typedefs.h>
 
 #include <list>
 #include <map>

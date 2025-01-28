@@ -12,30 +12,37 @@
 
 #pragma once
 
-#include <legate/runtime/library.h>
-#include <legate/utilities/detail/type_traits.h>
+#include <legate/task/variant_info.h>
+#include <legate/task/variant_options.h>
+#include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
-#include <functional>
 #include <iosfwd>
 #include <map>
-#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 
+/** @file */
+
 namespace legate {
 
+class Library;
 class TaskInfo;
 
-namespace detail {
+}  // namespace legate
+
+namespace legate::detail {
+
+class TaskInfo;
 
 template <typename T, template <typename...> typename SELECTOR, bool valid>
 class VariantHelper;
 
-void register_legate_core_tasks(detail::Library* core_lib);
+}  // namespace legate::detail
 
-namespace cython {
+namespace legate::detail::cython {
 
 void cytaskinfo_add_variant(legate::TaskInfo* handle,
                             legate::Library* core_lib,
@@ -43,46 +50,52 @@ void cytaskinfo_add_variant(legate::TaskInfo* handle,
                             legate::VariantImpl cy_entry,
                             legate::Processor::TaskFuncPtr py_entry);
 
-}  // namespace cython
+}  // namespace legate::detail::cython
 
-}  // namespace detail
+namespace legate {
 
-class VariantInfo {
- public:
-  VariantInfo() = default;
+/**
+ * @addtogroup task
+ * @{
+ */
 
-  static_assert(!traits::detail::is_pure_move_constructible_v<Legion::CodeDescriptor>,
-                "Use by value and std::move for Legion::CodeDescriptor");
-  VariantInfo(VariantImpl body_, const Legion::CodeDescriptor& code_desc_, VariantOptions options_)
-    : body{body_}, code_desc{code_desc_}, options{options_}
-  {
-  }
-
-  [[nodiscard]] std::string to_string() const;
-
-  VariantImpl body{};
-  Legion::CodeDescriptor code_desc{};
-  VariantOptions options{};
-};
-
+/**
+ * @brief An object describing a Legate task registration info.
+ */
 class TaskInfo {
  public:
-  explicit TaskInfo(std::string task_name);
-  ~TaskInfo();
+  TaskInfo() = LEGATE_DEFAULT_WHEN_CYTHON;
 
+  /**
+   * @brief Construct a `TaskInfo`.
+   *
+   * @param task_name The name of the task.
+   */
+  explicit TaskInfo(std::string task_name);
+
+  /**
+   * @brief Construct a `TaskInfo`.
+   *
+   * @param impl A pointer to the implementation class.
+   */
+  explicit TaskInfo(InternalSharedPtr<detail::TaskInfo> impl);
+
+  /**
+   * @return The name of the task.
+   */
   [[nodiscard]] std::string_view name() const;
 
-  [[nodiscard]] std::optional<std::reference_wrapper<const VariantInfo>> find_variant(
-    VariantCode vid) const;
-  [[deprecated("since 24.11: use find_variant() directly")]] [[nodiscard]] bool has_variant(
-    VariantCode vid) const;
-
-  void register_task(GlobalTaskID task_id);
-
-  TaskInfo(const TaskInfo&)            = delete;
-  TaskInfo& operator=(const TaskInfo&) = delete;
-  TaskInfo(TaskInfo&&)                 = delete;
-  TaskInfo& operator=(TaskInfo&&)      = delete;
+  /**
+   * @brief Look up a variant of the task.
+   *
+   * @param vid The variant to look up.
+   *
+   * @return An optional containing the `VariantInfo` for the variant, or `std::nullopt` if the
+   * variant was not found.
+   *
+   * @see VariantInfo
+   */
+  [[nodiscard]] std::optional<VariantInfo> find_variant(VariantCode vid) const;
 
   class AddVariantKey {
     AddVariantKey() = default;
@@ -98,9 +111,20 @@ class TaskInfo {
   };
 
   // These are "private" insofar that the access key is private
-  // NOLINTNEXTLINE(readability-identifier-naming)
-  void add_variant_(AddVariantKey,
-                    Library library,
+
+  /**
+   * @brief Register a new variant to the task description.
+   *
+   * @param library The library to retrieve the default variant options from.
+   * @param vid The variant type to register.
+   * @param body The variant function pointer.
+   * @param entry The pointer to the entry point wrapping `body`, to be passed to Legion.
+   * @param decl_options Any variant options declared in the task declaration, or `nullptr` if
+   * none were found.
+   * @param registration_options Variant options specified at task registration time.
+   */
+  void add_variant_(AddVariantKey,  // NOLINT(readability-identifier-naming)
+                    const Library& library,
                     VariantCode vid,
                     VariantImpl body,
                     Processor::TaskFuncPtr entry,
@@ -108,40 +132,43 @@ class TaskInfo {
                     const std::map<VariantCode, VariantOptions>& registration_options = {});
 
   // These are "private" insofar that the access key is private
-  // NOLINTBEGIN(readability-identifier-naming)
+  /**
+   * @brief Register a new variant to the task description.
+   *
+   * @param library The library to retrieve the default variant options from.
+   * @param vid The variant type to register.
+   * @param body The variant function pointer.
+   * @param entry The pointer to the entry point wrapping `body`, to be passed to Legion.
+   * @param decl_options Any variant options declared in the task declaration, or `nullptr` if
+   * none were found.
+   * @param registration_options Variant options specified at task registration time.
+   */
   template <typename T>
-  void add_variant_(AddVariantKey,
-                    Library library,
+  void add_variant_(AddVariantKey,  // NOLINT(readability-identifier-naming)
+                    const Library& library,
                     VariantCode vid,
                     LegionVariantImpl<T> body,
                     Processor::TaskFuncPtr entry,
                     const VariantOptions* decl_options,
                     const std::map<VariantCode, VariantOptions>& registration_options = {});
-  // NOLINTEND(readability-identifier-naming)
 
-  // TODO(wonchanl): remove once scalar extraction workaround is removed
-  class RuntimeAddVariantKey {
-    RuntimeAddVariantKey() = default;
-
-    friend void legate::detail::register_legate_core_tasks(legate::detail::Library* core_lib);
-  };
-
-  // NOLINTNEXTLINE(readability-identifier-naming)
-  void add_variant_(RuntimeAddVariantKey,
-                    Library core_lib,
-                    VariantCode vid,
-                    const VariantOptions* callsite_options,
-                    Legion::CodeDescriptor&& descr);
-
+  /**
+   * @return A human-readable representation of the Task.
+   */
   [[nodiscard]] std::string to_string() const;
+
+  /**
+   * @return The private implementation pointer.
+   */
+  [[nodiscard]] const SharedPtr<detail::TaskInfo>& impl() const;
 
  private:
   friend std::ostream& operator<<(std::ostream& os, const TaskInfo& info);
 
-  class Impl;
-
-  std::unique_ptr<Impl> impl_;
+  SharedPtr<detail::TaskInfo> impl_{};
 };
+
+/** @} */
 
 }  // namespace legate
 

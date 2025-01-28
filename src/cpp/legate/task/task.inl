@@ -43,18 +43,20 @@ template <typename T>
 /*static*/ void LegateTask<T>::register_variants(
   Library library, LocalTaskID task_id, const std::map<VariantCode, VariantOptions>& all_options)
 {
-  auto task_info = create_task_info_(library, all_options);
-  library.register_task(task_id, std::move(task_info));
+  const auto task_info = create_task_info_(library, all_options);
+
+  library.register_task(task_id, task_info);
 }
 
 template <typename T>
-/*static*/ std::unique_ptr<TaskInfo> LegateTask<T>::create_task_info_(
+/*static*/ TaskInfo LegateTask<T>::create_task_info_(
   const Library& lib, const std::map<VariantCode, VariantOptions>& all_options)
 {
-  auto task_info = std::make_unique<TaskInfo>(task_name_().to_string());
-  detail::VariantHelper<T, detail::CPUVariant>::record(lib, task_info.get(), all_options);
-  detail::VariantHelper<T, detail::OMPVariant>::record(lib, task_info.get(), all_options);
-  detail::VariantHelper<T, detail::GPUVariant>::record(lib, task_info.get(), all_options);
+  auto task_info = TaskInfo{task_name_().to_string()};
+
+  detail::VariantHelper<T, detail::CPUVariant>::record(lib, all_options, &task_info);
+  detail::VariantHelper<T, detail::OMPVariant>::record(lib, all_options, &task_info);
+  detail::VariantHelper<T, detail::GPUVariant>::record(lib, all_options, &task_info);
   return task_info;
 }
 

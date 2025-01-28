@@ -16,6 +16,7 @@
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/resource.h>
 #include <legate/task/task_info.h>
+#include <legate/task/variant_options.h>
 #include <legate/utilities/detail/zstring_view.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
@@ -28,6 +29,7 @@
 namespace legate::detail {
 
 class Runtime;
+class TaskInfo;
 
 class Library {
   class ResourceIdScope {
@@ -89,8 +91,8 @@ class Library {
   [[nodiscard]] std::unique_ptr<Scalar> get_tunable(std::int64_t tunable_id,
                                                     InternalSharedPtr<Type> type) const;
 
-  void register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info);
-  [[nodiscard]] const TaskInfo* find_task(LocalTaskID local_task_id) const;
+  void register_task(LocalTaskID local_task_id, InternalSharedPtr<TaskInfo> task_info);
+  [[nodiscard]] const InternalSharedPtr<TaskInfo>& find_task(LocalTaskID local_task_id) const;
 
   [[nodiscard]] const std::map<VariantCode, VariantOptions>& get_default_variant_options() const;
 
@@ -111,7 +113,7 @@ class Library {
   ResourceIdScope shard_scope_{};
 
   std::unique_ptr<mapping::Mapper> mapper_{};
-  std::unordered_map<LocalTaskID, std::unique_ptr<TaskInfo>> tasks_{};
+  std::unordered_map<LocalTaskID, InternalSharedPtr<TaskInfo>> tasks_{};
   std::map<VariantCode, VariantOptions> default_options_{};
 };
 

@@ -86,6 +86,16 @@ Processor::Kind to_kind(TaskTarget target)
   LEGATE_ABORT("Unhandled TaskTarget ", traits::detail::to_underlying(target));
 }
 
+Processor::Kind to_kind(VariantCode code)
+{
+  switch (code) {
+    case VariantCode::CPU: return Processor::Kind::LOC_PROC;
+    case VariantCode::GPU: return Processor::Kind::TOC_PROC;
+    case VariantCode::OMP: return Processor::Kind::OMP_PROC;
+  }
+  LEGATE_ABORT("Unhandled variant code ", traits::detail::to_underlying(code));
+}
+
 Memory::Kind to_kind(StoreTarget target)
 {
   switch (target) {

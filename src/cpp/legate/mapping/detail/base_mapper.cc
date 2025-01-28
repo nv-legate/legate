@@ -21,7 +21,8 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/detail/shard.h>
 #include <legate/task/detail/returned_exception.h>
-#include <legate/task/detail/task_return.h>
+#include <legate/task/detail/task_info.h>
+#include <legate/task/detail/task_return_layout.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/env.h>

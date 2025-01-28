@@ -15,6 +15,7 @@
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/runtime.h>
+#include <legate/task/detail/task_info.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/type_traits.h>
 
@@ -132,7 +133,7 @@ bool Library::valid_sharding_id(Legion::ShardingID shard_id) const
 
 std::string_view Library::get_task_name(LocalTaskID local_task_id) const
 {
-  return find_task(local_task_id)->name();
+  return find_task(local_task_id)->name().as_string_view();
 }
 
 std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
@@ -151,7 +152,11 @@ std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
   return std::make_unique<Scalar>(std::move(type), buffer, true);
 }
 
-void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info)
+void Library::register_task(
+  LocalTaskID local_task_id,
+  // try_emplace() doesn't unconditionally move, so clang-tidy thinks this is copied.
+  InternalSharedPtr<TaskInfo> task_info  // NOLINT(performance-unnecessary-value-param)
+)
 {
   const auto task_id = [&] {
     try {
@@ -169,7 +174,7 @@ void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo>
     log_legate().debug() << "[" << get_library_name() << "] task "
                          << traits::detail::to_underlying(local_task_id)
                          << " (global id: " << traits::detail::to_underlying(task_id) << "), "
-                         << *task_info;
+                         << legate::TaskInfo{task_info};
   }
 
   const auto [it, inserted] = tasks_.try_emplace(local_task_id, std::move(task_info));
@@ -187,7 +192,7 @@ void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo>
   }
 }
 
-const TaskInfo* Library::find_task(LocalTaskID local_task_id) const
+const InternalSharedPtr<TaskInfo>& Library::find_task(LocalTaskID local_task_id) const
 {
   const auto it = tasks_.find(local_task_id);
 
@@ -195,7 +200,7 @@ const TaskInfo* Library::find_task(LocalTaskID local_task_id) const
     throw TracedException<std::out_of_range>{
       fmt::format("Library {} does not have task {}", get_library_name(), local_task_id)};
   }
-  return it->second.get();
+  return it->second;
 }
 
 }  // namespace legate::detail

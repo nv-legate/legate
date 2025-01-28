@@ -90,9 +90,9 @@ Scalar Library::get_tunable(std::int64_t tunable_id, const Type& type)
   return Scalar{impl()->get_tunable(tunable_id, type.impl())};
 }
 
-void Library::register_task(LocalTaskID local_task_id, std::unique_ptr<TaskInfo> task_info)
+void Library::register_task(LocalTaskID local_task_id, const TaskInfo& task_info)
 {
-  impl()->register_task(local_task_id, std::move(task_info));
+  impl()->register_task(local_task_id, task_info.impl());
 }
 
 const std::map<VariantCode, VariantOptions>& Library::get_default_variant_options() const
@@ -100,9 +100,9 @@ const std::map<VariantCode, VariantOptions>& Library::get_default_variant_option
   return impl()->get_default_variant_options();
 }
 
-const TaskInfo* Library::find_task(LocalTaskID local_task_id) const
+TaskInfo Library::find_task(LocalTaskID local_task_id) const
 {
-  return impl()->find_task(local_task_id);
+  return TaskInfo{impl()->find_task(local_task_id)};
 }
 
 void Library::perform_callback_(Legion::RegistrationWithArgsCallbackFnptr callback,

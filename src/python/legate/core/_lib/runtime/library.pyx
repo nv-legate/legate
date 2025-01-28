@@ -12,7 +12,6 @@
 from libc.stdint cimport int64_t, uintptr_t
 
 from ..data.scalar cimport Scalar
-from ..task.task_info cimport _TaskInfo
 from ..type.type_info cimport Type
 from ..utilities.typedefs cimport _GlobalTaskID, _LocalTaskID
 from ..utilities.unconstructable cimport Unconstructable
@@ -114,10 +113,8 @@ cdef class Library(Unconstructable):
         # do the check now before we potentially do things we can't undo
         task_info.validate_registered_py_variants()
         # point of no return
-        self._handle.register_task(
-            local_task_id,
-            std_unique_ptr[_TaskInfo](task_info.release())
-        )
+        with nogil:
+            self._handle.register_task(local_task_id, task_info._handle)
 
         cdef _GlobalTaskID global_task_id = self.get_task_id(local_task_id)
 

@@ -31,7 +31,6 @@
 namespace legate {
 
 class Scalar;
-class VariantInfo;
 
 }  // namespace legate
 

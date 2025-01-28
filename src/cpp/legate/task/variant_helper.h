@@ -100,8 +100,8 @@ template <typename T, template <typename...> typename SELECTOR, bool VALID = SEL
 class VariantHelper {
  public:
   static void record(const legate::Library& /*lib*/,
-                     TaskInfo* /*task_info*/,
-                     const std::map<VariantCode, VariantOptions>& /*all_options*/)
+                     const std::map<VariantCode, VariantOptions>& /*all_options*/,
+                     legate::TaskInfo* /*task_info*/)
   {
   }
 };
@@ -110,8 +110,8 @@ template <typename T, template <typename...> typename SELECTOR>
 class VariantHelper<T, SELECTOR, true> {
  public:
   static void record(const legate::Library& lib,
-                     TaskInfo* task_info,
-                     const std::map<VariantCode, VariantOptions>& all_options)
+                     const std::map<VariantCode, VariantOptions>& all_options,
+                     legate::TaskInfo* task_info)
   {
     // Construct the code descriptor for this task so that the library
     // can register it later when it is ready
@@ -122,8 +122,13 @@ class VariantHelper<T, SELECTOR, true> {
     if constexpr (std::is_convertible_v<decltype(variant_impl), VariantImpl>) {
       constexpr auto entry = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
 
-      task_info->add_variant_(
-        TaskInfo::AddVariantKey{}, lib, variant_kind, variant_impl, entry, options, all_options);
+      task_info->add_variant_(legate::TaskInfo::AddVariantKey{},
+                              lib,
+                              variant_kind,
+                              variant_impl,
+                              entry,
+                              options,
+                              all_options);
     } else {
       using RET            = std::invoke_result_t<decltype(variant_impl),
                                                   const Legion::Task*,
@@ -132,8 +137,13 @@ class VariantHelper<T, SELECTOR, true> {
                                                   Legion::Runtime*>;
       constexpr auto entry = T::BASE::template task_wrapper_<RET, variant_impl, variant_kind>;
 
-      task_info->add_variant_(
-        TaskInfo::AddVariantKey{}, lib, variant_kind, variant_impl, entry, options, all_options);
+      task_info->add_variant_(legate::TaskInfo::AddVariantKey{},
+                              lib,
+                              variant_kind,
+                              variant_impl,
+                              entry,
+                              options,
+                              all_options);
     }
   }
 };

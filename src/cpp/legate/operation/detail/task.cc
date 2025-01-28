@@ -25,7 +25,9 @@
 #include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/inline_task_body.h>
+#include <legate/task/detail/task_info.h>
 #include <legate/task/detail/task_return_layout.h>
+#include <legate/task/detail/variant_info.h>
 #include <legate/task/task_info.h>
 #include <legate/type/detail/type_info.h>
 #include <legate/utilities/assert.h>

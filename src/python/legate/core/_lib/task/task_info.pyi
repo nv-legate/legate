@@ -14,7 +14,6 @@ from ..utilities.typedefs import LocalTaskID, VariantCode
 from ..utilities.unconstructable import Unconstructable
 
 class TaskInfo(Unconstructable):
-    def __dealloc__(self) -> None: ...
     @classmethod
     def from_variants(
         cls,
@@ -22,8 +21,6 @@ class TaskInfo(Unconstructable):
         name: str,
         variants: list[tuple[VariantCode, VariantFunction]],
     ) -> TaskInfo: ...
-    @property
-    def valid(self) -> bool: ...
     @property
     def name(self) -> str: ...
     def has_variant(self, variant_id: VariantCode) -> bool: ...

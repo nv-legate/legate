@@ -20,6 +20,8 @@
 #include <legate/operation/detail/operation.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/constraint.h>
+#include <legate/task/detail/task_info.h>
+#include <legate/task/detail/variant_info.h>
 #include <legate/task/task_info.h>
 #include <legate/type/detail/type_info.h>
 #include <legate/type/type_info.h>
@@ -148,8 +150,14 @@ format_context::iterator formatter<legate::TaskInfo>::format(const legate::TaskI
   return formatter<std::string>::format(info.to_string(), ctx);
 }
 
-format_context::iterator formatter<legate::VariantInfo>::format(const legate::VariantInfo& info,
-                                                                format_context& ctx) const
+format_context::iterator formatter<legate::detail::TaskInfo>::format(
+  const legate::detail::TaskInfo& info, format_context& ctx) const
+{
+  return formatter<std::string>::format(info.to_string(), ctx);
+}
+
+format_context::iterator formatter<legate::detail::VariantInfo>::format(
+  const legate::detail::VariantInfo& info, format_context& ctx) const
 {
   return formatter<std::string>::format(info.to_string(), ctx);
 }

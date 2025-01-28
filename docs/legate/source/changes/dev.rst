@@ -32,18 +32,21 @@ C++
 .. rubric:: Tasks
 
 - Remove ``legate::VariantOptions::return_size``.
+- Add ``legate::TaskInfo``. This class has technically always existed, but was
+  undocumented.
+- Add ``legate::VariantInfo``. This class has technically always existed, but was
+  undocumented.
 
 .. rubric:: Types
 
 .. rubric:: Runtime
 
-- Deprecate ``legate::start(argc, argv)``. Users should use the argument-less version
-  ``legate::start()`` instead. The values of ``argc`` and ``argv`` were always ignored, so
-  this change has no runtime effect.
-- Add exception types ``legate::ConfigurationError`` and
-  ``legate::AutoConfigurationError`` to signal Legate configuration failures.
 - Add ``legate::Runtime::start_profiling_range`` and
   ``legate::Runtime::stop_profiling_range`` to create Legion profile ranges.
+- Change ``legate::Library::register_task()``. It now takes a ``const legate::TaskInfo &``
+  instead of a ``std::unique_ptr<legate::TaskInfo>``
+- Change ``legate::Library::find_task()``. It now returns a ``legate::TaskInfo`` instead
+  of a ``const legate::TaskInfo *``.
 
 .. rubric:: Utilities
 

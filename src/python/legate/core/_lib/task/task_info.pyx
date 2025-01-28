@@ -13,8 +13,12 @@ from libc.stdio cimport fflush as std_fflush, fprintf as std_fprintf, stderr
 from libc.stdlib cimport abort as std_abort
 from libcpp.string cimport string as std_string
 from libcpp.unordered_map cimport unordered_map as std_unordered_map
+from libcpp.utility cimport move as std_move
 
-from ..._ext.cython_libcpp.string_view cimport str_from_string_view
+from ..._ext.cython_libcpp.string_view cimport (
+    str_from_string_view,
+    string_view as std_string_view
+)
 from ..runtime.library cimport Library, _Library
 from ..runtime.runtime cimport get_legate_runtime
 from ..utilities.typedefs cimport TaskFuncPtr, VariantCode, _GlobalTaskID
@@ -150,7 +154,7 @@ cdef extern from *:
       legate::Processor::TaskFuncPtr py_entry)
     {
       handle->add_variant_(
-        TaskInfo::AddVariantKey{},
+        legate::TaskInfo::AddVariantKey{},
         *core_lib,
         variant_kind,
         cy_entry,
@@ -171,30 +175,13 @@ cdef extern from *:
         ) nogil
 
 cdef class TaskInfo(Unconstructable):
-    cdef void _assert_valid(self):
-        if not self.valid:
-            raise RuntimeError("TaskInfo object is in an invalid state")
-
     @staticmethod
-    cdef TaskInfo from_handle(
-        _TaskInfo* p_handle, _LocalTaskID local_task_id
-    ):
+    cdef TaskInfo from_handle(_TaskInfo handle, _LocalTaskID local_task_id):
         cdef TaskInfo result = TaskInfo.__new__(TaskInfo)
-        result._handle = p_handle
+        result._handle = std_move(handle)
         result._local_id = local_task_id
         result._registered_variants = {}
         return result
-
-    cdef _TaskInfo *release(self) except NULL:
-        if not self.valid:
-            raise RuntimeError(
-                "Cannot release the internal TaskInfo pointer because it is "
-                "NULL"
-            )
-
-        cdef _TaskInfo *ptr = self._handle
-        self._handle = NULL
-        return ptr
 
     cdef void validate_registered_py_variants(self):
         if not self._registered_variants:
@@ -210,15 +197,9 @@ cdef class TaskInfo(Unconstructable):
             f"Already registered task (local id: {self.get_local_id()})"
         _gid_to_variant_callbacks[global_task_id] = self._registered_variants
         self._registered_variants = {}
-        return
 
     cdef _LocalTaskID get_local_id(self):
         return self._local_id
-
-    def __dealloc__(self) -> None:
-        if self.valid:
-            del self._handle
-        return
 
     def __repr__(self) -> str:
         r"""
@@ -271,33 +252,16 @@ cdef class TaskInfo(Unconstructable):
                 " Variants must not be empty."
             )
 
-        cdef _TaskInfo *tptr = new _TaskInfo(name.encode())
         cdef TaskInfo task_info
-        try:
-            task_info = TaskInfo.from_handle(tptr, local_task_id)
-        except:  # noqa E722
-            del tptr  # strong exception guarantee
-            raise
+
+        task_info = TaskInfo.from_handle(
+            _TaskInfo(name.encode()), local_task_id
+        )
 
         cdef VariantCode variant_kind
         for variant_kind, variant_fn in variants:
             task_info.add_variant(variant_kind, variant_fn)
         return task_info
-
-    @property
-    def valid(self) -> bool:
-        r"""
-        Get whether this `TaskInfo` object is still valid.
-
-        When a `TaskInfo` object is registered with a `Library`, the task info
-        object is "moved" into the library, and relinquishes its internal
-        handle to the `Library`, thereby rendering it "invalid". But Python has
-        no move semantics, so this validity must be manually queried.
-
-        :returns: `True` if the object is valid, `False` otherwise.
-        :rtype: bool
-        """
-        return self._handle != NULL
 
     @property
     def name(self) -> str:
@@ -309,8 +273,11 @@ cdef class TaskInfo(Unconstructable):
 
         :raises RuntimeError: If the task info object is in an invalid state.
         """
-        self._assert_valid()
-        return str_from_string_view(self._handle.name())
+        cdef std_string_view sv
+
+        with nogil:
+            sv = self._handle.name()
+        return str_from_string_view(sv)
 
     cpdef bool has_variant(self, VariantCode variant_id):
         r"""
@@ -331,8 +298,6 @@ cdef class TaskInfo(Unconstructable):
         RuntimeError
             If the task info object is in an invalid state.
         """
-        self._assert_valid()
-
         cdef bool ret
 
         with nogil:
@@ -362,7 +327,6 @@ cdef class TaskInfo(Unconstructable):
             If the task info object has already registered a variant for
             `variant_kind`.
         """
-        self._assert_valid()
         if not callable(fn):
             raise TypeError(
                 f"Variant function ({fn}) for variant kind {variant_kind} is "
@@ -392,7 +356,7 @@ cdef class TaskInfo(Unconstructable):
 
         with nogil:
             cytaskinfo_add_variant(
-                self._handle,
+                &self._handle,
                 &core_lib._handle,
                 variant_kind,
                 _py_variant,
@@ -400,4 +364,3 @@ cdef class TaskInfo(Unconstructable):
             )
         # do this last to preserve strong exception guarantee
         self._registered_variants[variant_kind] = fn
-        return

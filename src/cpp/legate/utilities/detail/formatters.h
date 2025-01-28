@@ -30,7 +30,6 @@ enum class ImageComputationHint : std::uint8_t;
 
 class Type;
 class TaskInfo;
-class VariantInfo;
 
 }  // namespace legate
 
@@ -43,6 +42,8 @@ class Constraint;
 class Variable;
 class LogicalRegionField;
 class Storage;
+class VariantInfo;
+class TaskInfo;
 
 template <typename CharT, typename TraitsT>
 class BasicZStringView;
@@ -158,8 +159,14 @@ struct formatter<legate::TaskInfo> : formatter<std::string> {
 };
 
 template <>
-struct formatter<legate::VariantInfo> : formatter<std::string> {
-  format_context::iterator format(const legate::VariantInfo& info, format_context& ctx) const;
+struct formatter<legate::detail::TaskInfo> : formatter<std::string> {
+  format_context::iterator format(const legate::detail::TaskInfo& info, format_context& ctx) const;
+};
+
+template <>
+struct formatter<legate::detail::VariantInfo> : formatter<std::string> {
+  format_context::iterator format(const legate::detail::VariantInfo& info,
+                                  format_context& ctx) const;
 };
 
 template <>
