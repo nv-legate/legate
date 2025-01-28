@@ -98,7 +98,7 @@ jobs:
       - id: set-matrix
         run: |
           MATRIX_JSON='{"include": ['
-          RUNNERS=('linux-amd64-gpu-v100-latest-1:gpu:linux' 'linux-amd64-2gpu:gpu:linux' 'linux-amd64-cpu8:cpu:linux' 'macos-latest:cpu:mac' 'linux-arm64-cpu16:cpu:linux-aarch64' 'linux-aarch64-2gpu:gpu:linux-aarch64')
+          RUNNERS=('linux-amd64-gpu-l4-latest-1:gpu:linux' 'linux-amd64-2gpu:gpu:linux' 'linux-amd64-cpu8:cpu:linux' 'macos-latest:cpu:mac' 'linux-arm64-cpu16:cpu:linux-aarch64' 'linux-aarch64-2gpu:gpu:linux-aarch64')
           TEST_CONFIGS=('Python Unit Tests:python' 'C++ Unit Tests:cpp')
 
           for RUNNER in "${RUNNERS[@]}"; do

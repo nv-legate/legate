@@ -102,7 +102,7 @@ jobs:
     name: Upload Legate Profiler
     strategy:
       fail-fast: false
-    runs-on: linux-amd64-gpu-v100-earliest-1
+    runs-on: linux-amd64-gpu-l4-latest-1
     defaults:
       run:
         shell: bash --noprofile --norc -xeuo pipefail {0}

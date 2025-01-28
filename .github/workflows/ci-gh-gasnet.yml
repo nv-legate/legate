@@ -12,7 +12,7 @@ jobs:
     name: Build Gasnet wrapper
     strategy:
       fail-fast: false
-    runs-on: linux-amd64-gpu-v100-earliest-1
+    runs-on: linux-amd64-gpu-l4-latest-1
     container:
       options: -u root
       image: condaforge/miniforge3:latest
