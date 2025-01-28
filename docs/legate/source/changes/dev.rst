@@ -15,8 +15,13 @@ Changes: Latest Development Version
 
 .. rubric:: General
 
-- Add an environment variable ``LEGATE_MAX_EXCEPTION_SIZE`` that determines the maximum number of
-  bytes for an exception that can be raised by a task
+- Add an environment variable ``LEGATE_MAX_EXCEPTION_SIZE`` that determines the maximum
+  number of bytes for an exception that can be raised by a task.
+- Improve specification of logging levels. These may now be specified in a more
+  human-readable manner. Instead of ``--logging some_logger=2``, the user may now pass
+  ``--logging some_logger=info``. To see supported values for this feature, see the
+  ``--help`` output of the legate driver, or by running with ``LEGATE_CONFIG=--help``. To
+  ease adoption, the old numeric logging values continue to be supported.
 
 C++
 ---

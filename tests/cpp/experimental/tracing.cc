@@ -10,9 +10,8 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate.h>
-
 #include <legate/experimental/trace.h>
+#include <legate/utilities/detail/env.h>
 
 #include <gtest/gtest.h>
 

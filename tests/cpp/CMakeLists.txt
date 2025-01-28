@@ -281,7 +281,8 @@ set(non_reentrant_with_runtime_SRC
 set(non_reentrant_wo_runtime_SRC
     non_reentrant/wo_runtime/exception/base.cc
     non_reentrant/wo_runtime/exception/traced_exception.cc
-    non_reentrant/wo_runtime/exception/terminate_handler.cc)
+    non_reentrant/wo_runtime/exception/terminate_handler.cc
+    non_reentrant/wo_runtime/argument_parsing/logging.cc)
 
 legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
                                                       ${with_runtime_SRC}

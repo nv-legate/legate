@@ -15,6 +15,8 @@
 #include <legate_defines.h>
 
 #include <legate/mapping/detail/base_mapper.h>
+#include <legate/runtime/detail/argument_parsing/logging.h>
+#include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/runtime/detail/config.h>
 #include <legate/runtime/runtime.h>
 #include <legate/utilities/detail/env.h>
@@ -26,8 +28,11 @@
 #include <legion.h>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
+#include <algorithm>
 #include <argparse/argparse.hpp>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -114,6 +119,7 @@ template <typename T>
 class Arg {
  public:
   Arg() = delete;
+  explicit Arg(std::string_view flag);
   explicit Arg(std::string_view flag, T init);
 
   using value_type = T;
@@ -123,53 +129,16 @@ class Arg {
 };
 
 template <typename T>
+Arg<T>::Arg(std::string_view f) : flag{f}
+{
+}
+
+template <typename T>
 Arg<T>::Arg(std::string_view f, T init) : flag{f}, value{std::move(init)}
 {
 }
 
 // ==========================================================================================
-
-[[nodiscard]] std::vector<std::string> split_in_args(std::string_view command)
-{
-  std::vector<std::string> qargs;
-
-  // Needed to satisfy argparse, which expects an argv-like interface where argv[0] is the
-  // program name.
-  qargs.emplace_back("LEGATE");
-  while (!command.empty()) {
-    std::size_t arglen;
-    auto quoted = false;
-
-    switch (const auto c = command.front()) {
-      case '\"': [[fallthrough]];
-      case '\'':
-        command.remove_prefix(1);
-        quoted = true;
-        arglen = command.find(c);
-        if (arglen == std::string_view::npos) {
-          throw TracedException<std::invalid_argument>{
-            fmt::format("Unterminated quote: '{}'", command)};
-        }
-        break;
-      case ' ': {
-        command.remove_prefix(1);
-        continue;
-      }
-      default:  // legate-lint: no-switch-default
-        arglen = command.find(' ');
-        if (arglen == std::string_view::npos) {
-          arglen = command.size();
-        }
-        break;
-    }
-
-    if (auto sub = command.substr(0, arglen); !sub.empty()) {
-      qargs.emplace_back(sub);
-    }
-    command.remove_prefix(arglen + quoted);
-  }
-  return qargs;
-}
 
 [[nodiscard]] std::filesystem::path normalize_log_dir(std::string log_dir)
 {
@@ -609,7 +578,7 @@ void set_legion_default_args(std::string log_dir,
 
   LEGATE_ASSERT(Config::parsed());
   if (Config::log_mapping_decisions) {
-    add_logger(fmt::format("{}=2", mapping::detail::BaseMapper::LOGGER_NAME));
+    add_logger(fmt::format("{}=info", mapping::detail::BaseMapper::LOGGER_NAME));
   }
 
   if (spy) {
@@ -620,7 +589,7 @@ void set_legion_default_args(std::string log_dir,
       std::cout << "Logging output is being redirected to a file in --logdir" << std::endl;
     }
     args_ss << "-lg:spy ";
-    add_logger("legion_spy=2");
+    add_logger("legion_spy=info");
     log_to_file = true;
   }
 
@@ -628,7 +597,7 @@ void set_legion_default_args(std::string log_dir,
   // actually print anything to the logs, so don't consider that a conflict.
   if (profile) {
     args_ss << "-lg:prof 1 -lg:prof_logfile " << log_path / "legate_%.prof" << " ";
-    add_logger("legion_prof=2");
+    add_logger("legion_prof=info");
   }
 
   if (freeze_on_error) {
@@ -640,7 +609,7 @@ void set_legion_default_args(std::string log_dir,
   }
 
   if (!log_levels.empty()) {
-    args_ss << "-level " << log_levels << " ";
+    args_ss << "-level " << convert_log_levels(log_levels) << " ";
   }
 
   if (log_to_file) {
@@ -667,21 +636,24 @@ template <typename T>
 void add_argument_base(argparse::ArgumentParser* parser,
                        std::string_view flag,
                        std::string help,
-                       const T& default_val,
-                       T& val)
+                       const T* default_val,
+                       T* val)
 {
+  using RawT = std::decay_t<T>;
   auto& parg = parser->add_argument(flag);
 
   parg.help(std::move(help));
-  parg.default_value(default_val);
-  parg.store_into(val);
-  if constexpr (std::is_same_v<T, bool>) {
+  if (default_val) {
+    parg.default_value(*default_val);
+  }
+  parg.store_into(*val);
+  if constexpr (std::is_same_v<RawT, bool>) {
     parg.metavar("BOOL");
   } else {
     parg.nargs(1);
-    if constexpr (std::is_integral_v<T>) {
+    if constexpr (std::is_integral_v<RawT>) {
       parg.metavar("INT");
-    } else if constexpr (std::is_same_v<T, std::string>) {
+    } else if constexpr (std::is_same_v<RawT, std::string>) {
       parg.metavar("STRING");
     }
   }
@@ -693,9 +665,10 @@ template <typename T>
                                              std::string help,
                                              ScaledVar<T> val)
 {
-  auto arg = Arg<ScaledVar<T>>{flag, std::move(val)};
+  auto arg                = Arg<ScaledVar<T>>{flag, std::move(val)};
+  const auto& default_val = arg.value.default_value();
 
-  add_argument_base(parser, flag, std::move(help), arg.value.default_value(), arg.value.ref());
+  add_argument_base(parser, flag, std::move(help), &default_val, &arg.value.ref());
   return arg;
 }
 
@@ -707,7 +680,18 @@ template <typename T>
 {
   auto arg = Arg<T>{flag, std::move(val)};
 
-  add_argument_base(parser, flag, std::move(help), arg.value, arg.value);
+  add_argument_base(parser, flag, std::move(help), &arg.value, &arg.value);
+  return arg;
+}
+
+template <typename T>
+[[nodiscard]] Arg<T> add_argument(argparse::ArgumentParser* parser,
+                                  std::string_view flag,
+                                  std::string help)
+{
+  auto arg = Arg<T>{flag};
+
+  add_argument_base(parser, flag, std::move(help), static_cast<const T*>(nullptr), &arg.value);
   return arg;
 }
 
@@ -782,15 +766,9 @@ void handle_legate_args()
     add_argument(&parser, "--profile", "Whether to collect profiling logs", false);
   const auto spy =
     add_argument(&parser, "--spy", "Whether to collect dataflow & task graph logs", false);
-  auto log_levels = add_argument(
-    &parser,
-    "--logging",
-    "Comma separated list of loggers to enable and their level, e.g. legate=3,foo=0,bar=5",
-    std::string{});
-  auto log_dir           = add_argument(&parser,
-                              "--logdir",
-                              "Directory to emit logfiles to, defaults to current directory",
-                              std::string{});
+  auto log_levels = add_argument<std::string>(&parser, "--logging", logging_help_str());
+  auto log_dir    = add_argument<std::string>(
+    &parser, "--logdir", "Directory to emit logfiles to, defaults to current directory");
   const auto log_to_file = add_argument(
     &parser, "--log-to-file", "Redirect logging output to a file inside --logdir", false);
   const auto freeze_on_error = add_argument(
@@ -799,8 +777,12 @@ void handle_legate_args()
     "If the program crashes, freeze execution right before exit so a debugger can be attached",
     false);
 
-  auto legate_config_env = LEGATE_CONFIG.get();
-  auto&& args            = split_in_args(legate_config_env.value_or(""));
+  const auto legate_config_env = LEGATE_CONFIG.get(/* default_value */ "");
+  auto&& args                  = string_split(legate_config_env);
+
+  // Needed to satisfy argparse, which expects an argv-like interface where argv[0] is the
+  // program name.
+  args.insert(args.begin(), "LEGATE");
 
   try {
     parser.parse_args(args);

@@ -372,7 +372,7 @@ logging.add_argument(
     default=None,
     dest="user_logging_levels",
     help="Comma separated list of loggers to enable and their level, e.g. "
-    "legate=3,foo=0,bar=5",
+    "legate=info,foo=all,bar=error",
 )
 
 

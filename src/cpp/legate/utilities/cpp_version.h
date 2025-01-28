@@ -42,3 +42,6 @@
 #if defined(__cplusplus) && LEGATE_CPP_VERSION < LEGATE_CPP_MIN_VERSION
 #error "Legate requires C++" #LEGATE_CPP_MIN_VERSION
 #endif
+
+#define LEGATE_CPP_VERSION_TODO(version_lt, message) \
+  static_assert(LEGATE_CPP_MIN_VERSION < (version_lt), message)

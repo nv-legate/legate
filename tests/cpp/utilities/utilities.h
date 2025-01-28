@@ -14,8 +14,6 @@
 
 #include <legate.h>
 
-#include <legate/utilities/detail/env.h>
-
 #include <gtest/gtest.h>
 
 class DefaultFixture : public ::testing::Test {
@@ -39,13 +37,12 @@ class RegisterOnceFixture : public DefaultFixture {
   void SetUp() override
   {
     DefaultFixture::SetUp();
-    auto runtime = legate::Runtime::get_runtime();
-    auto created = false;
-    auto library = runtime->find_or_create_library(
+    auto* runtime = legate::Runtime::get_runtime();
+    auto created  = false;
+    auto library  = runtime->find_or_create_library(
       Config::LIBRARY_NAME, legate::ResourceConfig{}, nullptr, {}, &created);
-    if (!created) {
-      return;
+    if (created) {
+      Config::registration_callback(library);
     }
-    Config::registration_callback(library);
   }
 };
