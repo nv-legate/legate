@@ -1,0 +1,211 @@
+#!/usr/bin/env bash
+
+. pretty_printing.bash
+
+# Shamelessly stolen from https://github.com/rapidsai/gha-tools/blob/main/tools/rapids-conda-retry
+
+# legate-conda-retry
+#
+# wrapper for conda that retries the command after a CondaHTTPError,
+# ChecksumMismatchError, or JSONDecodeError (ideally, any conda error that
+# is normally resolved by retrying)
+#
+# This must be set in order for the script to recognize failing exit codes when
+# output is piped to tee
+#
+# Example usage:
+# $ legate-conda-retry install cudatoolkit=11.0 rapids=0.16
+#
+# Configurable options are set using the following env vars:
+#
+# LEGATE_CONDA_EXE             - override the conda executable
+#                                Default is "conda"
+#
+# LEGATE_CONDA_RETRY_MAX       - set to a positive integer to set the max number of retry
+#                                attempts (attempts after the initial try).
+#                                Default is 3 retries
+#
+# LEGATE_CONDA_RETRY_SLEEP     - set to a positive integer to set the duration, in
+#                                seconds, to wait between retries.
+#                                Default is a 10 second sleep
+#
+set -ou pipefail
+export LEGATE_SCRIPT_NAME="legate-conda-retry"
+
+# Function to run conda and check output for specific retryable errors
+# input variables:
+#    conda_cmd: the command used for running conda, which accepts the args
+#              passed to this script
+#    outfile: file to tee output to for checking, likely a temp file
+# output variables:
+#    exitcode: the exit code from running ${conda_cmd} ${args}
+#    need_to_retry: 1 if the command should be retried, 0 if it should not be
+legate_run_conda() {
+  # shellcheck disable=SC2086
+  # LEGATE_OTEL_WRAPPER is optionally passed in as an env var. It is
+  # used to instrument conda-build or mambabuild for finer-grained spans.
+  local outfile
+  outfile=$(mktemp)
+
+  # shellcheck disable=SC2086
+  ${LEGATE_OTEL_WRAPPER:-} ${conda_cmd} ${args} 2>&1 | tee "${outfile}"
+  local exitcode=$?
+  local need_to_retry=0
+  local need_to_clean=0
+  local retrying_msg=""
+
+  if (( exitcode != 0 )); then
+    # Show exit code
+    legate-echo-stderr "conda returned exit code: ${exitcode}"
+
+    if grep -q ChecksumMismatchError: "${outfile}"; then
+      retrying_msg="Retrying, found 'ChecksumMismatchError:' in output..."
+      need_to_retry=1
+    elif grep -q ChunkedEncodingError: "${outfile}"; then
+      retrying_msg="Retrying, found 'ChunkedEncodingError:' in output..."
+      need_to_retry=1
+    elif grep -q CondaHTTPError: "${outfile}"; then
+      retrying_msg="Retrying, found 'CondaHTTPError:' in output..."
+      need_to_retry=1
+    elif grep -q CondaMultiError: "${outfile}"; then
+      retrying_msg="Retrying after cleaning tarball cache, found 'CondaMultiError:' in output..."
+      need_to_retry=1
+      need_to_clean=1
+    elif grep -q CondaSSLError: "${outfile}"; then
+      retrying_msg="Retrying, found 'CondaSSLError:' in output..."
+      need_to_retry=1
+    elif grep -q "Connection broken:" "${outfile}"; then
+      retrying_msg="Retrying, found 'Connection broken:' in output..."
+      need_to_retry=1
+    elif grep -q ConnectionError: "${outfile}"; then
+      retrying_msg="Retrying, found 'ConnectionError:' in output..."
+      need_to_retry=1
+    elif grep -q DependencyNeedsBuildingError: "${outfile}"; then
+      retrying_msg="Retrying, found 'DependencyNeedsBuildingError:' in output..."
+      need_to_retry=1
+    elif grep -q EOFError: "${outfile}"; then
+      retrying_msg="Retrying, found 'EOFError:' in output..."
+      need_to_retry=1
+    elif grep -q JSONDecodeError: "${outfile}"; then
+      retrying_msg="Retrying, found 'JSONDecodeError:' in output..."
+      need_to_retry=1
+    elif grep -q "Multi-download failed" "${outfile}"; then
+      retrying_msg="Retrying, found 'Multi-download failed' in output..."
+      need_to_retry=1
+    elif grep -q "Response ended prematurely" "${outfile}"; then
+      retrying_msg="Retrying, found 'Response ended prematurely' in output..."
+      need_to_retry=1
+    elif grep -q "Timeout was reached" "${outfile}"; then
+      retrying_msg="Retrying, found 'Timeout was reached' in output..."
+      need_to_retry=1
+    elif grep -q "Unexpected error .* on netlink descriptor" "${outfile}"; then
+      retrying_msg="Retrying, found 'Unexpected error .* on netlink descriptor' in output..."
+      need_to_retry=1
+    elif [[ ${exitcode} -eq 139 ]]; then
+      retrying_msg="Retrying, command resulted in a segfault. This may be an intermittent failure..."
+      need_to_retry=1
+      need_to_clean=1
+    else
+      legate-echo-stderr "Exiting, no retryable ${LEGATE_CONDA_EXE} errors detected: \
+'ChecksumMismatchError:', \
+'ChunkedEncodingError:', \
+'CondaHTTPError:', \
+'CondaMultiError:', \
+'CondaSSLError:', \
+'Connection broken:', \
+'ConnectionError:', \
+'DependencyNeedsBuildingError:', \
+'EOFError:', \
+'JSONDecodeError:', \
+'Multi-download failed', \
+'Response ended prematurely', \
+'Timeout was reached', \
+segfault exit code 139"
+    fi
+
+    if (( need_to_retry == 1 )) && \
+         (( retries >= max_retries )); then
+      # Catch instance where we run out of retries
+      legate-echo-stderr "Exiting, reached max retries..."
+    else
+      # Give reason for retry
+      legate-echo-stderr "${retrying_msg}"
+      if (( need_to_clean == 1 )); then
+        legate-echo-stderr "Cleaning tarball cache before retrying..."
+        ${conda_cmd} clean --tarballs -y
+      fi
+    fi
+  fi
+  rm -f "${outfile}"
+}
+
+legate_conda_retry_fn() {
+  local condaretry_help="
+legate-conda-retry options:
+
+   --condaretry_max_retries=n      Retry the conda command at most n times (default is 3)
+   --condaretry_sleep_interval=n   Sleep n seconds between retries (default is 5)
+
+ALSO legate-conda-retry options can be set using the following env vars:
+
+    LEGATE_CONDA_RETRY_MAX       - set to a positive integer to set the max number of retry
+                                   attempts (attempts after the initial try).
+                                   Default is 3 retries
+
+    LEGATE_CONDA_RETRY_SLEEP     - set to a positive integer to set the duration, in
+                                   seconds, to wait between retries.
+                                   Default is a 10 second sleep
+==========
+"
+  local max_retries=${LEGATE_CONDA_RETRY_MAX:=3}
+  local sleep_interval=${LEGATE_CONDA_RETRY_SLEEP:=10}
+  local exitcode=0
+  local need_to_retry=0
+  local retries=0
+
+  # Temporarily set this to something else (eg. a script called "testConda" that
+  # prints "CondaHTTPError:" and exits with 1) for testing this script.
+  #conda_cmd=./testConda
+  local conda_cmd="${LEGATE_CONDA_EXE:=conda}"
+
+
+  # Process and remove args recognized only by this script, save others for conda
+  # Process help separately
+  local args=""
+
+  for arg in "$@"; do
+    local opt=${arg%%=*}
+    local val=${arg##*=}
+    if [[ ${opt} == "--help" ]] || [[ ${opt} == "-h" ]]; then
+      echo "${condaretry_help}"
+      ${conda_cmd} --help
+      exit $?
+    elif [[ ${opt} == "--condaretry_max_retries" ]]; then
+      max_retries=${val}
+    elif [[ ${opt} == "--condaretry_sleep_interval" ]]; then
+      sleep_interval=${val}
+    else
+      args="${args} ${arg}"
+    fi
+  done
+
+  # shellcheck disable=SC2086
+  legate_run_conda ${args}
+
+  # Retry loop, only if needed
+  while (( need_to_retry == 1 )) && \
+          (( retries < max_retries )); do
+
+    retries=$(( retries + 1 ))
+    legate-echo-stderr "Waiting, retry ${retries} of ${max_retries} -> sleeping for ${sleep_interval} seconds..."
+    sleep "${sleep_interval}"
+    legate-echo-stderr "Starting, retry ${retries} of ${max_retries} -> sleep done..."
+
+    # shellcheck disable=SC2086
+    legate_run_conda ${args}
+  done
+
+  return "${exitcode}"
+}
+
+run_command "${LEGATE_CONDA_EXE:-conda} '$*'" legate_conda_retry_fn "$@"

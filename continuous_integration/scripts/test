@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+export LEGATE_SCRIPT_NAME="test"
 
 run_test_or_analysis() {
-    set -x
+    # rename
+    # shellcheck disable=SC2154
+    export LEGATE_DIR="${REPO_DIR}"
 
-    . legate-conda-utils
+    export PATH="${PATH}:${LEGATE_DIR}/continuous_integration/scripts/tools"
+
+    . "$(dirname "$0")/tools/legate-conda-utils"
     . setup-utils;
 
     set_base_defs;
@@ -17,12 +24,6 @@ run_test_or_analysis() {
     activate_conda_env;
 
     conda_info;
-
-    set -xeuo pipefail
-
-    # rename
-    # shellcheck disable=SC2154
-    export LEGATE_DIR="${REPO_DIR}"
 
     # HACK: this should be done much better, and in a much more transparent manner... but
     # alas, we no longer have any control of the setup phases in github ci, so we must do
@@ -108,11 +109,18 @@ run_test_or_analysis() {
 
             set +u
             # shellcheck disable=SC2154
-            mamba install -y -n "${CONDA_ENV}" -c conda-forge psutil pytest pytest-mock ipython jupyter_client "${ucx_libs[@]}"
+            legate-mamba-retry install \
+                               -y \
+                               -n "${CONDA_ENV}" \
+                               -c conda-forge \
+                               psutil pytest pytest-mock ipython jupyter_client "${ucx_libs[@]}"
 
             hdf5_libs=(zarr fsspec kerchunk)
             # shellcheck disable=SC2154
-            mamba install -y -n "${CONDA_ENV}" "${hdf5_libs[@]}"
+            legate-mamba-retry install \
+                               -y \
+                               -n "${CONDA_ENV}" \
+                               "${hdf5_libs[@]}"
             # Conda packages for h5py are very outdated only going up to 3.11
             python3 -m pip install h5py
             set -u
@@ -128,10 +136,17 @@ run_test_or_analysis() {
             ;;
         "cpp")
             echo "Running C++ unit tests..."
-            mamba install -y -n "${DEFAULT_CONDA_ENV:-legate}" -c conda-forge psutil
+            legate-mamba-retry install \
+                               -y \
+                               -n "${DEFAULT_CONDA_ENV:-legate}" \
+                               -c conda-forge \
+                               psutil
 
             set +u
-            mamba install -y -n "${CONDA_ENV}" ucx openmpi openssh
+            legate-mamba-retry install \
+                               -y \
+                               -n "${CONDA_ENV}" \
+                               ucx openmpi openssh
             set -u
 
             cd "${LEGATE_DIR}"

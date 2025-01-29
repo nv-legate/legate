@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# Shamelessly stolen from https://github.com/rapidsai/gha-tools/blob/main/tools/rapids-mamba-retry
+
+# legate-mamba-retry
+#
+# Same as legate-conda-retry, but sets LEGATE_CONDA_EXE="mamba" to combine both scripts
+#
+# Configurable options are set using the following env vars:
+#
+# LEGATE_MAMBA_BIN             - override the mamba binary
+#                                Default is "mamba"
+#
+# LEGATE_MAMBA_RETRY_MAX       - set to a positive integer to set the max number of retry
+#                                attempts (attempts after the initial try).
+#                                Default is 3 retries
+#
+# LEGATE_MAMBA_RETRY_SLEEP     - set to a positive integer to set the duration, in
+#                                seconds, to wait between retries.
+#                                Default is a 10 second sleep
+#
+# These are copied to LEGATE_CONDA_RETRY_MAX and LEGATE_CONDA_RETRY_SLEEP
+
+set -eou pipefail
+
+export LEGATE_SCRIPT_NAME="legate-mamba-retry"
+export LEGATE_CONDA_EXE=${LEGATE_MAMBA_BIN:=mamba}
+
+if [[ -v LEGATE_MAMBA_RETRY_MAX ]]; then
+  export LEGATE_CONDA_RETRY_MAX="${LEGATE_MAMBA_RETRY_MAX}"
+fi
+
+if [[ -v LEGATE_MAMBA_RETRY_SLEEP ]]; then
+  export LEGATE_CONDA_RETRY_SLEEP="${LEGATE_MAMBA_RETRY_SLEEP}"
+fi
+
+legate-conda-retry "$@"

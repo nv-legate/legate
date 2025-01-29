@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+
+set -eou pipefail
+
+. conda-utils
+. pretty_printing.bash
+
+make_conda_env_from_yaml() {
+  # shellcheck disable=SC2154
+  legate-mamba-retry env create -q -n "${CONDA_ENV}" -f "${yaml_file}";
+}
+
+generate_yaml_file() {
+  # shellcheck disable=SC2154
+  if [[ "${USE_CUDA}" == "OFF" ]]; then
+    # shellcheck disable=SC2154
+    output=$("${REPO_DIR}/scripts/generate-conda-envs.py" \
+               --os "${OS_SHORT_NAME}" \
+               --compilers             \
+               --openmpi               \
+               --ucx)
+
+    yaml_output=$(echo "${output}" | head -n1)
+    yaml_file=$(echo "${yaml_output}" | cut -d' ' -f3)
+  else
+    # shellcheck disable=SC2154
+    output=$("${REPO_DIR}/scripts/generate-conda-envs.py" \
+               --os "${OS_SHORT_NAME}" \
+               --compilers             \
+               --ctk "${CUDA_VERSION}" \
+               --openmpi               \
+               --ucx)
+
+    yaml_output=$(echo "${output}" | head -n1)
+    yaml_file=$(echo "${yaml_output}" | cut -d' ' -f3)
+  fi
+
+
+  echo Dumping: "${yaml_file}"
+  cat "${yaml_file}";
+
+  # shellcheck disable=SC2154
+  ${SED} -i -re "s/legate-test/${CONDA_ENV}/g" "${yaml_file}";
+  echo "  - boa" >> "${yaml_file}";
+
+  # shellcheck disable=SC2154
+  if [[ ${LEGATE_BUILD_MODE} == *sanitizer* ]]; then
+    # shellcheck disable=SC2154
+    echo "  - libsanitizer <=${MAX_LIBSANITIZER_VERSION}" >> "${yaml_file}";
+  fi
+
+  mkdir -p /tmp/out/
+  cp "${yaml_file}" /tmp/out/
+  mkdir -p /tmp/env_yaml
+  cp "${yaml_file}" /tmp/env_yaml
+}
+
+find_yaml_file() {
+  pattern="/tmp/env_yaml/*.yaml";
+  files=( "${pattern}" );
+  yaml_file="${files[0]}";
+
+  if [[ -z "${yaml_file:-}" ]] || [[ ! -f "${yaml_file}" ]]; then
+    return 1;
+  fi
+
+  return 0;
+}
+
+get_yaml_and_make_conda_env() {
+  set -eou pipefail
+
+  local yaml_file=""
+
+  generate_yaml_file
+
+  echo YAML file: "${yaml_file}"
+  cat "${yaml_file}"
+
+  make_conda_env_from_yaml
+}
+
+install_legate_with_war() {
+  # WAR: legate depends on a different version of numpy than what is already installed.
+  # The correct version will be installed when legate is installed below.
+  # See github issue: https://github.com/nv-legate/legate.core/issues/812
+  legate-mamba-retry uninstall -q -y -n "${CONDA_ENV}" numpy
+
+  # shellcheck disable=SC2154
+  legate-mamba-retry install \
+                     -y \
+                     -n "${CONDA_ENV}" \
+                     -c conda-forge \
+                     -c "${ARTIFACTS_DIR}/conda-build/legate" \
+                     legate
+}
+
+make_release_env() {
+  legate-mamba-retry create -q -y -n "${CONDA_ENV}" -c conda-forge boa
+}

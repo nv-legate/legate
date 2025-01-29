@@ -23,7 +23,7 @@ if [[ -z "${BUILD_MARCH}" ]]; then
     fi
 fi
 
-. continuous_integration/scripts/pretty_printing.bash
+. continuous_integration/scripts/tools/pretty_printing.bash
 
 if [[ "${LEGATE_CI:-0}" == '0' ]]; then
   # not running in CI, define a dummy version of this function

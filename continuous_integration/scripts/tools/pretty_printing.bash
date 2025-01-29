@@ -60,9 +60,9 @@ export -f end_group
 # Usage: run_command "Group Name" command [arguments...]
 function run_command()
 {
+  { set +x; } 2>/dev/null;
   local old_opts
   old_opts=$(set +o)
-  { set +x; } 2>/dev/null;
   set +e
 
   local group_name="${1:-}"

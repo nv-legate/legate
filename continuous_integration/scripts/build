@@ -1,130 +1,135 @@
 #!/usr/bin/env bash
-. pretty_printing.bash
+set -eou pipefail
+{ set +x; } 2>/dev/null
+
+export LEGATE_SCRIPT_NAME="build"
+
+. "$(dirname "$0")/tools/pretty_printing.bash"
 
 setup_legate_env() {
-    set -eou pipefail
+  set -eou pipefail
 
-    # rename REPO_DIR
+  # rename REPO_DIR
+  # shellcheck disable=SC2154
+  export LEGATE_DIR="${REPO_DIR}"
+
+  # HACK: this should be done much better, and in a much more transparent manner... but
+  # alas, we no longer have any control of the setup phases in github ci, so we must do
+  # it here.
+  if [[ -z "${LEGATE_ARCH:-}" ]]; then
     # shellcheck disable=SC2154
-    export LEGATE_DIR="${REPO_DIR}"
-
-    # HACK: this should be done much better, and in a much more transparent manner... but
-    # alas, we no longer have any control of the setup phases in github ci, so we must do
-    # it here.
-    if [[ -z "${LEGATE_ARCH:-}" ]]; then
+    case "${BUILD_TYPE}" in
+      ci|release)
         # shellcheck disable=SC2154
-        case "${BUILD_TYPE}" in
-            ci|release)
-                # shellcheck disable=SC2154
-                local locase_uname
-                locase_uname=$(uname | tr '[:upper:]' '[:lower:]')
-                # shellcheck disable=SC2154
-                LEGATE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_BUILD_MODE%-gcc}"
-                ;;
-            docs)
-                LEGATE_ARCH='arch-ci-linux-docs'
-                ;;
-            *) return 1;;
-        esac
-        export LEGATE_ARCH
-    fi
-    echo "export LEGATE_DIR=${LEGATE_DIR}"
-    echo "export LEGATE_ARCH=${LEGATE_ARCH}"
+        local locase_uname
+        locase_uname=$(uname | tr '[:upper:]' '[:lower:]')
+        # shellcheck disable=SC2154
+        LEGATE_ARCH="arch-ci-${locase_uname}-${COMPILER:-gcc}-py-pkgs-${LEGATE_BUILD_MODE%-gcc}"
+        ;;
+      docs)
+        LEGATE_ARCH='arch-ci-linux-docs'
+        ;;
+      *) return 1;;
+    esac
+    export LEGATE_ARCH
+  fi
+  echo "export LEGATE_DIR=${LEGATE_DIR}"
+  echo "export LEGATE_ARCH=${LEGATE_ARCH}"
 
-    # shellcheck disable=SC2154
-    mkdir -p "${ARTIFACTS_DIR}/${LEGATE_ARCH}"
+  # shellcheck disable=SC2154
+  mkdir -p "${ARTIFACTS_DIR}/${LEGATE_ARCH}"
 }
 
 build_legate_release() {
-    set -eo pipefail;
+  set -eo pipefail;
 
-    mkdir -p /tmp/env_yaml /tmp/conda-build
-    local conda_build_args=();
-    conda_build_args+=(--quiet);
-    conda_build_args+=(--override-channels);
+  mkdir -p /tmp/env_yaml /tmp/conda-build
+  local conda_build_args=();
+  conda_build_args+=(--quiet);
+  conda_build_args+=(--override-channels);
 
-    conda_build_args+=(-c conda-forge);
+  conda_build_args+=(-c conda-forge);
 
-    conda_build_args+=(--croot /tmp/conda-croot/legate);
-    conda_build_args+=(--numpy 1.22);
-    conda_build_args+=(--no-test);
-    conda_build_args+=(--no-verify);
-    conda_build_args+=(--no-build-id);
-    conda_build_args+=("--build-id-pat=''");
-    conda_build_args+=(--no-include-recipe);
-    conda_build_args+=(--no-anaconda-upload);
-    conda_build_args+=(--output-folder /tmp/conda-build/legate);
+  conda_build_args+=(--croot /tmp/conda-croot/legate);
+  conda_build_args+=(--numpy 1.22);
+  conda_build_args+=(--no-test);
+  conda_build_args+=(--no-verify);
+  conda_build_args+=(--no-build-id);
+  conda_build_args+=("--build-id-pat=''");
+  conda_build_args+=(--no-include-recipe);
+  conda_build_args+=(--no-anaconda-upload);
+  conda_build_args+=(--output-folder /tmp/conda-build/legate);
 
-    GPU_ENABLED=true
-    [[ "${USE_CUDA:-}" = "OFF" ]] && GPU_ENABLED=false
+  GPU_ENABLED=true
+  [[ "${USE_CUDA:-}" = "OFF" ]] && GPU_ENABLED=false
 
-    UPLOAD_BUILD=true
-    [[ "${UPLOAD_ENABLED:-}" = "OFF" ]] && UPLOAD_BUILD=false
+  UPLOAD_BUILD=true
+  [[ "${UPLOAD_ENABLED:-}" = "OFF" ]] && UPLOAD_BUILD=false
 
-    # shellcheck disable=SC2154
-    variantOpts=$(printf '{"build_mode_str": ["%s"], "gpu_enabled": ["%s"], "upload_enabled": ["%s"], "network": ["%s"], "python": ["%s"]}' \
-      "${LEGATE_BUILD_MODE}" "${GPU_ENABLED}" "${UPLOAD_BUILD}" "${LEGATE_NETWORK}" "${PYTHON_VERSION}")
-    conda_build_args+=(--variants "${variantOpts}")
+  # shellcheck disable=SC2154
+  variantOpts=$(printf '{"build_mode_str": ["%s"], "gpu_enabled": ["%s"], "upload_enabled": ["%s"], "network": ["%s"], "python": ["%s"]}' \
+                       "${LEGATE_BUILD_MODE}" "${GPU_ENABLED}" "${UPLOAD_BUILD}" "${LEGATE_NETWORK}" "${PYTHON_VERSION}")
+  conda_build_args+=(--variants "${variantOpts}")
 
-    # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to
-    # only explicit warnings. If you want more verbose output, set this to 2 or higher.
-    export CONDA_VERBOSITY=0
-    # Use the new .conda format.
-    conda config --set conda_build.pkg_format 2
-    # For whatever reason, the default buffering of conda/mamba is not sufficient, and
-    # leads to garbled output in CI (mixing conda output and whatever build.sh prints). So
-    # we need to force unbuffered output.
-    run_command 'Mamba Preamble' stdbuf -o0 -e0 conda mambabuild "${conda_build_args[@]}" conda/conda-build;
+  # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to
+  # only explicit warnings. If you want more verbose output, set this to 2 or higher.
+  export CONDA_VERBOSITY=0
+  # Use the new .conda format.
+  conda config --set conda_build.pkg_format 2
+  # For whatever reason, the default buffering of conda/mamba is not sufficient, and
+  # leads to garbled output in CI (mixing conda output and whatever build.sh prints). So
+  # we need to force unbuffered output.
+  run_command 'Mamba Preamble' stdbuf -o0 -e0 conda mambabuild "${conda_build_args[@]}" conda/conda-build
 
-    run_command 'Copy Artifacts' copy_release_artifacts
+  run_command 'Copy Artifacts' copy_release_artifacts
 }
 
 copy_release_artifacts() {
-    echo Copying release artifacts
-    cp -r /tmp/out          "${ARTIFACTS_DIR}"
-    cp -r /tmp/conda-build  "${ARTIFACTS_DIR}"
-    ls -lahR "${ARTIFACTS_DIR}"
+  echo Copying release artifacts
+  cp -r /tmp/out          "${ARTIFACTS_DIR}"
+  cp -r /tmp/conda-build  "${ARTIFACTS_DIR}"
+  ls -lahR "${ARTIFACTS_DIR}"
 }
 
 copy_docs_artifacts() {
-    set -x
-    echo Copying artifacts
-    cp -r "${LEGATE_DIR}"/"${LEGATE_ARCH}"/cmake_build/cpp/docs/legate/sphinx/* "${ARTIFACTS_DIR}/."
+  echo Copying artifacts
+  cp -r "${LEGATE_DIR}"/"${LEGATE_ARCH}"/cmake_build/cpp/docs/legate/sphinx/* "${ARTIFACTS_DIR}/."
 }
 
 build_docs() {
-    set -eou pipefail
+  set -eou pipefail
 
-    cd "${LEGATE_DIR}"
-    set +u
-    run_command 'Activate Conda' conda activate legate
-    run_command 'List conda env' conda list
-    set -u
-    run_command 'Dump configure.py' cat "./config/examples/${LEGATE_ARCH}.py"
-    run_command 'Configure Legate' "./config/examples/${LEGATE_ARCH}.py"
-    # Install Legate Python bindings so the Python docs build works
-    run_command 'pip install Legate' python3 -m pip install . -v
-    run_command 'Build Documentation' make docs
-    run_command 'Copy Artifacts' copy_docs_artifacts
+  cd "${LEGATE_DIR}"
+  set +u
+  run_command 'Activate Conda' conda activate legate
+  run_command 'List conda env' conda list
+  set -u
+  run_command 'Dump configure.py' cat "./config/examples/${LEGATE_ARCH}.py"
+  run_command 'Configure Legate' "./config/examples/${LEGATE_ARCH}.py"
+  # Install Legate Python bindings so the Python docs build works
+  run_command 'pip install Legate' python3 -m pip install . -v
+  run_command 'Build Documentation' make docs
+  run_command 'Copy Artifacts' copy_docs_artifacts
 }
 
 build_project() {
-    set -eou pipefail
-    { set +x; } 2>/dev/null
+  set -eou pipefail
 
-    export LEGATE_CI=1
-    export PYTHONUNBUFFERED=1
-    run_command "Source setup-util" . setup-utils;
-    run_command "Init build environment" init_build_env "$@";
-    run_command "Setup Legate Env" setup_legate_env
+  export LEGATE_CI=1
+  export PYTHONUNBUFFERED=1
+  export PATH="${PATH}:${REPO_DIR}/continuous_integration/scripts/tools"
 
-    git config --global --add safe.directory "${REPO_DIR}/.git"
+  run_command "Source setup-util" . setup-utils
+  run_command "Init build environment" init_build_env "$@"
+  run_command "Setup Legate Env" setup_legate_env
 
-    case "${BUILD_TYPE}" in
-        release) build_legate_release;;
-        docs) build_docs;;
-        *) return 1;;
-    esac
+  git config --global --add safe.directory "${LEGATE_DIR}/.git"
+
+  case "${BUILD_TYPE}" in
+    release) build_legate_release;;
+    docs) build_docs;;
+    *) return 1;;
+  esac
 }
 
 (build_project "$@");
