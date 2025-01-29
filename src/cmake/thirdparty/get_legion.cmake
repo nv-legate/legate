@@ -114,7 +114,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           "Legion_INSTALL_PYTHON_PROFILER OFF"
                           "CMAKE_INSTALL_BINDIR ${legate_DEP_INSTALL_BINDIR}"
                           "CMAKE_INSTALL_INCLUDEDIR ${legate_DEP_INSTALL_INCLUDEDIR}"
-                          "CMAKE_INSTALL_LIBDIR ${legate_DEP_INSTALL_LIBDIR}"
+                          "INSTALL_SUFFIX -legate"
                           "CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON")
 
   cpm_export_variables(Legion)
