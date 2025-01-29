@@ -3,6 +3,8 @@ leak:intentionally_leak*
 # Legion and Realm leak like faucets
 leak:liblegion.*
 leak:librealm.*
+leak:liblegion-legate.*
+leak:librealm-legate.*
 # Because we didn't build python with ASAN (in fact, we don't build python at all), these
 # raise a bunch of (possibly) false positives related to interned Python strings and
 # Python module initialization. Maybe they are real errors, maybe not, but in any case
