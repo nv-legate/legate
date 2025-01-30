@@ -23,7 +23,7 @@ from ..data.shape cimport _Shape
 from ..mapping.machine cimport Machine, _Machine
 from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
 from ..task.exception cimport _TaskException
-from ..type.type_info cimport Type, _Type
+from ..type.types cimport Type, _Type
 from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain, _LocalTaskID
 from ..utilities.unconstructable cimport Unconstructable

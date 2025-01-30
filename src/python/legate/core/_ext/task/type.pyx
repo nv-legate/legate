@@ -22,7 +22,7 @@ from ..._lib.data.physical_store import PhysicalStore as PyPhysicalStore
 
 from ..._lib.task.task_context cimport TaskContext
 
-from ..._lib.type.type_info import ReductionOpKind
+from ..._lib.type.types import ReductionOpKind
 
 UserFunction: TypeAlias = Callable[..., None]
 VariantFunction: TypeAlias = Callable[[TaskContext], None]

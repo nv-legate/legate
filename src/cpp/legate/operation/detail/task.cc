@@ -29,7 +29,7 @@
 #include <legate/task/detail/task_return_layout.h>
 #include <legate/task/detail/variant_info.h>
 #include <legate/task/task_info.h>
-#include <legate/type/detail/type_info.h>
+#include <legate/type/detail/types.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/traced_exception.h>

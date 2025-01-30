@@ -39,7 +39,7 @@ from ..._lib.data.scalar cimport Scalar
 from ..._lib.operation.task cimport AutoTask
 from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
-from ..._lib.type.type_info cimport Type, TypeCode, binary_type
+from ..._lib.type.types cimport Type, TypeCode, binary_type
 
 from ...data_interface import (
     MAX_DATA_INTERFACE_VERSION,

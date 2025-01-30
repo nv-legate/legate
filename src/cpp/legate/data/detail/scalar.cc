@@ -12,7 +12,7 @@
 
 #include <legate/data/detail/scalar.h>
 
-#include <legate/type/detail/type_info.h>
+#include <legate/type/detail/types.h>
 
 #include <cstddef>
 #include <cstdint>

@@ -16,7 +16,7 @@ import numpy as np
 
 from libc.stdint cimport int32_t, uintptr_t
 
-from ..type.type_info cimport Type
+from ..type.types cimport Type
 from ..utilities.typedefs cimport Domain, DomainPoint
 from .physical_store cimport PhysicalStore
 

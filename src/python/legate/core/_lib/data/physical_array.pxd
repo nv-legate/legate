@@ -12,7 +12,7 @@
 from libc.stdint cimport int32_t, uint32_t
 from libcpp cimport bool
 
-from ..type.type_info cimport _Type
+from ..type.types cimport _Type
 from ..utilities.typedefs cimport Domain, _Domain
 from ..utilities.unconstructable cimport Unconstructable
 from .physical_store cimport PhysicalStore, _PhysicalStore

@@ -452,8 +452,8 @@ target_sources(legate
                        legate/task/detail/task_return_layout.cc
                        legate/task/detail/variant_info.cc
                        legate/task/detail/task_info.cc
-                       legate/type/type_info.cc
-                       legate/type/detail/type_info.cc
+                       legate/type/types.cc
+                       legate/type/detail/types.cc
                        legate/utilities/debug.cc
                        legate/utilities/machine.cc
                        legate/utilities/internal_shared_ptr.cc
@@ -699,7 +699,7 @@ install(FILES legate/task/exception.h
               legate/task/variant_info.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/task)
 
-install(FILES legate/type/type_info.h legate/type/type_info.inl legate/type/type_traits.h
+install(FILES legate/type/types.h legate/type/types.inl legate/type/type_traits.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/type)
 
 install(FILES legate/utilities/debug.h

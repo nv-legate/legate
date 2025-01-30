@@ -15,7 +15,7 @@ from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
 from ..mapping.mapping cimport StoreTarget
-from ..type.type_info cimport _Type
+from ..type.types cimport _Type
 from ..utilities.shared_ptr cimport _SharedPtr
 from ..utilities.tuple cimport _tuple
 from ..utilities.unconstructable cimport Unconstructable

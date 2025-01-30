@@ -11,7 +11,7 @@
 
 from typing import Any
 
-from ..type.type_info import Type
+from ..type.types import Type
 from ..utilities.typedefs import Domain
 from ..utilities.unconstructable import Unconstructable
 from .physical_store import PhysicalStore

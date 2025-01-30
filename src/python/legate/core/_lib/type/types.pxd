@@ -44,7 +44,7 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
 # __pyx_t_3 = __Pyx_PyInt_From_legate_3a__3a_Type_3a__3a_Code(__pyx_e_4Type_INT8);  # noqa E501
 #
 # because cython mangles the name of the enum
-cdef extern from "legate/type/type_info.h" namespace "legate" nogil:
+cdef extern from "legate/type/types.h" namespace "legate" nogil:
     cpdef enum class TypeCode "legate::Type::Code":
         NIL
         BOOL
@@ -68,7 +68,7 @@ cdef extern from "legate/type/type_info.h" namespace "legate" nogil:
         LIST
 
 
-cdef extern from "legate/type/type_info.h" namespace "legate" nogil:
+cdef extern from "legate/type/types.h" namespace "legate" nogil:
     cpdef enum class ReductionOpKind:
         ADD
         MUL

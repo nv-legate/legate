@@ -23,8 +23,8 @@
 #include <legate/task/detail/task_info.h>
 #include <legate/task/detail/variant_info.h>
 #include <legate/task/task_info.h>
-#include <legate/type/detail/type_info.h>
-#include <legate/type/type_info.h>
+#include <legate/type/detail/types.h>
+#include <legate/type/types.h>
 #include <legate/utilities/detail/zstring_view.h>
 #include <legate/utilities/macros.h>
 #include <legate/utilities/typedefs.h>

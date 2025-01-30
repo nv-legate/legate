@@ -23,7 +23,7 @@ from libcpp cimport bool as cpp_bool
 from libcpp.complex cimport complex as std_complex
 
 from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
-from ..type.type_info cimport _Type
+from ..type.types cimport _Type
 from ..utilities.typedefs cimport __half
 
 

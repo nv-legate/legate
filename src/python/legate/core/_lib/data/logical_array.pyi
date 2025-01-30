@@ -14,7 +14,7 @@ from typing import Any
 
 from ...data_interface import LegateDataInterfaceItem
 from ..mapping.mapping import StoreTarget
-from ..type.type_info import Type
+from ..type.types import Type
 from ..utilities.unconstructable import Unconstructable
 from .logical_store import LogicalStore
 from .physical_array import PhysicalArray

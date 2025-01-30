@@ -11,7 +11,7 @@
 
 from libc.stdint cimport uint32_t
 
-from ..type.type_info cimport Type
+from ..type.types cimport Type
 from ..utilities.unconstructable cimport Unconstructable
 from .physical_store cimport PhysicalStore
 

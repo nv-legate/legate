@@ -11,7 +11,7 @@
 
 from typing import Any
 
-from ..type.type_info import Type
+from ..type.types import Type
 
 class Scalar:
     def __init__(self, value: Any, dtype: Type | None = None): ...

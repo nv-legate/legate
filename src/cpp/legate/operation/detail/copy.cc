@@ -17,7 +17,7 @@
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partition.h>
 #include <legate/partitioning/detail/partitioner.h>
-#include <legate/type/detail/type_info.h>
+#include <legate/type/detail/types.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <stdexcept>

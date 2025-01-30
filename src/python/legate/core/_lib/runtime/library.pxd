@@ -13,7 +13,7 @@ from libc.stdint cimport int64_t
 
 from ..data.scalar cimport Scalar, _Scalar
 from ..task.task_info cimport TaskInfo, _TaskInfo
-from ..type.type_info cimport Type, _Type
+from ..type.types cimport Type, _Type
 from ..utilities.typedefs cimport (
     _GlobalRedopID,
     _GlobalTaskID,

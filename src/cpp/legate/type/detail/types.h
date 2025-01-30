@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <legate/type/type_info.h>
+#include <legate/type/types.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
@@ -208,7 +208,7 @@ class ListType final : public ExtensionType {
 
 }  // namespace legate::detail
 
-#include <legate/type/detail/type_info.inl>
+#include <legate/type/detail/types.inl>
 
 namespace fmt {
 

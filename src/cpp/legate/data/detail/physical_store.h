@@ -18,7 +18,7 @@
 #include <legate/data/inline_allocation.h>
 #include <legate/mapping/mapping.h>
 #include <legate/task/detail/return_value.h>
-#include <legate/type/detail/type_info.h>
+#include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstdint>

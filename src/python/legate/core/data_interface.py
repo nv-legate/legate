@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Final, Protocol, TypedDict
 
 if TYPE_CHECKING:
     from ._lib.data.logical_array import LogicalArray
-    from ._lib.type.type_info import Type
+    from ._lib.type.types import Type
 
 
 MIN_DATA_INTERFACE_VERSION: Final = 1

@@ -40,5 +40,6 @@
 #include <legate/task/task.h>
 #include <legate/task/task_context.h>
 #include <legate/type/type_traits.h>
+#include <legate/type/types.h>
 #include <legate/utilities/dispatch.h>
 #include <legate/utilities/typedefs.h>

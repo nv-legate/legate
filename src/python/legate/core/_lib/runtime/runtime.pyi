@@ -20,7 +20,7 @@ from ..data.scalar import Scalar
 from ..data.shape import Shape
 from ..mapping.machine import Machine
 from ..operation.task import AutoTask, ManualTask
-from ..type.type_info import Type
+from ..type.types import Type
 from ..utilities.typedefs import LocalTaskID
 from ..utilities.unconstructable import Unconstructable
 from .library import Library

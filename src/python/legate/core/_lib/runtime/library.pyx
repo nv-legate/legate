@@ -12,7 +12,7 @@
 from libc.stdint cimport int64_t, uintptr_t
 
 from ..data.scalar cimport Scalar
-from ..type.type_info cimport Type
+from ..type.types cimport Type
 from ..utilities.typedefs cimport _GlobalTaskID, _LocalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 

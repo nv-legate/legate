@@ -31,12 +31,12 @@ from ..data.logical_store cimport LogicalStore, LogicalStorePartition
 from ..data.scalar cimport Scalar
 from ..partitioning.constraint cimport Constraint, Variable, _align, _broadcast
 from ..runtime.runtime cimport get_legate_runtime
-from ..type.type_info cimport Type, array_type
+from ..type.types cimport Type, array_type
 from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport is_iterable
 from .projection cimport SymbolicExpr, _SymbolicPoint
 
-from ..type.type_info import null_type
+from ..type.types import null_type
 
 from ..utilities.tuple cimport _tuple
 

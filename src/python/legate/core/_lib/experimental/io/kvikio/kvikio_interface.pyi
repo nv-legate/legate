@@ -16,7 +16,7 @@ from typing import TypeAlias
 
 from ....data.logical_array import LogicalArray
 from ....data.shape import Shape
-from ....type.type_info import Type
+from ....type.types import Type
 
 Pathlike: TypeAlias = str | os_PathLike[str] | Path
 Shapelike: TypeAlias = Shape | Sequence[int]

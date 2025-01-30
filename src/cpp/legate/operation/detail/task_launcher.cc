@@ -19,7 +19,7 @@
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>
-#include <legate/type/detail/type_info.h>
+#include <legate/type/detail/types.h>
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/enumerate.h>
 

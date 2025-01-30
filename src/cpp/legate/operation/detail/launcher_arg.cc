@@ -18,7 +18,7 @@
 #include <legate/operation/detail/req_analyzer.h>
 #include <legate/operation/detail/task_launcher.h>
 #include <legate/runtime/detail/runtime.h>
-#include <legate/type/detail/type_info.h>
+#include <legate/type/detail/types.h>
 #include <legate/utilities/detail/buffer_builder.h>
 
 namespace legate::detail {

@@ -14,7 +14,7 @@ from libcpp cimport bool
 from libcpp.vector cimport vector as std_vector
 
 from ..mapping.mapping cimport StoreTarget
-from ..type.type_info cimport _Type
+from ..type.types cimport _Type
 from ..utilities.tuple cimport _tuple
 from ..utilities.unconstructable cimport Unconstructable
 from .logical_store cimport _LogicalStore

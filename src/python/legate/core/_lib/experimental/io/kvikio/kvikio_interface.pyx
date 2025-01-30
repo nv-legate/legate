@@ -19,7 +19,7 @@ from ....._ext.cython_libcpp.string_view cimport (
     string_view_from_py as std_string_view_from_py,
 )
 from ....data.logical_array cimport LogicalArray, _LogicalArray
-from ....type.type_info cimport Type
+from ....type.types cimport Type
 from ....utilities.utils cimport std_vector_from_iterable
 
 

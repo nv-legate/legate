@@ -12,7 +12,7 @@
 
 from libc.stdint cimport int32_t
 
-from ..type.type_info cimport Type
+from ..type.types cimport Type
 from ..utilities.typedefs cimport Domain
 from ..utilities.unconstructable cimport Unconstructable
 from .inline_allocation cimport InlineAllocation, _InlineAllocation

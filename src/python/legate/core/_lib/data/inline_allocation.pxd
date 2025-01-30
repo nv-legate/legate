@@ -13,7 +13,7 @@ from libc.stdint cimport int32_t
 from libcpp.vector cimport vector as std_vector
 
 from ..mapping.mapping cimport StoreTarget
-from ..type.type_info cimport _Type
+from ..type.types cimport _Type
 from ..utilities.typedefs cimport _Domain
 from .physical_store cimport PhysicalStore
 

@@ -17,7 +17,7 @@
 #include <legate/data/logical_store.h>
 #include <legate/data/physical_array.h>
 #include <legate/data/shape.h>
-#include <legate/type/type_info.h>
+#include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>

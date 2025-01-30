@@ -15,7 +15,7 @@
 #include <legate/io/hdf5/detail/util.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
-#include <legate/type/detail/type_info.h>  // for Type::Code formatter
+#include <legate/type/detail/types.h>  // for Type::Code formatter
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/formatters.h>

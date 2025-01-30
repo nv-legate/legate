@@ -12,7 +12,7 @@
 from typing import Any
 
 from ..mapping.mapping import StoreTarget
-from ..type.type_info import Type
+from ..type.types import Type
 from ..utilities.typedefs import Domain
 from ..utilities.unconstructable import Unconstructable
 from .inline_allocation import InlineAllocation

@@ -57,7 +57,7 @@
 #include <legate/task/detail/task_info.h>
 #include <legate/task/task_context.h>
 #include <legate/task/variant_options.h>
-#include <legate/type/detail/type_info.h>
+#include <legate/type/detail/types.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/env_defaults.h>

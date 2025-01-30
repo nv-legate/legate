@@ -18,8 +18,8 @@
 
 // Include detail/type_info (even though we only use public Type stuff) because that contains
 // the formatter for Type::Code
-#include <legate/type/detail/type_info.h>
-#include <legate/type/type_info.h>
+#include <legate/type/detail/types.h>
+#include <legate/type/types.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/dispatch.h>
 

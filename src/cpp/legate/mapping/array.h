@@ -13,7 +13,7 @@
 #pragma once
 
 #include <legate/mapping/store.h>
-#include <legate/type/type_info.h>
+#include <legate/type/types.h>
 
 namespace legate::mapping::detail {
 class Array;

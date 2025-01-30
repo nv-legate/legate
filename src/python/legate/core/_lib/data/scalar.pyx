@@ -31,15 +31,15 @@ from ..._ext.cython_libcpp.string_view cimport (
     string_view as std_string_view,
     string_view_from_py as std_string_view_from_py,
 )
-from ..type.type_info cimport Type
+from ..type.types cimport Type
 
 from typing import Any
 
 import numpy as np
 
-from ..type.type_info cimport Type, _Type
+from ..type.types cimport Type, _Type
 
-from ..type.type_info import null_type
+from ..type.types import null_type
 
 from ..utilities.typedefs cimport __half, half_to_float
 from ..utilities.utils cimport is_iterable

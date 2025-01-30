@@ -22,7 +22,7 @@
 #include <legate/mapping/detail/array.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/detail/store.h>
-#include <legate/type/detail/type_info.h>
+#include <legate/type/detail/types.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/span.h>

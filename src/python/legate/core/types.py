@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 # ruff: noqa: A005
-from ._lib.type.type_info import (
+from ._lib.type.types import (
     FixedArrayType,
     ReductionOpKind,
     StructType,

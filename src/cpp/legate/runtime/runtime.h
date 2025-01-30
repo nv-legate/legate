@@ -21,7 +21,7 @@
 #include <legate/runtime/library.h>
 #include <legate/runtime/resource.h>
 #include <legate/task/variant_options.h>
-#include <legate/type/type_info.h>
+#include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
 
 #include <cstdint>

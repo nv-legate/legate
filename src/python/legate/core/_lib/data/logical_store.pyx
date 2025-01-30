@@ -18,7 +18,7 @@ from ...data_interface import Field, LegateDataInterfaceItem
 
 from ..mapping.mapping cimport StoreTarget
 from ..runtime.runtime cimport get_legate_runtime
-from ..type.type_info cimport Type
+from ..type.types cimport Type
 from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.utils cimport is_iterable
 from .logical_array cimport LogicalArray

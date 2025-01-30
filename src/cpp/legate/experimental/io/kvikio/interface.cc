@@ -18,7 +18,7 @@
 #include <legate/experimental/io/kvikio/detail/tile.h>
 #include <legate/experimental/io/kvikio/detail/tile_by_offsets.h>
 #include <legate/runtime/runtime.h>
-#include <legate/type/type_info.h>
+#include <legate/type/types.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zip.h>
 

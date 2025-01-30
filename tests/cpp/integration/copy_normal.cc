@@ -12,7 +12,7 @@
 
 #include <legate.h>
 
-#include <legate/type/type_info.h>
+#include <legate/type/types.h>
 
 #include <gtest/gtest.h>
 

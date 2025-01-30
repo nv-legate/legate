@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <legate/type/detail/type_info.h>
+#include <legate/type/detail/types.h>
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/internal_shared_ptr.h>
 

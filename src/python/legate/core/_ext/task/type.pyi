@@ -15,7 +15,7 @@ from ..._lib.data.physical_array import PhysicalArray
 from ..._lib.data.physical_store import PhysicalStore
 from ..._lib.partitioning.constraint import ConstraintProxy
 from ..._lib.task.task_context import TaskContext
-from ..._lib.type.type_info import ReductionOpKind
+from ..._lib.type.types import ReductionOpKind
 from ..._lib.utilities.typedefs import VariantCode
 
 SignatureMapping: TypeAlias = dict[str, type]

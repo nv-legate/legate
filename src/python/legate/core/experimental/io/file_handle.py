@@ -27,7 +27,7 @@ OpenFlag = Literal["r", "rb", "r+", "rb+", "w", "wb", "w+", "wb+"]
 
 if TYPE_CHECKING:
     from ..._lib.data.logical_array import LogicalArray
-    from ..._lib.type.type_info import Type
+    from ..._lib.type.types import Type
 
 
 class FileHandle:

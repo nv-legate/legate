@@ -576,4 +576,4 @@ std::ostream& operator<<(std::ostream&, const Type&);
 
 }  // namespace legate
 
-#include <legate/type/type_info.inl>
+#include <legate/type/types.inl>

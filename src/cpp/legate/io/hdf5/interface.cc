@@ -18,7 +18,7 @@
 #include <legate/io/hdf5/detail/read.h>
 #include <legate/io/hdf5/detail/util.h>
 #include <legate/runtime/runtime.h>
-#include <legate/type/type_info.h>
+#include <legate/type/types.h>
 #include <legate/utilities/abort.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/type_traits.h>

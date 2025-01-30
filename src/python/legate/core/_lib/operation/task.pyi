@@ -15,7 +15,7 @@ from typing import Any
 from ..data.logical_array import LogicalArray
 from ..data.logical_store import LogicalStore, LogicalStorePartition
 from ..partitioning.constraint import Constraint, Variable
-from ..type.type_info import Type
+from ..type.types import Type
 from ..utilities.unconstructable import Unconstructable
 from .projection import SymbolicPoint
 

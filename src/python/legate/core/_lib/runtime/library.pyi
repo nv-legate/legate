@@ -11,7 +11,7 @@
 
 from ..data.scalar import Scalar
 from ..task.task_info import TaskInfo
-from ..type.type_info import Type
+from ..type.types import Type
 from ..utilities.typedefs import (
     GlobalRedopID,
     GlobalTaskID,
