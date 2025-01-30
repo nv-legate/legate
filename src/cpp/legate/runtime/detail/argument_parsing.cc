@@ -794,6 +794,11 @@ void handle_legate_args()
     std::exit(EXIT_FAILURE);
   }
 
+  // Disable MPI in legate if the network bootstrap is p2p
+  if (REALM_UCP_BOOTSTRAP_MODE.get(/* default_value */ "") == "p2p") {
+    LEGATE_DISABLE_MPI.set(true);
+  }
+
   auto rt = Realm::Runtime::get_runtime();
 
   // ensure sensible utility

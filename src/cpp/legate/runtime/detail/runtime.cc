@@ -1663,15 +1663,25 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
 
 namespace {
 
-void handle_realm_default_args()
+[[nodiscard]] bool single_node_job()
 {
   constexpr EnvironmentVariable<std::uint32_t> OMPI_COMM_WORLD_SIZE{"OMPI_COMM_WORLD_SIZE"};
   constexpr EnvironmentVariable<std::uint32_t> MV2_COMM_WORLD_SIZE{"MV2_COMM_WORLD_SIZE"};
   constexpr EnvironmentVariable<std::uint32_t> SLURM_NTASKS{"SLURM_NTASKS"};
 
-  if (OMPI_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
-      MV2_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
-      SLURM_NTASKS.get(/* default_vaule */ 1) == 1) {
+  return OMPI_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
+         MV2_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
+         SLURM_NTASKS.get(/* default_vaule */ 1) == 1;
+}
+
+[[nodiscard]] bool p2p_network_bootstrap()
+{
+  return REALM_UCP_BOOTSTRAP_MODE.get(/* default_value*/ "") == "p2p";
+}
+
+void handle_realm_default_args()
+{
+  if (single_node_job() && !p2p_network_bootstrap()) {
     constexpr EnvironmentVariable<std::string> REALM_DEFAULT_ARGS{"REALM_DEFAULT_ARGS"};
     std::stringstream ss;
 
@@ -1691,7 +1701,7 @@ void handle_realm_default_args()
     ss << " -ll:networks none ";
     REALM_DEFAULT_ARGS.set(ss.str());
   }
-}
+}  // namespace
 
 }  // namespace
 
