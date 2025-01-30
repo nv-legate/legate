@@ -47,13 +47,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get and save legate version
+      - name: Get and save legate version and sha
         run: |
           git config --global --add safe.directory "${GITHUB_WORKSPACE}"
           LEGATE_GIT_DESCRIBE_TAG=$(git -C "${GITHUB_WORKSPACE}" describe --tags | sed 's/-.*//')
           echo "LEGATE_GIT_DESCRIBE_TAG=${LEGATE_GIT_DESCRIBE_TAG}" >> "${GITHUB_ENV}"
           LEGATE_GIT_DESCRIBE_NUMBER=$(git -C "${GITHUB_WORKSPACE}" describe --tags | sed 's/.*-\([^-]*\)-[^-]*$/\1/')
           echo "LEGATE_GIT_DESCRIBE_NUMBER=${LEGATE_GIT_DESCRIBE_NUMBER}" >> "${GITHUB_ENV}"
+          LEGATE_GIT_DESCRIBE_HASH="g${GITHUB_SHA:0:8}"
+          echo "LEGATE_GIT_DESCRIBE_HASH=${LEGATE_GIT_DESCRIBE_HASH}" >> "${GITHUB_ENV}"
 
       - name: Cleanup/Create related folders
         run: |
