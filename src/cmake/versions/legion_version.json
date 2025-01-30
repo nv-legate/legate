@@ -29,11 +29,6 @@
                     "file": "${current_json_dir}/../patches/legion_install_tools_option.diff",
                     "fixed_in": "",
                     "issue": "legion option to install support tools"
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_install_lib_name.diff",
-                    "fixed_in": "",
-                    "issue": "legion fix missing suffix in output name"
                 }
             ],
             "version": "25.03.0"
