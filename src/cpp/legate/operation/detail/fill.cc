@@ -51,9 +51,17 @@ Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
 
 void Fill::validate()
 {
-  const auto& value_type =
-    value_.index() == 0 ? std::get<0>(value_)->type() : std::get<1>(value_).type();
-  if (*lhs_->type() != *value_type) {
+  class Visitor {
+   public:
+    const InternalSharedPtr<Type>& operator()(const InternalSharedPtr<LogicalStore>& store) const
+    {
+      return store->type();
+    }
+
+    const InternalSharedPtr<Type>& operator()(const Scalar& scalar) const { return scalar.type(); }
+  };
+
+  if (const auto& value_type = std::visit(Visitor{}, value_); *lhs_->type() != *value_type) {
     throw TracedException<std::invalid_argument>{"Fill value and target must have the same type"};
   }
 }
@@ -92,21 +100,36 @@ bool Fill::needs_flush() const
   if (lhs_->needs_flush()) {
     return true;
   }
-  if (const auto* logical_store = std::get_if<InternalSharedPtr<LogicalStore>>(&value_)) {
-    return (*logical_store)->needs_flush();
-  }
-  return false;
+
+  class Visitor {
+   public:
+    bool operator()(const InternalSharedPtr<LogicalStore>& store) const
+    {
+      return store->needs_flush();
+    }
+
+    bool operator()(const Scalar&) const { return false; }
+  };
+
+  return std::visit(Visitor{}, value_);
 }
 
 Legion::Future Fill::get_fill_value_() const
 {
-  if (const auto* logical_store = std::get_if<InternalSharedPtr<LogicalStore>>(&value_)) {
-    return (*logical_store)->get_future();
-  }
+  class Visitor {
+   public:
+    Legion::Future operator()(const InternalSharedPtr<LogicalStore>& store) const
+    {
+      return store->get_future();
+    }
 
-  const auto& value = std::get<Scalar>(value_);
+    Legion::Future operator()(const Scalar& scalar) const
+    {
+      return Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
+    }
+  };
 
-  return Legion::Future::from_untyped_pointer(value.data(), value.size());
+  return std::visit(Visitor{}, value_);
 }
 
 }  // namespace legate::detail
