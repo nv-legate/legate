@@ -94,7 +94,25 @@ function(legate_configure_default_compiler_flags)
       "-Warray-bounds-pointer-arithmetic"
       "-Wassign-enum"
       "-Wformat-pedantic")
-  set(default_cxx_flags_debug ${default_warning_flags} "-g" "-O0" "-fstack-protector")
+  set(default_cxx_flags_debug
+      ${default_warning_flags}
+      "-g"
+      "-O0"
+      "-fstack-protector"
+      # In classic conda fashion, it sets a bunch of environment variables for you but as
+      # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE
+      # because GCC and clang error with:
+      #
+      # cmake-format: off
+      # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
+      # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+      # [-Werror=cpp]
+      # 330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+      #     |    ^~~~~~~
+      # cmake-format: on
+      #
+      # Thanks conda, such a great help!
+      "-U_FORTIFY_SOURCE")
   set(default_cxx_flags_sanitizer
       "-fsanitize=address,undefined,bounds" "-fno-sanitize-recover=undefined"
       "-fno-omit-frame-pointer" "-g")
@@ -136,6 +154,8 @@ function(legate_configure_default_compiler_flags)
     set(cuda_flags "${legate_CXX_FLAGS}")
     list(REMOVE_ITEM cuda_flags "-pedantic")
     list(REMOVE_ITEM cuda_flags "-Wpedantic")
+    # Remove this, we don't want to wrap it in --compiler-options
+    list(REMOVE_ITEM cuda_flags "-U_FORTIFY_SOURCE")
 
     foreach(flag IN LISTS cuda_flags)
       list(APPEND default_cuda_flags --compiler-options="${flag}")
@@ -147,6 +167,8 @@ function(legate_configure_default_compiler_flags)
       # ptxas warning : Conflicting options --device-debug and --generate-line-info
       # specified, ignoring --generate-line-info option
       list(REMOVE_ITEM default_cuda_flags "-lineinfo" "--generate-line-info")
+      # See C++ flags above for why this is added
+      list(APPEND default_cuda_flags -U_FORTIFY_SOURCE)
     elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
       list(REMOVE_ITEM default_cuda_flags "-G" "--device-debug")
       list(APPEND default_cuda_flags "-g" "-lineinfo")

@@ -537,23 +537,6 @@ include("${LEGATE_CMAKE_DIR}/Modules/set_cpu_arch_flags.cmake")
 
 set_cpu_arch_flags(legate_CXX_FLAGS)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  # In classic conda fashion, it sets a bunch of environment variables for you but as
-  # usual this just ends up creating more headaches. We don't want FORTIFY_SOURCE because
-  # GCC and clang error with:
-  #
-  # cmake-format: off
-  # /tmp/conda-croot/legate/_build_env/x86_64-conda-linux-gnu/sysroot/usr/include/features.h:330:4:
-  # error: #warning _FORTIFY_SOURCE requires compiling with optimization (-O)
-  # [-Werror=cpp]
-  # 330 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
-  #     |    ^~~~~~~
-  # cmake-format: on
-  #
-  # Thanks conda, such a great help!
-  list(APPEND legate_CXX_FLAGS -U_FORTIFY_SOURCE)
-endif()
-
 # Change THRUST_DEVICE_SYSTEM for `.cpp` files If we include Thrust in "CUDA mode" in .cc
 # files, that ends up pulling the definition of __half from the CUDA toolkit, and Legion
 # defines a custom __half when compiling outside of nvcc (because CUDA's __half doesn't
@@ -581,6 +564,11 @@ include("${LEGATE_CMAKE_DIR}/Modules/utilities.cmake")
 
 legate_add_target_compile_options(legate CXX PUBLIC legate_CXX_PUBLIC_OPTIONS)
 legate_add_target_compile_options(legate CXX PRIVATE legate_CXX_FLAGS)
+# Legate has no direct CUDA files that it would compile (all CUDA sources are compiled
+# into fatbins and embedded in the library itself). But tests, benchmarks, or other
+# sources might. In that case, they would also have the LEGATE_INTERNAL_TARGET property
+# set, so let's populate these for that.
+legate_add_target_compile_options(legate CUDA PRIVATE legate_CUDA_FLAGS)
 
 legate_add_target_link_options(legate PUBLIC legate_LINKER_FLAGS)
 
