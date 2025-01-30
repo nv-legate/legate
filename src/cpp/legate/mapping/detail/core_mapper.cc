@@ -103,10 +103,9 @@ std::optional<std::size_t> CoreMapper::allocation_pool_size(
         return 0;
       }
       // We simply use twice the future size after 16-byte alignment as an upper bound
-      const auto future_size  = task.impl()->legion_task()->futures[0].get_untyped_size();
-      const auto aligned_size = (future_size + EXTRA_SCALAR_ALIGNMENT - 1) /
-                                EXTRA_SCALAR_ALIGNMENT * EXTRA_SCALAR_ALIGNMENT;
-      return aligned_size * 2;
+      const auto future_size = task.impl()->legion_task()->futures[0].get_untyped_size();
+      return (future_size + EXTRA_SCALAR_ALIGNMENT - 1) / EXTRA_SCALAR_ALIGNMENT *
+             EXTRA_SCALAR_ALIGNMENT;
     }
     case legate::detail::CoreTask::INIT_NCCL: {
       return legate::detail::Config::warmup_nccl ? NCCL_WARMUP_BUFFER_SIZE : 0;

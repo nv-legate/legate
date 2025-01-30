@@ -95,7 +95,6 @@ TEST_F(OffloadAPI, GPUToHostOffload)
   {
     auto task1 = runtime->create_task(library, GPUonlyTask::TASK_ID);
 
-    task1.add_input(store1);
     task1.add_output(store1);
     runtime->submit(std::move(task1));
   }
@@ -105,7 +104,6 @@ TEST_F(OffloadAPI, GPUToHostOffload)
   {
     auto task2 = runtime->create_task(library, GPUonlyTask::TASK_ID);
 
-    task2.add_input(store2);
     task2.add_output(store2);
     runtime->submit(std::move(task2));
   }

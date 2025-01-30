@@ -16,12 +16,15 @@
 #include <legate/task/detail/task_return_layout.h>
 #include <legate/utilities/typedefs.h>
 
+#include <cstddef>
 #include <vector>
 
 namespace legate::detail {
 
 class TaskReturn {
  public:
+  static constexpr std::size_t ALIGNMENT = 16;
+
   TaskReturn() = default;
   explicit TaskReturn(std::vector<ReturnValue>&& return_values);
 

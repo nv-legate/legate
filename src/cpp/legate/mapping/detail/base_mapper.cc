@@ -22,6 +22,7 @@
 #include <legate/runtime/detail/shard.h>
 #include <legate/task/detail/returned_exception.h>
 #include <legate/task/detail/task_info.h>
+#include <legate/task/detail/task_return.h>
 #include <legate/task/detail/task_return_layout.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/enumerate.h>
@@ -447,12 +448,9 @@ void map_future_backed_stores(
   output->future_locations.resize(mapped_futures.size());
   for (auto&& mapping : for_futures) {
     const auto fut_idx = mapping->store()->future_index();
-    StoreTarget target = mapping->policy.target;
 
-    if (LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB) && (target == StoreTarget::FBMEM)) {
-      target = StoreTarget::ZCMEM;
-    }
-    output->future_locations[fut_idx] = local_machine.get_memory(task.target_proc, target);
+    output->future_locations[fut_idx] =
+      local_machine.get_memory(task.target_proc, mapping->policy.target);
   }
 }
 
@@ -517,15 +515,22 @@ void map_unbound_stores(const std::vector<std::unique_ptr<StoreMapping>>& mappin
       }
     }
   }
+
+  // Align the buffer size to the 16-byte boundary (see the comment in task_return.cc for the
+  // detail)
+  const auto aligned_size = (layout.total_size() + legate::detail::TaskReturn::ALIGNMENT - 1) /
+                            legate::detail::TaskReturn::ALIGNMENT *
+                            legate::detail::TaskReturn::ALIGNMENT;
+
   // The math above only accounts for the buffers that are created when the stores are deserialized
   // in the task preamble. Once the task is done, the final values in those buffers are packed into
   // a return buffer of the task, which is yet to be included in the pool size. Therefore, we double
   // the pool size calculated so far to take the return buffer size into account.
-  const auto size = layout.total_size() * 2;
+  const auto total_size = aligned_size * 2;
 
   // If the task can raise an exception, we reserve extra space for the serialized exception
-  return size + (static_cast<std::size_t>(legate_task.can_raise_exception()) *
-                 legate::detail::ReturnedException::max_size());
+  return total_size + (static_cast<std::size_t>(legate_task.can_raise_exception()) *
+                       legate::detail::ReturnedException::max_size());
 }
 
 void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
@@ -672,6 +677,18 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
         output.untracked_valid_regions.insert(req_idx);
       }
     }
+  }
+
+  // FIXME(wonchanl): there's no way to do this in a Legate mapper yet, as this task doesn't use the
+  // Legate calling convention.
+  if (legate::GlobalTaskID{task.task_id} ==
+      legate::detail::Runtime::get_runtime()->core_library()->get_task_id(
+        legate::LocalTaskID{legate::detail::CoreTask::EXTRACT_SCALAR})) {
+    LEGATE_ASSERT(task.futures.size() == 1);
+    output.future_locations.push_back(local_machine_.get_memory(
+      task.target_proc,
+      task.target_proc.kind() == Processor::Kind::TOC_PROC ? StoreTarget::ZCMEM
+                                                           : StoreTarget::SYSMEM));
   }
 }
 

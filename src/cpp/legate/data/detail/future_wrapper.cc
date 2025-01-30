@@ -32,8 +32,7 @@ namespace {
   std::uint32_t field_alignment,
   std::uint64_t field_offset)
 {
-  const auto mem_kind =
-    find_memory_kind_for_executing_processor(LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB));
+  const auto mem_kind = find_memory_kind_for_executing_processor(false);
 
   if (!fut.valid()) {
     return Legion::UntypedDeferredValue{field_size, mem_kind, nullptr, field_alignment};
@@ -165,8 +164,7 @@ mapping::StoreTarget FutureWrapper::target() const
   // default mapping policy for futures. Unfortunately, Legion doesn't expose mapping decisions
   // for futures, but instead would move the data wherever it's requested. Until Legate gets
   // access to that information, we potentially give inaccurate answers
-  return mapping::detail::to_target(
-    find_memory_kind_for_executing_processor(LEGATE_DEFINED(LEGATE_NO_FUTURES_ON_FB)));
+  return mapping::detail::to_target(find_memory_kind_for_executing_processor(false));
 }
 
 // Initializing isn't a const operation, even if all member functions are used const-ly
@@ -201,7 +199,7 @@ const void* FutureWrapper::get_untyped_pointer_from_future() const
   LEGATE_ASSERT(get_future().valid());
   LEGATE_ASSERT(field_offset() + field_size() <= get_future().get_untyped_size());
   return static_cast<const std::int8_t*>(
-           get_future().get_buffer(find_memory_kind_for_executing_processor())) +
+           get_future().get_buffer(find_memory_kind_for_executing_processor(false))) +
          field_offset();
 }
 

@@ -82,10 +82,16 @@ void TaskReturn::finalize(Legion::Context legion_context, bool skip_device_ctx_s
     }
   }
 
-  auto return_buffer = Legion::UntypedDeferredValue{buffer_size(),
+  // We don't have direct control on the alignment of future instances. So, when Legion is about to
+  // make a copy of a future of some unusual size (say 27) due to multiplexing here, it may use a
+  // wrong alignment for the first element packed in the instance, which can lead to misaligned
+  // accesses in CUDA kernels. To prevent that from happening, here we align the size to the 16-byte
+  // boundary and set the alignment so there'd be no room for misinterpretation.
+  const auto aligned_size = (buffer_size() + ALIGNMENT - 1) / ALIGNMENT * ALIGNMENT;
+  auto return_buffer      = Legion::UntypedDeferredValue{aligned_size,
                                                     find_memory_kind_for_executing_processor(),
                                                     nullptr /*initial_value*/,
-                                                    1 /*alignment*/};
+                                                    ALIGNMENT /*alignment*/};
   const AccessorWO<std::int8_t, 1> acc{return_buffer, buffer_size(), false};
 
   pack(acc.ptr(0));
