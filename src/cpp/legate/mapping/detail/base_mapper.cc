@@ -1269,9 +1269,15 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
   std::size_t total_size = 0;
 
   for (const Legion::Mapping::PhysicalInstance& inst : existing) {
-    std::set<Legion::FieldID> fields;
+    const auto inst_size = inst.get_instance_size();
 
-    total_size += inst.get_instance_size();
+    if (inst_size == 0) {
+      continue;
+    }
+
+    auto fields = std::set<Legion::FieldID>{};
+
+    total_size += inst_size;
     inst.get_fields(fields);
     for (const Legion::FieldID fid : fields) {
       insts_for_store[{inst.get_field_space(), fid}].push_back(inst);
