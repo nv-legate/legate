@@ -1196,9 +1196,6 @@ class LaunchTask {
     constexpr bool has_function  = !std::is_same_v<decltype(function), detail::Function<>>;
     constexpr bool has_reduction = !std::is_same_v<decltype(reduction), detail::Reduction<>>;
 
-    static_assert((has_function + has_reduction) == 1,
-                  "You must specify either a function or a reduction");
-
     if constexpr (has_function) {
       make_iteration_task_(std::move(function),
                            detail::get_arg<detail::Inputs>(args..., no_inputs),
