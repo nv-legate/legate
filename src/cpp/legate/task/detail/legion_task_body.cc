@@ -114,7 +114,8 @@ LegionTaskContext::LegionTaskContext(const Legion::Task* legion_task,
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) && !can_elide_device_ctx_sync() &&
       (legion_task_().current_proc.kind() == Processor::Kind::TOC_PROC) &&
       std::any_of(reductions().begin(), reductions().end(), is_scalar_store)) {
-    Runtime::get_runtime()->get_cuda_driver_api()->ctx_synchronize();
+    Runtime::get_runtime()->get_cuda_driver_api()->stream_synchronize(
+      Runtime::get_runtime()->get_cuda_stream());
   }
 }
 
