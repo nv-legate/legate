@@ -14,11 +14,10 @@
 
 #include <legate/mapping/detail/machine.h>
 #include <legate/partitioning/detail/partition.h>
+#include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/enumerate.h>
-#include <legate/utilities/detail/env.h>
-#include <legate/utilities/detail/env_defaults.h>
 #include <legate/utilities/detail/zip.h>
 
 #include <algorithm>
@@ -35,14 +34,14 @@ namespace {
   // TODO(wonchanl): make these configurable via Scope
   if (local_machine.has_gpus()) {
     // Make sure we can get at least 1M elements on each GPU
-    return LEGATE_MIN_GPU_CHUNK.get(LEGATE_MIN_GPU_CHUNK_DEFAULT, LEGATE_MIN_GPU_CHUNK_TEST);
+    return Config::min_gpu_chunk;
   }
   if (local_machine.has_omps()) {
     // Make sure we get at least 128K elements on each OpenMP
-    return LEGATE_MIN_OMP_CHUNK.get(LEGATE_MIN_OMP_CHUNK_DEFAULT, LEGATE_MIN_OMP_CHUNK_TEST);
+    return Config::min_omp_chunk;
   }
   // Make sure we can get at least 8KB elements on each CPU
-  return LEGATE_MIN_CPU_CHUNK.get(LEGATE_MIN_CPU_CHUNK_DEFAULT, LEGATE_MIN_CPU_CHUNK_TEST);
+  return Config::min_cpu_chunk;
 }
 
 }  // namespace

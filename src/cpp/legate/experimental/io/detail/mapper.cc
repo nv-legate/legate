@@ -14,8 +14,8 @@
 
 #include <legate/data/buffer.h>
 #include <legate/mapping/operation.h>
+#include <legate/runtime/detail/config.h>
 #include <legate/utilities/detail/core_ids.h>
-#include <legate/utilities/detail/env.h>
 
 #include <optional>
 
@@ -52,7 +52,7 @@ std::optional<std::size_t> Mapper::allocation_pool_size(const mapping::Task& tas
     return 0;
   }
   // Bounce bffers are not created when GDS is on
-  if (legate::detail::LEGATE_IO_USE_VFD_GDS.get().value_or(false)) {
+  if (legate::detail::Config::io_use_vfd_gds) {
     return 0;
   }
 

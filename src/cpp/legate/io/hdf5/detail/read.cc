@@ -14,10 +14,10 @@
 
 #include <legate/io/hdf5/detail/util.h>
 #include <legate/mapping/mapping.h>
+#include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/types.h>  // for Type::Code formatter
 #include <legate/type/type_traits.h>
-#include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
 
@@ -109,7 +109,7 @@ class HDF5ReadFn {
       total_count *= count.emplace_back(shape.hi[i] - shape.lo[i] + 1);
     }
 
-    const auto gds_on = legate::detail::LEGATE_IO_USE_VFD_GDS.get().value_or(false);
+    const auto gds_on = legate::detail::Config::io_use_vfd_gds;
 
     const auto filepath     = context.scalar(0).value<std::string_view>();
     const auto dataset_name = context.scalar(1).value<std::string_view>();

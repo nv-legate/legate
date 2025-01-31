@@ -45,7 +45,7 @@ environment variable
 
     .. code-block:: sh
 
-        LEGATE_CONSENSUS=yes legate script.py
+        LEGATE_CONSENSUS=1 legate script.py
 
 local defaults
     These are default values defined when accessing the setting:

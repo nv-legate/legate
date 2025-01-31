@@ -111,11 +111,10 @@ constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
 
 Runtime::Runtime()
   : legion_runtime_{Legion::Runtime::get_runtime()},
-    window_size_{LEGATE_WINDOW_SIZE.get(LEGATE_WINDOW_SIZE_DEFAULT, LEGATE_WINDOW_SIZE_TEST)},
-    field_reuse_freq_{
-      LEGATE_FIELD_REUSE_FREQ.get(LEGATE_FIELD_REUSE_FREQ_DEFAULT, LEGATE_FIELD_REUSE_FREQ_TEST)},
+    window_size_{Config::window_size},
+    field_reuse_freq_{Config::field_reuse_freq},
     field_reuse_size_{local_machine().calculate_field_reuse_size()},
-    force_consensus_match_{LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST)}
+    force_consensus_match_{Config::consensus}
 {
 }
 
@@ -1722,17 +1721,17 @@ void handle_realm_default_args()
   }
 
   // Do these after handle_legate_args()
-  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && LEGATE_NEED_CUDA.get(/* default_value = */ false)) {
+  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && Config::need_cuda) {
     throw TracedException<std::runtime_error>{
       "Legate was run with GPUs but was not built with GPU support. "
       "Please install Legate again with the \"--with-cuda\" flag"};
   }
-  if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && LEGATE_NEED_OPENMP.get(/* default_value = */ false)) {
+  if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && Config::need_openmp) {
     throw TracedException<std::runtime_error>{
       "Legate was run with OpenMP enabled, but was not built with OpenMP support. "
       "Please install Legate again with the \"--with-openmp\" flag"};
   }
-  if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get(/* default_value = */ false)) {
+  if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && Config::need_network) {
     throw TracedException<std::runtime_error>{
       "Legate was run on multiple nodes but was not built with networking "
       "support. Please install Legate again with network support (e.g. \"--with-mpi\" or "

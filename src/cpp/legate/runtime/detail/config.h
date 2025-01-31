@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <legate/utilities/detail/env_defaults.h>
+
 #include <cstdint>
 
 namespace legate::detail {
@@ -32,6 +34,20 @@ class Config {
   static inline bool warmup_nccl                   = false;
   static inline bool enable_inline_task_launch     = false;
   static inline std::int64_t num_omp_threads       = 0;
+  static inline bool show_mapper_usage             = false;
+  static inline bool need_cuda                     = false;
+  static inline bool need_openmp                   = false;
+  static inline bool need_network                  = false;
+  static inline std::uint32_t max_exception_size   = LEGATE_MAX_EXCEPTION_SIZE_DEFAULT;
+  static inline std::int64_t min_cpu_chunk         = LEGATE_MIN_CPU_CHUNK_DEFAULT;
+  static inline std::int64_t min_gpu_chunk         = LEGATE_MIN_GPU_CHUNK_DEFAULT;
+  static inline std::int64_t min_omp_chunk         = LEGATE_MIN_OMP_CHUNK_DEFAULT;
+  static inline std::uint32_t window_size          = LEGATE_WINDOW_SIZE_DEFAULT;
+  static inline std::uint32_t field_reuse_frac     = LEGATE_FIELD_REUSE_FRAC_DEFAULT;
+  static inline std::uint32_t field_reuse_freq     = LEGATE_FIELD_REUSE_FREQ_DEFAULT;
+  static inline bool consensus                     = LEGATE_CONSENSUS_DEFAULT;
+  static inline bool disable_mpi                   = LEGATE_DISABLE_MPI_DEFAULT;
+  static inline bool io_use_vfd_gds                = false;
 
   static void parse();
   static bool parsed() noexcept;

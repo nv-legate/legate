@@ -17,8 +17,8 @@
 #include <legate/comm/detail/backend_network.h>
 #include <legate/comm/detail/local_network.h>
 #include <legate/comm/detail/mpi_network.h>
+#include <legate/runtime/detail/config.h>
 #include <legate/utilities/assert.h>
-#include <legate/utilities/detail/env.h>
 #include <legate/utilities/macros.h>
 
 #include <cstdlib>
@@ -30,8 +30,7 @@ namespace legate::detail::comm::coll {
 // called from main thread
 void init()
 {
-  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) &&
-      detail::LEGATE_NEED_NETWORK.get(/* default_value */ false)) {
+  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && Config::need_network) {
 #if LEGATE_DEFINED(LEGATE_USE_NETWORK)
     BackendNetwork::create_network(std::make_unique<detail::comm::coll::MPINetwork>());
 #endif

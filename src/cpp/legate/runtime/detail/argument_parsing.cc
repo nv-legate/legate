@@ -514,7 +514,7 @@ void set_cuda_config_properties(Realm::Runtime* rt,
     }
   }
   if (gpus.value.value() > 0) {
-    LEGATE_NEED_CUDA.set(true);
+    Config::need_cuda = true;
   }
 }
 
@@ -528,7 +528,7 @@ void set_openmp_config_properties(Realm::Runtime* rt,
     const auto num_threads = ompthreads.value.value();
 
     LEGATE_CHECK(num_threads > 0);
-    LEGATE_NEED_OPENMP.set(true);
+    Config::need_openmp     = true;
     Config::num_omp_threads = num_threads;
   }
   try {

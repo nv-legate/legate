@@ -14,8 +14,8 @@
 
 #include <legate_defines.h>
 
+#include <legate/runtime/detail/config.h>
 #include <legate/utilities/assert.h>
-#include <legate/utilities/detail/env.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/macros.h>
 
@@ -62,7 +62,7 @@ std::unique_ptr<BackendNetwork> the_backend_network{};
   // we do get around to comm:coll::init(), we can check that the actually created communicator
   // is of the same type that we guessed it would be previously.
   static const auto guessed_comm_type = [] {
-    if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && LEGATE_NEED_NETWORK.get(/* default_value */ false)) {
+    if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && Config::need_network) {
       return legate::comm::coll::CollCommType::CollMPI;
     }
     return legate::comm::coll::CollCommType::CollLocal;

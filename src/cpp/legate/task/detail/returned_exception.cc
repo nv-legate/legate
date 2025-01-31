@@ -12,6 +12,7 @@
 
 #include <legate/task/detail/returned_exception.h>
 
+#include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/core_ids.h>
@@ -108,8 +109,8 @@ void ReturnedException::throw_exception()
 
 /*static*/ std::uint32_t ReturnedException::max_size()
 {
-  static const auto MAX_SIZE = LEGATE_MAX_EXCEPTION_SIZE.get(LEGATE_MAX_EXCEPTION_SIZE_DEFAULT,
-                                                             LEGATE_MAX_EXCEPTION_SIZE_TEST);
+  static const auto MAX_SIZE = Config::max_exception_size;
+
   return MAX_SIZE;
 }
 
