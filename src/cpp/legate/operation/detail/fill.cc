@@ -53,15 +53,26 @@ void Fill::validate()
 {
   class Visitor {
    public:
-    const InternalSharedPtr<Type>& operator()(const InternalSharedPtr<LogicalStore>& store) const
+    // Would use const InternalSharedPtr<Type>& (since that's what these member functions
+    // return), but GCC balks:
+    //
+    // /home/bryan/work/legate.core.internal/src/cpp/legate/operation/detail/fill.cc: In member
+    // function 'virtual void legate::detail::Fill::validate()':
+    // /home/bryan/work/legate.core.internal/src/cpp/legate/operation/detail/fill.cc:64:19: error:
+    // possibly dangling reference to a temporary [-Werror=dangling-reference]
+    //    64 |   if (const auto& value_type = std::visit(Visitor{}, value_); *lhs_->type() != ...
+    //       |                   ^~~~~~~~~~
+    //
+    // So return by value it is...
+    InternalSharedPtr<Type> operator()(const InternalSharedPtr<LogicalStore>& store) const
     {
       return store->type();
     }
 
-    const InternalSharedPtr<Type>& operator()(const Scalar& scalar) const { return scalar.type(); }
+    InternalSharedPtr<Type> operator()(const Scalar& scalar) const { return scalar.type(); }
   };
 
-  if (const auto& value_type = std::visit(Visitor{}, value_); *lhs_->type() != *value_type) {
+  if (const auto value_type = std::visit(Visitor{}, value_); *lhs_->type() != *value_type) {
     throw TracedException<std::invalid_argument>{"Fill value and target must have the same type"};
   }
 }
