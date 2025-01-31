@@ -35,8 +35,7 @@ void abort_handler(std::string_view file, std::string_view func, int line, std::
                 std::move(*ss).str()},
     cpptrace::stacktrace::current(/* skip */ 1)}};
 
-  std::cerr << make_error_message({errs.cbegin(), errs.cend()})
-            << std::endl;  // NOLINT(performance-avoid-endl)
+  std::cerr << make_error_message(errs) << std::endl;  // NOLINT(performance-avoid-endl)
   comm::coll::abort();
 }
 

@@ -687,7 +687,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::transpose(std::vector<std::int32_t
       fmt::format("Dimension Mismatch: expected {} axes, but got {}", dim(), axes.size())};
   }
 
-  if (axes.size() != std::set<std::int32_t>{axes.begin(), axes.end()}.size()) {
+  if (axes.size() != std::unordered_set<std::int32_t>{axes.begin(), axes.end()}.size()) {
     throw TracedException<std::invalid_argument>{"Duplicate axes found"};
   }
 

@@ -30,7 +30,7 @@
 namespace legate::detail {
 
 ReturnedPythonException::Payload::Payload(std::size_t size,
-                                          std::unique_ptr<char[]> bytes,
+                                          std::unique_ptr<std::byte[]> bytes,
                                           std::string m) noexcept
   : pkl_size{size}, pkl_bytes{std::move(bytes)}, msg{std::move(m)}
 {
@@ -38,9 +38,9 @@ ReturnedPythonException::Payload::Payload(std::size_t size,
 
 namespace {
 
-[[nodiscard]] std::unique_ptr<char[]> copy_bytes(Span<const void> span)
+[[nodiscard]] std::unique_ptr<std::byte[]> copy_bytes(Span<const std::byte> span)
 {
-  auto ret = std::unique_ptr<char[]>{new char[span.size()]};
+  auto ret = std::unique_ptr<std::byte[]>{new std::byte[span.size()]};
 
   std::memcpy(ret.get(), span.ptr(), span.size());
   return ret;
@@ -48,8 +48,15 @@ namespace {
 
 }  // namespace
 
-ReturnedPythonException::ReturnedPythonException(Span<const void> pkl_span, std::string msg)
+ReturnedPythonException::ReturnedPythonException(Span<const std::byte> pkl_span, std::string msg)
   : bytes_{make_internal_shared<Payload>(pkl_span.size(), copy_bytes(pkl_span), std::move(msg))}
+{
+}
+
+ReturnedPythonException::ReturnedPythonException(const std::byte* pkl_buf,
+                                                 std::size_t pkl_len,
+                                                 std::string msg)
+  : ReturnedPythonException{Span<const std::byte>{pkl_buf, pkl_len}, std::move(msg)}
 {
 }
 
@@ -59,10 +66,10 @@ void ReturnedPythonException::legion_serialize(void* buffer) const
 
   std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, kind());
 
-  const auto [pkl_size, pkl_ptr] = pickle();
+  const auto pkl_span = pickle();
 
-  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, pkl_size);
-  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, pkl_size, pkl_ptr);
+  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, pkl_span.size());
+  std::tie(buffer, rem_cap) = pack_buffer(buffer, rem_cap, pkl_span.size(), pkl_span.data());
 
   const auto mess = message();
 
@@ -86,7 +93,7 @@ void ReturnedPythonException::legion_deserialize(const void* buffer)
   std::tie(buffer, rem_cap) = unpack_buffer(buffer, rem_cap, &tmp_bytes->pkl_size);
   // NOLINTNEXTLINE(readability-magic-numbers)
   static_assert(LEGATE_CPP_MIN_VERSION < 20, "Use make_unique_for_overwrite below");
-  tmp_bytes->pkl_bytes.reset(new char[tmp_bytes->pkl_size]);
+  tmp_bytes->pkl_bytes.reset(new std::byte[tmp_bytes->pkl_size]);
 
   auto* const ptr = tmp_bytes->pkl_bytes.get();
 
@@ -122,12 +129,13 @@ ReturnValue ReturnedPythonException::pack() const
 
 std::string ReturnedPythonException::to_string() const
 {
-  const auto [pkl_size, pkl_bytes] = pickle();
+  const auto pkl_span = pickle();
   std::string ret;
 
-  fmt::format_to(std::back_inserter(ret), "ReturnedPythonException(size = {}, bytes = ", pkl_size);
-  for (std::size_t i = 0; i < pkl_size; ++i) {
-    fmt::format_to(std::back_inserter(ret), "\\x{:0x}", static_cast<std::int32_t>(pkl_bytes[i]));
+  fmt::format_to(
+    std::back_inserter(ret), "ReturnedPythonException(size = {}, bytes = ", pkl_span.size());
+  for (auto&& i : pkl_span) {
+    fmt::format_to(std::back_inserter(ret), "\\x{:0x}", static_cast<std::int32_t>(i));
   }
   fmt::format_to(std::back_inserter(ret), ", message = {})", message());
   return ret;
@@ -141,7 +149,7 @@ void ReturnedPythonException::throw_exception()
   }
 
   const auto pkl_size = bytes_->pkl_size;
-  auto ptr            = SharedPtr<const char[]>{std::move(bytes_->pkl_bytes)};
+  auto ptr            = SharedPtr<const std::byte[]>{std::move(bytes_->pkl_bytes)};
 
   // Point of no return, at this point ptr owns the pickle bytes...
   bytes_.reset();

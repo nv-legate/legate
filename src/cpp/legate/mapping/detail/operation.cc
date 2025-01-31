@@ -68,7 +68,7 @@ Copy::Copy(const Legion::Copy* copy,
                      std::cref(copy->dst_requirements),
                      std::cref(copy->src_indirect_requirements),
                      std::cref(copy->dst_indirect_requirements)};
-  CopyDeserializer dez{copy, {reqs.begin(), reqs.end()}, runtime, context};
+  CopyDeserializer dez{copy, reqs, runtime, context};
 
   // Mappable
   //

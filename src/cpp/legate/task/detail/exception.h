@@ -16,6 +16,7 @@
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/shared_ptr.h>
 
+#include <cstddef>
 #include <cstdint>
 
 namespace legate::detail {
@@ -47,14 +48,14 @@ class PythonTaskException : public TaskException {
    * @param size The size, in bytes, of the given buffer.
    * @param buf The pointer to the pickled Python exception object.
    */
-  PythonTaskException(std::uint64_t size, SharedPtr<const char[]> buf);
+  PythonTaskException(std::uint64_t size, SharedPtr<const std::byte[]> buf);
 
   /**
    * @brief Return a pointer to the Python exception object.
    *
    * @return A pointer to the exception object.
    */
-  [[nodiscard]] const char* data() const noexcept;
+  [[nodiscard]] const std::byte* data() const noexcept;
 
   /**
    * @brief Return the size (in bytes) of the held buffer.
@@ -65,7 +66,7 @@ class PythonTaskException : public TaskException {
 
  private:
   std::uint64_t size_{};
-  SharedPtr<const char[]> bytes_{};
+  SharedPtr<const std::byte[]> bytes_{};
 };
 
 /** @} */

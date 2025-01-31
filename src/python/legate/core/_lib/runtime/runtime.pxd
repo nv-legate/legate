@@ -62,7 +62,9 @@ cdef extern from *:
         // so we can catch it in the outer context and rewrite it to the
         // user-asked one.
       } catch (const legate::detail::PythonTaskException& exn) {
-        PyObject* bytes = PyBytes_FromStringAndSize(exn.data(), exn.size());
+        PyObject* bytes = PyBytes_FromStringAndSize(
+          reinterpret_cast<const char*>(exn.data()), exn.size()
+        );
 
         assert(bytes);
         PyErr_SetObject(_LegatePyTaskException, bytes);

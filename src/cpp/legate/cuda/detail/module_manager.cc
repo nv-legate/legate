@@ -64,8 +64,7 @@ CUDAModuleManager::default_jit_options()
   static std::array values = {LEGATE_DEFINED(LEGATE_USE_DEBUG) ? one_v : zero_v,
                               LEGATE_DEFINED(LEGATE_USE_DEBUG) ? one_v : zero_v};
 
-  static constexpr std::pair<Span<CUjit_option>, Span<void*>> options = {
-    {keys.begin(), keys.end()}, {values.begin(), values.end()}};
+  static constexpr std::pair<Span<CUjit_option>, Span<void*>> options = {{keys}, {values}};
 
   return options;
 }

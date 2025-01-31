@@ -81,7 +81,7 @@ void unwrap_nested_exception(const std::exception& exn,
       std::vector<ErrorDescription> errs;
 
       unwrap_nested_exception(exn, /* depth */ 1, &errs);
-      std::cerr << make_error_message({errs.cbegin(), errs.cend()});
+      std::cerr << make_error_message(errs);
       std::abort();
     }
     catch (...)
@@ -177,7 +177,7 @@ void TracedExceptionBase::Impl::ensure_traced_what_() const
     std::vector<ErrorDescription> errs;
 
     unwrap_nested_(/* depth */ 1, &errs);
-    what_ = make_error_message({errs.cbegin(), errs.cend()});
+    what_ = make_error_message(errs);
   }
 }
 

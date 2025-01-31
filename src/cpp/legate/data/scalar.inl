@@ -137,7 +137,7 @@ Span<const VAL> Scalar::values() const
     case Type::Code::FIXED_ARRAY: {
       const auto [ptr, size] = make_fixed_array_values_(sizeof(VAL));
 
-      return {static_cast<const VAL*>(ptr), size};
+      return Span<const VAL>(static_cast<const VAL*>(ptr), size);
     }
     case Type::Code::STRING: {
       using char_type = typename type_of_t<Type::Code::STRING>::value_type;
@@ -155,9 +155,9 @@ Span<const VAL> Scalar::values() const
 
       const auto [ptr, size] = make_string_values_();
 
-      return {static_cast<const VAL*>(ptr), size};
+      return Span<const VAL>(static_cast<const VAL*>(ptr), size);
     }
-    case Type::Code::NIL: return {nullptr, 0};
+    case Type::Code::NIL: return Span<const VAL>(nullptr, 0);
     case Type::Code::BOOL: [[fallthrough]];
     case Type::Code::INT8: [[fallthrough]];
     case Type::Code::INT16: [[fallthrough]];
@@ -184,7 +184,7 @@ Span<const VAL> Scalar::values() const
   if (sizeof(VAL) != ty.size()) {
     throw_invalid_size_exception_(ty.size(), sizeof(VAL));
   }
-  return {static_cast<const VAL*>(ptr()), 1};
+  return Span<const VAL>(static_cast<const VAL*>(ptr()), 1);
 }
 
 inline const SharedPtr<detail::Scalar>& Scalar::impl() { return impl_; }

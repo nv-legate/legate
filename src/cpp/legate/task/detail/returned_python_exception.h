@@ -21,7 +21,6 @@
 #include <memory>
 #include <string>
 #include <string_view>
-#include <utility>
 
 namespace legate::detail {
 
@@ -39,7 +38,7 @@ class ReturnedPythonException {
    * This ctor exists purely because Cython doesn't know how to create `Span`'s. See the other
    * ctor for further info.
    */
-  ReturnedPythonException(const void* pkl_buf, std::size_t pkl_len, std::string msg);
+  ReturnedPythonException(const std::byte* pkl_buf, std::size_t pkl_len, std::string msg);
 
   /**
    * @brief Construct a Python exception.
@@ -77,10 +76,10 @@ class ReturnedPythonException {
    * So it's easier to just store both. It's inefficient, sure, but we only do this when we are
    * handling an uncaught exception, and throwing exceptions was never gonna be cheap anyways.
    */
-  ReturnedPythonException(Span<const void> pkl_span, std::string msg);
+  ReturnedPythonException(Span<const std::byte> pkl_span, std::string msg);
 
   [[nodiscard]] static constexpr ExceptionKind kind();
-  [[nodiscard]] std::pair<std::size_t, const char*> pickle() const;
+  [[nodiscard]] Span<const std::byte> pickle() const;
   [[nodiscard]] std::string_view message() const;
   [[nodiscard]] bool raised() const;
 
@@ -97,10 +96,10 @@ class ReturnedPythonException {
   class Payload {
    public:
     Payload() = default;
-    Payload(std::size_t size, std::unique_ptr<char[]> bytes, std::string m) noexcept;
+    Payload(std::size_t size, std::unique_ptr<std::byte[]> bytes, std::string m) noexcept;
 
     std::size_t pkl_size{};
-    std::unique_ptr<char[]> pkl_bytes{};
+    std::unique_ptr<std::byte[]> pkl_bytes{};
     std::string msg{};
   };
 

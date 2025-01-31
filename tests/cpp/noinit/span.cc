@@ -54,11 +54,11 @@ template <typename T>
 void create(const T& value1, const T& value2, const T& value3)
 {
   const auto data = std::array<T, DATA_SIZE>{value1, value2, value3};
-  const auto span = legate::Span<const T>{data.data(), DATA_SIZE};
+  const auto span = legate::Span<const T>{data};
 
   EXPECT_EQ(span.ptr(), data.data());
-  EXPECT_EQ(span.size(), DATA_SIZE);
-  EXPECT_EQ(span.end() - span.begin(), DATA_SIZE);
+  EXPECT_EQ(span.size(), data.size());
+  EXPECT_EQ(span.end() - span.begin(), data.size());
   for (auto& to_compare : span) {
     const auto i = std::distance(span.begin(), &to_compare);
 

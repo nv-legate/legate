@@ -55,6 +55,10 @@ C++
 
 .. rubric:: Utilities
 
+- Allow constructing a ``legate::Span`` directly from container-like objects.
+- Allow constructing a ``legate::Span`` directly from a ``std::initializer_list``.
+- Add ``legate::Span::data()``.
+
 .. rubric:: I/O
 
 

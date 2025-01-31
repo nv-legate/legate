@@ -10,6 +10,8 @@
 # its affiliates is strictly prohibited.
 
 from cpython.bytes cimport PyBytes_AsStringAndSize
+from libc.stddef cimport size_t
+from libcpp.string cimport string as std_string
 
 from ..data.physical_array cimport PhysicalArray
 from ..data.scalar cimport Scalar
@@ -20,6 +22,24 @@ from .detail.returned_python_exception cimport _ReturnedPythonException
 import pickle
 import traceback
 
+# Cython doesn't know about std::byte, so we have to hide the conversion from
+# const char* to it.
+cdef extern from *:
+    """
+    #include <cstddef>
+    #include <string>
+
+    legate::detail::ReturnedPythonException make_python_exception(
+      const char *buf,
+      std::size_t len,
+      std::string msg)
+    {
+      return {reinterpret_cast<const std::byte *>(buf), len, std::move(msg)};
+    }
+    """
+    _ReturnedPythonException make_python_exception(
+        const char*, size_t, std_string
+    )
 
 cdef class TaskContext(Unconstructable):
     # the defacto constructor
@@ -132,7 +152,7 @@ cdef class TaskContext(Unconstructable):
 
         PyBytes_AsStringAndSize(exn_bytes, &buf, &length)
         self._handle.impl().set_exception(
-            _ReturnedPythonException(buf, length, exn_text.encode())
+            make_python_exception(buf, length, exn_text.encode())
         )
 
     cpdef bool can_raise_exception(self):
