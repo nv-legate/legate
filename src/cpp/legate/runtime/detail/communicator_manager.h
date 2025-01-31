@@ -83,12 +83,14 @@ class CommunicatorFactory {
 
 class CommunicatorManager {
  public:
-  [[nodiscard]] CommunicatorFactory* find_factory(std::string_view name);
+  [[nodiscard]] CommunicatorFactory* find_factory(std::string_view name) const;
   void register_factory(std::string name, std::unique_ptr<CommunicatorFactory> factory);
 
   void destroy();
 
  private:
+  [[nodiscard]] std::optional<CommunicatorFactory*> find_factory_(std::string_view name) const;
+
   std::vector<std::pair<std::string, std::unique_ptr<CommunicatorFactory>>> factories_{};
 };
 

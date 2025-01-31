@@ -71,31 +71,41 @@ Legion::FutureMap CommunicatorFactory::transform_(const Legion::FutureMap& commu
   return Runtime::get_runtime()->delinearize_future_map(communicator, launch_domain);
 }
 
-CommunicatorFactory* CommunicatorManager::find_factory(std::string_view name)
+// ==========================================================================================
+
+std::optional<CommunicatorFactory*> CommunicatorManager::find_factory_(std::string_view name) const
 {
-  auto it =
-    std::find_if(factories_.begin(),
-                 factories_.end(),
-                 [&](const std::pair<std::string, std::unique_ptr<CommunicatorFactory>>& e) {
-                   return e.first == name;
-                 });
-  if (it == factories_.end()) {
-    throw TracedException<std::runtime_error>{
-      fmt::format("No factory available for communicator '{}'", name)};
+  using pair_type = std::pair<std::string, std::unique_ptr<CommunicatorFactory>>;
+  const auto it   = std::find_if(factories_.begin(), factories_.end(), [&](const pair_type& pair) {
+    return pair.first == name;
+  });
+
+  return it == factories_.end() ? std::nullopt : std::make_optional(it->second.get());
+}
+
+CommunicatorFactory* CommunicatorManager::find_factory(std::string_view name) const
+{
+  if (const auto f = find_factory_(name); f.has_value()) {
+    return *f;
   }
-  return it->second.get();
+  throw TracedException<std::runtime_error>{
+    fmt::format("No factory available for communicator '{}'", name)};
 }
 
 void CommunicatorManager::register_factory(std::string name,
                                            std::unique_ptr<CommunicatorFactory> factory)
 {
+  if (const auto f = find_factory_(name); f.has_value()) {
+    throw TracedException<std::logic_error>{
+      fmt::format("Factory '{}' already registered: {}", name, fmt::ptr(*f))};
+  }
   factories_.emplace_back(std::move(name), std::move(factory));
 }
 
 void CommunicatorManager::destroy()
 {
-  for (auto i = factories_.rbegin(); i != factories_.rend(); ++i) {
-    i->second->destroy();
+  for (auto it = factories_.rbegin(); it != factories_.rend(); ++it) {
+    it->second->destroy();
   }
   factories_.clear();
 }
