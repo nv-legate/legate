@@ -16,12 +16,9 @@
 #include <legate/data/physical_store.h>
 #include <legate/operation/detail/timing.h>
 #include <legate/runtime/detail/runtime.h>
-#include <legate/utilities/detail/traced_exception.h>
-
-#include <legion.h>
 
 #include <optional>
-#include <stdexcept>
+#include <utility>
 
 namespace legate::timing {
 
@@ -32,7 +29,9 @@ class Time::Impl {
   [[nodiscard]] std::int64_t value()
   {
     if (!value_) {
-      value_ = legate::PhysicalStore{store_->get_physical_store(false)}.scalar<std::int64_t>();
+      value_ =
+        legate::PhysicalStore{store_->get_physical_store(/* ignore_future_mutability */ false)}
+          .scalar<std::int64_t>();
       store_.reset();
     }
     return *value_;
@@ -43,23 +42,23 @@ class Time::Impl {
   std::optional<std::int64_t> value_{std::nullopt};
 };
 
-std::int64_t Time::value() const
-{
-  if (!impl_) {
-    throw legate::detail::TracedException<std::invalid_argument>{"Invalid time object"};
-  }
-  return impl_->value();
-}
+Time::Time(SharedPtr<Impl> impl) : impl_{std::move(impl)} {}
+
+std::int64_t Time::value() const { return impl_->value(); }
+
+Time::~Time() = default;
+
+// ==========================================================================================
 
 Time measure_microseconds()
 {
-  return Time{make_shared<Time::Impl>(
+  return Time{legate::make_shared<Time::Impl>(
     detail::Runtime::get_runtime()->get_timestamp(detail::Timing::Precision::MICRO))};
 }
 
 Time measure_nanoseconds()
 {
-  return Time{make_shared<Time::Impl>(
+  return Time{legate::make_shared<Time::Impl>(
     detail::Runtime::get_runtime()->get_timestamp(detail::Timing::Precision::NANO))};
 }
 

@@ -12,11 +12,12 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/shared_ptr.h>
 
 #include <cstdint>
-#include <utility>
 
 /**
  * @file
@@ -44,11 +45,18 @@ class Time {
    */
   [[nodiscard]] std::int64_t value() const;
 
-  Time() = default;
+  Time()                           = LEGATE_DEFAULT_WHEN_CYTHON;
+  Time(const Time&)                = default;
+  Time& operator=(const Time&)     = default;
+  Time(Time&&) noexcept            = default;
+  Time& operator=(Time&&) noexcept = default;
+  ~Time();
 
  private:
   class Impl;
-  explicit Time(SharedPtr<Impl> impl) : impl_{std::move(impl)} {}
+
+  explicit Time(SharedPtr<Impl> impl);
+
   SharedPtr<Impl> impl_{};
 
   friend Time measure_microseconds();

@@ -15,15 +15,15 @@ from ...core._lib.utilities.unconstructable cimport Unconstructable
 
 
 cdef extern from "legate/timing/timing.h" namespace "legate::timing" nogil:
-    cdef cppclass Time:
-        int64_t value()
+    cdef cppclass _Time "legate::timing::Time":
+        int64_t value() except+
 
-    cdef Time measure_microseconds()
-    cdef Time measure_nanoseconds()
+    cdef _Time measure_microseconds() except+
+    cdef _Time measure_nanoseconds() except+
 
 
 cdef class PyTime(Unconstructable):
-    cdef Time _time
+    cdef _Time _time
 
     cpdef int64_t value(self)
 
