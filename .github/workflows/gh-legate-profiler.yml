@@ -147,6 +147,7 @@ jobs:
           apt-get install -y jq curl
 
       - name: Upload Package to URM server
+        if: ${{ false }}
         run: |
           echo "Upload legate-profiler package"
           find "${ARTIFACT_PATH}/${TARGET_PLATFORM}/" -name "legate-profiler*.tar.bz2" | while IFS= read -r f; do
