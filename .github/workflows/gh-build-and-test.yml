@@ -184,7 +184,7 @@ jobs:
   updateTestStatus:
     needs: test-within-container
     name: Update Test status on Server
-    if: ${{ github.repository_owner == 'nv-legate' && contains(github.workflow, 'Nightly') && inputs.upload-enabled == true }}
+    if: ${{ false }}
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.24
     with:

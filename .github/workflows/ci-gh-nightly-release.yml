@@ -43,7 +43,7 @@ jobs:
       build-mode: ${{ matrix.build-mode }}
       build-type: release
       upload-enabled: ${{ matrix.upload-enabled }}
-      upload-action: ${{ matrix.upload-enabled == true && (matrix.build-mode == 'release' && 'upload-package-ALL' || matrix.build-mode == 'release-debug' && 'upload-package-URM') || 'upload-package-None' }}
+      upload-action: ${{ matrix.upload-enabled && (matrix.build-mode == 'release' && 'upload-package-Anaconda' || 'upload-package-None') }}
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
       nightly: true
