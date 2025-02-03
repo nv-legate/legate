@@ -191,8 +191,8 @@ class Test_offload_to:
         # fbmem allotted to Legate runtime or it needs to be run with Legate
         # configured with a known amount of fbmem so that a big enough store
         # can be created that will necessitate offloading.
-        one_gig = 1024 * 1024 * 1024
-        shape = (4 * one_gig,)
+        one_meg = 1024 * 1024
+        shape = (128 * one_meg,)
         # two stores too big for the GPU memory
         store1 = runtime.create_store(dtype=ty.int8, shape=shape)
         store2 = runtime.create_store(dtype=ty.int8, shape=shape)
