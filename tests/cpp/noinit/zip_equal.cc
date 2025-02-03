@@ -36,16 +36,14 @@ using ZipTester = zip_iterator_common::ZipTester<ZipEqualFn>;
 
 namespace has_size_test {
 
-static_assert(legate::traits::detail::is_detected_v<legate::detail::zip_detail::has_size,
-                                                    std::vector<std::int32_t>>);
 static_assert(
-  !legate::traits::detail::is_detected_v<legate::detail::zip_detail::has_size, std::int32_t>);
+  legate::detail::is_detected_v<legate::detail::zip_detail::has_size, std::vector<std::int32_t>>);
+static_assert(!legate::detail::is_detected_v<legate::detail::zip_detail::has_size, std::int32_t>);
 
 static_assert(
-  std::conjunction_v<legate::traits::detail::is_detected<legate::detail::zip_detail::has_size,
-                                                         std::vector<std::int32_t>>,
-                     legate::traits::detail::is_detected<legate::detail::zip_detail::has_size,
-                                                         std::vector<std::int32_t>>>);
+  std::conjunction_v<
+    legate::detail::is_detected<legate::detail::zip_detail::has_size, std::vector<std::int32_t>>,
+    legate::detail::is_detected<legate::detail::zip_detail::has_size, std::vector<std::int32_t>>>);
 
 }  // namespace has_size_test
 

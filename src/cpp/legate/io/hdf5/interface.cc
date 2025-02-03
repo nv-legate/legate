@@ -106,7 +106,7 @@ namespace {
       throw legate::detail::TracedException<UnsupportedHDF5DataTypeError>{
         fmt::format("unsupported HDF5 datatype: {}", dtype.string())};
   }
-  LEGATE_ABORT("Unhandled HDF5 Datatype ", traits::detail::to_underlying(dclass));
+  LEGATE_ABORT("Unhandled HDF5 Datatype ", legate::detail::to_underlying(dclass));
 }
 
 [[nodiscard]] Shape deduce_shape_from_dataset(const detail::HDF5GlobalLock&,

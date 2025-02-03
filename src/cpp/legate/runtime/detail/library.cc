@@ -171,9 +171,8 @@ void Library::register_task(
   }();
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    log_legate().debug() << "[" << get_library_name() << "] task "
-                         << traits::detail::to_underlying(local_task_id)
-                         << " (global id: " << traits::detail::to_underlying(task_id) << "), "
+    log_legate().debug() << "[" << get_library_name() << "] task " << to_underlying(local_task_id)
+                         << " (global id: " << to_underlying(task_id) << "), "
                          << legate::TaskInfo{task_info};
   }
 

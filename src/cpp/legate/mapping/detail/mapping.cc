@@ -40,7 +40,7 @@ TaskTarget to_target(Processor::Kind kind)
     case Processor::Kind::PROC_GROUP: [[fallthrough]];
     case Processor::Kind::PROC_SET: break;
   }
-  LEGATE_ABORT("Unhandled Processor::Kind ", traits::detail::to_underlying(kind));
+  LEGATE_ABORT("Unhandled Processor::Kind ", legate::detail::to_underlying(kind));
 }
 
 TaskTarget get_matching_task_target(StoreTarget target)
@@ -73,7 +73,7 @@ StoreTarget to_target(Memory::Kind kind)
     case Memory::Kind::GPU_MANAGED_MEM: [[fallthrough]];
     case Memory::Kind::GPU_DYNAMIC_MEM: break;
   }
-  LEGATE_ABORT("Unhandled Processor::Kind ", traits::detail::to_underlying(kind));
+  LEGATE_ABORT("Unhandled Processor::Kind ", legate::detail::to_underlying(kind));
 }
 
 Processor::Kind to_kind(TaskTarget target)
@@ -83,7 +83,7 @@ Processor::Kind to_kind(TaskTarget target)
     case TaskTarget::OMP: return Processor::Kind::OMP_PROC;
     case TaskTarget::CPU: return Processor::Kind::LOC_PROC;
   }
-  LEGATE_ABORT("Unhandled TaskTarget ", traits::detail::to_underlying(target));
+  LEGATE_ABORT("Unhandled TaskTarget ", legate::detail::to_underlying(target));
 }
 
 Processor::Kind to_kind(VariantCode code)
@@ -93,7 +93,7 @@ Processor::Kind to_kind(VariantCode code)
     case VariantCode::GPU: return Processor::Kind::TOC_PROC;
     case VariantCode::OMP: return Processor::Kind::OMP_PROC;
   }
-  LEGATE_ABORT("Unhandled variant code ", traits::detail::to_underlying(code));
+  LEGATE_ABORT("Unhandled variant code ", legate::detail::to_underlying(code));
 }
 
 Memory::Kind to_kind(StoreTarget target)
@@ -104,7 +104,7 @@ Memory::Kind to_kind(StoreTarget target)
     case StoreTarget::ZCMEM: return Memory::Kind::Z_COPY_MEM;
     case StoreTarget::SOCKETMEM: return Memory::Kind::SOCKET_MEM;
   }
-  LEGATE_ABORT("Unhandled StoreTarget ", traits::detail::to_underlying(target));
+  LEGATE_ABORT("Unhandled StoreTarget ", legate::detail::to_underlying(target));
 }
 
 VariantCode to_variant_code(TaskTarget target)
@@ -114,7 +114,7 @@ VariantCode to_variant_code(TaskTarget target)
     case TaskTarget::OMP: return VariantCode::OMP;
     case TaskTarget::CPU: return VariantCode::CPU;
   }
-  LEGATE_ABORT("Unhandled TaskTarget ", traits::detail::to_underlying(target));
+  LEGATE_ABORT("Unhandled TaskTarget ", legate::detail::to_underlying(target));
 }
 
 VariantCode to_variant_code(Processor::Kind kind) { return to_variant_code(to_target(kind)); }

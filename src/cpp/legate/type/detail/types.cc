@@ -359,8 +359,7 @@ InternalSharedPtr<Type> primitive_type(Type::Code code)
     try {
       fmt::format_to(std::back_inserter(result), "{}", code);
     } catch (const std::invalid_argument&) {
-      fmt::format_to(
-        std::back_inserter(result), "<unknown type code: {}>", traits::detail::to_underlying(code));
+      fmt::format_to(std::back_inserter(result), "<unknown type code: {}>", to_underlying(code));
     }
     fmt::format_to(std::back_inserter(result), " is not a valid type code for a primitive type");
     throw TracedException<std::invalid_argument>{std::move(result)};
@@ -439,8 +438,7 @@ InternalSharedPtr<FixedArrayType> fixed_array_type(InternalSharedPtr<Type> eleme
     if (!element_type->is_primitive() || N > MAX_ELEMENTS) {
       return get_next_uid();
     }
-    return static_cast<std::uint32_t>(traits::detail::to_underlying(element_type->code)) |
-           (N << TYPE_CODE_OFFSET);
+    return static_cast<std::uint32_t>(to_underlying(element_type->code)) | (N << TYPE_CODE_OFFSET);
   }();
   return make_internal_shared<FixedArrayType>(uid, std::move(element_type), N);
 }

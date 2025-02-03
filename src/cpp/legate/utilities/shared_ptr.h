@@ -39,12 +39,11 @@ class SharedPtr {
   template <typename U,
             typename Deleter,
             typename Alloc = std::allocator<U>,
-            typename       = std::enable_if_t<traits::detail::is_ptr_compat_v<U, element_type>>>
+            typename       = std::enable_if_t<detail::is_ptr_compat_v<U, element_type>>>
   SharedPtr(U* ptr,
             Deleter deleter,
             Alloc allocator = Alloc{});  // NOLINT(performance-unnecessary-value-param)
-  template <typename U,
-            typename = std::enable_if_t<traits::detail::is_ptr_compat_v<U, element_type>>>
+  template <typename U, typename = std::enable_if_t<detail::is_ptr_compat_v<U, element_type>>>
   explicit SharedPtr(U* ptr);
 
   SharedPtr(const SharedPtr&) noexcept;
@@ -54,21 +53,21 @@ class SharedPtr {
 
   template <typename U,
             typename = std::enable_if_t<
-              traits::detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
+              detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
   SharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
     const SharedPtr<U>&) noexcept;
   template <typename U,
             typename = std::enable_if_t<
-              traits::detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
+              detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
   SharedPtr& operator=(const SharedPtr<U>&) noexcept;
   template <typename U,
             typename = std::enable_if_t<
-              traits::detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
+              detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
   SharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
     SharedPtr<U>&&) noexcept;
   template <typename U,
             typename = std::enable_if_t<
-              traits::detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
+              detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
   SharedPtr& operator=(SharedPtr<U>&&) noexcept;
 
   explicit SharedPtr(const InternalSharedPtr<element_type>&) noexcept;
@@ -76,39 +75,33 @@ class SharedPtr {
   explicit SharedPtr(InternalSharedPtr<element_type>&&) noexcept;
   SharedPtr& operator=(InternalSharedPtr<element_type>&&) noexcept;
 
-  template <
-    typename U,
-    typename = std::enable_if_t<
-      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+  template <typename U,
+            typename = std::enable_if_t<
+              detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   explicit SharedPtr(const InternalSharedPtr<U>&) noexcept;
-  template <
-    typename U,
-    typename = std::enable_if_t<
-      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+  template <typename U,
+            typename = std::enable_if_t<
+              detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   SharedPtr& operator=(const InternalSharedPtr<U>&) noexcept;
-  template <
-    typename U,
-    typename = std::enable_if_t<
-      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+  template <typename U,
+            typename = std::enable_if_t<
+              detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   explicit SharedPtr(InternalSharedPtr<U>&&) noexcept;
-  template <
-    typename U,
-    typename = std::enable_if_t<
-      traits::detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
+  template <typename U,
+            typename = std::enable_if_t<
+              detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
   SharedPtr& operator=(InternalSharedPtr<U>&&) noexcept;
 
-  template <
-    typename U,
-    typename D,
-    typename = std::enable_if_t<
-      traits::detail::is_ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
+  template <typename U,
+            typename D,
+            typename = std::enable_if_t<
+              detail::is_ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
   SharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
     std::unique_ptr<U, D>&&);
-  template <
-    typename U,
-    typename D,
-    typename = std::enable_if_t<
-      traits::detail::is_ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
+  template <typename U,
+            typename D,
+            typename = std::enable_if_t<
+              detail::is_ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
   SharedPtr& operator=(std::unique_ptr<U, D>&&);
 
   ~SharedPtr() noexcept;
@@ -122,7 +115,7 @@ class SharedPtr {
   template <typename U,
             typename D = detail::SharedPtrDefaultDelete<T, U>,
             typename A = std::allocator<U>,
-            typename   = std::enable_if_t<traits::detail::is_ptr_compat_v<U, element_type>>>
+            typename   = std::enable_if_t<detail::is_ptr_compat_v<U, element_type>>>
   void reset(U* ptr,
              D deleter   = D{},
              A allocator = A{});  // NOLINT(performance-unnecessary-value-param)

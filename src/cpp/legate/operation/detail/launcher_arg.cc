@@ -131,7 +131,7 @@ void WriteOnlyScalarStoreArg::pack(BufferBuilder& buffer, const StoreAnalyzer& /
 
 void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack(legate::traits::detail::to_underlying(ArrayKind::BASE));
+  buffer.pack(to_underlying(ArrayKind::BASE));
   data_->pack(buffer, analyzer);
 
   const bool nullable = null_mask_ != nullptr;
@@ -170,7 +170,7 @@ void BaseArrayArg::perform_invalidations() const
 
 void ListArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack(legate::traits::detail::to_underlying(ArrayKind::LIST));
+  buffer.pack(to_underlying(ArrayKind::LIST));
   type_->pack(buffer);
   descriptor_->pack(buffer, analyzer);
   vardata_->pack(buffer, analyzer);
@@ -201,7 +201,7 @@ void ListArrayArg::perform_invalidations() const
 
 void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const
 {
-  buffer.pack(legate::traits::detail::to_underlying(ArrayKind::STRUCT));
+  buffer.pack(to_underlying(ArrayKind::STRUCT));
   type_->pack(buffer);
 
   const bool nullable = null_mask_ != nullptr;

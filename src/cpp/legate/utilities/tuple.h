@@ -138,8 +138,7 @@ template <typename T>
 [[nodiscard]] tuple<T> from_range(T start, T stop);
 
 template <typename T>
-[[nodiscard]] tuple<T> full(traits::detail::type_identity_t<typename tuple<T>::size_type> size,
-                            T init);
+[[nodiscard]] tuple<T> full(detail::type_identity_t<typename tuple<T>::size_type> size, T init);
 
 template <typename FUNC, typename T>
 [[nodiscard]] auto apply(FUNC&& func, const tuple<T>& rhs);

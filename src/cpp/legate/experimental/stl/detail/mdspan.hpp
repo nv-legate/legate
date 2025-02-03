@@ -282,7 +282,7 @@ class MDSpanAccessor {
 template <typename Store>
 struct ValueTypeOf : meta::if_c<(type_code_of_v<Store> == Type::Code::NIL),
                                 meta::empty,
-                                traits::detail::type_identity<Store>> {};
+                                legate::detail::type_identity<Store>> {};
 
 }  // namespace detail
 

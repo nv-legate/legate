@@ -2038,16 +2038,15 @@ namespace {
     //
     // We need to special-case the logical-AND reduction for booleans, as it is registered as a
     // prod reduction on the Legion side...
-    (traits::detail::to_underlying(
+    (to_underlying(
        (type_code == Type::Code::BOOL && op == ReductionOpKind::AND) ? ReductionOpKind::MUL : op) *
      LEGION_TYPE_TOTAL) +
-    traits::detail::to_underlying(type_code));
+    to_underlying(type_code));
 }
 
-#define RECORD(OP, TYPE_CODE)                           \
-  PrimitiveType{TYPE_CODE}.record_reduction_operator(   \
-    traits::detail::to_underlying(ReductionOpKind::OP), \
-    builtin_redop_id(ReductionOpKind::OP, TYPE_CODE));
+#define RECORD(OP, TYPE_CODE)                         \
+  PrimitiveType{TYPE_CODE}.record_reduction_operator( \
+    to_underlying(ReductionOpKind::OP), builtin_redop_id(ReductionOpKind::OP, TYPE_CODE));
 
 #define RECORD_INT(OP)           \
   RECORD(OP, Type::Code::BOOL)   \
@@ -2108,10 +2107,10 @@ extern void register_exception_reduction_op(const Library* context);
   ResourceConfig config;
   config.max_tasks       = CoreTask::MAX_TASK;
   config.max_dyn_tasks   = config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
-  config.max_projections = traits::detail::to_underlying(CoreProjectionOp::MAX_FUNCTOR);
+  config.max_projections = to_underlying(CoreProjectionOp::MAX_FUNCTOR);
   // We register one sharding functor for each new projection functor
-  config.max_shardings     = traits::detail::to_underlying(CoreShardID::MAX_FUNCTOR);
-  config.max_reduction_ops = traits::detail::to_underlying(CoreReductionOp::MAX_REDUCTION);
+  config.max_shardings     = to_underlying(CoreShardID::MAX_FUNCTOR);
+  config.max_reduction_ops = to_underlying(CoreReductionOp::MAX_REDUCTION);
 
   auto* runtime = Runtime::get_runtime();
 

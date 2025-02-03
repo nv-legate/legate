@@ -54,7 +54,7 @@ LocalTaskID Task::task_id() const
 
 Legion::VariantID Task::legion_task_variant() const
 {
-  return traits::detail::to_underlying(to_variant_code(target()));
+  return legate::detail::to_underlying(to_variant_code(target()));
 }
 
 // ==========================================================================================

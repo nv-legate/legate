@@ -66,7 +66,7 @@ inline void task_wrapper_dyn_name(const void* args,
                                                                                              \
     [[nodiscard]] static constexpr const VariantOptions* get_default_options_() noexcept     \
     {                                                                                        \
-      if constexpr (traits::detail::is_detected_v<has_default_variant_options, T>) {         \
+      if constexpr (detail::is_detected_v<has_default_variant_options, T>) {                 \
         static_assert(                                                                       \
           std::is_same_v<std::decay_t<decltype(T::NAME##_VARIANT_OPTIONS)>, VariantOptions>, \
           "Default variant options for " #NAME                                               \

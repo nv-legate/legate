@@ -46,7 +46,7 @@ void show_progress(const DomainPoint& index_point,
       case Processor::Kind::PROC_GROUP: [[fallthrough]];
       case Processor::Kind::PROC_SET: break;
     }
-    LEGATE_ABORT("Unhandled processor kind: ", legate::traits::detail::to_underlying(kind));
+    LEGATE_ABORT("Unhandled processor kind: ", to_underlying(kind));
   }();
 
   std::stringstream point_str;

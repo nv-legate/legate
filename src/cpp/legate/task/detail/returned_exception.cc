@@ -25,19 +25,19 @@
 #include <string>
 #include <utility>
 
-namespace legate::traits::detail {
+namespace legate::detail {
 
 template <typename T, typename... Ts>
 struct is_same_as_one_of<T, std::variant<Ts...>> : is_same_as_one_of<T, Ts...> {};
 
-}  // namespace legate::traits::detail
+}  // namespace legate::detail
 
 namespace legate::detail {
 
 template <typename T>
 /*static*/ ReturnedException ReturnedException::construct_specific_from_buffer_(const void* buf)
 {
-  static_assert(traits::detail::is_same_as_one_of_v<T, variant_type>);
+  static_assert(detail::is_same_as_one_of_v<T, variant_type>);
 
   auto ret = T{};
 
@@ -103,8 +103,7 @@ void ReturnedException::throw_exception()
     case ExceptionKind::PYTHON:
       return construct_specific_from_buffer_<ReturnedPythonException>(buf);
   }
-  LEGATE_ABORT("Unhandled exception kind: ", traits::detail::to_underlying(kind));
-  LEGATE_UNREACHABLE();
+  LEGATE_ABORT("Unhandled exception kind: ", to_underlying(kind));
 }
 
 /*static*/ std::uint32_t ReturnedException::max_size()

@@ -16,9 +16,9 @@
 
 #include <type_traits>
 
-namespace legate::traits::detail {
+namespace legate::detail {
 
-namespace util {
+namespace move_detail {
 
 template <typename T>
 struct MoveConversionSFINAEHelper {
@@ -29,7 +29,7 @@ struct MoveConversionSFINAEHelper {
   // NOLINTEND(google-explicit-constructor)
 };
 
-}  // namespace util
+}  // namespace move_detail
 
 // A useful helper to detect if a class is TRULY move-constructible. It returns true if (and
 // only if) the class has a move ctor, i.e. Foo f{std::move(another_foo)} results in
@@ -49,9 +49,10 @@ struct MoveConversionSFINAEHelper {
 // So this
 template <typename T>
 struct is_pure_move_constructible
-  : std::integral_constant<bool,
-                           std::is_move_constructible_v<T> &&
-                             !std::is_constructible_v<T, util::MoveConversionSFINAEHelper<T>>> {};
+  : std::integral_constant<
+      bool,
+      std::is_move_constructible_v<T> &&
+        !std::is_constructible_v<T, move_detail::MoveConversionSFINAEHelper<T>>> {};
 
 template <typename T>
 inline constexpr bool is_pure_move_constructible_v = is_pure_move_constructible<T>::value;
@@ -85,7 +86,8 @@ template <typename T>
 struct is_pure_move_assignable
   : std::integral_constant<bool,
                            std::is_move_assignable_v<T> &&
-                             !std::is_assignable_v<T, util::MoveConversionSFINAEHelper<T>>> {};
+                             !std::is_assignable_v<T, move_detail::MoveConversionSFINAEHelper<T>>> {
+};
 
 template <typename T>
 inline constexpr bool is_pure_move_assignable_v = is_pure_move_assignable<T>::value;
@@ -139,28 +141,28 @@ template <typename Default,
           typename AlwaysVoid,
           template <typename...> typename Op,
           typename... Args>
-struct Detector : std::false_type {
+struct detector : std::false_type {  // NOLINT(readability-identifier-naming)
   using type = Default;
 };
 
 template <typename Default, template <typename...> typename Op, typename... Args>
-struct Detector<Default, std::void_t<Op<Args...>>, Op, Args...> : std::true_type {
+struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> : std::true_type {
   using type = Op<Args...>;
 };
 
-struct Nonesuch {
-  ~Nonesuch()                     = delete;
-  Nonesuch(Nonesuch const&)       = delete;
-  void operator=(Nonesuch const&) = delete;
+struct nonesuch {  // NOLINT(readability-identifier-naming)
+  ~nonesuch()                     = delete;
+  nonesuch(nonesuch const&)       = delete;
+  void operator=(nonesuch const&) = delete;
 };
 
 }  // namespace detected_detail
 
 template <typename Default, template <typename...> typename Op, typename... Args>
-using detected_or = detected_detail::Detector<Default, void, Op, Args...>;
+using detected_or = detected_detail::detector<Default, void, Op, Args...>;
 
 template <template <typename...> typename Op, typename... Args>
-using is_detected = detected_or<detected_detail::Nonesuch, Op, Args...>;
+using is_detected = detected_or<detected_detail::nonesuch, Op, Args...>;
 
 template <template <typename...> typename Op, typename... Args>
 constexpr bool is_detected_v = is_detected<Op, Args...>::value;
@@ -168,8 +170,7 @@ constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 template <template <typename...> class Op, typename... Args>
 using is_detected_t = typename is_detected<Op, Args...>::type;
 
-static_assert(LEGATE_CPP_MIN_VERSION <
-              20);  // NOLINT(readability-magic-numbers) std::type_identity since C++23
+LEGATE_CPP_VERSION_TODO(20, "use std::type_identity");
 
 template <typename T>
 struct type_identity {  // NOLINT(readability-identifier-naming)
@@ -179,4 +180,4 @@ struct type_identity {  // NOLINT(readability-identifier-naming)
 template <typename T>
 using type_identity_t = typename type_identity<T>::type;
 
-}  // namespace legate::traits::detail
+}  // namespace legate::detail

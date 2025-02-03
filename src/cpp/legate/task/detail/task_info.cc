@@ -26,7 +26,7 @@
 
 namespace legate::detail {
 
-static_assert(!traits::detail::is_pure_move_constructible_v<Legion::CodeDescriptor>,
+static_assert(!is_pure_move_constructible_v<Legion::CodeDescriptor>,
               "Use by value and std::move for Legion::CodeDescriptor");
 void TaskInfo::add_variant(VariantCode vid,
                            VariantImpl body,
@@ -95,7 +95,7 @@ void TaskInfo::register_task(GlobalTaskID task_id) const
                                    /* user_data */ nullptr,
                                    /* user_len */ 0,
                                    /* return_size */ 0,
-                                   traits::detail::to_underlying(vcode),
+                                   to_underlying(vcode),
                                    /* has_return_type_size */ false);
   }
 }

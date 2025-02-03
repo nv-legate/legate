@@ -29,7 +29,7 @@ class VariantInfo {
  public:
   VariantInfo() = default;
 
-  static_assert(!traits::detail::is_pure_move_constructible_v<Legion::CodeDescriptor>,
+  static_assert(!is_pure_move_constructible_v<Legion::CodeDescriptor>,
                 "Use by value and std::move for Legion::CodeDescriptor");
   /**
    * @brief Construct a VariantInfo

@@ -243,7 +243,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
 
   Legion::ProjectionID projection = 0;
   for (auto&& req : task.regions) {
-    if (req.tag == traits::detail::to_underlying(legate::detail::CoreMappingTag::KEY_STORE)) {
+    if (req.tag == legate::detail::to_underlying(legate::detail::CoreMappingTag::KEY_STORE)) {
       projection = req.projection;
       break;
     }
@@ -817,7 +817,7 @@ void BaseMapper::tighten_write_policies_(const Legion::Mappable& mappable,
       continue;
     }
 
-    auto priv = traits::detail::to_underlying(LEGION_NO_ACCESS);
+    auto priv = legate::detail::to_underlying(LEGION_NO_ACCESS);
     for (const auto* req : mapping->requirements()) {
       priv |= req->privilege;
     }
@@ -1238,7 +1238,7 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
   std::stringstream req_ss;
 
   if (redop > GlobalRedopID{0}) {
-    req_ss << "reduction (" << traits::detail::to_underlying(redop) << ") requirement(s) ";
+    req_ss << "reduction (" << legate::detail::to_underlying(redop) << ") requirement(s) ";
   } else {
     req_ss << "region requirement(s) ";
   }
@@ -1852,7 +1852,7 @@ void BaseMapper::map_future_map_reduction(Legion::Mapping::MapperContext /*ctx*/
       // If this was joining exceptions, we should put instances on a host-visible memory
       // because they need serdez
       if (input.tag ==
-          traits::detail::to_underlying(legate::detail::CoreMappingTag::JOIN_EXCEPTION)) {
+          legate::detail::to_underlying(legate::detail::CoreMappingTag::JOIN_EXCEPTION)) {
         dest_memories.push_back(local_machine_.zerocopy_memory());
       } else {
         auto&& fbufs = local_machine_.frame_buffers();

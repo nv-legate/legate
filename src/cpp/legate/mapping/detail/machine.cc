@@ -100,10 +100,10 @@ std::string Machine::to_string() const { return fmt::format("{}", fmt::streamed(
 
 void Machine::pack(legate::detail::BufferBuilder& buffer) const
 {
-  buffer.pack(legate::traits::detail::to_underlying(preferred_target()));
+  buffer.pack(legate::detail::to_underlying(preferred_target()));
   buffer.pack(static_cast<std::uint32_t>(processor_ranges().size()));
   for (auto&& [target, processor_range] : processor_ranges()) {
-    buffer.pack(legate::traits::detail::to_underlying(target));
+    buffer.pack(legate::detail::to_underlying(target));
     buffer.pack<std::uint32_t>(processor_range.low);
     buffer.pack<std::uint32_t>(processor_range.high);
     buffer.pack<std::uint32_t>(processor_range.per_node_count);
@@ -433,7 +433,7 @@ Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) cons
     case StoreTarget::ZCMEM: return zerocopy_memory();
     case StoreTarget::SOCKETMEM: return socket_memories().at(proc);
   }
-  LEGATE_ABORT("invalid StoreTarget: ", legate::traits::detail::to_underlying(target));
+  LEGATE_ABORT("invalid StoreTarget: ", legate::detail::to_underlying(target));
 }
 
 std::uint32_t LocalMachine::g2c_multi_hop_bandwidth(Memory gpu_mem, Memory cpu_mem) const

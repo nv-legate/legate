@@ -33,7 +33,7 @@ void Timing::launch()
           Legion::Runtime::get_context());
       }
     }
-    LEGATE_ABORT("Unhandled precision ", traits::detail::to_underlying(precision_));
+    LEGATE_ABORT("Unhandled precision ", to_underlying(precision_));
     return Legion::Future{};
   };
   store_->set_future(get_timestamp(), 0);

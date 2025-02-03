@@ -287,7 +287,7 @@ void check_image(const legate::LogicalStore& func,
 
   task.add_input(func, part_domain);
   task.add_input(range, part_range);
-  task.add_scalar_arg(legate::Scalar{legate::traits::detail::to_underlying(hint)});
+  task.add_scalar_arg(legate::Scalar{hint});
   task.add_constraint(legate::image(part_domain, part_range, hint));
 
   runtime->submit(std::move(task));

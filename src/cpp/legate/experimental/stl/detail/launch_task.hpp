@@ -298,8 +298,7 @@ template <typename T>
 
 [[nodiscard]] inline std::int32_t next_reduction_kind_()  // NOLINT(readability-identifier-naming)
 {
-  static std::atomic<std::int32_t> id{legate::traits::detail::to_underlying(ReductionOpKind::XOR) +
-                                      1};
+  static std::atomic<std::int32_t> id{legate::detail::to_underlying(ReductionOpKind::XOR) + 1};
   return id.fetch_add(1);
 }
 

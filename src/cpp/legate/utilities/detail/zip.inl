@@ -371,7 +371,7 @@ template <typename... T>
 zip_detail::Zipper<zip_detail::ZiperatorEqual, T...> zip_equal(T&&... args)
 {
   if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG) && (sizeof...(args) > 1) &&
-                std::conjunction_v<traits::detail::is_detected<zip_detail::has_size, T>...>) {
+                std::conjunction_v<detail::is_detected<zip_detail::has_size, T>...>) {
     const auto all_same_size = [](const auto& a0, const auto&... rest) {
       return ((std::size(a0) == std::size(rest)) && ...);
     }(args...);

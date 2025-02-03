@@ -95,7 +95,7 @@ class AlignOfPointType {
 std::optional<std::size_t> CoreMapper::allocation_pool_size(
   const legate::mapping::Task& task, legate::mapping::StoreTarget memory_kind)
 {
-  const auto task_id = traits::detail::to_underlying(task.task_id());
+  const auto task_id = legate::detail::to_underlying(task.task_id());
   switch (task_id) {
     case legate::detail::CoreTask::EXTRACT_SCALAR: {
       // Extract scalar task doesn't use the framebuffer
