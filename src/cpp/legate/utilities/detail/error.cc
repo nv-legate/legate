@@ -60,7 +60,14 @@ constexpr auto BASE_ERROR_PREFIX = std::string_view{"LEGATE ERROR:"};
     // function-local static variable whose initialization depends on that function?
     //
     // Which is not great
-    if (const auto* no_color = std::getenv("NO_COLOR"); no_color && (no_color[0] != '0')) {
+
+    // https://force-color.org/
+    if (const auto* force_color = std::getenv("FORCE_COLOR");
+        force_color && (force_color[0] != '\0')) {
+      return true;
+    }
+    // https://no-color.org/
+    if (const auto* no_color = std::getenv("NO_COLOR"); no_color && (no_color[0] != '\0')) {
       return false;
     }
     return cpptrace::isatty(cpptrace::stdout_fileno) && cpptrace::isatty(cpptrace::stderr_fileno);

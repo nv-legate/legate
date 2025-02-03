@@ -184,6 +184,11 @@ class TestStage(Protocol):
         # can't use auto-resource configuration in any tests
         env.update(MANUAL_CONFIG_ENV)
 
+        # Do this here so that stage_env() and project.stage_env() can
+        # potentially override it.
+        if config.other.color:
+            env.setdefault("FORCE_COLOR", "1")
+
         # add general stage environment customizations
         env.update(self.stage_env(config, system))
 

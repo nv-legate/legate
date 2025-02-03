@@ -22,6 +22,9 @@ Changes: Latest Development Version
   ``--logging some_logger=info``. To see supported values for this feature, see the
   ``--help`` output of the legate driver, or by running with ``LEGATE_CONFIG=--help``. To
   ease adoption, the old numeric logging values continue to be supported.
+- Add support for ``FORCE_COLOR`` and ``NO_COLOR`` environment variables. In keeping with
+  https://force-color.org/ and https://no-color.org/ if both are defined, then
+  ``FORCE_COLOR`` takes precedence.
 
 C++
 ---

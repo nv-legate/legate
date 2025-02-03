@@ -38,7 +38,8 @@ class TracedExceptionFixture : public DefaultFixture {
   void TearDown() override;
 
  private:
-  std::optional<legate::test::Environment::TemporaryEnvVar> tmp_{};
+  std::optional<legate::test::Environment::TemporaryEnvVar> force_color_{};
+  std::optional<legate::test::Environment::TemporaryEnvVar> no_color_{};
 };
 
 inline void TracedExceptionFixture::SetUp()
@@ -49,13 +50,15 @@ inline void TracedExceptionFixture::SetUp()
   // Must do this in a fixture because the "should exceptions use color" check is done
   // exactly once, and on construction of a TracedException object. So we need to ensure that
   // all tests are disabling color output.
-  tmp_.emplace("NO_COLOR", "1", true);
+  force_color_.emplace("FORCE_COLOR", nullptr);
+  no_color_.emplace("NO_COLOR", "1", true);
   DefaultFixture::SetUp();
 }
 
 inline void TracedExceptionFixture::TearDown()
 {
-  tmp_.reset();
+  force_color_.reset();
+  no_color_.reset();
   DefaultFixture::TearDown();
 }
 
