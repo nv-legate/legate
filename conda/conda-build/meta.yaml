@@ -190,7 +190,7 @@ requirements:
     - libcal-dev
 {% endif %}
 {% if network == 'ucx' %}
-    - ucx >=1.17
+    - ucx >=1.17<1.18
 {% endif %}
     - openmpi <5
 
