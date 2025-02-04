@@ -878,11 +878,7 @@ endif()
        "set(Legion_MAX_DIM ${Legion_MAX_DIM})"
        "set(Legion_MAX_FIELDS ${Legion_MAX_FIELDS})"
        # END MUST MATCH
-       [=[
-if(Legion_NETWORKS)
-  find_package(MPI REQUIRED COMPONENTS CXX)
-endif()
-]=])
+)
 
 get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
 
