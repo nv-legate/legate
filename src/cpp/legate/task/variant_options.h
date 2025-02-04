@@ -12,10 +12,15 @@
 
 #pragma once
 
+#include <legate/utilities/cpp_version.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/typedefs.h>
 
+#include <array>
 #include <cstddef>
+#include <initializer_list>
+#include <optional>
+#include <string_view>
 
 /**
  * @file
@@ -61,6 +66,57 @@ class VariantOptions {
   bool elide_device_ctx_sync{};
 
   /**
+   * @brief Indicate whether a task has side effects outside of the runtime's tracking that
+   * forbid it from replicated a task.
+   *
+   * When a task only takes scalar stores, it gets replicated by default on all the ranks, as
+   * that's more efficient than having only one of the ranks run it and broadcast the results.
+   *
+   * However, sometimes a task may have "side effects" (which are outside the runtime's
+   * tracking) which should otherwise forbid the runtime from replicating a particular variant.
+   *
+   * For example, the task may write something to disk, or effect some other kind of permanent
+   * change to the system. In these cases the runtime must not replicate the task, as the
+   * effect must occur exactly once.
+   */
+  bool has_side_effect{};
+
+  /**
+   * @brief Whether this variant may throw an exception.
+   *
+   * Tasks that throw exception must be handled specially by the runtime in order to safely and
+   * correctly propagate the thrown exceptions. For this reason, tasks must explicitly declare
+   * whether they throw an exception.
+   *
+   * @warning This special handling usually comes with severe performance penalties. For
+   * example, the runtime may block the calling thread (i.e. the main thread) on the completion
+   * of the possibly throwing task, or may opt not to schedule any other tasks concurrently.
+   *
+   * @warning It is highly recommended that tasks do *not* throw exceptions, and instead
+   * indicate an error state using some other way. Exceptions should be used as an absolute
+   * last resort.
+   */
+  bool may_throw_exception{};
+
+  /**
+   * @brief The maximum number of communicators allowed per variant.
+   *
+   * This is a workaround for insufficient constexpr support in C++17 and will be removed in a
+   * future release.
+   */
+  static constexpr auto MAX_COMMS = 3;
+
+  /**
+   * @brief The communicator(s) to be used by the variant, or `std::nullopt` if no communicator
+   * is to be used.
+   *
+   * Setting this to anything other than `std::nullopt` implies `concurrent` to be `true`.
+   */
+  std::optional<std::array<std::string_view, MAX_COMMS>> communicators{};
+
+  LEGATE_CPP_VERSION_TODO(20, "Use std::vector for underlying container, and get rid of MAX_COMMS");
+
+  /**
    * @brief Changes the value of the `concurrent` flag
    *
    * @param `concurrent` A new value for the `concurrent` flag
@@ -85,6 +141,50 @@ class VariantOptions {
    * @see elide_device_ctx_sync
    */
   constexpr VariantOptions& with_elide_device_ctx_sync(bool elide_sync);
+
+  /**
+   * @brief Sets whether the variant has side effects.
+   *
+   * @param side_effect `true` if the task has side-effects, `false` otherwise.
+   *
+   * @return reference to `this`.
+   *
+   * @see has_side_effect.
+   */
+  constexpr VariantOptions& with_has_side_effect(bool side_effect);
+
+  /**
+   * @brief Sets whether the variant may throw exceptions.
+   *
+   * @param may_throw `true` if the variant may throw exceptions, `false` otherwise.
+   *
+   * @return reference to `this`.
+   *
+   * @see may_throw_exception.
+   */
+  constexpr VariantOptions& with_may_throw_exception(bool may_throw);
+
+  /**
+   * @brief Sets the communicator(s) for the variant.
+   *
+   * This call implies `concurrent = true` as well.
+   *
+   * The `VariantOptions` does not take ownership of `comms` in any way. If `comms` are not
+   * constructed from a string-literal, or some other object with static storage duration, then
+   * the user must ensure that the string(s) outlives this object.
+   *
+   * Due to limitations with constexpr in C++17, the user may register at most `MAX_COMMS`
+   * number of communicators. This restriction is expected to be lifted in the future.
+   *
+   * @param comms The communicator(s) to use.
+   *
+   * @return reference to `this`.
+   *
+   * @see communicators.
+   */
+  VariantOptions& with_communicators(std::initializer_list<std::string_view> comms) noexcept;
+
+  LEGATE_CPP_VERSION_TODO(20, "The above function can be constexpr");
 
   /**
    * @brief Populate a Legion::TaskVariantRegistrar using the options contained.

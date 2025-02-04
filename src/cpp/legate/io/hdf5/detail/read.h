@@ -14,6 +14,7 @@
 
 #include <legate/task/task.h>
 #include <legate/task/task_context.h>
+#include <legate/task/variant_options.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/typedefs.h>
 
@@ -36,8 +37,12 @@ class HDF5Read : public LegateTask<HDF5Read> {
  public:
   static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_HDF5_FILE_READ};
 
-  static constexpr VariantOptions GPU_VARIANT_OPTIONS =
-    VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
+  static constexpr auto CPU_VARIANT_OPTIONS = VariantOptions{}.with_has_side_effect(true);
+  static constexpr auto GPU_VARIANT_OPTIONS = VariantOptions{}
+                                                .with_elide_device_ctx_sync(true)
+                                                .with_has_allocations(true)
+                                                .with_has_side_effect(true);
+  static constexpr auto OMP_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);

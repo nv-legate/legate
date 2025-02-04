@@ -14,6 +14,7 @@
 
 #include <legate/task/task.h>
 #include <legate/task/task_context.h>
+#include <legate/task/variant_options.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/typedefs.h>
 
@@ -30,6 +31,10 @@ namespace legate::experimental::io::kvikio::detail {
 class BasicRead : public LegateTask<BasicRead> {
  public:
   static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_FILE_READ};
+
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_side_effect(true);
+  static constexpr auto OMP_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
+  static constexpr auto GPU_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
@@ -49,6 +54,10 @@ class BasicRead : public LegateTask<BasicRead> {
 class BasicWrite : public LegateTask<BasicWrite> {
  public:
   static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_FILE_WRITE};
+
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_side_effect(true);
+  static constexpr auto OMP_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
+  static constexpr auto GPU_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);

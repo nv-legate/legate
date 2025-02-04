@@ -31,6 +31,7 @@
 #include <legate/task/task_info.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/assert.h>
+#include <legate/utilities/cpp_version.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zip.h>
@@ -57,9 +58,20 @@ Task::Task(const Library* library,
     library_{library},
     task_id_{task_id},
     concurrent_{variant_info.options.concurrent},
+    has_side_effect_{variant_info.options.has_side_effect},
+    can_throw_exception_{variant_info.options.may_throw_exception},
     can_elide_device_ctx_sync_{variant_info.options.elide_device_ctx_sync},
     can_inline_launch_{can_inline_launch}
 {
+  if (const auto& communicators = variant_info.options.communicators; communicators.has_value()) {
+    for (auto&& comm : *communicators) {
+      if (comm.empty()) {
+        LEGATE_CPP_VERSION_TODO(20, "No need to use empty comm as sentinel value anymore");
+        break;
+      }
+      add_communicator(comm);
+    }
+  }
 }
 
 void Task::add_scalar_arg(InternalSharedPtr<Scalar> scalar)
@@ -78,8 +90,8 @@ void Task::throws_exception(bool can_throw_exception)
 
 void Task::add_communicator(std::string_view name)
 {
-  auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
-  auto* factory  = comm_mgr->find_factory(name);
+  const auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
+  auto* factory        = comm_mgr->find_factory(name);
 
   if (factory->is_supported_target(machine().preferred_target())) {
     communicator_factories_.push_back(factory);
@@ -122,6 +134,8 @@ void Task::legion_launch_(Strategy* strategy_ptr)
   auto& strategy       = *strategy_ptr;
   auto launcher        = detail::TaskLauncher{library(), machine(), provenance(), local_task_id()};
   auto&& launch_domain = strategy.launch_domain(this);
+  const auto valid_launch  = launch_domain.is_valid();
+  const auto launch_volume = launch_domain.get_volume();
 
   launcher.set_priority(priority());
 
@@ -148,7 +162,7 @@ void Task::legion_launch_(Strategy* strategy_ptr)
   }
 
   // Add communicators
-  if (launch_domain.is_valid() && launch_domain.get_volume() > 1) {
+  if (valid_launch && (launch_volume > 1)) {
     const auto target           = machine().preferred_target();
     const auto& processor_range = machine().processor_range();
 
@@ -167,18 +181,18 @@ void Task::legion_launch_(Strategy* strategy_ptr)
 
   // TODO(wonchanl): Once we implement a precise interference checker, this workaround can be
   // removed
-  constexpr auto has_projection = [](auto& args) {
+  constexpr auto has_projection = [](const auto& args) {
     return std::any_of(
       args.begin(), args.end(), [](const auto& arg) { return arg.projection.has_value(); });
   };
   launcher.relax_interference_checks(
-    launch_domain.is_valid() &&
+    valid_launch &&
     (has_projection(inputs_) || has_projection(outputs_) || has_projection(reductions_)));
 
-  if (launch_domain.is_valid()) {
+  if (valid_launch) {
     auto result = launcher.execute(launch_domain);
 
-    if (launch_domain.get_volume() > 1) {
+    if (launch_volume > 1) {
       demux_scalar_stores_(result, launch_domain);
     } else {
       demux_scalar_stores_(result.get_future(launch_domain.lo()));

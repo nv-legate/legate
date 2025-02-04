@@ -13,6 +13,7 @@
 #pragma once
 
 #include <legate/task/variant_options.h>
+#include <legate/utilities/assert.h>
 
 namespace legate {
 
@@ -34,10 +35,43 @@ constexpr VariantOptions& VariantOptions::with_elide_device_ctx_sync(bool elide_
   return *this;
 }
 
+constexpr VariantOptions& VariantOptions::with_has_side_effect(bool side_effect)
+{
+  has_side_effect = side_effect;
+  return *this;
+}
+
+constexpr VariantOptions& VariantOptions::with_may_throw_exception(bool may_throw)
+{
+  may_throw_exception = may_throw;
+  return *this;
+}
+
+inline VariantOptions& VariantOptions::with_communicators(
+  std::initializer_list<std::string_view> comms) noexcept
+{
+  LEGATE_CHECK(comms.size() < MAX_COMMS);
+  if (!communicators.has_value()) {
+    communicators.emplace();
+  }
+
+  std::size_t i = 0;
+
+  for (; i < comms.size(); ++i) {
+    (*communicators)[i] = std::data(comms)[i];
+  }
+  // Clear the rest. Internally an empty communicator is used as the sentinel value.
+  for (; i < communicators->size(); ++i) {
+    (*communicators)[i] = std::string_view{};
+  }
+  return with_concurrent(true);
+}
+
 constexpr bool VariantOptions::operator==(const VariantOptions& other) const
 {
   return concurrent == other.concurrent && has_allocations == other.has_allocations &&
-         elide_device_ctx_sync == other.elide_device_ctx_sync;
+         elide_device_ctx_sync == other.elide_device_ctx_sync &&
+         has_side_effect == other.has_side_effect && communicators == other.communicators;
 }
 
 constexpr bool VariantOptions::operator!=(const VariantOptions& other) const

@@ -74,7 +74,6 @@ LogicalArray from_file(const std::filesystem::path& file_path, const Type& type)
 
   task.add_scalar_arg(Scalar{file_path.native()});
   task.add_output(ret);
-  task.set_side_effect(true);
   rt->submit(std::move(task));
   return ret;
 }
@@ -103,7 +102,6 @@ void to_file(const std::filesystem::path& file_path, const LogicalArray& array)
 
   task.add_scalar_arg(Scalar{file_path.native()});
   task.add_input(array);
-  task.set_side_effect(true);
 
   // Truncate the file because each leaf task opens the file in "r+" mode (because otherwise
   // each open() of the file would overwrite it).

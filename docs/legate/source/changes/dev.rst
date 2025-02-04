@@ -44,6 +44,15 @@ C++
   undocumented.
 - Add ``legate::VariantInfo``. This class has technically always existed, but was
   undocumented.
+- Add ``legate::VariantOptions::has_side_effect`` and
+  ``legate::VariantOptions::with_has_side_effect()``, to indicate that a variant has
+  external side-effects, and therefore shouldn't be replicated.
+- Add ``legate::VariantOptions::may_throw_exception`` and
+  ``legate::VariantOptions::with_may_throw_exception()`` to indicate that a variant may
+  throw a C++ exception.
+- Add ``legate::VariantOptions::communicators`` and
+  ``legate::VariantOptions::with_communicators()`` to indicate that a variant will use the
+  specified communicator(s).
 
 .. rubric:: Types
 

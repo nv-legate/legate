@@ -167,7 +167,6 @@ LogicalArray from_file(const std::filesystem::path& file_path, std::string_view 
   task.add_scalar_arg(Scalar{native_path});
   task.add_scalar_arg(Scalar{dataset_name});
   task.add_output(ret);
-  task.set_side_effect(true);
   rt->submit(std::move(task));
   return ret;
 }

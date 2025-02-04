@@ -33,7 +33,23 @@ std::ostream& operator<<(std::ostream& os, const VariantOptions& options)
     os << "has_allocations,";
   }
   if (options.elide_device_ctx_sync) {
-    os << "elide_device_ctx_sync";
+    os << "elide_device_ctx_sync,";
+  }
+  if (options.has_side_effect) {
+    os << "has_side_effect,";
+  }
+  if (options.may_throw_exception) {
+    os << "may_throw_exceptions,";
+  }
+  if (const auto& comms = options.communicators; comms.has_value()) {
+    os << "communicator(";
+    for (auto&& c : *comms) {
+      if (c.empty()) {
+        break;
+      }
+      os << c << ",";
+    }
+    os << ")";
   }
   os << ")";
   return os;
