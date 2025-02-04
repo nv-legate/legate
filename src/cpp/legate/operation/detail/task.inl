@@ -74,7 +74,7 @@ inline AutoTask::AutoTask(const Library* library,
          unique_id,
          priority,
          std::move(machine),
-         /* can_inline_launch */ Config::enable_inline_task_launch}
+         /* can_inline_launch */ Config::get_config().enable_inline_task_launch()}
 {
 }
 

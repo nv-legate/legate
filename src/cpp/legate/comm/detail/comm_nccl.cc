@@ -121,14 +121,14 @@ class Init : public detail::LegionTask<Init> {
     auto time_init = std::chrono::duration<double>(ts_init_stop - ts_init_start).count() * 1000.0;
 
     if (0 == rank_id) {
-      legate::detail::log_legate().debug("NCCL initialization took %lf ms", time_init);
+      legate::detail::log_legate().debug() << "NCCL initialization took " << time_init << " ms";
     }
 
     if (num_ranks == 1) {
       return comm.release();
     }
 
-    if (!detail::Config::warmup_nccl) {
+    if (!detail::Config::get_config().warmup_nccl()) {
       return comm.release();
     }
 

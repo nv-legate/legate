@@ -73,7 +73,7 @@ template <typename F>
   };
 
   try {
-    if (!Config::use_empty_task) {
+    if (!Config::get_config().use_empty_task()) {
       (*variant_impl)(ctx);
     }
 

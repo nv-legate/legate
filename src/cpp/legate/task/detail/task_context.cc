@@ -71,7 +71,7 @@ TaskContext::TaskContext(CtorArgs&& args)
 
   if constexpr (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
     if (variant_kind_ == VariantCode::OMP) {
-      omp_set_num_threads(static_cast<std::int32_t>(Config::num_omp_threads));
+      omp_set_num_threads(static_cast<std::int32_t>(Config::get_config().num_omp_threads()));
     }
   }
 }

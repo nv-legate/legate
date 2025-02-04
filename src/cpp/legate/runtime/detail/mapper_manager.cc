@@ -34,8 +34,8 @@ MapperManager::MapperManager(Legion::Runtime* legion_runtime)
     // the call to add_mapper().
     const auto base_mapper = new mapping::detail::BaseMapper{};
 
-    LEGATE_ASSERT(Config::parsed());
-    if (Config::log_mapping_decisions) {
+    LEGATE_ASSERT(Config::get_config().parsed());
+    if (Config::get_config().log_mapping_decisions()) {
       try {
         return new Legion::Mapping::LoggingWrapper{base_mapper, &base_mapper->logger()};
       } catch (...) {

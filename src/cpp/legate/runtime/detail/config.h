@@ -18,44 +18,54 @@
 
 namespace legate::detail {
 
+#define LEGATE_CONFIG_VAR(__type__, __name__, __initial_value__)           \
+ private:                                                                  \
+  __type__ __name__##_ = __initial_value__;                                \
+                                                                           \
+ public:                                                                   \
+  [[nodiscard]] __type__ __name__() const noexcept { return __name__##_; } \
+  void set_##__name__(__type__ value) { __name__##_ = value; }             \
+  static_assert(true)
+
 class Config {
  public:
-  // Note, if you change any of these values, or add new ones, you must update Config::reset_()
-  // accordingly
-  static inline bool auto_config                   = true;
-  static inline bool show_config                   = false;
-  static inline bool show_progress_requested       = false;
-  static inline bool use_empty_task                = false;
-  static inline bool synchronize_stream_view       = false;
-  static inline bool log_mapping_decisions         = false;
-  static inline bool log_partitioning_decisions    = false;
-  static inline bool has_socket_mem                = false;
-  static inline std::uint64_t max_field_reuse_size = 0;
-  static inline bool warmup_nccl                   = false;
-  static inline bool enable_inline_task_launch     = false;
-  static inline std::int64_t num_omp_threads       = 0;
-  static inline bool show_mapper_usage             = false;
-  static inline bool need_cuda                     = false;
-  static inline bool need_openmp                   = false;
-  static inline bool need_network                  = false;
-  static inline std::uint32_t max_exception_size   = LEGATE_MAX_EXCEPTION_SIZE_DEFAULT;
-  static inline std::int64_t min_cpu_chunk         = LEGATE_MIN_CPU_CHUNK_DEFAULT;
-  static inline std::int64_t min_gpu_chunk         = LEGATE_MIN_GPU_CHUNK_DEFAULT;
-  static inline std::int64_t min_omp_chunk         = LEGATE_MIN_OMP_CHUNK_DEFAULT;
-  static inline std::uint32_t window_size          = LEGATE_WINDOW_SIZE_DEFAULT;
-  static inline std::uint32_t field_reuse_frac     = LEGATE_FIELD_REUSE_FRAC_DEFAULT;
-  static inline std::uint32_t field_reuse_freq     = LEGATE_FIELD_REUSE_FREQ_DEFAULT;
-  static inline bool consensus                     = LEGATE_CONSENSUS_DEFAULT;
-  static inline bool disable_mpi                   = LEGATE_DISABLE_MPI_DEFAULT;
-  static inline bool io_use_vfd_gds                = false;
+  LEGATE_CONFIG_VAR(bool, auto_config, true);
+  LEGATE_CONFIG_VAR(bool, show_config, false);
+  LEGATE_CONFIG_VAR(bool, show_progress_requested, false);
+  LEGATE_CONFIG_VAR(bool, use_empty_task, false);
+  LEGATE_CONFIG_VAR(bool, synchronize_stream_view, false);
+  LEGATE_CONFIG_VAR(bool, log_mapping_decisions, false);
+  LEGATE_CONFIG_VAR(bool, log_partitioning_decisions, false);
+  LEGATE_CONFIG_VAR(bool, has_socket_mem, false);
+  LEGATE_CONFIG_VAR(std::uint64_t, max_field_reuse_size, 0);
+  LEGATE_CONFIG_VAR(bool, warmup_nccl, false);
+  LEGATE_CONFIG_VAR(bool, enable_inline_task_launch, false);
+  LEGATE_CONFIG_VAR(std::int64_t, num_omp_threads, 0);
+  LEGATE_CONFIG_VAR(bool, show_mapper_usage, false);
+  LEGATE_CONFIG_VAR(bool, need_cuda, false);
+  LEGATE_CONFIG_VAR(bool, need_openmp, false);
+  LEGATE_CONFIG_VAR(bool, need_network, false);
+  LEGATE_CONFIG_VAR(std::uint32_t, max_exception_size, LEGATE_MAX_EXCEPTION_SIZE_DEFAULT);
+  LEGATE_CONFIG_VAR(std::int64_t, min_cpu_chunk, LEGATE_MIN_CPU_CHUNK_DEFAULT);
+  LEGATE_CONFIG_VAR(std::int64_t, min_gpu_chunk, LEGATE_MIN_GPU_CHUNK_DEFAULT);
+  LEGATE_CONFIG_VAR(std::int64_t, min_omp_chunk, LEGATE_MIN_OMP_CHUNK_DEFAULT);
+  LEGATE_CONFIG_VAR(std::uint32_t, window_size, LEGATE_WINDOW_SIZE_DEFAULT);
+  LEGATE_CONFIG_VAR(std::uint32_t, field_reuse_frac, LEGATE_FIELD_REUSE_FRAC_DEFAULT);
+  LEGATE_CONFIG_VAR(std::uint32_t, field_reuse_freq, LEGATE_FIELD_REUSE_FREQ_DEFAULT);
+  LEGATE_CONFIG_VAR(bool, consensus, LEGATE_CONSENSUS_DEFAULT);
+  LEGATE_CONFIG_VAR(bool, disable_mpi, LEGATE_DISABLE_MPI_DEFAULT);
+  LEGATE_CONFIG_VAR(bool, io_use_vfd_gds, false);
 
-  static void parse();
-  static bool parsed() noexcept;
+  void parse();
+  [[nodiscard]] bool parsed() const noexcept;
+
+  [[nodiscard]] static const Config& get_config() noexcept;
+  [[nodiscard]] static Config& get_config_mut() noexcept;
 
  private:
-  static void reset_() noexcept;
-
-  static inline bool parsed_ = false;
+  bool parsed_{};
 };
+
+#undef LEGATE_CONFIG_VAR
 
 }  // namespace legate::detail

@@ -109,7 +109,7 @@ class HDF5ReadFn {
       total_count *= count.emplace_back(shape.hi[i] - shape.lo[i] + 1);
     }
 
-    const auto gds_on = legate::detail::Config::io_use_vfd_gds;
+    const auto gds_on = legate::detail::Config::get_config().io_use_vfd_gds();
 
     const auto filepath     = context.scalar(0).value<std::string_view>();
     const auto dataset_name = context.scalar(1).value<std::string_view>();

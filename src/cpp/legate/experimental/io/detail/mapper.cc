@@ -52,7 +52,7 @@ std::optional<std::size_t> Mapper::allocation_pool_size(const mapping::Task& tas
     return 0;
   }
   // Bounce bffers are not created when GDS is on
-  if (legate::detail::Config::io_use_vfd_gds) {
+  if (legate::detail::Config::get_config().io_use_vfd_gds()) {
     return 0;
   }
 

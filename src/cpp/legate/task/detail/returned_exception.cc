@@ -108,7 +108,7 @@ void ReturnedException::throw_exception()
 
 /*static*/ std::uint32_t ReturnedException::max_size()
 {
-  static const auto MAX_SIZE = Config::max_exception_size;
+  static const auto MAX_SIZE = Config::get_config().max_exception_size();
 
   return MAX_SIZE;
 }

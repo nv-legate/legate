@@ -34,14 +34,14 @@ namespace {
   // TODO(wonchanl): make these configurable via Scope
   if (local_machine.has_gpus()) {
     // Make sure we can get at least 1M elements on each GPU
-    return Config::min_gpu_chunk;
+    return Config::get_config().min_gpu_chunk();
   }
   if (local_machine.has_omps()) {
     // Make sure we get at least 128K elements on each OpenMP
-    return Config::min_omp_chunk;
+    return Config::get_config().min_omp_chunk();
   }
   // Make sure we can get at least 8KB elements on each CPU
-  return Config::min_cpu_chunk;
+  return Config::get_config().min_cpu_chunk();
 }
 
 }  // namespace

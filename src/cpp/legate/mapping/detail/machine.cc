@@ -374,7 +374,7 @@ std::size_t LocalMachine::total_system_memory_size() const
 
 [[nodiscard]] std::size_t LocalMachine::calculate_field_reuse_size() const
 {
-  static const auto FIELD_REUSE_FRAC = legate::detail::Config::field_reuse_frac;
+  static const auto FIELD_REUSE_FRAC = legate::detail::Config::get_config().field_reuse_frac();
 
   if (has_gpus()) {
     return total_frame_buffer_size() / FIELD_REUSE_FRAC;

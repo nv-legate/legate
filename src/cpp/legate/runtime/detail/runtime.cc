@@ -111,10 +111,10 @@ constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
 
 Runtime::Runtime()
   : legion_runtime_{Legion::Runtime::get_runtime()},
-    window_size_{Config::window_size},
-    field_reuse_freq_{Config::field_reuse_freq},
+    window_size_{Config::get_config().window_size()},
+    field_reuse_freq_{Config::get_config().field_reuse_freq()},
     field_reuse_size_{local_machine().calculate_field_reuse_size()},
-    force_consensus_match_{Config::consensus}
+    force_consensus_match_{Config::get_config().consensus()}
 {
 }
 
@@ -258,10 +258,12 @@ void Runtime::initialize(Legion::Context legion_context)
     throw TracedException<std::runtime_error>{"Legate runtime has already been initialized"};
   }
 
+  auto& config = Config::get_config_mut();
+
   LEGATE_SCOPE_FAIL(
     // de-initialize everything in reverse order
-    Config::has_socket_mem = false;
-    scope_                 = Scope{};
+    config.set_has_socket_mem(false);
+    scope_ = Scope{};
     partition_manager_.reset();
     communicator_manager_.reset();
     field_manager_.reset();
@@ -283,7 +285,7 @@ void Runtime::initialize(Legion::Context legion_context)
   partition_manager_.emplace();
   static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
 
-  Config::has_socket_mem = local_machine_.has_socket_memory();
+  config.set_has_socket_mem(local_machine_.has_socket_memory());
   comm::register_builtin_communicator_factories(core_library());
 }
 
@@ -1709,7 +1711,9 @@ void handle_realm_default_args()
   // Call as soon as possible, to ensure that any exceptions are pretty-printed
   static_cast<void>(install_terminate_handler());
   // Must populate this before we handle Legate args as it expects to read its values.
-  Config::parse();
+  auto& config = Config::get_config_mut();
+
+  config.parse();
   if (!Legion::Runtime::has_runtime()) {
     handle_realm_default_args();
 
@@ -1721,17 +1725,17 @@ void handle_realm_default_args()
   }
 
   // Do these after handle_legate_args()
-  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && Config::need_cuda) {
+  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && config.need_cuda()) {
     throw TracedException<std::runtime_error>{
       "Legate was run with GPUs but was not built with GPU support. "
       "Please install Legate again with the \"--with-cuda\" flag"};
   }
-  if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && Config::need_openmp) {
+  if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && config.need_openmp()) {
     throw TracedException<std::runtime_error>{
       "Legate was run with OpenMP enabled, but was not built with OpenMP support. "
       "Please install Legate again with the \"--with-openmp\" flag"};
   }
-  if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && Config::need_network) {
+  if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && config.need_network()) {
     throw TracedException<std::runtime_error>{
       "Legate was run on multiple nodes but was not built with networking "
       "support. Please install Legate again with network support (e.g. \"--with-mpi\" or "

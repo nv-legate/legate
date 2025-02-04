@@ -195,7 +195,7 @@ void autoconfigure_gpus(const Realm::ModuleConfig* cuda, ScaledVar<std::int32_t>
 
   std::decay_t<decltype(*gpus)>::value_type auto_gpus = 0;
 
-  if (Config::auto_config && cuda != nullptr) {
+  if (Config::get_config().auto_config() && cuda != nullptr) {
     // use all available GPUs
     if (!cuda->get_resource("gpu", auto_gpus)) {
       throw TracedException<AutoConfigurationError>{
@@ -218,7 +218,7 @@ void autoconfigure_fbmem(const Realm::ModuleConfig* cuda,
     return;
   }
 
-  if (Config::auto_config) {
+  if (Config::get_config().auto_config()) {
     constexpr double FBMEM_FRACTION = 0.95;
     std::size_t res_fbmem;
 
@@ -250,7 +250,7 @@ void autoconfigure_omps(const Realm::ModuleConfig* openmp,
   using T = std::decay_t<decltype(*omps)>::value_type;
 
   const auto auto_omps = [&]() -> T {
-    if (!Config::auto_config || !openmp) {
+    if (!Config::get_config().auto_config() || !openmp) {
       return 0;  // don't allocate any OpenMP groups
     }
     if (gpus > 0) {
@@ -277,7 +277,7 @@ void autoconfigure_numamem(const std::vector<std::size_t>& numa_mems,
     return;
   }
 
-  if (!Config::auto_config) {
+  if (!Config::get_config().auto_config()) {
     numamem->set(MINIMAL_MEM);
     return;
   }
@@ -304,7 +304,7 @@ void autoconfigure_cpus(const Realm::ModuleConfig* core,
     return;
   }
 
-  if (!Config::auto_config || (omps > 0)) {
+  if (!Config::get_config().auto_config() || (omps > 0)) {
     // leave one core available for profiling meta-tasks, and other random uses
     cpus->set(1);
     return;
@@ -351,7 +351,7 @@ void autoconfigure_sysmem(const Realm::ModuleConfig* core,
     return;
   }
 
-  if (!Config::auto_config || (numamem > 0)) {
+  if (!Config::get_config().auto_config() || (numamem > 0)) {
     // don't allocate much memory to --sysmem; leave most to be used for --numamem
     sysmem->set(MINIMAL_MEM);
     return;
@@ -388,7 +388,7 @@ void autoconfigure_ompthreads(const Realm::ModuleConfig* core,
     return;
   }
 
-  if (!Config::auto_config) {
+  if (!Config::get_config().auto_config()) {
     ompthreads->set(1);
     return;
   }
@@ -514,7 +514,7 @@ void set_cuda_config_properties(Realm::Runtime* rt,
     }
   }
   if (gpus.value.value() > 0) {
-    Config::need_cuda = true;
+    Config::get_config_mut().set_need_cuda(true);
   }
 }
 
@@ -528,8 +528,11 @@ void set_openmp_config_properties(Realm::Runtime* rt,
     const auto num_threads = ompthreads.value.value();
 
     LEGATE_CHECK(num_threads > 0);
-    Config::need_openmp     = true;
-    Config::num_omp_threads = num_threads;
+
+    auto& config = Config::get_config_mut();
+
+    config.set_need_openmp(true);
+    config.set_num_omp_threads(num_threads);
   }
   try {
     try_set_property(rt, "openmp", "ocpu", parser, omps);
@@ -576,8 +579,8 @@ void set_legion_default_args(std::string log_dir,
     log_levels += item;
   };
 
-  LEGATE_ASSERT(Config::parsed());
-  if (Config::log_mapping_decisions) {
+  LEGATE_ASSERT(Config::get_config().parsed());
+  if (Config::get_config().log_mapping_decisions()) {
     add_logger(fmt::format("{}=info", mapping::detail::BaseMapper::LOGGER_NAME));
   }
 
@@ -796,7 +799,7 @@ void handle_legate_args()
 
   // Disable MPI in legate if the network bootstrap is p2p
   if (REALM_UCP_BOOTSTRAP_MODE.get(/* default_value */ "") == "p2p") {
-    LEGATE_DISABLE_MPI.set(true);
+    Config::get_config_mut().set_disable_mpi(true);
   }
 
   auto rt = Realm::Runtime::get_runtime();
@@ -806,7 +809,7 @@ void handle_legate_args()
 
   autoconfigure(&rt, &util, &cpus, &gpus, &omps, &ompthreads, &sysmem, &fbmem, &numamem);
 
-  if (Config::show_config) {
+  if (Config::get_config().show_config()) {
     // Can't use a logger, since Realm hasn't been initialized yet.
     std::cout << "Legate hardware configuration:";
     std::cout << " " << cpus.flag << "=" << cpus.value.raw_value();

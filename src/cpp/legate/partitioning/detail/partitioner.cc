@@ -239,7 +239,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   solver.solve_constraints();
 
-  if (Config::log_partitioning_decisions) {
+  if (Config::get_config().log_partitioning_decisions()) {
     solver.dump();
   }
 
@@ -289,7 +289,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   strategy->compute_launch_domains_(solver);
 
-  if (Config::log_partitioning_decisions) {
+  if (Config::get_config().log_partitioning_decisions()) {
     strategy->dump();
   }
 

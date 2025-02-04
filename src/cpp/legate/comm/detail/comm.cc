@@ -30,7 +30,7 @@ void register_tasks(Library* library)
   if constexpr (LEGATE_DEFINED(LEGATE_USE_CAL)) {
     cal::register_tasks(library);
   }
-  if (!Config::disable_mpi) {
+  if (!Config::get_config().disable_mpi()) {
     cpu::register_tasks(library);
   }
 }

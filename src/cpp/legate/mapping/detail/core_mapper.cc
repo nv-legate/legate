@@ -108,7 +108,7 @@ std::optional<std::size_t> CoreMapper::allocation_pool_size(
              EXTRA_SCALAR_ALIGNMENT;
     }
     case legate::detail::CoreTask::INIT_NCCL: {
-      return legate::detail::Config::warmup_nccl ? NCCL_WARMUP_BUFFER_SIZE : 0;
+      return legate::detail::Config::get_config().warmup_nccl() ? NCCL_WARMUP_BUFFER_SIZE : 0;
     }
     case legate::detail::CoreTask::FIND_BOUNDING_BOX: [[fallthrough]];
     case legate::detail::CoreTask::FIND_BOUNDING_BOX_SORTED: {

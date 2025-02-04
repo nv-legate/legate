@@ -30,7 +30,7 @@ namespace legate::detail::comm::coll {
 // called from main thread
 void init()
 {
-  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && Config::need_network) {
+  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && Config::get_config().need_network()) {
 #if LEGATE_DEFINED(LEGATE_USE_NETWORK)
     BackendNetwork::create_network(std::make_unique<detail::comm::coll::MPINetwork>());
 #endif

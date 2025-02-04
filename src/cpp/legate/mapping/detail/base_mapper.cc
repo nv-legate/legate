@@ -114,7 +114,7 @@ BaseMapper::BaseMapper()
 
 BaseMapper::~BaseMapper()
 {
-  if (legate::detail::Config::show_mapper_usage) {
+  if (legate::detail::Config::get_config().show_mapper_usage()) {
     constexpr std::string_view memory_kinds[] = {
 #define MEM_NAMES(name, desc) LEGATE_STRINGIZE(name),
       REALM_MEMORY_KINDS(MEM_NAMES)
