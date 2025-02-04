@@ -469,6 +469,7 @@ target_sources(legate
                        legate/utilities/detail/zip.cc
                        legate/utilities/detail/linearize.cc
                        legate/utilities/detail/error.cc
+                       legate/utilities/detail/proc_local_storage.cc
                        legate/timing/timing.cc
                        # stl
                        legate/experimental/stl/detail/clang_tidy_dummy.cpp
@@ -713,6 +714,8 @@ install(FILES legate/utilities/debug.h
               legate/utilities/scope_guard.inl
               legate/utilities/compiler.h
               legate/utilities/macros.h
+              legate/utilities/proc_local_storage.h
+              legate/utilities/proc_local_storage.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities)
 
 install(FILES legate/utilities/detail/compressed_pair.h

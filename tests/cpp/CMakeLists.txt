@@ -163,6 +163,7 @@ set(with_runtime_SRC
     integration/multi_scalar_out.cc
     integration/partitioner.cc
     integration/projection.cc
+    integration/proc_local_storage.cc
     integration/provenance.cc
     integration/redundant.cc
     integration/region_manager.cc
