@@ -19,6 +19,8 @@ sys.path.append(str(Path(__file__).parents[2]))
 
 from get_legate_dir import get_legate_dir  # type: ignore[import-not-found]
 
+from .bump_cmake_versions import get_cmakelists_version
+
 if TYPE_CHECKING:
     from argparse import Namespace
     from collections.abc import Sequence
@@ -26,17 +28,25 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-Mode = Literal["pre-cut", "post-cut-release-branch", "post-cut-main-branch"]
+Mode = Literal["cut-branch", "post-cut"]
 
 
 class Context:
     def __init__(self, args: Namespace) -> None:
+        self._legate_dir = Path(get_legate_dir())
         self._verbose = args.verbose
         self._dry_run = args.dry_run
-        self._release_version = args.release_version
-        self._next_version = args.next_version
+        self._version_after_this = args.version_after_this
         self._mode = args.mode
-        self._legate_dir = Path(get_legate_dir())
+
+        cmakelists = self.legate_dir / "src" / "CMakelists.txt"
+        self.vprint(f"Opening {cmakelists}")
+        version, _ = get_cmakelists_version(
+            cmakelists, cmakelists.read_text().splitlines()
+        )
+
+        version = ".".join(version.split(".")[:2])
+        self._version_being_released = version
 
     @property
     def verbose(self) -> bool:
@@ -47,12 +57,12 @@ class Context:
         return self._dry_run
 
     @property
-    def release_version(self) -> str:
-        return self._release_version
+    def version_being_released(self) -> str:
+        return self._version_being_released
 
     @property
-    def next_version(self) -> str:
-        return self._next_version
+    def version_after_this(self) -> str:
+        return self._version_after_this
 
     @staticmethod
     def to_full_version(version: str, *, extra_zeros: bool = False) -> str:

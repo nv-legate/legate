@@ -15,39 +15,52 @@ import json
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from pathlib import Path
+    from typing import Final
+
     from .context import Context
 
 
-def bump_cmakelists_version(ctx: Context, version: str) -> None:
-    cmakelists = ctx.legate_dir / "src" / "CMakeLists.txt"
-    ctx.vprint(f"Opening {cmakelists}")
-    assert cmakelists.is_file()
-    lines = cmakelists.read_text().splitlines()
+VERSION_RE: Final = re.compile(r"VERSION\s+(\d+\.\d+\.\d+)")
 
+
+def get_cmakelists_version(
+    src_file: Path, lines: list[str]
+) -> tuple[str, int]:
     in_project = False
     for idx, line in enumerate(lines):
-        if line.lstrip().startswith("project("):
+        stripped = line.lstrip()
+        if stripped.startswith("project("):
             in_project = True
-        if in_project:
-            if "VERSION" in line:
-                line_idx = idx
-                break
-            if ")" in line:
-                in_project = False
-    else:
-        m = f"Failed to find project() call for legate in {cmakelists}"
-        raise ValueError(m)
 
-    full_version = ctx.to_full_version(version, extra_zeros=True)
-    lines[line_idx] = re.sub(
-        r"VERSION\s+\d+\.\d+\.\d+", f"VERSION {full_version}", lines[line_idx]
+        if not in_project:
+            continue
+
+        if re_match := VERSION_RE.search(stripped):
+            return (re_match[1], idx)
+
+        if ")" in stripped:
+            break
+
+    m = f"Failed to find project() call for legate in {src_file}"
+    raise ValueError(m)
+
+
+def bump_cmakelists_version(ctx: Context) -> None:
+    cmakelists = ctx.legate_dir / "src" / "CMakeLists.txt"
+    ctx.vprint(f"Opening {cmakelists}")
+    lines = cmakelists.read_text().splitlines()
+    _, idx = get_cmakelists_version(cmakelists, lines)
+    full_version = ctx.to_full_version(
+        ctx.version_after_this, extra_zeros=True
     )
+    lines[idx] = re.sub(VERSION_RE, f"VERSION {full_version}", lines[idx])
     if not ctx.dry_run:
         cmakelists.write_text("\n".join(lines))
     ctx.vprint(f"Updated {cmakelists}")
 
 
-def bump_legion_version(ctx: Context, version: str) -> None:
+def bump_legion_version(ctx: Context) -> None:
     legion_version = (
         ctx.legate_dir / "src" / "cmake" / "versions" / "legion_version.json"
     )
@@ -57,8 +70,13 @@ def bump_legion_version(ctx: Context, version: str) -> None:
         data = json.load(fd)
 
     lg_data = data["packages"]["Legion"]
+    full_ver = ctx.to_full_version(ctx.version_after_this)
     assert "version" in lg_data
-    lg_data["version"] = ctx.to_full_version(version)
+    if lg_data["version"] == full_ver:
+        ctx.vprint("Legion version already bumped")
+        return
+
+    lg_data["version"] = full_ver
 
     if not ctx.dry_run:
         with legion_version.open(mode="w") as fd:

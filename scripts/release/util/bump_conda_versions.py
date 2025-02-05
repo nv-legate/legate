@@ -27,7 +27,9 @@ def _do_bump_legate_profiler_version(ctx: Context, meta_yaml: Path) -> None:
     ctx.vprint(f"Opening {meta_yaml}")
     assert meta_yaml.is_file()
     lines = meta_yaml.read_text()
-    next_full_ver = ctx.to_full_version(ctx.next_version, extra_zeros=True)
+    next_full_ver = ctx.to_full_version(
+        ctx.version_after_this, extra_zeros=True
+    )
     new_lines = LEGATE_VERSION_RE.sub(rf"\1'{next_full_ver}'", lines)
     if new_lines == lines:
         ctx.vprint("Legate profiler version already bumped")

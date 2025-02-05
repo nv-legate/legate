@@ -11,8 +11,13 @@
     },
     {
         "name": "25.01",
-        "preferred": true,
         "url": "https://docs.nvidia.com/legate/25.01/",
         "version": "25.01"
+    },
+    {
+        "name": "25.03",
+        "preferred": true,
+        "url": "https://docs.nvidia.com/legate/25.03/",
+        "version": "25.03"
     }
 ]

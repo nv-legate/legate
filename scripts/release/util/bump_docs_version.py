@@ -35,7 +35,7 @@ def rotate_switcher(ctx: Context) -> None:
         data: list[SwitcherData] = json.load(fd)
 
     for sub_data in data:
-        if "preferred" in sub_data:
+        if sub_data.get("preferred", False):
             last_release = sub_data
             break
     else:
@@ -61,17 +61,19 @@ def rotate_switcher(ctx: Context) -> None:
         )
         raise ValueError(m)
 
-    last_version = last_release["version"]
-    if last_version == ctx.release_version:
+    last_version = last_release["version"].strip()
+    if last_version == ctx.version_being_released:
         # nothing to do
         ctx.vprint(f"Last release version {last_version} == current version")
         return
 
     new_release: SwitcherData = {
-        "name": ctx.release_version,
+        "name": ctx.version_being_released,
         "preferred": True,
-        "url": last_release["url"].replace(last_version, ctx.release_version),
-        "version": ctx.release_version,
+        "url": last_release["url"].replace(
+            last_version, ctx.version_being_released
+        ),
+        "version": ctx.version_being_released,
     }
 
     data.append(new_release)
@@ -79,12 +81,10 @@ def rotate_switcher(ctx: Context) -> None:
         with switcher_json.open(mode="w") as fd:
             json.dump(data, fd, indent=4, sort_keys=True)
 
-    ctx.vprint(f"Updated {switcher_json} to {ctx.release_version}")
+    ctx.vprint(f"Updated {switcher_json} to {ctx.version_being_released}")
 
 
 DEFAULT_CHANGELOG: Final = """\
-Changes: Latest Development Version
-===================================
 
 ..
    STYLE:
@@ -145,65 +145,55 @@ Python
 """.strip()
 
 
+def _rotate_log_files(ctx: Context) -> Path:
+    ver_file = ctx.version_after_this.replace(".", "")
+    new_log = (
+        ctx.legate_dir
+        / "docs"
+        / "legate"
+        / "source"
+        / "changes"
+        / f"{ver_file}.rst"
+    )
+
+    if new_log.is_file():
+        ctx.vprint(f"Changelog already rotated ({new_log})")
+        return new_log
+
+    header = f"Changes: {ctx.version_after_this}"
+    underline = "=" * len(header)
+    changelog = f"{header}\n{underline}\n{DEFAULT_CHANGELOG}"
+
+    if not ctx.dry_run:
+        new_log.write_text(changelog)
+        ctx.run_cmd(["git", "add", str(new_log)])
+
+    ctx.vprint(f"Wrote new log to {new_log}")
+    return new_log
+
+
+def _update_symlink(ctx: Context, new_log: Path) -> None:
+    dev_link = new_log.parent / "dev.rst"
+
+    def make_link() -> None:
+        if not ctx.dry_run:
+            dev_link.symlink_to(new_log.name)
+            ctx.run_cmd(["git", "add", str(dev_link)])
+        ctx.vprint(f"Created symlink {dev_link} -> {new_log.name}")
+
+    if not dev_link.exists():
+        make_link()
+        return
+
+    assert dev_link.is_symlink()
+    if dev_link.readlink().resolve() == new_log:
+        ctx.vprint(f"dev link already exists {dev_link}")
+        return
+
+    dev_link.unlink()
+    make_link()
+
+
 def update_changelog(ctx: Context) -> None:
-    def rotate_log_files() -> Path:
-        dev_log = (
-            ctx.legate_dir
-            / "docs"
-            / "legate"
-            / "source"
-            / "changes"
-            / "dev.rst"
-        )
-        old_log = dev_log.with_stem(ctx.release_version.replace(".", ""))
-
-        ctx.vprint(f"Opening {dev_log}")
-        assert dev_log.is_file()
-
-        txt = dev_log.read_text()
-        if txt == DEFAULT_CHANGELOG:
-            ctx.vprint("changelog already rotated")
-            return old_log
-
-        lines = txt.splitlines()
-        assert lines[0] == DEFAULT_CHANGELOG[: DEFAULT_CHANGELOG.find("\n")]
-        lines[0] = f"Changes: {ctx.release_version}"
-        lines[1] = "=" * len(lines[0])
-
-        if not ctx.dry_run:
-            old_log.write_text("\n".join(lines))
-        ctx.vprint(f"Wrote old log to {old_log}")
-        ctx.run_cmd(["git", "add", str(old_log)])
-
-        if not ctx.dry_run:
-            dev_log.write_text(DEFAULT_CHANGELOG)
-        ctx.vprint(f"Updated {dev_log}")
-        return old_log
-
-    def update_links(old_log: Path) -> None:
-        index = old_log.parent / "index.rst"
-        assert index.is_file()
-        ctx.vprint(f"Opening {index}")
-        lines = index.read_text().splitlines()
-        for idx, line in enumerate(lines):
-            if "In Development <dev.rst>" in line:
-                idx += 1  # noqa: PLW2901
-                break
-        else:
-            m = f"Failed to find link to 'In Development' changelog in {index}"
-            raise ValueError(m)
-
-        cur_line = lines[idx]
-        padding = " " * (len(cur_line) - len(cur_line.lstrip()))
-        template = f"{padding}{ctx.release_version} <{old_log.name}>"
-        if cur_line == template:
-            ctx.vprint("Link already updated")
-            return
-
-        lines.insert(idx, template)
-        if not ctx.dry_run:
-            index.write_text("\n".join(lines))
-        ctx.vprint("Updated link to current documentation")
-
-    old_log = rotate_log_files()
-    update_links(old_log)
+    new_log = _rotate_log_files(ctx)
+    _update_symlink(ctx, new_log)
