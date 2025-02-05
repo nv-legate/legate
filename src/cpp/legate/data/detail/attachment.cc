@@ -15,6 +15,7 @@
 #include <legate_defines.h>
 
 #include <legate/runtime/detail/runtime.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <exception>
 #include <memory>
@@ -73,17 +74,14 @@ void Attachment::detach(bool unordered)
   }
 
   can_dealloc_.emplace(std::visit(
-    [&](auto&& handle) {
-      using T = std::decay_t<decltype(handle)>;
-      if constexpr (std::is_same_v<T, Legion::PhysicalRegion>) {
-        LEGATE_ASSERT(allocations_.size() == 1);
-        return Runtime::get_runtime()->detach(
-          handle, !allocations_.front()->read_only(), unordered);
-      }
-      if constexpr (std::is_same_v<T, Legion::ExternalResources>) {
-        return Runtime::get_runtime()->detach(handle, false /*flush*/, unordered);
-      }
-    },
+    Overload{[&](const Legion::PhysicalRegion& region) {
+               LEGATE_ASSERT(allocations_.size() == 1);
+               return Runtime::get_runtime()->detach(
+                 region, !allocations_.front()->read_only(), unordered);
+             },
+             [&](const Legion::ExternalResources& resources) {
+               return Runtime::get_runtime()->detach(resources, false /*flush*/, unordered);
+             }},
     handle_));
 }
 

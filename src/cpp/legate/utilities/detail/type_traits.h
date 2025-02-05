@@ -180,4 +180,13 @@ struct type_identity {  // NOLINT(readability-identifier-naming)
 template <typename T>
 using type_identity_t = typename type_identity<T>::type;
 
+template <typename... T>
+class Overload : public T... {
+ public:
+  using T::operator()...;
+};
+
+template <typename... T>
+Overload(T...) -> Overload<T...>;
+
 }  // namespace legate::detail

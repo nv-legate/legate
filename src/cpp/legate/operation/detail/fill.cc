@@ -18,6 +18,7 @@
 #include <legate/partitioning/detail/constraint_solver.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <stdexcept>
 
@@ -51,28 +52,24 @@ Fill::Fill(InternalSharedPtr<LogicalStore> lhs,
 
 void Fill::validate()
 {
-  class Visitor {
-   public:
-    // Would use const InternalSharedPtr<Type>& (since that's what these member functions
-    // return), but GCC balks:
-    //
-    // /home/bryan/work/legate.core.internal/src/cpp/legate/operation/detail/fill.cc: In member
-    // function 'virtual void legate::detail::Fill::validate()':
-    // /home/bryan/work/legate.core.internal/src/cpp/legate/operation/detail/fill.cc:64:19: error:
-    // possibly dangling reference to a temporary [-Werror=dangling-reference]
-    //    64 |   if (const auto& value_type = std::visit(Visitor{}, value_); *lhs_->type() != ...
-    //       |                   ^~~~~~~~~~
-    //
-    // So return by value it is...
-    InternalSharedPtr<Type> operator()(const InternalSharedPtr<LogicalStore>& store) const
-    {
-      return store->type();
-    }
+  // Would use const InternalSharedPtr<Type>& (since that's what these member functions
+  // return), but GCC balks:
+  //
+  // /home/bryan/work/legate.core.internal/src/cpp/legate/operation/detail/fill.cc: In member
+  // function 'virtual void legate::detail::Fill::validate()':
+  // /home/bryan/work/legate.core.internal/src/cpp/legate/operation/detail/fill.cc:64:19: error:
+  // possibly dangling reference to a temporary [-Werror=dangling-reference]
+  //    64 |   if (const auto& value_type = std::visit(Visitor{}, value_); *lhs_->type() != ...
+  //       |                   ^~~~~~~~~~
+  //
+  // So return by value it is...
+  constexpr auto vis =
+    Overload{[](const InternalSharedPtr<LogicalStore>& store) -> InternalSharedPtr<Type> {
+               return store->type();
+             },
+             [](const Scalar& scalar) -> InternalSharedPtr<Type> { return scalar.type(); }};
 
-    InternalSharedPtr<Type> operator()(const Scalar& scalar) const { return scalar.type(); }
-  };
-
-  if (const auto value_type = std::visit(Visitor{}, value_); *lhs_->type() != *value_type) {
+  if (const auto value_type = std::visit(vis, value_); *lhs_->type() != *value_type) {
     throw TracedException<std::invalid_argument>{"Fill value and target must have the same type"};
   }
 }
@@ -112,35 +109,20 @@ bool Fill::needs_flush() const
     return true;
   }
 
-  class Visitor {
-   public:
-    bool operator()(const InternalSharedPtr<LogicalStore>& store) const
-    {
-      return store->needs_flush();
-    }
-
-    bool operator()(const Scalar&) const { return false; }
-  };
-
-  return std::visit(Visitor{}, value_);
+  return std::visit(
+    Overload{[](const InternalSharedPtr<LogicalStore>& store) { return store->needs_flush(); },
+             [](const Scalar&) { return false; }},
+    value_);
 }
 
 Legion::Future Fill::get_fill_value_() const
 {
-  class Visitor {
-   public:
-    Legion::Future operator()(const InternalSharedPtr<LogicalStore>& store) const
-    {
-      return store->get_future();
-    }
-
-    Legion::Future operator()(const Scalar& scalar) const
-    {
-      return Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
-    }
-  };
-
-  return std::visit(Visitor{}, value_);
+  return std::visit(
+    Overload{[](const InternalSharedPtr<LogicalStore>& store) { return store->get_future(); },
+             [](const Scalar& scalar) {
+               return Legion::Future::from_untyped_pointer(scalar.data(), scalar.size());
+             }},
+    value_);
 }
 
 }  // namespace legate::detail

@@ -29,6 +29,7 @@
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/tuple.h>
+#include <legate/utilities/detail/type_traits.h>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
@@ -1066,12 +1067,11 @@ std::unique_ptr<Analyzable> LogicalStore::future_map_to_launcher_arg_(
   auto future_or_future_map = get_storage()->get_future_or_future_map(launch_domain);
 
   return std::visit(
-    [&](auto&& val) -> std::unique_ptr<Analyzable> {
-      using T = std::decay_t<decltype(val)>;
-      if constexpr (std::is_same_v<T, Legion::Future>) {
-        return future_to_launcher_arg_(std::forward<T>(val), launch_domain, privilege, redop);
-      }
-      if constexpr (std::is_same_v<T, Legion::FutureMap>) {
+    Overload{
+      [&](Legion::Future fut) {
+        return future_to_launcher_arg_(std::move(fut), launch_domain, privilege, redop);
+      },
+      [&](Legion::FutureMap map) -> std::unique_ptr<Analyzable> {
         // Scalar reductions don't need to pass the future or future map holding the current value
         // to the task, as the physical stores will be initialized with the reduction identity. They
         // are later passed to a future map reduction as an initial value in the task launch
@@ -1085,14 +1085,9 @@ std::unique_ptr<Analyzable> LogicalStore::future_map_to_launcher_arg_(
         // So, the privilege of this store alone doesn't tell us whether it's truly a write-only
         // store or this is also passed as an input store. For the time being, we just pass the
         // future when it exists even when the store is not actually read by the task.
-        return std::make_unique<ReplicatedScalarStoreArg>(this,
-                                                          std::forward<T>(val),
-                                                          get_storage()->scalar_offset(),
-                                                          privilege == LEGION_READ_ONLY);
-      }
-      LEGATE_UNREACHABLE();
-      return nullptr;
-    },
+        return std::make_unique<ReplicatedScalarStoreArg>(
+          this, std::move(map), get_storage()->scalar_offset(), privilege == LEGION_READ_ONLY);
+      }},
     future_or_future_map);
 }
 
