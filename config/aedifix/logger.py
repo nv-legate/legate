@@ -404,14 +404,18 @@ class Logger:
     def _log_boxed_screen(
         self, message: str, title: str, style: str, align: AlignMethod
     ) -> None:
-        if title:
-            title_style = style
-            if not title_style.startswith("["):
-                title_style = "[" + title_style
-            if not title_style.endswith("]"):
-                title_style += "]"
-            title = f"[bold]{title_style}{title}[/]"
+        def fixup_title(title: str, style: str) -> str:
+            if not title:
+                return title
 
+            if style:
+                if not style.startswith("["):
+                    style = "[" + style
+                if not style.endswith("]"):
+                    style += "]"
+            return f"[bold]{style}{title}[/]"
+
+        title = fixup_title(title, style)
         rich_txt = self.console.render_str(message)
         screen_message = Panel(
             Align(rich_txt, align=align), style=style, title=title
