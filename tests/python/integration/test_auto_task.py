@@ -21,6 +21,7 @@ import pytest
 from legate.core import (
     ImageComputationHint,
     LogicalArray,
+    ReductionOpKind,
     Scalar,
     Scope,
     TaskTarget,
@@ -308,14 +309,53 @@ class TestAutoTask:
         runtime.issue_execution_fence(block=True)
         assert obj.val == 1
 
+    @pytest.mark.parametrize("communicator", ["cpu", "nccl", "cal"])
+    def test_add_communicator(self, communicator: str) -> None:
+        runtime = get_legate_runtime()
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.basic_task.task_id
+        )
+        # can't find a good way to check whether a communicator exists or not
+        # before the acture add_communicator call
+        # just check that they either exist or raise the expected msg
+        expected = f"No factory available for communicator '{communicator}'"
+        raised = None
+        try:
+            auto_task.add_communicator(communicator)
+        except RuntimeError as exc:
+            raised = exc.args[0]
+        # "cpu" should always exist
+        if communicator == "cpu":
+            assert raised is None
+        elif raised:
+            assert expected in raised
+        auto_task.execute()
+
+    @pytest.mark.parametrize("communicator", ["cpu", "nccl", "cal"])
+    def test_builtin_communicator(self, communicator: str) -> None:
+        runtime = get_legate_runtime()
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.basic_task.task_id
+        )
+
+        func = getattr(auto_task, f"add_{communicator}_communicator")
+        expected = f"No factory available for communicator '{communicator}'"
+        raised = None
+        try:
+            func()
+        except RuntimeError as exc:
+            raised = exc.args[0]
+        # "cpu" should always exist
+        if communicator == "cpu":
+            assert raised is None
+        elif raised:
+            assert expected in raised
+        auto_task.execute()
+
 
 class TestAutoTaskConstraints:
-    @pytest.mark.xfail(
-        get_legate_runtime().machine.count() > 1,
-        run=False,
-        reason="crashes on multi-node",
-    )
-    def test_add_reduction(self) -> None:
+    @pytest.mark.parametrize("part", [True, False], ids=str)
+    def test_add_reduction(self, part: bool) -> None:
         runtime = get_legate_runtime()
         in_arr = np.arange(10, dtype=np.float64)
         in_store = runtime.create_store_from_buffer(
@@ -330,11 +370,8 @@ class TestAutoTaskConstraints:
             runtime.core_library, tasks.array_sum_task.task_id
         )
         auto_task.add_input(in_store)
-        auto_task.add_reduction(out_store, ty.ReductionOpKind.ADD)
-        # TODO(yimoj) [issue 1099]
-        # when running on multi-node this hits LEGION ERROR and then SIGABRT
-        # LEGION ERROR: Error creating read-only field accessor without
-        # read-only privileges on field 10000 in task
+        in_part = auto_task.declare_partition() if part else None
+        auto_task.add_reduction(out_store, ty.ReductionOpKind.ADD, in_part)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
 
@@ -343,7 +380,8 @@ class TestAutoTaskConstraints:
             np.sum(in_arr),
         )
 
-    def test_add_broadcast(self) -> None:
+    @pytest.mark.parametrize("axes", [None, 0, (1, 0), (0, 2), ()], ids=str)
+    def test_add_broadcast(self, axes: int | tuple[int, ...] | None) -> None:
         runtime = get_legate_runtime()
         count = runtime.machine.count()
         legate_test = os.environ.get("LEGATE_TEST", "0") == "1"
@@ -362,7 +400,7 @@ class TestAutoTaskConstraints:
         )
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
-        auto_task.add_broadcast(in_store)
+        auto_task.add_broadcast(in_store, axes)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
 
@@ -446,7 +484,6 @@ class TestAutoTaskConstraints:
     @pytest.mark.parametrize("shape", SHAPES + LARGE_SHAPES, ids=str)
     def test_bloat_constraints(self, shape: tuple[int, ...]) -> None:
         bloat_task = task(variants=tuple(VariantCode))(tasks.basic_bloat_task)
-
         low_offsets = tuple(np.random.randint(1, 6) for _ in shape)
 
         runtime = get_legate_runtime()
@@ -489,17 +526,37 @@ class TestAutoTaskErrors:
         with pytest.raises(ValueError, match=msg):
             auto_task.add_input(Scalar(1, ty.int8))  # type: ignore[arg-type]
 
+    def test_invalid_partition(self) -> None:
+        runtime = get_legate_runtime()
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.basic_task.task_id
+        )
+        store = runtime.create_store(ty.int32, (1, 2, 3))
+        with pytest.raises(ValueError, match="Invalid partition symbol"):
+            auto_task.add_output(store, "foo")  # type: ignore[arg-type]
+        store.fill(0)
+        with pytest.raises(ValueError, match="Invalid partition symbol"):
+            auto_task.add_input(store, "foo")  # type: ignore[arg-type]
+        with pytest.raises(ValueError, match="Invalid partition symbol"):
+            auto_task.add_reduction(
+                store,
+                ReductionOpKind.ADD,
+                "foo",  # type: ignore[arg-type]
+            )
+
     @pytest.mark.parametrize(
-        "dtype", [(ty.int32, ty.int64), (np.int32,)], ids=str
+        "dtype", [(ty.int32, ty.int64), (np.int32,), int], ids=str
     )
-    def test_unsupported_scalar_arg_type(self, dtype: tuple[Any, ...]) -> None:
+    def test_unsupported_scalar_arg_type(
+        self, dtype: tuple[Any, ...] | type[int]
+    ) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
             runtime.core_library, tasks.basic_task.task_id
         )
         msg = "Unsupported type"
         with pytest.raises(TypeError, match=msg):
-            auto_task.add_scalar_arg((123,), dtype)
+            auto_task.add_scalar_arg((123,), dtype)  # type: ignore[arg-type]
 
     def test_scalar_val_with_array_type(self) -> None:
         runtime = get_legate_runtime()
@@ -652,6 +709,26 @@ class TestAutoTaskConstraintsErrors:
         with pytest.raises(ValueError, match=msg):
             auto_task.execute()
         runtime.issue_execution_fence(block=True)
+
+    @pytest.mark.parametrize(
+        ("axes", "exc", "msg"),
+        [
+            ("foo", TypeError, "an integer is required"),
+            (3.1415, ValueError, "axes must be an integer or an iterable"),
+        ],
+        ids=str,
+    )
+    def test_invalid_broadcast_axes(
+        self, axes: Any, exc: type[Exception], msg: str
+    ) -> None:
+        runtime = get_legate_runtime()
+        src_shape = (5, 10, 5)
+        _, in_store = utils.random_array_and_store(src_shape)
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, tasks.basic_task.task_id
+        )
+        with pytest.raises(exc, match=msg):
+            auto_task.add_broadcast(in_store, axes)
 
 
 if __name__ == "__main__":

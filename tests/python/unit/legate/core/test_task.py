@@ -867,6 +867,24 @@ class TestLegateDataInterface:
         ):
             foo(NullableStore())
 
+    def test_task_properties(self) -> None:
+        @lct.task
+        def foo() -> None:
+            pass
+
+        # without this mypy thinks len(task.exception_types) == 0 after the
+        # first assert, and complains the last line is unreachable.
+        def safe_assert(expr: bool) -> None:
+            assert expr
+
+        task = foo.prepare_call()
+        # just touching raw_handle for coverage
+        _ = task.raw_handle
+        safe_assert(len(task.exception_types) == 0)
+        task.throws_exception(RuntimeError)
+        safe_assert(len(task.exception_types) == 1)
+        assert RuntimeError in task.exception_types
+
 
 class TestVariantInvoker(BaseTest):
     @pytest.mark.parametrize("func", USER_FUNCS)

@@ -626,7 +626,7 @@ cdef class ManualTask(Unconstructable):
         else:
             raise ValueError(
                 "Expected a logical store or store partition "
-                "but got {type(arg)}"
+                f"but got {type(arg)}"
             )
 
     cpdef void add_scalar_arg(

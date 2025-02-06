@@ -18,10 +18,13 @@ import numpy as np
 import pytest
 
 from legate.core import (
+    LEGATE_MAX_DIM,
+    ManualTask,
     Scalar,
     Scope,
     TaskTarget,
     VariantCode,
+    constant,
     get_legate_runtime,
     track_provenance,
     types as ty,
@@ -37,7 +40,12 @@ class TestManualTask:
     def test_create_manual_task(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         library = runtime.core_library
-        runtime.create_manual_task(library, tasks.basic_task.task_id, shape)
+        manual_task = runtime.create_manual_task(
+            library, tasks.basic_task.task_id, shape
+        )
+        assert isinstance(manual_task, ManualTask)
+        # just touching raw_handle for coverage
+        _ = manual_task.raw_handle
 
     def test_create_with_lower_bounds(self) -> None:
         runtime = get_legate_runtime()
@@ -189,7 +197,7 @@ class TestManualTask:
 
         arr_np = np.empty(shape=shape, dtype=np.int32)
 
-        manual_task.add_scalar_arg(arr_np, (ty.int32,))
+        manual_task.add_scalar_arg(arr_np)
         manual_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
@@ -241,6 +249,31 @@ class TestManualTask:
         manual_task.execute()
         runtime.issue_execution_fence(block=True)
 
+    @pytest.mark.parametrize("shape", [(3, 4, 6, 8), (7, 4, 3, 9)], ids=str)
+    def test_copy_partition(self, shape: tuple[int, ...]) -> None:
+        tile = (2, 2, 2, 2)
+        runtime = get_legate_runtime()
+        manual_task = runtime.create_manual_task(
+            runtime.core_library, tasks.copy_store_task.task_id, tile
+        )
+        arr = np.random.random(shape)
+        store = runtime.create_store_from_buffer(
+            ty.float64, arr.shape, arr, False
+        )
+        out_arr = np.zeros(shape, dtype=np.float64)
+        out_store = runtime.create_store_from_buffer(
+            ty.float64, out_arr.shape, out_arr, False
+        )
+        in_partition = store.partition_by_tiling(tile)
+        out_partition = out_store.partition_by_tiling(tile)
+        manual_task.add_input(in_partition)
+        manual_task.add_output(out_partition)
+        manual_task.execute()
+        runtime.issue_execution_fence(block=True)
+        np.testing.assert_allclose(
+            out_arr[:2, :2, :2, :2], arr[:2, :2, :2, :2]
+        )
+
     def test_add_reduction(self) -> None:
         runtime = get_legate_runtime()
         in_arr = np.arange(10, dtype=np.float64)
@@ -258,12 +291,35 @@ class TestManualTask:
 
         manual_task.add_input(in_store)
         manual_task.add_reduction(out_store, ty.ReductionOpKind.ADD)
-        manual_task.throws_exception(Exception)
         manual_task.execute()
         np.testing.assert_allclose(
             np.asarray(out_store.get_physical_store().get_inline_allocation()),
             np.sum(in_arr),
         )
+
+    def test_add_reduction_partition(self) -> None:
+        runtime = get_legate_runtime()
+        in_arr = np.arange(10, dtype=np.float64)
+        in_store = runtime.create_store_from_buffer(
+            ty.float64, in_arr.shape, in_arr, read_only=False
+        )
+        out_arr = np.zeros(shape=(2, 2), dtype=np.float64)
+        out_store = runtime.create_store_from_buffer(
+            ty.float64, out_arr.shape, out_arr, read_only=False
+        )
+        partition = out_store.partition_by_tiling((1, 1))
+
+        manual_task = runtime.create_manual_task(
+            runtime.core_library, tasks.array_sum_task.task_id, (1,)
+        )
+
+        manual_task.add_input(in_store)
+        manual_task.add_reduction(
+            partition, ty.ReductionOpKind.ADD, (constant(1), constant(0))
+        )
+        manual_task.execute()
+        runtime.issue_execution_fence(block=True)
+        np.testing.assert_allclose(out_arr[1, 0], np.sum(in_arr))
 
     def test_concurrent(self) -> None:
         runtime = get_legate_runtime()
@@ -305,6 +361,51 @@ class TestManualTask:
         manual_task.execute()
         runtime.issue_execution_fence(block=True)
         assert obj.val == count
+
+    @pytest.mark.parametrize("communicator", ["cpu", "nccl", "cal"])
+    def test_add_communicator(self, communicator: str) -> None:
+        runtime = get_legate_runtime()
+        manual_task = runtime.create_manual_task(
+            runtime.core_library, tasks.basic_task.task_id, (1,)
+        )
+        # can't find a good way to check whether a communicator exists or not
+        # before the acture add_communicator call
+        # just check that they either exist or raise the expected msg
+        expected = f"No factory available for communicator '{communicator}'"
+        raised = None
+        try:
+            manual_task.add_communicator(communicator)
+        except RuntimeError as exc:
+            raised = exc.args[0]
+        # "cpu" should always exist
+        if communicator == "cpu":
+            assert raised is None
+        elif raised:
+            assert expected in raised
+        manual_task.execute()
+
+    @pytest.mark.parametrize("communicator", ["cpu", "nccl", "cal"])
+    def test_builtin_communicator(self, communicator: str) -> None:
+        runtime = get_legate_runtime()
+        manual_task = runtime.create_manual_task(
+            runtime.core_library,
+            tasks.basic_task.task_id,
+            (1,) * min(runtime.machine.count(), LEGATE_MAX_DIM),
+        )
+
+        func = getattr(manual_task, f"add_{communicator}_communicator")
+        expected = f"No factory available for communicator '{communicator}'"
+        raised = None
+        try:
+            func()
+        except RuntimeError as exc:
+            raised = exc.args[0]
+        # "cpu" should always exist
+        if communicator == "cpu":
+            assert raised is None
+        elif raised:
+            assert expected in raised
+        manual_task.execute()
 
 
 class TestManualTaskErrors:
@@ -472,6 +573,43 @@ class TestManualTaskErrors:
         # of index space tasks.
         manual_task.execute()
         runtime.issue_execution_fence(block=True)
+
+    def test_invalid_projection_type(self) -> None:
+        runtime = get_legate_runtime()
+        out_arr = np.array((2, 2), dtype=np.float64)
+        out_store = runtime.create_store_from_buffer(
+            ty.float64, out_arr.shape, out_arr, False
+        )
+        partition = out_store.partition_by_tiling((1,))
+        manual_task = runtime.create_manual_task(
+            runtime.core_library, tasks.array_sum_task.task_id, (1,)
+        )
+
+        proj = "foo"
+        msg = f"Expected a tuple, but got {type(proj)}"
+        with pytest.raises(ValueError, match=msg):
+            manual_task.add_reduction(
+                partition,
+                ty.ReductionOpKind.ADD,
+                proj,  # type: ignore[arg-type]
+            )
+
+    def test_invalid_reduction_store(self) -> None:
+        runtime = get_legate_runtime()
+        manual_task = runtime.create_manual_task(
+            runtime.core_library, tasks.array_sum_task.task_id, (1,)
+        )
+
+        store = "foo"
+        msg = (
+            "Expected a logical store or store partition "
+            f"but got {type(store)}"
+        )
+        with pytest.raises(ValueError, match=msg):
+            manual_task.add_reduction(
+                store,  # type: ignore[arg-type]
+                ty.ReductionOpKind.ADD,
+            )
 
 
 if __name__ == "__main__":
