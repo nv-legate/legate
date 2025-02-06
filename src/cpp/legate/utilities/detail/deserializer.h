@@ -92,6 +92,7 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   void unpack_impl(Legion::PhaseBarrier& barrier);
 
  private:
+  const Legion::Task* legion_task_{};
   Span<const Legion::Future> futures_{};
   Span<const Legion::PhysicalRegion> regions_{};
   std::vector<Legion::OutputRegion> outputs_{};

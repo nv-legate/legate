@@ -26,6 +26,8 @@ inline bool RegionField::is_writable() const { return writable_; }
 
 inline bool RegionField::is_reducible() const { return reducible_; }
 
+inline bool RegionField::is_partitioned() const { return partitioned_; }
+
 inline const Legion::PhysicalRegion& RegionField::get_physical_region() const
 {
   LEGATE_ASSERT(pr_.has_value());

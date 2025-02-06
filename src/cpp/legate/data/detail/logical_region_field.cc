@@ -126,7 +126,7 @@ RegionField LogicalRegionField::map()
     return parent_->map();
   }
   mapped_ = true;
-  return {dim(), physical_state_->ensure_mapping(lr_, fid_), fid_};
+  return {dim(), physical_state_->ensure_mapping(lr_, fid_), fid_, false /*partitioned*/};
 }
 
 void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,

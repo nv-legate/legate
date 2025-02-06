@@ -23,7 +23,7 @@ namespace legate::detail {
 class RegionField {
  public:
   RegionField() = default;
-  RegionField(std::int32_t dim, Legion::PhysicalRegion pr, Legion::FieldID fid);
+  RegionField(std::int32_t dim, Legion::PhysicalRegion pr, Legion::FieldID fid, bool partitioned);
 
   RegionField(RegionField&& other) noexcept            = default;
   RegionField& operator=(RegionField&& other) noexcept = default;
@@ -42,6 +42,7 @@ class RegionField {
     const Domain& domain, const Legion::DomainAffineTransform& transform) const;
   [[nodiscard]] mapping::StoreTarget target() const;
 
+  [[nodiscard]] bool is_partitioned() const;
   [[nodiscard]] bool is_readable() const;
   [[nodiscard]] bool is_writable() const;
   [[nodiscard]] bool is_reducible() const;
@@ -55,6 +56,7 @@ class RegionField {
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{-1U};
 
+  bool partitioned_{};
   bool readable_{};
   bool writable_{};
   bool reducible_{};

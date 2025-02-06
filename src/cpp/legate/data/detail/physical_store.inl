@@ -19,8 +19,11 @@
 
 namespace legate::detail {
 
-inline UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid)
-  : num_elements_{sizeof(std::size_t),
+inline UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out,
+                                              Legion::FieldID fid,
+                                              bool partitioned)
+  : partitioned_{partitioned},
+    num_elements_{sizeof(std::size_t),
                   find_memory_kind_for_executing_processor(),
                   nullptr /*init_value*/,
                   alignof(std::size_t)},
@@ -31,11 +34,14 @@ inline UnboundRegionField::UnboundRegionField(const Legion::OutputRegion& out, L
 
 inline UnboundRegionField::UnboundRegionField(UnboundRegionField&& other) noexcept
   : bound_{std::exchange(other.bound_, false)},
+    partitioned_{std::exchange(other.partitioned_, false)},
     num_elements_{std::exchange(other.num_elements_, Legion::UntypedDeferredValue{})},
     out_{std::exchange(other.out_, Legion::OutputRegion{})},
     fid_{std::exchange(other.fid_, -1)}
 {
 }
+
+inline bool UnboundRegionField::is_partitioned() const { return partitioned_; }
 
 inline bool UnboundRegionField::bound() const { return bound_; }
 

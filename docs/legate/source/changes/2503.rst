@@ -37,6 +37,8 @@ C++
 
 .. rubric:: Data
 
+- Add ``legate::PhysicalStore::is_partitioned()`` that indicates if the store is partitioned.
+
 .. rubric:: Mapping
 
 .. rubric:: Partitioning

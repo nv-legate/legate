@@ -28,6 +28,7 @@ UnboundRegionField& UnboundRegionField::operator=(UnboundRegionField&& other) no
 {
   if (this != &other) {
     bound_        = std::exchange(other.bound_, false);
+    partitioned_  = std::exchange(other.partitioned_, false);
     num_elements_ = std::exchange(other.num_elements_, Legion::UntypedDeferredValue{});
     out_          = std::exchange(other.out_, Legion::OutputRegion{});
     fid_          = std::exchange(other.fid_, -1);
@@ -128,6 +129,12 @@ void PhysicalStore::bind_empty_data()
 {
   check_valid_binding_(true);
   unbound_field_.bind_empty_data(dim());
+}
+
+bool PhysicalStore::is_partitioned() const
+{
+  return (is_unbound_store() && unbound_field_.is_partitioned()) ||
+         (!is_future() && region_field_.is_partitioned());
 }
 
 void PhysicalStore::check_accessor_dimension_(std::int32_t dim) const

@@ -71,6 +71,8 @@ bool PhysicalStore::is_future() const { return impl()->is_future(); }
 
 bool PhysicalStore::is_unbound_store() const { return impl()->is_unbound_store(); }
 
+bool PhysicalStore::is_partitioned() const { return impl()->is_partitioned(); }
+
 mapping::StoreTarget PhysicalStore::target() const { return impl()->target(); }
 
 PhysicalStore::PhysicalStore(const PhysicalArray& array)

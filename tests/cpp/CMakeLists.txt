@@ -155,6 +155,7 @@ set(with_runtime_SRC
     integration/index_attach.cc
     integration/inline_map.cc
     integration/inout.cc
+    integration/is_partitioned.cc
     integration/is_running_in_task.cc
     integration/machine_scope.cc
     integration/manual_task.cc

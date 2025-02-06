@@ -17,8 +17,15 @@
 
 namespace legate::detail {
 
-RegionField::RegionField(std::int32_t dim, Legion::PhysicalRegion pr, Legion::FieldID fid)
-  : dim_{dim}, pr_{std::move(pr)}, lr_{get_physical_region().get_logical_region()}, fid_{fid}
+RegionField::RegionField(std::int32_t dim,
+                         Legion::PhysicalRegion pr,
+                         Legion::FieldID fid,
+                         bool partitioned)
+  : dim_{dim},
+    pr_{std::move(pr)},
+    lr_{get_physical_region().get_logical_region()},
+    fid_{fid},
+    partitioned_{partitioned}
 {
   const auto priv = get_physical_region().get_privilege();
   readable_       = static_cast<bool>(priv & LEGION_READ_PRIV);

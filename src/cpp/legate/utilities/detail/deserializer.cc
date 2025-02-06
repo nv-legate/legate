@@ -50,6 +50,7 @@ std::pair<void*, std::size_t> align_for_unpack_impl(void* ptr,
 TaskDeserializer::TaskDeserializer(const Legion::Task* task,
                                    const std::vector<Legion::PhysicalRegion>& regions)
   : BaseDeserializer{task->args, task->arglen},
+    legion_task_{task},
     futures_{task->futures.data(), task->futures.size()},
     regions_{regions.data(), regions.size()}
 {
@@ -168,7 +169,10 @@ void TaskDeserializer::unpack_impl(RegionField& value)
   auto idx = unpack<std::uint32_t>();
   auto fid = unpack<std::int32_t>();
 
-  value = RegionField{dim, regions_[idx], static_cast<Legion::FieldID>(fid)};
+  value = RegionField{dim,
+                      regions_[idx],
+                      static_cast<Legion::FieldID>(fid),
+                      legion_task_->regions[idx].partition != Legion::LogicalPartition::NO_PART};
 }
 
 void TaskDeserializer::unpack_impl(UnboundRegionField& value)
@@ -177,7 +181,10 @@ void TaskDeserializer::unpack_impl(UnboundRegionField& value)
   auto idx = unpack<std::uint32_t>();
   auto fid = unpack<std::int32_t>();
 
-  value = UnboundRegionField{outputs_[idx], static_cast<Legion::FieldID>(fid)};
+  value = UnboundRegionField{
+    outputs_[idx],
+    static_cast<Legion::FieldID>(fid),
+    legion_task_->output_regions[idx].partition != Legion::LogicalPartition::NO_PART};
 }
 
 void TaskDeserializer::unpack_impl(legate::comm::Communicator& value)

@@ -34,7 +34,7 @@ class BasePhysicalArray;
 class UnboundRegionField {
  public:
   UnboundRegionField() = default;
-  UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid);
+  UnboundRegionField(const Legion::OutputRegion& out, Legion::FieldID fid, bool partitioned);
 
   UnboundRegionField(UnboundRegionField&& other) noexcept;
   UnboundRegionField& operator=(UnboundRegionField&& other) noexcept;
@@ -42,6 +42,7 @@ class UnboundRegionField {
   UnboundRegionField(const UnboundRegionField& other)            = delete;
   UnboundRegionField& operator=(const UnboundRegionField& other) = delete;
 
+  [[nodiscard]] bool is_partitioned() const;
   [[nodiscard]] bool bound() const;
 
   void bind_empty_data(std::int32_t dim);
@@ -56,6 +57,7 @@ class UnboundRegionField {
 
  private:
   bool bound_{};
+  bool partitioned_{};
   Legion::UntypedDeferredValue num_elements_{};
   Legion::OutputRegion out_{};
   Legion::FieldID fid_{-1U};
@@ -104,6 +106,7 @@ class PhysicalStore {
 
   [[nodiscard]] bool is_future() const;
   [[nodiscard]] bool is_unbound_store() const;
+  [[nodiscard]] bool is_partitioned() const;
   [[nodiscard]] ReturnValue pack() const;
   [[nodiscard]] ReturnValue pack_weight() const;
 
