@@ -824,7 +824,15 @@ install(FILES ${LEGATE_DIR}/share/legate/examples/binding/pybind11/hello_world.c
 # ########################################################################################
 # * install legate-bind.sh  --------------------------------------------------------
 
-install(PROGRAMS ${LEGATE_DIR}/legate-bind.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
+# This is non-standard. Normally this should just go under a top-level /libexec directory
+# (or possible /lib/legate/libexec), but we must put it under /share because of
+# restrictions placed on us by scikit-build-core. scikit-build-core only considers a
+# select subset of directories under $PREFIX when collecting files to populate a wheel and
+# while /share gets picked up, /libexec does *not*.
+#
+# It's possible this restriction is relaxed in the future, but for now, /share it must be.
+install(PROGRAMS ${LEGATE_DIR}/share/legate/libexec/legate-bind.sh
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/${CMAKE_INSTALL_LIBEXECDIR})
 
 # ########################################################################################
 # * install Legate debug symbols ---------------------------------------------------------

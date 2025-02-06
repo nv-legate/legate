@@ -25,6 +25,10 @@ Changes: 25.03
 - Add support for ``FORCE_COLOR`` and ``NO_COLOR`` environment variables. In keeping with
   https://force-color.org/ and https://no-color.org/ if both are defined, then
   ``FORCE_COLOR`` takes precedence.
+- Move ``legate-bind.sh`` to ``share/legate/libexec``. This is a low-level tool that is
+  usually not invoked by the user directly, and moving it to this new directory reflects
+  this. The user should instead launch their programs directly, or, for greater
+  convenience use the ``legate`` launcher.
 
 C++
 ---

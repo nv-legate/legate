@@ -280,17 +280,26 @@ def get_legate_paths() -> LegatePaths:
             # src/python/legate, but have neither configured nor installed the
             # libraries. Most of these paths are meaningless, but let's at
             # least fill out the right bind_sh_path.
-            bind_sh_path = legate_mod_dir.parents[2] / "legate-bind.sh"
+            bind_sh_path = (
+                legate_mod_dir.parents[2]
+                / "share"
+                / "legate"
+                / "libexec"
+                / "legate-bind.sh"
+            )
             legate_lib_path = Path("this_path_does_not_exist")
             assert not legate_lib_path.exists()
         elif legate_mod_parent.name == site_package_dir_name:
             # It's possible we are in an installed library, in which case
             # legate_mod_dir is probably
             # <PREFIX>/lib/python<version>/site-packages/legate. In this case,
-            # legate-bind.sh and the libs are under <PREFIX>/bin/legate-bind.sh
-            # and <PREFIX>/lib respectively.
+            # legate-bind.sh and the libs are under
+            # <PREFIX>/share/legate/libexec/legate-bind.sh and <PREFIX>/lib
+            # respectively.
             prefix_dir = legate_mod_dir.parents[3]
-            bind_sh_path = prefix_dir / "bin" / "legate-bind.sh"
+            bind_sh_path = (
+                prefix_dir / "share" / "legate" / "libexec" / "legate-bind.sh"
+            )
             legate_lib_path = prefix_dir / "lib"
             assert_dir_exists(legate_lib_path)
         else:

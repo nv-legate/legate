@@ -354,7 +354,7 @@ Perlmutter:
     Legate paths:
       legate_dir       : /conda/envs/legate-gex-anaconda/lib/python3.12/site-packages/legate
       legate_build_dir : None
-      bind_sh_path     : /conda/envs/legate-gex-anaconda/bin/legate-bind.sh
+      bind_sh_path     : /conda/envs/legate-gex-anaconda/share/legate/libexec/legate-bind.sh
       legate_lib_path  : /conda/envs/legate-gex-anaconda/lib
 
     Legion paths:
@@ -371,7 +371,7 @@ Perlmutter:
       legate_version : 24.9.0.dev329+g32137a65
 
     Command:
-      srun -n 2 --ntasks-per-node 1 /conda/envs/legate-gex-anaconda/bin/legate-bind.sh --launcher srun -- python ./hello_world.py
+      srun -n 2 --ntasks-per-node 1 /conda/envs/legate-gex-anaconda/share/legate/libexec/legate-bind.sh --launcher srun -- python ./hello_world.py
 
     Customized Environment:
       CUTENSOR_LOG_LEVEL=1
