@@ -29,6 +29,8 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/core_ids.h>
 
+#include <cstddef>
+
 namespace legate::detail {
 
 Reduce::Reduce(const Library* library,
@@ -128,6 +130,9 @@ void Reduce::launch(Strategy* p_strategy)
       launcher.add_output(
         to_array_arg(std::make_unique<OutputRegionArg>(output_.get(), field_space, field_id)));
     }
+
+    // Every reduction task returns exactly one unbound store
+    launcher.set_future_size(sizeof(std::size_t));
 
     launch_domain = Domain{DomainPoint{0}, DomainPoint{static_cast<coord_t>(n_tasks - 1)}};
     auto result   = launcher.execute(launch_domain);

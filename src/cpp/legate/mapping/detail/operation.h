@@ -74,6 +74,8 @@ class Task : public Mappable {
   [[nodiscard]] TaskTarget target() const;
   [[nodiscard]] Legion::VariantID legion_task_variant() const;
 
+  // This size doesn't include the upper bound for the returned exception
+  [[nodiscard]] std::size_t future_size() const;
   [[nodiscard]] bool can_raise_exception() const;
 
   [[nodiscard]] const Legion::Task* legion_task() const;
@@ -86,6 +88,7 @@ class Task : public Mappable {
   std::vector<InternalSharedPtr<Array>> outputs_{};
   std::vector<InternalSharedPtr<Array>> reductions_{};
   std::vector<InternalSharedPtr<legate::detail::Scalar>> scalars_{};
+  std::size_t future_size_{};
   bool can_raise_exception_{};
 };
 

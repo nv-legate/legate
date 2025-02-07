@@ -1415,6 +1415,7 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result,
   launcher.add_future(result);
   launcher.add_scalar(make_internal_shared<Scalar>(offset));
   launcher.add_scalar(make_internal_shared<Scalar>(size));
+  launcher.set_future_size(size);
   return launcher.execute_single();
 }
 
@@ -1432,6 +1433,7 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
   launcher.add_future_map(result);
   launcher.add_scalar(make_internal_shared<Scalar>(offset));
   launcher.add_scalar(make_internal_shared<Scalar>(size));
+  launcher.set_future_size(size);
   return launcher.execute(launch_domain);
 }
 

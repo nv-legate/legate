@@ -15,6 +15,7 @@
 #include <legate/cuda/cuda.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/returned_exception_common.h>
+#include <legate/utilities/detail/align.h>
 #include <legate/utilities/detail/zip.h>
 #include <legate/utilities/machine.h>
 #include <legate/utilities/typedefs.h>
@@ -87,7 +88,7 @@ void TaskReturn::finalize(Legion::Context legion_context, bool skip_device_ctx_s
   // wrong alignment for the first element packed in the instance, which can lead to misaligned
   // accesses in CUDA kernels. To prevent that from happening, here we align the size to the 16-byte
   // boundary and set the alignment so there'd be no room for misinterpretation.
-  const auto aligned_size = (buffer_size() + ALIGNMENT - 1) / ALIGNMENT * ALIGNMENT;
+  const auto aligned_size = round_up_to_multiple(buffer_size(), ALIGNMENT);
   auto return_buffer      = Legion::UntypedDeferredValue{aligned_size,
                                                     find_memory_kind_for_executing_processor(),
                                                     nullptr /*initial_value*/,

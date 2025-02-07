@@ -52,10 +52,12 @@ namespace {
   TaskDeserializer dez{task, regions};
 
   static_cast<void>(dez.unpack<Library*>());
-  ret.inputs                    = dez.unpack_arrays();
-  ret.outputs                   = dez.unpack_arrays();
-  ret.reductions                = dez.unpack_arrays();
-  ret.scalars                   = dez.unpack_scalars();
+  ret.inputs     = dez.unpack_arrays();
+  ret.outputs    = dez.unpack_arrays();
+  ret.reductions = dez.unpack_arrays();
+  ret.scalars    = dez.unpack_scalars();
+  // The return future size is not used for task execution
+  std::ignore                   = dez.unpack<std::size_t>();
   ret.can_raise_exception       = dez.unpack<bool>();
   ret.can_elide_device_ctx_sync = dez.unpack<bool>();
 

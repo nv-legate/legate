@@ -31,6 +31,7 @@ class PhysicalArray;
 class AutoTask;
 class ConstraintSolver;
 class ListLogicalArray;
+class TaskReturnLayoutForUnpack;
 class Variable;
 
 class LogicalArray {
@@ -92,6 +93,7 @@ class LogicalArray {
   [[nodiscard]] bool needs_flush() const;
 
   virtual void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const = 0;
+  virtual void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const              = 0;
 };
 
 class BaseLogicalArray final : public LogicalArray {
@@ -148,6 +150,7 @@ class BaseLogicalArray final : public LogicalArray {
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
   void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
+  void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const override;
 
  private:
   InternalSharedPtr<LogicalStore> data_{};
@@ -208,6 +211,7 @@ class ListLogicalArray final : public LogicalArray {
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
   void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
+  void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const override;
 
  private:
   InternalSharedPtr<Type> type_{};
@@ -268,6 +272,7 @@ class StructLogicalArray final : public LogicalArray {
     const Domain& launch_domain, Legion::PrivilegeMode privilege) const override;
 
   void collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const override;
+  void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const override;
 
  private:
   InternalSharedPtr<Type> type_{};

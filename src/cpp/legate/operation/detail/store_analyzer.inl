@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <legate/operation/detail/req_analyzer.h>
+#include <legate/operation/detail/store_analyzer.h>
 
 namespace legate::detail {
 

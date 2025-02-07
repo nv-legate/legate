@@ -25,6 +25,7 @@
 #include <legate/task/detail/task_info.h>
 #include <legate/task/detail/task_return.h>
 #include <legate/task/detail/task_return_layout.h>
+#include <legate/utilities/detail/align.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/env.h>
@@ -489,45 +490,11 @@ void map_unbound_stores(const std::vector<std::unique_ptr<StoreMapping>>& mappin
 
 [[nodiscard]] std::size_t calculate_legate_allocation_size(const Task& legate_task)
 {
-  auto&& all_arrays = {std::cref(legate_task.inputs()),
-                       std::cref(legate_task.outputs()),
-                       std::cref(legate_task.reductions())};
-  auto get_stores   = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
-
-  // Here we calculate the total size of buffers created for scalar stores and unbound stores in the
-  // following way: each output or reduction scalar store embeds a buffer to hold the update; each
-  // unbound store gets a buffer that holds the number of elements, which will later be retrieved to
-  // keep track of the store's key partition (of the legate::detail::Weighted type).
-  auto layout = legate::detail::TaskReturnLayoutForUnpack{};
-  for (auto&& arrays : all_arrays) {
-    for (auto&& array : arrays.get()) {
-      for (auto&& store : get_stores(*array)) {
-        if (store->is_future()) {
-          const auto& type = store->type();
-          if (type->size() == 0) {
-            continue;
-          }
-          std::ignore = layout.next(type->size(), type->alignment());
-        } else if (store->unbound()) {
-          // The number of elements for each unbound store is stored in a buffer of type
-          // std::size_t
-          std::ignore = layout.next(sizeof(std::size_t), alignof(std::size_t));
-        }
-      }
-    }
-  }
-
-  // Align the buffer size to the 16-byte boundary (see the comment in task_return.cc for the
-  // detail)
-  const auto aligned_size = (layout.total_size() + legate::detail::TaskReturn::ALIGNMENT - 1) /
-                            legate::detail::TaskReturn::ALIGNMENT *
-                            legate::detail::TaskReturn::ALIGNMENT;
-
-  // The math above only accounts for the buffers that are created when the stores are deserialized
-  // in the task preamble. Once the task is done, the final values in those buffers are packed into
-  // a return buffer of the task, which is yet to be included in the pool size. Therefore, we double
-  // the pool size calculated so far to take the return buffer size into account.
-  const auto total_size = aligned_size * 2;
+  // The future size calculated at the launch site accounts for the values that will be serialized
+  // into the return buffer, but the task preamble creates the same amount of buffers for holding
+  // those values during the task execution. Therefore, we need to double that future size to get
+  // the total pool size for the task.
+  const auto total_size = legate_task.future_size() * 2;
 
   // If the task can raise an exception, we reserve extra space for the serialized exception
   return total_size + (static_cast<std::size_t>(legate_task.can_raise_exception()) *

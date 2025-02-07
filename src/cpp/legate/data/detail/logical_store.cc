@@ -24,6 +24,7 @@
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/task/detail/task_return_layout.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/formatters.h>
@@ -36,6 +37,7 @@
 #include <fmt/ranges.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <numeric>
 #include <stdexcept>
 #include <utility>
@@ -992,6 +994,17 @@ void LogicalStore::pack(BufferBuilder& buffer) const
   buffer.pack<std::uint32_t>(dim());
   type()->pack(buffer);
   transform_->pack(buffer);
+}
+
+void LogicalStore::calculate_pack_size(TaskReturnLayoutForUnpack* layout) const
+{
+  if (has_scalar_storage()) {
+    std::ignore = layout->next(type()->size(), type()->alignment());
+  } else if (unbound()) {
+    // The number of elements for each unbound store is stored in a buffer of type
+    // std::size_t
+    std::ignore = layout->next(sizeof(std::size_t), alignof(std::size_t));
+  }
 }
 
 std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_(

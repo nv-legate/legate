@@ -83,6 +83,10 @@ class Task : public Operation {
   void demux_scalar_stores_(const Legion::Future& result);
   void demux_scalar_stores_(const Legion::FutureMap& result, const Domain& launch_domain);
 
+  // Calculate the return future size excluding the size of returned exception, which can only be
+  // approximate
+  [[nodiscard]] std::size_t calculate_future_size_() const;
+
  public:
   [[nodiscard]] std::string to_string(bool show_provenance) const override;
   [[nodiscard]] bool needs_flush() const override;

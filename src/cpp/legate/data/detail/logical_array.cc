@@ -45,15 +45,15 @@ const InternalSharedPtr<LogicalStore>& LogicalArray::data() const
 
 bool BaseLogicalArray::unbound() const
 {
-  LEGATE_ASSERT(!nullable() || data_->unbound() == null_mask_->unbound());
-  return data_->unbound();
+  LEGATE_ASSERT(!nullable() || data()->unbound() == null_mask_->unbound());
+  return data()->unbound();
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::promote(std::int32_t extra_dim,
                                                           std::size_t dim_size) const
 {
   auto null_mask = nullable() ? null_mask_->promote(extra_dim, dim_size) : nullptr;
-  auto data      = data_->promote(extra_dim, dim_size);
+  auto data      = this->data()->promote(extra_dim, dim_size);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -61,14 +61,14 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::project(std::int32_t dim,
                                                           std::int64_t index) const
 {
   auto null_mask = nullable() ? null_mask_->project(dim, index) : nullptr;
-  auto data      = data_->project(dim, index);
+  auto data      = this->data()->project(dim, index);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::slice(std::int32_t dim, Slice sl) const
 {
   auto null_mask = nullable() ? slice_store(null_mask_, dim, sl) : nullptr;
-  auto data      = slice_store(data_, dim, sl);
+  auto data      = slice_store(this->data(), dim, sl);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -76,7 +76,7 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::transpose(
   const std::vector<std::int32_t>& axes) const
 {
   auto null_mask = nullable() ? null_mask_->transpose(axes) : nullptr;
-  auto data      = data_->transpose(axes);
+  auto data      = this->data()->transpose(axes);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -84,7 +84,7 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::delinearize(
   std::int32_t dim, const std::vector<std::uint64_t>& sizes) const
 {
   auto null_mask = nullable() ? null_mask_->delinearize(dim, sizes) : nullptr;
-  auto data      = data_->delinearize(dim, sizes);
+  auto data      = this->data()->delinearize(dim, sizes);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -106,7 +106,7 @@ InternalSharedPtr<PhysicalArray> BaseLogicalArray::get_physical_array(
 InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array(
   bool ignore_future_mutability) const
 {
-  auto data_store = data_->get_physical_store(ignore_future_mutability);
+  auto data_store = data()->get_physical_store(ignore_future_mutability);
   InternalSharedPtr<PhysicalStore> null_mask_store{};
   if (null_mask_ != nullptr) {
     null_mask_store = null_mask_->get_physical_store(ignore_future_mutability);
@@ -122,10 +122,10 @@ InternalSharedPtr<LogicalArray> BaseLogicalArray::child(std::uint32_t /*index*/)
 
 void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 {
-  if (data_->has_scalar_storage()) {
-    task->record_scalar_output(data_);
-  } else if (data_->unbound()) {
-    task->record_unbound_output(data_);
+  if (data()->has_scalar_storage()) {
+    task->record_scalar_output(data());
+  } else if (data()->unbound()) {
+    task->record_unbound_output(data());
   }
   if (!nullable()) {
     return;
@@ -140,8 +140,8 @@ void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
 
 void BaseLogicalArray::record_scalar_reductions(AutoTask* task, GlobalRedopID redop) const
 {
-  if (data_->has_scalar_storage()) {
-    task->record_scalar_reduction(data_, redop);
+  if (data()->has_scalar_storage()) {
+    task->record_scalar_reduction(data(), redop);
   }
   if (nullable() && null_mask_->has_scalar_storage()) {
     auto null_redop = bool_()->find_reduction_operator(ReductionOpKind::MUL);
@@ -154,7 +154,7 @@ void BaseLogicalArray::generate_constraints(
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*>& mapping,
   const Variable* partition_symbol) const
 {
-  mapping.try_emplace(data_, partition_symbol);
+  mapping.try_emplace(data(), partition_symbol);
 
   if (!nullable()) {
     return;
@@ -173,7 +173,7 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
   GlobalRedopID redop) const
 {
   auto data_arg = store_to_launcher_arg(
-    data_, mapping.at(data_), strategy, launch_domain, projection, privilege, redop);
+    data(), mapping.at(data()), strategy, launch_domain, projection, privilege, redop);
   std::unique_ptr<Analyzable> null_mask_arg{};
 
   if (nullable()) {
@@ -196,14 +196,22 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg_for_fixup(
   const Domain& launch_domain, Legion::PrivilegeMode privilege) const
 {
   return std::make_unique<BaseArrayArg>(
-    store_to_launcher_arg_for_fixup(data_, launch_domain, privilege));
+    store_to_launcher_arg_for_fixup(data(), launch_domain, privilege));
 }
 
 void BaseLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
 {
-  trackers.emplace_back(data_);
+  trackers.emplace_back(data());
   if (null_mask_) {
     trackers.emplace_back(null_mask_);
+  }
+}
+
+void BaseLogicalArray::calculate_pack_size(TaskReturnLayoutForUnpack* layout) const
+{
+  data()->calculate_pack_size(layout);
+  if (null_mask_) {
+    null_mask_->calculate_pack_size(layout);
   }
 }
 
@@ -342,6 +350,12 @@ void ListLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>&
 {
   descriptor_->collect_storage_trackers(trackers);
   vardata_->collect_storage_trackers(trackers);
+}
+
+void ListLogicalArray::calculate_pack_size(TaskReturnLayoutForUnpack* layout) const
+{
+  descriptor_->calculate_pack_size(layout);
+  vardata_->calculate_pack_size(layout);
 }
 
 // ==========================================================================================
@@ -567,6 +581,16 @@ void StructLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker
   }
   for (auto&& field : fields_) {
     field->collect_storage_trackers(trackers);
+  }
+}
+
+void StructLogicalArray::calculate_pack_size(TaskReturnLayoutForUnpack* layout) const
+{
+  if (null_mask_) {
+    null_mask_->calculate_pack_size(layout);
+  }
+  for (auto&& field : fields_) {
+    field->calculate_pack_size(layout);
   }
 }
 

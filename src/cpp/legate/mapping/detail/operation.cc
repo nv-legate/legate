@@ -37,6 +37,7 @@ Task::Task(const Legion::Task* task,
   outputs_             = dez.unpack_arrays();
   reductions_          = dez.unpack_arrays();
   scalars_             = dez.unpack_scalars();
+  future_size_         = dez.unpack<std::size_t>();
   can_raise_exception_ = dez.unpack<bool>();
 
   if (task_->tag ==

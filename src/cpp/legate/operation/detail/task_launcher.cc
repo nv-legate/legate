@@ -15,10 +15,11 @@
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
 #include <legate/operation/detail/launcher_arg.h>
-#include <legate/operation/detail/req_analyzer.h>
+#include <legate/operation/detail/store_analyzer.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/task/detail/returned_exception.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/buffer_builder.h>
 #include <legate/utilities/detail/enumerate.h>
@@ -121,6 +122,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
   pack_args(task_arg, analyzer, outputs_);
   pack_args(task_arg, analyzer, reductions_);
   pack_args(task_arg, scalars_);
+  task_arg.pack<std::size_t>(future_size_);
   task_arg.pack<bool>(can_throw_exception_);
   task_arg.pack<bool>(can_elide_device_ctx_sync_);
   task_arg.pack<bool>(insert_barrier_);
@@ -142,7 +144,8 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
                                        tag_,
                                        mapper_arg.to_legion_buffer()};
 
-  index_task.provenance = provenance().as_string_view();
+  index_task.provenance         = provenance().as_string_view();
+  index_task.future_return_size = get_future_size_including_exception_();
 
   std::vector<Legion::OutputRequirement> output_requirements;
 
@@ -196,6 +199,7 @@ Legion::Future TaskLauncher::execute_single()
   pack_args(task_arg, analyzer, outputs_);
   pack_args(task_arg, analyzer, reductions_);
   pack_args(task_arg, scalars_);
+  task_arg.pack<std::size_t>(future_size_);
   task_arg.pack<bool>(can_throw_exception_);
   task_arg.pack<bool>(can_elide_device_ctx_sync_);
   // insert_barrier
@@ -216,7 +220,8 @@ Legion::Future TaskLauncher::execute_single()
                                    tag_,
                                    mapper_arg.to_legion_buffer()};
 
-  single_task.provenance = provenance().as_string_view();
+  single_task.provenance         = provenance().as_string_view();
+  single_task.future_return_size = get_future_size_including_exception_();
 
   std::vector<Legion::OutputRequirement> output_requirements;
 
@@ -376,6 +381,12 @@ void TaskLauncher::report_interfering_stores_() const
     "via multiplepartitions in mixed modes, which is illegal in Legate. Make sure to make a "
     "copy "
     "of the store so there would be no interference.");
+}
+
+std::size_t TaskLauncher::get_future_size_including_exception_() const
+{
+  return future_size_ +
+         (static_cast<std::size_t>(can_throw_exception_) * ReturnedException::max_size());
 }
 
 }  // namespace legate::detail

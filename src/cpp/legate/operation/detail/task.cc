@@ -25,14 +25,18 @@
 #include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/inline_task_body.h>
+#include <legate/task/detail/returned_exception.h>
 #include <legate/task/detail/task_info.h>
+#include <legate/task/detail/task_return.h>
 #include <legate/task/detail/task_return_layout.h>
 #include <legate/task/detail/variant_info.h>
 #include <legate/task/task_info.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/cpp_version.h>
+#include <legate/utilities/detail/align.h>
 #include <legate/utilities/detail/core_ids.h>
+#include <legate/utilities/detail/store_iterator_cache.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zip.h>
 
@@ -178,6 +182,7 @@ void Task::legion_launch_(Strategy* strategy_ptr)
   launcher.set_concurrent(concurrent_);
   launcher.throws_exception(can_throw_exception());
   launcher.can_elide_device_ctx_sync(can_elide_device_ctx_sync());
+  launcher.set_future_size(calculate_future_size_());
 
   // TODO(wonchanl): Once we implement a precise interference checker, this workaround can be
   // removed
@@ -261,7 +266,7 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
     }
     if (can_throw_exception()) {
       runtime->record_pending_exception(runtime->extract_scalar(
-        result, return_layout.total_size(), std::numeric_limits<std::uint32_t>::max()));
+        result, return_layout.total_size(), legate::detail::ReturnedException::max_size()));
     }
   }
 }
@@ -315,12 +320,31 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
     if (can_throw_exception()) {
       auto exn_fm = runtime->extract_scalar(result,
                                             return_layout.total_size(),
-                                            std::numeric_limits<std::uint32_t>::max(),
+                                            legate::detail::ReturnedException::max_size(),
                                             launch_domain);
 
       runtime->record_pending_exception(runtime->reduce_exception_future_map(exn_fm));
     }
   }
+}
+
+std::size_t Task::calculate_future_size_() const
+{
+  // Here we calculate the total size of buffers created for scalar stores and unbound stores in the
+  // following way: each output or reduction scalar store embeds a buffer to hold the update; each
+  // unbound store gets a buffer that holds the number of elements, which will later be retrieved to
+  // keep track of the store's key partition (of the legate::detail::Weighted type).
+  auto&& all_array_args = {std::cref(inputs()), std::cref(outputs()), std::cref(reductions())};
+  auto layout           = TaskReturnLayoutForUnpack{};
+  for (auto&& array_args : all_array_args) {
+    for (auto&& [arr, mapping, projection] : array_args.get()) {
+      arr->calculate_pack_size(&layout);
+    }
+  }
+
+  // Align the buffer size to the 16-byte boundary (see the comment in task_return.cc for the
+  // detail)
+  return round_up_to_multiple(layout.total_size(), TaskReturn::ALIGNMENT);
 }
 
 std::string Task::to_string(bool show_provenance) const

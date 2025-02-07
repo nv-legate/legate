@@ -54,6 +54,7 @@ class TaskLauncher {
   void set_side_effect(bool has_side_effect);
   void set_concurrent(bool is_concurrent);
   void set_insert_barrier(bool insert_barrier);
+  void set_future_size(std::size_t future_size);
   void throws_exception(bool can_throw_exception);
   void can_elide_device_ctx_sync(bool can_elide_sync);
   void relax_interference_checks(bool relax);
@@ -74,6 +75,7 @@ class TaskLauncher {
     const std::vector<Legion::OutputRequirement>& output_requirements);
 
   void report_interfering_stores_() const;
+  [[nodiscard]] std::size_t get_future_size_including_exception_() const;
 
   const Library* library_{};
   LocalTaskID task_id_{};
@@ -88,6 +90,7 @@ class TaskLauncher {
   bool can_throw_exception_{};
   bool can_elide_device_ctx_sync_{};
   bool relax_interference_checks_{};
+  std::size_t future_size_{};
 
   std::vector<std::unique_ptr<Analyzable>> inputs_{};
   std::vector<std::unique_ptr<Analyzable>> outputs_{};

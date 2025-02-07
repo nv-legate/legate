@@ -50,6 +50,8 @@ inline const DomainPoint& Task::point() const { return task_->index_point; }
 
 inline const Domain& Task::get_launch_domain() const { return task_->index_domain; }
 
+inline std::size_t Task::future_size() const { return future_size_; }
+
 inline bool Task::can_raise_exception() const { return can_raise_exception_; }
 
 inline const Legion::Task* Task::legion_task() const { return task_; }

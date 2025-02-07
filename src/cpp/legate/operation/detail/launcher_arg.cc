@@ -15,7 +15,7 @@
 #include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/logical_region_field.h>
 #include <legate/data/detail/logical_store.h>
-#include <legate/operation/detail/req_analyzer.h>
+#include <legate/operation/detail/store_analyzer.h>
 #include <legate/operation/detail/task_launcher.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/types.h>

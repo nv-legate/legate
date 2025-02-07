@@ -35,9 +35,10 @@
 namespace legate::detail {
 
 class LogicalStorePartition;
-class Strategy;
-class StoragePartition;
 class PhysicalStore;
+class StoragePartition;
+class Strategy;
+class TaskReturnLayoutForUnpack;
 class Variable;
 
 class Storage {
@@ -280,6 +281,7 @@ class LogicalStore {
     const std::optional<SymbolicPoint>& projection = {}) const;
 
   void pack(BufferBuilder& buffer) const;
+  void calculate_pack_size(TaskReturnLayoutForUnpack* layout) const;
 
  private:
   friend std::unique_ptr<Analyzable> store_to_launcher_arg(

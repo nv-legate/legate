@@ -15,6 +15,7 @@
 #include <legate/data/buffer.h>
 #include <legate/mapping/operation.h>
 #include <legate/runtime/detail/config.h>
+#include <legate/utilities/detail/align.h>
 #include <legate/utilities/detail/core_ids.h>
 
 #include <optional>
@@ -59,7 +60,7 @@ std::optional<std::size_t> Mapper::allocation_pool_size(const mapping::Task& tas
   const auto output = task.output(0);
   const auto bytes  = output.domain().get_volume() * output.type().size();
 
-  return (bytes + DEFAULT_ALIGNMENT - 1) / DEFAULT_ALIGNMENT * DEFAULT_ALIGNMENT;
+  return legate::detail::round_up_to_multiple(bytes, DEFAULT_ALIGNMENT);
 }
 
 legate::Scalar Mapper::tunable_value(TunableID)

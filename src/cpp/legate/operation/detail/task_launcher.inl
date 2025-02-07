@@ -51,6 +51,8 @@ inline void TaskLauncher::set_insert_barrier(bool insert_barrier)
   insert_barrier_ = insert_barrier;
 }
 
+inline void TaskLauncher::set_future_size(std::size_t future_size) { future_size_ = future_size; }
+
 inline void TaskLauncher::throws_exception(bool can_throw_exception)
 {
   can_throw_exception_ = can_throw_exception;

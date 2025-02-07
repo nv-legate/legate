@@ -10,7 +10,7 @@
  * its affiliates is strictly prohibited.
  */
 
-#include <legate/operation/detail/req_analyzer.h>
+#include <legate/operation/detail/store_analyzer.h>
 
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/traced_exception.h>

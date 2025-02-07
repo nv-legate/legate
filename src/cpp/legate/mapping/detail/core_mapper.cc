@@ -18,6 +18,7 @@
 #include <legate/mapping/operation.h>
 #include <legate/runtime/detail/config.h>
 #include <legate/task/variant_options.h>
+#include <legate/utilities/detail/align.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/env_defaults.h>
 #include <legate/utilities/detail/type_traits.h>
@@ -104,8 +105,7 @@ std::optional<std::size_t> CoreMapper::allocation_pool_size(
       }
       // We simply use twice the future size after 16-byte alignment as an upper bound
       const auto future_size = task.impl()->legion_task()->futures[0].get_untyped_size();
-      return (future_size + EXTRA_SCALAR_ALIGNMENT - 1) / EXTRA_SCALAR_ALIGNMENT *
-             EXTRA_SCALAR_ALIGNMENT;
+      return legate::detail::round_up_to_multiple(future_size, EXTRA_SCALAR_ALIGNMENT);
     }
     case legate::detail::CoreTask::INIT_NCCL: {
       return legate::detail::Config::get_config().warmup_nccl() ? NCCL_WARMUP_BUFFER_SIZE : 0;

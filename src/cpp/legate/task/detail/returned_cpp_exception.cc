@@ -15,7 +15,9 @@
 #include <legate/task/detail/returned_exception.h>
 #include <legate/task/exception.h>
 #include <legate/utilities/detail/formatters.h>
+#include <legate/utilities/detail/pack.h>
 #include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/machine.h>
 
 #include <fmt/format.h>
 

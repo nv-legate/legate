@@ -175,4 +175,4 @@ class StoreAnalyzer {
 
 }  // namespace legate::detail
 
-#include <legate/operation/detail/req_analyzer.inl>
+#include <legate/operation/detail/store_analyzer.inl>

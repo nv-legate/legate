@@ -405,7 +405,7 @@ target_sources(legate
                        legate/operation/detail/store_projection.cc
                        legate/operation/detail/reduce.cc
                        legate/operation/detail/release_region_field.cc
-                       legate/operation/detail/req_analyzer.cc
+                       legate/operation/detail/store_analyzer.cc
                        legate/operation/detail/scatter.cc
                        legate/operation/detail/scatter_gather.cc
                        legate/operation/detail/task.cc
@@ -460,6 +460,7 @@ target_sources(legate
                        legate/utilities/compiler.cc
                        legate/utilities/abort.cc
                        legate/utilities/dispatch.cc
+                       legate/utilities/detail/align.cc
                        legate/utilities/detail/buffer_builder.cc
                        legate/utilities/detail/env.cc
                        legate/utilities/detail/tuple.cc
