@@ -357,7 +357,7 @@ class ListType : public Type {
  *
  * @return StructType object
  */
-[[nodiscard]] StructType struct_type(const std::vector<Type>& field_types, bool align = false);
+[[nodiscard]] StructType struct_type(const std::vector<Type>& field_types, bool align = true);
 
 /**
  * @brief Creates a metadata object for a list type

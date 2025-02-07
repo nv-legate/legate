@@ -128,7 +128,7 @@ class StructType final : public ExtensionType {
  public:
   StructType(std::uint32_t uid,
              std::vector<InternalSharedPtr<Type>>&& field_types,
-             bool align = false);
+             bool align = true);
 
   [[nodiscard]] std::uint32_t size() const override;
   [[nodiscard]] std::uint32_t alignment() const override;

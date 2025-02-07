@@ -107,13 +107,13 @@ class TestType:
         ("dtype", "align", "offsets", "size"),
         [
             (
-                ty.struct_type([ty.int32, ty.int8, ty.int64], True),
+                ty.struct_type([ty.int32, ty.int8, ty.int64]),
                 True,
                 (0, 4, 8),
                 16,
             ),
             (
-                ty.struct_type([ty.int32, ty.int8, ty.int64]),
+                ty.struct_type([ty.int32, ty.int8, ty.int64], False),
                 False,
                 (0, 4, 5),
                 13,

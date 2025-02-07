@@ -698,7 +698,7 @@ cpdef FixedArrayType array_type(Type element_type, uint32_t N):
     return FixedArrayType.from_handle(std_move(type))
 
 
-cpdef StructType struct_type(list field_types, bool align = False):
+cpdef StructType struct_type(list field_types, bool align = True):
     r"""
     Create a structure type.
 
@@ -706,7 +706,7 @@ cpdef StructType struct_type(list field_types, bool align = False):
     ----------
     field_types : list[Type]
         The types of the fields.
-    align : bool (`False`)
+    align : bool (``True``)
         Whether the types should be aligned in memory.
 
     Returns

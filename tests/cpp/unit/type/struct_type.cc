@@ -58,7 +58,7 @@ INSTANTIATE_TEST_SUITE_P(
       "{int16:0,bool:2,float64:8}"),
     std::make_tuple(
       legate::struct_type(
-        std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()}), true),
+        std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()})),
       std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()}),
       true,
       24,
@@ -73,7 +73,7 @@ INSTANTIATE_TEST_SUITE_P(
       "{int16:0,bool:2,float64:3}"),
     std::make_tuple(
       legate::struct_type(
-        std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()})),
+        std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()}), false),
       std::vector<legate::Type>({legate::bool_(), legate::float64(), legate::int16()}),
       false,
       sizeof(std::int16_t) + sizeof(bool) + sizeof(double),
