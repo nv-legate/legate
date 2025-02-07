@@ -28,12 +28,10 @@ inline Scalar::Scalar(InternalSharedPtr<Type> type)
 template <typename T>
 inline Scalar::Scalar(T value)
   : own_{true},
-    type_{detail::primitive_type(canonical_type_code_of<T>())},
+    type_{detail::primitive_type(type_code_of_v<T>)},
     data_{copy_data_(std::addressof(value), sizeof(T))}
 {
 }
-
-inline Scalar::~Scalar() { clear_data_(); }
 
 inline Scalar::Scalar(const Scalar& other)
   : own_{other.own_},

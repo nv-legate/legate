@@ -31,6 +31,8 @@ void Scalar::clear_data_()
   }
 }
 
+Scalar::~Scalar() { clear_data_(); }
+
 Scalar::Scalar(InternalSharedPtr<Type> type, const void* data, bool copy)
   : own_{copy}, type_{std::move(type)}, data_{data}
 {

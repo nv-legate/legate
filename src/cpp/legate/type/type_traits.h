@@ -81,6 +81,20 @@ template <>
 struct type_code_of<std::uint32_t> : std::integral_constant<Type::Code, Type::Code::UINT32> {};
 template <>
 struct type_code_of<std::uint64_t> : std::integral_constant<Type::Code, Type::Code::UINT64> {};
+// Do not be fooled by the template parameter. This matches *exactly* std::size_t if and only
+// if it is not the same as std::uint64_t. It needs to be a template because otherwise you
+// cannot use std::enable_if_t.
+//
+// This specialization is needed because on some systems (e.g. macOS) std::size_t !=
+// std::uint64_t.
+template <typename T>
+struct type_code_of<
+  T,
+  std::enable_if_t<std::is_same_v<T, std::size_t> && !std::is_same_v<std::size_t, std::uint64_t>>>
+  : type_code_of<std::uint64_t> {
+  static_assert(sizeof(T) == sizeof(std::uint64_t));
+  static_assert(alignof(T) == alignof(std::uint64_t));
+};
 template <>
 struct type_code_of<bool> : std::integral_constant<Type::Code, Type::Code::BOOL> {};
 template <>

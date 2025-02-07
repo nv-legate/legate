@@ -26,27 +26,6 @@ namespace legate {
 namespace detail {
 
 template <typename T>
-constexpr legate::Type::Code canonical_type_code_of() noexcept
-{
-  using RawT = std::decay_t<T>;
-  using legate::Type;  // to disambiguate from legate::detail::Type;
-
-  static_assert(!std::is_same_v<RawT, Scalar>, "Invalid constructor selected for Scalar");
-  if constexpr (std::is_same_v<std::size_t, RawT>) {
-    static_assert(sizeof(RawT) == sizeof(std::uint64_t));
-    return Type::Code::UINT64;
-  } else {
-    constexpr auto ret = type_code_of_v<RawT>;
-
-    static_assert(ret != Type::Code::FIXED_ARRAY);
-    static_assert(ret != Type::Code::STRUCT);
-    static_assert(ret != Type::Code::STRING);
-    static_assert(ret != Type::Code::NIL);
-    return ret;
-  }
-}
-
-template <typename T>
 inline decltype(auto) canonical_value_of(T&& v) noexcept
 {
   return std::forward<T>(v);
@@ -58,10 +37,13 @@ inline std::uint64_t canonical_value_of(std::size_t v) noexcept { return std::ui
 
 template <typename T>
 Scalar::Scalar(const T& value, private_tag)
-  : Scalar{create_impl_(
-             primitive_type(detail::canonical_type_code_of<T>()), std::addressof(value), true),
+  : Scalar{create_impl_(primitive_type(type_code_of_v<T>), std::addressof(value), true),
            private_tag{}}
 {
+  static_assert(type_code_of_v<T> != Type::Code::FIXED_ARRAY);
+  static_assert(type_code_of_v<T> != Type::Code::STRUCT);
+  static_assert(type_code_of_v<T> != Type::Code::STRING);
+  static_assert(type_code_of_v<T> != Type::Code::NIL);
 }
 
 template <typename T, typename SFINAE>
@@ -77,13 +59,16 @@ Scalar::Scalar(const T& value, const Type& type)
 
 template <typename T>
 Scalar::Scalar(const std::vector<T>& values)
-  : Scalar{checked_create_impl_(
-             fixed_array_type(primitive_type(detail::canonical_type_code_of<T>()), values.size()),
-             values.data(),
-             true,
-             values.size() * sizeof(T)),
+  : Scalar{checked_create_impl_(fixed_array_type(primitive_type(type_code_of_v<T>), values.size()),
+                                values.data(),
+                                true,
+                                values.size() * sizeof(T)),
            private_tag{}}
 {
+  static_assert(type_code_of_v<T> != Type::Code::FIXED_ARRAY);
+  static_assert(type_code_of_v<T> != Type::Code::STRUCT);
+  static_assert(type_code_of_v<T> != Type::Code::STRING);
+  static_assert(type_code_of_v<T> != Type::Code::NIL);
 }
 
 template <typename T>
