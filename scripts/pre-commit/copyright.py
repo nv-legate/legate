@@ -13,53 +13,22 @@ from __future__ import annotations
 
 import sys
 from datetime import datetime
-from pathlib import Path
-from re import IGNORECASE, Match
-from subprocess import check_output
-from typing import Final
+from re import IGNORECASE
 
 from util.re_replacement import RegexReplacement, Replacement
 
-CUR_YEAR: Final = datetime.now().year
-
-CHECKIN_YEAR_CACHE: dict[Path, str] = {}
-
-
-class CopyrightReplacement(RegexReplacement):
-    def parse_args(self) -> None:
-        super().parse_args()
-
-        get_all_years = Path(__file__).parent / "get_checkin_year.bash"
-        assert get_all_years.is_file(), f"{get_all_years}"
-
-        checkin_years = check_output([get_all_years, *self.files], text=True)
-
-        items = (line.split("->") for line in checkin_years.splitlines())
-        sanitized_items = (
-            (path.strip(), year.strip()) for path, year in items
-        )
-        CHECKIN_YEAR_CACHE.update(
-            {Path(path).resolve(): year for path, year in sanitized_items}
-        )
-
-
-def fixup_copyright(path: Path, re_match: Match) -> str:
-    checkin_year = CHECKIN_YEAR_CACHE[path.resolve()]
-    return f"{checkin_year}-{CUR_YEAR} {re_match[2].lstrip()}"
-
 
 def main() -> int:
-    repl = [
-        Replacement(
-            pattern=r"([\d]+\-?[\d]*)(\s+nvidia\s+corporation)",
-            repl=fixup_copyright,
-            pragma_keyword="copyright",
-            flags=IGNORECASE,
-        )
-    ]
-    return CopyrightReplacement(
+    cur_year = datetime.now().year
+    repl = Replacement(
+        pattern=r"(([\d]+)\-?[\d]*)\s*(nvidia\s+corporation)",
+        repl=rf"\2-{cur_year} \3",
+        pragma_keyword="copyright",
+        flags=IGNORECASE,
+    )
+    return RegexReplacement(
         description="Find and fix the date in copyright notices",
-        replacements=repl,
+        replacements=[repl],
         allowed_suffixes=RegexReplacement.AllSuffixes,
     ).main()
 
