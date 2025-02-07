@@ -266,6 +266,9 @@ def get_legate_paths() -> LegatePaths:
     legate_mod_parent = legate_mod_dir.parent
     legate_build_dir = get_legate_build_dir(legate_mod_parent)
 
+    def make_legate_bind_path(base: Path) -> Path:
+        return base / "share" / "legate" / "libexec" / "legate-bind.sh"
+
     if legate_build_dir is None:
         import sysconfig
 
@@ -280,13 +283,7 @@ def get_legate_paths() -> LegatePaths:
             # src/python/legate, but have neither configured nor installed the
             # libraries. Most of these paths are meaningless, but let's at
             # least fill out the right bind_sh_path.
-            bind_sh_path = (
-                legate_mod_dir.parents[2]
-                / "share"
-                / "legate"
-                / "libexec"
-                / "legate-bind.sh"
-            )
+            bind_sh_path = make_legate_bind_path(legate_mod_dir.parents[2])
             legate_lib_path = Path("this_path_does_not_exist")
             assert not legate_lib_path.exists()
         elif legate_mod_parent.name == site_package_dir_name:
@@ -297,9 +294,7 @@ def get_legate_paths() -> LegatePaths:
             # <PREFIX>/share/legate/libexec/legate-bind.sh and <PREFIX>/lib
             # respectively.
             prefix_dir = legate_mod_dir.parents[3]
-            bind_sh_path = (
-                prefix_dir / "share" / "legate" / "libexec" / "legate-bind.sh"
-            )
+            bind_sh_path = make_legate_bind_path(prefix_dir)
             legate_lib_path = prefix_dir / "lib"
             assert_dir_exists(legate_lib_path)
         else:
@@ -318,14 +313,12 @@ def get_legate_paths() -> LegatePaths:
     # install, or are being called by test.py
     cmake_cache_txt = legate_build_dir / "CMakeCache.txt"
 
-    bind_sh_path = (
-        Path(
-            read_cmake_cache_value(
-                cmake_cache_txt, "legate_cpp_SOURCE_DIR:STATIC="
-            )
-        ).parent
-        / "legate-bind.sh"
-    )
+    src_dir = Path(
+        read_cmake_cache_value(
+            cmake_cache_txt, "legate_cpp_SOURCE_DIR:STATIC="
+        )
+    ).parent
+    bind_sh_path = make_legate_bind_path(src_dir)
 
     legate_binary_dir = Path(
         read_cmake_cache_value(
