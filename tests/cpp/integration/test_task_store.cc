@@ -240,6 +240,14 @@ legate::LogicalStore create_scalar_store()
   return store;
 }
 
+legate::LogicalStore create_promote_store(const legate::Shape& shape,
+                                          const std::vector<std::int32_t>& promote_args)
+{
+  auto runtime = legate::Runtime::get_runtime();
+  auto store   = runtime->create_store(shape, legate::int32());
+  return store.promote(promote_args.at(0), promote_args.at(1));
+}
+
 void auto_task_normal_input(const legate::LogicalArray& array, std::uint32_t index)
 {
   auto runtime = legate::Runtime::get_runtime();
@@ -733,6 +741,17 @@ class ManualTaskScalarInput : public ManualTaskScalar {};
 class ManualTaskScalarOutput : public ManualTaskScalar {};
 class ManualTaskScalarReduction : public ManualTaskScalar {};
 
+class ManualTaskPromote
+  : public TaskStoreTests,
+    public ::testing::WithParamInterface<std::tuple<std::int32_t,
+                                                    std::tuple<legate::Shape,
+                                                               legate::Shape,
+                                                               std::vector<std::uint64_t>,
+                                                               std::vector<std::int32_t>>>> {};
+class ManualTaskPromoteInput : public ManualTaskPromote {};
+class ManualTaskPromoteOutput : public ManualTaskPromote {};
+class ManualTaskPromoteReduction : public ManualTaskPromote {};
+
 INSTANTIATE_TEST_SUITE_P(
   TaskStoreTests,
   AutoTaskNormalInput,
@@ -888,6 +907,33 @@ INSTANTIATE_TEST_SUITE_P(
     // std::make_tuple(legate::Shape({1}), std::vector<std::size_t>({1})))
     ));
 
+INSTANTIATE_TEST_SUITE_P(
+  TaskStoreTests,
+  ManualTaskPromoteInput,
+  ::testing::Combine(::testing::Range(0, auto_task_method_count().at(TaskDataMode::INPUT)),
+                     ::testing::Values(std::make_tuple(legate::Shape({3}),
+                                                       legate::Shape({1}),
+                                                       std::vector<std::uint64_t>({3, 1}),
+                                                       std::vector<std::int32_t>({1, 1})))));
+
+INSTANTIATE_TEST_SUITE_P(
+  TaskStoreTests,
+  ManualTaskPromoteOutput,
+  ::testing::Combine(::testing::Range(0, auto_task_method_count().at(TaskDataMode::OUTPUT)),
+                     ::testing::Values(std::make_tuple(legate::Shape({3}),
+                                                       legate::Shape({1}),
+                                                       std::vector<std::uint64_t>({3, 1}),
+                                                       std::vector<std::int32_t>({1, 1})))));
+
+INSTANTIATE_TEST_SUITE_P(
+  TaskStoreTests,
+  ManualTaskPromoteReduction,
+  ::testing::Combine(::testing::Range(0, auto_task_method_count().at(TaskDataMode::REDUCTION)),
+                     ::testing::Values(std::make_tuple(legate::Shape({3}),
+                                                       legate::Shape({1}),
+                                                       std::vector<std::uint64_t>({3, 1}),
+                                                       std::vector<std::int32_t>({1, 1})))));
+
 TEST_P(AutoTaskNormalInput, Basic)
 {
   auto [index1, index2, shape] = GetParam();
@@ -1000,6 +1046,30 @@ TEST_P(ManualTaskScalarReduction, Basic)
   const auto& [launch_shape, tile_shape] = shapes;
   auto store                             = create_scalar_store();
   manual_task_scalar_reduction(store, index, launch_shape.extents(), tile_shape);
+}
+
+TEST_P(ManualTaskPromoteInput, Basic)
+{
+  auto [index, shapes]                                       = GetParam();
+  auto [store_shape, launch_shape, tile_shape, promote_args] = shapes;
+  auto store = create_promote_store(store_shape, promote_args);
+  manual_task_normal_input(store, index, launch_shape.extents(), tile_shape);
+}
+
+TEST_P(ManualTaskPromoteOutput, Basic)
+{
+  auto [index, shapes]                                       = GetParam();
+  auto [store_shape, launch_shape, tile_shape, promote_args] = shapes;
+  auto store = create_promote_store(store_shape, promote_args);
+  manual_task_normal_output(store, index, launch_shape.extents(), tile_shape);
+}
+
+TEST_P(ManualTaskPromoteReduction, Basic)
+{
+  auto [index, shapes]                                       = GetParam();
+  auto [store_shape, launch_shape, tile_shape, promote_args] = shapes;
+  auto store = create_promote_store(store_shape, promote_args);
+  manual_task_normal_reduction(store, index, launch_shape.extents(), tile_shape);
 }
 
 TEST_F(TaskStoreTests, CreateTaskInvalid)
