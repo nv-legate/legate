@@ -39,6 +39,8 @@ if "dev" in legate.__version__:
 copyright = "2021-2024, NVIDIA"  # noqa: A001
 author = "NVIDIA Corporation"
 
+release = version = "25.01"
+
 # -- General configuration ---------------------------------------------------
 
 extensions = [
@@ -67,7 +69,7 @@ html_theme_options = {
     "switcher": {
         "json_url": JSON_URL,
         "navbar_start": ["navbar-logo", "version-switcher"],
-        "version_match": ".".join(legate.__version__.split(".", 2)[:2]),
+        "version_match": "25.01",
     },
     "extra_footer": [
         '<script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>'  # NOQA: E501
