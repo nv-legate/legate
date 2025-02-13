@@ -1,29 +1,31 @@
 # Global
-CODEOWNERS @magnatelee @manopapad @Jacobfaib
 * @magnatelee @Jacobfaib
 
 # Python
 src/python @bryevdv
 src/python/legate/jupyter @eddy16112
-src/python/legate/core @magnatelee @Jacobfaib
+src/python/legate/core @nv-legate/python-reviewers
 
 # cmake
-src/cmake @Jacobfaib @cryos
-*.cmake @Jacobfaib @cryos
-CMakeLists.txt @Jacobfaib @cryos
+src/cmake @nv-legate/build-reviewers
+*.cmake @nv-legate/build-reviewers
+CMakeLists.txt @nv-legate/build-reviewers
 
 # configure
-config/ @Jacobfaib @bryevdv
-configure @Jacobfaib @bryevdv
+config/ @nv-legate/python-reviewers
+configure @nv-legate/python-reviewers
 
 # CI
-.github/ @sandeepd-nv @mag1cp1n @m3vaz @marcinz
-continuous_integration @sandeepd-nv @mag1cp1n @m3vaz @marcinz
-conda @sandeepd-nv @mag1cp1n @m3vaz @marcinz
-scripts/ @sandeepd-nv @mag1cp1n @m3vaz @marcinz
+.github/ @nv-legate/devops-reviewers
+continuous_integration @nv-legate/devops-reviewers
+conda @nv-legate/devops-reviewers
+scripts/ @nv-legate/devops-reviewers
 
 # cpp
-src/cpp @magnatelee @Jacobfaib
+src/cpp @nv-legate/cpp-reviewers
 
 # docs
-docs/ @bryevdv @magnatelee
+docs/ @nv-legate/docs-reviewers
+
+# Override for CODEOWNERS - last rule wins.
+CODEOWNERS @magnatelee @manopapad @Jacobfaib
