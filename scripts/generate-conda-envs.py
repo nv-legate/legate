@@ -74,6 +74,7 @@ class CUDAConfig(SectionConfig):
     ctk_version: str | None
     compilers: bool
     os: OSType
+    cupynumeric: bool
 
     header = "cuda"
 
@@ -102,6 +103,16 @@ class CUDAConfig(SectionConfig):
                 "libcufile-dev",
                 "libcal-dev",
             )
+            if self.cupynumeric:
+                deps += (
+                    "cuda-cudart-static",
+                    "libcublas-dev",
+                    "libcufft-dev",
+                    "libcurand-dev",
+                    "libcusolver-dev",
+                    "libcusparse-dev",
+                    "libnvjitlink-dev",
+                )
 
         if self.compilers and self.os == "linux":
             if V(self.ctk_version) < (12, 0, 0):
@@ -132,6 +143,7 @@ class BuildConfig(SectionConfig):
     ucx: bool
     sanitizers: bool
     os: OSType
+    cupynumeric: bool
 
     header = "build"
 
@@ -185,6 +197,8 @@ class BuildConfig(SectionConfig):
         val += "-ucx" if self.ucx else ""
         if self.sanitizers:
             val += "-sanitizer"
+        if self.cupynumeric:
+            val += "-cupynumeric"
         return val
 
 
@@ -282,6 +296,7 @@ class EnvConfig:
     openmpi: bool
     ucx: bool
     sanitizers: bool
+    cupynumeric: bool
 
     @property
     def channels(self) -> str:
@@ -295,12 +310,19 @@ class EnvConfig:
 
     @property
     def cuda(self) -> CUDAConfig:
-        return CUDAConfig(self.ctk_version, self.compilers, self.os)
+        return CUDAConfig(
+            self.ctk_version, self.compilers, self.os, self.cupynumeric
+        )
 
     @property
     def build(self) -> BuildConfig:
         return BuildConfig(
-            self.compilers, self.openmpi, self.ucx, self.sanitizers, self.os
+            self.compilers,
+            self.openmpi,
+            self.ucx,
+            self.sanitizers,
+            self.os,
+            self.cupynumeric,
         )
 
     @property
@@ -456,6 +478,13 @@ if __name__ == "__main__":
         default=False,
         help="Whether to include UCX or not",
     )
+    parser.add_argument(
+        "--cupynumeric",
+        action=BooleanFlag,
+        dest="cupynumeric",
+        default=False,
+        help="Whether to include cupynumeric dependencies",
+    )
 
     parser.add_argument(
         "--sections",
@@ -485,6 +514,7 @@ if __name__ == "__main__":
         args.openmpi,
         args.ucx,
         args.sanitizers,
+        args.cupynumeric,
     )
 
     conda_sections = indent(
