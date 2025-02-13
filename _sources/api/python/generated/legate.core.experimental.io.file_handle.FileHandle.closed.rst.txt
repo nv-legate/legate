@@ -1,0 +1,6 @@
+legate.core.experimental.io.file\_handle.FileHandle.closed
+==========================================================
+
+.. currentmodule:: legate.core.experimental.io.file_handle
+
+.. autoproperty:: FileHandle.closed

@@ -1,0 +1,6 @@
+legate.core.Runtime.find\_library
+=================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.find_library

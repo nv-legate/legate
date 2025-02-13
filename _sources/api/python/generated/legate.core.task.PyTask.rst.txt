@@ -1,0 +1,37 @@
+﻿legate.core.task.PyTask
+=======================
+
+.. currentmodule:: legate.core.task
+
+.. autoclass:: PyTask
+
+   .. automethod:: PyTask.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~PyTask.UNREGISTERED_ID
+      ~PyTask.registered
+      ~PyTask.task_id
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~PyTask.__call__
+      ~PyTask.complete_registration
+      ~PyTask.cpu_variant
+      ~PyTask.gpu_variant
+      ~PyTask.omp_variant
+      ~PyTask.prepare_call
+   
+   

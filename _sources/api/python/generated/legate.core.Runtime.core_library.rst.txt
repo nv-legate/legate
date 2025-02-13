@@ -1,0 +1,6 @@
+legate.core.Runtime.core\_library
+=================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Runtime.core_library

@@ -1,0 +1,6 @@
+﻿legate.core.AutoTask.set\_concurrent
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: AutoTask.set_concurrent

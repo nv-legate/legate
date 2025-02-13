@@ -1,0 +1,6 @@
+legate.core.Runtime.get\_machine
+================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.get_machine

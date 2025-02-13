@@ -1,0 +1,38 @@
+﻿legate.core.task.ReductionArray
+===============================
+
+.. currentmodule:: legate.core.task
+
+.. autoclass:: ReductionArray
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ReductionArray.__init__
+      ~ReductionArray.child
+      ~ReductionArray.data
+      ~ReductionArray.domain
+      ~ReductionArray.null_mask
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ReductionArray.__array_interface__
+      ~ReductionArray.__cuda_array_interface__
+      ~ReductionArray.__doc__
+      ~ReductionArray.ndim
+      ~ReductionArray.nested
+      ~ReductionArray.nullable
+      ~ReductionArray.type
+   
+   

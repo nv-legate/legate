@@ -1,0 +1,38 @@
+﻿legate.core.task.OutputArray
+============================
+
+.. currentmodule:: legate.core.task
+
+.. autoclass:: OutputArray
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OutputArray.__init__
+      ~OutputArray.child
+      ~OutputArray.data
+      ~OutputArray.domain
+      ~OutputArray.null_mask
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OutputArray.__array_interface__
+      ~OutputArray.__cuda_array_interface__
+      ~OutputArray.__doc__
+      ~OutputArray.ndim
+      ~OutputArray.nested
+      ~OutputArray.nullable
+      ~OutputArray.type
+   
+   

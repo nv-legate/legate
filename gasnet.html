@@ -1,0 +1,931 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>GASNet-based Installation &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/nvidia-sphinx-theme.css?v=4c56b82b" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'gasnet';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Resources" href="resources.html" />
+    <link rel="prev" title="Running Legate programs with Jupyter Notebook" href="jupyter.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="user.html">User Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Using with Jupyter</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">GASNet-based Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resources.html">Links to resources</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="api/python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/shape.html">Shape</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="api/python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/io.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/cpp/index.html">C++ API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/data.html">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/partitioning.html">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/task.html">Task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/util.html">Util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/io.html">IO</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="legate.stl/source/user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="user.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">GASNet-based Installation</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="gasnet-based-installation">
+<span id="gasnet"></span><h1>GASNet-based Installation<a class="headerlink" href="#gasnet-based-installation" title="Link to this heading">#</a></h1>
+<section id="overview">
+<span id="gasnet-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="installation.html#installation"><span class="std std-ref">Installation</span></a> part of the guide describes the general
+installation process.  However, the general Conda packages are built with <cite>UCX
+&lt;https://openucx.org/&gt;</cite> networking, which is not compatible with some
+supercomputers.  For example, the
+<cite>Perlmutter&lt;https://docs.nersc.gov/systems/perlmutter/architecture/&gt;</cite> HPE Cray
+supercomputer uses the Cray Slingshot 11 interconnect fabric with HPE Cray’s
+proprietary Cassini NICs.  This interconnect is not currently supported by the
+UCX networking backend.  For machines that require a non-UCX backend, we provide
+GASNet versions of the Legate packages, which leverage Legate’s ability to
+use <cite>GASNet&lt;https://gasnet.lbl.gov/&gt;</cite> for the networking backend.  The GASNet
+backend supports many interconnects, including the Slingshot 11 interconnect.</p>
+<p>Because the GASNet backend packages are meant for customized environments, these
+packages do not include any networking components. They require that the MPI
+communicator module and the GASNet networking backend be built by the user
+after installing the Legate
+package.  Thus, a GASNet package installation requires three components:</p>
+<ul class="simple">
+<li><p>The Legate package built with the GASNet wrapper support.</p></li>
+<li><p>A GASNet wrapper built for a particular environment.</p></li>
+<li><p>An MPI wrapper built for a particular environment.</p></li>
+</ul>
+<p>The installation of the MPI wrapper is discussed in more detail in
+<a class="reference internal" href="installation.html#installation-of-mpi-wrapper"><span class="std std-ref">Installation</span></a> and <a class="reference internal" href="faq.html#mpi-wrapper-faq"><span class="std std-ref">MPI wrapper
+FAQ</span></a>.  In summary, the idea is to provide an API wrapper around
+MPI that can be plugged into Leagate at start time.  The GASNet wrapper has a
+similar purpose, but plugs into the underlying Realm networking module.  To make
+this process easier, instead of building the wrappers from source, we
+provide an MPI wrapper and a GASNet wrapper conda packages that install scripts
+for building of the wrappers, and automate their use by setting the necessary
+environment variables.</p>
+</section>
+<section id="how-do-i-install-legate-with-the-mpi-and-gasnet-wrappers">
+<span id="how-do-i-install-legate-with-wrappers"></span><h2>How Do I Install Legate with the MPI and GASNet wrappers<a class="headerlink" href="#how-do-i-install-legate-with-the-mpi-and-gasnet-wrappers" title="Link to this heading">#</a></h2>
+<p>The basics of the installation of Leagate are covered in <a class="reference internal" href="installation.html#how-do-i-install-legate"><span class="std std-ref">How Do I Install
+Legate</span></a>.  Here, we discuss the differences from the
+non-wrapper packages.</p>
+<p>First, the GASNet wrapper Legate packages live under a different label in the
+Legate conda repository.  The reason for this is to keep the UCX and the GASNet
+packages separated, so they do not conflict with each other.  So, the
+installation of the Legate GASNet package differs only slightly from the UCX
+package installation:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>myenv<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate/label/gex<span class="w"> </span>legate<span class="w"> </span>realm-gex-wrapper<span class="w"> </span>legate-mpi-wrapper
+</pre></div>
+</div>
+<p>In addition to the Legate package, the user should install the wrapper packages
+that contain the scripts necessary to build the wrappers. When the packages are
+installed, the instructions for building the wrappers are displayed:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>To<span class="w"> </span>finish<span class="w"> </span>configuring<span class="w"> </span>the<span class="w"> </span>Legate<span class="w"> </span>MPI<span class="w"> </span>wrapper,<span class="w"> </span>activate<span class="w"> </span>your<span class="w"> </span>environment<span class="w"> </span>and<span class="w"> </span>run<span class="w"> </span>/conda/env/path/mpi-wrapper/build-mpi-wrapper.sh
+
+To<span class="w"> </span>finish<span class="w"> </span>configuring<span class="w"> </span>the<span class="w"> </span>Realm<span class="w"> </span>GASNet-EX<span class="w"> </span>wrapper,<span class="w"> </span>activate<span class="w"> </span>your<span class="w"> </span>environment<span class="w"> </span>and<span class="w"> </span>run<span class="w"> </span>/conda/env/path/gex-wrapper/build-gex-wrapper.sh
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">/conda/env/path</span></code> will be the path to the conda environment created during the
+<code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">create</span></code> step.  When both of the scripts are run and the wrappers are
+built, the environment needs to be deactivated and reactivated to set up the
+necessary environment variables (when the wrapper packages activation scripts
+are run).  After the packages are installed, Legate is ready to use.</p>
+</section>
+<section id="perlmutter-example">
+<h2>Perlmutter example<a class="headerlink" href="#perlmutter-example" title="Link to this heading">#</a></h2>
+<p>Here, we will show a complete example of installing Legate on Perlmutter.  This
+example will be a good starting point, even on machines with a different setup.</p>
+<p>First, on Perlmutter, Conda is not available by default.  The simplest way to
+get a working conda environment is to use the Cray module for Conda:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>module<span class="w"> </span>load<span class="w"> </span>conda
+</pre></div>
+</div>
+<p>Next, create a Legate environment:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>login40:~&gt;<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>legate-gex-anaconda<span class="w"> </span>-c<span class="w"> </span>legate/label/gex<span class="w"> </span>legate<span class="w"> </span>realm-gex-wrapper<span class="w"> </span>legate-mpi-wrapper
+</pre></div>
+</div>
+<p>This installs Legate and all the necessary dependencies, just like for the UCX
+Legate package, but, in addition to the usual output listing the installed
+packages, the following message is displayed:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>To<span class="w"> </span>finish<span class="w"> </span>configuring<span class="w"> </span>the<span class="w"> </span>Legate<span class="w"> </span>MPI<span class="w"> </span>wrapper,<span class="w"> </span>activate<span class="w"> </span>your<span class="w"> </span>environment<span class="w"> </span>and<span class="w"> </span>run<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/build-mpi-wrapper.sh
+
+
+<span class="se">\</span>
+To<span class="w"> </span>finish<span class="w"> </span>configuring<span class="w"> </span>the<span class="w"> </span>Realm<span class="w"> </span>GASNet-EX<span class="w"> </span>wrapper,<span class="w"> </span>activate<span class="w"> </span>your<span class="w"> </span>environment<span class="w"> </span>and<span class="w"> </span>run<span class="w"> </span>/conda/envs/legate-gex-anaconda/gex-wrapper/build-gex-wrapper.sh
+
+
+<span class="k">done</span>
+
+To<span class="w"> </span>activate<span class="w"> </span>this<span class="w"> </span>environment,<span class="w"> </span>use
+
+<span class="w">     </span>$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>legate-gex-anaconda
+
+To<span class="w"> </span>deactivate<span class="w"> </span>an<span class="w"> </span>active<span class="w"> </span>environment,<span class="w"> </span>use
+
+<span class="w">     </span>$<span class="w"> </span>conda<span class="w"> </span>deactivate
+</pre></div>
+</div>
+<p>To build the wrappers, we must first activate the <code class="docutils literal notranslate"><span class="pre">legate-gex-anaconda</span></code>
+environment we created.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>login40:~&gt;<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>legate-gex-anaconda
+
+
+---------------------<span class="w"> </span>CONDA/MPI_WRAPPER/ACTIVATE.SH<span class="w"> </span>-----------------------
+
+<span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span>
+
+
+---------------------<span class="w"> </span>CONDA/GASNET_WRAPPER/ACTIVATE.SH<span class="w"> </span>-----------------------
+
+<span class="nv">REALM_GASNETEX_WRAPPER</span><span class="o">=</span>
+<span class="nv">GASNET_OFI_SPAWNER</span><span class="o">=</span>mpi
+<span class="nv">FI_CXI_RDZV_THRESHOLD</span><span class="o">=</span><span class="m">256</span>
+</pre></div>
+</div>
+<p>Note that when the environment is activated without the wrappers built, the
+activation scripts do not find the built libraries (nothing follows the <code class="docutils literal notranslate"><span class="pre">=</span></code>
+mark).  After the environment is activated, we can first build the MPI wrapper
+(although the order of building the wrappers does not matter):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>login40:~&gt;<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/build-mpi-wrapper.sh
+Building<span class="w"> </span>Legate<span class="w"> </span>MPI<span class="w"> </span>wrapper:
+<span class="w">  </span>Installation<span class="w"> </span>directory:<span class="w"> </span>/conda/envs/legate-gex-anaconda/lib
+<span class="w">  </span>Compiler:<span class="w"> </span>CC
+--<span class="w"> </span>The<span class="w"> </span>CXX<span class="w"> </span>compiler<span class="w"> </span>identification<span class="w"> </span>is<span class="w"> </span>GNU<span class="w"> </span><span class="m">12</span>.3.0
+--<span class="w"> </span>Cray<span class="w"> </span>Programming<span class="w"> </span>Environment<span class="w"> </span><span class="m">2</span>.7.30<span class="w"> </span>CXX
+--<span class="w"> </span>Detecting<span class="w"> </span>CXX<span class="w"> </span>compiler<span class="w"> </span>ABI<span class="w"> </span>info
+--<span class="w"> </span>Detecting<span class="w"> </span>CXX<span class="w"> </span>compiler<span class="w"> </span>ABI<span class="w"> </span>info<span class="w"> </span>-<span class="w"> </span><span class="k">done</span>
+--<span class="w"> </span>Check<span class="w"> </span><span class="k">for</span><span class="w"> </span>working<span class="w"> </span>CXX<span class="w"> </span>compiler:<span class="w"> </span>/opt/cray/pe/craype/2.7.30/bin/CC<span class="w"> </span>-<span class="w"> </span>skipped
+--<span class="w"> </span>Detecting<span class="w"> </span>CXX<span class="w"> </span>compile<span class="w"> </span>features
+--<span class="w"> </span>Detecting<span class="w"> </span>CXX<span class="w"> </span>compile<span class="w"> </span>features<span class="w"> </span>-<span class="w"> </span><span class="k">done</span>
+--<span class="w"> </span>Using<span class="w"> </span>build<span class="w"> </span>type:<span class="w"> </span>Release
+--<span class="w"> </span>Building<span class="w"> </span>shared<span class="w"> </span>library:<span class="w"> </span>ON
+--<span class="w"> </span>Generating<span class="w"> </span>src<span class="w"> </span>install<span class="w"> </span>rules:<span class="w"> </span>ON
+--<span class="w"> </span>Found<span class="w"> </span>MPI_CXX:<span class="w"> </span>/opt/cray/pe/craype/2.7.30/bin/CC<span class="w"> </span><span class="o">(</span>found<span class="w"> </span>version<span class="w"> </span><span class="s2">&quot;3.1&quot;</span><span class="o">)</span>
+--<span class="w"> </span>Found<span class="w"> </span>MPI:<span class="w"> </span>TRUE<span class="w"> </span><span class="o">(</span>found<span class="w"> </span>version<span class="w"> </span><span class="s2">&quot;3.1&quot;</span><span class="o">)</span><span class="w"> </span>found<span class="w"> </span>components:<span class="w"> </span>CXX
+--<span class="w"> </span>Configuring<span class="w"> </span><span class="k">done</span><span class="w"> </span><span class="o">(</span><span class="m">2</span>.2s<span class="o">)</span>
+--<span class="w"> </span>Generating<span class="w"> </span><span class="k">done</span><span class="w"> </span><span class="o">(</span><span class="m">0</span>.0s<span class="o">)</span>
+--<span class="w"> </span>Build<span class="w"> </span>files<span class="w"> </span>have<span class="w"> </span>been<span class="w"> </span>written<span class="w"> </span>to:<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/build
+<span class="o">[</span><span class="w"> </span><span class="m">50</span>%<span class="o">]</span><span class="w"> </span>Building<span class="w"> </span>CXX<span class="w"> </span>object<span class="w"> </span>CMakeFiles/mpi_wrapper.dir/src/legate_mpi_wrapper/mpi_wrapper.cc.o
+<span class="o">[</span><span class="m">100</span>%<span class="o">]</span><span class="w"> </span>Linking<span class="w"> </span>CXX<span class="w"> </span>shared<span class="w"> </span>library<span class="w"> </span>lib64/liblgcore_mpi_wrapper.so
+<span class="o">[</span><span class="m">100</span>%<span class="o">]</span><span class="w"> </span>Built<span class="w"> </span>target<span class="w"> </span>mpi_wrapper
+--<span class="w"> </span>Install<span class="w"> </span>configuration:<span class="w"> </span><span class="s2">&quot;Release&quot;</span>
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/lib64/liblgcore_mpi_wrapper.so.1
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/lib64/liblgcore_mpi_wrapper.so
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/include/legate_mpi_wrapper/legate_mpi_wrapper/mpi_wrapper.h
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/include/legate_mpi_wrapper/legate_mpi_wrapper/mpi_wrapper_types.h
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/lib64/cmake/legate_mpi_wrapper/mpi_wrapperTargets.cmake
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/lib64/cmake/legate_mpi_wrapper/mpi_wrapperTargets-release.cmake
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/lib64/cmake/legate_mpi_wrapper/mpi_wrapperConfig.cmake
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/lib64/cmake/legate_mpi_wrapper/mpi_wrapperConfigVersion.cmake
+
+Reactivate<span class="w"> </span>the<span class="w"> </span>conda<span class="w"> </span>environment<span class="w"> </span>to<span class="w"> </span><span class="nb">set</span><span class="w"> </span>the<span class="w"> </span>necessary<span class="w"> </span>environment<span class="w"> </span>variables:
+
+$<span class="w"> </span>conda<span class="w"> </span>deactivate
+$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>legate-gex-anaconda
+</pre></div>
+</div>
+<p>On Perlmutter, when attempting to build the MPI wrapper, at the time of writing
+this document, the installed <code class="docutils literal notranslate"><span class="pre">cmake</span></code> is too old:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>/conda/envs/legate-gex-anaconda/mpi-wrapper/build-mpi-wrapper.sh
+Building<span class="w"> </span>Legate<span class="w"> </span>MPI<span class="w"> </span>wrapper:
+<span class="w">  </span>Installation<span class="w"> </span>directory:<span class="w"> </span>/conda/envs/legate-gex-anaconda/lib
+<span class="w">  </span>Compiler:<span class="w"> </span>CC
+CMake<span class="w"> </span>Error<span class="w"> </span>at<span class="w"> </span>CMakeLists.txt:13<span class="w"> </span><span class="o">(</span>cmake_minimum_required<span class="o">)</span>:
+<span class="w">  </span>CMake<span class="w"> </span><span class="m">3</span>.22.1<span class="w"> </span>or<span class="w"> </span>higher<span class="w"> </span>is<span class="w"> </span>required.<span class="w">  </span>You<span class="w"> </span>are<span class="w"> </span>running<span class="w"> </span>version<span class="w"> </span><span class="m">3</span>.20.4
+</pre></div>
+</div>
+<p>In case of CMake version error, a new version can be installed with <code class="docutils literal notranslate"><span class="pre">conda</span>
+<span class="pre">install</span> <span class="pre">cmake</span></code> or by any other means.  Note that when the wrapper is built, the
+final message suggests reactivating the environment, but that is not necessary
+before building the GASNet wrapper:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>login40:~&gt;<span class="w"> </span>/conda/envs/legate-gex-anaconda/gex-wrapper/build-gex-wrapper.sh
+Building<span class="w"> </span>GASNet-EX<span class="w"> </span>wrapper:
+<span class="w">  </span>Installation<span class="w"> </span>directory:<span class="w"> </span>/conda/envs/legate-gex-anaconda/lib
+<span class="w">  </span>Conduit:<span class="w"> </span>ofi
+<span class="w">  </span>System<span class="w"> </span>configuration:<span class="w"> </span>slingshot11
+--<span class="w"> </span>The<span class="w"> </span>C<span class="w"> </span>compiler<span class="w"> </span>identification<span class="w"> </span>is<span class="w"> </span>GNU<span class="w"> </span><span class="m">12</span>.3.0
+--<span class="w"> </span>The<span class="w"> </span>CXX<span class="w"> </span>compiler<span class="w"> </span>identification<span class="w"> </span>is<span class="w"> </span>GNU<span class="w"> </span><span class="m">12</span>.3.0
+--<span class="w"> </span>Cray<span class="w"> </span>Programming<span class="w"> </span>Environment<span class="w"> </span><span class="m">2</span>.7.30<span class="w"> </span>C
+--<span class="w"> </span>Detecting<span class="w"> </span>C<span class="w"> </span>compiler<span class="w"> </span>ABI<span class="w"> </span>info
+--<span class="w"> </span>Detecting<span class="w"> </span>C<span class="w"> </span>compiler<span class="w"> </span>ABI<span class="w"> </span>info<span class="w"> </span>-<span class="w"> </span><span class="k">done</span>
+--<span class="w"> </span>Check<span class="w"> </span><span class="k">for</span><span class="w"> </span>working<span class="w"> </span>C<span class="w"> </span>compiler:<span class="w"> </span>/opt/cray/pe/craype/2.7.30/bin/cc<span class="w"> </span>-<span class="w"> </span>skipped
+--<span class="w"> </span>Detecting<span class="w"> </span>C<span class="w"> </span>compile<span class="w"> </span>features
+--<span class="w"> </span>Detecting<span class="w"> </span>C<span class="w"> </span>compile<span class="w"> </span>features<span class="w"> </span>-<span class="w"> </span><span class="k">done</span>
+--<span class="w"> </span>Cray<span class="w"> </span>Programming<span class="w"> </span>Environment<span class="w"> </span><span class="m">2</span>.7.30<span class="w"> </span>CXX
+--<span class="w"> </span>Detecting<span class="w"> </span>CXX<span class="w"> </span>compiler<span class="w"> </span>ABI<span class="w"> </span>info
+--<span class="w"> </span>Detecting<span class="w"> </span>CXX<span class="w"> </span>compiler<span class="w"> </span>ABI<span class="w"> </span>info<span class="w"> </span>-<span class="w"> </span><span class="k">done</span>
+--<span class="w"> </span>Check<span class="w"> </span><span class="k">for</span><span class="w"> </span>working<span class="w"> </span>CXX<span class="w"> </span>compiler:<span class="w"> </span>/opt/cray/pe/craype/2.7.30/bin/CC<span class="w"> </span>-<span class="w"> </span>skipped
+--<span class="w"> </span>Detecting<span class="w"> </span>CXX<span class="w"> </span>compile<span class="w"> </span>features
+--<span class="w"> </span>Detecting<span class="w"> </span>CXX<span class="w"> </span>compile<span class="w"> </span>features<span class="w"> </span>-<span class="w"> </span><span class="k">done</span>
+--<span class="w"> </span>Could<span class="w"> </span>NOT<span class="w"> </span>find<span class="w"> </span>GASNet<span class="w"> </span><span class="o">(</span>missing:<span class="w"> </span>GASNet_INCLUDE_DIR<span class="w"> </span>GASNet_CONDUITS<span class="w"> </span>GASNet_THREADING_OPTS<span class="o">)</span>
+--<span class="w"> </span>Configuring<span class="w"> </span>and<span class="w"> </span>building<span class="w"> </span>embedded<span class="w"> </span>GASNet...
+--<span class="w"> </span>Downloading<span class="w"> </span>StanfordLegion/gasnet<span class="w"> </span>repo<span class="w"> </span>from:<span class="w"> </span>https://github.com/StanfordLegion/gasnet.git
+CMake<span class="w"> </span>Warning<span class="w"> </span><span class="o">(</span>dev<span class="o">)</span><span class="w"> </span>at<span class="w"> </span>/conda/envs/legate-gex-anaconda/share/cmake-3.30/Modules/FetchContent.cmake:1953<span class="w"> </span><span class="o">(</span>message<span class="o">)</span>:
+<span class="w">  </span>Calling<span class="w"> </span>FetchContent_Populate<span class="o">(</span>embed-gasnet<span class="o">)</span><span class="w"> </span>is<span class="w"> </span>deprecated,<span class="w"> </span>call
+<span class="w">  </span>FetchContent_MakeAvailable<span class="o">(</span>embed-gasnet<span class="o">)</span><span class="w"> </span>instead.<span class="w">  </span>Policy<span class="w"> </span>CMP0169<span class="w"> </span>can<span class="w"> </span>be
+<span class="w">  </span><span class="nb">set</span><span class="w"> </span>to<span class="w"> </span>OLD<span class="w"> </span>to<span class="w"> </span>allow<span class="w"> </span>FetchContent_Populate<span class="o">(</span>embed-gasnet<span class="o">)</span><span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span>called
+<span class="w">  </span>directly<span class="w"> </span><span class="k">for</span><span class="w"> </span>now,<span class="w"> </span>but<span class="w"> </span>the<span class="w"> </span>ability<span class="w"> </span>to<span class="w"> </span>call<span class="w"> </span>it<span class="w"> </span>with<span class="w"> </span>declared<span class="w"> </span>details<span class="w"> </span>will<span class="w"> </span>be
+<span class="w">  </span>removed<span class="w"> </span>completely<span class="w"> </span><span class="k">in</span><span class="w"> </span>a<span class="w"> </span>future<span class="w"> </span>version.
+Call<span class="w"> </span>Stack<span class="w"> </span><span class="o">(</span>most<span class="w"> </span>recent<span class="w"> </span>call<span class="w"> </span>first<span class="o">)</span>:
+<span class="w">  </span>/conda/envs/legate-gex-anaconda/gex-wrapper/cmake/FetchAndBuildGASNet.cmake:105<span class="w"> </span><span class="o">(</span>FetchContent_Populate<span class="o">)</span>
+<span class="w">  </span>CMakeLists.txt:38<span class="w"> </span><span class="o">(</span>include<span class="o">)</span>
+This<span class="w"> </span>warning<span class="w"> </span>is<span class="w"> </span><span class="k">for</span><span class="w"> </span>project<span class="w"> </span>developers.<span class="w">  </span>Use<span class="w"> </span>-Wno-dev<span class="w"> </span>to<span class="w"> </span>suppress<span class="w"> </span>it.
+
+--<span class="w"> </span>Found<span class="w"> </span>MPI_C:<span class="w"> </span>/opt/cray/pe/craype/2.7.30/bin/cc<span class="w"> </span><span class="o">(</span>found<span class="w"> </span>version<span class="w"> </span><span class="s2">&quot;3.1&quot;</span><span class="o">)</span>
+--<span class="w"> </span>Found<span class="w"> </span>MPI:<span class="w"> </span>TRUE<span class="w"> </span><span class="o">(</span>found<span class="w"> </span>version<span class="w"> </span><span class="s2">&quot;3.1&quot;</span><span class="o">)</span><span class="w"> </span>found<span class="w"> </span>components:<span class="w"> </span>C
+--<span class="w"> </span>Found<span class="w"> </span>GASNet:<span class="w"> </span>/conda/envs/legate-gex-anaconda/gex-wrapper/src/build/embed-gasnet/install/include
+--<span class="w"> </span>Found<span class="w"> </span>GASNet<span class="w"> </span>Conduits:<span class="w"> </span>ofi
+--<span class="w"> </span>Found<span class="w"> </span>GASNet<span class="w"> </span>Threading<span class="w"> </span>models:<span class="w"> </span>par
+--<span class="w"> </span>GASNet:<span class="w"> </span>Using<span class="w"> </span>ofi-par
+--<span class="w"> </span>Performing<span class="w"> </span>Test<span class="w"> </span>COMPILER_HAS_HIDDEN_VISIBILITY
+--<span class="w"> </span>Performing<span class="w"> </span>Test<span class="w"> </span>COMPILER_HAS_HIDDEN_VISIBILITY<span class="w"> </span>-<span class="w"> </span>Success
+--<span class="w"> </span>Performing<span class="w"> </span>Test<span class="w"> </span>COMPILER_HAS_HIDDEN_INLINE_VISIBILITY
+--<span class="w"> </span>Performing<span class="w"> </span>Test<span class="w"> </span>COMPILER_HAS_HIDDEN_INLINE_VISIBILITY<span class="w"> </span>-<span class="w"> </span>Success
+--<span class="w"> </span>Performing<span class="w"> </span>Test<span class="w"> </span>COMPILER_HAS_DEPRECATED_ATTR
+--<span class="w"> </span>Performing<span class="w"> </span>Test<span class="w"> </span>COMPILER_HAS_DEPRECATED_ATTR<span class="w"> </span>-<span class="w"> </span>Success
+--<span class="w"> </span>Configuring<span class="w"> </span><span class="k">done</span><span class="w"> </span><span class="o">(</span><span class="m">131</span>.1s<span class="o">)</span>
+--<span class="w"> </span>Generating<span class="w"> </span><span class="k">done</span><span class="w"> </span><span class="o">(</span><span class="m">0</span>.1s<span class="o">)</span>
+--<span class="w"> </span>Build<span class="w"> </span>files<span class="w"> </span>have<span class="w"> </span>been<span class="w"> </span>written<span class="w"> </span>to:<span class="w"> </span>/conda/envs/legate-gex-anaconda/gex-wrapper/src/build
+<span class="o">[</span><span class="w"> </span><span class="m">33</span>%<span class="o">]</span><span class="w"> </span>Building<span class="w"> </span>CXX<span class="w"> </span>object<span class="w"> </span>CMakeFiles/realm_gex_wrapper_objs.dir/gasnetex_handlers.cc.o
+<span class="o">[</span><span class="w"> </span><span class="m">66</span>%<span class="o">]</span><span class="w"> </span>Building<span class="w"> </span>CXX<span class="w"> </span>object<span class="w"> </span>CMakeFiles/realm_gex_wrapper_objs.dir/gasnetex_wrapper.cc.o
+<span class="o">[</span><span class="w"> </span><span class="m">66</span>%<span class="o">]</span><span class="w"> </span>Built<span class="w"> </span>target<span class="w"> </span>realm_gex_wrapper_objs
+<span class="o">[</span><span class="m">100</span>%<span class="o">]</span><span class="w"> </span>Linking<span class="w"> </span>CXX<span class="w"> </span>shared<span class="w"> </span>library<span class="w"> </span>librealm_gex_wrapper.so
+<span class="o">[</span><span class="m">100</span>%<span class="o">]</span><span class="w"> </span>Built<span class="w"> </span>target<span class="w"> </span>realm_gex_wrapper
+--<span class="w"> </span>Install<span class="w"> </span>configuration:<span class="w"> </span><span class="s2">&quot;&quot;</span>
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/gex-wrapper/lib/librealm_gex_wrapper.so.0.0.1
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/gex-wrapper/lib/librealm_gex_wrapper.so.0
+--<span class="w"> </span>Set<span class="w"> </span>non-toolchain<span class="w"> </span>portion<span class="w"> </span>of<span class="w"> </span>runtime<span class="w"> </span>path<span class="w"> </span>of<span class="w"> </span><span class="s2">&quot;/conda/envs/legate-gex-anaconda/gex-wrapper/lib/librealm_gex_wrapper.so.0.0.1&quot;</span><span class="w"> </span>to<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$ORIGIN</span><span class="s2">&quot;</span>
+--<span class="w"> </span>Installing:<span class="w"> </span>/conda/envs/legate-gex-anaconda/gex-wrapper/lib/librealm_gex_wrapper.so
+
+Reactivate<span class="w"> </span>the<span class="w"> </span>conda<span class="w"> </span>environment<span class="w"> </span>to<span class="w"> </span><span class="nb">set</span><span class="w"> </span>the<span class="w"> </span>necessary<span class="w"> </span>environment<span class="w"> </span>variables:
+
+$<span class="w"> </span>conda<span class="w"> </span>deactivate
+$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>legate-gex-anaconda
+</pre></div>
+</div>
+<p>Now, with both wrappers built, we can reactivate the environment:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>login40:~&gt;<span class="w"> </span>conda<span class="w"> </span>deactivate
+
+
+---------------------<span class="w"> </span>CONDA/GASNET_WRAPPER/DEACTIVATE.SH<span class="w"> </span>-----------------------
+
++++<span class="w"> </span><span class="nb">unset</span><span class="w"> </span>REALM_GASNETEX_WRAPPER
++++<span class="w"> </span><span class="nb">unset</span><span class="w"> </span>GASNET_OFI_SPAWNER
++++<span class="w"> </span><span class="nb">unset</span><span class="w"> </span>FI_CXI_RDZV_THRESHOLD
++++<span class="w"> </span><span class="nb">set</span><span class="w"> </span>+x
+
+
+---------------------<span class="w"> </span>CONDA/MPI_WRAPPER/DEACTIVATE.SH<span class="w"> </span>-----------------------
+
++++<span class="w"> </span><span class="nb">unset</span><span class="w"> </span>LEGATE_MPI_WRAPPER
++++<span class="w"> </span><span class="nb">set</span><span class="w"> </span>+x
+login40:~&gt;<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>legate-gex-anaconda
+
+
+---------------------<span class="w"> </span>CONDA/MPI_WRAPPER/ACTIVATE.SH<span class="w"> </span>-----------------------
+
+<span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/lib64/liblgcore_mpi_wrapper.so
+
+
+---------------------<span class="w"> </span>CONDA/GASNET_WRAPPER/ACTIVATE.SH<span class="w"> </span>-----------------------
+
+<span class="nv">REALM_GASNETEX_WRAPPER</span><span class="o">=</span>/conda/envs/legate-gex-anaconda/gex-wrapper/lib/librealm_gex_wrapper.so
+<span class="nv">GASNET_OFI_SPAWNER</span><span class="o">=</span>mpi
+<span class="nv">FI_CXI_RDZV_THRESHOLD</span><span class="o">=</span><span class="m">256</span>
+</pre></div>
+</div>
+<p>When the environment is deactivated, the deactivation scripts unset all the
+variables, even if they were not set before.  Activating the environment sets
+the paths to the wrappers libraries this time because the libraries are built
+and available in the expected paths.  After the wrappers are built, Legate jobs
+can be run.  When running Legate, the conda environment should be activated
+first (for example, load the conda module and activate the Legate environment in
+a batch script).  For example, we can create a simple hello world script:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span><span class="s2">&quot;print(&quot;</span>Hello<span class="w"> </span>World<span class="s2">&quot;)&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>hello_world.py
+</pre></div>
+</div>
+<p>Then, we can create a batch script to run it:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
+<span class="c1">#SBATCH --qos=debug</span>
+<span class="c1">#SBATCH --nodes=2</span>
+<span class="c1">#SBATCH --ntasks-per-node=1</span>
+<span class="c1">#SBATCH --constraint=gpu</span>
+<span class="c1">#SBATCH --gpus-per-node=4</span>
+<span class="c1">#SBATCH --time=03:00</span>
+<span class="c1">#SBATCH -o legate-%j.out</span>
+
+module<span class="w"> </span>load<span class="w"> </span>conda
+conda<span class="w"> </span>activate<span class="w"> </span>legate-gex-anaconda
+legate<span class="w"> </span>--logging<span class="w"> </span><span class="nv">legate</span><span class="o">=</span><span class="m">1</span>,gex<span class="o">=</span><span class="m">1</span><span class="w"> </span>--launcher<span class="w"> </span>srun<span class="w"> </span>--nodes<span class="w"> </span><span class="m">2</span><span class="w"> </span>--ranks-per-node<span class="w"> </span><span class="m">1</span><span class="w"> </span>--cpus<span class="w"> </span><span class="m">1</span><span class="w"> </span>--sysmem<span class="w"> </span><span class="m">4000</span><span class="w"> </span>--gpus<span class="w"> </span><span class="m">4</span><span class="w"> </span>--fbmem<span class="w"> </span><span class="m">4000</span><span class="w"> </span>--verbose<span class="w"> </span>./hello_world.py
+</pre></div>
+</div>
+<p>The example batch script needs to be adjusted for a particular situation.  Here,
+we launch Legate with some options that are more relevant in more involved
+codes, but we show them for exposure.  The important options for invoking Legate
+in the Perlmutter environment are <code class="docutils literal notranslate"><span class="pre">--launcher</span> <span class="pre">srun</span></code> and <code class="docutils literal notranslate"><span class="pre">--nodes</span> <span class="pre">2</span></code>.  These
+options tell the Legate driver to use <code class="docutils literal notranslate"><span class="pre">srun</span></code> to launch Legate.  We could
+actually provide the <code class="docutils literal notranslate"><span class="pre">srun</span></code> command around Legate, and then we would use
+<code class="docutils literal notranslate"><span class="pre">--launcher</span> <span class="pre">none</span></code> to prevent the Legate launcher from using any external
+launcher.  With our options, Legate run results in the following output on
+Perlmutter:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>---------------------<span class="w"> </span>CONDA/MPI_WRAPPER/ACTIVATE.SH<span class="w"> </span>-----------------------
+
+<span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span>/conda/envs/legate-gex-anaconda/mpi-wrapper/conda/envs/legate-gex-anaconda/mpi-wrapper/lib64/liblgcore_mpi_wrapper.so
+
+
+---------------------<span class="w"> </span>CONDA/GASNET_WRAPPER/ACTIVATE.SH<span class="w"> </span>-----------------------
+
+<span class="nv">REALM_GASNETEX_WRAPPER</span><span class="o">=</span>/conda/envs/legate-gex-anaconda/gex-wrapper/lib/librealm_gex_wrapper.so
+<span class="nv">GASNET_OFI_SPAWNER</span><span class="o">=</span>mpi
+<span class="nv">FI_CXI_RDZV_THRESHOLD</span><span class="o">=</span><span class="m">256</span>
+START
+
+---<span class="w"> </span>Legion<span class="w"> </span>Python<span class="w"> </span>Configuration<span class="w"> </span>------------------------------------------------
+
+Legate<span class="w"> </span>paths:
+<span class="w">  </span>legate_dir<span class="w">       </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/lib/python3.12/site-packages/legate
+<span class="w">  </span>legate_build_dir<span class="w"> </span>:<span class="w"> </span>None
+<span class="w">  </span>bind_sh_path<span class="w">     </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/share/legate/libexec/legate-bind.sh
+<span class="w">  </span>legate_lib_path<span class="w">  </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/lib
+
+Legion<span class="w"> </span>paths:
+<span class="w">  </span>legion_bin_path<span class="w">       </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/bin
+<span class="w">  </span>legion_lib_path<span class="w">       </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/lib
+<span class="w">  </span>realm_defines_h<span class="w">       </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/include/realm_defines.h
+<span class="w">  </span>legion_defines_h<span class="w">      </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/include/legion_defines.h
+<span class="w">  </span>legion_spy_py<span class="w">         </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/bin/legion_spy.py
+<span class="w">  </span>legion_prof<span class="w">           </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/bin/legion_prof
+<span class="w">  </span>legion_module<span class="w">         </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/lib/python3.12/site-packages
+<span class="w">  </span>legion_jupyter_module<span class="w"> </span>:<span class="w"> </span>/conda/envs/legate-gex-anaconda/lib/python3.12/site-packages
+
+Versions:
+<span class="w">  </span>legate_version<span class="w"> </span>:<span class="w"> </span><span class="m">24</span>.9.0.dev329+g32137a65
+
+Command:
+<span class="w">  </span>srun<span class="w"> </span>-n<span class="w"> </span><span class="m">2</span><span class="w"> </span>--ntasks-per-node<span class="w"> </span><span class="m">1</span><span class="w"> </span>/conda/envs/legate-gex-anaconda/share/legate/libexec/legate-bind.sh<span class="w"> </span>--launcher<span class="w"> </span>srun<span class="w"> </span>--<span class="w"> </span>python<span class="w"> </span>./hello_world.py
+
+Customized<span class="w"> </span>Environment:
+<span class="w">  </span><span class="nv">CUTENSOR_LOG_LEVEL</span><span class="o">=</span><span class="m">1</span>
+<span class="w">  </span><span class="nv">GASNET_MPI_THREAD</span><span class="o">=</span>MPI_THREAD_MULTIPLE
+<span class="w">  </span><span class="nv">LEGATE_CONFIG</span><span class="o">=</span><span class="s1">&#39;--cpus 1 --gpus 4 --sysmem 4000 --fbmem 4000 --logging legate=1,gex=0 --logdir /log/dir --eager-alloc-percentage 1&#39;</span>
+<span class="w">  </span><span class="nv">LEGATE_MAX_DIM</span><span class="o">=</span><span class="m">4</span>
+<span class="w">  </span><span class="nv">LEGATE_MAX_FIELDS</span><span class="o">=</span><span class="m">256</span>
+<span class="w">  </span><span class="nv">LEGATE_NEED_NETWORK</span><span class="o">=</span><span class="m">1</span>
+<span class="w">  </span><span class="nv">NCCL_LAUNCH_MODE</span><span class="o">=</span>PARALLEL
+<span class="w">  </span><span class="nv">PYTHONDONTWRITEBYTECODE</span><span class="o">=</span><span class="m">1</span>
+<span class="w">  </span><span class="nv">PYTHONPATH</span><span class="o">=</span>/opt/nersc/pymon:/conda/envs/legate-gex-anaconda/lib/python3.12/site-packages:/conda/envs/legate-gex-anaconda/lib/python3.12/site-packages
+<span class="w">  </span><span class="nv">REALM_BACKTRACE</span><span class="o">=</span><span class="m">1</span>
+
+--------------------------------------------------------------------------------
+
+Hello<span class="w"> </span>World
+Hello<span class="w"> </span>World
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="jupyter.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Running Legate programs with Jupyter Notebook</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="resources.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Resources</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-install-legate-with-the-mpi-and-gasnet-wrappers">How Do I Install Legate with the MPI and GASNet wrappers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#perlmutter-example">Perlmutter example</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

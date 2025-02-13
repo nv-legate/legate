@@ -1,0 +1,6 @@
+legate.core.Runtime.node\_count
+===============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Runtime.node_count

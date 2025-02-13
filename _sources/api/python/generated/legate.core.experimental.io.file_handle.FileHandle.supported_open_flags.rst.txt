@@ -1,0 +1,6 @@
+legate.core.experimental.io.file\_handle.FileHandle.supported\_open\_flags
+==========================================================================
+
+.. currentmodule:: legate.core.experimental.io.file_handle
+
+.. autoattribute:: FileHandle.supported_open_flags

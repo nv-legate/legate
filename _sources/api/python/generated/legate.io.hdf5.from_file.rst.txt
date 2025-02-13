@@ -1,0 +1,6 @@
+﻿legate.io.hdf5.from\_file
+=========================
+
+.. currentmodule:: legate.io.hdf5
+
+.. autofunction:: from_file

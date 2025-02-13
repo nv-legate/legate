@@ -1,0 +1,2289 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/nvidia-sphinx-theme.css?v=4c56b82b" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="user.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Using with Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resources.html">Links to resources</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="api/python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/shape.html">Shape</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="api/python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/io.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/cpp/index.html">C++ API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/data.html">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/partitioning.html">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/task.html">Task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/util.html">Util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/cpp/io.html">IO</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="legate.stl/source/user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ | <a href="#X"><strong>X</strong></a>
+ 
+</div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.Machine.__and__.html#legate.core.Machine.__and__">__and__() (legate.core.Machine method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ProcessorRange.__and__.html#legate.core.ProcessorRange.__and__">(legate.core.ProcessorRange method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.task.PyTask.__call__.html#legate.core.task.PyTask.__call__">__call__() (legate.core.task.PyTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.task.VariantInvoker.__call__.html#legate.core.task.VariantInvoker.__call__">(legate.core.task.VariantInvoker method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.__enter__.html#legate.core.experimental.io.file_handle.FileHandle.__enter__">__enter__() (legate.core.experimental.io.file_handle.FileHandle method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.__exit__.html#legate.core.experimental.io.file_handle.FileHandle.__exit__">__exit__() (legate.core.experimental.io.file_handle.FileHandle method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Machine.__getitem__.html#legate.core.Machine.__getitem__">__getitem__() (legate.core.Machine method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ProcessorRange.__getitem__.html#legate.core.ProcessorRange.__getitem__">(legate.core.ProcessorRange method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.Shape.__getitem__.html#legate.core.Shape.__getitem__">(legate.core.Shape method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.Annotation.__init__.html#legate.core.Annotation.__init__">__init__() (legate.core.Annotation method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html#legate.core.experimental.io.file_handle.FileHandle.__init__">(legate.core.experimental.io.file_handle.FileHandle method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.Runtime.html#legate.core.Runtime.__init__">(legate.core.Runtime method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.Shape.__init__.html#legate.core.Shape.__init__">(legate.core.Shape method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.task.InputArray.html#legate.core.task.InputArray.__init__">(legate.core.task.InputArray method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.task.InputStore.html#legate.core.task.InputStore.__init__">(legate.core.task.InputStore method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.task.OutputArray.html#legate.core.task.OutputArray.__init__">(legate.core.task.OutputArray method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.task.OutputStore.html#legate.core.task.OutputStore.__init__">(legate.core.task.OutputStore method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.task.PyTask.html#legate.core.task.PyTask.__init__">(legate.core.task.PyTask method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.task.ReductionArray.html#legate.core.task.ReductionArray.__init__">(legate.core.task.ReductionArray method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.task.ReductionStore.html#legate.core.task.ReductionStore.__init__">(legate.core.task.ReductionStore method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.task.VariantInvoker.html#legate.core.task.VariantInvoker.__init__">(legate.core.task.VariantInvoker method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.Machine.__len__.html#legate.core.Machine.__len__">__len__() (legate.core.Machine method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ProcessorRange.__len__.html#legate.core.ProcessorRange.__len__">(legate.core.ProcessorRange method)</a>
+</li>
+        <li><a href="api/python/generated/legate.core.Shape.__len__.html#legate.core.Shape.__len__">(legate.core.Shape method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0_b_i0E10AccessorRD">AccessorRD (C++ type)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0_i0E10AccessorRO">AccessorRO (C++ type)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0_i0E10AccessorRW">AccessorRW (C++ type)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0_i0E10AccessorWO">AccessorWO (C++ type)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.AutoTask.add_alignment.html#legate.core.AutoTask.add_alignment">add_alignment() (legate.core.AutoTask method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.AutoTask.add_broadcast.html#legate.core.AutoTask.add_broadcast">add_broadcast() (legate.core.AutoTask method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.AutoTask.add_constraint.html#legate.core.AutoTask.add_constraint">add_constraint() (legate.core.AutoTask method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.AutoTask.add_cpu_communicator.html#legate.core.AutoTask.add_cpu_communicator">add_cpu_communicator() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.add_cpu_communicator.html#legate.core.ManualTask.add_cpu_communicator">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.AutoTask.add_input.html#legate.core.AutoTask.add_input">add_input() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.add_input.html#legate.core.ManualTask.add_input">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.AutoTask.add_nccl_communicator.html#legate.core.AutoTask.add_nccl_communicator">add_nccl_communicator() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.add_nccl_communicator.html#legate.core.ManualTask.add_nccl_communicator">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.AutoTask.add_output.html#legate.core.AutoTask.add_output">add_output() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.add_output.html#legate.core.ManualTask.add_output">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.AutoTask.add_reduction.html#legate.core.AutoTask.add_reduction">add_reduction() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.add_reduction.html#legate.core.ManualTask.add_reduction">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.AutoTask.add_scalar_arg.html#legate.core.AutoTask.add_scalar_arg">add_scalar_arg() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.add_scalar_arg.html#legate.core.ManualTask.add_scalar_arg">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.Runtime.add_shutdown_callback.html#legate.core.Runtime.add_shutdown_callback">add_shutdown_callback() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv45align8Variable8Variable">align (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv411AllocPolicy">AllocPolicy (C++ enum)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N11AllocPolicy9MAY_ALLOCE">AllocPolicy::MAY_ALLOC (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N11AllocPolicy10MUST_ALLOCE">AllocPolicy::MUST_ALLOC (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0E12AndReduction">AndReduction (C++ type)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/types.html#_CPPv411binary_typeNSt8uint32_tE">binary_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv45bloat8Variable8Variable5tupleINSt8uint64_tEE5tupleINSt8uint64_tEE">bloat (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/types.html#_CPPv45bool_v">bool_ (C++ function)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv49broadcast8Variable">broadcast (C++ function)</a>, <a href="api/cpp/partitioning.html#_CPPv49broadcast8Variable5tupleINSt8uint32_tEE">[1]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tEE6Buffer">Buffer (C++ type)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.close.html#legate.core.experimental.io.file_handle.FileHandle.close">close() (legate.core.experimental.io.file_handle.FileHandle method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.closed.html#legate.core.experimental.io.file_handle.FileHandle.closed">closed (legate.core.experimental.io.file_handle.FileHandle property)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv413column_policy">column_policy (C++ type)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.PyTask.complete_registration.html#legate.core.task.PyTask.complete_registration">complete_registration() (legate.core.task.PyTask method)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv410complex128v">complex128 (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv49complex64v">complex64 (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv48constantNSt7int32_tE">constant (C++ function)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv47coord_t">coord_t (C++ type)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.core_library.html#legate.core.Runtime.core_library">core_library (legate.core.Runtime attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Machine.count.html#legate.core.Machine.count">count() (legate.core.Machine method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.task.PyTask.cpu_variant.html#legate.core.task.PyTask.cpu_variant">cpu_variant() (legate.core.task.PyTask method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.create_array.html#legate.core.Runtime.create_array">create_array() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.create_array_like.html#legate.core.Runtime.create_array_like">create_array_like() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.create_auto_task.html#legate.core.Runtime.create_auto_task">create_auto_task() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0E13create_buffer6BufferI3VALENSt6size_tEN6Memory4KindENSt6size_tE">create_buffer (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tEE13create_buffer6BufferI3VAL3DIMERK5PointI3DIMEN6Memory4KindENSt6size_tE">[1]</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.create_library.html#legate.core.Runtime.create_library">create_library() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.create_manual_task.html#legate.core.Runtime.create_manual_task">create_manual_task() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.create_store.html#legate.core.Runtime.create_store">create_store() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.create_store_from_buffer.html#legate.core.Runtime.create_store_from_buffer">create_store_from_buffer() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.create_store_from_scalar.html#legate.core.Runtime.create_store_from_scalar">create_store_from_scalar() (legate.core.Runtime method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.AutoTask.declare_partition.html#legate.core.AutoTask.declare_partition">declare_partition() (legate.core.AutoTask method)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv417DEFAULT_ALIGNMENT">DEFAULT_ALIGNMENT (C++ member)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv415DEFAULT_OPTIONS">DEFAULT_OPTIONS (C++ member)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.LogicalStore.delinearize.html#legate.core.LogicalStore.delinearize">delinearize() (legate.core.LogicalStore method)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv47destroyv">destroy (C++ function)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0E13DiffReduction">DiffReduction (C++ type)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/util.html#_CPPv4I0DpE12dim_dispatchDci7FunctorDpRR6Fnargs">dim_dispatch (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv49dimensionNSt8uint32_tE">dimension (C++ function)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0E12DivReduction">DivReduction (C++ type)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv46Domain">Domain (C++ type)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv411DomainPoint">DomainPoint (C++ type)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4I0DpE15double_dispatchDciN4Type4CodeE7FunctorDpRR6Fnargs">double_dispatch (C++ function)</a>, <a href="api/cpp/util.html#_CPPv4I0DpE15double_dispatchDcii7FunctorDpRR6Fnargs">[1]</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv414element_policy">element_policy (C++ type)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I0E11elementwise11unspecifiedRR8Function">elementwise (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Machine.empty.html#legate.core.Machine.empty">empty (legate.core.Machine attribute)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ProcessorRange.empty.html#legate.core.ProcessorRange.empty">(legate.core.ProcessorRange attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/cpp/runtime.html#_CPPv413ExceptionMode">ExceptionMode (C++ enum)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/runtime.html#_CPPv4N13ExceptionMode8DEFERREDE">ExceptionMode::DEFERRED (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N13ExceptionMode7IGNOREDE">ExceptionMode::IGNORED (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N13ExceptionMode9IMMEDIATEE">ExceptionMode::IMMEDIATE (C++ enumerator)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.AutoTask.execute.html#legate.core.AutoTask.execute">execute() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.execute.html#legate.core.ManualTask.execute">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.Shape.extents.html#legate.core.Shape.extents">extents (legate.core.Shape attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html#legate.core.experimental.io.file_handle.FileHandle">FileHandle (class in legate.core.experimental.io.file_handle)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I0E4fillvRR5Range15value_type_of_tI5RangeE">fill (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.find_library.html#legate.core.Runtime.find_library">find_library() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv46finishv">finish (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.finish.html#legate.core.Runtime.finish">finish() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv416fixed_array_typeRK4TypeNSt8uint32_tE">fixed_array_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv47float16v">float16 (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/types.html#_CPPv47float32v">float32 (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv47float64v">float64 (C++ function)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I00E8for_eachvRR5InputRR8Function">for_each (C++ function)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I0DpE12for_each_zipvRR8FunctionDpRR6Inputs">for_each_zip (C++ function)</a>
+</li>
+      <li><a href="api/cpp/io.html#_CPPv49from_fileRKNSt10filesystem4pathENSt11string_viewE">from_file (C++ function)</a>, <a href="api/cpp/io.html#_CPPv49from_fileRKNSt10filesystem4pathERK4Type">[1]</a>, <a href="api/cpp/io.html#_CPPv49from_fileRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE">[2]</a>
+</li>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.from_file.html#legate.core.experimental.io.file_handle.from_file">from_file() (in module legate.core.experimental.io.file_handle)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.io.hdf5.from_file.html#legate.io.hdf5.from_file">(in module legate.io.hdf5)</a>
+</li>
+      </ul></li>
+      <li><a href="api/cpp/io.html#_CPPv420from_file_by_offsetsRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEERKNSt6vectorINSt8uint64_tEEE">from_file_by_offsets (C++ function)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.get_legate_runtime.html#legate.core.get_legate_runtime">get_legate_runtime() (in module legate.core)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I0E17get_logical_store12LogicalStoreRR9StoreLike">get_logical_store (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv411get_machinev">get_machine (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.get_machine.html#legate.core.get_machine">get_machine() (in module legate.core)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.Runtime.get_machine.html#legate.core.Runtime.get_machine">(legate.core.Runtime method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.Machine.get_node_range.html#legate.core.Machine.get_node_range">get_node_range() (legate.core.Machine method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ProcessorRange.get_node_range.html#legate.core.ProcessorRange.get_node_range">(legate.core.ProcessorRange method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.Machine.get_processor_range.html#legate.core.Machine.get_processor_range">get_processor_range() (legate.core.Machine method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.PyTask.gpu_variant.html#legate.core.task.PyTask.gpu_variant">gpu_variant() (legate.core.task.PyTask method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/runtime.html#_CPPv412has_finishedv">has_finished (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/runtime.html#_CPPv411has_startedv">has_started (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.ProcessorRange.high.html#legate.core.ProcessorRange.high">high (legate.core.ProcessorRange attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/partitioning.html#_CPPv45image8Variable8Variable20ImageComputationHint">image (C++ function)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv420ImageComputationHint">ImageComputationHint (C++ enum)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv4N20ImageComputationHint10FIRST_LASTE">ImageComputationHint::FIRST_LAST (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv4N20ImageComputationHint7MIN_MAXE">ImageComputationHint::MIN_MAX (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv4N20ImageComputationHint7NO_HINTE">ImageComputationHint::NO_HINT (C++ enumerator)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.InputArray.html#legate.core.task.InputArray">InputArray (class in legate.core.task)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.VariantInvoker.inputs.html#legate.core.task.VariantInvoker.inputs">inputs (legate.core.task.VariantInvoker attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.InputStore.html#legate.core.task.InputStore">InputStore (class in legate.core.task)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv410InstLayout">InstLayout (C++ enum)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N10InstLayout3AOSE">InstLayout::AOS (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N10InstLayout3SOAE">InstLayout::SOA (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv45int16v">int16 (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/types.html#_CPPv45int32v">int32 (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv45int64v">int64 (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv44int8v">int8 (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv413is_point_typeRK4Type">is_point_type (C++ function)</a>, <a href="api/cpp/types.html#_CPPv413is_point_typeRK4TypeNSt8uint32_tE">[1]</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv412is_rect_typeRK4Type">is_rect_type (C++ function)</a>, <a href="api/cpp/types.html#_CPPv412is_rect_typeRK4TypeNSt8uint32_tE">[1]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv418is_running_in_taskv">is_running_in_task (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.issue_copy.html#legate.core.Runtime.issue_copy">issue_copy() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.issue_execution_fence.html#legate.core.Runtime.issue_execution_fence">issue_execution_fence() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.issue_fill.html#legate.core.Runtime.issue_fill">issue_fill() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.issue_gather.html#legate.core.Runtime.issue_gather">issue_gather() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.issue_mapping_fence.html#legate.core.Runtime.issue_mapping_fence">issue_mapping_fence() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.issue_scatter.html#legate.core.Runtime.issue_scatter">issue_scatter() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.issue_scatter_gather.html#legate.core.Runtime.issue_scatter_gather">issue_scatter_gather() (legate.core.Runtime method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.io.hdf5.kerchunk_read.html#legate.io.hdf5.kerchunk_read">kerchunk_read() (in module legate.io.hdf5)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv411launch_task">launch_task (C++ class)</a>
+
+      <ul>
+        <li><a href="legate.stl/source/reference/index.html#_CPPv4I_Dp11LaunchParamE11launch_taskvDp6Params">(C++ function)</a>
+</li>
+      </ul></li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate22AutoConfigurationErrorE">legate::AutoConfigurationError (C++ class)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate22AutoConfigurationError22AutoConfigurationErrorENSt11string_viewE">legate::AutoConfigurationError::AutoConfigurationError (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTaskE">legate::AutoTask (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask16add_communicatorENSt11string_viewE">legate::AutoTask::add_communicator (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask14add_constraintERK10Constraint">legate::AutoTask::add_constraint (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask9add_inputE12LogicalArray">legate::AutoTask::add_input (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate8AutoTask9add_inputE12LogicalArray8Variable">[1]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask10add_outputE12LogicalArray">legate::AutoTask::add_output (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate8AutoTask10add_outputE12LogicalArray8Variable">[1]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask13add_reductionE12LogicalArray15ReductionOpKind">legate::AutoTask::add_reduction (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate8AutoTask13add_reductionE12LogicalArray15ReductionOpKind8Variable">[1]</a>, <a href="api/cpp/task.html#_CPPv4N6legate8AutoTask13add_reductionE12LogicalArrayNSt7int32_tE">[2]</a>, <a href="api/cpp/task.html#_CPPv4N6legate8AutoTask13add_reductionE12LogicalArrayNSt7int32_tE8Variable">[3]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4I00EN6legate8AutoTask14add_scalar_argEvRR1T">legate::AutoTask::add_scalar_arg (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate8AutoTask14add_scalar_argERK6Scalar">[1]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask17declare_partitionEv">legate::AutoTask::declare_partition (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask25find_or_declare_partitionERK12LogicalArray">legate::AutoTask::find_or_declare_partition (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask4ImplE">legate::AutoTask::Impl (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate8AutoTask10provenanceEv">legate::AutoTask::provenance (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask14set_concurrentEb">legate::AutoTask::set_concurrent (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask15set_side_effectEb">legate::AutoTask::set_side_effect (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8AutoTask16throws_exceptionEb">legate::AutoTask::throws_exception (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate4comm12CommunicatorE">legate::comm::Communicator (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4I0ENK6legate4comm12Communicator3getE1Tv">legate::comm::Communicator::get (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate18ConfigurationErrorE">legate::ConfigurationError (C++ class)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate18ConfigurationError18ConfigurationErrorENSt11string_viewE">legate::ConfigurationError::ConfigurationError (C++ function)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv4N6legate10ConstraintE">legate::Constraint (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate4cuda10StreamPoolE">legate::cuda::StreamPool (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate4cuda10StreamPool10get_streamEv">legate::cuda::StreamPool::get_stream (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate4cuda10StreamPool15get_stream_poolEv">legate::cuda::StreamPool::get_stream_pool (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate4cuda10StreamViewE">legate::cuda::StreamView (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate4cuda10StreamViewcv8CUstreamEv">legate::cuda::StreamView::operator CUstream (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate4cuda10StreamView10StreamViewE8CUstream">legate::cuda::StreamView::StreamView (C++ function)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4N6legate12experimental3stl18initialize_libraryE">legate::experimental::stl::initialize_library (C++ class)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4N6legate12experimental3stl18initialize_library18initialize_libraryEv">legate::experimental::stl::initialize_library::initialize_library (C++ function)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I0EN6legate12experimental3stl16legate_reductionE">legate::experimental::stl::legate_reduction (C++ concept)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I0EN6legate12experimental3stl18logical_store_likeE">legate::experimental::stl::logical_store_like (C++ concept)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate18ExternalAllocationE">legate::ExternalAllocation (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate18ExternalAllocation12create_fbmemENSt8uint32_tEPKvNSt6size_tENSt8optionalI7DeleterEE">legate::ExternalAllocation::create_fbmem (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4N6legate18ExternalAllocation12create_fbmemENSt8uint32_tEPvNSt6size_tEbNSt8optionalI7DeleterEE">[1]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate18ExternalAllocation13create_sysmemEPKvNSt6size_tENSt8optionalI7DeleterEE">legate::ExternalAllocation::create_sysmem (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4N6legate18ExternalAllocation13create_sysmemEPvNSt6size_tEbNSt8optionalI7DeleterEE">[1]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate18ExternalAllocation12create_zcmemEPKvNSt6size_tENSt8optionalI7DeleterEE">legate::ExternalAllocation::create_zcmem (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4N6legate18ExternalAllocation12create_zcmemEPvNSt6size_tEbNSt8optionalI7DeleterEE">[1]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate18ExternalAllocation7DeleterE">legate::ExternalAllocation::Deleter (C++ type)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate18ExternalAllocation3ptrEv">legate::ExternalAllocation::ptr (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate18ExternalAllocation9read_onlyEv">legate::ExternalAllocation::read_only (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate18ExternalAllocation4sizeEv">legate::ExternalAllocation::size (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate18ExternalAllocation6targetEv">legate::ExternalAllocation::target (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate14FixedArrayTypeE">legate::FixedArrayType (C++ class)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate14FixedArrayType12element_typeEv">legate::FixedArrayType::element_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate14FixedArrayType12num_elementsEv">legate::FixedArrayType::num_elements (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate16InlineAllocationE">legate::InlineAllocation (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate16InlineAllocation3ptrE">legate::InlineAllocation::ptr (C++ member)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate16InlineAllocation7stridesE">legate::InlineAllocation::strides (C++ member)</a>
+</li>
+      <li><a href="api/cpp/io.html#_CPPv4N6legate2io4hdf519InvalidDataSetErrorE">legate::io::hdf5::InvalidDataSetError (C++ class)</a>
+</li>
+      <li><a href="api/cpp/io.html#_CPPv4NK6legate2io4hdf519InvalidDataSetError12dataset_nameEv">legate::io::hdf5::InvalidDataSetError::dataset_name (C++ function)</a>
+</li>
+      <li><a href="api/cpp/io.html#_CPPv4N6legate2io4hdf519InvalidDataSetError19InvalidDataSetErrorERKNSt6stringENSt10filesystem4pathENSt6stringE">legate::io::hdf5::InvalidDataSetError::InvalidDataSetError (C++ function)</a>
+</li>
+      <li><a href="api/cpp/io.html#_CPPv4NK6legate2io4hdf519InvalidDataSetError4pathEv">legate::io::hdf5::InvalidDataSetError::path (C++ function)</a>
+</li>
+      <li><a href="api/cpp/io.html#_CPPv4N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE">legate::io::hdf5::UnsupportedHDF5DataTypeError (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4I0EN6legate10LegateTaskE">legate::LegateTask (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10LegateTask17register_variantsE7Library11LocalTaskIDRKNSt3mapI11VariantCode14VariantOptionsEE">legate::LegateTask::register_variants (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate10LegateTask17register_variantsE7LibraryRKNSt3mapI11VariantCode14VariantOptionsEE">[1]</a>, <a href="api/cpp/task.html#_CPPv4N6legate10LegateTask17register_variantsENSt3mapI11VariantCode14VariantOptionsEE">[2]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7LibraryE">legate::Library (C++ class)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4NK6legate7Library9find_taskE11LocalTaskID">legate::Library::find_task (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4NK6legate7Library16get_library_nameEv">legate::Library::get_library_name (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4NK6legate7Library13get_task_nameE11LocalTaskID">legate::Library::get_task_name (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Library11get_tunableENSt7int64_tERK4Type">legate::Library::get_tunable (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4I0EN6legate7Library27register_reduction_operatorE13GlobalRedopID12LocalRedopID">legate::Library::register_reduction_operator (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Library13register_taskE11LocalTaskIDRK8TaskInfo">legate::Library::register_task (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate16ListLogicalArrayE">legate::ListLogicalArray (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate16ListLogicalArray10descriptorEv">legate::ListLogicalArray::descriptor (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate16ListLogicalArray7vardataEv">legate::ListLogicalArray::vardata (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate17ListPhysicalArrayE">legate::ListPhysicalArray (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate17ListPhysicalArray10descriptorEv">legate::ListPhysicalArray::descriptor (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate17ListPhysicalArray7vardataEv">legate::ListPhysicalArray::vardata (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate8ListTypeE">legate::ListType (C++ class)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate8ListType12element_typeEv">legate::ListType::element_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate12LogicalArrayE">legate::LogicalArray (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray13as_list_arrayEv">legate::LogicalArray::as_list_array (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray15as_string_arrayEv">legate::LogicalArray::as_string_array (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray5childENSt8uint32_tE">legate::LogicalArray::child (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray4dataEv">legate::LogicalArray::data (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray11delinearizeENSt7int32_tERKNSt6vectorINSt8uint64_tEEE">legate::LogicalArray::delinearize (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray3dimEv">legate::LogicalArray::dim (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray7extentsEv">legate::LogicalArray::extents (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray18get_physical_arrayEv">legate::LogicalArray::get_physical_array (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate12LogicalArray4ImplE">legate::LogicalArray::Impl (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray6nestedEv">legate::LogicalArray::nested (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray9null_maskEv">legate::LogicalArray::null_mask (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray8nullableEv">legate::LogicalArray::nullable (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray12num_childrenEv">legate::LogicalArray::num_children (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray10offload_toEN7mapping11StoreTargetE">legate::LogicalArray::offload_to (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray7projectENSt7int32_tENSt7int64_tE">legate::LogicalArray::project (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray7promoteENSt7int32_tENSt6size_tE">legate::LogicalArray::promote (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray5shapeEv">legate::LogicalArray::shape (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray5sliceENSt7int32_tE5Slice">legate::LogicalArray::slice (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray9transposeERKNSt6vectorINSt7int32_tEEE">legate::LogicalArray::transpose (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray4typeEv">legate::LogicalArray::type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray7unboundEv">legate::LogicalArray::unbound (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalArray6volumeEv">legate::LogicalArray::volume (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate12LogicalStoreE">legate::LogicalStore (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore11delinearizeENSt7int32_tENSt6vectorINSt8uint64_tEEE">legate::LogicalStore::delinearize (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate12LogicalStore6detachEv">legate::LogicalStore::detach (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore3dimEv">legate::LogicalStore::dim (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore13equal_storageERK12LogicalStore">legate::LogicalStore::equal_storage (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore7extentsEv">legate::LogicalStore::extents (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore18get_physical_storeEv">legate::LogicalStore::get_physical_store (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore18has_scalar_storageEv">legate::LogicalStore::has_scalar_storage (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate12LogicalStore4ImplE">legate::LogicalStore::Impl (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate12LogicalStore10offload_toEN7mapping11StoreTargetE">legate::LogicalStore::offload_to (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore8overlapsERK12LogicalStore">legate::LogicalStore::overlaps (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore19partition_by_tilingENSt6vectorINSt8uint64_tEEE">legate::LogicalStore::partition_by_tiling (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore7projectENSt7int32_tENSt7int64_tE">legate::LogicalStore::project (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore7promoteENSt7int32_tENSt6size_tE">legate::LogicalStore::promote (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore14reinterpret_asERK4Type">legate::LogicalStore::reinterpret_as (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore5shapeEv">legate::LogicalStore::shape (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore5sliceENSt7int32_tE5Slice">legate::LogicalStore::slice (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore11transformedEv">legate::LogicalStore::transformed (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore9transposeERRNSt6vectorINSt7int32_tEEE">legate::LogicalStore::transpose (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore4typeEv">legate::LogicalStore::type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore7unboundEv">legate::LogicalStore::unbound (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate12LogicalStore6volumeEv">legate::LogicalStore::volume (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate21LogicalStorePartitionE">legate::LogicalStorePartition (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate21LogicalStorePartition4ImplE">legate::LogicalStorePartition::Impl (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10ManualTaskE">legate::ManualTask (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10ManualTask16add_communicatorENSt11string_viewE">legate::ManualTask::add_communicator (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10ManualTask9add_inputE12LogicalStore">legate::ManualTask::add_input (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate10ManualTask9add_inputE21LogicalStorePartitionNSt8optionalI13SymbolicPointEE">[1]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10ManualTask10add_outputE12LogicalStore">legate::ManualTask::add_output (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate10ManualTask10add_outputE21LogicalStorePartitionNSt8optionalI13SymbolicPointEE">[1]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10ManualTask13add_reductionE12LogicalStore15ReductionOpKind">legate::ManualTask::add_reduction (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate10ManualTask13add_reductionE12LogicalStoreNSt7int32_tE">[1]</a>, <a href="api/cpp/task.html#_CPPv4N6legate10ManualTask13add_reductionE21LogicalStorePartition15ReductionOpKindNSt8optionalI13SymbolicPointEE">[2]</a>, <a href="api/cpp/task.html#_CPPv4N6legate10ManualTask13add_reductionE21LogicalStorePartitionNSt7int32_tENSt8optionalI13SymbolicPointEE">[3]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4I00EN6legate10ManualTask14add_scalar_argEvRR1T">legate::ManualTask::add_scalar_arg (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate10ManualTask14add_scalar_argERK6Scalar">[1]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10ManualTask4ImplE">legate::ManualTask::Impl (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate10ManualTask10provenanceEv">legate::ManualTask::provenance (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10ManualTask14set_concurrentEb">legate::ManualTask::set_concurrent (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10ManualTask15set_side_effectEb">legate::ManualTask::set_side_effect (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate10ManualTask16throws_exceptionEb">legate::ManualTask::throws_exception (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrderingE">legate::mapping::DimOrdering (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering7c_orderEv">legate::mapping::DimOrdering::c_order (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering12custom_orderENSt6vectorINSt7int32_tEEE">legate::mapping::DimOrdering::custom_order (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping11DimOrdering10dimensionsEv">legate::mapping::DimOrdering::dimensions (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering13fortran_orderEv">legate::mapping::DimOrdering::fortran_order (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering4KindE">legate::mapping::DimOrdering::Kind (C++ enum)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping11DimOrdering4kindEv">legate::mapping::DimOrdering::kind (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering4Kind1CE">legate::mapping::DimOrdering::Kind::C (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering4Kind6CUSTOME">legate::mapping::DimOrdering::Kind::CUSTOM (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering4Kind7FORTRANE">legate::mapping::DimOrdering::Kind::FORTRAN (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering11set_c_orderEv">legate::mapping::DimOrdering::set_c_order (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering16set_custom_orderENSt6vectorINSt7int32_tEEE">legate::mapping::DimOrdering::set_custom_order (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping11DimOrdering17set_fortran_orderEv">legate::mapping::DimOrdering::set_fortran_order (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicyE">legate::mapping::InstanceMappingPolicy (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy10allocationE">legate::mapping::InstanceMappingPolicy::allocation (C++ member)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy5exactE">legate::mapping::InstanceMappingPolicy::exact (C++ member)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy6layoutE">legate::mapping::InstanceMappingPolicy::layout (C++ member)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy8orderingE">legate::mapping::InstanceMappingPolicy::ordering (C++ member)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy9redundantE">legate::mapping::InstanceMappingPolicy::redundant (C++ member)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy21set_allocation_policyE11AllocPolicy">legate::mapping::InstanceMappingPolicy::set_allocation_policy (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy9set_exactEb">legate::mapping::InstanceMappingPolicy::set_exact (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy19set_instance_layoutE10InstLayout">legate::mapping::InstanceMappingPolicy::set_instance_layout (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy12set_orderingE11DimOrdering">legate::mapping::InstanceMappingPolicy::set_ordering (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy13set_redundantEb">legate::mapping::InstanceMappingPolicy::set_redundant (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy10set_targetE11StoreTarget">legate::mapping::InstanceMappingPolicy::set_target (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping21InstanceMappingPolicy8subsumesERK21InstanceMappingPolicy">legate::mapping::InstanceMappingPolicy::subsumes (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21InstanceMappingPolicy6targetE">legate::mapping::InstanceMappingPolicy::target (C++ member)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NR6legate7mapping21InstanceMappingPolicy22with_allocation_policyE11AllocPolicy">legate::mapping::InstanceMappingPolicy::with_allocation_policy (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NR6legate7mapping21InstanceMappingPolicy10with_exactEb">legate::mapping::InstanceMappingPolicy::with_exact (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NR6legate7mapping21InstanceMappingPolicy20with_instance_layoutE10InstLayout">legate::mapping::InstanceMappingPolicy::with_instance_layout (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NR6legate7mapping21InstanceMappingPolicy13with_orderingE11DimOrdering">legate::mapping::InstanceMappingPolicy::with_ordering (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NR6legate7mapping21InstanceMappingPolicy14with_redundantEb">legate::mapping::InstanceMappingPolicy::with_redundant (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NR6legate7mapping21InstanceMappingPolicy11with_targetE11StoreTarget">legate::mapping::InstanceMappingPolicy::with_target (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping7MachineE">legate::mapping::Machine (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine5countE10TaskTarget">legate::mapping::Machine::count (C++ function)</a>, <a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine5countEv">[1]</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine5emptyEv">legate::mapping::Machine::empty (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine4onlyE10TaskTarget">legate::mapping::Machine::only (C++ function)</a>, <a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine4onlyERKNSt6vectorI10TaskTargetEE">[1]</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7MachineanERK7Machine">legate::mapping::Machine::operator&amp; (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7MachineixE10TaskTarget">legate::mapping::Machine::operator[] (C++ function)</a>, <a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7MachineixERKNSt6vectorI10TaskTargetEE">[1]</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine16preferred_targetEv">legate::mapping::Machine::preferred_target (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine15processor_rangeE10TaskTarget">legate::mapping::Machine::processor_range (C++ function)</a>, <a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine15processor_rangeEv">[1]</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine5sliceENSt8uint32_tENSt8uint32_tE10TaskTargetb">legate::mapping::Machine::slice (C++ function)</a>, <a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine5sliceENSt8uint32_tENSt8uint32_tEb">[1]</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine9to_stringEv">legate::mapping::Machine::to_string (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine13valid_targetsEv">legate::mapping::Machine::valid_targets (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping7Machine20valid_targets_exceptERKNSt3setI10TaskTargetEE">legate::mapping::Machine::valid_targets_except (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping21MachineQueryInterfaceE">legate::mapping::MachineQueryInterface (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping21MachineQueryInterface4cpusEv">legate::mapping::MachineQueryInterface::cpus (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping21MachineQueryInterface4gpusEv">legate::mapping::MachineQueryInterface::gpus (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping21MachineQueryInterface4ompsEv">legate::mapping::MachineQueryInterface::omps (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping21MachineQueryInterface11total_nodesEv">legate::mapping::MachineQueryInterface::total_nodes (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping6MapperE">legate::mapping::Mapper (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping6Mapper20allocation_pool_sizeERK4Task11StoreTarget">legate::mapping::Mapper::allocation_pool_size (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping6Mapper14store_mappingsERK4TaskRKNSt6vectorI11StoreTargetEE">legate::mapping::Mapper::store_mappings (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping6Mapper13tunable_valueE9TunableID">legate::mapping::Mapper::tunable_value (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping9NodeRangeE">legate::mapping::NodeRange (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping14ProcessorRangeE">legate::mapping::ProcessorRange (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping14ProcessorRange5countEv">legate::mapping::ProcessorRange::count (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping14ProcessorRange5emptyEv">legate::mapping::ProcessorRange::empty (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping14ProcessorRange14get_node_rangeEv">legate::mapping::ProcessorRange::get_node_range (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping14ProcessorRange4highE">legate::mapping::ProcessorRange::high (C++ member)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping14ProcessorRange3lowE">legate::mapping::ProcessorRange::low (C++ member)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping14ProcessorRange14per_node_countE">legate::mapping::ProcessorRange::per_node_count (C++ member)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping14ProcessorRange14ProcessorRangeENSt8uint32_tENSt8uint32_tENSt8uint32_tE">legate::mapping::ProcessorRange::ProcessorRange (C++ function)</a>, <a href="api/cpp/mapping.html#_CPPv4N6legate7mapping14ProcessorRange14ProcessorRangeEv">[1]</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping14ProcessorRange5sliceENSt8uint32_tENSt8uint32_tE">legate::mapping::ProcessorRange::slice (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping14ProcessorRange9to_stringEv">legate::mapping::ProcessorRange::to_string (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping5StoreE">legate::mapping::Store (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping5Store17can_colocate_withERK5Store">legate::mapping::Store::can_colocate_with (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping5Store3dimEv">legate::mapping::Store::dim (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping5Store6domainEv">legate::mapping::Store::domain (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping5Store9is_futureEv">legate::mapping::Store::is_future (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping5Store12is_reductionEv">legate::mapping::Store::is_reduction (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping5Store5redopEv">legate::mapping::Store::redop (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4I_NSt7int32_tEENK6legate7mapping5Store5shapeE4RectI3DIMEv">legate::mapping::Store::shape (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping5Store7unboundEv">legate::mapping::Store::unbound (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping12StoreMappingE">legate::mapping::StoreMapping (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping12StoreMapping9add_storeERK5Store">legate::mapping::StoreMapping::add_store (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping12StoreMapping6createERK5StoreRR21InstanceMappingPolicy">legate::mapping::StoreMapping::create (C++ function)</a>, <a href="api/cpp/mapping.html#_CPPv4N6legate7mapping12StoreMapping6createERKNSt6vectorI5StoreEERR21InstanceMappingPolicy">[1]</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping12StoreMapping15default_mappingERK5Store11StoreTargetb">legate::mapping::StoreMapping::default_mapping (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping12StoreMapping6policyEv">legate::mapping::StoreMapping::policy (C++ function)</a>, <a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping12StoreMapping6policyEv">[1]</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping12StoreMapping10ReleaseKeyE">legate::mapping::StoreMapping::ReleaseKey (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping12StoreMapping5storeEv">legate::mapping::StoreMapping::store (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping12StoreMapping6storesEv">legate::mapping::StoreMapping::stores (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N6legate7mapping4TaskE">legate::mapping::Task (C++ class)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task17get_launch_domainEv">legate::mapping::Task::get_launch_domain (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task5inputENSt8uint32_tE">legate::mapping::Task::input (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task6inputsEv">legate::mapping::Task::inputs (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task14is_single_taskEv">legate::mapping::Task::is_single_task (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task10num_inputsEv">legate::mapping::Task::num_inputs (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task11num_outputsEv">legate::mapping::Task::num_outputs (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task14num_reductionsEv">legate::mapping::Task::num_reductions (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task11num_scalarsEv">legate::mapping::Task::num_scalars (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task6outputENSt8uint32_tE">legate::mapping::Task::output (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task7outputsEv">legate::mapping::Task::outputs (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task9reductionENSt8uint32_tE">legate::mapping::Task::reduction (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task10reductionsEv">legate::mapping::Task::reductions (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task6scalarENSt8uint32_tE">legate::mapping::Task::scalar (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task7scalarsEv">legate::mapping::Task::scalars (C++ function)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4NK6legate7mapping4Task7task_idEv">legate::mapping::Task::task_id (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate13PhysicalArrayE">legate::PhysicalArray (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray13as_list_arrayEv">legate::PhysicalArray::as_list_array (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray15as_string_arrayEv">legate::PhysicalArray::as_string_array (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray5childENSt8uint32_tE">legate::PhysicalArray::child (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray4dataEv">legate::PhysicalArray::data (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray3dimEv">legate::PhysicalArray::dim (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray6domainEv">legate::PhysicalArray::domain (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray6nestedEv">legate::PhysicalArray::nested (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray9null_maskEv">legate::PhysicalArray::null_mask (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray8nullableEv">legate::PhysicalArray::nullable (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I_NSt7int32_tEENK6legate13PhysicalArray5shapeE4RectI3DIMEv">legate::PhysicalArray::shape (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalArray4typeEv">legate::PhysicalArray::type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate13PhysicalStoreE">legate::PhysicalStore (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tEENK6legate13PhysicalStore9bind_dataEvR6BufferI1T3DIMERK5PointI3DIME">legate::PhysicalStore::bind_data (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore15bind_empty_dataEv">legate::PhysicalStore::bind_empty_data (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore17bind_untyped_dataER6BufferINSt6int8_tEXL1EEERK5PointIXL1EEE">legate::PhysicalStore::bind_untyped_data (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0ENK6legate13PhysicalStore4codeE9TYPE_CODEv">legate::PhysicalStore::code (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tEENK6legate13PhysicalStore20create_output_bufferE6BufferI1T3DIMERK5PointI3DIMEb">legate::PhysicalStore::create_output_buffer (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore3dimEv">legate::PhysicalStore::dim (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore6domainEv">legate::PhysicalStore::domain (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore21get_inline_allocationEv">legate::PhysicalStore::get_inline_allocation (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore9is_futureEv">legate::PhysicalStore::is_future (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore14is_partitionedEv">legate::PhysicalStore::is_partitioned (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore11is_readableEv">legate::PhysicalStore::is_readable (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore12is_reducibleEv">legate::PhysicalStore::is_reducible (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore16is_unbound_storeEv">legate::PhysicalStore::is_unbound_store (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore11is_writableEv">legate::PhysicalStore::is_writable (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate13PhysicalStore13PhysicalStoreERK13PhysicalArray">legate::PhysicalStore::PhysicalStore (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tE_bENK6legate13PhysicalStore13read_accessorE10AccessorROI1T3DIMERK4RectI3DIME">legate::PhysicalStore::read_accessor (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tE_bENK6legate13PhysicalStore13read_accessorE10AccessorROI1T3DIMEv">[1]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tE_bENK6legate13PhysicalStore19read_write_accessorE10AccessorRWI1T3DIMERK4RectI3DIME">legate::PhysicalStore::read_write_accessor (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tE_bENK6legate13PhysicalStore19read_write_accessorE10AccessorRWI1T3DIMEv">[1]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0_b_NSt7int32_tE_bENK6legate13PhysicalStore15reduce_accessorE10AccessorRDI2OP9EXCLUSIVE3DIMERK4RectI3DIME">legate::PhysicalStore::reduce_accessor (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4I0_b_NSt7int32_tE_bENK6legate13PhysicalStore15reduce_accessorE10AccessorRDI2OP9EXCLUSIVE3DIMEv">[1]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0ENK6legate13PhysicalStore6scalarE3VALv">legate::PhysicalStore::scalar (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I_NSt7int32_tEENK6legate13PhysicalStore5shapeE4RectI3DIMEv">legate::PhysicalStore::shape (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore6targetEv">legate::PhysicalStore::target (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore11transformedEv">legate::PhysicalStore::transformed (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore4typeEv">legate::PhysicalStore::type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate13PhysicalStore5validEv">legate::PhysicalStore::valid (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tE_bENK6legate13PhysicalStore14write_accessorE10AccessorWOI1T3DIMERK4RectI3DIME">legate::PhysicalStore::write_accessor (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4I0_NSt7int32_tE_bENK6legate13PhysicalStore14write_accessorE10AccessorWOI1T3DIMEv">[1]</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4I0EN6legate16ProcLocalStorageE">legate::ProcLocalStorage (C++ class)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args">legate::ProcLocalStorage::emplace (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate16ProcLocalStorage3getEv">legate::ProcLocalStorage::get (C++ function)</a>, <a href="api/cpp/util.html#_CPPv4NK6legate16ProcLocalStorage3getEv">[1]</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4NK6legate16ProcLocalStorage9has_valueEv">legate::ProcLocalStorage::has_value (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate16ProcLocalStorage10value_typeE">legate::ProcLocalStorage::value_type (C++ type)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate14ResourceConfigE">legate::ResourceConfig (C++ struct)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate14ResourceConfig13max_dyn_tasksE">legate::ResourceConfig::max_dyn_tasks (C++ member)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate14ResourceConfig17max_reduction_opsE">legate::ResourceConfig::max_reduction_ops (C++ member)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate14ResourceConfig9max_tasksE">legate::ResourceConfig::max_tasks (C++ member)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7RuntimeE">legate::Runtime (C++ class)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12create_arrayERK4TypeNSt8uint32_tEb">legate::Runtime::create_array (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12create_arrayERK5ShapeRK4Typebb">[1]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime17create_array_likeERK12LogicalArrayNSt8optionalI4TypeEE">legate::Runtime::create_array_like (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime14create_libraryENSt11string_viewERK14ResourceConfigNSt10unique_ptrIN7mapping6MapperEEENSt3mapI11VariantCode14VariantOptionsEE">legate::Runtime::create_library (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime17create_list_arrayERK12LogicalArrayRK12LogicalArrayNSt8optionalI4TypeEE">legate::Runtime::create_list_array (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12create_storeERK4TypeNSt8uint32_tE">legate::Runtime::create_store (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK4TypePvbRKN7mapping11DimOrderingE">[1]</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK4TypeRK18ExternalAllocationRKN7mapping11DimOrderingE">[2]</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK4Typeb">[3]</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK5tupleINSt8uint64_tEERK4TypeRKNSt6vectorINSt4pairI18ExternalAllocation5tupleINSt8uint64_tEEEEEERKN7mapping11DimOrderingE">[4]</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12create_storeERK6ScalarRK5Shape">[5]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime19create_string_arrayERK12LogicalArrayRK12LogicalArray">legate::Runtime::create_string_array (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime11create_taskE7Library11LocalTaskID">legate::Runtime::create_task (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime11create_taskE7Library11LocalTaskIDRK5tupleINSt8uint64_tEE">[1]</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime11create_taskE7Library11LocalTaskIDRK6Domain">[2]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4NK6legate7Runtime12find_libraryENSt11string_viewE">legate::Runtime::find_library (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime22find_or_create_libraryENSt11string_viewERK14ResourceConfigNSt10unique_ptrIN7mapping6MapperEEERKNSt3mapI11VariantCode14VariantOptionsEEPb">legate::Runtime::find_or_create_library (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4NK6legate7Runtime23get_executing_processorEv">legate::Runtime::get_executing_processor (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4NK6legate7Runtime11get_machineEv">legate::Runtime::get_machine (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime11get_runtimeEv">legate::Runtime::get_runtime (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime10issue_copyER12LogicalStoreRK12LogicalStoreNSt8optionalI15ReductionOpKindEE">legate::Runtime::issue_copy (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime10issue_copyER12LogicalStoreRK12LogicalStoreNSt8optionalINSt7int32_tEEE">[1]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime21issue_execution_fenceEb">legate::Runtime::issue_execution_fence (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime10issue_fillERK12LogicalArrayRK12LogicalStore">legate::Runtime::issue_fill (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime10issue_fillERK12LogicalArrayRK6Scalar">[1]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12issue_gatherER12LogicalStoreRK12LogicalStoreRK12LogicalStoreNSt8optionalI15ReductionOpKindEE">legate::Runtime::issue_gather (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime12issue_gatherER12LogicalStoreRK12LogicalStoreRK12LogicalStoreNSt8optionalINSt7int32_tEEE">[1]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime19issue_mapping_fenceEv">legate::Runtime::issue_mapping_fence (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime13issue_scatterER12LogicalStoreRK12LogicalStoreRK12LogicalStoreNSt8optionalI15ReductionOpKindEE">legate::Runtime::issue_scatter (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime13issue_scatterER12LogicalStoreRK12LogicalStoreRK12LogicalStoreNSt8optionalINSt7int32_tEEE">[1]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime20issue_scatter_gatherER12LogicalStoreRK12LogicalStoreRK12LogicalStoreRK12LogicalStoreNSt8optionalI15ReductionOpKindEE">legate::Runtime::issue_scatter_gather (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime20issue_scatter_gatherER12LogicalStoreRK12LogicalStoreRK12LogicalStoreRK12LogicalStoreNSt8optionalINSt7int32_tEEE">[1]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4NK6legate7Runtime18maybe_find_libraryENSt11string_viewE">legate::Runtime::maybe_find_library (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4NK6legate7Runtime10node_countEv">legate::Runtime::node_count (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4NK6legate7Runtime7node_idEv">legate::Runtime::node_id (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime26prefetch_bloated_instancesERK12LogicalStore5tupleINSt8uint64_tEE5tupleINSt8uint64_tEEb">legate::Runtime::prefetch_bloated_instances (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime23raise_pending_exceptionEv">legate::Runtime::raise_pending_exception (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime21start_profiling_rangeEv">legate::Runtime::start_profiling_range (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime20stop_profiling_rangeENSt11string_viewE">legate::Runtime::stop_profiling_range (C++ function)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime6submitERR10ManualTask">legate::Runtime::submit (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime6submitERR8AutoTask">[1]</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4N6legate7Runtime11tree_reduceE7Library11LocalTaskIDRK12LogicalStoreNSt7int32_tE">legate::Runtime::tree_reduce (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate6ScalarE">legate::Scalar (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate6Scalar3ptrEv">legate::Scalar::ptr (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I00EN6legate6Scalar6ScalarERK1T">legate::Scalar::Scalar (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4I0EN6legate6Scalar6ScalarERK1TRK4Type">[1]</a>, <a href="api/cpp/data.html#_CPPv4I0EN6legate6Scalar6ScalarERK5tupleI1TE">[2]</a>, <a href="api/cpp/data.html#_CPPv4I0EN6legate6Scalar6ScalarERKNSt6vectorI1TEE">[3]</a>, <a href="api/cpp/data.html#_CPPv4I_NSt7int32_tEEN6legate6Scalar6ScalarERK4RectI3DIME">[4]</a>, <a href="api/cpp/data.html#_CPPv4I_NSt7int32_tEEN6legate6Scalar6ScalarERK5PointI3DIME">[5]</a>, <a href="api/cpp/data.html#_CPPv4N6legate6Scalar6ScalarENSt11string_viewE">[6]</a>, <a href="api/cpp/data.html#_CPPv4N6legate6Scalar6ScalarERK4TypePKvb">[7]</a>, <a href="api/cpp/data.html#_CPPv4N6legate6Scalar6ScalarEv">[8]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate6Scalar4sizeEv">legate::Scalar::size (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate6Scalar4typeEv">legate::Scalar::type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0ENK6legate6Scalar5valueE3VALv">legate::Scalar::value (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0ENK6legate6Scalar6valuesE4SpanIK3VALEv">legate::Scalar::values (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5ScopeE">legate::Scope (C++ class)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope14exception_modeEv">legate::Scope::exception_mode (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope4ImplE">legate::Scope::Impl (C++ class)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope7machineEv">legate::Scope::machine (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope8priorityEv">legate::Scope::priority (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope10provenanceEv">legate::Scope::provenance (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope5ScopeE13ExceptionMode">legate::Scope::Scope (C++ function)</a>, <a href="api/cpp/util.html#_CPPv4N6legate5Scope5ScopeENSt6stringE">[1]</a>, <a href="api/cpp/util.html#_CPPv4N6legate5Scope5ScopeENSt7int32_tE">[2]</a>, <a href="api/cpp/util.html#_CPPv4N6legate5Scope5ScopeERKN7mapping7MachineE">[3]</a>, <a href="api/cpp/util.html#_CPPv4N6legate5Scope5ScopeEv">[4]</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope18set_exception_modeE13ExceptionMode">legate::Scope::set_exception_mode (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope11set_machineERKN7mapping7MachineE">legate::Scope::set_machine (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope12set_priorityENSt7int32_tE">legate::Scope::set_priority (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate5Scope14set_provenanceENSt6stringE">legate::Scope::set_provenance (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4NO6legate5Scope19with_exception_modeE13ExceptionMode">legate::Scope::with_exception_mode (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4NO6legate5Scope12with_machineERKN7mapping7MachineE">legate::Scope::with_machine (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4NO6legate5Scope13with_priorityENSt7int32_tE">legate::Scope::with_priority (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4NO6legate5Scope15with_provenanceENSt6stringE">legate::Scope::with_provenance (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate15ScopedAllocatorE">legate::ScopedAllocator (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate15ScopedAllocator8allocateENSt6size_tE">legate::ScopedAllocator::allocate (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate15ScopedAllocator10deallocateEPv">legate::ScopedAllocator::deallocate (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate15ScopedAllocator4ImplE">legate::ScopedAllocator::Impl (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate15ScopedAllocator15ScopedAllocatorEN6Memory4KindEbNSt6size_tE">legate::ScopedAllocator::ScopedAllocator (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4I0EN6legate9ScopeFailE">legate::ScopeFail (C++ class)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate9ScopeFail9ScopeFailERR10value_type">legate::ScopeFail::ScopeFail (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate9ScopeFail10value_typeE">legate::ScopeFail::value_type (C++ type)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate9ScopeFailD0Ev">legate::ScopeFail::~ScopeFail (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4I0EN6legate10ScopeGuardE">legate::ScopeGuard (C++ class)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate10ScopeGuard7disableEv">legate::ScopeGuard::disable (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate10ScopeGuard6enableEv">legate::ScopeGuard::enable (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4NK6legate10ScopeGuard7enabledEv">legate::ScopeGuard::enabled (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate10ScopeGuardaSERR10ScopeGuard">legate::ScopeGuard::operator= (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate10ScopeGuard10ScopeGuardERR10ScopeGuard">legate::ScopeGuard::ScopeGuard (C++ function)</a>, <a href="api/cpp/util.html#_CPPv4N6legate10ScopeGuard10ScopeGuardERR10value_typeb">[1]</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate10ScopeGuard10value_typeE">legate::ScopeGuard::value_type (C++ type)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate10ScopeGuardD0Ev">legate::ScopeGuard::~ScopeGuard (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate5ShapeE">legate::Shape (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate5Shape2atENSt8uint32_tE">legate::Shape::at (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate5Shape7extentsEv">legate::Shape::extents (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate5Shape4ndimEv">legate::Shape::ndim (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate5ShapeneERK5Shape">legate::Shape::operator!= (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate5ShapeeqERK5Shape">legate::Shape::operator== (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate5ShapeixENSt8uint32_tE">legate::Shape::operator[] (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate5Shape5ShapeE5tupleINSt8uint64_tEE">legate::Shape::Shape (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4N6legate5Shape5ShapeENSt16initializer_listINSt8uint64_tEEE">[1]</a>, <a href="api/cpp/data.html#_CPPv4N6legate5Shape5ShapeENSt6vectorINSt8uint64_tEEE">[2]</a>, <a href="api/cpp/data.html#_CPPv4N6legate5Shape5ShapeEv">[3]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate5Shape9to_stringEv">legate::Shape::to_string (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate5Shape6volumeEv">legate::Shape::volume (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate5SliceE">legate::Slice (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate5Slice5SliceENSt8optionalINSt7int64_tEEENSt8optionalINSt7int64_tEEE">legate::Slice::Slice (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate5Slice5startE">legate::Slice::start (C++ member)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate5Slice4stopE">legate::Slice::stop (C++ member)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I0EN6legate4SpanE">legate::Span (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate4Span5beginEv">legate::Span::begin (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4NK6legate4Span5beginEv">[1]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate4Span4dataEv">legate::Span::data (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate4Span3endEv">legate::Span::end (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4NK6legate4Span3endEv">[1]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate4Span3ptrEv">legate::Span::ptr (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate4Span4sizeEv">legate::Span::size (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4I00EN6legate4Span4SpanER1C">legate::Span::Span (C++ function)</a>, <a href="api/cpp/data.html#_CPPv4N6legate4Span4SpanENSt16initializer_listI1TEE">[1]</a>, <a href="api/cpp/data.html#_CPPv4N6legate4Span4SpanEP1TNSt6size_tE">[2]</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate4Span7subspanENSt6size_tE">legate::Span::subspan (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate18StringLogicalArrayE">legate::StringLogicalArray (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate18StringLogicalArray5charsEv">legate::StringLogicalArray::chars (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate18StringLogicalArray7offsetsEv">legate::StringLogicalArray::offsets (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4N6legate19StringPhysicalArrayE">legate::StringPhysicalArray (C++ class)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate19StringPhysicalArray5charsEv">legate::StringPhysicalArray::chars (C++ function)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv4NK6legate19StringPhysicalArray6rangesEv">legate::StringPhysicalArray::ranges (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate10StructTypeE">legate::StructType (C++ class)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate10StructType7alignedEv">legate::StructType::aligned (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate10StructType10field_typeENSt8uint32_tE">legate::StructType::field_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate10StructType10num_fieldsEv">legate::StructType::num_fields (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate10StructType7offsetsEv">legate::StructType::offsets (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate12SymbolicExprE">legate::SymbolicExpr (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate12SymbolicExpr3dimEv">legate::SymbolicExpr::dim (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate12SymbolicExpr11is_constantEv">legate::SymbolicExpr::is_constant (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate12SymbolicExpr11is_identityENSt8uint32_tE">legate::SymbolicExpr::is_identity (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate12SymbolicExpr6offsetEv">legate::SymbolicExpr::offset (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate12SymbolicExpr6weightEv">legate::SymbolicExpr::weight (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate11TaskContextE">legate::TaskContext (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext19can_raise_exceptionEv">legate::TaskContext::can_raise_exception (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext12communicatorENSt8uint32_tE">legate::TaskContext::communicator (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext13communicatorsEv">legate::TaskContext::communicators (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate11TaskContext23concurrent_task_barrierEv">legate::TaskContext::concurrent_task_barrier (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext17get_launch_domainEv">legate::TaskContext::get_launch_domain (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext14get_task_indexEv">legate::TaskContext::get_task_index (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext15get_task_streamEv">legate::TaskContext::get_task_stream (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext5inputENSt8uint32_tE">legate::TaskContext::input (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext6inputsEv">legate::TaskContext::inputs (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext14is_single_taskEv">legate::TaskContext::is_single_task (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext17num_communicatorsEv">legate::TaskContext::num_communicators (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext10num_inputsEv">legate::TaskContext::num_inputs (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext11num_outputsEv">legate::TaskContext::num_outputs (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext14num_reductionsEv">legate::TaskContext::num_reductions (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext11num_scalarsEv">legate::TaskContext::num_scalars (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext6outputENSt8uint32_tE">legate::TaskContext::output (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext7outputsEv">legate::TaskContext::outputs (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext9reductionENSt8uint32_tE">legate::TaskContext::reduction (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext10reductionsEv">legate::TaskContext::reductions (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext6scalarENSt8uint32_tE">legate::TaskContext::scalar (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext7scalarsEv">legate::TaskContext::scalars (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext6targetEv">legate::TaskContext::target (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext7task_idEv">legate::TaskContext::task_id (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11TaskContext12variant_kindEv">legate::TaskContext::variant_kind (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate13TaskExceptionE">legate::TaskException (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate13TaskException13error_messageEv">legate::TaskException::error_message (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate13TaskException5indexEv">legate::TaskException::index (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate13TaskException13TaskExceptionENSt6stringE">legate::TaskException::TaskException (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate13TaskException13TaskExceptionENSt7int32_tENSt6stringE">[1]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8TaskInfoE">legate::TaskInfo (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4I0EN6legate8TaskInfo12add_variant_Ev13AddVariantKeyRK7Library11VariantCode17LegionVariantImplI1TEN9Processor11TaskFuncPtrEPK14VariantOptionsRKNSt3mapI11VariantCode14VariantOptionsEE">legate::TaskInfo::add_variant_ (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate8TaskInfo12add_variant_E13AddVariantKeyRK7Library11VariantCode11VariantImplN9Processor11TaskFuncPtrEPK14VariantOptionsRKNSt3mapI11VariantCode14VariantOptionsEE">[1]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8TaskInfo13AddVariantKeyE">legate::TaskInfo::AddVariantKey (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate8TaskInfo12find_variantE11VariantCode">legate::TaskInfo::find_variant (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate8TaskInfo4implEv">legate::TaskInfo::impl (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate8TaskInfo4nameEv">legate::TaskInfo::name (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate8TaskInfo8TaskInfoE17InternalSharedPtrIN6detail8TaskInfoEE">legate::TaskInfo::TaskInfo (C++ function)</a>, <a href="api/cpp/task.html#_CPPv4N6legate8TaskInfo8TaskInfoENSt6stringE">[1]</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate8TaskInfo9to_stringEv">legate::TaskInfo::to_string (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate13TaskRegistrarE">legate::TaskRegistrar (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate13TaskRegistrar4ImplE">legate::TaskRegistrar::Impl (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate13TaskRegistrar13RecordTaskKeyE">legate::TaskRegistrar::RecordTaskKey (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate13TaskRegistrar18register_all_tasksER7Library">legate::TaskRegistrar::register_all_tasks (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate6timing4TimeE">legate::timing::Time (C++ class)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4N6legate6timing4Time4ImplE">legate::timing::Time::Impl (C++ class)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4NK6legate6timing4Time5valueEv">legate::timing::Time::value (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4TypeE">legate::Type (C++ class)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type9alignmentEv">legate::Type::alignment (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type19as_fixed_array_typeEv">legate::Type::as_fixed_array_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type12as_list_typeEv">legate::Type::as_list_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type14as_struct_typeEv">legate::Type::as_struct_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4CodeE">legate::Type::Code (C++ enum)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type4codeEv">legate::Type::code (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code6BINARYE">legate::Type::Code::BINARY (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code4BOOLE">legate::Type::Code::BOOL (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code10COMPLEX128E">legate::Type::Code::COMPLEX128 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code9COMPLEX64E">legate::Type::Code::COMPLEX64 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code11FIXED_ARRAYE">legate::Type::Code::FIXED_ARRAY (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code7FLOAT16E">legate::Type::Code::FLOAT16 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code7FLOAT32E">legate::Type::Code::FLOAT32 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code7FLOAT64E">legate::Type::Code::FLOAT64 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code5INT16E">legate::Type::Code::INT16 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code5INT32E">legate::Type::Code::INT32 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code5INT64E">legate::Type::Code::INT64 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code4INT8E">legate::Type::Code::INT8 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code4LISTE">legate::Type::Code::LIST (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code3NILE">legate::Type::Code::NIL (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code6STRINGE">legate::Type::Code::STRING (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code6STRUCTE">legate::Type::Code::STRUCT (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code6UINT16E">legate::Type::Code::UINT16 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code6UINT32E">legate::Type::Code::UINT32 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code6UINT64E">legate::Type::Code::UINT64 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N6legate4Type4Code5UINT8E">legate::Type::Code::UINT8 (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type23find_reduction_operatorE15ReductionOpKind">legate::Type::find_reduction_operator (C++ function)</a>, <a href="api/cpp/types.html#_CPPv4NK6legate4Type23find_reduction_operatorENSt7int32_tE">[1]</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type12is_primitiveEv">legate::Type::is_primitive (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4TypeeqERK4Type">legate::Type::operator== (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type25record_reduction_operatorE15ReductionOpKind13GlobalRedopID">legate::Type::record_reduction_operator (C++ function)</a>, <a href="api/cpp/types.html#_CPPv4NK6legate4Type25record_reduction_operatorENSt7int32_tE13GlobalRedopID">[1]</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type4sizeEv">legate::Type::size (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type9to_stringEv">legate::Type::to_string (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type3uidEv">legate::Type::uid (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4NK6legate4Type13variable_sizeEv">legate::Type::variable_size (C++ function)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv4N6legate8VariableE">legate::Variable (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate11VariantInfoE">legate::VariantInfo (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate11VariantInfo7optionsEv">legate::VariantInfo::options (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptionsE">legate::VariantOptions (C++ class)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions13communicatorsE">legate::VariantOptions::communicators (C++ member)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions10concurrentE">legate::VariantOptions::concurrent (C++ member)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions21elide_device_ctx_syncE">legate::VariantOptions::elide_device_ctx_sync (C++ member)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions15has_allocationsE">legate::VariantOptions::has_allocations (C++ member)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions15has_side_effectE">legate::VariantOptions::has_side_effect (C++ member)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions9MAX_COMMSE">legate::VariantOptions::MAX_COMMS (C++ member)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions19may_throw_exceptionE">legate::VariantOptions::may_throw_exception (C++ member)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4NK6legate14VariantOptions18populate_registrarERN6Legion20TaskVariantRegistrarE">legate::VariantOptions::populate_registrar (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions18with_communicatorsENSt16initializer_listINSt11string_viewEEE">legate::VariantOptions::with_communicators (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions15with_concurrentEb">legate::VariantOptions::with_concurrent (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions26with_elide_device_ctx_syncEb">legate::VariantOptions::with_elide_device_ctx_sync (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions20with_has_allocationsEb">legate::VariantOptions::with_has_allocations (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions20with_has_side_effectEb">legate::VariantOptions::with_has_side_effect (C++ function)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv4N6legate14VariantOptions24with_may_throw_exceptionEb">legate::VariantOptions::with_may_throw_exception (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_CONCAT">LEGATE_CONCAT (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_CONCAT_">LEGATE_CONCAT_ (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_DEFINED">LEGATE_DEFINED (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_DEFINED_ENABLED_FORM_">LEGATE_DEFINED_ENABLED_FORM_ (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_DEFINED_ENABLED_FORM_1">LEGATE_DEFINED_ENABLED_FORM_1 (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_DEFINED_PRIVATE">LEGATE_DEFINED_PRIVATE (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_DEFINED_PRIVATE_1_">LEGATE_DEFINED_PRIVATE_1_ (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_DEFINED_PRIVATE_2_">LEGATE_DEFINED_PRIVATE_2_ (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_DEFINED_PRIVATE_3_">LEGATE_DEFINED_PRIVATE_3_ (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_SCOPE_FAIL">LEGATE_SCOPE_FAIL (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_SCOPE_GUARD">LEGATE_SCOPE_GUARD (C macro)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv426LEGATE_STL_RESOURCE_CONFIG">LEGATE_STL_RESOURCE_CONFIG (C++ member)</a>
+</li>
+      <li><a href="api/cpp/task.html#c.LEGATE_STREAM_POOL_DEPRECATED">LEGATE_STREAM_POOL_DEPRECATED (C macro)</a>
+</li>
+      <li><a href="api/cpp/task.html#c.LEGATE_STREAM_VIEW_DEPRECATED">LEGATE_STREAM_VIEW_DEPRECATED (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_STRINGIZE">LEGATE_STRINGIZE (C macro)</a>
+</li>
+      <li><a href="api/cpp/util.html#c.LEGATE_STRINGIZE_">LEGATE_STRINGIZE_ (C macro)</a>
+</li>
+      <li><a href="api/cpp/data.html#c.LEGATE_TRUE_WHEN_DEBUG">LEGATE_TRUE_WHEN_DEBUG (C macro)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv49list_typeRK4Type">list_type (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.ProcessorRange.low.html#legate.core.ProcessorRange.low">low (legate.core.ProcessorRange attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.Runtime.machine.html#legate.core.Runtime.machine">machine (legate.core.Runtime attribute)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4I0E15make_scope_fail9ScopeFailI1FERR1F">make_scope_fail (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4I0E16make_scope_guard10ScopeGuardI1FERR1F">make_scope_guard (C++ function)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0E12MaxReduction">MaxReduction (C++ type)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I0_NSt7int32_tEE8mdspan_t">mdspan_t (C++ type)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv420measure_microsecondsv">measure_microseconds (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv419measure_nanosecondsv">measure_nanoseconds (C++ function)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv46Memory">Memory (C++ type)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0E12MinReduction">MinReduction (C++ type)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.LogicalStore.ndim.html#legate.core.LogicalStore.ndim">ndim (legate.core.LogicalStore attribute)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.Shape.ndim.html#legate.core.Shape.ndim">(legate.core.Shape attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/cpp/types.html#_CPPv415ndim_point_typeRK4Type">ndim_point_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv414ndim_rect_typeRK4Type">ndim_rect_type (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.Runtime.node_count.html#legate.core.Runtime.node_count">node_count (legate.core.Runtime attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.node_id.html#legate.core.Runtime.node_id">node_id (legate.core.Runtime attribute)</a>
+</li>
+      <li><a href="api/cpp/data.html#_CPPv44nullv">null (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv49null_typev">null_type (C++ function)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.task.PyTask.omp_variant.html#legate.core.task.PyTask.omp_variant">omp_variant() (legate.core.task.PyTask method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Machine.only.html#legate.core.Machine.only">only() (legate.core.Machine method)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4lsRNSt7ostreamERK10TaskTarget">operator&lt;&lt; (C++ function)</a>, <a href="api/cpp/mapping.html#_CPPv4lsRNSt7ostreamERK11StoreTarget">[1]</a>, <a href="api/cpp/mapping.html#_CPPv4lsRNSt7ostreamERK14ProcessorRange">[2]</a>, <a href="api/cpp/mapping.html#_CPPv4lsRNSt7ostreamERK7Machine">[3]</a>, <a href="api/cpp/task.html#_CPPv4lsRNSt7ostreamERK12SymbolicExpr">[4]</a>, <a href="api/cpp/task.html#_CPPv4lsRNSt7ostreamERK14VariantOptions">[5]</a>, <a href="api/cpp/types.html#_CPPv4lsRNSt7ostreamERK4Type">[6]</a>, <a href="api/cpp/types.html#_CPPv4lsRNSt7ostreamERKN4Type4CodeE">[7]</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0E11OrReduction">OrReduction (C++ type)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.OutputArray.html#legate.core.task.OutputArray">OutputArray (class in legate.core.task)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.VariantInvoker.outputs.html#legate.core.task.VariantInvoker.outputs">outputs (legate.core.task.VariantInvoker attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.OutputStore.html#legate.core.task.OutputStore">OutputStore (class in legate.core.task)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.LogicalStore.partition_by_tiling.html#legate.core.LogicalStore.partition_by_tiling">partition_by_tiling() (legate.core.LogicalStore method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.ProcessorRange.per_node_count.html#legate.core.ProcessorRange.per_node_count">per_node_count (legate.core.ProcessorRange attribute)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I_i0E5Point">Point (C++ type)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv410point_typeNSt8uint32_tE">point_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I_i0E21PointInDomainIterator">PointInDomainIterator (C++ type)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I_i0E19PointInRectIterator">PointInRectIterator (C++ type)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Machine.preferred_target.html#legate.core.Machine.preferred_target">preferred_target (legate.core.Machine attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.prefetch_bloated_instances.html#legate.core.Runtime.prefetch_bloated_instances">prefetch_bloated_instances() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.PyTask.prepare_call.html#legate.core.task.PyTask.prepare_call">prepare_call() (legate.core.task.PyTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.task.VariantInvoker.prepare_call.html#legate.core.task.VariantInvoker.prepare_call">(legate.core.task.VariantInvoker method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/types.html#_CPPv414primitive_typeN4Type4CodeE">primitive_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4I0_iE17print_dense_arrayNSt6stringEPK1TRK5PointI3DIMERA3DIM_KNSt6size_tE">print_dense_array (C++ function)</a>, <a href="api/cpp/util.html#_CPPv4I_i0E17print_dense_arrayNSt6stringERK3ACCRK4RectI3DIME">[1]</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv49Processor">Processor (C++ type)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0E13ProdReduction">ProdReduction (C++ type)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.LogicalStore.project.html#legate.core.LogicalStore.project">project() (legate.core.LogicalStore method)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I_DpNSt7int32_tEE17projection_policy">projection_policy (C++ type)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.LogicalStore.promote.html#legate.core.LogicalStore.promote">promote() (legate.core.LogicalStore method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.PyTask.html#legate.core.task.PyTask">PyTask (class in legate.core.task)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.read.html#legate.core.experimental.io.file_handle.FileHandle.read">read() (legate.core.experimental.io.file_handle.FileHandle method)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I_i0E4Rect">Rect (C++ type)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv49rect_typeNSt8uint32_tE">rect_type (C++ function)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation">reduce (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.ReductionArray.html#legate.core.task.ReductionArray">ReductionArray (class in legate.core.task)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv415ReductionOpKind">ReductionOpKind (C++ enum)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N15ReductionOpKind3ADDE">ReductionOpKind::ADD (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N15ReductionOpKind3ANDE">ReductionOpKind::AND (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N15ReductionOpKind3MAXE">ReductionOpKind::MAX (C++ enumerator)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/types.html#_CPPv4N15ReductionOpKind3MINE">ReductionOpKind::MIN (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N15ReductionOpKind3MULE">ReductionOpKind::MUL (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N15ReductionOpKind2ORE">ReductionOpKind::OR (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv4N15ReductionOpKind3XORE">ReductionOpKind::XOR (C++ enumerator)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.VariantInvoker.reductions.html#legate.core.task.VariantInvoker.reductions">reductions (legate.core.task.VariantInvoker attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.ReductionStore.html#legate.core.task.ReductionStore">ReductionStore (class in legate.core.task)</a>
+</li>
+      <li><a href="api/cpp/runtime.html#_CPPv4I0E26register_shutdown_callbackvRR1T">register_shutdown_callback (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.PyTask.registered.html#legate.core.task.PyTask.registered">registered (legate.core.task.PyTask attribute)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv410row_policy">row_policy (C++ type)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.html#legate.core.Runtime">Runtime (class in legate.core)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.task.VariantInvoker.scalars.html#legate.core.task.VariantInvoker.scalars">scalars (legate.core.task.VariantInvoker attribute)</a>
+</li>
+      <li><a href="api/cpp/partitioning.html#_CPPv45scale5tupleINSt8uint64_tEE8Variable8Variable">scale (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.AutoTask.set_concurrent.html#legate.core.AutoTask.set_concurrent">set_concurrent() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.set_concurrent.html#legate.core.ManualTask.set_concurrent">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.AutoTask.set_side_effect.html#legate.core.AutoTask.set_side_effect">set_side_effect() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.set_side_effect.html#legate.core.ManualTask.set_side_effect">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.LogicalStore.shape.html#legate.core.LogicalStore.shape">shape (legate.core.LogicalStore attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.VariantInvoker.signature.html#legate.core.task.VariantInvoker.signature">signature (legate.core.task.VariantInvoker attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.size.html#legate.core.experimental.io.file_handle.FileHandle.size">size (legate.core.experimental.io.file_handle.FileHandle property)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.LogicalStore.size.html#legate.core.LogicalStore.size">(legate.core.LogicalStore attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/python/generated/legate.core.LogicalStore.slice.html#legate.core.LogicalStore.slice">slice() (legate.core.LogicalStore method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ProcessorRange.slice.html#legate.core.ProcessorRange.slice">(legate.core.ProcessorRange method)</a>
+</li>
+      </ul></li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I0_NSt7int32_tE0E10slice_view">slice_view (C++ type)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/runtime.html#_CPPv45startNSt7int32_tEA_Pc">start (C++ function)</a>, <a href="api/cpp/runtime.html#_CPPv45startv">[1]</a>
+</li>
+      <li><a href="api/python/generated/legate.core.LogicalStorePartition.store.html#legate.core.LogicalStorePartition.store">store() (legate.core.LogicalStorePartition method)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv411StoreTarget">StoreTarget (C++ enum)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N11StoreTarget5FBMEME">StoreTarget::FBMEM (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N11StoreTarget9SOCKETMEME">StoreTarget::SOCKETMEM (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N11StoreTarget6SYSMEME">StoreTarget::SYSMEM (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N11StoreTarget5ZCMEME">StoreTarget::ZCMEM (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv411string_typev">string_type (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv411struct_typeRKNSt6vectorI4TypeEEb">struct_type (C++ function)</a>, <a href="api/cpp/types.html#_CPPv4IDpE11struct_typeNSt11enable_if_tINSt13conjunction_vIDpNSt14is_convertibleINSt7decay_tI4ArgsEE4TypeEEEE10StructTypeEEbDpRR4Args">[1]</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.submit.html#legate.core.Runtime.submit">submit() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0E12SumReduction">SumReduction (C++ type)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.supported_open_flags.html#legate.core.experimental.io.file_handle.FileHandle.supported_open_flags">supported_open_flags (legate.core.experimental.io.file_handle.FileHandle attribute)</a>
+</li>
+      <li><a href="api/cpp/task.html#_CPPv413SymbolicPoint">SymbolicPoint (C++ type)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.task.task.html#legate.core.task.task">task() (in module legate.core.task)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.PyTask.task_id.html#legate.core.task.PyTask.task_id">task_id (legate.core.task.PyTask attribute)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv410TaskTarget">TaskTarget (C++ enum)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N10TaskTarget3CPUE">TaskTarget::CPU (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N10TaskTarget3GPUE">TaskTarget::GPU (C++ enumerator)</a>
+</li>
+      <li><a href="api/cpp/mapping.html#_CPPv4N10TaskTarget3OMPE">TaskTarget::OMP (C++ enumerator)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.AutoTask.throws_exception.html#legate.core.AutoTask.throws_exception">throws_exception() (legate.core.AutoTask method)</a>
+
+      <ul>
+        <li><a href="api/python/generated/legate.core.ManualTask.throws_exception.html#legate.core.ManualTask.throws_exception">(legate.core.ManualTask method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/cpp/io.html#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArray">to_file (C++ function)</a>, <a href="api/cpp/io.html#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArrayRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE">[1]</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.to_file.html#legate.core.experimental.io.file_handle.to_file">to_file() (in module legate.core.experimental.io.file_handle)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.track_provenance.html#legate.core.track_provenance">track_provenance() (in module legate.core)</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I0000E9transformvRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation">transform (C++ function)</a>, <a href="legate.stl/source/reference/index.html#_CPPv4I000E9transformvRR10InputRangeRR11OutputRange14UnaryOperation">[1]</a>
+</li>
+      <li><a href="legate.stl/source/reference/index.html#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform">transform_reduce (C++ function)</a>, <a href="legate.stl/source/reference/index.html#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform">[1]</a>
+</li>
+      <li><a href="api/python/generated/legate.core.LogicalStore.transformed.html#legate.core.LogicalStore.transformed">transformed (legate.core.LogicalStore attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.LogicalStore.transpose.html#legate.core.LogicalStore.transpose">transpose() (legate.core.LogicalStore method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Runtime.tree_reduce.html#legate.core.Runtime.tree_reduce">tree_reduce() (legate.core.Runtime method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.LogicalStore.type.html#legate.core.LogicalStore.type">type (legate.core.LogicalStore attribute)</a>
+</li>
+      <li><a href="api/cpp/util.html#_CPPv4I0DpE13type_dispatchDcN4Type4CodeERR7FunctorDpRR6Fnargs">type_dispatch (C++ function)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/types.html#_CPPv46uint16v">uint16 (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv46uint32v">uint32 (C++ function)</a>
+</li>
+      <li><a href="api/cpp/types.html#_CPPv46uint64v">uint64 (C++ function)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/types.html#_CPPv45uint8v">uint8 (C++ function)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.LogicalStore.unbound.html#legate.core.LogicalStore.unbound">unbound (legate.core.LogicalStore attribute)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.PyTask.UNREGISTERED_ID.html#legate.core.task.PyTask.UNREGISTERED_ID">UNREGISTERED_ID (legate.core.task.PyTask attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.task.VariantInvoker.valid_signature.html#legate.core.task.VariantInvoker.valid_signature">valid_signature() (legate.core.task.VariantInvoker method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Machine.valid_targets.html#legate.core.Machine.valid_targets">valid_targets (legate.core.Machine attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.task.VariantInvoker.validate_signature.html#legate.core.task.VariantInvoker.validate_signature">validate_signature() (legate.core.task.VariantInvoker method)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.task.VariantInvoker.html#legate.core.task.VariantInvoker">VariantInvoker (class in legate.core.task)</a>
+</li>
+      <li><a href="api/python/generated/legate.core.Shape.volume.html#legate.core.Shape.volume">volume (legate.core.Shape attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.write.html#legate.core.experimental.io.file_handle.FileHandle.write">write() (legate.core.experimental.io.file_handle.FileHandle method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="X">X</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/cpp/typedefs.html#_CPPv4I0E12XorReduction">XorReduction (C++ type)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

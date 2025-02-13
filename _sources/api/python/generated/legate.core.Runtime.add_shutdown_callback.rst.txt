@@ -1,0 +1,6 @@
+legate.core.Runtime.add\_shutdown\_callback
+===========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.add_shutdown_callback

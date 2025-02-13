@@ -1,0 +1,6 @@
+legate.core.Runtime.issue\_copy
+===============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.issue_copy

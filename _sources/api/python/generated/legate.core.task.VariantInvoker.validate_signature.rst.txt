@@ -1,0 +1,6 @@
+legate.core.task.VariantInvoker.validate\_signature
+===================================================
+
+.. currentmodule:: legate.core.task
+
+.. automethod:: VariantInvoker.validate_signature

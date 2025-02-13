@@ -1,0 +1,6 @@
+legate.core.task.PyTask.registered
+==================================
+
+.. currentmodule:: legate.core.task
+
+.. autoattribute:: PyTask.registered

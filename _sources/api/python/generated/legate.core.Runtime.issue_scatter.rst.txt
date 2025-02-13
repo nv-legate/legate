@@ -1,0 +1,6 @@
+legate.core.Runtime.issue\_scatter
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.issue_scatter

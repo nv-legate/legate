@@ -1,0 +1,6 @@
+﻿legate.core.LogicalStore.type
+=============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: LogicalStore.type

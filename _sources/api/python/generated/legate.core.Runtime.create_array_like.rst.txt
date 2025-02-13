@@ -1,0 +1,6 @@
+legate.core.Runtime.create\_array\_like
+=======================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.create_array_like

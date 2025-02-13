@@ -1,0 +1,6 @@
+﻿legate.core.Machine.\_\_and\_\_
+===============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Machine.__and__

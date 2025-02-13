@@ -1,0 +1,6 @@
+legate.core.task.PyTask.cpu\_variant
+====================================
+
+.. currentmodule:: legate.core.task
+
+.. automethod:: PyTask.cpu_variant

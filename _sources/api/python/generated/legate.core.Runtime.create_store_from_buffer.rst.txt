@@ -1,0 +1,6 @@
+legate.core.Runtime.create\_store\_from\_buffer
+===============================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.create_store_from_buffer

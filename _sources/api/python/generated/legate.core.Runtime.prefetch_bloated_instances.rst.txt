@@ -1,0 +1,6 @@
+legate.core.Runtime.prefetch\_bloated\_instances
+================================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.prefetch_bloated_instances

@@ -1,0 +1,6 @@
+legate.core.experimental.io.file\_handle.FileHandle.\_\_exit\_\_
+================================================================
+
+.. currentmodule:: legate.core.experimental.io.file_handle
+
+.. automethod:: FileHandle.__exit__

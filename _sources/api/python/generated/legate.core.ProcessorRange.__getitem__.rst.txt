@@ -1,0 +1,6 @@
+﻿legate.core.ProcessorRange.\_\_getitem\_\_
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: ProcessorRange.__getitem__

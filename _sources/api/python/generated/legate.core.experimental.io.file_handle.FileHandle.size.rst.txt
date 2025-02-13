@@ -1,0 +1,6 @@
+legate.core.experimental.io.file\_handle.FileHandle.size
+========================================================
+
+.. currentmodule:: legate.core.experimental.io.file_handle
+
+.. autoproperty:: FileHandle.size

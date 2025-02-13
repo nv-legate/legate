@@ -1,0 +1,801 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Partitioning &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/nvidia-sphinx-theme.css?v=4c56b82b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=4ea706d9"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/cpp/partitioning';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Runtime" href="runtime.html" />
+    <link rel="prev" title="Data" href="data.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../jupyter.html">Using with Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../resources.html">Links to resources</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/shape.html">Shape</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/io.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">C++ API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="data.html">Data</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="task.html">Task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="util.html">Util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="io.html">IO</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">C++ API Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Partitioning</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="partitioning">
+<h1>Partitioning<a class="headerlink" href="#partitioning" title="Link to this heading">#</a></h1>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__partitioning"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">partitioning</span></span></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-enums">Enums</p>
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv420ImageComputationHint">
+<span id="_CPPv320ImageComputationHint"></span><span id="_CPPv220ImageComputationHint"></span><span class="target" id="group__partitioning_1gab5dbde3cac532f7d44ebefbae6c5c2f1"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ImageComputationHint</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint8_t</span></span><a class="headerlink" href="#_CPPv420ImageComputationHint" title="Link to this definition">#</a><br /></dt>
+<dd><p>Hints to the runtime for the image computation. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N20ImageComputationHint7NO_HINTE">
+<span id="_CPPv3N20ImageComputationHint7NO_HINTE"></span><span id="_CPPv2N20ImageComputationHint7NO_HINTE"></span><span class="target" id="group__partitioning_1ggab5dbde3cac532f7d44ebefbae6c5c2f1a202e2c2f0b6aa0d88d70cb72af619999"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">NO_HINT</span></span></span><a class="headerlink" href="#_CPPv4N20ImageComputationHint7NO_HINTE" title="Link to this definition">#</a><br /></dt>
+<dd><p>A precise image of the function is needed </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N20ImageComputationHint7MIN_MAXE">
+<span id="_CPPv3N20ImageComputationHint7MIN_MAXE"></span><span id="_CPPv2N20ImageComputationHint7MIN_MAXE"></span><span class="target" id="group__partitioning_1ggab5dbde3cac532f7d44ebefbae6c5c2f1a08c272832faf15ce765305111cbb264f"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MIN_MAX</span></span></span><a class="headerlink" href="#_CPPv4N20ImageComputationHint7MIN_MAXE" title="Link to this definition">#</a><br /></dt>
+<dd><p>An approximate image of the function using bounding boxes is sufficient </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N20ImageComputationHint10FIRST_LASTE">
+<span id="_CPPv3N20ImageComputationHint10FIRST_LASTE"></span><span id="_CPPv2N20ImageComputationHint10FIRST_LASTE"></span><span class="target" id="group__partitioning_1ggab5dbde3cac532f7d44ebefbae6c5c2f1a952b181deb641da23c628752c546b263"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FIRST_LAST</span></span></span><a class="headerlink" href="#_CPPv4N20ImageComputationHint10FIRST_LASTE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Elements in the function store are sorted and thus bounding can be computed using only the first and the last elements </p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv45align8Variable8Variable">
+<span id="_CPPv35align8Variable8Variable"></span><span id="_CPPv25align8Variable8Variable"></span><span id="align__Variable.Variable"></span><span class="target" id="group__partitioning_1gabe986d7603f8c623cae55498fccc3d49"></span><span class="n"><span class="pre">Constraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">align</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lhs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv45align8Variable8Variable" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates an alignment constraint on two variables. </p>
+<p>An alignment constraint between variables <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> indicates to the runtime that the PhysicalStores (leaf-task-local portions, typically equal-size tiles) of the LogicalStores corresponding to <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> must have the same global indices (i.e. the Stores must “align” with one another).</p>
+<p>This is commonly used for e.g. element-wise operations. For example, consider an element-wise addition (<code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">x</span> <span class="pre">+</span> <span class="pre">y</span></code>), where each array is 100 elements long. Each leaf task must receive the same local tile for all 3 arrays. For example, leaf task 0 receives indices 0 - 24, leaf task 1 receives 25 - 49, leaf task 2 receives 50 - 74, and leaf task 3 receives 75 - 99.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lhs</strong> – LHS variable </p></li>
+<li><p><strong>rhs</strong> – RHS variable</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Alignment constraint </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49broadcast8Variable">
+<span id="_CPPv39broadcast8Variable"></span><span id="_CPPv29broadcast8Variable"></span><span id="broadcast__Variable"></span><span class="target" id="group__partitioning_1gab2923160c9a7bf00c541f19f2b3957f7"></span><span class="n"><span class="pre">Constraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">broadcast</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49broadcast8Variable" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a broadcast constraint on a variable. </p>
+<p>A broadcast constraint informs the runtime that the variable should not be split among the leaf tasks, instead, each leaf task should get a full copy of the underlying store. In other words, the store should be “broadcast” in its entirety to all leaf tasks in a task launch.</p>
+<p>In effect, this constraint prevents all dimensions of the store from being partitioned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>variable</strong> – Partition symbol to constrain</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Broadcast constraint </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49broadcast8Variable5tupleINSt8uint32_tEE">
+<span id="_CPPv39broadcast8Variable5tupleINSt8uint32_tEE"></span><span id="_CPPv29broadcast8Variable5tupleINSt8uint32_tEE"></span><span id="broadcast__Variable.tuple:std::uint32_t:"></span><span class="target" id="group__partitioning_1ga59e0af705e9d200ca91c7af08432b016"></span><span class="n"><span class="pre">Constraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">broadcast</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">axes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49broadcast8Variable5tupleINSt8uint32_tEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a broadcast constraint on a variable. </p>
+<p>A modified form of broadcast constraint which applies the broadcast to a subset of the axes of the <a class="reference internal" href="data.html#classlegate_1_1LogicalStore"><span class="std std-ref">LogicalStore</span></a> corresponding to <code class="docutils literal notranslate"><span class="pre">variable</span></code>. The Store will be partitioned on all other axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> – Partition symbol to constrain </p></li>
+<li><p><strong>axes</strong> – List of dimensions to broadcast</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the list of axes is empty </p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Broadcast constraint</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv45image8Variable8Variable20ImageComputationHint">
+<span id="_CPPv35image8Variable8Variable20ImageComputationHint"></span><span id="_CPPv25image8Variable8Variable20ImageComputationHint"></span><span id="image__Variable.Variable.ImageComputationHint"></span><span class="target" id="group__partitioning_1gabec27816bfd824ddb04947990b9efb23"></span><span class="n"><span class="pre">Constraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">image</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">var_function</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">var_range</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv420ImageComputationHint" title="ImageComputationHint"><span class="n"><span class="pre">ImageComputationHint</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">hint</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv420ImageComputationHint" title="ImageComputationHint"><span class="n"><span class="pre">ImageComputationHint</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N20ImageComputationHint7NO_HINTE" title="ImageComputationHint::NO_HINT"><span class="n"><span class="pre">NO_HINT</span></span></a></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv45image8Variable8Variable20ImageComputationHint" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates an image constraint between partitions. </p>
+<p>The elements of <code class="docutils literal notranslate"><span class="pre">var_function</span></code> are treated as pointers to elements in <code class="docutils literal notranslate"><span class="pre">var_range</span></code>. Each sub-store <code class="docutils literal notranslate"><span class="pre">s</span></code> of <code class="docutils literal notranslate"><span class="pre">var_function</span></code> is aligned with a sub-store <code class="docutils literal notranslate"><span class="pre">t</span></code> of <code class="docutils literal notranslate"><span class="pre">var_range</span></code>, such that every element in <code class="docutils literal notranslate"><span class="pre">s</span></code> will find the element of <code class="docutils literal notranslate"><span class="pre">var_range</span></code> it’s pointing to inside of <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p>
+<p>
+Currently, the precise image computation can be performed only by CPUs. As a result, the function store is copied to the system memory if the store was last updated by GPU tasks. The approximate image computation has no such issue and is fully GPU accelerated. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>An approximate image of a function potentially contains extra points not in the function’s image. For example, if a function sub-store contains two 2-D points (0, 0) and (1, 1), the corresponding sub-store of the range would only contain the elements at points (0, 0) and (1, 1) if it was constructed from a precise image computation, whereas an approximate image computation would yield a sub-store with elements at point (0, 0), (0, 1), (1, 0), and (1, 1) (two extra elements).</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>var_function</strong> – Partition symbol for the function store </p></li>
+<li><p><strong>var_range</strong> – Partition symbol of the store whose partition should be derived from the image </p></li>
+<li><p><strong>hint</strong> – Optional hint to the runtime describing how the image computation can be performed. If no hint is given (which is the default), the runtime falls back to the precise image computation. Otherwise, the runtime computes a potentially approximate image of the function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Image constraint</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv45scale5tupleINSt8uint64_tEE8Variable8Variable">
+<span id="_CPPv35scale5tupleINSt8uint64_tEE8Variable8Variable"></span><span id="_CPPv25scale5tupleINSt8uint64_tEE8Variable8Variable"></span><span id="scale__tuple:std::uint64_t:.Variable.Variable"></span><span class="target" id="group__partitioning_1gaed632471d8161486c00e015ac968c9e6"></span><span class="n"><span class="pre">Constraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">scale</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">factors</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">var_smaller</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">var_bigger</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv45scale5tupleINSt8uint64_tEE8Variable8Variable" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a scaling constraint between partitions. </p>
+<p>A scaling constraint is similar to an alignment constraint, except that the sizes of the aligned tiles is first scaled by <code class="docutils literal notranslate"><span class="pre">factors</span></code>.</p>
+<p>For example, this may be used in compacting a <code class="docutils literal notranslate"><span class="pre">5x56</span></code> array of <code class="docutils literal notranslate"><span class="pre">bool</span></code>s to a <code class="docutils literal notranslate"><span class="pre">5x7</span></code> array of bytes, treated as a bitfield. In this case <code class="docutils literal notranslate"><span class="pre">var_smaller</span></code> would be the byte array, <code class="docutils literal notranslate"><span class="pre">var_bigger</span></code> would be the array of <code class="docutils literal notranslate"><span class="pre">bool</span></code>s, and <code class="docutils literal notranslate"><span class="pre">factors</span></code> would be <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">8]</span></code> (a <code class="docutils literal notranslate"><span class="pre">2x3</span></code> tile on the byte array corresponds to a <code class="docutils literal notranslate"><span class="pre">2x24</span></code> tile on the bool array.</p>
+<p>Formally: if two stores <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> are constrained by a scaling constraint</p>
+<p><code class="docutils literal notranslate"><span class="pre">legate::scale(S,</span> <span class="pre">pA,</span> <span class="pre">pB)</span></code></p>
+<p>where <code class="docutils literal notranslate"><span class="pre">pA</span></code> and <code class="docutils literal notranslate"><span class="pre">pB</span></code> are partition symbols for <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code>, respectively, <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> will be partitioned such that each pair of sub-stores <code class="docutils literal notranslate"><span class="pre">Ak</span></code> and <code class="docutils literal notranslate"><span class="pre">Bk</span></code> satisfy the following property:</p>
+<p><span class="math notranslate nohighlight">\(\mathtt{S} \cdot \mathit{dom}(\mathtt{Ak}) \cap \mathit{dom}(\mathtt{B}) \subseteq \)</span> <span class="math notranslate nohighlight">\(\mathit{dom}(\mathtt{Bk})\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factors</strong> – Scaling factors </p></li>
+<li><p><strong>var_smaller</strong> – Partition symbol for the smaller store (i.e., the one whose extents are scaled) </p></li>
+<li><p><strong>var_bigger</strong> – Partition symbol for the bigger store</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Scaling constraint </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv45bloat8Variable8Variable5tupleINSt8uint64_tEE5tupleINSt8uint64_tEE">
+<span id="_CPPv35bloat8Variable8Variable5tupleINSt8uint64_tEE5tupleINSt8uint64_tEE"></span><span id="_CPPv25bloat8Variable8Variable5tupleINSt8uint64_tEE5tupleINSt8uint64_tEE"></span><span id="bloat__Variable.Variable.tuple:std::uint64_t:.tuple:std::uint64_t:"></span><span class="target" id="group__partitioning_1gad6c94ca303dc2e46766ae71bc12456c5"></span><span class="n"><span class="pre">Constraint</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bloat</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">var_source</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">Variable</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">var_bloat</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">low_offsets</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">high_offsets</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv45bloat8Variable8Variable5tupleINSt8uint64_tEE5tupleINSt8uint64_tEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a bloating constraint between partitions. </p>
+<p>This is typically used in stencil computations, to instruct the runtime that the tiles on the “private + ghost” partition (<code class="docutils literal notranslate"><span class="pre">var_bloat</span></code>) must align with the tiles on the “private” partition (<code class="docutils literal notranslate"><span class="pre">var_source</span></code>), but also include a halo of additional elements off each end.</p>
+<p>For example, if <code class="docutils literal notranslate"><span class="pre">var_source</span></code> and <code class="docutils literal notranslate"><span class="pre">var_bloat</span></code> correspond to 10-element vectors, <code class="docutils literal notranslate"><span class="pre">var_source</span></code> is split into 2 tiles, <code class="docutils literal notranslate"><span class="pre">0-4</span></code> and <code class="docutils literal notranslate"><span class="pre">5-9</span></code>, <code class="docutils literal notranslate"><span class="pre">low_offsets</span> <span class="pre">==</span> <span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">high_offsets</span> <span class="pre">==</span> <span class="pre">2</span></code>, then <code class="docutils literal notranslate"><span class="pre">var_bloat</span></code> will be split into 2 tiles, <code class="docutils literal notranslate"><span class="pre">0-6</span></code> and <code class="docutils literal notranslate"><span class="pre">4-9</span></code>.</p>
+<p>Formally, if two stores <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> are constrained by a bloating constraint</p>
+<p><code class="docutils literal notranslate"><span class="pre">legate::bloat(pA,</span> <span class="pre">pB,</span> <span class="pre">L,</span> <span class="pre">H)</span></code></p>
+<p>where <code class="docutils literal notranslate"><span class="pre">pA</span></code> and <code class="docutils literal notranslate"><span class="pre">pB</span></code> are partition symbols for <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code>, respectively, <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> will be partitioned such that each pair of sub-stores <code class="docutils literal notranslate"><span class="pre">Ak</span></code> and <code class="docutils literal notranslate"><span class="pre">Bk</span></code> satisfy the following property:</p>
+<p><span class="math notranslate nohighlight">\( \forall p \in \mathit{dom}(\mathtt{Ak}). \forall \delta \in [-\mathtt{L}, \mathtt{H}]. \)</span> <span class="math notranslate nohighlight">\( p + \delta \in \mathit{dom}(\mathtt{Bk}) \lor p + \delta \not \in \mathit{dom}(\mathtt{B})\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>var_source</strong> – Partition symbol for the source store </p></li>
+<li><p><strong>var_bloat</strong> – Partition symbol for the target store </p></li>
+<li><p><strong>low_offsets</strong> – Offsets to bloat towards the negative direction </p></li>
+<li><p><strong>high_offsets</strong> – Offsets to bloat towards the positive direction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Bloating constraint </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate8VariableE">
+<span id="_CPPv3N6legate8VariableE"></span><span id="_CPPv2N6legate8VariableE"></span><span id="legate::Variable"></span><span class="target" id="classlegate_1_1Variable"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Variable</span></span></span><a class="headerlink" href="#_CPPv4N6legate8VariableE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/partitioning/constraint.h&gt;</em></div>
+<p>Class for partition symbols. </p>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate10ConstraintE">
+<span id="_CPPv3N6legate10ConstraintE"></span><span id="_CPPv2N6legate10ConstraintE"></span><span id="legate::Constraint"></span><span class="target" id="classlegate_1_1Constraint"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Constraint</span></span></span><a class="headerlink" href="#_CPPv4N6legate10ConstraintE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/partitioning/constraint.h&gt;</em></div>
+<p>A base class for partitioning constraints. </p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="data.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Data</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="runtime.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Runtime</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv420ImageComputationHint"><code class="docutils literal notranslate"><span class="pre">ImageComputationHint</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N20ImageComputationHint7NO_HINTE"><code class="docutils literal notranslate"><span class="pre">NO_HINT</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N20ImageComputationHint7MIN_MAXE"><code class="docutils literal notranslate"><span class="pre">MIN_MAX</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N20ImageComputationHint10FIRST_LASTE"><code class="docutils literal notranslate"><span class="pre">FIRST_LAST</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45align8Variable8Variable"><code class="docutils literal notranslate"><span class="pre">align()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcast8Variable"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49broadcast8Variable5tupleINSt8uint32_tEE"><code class="docutils literal notranslate"><span class="pre">broadcast()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45image8Variable8Variable20ImageComputationHint"><code class="docutils literal notranslate"><span class="pre">image()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45scale5tupleINSt8uint64_tEE8Variable8Variable"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv45bloat8Variable8Variable5tupleINSt8uint64_tEE5tupleINSt8uint64_tEE"><code class="docutils literal notranslate"><span class="pre">bloat()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate8VariableE"><code class="docutils literal notranslate"><span class="pre">Variable</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate10ConstraintE"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

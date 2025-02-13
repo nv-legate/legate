@@ -1,0 +1,6 @@
+legate.core.Runtime.machine
+===========================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Runtime.machine

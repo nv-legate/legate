@@ -1,0 +1,6 @@
+legate.core.Runtime.issue\_mapping\_fence
+=========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.issue_mapping_fence

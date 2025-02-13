@@ -1,0 +1,1742 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Util &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/nvidia-sphinx-theme.css?v=4c56b82b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/cpp/util';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="IO" href="io.html" />
+    <link rel="prev" title="Task" href="task.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../jupyter.html">Using with Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../resources.html">Links to resources</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/shape.html">Shape</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/io.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">C++ API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="data.html">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="partitioning.html">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="task.html">Task</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="io.html">IO</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">C++ API Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Util</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="util">
+<h1>Util<a class="headerlink" href="#util" title="Link to this heading">#</a></h1>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__util"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">util</span></span></dt>
+<dd><p>General utilities. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-defines">Defines</p>
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_CONCAT_">
+<span class="target" id="group__util_1gaee85da5b619f1d31c41d8faaa513a758"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_CONCAT_</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="p"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_CONCAT_" title="Link to this definition">#</a><br /></dt>
+<dd><p>Concatenate a series of tokens without macro expansion. </p>
+<p>
+This macro will NOT macro-expand any tokens passed to it. If this behavior is undesirable, and the user wishes to have all tokens expanded before concatenation, use <a class="reference internal" href="#group__util_1ga1da7cc166b696f212127e9c7f7dfb2c3"><span class="std std-ref">LEGATE_CONCAT()</span></a> instead. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define FOO 1</span>
+<span class="c1">#define BAR 2</span>
+
+<span class="n">LEGATE_CONCAT</span><span class="p">(</span><span class="n">FOO</span><span class="p">,</span> <span class="n">BAR</span><span class="p">)</span> <span class="o">//</span> <span class="n">expands</span> <span class="n">to</span> <span class="n">FOOBAR</span>
+</pre></div>
+</div>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__util_1ga1da7cc166b696f212127e9c7f7dfb2c3"><span class="std std-ref">LEGATE_CONCAT()</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The first parameter to concatenate. </p></li>
+<li><p><strong>...</strong> – The remaining parameters to concatenate.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_CONCAT">
+<span class="target" id="group__util_1ga1da7cc166b696f212127e9c7f7dfb2c3"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_CONCAT</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="p"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_CONCAT" title="Link to this definition">#</a><br /></dt>
+<dd><p>Concatenate a series of tokens. </p>
+<p>
+This macro will first macro-expand any tokens passed to it. If this behavior is undesirable, use <a class="reference internal" href="#group__util_1gaee85da5b619f1d31c41d8faaa513a758"><span class="std std-ref">LEGATE_CONCAT_()</span></a> instead. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define FOO 1</span>
+<span class="c1">#define BAR 2</span>
+
+<span class="n">LEGATE_CONCAT</span><span class="p">(</span><span class="n">FOO</span><span class="p">,</span> <span class="n">BAR</span><span class="p">)</span> <span class="o">//</span> <span class="n">expands</span> <span class="n">to</span> <span class="mi">12</span>
+</pre></div>
+</div>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__util_1gaee85da5b619f1d31c41d8faaa513a758"><span class="std std-ref">LEGATE_CONCAT_()</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The first parameter to concatenate. </p></li>
+<li><p><strong>...</strong> – The remaining parameters to concatenate.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_STRINGIZE_">
+<span class="target" id="group__util_1gae50a8fe297d904995512a6a1abc623d3"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_STRINGIZE_</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="p"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_STRINGIZE_" title="Link to this definition">#</a><br /></dt>
+<dd><p>Stringize a series of tokens. </p>
+<p>
+This macro will turn its arguments into compile-time constant C strings.</p>
+<p>This macro will NOT macro-expand any tokens passed to it. If this behavior is undesirable, and the user wishes to have all tokens expanded before stringification, use <a class="reference internal" href="#group__util_1ga50120b73bc4caecb62f97c75c4e8bc41"><span class="std std-ref">LEGATE_STRINGIZE()</span></a> instead. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define FOO 1</span>
+<span class="c1">#define BAR 2</span>
+
+<span class="n">LEGATE_STRINGIZE_</span><span class="p">(</span><span class="n">FOO</span><span class="p">,</span> <span class="n">BAR</span><span class="p">)</span> <span class="o">//</span> <span class="n">expands</span> <span class="n">to</span> <span class="s2">&quot;FOO, BAR&quot;</span> <span class="p">(</span><span class="n">note</span> <span class="n">the</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__util_1ga50120b73bc4caecb62f97c75c4e8bc41"><span class="std std-ref">LEGATE_STRINGIZE()</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>...</strong> – The tokens to stringize.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_STRINGIZE">
+<span class="target" id="group__util_1ga50120b73bc4caecb62f97c75c4e8bc41"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_STRINGIZE</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="p"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_STRINGIZE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Stringize a series of tokens. </p>
+<p>
+This macro will turn its arguments into compile-time constant C strings.</p>
+<p>This macro will first macro-expand any tokens passed to it. If this behavior is undesirable, use <a class="reference internal" href="#group__util_1gae50a8fe297d904995512a6a1abc623d3"><span class="std std-ref">LEGATE_STRINGIZE_()</span></a> instead. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define FOO 1</span>
+<span class="c1">#define BAR 2</span>
+
+<span class="n">LEGATE_STRINGIZE</span><span class="p">(</span><span class="n">FOO</span><span class="p">,</span> <span class="n">BAR</span><span class="p">)</span> <span class="o">//</span> <span class="n">expands</span> <span class="n">to</span> <span class="s2">&quot;1, 2&quot;</span> <span class="p">(</span><span class="n">note</span> <span class="n">the</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__util_1gae50a8fe297d904995512a6a1abc623d3"><span class="std std-ref">LEGATE_STRINGIZE_()</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>...</strong> – The tokens to stringize.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_DEFINED_ENABLED_FORM_1">
+<span class="target" id="group__util_1gafd3390a0d2ccf9086024baebad685fad"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_DEFINED_ENABLED_FORM_1</span></span></span><a class="headerlink" href="#c.LEGATE_DEFINED_ENABLED_FORM_1" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_DEFINED_ENABLED_FORM_">
+<span class="target" id="group__util_1ga37f8eadd023ab260be042dbab1b918f7"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_DEFINED_ENABLED_FORM_</span></span></span><a class="headerlink" href="#c.LEGATE_DEFINED_ENABLED_FORM_" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_DEFINED_PRIVATE_3_">
+<span class="target" id="group__util_1ga5d311ab020fe7ad033727707a40b9e9d"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_DEFINED_PRIVATE_3_</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ignored</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val</span></span></em>, <em class="sig-param"><span class="p"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_DEFINED_PRIVATE_3_" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_DEFINED_PRIVATE_2_">
+<span class="target" id="group__util_1ga96507141b982f62d5df75821e1a9377d"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_DEFINED_PRIVATE_2_</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_DEFINED_PRIVATE_2_" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_DEFINED_PRIVATE_1_">
+<span class="target" id="group__util_1ga8348a7d9fe29b07f6c8c8df7aae28e91"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_DEFINED_PRIVATE_1_</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="p"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_DEFINED_PRIVATE_1_" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_DEFINED_PRIVATE">
+<span class="target" id="group__util_1ga185e0bd1af63d8d0b0c6a24cdc4f2ef7"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_DEFINED_PRIVATE</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_DEFINED_PRIVATE" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_DEFINED">
+<span class="target" id="group__util_1gab87ba1536b8da92f5982f7ff389fbdd2"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_DEFINED</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_DEFINED" title="Link to this definition">#</a><br /></dt>
+<dd><p>Determine if a preprocessor definition is positively defined. </p>
+<p><a class="reference internal" href="#group__util_1gab87ba1536b8da92f5982f7ff389fbdd2"><span class="std std-ref">LEGATE_DEFINED()</span></a> returns 1 if and only if <em>x</em> expands to integer literal 1, or is defined (but empty). In all other cases, <a class="reference internal" href="#group__util_1gab87ba1536b8da92f5982f7ff389fbdd2"><span class="std std-ref">LEGATE_DEFINED()</span></a> returns the integer literal 0. Therefore this macro should not be used if its argument may expand to a non-empty value other than<ol class="loweralpha simple">
+<li><p>The only exception is if the argument is defined but expands to 0, in which case <code class="docutils literal notranslate"><a class="reference internal" href="#group__util_1gab87ba1536b8da92f5982f7ff389fbdd2"><span class="std std-ref"><span class="pre">LEGATE_DEFINED()</span></span></a></code> will also expand to 0:</p></li>
+</ol>
+</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#define FOO_EMPTY</span>
+<span class="cp">#define FOO_ONE 1</span>
+<span class="cp">#define FOO_ZERO 0</span>
+<span class="c1">// #define FOO_UNDEFINED</span>
+
+<span class="k">static_assert</span><span class="p">(</span><span class="n">LEGATE_DEFINED</span><span class="p">(</span><span class="n">FOO_EMPTY</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">LEGATE_DEFINED</span><span class="p">(</span><span class="n">FOO_ONE</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">LEGATE_DEFINED</span><span class="p">(</span><span class="n">FOO_ZERO</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">LEGATE_DEFINED</span><span class="p">(</span><span class="n">FOO_UNDEFINED</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Conceptually, <code class="docutils literal notranslate"><a class="reference internal" href="#group__util_1gab87ba1536b8da92f5982f7ff389fbdd2"><span class="std std-ref"><span class="pre">LEGATE_DEFINED()</span></span></a></code> is equivalent to</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#if defined(x) &amp;&amp; (x == 1 || x == *empty*)</span>
+<span class="o">//</span> <span class="s2">&quot;return&quot;</span> <span class="mi">1</span>
+<span class="c1">#else</span>
+<span class="o">//</span> <span class="s2">&quot;return&quot;</span> <span class="mi">0</span>
+<span class="c1">#endif</span>
+</pre></div>
+</div>
+<p>As a result this macro works both in preprocessor statements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#if LEGATE_DEFINED(FOO_BAR)</span>
+  <span class="n">foo_bar_is_defined</span><span class="p">();</span>
+<span class="c1">#else</span>
+  <span class="n">foo_bar_is_not_defined</span><span class="p">();</span>
+<span class="c1">#endif</span>
+</pre></div>
+</div>
+<p>And in regular C++ code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">LEGATE_DEFINED</span><span class="p">(</span><span class="n">FOO_BAR</span><span class="p">))</span> <span class="p">{</span>
+  <span class="n">foo_bar_is_defined</span><span class="p">();</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="n">foo_bar_is_not_defined</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that in the C++ example above both arms of the if statement must compile. If this is not desired, then &amp;#8212; since <code class="docutils literal notranslate"><a class="reference internal" href="#group__util_1gab87ba1536b8da92f5982f7ff389fbdd2"><span class="std std-ref"><span class="pre">LEGATE_DEFINED()</span></span></a></code> produces a compile-time constant expression &amp;#8212; the user may use C++17’s <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">constexpr</span></code> to block out one of the arms:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">constexpr</span> <span class="p">(</span><span class="n">LEGATE_DEFINED</span><span class="p">(</span><span class="n">FOO_BAR</span><span class="p">))</span> <span class="p">{</span>
+  <span class="n">foo_bar_is_defined</span><span class="p">();</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="n">foo_bar_is_not_defined</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__util_1ga1da7cc166b696f212127e9c7f7dfb2c3"><span class="std std-ref">LEGATE_CONCAT()</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The legate preprocessor definition. </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>1 if the argument is defined and true, 0 otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_SCOPE_GUARD">
+<span class="target" id="group__util_1ga64db61c96b1a6698cba7df9fd7a36e9c"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_SCOPE_GUARD</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="p"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_SCOPE_GUARD" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct an unnamed <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">legate::ScopeGuard</span></a> from the contents of the macro arguments. </p>
+<p>
+It is impossible to enable or disable the <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">legate::ScopeGuard</span></a> constructed by this macro.</p>
+<p>This macro is useful if the user need only define some action to be executed on scope exit, but doesn’t care to name the <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">legate::ScopeGuard</span></a> and/or has no need to enable/disable it after construction.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="o">*</span><span class="n">mem</span> <span class="o">=</span> <span class="n">std</span><span class="p">::</span><span class="n">malloc</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">sizeof</span><span class="p">(</span><span class="nb">int</span><span class="p">));</span>
+
+<span class="n">LEGATE_SCOPE_GUARD</span><span class="p">(</span><span class="n">std</span><span class="p">::</span><span class="n">free</span><span class="p">(</span><span class="n">mem</span><span class="p">));</span>
+<span class="o">//</span> <span class="n">use</span> <span class="n">mem</span><span class="o">...</span>
+<span class="o">//</span> <span class="n">scope</span> <span class="n">exits</span><span class="p">,</span> <span class="ow">and</span> <span class="n">mem</span> <span class="ow">is</span> <span class="n">free</span><span class="s1">&#39;d.</span>
+</pre></div>
+</div>
+<p>Multi-line statements are also supported:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="o">*</span><span class="n">mem</span> <span class="o">=</span> <span class="n">std</span><span class="p">::</span><span class="n">malloc</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">sizeof</span><span class="p">(</span><span class="nb">int</span><span class="p">));</span>
+
+<span class="n">LEGATE_SCOPE_GUARD</span><span class="p">(</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">frobnicate</span><span class="p">())</span> <span class="p">{</span>
+    <span class="n">std</span><span class="p">::</span><span class="n">free</span><span class="p">(</span><span class="n">mem</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">);</span>
+<span class="o">//</span> <span class="n">use</span> <span class="n">mem</span><span class="o">...</span>
+<span class="o">//</span> <span class="n">scope</span> <span class="n">exits</span><span class="p">,</span> <span class="ow">and</span> <span class="n">mem</span> <span class="ow">is</span> <span class="n">free</span><span class="s1">&#39;d depending on return value of frobnicate()</span>
+</pre></div>
+</div>
+<p>If the body of the guard should only be executed on failure, use <a class="reference internal" href="#group__util_1gafcd44daa3bc175e2fa2462dc1eb7ef6a"><span class="std std-ref">LEGATE_SCOPE_FAIL</span></a> instead.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>ScopeGuard </p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__util_1gafcd44daa3bc175e2fa2462dc1eb7ef6a"><span class="std std-ref">LEGATE_SCOPE_FAIL</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>...</strong> – The body of the constructed <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">legate::ScopeGuard</span></a>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LEGATE_SCOPE_FAIL">
+<span class="target" id="group__util_1gafcd44daa3bc175e2fa2462dc1eb7ef6a"></span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_SCOPE_FAIL</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="p"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#c.LEGATE_SCOPE_FAIL" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct an unnamed <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">legate::ScopeFail</span></a> from the contents of the macro arguments. </p>
+<p>
+This macro behaves identically to <code class="docutils literal notranslate"><span class="pre">LEGATE_SCOPE_GUARD</span></code>, except that it creates a <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">legate::ScopeFail</span></a> instead of a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">legate::ScopeGuard</span></a>. Please refer to its documentation for further discussion.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>ScopeFail </p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#group__util_1ga64db61c96b1a6698cba7df9fd7a36e9c"><span class="std std-ref">LEGATE_SCOPE_GUARD</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>...</strong> – The body of the constructed <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">legate::ScopeFail</span></a>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv420measure_microsecondsv">
+<span id="_CPPv320measure_microsecondsv"></span><span id="_CPPv220measure_microsecondsv"></span><span id="measure_microseconds"></span><span class="target" id="group__util_1gae30d947db760d314640fffa3d68bc75e"></span><span class="n"><span class="pre">Time</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">measure_microseconds</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420measure_microsecondsv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns a timestamp at the resolution of microseconds. </p>
+<p>The returned timestamp indicates the time at which all preceding Legate operations finish. This timestamp generation is a non-blocking operation, and the blocking happens when the value wrapped within the returned <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1timing_1_1Time"><span class="std std-ref"><span class="pre">Time</span></span></a></code> object is retrieved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1timing_1_1Time"><span class="std std-ref"><span class="pre">Time</span></span></a></code> object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv419measure_nanosecondsv">
+<span id="_CPPv319measure_nanosecondsv"></span><span id="_CPPv219measure_nanosecondsv"></span><span id="measure_nanoseconds"></span><span class="target" id="group__util_1ga9b94e146691988e0243a9e8bd6969e0f"></span><span class="n"><span class="pre">Time</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">measure_nanoseconds</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv419measure_nanosecondsv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns a timestamp at the resolution of nanoseconds. </p>
+<p>The returned timestamp indicates the time at which all preceding Legate operations finish. This timestamp generation is a non-blocking operation, and the blocking happens when the value wrapped within the returned <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1timing_1_1Time"><span class="std std-ref"><span class="pre">Time</span></span></a></code> object is retrieved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1timing_1_1Time"><span class="std std-ref"><span class="pre">Time</span></span></a></code> object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0_iE17print_dense_arrayNSt6stringEPK1TRK5PointI3DIMERA3DIM_KNSt6size_tE">
+<span id="_CPPv3I0_iE17print_dense_arrayPK1TRK5PointI3DIMERA3DIM_KNSt6size_tE"></span><span id="_CPPv2I0_iE17print_dense_arrayPK1TRK5PointI3DIMERADIM_KNSt6size_tE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">DIM</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__util_1ga3a4c539321f2fe87946ee489638ddd72"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">print_dense_array</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_iE17print_dense_arrayNSt6stringEPK1TRK5PointI3DIMERA3DIM_KNSt6size_tE" title="print_dense_array::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">base</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="typedefs.html#_CPPv4I_i0E5Point" title="Point"><span class="n"><span class="pre">Point</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_iE17print_dense_arrayNSt6stringEPK1TRK5PointI3DIMERA3DIM_KNSt6size_tE" title="print_dense_array::DIM"><span class="n"><span class="pre">DIM</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">extents</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">strides</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#_CPPv4I0_iE17print_dense_arrayNSt6stringEPK1TRK5PointI3DIMERA3DIM_KNSt6size_tE" title="print_dense_array::DIM"><span class="n"><span class="pre">DIM</span></span></a><span class="p"><span class="pre">]</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_iE17print_dense_arrayNSt6stringEPK1TRK5PointI3DIMERA3DIM_KNSt6size_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Converts the dense array into a string. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base</strong> – Array to convert </p></li>
+<li><p><strong>extents</strong> – Extents of the array </p></li>
+<li><p><strong>strides</strong> – Strides for dimensions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A string expressing the contents of the array </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_i0E17print_dense_arrayNSt6stringERK3ACCRK4RectI3DIME">
+<span id="_CPPv3I_i0E17print_dense_arrayRK3ACCRK4RectI3DIME"></span><span id="_CPPv2I_i0E17print_dense_arrayRK3ACCRK4RectI3DIME"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">DIM</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">ACC</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__util_1ga014b2156a1140b73ae209735a48fe4f0"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">print_dense_array</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I_i0E17print_dense_arrayNSt6stringERK3ACCRK4RectI3DIME" title="print_dense_array::ACC"><span class="n"><span class="pre">ACC</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">accessor</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="typedefs.html#_CPPv4I_i0E4Rect" title="Rect"><span class="n"><span class="pre">Rect</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I_i0E17print_dense_arrayNSt6stringERK3ACCRK4RectI3DIME" title="print_dense_array::DIM"><span class="n"><span class="pre">DIM</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rect</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I_i0E17print_dense_arrayNSt6stringERK3ACCRK4RectI3DIME" title="Link to this definition">#</a><br /></dt>
+<dd><p>Converts the dense array into a string using an accessor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>accessor</strong> – Accessor to an array </p></li>
+<li><p><strong>rect</strong> – Sub-rectangle within which the elements should be retrieved</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A string expressing the contents of the array </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0DpE15double_dispatchDciN4Type4CodeE7FunctorDpRR6Fnargs">
+<span id="_CPPv3I0DpE15double_dispatchiN4Type4CodeE7FunctorDpRR6Fnargs"></span><span id="_CPPv2I0DpE15double_dispatchiN4Type4CodeE7FunctorDpRR6Fnargs"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Functor</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Fnargs</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__util_1ga53dc807b7e97fa3096c5f38873958533"></span><span class="k"><span class="pre">decltype</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">auto</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">double_dispatch</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">Type</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Code</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">code</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE15double_dispatchDciN4Type4CodeE7FunctorDpRR6Fnargs" title="double_dispatch::Functor"><span class="n"><span class="pre">Functor</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">f</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE15double_dispatchDciN4Type4CodeE7FunctorDpRR6Fnargs" title="double_dispatch::Fnargs"><span class="n"><span class="pre">Fnargs</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0DpE15double_dispatchDciN4Type4CodeE7FunctorDpRR6Fnargs" title="Link to this definition">#</a><br /></dt>
+<dd><p>Converts the runtime dimension and type code into compile time constants and invokes the functor with them. </p>
+<p>The functor’s <code class="docutils literal notranslate"><span class="pre">operator()</span></code> should take a dimension and a type code as template parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> – Dimension </p></li>
+<li><p><strong>code</strong> – <a class="reference internal" href="types.html#classlegate_1_1Type"><span class="std std-ref">Type</span></a> code </p></li>
+<li><p><strong>f</strong> – Functor to dispatch </p></li>
+<li><p><strong>args</strong> – Extra arguments to the functor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The functor’s return value </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0DpE15double_dispatchDcii7FunctorDpRR6Fnargs">
+<span id="_CPPv3I0DpE15double_dispatchii7FunctorDpRR6Fnargs"></span><span id="_CPPv2I0DpE15double_dispatchii7FunctorDpRR6Fnargs"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Functor</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Fnargs</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__util_1ga8e4ed3ee9104393993bb614ae6562524"></span><span class="k"><span class="pre">decltype</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">auto</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">double_dispatch</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim1</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim2</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE15double_dispatchDcii7FunctorDpRR6Fnargs" title="double_dispatch::Functor"><span class="n"><span class="pre">Functor</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">f</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE15double_dispatchDcii7FunctorDpRR6Fnargs" title="double_dispatch::Fnargs"><span class="n"><span class="pre">Fnargs</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0DpE15double_dispatchDcii7FunctorDpRR6Fnargs" title="Link to this definition">#</a><br /></dt>
+<dd><p>Converts the runtime dimensions into compile time constants and invokes the functor with them. </p>
+<p>The functor’s <code class="docutils literal notranslate"><span class="pre">operator()</span></code> should take exactly two integers as template parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim1</strong> – First dimension </p></li>
+<li><p><strong>dim2</strong> – Second dimension </p></li>
+<li><p><strong>f</strong> – Functor to dispatch </p></li>
+<li><p><strong>args</strong> – Extra arguments to the functor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The functor’s return value </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0DpE12dim_dispatchDci7FunctorDpRR6Fnargs">
+<span id="_CPPv3I0DpE12dim_dispatchi7FunctorDpRR6Fnargs"></span><span id="_CPPv2I0DpE12dim_dispatchi7FunctorDpRR6Fnargs"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Functor</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Fnargs</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__util_1ga1b6004a4aaf6e56cc2d070008fe320ff"></span><span class="k"><span class="pre">decltype</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">auto</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dim_dispatch</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dim</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE12dim_dispatchDci7FunctorDpRR6Fnargs" title="dim_dispatch::Functor"><span class="n"><span class="pre">Functor</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">f</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE12dim_dispatchDci7FunctorDpRR6Fnargs" title="dim_dispatch::Fnargs"><span class="n"><span class="pre">Fnargs</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0DpE12dim_dispatchDci7FunctorDpRR6Fnargs" title="Link to this definition">#</a><br /></dt>
+<dd><p>Converts the runtime dimension into a compile time constant and invokes the functor with it. </p>
+<p>The functor’s <code class="docutils literal notranslate"><span class="pre">operator()</span></code> should take an integer as its sole template parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> – Dimension </p></li>
+<li><p><strong>f</strong> – Functor to dispatch </p></li>
+<li><p><strong>args</strong> – Extra arguments to the functor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The functor’s return value </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0DpE13type_dispatchDcN4Type4CodeERR7FunctorDpRR6Fnargs">
+<span id="_CPPv3I0DpE13type_dispatchN4Type4CodeERR7FunctorDpRR6Fnargs"></span><span id="_CPPv2I0DpE13type_dispatchN4Type4CodeERR7FunctorDpRR6Fnargs"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Functor</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Fnargs</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__util_1ga44a4a1a6f10ab9ded7bee9ef12747fb0"></span><span class="k"><span class="pre">decltype</span></span><span class="p"><span class="pre">(</span></span><span class="k"><span class="pre">auto</span></span><span class="p"><span class="pre">)</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">type_dispatch</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">Type</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Code</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">code</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE13type_dispatchDcN4Type4CodeERR7FunctorDpRR6Fnargs" title="type_dispatch::Functor"><span class="n"><span class="pre">Functor</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE13type_dispatchDcN4Type4CodeERR7FunctorDpRR6Fnargs" title="type_dispatch::Fnargs"><span class="n"><span class="pre">Fnargs</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0DpE13type_dispatchDcN4Type4CodeERR7FunctorDpRR6Fnargs" title="Link to this definition">#</a><br /></dt>
+<dd><p>Converts the runtime type code into a compile time constant and invokes the functor with it. </p>
+<p>The functor’s <code class="docutils literal notranslate"><span class="pre">operator()</span></code> should take a type code as its sole template parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>code</strong> – <a class="reference internal" href="types.html#classlegate_1_1Type"><span class="std std-ref">Type</span></a> code </p></li>
+<li><p><strong>f</strong> – Functor to dispatch </p></li>
+<li><p><strong>args</strong> – Extra arguments to the functor</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The functor’s return value </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0E16make_scope_guard10ScopeGuardI1FERR1F">
+<span id="_CPPv3I0E16make_scope_guardRR1F"></span><span id="_CPPv2I0E16make_scope_guardRR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__util_1ga618c2bb15221566ecc7cd0d35a21f539"></span><span class="n"><span class="pre">ScopeGuard</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0E16make_scope_guard10ScopeGuardI1FERR1F" title="make_scope_guard::F"><span class="n"><span class="pre">F</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">make_scope_guard</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0E16make_scope_guard10ScopeGuardI1FERR1F" title="make_scope_guard::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fn</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4I0E16make_scope_guard10ScopeGuardI1FERR1F" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> from a given functor. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fn</strong> – The functor to create the <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> with.</p>
+</dd>
+<dt class="field-even">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>The</strong> – type of <code class="docutils literal notranslate"><span class="pre">fn</span></code>, usually inferred from the argument itself.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The constructed <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0E15make_scope_fail9ScopeFailI1FERR1F">
+<span id="_CPPv3I0E15make_scope_failRR1F"></span><span id="_CPPv2I0E15make_scope_failRR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__util_1ga22086905a5b03be71ad4cf6c89aec245"></span><span class="n"><span class="pre">ScopeFail</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0E15make_scope_fail9ScopeFailI1FERR1F" title="make_scope_fail::F"><span class="n"><span class="pre">F</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">make_scope_fail</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4I0E15make_scope_fail9ScopeFailI1FERR1F" title="make_scope_fail::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4I0E15make_scope_fail9ScopeFailI1FERR1F" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create a <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a> from a given functor. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fn</strong> – The functor to create the <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a> with.</p>
+</dd>
+<dt class="field-even">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>The</strong> – type of <code class="docutils literal notranslate"><span class="pre">fn</span></code>, usually inferred from the argument itself.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The constructed <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5ScopeE">
+<span id="_CPPv3N6legate5ScopeE"></span><span id="_CPPv2N6legate5ScopeE"></span><span id="legate::Scope"></span><span class="target" id="classlegate_1_1Scope"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><a class="headerlink" href="#_CPPv4N6legate5ScopeE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/runtime/scope.h&gt;</em></div>
+<p>A helper class to configure task execution. </p>
+<p>The <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> class offers APIs to configure runtime parameters for task execution. The parameters set by a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object are effective only for the lifetime of the object. Currently, <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> can be used to configure the following parameters:</p>
+<p>1) Task priority: Each task is associated with a priority value. The higher the value, the earlier among a set of ready-to-run tasks the task will get scheduled for execution. (the task with a higher priority, however, does not preempt another with a lower priority that is already running on the processor.) Task priorities are a signed 32-bit integer value. By default, all tasks get assigned to 0 for the priorities.</p>
+<p>2) Provenance: User programs or libraries often want to attach provenance information to each of their operations and have it rendered in profiling outputs. Such information can be passed as a string via a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object, which then will be attached to all operations issued within the <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a>’s lifetime.</p>
+<p>3) Machine: By default, Legate operations target the entire machine available for the program. When a user program wants to assign a subset of the machine to its operations, it can subdivide the machine using the machine API (see <code class="docutils literal notranslate"><span class="pre">Machine</span></code> for details) and set a sub-machine for the scope using <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a>. All operations within the lifetime of the <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object can use only the sub-machine for their execution.</p>
+<p>Each parameter can be set only once via each <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object. Multiple attempts to set the same parameter would raise an exception. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeEv">
+<span id="_CPPv3N6legate5Scope5ScopeEv"></span><span id="_CPPv2N6legate5Scope5ScopeEv"></span><span id="legate::Scope::Scope"></span><span class="target" id="classlegate_1_1Scope_1aaf32cf24e705a797bdd9490fbd0394aa"></span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Constructs an empty <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeENSt7int32_tE">
+<span id="_CPPv3N6legate5Scope5ScopeENSt7int32_tE"></span><span id="_CPPv2N6legate5Scope5ScopeENSt7int32_tE"></span><span id="legate::Scope::Scope__std::int32_t"></span><span class="target" id="classlegate_1_1Scope_1af43367a2db1ed5056c1b73895057a993"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">priority</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeENSt7int32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Constructs a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> with a given task priority. </p>
+<p>Equivalent to <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Scope</span><span class="p">();</span>
+<span class="n">scope</span><span class="p">.</span><span class="n">set_priority</span><span class="p">(</span><span class="n">priority</span><span class="p">);</span>
+</pre></div>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>priority</strong> – Task priority to set to the scope </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeE13ExceptionMode">
+<span id="_CPPv3N6legate5Scope5ScopeE13ExceptionMode"></span><span id="_CPPv2N6legate5Scope5ScopeE13ExceptionMode"></span><span id="legate::Scope::Scope__ExceptionMode"></span><span class="target" id="classlegate_1_1Scope_1a71cf5362ce3b18dc634361a47dbf8689"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="runtime.html#_CPPv413ExceptionMode" title="ExceptionMode"><span class="n"><span class="pre">ExceptionMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">exception_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeE13ExceptionMode" title="Link to this definition">#</a><br /></dt>
+<dd><p>Constructs a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> with a given exception mode. </p>
+<p>Equivalent to <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Scope</span><span class="p">();</span>
+<span class="n">scope</span><span class="p">.</span><span class="n">set_exception_mode</span><span class="p">(</span><span class="n">exception_mode</span><span class="p">);</span>
+</pre></div>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>exception_mode</strong> – Exception mode to set to the scope </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeENSt6stringE">
+<span id="_CPPv3N6legate5Scope5ScopeENSt6stringE"></span><span id="_CPPv2N6legate5Scope5ScopeENSt6stringE"></span><span id="legate::Scope::Scope__ss"></span><span class="target" id="classlegate_1_1Scope_1a009dd9d97bfc274dc068b1af17781f72"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">provenance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeENSt6stringE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Constructs a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> with a given provenance string. </p>
+<p>Equivalent to <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Scope</span><span class="p">();</span>
+<span class="n">scope</span><span class="p">.</span><span class="n">set_provenance</span><span class="p">(</span><span class="n">provenance</span><span class="p">);</span>
+</pre></div>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>provenance</strong> – Provenance string to set to the scope </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeERKN7mapping7MachineE">
+<span id="_CPPv3N6legate5Scope5ScopeERKN7mapping7MachineE"></span><span id="_CPPv2N6legate5Scope5ScopeERKN7mapping7MachineE"></span><span id="legate::Scope::Scope__mapping::MachineCR"></span><span class="target" id="classlegate_1_1Scope_1aa3532b5cbf52576927a127ca57fb7dd4"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="mapping.html#_CPPv4N6legate7mapping7MachineE" title="legate::mapping::Machine"><span class="n"><span class="pre">Machine</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">machine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeERKN7mapping7MachineE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Constructs a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> with a given machine. </p>
+<p>Equivalent to <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Scope</span><span class="p">();</span>
+<span class="n">scope</span><span class="p">.</span><span class="n">set_machine</span><span class="p">(</span><span class="n">machine</span><span class="p">);</span>
+</pre></div>
+</div>
+</p>
+<p>The given machine is intersected with the machine from the outer scope</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1Scope_1a626ff10d20738566527463e4c3a44ed8"><span class="std std-ref">set_machine</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>machine</strong> – Machine to use within the scope</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the intersected machine is empty</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NO6legate5Scope13with_priorityENSt7int32_tE">
+<span id="_CPPv3NO6legate5Scope13with_priorityENSt7int32_tE"></span><span id="_CPPv2NO6legate5Scope13with_priorityENSt7int32_tE"></span><span id="legate::Scope::with_priority__std::int32_tO"></span><span class="target" id="classlegate_1_1Scope_1aedec44b5f8b316f161ba7c131b80a454"></span><a class="reference internal" href="#_CPPv4N6legate5ScopeE" title="legate::Scope"><span class="n"><span class="pre">Scope</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_priority</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">priority</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4NO6legate5Scope13with_priorityENSt7int32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets a given task priority to the scope. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>priority</strong> – Task priority to set to the scope</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a task priority has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NO6legate5Scope19with_exception_modeE13ExceptionMode">
+<span id="_CPPv3NO6legate5Scope19with_exception_modeE13ExceptionMode"></span><span id="_CPPv2NO6legate5Scope19with_exception_modeE13ExceptionMode"></span><span id="legate::Scope::with_exception_mode__ExceptionModeO"></span><span class="target" id="classlegate_1_1Scope_1a38cd61db0aba0e2499aa377c0f619b7f"></span><a class="reference internal" href="#_CPPv4N6legate5ScopeE" title="legate::Scope"><span class="n"><span class="pre">Scope</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_exception_mode</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="runtime.html#_CPPv413ExceptionMode" title="ExceptionMode"><span class="n"><span class="pre">ExceptionMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">exception_mode</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4NO6legate5Scope19with_exception_modeE13ExceptionMode" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets a given exception mode to the scope. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>exception_mode</strong> – Exception mode to set to the scope</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If an exception mode has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NO6legate5Scope15with_provenanceENSt6stringE">
+<span id="_CPPv3NO6legate5Scope15with_provenanceENSt6stringE"></span><span id="_CPPv2NO6legate5Scope15with_provenanceENSt6stringE"></span><span id="legate::Scope::with_provenance__ssO"></span><span class="target" id="classlegate_1_1Scope_1ab90f3870914fe0f789fe7cd67b0d143d"></span><a class="reference internal" href="#_CPPv4N6legate5ScopeE" title="legate::Scope"><span class="n"><span class="pre">Scope</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_provenance</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">provenance</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4NO6legate5Scope15with_provenanceENSt6stringE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets a given provenance string to the scope. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>provenance</strong> – Provenance string to set to the scope</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a provenance string has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NO6legate5Scope12with_machineERKN7mapping7MachineE">
+<span id="_CPPv3NO6legate5Scope12with_machineERKN7mapping7MachineE"></span><span id="_CPPv2NO6legate5Scope12with_machineERKN7mapping7MachineE"></span><span id="legate::Scope::with_machine__mapping::MachineCRO"></span><span class="target" id="classlegate_1_1Scope_1a050534a929749b11a3321cd20ec89257"></span><a class="reference internal" href="#_CPPv4N6legate5ScopeE" title="legate::Scope"><span class="n"><span class="pre">Scope</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_machine</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="mapping.html#_CPPv4N6legate7mapping7MachineE" title="legate::mapping::Machine"><span class="n"><span class="pre">Machine</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">machine</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4NO6legate5Scope12with_machineERKN7mapping7MachineE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets a given machine to the scope. </p>
+<p>
+The given machine is intersected with the machine from the outer scope</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1Scope_1a626ff10d20738566527463e4c3a44ed8"><span class="std std-ref">set_machine</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>machine</strong> – Machine to use within the scope</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the intersected machine is empty </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a machine has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope12set_priorityENSt7int32_tE">
+<span id="_CPPv3N6legate5Scope12set_priorityENSt7int32_tE"></span><span id="_CPPv2N6legate5Scope12set_priorityENSt7int32_tE"></span><span id="legate::Scope::set_priority__std::int32_t"></span><span class="target" id="classlegate_1_1Scope_1aac608215e16e04ccb0bb60d7c774f4b7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_priority</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">priority</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope12set_priorityENSt7int32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets a given task priority to the scope. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>priority</strong> – Task priority to set to the scope</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a task priority has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope18set_exception_modeE13ExceptionMode">
+<span id="_CPPv3N6legate5Scope18set_exception_modeE13ExceptionMode"></span><span id="_CPPv2N6legate5Scope18set_exception_modeE13ExceptionMode"></span><span id="legate::Scope::set_exception_mode__ExceptionMode"></span><span class="target" id="classlegate_1_1Scope_1a5034e57b09b99d91ce02ebd358d1fe08"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_exception_mode</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="runtime.html#_CPPv413ExceptionMode" title="ExceptionMode"><span class="n"><span class="pre">ExceptionMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">exception_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope18set_exception_modeE13ExceptionMode" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets a given exception mode to the scope. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>exception_mode</strong> – Exception mode to set to the scope</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If an exception mode has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope14set_provenanceENSt6stringE">
+<span id="_CPPv3N6legate5Scope14set_provenanceENSt6stringE"></span><span id="_CPPv2N6legate5Scope14set_provenanceENSt6stringE"></span><span id="legate::Scope::set_provenance__ss"></span><span class="target" id="classlegate_1_1Scope_1a2be43396290c561a5e71d61a7cb121b4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_provenance</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">provenance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope14set_provenanceENSt6stringE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets a given provenance string to the scope. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>provenance</strong> – Provenance string to set to the scope</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a provenance string has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope11set_machineERKN7mapping7MachineE">
+<span id="_CPPv3N6legate5Scope11set_machineERKN7mapping7MachineE"></span><span id="_CPPv2N6legate5Scope11set_machineERKN7mapping7MachineE"></span><span id="legate::Scope::set_machine__mapping::MachineCR"></span><span class="target" id="classlegate_1_1Scope_1a626ff10d20738566527463e4c3a44ed8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_machine</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="mapping.html#_CPPv4N6legate7mapping7MachineE" title="legate::mapping::Machine"><span class="n"><span class="pre">Machine</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">machine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope11set_machineERKN7mapping7MachineE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Sets a given machine to the scope. </p>
+<p>The given machine is intersected with the machine from the outer scope, so the actual machine used in this scope will always be a subset of the outer scope’s.</p>
+<p>For example, if the machine of the current scope has GPUs 2, 3, 4, and 5, and a new scope is created with another machine with GPUs 3, 4, 5, and 6, then only the GPUs 3, 4, and 5 will be set to the new scope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>machine</strong> – Machine to use within the scope</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the intersected machine is empty </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a machine has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope8priorityEv">
+<span id="_CPPv3N6legate5Scope8priorityEv"></span><span id="_CPPv2N6legate5Scope8priorityEv"></span><span id="legate::Scope::priority"></span><span class="target" id="classlegate_1_1Scope_1a78cc7bc455fd23435b065b280571b676"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">priority</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope8priorityEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns the task priority of the current scope. </p>
+<p>return Current task priority </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope14exception_modeEv">
+<span id="_CPPv3N6legate5Scope14exception_modeEv"></span><span id="_CPPv2N6legate5Scope14exception_modeEv"></span><span id="legate::Scope::exception_mode"></span><span class="target" id="classlegate_1_1Scope_1af63f054ac1044d6162bea031c068e064"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">legate</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ExceptionMode</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">exception_mode</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope14exception_modeEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns the exception mode of the current scope. </p>
+<p>return Current exception mode </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope10provenanceEv">
+<span id="_CPPv3N6legate5Scope10provenanceEv"></span><span id="_CPPv2N6legate5Scope10provenanceEv"></span><span id="legate::Scope::provenance"></span><span class="target" id="classlegate_1_1Scope_1a5660a1db0747a8a6c63caf91763ff4f7"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">provenance</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope10provenanceEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns the provenance string of the current scope. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Current provenance string </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope7machineEv">
+<span id="_CPPv3N6legate5Scope7machineEv"></span><span id="_CPPv2N6legate5Scope7machineEv"></span><span id="legate::Scope::machine"></span><span class="target" id="classlegate_1_1Scope_1a63868c9d7ecdf5f7befbbb471783c54a"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="mapping.html#_CPPv4N6legate7mapping7MachineE" title="legate::mapping::Machine"><span class="n"><span class="pre">Machine</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">machine</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope7machineEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns the machine of the current scope. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Current machine </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope4ImplE">
+<span id="_CPPv3N6legate5Scope4ImplE"></span><span id="_CPPv2N6legate5Scope4ImplE"></span><span id="legate::Scope::Impl"></span><span class="target" id="classlegate_1_1Scope_1_1Impl"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Impl</span></span></span><a class="headerlink" href="#_CPPv4N6legate5Scope4ImplE" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6timing4TimeE">
+<span id="_CPPv3N6legate6timing4TimeE"></span><span id="_CPPv2N6legate6timing4TimeE"></span><span id="legate::timing::Time"></span><span class="target" id="classlegate_1_1timing_1_1Time"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Time</span></span></span><a class="headerlink" href="#_CPPv4N6legate6timing4TimeE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/timing/timing.h&gt;</em></div>
+<p>Deferred timestamp class. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate6timing4Time5valueEv">
+<span id="_CPPv3NK6legate6timing4Time5valueEv"></span><span id="_CPPv2NK6legate6timing4Time5valueEv"></span><span id="legate::timing::Time::valueC"></span><span class="target" id="classlegate_1_1timing_1_1Time_1a074aac168d4e097c950ab0935b699fc7"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate6timing4Time5valueEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns the timestamp value in this <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1timing_1_1Time"><span class="std std-ref"><span class="pre">Time</span></span></a></code> object. </p>
+<p>Blocks on all Legate operations preceding the call that generated this <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1timing_1_1Time"><span class="std std-ref"><span class="pre">Time</span></span></a></code> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A timestamp value </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6timing4Time4ImplE">
+<span id="_CPPv3N6legate6timing4Time4ImplE"></span><span id="_CPPv2N6legate6timing4Time4ImplE"></span><span id="legate::timing::Time::Impl"></span><span class="target" id="classlegate_1_1timing_1_1Time_1_1Impl"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Impl</span></span></span><a class="headerlink" href="#_CPPv4N6legate6timing4Time4ImplE" title="Link to this definition">#</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6legate16ProcLocalStorageE">
+<span id="_CPPv3I0EN6legate16ProcLocalStorageE"></span><span id="_CPPv2I0EN6legate16ProcLocalStorageE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1ProcLocalStorage"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ProcLocalStorage</span></span></span><a class="headerlink" href="#_CPPv4I0EN6legate16ProcLocalStorageE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/utilities/proc_local_storage.h&gt;</em></div>
+<p>A helper data structure to store processor-local objects. </p>
+<p>Oftentimes, users need to create objects, usually some library handles, each of which is associated with only one processor (GPU, most likely). For those cases, users can create a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage"><span class="std std-ref"><span class="pre">ProcLocalStorage</span></span></a><span class="pre">&lt;T&gt;</span></code> that holds a unique singleton object of type <code class="docutils literal notranslate"><span class="pre">T</span></code> for each processor thread. The object can be retrieved simply by the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage_1a54fb6958f7dde2a68136ad0e72137a1a"><span class="std std-ref"><span class="pre">get()</span></span></a></code> method and internally the calls are distinguished by IDs of the processors invoking them.</p>
+<p>Two parallel tasks running on the same processor will get the same object if they query the same <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage"><span class="std std-ref"><span class="pre">ProcLocalStorage</span></span></a></code>. Atomicity of access to the storage is guaranteed by the programming model running parallel tasks atomically on each processor; in other words, no synchronization is needed to call the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage_1a54fb6958f7dde2a68136ad0e72137a1a"><span class="std std-ref"><span class="pre">get()</span></span></a></code> method on a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage"><span class="std std-ref"><span class="pre">ProcLocalStorage</span></span></a></code> even when it’s shared by multiple tasks.</p>
+<p>Despite the name, the values that are stored in this storage don’t have static storage duration, but they are alive only as long as the owning <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage"><span class="std std-ref"><span class="pre">ProcLocalStorage</span></span></a></code> object is.</p>
+<p>This example uses a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage"><span class="std std-ref"><span class="pre">ProcLocalStorage</span></span></a><span class="pre">&lt;int&gt;</span></code> to count the number of task invocations on each processor:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cpu_variant</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">TaskContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">ProcLocalStorage</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">counter</span><span class="p">{};</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">storage</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// If this is the first visit, initialize the counter</span>
+<span class="w">    </span><span class="n">counter</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Otherwise, increment the counter by 1</span>
+<span class="w">    </span><span class="o">++</span><span class="n">counter</span><span class="p">.</span><span class="n">get</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>T</strong> – <a class="reference internal" href="types.html#classlegate_1_1Type"><span class="std std-ref">Type</span></a> of values stored in this <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage"><span class="std std-ref"><span class="pre">ProcLocalStorage</span></span></a></code>. </p>
+</dd>
+</dl>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate16ProcLocalStorage10value_typeE">
+<span id="_CPPv3N6legate16ProcLocalStorage10value_typeE"></span><span id="_CPPv2N6legate16ProcLocalStorage10value_typeE"></span><span class="target" id="classlegate_1_1ProcLocalStorage_1a7d8645cde831e6ea9edf6fa82ced7dd3"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6legate16ProcLocalStorageE" title="legate::ProcLocalStorage::T"><span class="n"><span class="pre">T</span></span></a><a class="headerlink" href="#_CPPv4N6legate16ProcLocalStorage10value_typeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>The type of stored objects. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate16ProcLocalStorage9has_valueEv">
+<span id="_CPPv3NK6legate16ProcLocalStorage9has_valueEv"></span><span id="_CPPv2NK6legate16ProcLocalStorage9has_valueEv"></span><span id="legate::ProcLocalStorage::has_valueC"></span><span class="target" id="classlegate_1_1ProcLocalStorage_1aa97d0d50bcfceb2e1f640037c468c033"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">has_value</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate16ProcLocalStorage9has_valueEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Checks if the value has been created for the executing processor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">true</span></code> if the value exists, <code class="docutils literal notranslate"><span class="pre">false</span></code> otherwise. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args">
+<span id="_CPPv3IDpEN6legate16ProcLocalStorage7emplaceEDpRR4Args"></span><span id="_CPPv2IDpEN6legate16ProcLocalStorage7emplaceEDpRR4Args"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Args</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1ProcLocalStorage_1a894bf7afc9711cd945482a020e4a10fb"></span><a class="reference internal" href="#_CPPv4N6legate16ProcLocalStorage10value_typeE" title="legate::ProcLocalStorage::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">emplace</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args" title="legate::ProcLocalStorage::emplace::Args"><span class="n"><span class="pre">Args</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args" title="Link to this definition">#</a><br /></dt>
+<dd><p>Constructs a new value for the executing processor. </p>
+<p>The existing value will be overwritten by the new value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> – Arguments to the constructor of type <code class="docutils literal notranslate"><span class="pre">T</span></code>. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate16ProcLocalStorage3getEv">
+<span id="_CPPv3N6legate16ProcLocalStorage3getEv"></span><span id="_CPPv2N6legate16ProcLocalStorage3getEv"></span><span id="legate::ProcLocalStorage::get"></span><span class="target" id="classlegate_1_1ProcLocalStorage_1a54fb6958f7dde2a68136ad0e72137a1a"></span><a class="reference internal" href="#_CPPv4N6legate16ProcLocalStorage10value_typeE" title="legate::ProcLocalStorage::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">get</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate16ProcLocalStorage3getEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns the value for the executing processor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Throws<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">logic_error</span></span></span> – If no value exists for this processor (i.e., if <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage_1aa97d0d50bcfceb2e1f640037c468c033"><span class="std std-ref"><span class="pre">has_value()</span></span></a></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code>), or if the method is invoked outside a task </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the value for the executing processor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate16ProcLocalStorage3getEv">
+<span id="_CPPv3NK6legate16ProcLocalStorage3getEv"></span><span id="_CPPv2NK6legate16ProcLocalStorage3getEv"></span><span id="legate::ProcLocalStorage::getC"></span><span class="target" id="classlegate_1_1ProcLocalStorage_1a56c47e4e5e48e0d7a89efa9c3ff113ae"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6legate16ProcLocalStorage10value_typeE" title="legate::ProcLocalStorage::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">get</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate16ProcLocalStorage3getEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns the value for the executing processor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Throws<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">logic_error</span></span></span> – If no value exists for this processor (i.e., if <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage_1aa97d0d50bcfceb2e1f640037c468c033"><span class="std std-ref"><span class="pre">has_value()</span></span></a></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code>), or if the method is invoked outside a task </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the value for the executing processor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6legate10ScopeGuardE">
+<span id="_CPPv3I0EN6legate10ScopeGuardE"></span><span id="_CPPv2I0EN6legate10ScopeGuardE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1ScopeGuard"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScopeGuard</span></span></span><a class="headerlink" href="#_CPPv4I0EN6legate10ScopeGuardE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/utilities/scope_guard.h&gt;</em></div>
+<p>A simple wrapper around a callable that automatically executes the callable on exiting the scope. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>F</strong> – The type of the callable to execute. </p>
+</dd>
+</dl>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate10ScopeGuard10value_typeE">
+<span id="_CPPv3N6legate10ScopeGuard10value_typeE"></span><span id="_CPPv2N6legate10ScopeGuard10value_typeE"></span><span class="target" id="classlegate_1_1ScopeGuard_1ac12f663161e824c06e111a9f02ed7104"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6legate10ScopeGuardE" title="legate::ScopeGuard::F"><span class="n"><span class="pre">F</span></span></a><a class="headerlink" href="#_CPPv4N6legate10ScopeGuard10value_typeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>The type of callable stored within the <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate10ScopeGuard10ScopeGuardERR10value_typeb">
+<span id="_CPPv3N6legate10ScopeGuard10ScopeGuardERR10value_typeb"></span><span id="_CPPv2N6legate10ScopeGuard10ScopeGuardERR10value_typeb"></span><span id="legate::ScopeGuard::ScopeGuard__value_typeRR.b"></span><span class="target" id="classlegate_1_1ScopeGuard_1ac0d923055ac91afbdcd9315702b87672"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScopeGuard</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4N6legate10ScopeGuard10value_typeE" title="legate::ScopeGuard::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">enabled</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">true</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N6legate10ScopeGuard10ScopeGuardERR10value_typeb" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>. </p>
+<p>
+On destruction, a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> will execute <code class="docutils literal notranslate"><span class="pre">fn</span></code> if and only if it is in the enabled state. <code class="docutils literal notranslate"><span class="pre">fn</span></code> will be invoked with no arguments, and any return value discarded. <code class="docutils literal notranslate"><span class="pre">fn</span></code> must be no-throw move-constructible, and must not throw any exceptions when invoked.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeGuard_1a7a2f4443c56d05eb8c37e633862eeb69"><span class="std std-ref">ScopeGuard::enable()</span></a></p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeGuard_1a8f45f72818f93a73724f5b0ed16475c9"><span class="std std-ref">ScopeGuard::disable()</span></a></p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeGuard_1ab46a4bc5fb790d4733bfc64645def5e0"><span class="std std-ref">ScopeGuard::enabled()</span></a></p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> – The function to execute. </p></li>
+<li><p><strong>enabled</strong> – Whether the <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> should start in the “enabled” state.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate10ScopeGuard10ScopeGuardERR10ScopeGuard">
+<span id="_CPPv3N6legate10ScopeGuard10ScopeGuardERR10ScopeGuard"></span><span id="_CPPv2N6legate10ScopeGuard10ScopeGuardERR10ScopeGuard"></span><span id="legate::ScopeGuard::ScopeGuard__ScopeGuardRR"></span><span class="target" id="classlegate_1_1ScopeGuard_1ae96ab8992a4fc5b1e560a0530638bb41"></span><span class="sig-name descname"><span class="n"><span class="pre">ScopeGuard</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4N6legate10ScopeGuard10ScopeGuardERR10ScopeGuard" title="legate::ScopeGuard::ScopeGuard"><span class="n"><span class="pre">ScopeGuard</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N6legate10ScopeGuard10ScopeGuardERR10ScopeGuard" title="Link to this definition">#</a><br /></dt>
+<dd><p>Move-construct a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>. </p>
+<p><code class="docutils literal notranslate"><span class="pre">other</span></code> will be left in the “disabled” state, and will not execute its held functor upon destruction. Furthermore, the held functor is moved into the receiving <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>, so <code class="docutils literal notranslate"><span class="pre">other's</span></code> functor may be in an indeterminate state. It is therefore not advised to re-enable <code class="docutils literal notranslate"><span class="pre">other</span></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> – The <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> to move from.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate10ScopeGuardaSERR10ScopeGuard">
+<span id="_CPPv3N6legate10ScopeGuardaSERR10ScopeGuard"></span><span id="_CPPv2N6legate10ScopeGuardaSERR10ScopeGuard"></span><span id="legate::ScopeGuard::assign-operator__ScopeGuardRR"></span><span class="target" id="classlegate_1_1ScopeGuard_1ad76ebd1565853c43261f723562e96de6"></span><a class="reference internal" href="#_CPPv4I0EN6legate10ScopeGuardE" title="legate::ScopeGuard"><span class="n"><span class="pre">ScopeGuard</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4I0EN6legate10ScopeGuardE" title="legate::ScopeGuard"><span class="n"><span class="pre">ScopeGuard</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N6legate10ScopeGuardaSERR10ScopeGuard" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> via move-assignment. </p>
+<p>
+This routine has no effect if <code class="docutils literal notranslate"><span class="pre">other</span></code> and <code class="docutils literal notranslate"><span class="pre">this</span></code> are the same.</p>
+<p><code class="docutils literal notranslate"><span class="pre">other</span></code> will be left in the “disabled” state, and will not execute its held functor upon destruction. Furthermore, the held functor is moved into the receiving <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>, so <code class="docutils literal notranslate"><span class="pre">other's</span></code> functor may be in an indeterminate state. It is therefore not advised to re-enable <code class="docutils literal notranslate"><span class="pre">other</span></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> – The <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> to move from. </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A reference to <code class="docutils literal notranslate"><span class="pre">this</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate10ScopeGuardD0Ev">
+<span id="_CPPv3N6legate10ScopeGuardD0Ev"></span><span id="_CPPv2N6legate10ScopeGuardD0Ev"></span><span id="legate::ScopeGuard::~ScopeGuard"></span><span class="target" id="classlegate_1_1ScopeGuard_1ad7e8734dde7e7fdc107d8fb15d0c2d80"></span><span class="sig-name descname"><span class="n"><span class="pre">~ScopeGuard</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N6legate10ScopeGuardD0Ev" title="Link to this definition">#</a><br /></dt>
+<dd><p>Destroy a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>. </p>
+<p>If the <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> is currently in the enabled state, executes the held functor, otherwise does nothing. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate10ScopeGuard7enabledEv">
+<span id="_CPPv3NK6legate10ScopeGuard7enabledEv"></span><span id="_CPPv2NK6legate10ScopeGuard7enabledEv"></span><span id="legate::ScopeGuard::enabledC"></span><span class="target" id="classlegate_1_1ScopeGuard_1ab46a4bc5fb790d4733bfc64645def5e0"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">enabled</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate10ScopeGuard7enabledEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Query a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>’s state. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeGuard_1a7a2f4443c56d05eb8c37e633862eeb69"><span class="std std-ref">ScopeGuard::enable()</span></a></p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeGuard_1a8f45f72818f93a73724f5b0ed16475c9"><span class="std std-ref">ScopeGuard::disable()</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>true if the <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> is enabled, false otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate10ScopeGuard7disableEv">
+<span id="_CPPv3N6legate10ScopeGuard7disableEv"></span><span id="_CPPv2N6legate10ScopeGuard7disableEv"></span><span id="legate::ScopeGuard::disable"></span><span class="target" id="classlegate_1_1ScopeGuard_1a8f45f72818f93a73724f5b0ed16475c9"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">disable</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate10ScopeGuard7disableEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Disable a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>. </p>
+<p>This routine prevents a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> from executing its held functor on destruction. On return, <a class="reference internal" href="#classlegate_1_1ScopeGuard_1ab46a4bc5fb790d4733bfc64645def5e0"><span class="std std-ref">ScopeGuard::enabled()</span></a> will return false.</p>
+<p>Calling this routine on an already disabled <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> has no effect.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeGuard_1a7a2f4443c56d05eb8c37e633862eeb69"><span class="std std-ref">ScopeGuard::enable()</span></a></p>
+</div>
+</p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate10ScopeGuard6enableEv">
+<span id="_CPPv3N6legate10ScopeGuard6enableEv"></span><span id="_CPPv2N6legate10ScopeGuard6enableEv"></span><span id="legate::ScopeGuard::enable"></span><span class="target" id="classlegate_1_1ScopeGuard_1a7a2f4443c56d05eb8c37e633862eeb69"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">enable</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate10ScopeGuard6enableEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Enable a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>. </p>
+<p>This routine makes a <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> execute its held functor on destruction. On return, <a class="reference internal" href="#classlegate_1_1ScopeGuard_1ab46a4bc5fb790d4733bfc64645def5e0"><span class="std std-ref">ScopeGuard::enabled()</span></a> will return true.</p>
+<p>Calling this routine on an already enabled <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a> has no effect.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeGuard_1a8f45f72818f93a73724f5b0ed16475c9"><span class="std std-ref">ScopeGuard::disable()</span></a></p>
+</div>
+</p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6legate9ScopeFailE">
+<span id="_CPPv3I0EN6legate9ScopeFailE"></span><span id="_CPPv2I0EN6legate9ScopeFailE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1ScopeFail"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScopeFail</span></span></span><a class="headerlink" href="#_CPPv4I0EN6legate9ScopeFailE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/utilities/scope_guard.h&gt;</em></div>
+<p>Similar to <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>, except that the callable is only executed if the scope is exited due to an exception. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>F</strong> – The type of the callable to execute. </p>
+</dd>
+</dl>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate9ScopeFail10value_typeE">
+<span id="_CPPv3N6legate9ScopeFail10value_typeE"></span><span id="_CPPv2N6legate9ScopeFail10value_typeE"></span><span class="target" id="classlegate_1_1ScopeFail_1a342cd36af778ef2ca3f6b18c5d878889"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN6legate9ScopeFailE" title="legate::ScopeFail::F"><span class="n"><span class="pre">F</span></span></a><a class="headerlink" href="#_CPPv4N6legate9ScopeFail10value_typeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>The type of callable stored within the <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a>. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate9ScopeFail9ScopeFailERR10value_type">
+<span id="_CPPv3N6legate9ScopeFail9ScopeFailERR10value_type"></span><span id="_CPPv2N6legate9ScopeFail9ScopeFailERR10value_type"></span><span id="legate::ScopeFail::ScopeFail__value_typeRR"></span><span class="target" id="classlegate_1_1ScopeFail_1a8eb84afcc611ed271dba650ed610049e"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ScopeFail</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4N6legate9ScopeFail10value_typeE" title="legate::ScopeFail::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N6legate9ScopeFail9ScopeFailERR10value_type" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct a <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a>. </p>
+<p>
+On destruction, a <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a> will execute <code class="docutils literal notranslate"><span class="pre">fn</span></code> if and only if the scope is being exited due to an uncaught exception. Therefore, unlike <a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a>, it is not possible to “disable” a <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fn</span></code> will be invoked with no arguments, and any return value discarded. <code class="docutils literal notranslate"><span class="pre">fn</span></code> must be no-throw move-constructible, and must not throw any exceptions when invoked.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#classlegate_1_1ScopeGuard"><span class="std std-ref">ScopeGuard</span></a></p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fn</strong> – The function to execute.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate9ScopeFailD0Ev">
+<span id="_CPPv3N6legate9ScopeFailD0Ev"></span><span id="_CPPv2N6legate9ScopeFailD0Ev"></span><span id="legate::ScopeFail::~ScopeFail"></span><span class="target" id="classlegate_1_1ScopeFail_1a449005d130ef70cd80176790a8e9700b"></span><span class="sig-name descname"><span class="n"><span class="pre">~ScopeFail</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N6legate9ScopeFailD0Ev" title="Link to this definition">#</a><br /></dt>
+<dd><p>Destroy a <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a>. </p>
+<p>If the <a class="reference internal" href="#classlegate_1_1ScopeFail"><span class="std std-ref">ScopeFail</span></a> is being destroyed due to the result of exception-related stack unwinding, then the held functor is executed, otherwise has no effect. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="task.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Task</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="io.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">IO</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv420measure_microsecondsv"><code class="docutils literal notranslate"><span class="pre">measure_microseconds()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv419measure_nanosecondsv"><code class="docutils literal notranslate"><span class="pre">measure_nanoseconds()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_iE17print_dense_arrayNSt6stringEPK1TRK5PointI3DIMERA3DIM_KNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">print_dense_array()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I_i0E17print_dense_arrayNSt6stringERK3ACCRK4RectI3DIME"><code class="docutils literal notranslate"><span class="pre">print_dense_array()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0DpE15double_dispatchDciN4Type4CodeE7FunctorDpRR6Fnargs"><code class="docutils literal notranslate"><span class="pre">double_dispatch()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0DpE15double_dispatchDcii7FunctorDpRR6Fnargs"><code class="docutils literal notranslate"><span class="pre">double_dispatch()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0DpE12dim_dispatchDci7FunctorDpRR6Fnargs"><code class="docutils literal notranslate"><span class="pre">dim_dispatch()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0DpE13type_dispatchDcN4Type4CodeERR7FunctorDpRR6Fnargs"><code class="docutils literal notranslate"><span class="pre">type_dispatch()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E16make_scope_guard10ScopeGuardI1FERR1F"><code class="docutils literal notranslate"><span class="pre">make_scope_guard()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E15make_scope_fail9ScopeFailI1FERR1F"><code class="docutils literal notranslate"><span class="pre">make_scope_fail()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5ScopeE"><code class="docutils literal notranslate"><span class="pre">Scope</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeEv"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeENSt7int32_tE"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeE13ExceptionMode"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeENSt6stringE"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeERKN7mapping7MachineE"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NO6legate5Scope13with_priorityENSt7int32_tE"><code class="docutils literal notranslate"><span class="pre">with_priority()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NO6legate5Scope19with_exception_modeE13ExceptionMode"><code class="docutils literal notranslate"><span class="pre">with_exception_mode()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NO6legate5Scope15with_provenanceENSt6stringE"><code class="docutils literal notranslate"><span class="pre">with_provenance()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NO6legate5Scope12with_machineERKN7mapping7MachineE"><code class="docutils literal notranslate"><span class="pre">with_machine()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope12set_priorityENSt7int32_tE"><code class="docutils literal notranslate"><span class="pre">set_priority()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope18set_exception_modeE13ExceptionMode"><code class="docutils literal notranslate"><span class="pre">set_exception_mode()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope14set_provenanceENSt6stringE"><code class="docutils literal notranslate"><span class="pre">set_provenance()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope11set_machineERKN7mapping7MachineE"><code class="docutils literal notranslate"><span class="pre">set_machine()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope8priorityEv"><code class="docutils literal notranslate"><span class="pre">priority()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope14exception_modeEv"><code class="docutils literal notranslate"><span class="pre">exception_mode()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope10provenanceEv"><code class="docutils literal notranslate"><span class="pre">provenance()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope7machineEv"><code class="docutils literal notranslate"><span class="pre">machine()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope4ImplE"><code class="docutils literal notranslate"><span class="pre">Impl</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6timing4TimeE"><code class="docutils literal notranslate"><span class="pre">Time</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate6timing4Time5valueEv"><code class="docutils literal notranslate"><span class="pre">value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6timing4Time4ImplE"><code class="docutils literal notranslate"><span class="pre">Impl</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate16ProcLocalStorageE"><code class="docutils literal notranslate"><span class="pre">ProcLocalStorage</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate16ProcLocalStorage10value_typeE"><code class="docutils literal notranslate"><span class="pre">value_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate16ProcLocalStorage9has_valueEv"><code class="docutils literal notranslate"><span class="pre">has_value()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args"><code class="docutils literal notranslate"><span class="pre">emplace()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate16ProcLocalStorage3getEv"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate16ProcLocalStorage3getEv"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate10ScopeGuardE"><code class="docutils literal notranslate"><span class="pre">ScopeGuard</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate10ScopeGuard10value_typeE"><code class="docutils literal notranslate"><span class="pre">value_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate10ScopeGuard10ScopeGuardERR10value_typeb"><code class="docutils literal notranslate"><span class="pre">ScopeGuard()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate10ScopeGuard10ScopeGuardERR10ScopeGuard"><code class="docutils literal notranslate"><span class="pre">ScopeGuard()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate10ScopeGuardaSERR10ScopeGuard"><code class="docutils literal notranslate"><span class="pre">operator=()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate10ScopeGuardD0Ev"><code class="docutils literal notranslate"><span class="pre">~ScopeGuard()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate10ScopeGuard7enabledEv"><code class="docutils literal notranslate"><span class="pre">enabled()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate10ScopeGuard7disableEv"><code class="docutils literal notranslate"><span class="pre">disable()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate10ScopeGuard6enableEv"><code class="docutils literal notranslate"><span class="pre">enable()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate9ScopeFailE"><code class="docutils literal notranslate"><span class="pre">ScopeFail</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate9ScopeFail10value_typeE"><code class="docutils literal notranslate"><span class="pre">value_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate9ScopeFail9ScopeFailERR10value_type"><code class="docutils literal notranslate"><span class="pre">ScopeFail()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate9ScopeFailD0Ev"><code class="docutils literal notranslate"><span class="pre">~ScopeFail()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

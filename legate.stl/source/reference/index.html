@@ -1,0 +1,1533 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Legate.STL Reference &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/nvidia-sphinx-theme.css?v=4c56b82b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=4ea706d9"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'legate.stl/source/reference/index';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Versions and Tags" href="../../../versions.html" />
+    <link rel="prev" title="IO" href="../../../api/cpp/io.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../user.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../jupyter.html">Using with Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../resources.html">Links to resources</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../../api/index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/shape.html">Shape</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/python/io.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../../../api/cpp/index.html">C++ API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/data.html">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/partitioning.html">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/task.html">Task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/util.html">Util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/io.html">IO</a></li>
+<li class="toctree-l3 current active has-children"><a class="current reference internal" href="#">Legate.STL Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../legate-stl.html">Legate.STL</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="current reference internal" href="#">Legate.STL Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../api/index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../api/cpp/index.html" class="nav-link">C++ API Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Legate.STL Reference</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="legate-stl-reference">
+<span id="stl-reference"></span><h1>Legate.STL Reference<a class="headerlink" href="#legate-stl-reference" title="Link to this heading">#</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<section id="concepts">
+<h2>Concepts<a class="headerlink" href="#concepts" title="Link to this heading">#</a></h2>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__stl-concepts"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">stl-concepts</span></span></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0E17get_logical_store12LogicalStoreRR9StoreLike">
+<span id="_CPPv3I0E17get_logical_storeRR9StoreLike"></span><span id="_CPPv2I0E17get_logical_storeRR9StoreLike"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">StoreLike</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-concepts_1ga9e86a754911a7fb981567f6135aefbd7"></span><span class="n"><span class="pre">LogicalStore</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_logical_store</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0E17get_logical_store12LogicalStoreRR9StoreLike" title="get_logical_store::StoreLike"><span class="n"><span class="pre">StoreLike</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">store_like</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0E17get_logical_store12LogicalStoreRR9StoreLike" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get the logical store from a logical store-like object. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code></p>
+</div>
+</p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp concept">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6legate12experimental3stl18logical_store_likeE">
+<span id="_CPPv3I0EN6legate12experimental3stl18logical_store_likeE"></span><span id="_CPPv2I0EN6legate12experimental3stl18logical_store_likeE"></span><span class="target" id="conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">StoreLike</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="k"><span class="pre">concept</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">logical_store_like</span></span></span><a class="headerlink" href="#_CPPv4I0EN6legate12experimental3stl18logical_store_likeE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/experimental/stl/detail/stlfwd.hpp&gt;</em></div>
+<p>A type <code class="docutils literal notranslate"><span class="pre">StoreLike</span></code> satisfied <code class="docutils literal notranslate"><span class="pre">logical_store_like</span></code> when it exposes a <code class="docutils literal notranslate"><a class="reference internal" href="../../../api/cpp/data.html#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">legate::LogicalStore</span></span></a></code> via the <code class="docutils literal notranslate"><span class="pre">get_logical_store</span></code> customization point. </p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">requires</span><span class="p">(</span><span class="n">StoreLike</span><span class="o">&amp;</span><span class="w"> </span><span class="n">storeish</span><span class="p">,</span>
+<span class="w">         </span><span class="n">legate</span><span class="o">::</span><span class="n">LogicalStore</span><span class="o">&amp;</span><span class="w"> </span><span class="n">lstore</span><span class="p">,</span>
+<span class="w">         </span><span class="n">stl</span><span class="o">::</span><span class="n">mdspan_for_t</span><span class="o">&lt;</span><span class="n">StoreLike</span><span class="o">&gt;</span><span class="w"> </span><span class="n">span</span><span class="p">,</span>
+<span class="w">         </span><span class="n">legate</span><span class="o">::</span><span class="n">PhysicalStore</span><span class="o">&amp;</span><span class="w"> </span><span class="n">pstore</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">get_logical_store</span><span class="p">(</span><span class="n">storeish</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="n">LogicalStore</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">StoreLike</span><span class="o">::</span><span class="n">policy</span><span class="o">::</span><span class="n">logical_view</span><span class="p">(</span><span class="n">lstore</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">range</span><span class="p">;</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">StoreLike</span><span class="o">::</span><span class="n">policy</span><span class="o">::</span><span class="n">physical_view</span><span class="p">(</span><span class="n">span</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">ranges</span><span class="o">::</span><span class="n">range</span><span class="p">;</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">StoreLike</span><span class="o">::</span><span class="n">policy</span><span class="o">::</span><span class="n">size</span><span class="p">(</span><span class="n">pstore</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">coord_t</span><span class="p">;</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">StoreLike</span><span class="o">::</span><span class="n">policy</span><span class="o">::</span><span class="n">partition_constraints</span><span class="p">(</span><span class="n">iteration_kind</span><span class="p">{})</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">tuple</span><span class="o">-</span><span class="n">like</span><span class="p">;</span>
+<span class="w">    </span><span class="p">{</span><span class="w"> </span><span class="n">StoreLike</span><span class="o">::</span><span class="n">policy</span><span class="o">::</span><span class="n">partition_constraints</span><span class="p">(</span><span class="n">reduction_kind</span><span class="p">{})</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">tuple</span><span class="o">-</span><span class="n">like</span><span class="p">;</span>
+<span class="w">  </span><span class="p">};</span>
+</pre></div>
+</div>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="docutils literal notranslate"><span class="pre">get_logical_store</span></code></p>
+</div>
+</p>
+</dd></dl>
+
+<dl class="cpp concept">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN6legate12experimental3stl16legate_reductionE">
+<span id="_CPPv3I0EN6legate12experimental3stl16legate_reductionE"></span><span id="_CPPv2I0EN6legate12experimental3stl16legate_reductionE"></span><span class="target" id="conceptlegate_1_1experimental_1_1stl_1_1legate__reduction"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Reduction</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="k"><span class="pre">concept</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">legate_reduction</span></span></span><a class="headerlink" href="#_CPPv4I0EN6legate12experimental3stl16legate_reductionE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/experimental/stl/detail/stlfwd.hpp&gt;</em></div>
+<p>A concept describing the requirements of a reduction operation that can be used with the <code class="docutils literal notranslate"><span class="pre">reduce</span></code> and <code class="docutils literal notranslate"><span class="pre">transform_reduce</span></code> algorithms. </p>
+<p>A reduction is characterized by the following three things: <ul class="simple">
+<li><p>An <code class="docutils literal notranslate"><span class="pre">apply</span></code> operation </p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">fold</span></code> operation </p></li>
+<li><p>An identity value</p></li>
+</ul>
+<code class="docutils literal notranslate"><span class="pre">apply</span></code> is used to apply the reduction operation to a pair of values, modifying the first value in-place. <code class="docutils literal notranslate"><span class="pre">fold</span></code> is used to combine two values into an accumulator that can then be passed as the second argument to the <code class="docutils literal notranslate"><span class="pre">apply</span></code> operation. The <code class="docutils literal notranslate"><span class="pre">fold</span></code> operation must be reflexive, transitive, and symmetric. <code class="docutils literal notranslate"><span class="pre">fold</span></code>, like <code class="docutils literal notranslate"><span class="pre">apply</span></code>, modifies the first parameter in-place.</p>
+<p>The following relations must hold for the three reduction components: <ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">apply(apply(x,</span> <span class="pre">y),</span> <span class="pre">z)</span></code> is functionally equivalent to <code class="docutils literal notranslate"><span class="pre">apply(x,</span> <span class="pre">fold(y,</span> <span class="pre">z))</span></code>. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">apply(x,</span> <span class="pre">identity)</span></code> leaves <code class="docutils literal notranslate"><span class="pre">x</span></code> unchanged. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fold(x,</span> <span class="pre">identity)</span></code> leaves <code class="docutils literal notranslate"><span class="pre">x</span></code> unchanged.</p></li>
+</ul>
+
+A type <code class="docutils literal notranslate"><span class="pre">Reduction</span></code> satisfies <code class="docutils literal notranslate"><span class="pre">legate_reduction</span></code> if the <code class="docutils literal notranslate"><span class="pre">requires</span></code> clause below is <code class="docutils literal notranslate"><span class="pre">true</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">requires</span><span class="w"> </span><span class="p">(</span><span class="n">Reduction</span><span class="w"> </span><span class="n">red</span><span class="p">,</span><span class="w"> </span><span class="k">typename</span><span class="w"> </span><span class="nc">Reduction</span><span class="o">::</span><span class="n">LHS</span><span class="o">&amp;</span><span class="w"> </span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="k">typename</span><span class="w"> </span><span class="nc">Reduction</span><span class="o">::</span><span class="n">RHS</span><span class="o">&amp;</span><span class="w"> </span><span class="n">rhs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="n">Reduction</span><span class="o">::</span><span class="k">template</span><span class="w"> </span><span class="n">apply</span><span class="o">&lt;</span><span class="nb">true</span><span class="o">&gt;</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">rhs</span><span class="p">))</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="n">Reduction</span><span class="o">::</span><span class="k">template</span><span class="w"> </span><span class="n">apply</span><span class="o">&lt;</span><span class="nb">false</span><span class="o">&gt;</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">rhs</span><span class="p">))</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="n">Reduction</span><span class="o">::</span><span class="k">template</span><span class="w"> </span><span class="n">fold</span><span class="o">&lt;</span><span class="nb">true</span><span class="o">&gt;</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">rhs</span><span class="p">))</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="n">Reduction</span><span class="o">::</span><span class="k">template</span><span class="w"> </span><span class="n">fold</span><span class="o">&lt;</span><span class="nb">false</span><span class="o">&gt;</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">rhs</span><span class="p">))</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">same_as</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">typename</span><span class="w"> </span><span class="nc">std</span><span class="o">::</span><span class="n">integral_constant</span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">Reduction</span><span class="o">::</span><span class="n">LHS</span><span class="p">,</span><span class="w"> </span><span class="n">Reduction</span><span class="o">::</span><span class="n">identity</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">typename</span><span class="w"> </span><span class="nc">std</span><span class="o">::</span><span class="n">integral_constant</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">Reduction</span><span class="o">::</span><span class="n">REDOP_ID</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reduce</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transform_reduce</span></code></p></li>
+</ul>
+</p>
+</div>
+</p>
+</dd></dl>
+
+</section>
+<section id="containers">
+<h2>Containers<a class="headerlink" href="#containers" title="Link to this heading">#</a></h2>
+</section>
+<section id="views">
+<h2>Views<a class="headerlink" href="#views" title="Link to this heading">#</a></h2>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__stl-views"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">stl-views</span></span></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-typedefs">Typedefs</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4I0_NSt7int32_tEE8mdspan_t">
+<span id="_CPPv3I0_NSt7int32_tEE8mdspan_t"></span><span id="_CPPv2I0_NSt7int32_tEE8mdspan_t"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">ElementType</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Dim</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-views_1ga8913d859c8d06a5e036676e49f0f0656"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mdspan_t</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mdspan</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE8mdspan_t" title="mdspan_t::ElementType"><span class="n"><span class="pre">ElementType</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">dextents</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../../../api/cpp/typedefs.html#_CPPv47coord_t" title="coord_t"><span class="n"><span class="pre">coord_t</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE8mdspan_t" title="mdspan_t::Dim"><span class="n"><span class="pre">Dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">layout_right</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">MDSpanAccessor</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE8mdspan_t" title="mdspan_t::ElementType"><span class="n"><span class="pre">ElementType</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE8mdspan_t" title="mdspan_t::Dim"><span class="n"><span class="pre">Dim</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tEE8mdspan_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>An alias for <code class="docutils literal notranslate"><span class="pre">std::mdspan</span></code> with a custom accessor that allows elementwise access to a <code class="docutils literal notranslate"><a class="reference internal" href="../../../api/cpp/data.html#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">legate::PhysicalStore</span></span></a></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ElementType</strong> – The element type of the <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>. </p></li>
+<li><p><strong>Dim</strong> – The dimensionality of the <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv414element_policy">
+<span id="_CPPv314element_policy"></span><span id="_CPPv214element_policy"></span><span class="target" id="group__stl-views_1ga3b4d1502b433270921461879f9d17eb6"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">element_policy</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ElementPolicy</span></span><a class="headerlink" href="#_CPPv414element_policy" title="Link to this definition">#</a><br /></dt>
+<dd><p>A policy for use with <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-views_1ga9298b9cd008e547c686e6e044506214e"><span class="std std-ref"><span class="pre">legate::experimental::stl::slice_view</span></span></a></code> that creates a flat view of all the elements of the store. </p>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv410row_policy">
+<span id="_CPPv310row_policy"></span><span id="_CPPv210row_policy"></span><span class="target" id="group__stl-views_1ga2a98abb0f9bd72bfed8d2089623435d5"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">row_policy</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">RowPolicy</span></span><a class="headerlink" href="#_CPPv410row_policy" title="Link to this definition">#</a><br /></dt>
+<dd><p>A policy for use with <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-views_1ga9298b9cd008e547c686e6e044506214e"><span class="std std-ref"><span class="pre">legate::experimental::stl::slice_view</span></span></a></code> that slices a logical store along the row (0th) dimension. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The elements of the resulting range are logical stores with one fewer dimension than the original store. </p>
+</div>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv413column_policy">
+<span id="_CPPv313column_policy"></span><span id="_CPPv213column_policy"></span><span class="target" id="group__stl-views_1ga51eaadee8a6bb5fb03ea0a7fb3657464"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">column_policy</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ColumnPolicy</span></span><a class="headerlink" href="#_CPPv413column_policy" title="Link to this definition">#</a><br /></dt>
+<dd><p>A policy for use with <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-views_1ga9298b9cd008e547c686e6e044506214e"><span class="std std-ref"><span class="pre">legate::experimental::stl::slice_view</span></span></a></code> that slices a logical store along the column (1st) dimension. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The elements of the resulting range are logical stores with one fewer dimension than the original store. </p>
+</div>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4I_DpNSt7int32_tEE17projection_policy">
+<span id="_CPPv3I_DpNSt7int32_tEE17projection_policy"></span><span id="_CPPv2I_DpNSt7int32_tEE17projection_policy"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">ProjDims</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-views_1ga2b708c0f30ec99205aee87fd07cf8d09"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">projection_policy</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ProjectionPolicy</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I_DpNSt7int32_tEE17projection_policy" title="projection_policy::ProjDims"><span class="n"><span class="pre">ProjDims</span></span></a><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I_DpNSt7int32_tEE17projection_policy" title="Link to this definition">#</a><br /></dt>
+<dd><p>A policy for use with <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-views_1ga9298b9cd008e547c686e6e044506214e"><span class="std std-ref"><span class="pre">legate::experimental::stl::slice_view</span></span></a></code> that slices a logical store along <code class="docutils literal notranslate"><span class="pre">ProjDims...</span></code> dimensions. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The elements of the resulting range are logical stores with <em>N</em> fewer dimensions than the original store, where <em>N</em> is <code class="docutils literal notranslate"><span class="pre">sizeof...(ProjDims)</span></code>. </p>
+</div>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4I0_NSt7int32_tE0E10slice_view">
+<span id="_CPPv3I0_NSt7int32_tE0E10slice_view"></span><span id="_CPPv2I0_NSt7int32_tE0E10slice_view"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">ElementType</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Dim</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">SlicePolicy</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-views_1ga9298b9cd008e547c686e6e044506214e"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">slice_view</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">slice_view_t</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tE0E10slice_view" title="slice_view::ElementType"><span class="n"><span class="pre">ElementType</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tE0E10slice_view" title="slice_view::Dim"><span class="n"><span class="pre">Dim</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tE0E10slice_view" title="slice_view::SlicePolicy"><span class="n"><span class="pre">SlicePolicy</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tE0E10slice_view" title="Link to this definition">#</a><br /></dt>
+<dd><p>A view of a logical store, sliced along some specified dimenstion(s), resulting in a 1-dimensional range of logical stores. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ElementType</strong> – The element type of the underlying logical store. </p></li>
+<li><p><strong>Dim</strong> – The dimensionality of the underlying logical store. </p></li>
+<li><p><strong>SlicePolicy</strong> – A type that determines how the logical store is sliced into a range. Choices include <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-views_1ga3b4d1502b433270921461879f9d17eb6"><span class="std std-ref"><span class="pre">element_policy</span></span></a></code>, <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-views_1ga2a98abb0f9bd72bfed8d2089623435d5"><span class="std std-ref"><span class="pre">row_policy</span></span></a></code>, <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-views_1ga51eaadee8a6bb5fb03ea0a7fb3657464"><span class="std std-ref"><span class="pre">column_policy</span></span></a></code>, and <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-views_1ga2b708c0f30ec99205aee87fd07cf8d09"><span class="std std-ref"><span class="pre">projection_policy</span></span></a></code>. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="algorithms">
+<h2>Algorithms<a class="headerlink" href="#algorithms" title="Link to this heading">#</a></h2>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__stl-algorithms"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">stl-algorithms</span></span></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0E4fillvRR5Range15value_type_of_tI5RangeE">
+<span id="_CPPv3I0E4fillRR5Range15value_type_of_tI5RangeE"></span><span id="_CPPv2I0E4fillRR5Range15value_type_of_tI5RangeE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Range</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-algorithms_1gad680b89debe5c9b64decd7ca9d4a12b5"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fill</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0E4fillvRR5Range15value_type_of_tI5RangeE" title="fill::Range"><span class="n"><span class="pre">Range</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">output</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">value_type_of_t</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0E4fillvRR5Range15value_type_of_tI5RangeE" title="fill::Range"><span class="n"><span class="pre">Range</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">val</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0E4fillvRR5Range15value_type_of_tI5RangeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Fills the given range with the specified value.</p>
+<p>This function fills the elements in the range [begin, end) with the specified value. The range must be a logical store-like object, meaning it supports the necessary operations for storing values. The value to be filled is specified by the <code class="docutils literal notranslate"><span class="pre">val</span></code> parameter.</p>
+<p><dl>
+<dt><strong>Example:</strong></dt><dd><div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 3-dimensional logical store and fill it with the value 42.</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">}};</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">fill</span><span class="p">(</span><span class="n">store</span><span class="p">,</span><span class="w"> </span><span class="mi">42</span><span class="p">);</span>
+<span class="c1">// store&#39;s elements are now all 42</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output</strong> – The range to be filled. </p></li>
+<li><p><strong>val</strong> – The value to fill the range with.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0DpE12for_each_zipvRR8FunctionDpRR6Inputs">
+<span id="_CPPv3I0DpE12for_each_zipRR8FunctionDpRR6Inputs"></span><span id="_CPPv2I0DpE12for_each_zipRR8FunctionDpRR6Inputs"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Function</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Inputs</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-algorithms_1ga53f01d6bba66cc6a847af6b1eff861e9"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">for_each_zip</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE12for_each_zipvRR8FunctionDpRR6Inputs" title="for_each_zip::Function"><span class="n"><span class="pre">Function</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fn</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0DpE12for_each_zipvRR8FunctionDpRR6Inputs" title="for_each_zip::Inputs"><span class="n"><span class="pre">Inputs</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ins</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0DpE12for_each_zipvRR8FunctionDpRR6Inputs" title="Link to this definition">#</a><br /></dt>
+<dd><p>Applies the given function <code class="docutils literal notranslate"><span class="pre">fn</span></code> with elements of each of the input sequences <code class="docutils literal notranslate"><span class="pre">ins</span></code> as function arguments. </p>
+<p>This function launches a Legate task that applies the provided function <code class="docutils literal notranslate"><span class="pre">fn</span></code> element-wise to the pack of ranges <code class="docutils literal notranslate"><span class="pre">ins</span></code>.</p>
+<p><dl class="simple">
+<dt><strong>Examples:</strong></dt><dd><p><div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Element-wise addition of two logical stores.</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">                                     </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span>
+<span class="w">                                     </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">}};</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">                                     </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span>
+<span class="w">                                     </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}};</span>
+
+<span class="c1">// `a` and `b` refer to the elements of `store1` and `store2`.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="n">LEGATE_HOST_DEVICE</span><span class="p">(</span><span class="kt">int</span><span class="o">&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">for_each_zip</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="n">store1</span><span class="p">,</span><span class="w"> </span><span class="n">store2</span><span class="p">);</span>
+
+<span class="c1">// store1 now contains:</span>
+<span class="c1">// {</span>
+<span class="c1">//   {4, 6, 8, 10},</span>
+<span class="c1">//   {4, 6, 8, 10},</span>
+<span class="c1">//   {4, 6, 8, 10}</span>
+<span class="c1">// }</span>
+</pre></div>
+</div>
+ <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Row-wise operation on two logical stores.</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">                                     </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span>
+<span class="w">                                     </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">}};</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">},</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">                                     </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span>
+<span class="w">                                     </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}};</span>
+
+<span class="c1">// `a` and `b` are `mdspan` objects refering to the rows of `store1`</span>
+<span class="c1">// and `store2`.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="n">LEGATE_HOST_DEVICE</span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">ptrdiff_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">};</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">for_each_zip</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store1</span><span class="p">),</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store2</span><span class="p">));</span>
+
+<span class="c1">// store1 now contains:</span>
+<span class="c1">// {</span>
+<span class="c1">//   {4, 6, 8, 10},</span>
+<span class="c1">//   {4, 6, 8, 10},</span>
+<span class="c1">//   {4, 6, 8, 10}</span>
+<span class="c1">// }</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> – The function object to apply with each set of elements. </p></li>
+<li><p><strong>ins</strong> – The input sequences to iterate over.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Pre<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>The number of input sequences must be greater than 0. </p></li>
+<li><p>The input sequences must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p>The input sequences must have the same shape. </p></li>
+<li><p>The function object <code class="docutils literal notranslate"><span class="pre">fn</span></code> must be callable with the same number of arguments as the number of input sequences. </p></li>
+<li><p>The function object <code class="docutils literal notranslate"><span class="pre">fn</span></code> must be trivially copyable.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00E8for_eachvRR5InputRR8Function">
+<span id="_CPPv3I00E8for_eachRR5InputRR8Function"></span><span id="_CPPv2I00E8for_eachRR5InputRR8Function"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Input</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Function</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-algorithms_1gabcc2627e3060e82aec414f35cc386432"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">for_each</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I00E8for_eachvRR5InputRR8Function" title="for_each::Input"><span class="n"><span class="pre">Input</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">input</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I00E8for_eachvRR5InputRR8Function" title="for_each::Function"><span class="n"><span class="pre">Function</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fn</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I00E8for_eachvRR5InputRR8Function" title="Link to this definition">#</a><br /></dt>
+<dd><p>Applies the given function to each element in the input range. </p>
+<p>This function launches a Legate task that applies the provided function <code class="docutils literal notranslate"><span class="pre">fn</span></code> to each element in the input range <code class="docutils literal notranslate"><span class="pre">input</span></code>.</p>
+<p><dl class="simple">
+<dt><strong>Examples:</strong></dt><dd><p><div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Element-wise addition of two logical stores.</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">                                    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span>
+<span class="w">                                    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">}};</span>
+
+<span class="c1">// `a` refers to the elements of `store`.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="n">LEGATE_HOST_DEVICE</span><span class="p">(</span><span class="kt">int</span><span class="o">&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">++</span><span class="n">a</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="n">store</span><span class="p">,</span><span class="w"> </span><span class="n">fn</span><span class="p">);</span>
+
+<span class="c1">// store1 now contains:</span>
+<span class="c1">// {</span>
+<span class="c1">//   {2, 3, 4, 5},</span>
+<span class="c1">//   {3, 4, 5, 6}</span>
+<span class="c1">//   {4, 5, 6, 7}</span>
+<span class="c1">// }</span>
+</pre></div>
+</div>
+ <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Row-wise operation on two logical stores.</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">                                    </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span>
+<span class="w">                                    </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">}};</span>
+
+<span class="c1">// `a` is an `mdspan` object refering to the rows of `store`.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">fn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="n">LEGATE_HOST_DEVICE</span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">a</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">for_each</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store</span><span class="p">),</span><span class="w"> </span><span class="n">fn</span><span class="p">);</span>
+
+<span class="c1">// store1 now contains:</span>
+<span class="c1">// {</span>
+<span class="c1">//   {42, 2, 3, 4},</span>
+<span class="c1">//   {42, 3, 4, 5},</span>
+<span class="c1">//   {42, 4, 5, 6}</span>
+<span class="c1">// }</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> – The input range to iterate over. </p></li>
+<li><p><strong>fn</strong> – The function to apply to each element.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Pre<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>The input range <code class="docutils literal notranslate"><span class="pre">input</span></code> must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p>The function object <code class="docutils literal notranslate"><span class="pre">fn</span></code> must be callable with the element type of the <code class="docutils literal notranslate"><span class="pre">input</span></code> range. </p></li>
+<li><p>The function object <code class="docutils literal notranslate"><span class="pre">fn</span></code> must be trivially copyable.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation">
+<span id="_CPPv3I000E6reduceRR10InputRangeRR4Init18ReductionOperation"></span><span id="_CPPv2I000E6reduceRR10InputRangeRR4Init18ReductionOperation"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">InputRange</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Init</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">ReductionOperation</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-algorithms_1ga7549210ab0883bf11c4fccf8e5ed9655"></span><span class="n"><span class="pre">logical_store</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">element_type_of_t</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation" title="reduce::InputRange"><span class="n"><span class="pre">InputRange</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">dim_of_v</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation" title="reduce::Init"><span class="n"><span class="pre">Init</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reduce</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation" title="reduce::InputRange"><span class="n"><span class="pre">InputRange</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">input</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation" title="reduce::Init"><span class="n"><span class="pre">Init</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">init</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation" title="reduce::ReductionOperation"><span class="n"><span class="pre">ReductionOperation</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation" title="Link to this definition">#</a><br /></dt>
+<dd><p>Reduces the elements of the input range using the given reduction operation operation. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1legate__reduction"><span class="std std-ref"><span class="pre">legate_reduction</span></span></a></code></p></li>
+<li><p><a class="reference internal" href="../../../api/cpp/typedefs.html#group__reduction"><span class="std std-ref">Legate’s built-in reduction operations</span></a></p></li>
+</ul>
+</p>
+</div>
+<dl class="simple">
+<dt><strong>Examples:</strong></dt><dd><p><div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({</span><span class="mi">5</span><span class="p">},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">init</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">});</span>
+
+<span class="c1">// fill the store with data</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">elems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elements_of</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">iota</span><span class="p">(</span><span class="n">elems</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">elems</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">});</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">store</span><span class="p">,</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">());</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">result_span</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+<span class="k">auto</span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">value</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">result_span</span><span class="p">();</span>
+<span class="k">static_assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">is_same_v</span><span class="o">&lt;</span><span class="k">decltype</span><span class="p">(</span><span class="n">value</span><span class="p">),</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&amp;&gt;</span><span class="p">);</span>
+<span class="n">EXPECT_EQ</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+</pre></div>
+</div>
+ <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">                                             </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span>
+<span class="w">                                             </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}};</span>
+
+<span class="c1">// Reduce by rows</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">init</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({</span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">});</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store</span><span class="p">),</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">()));</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result_span</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">.</span><span class="n">rank</span><span class="p">(),</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// Reduce by columns</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">init</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({</span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">});</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">columns_of</span><span class="p">(</span><span class="n">store</span><span class="p">),</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">()));</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">result_span</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">.</span><span class="n">rank</span><span class="p">(),</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mi">3</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<span class="w">  </span><span class="n">EXPECT_EQ</span><span class="p">(</span><span class="n">result_span</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> – The input range to reduce. </p></li>
+<li><p><strong>init</strong> – The initial value of the reduction. </p></li>
+<li><p><strong>op</strong> – The reduction operation to apply to the elements of the input range. <code class="docutils literal notranslate"><span class="pre">op</span></code> can be a type that satisfies the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1legate__reduction"><span class="std std-ref"><span class="pre">legate_reduction</span></span></a></code> concept or one of the standard functional objects <code class="docutils literal notranslate"><span class="pre">std::plus</span></code>, <code class="docutils literal notranslate"><span class="pre">std::minus</span></code>, <code class="docutils literal notranslate"><span class="pre">std::multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">std::divides</span></code>, etc.; or an elementwise operation created by passing any of the above to <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-utilities_1ga099fec83e3855ef57a59fe703dfc1049"><span class="std std-ref"><span class="pre">stl::elementwise</span></span></a></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Pre<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">InputRange</span></code> must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Init</span></code> must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p>The value type of the input range must be the same as the value type of the initial value. </p></li>
+<li><p>The dimension of the input range must be one greater than the dimension of the initial value.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An instance of <code class="docutils literal notranslate"><span class="pre">logical_store</span></code> with the same value type and shape as <code class="docutils literal notranslate"><span class="pre">init</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I000E9transformvRR10InputRangeRR11OutputRange14UnaryOperation">
+<span id="_CPPv3I000E9transformRR10InputRangeRR11OutputRange14UnaryOperation"></span><span id="_CPPv2I000E9transformRR10InputRangeRR11OutputRange14UnaryOperation"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">InputRange</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">OutputRange</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">UnaryOperation</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-algorithms_1ga0c0a8229bdc1e34d9e7e91c06d43dd3d"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I000E9transformvRR10InputRangeRR11OutputRange14UnaryOperation" title="transform::InputRange"><span class="n"><span class="pre">InputRange</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">input</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I000E9transformvRR10InputRangeRR11OutputRange14UnaryOperation" title="transform::OutputRange"><span class="n"><span class="pre">OutputRange</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">output</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I000E9transformvRR10InputRangeRR11OutputRange14UnaryOperation" title="transform::UnaryOperation"><span class="n"><span class="pre">UnaryOperation</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I000E9transformvRR10InputRangeRR11OutputRange14UnaryOperation" title="Link to this definition">#</a><br /></dt>
+<dd><p>Applies a unary operation to each element in the input range and stores the result in the output range. </p>
+<p>The input range and the output range may be the same.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-utilities_1ga099fec83e3855ef57a59fe703dfc1049"><span class="std std-ref"><span class="pre">legate::experimental::stl::elementwise</span></span></a></code></p>
+</div>
+<dl>
+<dt><strong>Example:</strong></dt><dd><div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">                                             </span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">},</span>
+<span class="w">                                             </span><span class="p">{</span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">11</span><span class="p">}};</span>
+
+<span class="c1">// Transform by rows</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">});</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">input</span><span class="p">),</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">               </span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">result</span><span class="p">),</span>
+<span class="w">               </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">Square</span><span class="p">()));</span>
+
+<span class="c1">// `result` now contains the squares of the elements:</span>
+<span class="c1">//     [[0   1   4   9]</span>
+<span class="c1">//      [16 25  36  49]</span>
+<span class="c1">//      [64 81 100 121]]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> – The input range. Must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p><strong>output</strong> – The output range. Must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p><strong>op</strong> – The unary operation to apply.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Pre<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>The input and output ranges must have the same shape. </p></li>
+<li><p>The unary operation must be trivially relocatable.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0000E9transformvRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation">
+<span id="_CPPv3I0000E9transformRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation"></span><span id="_CPPv2I0000E9transformRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">InputRange1</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">InputRange2</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">OutputRange</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">BinaryOperation</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-algorithms_1ga79ac05c5234915cd3d93ef8e4ac8c3ff"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0000E9transformvRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation" title="transform::InputRange1"><span class="n"><span class="pre">InputRange1</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">input1</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0000E9transformvRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation" title="transform::InputRange2"><span class="n"><span class="pre">InputRange2</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">input2</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0000E9transformvRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation" title="transform::OutputRange"><span class="n"><span class="pre">OutputRange</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">output</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0000E9transformvRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation" title="transform::BinaryOperation"><span class="n"><span class="pre">BinaryOperation</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0000E9transformvRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation" title="Link to this definition">#</a><br /></dt>
+<dd><p>Applies a binary operation to each element in two input ranges and stores the result in the output range. </p>
+<p>The output range may be the same as one of the input ranges.</p>
+<p><dl>
+<dt><strong>Example:</strong></dt><dd><div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">extents</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">};</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">store1</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">extents</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">store2</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">extents</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">store3</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">extents</span><span class="p">);</span>
+
+<span class="c1">// Stateless extended lambdas work with both clang CUDA and nvcc</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">shift</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="n">LEGATE_HOST_DEVICE</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">  </span><span class="c1">//</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">stl</span><span class="o">::</span><span class="n">fill</span><span class="p">(</span><span class="n">store1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">fill</span><span class="p">(</span><span class="n">store2</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">store1</span><span class="p">,</span><span class="w"> </span><span class="n">store2</span><span class="p">,</span><span class="w"> </span><span class="n">store3</span><span class="p">,</span><span class="w"> </span><span class="n">shift</span><span class="p">);</span>
+
+<span class="c1">// `store3` now contains the elements:</span>
+<span class="c1">//     [[32 32 32 32 32]</span>
+<span class="c1">//      [32 32 32 32 32]</span>
+<span class="c1">//      [32 32 32 32 32]</span>
+<span class="c1">//      [32 32 32 32 32]]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input1</strong> – The first input range. Must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p><strong>input2</strong> – The second input range. Must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p><strong>output</strong> – The output range. Must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p><strong>op</strong> – The binary operation to apply.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Pre<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>The input and output ranges must all have the same shape. </p></li>
+<li><p>The binary operation must be trivially relocatable.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform">
+<span id="_CPPv3I0000E16transform_reduceRR10InputRangeRR4InitRR9ReductionRR14UnaryTransform"></span><span id="_CPPv2I0000E16transform_reduceRR10InputRangeRR4InitRR9ReductionRR14UnaryTransform"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">InputRange</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Init</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Reduction</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">UnaryTransform</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-algorithms_1ga3975d4acbef39d5529cd95dfd460c87f"></span><span class="n"><span class="pre">logical_store</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">value_type_of_t</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform" title="transform_reduce::Init"><span class="n"><span class="pre">Init</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">dim_of_v</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform" title="transform_reduce::Init"><span class="n"><span class="pre">Init</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform_reduce</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform" title="transform_reduce::InputRange"><span class="n"><span class="pre">InputRange</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">input</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform" title="transform_reduce::Init"><span class="n"><span class="pre">Init</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">init</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform" title="transform_reduce::Reduction"><span class="n"><span class="pre">Reduction</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">reduction_op</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform" title="transform_reduce::UnaryTransform"><span class="n"><span class="pre">UnaryTransform</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">transform_op</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform" title="Link to this definition">#</a><br /></dt>
+<dd><p>Transform the elements of a store with a unary operation and reduce them using a binary operation with an initial value. </p>
+<p><code class="docutils literal notranslate"><span class="pre">stl::transform_reduce(input,</span> <span class="pre">init,</span> <span class="pre">reduction_op,</span> <span class="pre">transform_op)</span></code> is semantically equivalent (with the caveat noted below) to:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="n">TransformResult</span><span class="o">&gt;</span><span class="p">(</span><span class="w"> </span><span class="o">&lt;</span><span class="n">extents</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">input</span><span class="o">&gt;</span><span class="w"> </span><span class="p">);</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">transform_op</span><span class="p">);</span>
+<span class="k">return</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">reduction_op</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">TransformResult</span></code> is the result type of the unary transform operation. The input store arguments can be <code class="docutils literal notranslate"><span class="pre">legate_store</span></code> instances, or they can be views created with one of the <span> <a class="reference internal" href="../user/usage.html#creating-views"><span class="std std-ref">view adaptors</span></a> </span>. If the input store is a view, the <code class="docutils literal notranslate"><span class="pre">result</span></code> store used to hold the results of the transformation step will be a view of the same shape as the input store.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-utilities_1ga099fec83e3855ef57a59fe703dfc1049"><span class="std std-ref"><span class="pre">elementwise</span></span></a></code></p></li>
+<li><p><code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1legate__reduction"><span class="std std-ref"><span class="pre">legate_reduction</span></span></a></code></p></li>
+<li><p><a class="reference internal" href="../../../api/cpp/typedefs.html#group__reduction"><span class="std std-ref">Legate’s built-in reduction operations</span></a></p></li>
+</ul>
+</p>
+</div>
+<dl>
+<dt><strong>Example</strong></dt><dd><div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">5</span><span class="p">}};</span>
+
+<span class="c1">// fill the store with data. The store will contain {1, 2, 3, 4, 5}</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">elems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elements_of</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">iota</span><span class="p">(</span><span class="n">elems</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="w"> </span><span class="n">elems</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">1</span><span class="p">});</span>
+
+<span class="c1">// a host/device lambda to square the elements</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">square</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="n">LEGATE_HOST_DEVICE</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+
+<span class="c1">// sum the squared elements</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">transform_reduce</span><span class="p">(</span><span class="n">store</span><span class="p">,</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">scalar</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">{},</span><span class="w"> </span><span class="n">square</span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">result_span</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">result_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result_span</span><span class="p">();</span><span class="w">  </span><span class="c1">// index into the 0-D mdspan</span>
+<span class="c1">// result_value is 55</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> – The input range to transform. </p></li>
+<li><p><strong>init</strong> – The initial value of the reduction. </p></li>
+<li><p><strong>reduction_op</strong> – The reduction operation to apply to the transformed elements of the input range. <code class="docutils literal notranslate"><span class="pre">Reduction</span></code> can be a type that satisfies the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1legate__reduction"><span class="std std-ref"><span class="pre">legate_reduction</span></span></a></code> concept or one of the standard functional objects <code class="docutils literal notranslate"><span class="pre">std::plus</span></code>, <code class="docutils literal notranslate"><span class="pre">std::minus</span></code>, <code class="docutils literal notranslate"><span class="pre">std::multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">std::divides</span></code>, etc.; or an elementwise operation created by passing any of the above to <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-utilities_1ga099fec83e3855ef57a59fe703dfc1049"><span class="std std-ref"><span class="pre">stl::elementwise</span></span></a></code>. </p></li>
+<li><p><strong>transform_op</strong> – The unary operation to apply to the elements of the input prior to the reduction step.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Pre<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">InputRange</span></code> must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Init</span></code> must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p>The result type of the unary transform must be the same as the value type of the reduction’s initial value. </p></li>
+<li><p>The dimension of the input range must be one greater than the dimension of the initial value.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An instance of <code class="docutils literal notranslate"><span class="pre">logical_store</span></code> with the same value type and shape as <code class="docutils literal notranslate"><span class="pre">init</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform">
+<span id="_CPPv3I00000E16transform_reduceRR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform"></span><span id="_CPPv2I00000E16transform_reduceRR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">InputRange1</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">InputRange2</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Init</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Reduction</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">BinaryTransform</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-algorithms_1gaf499965ca244bb67ae615dd3848dfac5"></span><span class="n"><span class="pre">logical_store</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">element_type_of_t</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform" title="transform_reduce::Init"><span class="n"><span class="pre">Init</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">dim_of_v</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform" title="transform_reduce::Init"><span class="n"><span class="pre">Init</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform_reduce</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform" title="transform_reduce::InputRange1"><span class="n"><span class="pre">InputRange1</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">input1</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform" title="transform_reduce::InputRange2"><span class="n"><span class="pre">InputRange2</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">input2</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform" title="transform_reduce::Init"><span class="n"><span class="pre">Init</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">init</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform" title="transform_reduce::Reduction"><span class="n"><span class="pre">Reduction</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">reduction_op</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform" title="transform_reduce::BinaryTransform"><span class="n"><span class="pre">BinaryTransform</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">transform_op</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform" title="Link to this definition">#</a><br /></dt>
+<dd><p>Transform the elements of two stores with a binary operation and reduce them using a binary operation with an initial value. </p>
+<p><code class="docutils literal notranslate"><span class="pre">stl::transform_reduce(input1,</span> <span class="pre">input2,</span> <span class="pre">init,</span> <span class="pre">reduction_op,</span> <span class="pre">transform_op)</span></code> is semantically equivalent (with the caveat noted below) to:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="n">TransformResult</span><span class="o">&gt;</span><span class="p">(</span><span class="w"> </span><span class="o">&lt;</span><span class="n">extents</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">input1</span><span class="o">&gt;</span><span class="w"> </span><span class="p">);</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">input1</span><span class="p">,</span><span class="w"> </span><span class="n">input2</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">transform_op</span><span class="p">);</span>
+<span class="k">return</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">reduction_op</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">TransformResult</span></code> is the result type of the binary transform operation. The input store arguments can be <code class="docutils literal notranslate"><span class="pre">legate_store</span></code> instances, or they can be views created with one of the <span> <a class="reference internal" href="../user/usage.html#creating-views"><span class="std std-ref">view adaptors</span></a> </span>. If the input stores are views, the <code class="docutils literal notranslate"><span class="pre">result</span></code> store used to hold the results of the transformation step will be a view of the same shape as the first input store.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-utilities_1ga099fec83e3855ef57a59fe703dfc1049"><span class="std std-ref"><span class="pre">elementwise</span></span></a></code></p></li>
+<li><p><code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1legate__reduction"><span class="std std-ref"><span class="pre">legate_reduction</span></span></a></code></p></li>
+<li><p><a class="reference internal" href="../../../api/cpp/typedefs.html#group__reduction"><span class="std std-ref">Legate’s built-in reduction operations</span></a></p></li>
+</ul>
+</p>
+</div>
+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input1</strong> – The first input range to transform. </p></li>
+<li><p><strong>input2</strong> – The second input range to transform. </p></li>
+<li><p><strong>init</strong> – The initial value of the reduction. </p></li>
+<li><p><strong>reduction_op</strong> – The reduction operation to apply to the transformed elements of the input ranges. <code class="docutils literal notranslate"><span class="pre">Reduction</span></code> can be a type that satisfies the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1legate__reduction"><span class="std std-ref"><span class="pre">legate_reduction</span></span></a></code> concept or one of the standard functional objects <code class="docutils literal notranslate"><span class="pre">std::plus</span></code>, <code class="docutils literal notranslate"><span class="pre">std::minus</span></code>, <code class="docutils literal notranslate"><span class="pre">std::multiplies</span></code>, <code class="docutils literal notranslate"><span class="pre">std::divides</span></code>, etc.; or an elementwise operation created by passing any of the above to <code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-utilities_1ga099fec83e3855ef57a59fe703dfc1049"><span class="std std-ref"><span class="pre">stl::elementwise</span></span></a></code>. </p></li>
+<li><p><strong>transform_op</strong> – The binary operation to apply to the elements of the two input ranges prior to the reduction step.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Pre<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">InputRange1</span></code> and <code class="docutils literal notranslate"><span class="pre">InputRange2</span> <span class="pre">must</span> <span class="pre">satisfy</span> <span class="pre">the</span> <span class="pre">&#64;c</span> <a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a> <span class="pre">concept.</span> <span class="pre">&#64;li</span></code>Init` must satisfy the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. </p></li>
+<li><p>The shape of the input ranges must be the same. </p></li>
+<li><p>The result type of the binary transform must be the same as the value type of the initial reduction value. </p></li>
+<li><p>The dimensionality of the input ranges must be one greater than the dimension of the reduction initial value.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An instance of <code class="docutils literal notranslate"><span class="pre">logical_store</span></code> with the same value type and shape as <code class="docutils literal notranslate"><span class="pre">init</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="utilities">
+<h2>Utilities<a class="headerlink" href="#utilities" title="Link to this heading">#</a></h2>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__stl-utilities"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">stl-utilities</span></span></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0E11elementwise11unspecifiedRR8Function">
+<span id="_CPPv3I0E11elementwiseRR8Function"></span><span id="_CPPv2I0E11elementwiseRR8Function"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Function</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-utilities_1ga099fec83e3855ef57a59fe703dfc1049"></span><span class="n"><span class="pre">unspecified</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">elementwise</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4I0E11elementwise11unspecifiedRR8Function" title="elementwise::Function"><span class="n"><span class="pre">Function</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0E11elementwise11unspecifiedRR8Function" title="Link to this definition">#</a><br /></dt>
+<dd><p>A functional adaptor that, given a callable object <code class="docutils literal notranslate"><span class="pre">fn</span></code>, returns another callable object <code class="docutils literal notranslate"><span class="pre">g</span></code> that applies <code class="docutils literal notranslate"><span class="pre">fn</span></code> element-wise to its arguments. </p>
+<p>The arguments to <code class="docutils literal notranslate"><span class="pre">g</span></code> must be <code class="docutils literal notranslate"><span class="pre">mdspan</span></code> objects or models of the <code class="docutils literal notranslate"><a class="reference internal" href="#conceptlegate_1_1experimental_1_1stl_1_1logical__store__like"><span class="std std-ref"><span class="pre">logical_store_like</span></span></a></code> concept. The shapes of the input arguments must all match. The element-wise application of <code class="docutils literal notranslate"><span class="pre">f</span></code> is performed lazily; <em>i.e</em>., the result is not computed until the elements of the result are accessed.</p>
+<p><dl>
+<dt><strong>Example:</strong></dt><dd><div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Perform element-wise addition of the rows of two logical stores,</span>
+<span class="c1">// assigning the result element-wise into the rows of the first.</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">},</span><span class="w">  </span><span class="c1">// row 0</span>
+<span class="w">  </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">},</span><span class="w">  </span><span class="c1">// row 1</span>
+<span class="w">  </span><span class="p">{</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">}</span><span class="w">   </span><span class="c1">// row 2</span>
+<span class="p">};</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">},</span><span class="w">  </span><span class="c1">// row 0</span>
+<span class="w">  </span><span class="p">{</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">},</span><span class="w">  </span><span class="c1">// row 1</span>
+<span class="w">  </span><span class="p">{</span><span class="mi">30</span><span class="p">,</span><span class="w"> </span><span class="mi">40</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">60</span><span class="p">}</span><span class="w">   </span><span class="c1">// row 2</span>
+<span class="p">};</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">transform</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store1</span><span class="p">),</span>
+<span class="w">               </span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store2</span><span class="p">),</span>
+<span class="w">               </span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store1</span><span class="p">),</span>
+<span class="w">               </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">{}));</span>
+
+<span class="c1">// store1 now contains:</span>
+<span class="c1">// [[11 22 33 44]   // row 0</span>
+<span class="c1">//  [22 33 44 55]   // row 1</span>
+<span class="c1">//  [33 44 55 66]]  // row 2</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Legate.STL algorithms recognize the return type of <span class="math notranslate nohighlight">\(\mathtt{elementwise(fn)(}A^1,A^2\cdots,A^n\mathtt{)}\)</span> such that assigning its result to an <code class="docutils literal notranslate"><span class="pre">mdspan</span></code> object will perform an element-wise assignment. The element-wise assignment is done with <code class="docutils literal notranslate"><span class="pre">thrust::copy</span></code> and will be accelerated if CUDA support is enabled.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fn</strong> – The callable object to apply element-wise.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A callable object <span class="math notranslate nohighlight">\(\mathtt{g}\)</span> such that, given multi-dimensional arguments <span class="math notranslate nohighlight">\(A^1,A^2\cdots,A^n\)</span>, the expression <span class="math notranslate nohighlight">\(\mathtt{g(}A^1,A^2\cdots,A^n\mathtt{)}\)</span> returns a multi-dimensional view <span class="math notranslate nohighlight">\(\mathtt{V}\)</span> where <span class="math notranslate nohighlight">\(\mathtt{V}_{i,j,\ldots}\)</span> is the result of calling <span class="math notranslate nohighlight">\(\mathtt{fn(}{A^1}_{i,j,\ldots}, {A^2}_{i,j,\ldots}, \cdots, {A^n}_{i,j,\ldots}\mathtt{)}\)</span>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_Dp11LaunchParamE11launch_taskvDp6Params">
+<span id="_CPPv3I_Dp11LaunchParamE11launch_taskDp6Params"></span><span id="_CPPv2I_Dp11LaunchParamE11launch_taskDp6Params"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">LaunchParam</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Params</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="group__stl-utilities_1ga25fb6756c067dd67b28add97e9a4acec"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">launch_task</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4I_Dp11LaunchParamE11launch_taskvDp6Params" title="launch_task::Params"><span class="n"><span class="pre">Params</span></span></a><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I_Dp11LaunchParamE11launch_taskvDp6Params" title="Link to this definition">#</a><br /></dt>
+<dd><p>A function that launches a task with the given inputs, outputs, scalars, and constraints. </p>
+<p>Launch parameter arguments can be one of the following in any order:</p>
+<p><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::inputs</span></code> - specifies the input stores for the task<ul>
+<li><p><em>Example:</em></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">inputs</span><span class="p">(</span><span class="n">store1</span><span class="p">,</span> <span class="n">store2</span><span class="p">,</span> <span class="n">store3</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::outputs</span></code> - specifies the output stores for the task<ul>
+<li><p><em>Example:</em></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">outputs</span><span class="p">(</span><span class="n">store1</span><span class="p">,</span> <span class="n">store2</span><span class="p">,</span> <span class="n">store3</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::scalars</span></code> - specifies the scalar arguments for the task<ul>
+<li><p><em>Example:</em></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scalars</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mf">3.14</span><span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::function</span></code> - specifies the function to be applied iteratively to the inputs.<ul>
+<li><p>The function will take as arguments the current elements of the input stores, in order, followed by the current elements of the output stores. The elements of a <code class="docutils literal notranslate"><span class="pre">stl::logical_store</span></code> are lvalue references to the elements of the physical store it represents. The elements of a view such as <code class="docutils literal notranslate"><span class="pre">stl::rows_of(store)</span></code> are <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>s denoting the rows of <code class="docutils literal notranslate"><span class="pre">store</span></code>.</p></li>
+<li><p>The function must be bitwise copyable.</p></li>
+<li><p>Only one of <code class="docutils literal notranslate"><span class="pre">function</span></code> or <code class="docutils literal notranslate"><span class="pre">reduction</span></code> can be specified in a call to <code class="docutils literal notranslate"><a class="reference internal" href="#classlaunch__task"><span class="std std-ref"><span class="pre">launch_task</span></span></a></code></p></li>
+<li><p><em>Example:</em></p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">function</span><span class="p">([](</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">in</span><span class="p">,</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">in</span><span class="p">;</span><span class="w"> </span><span class="p">})</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::reduction</span></code> - specifies the reduction store and the reduction function to be applied to the inputs.<ul>
+<li><p>The function must be bitwise copyable.</p></li>
+<li><p>The reduction function must take as <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>s refering to parts of the input stores.</p></li>
+<li><p>The reduction store can be a <code class="docutils literal notranslate"><span class="pre">logical_store</span></code> or some view of a store, such as <code class="docutils literal notranslate"><span class="pre">rows_of(store)</span></code>. When operating on a view, the arguments to the reduction function will be the elements of the view. For example, if the reduction store is <code class="docutils literal notranslate"><span class="pre">rows_of(store)</span></code>, the arguments passed to the reduction function will be <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>s denoting rows of <code class="docutils literal notranslate"><span class="pre">store</span></code>.</p></li>
+<li><p>Only one of <code class="docutils literal notranslate"><span class="pre">function</span></code> or <code class="docutils literal notranslate"><span class="pre">reduction</span></code> can be specified in a call to <code class="docutils literal notranslate"><a class="reference internal" href="#classlaunch__task"><span class="std std-ref"><span class="pre">launch_task</span></span></a></code></p></li>
+<li><p><em>Example:</em></p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">stl</span><span class="o">::</span><span class="n">reduction</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store</span><span class="p">),</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="p">{}))</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::constraints</span></code> - specifies the constraints for the task.<ul>
+<li><p>A constraint is a callable that takes an <code class="docutils literal notranslate"><a class="reference internal" href="../../../api/cpp/task.html#classlegate_1_1AutoTask"><span class="std std-ref"><span class="pre">legate::AutoTask</span></span></a><span class="pre">&amp;</span></code> and the input, output, and reduction stores as arguments. Its function signature must be:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">AutoTask</span><span class="o">&amp;</span><span class="p">,</span><span class="w">                </span><span class="c1">// the task to add the constraints to</span>
+<span class="w">     </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">LogicalStore</span><span class="o">&gt;&amp;</span><span class="p">,</span><span class="w"> </span><span class="c1">// the input stores</span>
+<span class="w">     </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">LogicalStore</span><span class="o">&gt;&amp;</span><span class="p">,</span><span class="w"> </span><span class="c1">// the output stores</span>
+<span class="w">     </span><span class="k">const</span><span class="w"> </span><span class="n">LogicalStore</span><span class="o">&amp;</span><span class="p">)</span><span class="w">              </span><span class="c1">// the reduction store</span>
+</pre></div>
+</div>
+</li>
+<li><p>Legate.STL provides one constraint generator, <code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::align</span></code>, for specifying the alignment constraints for the task. It can be used many different ways:<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">align(inputs[0],</span> <span class="pre">inputs[1])</span></code> - aligns the first input with the second input</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align(inputs[0],</span> <span class="pre">outputs[0])</span></code> - aligns the first input with the first output</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align(outputs[0],</span> <span class="pre">inputs)</span></code> - aligns the first output with all the inputs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align(outputs,</span> <span class="pre">inputs[1])</span></code> - aligns all the outputs with the second input</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align(reduction,</span> <span class="pre">inputs[0])</span></code> - aligns the reduction store with the first input</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align(reduction,</span> <span class="pre">inputs)</span></code> - aligns the reduction store with all the input</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align(inputs)</span></code> - aligns all the inputs with each other</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align(outputs)</span></code> - aligns all the outputs with each other</p></li>
+</ul>
+</p></li>
+</ul>
+</p></li>
+</ul>
+</p>
+<p><dl class="simple">
+<dt><strong>Example</strong></dt><dd><p>The following use of <code class="docutils literal notranslate"><a class="reference internal" href="#classlaunch__task"><span class="std std-ref"><span class="pre">launch_task</span></span></a></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">stl::transform(input,</span> <span class="pre">output</span> <span class="pre">op)</span></code>: <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">stl</span><span class="o">::</span><span class="n">launch_task</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">function</span><span class="p">(</span><span class="n">detail</span><span class="o">::</span><span class="n">UnaryTransform</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">op</span><span class="p">)}),</span>
+<span class="w">                 </span><span class="n">stl</span><span class="o">::</span><span class="n">inputs</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">InputRange</span><span class="o">&gt;</span><span class="p">(</span><span class="n">input</span><span class="p">)),</span>
+<span class="w">                 </span><span class="n">stl</span><span class="o">::</span><span class="n">outputs</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">forward</span><span class="o">&lt;</span><span class="n">OutputRange</span><span class="o">&gt;</span><span class="p">(</span><span class="n">output</span><span class="p">)),</span>
+<span class="w">                 </span><span class="n">stl</span><span class="o">::</span><span class="n">constraints</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])));</span>
+</pre></div>
+</div>
+</p>
+</dd>
+</dl>
+</p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-variables">Variables</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv426LEGATE_STL_RESOURCE_CONFIG">
+<span id="_CPPv326LEGATE_STL_RESOURCE_CONFIG"></span><span id="_CPPv226LEGATE_STL_RESOURCE_CONFIG"></span><span id="LEGATE_STL_RESOURCE_CONFIG__ResourceConfig"></span><span class="target" id="group__stl-utilities_1ga48759f4a5366884f2d278c498f93c9c8"></span><span class="n"><span class="pre">ResourceConfig</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">LEGATE_STL_RESOURCE_CONFIG</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="m"><span class="pre">1024</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1024</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">64</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv426LEGATE_STL_RESOURCE_CONFIG" title="Link to this definition">#</a><br /></dt>
+<dd><p>Configuration for the Legate STL resource. </p>
+<p>This constant represents the configuration for the Legate STL resource. It specifies (in order): <ul class="simple">
+<li><p>the maximum number of tasks, </p></li>
+<li><p>the maximum number of dynamic tasks, </p></li>
+<li><p>the maximum number of reduction operations, </p></li>
+<li><p>the maximum number of projections, and </p></li>
+<li><p>the maximum number of shardings</p></li>
+</ul>
+
+that can be used in a program using Legate.STL.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1experimental_1_1stl_1_1initialize__library"><span class="std std-ref"><span class="pre">initialize_library</span></span></a></code></p>
+</div>
+</p>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv411launch_task">
+<span id="_CPPv311launch_task"></span><span id="_CPPv211launch_task"></span><span id="launch_task"></span><span class="target" id="classlaunch__task"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">launch_task</span></span></span><a class="headerlink" href="#_CPPv411launch_task" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/experimental/stl/detail/launch_task.hpp&gt;</em></div>
+<p>A class that represents a task launcher. </p>
+<p>The <code class="docutils literal notranslate"><a class="reference internal" href="#classlaunch__task"><span class="std std-ref"><span class="pre">launch_task</span></span></a></code> class provides a convenient interface for launching tasks in the Legate framework. It supports both iteration tasks and reduction tasks. The tasks are created and submitted to the runtime using the provided inputs, outputs, scalars, and constraints. </p>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate12experimental3stl18initialize_libraryE">
+<span id="_CPPv3N6legate12experimental3stl18initialize_libraryE"></span><span id="_CPPv2N6legate12experimental3stl18initialize_libraryE"></span><span id="legate::experimental::stl::initialize_library"></span><span class="target" id="classlegate_1_1experimental_1_1stl_1_1initialize__library"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">initialize_library</span></span></span><a class="headerlink" href="#_CPPv4N6legate12experimental3stl18initialize_libraryE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/experimental/stl/detail/registrar.hpp&gt;</em></div>
+<p>A class that initializes the Legate runtime and creates the <code class="docutils literal notranslate"><span class="pre">legate.stl</span></code> library instance. </p>
+<p>The <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1experimental_1_1stl_1_1initialize__library"><span class="std std-ref"><span class="pre">initialize_library</span></span></a></code> class is responsible for creating a library instance. The initialization fails if the runtime has not started. If the initialization is successful, it creates a library with the name <code class="docutils literal notranslate"><span class="pre">&quot;legate.stl&quot;</span></code>.</p>
+<p>The library instance is automatically destroyed when the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1experimental_1_1stl_1_1initialize__library"><span class="std std-ref"><span class="pre">initialize_library</span></span></a></code> object goes out of scope.</p>
+<p>It is harmless to create multiple <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1experimental_1_1stl_1_1initialize__library"><span class="std std-ref"><span class="pre">initialize_library</span></span></a></code> objects in the same program.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="docutils literal notranslate"><a class="reference internal" href="#group__stl-utilities_1ga48759f4a5366884f2d278c498f93c9c8"><span class="std std-ref"><span class="pre">LEGATE_STL_RESOURCE_CONFIG</span></span></a></code></p>
+</div>
+</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate12experimental3stl18initialize_library18initialize_libraryEv">
+<span id="_CPPv3N6legate12experimental3stl18initialize_library18initialize_libraryEv"></span><span id="_CPPv2N6legate12experimental3stl18initialize_library18initialize_libraryEv"></span><span id="legate::experimental::stl::initialize_library::initialize_library"></span><span class="target" id="classlegate_1_1experimental_1_1stl_1_1initialize__library_1aed3df9794cb39b1e40ceec12bf516fab"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">initialize_library</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate12experimental3stl18initialize_library18initialize_libraryEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Constructs an <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1experimental_1_1stl_1_1initialize__library"><span class="std std-ref"><span class="pre">initialize_library</span></span></a></code> object. </p>
+<p>This constructor creates a library instance for Legate STL. The initialization fails if the runtime has not started. If the initialization is successful, it creates a library with the name <code class="docutils literal notranslate"><span class="pre">&quot;legate.stl&quot;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Throws<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the runtime has not started </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../../../api/cpp/io.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">IO</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../../versions.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Versions and Tags</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#concepts">Concepts</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E17get_logical_store12LogicalStoreRR9StoreLike"><code class="docutils literal notranslate"><span class="pre">get_logical_store()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate12experimental3stl18logical_store_likeE"><code class="docutils literal notranslate"><span class="pre">logical_store_like</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate12experimental3stl16legate_reductionE"><code class="docutils literal notranslate"><span class="pre">legate_reduction</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#containers">Containers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#views">Views</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEE8mdspan_t"><code class="docutils literal notranslate"><span class="pre">mdspan_t</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv414element_policy"><code class="docutils literal notranslate"><span class="pre">element_policy</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv410row_policy"><code class="docutils literal notranslate"><span class="pre">row_policy</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv413column_policy"><code class="docutils literal notranslate"><span class="pre">column_policy</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I_DpNSt7int32_tEE17projection_policy"><code class="docutils literal notranslate"><span class="pre">projection_policy</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tE0E10slice_view"><code class="docutils literal notranslate"><span class="pre">slice_view</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#algorithms">Algorithms</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E4fillvRR5Range15value_type_of_tI5RangeE"><code class="docutils literal notranslate"><span class="pre">fill()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0DpE12for_each_zipvRR8FunctionDpRR6Inputs"><code class="docutils literal notranslate"><span class="pre">for_each_zip()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I00E8for_eachvRR5InputRR8Function"><code class="docutils literal notranslate"><span class="pre">for_each()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I000E6reduce13logical_storeI17element_type_of_tI10InputRangeE8dim_of_vI4InitEERR10InputRangeRR4Init18ReductionOperation"><code class="docutils literal notranslate"><span class="pre">reduce()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I000E9transformvRR10InputRangeRR11OutputRange14UnaryOperation"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0000E9transformvRR11InputRange1RR11InputRange2RR11OutputRange15BinaryOperation"><code class="docutils literal notranslate"><span class="pre">transform()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0000E16transform_reduce13logical_storeI15value_type_of_tI4InitE8dim_of_vI4InitEERR10InputRangeRR4InitRR9ReductionRR14UnaryTransform"><code class="docutils literal notranslate"><span class="pre">transform_reduce()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I00000E16transform_reduce13logical_storeI17element_type_of_tI4InitE8dim_of_vI4InitEERR11InputRange1RR11InputRange2RR4InitRR9ReductionRR15BinaryTransform"><code class="docutils literal notranslate"><span class="pre">transform_reduce()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#utilities">Utilities</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E11elementwise11unspecifiedRR8Function"><code class="docutils literal notranslate"><span class="pre">elementwise()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I_Dp11LaunchParamE11launch_taskvDp6Params"><code class="docutils literal notranslate"><span class="pre">launch_task()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv426LEGATE_STL_RESOURCE_CONFIG"><code class="docutils literal notranslate"><span class="pre">LEGATE_STL_RESOURCE_CONFIG</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv411launch_task"><code class="docutils literal notranslate"><span class="pre">launch_task</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate12experimental3stl18initialize_libraryE"><code class="docutils literal notranslate"><span class="pre">initialize_library</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate12experimental3stl18initialize_library18initialize_libraryEv"><code class="docutils literal notranslate"><span class="pre">initialize_library()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

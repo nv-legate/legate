@@ -1,0 +1,968 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>IO &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/nvidia-sphinx-theme.css?v=4c56b82b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/cpp/io';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Legate.STL Reference" href="../../legate.stl/source/reference/index.html" />
+    <link rel="prev" title="Util" href="util.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../user.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../jupyter.html">Using with Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../resources.html">Links to resources</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/shape.html">Shape</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../python/io.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">C++ API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="data.html">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="partitioning.html">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="task.html">Task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="util.html">Util</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">IO</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">C++ API Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">IO</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="io">
+<h1>IO<a class="headerlink" href="#io" title="Link to this heading">#</a></h1>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__io"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">io</span></span></dt>
+<dd><p>Utilities for serializing and deserializing Legate stores to disk. </p>
+</dd></dl>
+
+<section id="hdf5">
+<h2>HDF5<a class="headerlink" href="#hdf5" title="Link to this heading">#</a></h2>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__io-hdf5"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">io-hdf5</span></span></dt>
+<dd><p>I/O operations backed by HDF5. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49from_fileRKNSt10filesystem4pathENSt11string_viewE">
+<span id="_CPPv39from_fileRKNSt10filesystem4pathENSt11string_viewE"></span><span id="_CPPv29from_fileRKNSt10filesystem4pathENSt11string_viewE"></span><span id="from_file__std::filesystem::pathCR.std::string_view"></span><span class="target" id="group__io-hdf5_1ga0d62ba1ddd3838c6cbe94210a389a2d3"></span><span class="n"><span class="pre">LogicalArray</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">from_file</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">file_path</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dataset_name</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49from_fileRKNSt10filesystem4pathENSt11string_viewE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Load a HDF5 dataset into a <a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> – The path to the file to load. </p></li>
+<li><p><strong>dataset_name</strong> – The name of the HDF5 dataset to load from the file.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">system_error</span></span></span> – If file_path does not exist. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">UnusupportedHDF5DataType</span></span></span> – If the data type cannot be converted to a <a class="reference internal" href="types.html#classlegate_1_1Type"><span class="std std-ref">Type</span></a>. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">InvalidDataSetError</span></span></span> – If the dataset is invalid, or is not found. </p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> The loaded array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE">
+<span id="_CPPv3N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE"></span><span id="_CPPv2N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE"></span><span id="legate::io::hdf5::UnsupportedHDF5DataTypeError"></span><span class="target" id="classlegate_1_1io_1_1hdf5_1_1UnsupportedHDF5DataTypeError"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">UnsupportedHDF5DataTypeError</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invalid_argument</span></span><a class="headerlink" href="#_CPPv4N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/io/hdf5/interface.h&gt;</em></div>
+<p>An exception thrown when a HDF5 datatype could not be converted to a <a class="reference internal" href="types.html#classlegate_1_1Type"><span class="std std-ref">Type</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate2io4hdf519InvalidDataSetErrorE">
+<span id="_CPPv3N6legate2io4hdf519InvalidDataSetErrorE"></span><span id="_CPPv2N6legate2io4hdf519InvalidDataSetErrorE"></span><span id="legate::io::hdf5::InvalidDataSetError"></span><span class="target" id="classlegate_1_1io_1_1hdf5_1_1InvalidDataSetError"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">InvalidDataSetError</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invalid_argument</span></span><a class="headerlink" href="#_CPPv4N6legate2io4hdf519InvalidDataSetErrorE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/io/hdf5/interface.h&gt;</em></div>
+<p>An exception thrown when an invalid dataset is encountered in an HDF5 file. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate2io4hdf519InvalidDataSetError19InvalidDataSetErrorERKNSt6stringENSt10filesystem4pathENSt6stringE">
+<span id="_CPPv3N6legate2io4hdf519InvalidDataSetError19InvalidDataSetErrorERKNSt6stringENSt10filesystem4pathENSt6stringE"></span><span id="_CPPv2N6legate2io4hdf519InvalidDataSetError19InvalidDataSetErrorERKNSt6stringENSt10filesystem4pathENSt6stringE"></span><span id="legate::io::hdf5::InvalidDataSetError::InvalidDataSetError__ssCR.std::filesystem::path.ss"></span><span class="target" id="classlegate_1_1io_1_1hdf5_1_1InvalidDataSetError_1a324f78f24e82f9d0696f2d92651fc538"></span><span class="sig-name descname"><span class="n"><span class="pre">InvalidDataSetError</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">what</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">path</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">dataset_name</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate2io4hdf519InvalidDataSetError19InvalidDataSetErrorERKNSt6stringENSt10filesystem4pathENSt6stringE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct an <a class="reference internal" href="#classlegate_1_1io_1_1hdf5_1_1InvalidDataSetError"><span class="std std-ref">InvalidDataSetError</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>what</strong> – The exception string to forward to the constructor of std::invalid_argument. </p></li>
+<li><p><strong>path</strong> – The path to the HDF5 file containing the dataset. </p></li>
+<li><p><strong>dataset_name</strong> – The name of the offending dataset. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate2io4hdf519InvalidDataSetError4pathEv">
+<span id="_CPPv3NK6legate2io4hdf519InvalidDataSetError4pathEv"></span><span id="_CPPv2NK6legate2io4hdf519InvalidDataSetError4pathEv"></span><span id="legate::io::hdf5::InvalidDataSetError::pathC"></span><span class="target" id="classlegate_1_1io_1_1hdf5_1_1InvalidDataSetError_1a92925c3a08c16bfa0f92d0701b964489"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">path</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK6legate2io4hdf519InvalidDataSetError4pathEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get the path to the file containing the dataset. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The path to the file containing the dataset. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate2io4hdf519InvalidDataSetError12dataset_nameEv">
+<span id="_CPPv3NK6legate2io4hdf519InvalidDataSetError12dataset_nameEv"></span><span id="_CPPv2NK6legate2io4hdf519InvalidDataSetError12dataset_nameEv"></span><span id="legate::io::hdf5::InvalidDataSetError::dataset_nameC"></span><span class="target" id="classlegate_1_1io_1_1hdf5_1_1InvalidDataSetError_1a1a9a5d71049bc01fef31164ca4856f60"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dataset_name</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK6legate2io4hdf519InvalidDataSetError12dataset_nameEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get the name of the dataset. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The name of the dataset. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="kvikio">
+<h2>KVikIO<a class="headerlink" href="#kvikio" title="Link to this heading">#</a></h2>
+<dl>
+<dt class="sig sig-object cpp">
+<span class="target" id="group__io-kvikio"></span><em><span class="pre">group</span></em> <span class="sig-name descname"><span class="pre">io-kvikio</span></span></dt>
+<dd><p>I/O operations backed by KVikIO. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-functions">Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49from_fileRKNSt10filesystem4pathERK4Type">
+<span id="_CPPv39from_fileRKNSt10filesystem4pathERK4Type"></span><span id="_CPPv29from_fileRKNSt10filesystem4pathERK4Type"></span><span id="from_file__std::filesystem::pathCR.TypeCR"></span><span class="target" id="group__io-kvikio_1gabc9b93324a9537700aa4c1411b73c471"></span><span class="n"><span class="pre">LogicalArray</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">from_file</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">file_path</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">type</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49from_fileRKNSt10filesystem4pathERK4Type" title="Link to this definition">#</a><br /></dt>
+<dd><p>Read a <a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> from a file. </p>
+<p>The array stored in file_path must have been written by a call to <code class="docutils literal notranslate"><span class="pre">to_file(const</span> <span class="pre">std::filesystem::path&amp;,</span> <span class="pre">const</span> <a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref"><span class="pre">LogicalArray</span></span></a><span class="pre">&amp;)</span></code>.</p>
+<p>This routine expects the file to contain nothing but the raw data linearly in memory, starting at offset 0. The file must contain no other metadata, padding, or other data, it will be interpreted as data to be read into the store.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This API is experimental. A future release may change or remove this API without warning, deprecation period, or notice. The user is nevertheless encouraged to use this API, and submit any feedback to <a class="reference external" href="mailto:legate&#37;&#52;&#48;nvidia&#46;com">legate<span>&#64;</span>nvidia<span>&#46;</span>com</a>. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> – The path to the file. </p></li>
+<li><p><strong>type</strong> – The datatype of the array.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">system_error</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">file_path</span></code> does not exist.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> The loaded array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArray">
+<span id="_CPPv37to_fileRKNSt10filesystem4pathERK12LogicalArray"></span><span id="_CPPv27to_fileRKNSt10filesystem4pathERK12LogicalArray"></span><span id="to_file__std::filesystem::pathCR.LogicalArrayCR"></span><span class="target" id="group__io-kvikio_1ga9fabc1b1e5cd6e0c7c97d2dcf9f2e613"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_file</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">file_path</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">LogicalArray</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">array</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArray" title="Link to this definition">#</a><br /></dt>
+<dd><p>Write a <a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> to a file. </p>
+<p>The array must be linear, i.e. have dimension of 1.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This API is experimental. A future release may change or remove this API without warning, deprecation period, or notice. The user is nevertheless encouraged to use this API, and submit any feedback to <a class="reference external" href="mailto:legate&#37;&#52;&#48;nvidia&#46;com">legate<span>&#64;</span>nvidia<span>&#46;</span>com</a>. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> – The path to the file. </p></li>
+<li><p><strong>array</strong> – The array to seralize.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the dimension of <code class="docutils literal notranslate"><span class="pre">array</span></code> is not 1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv49from_fileRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE">
+<span id="_CPPv39from_fileRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE"></span><span id="_CPPv29from_fileRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE"></span><span id="from_file__std::filesystem::pathCR.ShapeCR.TypeCR.std::vector:std::uint64_t:CR.std::optional:std::vector:std::uint64_t::"></span><span class="target" id="group__io-kvikio_1ga579a0efb043e974c6425edd70229677f"></span><span class="n"><span class="pre">LogicalArray</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">from_file</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">file_path</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Shape</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shape</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">type</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">tile_shape</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tile_start</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49from_fileRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Load a <a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> from a file in tiles. </p>
+<p>The file must have been written by a call to <code class="docutils literal notranslate"><a class="reference internal" href="#group__io-kvikio_1ga9fabc1b1e5cd6e0c7c97d2dcf9f2e613"><span class="std std-ref"><span class="pre">to_file()</span></span></a></code>. If <code class="docutils literal notranslate"><span class="pre">tile_start</span></code> is not given, it is initialized with zeros.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tile_start</span></code> and <code class="docutils literal notranslate"><span class="pre">tile_shape</span></code> must have the same size.</p>
+<p><code class="docutils literal notranslate"><span class="pre">array</span></code> must have the same number of dimensions as tiles. In effect <code class="docutils literal notranslate"><span class="pre">array.dim()</span></code> must equal <code class="docutils literal notranslate"><span class="pre">tile_shape.size()</span></code>.</p>
+<p>The array shape must be divisible by the tile shape.</p>
+<p>Given some array stored on disk as:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[1, 2, 3, 4, 5, 6, 7, 8, 9]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tile_shape</span></code> sets the leaf-task launch group size. For example, <code class="docutils literal notranslate"><span class="pre">tile_shape</span> <span class="pre">=</span> <span class="pre">[3]</span></code> would result in each leaf-task getting assigned a contiguous triplet of the array:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  task_0     task_1     task_2
+____|____  _____|___  ____|____
+[1, 2, 3], [4, 5, 6], [7, 8, 9]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tile_start</span></code> is a local offset into the tile from which to begin reading. Given <code class="docutils literal notranslate"><span class="pre">tile_start</span> <span class="pre">=</span> <span class="pre">[1]</span></code>, in the above example would mean that the resulting array would be read as:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>// First, split into tile_shape shapes.
+[1, 2, 3], [4, 5, 6], [7, 8, 9]
+// Then apply the offset (1) to each subgroup
+   [2, 3],    [5, 6],    [8, 9]
+</pre></div>
+</div>
+<p>Such that the resulting array would contain:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[2, 3, 5, 6, 8, 9]
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This API is experimental. A future release may change or remove this API without warning, deprecation period, or notice. The user is nevertheless encouraged to use this API, and submit any feedback to <a class="reference external" href="mailto:legate&#37;&#52;&#48;nvidia&#46;com">legate<span>&#64;</span>nvidia<span>&#46;</span>com</a>. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> – The path to the dataset. </p></li>
+<li><p><strong>shape</strong> – The shape of the resulting array. </p></li>
+<li><p><strong>type</strong> – The datatype of the array. </p></li>
+<li><p><strong>tile_shape</strong> – The shape of each tile. </p></li>
+<li><p><strong>tile_start</strong> – The offsets into each tile from which to read.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">system_error</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">file_path</span></code> does not exist. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">tile_shape</span></code> and <code class="docutils literal notranslate"><span class="pre">tile_start</span></code> are not the same size. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the array dimension does not match the tile shape. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the array shape is not divisible by the tile shape.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> The loaded array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArrayRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE">
+<span id="_CPPv37to_fileRKNSt10filesystem4pathERK12LogicalArrayRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE"></span><span id="_CPPv27to_fileRKNSt10filesystem4pathERK12LogicalArrayRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE"></span><span id="to_file__std::filesystem::pathCR.LogicalArrayCR.std::vector:std::uint64_t:CR.std::optional:std::vector:std::uint64_t::"></span><span class="target" id="group__io-kvikio_1ga0c38935fecbbba13038eb07812446ba2"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">to_file</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">file_path</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">LogicalArray</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">array</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">tile_shape</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">tile_start</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArrayRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Write a <a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> to file in tiles. </p>
+<p>If <code class="docutils literal notranslate"><span class="pre">tile_start</span></code> is not given, it is initialized with zeros.</p>
+<p><code class="docutils literal notranslate"><span class="pre">tile_start</span></code> and <code class="docutils literal notranslate"><span class="pre">tile_shape</span></code> must have the same size.</p>
+<p><code class="docutils literal notranslate"><span class="pre">array</span></code> must have the same number of dimensions as tiles. In effect <code class="docutils literal notranslate"><span class="pre">array.dim()</span></code> must equal <code class="docutils literal notranslate"><span class="pre">tile_shape.size()</span></code>.</p>
+<p>The array shape must be divisible by the tile shape.</p>
+<p>See <code class="docutils literal notranslate"><a class="reference internal" href="#group__io-kvikio_1gabc9b93324a9537700aa4c1411b73c471"><span class="std std-ref"><span class="pre">from_file()</span></span></a></code> for further discussion on the arguments.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This API is experimental. A future release may change or remove this API without warning, deprecation period, or notice. The user is nevertheless encouraged to use this API, and submit any feedback to <a class="reference external" href="mailto:legate&#37;&#52;&#48;nvidia&#46;com">legate<span>&#64;</span>nvidia<span>&#46;</span>com</a>. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> – The base path of the dataset to write. </p></li>
+<li><p><strong>array</strong> – The array to serialize. </p></li>
+<li><p><strong>tile_shape</strong> – The shape of the tiles. </p></li>
+<li><p><strong>tile_start</strong> – The offsets into each tile from which to write.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">tile_shape</span></code> and <code class="docutils literal notranslate"><span class="pre">tile_start</span></code> are not the same size. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the array dimension does not match the tile shape. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the array shape is not divisible by the tile shape.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv420from_file_by_offsetsRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEERKNSt6vectorINSt8uint64_tEEE">
+<span id="_CPPv320from_file_by_offsetsRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEERKNSt6vectorINSt8uint64_tEEE"></span><span id="_CPPv220from_file_by_offsetsRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEERKNSt6vectorINSt8uint64_tEEE"></span><span id="from_file_by_offsets__std::filesystem::pathCR.ShapeCR.TypeCR.std::vector:std::uint64_t:CR.std::vector:std::uint64_t:CR"></span><span class="target" id="group__io-kvikio_1ga7559e87d26288f3f4f9ffa1027b68505"></span><span class="n"><span class="pre">LogicalArray</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">from_file_by_offsets</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">file_path</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Shape</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shape</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">type</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">offsets</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">tile_shape</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420from_file_by_offsetsRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEERKNSt6vectorINSt8uint64_tEEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Load a <a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> from a file in tiles. </p>
+<p><code class="docutils literal notranslate"><span class="pre">array</span></code> must have the same number of dimensions as tiles. In effect <code class="docutils literal notranslate"><span class="pre">array.dim()</span></code> must equal <code class="docutils literal notranslate"><span class="pre">tile_shape.size()</span></code>.</p>
+<p>This routine should be used if each leaf task in a tile should read from a potentially non-uniform offset than the others. If the offset is uniform (i.e. can be deduced by the leaf task index, and the tile shape), then <code class="docutils literal notranslate"><a class="reference internal" href="#group__io-kvikio_1gabc9b93324a9537700aa4c1411b73c471"><span class="std std-ref"><span class="pre">from_file()</span></span></a></code> should be preferred.</p>
+<p>For example, given some array (of int32’s) stored on disk as:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[1, 2, 3, 4, 5, 6, 7, 8, 9]
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">tile_shape</span></code> sets the leaf-task launch group size. For example, <code class="docutils literal notranslate"><span class="pre">tile_shape</span> <span class="pre">=</span> <span class="pre">{3}</span></code> would result in each leaf-task getting assigned a contiguous triplet of the array:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  task_0     task_1     task_2
+____|____  _____|___  ____|____
+[1, 2, 3], [4, 5, 6], [7, 8, 9]
+</pre></div>
+</div>
+<p>It also sets the number of elements to read. Each leaf-task will read <code class="docutils literal notranslate"><span class="pre">tile_shape.volume()</span> <span class="pre">*</span> <span class="pre">type.size()</span></code> bytes from the file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">offsets</span></code> encodes the per-leaf-task global offset in bytes into the array for each tile. Crucially, these offsets need not (and by definition shall not) be the same for each leaf task. For example, assuming <code class="docutils literal notranslate"><span class="pre">sizeof(std::int32_t)</span> <span class="pre">=</span> <span class="pre">4</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">uint64_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">offsets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// task_0 reads from byte index 0 of the file (i.e. starting from element 0)</span>
+<span class="w">  </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="c1">// task_1 reads from byte index 4 * 3 = 12 of the file (i.e. starting from element 4)</span>
+<span class="w">  </span><span class="mi">3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int32_t</span><span class="p">),</span>
+<span class="w">  </span><span class="c1">// task_2 reads from byte index 4 * 7 = 28 of the file (i.e. starting from element 8)</span>
+<span class="w">  </span><span class="mi">7</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="kt">int32_t</span><span class="p">),</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Note how the final offset is arbitrary. If the offsets were uniform, it would start from element 7. The resulting array would then contain:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[1, 2, 3, 4, 5, 6, 8, 9]
+</pre></div>
+</div>
+<p>If the data is multi-dimensional, the task IDs for the purposes of indexing into <code class="docutils literal notranslate"><span class="pre">offsets</span></code> are linearized in C order. For example, if we have 2x2 tiles (<code class="docutils literal notranslate"><span class="pre">tile_shape</span> <span class="pre">=</span> <span class="pre">{2,</span> <span class="pre">2}</span></code>), the task IDs would be linearized as follows:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>(0, 0) -&gt; 0
+(0, 1) -&gt; 1
+(1, 0) -&gt; 2
+(1, 1) -&gt; 3
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This API is experimental. A future release may change or remove this API without warning, deprecation period, or notice. The user is nevertheless encouraged to use this API, and submit any feedback to <a class="reference external" href="mailto:legate&#37;&#52;&#48;nvidia&#46;com">legate<span>&#64;</span>nvidia<span>&#46;</span>com</a>. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_path</strong> – The path to the file to read. </p></li>
+<li><p><strong>shape</strong> – The shape of the resulting array. </p></li>
+<li><p><strong>type</strong> – The datatype of the array. </p></li>
+<li><p><strong>offsets</strong> – The per-leaf-task global offsets (in bytes) into the file from which to read. </p></li>
+<li><p><strong>tile_shape</strong> – The shape of each tile.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">system_error</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">file_path</span></code> does not exist. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">offsets.size()</span></code> does not equal the number of partitioned array tiles.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="data.html#classlegate_1_1LogicalArray"><span class="std std-ref">LogicalArray</span></a> The loaded array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="util.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Util</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../legate.stl/source/reference/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Legate.STL Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hdf5">HDF5</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49from_fileRKNSt10filesystem4pathENSt11string_viewE"><code class="docutils literal notranslate"><span class="pre">from_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate2io4hdf528UnsupportedHDF5DataTypeErrorE"><code class="docutils literal notranslate"><span class="pre">UnsupportedHDF5DataTypeError</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate2io4hdf519InvalidDataSetErrorE"><code class="docutils literal notranslate"><span class="pre">InvalidDataSetError</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate2io4hdf519InvalidDataSetError19InvalidDataSetErrorERKNSt6stringENSt10filesystem4pathENSt6stringE"><code class="docutils literal notranslate"><span class="pre">InvalidDataSetError()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate2io4hdf519InvalidDataSetError4pathEv"><code class="docutils literal notranslate"><span class="pre">path()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate2io4hdf519InvalidDataSetError12dataset_nameEv"><code class="docutils literal notranslate"><span class="pre">dataset_name()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kvikio">KVikIO</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49from_fileRKNSt10filesystem4pathERK4Type"><code class="docutils literal notranslate"><span class="pre">from_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArray"><code class="docutils literal notranslate"><span class="pre">to_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv49from_fileRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE"><code class="docutils literal notranslate"><span class="pre">from_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv47to_fileRKNSt10filesystem4pathERK12LogicalArrayRKNSt6vectorINSt8uint64_tEEENSt8optionalINSt6vectorINSt8uint64_tEEEEE"><code class="docutils literal notranslate"><span class="pre">to_file()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv420from_file_by_offsetsRKNSt10filesystem4pathERK5ShapeRK4TypeRKNSt6vectorINSt8uint64_tEEERKNSt6vectorINSt8uint64_tEEE"><code class="docutils literal notranslate"><span class="pre">from_file_by_offsets()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

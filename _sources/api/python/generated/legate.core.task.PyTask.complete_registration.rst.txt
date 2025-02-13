@@ -1,0 +1,6 @@
+legate.core.task.PyTask.complete\_registration
+==============================================
+
+.. currentmodule:: legate.core.task
+
+.. automethod:: PyTask.complete_registration

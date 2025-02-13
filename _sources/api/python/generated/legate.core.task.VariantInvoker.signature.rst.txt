@@ -1,0 +1,6 @@
+legate.core.task.VariantInvoker.signature
+=========================================
+
+.. currentmodule:: legate.core.task
+
+.. autoattribute:: VariantInvoker.signature

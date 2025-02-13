@@ -1,0 +1,35 @@
+﻿legate.core.task.InputStore
+===========================
+
+.. currentmodule:: legate.core.task
+
+.. autoclass:: InputStore
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InputStore.__init__
+      ~InputStore.get_inline_allocation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~InputStore.__array_interface__
+      ~InputStore.__cuda_array_interface__
+      ~InputStore.__doc__
+      ~InputStore.domain
+      ~InputStore.ndim
+      ~InputStore.target
+      ~InputStore.type
+   
+   

@@ -1,0 +1,766 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Changes: 24.11 &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/nvidia-sphinx-theme.css?v=4c56b82b" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'changes/2411';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Changes: 24.06" href="2406.html" />
+    <link rel="prev" title="Changes: 25.01" href="2501.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../user.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../jupyter.html">Using with Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../resources.html">Links to resources</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../api/python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/shape.html">Shape</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/python/io.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/cpp/index.html">C++ API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/cpp/data.html">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/cpp/partitioning.html">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/cpp/runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/cpp/mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/cpp/types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/cpp/typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/cpp/task.html">Task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/cpp/util.html">Util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/cpp/io.html">IO</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../versions.html">Versions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Changelog</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="2501.html">2501</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="2406.html">2406</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../legate.stl/source/user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Change Log</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Changes: 24.11</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="changes-24-11">
+<h1>Changes: 24.11<a class="headerlink" href="#changes-24-11" title="Link to this heading">#</a></h1>
+<p class="rubric">General</p>
+<ul>
+<li><p>Rename the Python package from <code class="docutils literal notranslate"><span class="pre">legate.core</span></code> to <code class="docutils literal notranslate"><span class="pre">legate</span></code>. Note that the layout of
+the package itself, and the names of modules have not changed. This only affects the
+install command. Where previously a user would write</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>legate-core
+</pre></div>
+</div>
+<p>They now should write</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>legate
+</pre></div>
+</div>
+</li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">LEGATE_INLINE_TASK_LAUNCH</span></code> environment variable to request inline task
+launch. When enabled, this instructs Legate to forgo the usual Legion task calling
+convention in favor of launching the task immediately on the submitting thread. This
+feature is currently considered <em>experimental</em>.</p></li>
+<li><p>Rename <code class="docutils literal notranslate"><span class="pre">bind.sh</span></code> to <code class="docutils literal notranslate"><span class="pre">legate-bind.sh</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">LEGATE_CUDA_DRIVER</span></code> environment variable to optionally override the location of
+the CUDA driver shared library. If not set, defaults to the system-default name of the
+library (usually “libcuda.so.1”).</p></li>
+</ul>
+<section id="c">
+<h2>C++<a class="headerlink" href="#c" title="Link to this heading">#</a></h2>
+<p class="rubric">General</p>
+<ul>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">legate_c.h</span></code> and all macros defined therein.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">legate_preamble.h</span></code>.</p></li>
+<li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">LEGATE_NO_VARIANT</span></code>, <code class="docutils literal notranslate"><span class="pre">LEGATE_CPU_VARIANT</span></code>, <code class="docutils literal notranslate"><span class="pre">LEGATE_GPU_VARIANT</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">LEGATE_OMP_VARIANT</span></code>. Users should use the corresponding <code class="docutils literal notranslate"><span class="pre">legate::VariantCode</span></code>
+instead.</p></li>
+<li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">LegateVariantCode</span></code>. Users should use <code class="docutils literal notranslate"><span class="pre">legate::VariantCode</span></code> instead.</p></li>
+<li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">legate::destroy()</span></code>. Users should call <code class="docutils literal notranslate"><span class="pre">legate::finish()</span></code> instead.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::has_finished()</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">LocalTaskID</span></code> and <code class="docutils literal notranslate"><span class="pre">GlobalTaskID</span></code>, to describe local and global Task ID’s. Use
+these across the public and private API whenever local or global Task ID’s are
+requested. Unfortunately, this change could not be made in a backwards-compatible way,
+and users are therefore required to make the following changes. Users that previously did</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">MyTask</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">LegateTask</span><span class="o">&lt;</span><span class="n">MyTask</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="k">constexpr</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">TASK_ID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(...,</span><span class="w"> </span><span class="n">MyTask</span><span class="o">::</span><span class="n">TASK_ID</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Must now either</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">MyTask</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">LegateTask</span><span class="o">&lt;</span><span class="n">MyTask</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="k">constexpr</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">TASK_ID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">LocalTaskID</span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(...,</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">LocalTaskID</span><span class="p">{</span><span class="n">MyTask</span><span class="o">::</span><span class="n">TASK_ID</span><span class="p">});</span>
+</pre></div>
+</div>
+</li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">LocalRedopID</span></code> and <code class="docutils literal notranslate"><span class="pre">GlobalRedopID</span></code>, to describe local and global reduction
+operator ID’s.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">partition.h</span></code> and <code class="docutils literal notranslate"><span class="pre">restriction.h</span></code> from the public API</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">LEGATE_MPI_WRAPPER</span></code> environment variable.</p></li>
+</ul>
+<p class="rubric">Data</p>
+<ul class="simple">
+<li><p>Improve <code class="docutils literal notranslate"><span class="pre">ScopedAllocator::ScopeAllocator()</span></code> alignment validation. The alignment is now
+required to be a strictly positive power of 2. This was technically always the case, but
+previous versions did not check this, leading to silent failures down the line. The
+constructor will now validate the alignment and throw an exception if it is improper.</p></li>
+<li><p>Change passing <code class="docutils literal notranslate"><span class="pre">nullptr</span></code> to <code class="docutils literal notranslate"><span class="pre">ScopedAllocator::deallocate()</span></code>. This is now a no-op
+(previously this threw a <code class="docutils literal notranslate"><span class="pre">std::invalid_argument</span></code> exception).</p></li>
+<li><p>Clarify that <code class="docutils literal notranslate"><span class="pre">ScopedAllocator::allocate(0)</span></code> will return a <code class="docutils literal notranslate"><span class="pre">nullptr</span></code>. It always did
+this, but this behavior is now explicitly documented. Coupled with the change above, it
+means that all pointers returned from <code class="docutils literal notranslate"><span class="pre">allocate()</span></code> are safe to pass to
+<code class="docutils literal notranslate"><span class="pre">deallocate()</span></code>.</p></li>
+</ul>
+<p class="rubric">Mapping</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">NodeRange::hash()</span></code>.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">mapping::Mapper::set_machine()</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">mapping::InstanceMappingPolicy::redundant</span></code> that forces eager collection of freshly created
+redundant copies. Add <code class="docutils literal notranslate"><span class="pre">mapping::InstanceMappingPolicy::with_redundant()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">mapping::InstanceMappingPolicy::set_redundant()</span></code> to allow mappers to set new values to the
+flag.</p></li>
+<li><p>Change enum values for <code class="docutils literal notranslate"><span class="pre">mapping::TaskTarget</span></code>, <code class="docutils literal notranslate"><span class="pre">mapping::StoreTarget</span></code>,
+<code class="docutils literal notranslate"><span class="pre">mapping::AllocPolicy</span></code>, <code class="docutils literal notranslate"><span class="pre">mapping::InstLayout</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">mapping::DimOrdering::Kind</span></code>. Users should only consider the names of enums (and their
+members) to be stable, and should not depend on the values themselves.</p></li>
+</ul>
+<p class="rubric">Partitioning</p>
+<p class="rubric">Tasks</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">VariantOptions::elide_device_ctx_sync</span></code> and
+<code class="docutils literal notranslate"><span class="pre">VariantOptions::with_elide_device_ctx_sync()</span></code> to allow specifying that a particular
+task variant need not perform device context synchronization after task completion.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">TaskContext::get_task_stream()</span></code> to retrieve the current tasks’ active CUDA stream.</p></li>
+<li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">TaskRegistrar::record_task(std::int64_t</span> <span class="pre">std::unique_ptr&lt;TaskInfo&gt;)</span></code>. Users
+should use <code class="docutils literal notranslate"><span class="pre">LegateTask::Registrar</span></code> combined with <code class="docutils literal notranslate"><span class="pre">TaskRegistrar::record_all_task()</span></code>
+instead.</p></li>
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">TaskRegistrar::register_all_tasks()</span></code> to take a mutable reference to the
+<code class="docutils literal notranslate"><span class="pre">library</span></code> argument instead of by value.</p></li>
+<li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">TaskInfo::has_variant()</span></code>. Users should use <code class="docutils literal notranslate"><span class="pre">TaskInfo::find_variant()</span></code>
+directly instead.</p></li>
+<li><p>Change <code class="docutils literal notranslate"><span class="pre">TaskInfo::find_variant()</span></code> to return a <code class="docutils literal notranslate"><span class="pre">std::optional</span></code>. If the optional has a
+value, the find succeeded and the contained value is the <code class="docutils literal notranslate"><span class="pre">VariantInfo</span></code>. Otherwise the
+optional does not contain a value.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">TaskContext::num_scalars()</span></code> to query the number of <code class="docutils literal notranslate"><span class="pre">Scalar</span></code> arguments for a
+task.</p></li>
+<li><p>Move the implementation detail of the CPU communicator (i.e.,
+<code class="docutils literal notranslate"><span class="pre">legate::comm::coll::BackenedNetwork</span></code>,
+<code class="docutils literal notranslate"><span class="pre">legate::comm::coll::LocalNetwork</span></code>, and <code class="docutils literal notranslate"><span class="pre">legate::comm::coll::MPINetwork</span></code>)
+to the detail namespace. As a consequence, the following headers are removed
+from the public interface:<code class="docutils literal notranslate"><span class="pre">backend_network.h</span></code>, <code class="docutils literal notranslate"><span class="pre">thread_comm.h</span></code>,
+<code class="docutils literal notranslate"><span class="pre">local_network.h</span></code>, and <code class="docutils literal notranslate"><span class="pre">mpi_network.h</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">TaskContext::concurrent_task_barrier()</span></code> to perform a blocking barrier across all
+the leaf tasks in a concurrent task launch.</p></li>
+</ul>
+<p class="rubric">Types</p>
+<ul class="simple">
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">ReductionOpKind::DIV</span></code> and <code class="docutils literal notranslate"><span class="pre">ReductionOpKind::SUB</span></code>. Partial reduction results
+are combined in an arbitrary order; since division and subtraction are neither
+commutative nor associative, it is impossible to use these reliably as reduction
+operators.</p></li>
+<li><p>Change the return type of <code class="docutils literal notranslate"><span class="pre">legate::array_type</span></code> from <code class="docutils literal notranslate"><span class="pre">legate::Type</span></code> to
+<code class="docutils literal notranslate"><span class="pre">legate::FixedArrayType</span></code>.</p></li>
+<li><p>Change the return type of <code class="docutils literal notranslate"><span class="pre">legate::struct_type</span></code> from <code class="docutils literal notranslate"><span class="pre">legate::Type</span></code> to
+<code class="docutils literal notranslate"><span class="pre">legate::StructType</span></code>.</p></li>
+<li><p>Change the return type of <code class="docutils literal notranslate"><span class="pre">legate::list_type</span></code> from <code class="docutils literal notranslate"><span class="pre">legate::Type</span></code> to
+<code class="docutils literal notranslate"><span class="pre">legate::ListType</span></code>.</p></li>
+<li><p>Change the return type of <code class="docutils literal notranslate"><span class="pre">legate::point_type</span></code> from <code class="docutils literal notranslate"><span class="pre">legate::Type</span></code> to
+<code class="docutils literal notranslate"><span class="pre">legate::FixedArrayType</span></code>. <code class="docutils literal notranslate"><span class="pre">legate.core.types.point_type</span></code> now returns
+<code class="docutils literal notranslate"><span class="pre">legate.core.types.FixedArrayType</span></code> instead of <code class="docutils literal notranslate"><span class="pre">legate.core.types.Type</span></code>.</p></li>
+<li><p>Change the return type of <code class="docutils literal notranslate"><span class="pre">legate::rect_type</span></code> from <code class="docutils literal notranslate"><span class="pre">legate::Type</span></code> to <code class="docutils literal notranslate"><span class="pre">legate::StructType</span></code>.
+<code class="docutils literal notranslate"><span class="pre">legate.core.types.rect_type</span></code> now returns <code class="docutils literal notranslate"><span class="pre">legate.core.types.StructType</span></code> instead of
+<code class="docutils literal notranslate"><span class="pre">legate.core.types.Type</span></code>.</p></li>
+</ul>
+<p class="rubric">Runtime</p>
+<ul class="simple">
+<li><p>Add optional <code class="docutils literal notranslate"><span class="pre">default_options</span></code> argument to <code class="docutils literal notranslate"><span class="pre">Runtime::create_library()</span></code> to specify
+the library-default task variant options.</p></li>
+<li><p>Add optional <code class="docutils literal notranslate"><span class="pre">default_options</span></code> argument to <code class="docutils literal notranslate"><span class="pre">Runtime::find_or_create_library()</span></code> to
+specify the library-default task variant options.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">Library::get_default_variant_options()</span></code> to retrieve the library-default task
+variant options.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">Runtime::issue_mapping_fence()</span></code> to issue a mapping fence that prevents
+all the downstream tasks from being mapped ahead of the fence.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">Library::get_mapper_id()</span></code>. All libraries share the same (internal) underlying
+Legion mapper, so this method is pointless.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">Library::register_mapper()</span></code>. The mapper should be passed when the library is
+created, and can no longer be changed after the fact.</p></li>
+<li><p>Remove restriction on stores with zero-sized types. It is now possible to create a
+<code class="docutils literal notranslate"><span class="pre">LogicalStore</span></code> of type <code class="docutils literal notranslate"><span class="pre">Type::Code::NIL</span></code> and, for example, empty binary types.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">Runtime::prefetch_bloated_instances()</span></code> to prefetch instances bloated by
+a certain amount for a given logical store.</p></li>
+</ul>
+<p class="rubric">Utilities</p>
+<ul class="simple">
+<li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">legate::cuda::StreamPool</span></code>. Users should use
+<code class="docutils literal notranslate"><span class="pre">TaskContext::get_task_stream()</span></code> instead within tasks.</p></li>
+<li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">legate::cuda::StreamView</span></code>. Users should implement their own version of this
+class.</p></li>
+</ul>
+</section>
+<section id="python">
+<h2>Python<a class="headerlink" href="#python" title="Link to this heading">#</a></h2>
+<p class="rubric">General</p>
+<p class="rubric">Data</p>
+<p class="rubric">Mapping</p>
+<p class="rubric">Partitioning</p>
+<p class="rubric">Tasks</p>
+<ul class="simple">
+<li><p>Add support for default values on scalar arguments in Python tasks.</p></li>
+<li><p>Add support for <code class="docutils literal notranslate"><span class="pre">=</span> <span class="pre">None</span></code> as a default argument for store-type arguments in Python
+tasks. <code class="docutils literal notranslate"><span class="pre">None</span></code> is currently the only allowed default value for stores. Users may use
+any of the supported “optional” type hint variants (<code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">|</span> <span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">Union[x,</span> <span class="pre">None]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Optional[x]</span></code>) to inform the runtime that a store argument may be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p>Add support for passing simple Legate Data Interface objects with a single,
+non-nullable store, as arguments to Python tasks.</p></li>
+</ul>
+<p class="rubric">Types</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">Type.from_python_object()</span></code> to allow automatic type deduction at runtime. Make
+<code class="docutils literal notranslate"><span class="pre">type</span></code> parameters more optional in several cases as a result.</p></li>
+</ul>
+<p class="rubric">Runtime</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">Runtime.prefetch_bloated_instances()</span></code> to prefetch instances bloated by
+a certain amount for a given logical store.</p></li>
+</ul>
+<p class="rubric">Utilities</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="2501.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Changes: 25.01</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="2406.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Changes: 24.06</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#c">C++</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python">Python</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

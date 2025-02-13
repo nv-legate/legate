@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>NVIDIA Legate &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
+    <title>Frequently Asked Questions &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
   
   
   
@@ -47,8 +47,7 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=4ea706d9"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'faq';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
@@ -59,7 +58,8 @@
     <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Overview" href="overview.html" />
+    <link rel="next" title="API Reference" href="api/index.html" />
+    <link rel="prev" title="Resources" href="resources.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -118,7 +118,7 @@
     
   
 
-<a class="navbar-brand logo" href="#">
+<a class="navbar-brand logo" href="index.html">
   
   
   
@@ -189,8 +189,6 @@
       
       
       
-        
-      
       <dialog id="pst-primary-sidebar-modal"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
@@ -201,7 +199,7 @@
     
   
 
-<a class="navbar-brand logo" href="#">
+<a class="navbar-brand logo" href="index.html">
   
   
   
@@ -249,7 +247,7 @@
      aria-label="Table of Contents">
   <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="user.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -259,7 +257,7 @@
 <li class="toctree-l2"><a class="reference internal" href="resources.html">Links to resources</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Frequently Asked Questions</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -381,7 +379,31 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article d-print-none"></div>
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Frequently Asked Questions</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
               
               
               
@@ -389,65 +411,94 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="nvidia-legate">
-<h1>NVIDIA Legate<a class="headerlink" href="#nvidia-legate" title="Link to this heading">#</a></h1>
-<p>The Legate project endeavors to democratize computing by making it possible for
-all programmers to leverage the power of large clusters of CPUs and GPUs by
-running the same code that runs on a desktop or a laptop at scale. Using this
-technology, computational and data scientists and researchers can develop and
-test programs on moderately sized data sets on local machines and then
-immediately scale up to larger data sets deployed on many nodes in the cloud or
-on a supercomputer without any code modifications.</p>
-<div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="overview.html#why-legate">Why Legate</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview.html#the-legate-data-model">The Legate Data Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview.html#how-does-legate-work">How Does Legate Work</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview.html#contact">Contact</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="user.html">User Guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Using with Jupyter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gasnet.html">GASNet-based Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="resources.html">Links to resources</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/python/index.html">Python API Reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/cpp/index.html">C++ API Reference</a></li>
-</ul>
-</li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="versions.html">Versions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="changes/index.html">Changelog</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="legate.stl/source/legate-stl.html">Legate.STL</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="legate.stl/source/user/index.html">User guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="legate.stl/source/reference/index.html">Legate.STL Reference</a></li>
-<li class="toctree-l2"><a class="reference internal" href="legate.stl/source/legate-stl.html#indices-and-tables">Indices and tables</a></li>
-</ul>
-</li>
-</ul>
-</div>
-<section id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
-</section>
+  <section id="frequently-asked-questions">
+<h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Link to this heading">#</a></h1>
+<dl class="simple">
+<dt>Does Legate only work on NVIDIA hardware?</dt><dd><p>No, Legate will run on any processor supported by Legion (e.g. x86, ARM, and
+PowerPC CPUs), as well as any network supported by GASNet or UCX (e.g. Infiniband,
+Cray, Omnipath, and (ROC-)Ethernet based interconnects).</p>
+</dd>
+<dt>What languages does the Legate API have bindings for?</dt><dd><p>Currently the Legate bindings are available in C++ and Python.</p>
+</dd>
+<dt>Do I have to build drop-in replacement libraries?</dt><dd><p>No! While we’ve chosen to provide drop-in replacement libraries for
+popular Python libraries to illustrate the benefits of Legate, you
+are both welcomed and encouraged to develop your own libraries on top
+of Legate. We promise that they will compose well with other existing
+Legate libraries.</p>
+</dd>
+<dt>What other libraries are you planning to release for the Legate ecosystem?</dt><dd><p>We’re still working on that. If you have thoughts about what is important
+please let us know at <em>legate&#64;nvidia.com</em> so that we can get a feel for
+where best to put our time.</p>
+</dd>
+<dt>Does Legate interoperate with [other distributed runtime]?</dt><dd><p>Yes, probably, but we don’t recommend it. Our motivation for building
+Legate is to provide the bare minimum subset of functionality that
+we believe is essential for building truly composable software that can still
+run at scale. No other systems out there met our needs. Providing
+interoperability with those other systems will destroy the very essence
+of what Legate is and significantly dilute its benefits. All that being
+said, Legion does provide some means of doing stop-the-world exchanges
+with other runtime system running concurrently in the same processes.
+If you are interested in pursuing this approach please open an issue
+on the <a class="reference external" href="https://github.com/StanfordLegion/legion/issues">Legion github issue tracker</a>
+as it will be almost entirely orthogonal to how you use Legate.</p>
+</dd>
+<dt>Where can I go with technical questions?</dt><dd><p>For technical questions about Legate and Legate-based tools, please visit
+the <a class="reference external" href="https://github.com/nv-legate/discussion">community discussion forum</a>.</p>
+</dd>
+</dl>
+<dl id="mpi-wrapper-faq">
+<dt>What is the Legate MPI wrapper and why do I need it?</dt><dd><p>MPI is considered “API stable”, not “ABI stable”<a class="footnote-reference brackets" href="#abi" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. If a library is compiled on one
+machine, with a particular flavor and version of MPI (for example, OpenMPI v4.10),
+there is no guarantee that the same shared library will be able to link and run on
+another machine with another MPI implementation, or even a different version
+of the same MPI implementation.</p>
+<p>Normally this is not a problem for open-source libraries because users can simply
+compile the source on their local machine, with their local MPI. For closed-source
+libraries (such as Legate) which only ship binary artifacts, this presents a large
+problem.</p>
+<p>There are 2 choices to address this issue:</p>
+<ol class="arabic simple">
+<li><p>Ship a pre-compiled version of the library for all supported MPI flavors and
+versions.</p></li>
+<li><p>“Shim” the MPI interface with a lightweight wrapper which can be compiled locally
+on the target machine.</p></li>
+</ol>
+<p>Solution 1 is easiest for the user, as they will – courtesy of their package manager
+– automatically get a compatible version of both MPI and Legate installed on their
+machine which are guaranteed to be compatible. However, this places an enormous
+packaging burden on us. We would have to ship a version of our library for each MPI
+version and regular variant (CPU, GPU, debug, etc.). If we have 3 library variants,
+and 5 compatible MPI versions, this means that we need to ship (and test!) 15
+different versions of our library. In practice, due to the longstanding ABI
+instability in MPI, the true number of MPI versions/flavors that would need this
+treatment would easily number in the 30-40 range.</p>
+<p>Solution 2 is a compromise. In this case, we can isolate the MPI compile surface to
+just the functions that Legate requires into a “shim” wrapper. This wrapper, once
+compiled on the end users’ machine, can then be dynamically loaded by Legate at
+runtime to enable the interface.</p>
+</dd>
+</dl>
+<p class="rubric">Footnotes</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="abi" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>There are two classes of software interface stability: “API” and “ABI”
+stability. API stability means that a given piece of software will not make backwards
+incompatible source-level changes. This means that, if the software exports <code class="docutils literal notranslate"><span class="pre">int</span>
+<span class="pre">foo(int)</span></code>, then users can expect a function <code class="docutils literal notranslate"><span class="pre">foo()</span></code> with a compatible signature to
+exist forever.</p>
+<p>Note that a “compatible” signature does not mean that modifications to <code class="docutils literal notranslate"><span class="pre">foo()</span></code> are
+forbidden!  For example, if the library is built using a language that supports
+default arguments, they are free to modify <code class="docutils literal notranslate"><span class="pre">foo()</span></code> to, for example, <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">foo(int,</span>
+<span class="pre">double</span> <span class="pre">=</span> <span class="pre">1.2)</span></code>. This modification allows original callers of <code class="docutils literal notranslate"><span class="pre">foo()</span></code></p>
+<p>ABI stability, on the other hand, is a super-set of API stability, and mandates that
+not only will the library never change existing API between versions but that the
+binary interface will also remain unchanged. Note, the strictness of API compatibility
+is now absolute. While previously the library could get away with extending <code class="docutils literal notranslate"><span class="pre">foo()</span></code>
+with, say, default parameters to keep a <em>compatible</em> API, the library is now bound to
+export <code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">foo(int)</span></code> exactly as written in perpetuity.</p>
+</aside>
+</aside>
 </section>
 
 
@@ -460,12 +511,21 @@ on a supercomputer without any code modifications.</p>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="resources.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Resources</p>
+      </div>
+    </a>
     <a class="right-next"
-       href="overview.html"
+       href="api/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Overview</p>
+        <p class="prev-next-title">API Reference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

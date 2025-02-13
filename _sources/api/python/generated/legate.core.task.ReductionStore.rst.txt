@@ -1,0 +1,35 @@
+﻿legate.core.task.ReductionStore
+===============================
+
+.. currentmodule:: legate.core.task
+
+.. autoclass:: ReductionStore
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ReductionStore.__init__
+      ~ReductionStore.get_inline_allocation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ReductionStore.__array_interface__
+      ~ReductionStore.__cuda_array_interface__
+      ~ReductionStore.__doc__
+      ~ReductionStore.domain
+      ~ReductionStore.ndim
+      ~ReductionStore.target
+      ~ReductionStore.type
+   
+   

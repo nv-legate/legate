@@ -1,0 +1,6 @@
+legate.core.task.PyTask.task\_id
+================================
+
+.. currentmodule:: legate.core.task
+
+.. autoattribute:: PyTask.task_id

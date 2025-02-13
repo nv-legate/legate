@@ -1,0 +1,981 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Usage &#8212; NVIDIA legate (25.3.0.dev75+g14bdfc73)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/nvidia-sphinx-theme.css?v=4c56b82b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'legate.stl/source/user/usage';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.3';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.3.0.dev75+g14bdfc73) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.3.0.dev75+g14bdfc73)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../user.html">User Guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../jupyter.html">Using with Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../resources.html">Links to resources</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/shape.html">Shape</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/python/io.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/cpp/index.html">C++ API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/data.html">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/partitioning.html">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/task.html">Task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/util.html">Util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/cpp/io.html">IO</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../legate-stl.html">Legate.STL</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">User guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../legate-stl.html" class="nav-link">Welcome to Legate.STL</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Usage</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h1>
+<section id="initializing-the-legate-runtime">
+<h2>Initializing the Legate runtime<a class="headerlink" href="#initializing-the-legate-runtime" title="Link to this heading">#</a></h2>
+<p>Before using Legate.STL, you must initialize the Legate runtime. Legate.STL
+provides a convenience class called
+<a class="reference internal" href="../reference/index.html#_CPPv4N6legate12experimental3stl18initialize_libraryE" title="legate::experimental::stl::initialize_library"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">legate::experimental::stl::initialize_library</span></code></a> that initializes the
+runtime when it is constructed and finalizes the runtime when it is destroyed.
+The runtime must be initialized before any other Legate.STL functions are
+called.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;legate/experimental/stl.hpp&gt;</span>
+
+<span class="k">namespace</span><span class="w"> </span><span class="nn">stl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">legate</span><span class="o">::</span><span class="nn">experimental</span><span class="o">::</span><span class="nn">stl</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// Initialize the Legate runtime:</span>
+<span class="w">  </span><span class="n">stl</span><span class="o">::</span><span class="n">initialize_library</span><span class="w"> </span><span class="n">init</span><span class="p">{</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">};</span>
+
+<span class="w">  </span><span class="c1">// Your code here...</span>
+
+<span class="w">  </span><span class="c1">// Finalize the Legate runtime:</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="declaring-and-initializing-a-store">
+<h2>Declaring and initializing a store<a class="headerlink" href="#declaring-and-initializing-a-store" title="Link to this heading">#</a></h2>
+<p>There are several ways to declare and initialize a store. The simplest is to
+construct an <code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">legate::experimental::stl::logical_store</span></code> object, specifying the element type and
+and the shape of the store:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare an uninitialized 2-D store:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">}};</span>
+</pre></div>
+</div>
+<p>The code above declares an uninitialized store of <code class="docutils literal notranslate"><span class="pre">int</span></code>’s with 100 rows and 100
+columns. The second template parameter (<code class="docutils literal notranslate"><span class="pre">2</span></code>) specifies the number of dimensions
+for the store.</p>
+<p>To initialize the store with a value, pass the value as the second argument to
+the constructor:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 2-D store that is zero-initialized:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+</pre></div>
+</div>
+<p>With this form of initialization, the template parameters can be deduced. This
+definition is equivalent to the one above:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 2-D store that is zero-initialized:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+</pre></div>
+</div>
+<p>Above, the dimensionality of the store is deduced from the number of elements
+in the shape vector (<code class="docutils literal notranslate"><span class="pre">{100,</span> <span class="pre">100}</span></code>). The element type is deduced from the
+second argument (<code class="docutils literal notranslate"><span class="pre">0</span></code>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Declaring a store with an initial value is equivalent to declaring an
+uninitialized store and then calling the <code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::fill()</span></code>
+algorithm.</p>
+</div>
+<p>Finally, you can create a store <em>in situ</em> using the
+<code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::create_store()</span></code> function:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 2-D store that is zero-initialized:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="p">({</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+
+<span class="c1">// Same:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="scalar-stores">
+<h3>Scalar stores<a class="headerlink" href="#scalar-stores" title="Link to this heading">#</a></h3>
+<p>There is a special case of a store called a “scalar store.” A scalar store is a
+store with zero dimensions. It is a store that holds a single element. You can
+declare a scalar store like this:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a scalar store that is zero-initialized:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{},</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+
+<span class="c1">// Same:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">&gt;</span><span class="p">({},</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Just as with higher-dimensional stores, the element of the store can be
+accessed by asking the store for an <code class="docutils literal notranslate"><span class="pre">mdspan</span></code> view:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Get a view of the store:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+
+<span class="c1">// Access the element of the store. This is a 0-D indexing operation:</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">view</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>Due to a limitation in the current implementation of Legate.STL, scalar stores
+are immutable. Attempts to modify the value of a scalar store will result in a
+runtime error.</p>
+<p>There is a convenience function called <code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::scalar()</span></code>
+for creating scalar stores:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a scalar store holding the value 0:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">scalar</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="c1">// Same:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">scalar</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="c1">// Same:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="o">&gt;</span><span class="p">({},</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="element-types">
+<span id="id1"></span><h3>Element types<a class="headerlink" href="#element-types" title="Link to this heading">#</a></h3>
+<p>The permissible element types for <code class="docutils literal notranslate"><span class="pre">logical_store</span></code> objects are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">__half</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">double</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int8_t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int16_t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int32_t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::int64_t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::uint8_t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::uint16_t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::uint32_t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::uint64_t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::complex&lt;float&gt;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::complex&lt;double&gt;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std::string</span></code></p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+<section id="accessing-the-elements-of-a-store">
+<h2>Accessing the elements of a store<a class="headerlink" href="#accessing-the-elements-of-a-store" title="Link to this heading">#</a></h2>
+<p>A store is a logical entity that may span many disjoint address spaces, possibly
+distributed across multiple nodes. Unlike an ordinary STL container, the
+individual elements cannot be directly referenced.</p>
+<p>To access the elements of a store, you must first obtain a view into the store.
+There are several ways to do this, but the easiest is to use the
+<code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::as_mdspan()</span></code> function. This function returns a
+<a class="reference external" href="https://en.cppreference.com/w/cpp/container/mdspan">std::mdspan</a> object that
+gives direct access to the physical elements of the store.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 2-D store that is zero-initialized:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+
+<span class="c1">// Get a view of the whole the store:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+
+<span class="c1">// Access the elements of the store:</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">imax</span><span class="p">,</span><span class="w"> </span><span class="n">jmax</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">extents</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">imax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">jmax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="n">view</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">as_mdspan</span></code> function must pull all of the store’s backing data onto a
+single node and reify it in physical memory. This can be a very expensive
+operation. The call to <code class="docutils literal notranslate"><span class="pre">as_mdspan</span></code> blocks until all the data is available.</p>
+</div>
+<p>There are other ways to obtain a view into a store. See the section on <a class="reference internal" href="#id2">Creating
+Views</a> for more information.</p>
+</section>
+<section id="using-algorithms">
+<h2>Using algorithms<a class="headerlink" href="#using-algorithms" title="Link to this heading">#</a></h2>
+<p>Legate.STL provides a number of algorithms that operate on stores. These
+algorithms are similar to the range-based algorithms in the C++20 Standard
+Library, but they are designed to operate on stores and views of stores rather
+than STL ranges.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 2-D store that is zero-initialized:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+
+<span class="c1">// Assign a value to all elements of the store</span>
+<span class="c1">// with the `fill` algorithm:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">fill</span><span class="p">(</span><span class="n">store</span><span class="p">,</span><span class="w"> </span><span class="mi">42</span><span class="p">);</span>
+
+<span class="c1">// Get a view into the store:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+
+<span class="c1">// Access the elements of the store:</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">imax</span><span class="p">,</span><span class="w"> </span><span class="n">jmax</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">extents</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">imax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">jmax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="n">assert</span><span class="p">(</span><span class="n">view</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">42</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="reductions">
+<h3>Reductions<a class="headerlink" href="#reductions" title="Link to this heading">#</a></h3>
+<p>Reductions are algorithms on stores that reduces the stores’ dimensionality by
+combining elements along a chosen axis via repeated application of a binary
+operation. In the Standard Template Library, the <code class="docutils literal notranslate"><span class="pre">std::reduce</span></code> and
+<code class="docutils literal notranslate"><span class="pre">std::accumulate</span></code> algorithms are both examples of reductions.</p>
+<p>In Legate, reductions are a complicated topic. Legate.STL makes working
+with reductions easier by providing a familiar interface and hiding the
+bookkeeping details. The <code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::reduce()</span></code> and
+<code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::transform_reduce()</span></code> algorithms, together
+with the views described below, let you apply reductions along any axis of a
+store using the familiar function objects from the Standard library like
+<code class="docutils literal notranslate"><span class="pre">std::plus</span></code> and <code class="docutils literal notranslate"><span class="pre">std::minus</span></code>.</p>
+<p>Below is an example that does a row-wise reduction of a 2-D store using
+using <code class="docutils literal notranslate"><span class="pre">std::plus</span></code>. It is described after the break.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">store</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="o">&gt;</span><span class="p">({</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">});</span>
+
+<span class="c1">// fill the store with data so it looks like this:</span>
+<span class="c1">//     [[0 0 0 0]</span>
+<span class="c1">//      [1 1 1 1]</span>
+<span class="c1">//      [2 2 2 2]]</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">init</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">create_store</span><span class="p">({</span><span class="mi">4</span><span class="p">},</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="kt">int64_t</span><span class="p">{</span><span class="mi">0</span><span class="p">});</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">reduce</span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store</span><span class="p">),</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elementwise</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">plus</span><span class="o">&lt;&gt;</span><span class="p">()));</span>
+
+<span class="c1">// result is a 1D logical store with the following values:</span>
+<span class="c1">// [3 3 3 3]</span>
+</pre></div>
+</div>
+<p>Like <code class="docutils literal notranslate"><span class="pre">std::reduce</span></code>, the <code class="docutils literal notranslate"><span class="pre">legate::experimental::stl::reduce</span></code> algorithm takes
+a range of elements, an initial value, and a binary operation. The code above
+used the <code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::rows_of()</span></code> view (described below)
+to get a range of rows from the store. The result is a range of 1-D <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>
+objects, each representing a row.</p>
+</section>
+<section id="element-wise-operations">
+<h3>Element-wise operations<a class="headerlink" href="#element-wise-operations" title="Link to this heading">#</a></h3>
+<p>The code above wants to fold a store’s rows together using <code class="docutils literal notranslate"><span class="pre">std::plus</span></code>. Here
+we have a problem: <code class="docutils literal notranslate"><span class="pre">std::plus</span></code> works on elements, but we want it to work on
+<em>rows</em>, where each row is an <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>. You can’t add two <code class="docutils literal notranslate"><span class="pre">mdspan</span></code> objects
+together, and even if you could, assigning the result to another <code class="docutils literal notranslate"><span class="pre">mdspan</span></code> is
+not going to assign the <em>elements</em> of the <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>. This is where the
+<code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::elementwise()</span></code> function comes in. It adapts
+a function that works on elements to one that works on <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>’s of elements.</p>
+<p>Passing two <code class="docutils literal notranslate"><span class="pre">mdspan</span></code> objects to the result of
+<code class="docutils literal notranslate"><span class="pre">stl::elementwise(std::plus&lt;&gt;)</span></code> will return a new, special “element-wise”
+<code class="docutils literal notranslate"><span class="pre">mdspan</span></code>. When you access an element of the element-wise <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>, it will
+call <code class="docutils literal notranslate"><span class="pre">std::plus</span></code> on the corresponding elements of the two input <code class="docutils literal notranslate"><span class="pre">mdspan</span></code>’s.
+Legate.STL also knows that assigning an “element-wise” <code class="docutils literal notranslate"><span class="pre">mdspan</span></code> to a regular
+<code class="docutils literal notranslate"><span class="pre">mdspan</span></code> should assign the elements of the span rather than the span itself.</p>
+</section>
+<section id="custom-reduction-operations">
+<h3>Custom reduction operations<a class="headerlink" href="#custom-reduction-operations" title="Link to this heading">#</a></h3>
+<p>Legate does not recognize the STL functional objects like <code class="docutils literal notranslate"><span class="pre">std::plus</span></code> as
+reductions. Legate.STL transparently replaces these objects with reduction
+operations that Legate understands, like <code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">legate::SumReduction</span></code>.
+But Legate.STL’s reduction operations are not discriminating; you are free to
+use Legate’s reduction operations directly if you prefer.</p>
+</section>
+<section id="for-more-algorithm-information">
+<h3>For more algorithm information<a class="headerlink" href="#for-more-algorithm-information" title="Link to this heading">#</a></h3>
+<p>The current set of Legate.STL algorithms is small, but it will grow over time.
+It currently includes:</p>
+<ul class="simple">
+<li><p><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::fill()</span></code></p></li>
+<li><p><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::for_each()</span></code></p></li>
+<li><p><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::for_each_zip()</span></code></p></li>
+<li><p><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::reduce()</span></code></p></li>
+<li><p><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::transform()</span></code></p></li>
+<li><p><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">legate::experimental::stl::transform_reduce()</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="creating-views">
+<span id="id2"></span><h2>Creating views<a class="headerlink" href="#creating-views" title="Link to this heading">#</a></h2>
+<p>Legate.STL provides sequence algorithms like <code class="docutils literal notranslate"><span class="pre">transform</span></code> and <code class="docutils literal notranslate"><span class="pre">reduce</span></code> that,
+like their counterparts in the C++20 STL, operate on ranges of elements. There
+are many ways to view a store as a range of elements. For example, you may want
+to operate to operate on a flattened view of a store, or on a slice of a store.
+You may want the elements of the range to be rows or columns or some other
+subdimension of the store. For each of these cases, Legate.STL provides a
+range adaptor that presents the store as a range of elements.</p>
+<section id="elements-of">
+<h3><code class="docutils literal notranslate"><span class="pre">elements_of</span></code><a class="headerlink" href="#elements-of" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">elements_of</span></code> adaptor presents the store as a flattened range of elements.
+Iterating over the range visits each element of the store in row-major order.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 2-D store that is zero-initialized:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+
+<span class="c1">// Fill the store with data.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">imax</span><span class="p">,</span><span class="w"> </span><span class="n">jmax</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">extents</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">imax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">jmax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="n">view</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">imax</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+
+<span class="c1">// Use &#39;elements_of&#39; to get a flattened view of the store:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">elements</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">elements_of</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">elements</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The code above prints:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0, 1, 2, 3,
+</pre></div>
+</div>
+</section>
+<section id="rows-of">
+<h3><code class="docutils literal notranslate"><span class="pre">rows_of</span></code><a class="headerlink" href="#rows-of" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">rows_of</span></code> adaptor presents a two-dimensional store as a range of rows,
+where each row is represented as a 1-dimensional <code class="docutils literal notranslate"><span class="pre">stl::logical_store</span></code> object.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 2-D store that is zero-initialized:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+
+<span class="c1">// Fill the store with data.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">imax</span><span class="p">,</span><span class="w"> </span><span class="n">jmax</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">extents</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">imax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">jmax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="n">view</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">imax</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+
+<span class="c1">// Use &#39;rows_of&#39; to get a view of the store as a range of rows:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">rows_of</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rows</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">row_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">row</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">row_view</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">row_view</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The above code prints:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0, 1,
+2, 3,
+</pre></div>
+</div>
+</section>
+<section id="columns-of">
+<h3><code class="docutils literal notranslate"><span class="pre">columns_of</span></code><a class="headerlink" href="#columns-of" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">columns_of</span></code> adaptor presents a two-dimensional store as a range of columns,
+where each column is represented as a 1-dimensional <code class="docutils literal notranslate"><span class="pre">stl::logical_store</span></code> object.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 2-D store that is zero-initialized:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+
+<span class="c1">// Fill the store with data.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">imax</span><span class="p">,</span><span class="w"> </span><span class="n">jmax</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">extents</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">imax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">jmax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="n">view</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">imax</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+
+<span class="c1">// Use &#39;columns_of&#39; to get a view of the store as a range of columns:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">cols</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">columns_of</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">cols</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">col_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">col</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">col_view</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">col_view</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The above code prints:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0, 2,
+1, 3,
+</pre></div>
+</div>
+</section>
+<section id="projections-of">
+<h3><code class="docutils literal notranslate"><span class="pre">projections_of</span></code><a class="headerlink" href="#projections-of" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">projections_of</span></code> adaptor is a generalization of <code class="docutils literal notranslate"><span class="pre">rows_of</span></code> and <code class="docutils literal notranslate"><span class="pre">columns_of</span></code>.
+It presents a store as a range of slices along several specified dimensions. As
+such, it can be used with stores of any dimensionality.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rows_of(store))</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">projections_of&lt;0&gt;(store)</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">columns_of(store))</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">projections_of&lt;1&gt;(store)</span></code>.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Declare a 3-D store that is zero-initialized:</span>
+<span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="o">&gt;</span><span class="w"> </span><span class="n">store</span><span class="p">{{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">},</span><span class="w"> </span><span class="mi">0</span><span class="p">};</span>
+
+<span class="c1">// Fill the store with data.</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">imax</span><span class="p">,</span><span class="w"> </span><span class="n">jmax</span><span class="p">,</span><span class="w"> </span><span class="n">kmax</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">store</span><span class="p">.</span><span class="n">extents</span><span class="p">();</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">imax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">jmax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">kmax</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">k</span><span class="p">)</span>
+<span class="w">      </span><span class="n">view</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">imax</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">jmax</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">jmax</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">k</span><span class="p">;</span>
+
+<span class="c1">// Use &#39;projections_of&#39; to get a view of the store as a range of slices along</span>
+<span class="c1">// the first and second dimension:</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">slices</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">projections_of</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">(</span><span class="n">store</span><span class="p">);</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">stl</span><span class="o">::</span><span class="n">logical_store</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="o">&gt;</span><span class="w"> </span><span class="n">slice</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">slices</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">slice_view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stl</span><span class="o">::</span><span class="n">as_mdspan</span><span class="p">(</span><span class="n">slice</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">auto</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">slice_view</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">slice_view</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;, &quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The code above prints:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0, 1,
+4, 5,
+2, 3,
+6, 7,
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="installation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Installation</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#initializing-the-legate-runtime">Initializing the Legate runtime</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#declaring-and-initializing-a-store">Declaring and initializing a store</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scalar-stores">Scalar stores</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#element-types">Element types</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#accessing-the-elements-of-a-store">Accessing the elements of a store</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-algorithms">Using algorithms</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#reductions">Reductions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#element-wise-operations">Element-wise operations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-reduction-operations">Custom reduction operations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#for-more-algorithm-information">For more algorithm information</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-views">Creating views</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#elements-of"><code class="docutils literal notranslate"><span class="pre">elements_of</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rows-of"><code class="docutils literal notranslate"><span class="pre">rows_of</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#columns-of"><code class="docutils literal notranslate"><span class="pre">columns_of</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#projections-of"><code class="docutils literal notranslate"><span class="pre">projections_of</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+﻿legate.core.LogicalStore.project
+================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: LogicalStore.project

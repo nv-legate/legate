@@ -1,0 +1,36 @@
+﻿legate.core.experimental.io.file\_handle.FileHandle
+===================================================
+
+.. currentmodule:: legate.core.experimental.io.file_handle
+
+.. autoclass:: FileHandle
+
+   .. automethod:: FileHandle.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~FileHandle.closed
+      ~FileHandle.size
+      ~FileHandle.supported_open_flags
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~FileHandle.__enter__
+      ~FileHandle.__exit__
+      ~FileHandle.close
+      ~FileHandle.read
+      ~FileHandle.write
+   
+   

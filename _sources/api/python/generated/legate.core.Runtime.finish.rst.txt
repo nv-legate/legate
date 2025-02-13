@@ -1,0 +1,6 @@
+legate.core.Runtime.finish
+==========================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.finish

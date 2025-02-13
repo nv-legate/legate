@@ -1,0 +1,6 @@
+legate.core.Runtime.node\_id
+============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Runtime.node_id

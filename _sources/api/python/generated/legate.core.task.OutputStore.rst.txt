@@ -1,0 +1,35 @@
+﻿legate.core.task.OutputStore
+============================
+
+.. currentmodule:: legate.core.task
+
+.. autoclass:: OutputStore
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OutputStore.__init__
+      ~OutputStore.get_inline_allocation
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OutputStore.__array_interface__
+      ~OutputStore.__cuda_array_interface__
+      ~OutputStore.__doc__
+      ~OutputStore.domain
+      ~OutputStore.ndim
+      ~OutputStore.target
+      ~OutputStore.type
+   
+   

@@ -1,0 +1,6 @@
+﻿legate.core.task.task
+=====================
+
+.. currentmodule:: legate.core.task
+
+.. autofunction:: task

@@ -1,0 +1,6 @@
+legate.core.task.PyTask.UNREGISTERED\_ID
+========================================
+
+.. currentmodule:: legate.core.task
+
+.. autoattribute:: PyTask.UNREGISTERED_ID

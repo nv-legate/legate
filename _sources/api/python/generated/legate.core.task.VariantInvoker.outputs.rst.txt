@@ -1,0 +1,6 @@
+legate.core.task.VariantInvoker.outputs
+=======================================
+
+.. currentmodule:: legate.core.task
+
+.. autoattribute:: VariantInvoker.outputs

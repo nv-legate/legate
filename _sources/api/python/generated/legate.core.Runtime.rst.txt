@@ -1,0 +1,54 @@
+﻿legate.core.Runtime
+===================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: Runtime
+
+   .. automethod:: Runtime.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~Runtime.core_library
+      ~Runtime.machine
+      ~Runtime.node_count
+      ~Runtime.node_id
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~Runtime.add_shutdown_callback
+      ~Runtime.create_array
+      ~Runtime.create_array_like
+      ~Runtime.create_auto_task
+      ~Runtime.create_library
+      ~Runtime.create_manual_task
+      ~Runtime.create_store
+      ~Runtime.create_store_from_buffer
+      ~Runtime.create_store_from_scalar
+      ~Runtime.find_library
+      ~Runtime.finish
+      ~Runtime.get_machine
+      ~Runtime.issue_copy
+      ~Runtime.issue_execution_fence
+      ~Runtime.issue_fill
+      ~Runtime.issue_gather
+      ~Runtime.issue_mapping_fence
+      ~Runtime.issue_scatter
+      ~Runtime.issue_scatter_gather
+      ~Runtime.prefetch_bloated_instances
+      ~Runtime.submit
+      ~Runtime.tree_reduce
+   
+   

@@ -1,0 +1,6 @@
+legate.core.task.PyTask.\_\_call\_\_
+====================================
+
+.. currentmodule:: legate.core.task
+
+.. automethod:: PyTask.__call__

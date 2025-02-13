@@ -1,0 +1,6 @@
+﻿legate.core.LogicalStore.transpose
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: LogicalStore.transpose

@@ -1,0 +1,6 @@
+﻿legate.core.Machine.valid\_targets
+==================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Machine.valid_targets

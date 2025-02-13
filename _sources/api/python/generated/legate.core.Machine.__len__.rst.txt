@@ -1,0 +1,6 @@
+﻿legate.core.Machine.\_\_len\_\_
+===============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Machine.__len__

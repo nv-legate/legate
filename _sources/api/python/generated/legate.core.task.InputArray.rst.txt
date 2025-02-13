@@ -1,0 +1,38 @@
+﻿legate.core.task.InputArray
+===========================
+
+.. currentmodule:: legate.core.task
+
+.. autoclass:: InputArray
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InputArray.__init__
+      ~InputArray.child
+      ~InputArray.data
+      ~InputArray.domain
+      ~InputArray.null_mask
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~InputArray.__array_interface__
+      ~InputArray.__cuda_array_interface__
+      ~InputArray.__doc__
+      ~InputArray.ndim
+      ~InputArray.nested
+      ~InputArray.nullable
+      ~InputArray.type
+   
+   

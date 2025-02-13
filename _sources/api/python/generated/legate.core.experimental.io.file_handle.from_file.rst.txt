@@ -1,0 +1,6 @@
+﻿legate.core.experimental.io.file\_handle.from\_file
+===================================================
+
+.. currentmodule:: legate.core.experimental.io.file_handle
+
+.. autofunction:: from_file

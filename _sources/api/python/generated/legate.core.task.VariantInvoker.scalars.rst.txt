@@ -1,0 +1,6 @@
+legate.core.task.VariantInvoker.scalars
+=======================================
+
+.. currentmodule:: legate.core.task
+
+.. autoattribute:: VariantInvoker.scalars

@@ -1,0 +1,6 @@
+legate.core.experimental.io.file\_handle.FileHandle.read
+========================================================
+
+.. currentmodule:: legate.core.experimental.io.file_handle
+
+.. automethod:: FileHandle.read

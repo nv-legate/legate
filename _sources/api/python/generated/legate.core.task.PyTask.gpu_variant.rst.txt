@@ -1,0 +1,6 @@
+legate.core.task.PyTask.gpu\_variant
+====================================
+
+.. currentmodule:: legate.core.task
+
+.. automethod:: PyTask.gpu_variant

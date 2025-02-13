@@ -1,0 +1,37 @@
+﻿legate.core.task.VariantInvoker
+===============================
+
+.. currentmodule:: legate.core.task
+
+.. autoclass:: VariantInvoker
+
+   .. automethod:: VariantInvoker.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~VariantInvoker.inputs
+      ~VariantInvoker.outputs
+      ~VariantInvoker.reductions
+      ~VariantInvoker.scalars
+      ~VariantInvoker.signature
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~VariantInvoker.__call__
+      ~VariantInvoker.prepare_call
+      ~VariantInvoker.valid_signature
+      ~VariantInvoker.validate_signature
+   
+   

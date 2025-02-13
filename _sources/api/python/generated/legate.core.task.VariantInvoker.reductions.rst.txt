@@ -1,0 +1,6 @@
+legate.core.task.VariantInvoker.reductions
+==========================================
+
+.. currentmodule:: legate.core.task
+
+.. autoattribute:: VariantInvoker.reductions
