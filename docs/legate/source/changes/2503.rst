@@ -29,6 +29,9 @@ Changes: 25.03
   usually not invoked by the user directly, and moving it to this new directory reflects
   this. The user should instead launch their programs directly, or, for greater
   convenience use the ``legate`` launcher.
+- Stop passing default options to Nsight Systems when using the ``--nsys`` flag
+  of the ``legate`` launcher. Any non-default arguments are fully in the control
+  of the user, through ``--nsys-extra``.
 
 C++
 ---

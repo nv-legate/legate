@@ -342,16 +342,6 @@ profiling.add_argument(
 
 
 profiling.add_argument(
-    "--nsys-targets",
-    dest="nsys_targets",
-    default=defaults.NSYS_TARGETS,
-    required=False,
-    help="Specify profiling targets for Nsight Systems "
-    "[legate-only, not supported with standard Python invocation]",
-)
-
-
-profiling.add_argument(
     "--nsys-extra",
     dest="nsys_extra",
     action="append",

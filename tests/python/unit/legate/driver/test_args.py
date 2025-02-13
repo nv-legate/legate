@@ -99,12 +99,6 @@ class TestParserDefaults:
     def test_nsys(self) -> None:
         assert m.parser.get_default("nsys") is False
 
-    def test_nsys_targets(self) -> None:
-        assert (
-            m.parser.get_default("nsys_targets")
-            == "cublas,cuda,cudnn,nvtx,ucx"
-        )
-
     def test_nsys_extra(self) -> None:
         assert m.parser.get_default("nsys_extra") == []
 

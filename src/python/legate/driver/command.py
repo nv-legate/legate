@@ -12,7 +12,6 @@
 from __future__ import annotations
 
 import shlex
-import argparse
 from typing import TYPE_CHECKING
 
 from rich import print as rich_print
@@ -141,27 +140,9 @@ def cmd_nsys(
     log_path = str(
         config.logging.logdir / f"legate_{LEGATE_GLOBAL_RANK_SUBSTITUTION}"
     )
-    targets = config.profiling.nsys_targets
     extra = config.profiling.nsys_extra
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--sample")
-    parser.add_argument("-t", "--targets")
-    nsys_parsed_args, unparsed = parser.parse_known_args(extra)
-
-    if nsys_parsed_args.targets:
-        msg = (
-            "please pass targets as arguments to --nsys"
-            "rather than using --nsys-extra"
-        )
-        raise RuntimeError(msg)
-
-    opts: CommandPart = ("nsys", "profile", "-t", targets, "-o", log_path)
-    opts += tuple(extra)
-    if not nsys_parsed_args.sample:
-        opts += ("-s", "none")
-
-    return opts
+    return ("nsys", "profile", "-o", log_path, *tuple(extra))
 
 
 def cmd_valgrind(

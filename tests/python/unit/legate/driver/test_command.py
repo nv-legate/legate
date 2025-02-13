@@ -367,16 +367,7 @@ class Test_cmd_nsys:
             config.logging.logdir
             / f"legate_{m.LEGATE_GLOBAL_RANK_SUBSTITUTION}"
         )
-        assert result == (
-            "nsys",
-            "profile",
-            "-t",
-            "cublas,cuda,cudnn,nvtx,ucx",
-            "-o",
-            log_path,
-            "-s",
-            "none",
-        )
+        assert result == ("nsys", "profile", "-o", log_path)
 
     @pytest.mark.parametrize(
         "nsys_extra",
@@ -416,16 +407,7 @@ class Test_cmd_nsys:
             config.logging.logdir
             / f"legate_{m.LEGATE_GLOBAL_RANK_SUBSTITUTION}"
         )
-        assert result == (
-            "nsys",
-            "profile",
-            "-t",
-            "cublas,cuda,cudnn,nvtx,ucx",
-            "-o",
-            log_path,
-            "-s",
-            "none",
-        )
+        assert result == ("nsys", "profile", "-o", log_path)
 
     @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)
     @pytest.mark.parametrize("rank", ("0", "1", "2"))
@@ -452,18 +434,7 @@ class Test_cmd_nsys:
             config.logging.logdir
             / f"legate_{m.LEGATE_GLOBAL_RANK_SUBSTITUTION}"
         )
-        assert result == (
-            "nsys",
-            "profile",
-            "-t",
-            "cublas,cuda,cudnn,nvtx,ucx",
-            "-o",
-            log_path,
-            "a",
-            "b",
-            "-s",
-            "none",
-        )
+        assert result == ("nsys", "profile", "-o", log_path, "a", "b")
 
     @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)
     @pytest.mark.parametrize("rank", ("0", "1", "2"))
@@ -496,42 +467,12 @@ class Test_cmd_nsys:
         assert result == (
             "nsys",
             "profile",
-            "-t",
-            "cublas,cuda,cudnn,nvtx,ucx",
             "-o",
             log_path,
             "a",
             "b",
             "-s",
             "foo",
-        )
-
-    @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)
-    @pytest.mark.parametrize("rank", ("0", "1", "2"))
-    def test_multi_rank_targets(
-        self, genobjs: GenObjs, rank_var: str, rank: str
-    ) -> None:
-        config, system, launcher = genobjs(
-            ["--nsys", "--logdir", "foo", "--nsys-targets", "foo,bar"],
-            multi_rank=(2, 2),
-            rank_env={rank_var: rank},
-        )
-
-        result = m.cmd_nsys(config, system, launcher)
-
-        log_path = str(
-            config.logging.logdir
-            / f"legate_{m.LEGATE_GLOBAL_RANK_SUBSTITUTION}"
-        )
-        assert result == (
-            "nsys",
-            "profile",
-            "-t",
-            "foo,bar",
-            "-o",
-            log_path,
-            "-s",
-            "none",
         )
 
 

@@ -69,7 +69,6 @@ class TestConfig:
             cprofile=False,
             nvprof=False,
             nsys=False,
-            nsys_targets="",
             nsys_extra=[],
         )
 

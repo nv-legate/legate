@@ -90,7 +90,6 @@ class Config:
             cprofile=False,
             nvprof=False,
             nsys=False,
-            nsys_targets="",
             nsys_extra=[],
         )
         self.logging = Logging(

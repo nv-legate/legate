@@ -98,7 +98,6 @@ class Profiling(DataclassMixin):
     cprofile: bool
     nvprof: bool
     nsys: bool
-    nsys_targets: str  # TODO: multi-choice
     nsys_extra: list[str]
 
     def __post_init__(self, **kw: dict[str, Any]) -> None:

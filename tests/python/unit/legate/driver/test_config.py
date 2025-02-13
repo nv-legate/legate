@@ -131,7 +131,6 @@ class TestProfiling:
             "cprofile",
             "nvprof",
             "nsys",
-            "nsys_targets",
             "nsys_extra",
         }
 
@@ -148,7 +147,6 @@ class TestProfiling:
             cprofile=True,
             nvprof=True,
             nsys=True,
-            nsys_targets="foo,bar",
             nsys_extra=extra,
         )
         assert p.nsys_extra == functools.reduce(
@@ -161,7 +159,6 @@ class TestProfiling:
             cprofile=True,
             nvprof=True,
             nsys=True,
-            nsys_targets="foo,bar",
             nsys_extra=["-H g0002,g0002 -X SOMEENV --fork", "-bind-to none"],
         )
         assert p.nsys_extra == [
@@ -180,7 +177,6 @@ class TestProfiling:
             cprofile=True,
             nvprof=True,
             nsys=True,
-            nsys_targets="foo,bar",
             nsys_extra=["-f 'some path with spaces/foo.txt'"],
         )
         assert p.nsys_extra == ["-f", "some path with spaces/foo.txt"]
@@ -267,7 +263,6 @@ class TestConfig:
             cprofile=False,
             nvprof=False,
             nsys=False,
-            nsys_targets=defaults.NSYS_TARGETS,
             nsys_extra=[],
         )
 

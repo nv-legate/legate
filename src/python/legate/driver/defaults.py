@@ -13,14 +13,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-__all__ = (
-    "LEGATE_LOG_DIR",
-    "LEGATE_NODES",
-    "LEGATE_RANKS_PER_NODE",
-    "NSYS_TARGETS",
-)
+__all__ = ("LEGATE_LOG_DIR", "LEGATE_NODES", "LEGATE_RANKS_PER_NODE")
 
 LEGATE_NODES = 1
 LEGATE_RANKS_PER_NODE = 1
 LEGATE_LOG_DIR = Path.cwd()
-NSYS_TARGETS = "cublas,cuda,cudnn,nvtx,ucx"
