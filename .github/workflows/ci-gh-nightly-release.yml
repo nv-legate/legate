@@ -18,23 +18,15 @@ jobs:
           - gpu
           - cpu
         build-mode:
-          - debug
-          - debug-sanitizer
           - release
           - release-debug
         network:
           - ucx
           - gex
-        upload-enabled:
-          - true
-          - false
         python-version:
           - "3.10"
           - "3.11"
           - "3.12"
-        exclude:
-          - {build-mode: debug, upload-enabled: true}
-          - {build-mode: debug-sanitizer, upload-enabled: true}
     uses:
       ./.github/workflows/gh-build-and-test.yml
     with:
@@ -42,8 +34,8 @@ jobs:
       target-device: ${{ matrix.target-device }}
       build-mode: ${{ matrix.build-mode }}
       build-type: release
-      upload-enabled: ${{ matrix.upload-enabled }}
-      upload-action: ${{ matrix.upload-enabled && (matrix.build-mode == 'release' && 'upload-package-Anaconda' || 'upload-package-None') }}
+      upload-enabled: true
+      upload-action: ${{ (matrix.build-mode == 'release' && 'upload-package-Anaconda' || 'upload-package-None') }}
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
       nightly: true
