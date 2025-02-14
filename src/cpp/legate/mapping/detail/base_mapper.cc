@@ -437,6 +437,7 @@ void map_future_backed_stores(
   const std::vector<std::unique_ptr<StoreMapping>>& for_futures,
   const LocalMachine& local_machine,
   const Legion::Task& task,
+  Processor target_proc,
   Legion::Mapping::Mapper::MapTaskOutput* output)
 {
   LEGATE_CHECK(mapped_futures.size() <= task.futures.size());
@@ -452,7 +453,7 @@ void map_future_backed_stores(
     const auto fut_idx = mapping->store()->future_index();
 
     output->future_locations[fut_idx] =
-      local_machine.get_memory(task.target_proc, mapping->policy.target);
+      local_machine.get_memory(target_proc, mapping->policy.target);
   }
 }
 
@@ -504,6 +505,7 @@ void map_unbound_stores(const std::vector<std::unique_ptr<StoreMapping>>& mappin
 void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
                           Legion::Mapping::MapperContext ctx,
                           const Legion::Task& task,
+                          Processor target_proc,
                           const LocalMachine& local_machine,
                           Logger* logger,
                           Task* legate_task,
@@ -527,13 +529,13 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
                     << " bytes in a pool for scalar stores, unbound stores, and exceptions";
   }
 
-  const auto& allocation_pool_targets = default_store_targets(task.target_proc.kind(), true);
+  const auto& allocation_pool_targets = default_store_targets(target_proc.kind(), true);
   if (!vinfo.options.has_allocations) {
     // Unfortunately, even when the user said her task doesn't create any allocations, there can be
     // some made by Legate. Therefore, we still need to return the right bounds so Legate can create
     // those allocations in (the pre- and post-amble of) the user task.
     for (auto&& target : allocation_pool_targets) {
-      output->leaf_pool_bounds.try_emplace(local_machine.get_memory(task.target_proc, target),
+      output->leaf_pool_bounds.try_emplace(local_machine.get_memory(target_proc, target),
                                            legate_alloc_size);
     }
     return;
@@ -542,7 +544,7 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
   auto* legate_mapper = library->get_mapper();
   for (auto&& target : allocation_pool_targets) {
     const auto size   = legate_mapper->allocation_pool_size(mapping::Task{legate_task}, target);
-    const auto memory = local_machine.get_memory(task.target_proc, target);
+    const auto memory = local_machine.get_memory(target_proc, target);
     output->leaf_pool_bounds.try_emplace(
       memory,
       size.has_value()
@@ -574,20 +576,23 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   output.task_priority      = legate_task.priority();
   output.copy_fill_priority = legate_task.priority();
 
-  if (task.is_index_space) {
-    // If this is an index task, point tasks already have the right targets, so we just need to
-    // copy them to the mapper output
-    output.target_procs.push_back(task.target_proc);
-  } else {
-    // If this is a single task, here is the right place to compute the final target processor
+  auto target_proc = [&]() {
+    if (task.is_index_space) {
+      // If this is an index task, point tasks already have the right targets,
+      // so we just need to copy them to the mapper output
+      return task.target_proc;
+    }
+    // If this is a single task, here is the right place to compute the final
+    // target processor
     const auto local_range =
       local_machine_.slice(legate_task.target(), legate_task.machine(), task.local_function);
 
     LEGATE_ASSERT(!local_range.empty());
-    output.target_procs.push_back(local_range.first());
-  }
+    return local_range.first();
+  }();
+  output.target_procs.push_back(target_proc);
 
-  const auto& options = default_store_targets(task.target_proc.kind());
+  const auto& options = default_store_targets(target_proc.kind());
 
   auto [mapped_futures, for_futures, mapped_regions, for_unbound_stores, for_stores] = [&] {
     auto client_mappings =
@@ -613,9 +618,9 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   }
 
   // Map future-backed stores
-  map_future_backed_stores(mapped_futures, for_futures, local_machine_, task, &output);
+  map_future_backed_stores(mapped_futures, for_futures, local_machine_, task, target_proc, &output);
   // Map unbound stores
-  map_unbound_stores(for_unbound_stores, local_machine_, task.target_proc, &output);
+  map_unbound_stores(for_unbound_stores, local_machine_, target_proc, &output);
 
   OutputMap output_map;
 
@@ -629,11 +634,12 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   map_legate_stores_(ctx,
                      task,
                      for_stores,
-                     task.target_proc,
+                     target_proc,
                      output_map,
                      legate_task.machine().count() < task.index_domain.get_volume());
 
-  calculate_pool_sizes(runtime, ctx, task, local_machine_, &logger(), &legate_task, &output);
+  calculate_pool_sizes(
+    runtime, ctx, task, target_proc, local_machine_, &logger(), &legate_task, &output);
 
   for (auto&& mapping : for_stores) {
     if (!mapping->policy.redundant) {
@@ -654,9 +660,8 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
         legate::LocalTaskID{legate::detail::CoreTask::EXTRACT_SCALAR})) {
     LEGATE_ASSERT(task.futures.size() == 1);
     output.future_locations.push_back(local_machine_.get_memory(
-      task.target_proc,
-      task.target_proc.kind() == Processor::Kind::TOC_PROC ? StoreTarget::ZCMEM
-                                                           : StoreTarget::SYSMEM));
+      target_proc,
+      target_proc.kind() == Processor::Kind::TOC_PROC ? StoreTarget::ZCMEM : StoreTarget::SYSMEM));
   }
 }
 
