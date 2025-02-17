@@ -126,9 +126,10 @@ build_project() {
   git config --global --add safe.directory "${LEGATE_DIR}/.git"
 
   case "${BUILD_TYPE}" in
-    release) build_legate_release;;
-    docs) build_docs;;
-    *) return 1;;
+      ci) build_legate_release;;
+      release) build_legate_release;;
+      docs) build_docs;;
+      *) return 1;;
   esac
 }
 
