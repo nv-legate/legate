@@ -13,7 +13,10 @@
 
 from __future__ import annotations
 
+import sys
+
 from legate.tester.defaults import (
+    CPU_PIN,
     CPUS_PER_NODE,
     FEATURES,
     GPU_BLOAT_FACTOR,
@@ -84,3 +87,10 @@ def test_PROCESS_ENV() -> None:
 
 def test_NODES() -> None:
     assert NODES == 1
+
+
+def test_CPU_PIN() -> None:
+    if sys.platform == "darwin":
+        assert CPU_PIN == "none"
+    else:
+        assert CPU_PIN == "partial"

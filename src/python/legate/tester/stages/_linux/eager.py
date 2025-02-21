@@ -76,5 +76,4 @@ class Eager(TestStage):
 
         # Just put each worker on its own full CPU for eager tests
         shards = [Shard([cpu.ids]) for cpu in system.cpus]
-
         return StageSpec(workers, shards)

@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+import warnings
+from itertools import chain
 from typing import TYPE_CHECKING
 
 from ..test_stage import TestStage
@@ -48,8 +50,22 @@ class CPU(TestStage):
     ) -> EnvDict:
         return dict(UNPIN_ENV)
 
-    def shard_args(self, shard: Shard, config: Config) -> ArgList:  # noqa: ARG002
-        return [
+    @staticmethod
+    def handle_cpu_pin_args(
+        config: Config,
+        shard: Shard,  # noqa: ARG004
+    ) -> ArgList:
+        if config.execution.cpu_pin != "none":
+            warnings.warn(
+                "CPU pinning is not supported on macOS, ignoring pinning "
+                "arguments",
+                stacklevel=2,
+            )
+
+        return []
+
+    def shard_args(self, shard: Shard, config: Config) -> ArgList:
+        args = [
             "--cpus",
             str(config.core.cpus),
             "--sysmem",
@@ -57,9 +73,13 @@ class CPU(TestStage):
             "--utility",
             str(config.core.utility),
         ]
+        args += self.handle_cpu_pin_args(config, shard)
+        args += self.handle_multi_node_args(config)
+        return args
 
     def compute_spec(self, config: Config, system: TestSystem) -> StageSpec:
         cpus = system.cpus
+        ranks_per_node = config.multi_node.ranks_per_node
         sysmem = config.memory.sysmem
         bloat_factor = config.execution.bloat_factor
 
@@ -69,9 +89,31 @@ class CPU(TestStage):
             + int(config.execution.cpu_pin == "strict")
         )
 
-        cpu_workers = len(cpus) // (procs * config.multi_node.ranks_per_node)
+        cpu_workers = len(cpus) // (procs * ranks_per_node)
 
         mem_workers = system.memory // (sysmem * bloat_factor)
+
+        if cpu_workers == 0:
+            if config.execution.cpu_pin == "strict":
+                msg = (
+                    f"{len(cpus)} detected core(s) not enough for "
+                    f"{ranks_per_node} rank(s) per node, each "
+                    f"reserving {procs} core(s) with strict CPU pinning. "
+                    "While CPU pinning is not supported in macOS, this "
+                    "configuration is nevertheless unsatisfiable. If you "
+                    "would like legate to launch it anyway, run with "
+                    "'--cpu-pin none'."
+                )
+                raise RuntimeError(msg)
+            if mem_workers > 0:
+                warnings.warn(
+                    f"{len(cpus)} detected core(s) not enough for "
+                    f"{ranks_per_node} rank(s) per node, each "
+                    f"reserving {procs} core(s), running anyway.",
+                    stacklevel=2,
+                )
+                all_cpus = chain.from_iterable(cpu.ids for cpu in cpus)
+                return StageSpec(1, [Shard([tuple(sorted(all_cpus))])])
 
         workers = min(cpu_workers, mem_workers)
 

@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -31,6 +32,9 @@ OMPS_PER_NODE = 1
 
 #: Value to use if --ompthreads is not specified.
 OMPTHREADS = 4
+
+#: Value to use if --cpu-pin is not specified.
+CPU_PIN = "none" if sys.platform == "darwin" else "partial"
 
 # -- memory
 

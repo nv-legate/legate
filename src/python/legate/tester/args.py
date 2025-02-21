@@ -254,7 +254,7 @@ execution.add_argument(
     "--cpu-pin",
     dest="cpu_pin",
     choices=PIN_OPTIONS,
-    default="partial",
+    default=defaults.CPU_PIN,
     help="CPU pinning behavior on platforms that support CPU pinning",
 )
 
