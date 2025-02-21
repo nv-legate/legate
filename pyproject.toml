@@ -42,7 +42,9 @@ classifiers = [
 dependencies = [
     "numpy!=2.1.0",
     "zarr",
-    "h5py",
+    # h5py 3.13.0 does not have a number of builtin compression filters installed needed
+    # for tests
+    "h5py!=3.13.0",
     "fsspec",
     "kerchunk",
     "rich",
