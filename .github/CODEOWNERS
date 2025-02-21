@@ -1,10 +1,15 @@
 # Global
 * @magnatelee @Jacobfaib
 
-# Python
-src/python @bryevdv
+# Python/Cython
+*.py @nv-legate/python-reviewers
+*.pyi @nv-legate/python-reviewers
+*.pyx @nv-legate/python-reviewers
+*.pxd @nv-legate/python-reviewers
+src/python @nv-legate/python-reviewers
 src/python/legate/jupyter @eddy16112
-src/python/legate/core @nv-legate/python-reviewers
+pyproject.toml @nv-legate/build-reviewers
+setup.cfg @nv-legate/build-reviewers
 
 # cmake
 src/cmake @nv-legate/build-reviewers
@@ -12,8 +17,9 @@ src/cmake @nv-legate/build-reviewers
 CMakeLists.txt @nv-legate/build-reviewers
 
 # configure
-config/ @nv-legate/python-reviewers
-configure @nv-legate/python-reviewers
+config/ @nv-legate/python-reviewers @nv-legate/build-reviewers
+configure @nv-legate/python-reviewers @nv-legate/build-reviewers
+makefile @nv-legate/build-reviewers
 
 # CI
 .github/ @nv-legate/devops-reviewers
@@ -26,6 +32,7 @@ src/cpp @nv-legate/cpp-reviewers
 
 # docs
 docs/ @nv-legate/docs-reviewers
+*.md @nv-legate/docs-reviewers
 
 # Override for CODEOWNERS - last rule wins.
 CODEOWNERS @magnatelee @manopapad @Jacobfaib
