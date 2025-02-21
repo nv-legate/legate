@@ -20,10 +20,9 @@ jobs:
     with:
       platform: mac
       target-device: cpu
-      build-type: release
+      build-type: ci
       build-mode: release
       upload-enabled: false
-      nightly: false
       network: ucx
       refname: ${{ github.ref_name }}
       default-branch: ${{ github.event.repository.default_branch }}

@@ -19,7 +19,7 @@ setup_legate_env() {
   if [[ -z "${LEGATE_ARCH:-}" ]]; then
     # shellcheck disable=SC2154
     case "${BUILD_TYPE}" in
-      ci|release)
+      ci|nightly)
         # shellcheck disable=SC2154
         local locase_uname
         locase_uname=$(uname | tr '[:upper:]' '[:lower:]')
@@ -127,7 +127,7 @@ build_project() {
 
   case "${BUILD_TYPE}" in
       ci) build_legate_release;;
-      release) build_legate_release;;
+      nightly) build_legate_release;;
       docs) build_docs;;
       *) return 1;;
   esac

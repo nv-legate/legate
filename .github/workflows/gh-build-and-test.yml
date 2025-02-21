@@ -11,9 +11,6 @@ on:
       network:
         required: true
         type: string
-      nightly:
-        required: true
-        type: boolean
       platform:
         required: true
         type: string
@@ -64,7 +61,7 @@ jobs:
 
   upload:
     needs: build
-    if: ${{ github.repository_owner == 'nv-legate' && contains(github.workflow, 'Nightly') && inputs.upload-enabled == true }}
+    if: ${{ github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.upload-enabled == true }}
     name: Upload package to Server
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.27
@@ -90,7 +87,7 @@ jobs:
   setup-test:
     name: Setup test
     # Don't run GPU tests on linux-aarch64. We don't have enough test machines for this.
-    if: inputs.upload-enabled == false && (inputs.nightly || inputs.target-device != 'gpu' || inputs.platform != 'linux-aarch64')
+    if: inputs.upload-enabled == false && (inputs.build-type == 'nightly' || inputs.target-device != 'gpu' || inputs.platform != 'linux-aarch64')
     needs:
       - build
     runs-on: linux-amd64-cpu4
