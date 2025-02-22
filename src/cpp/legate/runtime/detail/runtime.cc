@@ -1719,37 +1719,49 @@ void handle_realm_default_args()
   if (!Legion::Runtime::has_runtime()) {
     handle_realm_default_args();
 
-    int dummy_argc    = 0;
-    char** dummy_argv = nullptr;
+    int argc                     = 1;
+    const char* dummy_argv_arr[] = {"legate-placeholder-binary-name", nullptr};
+    // Realm won't modify the existing strings, but nevertheless they require a char*
+    char** dummy_argv = const_cast<char**>(dummy_argv_arr);
+    char** argv       = dummy_argv;
 
-    Legion::Runtime::initialize(&dummy_argc, &dummy_argv, /*filter=*/false, /*parse=*/false);
+    Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
+
+    // If Realm finds anything in REALM_DEFAULT_ARGS, it will copy it onto the command line, right
+    // after the (fake) program name. So at exit we should free everything except the first token.
+    LEGATE_SCOPE_GUARD(
+      if (argv != dummy_argv) {
+        for (int i = 1; i < argc; ++i) {
+          std::free(argv[i]);
+        }
+        std::free(argv);
+      });
+
     handle_legate_args();
-  }
 
-  // Do these after handle_legate_args()
-  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && config.need_cuda()) {
-    throw TracedException<std::runtime_error>{
-      "Legate was run with GPUs but was not built with GPU support. "
-      "Please install Legate again with the \"--with-cuda\" flag"};
-  }
-  if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && config.need_openmp()) {
-    throw TracedException<std::runtime_error>{
-      "Legate was run with OpenMP enabled, but was not built with OpenMP support. "
-      "Please install Legate again with the \"--with-openmp\" flag"};
-  }
-  if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && config.need_network()) {
-    throw TracedException<std::runtime_error>{
-      "Legate was run on multiple nodes but was not built with networking "
-      "support. Please install Legate again with network support (e.g. \"--with-mpi\" or "
-      "\"--with-gasnet\")"};
-  }
+    // Do these after handle_legate_args()
+    if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && config.need_cuda()) {
+      throw TracedException<std::runtime_error>{
+        "Legate was run with GPUs but was not built with GPU support. Please "
+        "install Legate again with the \"--with-cuda\" flag"};
+    }
+    if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && config.need_openmp()) {
+      throw TracedException<std::runtime_error>{
+        "Legate was run with OpenMP enabled, but was not built with OpenMP "
+        "support. Please install Legate again with the \"--with-openmp\" "
+        "flag"};
+    }
+    if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && config.need_network()) {
+      throw TracedException<std::runtime_error>{
+        "Legate was run on multiple nodes but was not built with networking "
+        "support. Please install Legate again with network support (e.g. "
+        "\"--with-mpi\" or \"--with-ucx\")"};
+    }
 
-  Legion::Runtime::perform_registration_callback(initialize_core_library_callback_,
-                                                 true /*global*/);
+    Legion::Runtime::perform_registration_callback(initialize_core_library_callback_,
+                                                   true /*global*/);
 
-  if (!Legion::Runtime::has_runtime()) {
-    if (const auto result =
-          Legion::Runtime::start(/*argc*/ 0, /*argv*/ nullptr, /*background=*/true)) {
+    if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true)) {
       throw TracedException<std::runtime_error>{
         fmt::format("Legion Runtime failed to start, error code: {}", result)};
     }
