@@ -243,12 +243,18 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
   detail::TaskLauncher init_nccl_id_launcher{
     core_library_, machine, InitId::TASK_ID, static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   init_nccl_id_launcher.set_side_effect(true);
+  // Setting this according to the return type on the task variant. Have to do this manually because
+  // this launch is using the Legion task launcher directly.
+  init_nccl_id_launcher.set_future_size(sizeof(ncclUniqueId));
   auto nccl_id = init_nccl_id_launcher.execute_single();
 
   // Then create the communicators on participating GPUs
   detail::TaskLauncher init_nccl_launcher{
     core_library_, machine, Init::TASK_ID, static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   init_nccl_launcher.add_future(nccl_id);
+  // Setting this according to the return type on the task variant. Have to do this manually because
+  // this launch is using the Legion task launcher directly.
+  init_nccl_launcher.set_future_size(sizeof(ncclComm_t*));
   init_nccl_launcher.set_concurrent(true);
   return init_nccl_launcher.execute(launch_domain);
 }

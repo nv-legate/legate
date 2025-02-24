@@ -52,6 +52,9 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
     core_library_, machine, init_mapping_task_type::TASK_ID, tag};
 
   init_cpucoll_mapping_launcher.add_future(comm_id);
+  // Setting this according to the return type on the task variant. Have to do this manually because
+  // this launch is using the Legion task launcher directly.
+  init_cpucoll_mapping_launcher.set_future_size(sizeof(int));
 
   const auto mapping = init_cpucoll_mapping_launcher.execute(launch_domain);
 
@@ -59,6 +62,9 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
   detail::TaskLauncher init_cpucoll_launcher{core_library_, machine, init_task_type::TASK_ID, tag};
 
   init_cpucoll_launcher.add_future(comm_id);
+  // Setting this according to the return type on the task variant. Have to do this manually because
+  // this launch is using the Legion task launcher directly.
+  init_cpucoll_launcher.set_future_size(sizeof(legate::comm::coll::CollComm));
   init_cpucoll_launcher.set_concurrent(true);
 
   const auto domain = mapping.get_future_map_domain();

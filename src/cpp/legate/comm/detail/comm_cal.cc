@@ -198,6 +198,9 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
     mapping::TaskTarget::GPU, machine.processor_range(), launch_domain);
 
   launcher.set_concurrent(true);
+  // Setting this according to the return type on the task variant. Have to do this manually because
+  // this launch is using the Legion task launcher directly.
+  launcher.set_future_size(sizeof(cal_comm_t));
   launcher.add_future_map(cpu_comm);
   return launcher.execute(launch_domain);
 }
