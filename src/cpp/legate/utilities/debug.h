@@ -53,7 +53,7 @@ template <typename T, int DIM>
 template <int DIM, typename ACC>
 [[nodiscard]] std::string print_dense_array(const ACC& accessor, const Rect<DIM>& rect);
 // TODO(mpapadakis): Disabled while we find a workaround for operator<< missing for
-// cuda::std::complex, see legate.core.internal#475
+// cuda::std::complex, see legate.internal#475
 // /**
 //  * @ingroup util
 //  * @brief Converts the store to a string

@@ -1734,7 +1734,7 @@ void handle_realm_default_args()
         for (int i = 1; i < argc; ++i) {
           std::free(argv[i]);
         }
-        std::free(argv);
+        std::free(static_cast<void*>(argv));
       });
 
     handle_legate_args();

@@ -26,7 +26,7 @@ namespace legate::mapping::detail {
 // 'legate::mapping::detail' [bugprone-forward-declaration-namespace,-warnings-as-errors]
 //  263 |     class DefaultMapper;
 //      |           ^
-// legate.core.internal/src/core/mapping/detail/default_mapper.h:21:7: note: a definition of
+// legate/src/core/mapping/detail/default_mapper.h:21:7: note: a definition of
 // 'DefaultMapper' is found here
 //   21 | class DefaultMapper : public Mapper {
 //      |       ^

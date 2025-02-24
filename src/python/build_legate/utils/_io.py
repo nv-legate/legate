@@ -38,9 +38,7 @@ def rich_print(*args: Any, **kwargs: Any) -> None:
 
 
 def vprint(*args: Any, **kwargs: Any) -> None:
-    rich_print(
-        "[bold]x-- [yellow]legate.internal:setup.py:[/]", *args, **kwargs
-    )
+    rich_print("[bold]x-- [yellow]legate:setup.py:[/]", *args, **kwargs)
 
 
 def warning_print(text: str, **kwargs: Any) -> None:

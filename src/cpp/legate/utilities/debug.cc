@@ -34,7 +34,7 @@ class PrintDenseArrayFn {
 }  // namespace
 
 // TODO(mpapadakis): Disabled while we find a workaround for operator<< missing for
-// cuda::std::complex, see legate.core.internal#475
+// cuda::std::complex, see legate.internal#475
 // std::string print_dense_array(const PhysicalStore& store)
 // {
 //   LEGATE_CHECK(store.is_readable());

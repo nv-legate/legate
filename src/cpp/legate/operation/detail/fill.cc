@@ -55,9 +55,9 @@ void Fill::validate()
   // Would use const InternalSharedPtr<Type>& (since that's what these member functions
   // return), but GCC balks:
   //
-  // /home/bryan/work/legate.core.internal/src/cpp/legate/operation/detail/fill.cc: In member
+  // legate/src/cpp/legate/operation/detail/fill.cc: In member
   // function 'virtual void legate::detail::Fill::validate()':
-  // /home/bryan/work/legate.core.internal/src/cpp/legate/operation/detail/fill.cc:64:19: error:
+  // legate/src/cpp/legate/operation/detail/fill.cc:64:19: error:
   // possibly dangling reference to a temporary [-Werror=dangling-reference]
   //    64 |   if (const auto& value_type = std::visit(Visitor{}, value_); *lhs_->type() != ...
   //       |                   ^~~~~~~~~~

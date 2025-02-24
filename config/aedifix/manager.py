@@ -588,7 +588,7 @@ class ConfigurationManager:
         -------
         dir : Path
             The full path to the current project root directory, e.g.
-            `/path/to/legate.internal`.
+            `/path/to/legate`.
         """
         return self._main_package.project_dir_value
 
@@ -600,7 +600,7 @@ class ConfigurationManager:
         -------
         dir : Path
             The full path to the current project source directory, e.g.
-            `/path/to/legate.internal/src`.
+            `/path/to/legate/src`.
         """
         return self._main_package.project_src_dir
 
@@ -624,7 +624,7 @@ class ConfigurationManager:
         -------
         arch_dir : Path
             The full path to the current project arch directory,
-            e.g. `/path/to/legate.internal/arch-darwin-debug`.
+            e.g. `/path/to/legate/arch-darwin-debug`.
         """
         return self.project_dir / self.project_arch
 
@@ -636,7 +636,7 @@ class ConfigurationManager:
         -------
         cmake_dir : Path
             The full path to the current project cmake directory.
-            e.g. `/path/to/legate.internal/arch-darwin-debug/cmake_build`.
+            e.g. `/path/to/legate/arch-darwin-debug/cmake_build`.
         """
         return self.project_arch_dir / "cmake_build"
 

@@ -19,7 +19,7 @@
 //   explicit logical_store(std::span<const std::size_t, 0>) : LogicalStore(logical_store::create())
 //   {}
 //                                                         ^
-// /Users/jfaibussowit/soft/nv/legate.core.internal/build/debug-sanitizer-clang/_deps/span-src/include/tcb/span.hpp:148:7:
+// legate/build/debug-sanitizer-clang/_deps/span-src/include/tcb/span.hpp:148:7:
 // note: template is declared here
 // class span;
 //       ^
@@ -43,7 +43,7 @@
 // 'std::span<const unsigned long, 0>'
 //   std::span<const std::size_t, 0> x;
 //                                   ^
-// /Users/jfaibussowit/soft/nv/legate.core.internal/build/debug-sanitizer-clang/_deps/span-src/include/tcb/span.hpp:148:7:
+// legate/build/debug-sanitizer-clang/_deps/span-src/include/tcb/span.hpp:148:7:
 // note: template is declared here class span;
 //       ^
 #include <legate/experimental/stl/detail/span.hpp>

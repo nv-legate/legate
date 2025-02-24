@@ -46,7 +46,7 @@ std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group);
 // 'legate::mapping::detail' [bugprone-forward-declaration-namespace,-warnings-as-errors]
 // 2027 | class InstanceSet;
 //      |       ^
-// legate.core.internal/src/core/mapping/detail/instance_manager.h:44:8: note: a definition of
+// legate/src/core/mapping/detail/instance_manager.h:44:8: note: a definition of
 // 'InstanceSet' is found here
 //   44 | class InstanceSet {
 //      |       ^

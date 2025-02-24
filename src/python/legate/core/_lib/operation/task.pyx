@@ -67,7 +67,7 @@ cdef class AutoTask(Unconstructable):
         return result
 
     # TODO(jfaibussowit): consider removing this, see
-    # https://github.com/nv-legate/legate.core.internal/pull/309
+    # https://github.com/nv-legate/legate.internal/pull/309
     cpdef void lock(self):
         r"""Lock an `AutoTask` from further argument modifications.
 

@@ -200,7 +200,7 @@ class MDSpanAccessor {
   // This ignore is needed to silence the following spurious warnings, because I guess the
   // Kokkos guys don't default-initialize their compressed pairs?
   //
-  // legate.core.internal/src/core/experimental/stl/detail/mdspan.hpp:171:3: error:
+  // legate/src/core/experimental/stl/detail/mdspan.hpp:171:3: error:
   // '<unnamed>.std::detail::__compressed_pair<std::layout_right::mapping<std::extents<long
   // long int, 18446744073709551615> >, legate::experimental::stl::detail::mdspan_accessor<long int,
   // 1, legate::experimental::stl::detail::default_accessor>,
@@ -210,7 +210,7 @@ class MDSpanAccessor {
   // 171 |   mdspan_accessor(mdspan_accessor&& other) noexcept = default;
   //     |   ^~~~~~~~~~~~~~~
   //
-  // legate.core.internal/arch-ci-linux-gcc-py-pkgs-release/cmake_build/_deps/mdspan-src/include/experimental/__p0009_bits/mdspan.hpp:198:36:
+  // legate/arch-ci-linux-gcc-py-pkgs-release/cmake_build/_deps/mdspan-src/include/experimental/__p0009_bits/mdspan.hpp:198:36:
   // note: '<anonymous>' declared here
   //   198 |     : __members(other.__ptr_ref(), __map_acc_pair_t(other.__mapping_ref(),
   //   other.__accessor_ref()))

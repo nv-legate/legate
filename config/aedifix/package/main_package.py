@@ -394,7 +394,7 @@ class MainPackage(Package, ABC):
         project_dir_name : str
             The name of the project dir variable, e.g. 'LEGATE_DIR'.
         project_dir_value : Path
-            The value of the project dir, e.g. /path/to/legate.internal.
+            The value of the project dir, e.g. /path/to/legate.
         project_config_file_template: Path
             A path to a configure file template to fill out and place under
             PROJECT_DIR/PROJECT_ARCH on successfull configure.
@@ -518,7 +518,7 @@ class MainPackage(Package, ABC):
         -------
         proj_dir_value : Path
             The value of the project dir variable,
-            e.g. /path/to/legate.internal.
+            e.g. /path/to/legate.
         """
         return self._proj_dir_value
 
@@ -541,7 +541,7 @@ class MainPackage(Package, ABC):
         Returns
         -------
         proj_dir_value : Path
-            The project source dir e.g. /path/to/legate.internal/src.
+            The project source dir e.g. /path/to/legate/src.
         """
         return self._proj_src_dir
 
