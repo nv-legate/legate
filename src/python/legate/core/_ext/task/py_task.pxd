@@ -14,7 +14,6 @@ from libc.stdint cimport int64_t
 from libcpp cimport bool
 
 from ..._lib.operation.task cimport AutoTask
-from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.runtime.library cimport Library
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.utilities.typedefs cimport VariantCode, _LocalTaskID
@@ -34,7 +33,6 @@ cdef class PyTask:
         VariantMapping              _variants
         _LocalTaskID                _task_id
         Library                     _library
-        tuple[ConstraintProxy, ...] _constraints
         bool                        _throws
         bool                        _has_side_effect
 

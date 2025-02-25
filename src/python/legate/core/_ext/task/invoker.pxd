@@ -15,37 +15,31 @@ from libcpp cimport bool
 from typing import Any
 
 from ..._lib.operation.task cimport AutoTask
-from ..._lib.partitioning.constraint cimport ConstraintProxy
-from .type cimport ConstraintSet
+from ..._lib.task.task_signature cimport _TaskSignature
+from ..._lib.partitioning.constraint cimport Constraint, DeferredConstraint
 
 from .type import UserFunction
 
-ctypedef dict[str, object] ParamMapping
-
 cdef class VariantInvoker:
     cdef:
-        object          _signature  # inspect.Signature
+        object _signature  # inspect.Signature
         tuple[str, ...] _inputs
         tuple[str, ...] _outputs
         tuple[str, ...] _reductions
         tuple[str, ...] _scalars
+        tuple[DeferredConstraint, ...] _constraints
+
+    cdef _TaskSignature prepare_task_signature(self)
 
     @staticmethod
-    cdef object _handle_param(
+    cdef void _handle_param(
         AutoTask task,
         object expected_param,  # inspect.Parameter
         object user_param,
     )
 
-    cdef ParamMapping _prepare_params(
+    cdef void _prepare_params(
         self, AutoTask task, tuple[Any, ...] args, dict[str, Any] kwargs
-    )
-
-    @staticmethod
-    cdef void _prepare_constraints(
-        AutoTask task,
-        ParamMapping param_mapping,
-        ConstraintSet constraints,
     )
 
     cpdef void prepare_call(
@@ -53,7 +47,7 @@ cdef class VariantInvoker:
         AutoTask task,
         tuple[Any, ...] args,
         dict[str, Any] kwargs,
-        ConstraintSet constraints = *
+        tuple[Constraint, ...] constraints = *
     )
 
     @staticmethod

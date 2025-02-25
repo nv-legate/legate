@@ -11,6 +11,8 @@
 from __future__ import annotations
 
 from libcpp cimport bool
+from libcpp.utility cimport move as std_move
+from libcpp.vector cimport vector as std_vector
 
 import inspect
 import warnings
@@ -37,8 +39,11 @@ from ..._lib.data.physical_array cimport PhysicalArray
 from ..._lib.data.physical_store cimport PhysicalStore
 from ..._lib.data.scalar cimport Scalar
 from ..._lib.operation.task cimport AutoTask
+from ..._lib.partitioning.constraint cimport Constraint
+from ..._lib.partitioning.proxy cimport _ArrayArgumentKind, _Constraint
 from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
+from ..._lib.task.task_signature cimport make_task_signature
 from ..._lib.type.types cimport Type, TypeCode, binary_type
 
 from ...data_interface import (
@@ -48,7 +53,6 @@ from ...data_interface import (
 )
 
 from .type cimport (
-    ConstraintSet,
     InputArray,
     InputStore,
     OutputArray,
@@ -276,6 +280,7 @@ cdef tuple[
         tuple(scalars),
     )
 
+
 cdef inline bytes _serialize_object(object value):
     return pklt_optimize(pkl_dumps(value, protocol=PKL_HIGHEST_PROTOCOL))
 
@@ -285,13 +290,21 @@ cdef class VariantInvoker:
     r"""Encapsulate the calling conventions between a user-supplied task
     variant function, and a Legate task."""
 
-    def __init__(self, func: UserFunction) -> None:
+    def __init__(
+        self,
+        func: UserFunction,
+        *,
+        constraints: Sequence[DeferredConstraint] | None = None
+    ) -> None:
         r"""Construct a ``VariantInvoker``
 
         Parameters
         ----------
         func : UserFunction
             The user function which is to be invoked.
+        constraints
+            The list of constraints which are to be applied to the arguments of
+            ``func``, if any. Defaults to no constraints.
 
         Raises
         ------
@@ -307,9 +320,10 @@ cdef class VariantInvoker:
         must be fully type-hinted. Furthermore, all arguments must be
         positional or keyword arguments, ``*args`` and ``**kwargs`` are not
         allowed.
-
-        Default arguments are not yet supported either.
         """
+        if constraints is None:
+            constraints = tuple()
+
         signature = VariantInvoker._get_signature(func)
 
         ret_type = signature.return_annotation
@@ -319,6 +333,29 @@ cdef class VariantInvoker:
                 f"expected 'None' as return-type, found {ret_type}"
             )
 
+        cdef int i
+        cdef set[str] param_names = set(signature.parameters.keys())
+        cdef DeferredConstraint dc
+        # Not cdef-ing 'c' is intentional. If we cdef it, and c is not a
+        # ConstraintProxy, then Cython's default error message is inscrutible.
+        for i, c in enumerate(constraints, start=1):
+            if not isinstance(c, DeferredConstraint):
+                m = (
+                    f"Constraint #{i} of unexpected type. "
+                    f"Found {type(c)}, expected {DeferredConstraint}"
+                )
+                raise TypeError(m)
+            dc = c
+            for arg in dc.args:
+                if not isinstance(arg, str):
+                    continue
+                if arg not in param_names:
+                    m = (
+                        f"constraint argument \"{arg}\" not "
+                        f"in set of parameters: {param_names}"
+                    )
+                    raise ValueError(m)
+
         self._signature = signature
         (
             self._inputs,
@@ -326,6 +363,7 @@ cdef class VariantInvoker:
             self._reductions,
             self._scalars
         ) = _parse_signature(signature)
+        self._constraints = constraints
 
     @property
     def inputs(self) -> ParamList:
@@ -375,8 +413,41 @@ cdef class VariantInvoker:
         """
         return self._signature
 
+    # This function should logically be called during the constructor of this
+    # class, and the returned _TaskSignature be a member. However, due to some
+    # quirks with memory-leak checking and the lifetime of Python objects,
+    # doing so makes the leak-checkers think the allocagted memory is leaked.
+    #
+    # To be clear: the memory is not leaked. It cannot be, because we always
+    # use memory-safe C++ containers.
+    #
+    # My hunch is that leak-checking runs *before* the full finalization of the
+    # Python interpreter, and therefore before any "global" Python objects
+    # (such as decorators on global functions, which this class would be) are
+    # destroyed.
+    cdef _TaskSignature prepare_task_signature(self):
+        cdef tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args = (
+            (_ArrayArgumentKind.INPUT, self.inputs),
+            (_ArrayArgumentKind.OUTPUT, self.outputs),
+            (_ArrayArgumentKind.REDUCTION, self.reductions)
+        )
+        cdef std_vector[_Constraint] constraints
+        cdef DeferredConstraint c
+
+        constraints.reserve(len(self._constraints))
+        for c in self._constraints:
+            constraints.emplace_back(c.func(c.args, task_args))
+
+        return make_task_signature(
+            num_inputs=len(self.inputs),
+            num_outputs=len(self.outputs),
+            num_redops=len(self.reductions),
+            num_scalars=len(self.scalars),
+            constraints=std_move(constraints),
+        )
+
     @staticmethod
-    cdef object _handle_param(
+    cdef void _handle_param(
         task: AutoTask,
         expected_param: Parameter,
         user_param: Any
@@ -464,9 +535,8 @@ cdef class VariantInvoker:
                 )
                 dtype = binary_type(len(user_param))
             task.add_scalar_arg(user_param, dtype=dtype)
-        return user_param
 
-    cdef ParamMapping _prepare_params(
+    cdef void  _prepare_params(
         self, AutoTask task, tuple[Any, ...] args, dict[str, Any] kwargs
     ):
         signature = self.signature
@@ -474,64 +544,20 @@ cdef class VariantInvoker:
         bound_params = signature.bind(*args, **kwargs)
         bound_params.apply_defaults()
 
-        cdef ParamMapping param_mapping = bound_params.arguments
+        cdef dict[str, object] param_mapping = bound_params.arguments
         cdef str name
         # Traversal of the arguments using params is deliberate. We need to
         # keep the relative ordering of the inputs, outputs, etc in the same
         # order in which they were declared in the signature.
         for name, sig in signature.parameters.items():
-            param_mapping[name] = VariantInvoker._handle_param(
-                task, sig, param_mapping[name]
-            )
-        return param_mapping
-
-    @staticmethod
-    cdef void _prepare_constraints(
-        AutoTask task, ParamMapping param_mapping, ConstraintSet constraints
-    ):
-        r"""Handle any constraints imposed on the task
-
-        Parameters
-        ----------
-        task : AutoTask
-            The task to which to apply the constraints.
-        param_mapping : ParamMapping
-            The mapping of parameter names to their values.
-        constraints : ConstraintSet
-            The set of constraint proxies.
-        """
-        cdef ConstraintProxy constraint
-        cdef list sanitized_args
-
-        for constraint in constraints:
-            sanitized_args = []
-            for arg in constraint.args:
-                if isinstance(arg, str):
-                    arg_value = param_mapping[arg]
-                    if isinstance(arg_value, LogicalStore):
-                        arg_value = LogicalArray.from_store(arg_value)
-                    else:
-                        assert isinstance(arg_value, LogicalArray), (
-                            "Parameter constraint argument of unexpected type "
-                            f"{type(arg_value)}. Expected LogicalArray or "
-                            "LogicalStore."
-                        )
-                    arg_value = task.find_or_declare_partition(arg_value)
-                else:
-                    assert arg is not None
-                    arg_value = arg
-                sanitized_args.append(arg_value)
-            task.add_constraint(constraint.func(*sanitized_args))
+            VariantInvoker._handle_param(task, sig, param_mapping[name])
 
     cpdef void prepare_call(
         self,
         AutoTask task,
         tuple[Any, ...] args,
         dict[str, Any] kwargs,
-        # This should be constraints: ConstraintSet | None, but then Cython
-        # barfs with "Signature not compatible with previous declaration", even
-        # if you change the .pxd to match. So here we are, lying to Cython.
-        ConstraintSet constraints = None
+        tuple[Constraint, ...] constraints = None
     ):
         r"""Prepare a list of arguments for task call.
 
@@ -543,6 +569,8 @@ cdef class VariantInvoker:
             The set of positional arguments for the task.
         kwargs : dict, optional
             The set of keyword arguments for the task.
+        constraints : tuple[Constraint, ...], optional
+            The set of constraints to apply to the task, if any.
 
         Raises
         ------
@@ -577,12 +605,12 @@ cdef class VariantInvoker:
                 {"foo" : "bar", "baz" : "bop"}
             )
         """
-        cdef ParamMapping param_mapping = self._prepare_params(
-            task, args, kwargs
-        )
-        if constraints is None:
-            constraints = tuple()
-        VariantInvoker._prepare_constraints(task, param_mapping, constraints)
+        cdef Constraint c
+
+        self._prepare_params(task, args, kwargs)
+        if constraints:
+            for c in constraints:
+                task.add_constraint(c)
 
     def __call__(self, ctx: TaskContext, func: UserFunction) -> None:
         r"""Invoke the given function by adapting a TaskContext to the

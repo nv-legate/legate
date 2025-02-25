@@ -36,7 +36,8 @@ cpdef void validate_variant(VariantCode kind):
         If ``kind`` is an unknown variant kind.
     """
     if kind not in PyVariantCode:
-        raise ValueError(f"Unknown variant kind: {kind}")
+        m = f"Unknown variant kind: {kind}"
+        raise ValueError(m)
 
 
 def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]:
@@ -51,3 +52,14 @@ def dynamic_docstring(**kwargs: Any) -> Callable[[_T], _T]:
         return obj
 
     return wrapper
+
+
+cdef str _get_callable_name(object obj):
+    try:
+        return obj.__qualname__
+    except AttributeError:
+        pass
+    try:
+        return obj.__class__.__qualname__
+    except AttributeError:
+        return obj.__name__

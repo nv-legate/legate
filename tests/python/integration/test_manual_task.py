@@ -109,17 +109,26 @@ class TestManualTask:
             library, tasks.basic_task.task_id, (1,)
         )
         manual_task.add_output(runtime.create_store(ty.bool_))
-        exc = ValueError
+        exc = IndexError
         manual_task.throws_exception(exc)
-        with pytest.raises(exc, match="Wrong number of given arguments"):
+        with pytest.raises(
+            exc,
+            match=re.escape(
+                "Invalid arguments to task. Expected Nargs(0) output "
+                "arguments, have 1"
+            ),
+        ):
             manual_task.execute()
         runtime.issue_execution_fence(block=True)
 
     def test_recreate_task_with_exception(self) -> None:
         runtime = get_legate_runtime()
         library = runtime.core_library
-        exc = ValueError
-        msg = "Wrong number of given arguments"
+        exc = IndexError
+        msg = re.escape(
+            "Invalid arguments to task. Expected Nargs(0) output "
+            "arguments, have 1"
+        )
 
         def exc_task() -> None:
             exc_task = runtime.create_manual_task(

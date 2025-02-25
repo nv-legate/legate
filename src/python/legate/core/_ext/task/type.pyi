@@ -13,20 +13,14 @@ from typing import Callable, Generic, Literal, TypeAlias, TypeVar
 
 from ..._lib.data.physical_array import PhysicalArray
 from ..._lib.data.physical_store import PhysicalStore
-from ..._lib.partitioning.constraint import ConstraintProxy
 from ..._lib.task.task_context import TaskContext
 from ..._lib.type.types import ReductionOpKind
-from ..._lib.utilities.typedefs import VariantCode
-
-SignatureMapping: TypeAlias = dict[str, type]
 
 ParamList: TypeAlias = tuple[str, ...]
 
 UserFunction: TypeAlias = Callable[..., None]
 
 VariantFunction: TypeAlias = Callable[[TaskContext], None]
-
-VariantList: TypeAlias = tuple[VariantCode, ...]
 
 _T = TypeVar("_T", bound=ReductionOpKind)
 
@@ -45,5 +39,3 @@ class ReductionStore(Generic[_T], PhysicalStore): ...
 class InputArray(PhysicalArray): ...
 class OutputArray(PhysicalArray): ...
 class ReductionArray(Generic[_T], PhysicalArray): ...
-
-ConstraintSet: TypeAlias = tuple[ConstraintProxy, ...]

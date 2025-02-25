@@ -38,6 +38,10 @@ C++
 
 .. rubric:: General
 
+- Add the ability for users to statically declare their tasks' signature and
+  constraints. Users should declare a ``static inline const legate::TaskSignature
+  TASK_SIGNATURE`` member on their tasks to do so.
+
 .. rubric:: Data
 
 - Add ``legate::PhysicalStore::is_partitioned()`` that indicates if the store is partitioned.
@@ -62,6 +66,13 @@ C++
 - Add ``legate::VariantOptions::communicators`` and
   ``legate::VariantOptions::with_communicators()`` to indicate that a variant will use the
   specified communicator(s).
+- Add ``legate::TaskSignature``.
+- Add ``legate::proxy::inputs``, ``legate::proxy::outputs``, ``legate::proxy::reductions``
+  to be used in conjunction with the task signatures to describe future arguments to tasks.
+- Extend ``legate::align()``, ``legate::broadcast()``, ``legate::image()``,
+  ``legate::scale()``, and ``legate::bloat()`` to also take the proxy arguments. The
+  result of these are to be used with the task signature to describe constraints in terms
+  of future task arguments.
 
 .. rubric:: Types
 

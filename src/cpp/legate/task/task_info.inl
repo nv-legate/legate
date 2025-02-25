@@ -32,8 +32,14 @@ void TaskInfo::add_variant_(AddVariantKey,  // NOLINT(readability-identifier-nam
   // TODO(wonchanl): pass a null pointer as the body here as the function does not have the type
   // signature for Legate task variants. In the future we should extend VariantInfo so we can
   // distinguish Legate tasks from Legion tasks.
-  add_variant_(
-    AddVariantKey{}, library, vid, VariantImpl{}, entry, decl_options, registration_options);
+  add_variant_(AddVariantKey{},
+               library,
+               vid,
+               VariantImpl{},
+               entry,
+               /* signature */ nullptr,
+               decl_options,
+               registration_options);
 }
 
 }  // namespace legate

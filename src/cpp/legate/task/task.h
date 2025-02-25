@@ -20,9 +20,8 @@
 #include <legate/utilities/detail/zstring_view.h>
 #include <legate/utilities/typedefs.h>
 
+#include <cstddef>
 #include <map>
-#include <memory>
-#include <string_view>
 
 /**
  * @file
@@ -56,7 +55,7 @@ namespace legate {
  * registrar class. (See legate::TaskRegistrar for details.)
  *
  * Each task can also declare the following static members which are used as defaults in
- * variious circumstances:
+ * various circumstances:
  *
  * - `static constexpr legate::LocalTaskID TASK_ID`: Specifies the default local task ID used when
  *   registering a task with a library, and subsequent creation. If not present, then the user
@@ -75,6 +74,24 @@ namespace legate {
  * 3. The variant options provided by `Library::get_default_variant_options()`.
  * 4. The global default variant options found in `VariantOptions::DEFAULT_OPTIONS`.
  *
+ * Tasks may also optionally pre-declare their "signature" with a `static const TaskSignature
+ * TASK_SIGNATURE` member. This member describes how many input, output, scalar, or reduction
+ * arguments they take, as well as any constraints that are to be applied to the task. If a
+ * task predeclares its signature in this manner, the runtime will be able to perform a
+ * number of optimizations and sanity-checks for the user, including (but not limited to):
+ *
+ * - Checking the number of arguments matches the expected signature (and raising exceptions if
+ *   not).
+ * - Automatically applying constraints on task arguments.
+ * - Improved scheduling of tasks.
+ *
+ * @note While it is highly recommended that user statically declare their tasks' signatures,
+ * the user is no longer allowed to deviate from the signature at runtime. For example, tasks
+ * that predeclare their constraints are not allowed to add additional constraints during task
+ * launch.
+ *
+ * @see TaskSignature
+ * @see VariantOptions
  */
 template <typename T>
 class LegateTask {  // NOLINT(bugprone-crtp-constructor-accessibility)

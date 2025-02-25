@@ -412,12 +412,19 @@ target_sources(legate
                        legate/operation/detail/task_launcher.cc
                        legate/operation/detail/timing.cc
                        legate/partitioning/constraint.cc
+                       legate/partitioning/proxy.cc
                        legate/partitioning/detail/constraint.cc
                        legate/partitioning/detail/constraint_solver.cc
                        legate/partitioning/detail/partition.cc
                        legate/partitioning/detail/partitioner.cc
                        legate/partitioning/detail/partitioning_tasks.cc
                        legate/partitioning/detail/restriction.cc
+                       legate/partitioning/detail/proxy/align.cc
+                       legate/partitioning/detail/proxy/broadcast.cc
+                       legate/partitioning/detail/proxy/image.cc
+                       legate/partitioning/detail/proxy/scale.cc
+                       legate/partitioning/detail/proxy/bloat.cc
+                       legate/partitioning/detail/proxy/validate.cc
                        legate/runtime/library.cc
                        legate/runtime/runtime.cc
                        legate/runtime/scope.cc
@@ -440,6 +447,7 @@ target_sources(legate
                        legate/task/task_info.cc
                        legate/task/variant_options.cc
                        legate/task/variant_info.cc
+                       legate/task/task_signature.cc
                        legate/task/detail/return_value.cc
                        legate/task/detail/returned_exception.cc
                        legate/task/detail/returned_cpp_exception.cc
@@ -452,6 +460,7 @@ target_sources(legate
                        legate/task/detail/task_return_layout.cc
                        legate/task/detail/variant_info.cc
                        legate/task/detail/task_info.cc
+                       legate/task/detail/task_signature.cc
                        legate/type/types.cc
                        legate/type/detail/types.cc
                        legate/utilities/debug.cc
@@ -666,6 +675,7 @@ install(FILES legate/operation/projection.h legate/operation/projection.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/operation)
 
 install(FILES legate/partitioning/constraint.h legate/partitioning/constraint.inl
+              legate/partitioning/proxy.h legate/partitioning/proxy.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/partitioning)
 
 install(FILES legate/runtime/exception_mode.h legate/runtime/library.h
@@ -687,6 +697,8 @@ install(FILES legate/task/exception.h
               legate/task/variant_options.inl
               legate/task/variant_info.h
               legate/task/variant_info.inl
+              legate/task/task_signature.h
+              legate/task/task_signature.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/task)
 
 install(FILES legate/type/types.h legate/type/types.inl legate/type/type_traits.h

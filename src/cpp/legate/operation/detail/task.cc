@@ -30,17 +30,16 @@
 #include <legate/task/detail/task_return.h>
 #include <legate/task/detail/task_return_layout.h>
 #include <legate/task/detail/variant_info.h>
-#include <legate/task/task_info.h>
-#include <legate/type/detail/types.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/cpp_version.h>
 #include <legate/utilities/detail/align.h>
 #include <legate/utilities/detail/core_ids.h>
-#include <legate/utilities/detail/store_iterator_cache.h>
+#include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/zip.h>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 #include <algorithm>
 #include <stdexcept>
@@ -60,6 +59,7 @@ Task::Task(const Library* library,
            bool can_inline_launch)
   : Operation{unique_id, priority, std::move(machine)},
     library_{library},
+    vinfo_{&variant_info},
     task_id_{task_id},
     concurrent_{variant_info.options.concurrent},
     has_side_effect_{variant_info.options.has_side_effect},
@@ -73,8 +73,25 @@ Task::Task(const Library* library,
         LEGATE_CPP_VERSION_TODO(20, "No need to use empty comm as sentinel value anymore");
         break;
       }
-      add_communicator(comm);
+      add_communicator(comm, /* bypass_signature_check */ true);
     }
+  }
+
+  if (const auto& signature = variant_info.signature; signature.has_value()) {
+    constexpr auto nargs_upper_limit = [](const std::optional<TaskSignature::Nargs>& nargs) {
+      return nargs.has_value() ? nargs->upper_limit() : 0;
+    };
+
+    const auto& sig = *signature;
+
+    inputs_.reserve(nargs_upper_limit(sig->inputs()));
+    outputs_.reserve(nargs_upper_limit(sig->outputs()));
+    scalars_.reserve(nargs_upper_limit(sig->scalars()));
+
+    const auto num_redops = nargs_upper_limit(sig->redops());
+
+    reductions_.reserve(num_redops);
+    reduction_ops_.reserve(num_redops);
   }
 }
 
@@ -92,8 +109,20 @@ void Task::throws_exception(bool can_throw_exception)
   can_throw_exception_ = can_throw_exception;
 }
 
-void Task::add_communicator(std::string_view name)
+void Task::add_communicator(std::string_view name, bool bypass_signature_check)
 {
+  if (const auto& comms = variant_info_().options.communicators; comms.has_value()) {
+    if (!bypass_signature_check) {
+      throw TracedException<std::runtime_error>{
+        fmt::format("Task {} has pre-declared communicator(s) ({}), cannot override it by adding "
+                    "communicators (of any kind) at the task callsite. Either remove the "
+                    "communicator from the task declaration, or remove the manual "
+                    "add_communicator() calls from the task construction sequence.",
+                    *this,
+                    *comms)};
+    }
+  }
+
   const auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
   auto* factory        = comm_mgr->find_factory(name);
 
@@ -117,6 +146,14 @@ void Task::record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
                                    GlobalRedopID legion_redop_id)
 {
   scalar_reductions_.emplace_back(std::move(store), legion_redop_id);
+}
+
+void Task::validate()
+{
+  Operation::validate();
+  if (const auto& signature = variant_info_().signature) {
+    (*signature)->check_signature(*this);
+  }
 }
 
 void Task::inline_launch_() const
@@ -217,7 +254,7 @@ void Task::launch_task_(Strategy* strategy)
     // TODO(jfaibussowit)
     // Inline launch not yet supported for unbound arrays. Not yet clear what to do to
     // materialize the buffers (as sizes aren't yet known).
-    launch_fast = std::none_of(outputs_.begin(), outputs_.end(), [](const ArrayArg& array_arg) {
+    launch_fast = std::none_of(outputs_.begin(), outputs_.end(), [](const TaskArrayArg& array_arg) {
       return array_arg.array->unbound();
     });
   }
@@ -369,6 +406,22 @@ bool Task::needs_flush() const
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
+AutoTask::AutoTask(const Library* library,
+                   const VariantInfo& variant_info,
+                   LocalTaskID task_id,
+                   std::uint64_t unique_id,
+                   std::int32_t priority,
+                   mapping::detail::Machine machine)
+  : Task{library,
+         variant_info,
+         task_id,
+         unique_id,
+         priority,
+         std::move(machine),
+         /* can_inline_launch */ Config::get_config().enable_inline_task_launch()}
+{
+}
+
 const Variable* AutoTask::add_input(InternalSharedPtr<LogicalArray> array)
 {
   auto symb = find_or_declare_partition(array);
@@ -449,8 +502,24 @@ const Variable* AutoTask::find_or_declare_partition(const InternalSharedPtr<Logi
   return Operation::find_or_declare_partition(array->primary_store());
 }
 
-void AutoTask::add_constraint(InternalSharedPtr<Constraint> constraint)
+void AutoTask::add_constraint(InternalSharedPtr<Constraint> constraint, bool bypass_signature_check)
 {
+  const auto have_signature = [&] {
+    if (const auto& sig = variant_info_().signature; sig.has_value()) {
+      LEGATE_ASSERT(*sig);
+      return (*sig)->constraints().has_value();
+    }
+    return false;
+  };
+
+  if (!bypass_signature_check && have_signature()) {
+    throw TracedException<std::runtime_error>{fmt::format(
+      "Task {} has pre-declared signature, cannot override it by adding constraints (of any "
+      "kind) at the task callsite. Either remove the signature from the task declaration, or "
+      "remove the manual add_constraint() calls from the task construction sequence.",
+      *this)};
+  }
+
   constraints_.push_back(std::move(constraint));
 }
 
@@ -481,6 +550,10 @@ void AutoTask::add_to_solver(detail::ConstraintSolver& solver)
 
 void AutoTask::validate()
 {
+  Task::validate();
+  if (const auto& signature = variant_info_().signature) {
+    (*signature)->apply_constraints(this);
+  }
   for (auto&& constraint : constraints_) {
     constraint->validate();
   }
@@ -508,8 +581,8 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
   launcher.set_priority(priority());
 
   for (auto* array : arrays_to_fixup_) {
-    // TODO(wonchanl): We should pass projection functors here once we start supporting string/list
-    // legate arrays in ManualTasks
+    // TODO(wonchanl): We should pass projection functors here once we start supporting
+    // string/list legate arrays in ManualTasks
     launcher.add_output(array->to_launcher_arg_for_fixup(launch_domain, LEGION_NO_ACCESS));
   }
 
@@ -605,7 +678,7 @@ void ManualTask::add_reduction(const InternalSharedPtr<LogicalStorePartition>& s
   reduction_ops_.push_back(legion_redop_id);
 }
 
-void ManualTask::add_store_(std::vector<ArrayArg>& store_args,
+void ManualTask::add_store_(std::vector<TaskArrayArg>& store_args,
                             const InternalSharedPtr<LogicalStore>& store,
                             InternalSharedPtr<Partition> partition,
                             std::optional<SymbolicPoint> projection)
@@ -627,5 +700,7 @@ void ManualTask::add_store_(std::vector<ArrayArg>& store_args,
     strategy_.insert(partition_symbol, std::move(partition));
   }
 }
+
+void ManualTask::launch() { launch_task_(&strategy_); }
 
 }  // namespace legate::detail

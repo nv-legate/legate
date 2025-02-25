@@ -25,6 +25,7 @@ from ..utilities.typedefs cimport TaskFuncPtr, VariantCode, _GlobalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 from .task_context cimport TaskContext, _TaskContext
 from .variant_helper cimport task_wrapper_dyn_name
+from .task_signature cimport _TaskSignature
 
 
 cdef extern from *:
@@ -151,7 +152,8 @@ cdef extern from *:
       legate::Library *core_lib,
       legate::VariantCode variant_kind,
       legate::VariantImpl cy_entry,
-      legate::Processor::TaskFuncPtr py_entry)
+      legate::Processor::TaskFuncPtr py_entry,
+      const legate::TaskSignature* signature)
     {
       handle->add_variant_(
         legate::TaskInfo::AddVariantKey{},
@@ -159,7 +161,8 @@ cdef extern from *:
         variant_kind,
         cy_entry,
         py_entry,
-        nullptr
+        signature,
+        /* decl_options */ nullptr
       );
     }
 
@@ -171,7 +174,8 @@ cdef extern from *:
             _Library *,
             VariantCode,
             VariantImpl,
-            TaskFuncPtr
+            TaskFuncPtr,
+            const _TaskSignature *
         ) nogil
 
 cdef class TaskInfo(Unconstructable):
@@ -221,6 +225,37 @@ cdef class TaskInfo(Unconstructable):
         cdef str variants = ", ".join(descr) if descr else "None"
         return f"TaskInfo(name: {self.name}, variants: {variants})"
 
+    # The exact same thing as from_variants() (in fact, that function calls
+    # this one), except that it also accepts a TaskSignature argument. The
+    # reason we have two versions of the function is because TaskSignature does
+    # not need to be exposed to the user.
+    @staticmethod
+    cdef TaskInfo from_variants_signature(
+        _LocalTaskID local_task_id,
+        str name,
+        list[tuple[VariantCode, object]] variants,
+        const _TaskSignature *signature
+    ):
+        if not variants:
+            raise ValueError(
+                "Cannot construct task info "
+                f"(local id: {local_task_id}, name: {name})."
+                " Variants must not be empty."
+            )
+
+        cdef TaskInfo task_info
+
+        task_info = TaskInfo.from_handle(
+            _TaskInfo(name.encode()), local_task_id
+        )
+
+        cdef VariantCode variant_kind
+        for variant_kind, variant_fn in variants:
+            task_info.add_variant_signature(
+                variant_kind, variant_fn, signature
+            )
+        return task_info
+
     @classmethod
     def from_variants(
         cls,
@@ -245,23 +280,12 @@ cdef class TaskInfo(Unconstructable):
         TaskInfo
             The created `TaskInfo` object.
         """
-        if not variants:
-            raise ValueError(
-                "Cannot construct task info "
-                f"(local id: {local_task_id}, name: {name})."
-                " Variants must not be empty."
-            )
-
-        cdef TaskInfo task_info
-
-        task_info = TaskInfo.from_handle(
-            _TaskInfo(name.encode()), local_task_id
+        return TaskInfo.from_variants_signature(
+            local_task_id=local_task_id,
+            name=name,
+            variants=variants,
+            signature=NULL
         )
-
-        cdef VariantCode variant_kind
-        for variant_kind, variant_fn in variants:
-            task_info.add_variant(variant_kind, variant_fn)
-        return task_info
 
     @property
     def name(self) -> str:
@@ -304,29 +328,13 @@ cdef class TaskInfo(Unconstructable):
             ret = self._handle.find_variant(variant_id).has_value()
         return ret
 
-    cpdef void add_variant(self, VariantCode variant_kind, object fn):
-        r"""
-        Register a variant to a `TaskInfo`.
-
-        Parameters
-        ----------
-        variant_kind : VariantCode
-            The variant kind to add.
-        fn : VariantFunction
-            The variant to add.
-
-        Raises
-        ------
-        RuntimeError
-            If the task info object is in an invalid state.
-        TypeError
-            If `fn` is not callable.
-        ValueError
-            If `variant_kind` is an unknown variant kind.
-        RuntimeError
-            If the task info object has already registered a variant for
-            `variant_kind`.
-        """
+    # The exact same thing as add_variant() (in fact, that function calls this
+    # one), except that it also accepts a TaskSignature argument. The reason we
+    # have two versions of the function is because TaskSignature does not need
+    # to be exposed to the user.
+    cdef void add_variant_signature(
+        self, VariantCode variant_kind, object fn, const _TaskSignature *signature
+    ):
         if not callable(fn):
             raise TypeError(
                 f"Variant function ({fn}) for variant kind {variant_kind} is "
@@ -360,7 +368,35 @@ cdef class TaskInfo(Unconstructable):
                 &core_lib._handle,
                 variant_kind,
                 _py_variant,
-                callback
+                callback,
+                signature
             )
         # do this last to preserve strong exception guarantee
         self._registered_variants[variant_kind] = fn
+
+    cpdef void add_variant(self, VariantCode variant_kind, object fn):
+        r"""
+        Register a variant to a `TaskInfo`.
+
+        Parameters
+        ----------
+        variant_kind : VariantCode
+            The variant kind to add.
+        fn : VariantFunction
+            The variant to add.
+
+        Raises
+        ------
+        RuntimeError
+            If the task info object is in an invalid state.
+        TypeError
+            If `fn` is not callable.
+        ValueError
+            If `variant_kind` is an unknown variant kind.
+        RuntimeError
+            If the task info object has already registered a variant for
+            `variant_kind`.
+        """
+        self.add_variant_signature(
+            variant_kind=variant_kind, fn=fn, signature=NULL
+        )

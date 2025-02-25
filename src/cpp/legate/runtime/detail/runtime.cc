@@ -570,6 +570,10 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
     log_legate().debug() << op->to_string(true /*show_provenance*/) << " submitted";
   }
 
+  // Must validate all operations (internal or not), because this call will check the task
+  // signatures if they are set.
+  op->validate();
+
   // Special case for internal operations
   if (op->is_internal()) {
     operations_.emplace_back(std::move(op));
@@ -579,7 +583,6 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
     return;
   }
 
-  op->validate();
   auto& submitted = operations_.emplace_back(std::move(op));
   if (submitted->needs_flush() || operations_.size() >= window_size_) {
     flush_scheduling_window();
@@ -1222,6 +1225,7 @@ Legion::IndexPartition Runtime::create_approximate_image_partition(
   task->add_output(output);
   // Directly launch the partitioning task, instead of going through the scheduling pipeline,
   // because this function is invoked only when the partition is immediately needed.
+  task->validate();
   launch_immediately(std::move(task));
 
   auto domains     = output->get_future_map();

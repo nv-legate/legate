@@ -12,5 +12,6 @@ from __future__ import annotations
 
 from ..._lib.utilities.typedefs cimport VariantCode
 
-
 cpdef void validate_variant(VariantCode kind)
+
+cdef str _get_callable_name(object obj)

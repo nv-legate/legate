@@ -121,7 +121,7 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 // ==========================================================================================
 
 [[nodiscard]] std::vector<InternalSharedPtr<PhysicalArray>> fill_vector(
-  const std::vector<Task::ArrayArg>& src,
+  const std::vector<TaskArrayArg>& src,
   bool ignore_future_mutability,
   const StoreIteratorCache<InternalSharedPtr<PhysicalStore>>& get_stores_cache,
   std::vector<Legion::UntypedDeferredValue>* deferred_buffers)

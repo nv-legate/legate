@@ -14,14 +14,16 @@
 
 #include <legate_defines.h>
 
-#include <legate/data/shape.h>
+#include <legate/partitioning/proxy.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>
-#include <legate/utilities/memory.h>
 #include <legate/utilities/shared_ptr.h>
 #include <legate/utilities/tuple.h>
 
+#include <cstdint>
+#include <optional>
 #include <string>
+#include <variant>
 
 /**
  * @file
@@ -34,8 +36,6 @@ namespace legate {
  * @addtogroup partitioning
  * @{
  */
-
-class AutoTask;
 
 namespace detail {
 
@@ -105,6 +105,58 @@ class Constraint {
 [[nodiscard]] Constraint align(Variable lhs, Variable rhs);
 
 /**
+ * @brief Construct an alignment constraint descriptor from a pair of proxy objects.
+ *
+ * This routine may be used to describe an alignment constraint between prospective arguments
+ * to a task. For example:
+ *
+ * @snippet{trimleft} unit/task_signature/register.cc Align all inputs with output 0
+ *
+ * Dictates that all inputs should be aligned with output `0`. Similarly
+ *
+ * @snippet{trimleft} unit/task_signature/register.cc Align all input 0 with output 1
+ *
+ * Dictates that inputs `0` and `1` of the task should be aligned.
+ *
+ * @param left The left operand to the alignment constraint.
+ * @param right The right operand to the alignment constraint.
+ *
+ * @return The alignment descriptor.
+ *
+ * @see align(Variable, Variable)
+ */
+[[nodiscard]] proxy::Constraint align(std::variant<proxy::ArrayArgument,
+                                                   proxy::InputArguments,
+                                                   proxy::OutputArguments,
+                                                   proxy::ReductionArguments> left,
+                                      std::variant<proxy::ArrayArgument,
+                                                   proxy::InputArguments,
+                                                   proxy::OutputArguments,
+                                                   proxy::ReductionArguments> right);
+
+/**
+ * @brief Construct an alignment constraint descriptor for all input arguments.
+ *
+ * The returned constraint aligns all input arguments with each other.
+ *
+ * @param proxies The input arguments.
+ *
+ * @return The alignment descriptor.
+ */
+[[nodiscard]] proxy::Constraint align(proxy::InputArguments proxies);
+
+/**
+ * @brief Construct an alignment constraint descriptor for all output arguments.
+ *
+ * The returned constraint aligns all output arguments with each other.
+ *
+ * @param proxies The output arguments.
+ *
+ * @return The alignment descriptor.
+ */
+[[nodiscard]] proxy::Constraint align(proxy::OutputArguments proxies);
+
+/**
  * @brief Creates a broadcast constraint on a variable.
  *
  * A broadcast constraint informs the runtime that the variable should not be split among the
@@ -133,6 +185,36 @@ class Constraint {
  * @throw std::invalid_argument If the list of axes is empty
  */
 [[nodiscard]] Constraint broadcast(Variable variable, tuple<std::uint32_t> axes);
+
+/**
+ * @brief Construct a broadcast constraint descriptor.
+ *
+ * This routine may be used to describe a broadcast constraint for prospective arguments to a
+ * task. For example:
+ *
+ * @snippet{trimleft} unit/task_signature/register.cc Broadcast input 0
+ *
+ * Dictates that the first input argument should be broadcast to all leaf tasks, while
+ *
+ * @snippet{trimleft} unit/task_signature/register.cc Broadcast all outputs
+ *
+ * Dictates that all outputs should be broadcast to all leaf tasks.
+ *
+ * See `legate::broadcast()` for more information on the precise semantics of broadcasting
+ * arguments.
+ *
+ * @param value The proxy value to apply the broadcast constraint to.
+ * @param axes Optional axes to specify when broadcasting.
+ *
+ * @return The broadcast descriptor.
+ *
+ * @see broadcast(Variable, tuple<std::uint32_t>)
+ */
+[[nodiscard]] proxy::Constraint broadcast(std::variant<proxy::ArrayArgument,
+                                                       proxy::InputArguments,
+                                                       proxy::OutputArguments,
+                                                       proxy::ReductionArguments> value,
+                                          std::optional<tuple<std::uint32_t>> axes = std::nullopt);
 
 /**
  * @brief Hints to the runtime for the image computation
@@ -176,6 +258,33 @@ enum class ImageComputationHint : std::uint8_t {
                                ImageComputationHint hint = ImageComputationHint::NO_HINT);
 
 /**
+ * @brief Construct an image constraint descriptor.
+ *
+ * This routine may be used to describe an image constraint for prospective arguments to a
+ * task.
+ *
+ * See `legate::image()` for more information on the precise semantics of image constraints.
+ *
+ * @param var_function The proxy symbol for the function store.
+ * @param var_range The proxy symbol for the range store.
+ * @param hint The optional hint given to the runtime describing how the image computation
+ * will be performed.
+ *
+ * @return The image descriptor.
+ *
+ * @see image(Variable, Variable, ImageComputationHint)
+ */
+[[nodiscard]] proxy::Constraint image(std::variant<proxy::ArrayArgument,
+                                                   proxy::InputArguments,
+                                                   proxy::OutputArguments,
+                                                   proxy::ReductionArguments> var_function,
+                                      std::variant<proxy::ArrayArgument,
+                                                   proxy::InputArguments,
+                                                   proxy::OutputArguments,
+                                                   proxy::ReductionArguments> var_range,
+                                      std::optional<ImageComputationHint> hint = std::nullopt);
+
+/**
  * @brief Creates a scaling constraint between partitions
  *
  * A scaling constraint is similar to an alignment constraint, except that the sizes of the
@@ -206,6 +315,32 @@ enum class ImageComputationHint : std::uint8_t {
 [[nodiscard]] Constraint scale(tuple<std::uint64_t> factors,
                                Variable var_smaller,
                                Variable var_bigger);
+
+/**
+ * @brief Construct a scaling constraint descriptor.
+ *
+ * This routine may be used to describe a scaling constraint for prospective arguments to a
+ * task.
+ *
+ * See `legate::scale()` for more information on the precise semantics of scaling constraints.
+ *
+ * @param factors The scaling factors.
+ * @param var_smaller The proxy argument for the smaller store (that which should be scaled).
+ * @param var_bigger The proxy argument for the bigger store.
+ *
+ * @return The scale descriptor.
+ *
+ * @see scale(tuple<std::uint64_t>, Variable, Variable)
+ */
+[[nodiscard]] proxy::Constraint scale(tuple<std::uint64_t> factors,
+                                      std::variant<proxy::ArrayArgument,
+                                                   proxy::InputArguments,
+                                                   proxy::OutputArguments,
+                                                   proxy::ReductionArguments> var_smaller,
+                                      std::variant<proxy::ArrayArgument,
+                                                   proxy::InputArguments,
+                                                   proxy::OutputArguments,
+                                                   proxy::ReductionArguments> var_bigger);
 
 /**
  * @brief Creates a bloating constraint between partitions
@@ -239,6 +374,34 @@ enum class ImageComputationHint : std::uint8_t {
                                Variable var_bloat,
                                tuple<std::uint64_t> low_offsets,
                                tuple<std::uint64_t> high_offsets);
+
+/**
+ * @brief Construct a bloat constraint descriptor.
+ *
+ * This routine may be used to describe a bloat constraint for prospective arguments to a
+ * task.
+ *
+ * See `legate::bloat()` for more information on the precise semantics of bloat constraints.
+ *
+ * @param var_source The proxy source store.
+ * @param var_bloat The proxy target store.
+ * @param low_offsets Offsets to bloat towards the negative direction.
+ * @param high_offsets Offsets to bloat towards the positive direction.
+ *
+ * @return The bloat descriptor.
+ *
+ * @see bloat(Variable, Variable, tuple<std::uint64_t>, tuple<std::uint64_t>)
+ */
+[[nodiscard]] proxy::Constraint bloat(std::variant<proxy::ArrayArgument,
+                                                   proxy::InputArguments,
+                                                   proxy::OutputArguments,
+                                                   proxy::ReductionArguments> var_source,
+                                      std::variant<proxy::ArrayArgument,
+                                                   proxy::InputArguments,
+                                                   proxy::OutputArguments,
+                                                   proxy::ReductionArguments> var_bloat,
+                                      tuple<std::uint64_t> low_offsets,
+                                      tuple<std::uint64_t> high_offsets);
 
 /** @} */
 

@@ -14,6 +14,8 @@
 
 #include <legate/runtime/library.h>
 #include <legate/task/detail/task_info.h>
+#include <legate/task/detail/task_signature.h>
+#include <legate/task/task_signature.h>
 #include <legate/utilities/typedefs.h>
 
 #include <iostream>
@@ -27,6 +29,7 @@ void TaskInfo::add_variant_(AddVariantKey,
                             VariantCode vid,
                             VariantImpl body,
                             Processor::TaskFuncPtr entry,
+                            const TaskSignature* signature,
                             const VariantOptions* decl_options,
                             const std::map<VariantCode, VariantOptions>& registration_options)
 {
@@ -52,7 +55,13 @@ void TaskInfo::add_variant_(AddVariantKey,
     return VariantOptions::DEFAULT_OPTIONS;
   }();
 
-  impl()->add_variant(vid, body, Legion::CodeDescriptor{entry}, options);
+  std::optional<InternalSharedPtr<detail::TaskSignature>> sig;
+
+  if (signature) {
+    sig.emplace(signature->impl());
+  }
+
+  impl()->add_variant(vid, body, Legion::CodeDescriptor{entry}, options, std::move(sig));
 }
 
 // ==========================================================================================

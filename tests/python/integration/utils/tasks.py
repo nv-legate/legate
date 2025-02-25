@@ -20,7 +20,14 @@ except ModuleNotFoundError:
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from legate.core import InlineAllocation, Scalar, VariantCode, align, broadcast
+from legate.core import (
+    InlineAllocation,
+    PhysicalStore,
+    Scalar,
+    VariantCode,
+    align,
+    broadcast,
+)
 from legate.core.task import (
     ADD,
     InputArray,
@@ -84,13 +91,26 @@ def zeros_task(out: OutputStore) -> None:
     out_arr[:] = lib.zeros(out_arr.shape)
 
 
+def _copy_store_task(
+    in_store: PhysicalStore, out_store: PhysicalStore
+) -> None:
+    in_arr_np = asarray(in_store.get_inline_allocation())
+    out_arr_np = asarray(out_store.get_inline_allocation())
+    out_arr_np[:] = in_arr_np[:]
+
+
 @task(
     variants=tuple(VariantCode), constraints=(align("in_store", "out_store"),)
 )
 def copy_store_task(in_store: InputStore, out_store: OutputStore) -> None:
-    in_arr_np = asarray(in_store.get_inline_allocation())
-    out_arr_np = asarray(out_store.get_inline_allocation())
-    out_arr_np[:] = in_arr_np[:]
+    _copy_store_task(in_store, out_store)
+
+
+@task(variants=tuple(VariantCode))
+def copy_store_task_no_constraints(
+    in_store: InputStore, out_store: OutputStore
+) -> None:
+    _copy_store_task(in_store, out_store)
 
 
 @task(variants=tuple(VariantCode))

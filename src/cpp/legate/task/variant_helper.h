@@ -108,6 +108,9 @@ class VariantHelper {
 
 template <typename T, template <typename...> typename SELECTOR>
 class VariantHelper<T, SELECTOR, true> {
+  template <typename U>
+  using has_task_signature = decltype(U::TASK_SIGNATURE);
+
  public:
   static void record(const legate::Library& lib,
                      const std::map<VariantCode, VariantOptions>& all_options,
@@ -120,13 +123,21 @@ class VariantHelper<T, SELECTOR, true> {
     constexpr auto* options     = SELECTOR<T>::options;
 
     if constexpr (std::is_convertible_v<decltype(variant_impl), VariantImpl>) {
-      constexpr auto entry = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
+      constexpr auto entry            = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
+      constexpr const auto* signature = []() -> const legate::TaskSignature* {
+        if constexpr (is_detected_v<has_task_signature, T>) {
+          return &T::TASK_SIGNATURE;
+        } else {
+          return nullptr;
+        }
+      }();
 
       task_info->add_variant_(legate::TaskInfo::AddVariantKey{},
                               lib,
                               variant_kind,
                               variant_impl,
                               entry,
+                              signature,
                               options,
                               all_options);
     } else {

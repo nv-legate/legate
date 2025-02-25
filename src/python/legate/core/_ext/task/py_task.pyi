@@ -13,11 +13,11 @@ from collections.abc import Sequence
 from typing import Any, Final
 
 from ..._lib.operation.task import AutoTask
-from ..._lib.partitioning.constraint import ConstraintProxy
+from ..._lib.partitioning.constraint import DeferredConstraint
 from ..._lib.runtime.library import Library
-from ..._lib.utilities.typedefs import LocalTaskID
+from ..._lib.utilities.typedefs import LocalTaskID, VariantCode
 from .invoker import VariantInvoker
-from .type import UserFunction, VariantList
+from .type import UserFunction
 
 class PyTask:
     UNREGISTERED_ID: Final = ...
@@ -26,8 +26,8 @@ class PyTask:
         self,
         *,
         func: UserFunction,
-        variants: VariantList,
-        constraints: Sequence[ConstraintProxy] | None = None,
+        variants: tuple[VariantCode, ...],
+        constraints: Sequence[DeferredConstraint] | None = None,
         throws_exception: bool = False,
         has_side_effect: bool = False,
         invoker: VariantInvoker | None = None,

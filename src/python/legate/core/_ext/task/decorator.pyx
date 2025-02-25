@@ -14,9 +14,8 @@ from libcpp cimport bool
 
 from collections.abc import Callable, Sequence
 
-from ..._lib.partitioning.constraint cimport ConstraintProxy
+from ..._lib.partitioning.constraint cimport DeferredConstraint
 from ..._lib.utilities.typedefs cimport VariantCode
-from .type cimport VariantList
 
 # imports are deliberate here, we want the python objects. Technically not true
 # for PyTask, but cimporting it results in:
@@ -42,8 +41,8 @@ cdef tuple[VariantCode, ...] DEFAULT_VARIANT_LIST = (VariantCode.CPU,)
 def task(
     func: UserFunction | None = None,
     *,
-    variants: VariantList = DEFAULT_VARIANT_LIST,
-    constraints: Sequence[ConstraintProxy] | None = None,
+    variants: tuple[VariantCode, ...] = DEFAULT_VARIANT_LIST,
+    constraints: Sequence[DeferredConstraint] | None = None,
     throws_exception: bool = False,
     has_side_effect: bool = False,
     register: bool = True,
@@ -54,10 +53,10 @@ def task(
     ----------
     func : UserFunction
         The base user function to invoke in the task.
-    variants : VariantList, optional
+    variants : tuple[VariantCode, ...], optional
         The list of variants for which ``func`` is applicable. Defaults
         to ``{DEFAULT_VARIANT_LIST}``.
-    constraints : Sequence[ConstraintProxy], optional
+    constraints : Sequence[DeferredConstraint], optional
         The list of constraints which are to be applied to the arguments of
         ``func``, if any. Defaults to no constraints.
     throws_exception : bool, False
@@ -67,12 +66,44 @@ def task(
         Whether the task has any global side-effects. See ``AutoTask.set_side_
         effect()`` for further information.
     register : bool, True
-        Whether to immediately complete registration of the task.
+        Whether to immediately complete registration of the task. Deferring
+        registration is used to add additional variants to the task that have
+        a different body. However, all variants must have identical signatures.
+        The user must manually call ``PyTask.complete_registration`` to finish
+        registering the task.
 
     Returns
     -------
-    task : PyTask
+    PyTask
         The task object.
+
+    Example
+    -------
+    ::
+
+        from legate.core import broadcast, align, VariantCode
+        from legate.core.task import task, InputArray, OutputArray
+
+        @task
+        def my_basic_task(
+            x: InputArray,
+            y: OutputArray,
+            z: tuple[int, ...] = (1, 2, 3)
+         ) -> None:
+            ...
+
+        @task(
+            variants=(VariantCode.CPU, VariantCode.GPU),
+            constraints=(align("x", "y"), broadcast("x")),
+            throws_exception=True,
+        )
+        def my_task_with_options(
+            x: InputArray,
+            y: OutputArray,
+            z: tuple[int, ...] = (1, 2, 3)
+        ) -> None:
+            raise RuntimeError("Exceptional!")
+
 
     See Also
     --------

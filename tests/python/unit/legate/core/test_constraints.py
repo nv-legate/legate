@@ -26,7 +26,7 @@ from legate.core import (
 )
 from legate.core._lib.partitioning.constraint import (
     Constraint,
-    ConstraintProxy,
+    DeferredConstraint,
     Variable,
 )
 from legate.core.task import InputStore, task
@@ -83,10 +83,7 @@ def repr_type_without_class(obj: type) -> str:
 class TestAlign:
     def test_create_from_str(self) -> None:
         constraint = lg.align("x", "y")
-        assert isinstance(constraint, ConstraintProxy)
-        assert hasattr(constraint, "func")
-        assert callable(constraint.func)
-        assert constraint.func == lg.align
+        assert isinstance(constraint, DeferredConstraint)
         assert hasattr(constraint, "args")
         assert constraint.args == ("x", "y")
 
@@ -133,10 +130,7 @@ class TestBroadcast:
     @pytest.mark.parametrize("axes", AXES)
     def test_create_from_str(self, axes: Collection[int]) -> None:
         constraint = lg.broadcast("x", axes=axes)
-        assert isinstance(constraint, ConstraintProxy)
-        assert hasattr(constraint, "func")
-        assert callable(constraint.func)
-        assert constraint.func == lg.broadcast
+        assert isinstance(constraint, DeferredConstraint)
         assert hasattr(constraint, "args")
         assert constraint.args == ("x", axes)
 
@@ -173,19 +167,13 @@ class TestBroadcast:
 class TestImage:
     def test_create_from_str(self) -> None:
         constraint = lg.image("x", "y")
-        assert isinstance(constraint, ConstraintProxy)
-        assert hasattr(constraint, "func")
-        assert callable(constraint.func)
-        assert constraint.func == lg.image
+        assert isinstance(constraint, DeferredConstraint)
         assert hasattr(constraint, "args")
         assert constraint.args == ("x", "y", lg.ImageComputationHint.NO_HINT)
 
     def test_create_from_str_with_hint(self) -> None:
         constraint = lg.image("x", "y", lg.ImageComputationHint.FIRST_LAST)
-        assert isinstance(constraint, ConstraintProxy)
-        assert hasattr(constraint, "func")
-        assert callable(constraint.func)
-        assert constraint.func == lg.image
+        assert isinstance(constraint, DeferredConstraint)
         assert hasattr(constraint, "args")
         assert constraint.args == (
             "x",
@@ -236,10 +224,7 @@ class TestScale:
     @pytest.mark.parametrize("factors", FACTORS)
     def test_create_from_str(self, factors: tuple[int, ...]) -> None:
         constraint = lg.scale(factors, "x", "y")
-        assert isinstance(constraint, ConstraintProxy)
-        assert hasattr(constraint, "func")
-        assert callable(constraint.func)
-        assert constraint.func == lg.scale
+        assert isinstance(constraint, DeferredConstraint)
         assert hasattr(constraint, "args")
         assert constraint.args == (factors, "x", "y")
 
@@ -306,10 +291,7 @@ class TestBloat:
         self, lo_offsets: tuple[int, ...], hi_offsets: tuple[int, ...]
     ) -> None:
         constraint = lg.bloat("x", "y", lo_offsets, hi_offsets)
-        assert isinstance(constraint, ConstraintProxy)
-        assert hasattr(constraint, "func")
-        assert callable(constraint.func)
-        assert constraint.func == lg.bloat
+        assert isinstance(constraint, DeferredConstraint)
         assert hasattr(constraint, "args")
         assert constraint.args == ("x", "y", lo_offsets, hi_offsets)
 

@@ -241,6 +241,9 @@ set(with_runtime_SRC
     unit/type/type_features.cc
     unit/type/type_traits.cc
     unit/io/hdf5/read.cc
+    unit/task_signature/nargs.cc
+    unit/task_signature/basic.cc
+    unit/task_signature/register.cc
     # experimental
     experimental/stl/elementwise.cc
     experimental/stl/fill.cc

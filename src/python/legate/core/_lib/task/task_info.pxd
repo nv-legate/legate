@@ -25,6 +25,7 @@ from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.shared_ptr cimport _SharedPtr
 from .variant_options cimport _VariantOptions
 from .variant_info cimport _VariantInfo
+from .task_signature cimport _TaskSignature
 
 from .detail.task_info cimport _TaskInfo as _DetailTaskInfo
 
@@ -54,8 +55,22 @@ cdef class TaskInfo(Unconstructable):
 
     @staticmethod
     cdef TaskInfo from_handle(_TaskInfo, _LocalTaskID)
+
+    @staticmethod
+    cdef TaskInfo from_variants_signature(
+        _LocalTaskID local_task_id,
+        str name,
+        list[tuple[VariantCode, object]] variants,
+        const _TaskSignature *signature
+    )
     cdef void validate_registered_py_variants(self)
     cdef void register_global_variant_callbacks(self, _GlobalTaskID)
     cdef _LocalTaskID get_local_id(self)
     cpdef bool has_variant(self, VariantCode)
+    cdef void add_variant_signature(
+        self,
+        VariantCode variant_kind,
+        object fn,
+        const _TaskSignature *signature
+    )
     cpdef void add_variant(self, VariantCode, object)

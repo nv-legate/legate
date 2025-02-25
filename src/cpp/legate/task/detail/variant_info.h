@@ -12,8 +12,10 @@
 
 #pragma once
 
+#include <legate/task/detail/task_signature.h>
 #include <legate/task/variant_options.h>
 #include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
 #include <legion/legion_types.h>
@@ -38,7 +40,10 @@ class VariantInfo {
    * @param code_desc_ The Legion code descriptor object that will be registered with Legion.
    * @param options_ The variant options set by the user.
    */
-  VariantInfo(VariantImpl body_, const Legion::CodeDescriptor& code_desc_, VariantOptions options_);
+  VariantInfo(VariantImpl body_,
+              const Legion::CodeDescriptor& code_desc_,
+              VariantOptions options_,
+              std::optional<InternalSharedPtr<TaskSignature>> signature_);
 
   /**
    * @return Get a textual representation of the variant info.
@@ -59,6 +64,11 @@ class VariantInfo {
    * @brief The variant options.
    */
   VariantOptions options{};
+
+  /**
+   * @brief The task signature.
+   */
+  std::optional<InternalSharedPtr<TaskSignature>> signature{};
 };
 
 }  // namespace legate::detail

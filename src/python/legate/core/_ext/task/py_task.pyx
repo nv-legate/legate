@@ -10,20 +10,19 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Any
 
 from ..._lib.operation.task cimport AutoTask
-from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.runtime.library cimport Library
 from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.task.task_info cimport TaskInfo
+from ..._lib.task.task_signature cimport _TaskSignature
 from ..._lib.utilities.typedefs cimport VariantCode, _LocalTaskID
 from ..._lib.utilities.typedefs import VariantCode as PyVariantCode
 from .invoker cimport VariantInvoker
 from .type cimport VariantList, VariantMapping
-from .util cimport validate_variant
+from .util cimport validate_variant, _get_callable_name
 
 from .type import UserFunction
 
@@ -54,7 +53,7 @@ cdef class PyTask:
             The list of constraints which are to be applied to the arguments of
             ``func``, if any. Defaults to no constraints.
         throws_exception
-            True if any variants of ``func`` throws an exception, False
+            ``True`` if any variants of ``func`` throws an exception, ``False``
             otherwise.
         has_side_effect : bool, False
             Whether the task has any global side-effects. See
@@ -67,7 +66,7 @@ cdef class PyTask:
             The library context under which to register the new task. Defaults
             to the core context.
         register
-            Whether to immediately register the task with ``context``. If
+            Whether to immediately register the task with ``library``. If
             ``False``, the user must manually register the task (via
             ``PyTask.complete_registration()``) before use.
         """
@@ -78,48 +77,13 @@ cdef class PyTask:
             library = get_legate_runtime().core_library
 
         if invoker is None:
-            invoker = VariantInvoker(func)
+            invoker = VariantInvoker(func, constraints=constraints)
 
-        if constraints is None:
-            constraints = tuple()
-
-        def get_callable_name(obj: Any) -> str:
-            try:
-                return obj.__qualname__
-            except AttributeError:
-                pass
-            try:
-                return obj.__class__.__qualname__
-            except AttributeError:
-                return obj.__name__
-
-        cdef int i
-        cdef set[str] param_names = set(invoker.signature.parameters.keys())
-        # Not cdef-ing c is deliberate! Otherwise if c is not a ConstraintProxy
-        # we get a worse error message from Cython: 'Cannot convert int to
-        # ConstraintProxy'.
-        for i, c in enumerate(constraints):
-            if not isinstance(c, ConstraintProxy):
-                raise TypeError(
-                    f"Constraint #{i + 1} of unexpected type. "
-                    f"Found {type(c)}, expected {ConstraintProxy}"
-                )
-            for arg in c.args:
-                if not isinstance(arg, str):
-                    continue
-                if arg not in param_names:
-                    raise ValueError(
-                        f"Constraint argument \"{arg}\" (of constraint "
-                        f"\"{get_callable_name(c.func)}()\") not in set of "
-                        f"parameters: {param_names}"
-                    )
-
-        self._name = get_callable_name(func)
+        self._name = _get_callable_name(func)
         self._invoker = invoker
         self._variants = self._init_variants(func, variants)
         self._task_id = self.UNREGISTERED_ID
         self._library = library
-        self._constraints = constraints
         self._throws = throws_exception
         self._has_side_effect = has_side_effect
         if register:
@@ -195,7 +159,7 @@ cdef class PyTask:
         )
         task._handle.throws_exception(self._throws)
         task.set_side_effect(self._has_side_effect)
-        self._invoker.prepare_call(task, args, kwargs, self._constraints)
+        self._invoker.prepare_call(task, args, kwargs)
         task.lock()
         return task
 
@@ -265,8 +229,12 @@ cdef class PyTask:
             raise ValueError("Task has no registered variants")
 
         cdef _LocalTaskID task_id = self._library.get_new_task_id()
-        cdef TaskInfo task_info = TaskInfo.from_variants(
-            task_id, self._name, variants
+        cdef _TaskSignature signature = self._invoker.prepare_task_signature()
+        cdef TaskInfo task_info = TaskInfo.from_variants_signature(
+            task_id,
+            self._name,
+            variants,
+            &signature
         )
         self._library.register_task(task_info)
         self._task_id = task_id

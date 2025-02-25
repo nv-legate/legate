@@ -9,14 +9,29 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport uint32_t
+cimport cython
+
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp.utility cimport move as std_move
+from libcpp.optional cimport optional as std_optional
+
+from ..._ext.task.type cimport ParamList
 
 from ..utilities.tuple cimport _tuple
 from ..utilities.unconstructable cimport Unconstructable
-from ..utilities.utils cimport is_iterable, uint64_tuple_from_iterable
+from ..utilities.utils cimport is_iterable, tuple_from_iterable
+from ..utilities.tuple cimport _tuple
 
-from collections.abc import Callable, Collection
+from .proxy cimport (
+    _ArrayArgument,
+    _ArrayArgumentKind,
+    _Constraint as _ProxyConstraint,
+    _inputs,
+    _outputs,
+    _reductions
+)
+
+from collections.abc import Collection
 
 
 cdef class Variable(Unconstructable):
@@ -79,7 +94,36 @@ cdef class Constraint(Unconstructable):
         return str(self)
 
 
-cdef class ConstraintProxy:
+cdef _ArrayArgument _deduce_arg(
+    str arg,
+    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+):
+    cdef _ArrayArgumentKind kind
+    cdef ParamList plist
+    cdef uint32_t idx
+
+    for kind, plist in task_args:
+        try:
+            idx = plist.index(arg)
+        except ValueError:
+            continue
+
+        if kind == _ArrayArgumentKind.INPUT:
+            return _inputs[idx]
+        if kind == _ArrayArgumentKind.OUTPUT:
+            return _outputs[idx]
+        if kind == _ArrayArgumentKind.REDUCTION:
+            return _reductions[idx]
+        raise ValueError(kind)
+
+    # Actually, we should never get here, because we check if the argument is
+    # in param_names before we ever call this function, but good to have this
+    # backstop nonetheless.
+    m = f"Could not find {arg} in task arguments: {task_args}"
+    raise ValueError(m)
+
+
+cdef class DeferredConstraint:
     r"""A trivial wrapper class to store the function and arguments
     to construct a `Constraint`
 
@@ -89,21 +133,43 @@ cdef class ConstraintProxy:
     a later time. For example, it is used by `PyTask` to take in Store or Array
     arguments, convert them to the appropriate `Variable`, and then construct
     the `Constraint` transparently.
+
+    While this class is documented here, it is considered an implementation
+    detail and is subject to change at any time.
     """
-    def __init__(self, func: Callable[..., Constraint], *args: Any) -> None:
-        r"""Construct a `ConstraintProxy`
+    @staticmethod
+    cdef DeferredConstraint construct(
+        _ProxyConstraint(*func)(tuple, tuple),
+        tuple args
+    ):
+        cdef DeferredConstraint obj = DeferredConstraint.__new__(
+            DeferredConstraint
+        )
 
-        Parameters
-        ----------
-        func : Callable[..., Constraint]
-            The function which, given `args`, will construct the `Constraint`.
-        *args : Any
-            The original arguments to `func`.
-        """
-        self.func = func
-        self.args = args
+        obj.func = func
+        obj.args = args
+        return obj
 
 
+cdef _ProxyConstraint _handle_align(
+    tuple[str, str] args,
+    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+):
+    if len(args) != 2:
+        m = f"align got unexpected arguments '{args}'"
+        raise ValueError(m)
+
+    cdef _ArrayArgument lhs_ret, rhs_ret
+
+    lhs_ret = _deduce_arg(args[0], task_args)
+    rhs_ret = _deduce_arg(args[1], task_args)
+    return _proxy_align(lhs_ret, rhs_ret)
+
+
+# Cython complains that the DeferredConstraint() path is unreachable if
+# VariableOrStr is Variable. That is... obviously the point, so we silence the
+# warning here.
+@cython.warn.unreachable(False)
 cpdef object align(VariableOrStr lhs, VariableOrStr rhs):
     r"""
     Create an alignment constraint between two variables.
@@ -139,11 +205,31 @@ cpdef object align(VariableOrStr lhs, VariableOrStr rhs):
         with nogil:
             handle = _align(lhs._handle, rhs._handle)
         return Constraint.from_handle(std_move(handle))
-    # I don't know why cython complains that this is unreachable. It is, just
-    # not for every version of this function (and that's the point!!)
-    return ConstraintProxy(align, lhs, rhs)
+
+    return DeferredConstraint.construct(_handle_align, (lhs, rhs))
+
+cdef _ProxyConstraint _handle_bcast(
+    tuple[str, tuple[int, ...]] args,
+    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+):
+    if len(args) != 2:
+        m = f"broadcast got unexpected arguments '{args}'"
+        raise ValueError(m)
+
+    cdef _ArrayArgument var
+    cdef tuple[int, ...] axes
+    cdef std_optional[_tuple[uint32_t]] cpp_axes
+
+    var = _deduce_arg(args[0], task_args)
+    if axes := args[1]:
+        cpp_axes.emplace(tuple_from_iterable[uint32_t](axes))
+    return _proxy_broadcast(var, std_move(cpp_axes))
 
 
+# Cython complains that the DeferredConstraint() path is unreachable if
+# VariableOrStr is Variable. That is... obviously the point, so we silence the
+# warning here.
+@cython.warn.unreachable(False)
 cpdef object broadcast(
     VariableOrStr variable, axes: Collection[int] = tuple()
 ):
@@ -179,7 +265,9 @@ cpdef object broadcast(
         raise ValueError("axes must be iterable")
 
     if VariableOrStr is str:
-        return ConstraintProxy(broadcast, variable, axes)
+        return DeferredConstraint.construct(
+            func=_handle_bcast, args=(variable, axes)
+        )
 
     cdef _Constraint handle
 
@@ -199,6 +287,27 @@ cpdef object broadcast(
     return Constraint.from_handle(std_move(handle))
 
 
+cdef _ProxyConstraint _handle_image(
+    tuple[str, str, ImageComputationHint] args,
+    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+):
+    if len(args) != 3:
+        m = f"image got unexpected arguments '{args}'"
+        raise ValueError(m)
+
+    cdef _ArrayArgument func_ret, range_ret
+    cdef ImageComputationHint hint
+
+    func_ret = _deduce_arg(args[0], task_args)
+    range_ret = _deduce_arg(args[1], task_args)
+    hint = args[2]
+    return _proxy_image(func_ret, range_ret, hint)
+
+
+# Cython complains that the DeferredConstraint() path is unreachable if
+# VariableOrStr is Variable. That is... obviously the point, so we silence the
+# warning here.
+@cython.warn.unreachable(False)
 cpdef object image(
     VariableOrStr var_function,
     VariableOrStr var_range,
@@ -248,9 +357,33 @@ cpdef object image(
         with nogil:
             handle = _image(var_function._handle, var_range._handle, hint)
         return Constraint.from_handle(std_move(handle))
-    return ConstraintProxy(image, var_function, var_range, hint)
+
+    return DeferredConstraint.construct(
+        func=_handle_image, args=(var_function, var_range, hint)
+    )
 
 
+cdef _ProxyConstraint _handle_scale(
+    tuple[tuple[int, ...], str, str] args,
+    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+):
+    if len(args) != 3:
+        m = f"scale got unexpected arguments '{args}'"
+        raise ValueError(m)
+
+    cdef _tuple[uint64_t] factors
+    cdef _ArrayArgument smaller_ret, bigger_ret
+
+    factors = tuple_from_iterable[uint64_t](args[0])
+    smaller_ret = _deduce_arg(args[1], task_args)
+    bigger_ret = _deduce_arg(args[2], task_args)
+    return _proxy_scale(std_move(factors), smaller_ret, bigger_ret)
+
+
+# Cython complains that the DeferredConstraint() path is unreachable if
+# VariableOrStr is Variable. That is... obviously the point, so we silence the
+# warning here.
+@cython.warn.unreachable(False)
 cpdef object scale(
     tuple factors,
     VariableOrStr var_smaller,
@@ -300,17 +433,42 @@ cpdef object scale(
     cdef _tuple[uint64_t] tup
 
     if VariableOrStr is Variable:
-        tup = uint64_tuple_from_iterable(factors)
+        tup = tuple_from_iterable[uint64_t](factors)
         with nogil:
             handle = _scale(
                 std_move(tup), var_smaller._handle, var_bigger._handle,
             )
         return Constraint.from_handle(std_move(handle))
-    return ConstraintProxy(
-        scale, factors, var_smaller, var_bigger
+
+    return DeferredConstraint.construct(
+        func=_handle_scale, args=(factors, var_smaller, var_bigger)
+    )
+
+cdef _ProxyConstraint _handle_bloat(
+    tuple[str, str, tuple[int, ...], tuple[int, ...]] args,
+    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+):
+    if len(args) != 4:
+        m = f"bloat got unexpected arguments '{args}'"
+        raise ValueError(m)
+
+    cdef _ArrayArgument source_ret, bloat_ret
+    cdef _tuple[uint64_t] low_offsets, high_offsets
+
+    source_ret = _deduce_arg(args[0], task_args)
+    bloat_ret = _deduce_arg(args[1], task_args)
+    low_offsets = tuple_from_iterable[uint64_t](args[2])
+    high_offsets = tuple_from_iterable[uint64_t](args[3])
+
+    return _proxy_bloat(
+        source_ret, bloat_ret, std_move(low_offsets), std_move(high_offsets)
     )
 
 
+# Cython complains that the DeferredConstraint() path is unreachable if
+# VariableOrStr is Variable. That is... obviously the point, so we silence the
+# warning here.
+@cython.warn.unreachable(False)
 cpdef object bloat(
     VariableOrStr var_source,
     VariableOrStr var_bloat,
@@ -364,8 +522,8 @@ cpdef object bloat(
     cdef _tuple[uint64_t] tup_hi
 
     if VariableOrStr is Variable:
-        tup_lo = uint64_tuple_from_iterable(low_offsets)
-        tup_hi = uint64_tuple_from_iterable(high_offsets)
+        tup_lo = tuple_from_iterable[uint64_t](low_offsets)
+        tup_hi = tuple_from_iterable[uint64_t](high_offsets)
 
         with nogil:
             handle = _bloat(
@@ -375,10 +533,8 @@ cpdef object bloat(
                 std_move(tup_hi),
             )
         return Constraint.from_handle(std_move(handle))
-    return ConstraintProxy(
-        bloat,
-        var_source,
-        var_bloat,
-        low_offsets,
-        high_offsets,
+
+    return DeferredConstraint.construct(
+        func=_handle_bloat,
+        args=(var_source, var_bloat, low_offsets, high_offsets)
     )

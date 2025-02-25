@@ -17,17 +17,17 @@
 
 namespace legate::detail {
 
-inline Task::ArrayArg::ArrayArg(InternalSharedPtr<LogicalArray> _array) : array{std::move(_array)}
+inline TaskArrayArg::TaskArrayArg(InternalSharedPtr<LogicalArray> _array) : array{std::move(_array)}
 {
 }
 
-inline Task::ArrayArg::ArrayArg(InternalSharedPtr<LogicalArray> _array,
-                                std::optional<SymbolicPoint> _projection)
+inline TaskArrayArg::TaskArrayArg(InternalSharedPtr<LogicalArray> _array,
+                                  std::optional<SymbolicPoint> _projection)
   : array{std::move(_array)}, projection{std::move(_projection)}
 {
 }
 
-inline bool Task::ArrayArg::needs_flush() const { return array->needs_flush(); }
+inline bool TaskArrayArg::needs_flush() const { return array->needs_flush(); }
 
 // ==========================================================================================
 
@@ -43,11 +43,11 @@ inline LocalTaskID Task::local_task_id() const { return task_id_; }
 
 inline const std::vector<InternalSharedPtr<Scalar>>& Task::scalars() const { return scalars_; }
 
-inline const std::vector<Task::ArrayArg>& Task::inputs() const { return inputs_; }
+inline const std::vector<TaskArrayArg>& Task::inputs() const { return inputs_; }
 
-inline const std::vector<Task::ArrayArg>& Task::outputs() const { return outputs_; }
+inline const std::vector<TaskArrayArg>& Task::outputs() const { return outputs_; }
 
-inline const std::vector<Task::ArrayArg>& Task::reductions() const { return reductions_; }
+inline const std::vector<TaskArrayArg>& Task::reductions() const { return reductions_; }
 
 inline const std::vector<InternalSharedPtr<LogicalStore>>& Task::scalar_outputs() const
 {
@@ -60,32 +60,13 @@ Task::scalar_reductions() const
   return scalar_reductions_;
 }
 
-// ==========================================================================================
+inline const VariantInfo& Task::variant_info_() const { return *vinfo_; }
 
-inline AutoTask::AutoTask(const Library* library,
-                          const VariantInfo& variant_info,
-                          LocalTaskID task_id,
-                          std::uint64_t unique_id,
-                          std::int32_t priority,
-                          mapping::detail::Machine machine)
-  : Task{library,
-         variant_info,
-         task_id,
-         unique_id,
-         priority,
-         std::move(machine),
-         /* can_inline_launch */ Config::get_config().enable_inline_task_launch()}
-{
-}
+// ==========================================================================================
 
 inline Operation::Kind AutoTask::kind() const { return Kind::AUTO_TASK; }
 
 // ==========================================================================================
-
-// TODO(wonchanl): Needs to validate interfering store accesses in this method
-inline void ManualTask::validate() {}
-
-inline void ManualTask::launch() { launch_task_(&strategy_); }
 
 inline Operation::Kind ManualTask::kind() const { return Kind::MANUAL_TASK; }
 

@@ -30,6 +30,7 @@ namespace legate {
 
 class Library;
 class TaskInfo;
+class TaskSignature;
 
 }  // namespace legate
 
@@ -48,7 +49,8 @@ void cytaskinfo_add_variant(legate::TaskInfo* handle,
                             legate::Library* core_lib,
                             legate::VariantCode variant_kind,
                             legate::VariantImpl cy_entry,
-                            legate::Processor::TaskFuncPtr py_entry);
+                            legate::Processor::TaskFuncPtr py_entry,
+                            const legate::TaskSignature* signature);
 
 }  // namespace legate::detail::cython
 
@@ -105,7 +107,8 @@ class TaskInfo {
                                                                legate::Library*,
                                                                legate::VariantCode,
                                                                legate::VariantImpl,
-                                                               legate::Processor::TaskFuncPtr);
+                                                               legate::Processor::TaskFuncPtr,
+                                                               const legate::TaskSignature*);
     template <typename T, template <typename...> typename SELECTOR, bool valid>
     friend class detail::VariantHelper;
   };
@@ -119,6 +122,7 @@ class TaskInfo {
    * @param vid The variant type to register.
    * @param body The variant function pointer.
    * @param entry The pointer to the entry point wrapping `body`, to be passed to Legion.
+   * @param signature The pointer to the task signature, or `nullptr` if no signature was given.
    * @param decl_options Any variant options declared in the task declaration, or `nullptr` if
    * none were found.
    * @param registration_options Variant options specified at task registration time.
@@ -128,6 +132,7 @@ class TaskInfo {
                     VariantCode vid,
                     VariantImpl body,
                     Processor::TaskFuncPtr entry,
+                    const TaskSignature* signature,
                     const VariantOptions* decl_options,
                     const std::map<VariantCode, VariantOptions>& registration_options = {});
 

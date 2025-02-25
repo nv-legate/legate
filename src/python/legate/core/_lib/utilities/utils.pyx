@@ -36,13 +36,14 @@ cpdef bool is_iterable(object obj):
         return False
 
 
-cdef _tuple[uint64_t] uint64_tuple_from_iterable(object obj):
+cdef _tuple[AnyT] tuple_from_iterable(
+    object obj, AnyT type_deduction_dummy = 0
+):
     if not is_iterable(obj):
-        raise ValueError(
-            f"Expected an iterable but got {type(obj)}"
-        )
+        m = f"Expected an iterable but got {type(obj)}"
+        raise ValueError(m)
 
-    cdef _tuple[uint64_t] tpl
+    cdef _tuple[AnyT] tpl
 
     tpl.reserve(len(obj))
     for extent in obj:
@@ -53,6 +54,9 @@ cdef _tuple[uint64_t] uint64_tuple_from_iterable(object obj):
 
     return std_move(tpl)
 
+
+cdef _tuple[uint64_t] uint64_tuple_from_iterable(object obj):
+    return tuple_from_iterable[uint64_t](obj)
 
 cdef _Domain domain_from_iterables(object low, object high):
     return _Domain(

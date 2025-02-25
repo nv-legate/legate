@@ -14,11 +14,9 @@ from typing import Optional
 
 from ..._lib.data.physical_array cimport PhysicalArray
 from ..._lib.data.physical_store cimport PhysicalStore
-from ..._lib.partitioning.constraint cimport ConstraintProxy
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.utilities.typedefs cimport VariantCode
 
-ctypedef dict[str, type] SignatureMapping
 ctypedef tuple[str, ...] ParamList
 ctypedef tuple[VariantCode, ...] VariantList
 # Would use UserFunction | None below, but get:
@@ -70,5 +68,3 @@ cdef class InputArray(PhysicalArray):
 
 cdef class OutputArray(PhysicalArray):
     pass
-
-ctypedef tuple[ConstraintProxy, ...] ConstraintSet

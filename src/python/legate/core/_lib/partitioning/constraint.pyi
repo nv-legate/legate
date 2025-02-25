@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from collections.abc import Callable, Collection
+from collections.abc import Collection
 from enum import IntEnum, unique
 from typing import Any, cast, overload
 
@@ -18,12 +18,7 @@ from ..utilities.unconstructable import Unconstructable
 class Variable(Unconstructable): ...
 class Constraint(Unconstructable): ...
 
-class ConstraintProxy:
-    def __init__(
-        self, func: Callable[..., Constraint], *args: Any
-    ) -> None: ...
-    @property
-    def func(self) -> Callable[..., Constraint]: ...
+class DeferredConstraint:
     @property
     def args(self) -> tuple[Any, ...]: ...
 
@@ -36,7 +31,7 @@ class ImageComputationHint(IntEnum):
 @overload
 def align(lhs: Variable, rhs: Variable) -> Constraint: ...
 @overload
-def align(lhs: str, rhs: str) -> ConstraintProxy: ...
+def align(lhs: str, rhs: str) -> DeferredConstraint: ...
 @overload
 def broadcast(
     variable: Variable, axes: Collection[int] = ...
@@ -44,7 +39,7 @@ def broadcast(
 @overload
 def broadcast(
     variable: str, axes: Collection[int] = ...
-) -> ConstraintProxy: ...
+) -> DeferredConstraint: ...
 @overload
 def image(
     var_function: Variable,
@@ -54,7 +49,7 @@ def image(
 @overload
 def image(
     var_function: str, var_range: str, hint: ImageComputationHint = ...
-) -> ConstraintProxy: ...
+) -> DeferredConstraint: ...
 @overload
 def scale(
     factors: tuple[int, ...], var_smaller: Variable, var_bigger: Variable
@@ -62,7 +57,7 @@ def scale(
 @overload
 def scale(
     factors: tuple[int, ...], var_smaller: str, var_bigger: str
-) -> ConstraintProxy: ...
+) -> DeferredConstraint: ...
 @overload
 def bloat(
     var_source: Variable,
@@ -76,4 +71,4 @@ def bloat(
     var_bloat: str,
     low_offsets: tuple[int, ...],
     high_offsets: tuple[int, ...],
-) -> ConstraintProxy: ...
+) -> DeferredConstraint: ...

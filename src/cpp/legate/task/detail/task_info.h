@@ -15,6 +15,7 @@
 #include <legate/task/detail/variant_info.h>
 #include <legate/task/variant_options.h>
 #include <legate/utilities/detail/zstring_view.h>
+#include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
 
 #include <legion/legion_types.h>
@@ -27,6 +28,7 @@
 namespace legate::detail {
 
 class Library;
+class TaskSignature;
 
 void register_legate_core_tasks(Library* core_lib);
 
@@ -53,7 +55,8 @@ class TaskInfo {
   void add_variant(VariantCode vid,
                    VariantImpl body,
                    const Legion::CodeDescriptor& code_desc,
-                   const VariantOptions& options);
+                   const VariantOptions& options,
+                   std::optional<InternalSharedPtr<TaskSignature>> signature);
 
   // TODO(wonchanl): remove once scalar extraction workaround is removed
   class RuntimeAddVariantKey {

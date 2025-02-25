@@ -26,6 +26,7 @@ from legate.core import (
     Scope,
     TaskTarget,
     VariantCode,
+    align,
     bloat,
     get_legate_runtime,
     image,
@@ -100,17 +101,26 @@ class TestAutoTask:
         library = runtime.core_library
         auto_task = runtime.create_auto_task(library, tasks.basic_task.task_id)
         auto_task.add_output(runtime.create_store(ty.bool_))
-        exc = ValueError
+        exc = IndexError
         auto_task.throws_exception(exc)
-        with pytest.raises(exc, match="Wrong number of given arguments"):
+        with pytest.raises(
+            exc,
+            match=re.escape(
+                "Invalid arguments to task. Expected Nargs(0) "
+                "output arguments, have 1"
+            ),
+        ):
             auto_task.execute()
         runtime.issue_execution_fence(block=True)
 
     def test_recreate_task_with_exception(self) -> None:
         runtime = get_legate_runtime()
         library = runtime.core_library
-        exc = ValueError
-        msg = "Wrong number of given arguments"
+        exc = IndexError
+        msg = re.escape(
+            "Invalid arguments to task. Expected Nargs(0) output "
+            "arguments, have 1"
+        )
 
         def exc_task() -> None:
             exc_task = runtime.create_auto_task(
@@ -144,7 +154,6 @@ class TestAutoTask:
 
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
-        auto_task.add_alignment(out_store, in_store)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
@@ -198,7 +207,6 @@ class TestAutoTask:
         arr_np = np.empty(shape=shape, dtype=np.int32)
 
         auto_task.add_scalar_arg(arr_np)
-        auto_task.add_broadcast(out_store)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
@@ -225,9 +233,6 @@ class TestAutoTask:
         auto_task.add_input(arg1_array)
         auto_task.add_input(arg2_store)
         auto_task.add_output(out_store)
-        auto_task.add_broadcast(arg1_array)
-        auto_task.add_broadcast(arg2_store)
-        auto_task.add_broadcast(out_store)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
@@ -260,7 +265,6 @@ class TestAutoTask:
 
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
-        auto_task.add_alignment(out_store, in_store)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
@@ -278,7 +282,6 @@ class TestAutoTask:
         out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
-        auto_task.add_alignment(out_store, in_store)
         # not sure if there's a way to confirm the effects from python side
         # just set val and execute for now
         auto_task.set_concurrent(True)
@@ -396,10 +399,11 @@ class TestAutoTaskConstraints:
         out_np, out_store = utils.zero_array_and_store(ty.float64, tgt_shape)
 
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task.task_id
+            runtime.core_library, tasks.copy_store_task_no_constraints.task_id
         )
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
+        auto_task.add_alignment(in_store, out_store)
         auto_task.add_broadcast(in_store, axes)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)
@@ -599,7 +603,6 @@ class TestAutoTaskErrors:
 
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
-        auto_task.add_alignment(out_store, in_store)
         # TODO(yimoj) [issue 465]
         # crashes application if input store is not accessed prior
         # need to be updated when this is raising python exception properly
@@ -649,7 +652,6 @@ class TestAutoTaskConstraintsErrors:
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
         msg = "Alignment requires the stores to have the same shape"
-        auto_task.add_alignment(out_store, in_store)
         with pytest.raises(ValueError, match=msg):
             auto_task.execute()
         runtime.issue_execution_fence(block=True)
@@ -664,7 +666,6 @@ class TestAutoTaskConstraintsErrors:
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
         msg = "Alignment requires the stores to be all normal or all unbound"
-        auto_task.add_alignment(out_store, in_store)
         with pytest.raises(ValueError, match=msg):
             auto_task.execute()
         runtime.issue_execution_fence(block=True)
@@ -675,9 +676,7 @@ class TestAutoTaskConstraintsErrors:
             runtime.core_library, tasks.copy_store_task.task_id
         )
         in_store = runtime.create_store(ty.int32, (1,))
-        tmp_store = runtime.create_store(ty.int32, (1,))
         auto_task.add_input(in_store)
-        auto_task.add_alignment(in_store, tmp_store)
         # not asserting on the error message for this particular case due to
         # the message being unintuitive and may be compiler-dependent
         # match="unordered_map::at"
@@ -696,12 +695,13 @@ class TestAutoTaskConstraintsErrors:
         _, bloat_store = utils.random_array_and_store(shape)
 
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task.task_id
+            runtime.core_library, tasks.copy_store_task_no_constraints.task_id
         )
         source_part = auto_task.declare_partition()
         bloat_part = auto_task.declare_partition()
         auto_task.add_input(source_store, source_part)
         auto_task.add_output(bloat_store, bloat_part)
+        auto_task.add_constraint(align(source_part, bloat_part))
         auto_task.add_constraint(
             bloat(source_part, bloat_part, offsets, offsets)
         )

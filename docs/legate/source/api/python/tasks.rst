@@ -43,20 +43,15 @@ It is possible to take and pass store arguments to a Python task, just like a re
 task. This is done by using the special ``Input``, ``Ouput``, or ``Reduction`` store/array
 type hints:
 
-.. testsetup::
+.. testcode::
 
    import numpy as np
    from legate.core import get_legate_runtime, types as ty
+   from legate.core.task import task, InputArray, OutputArray
 
    def make_store(init: list[int]):
        arr = np.array(init, dtype=np.int64)
        return get_legate_runtime().create_store_from_buffer(ty.int64, arr.shape, arr, False)
-
-
-.. testcode::
-
-   import numpy as np
-   from legate.core.task import task, InputArray, OutputArray
 
    @task
    def foo_in_out(in_store: InputArray, out_store: OutputArray) -> None:
@@ -114,7 +109,7 @@ Misc. Trivia
 
 #. Keyword arguments are supported
 
-.. testsetup::
+.. testcode::
 
    import numpy as np
    from legate.core import get_legate_runtime, types as ty
@@ -130,13 +125,11 @@ Misc. Trivia
    z_store = make_store()
 
 
-.. testcode::
+   @task
+   def foo(x: InputStore, y: OutputStore, z: OutputStore) -> None:
+       ...
 
-     @task
-     def foo(x: InputStore, y: OutputStore, z: OutputStore) -> None:
-         ...
-
-     foo(z=z_store, x=x_store, y=y_store) # will demux to f(x_store, y_store, z_store)
+   foo(z=z_store, x=x_store, y=y_store) # will demux to f(x_store, y_store, z_store)
 
 #. Default values for arguments are currently not supported.
 #. The task may raise arbitrary exceptions, provided that the decorator is passed the
@@ -145,11 +138,9 @@ Misc. Trivia
    Legate will abort when the exception is thrown. If the thrown exception does not derive
    from ``Exception``, behavior is undefined.
 
-.. testsetup::
+.. testcode::
 
    from legate.core.task import task
-
-.. testcode::
 
    class MyException(Exception):
        pass

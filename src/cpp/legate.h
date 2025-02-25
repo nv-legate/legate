@@ -32,6 +32,7 @@
 #include <legate/operation/projection.h>
 #include <legate/operation/task.h>
 #include <legate/partitioning/constraint.h>
+#include <legate/partitioning/proxy.h>
 #include <legate/runtime/library.h>
 #include <legate/runtime/runtime.h>
 #include <legate/runtime/scope.h>

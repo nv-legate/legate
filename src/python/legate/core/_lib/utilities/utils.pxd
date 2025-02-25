@@ -9,7 +9,7 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport uint64_t
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp cimport bool
 from libcpp.vector cimport vector as std_vector
 
@@ -19,13 +19,15 @@ from .typedefs cimport _Domain
 
 cpdef bool is_iterable(object obj)
 
+# Add new types to this fused type whenever the function below needs extending
+ctypedef fused AnyT:
+    uint32_t
+    uint64_t
+
+cdef _tuple[AnyT] tuple_from_iterable(object, AnyT type_deduction_dummy = *)
 cdef _tuple[uint64_t] uint64_tuple_from_iterable(object)
 
 cdef _Domain domain_from_iterables(object, object)
-
-# Add new types to this fused type whenever the function below needs extending
-ctypedef fused AnyT:
-    uint64_t
 
 
 cdef inline std_vector[AnyT] std_vector_from_iterable(

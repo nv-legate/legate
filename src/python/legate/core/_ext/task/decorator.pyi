@@ -12,17 +12,18 @@
 from collections.abc import Sequence
 from typing import Callable, overload
 
-from ..._lib.partitioning.constraint import ConstraintProxy
+from ..._lib.partitioning.constraint import DeferredConstraint
+from ..._lib.utilities.typedefs import VariantCode
 from .py_task import PyTask
-from .type import UserFunction, VariantList
+from .type import UserFunction
 
 @overload
 def task(func: UserFunction) -> PyTask: ...
 @overload
 def task(
     *,
-    variants: VariantList = ...,
-    constraints: Sequence[ConstraintProxy] | None = None,
+    variants: tuple[VariantCode, ...] = ...,
+    constraints: Sequence[DeferredConstraint] | None = None,
     throws_exception: bool = False,
     has_side_effect: bool = False,
     register: bool = True,

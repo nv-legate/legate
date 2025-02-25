@@ -14,6 +14,7 @@ from libcpp.string cimport string as std_string
 
 from ..utilities.tuple cimport _tuple
 from ..utilities.unconstructable cimport Unconstructable
+from .proxy cimport _Constraint as _ProxyConstraint
 
 from collections.abc import Iterable
 
@@ -31,11 +32,17 @@ cdef extern from "legate/partitioning/constraint.h" namespace "legate" nogil:
 
     cdef _Constraint _align "align" (_Variable, _Variable) except+
 
+    # Using ... as argument list since Cython does not understand std::variant.
+    cdef _ProxyConstraint _proxy_align "legate::align" (...) except+
+
     cdef _Constraint _broadcast "broadcast" (_Variable) except+
 
     cdef _Constraint _broadcast "broadcast" (
         _Variable, _tuple[uint32_t]
     ) except+
+
+    # Using ... as argument list since Cython does not understand std::variant.
+    cdef _ProxyConstraint _proxy_broadcast "broadcast" (...) except+
 
     cpdef enum class ImageComputationHint:
         NO_HINT
@@ -46,13 +53,22 @@ cdef extern from "legate/partitioning/constraint.h" namespace "legate" nogil:
         _Variable, _Variable, ImageComputationHint
     ) except+
 
+    # Using ... as argument list since Cython does not understand std::variant.
+    cdef _ProxyConstraint _proxy_image "image" (...) except+
+
     cdef _Constraint _scale "scale" (
         _tuple[uint64_t], _Variable, _Variable
     ) except+
 
+    # Using ... as argument list since Cython does not understand std::variant.
+    cdef _ProxyConstraint _proxy_scale "scale" (...) except+
+
     cdef _Constraint _bloat "bloat" (
         _Variable, _Variable, _tuple[uint64_t], _tuple[uint64_t]
     ) except+
+
+    # Using ... as argument list since Cython does not understand std::variant.
+    cdef _ProxyConstraint _proxy_bloat "bloat" (...) except+
 
 
 cdef class Variable(Unconstructable):
@@ -68,10 +84,18 @@ cdef class Constraint(Unconstructable):
     @staticmethod
     cdef Constraint from_handle(_Constraint)
 
-cdef class ConstraintProxy:
+cdef class DeferredConstraint:
+    cdef:
+        # The proxy function is considered an implementation detail and is not
+        # exposed to Python
+        _ProxyConstraint(*func)(tuple, tuple)
     cdef readonly:
-        object func
         tuple[Any, ...] args
+
+    @staticmethod
+    cdef DeferredConstraint construct(
+        _ProxyConstraint(*func)(tuple, tuple), tuple args
+    )
 
 ctypedef fused VariableOrStr:
     Variable

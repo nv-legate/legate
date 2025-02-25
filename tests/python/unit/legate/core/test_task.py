@@ -487,13 +487,10 @@ class TestTask(BaseTest):
         def baz(x: OutputStore) -> None:
             pass
 
-        with pytest.raises(
-            ValueError,
-            match=re.escape(
-                r'Constraint argument "y" (of constraint "align()") '
-                r"not in set of parameters: {'x'}"
-            ),
-        ):
+        m = re.escape(
+            "constraint argument \"y\" not in set of parameters: {'x'}"
+        )
+        with pytest.raises(ValueError, match=m):
             lct.task(constraints=(lg.align("x", "y"),))(baz)
 
     def test_reduction(self) -> None:

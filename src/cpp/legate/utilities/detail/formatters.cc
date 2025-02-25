@@ -18,6 +18,7 @@
 #include <legate/mapping/detail/machine.h>
 #include <legate/mapping/mapping.h>
 #include <legate/operation/detail/operation.h>
+#include <legate/operation/detail/task.h>
 #include <legate/partitioning/constraint.h>
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/task/detail/task_info.h>
@@ -197,6 +198,12 @@ format_context::iterator formatter<legate::mapping::StoreTarget>::format(
 #undef LEGATE_STORE_TARGET_CASE
   }
   return formatter<string_view>::format(name, ctx);
+}
+
+format_context::iterator formatter<legate::detail::Task>::format(const legate::detail::Task& task,
+                                                                 format_context& ctx) const
+{
+  return formatter<std::string>::format(task.to_string(/* show provenance */ false), ctx);
 }
 
 }  // namespace fmt

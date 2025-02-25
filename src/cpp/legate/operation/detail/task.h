@@ -39,6 +39,18 @@ namespace legate::detail {
 class CommunicatorFactory;
 class ConstraintSolver;
 class Library;
+class VariantInfo;
+
+class TaskArrayArg {
+ public:
+  explicit TaskArrayArg(InternalSharedPtr<LogicalArray> _array);
+  TaskArrayArg(InternalSharedPtr<LogicalArray> _array, std::optional<SymbolicPoint> _projection);
+  [[nodiscard]] bool needs_flush() const;
+
+  InternalSharedPtr<LogicalArray> array{};
+  std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> mapping{};
+  std::optional<SymbolicPoint> projection{};
+};
 
 class Task : public Operation {
  protected:
@@ -51,27 +63,18 @@ class Task : public Operation {
        bool can_inline_launch);
 
  public:
-  class ArrayArg {
-   public:
-    explicit ArrayArg(InternalSharedPtr<LogicalArray> _array);
-    ArrayArg(InternalSharedPtr<LogicalArray> _array, std::optional<SymbolicPoint> _projection);
-    [[nodiscard]] bool needs_flush() const;
-
-    InternalSharedPtr<LogicalArray> array{};
-    std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> mapping{};
-    std::optional<SymbolicPoint> projection{};
-  };
-
   void add_scalar_arg(InternalSharedPtr<Scalar> scalar);
   void set_concurrent(bool concurrent);
   void set_side_effect(bool has_side_effect);
   void throws_exception(bool can_throw_exception);
-  void add_communicator(std::string_view name);
+  void add_communicator(std::string_view name, bool bypass_signature_check = false);
 
   void record_scalar_output(InternalSharedPtr<LogicalStore> store);
   void record_unbound_output(InternalSharedPtr<LogicalStore> store);
   void record_scalar_reduction(InternalSharedPtr<LogicalStore> store,
                                GlobalRedopID legion_redop_id);
+
+  void validate() override;
 
  protected:
   void launch_task_(Strategy* strategy);
@@ -95,9 +98,9 @@ class Task : public Operation {
   [[nodiscard]] bool can_elide_device_ctx_sync() const;
 
   [[nodiscard]] const std::vector<InternalSharedPtr<Scalar>>& scalars() const;
-  [[nodiscard]] const std::vector<ArrayArg>& inputs() const;
-  [[nodiscard]] const std::vector<ArrayArg>& outputs() const;
-  [[nodiscard]] const std::vector<ArrayArg>& reductions() const;
+  [[nodiscard]] const std::vector<TaskArrayArg>& inputs() const;
+  [[nodiscard]] const std::vector<TaskArrayArg>& outputs() const;
+  [[nodiscard]] const std::vector<TaskArrayArg>& reductions() const;
   [[nodiscard]] const std::vector<InternalSharedPtr<LogicalStore>>& scalar_outputs() const;
   [[nodiscard]] const std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>&
   scalar_reductions() const;
@@ -106,17 +109,25 @@ class Task : public Operation {
   [[nodiscard]] LocalTaskID local_task_id() const;
 
  protected:
+  [[nodiscard]] const VariantInfo& variant_info_() const;
+
+ private:
   const Library* library_{};
+  const VariantInfo* vinfo_{};
   LocalTaskID task_id_{};
   bool concurrent_{};
   bool has_side_effect_{};
   bool can_throw_exception_{};
   bool can_elide_device_ctx_sync_{};
   std::vector<InternalSharedPtr<Scalar>> scalars_{};
-  std::vector<ArrayArg> inputs_{};
-  std::vector<ArrayArg> outputs_{};
-  std::vector<ArrayArg> reductions_{};
+
+ protected:
+  std::vector<TaskArrayArg> inputs_{};
+  std::vector<TaskArrayArg> outputs_{};
+  std::vector<TaskArrayArg> reductions_{};
   std::vector<GlobalRedopID> reduction_ops_{};
+
+ private:
   std::vector<InternalSharedPtr<LogicalStore>> unbound_outputs_{};
   std::vector<InternalSharedPtr<LogicalStore>> scalar_outputs_{};
   std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>> scalar_reductions_{};
@@ -147,7 +158,8 @@ class AutoTask final : public Task {
   [[nodiscard]] const Variable* find_or_declare_partition(
     const InternalSharedPtr<LogicalArray>& array);
 
-  void add_constraint(InternalSharedPtr<Constraint> constraint);
+  void add_constraint(InternalSharedPtr<Constraint> constraint,
+                      bool bypass_signature_check = false);
   void add_to_solver(ConstraintSolver& solver) override;
 
   void validate() override;
@@ -184,13 +196,12 @@ class ManualTask final : public Task {
                      std::optional<SymbolicPoint> projection);
 
  private:
-  void add_store_(std::vector<ArrayArg>& store_args,
+  void add_store_(std::vector<TaskArrayArg>& store_args,
                   const InternalSharedPtr<LogicalStore>& store,
                   InternalSharedPtr<Partition> partition,
                   std::optional<SymbolicPoint> projection = {});
 
  public:
-  void validate() override;
   void launch() override;
 
   [[nodiscard]] Kind kind() const override;

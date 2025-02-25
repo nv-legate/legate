@@ -31,9 +31,15 @@ static_assert(!is_pure_move_constructible_v<Legion::CodeDescriptor>,
 void TaskInfo::add_variant(VariantCode vid,
                            VariantImpl body,
                            const Legion::CodeDescriptor& code_desc,
-                           const VariantOptions& options)
+                           const VariantOptions& options,
+                           std::optional<InternalSharedPtr<TaskSignature>>
+                             signature  // NOLINT(performance-unnecessary-value-param)
+)
 {
-  if (!variants_().try_emplace(vid, body, code_desc, options).second) {
+  if (signature.has_value()) {
+    (*signature)->validate(name().as_string_view());
+  }
+  if (!variants_().try_emplace(vid, body, code_desc, options, std::move(signature)).second) {
     throw detail::TracedException<std::invalid_argument>{
       fmt::format("Task {} already has variant {}", name(), vid)};
   }
@@ -56,7 +62,7 @@ void TaskInfo::add_variant_(RuntimeAddVariantKey,
     return it == lib_defaults.end() ? VariantOptions::DEFAULT_OPTIONS : it->second;
   }();
 
-  add_variant(vid, nullptr, descr, options);
+  add_variant(vid, nullptr, descr, options, std::nullopt);
 }
 
 std::optional<std::reference_wrapper<const VariantInfo>> TaskInfo::find_variant(
