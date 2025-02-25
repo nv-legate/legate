@@ -166,10 +166,7 @@ Buffer<T, DIM> PhysicalStore::create_output_buffer(const Point<DIM>& extents,
   check_valid_binding_(bind_buffer);
   check_buffer_dimension_(DIM);
 
-  Legion::OutputRegion out;
-  Legion::FieldID fid;
-
-  get_output_field_(out, fid);
+  auto [out, fid] = get_output_field_();
 
   auto result = out.create_buffer<T, DIM>(extents, fid, nullptr, bind_buffer);
   // We will use this value only when the unbound store is 1D
@@ -220,10 +217,7 @@ void PhysicalStore::bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents)
   check_valid_binding_(true);
   check_buffer_dimension_(DIM);
 
-  Legion::OutputRegion out;
-  Legion::FieldID fid;
-
-  get_output_field_(out, fid);
+  auto [out, fid] = get_output_field_();
 
   out.return_data(extents, fid, buffer);
   // We will use this value only when the unbound store is 1D
@@ -242,41 +236,39 @@ template <typename ACC, typename T, std::int32_t DIM>
 ACC PhysicalStore::create_field_accessor_(const Rect<DIM>& bounds) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
-  Legion::PhysicalRegion pr;
-  Legion::FieldID fid;
 
-  get_region_field_(pr, fid);
+  auto [pr, fid] = get_region_field_();
+
   if (transformed()) {
     auto transform = get_inverse_transform_();
     return dim_dispatch(transform.transform.m,
                         detail::store_detail::TransAccessorFn<ACC, T, DIM>{},
-                        pr,
+                        std::move(pr),
                         fid,
                         transform,
                         bounds);
   }
-  return {pr, fid, bounds};
+  return {std::move(pr), fid, bounds};
 }
 
 template <typename ACC, typename T, std::int32_t DIM>
 ACC PhysicalStore::create_reduction_accessor_(const Rect<DIM>& bounds) const
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
-  Legion::PhysicalRegion pr;
-  Legion::FieldID fid;
 
-  get_region_field_(pr, fid);
+  auto [pr, fid] = get_region_field_();
+
   if (transformed()) {
     auto transform = get_inverse_transform_();
     return dim_dispatch(transform.transform.m,
                         detail::store_detail::TransAccessorFn<ACC, T, DIM>{},
-                        pr,
+                        std::move(pr),
                         fid,
                         get_redop_id_(),
                         transform,
                         bounds);
   }
-  return {pr, fid, static_cast<Legion::ReductionOpID>(get_redop_id_()), bounds};
+  return {std::move(pr), fid, static_cast<Legion::ReductionOpID>(get_redop_id_()), bounds};
 }
 
 inline PhysicalStore::PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl)

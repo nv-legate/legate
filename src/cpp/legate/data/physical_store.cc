@@ -33,10 +33,7 @@ void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>& buffer, const Poin
   check_valid_binding_(true);
   check_buffer_dimension_(1);
 
-  Legion::OutputRegion out;
-  Legion::FieldID fid;
-
-  get_output_field_(out, fid);
+  auto [out, fid] = get_output_field_();
 
   out.return_data(DomainPoint{extents}, fid, buffer.get_instance(), false /*check_constraints*/);
 
@@ -142,9 +139,9 @@ const void* PhysicalStore::get_untyped_pointer_from_future_() const
   return impl()->get_untyped_pointer_from_future_();
 }
 
-void PhysicalStore::get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const
+std::pair<Legion::PhysicalRegion, Legion::FieldID> PhysicalStore::get_region_field_() const
 {
-  impl()->get_region_field_(pr, fid);
+  return impl()->get_region_field_();
 }
 
 GlobalRedopID PhysicalStore::get_redop_id_() const { return impl()->get_redop_id_(); }
@@ -156,9 +153,9 @@ const Legion::UntypedDeferredValue& PhysicalStore::get_buffer_() const
   return impl()->get_buffer();
 }
 
-void PhysicalStore::get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid) const
+std::pair<Legion::OutputRegion, Legion::FieldID> PhysicalStore::get_output_field_() const
 {
-  impl()->get_output_field_(out, fid);
+  return impl()->get_output_field_();
 }
 
 void PhysicalStore::update_num_elements_(std::size_t num_elements) const

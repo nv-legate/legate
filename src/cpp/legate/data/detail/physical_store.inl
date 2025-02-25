@@ -47,7 +47,7 @@ inline bool UnboundRegionField::bound() const { return bound_; }
 
 inline void UnboundRegionField::set_bound(bool bound) { bound_ = bound; }
 
-inline Legion::OutputRegion UnboundRegionField::get_output_region() const { return out_; }
+inline const Legion::OutputRegion& UnboundRegionField::get_output_region() const { return out_; }
 
 inline Legion::FieldID UnboundRegionField::get_field_id() const { return fid_; }
 

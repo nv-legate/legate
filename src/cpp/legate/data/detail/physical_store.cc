@@ -199,11 +199,10 @@ const void* PhysicalStore::get_untyped_pointer_from_future_() const
   return future_.get_untyped_pointer_from_future();
 }
 
-void PhysicalStore::get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const
+std::pair<Legion::PhysicalRegion, Legion::FieldID> PhysicalStore::get_region_field_() const
 {
   LEGATE_ASSERT(!(is_future() || is_unbound_store()));
-  pr  = region_field_.get_physical_region();
-  fid = region_field_.get_field_id();
+  return {region_field_.get_physical_region(), region_field_.get_field_id()};
 }
 
 const Legion::Future& PhysicalStore::get_future() const
@@ -218,11 +217,10 @@ const Legion::UntypedDeferredValue& PhysicalStore::get_buffer() const
   return future_.get_buffer();
 }
 
-void PhysicalStore::get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid)
+std::pair<Legion::OutputRegion, Legion::FieldID> PhysicalStore::get_output_field_()
 {
   LEGATE_ASSERT(is_unbound_store());
-  out = unbound_field_.get_output_region();
-  fid = unbound_field_.get_field_id();
+  return {unbound_field_.get_output_region(), unbound_field_.get_field_id()};
 }
 
 void PhysicalStore::update_num_elements_(std::size_t num_elements)

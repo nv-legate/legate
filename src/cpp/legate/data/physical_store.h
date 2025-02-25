@@ -410,7 +410,7 @@ class PhysicalStore {
   void check_accessor_type_(Type::Code code, std::size_t size_of_T) const;
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
-  void get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
+  [[nodiscard]] std::pair<Legion::PhysicalRegion, Legion::FieldID> get_region_field_() const;
   [[nodiscard]] GlobalRedopID get_redop_id_() const;
   template <typename ACC, typename T, std::int32_t DIM>
   [[nodiscard]] ACC create_field_accessor_(const Rect<DIM>& bounds) const;
@@ -423,7 +423,7 @@ class PhysicalStore {
   [[nodiscard]] const Legion::Future& get_future_() const;
   [[nodiscard]] const Legion::UntypedDeferredValue& get_buffer_() const;
 
-  void get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid) const;
+  [[nodiscard]] std::pair<Legion::OutputRegion, Legion::FieldID> get_output_field_() const;
   void update_num_elements_(std::size_t num_elements) const;
 
   [[noreturn]] static void throw_invalid_scalar_access_();

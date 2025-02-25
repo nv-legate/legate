@@ -52,7 +52,7 @@ class UnboundRegionField {
   void set_bound(bool bound);
   void update_num_elements(std::size_t num_elements);
 
-  [[nodiscard]] Legion::OutputRegion get_output_region() const;
+  [[nodiscard]] const Legion::OutputRegion& get_output_region() const;
   [[nodiscard]] Legion::FieldID get_field_id() const;
 
  private:
@@ -122,14 +122,14 @@ class PhysicalStore {
 
   [[nodiscard]] Legion::DomainAffineTransform get_inverse_transform_() const;
 
-  void get_region_field_(Legion::PhysicalRegion& pr, Legion::FieldID& fid) const;
+  [[nodiscard]] std::pair<Legion::PhysicalRegion, Legion::FieldID> get_region_field_() const;
   [[nodiscard]] GlobalRedopID get_redop_id_() const;
 
   [[nodiscard]] bool is_read_only_future_() const;
   [[nodiscard]] std::size_t get_field_offset_() const;
   [[nodiscard]] const void* get_untyped_pointer_from_future_() const;
 
-  void get_output_field_(Legion::OutputRegion& out, Legion::FieldID& fid);
+  [[nodiscard]] std::pair<Legion::OutputRegion, Legion::FieldID> get_output_field_();
   void update_num_elements_(std::size_t num_elements);
 
   bool is_future_{};
