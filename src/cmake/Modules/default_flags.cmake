@@ -86,14 +86,22 @@ function(legate_configure_default_compiler_flags)
       "-fdiagnostics-show-template-tree"
       "-Wignored-qualifiers"
       "-Wmissing-field-initializers"
-      "-Wshadow"
       "-pedantic"
       "-Wsign-compare"
       "-Wshadow"
       "-Wshadow-all"
       "-Warray-bounds-pointer-arithmetic"
       "-Wassign-enum"
-      "-Wformat-pedantic")
+      "-Wformat-pedantic"
+      "-Wswitch-enum"
+      "-Walloc-size"
+      "-Walloc-zero"
+      "-Wundef"
+      "-Wtsan"
+      "-Wenum-conversion"
+      "-Wpacked"
+      # GCC 14+
+      "-Wnrvo")
   set(default_cxx_flags_debug
       ${default_warning_flags}
       "-g"

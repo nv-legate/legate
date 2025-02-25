@@ -187,6 +187,9 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
         legate::ExternalAllocation::create_zcmem(d_alloc, BYTES, false, std::move(deleter));
       break;
     }
+    case legate::mapping::StoreTarget::SYSMEM: [[fallthrough]];
+    case legate::mapping::StoreTarget::SOCKETMEM:
+      LEGATE_ABORT("Unhandled store target: SYSMEM and SOCKETMEM");
     default: {
       CHECK_CUDA(cudaFree(d_alloc));
       return;

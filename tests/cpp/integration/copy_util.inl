@@ -15,7 +15,7 @@
 #include <legate/data/detail/logical_store.h>
 #include <legate/utilities/detail/tuple.h>
 
-namespace {
+namespace {  // NOLINT(cert-dcl59-cpp, google-build-namespaces)
 
 constexpr std::int32_t TEST_MAX_DIM = 3;
 
@@ -33,13 +33,29 @@ decltype(auto) type_dispatch_for_test(legate::Type::Code code, Functor f, Fnargs
     case legate::Type::Code::FLOAT64: {
       return f.template operator()<legate::Type::Code::FLOAT64>(std::forward<Fnargs>(args)...);
     }
-    default: break;
+    case legate::Type::Code::BOOL: [[fallthrough]];
+    case legate::Type::Code::INT8: [[fallthrough]];
+    case legate::Type::Code::INT16: [[fallthrough]];
+    case legate::Type::Code::INT32: [[fallthrough]];
+    case legate::Type::Code::UINT8: [[fallthrough]];
+    case legate::Type::Code::UINT16: [[fallthrough]];
+    case legate::Type::Code::UINT64: [[fallthrough]];
+    case legate::Type::Code::FLOAT16: [[fallthrough]];
+    case legate::Type::Code::FLOAT32: [[fallthrough]];
+    case legate::Type::Code::COMPLEX64: [[fallthrough]];
+    case legate::Type::Code::COMPLEX128: [[fallthrough]];
+    case legate::Type::Code::NIL: [[fallthrough]];
+    case legate::Type::Code::BINARY: [[fallthrough]];
+    case legate::Type::Code::FIXED_ARRAY: [[fallthrough]];
+    case legate::Type::Code::STRUCT: [[fallthrough]];
+    case legate::Type::Code::STRING: [[fallthrough]];
+    case legate::Type::Code::LIST: break;
   }
-  LEGATE_ASSERT(false);
+  LEGATE_ABORT("Should never get here");
   return f.template operator()<legate::Type::Code::INT64>(std::forward<Fnargs>(args)...);
 }
 
-enum TaskIDs {
+enum TaskIDs : std::uint8_t {
   FILL_TASK          = 0,
   FILL_INDIRECT_TASK = FILL_TASK + TEST_MAX_DIM,
 };

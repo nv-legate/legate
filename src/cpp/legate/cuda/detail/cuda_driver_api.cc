@@ -487,24 +487,23 @@ void throw_cuda_driver_error(CUresult result,
                              std::string_view func,
                              int line)
 {
-  const char* error_str{};
+  const char* error_str = [&] {
+    // Do not care about the error, in fact, cannot handle it.
+    try {
+      return legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->get_error_string(
+        result);
+    } catch (...) {
+      return "unknown error occurred";
+    }
+  }();
 
-  // Do not care about the error, in fact, cannot handle it.
-  try {
-    error_str =
-      legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->get_error_string(result);
-  } catch (...) {
-    error_str = "unknown error occurred";
-  }
-
-  const char* error_name{};
-
-  try {
-    error_name =
-      legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->get_error_name(result);
-  } catch (...) {
-    error_name = "unknown error";
-  }
+  const char* error_name = [&] {
+    try {
+      return legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->get_error_name(result);
+    } catch (...) {
+      return "unknown error";
+    }
+  }();
 
   throw legate::detail::TracedException<CUDADriverError>{
     fmt::format("CUDA driver expression '{}' failed at {}:{} (in {}()) with error code {} ({}): {}",
@@ -512,7 +511,7 @@ void throw_cuda_driver_error(CUresult result,
                 file,
                 line,
                 func,
-                static_cast<int>(result),
+                result,
                 error_name,
                 error_str),
     result};

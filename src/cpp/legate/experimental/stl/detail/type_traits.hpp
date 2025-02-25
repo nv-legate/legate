@@ -31,7 +31,7 @@ T&& declval() noexcept;
 
 }  // namespace detail
 
-#if __cpp_lib_remove_cvref >= 20171L
+#if defined(__cpp_lib_remove_cvref) && (__cpp_lib_remove_cvref >= 20171L)
 using std::remove_cvref_t;
 #else
 template <typename T>
