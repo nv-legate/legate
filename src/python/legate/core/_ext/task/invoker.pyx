@@ -216,7 +216,7 @@ cdef inline type _unpack_type(object annotation):
 
 
 cdef tuple[
-    tuple[str], tuple[str], tuple[str], tuple[str]
+    tuple[str, ...], tuple[str, ...], tuple[str, ...], tuple[str, ...], bool
 ] _parse_signature(object signature):
     cdef list[str] inputs = []
     cdef list[str] outputs = []
@@ -225,8 +225,12 @@ cdef tuple[
     cdef str name
     cdef type ty
     cdef int num_redops
+    cdef int idx
+    cdef bool pass_task_ctx = False
 
-    for name, param_descr in signature.parameters.items():
+    for idx, (name, param_descr) in enumerate(
+        signature.parameters.items(), start=1
+    ):
         annotation = param_descr.annotation
         if annotation is Signature.empty:
             raise TypeError(
@@ -270,6 +274,15 @@ cdef tuple[
                 "impossible to deduce intent from it. Must use either "
                 "Input/Output/Reduction variant"
             )
+        elif issubclass(ty, TaskContext):
+            if idx > 1:
+                m = (
+                    "Explicit task context argument must appear as the first"
+                    f" argument to the task. Found it in position {idx}: "
+                    f"{signature}."
+                )
+                raise TypeError(m)
+            pass_task_ctx = True
         else:
             scalars.append(name)
 
@@ -278,6 +291,7 @@ cdef tuple[
         tuple(outputs),
         tuple(reductions),
         tuple(scalars),
+        pass_task_ctx,
     )
 
 
@@ -285,6 +299,12 @@ cdef inline bytes _serialize_object(object value):
     return pklt_optimize(pkl_dumps(value, protocol=PKL_HIGHEST_PROTOCOL))
 
 cdef bytes LEGATE_PICKLE_HEADER = b"__legate_pickled_arg__"
+
+cdef class _ArgPlaceholder:
+    pass
+
+
+cdef _ArgPlaceholder ArgPlaceholder = _ArgPlaceholder()
 
 cdef class VariantInvoker:
     r"""Encapsulate the calling conventions between a user-supplied task
@@ -361,7 +381,8 @@ cdef class VariantInvoker:
             self._inputs,
             self._outputs,
             self._reductions,
-            self._scalars
+            self._scalars,
+            self._pass_task_ctx
         ) = _parse_signature(signature)
         self._constraints = constraints
 
@@ -513,6 +534,12 @@ cdef class VariantInvoker:
         # hint says "InputArray" (A.K.A. PhysicalArray), but the user will be
         # passing in LogicalArray.
         elif not isinstance(user_param, expected_ty):
+            # ...unless of course we are handling the "special" arguments like
+            # TaskContext. In this case, we have inserted the special
+            # placeholder value which we can safely ignore.
+            if user_param is ArgPlaceholder:
+                return
+
             raise TypeError(
                 f"Task expected a value of type {expected_ty} for "
                 f"parameter {expected_param.name}, but got {type(user_param)}"
@@ -541,7 +568,10 @@ cdef class VariantInvoker:
     ):
         signature = self.signature
 
-        bound_params = signature.bind(*args, **kwargs)
+        if self._pass_task_ctx:
+            bound_params = signature.bind(ArgPlaceholder, *args, **kwargs)
+        else:
+            bound_params = signature.bind(*args, **kwargs)
         bound_params.apply_defaults()
 
         cdef dict[str, object] param_mapping = bound_params.arguments
@@ -703,7 +733,15 @@ cdef class VariantInvoker:
         unpack_args(self.outputs, ctx.outputs, maybe_unpack_array)
         unpack_args(self.reductions, ctx.reductions, maybe_unpack_array)
         unpack_args(self.scalars, ctx.scalars, unpack_scalar)
-        return func(**kw)
+
+        cdef str ctx_arg_name
+
+        if self._pass_task_ctx:
+            # We know that the task context must be passed as the first argument
+            ctx_arg_name = next(iter(params.keys()))
+            kw[ctx_arg_name] = ctx
+
+        func(**kw)
 
     @staticmethod
     cdef object _get_signature(object func):

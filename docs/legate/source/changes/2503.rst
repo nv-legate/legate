@@ -111,6 +111,19 @@ Python
 
 - Add ``legate.core.ProfileRange`` context manager to activate the API for
   generating sub-boxes on the profiler.
+- Add ability for Python tasks to request that the ``legate.core.TaskContext`` be passed
+  to the task body. Tasks may do so by making the first argument of the task be of type
+  ``TaskContext``. The runtime will then automatically pass the task context during task
+  execution in addition to all the other usual arguments:
+
+  ::
+
+     from legate.core import TaskContext
+     from legate.core.task import task
+
+     @task
+     def foo(ctx: TaskContext, ...) -> None:
+         ...
 
 .. rubric:: Types
 

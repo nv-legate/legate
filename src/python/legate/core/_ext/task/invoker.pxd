@@ -28,6 +28,7 @@ cdef class VariantInvoker:
         tuple[str, ...] _reductions
         tuple[str, ...] _scalars
         tuple[DeferredConstraint, ...] _constraints
+        bool _pass_task_ctx
 
     cdef _TaskSignature prepare_task_signature(self)
 

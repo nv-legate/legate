@@ -80,6 +80,9 @@ been partitioned across all instances of the task, and transformed to ``Physical
 or array as an argument to the function. This is checked on task function call (before it
 is launched).
 
+Arbitrary Python Arguments
+--------------------------
+
 It is also possible to pass and receive arbitrary Python data types as task arguments. Any
 arguments passed in this manner should be considered as constant, scalar values
 *independent* of the call-site values. Any modifications made to them in the task body may
@@ -102,6 +105,40 @@ not propagate outside the task body!
 
 
    foo(12.34, {"hello": "there"}, MyClass())
+
+
+Explicit Task Context Argument
+------------------------------
+
+While it is normally hidden, the user may also request that the ``TaskContext`` for the
+executing task be passed into the task body as well. To do so, the user must have the
+**first** argument of the task be a ``TaskContext``:
+
+- The name of the argument itself is irrelevant.
+- If the task takes the ``TaskContext`` in any other position, or has multiple
+  ``TaskContext`` arguments, this is diagnosed as an error and an exception is raised when
+  the task decorator is executed.
+
+The top-level calling convention remains as usual; the user should not pass in the task
+context themselves. The runtime will automatically insert the task context argument during
+execution of the task:
+
+.. testcode::
+
+   from legate.core import TaskContext
+   from legate.core.task import task, InputStore, OutputStore
+
+   @task
+   def foo(
+       ctx: TaskContext,
+       x: InputStore,
+       y: OutputStore,  # etc...
+   ) -> None:
+       print(ctx.get_variant_kind())
+
+
+   foo(x, y)  # Note, no task context argument passed
+
 
 
 Misc. Trivia
