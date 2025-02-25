@@ -33,36 +33,6 @@ class FixupRanges : public LegateTask<FixupRanges> {
 #endif
 };
 
-class OffsetsToRanges : public LegateTask<OffsetsToRanges> {
- public:
-  static constexpr auto TASK_ID = LocalTaskID{CoreTask::OFFSETS_TO_RANGES};
-  static constexpr VariantOptions GPU_VARIANT_OPTIONS =
-    VariantOptions{}.with_elide_device_ctx_sync(true);
-
-  static void cpu_variant(legate::TaskContext context);
-#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
-  static void omp_variant(legate::TaskContext context);
-#endif
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  static void gpu_variant(legate::TaskContext context);
-#endif
-};
-
-class RangesToOffsets : public LegateTask<RangesToOffsets> {
- public:
-  static constexpr auto TASK_ID = LocalTaskID{CoreTask::RANGES_TO_OFFSETS};
-  static constexpr VariantOptions GPU_VARIANT_OPTIONS =
-    VariantOptions{}.with_elide_device_ctx_sync(true);
-
-  static void cpu_variant(legate::TaskContext context);
-#if LEGATE_DEFINED(LEGATE_USE_OPENMP)
-  static void omp_variant(legate::TaskContext context);
-#endif
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  static void gpu_variant(legate::TaskContext context);
-#endif
-};
-
 void register_array_tasks(Library* core_lib);
 
 }  // namespace legate::detail

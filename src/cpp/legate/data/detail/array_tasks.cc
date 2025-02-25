@@ -45,57 +45,9 @@ namespace legate::detail {
   }
 }
 
-/*static*/ void OffsetsToRanges::cpu_variant(legate::TaskContext context)
-{
-  const auto offsets = context.input(0).data();
-  const auto vardata = context.input(1).data();
-  const auto ranges  = context.output(0).data();
-
-  const auto shape = offsets.shape<1>();
-  LEGATE_CHECK(shape == ranges.shape<1>());
-
-  if (shape.empty()) {
-    return;
-  }
-
-  const auto vardata_shape = vardata.shape<1>();
-  const auto vardata_lo    = vardata_shape.lo[0];
-
-  const auto offsets_acc = offsets.read_accessor<std::int32_t, 1>();
-  const auto ranges_acc  = ranges.write_accessor<Rect<1>, 1>();
-  for (auto idx = shape.lo[0]; idx < shape.hi[0]; ++idx) {
-    ranges_acc[idx].lo[0] = vardata_lo + offsets_acc[idx];
-    ranges_acc[idx].hi[0] = vardata_lo + offsets_acc[idx + 1] - 1;
-  }
-  ranges_acc[shape.hi].lo[0] = vardata_lo + offsets_acc[shape.hi];
-  ranges_acc[shape.hi].hi[0] = vardata_lo + static_cast<std::int64_t>(vardata_shape.volume()) - 1;
-}
-
-/*static*/ void RangesToOffsets::cpu_variant(legate::TaskContext context)
-{
-  const auto ranges  = context.input(0).data();
-  const auto offsets = context.output(0).data();
-
-  const auto shape = ranges.shape<1>();
-  LEGATE_CHECK(shape == offsets.shape<1>());
-
-  if (shape.empty()) {
-    return;
-  }
-
-  const auto ranges_acc  = ranges.read_accessor<Rect<1>, 1>();
-  const auto offsets_acc = offsets.write_accessor<std::int32_t, 1>();
-  const auto lo          = ranges_acc[shape.lo].lo[0];
-  for (auto idx = shape.lo[0]; idx <= shape.hi[0]; ++idx) {
-    offsets_acc[idx] = static_cast<std::int32_t>(ranges_acc[idx].lo[0] - lo);
-  }
-}
-
 void register_array_tasks(Library* core_lib)
 {
   FixupRanges::register_variants(legate::Library{core_lib});
-  OffsetsToRanges::register_variants(legate::Library{core_lib});
-  RangesToOffsets::register_variants(legate::Library{core_lib});
 }
 
 }  // namespace legate::detail
