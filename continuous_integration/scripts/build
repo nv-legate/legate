@@ -19,7 +19,7 @@ setup_legate_env() {
   if [[ -z "${LEGATE_ARCH:-}" ]]; then
     # shellcheck disable=SC2154
     case "${BUILD_TYPE}" in
-      ci|nightly)
+      ci|nightly|profiler)
         # shellcheck disable=SC2154
         local locase_uname
         locase_uname=$(uname | tr '[:upper:]' '[:lower:]')
@@ -38,6 +38,42 @@ setup_legate_env() {
 
   # shellcheck disable=SC2154
   mkdir -p "${ARTIFACTS_DIR}/${LEGATE_ARCH}"
+}
+
+setup_profiler() {
+  cd "${LEGATE_DIR}"
+  LEGATE_GIT_DESCRIBE_TAG=$(git describe --tags | sed 's/-.*//')
+  LEGATE_GIT_DESCRIBE_NUMBER=$(git describe --tags | sed 's/.*-\([^-]*\)-[^-]*$/\1/')
+  LEGATE_GIT_DESCRIBE_HASH="g$(git rev-parse --short HEAD)"
+  export LEGATE_GIT_DESCRIBE_TAG=${LEGATE_GIT_DESCRIBE_TAG}
+  export LEGATE_GIT_DESCRIBE_NUMBER=${LEGATE_GIT_DESCRIBE_NUMBER}
+  export LEGATE_GIT_DESCRIBE_HASH="g${LEGATE_GIT_DESCRIBE_HASH}"
+
+  LEGION_GIT_REV=$(jq -r '.packages.Legion.git_tag' "${LEGATE_DIR}/src/cmake/versions/legion_version.json")
+  LEGION_GIT_URL=$(jq -r '.packages.Legion.git_url' "${LEGATE_DIR}/src/cmake/versions/legion_version.json")
+  export LEGION_GIT_REV=${LEGION_GIT_REV}
+  export LEGION_GIT_URL=${LEGION_GIT_URL}
+
+  export CONDA_ROOT="/tmp/conda-croot/legate-profiler"
+  export CONDA_OUTPUT="/tmp/conda-build/legate-profiler"
+}
+
+build_legate_profiler() {
+  set -eo pipefail;
+
+  run_command 'Profiler Build Initial config' setup_profiler
+
+  mkdir -p /tmp/conda-build /tmp/conda-croot
+  local conda_build_args=();
+  conda_build_args+=(--croot "${CONDA_ROOT}");
+  conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
+  conda_build_args+=(--numpy 1.22);
+  mamba install -y boa conda-verify python
+  mamba install -y -c conda-forge gcc gxx make pkg-config
+  conda mambabuild "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
+  conda mambabuild "${conda_build_args[@]}" conda/legate_profiler
+
+  run_command 'Copy Profiler Artifacts' copy_profiler_artifacts
 }
 
 build_legate_release() {
@@ -91,6 +127,12 @@ copy_release_artifacts() {
   ls -lahR "${ARTIFACTS_DIR}"
 }
 
+copy_profiler_artifacts() {
+  echo Copying profiler artifacts
+  cp -r /tmp/conda-build  "${ARTIFACTS_DIR}"
+  ls -lahR "${ARTIFACTS_DIR}"
+}
+
 copy_docs_artifacts() {
   echo Copying artifacts
   cp -r "${LEGATE_DIR}"/"${LEGATE_ARCH}"/cmake_build/cpp/docs/legate/sphinx/* "${ARTIFACTS_DIR}/."
@@ -128,6 +170,7 @@ build_project() {
   case "${BUILD_TYPE}" in
       ci) build_legate_release;;
       nightly) build_legate_release;;
+      profiler) build_legate_profiler;;
       docs) build_docs;;
       *) return 1;;
   esac

@@ -19,9 +19,8 @@
 
 {% set git_rev = environ.get('LEGION_GIT_REV', 'master') %}
 {% set git_url = environ.get('LEGION_GIT_URL', 'https://gitlab.com/StanfordLegion/legion.git') %}
-{% set git_shallow = environ.get('LEGION_GIT_SHALLOW', false) %}
+{% set git_shallow = environ.get('LEGION_GIT_SHALLOW', true) %}
 {% set git_describe_hash = environ.get('LEGATE_GIT_DESCRIBE_HASH', '0') %}
-
 
 package:
   name: {{ name|lower }}

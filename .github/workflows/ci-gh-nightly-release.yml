@@ -50,10 +50,23 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - linux-64
+          - linux
           - linux-aarch64
+        target-device:
+          - cpu
+        upload-enabled:
+          - true
+        python-version:
+          - "3.12"
     uses:
       ./.github/workflows/gh-legate-profiler.yml
     with:
       platform: ${{ matrix.platform }}
+      build-type: profiler
+      python-version: ${{ matrix.python-version }}
+      target-device: ${{ matrix.target-device }}
+      upload-enabled: ${{ matrix.upload-enabled }}
+      network: "ucx"
+      refname: ${{ github.ref_name }}
+      default-branch: ${{ github.event.repository.default_branch }}
     secrets: inherit

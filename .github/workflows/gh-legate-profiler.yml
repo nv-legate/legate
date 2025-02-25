@@ -5,158 +5,69 @@ on:
       platform:
         required: true
         type: string
-
-env:
-  CONDA_ROOT: "/tmp/conda-croot/legate-profiler"
-  CONDA_OUTPUT: "/tmp/legate-profiler/output"
-  URM_ARTIFACT_SERVER: "https://urm.nvidia.com/artifactory"
-  URM_ARTIFACT_REPOS: "sw-legate-conda-local"
-  URM_PKG_DIR: "${{ inputs.platform }}"
-  ARTIFACT_NAME: "Legate-Profiler-Artifact-${{ inputs.platform }}-${{ github.sha }}"
+      build-type:
+        type: string
+        required: true
+      python-version:
+        type: string
+        required: true
+      target-device:
+        type: string
+        required: true
+      upload-enabled:
+        type: boolean
+        required: true
+      network:
+        type: string
+        required: true
+      refname:
+        required: true
+        type: string
+      default-branch:
+        required: true
+        type: string
 
 jobs:
   Build_Profiler:
     if: ${{ github.repository_owner == 'nv-legate' }}
-    name: Build Legate Profiler
-    runs-on: ${{ (inputs.platform == 'linux-64' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') }}
-
-    defaults:
-      run:
-        shell: bash --noprofile --norc -xeuo pipefail {0}
-    container:
-      options: -u root
-      image: condaforge/miniforge3:latest
-
-    steps:
-      - name: Set environment variables
-        id: set_env
-        run: |
-          echo "ARTIFACT_PATH=${CONDA_OUTPUT}" >> "${GITHUB_ENV}"
-          echo "target_platform=${{ inputs.platform }}" >> "${GITHUB_OUTPUT}"
-
-      - name: Display environment variables
-        run: |
-          uname -a
-          echo "CONDA_ROOT=${CONDA_ROOT}"
-          echo "CONDA_OUTPUT=${CONDA_OUTPUT}"
-          echo "ARTIFACT_NAME=${ARTIFACT_NAME}"
-          echo "ARTIFACT_PATH=${ARTIFACT_PATH}"
-
-      - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get and save legate version and sha
-        run: |
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
-          LEGATE_GIT_DESCRIBE_TAG=$(git -C "${GITHUB_WORKSPACE}" describe --tags | sed 's/-.*//')
-          echo "LEGATE_GIT_DESCRIBE_TAG=${LEGATE_GIT_DESCRIBE_TAG}" >> "${GITHUB_ENV}"
-          LEGATE_GIT_DESCRIBE_NUMBER=$(git -C "${GITHUB_WORKSPACE}" describe --tags | sed 's/.*-\([^-]*\)-[^-]*$/\1/')
-          echo "LEGATE_GIT_DESCRIBE_NUMBER=${LEGATE_GIT_DESCRIBE_NUMBER}" >> "${GITHUB_ENV}"
-          LEGATE_GIT_DESCRIBE_HASH="g${GITHUB_SHA:0:8}"
-          echo "LEGATE_GIT_DESCRIBE_HASH=${LEGATE_GIT_DESCRIBE_HASH}" >> "${GITHUB_ENV}"
-
-      - name: Cleanup/Create related folders
-        run: |
-          rm -rf "${CONDA_ROOT}" "${CONDA_OUTPUT}";
-          mkdir -p "${CONDA_ROOT}" "${CONDA_OUTPUT}";
-
-      - name: Install pre-requisites to build package
-        run: |
-          echo "Install pre-requisites to build and upload"
-          apt-get update
-          apt-get install -y curl jq
-          DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 apt-get install -y pkg-config
-
-      - name: Gather and pass the url, git-tag from legion version file
-        run: |
-          LEGION_GIT_REV=$(jq -r '.packages.Legion.git_tag' "${GITHUB_WORKSPACE}/src/cmake/versions/legion_version.json")
-          LEGION_GIT_URL=$(jq -r '.packages.Legion.git_url' "${GITHUB_WORKSPACE}/src/cmake/versions/legion_version.json")
-          LEGION_GIT_SHALLOW=$(jq -r '.packages.Legion.git_shallow' "${GITHUB_WORKSPACE}/src/cmake/versions/legion_version.json")
-          {
-            echo "LEGION_GIT_REV=${LEGION_GIT_REV}"
-            echo "LEGION_GIT_URL=${LEGION_GIT_URL}"
-            echo "LEGION_GIT_SHALLOW=${LEGION_GIT_SHALLOW}"
-          } >> "${GITHUB_ENV}"
-
-      - name: Run conda build
-        run: |
-          conda_build_args=();
-          conda_build_args+=(--croot "${CONDA_ROOT}");
-          conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
-          mamba install -y boa conda-verify python
-          conda mambabuild "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
-          conda mambabuild "${conda_build_args[@]}" conda/legate_profiler
-
-      - name: Display output files
-        run: |
-          ls -lAhR "${CONDA_OUTPUT}"
-
-      - name: Upload Legate profiler artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.ARTIFACT_PATH }}
+    uses:
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.27
+    with:
+      client-repo: ${{ github.event.repository.name }}
+      target-device: ${{ inputs.target-device }}
+      runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
+      build-has-tests: ${{ inputs.upload-enabled == false }}
+      build-type: ${{ inputs.build-type }}
+      use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
+      platform: ${{ inputs.platform }}
+      dependencies-file: ""
+      legate-gh-ci-tag: "v1.27"
+      build-mode: ""
+      upload-enabled: ${{ inputs.upload-enabled }}
+      python-version: ${{ inputs.python-version }}
+      network: ${{ inputs.network }}
+    secrets: inherit
 
   Upload_Profiler:
     needs: Build_Profiler
     name: Upload Legate Profiler
-    strategy:
-      fail-fast: false
-    runs-on: linux-amd64-gpu-l4-latest-1
-    defaults:
-      run:
-        shell: bash --noprofile --norc -xeuo pipefail {0}
-    container:
-      options: -u root
-      image: condaforge/miniforge3:latest
-
-    steps:
-      - name: Set environment variables
-        id: set_env
-        run: |
-          ARTIFACT_PATH="${CONDA_OUTPUT}"
-          TARGET_PLATFORM=${{ inputs.platform }}
-          BUILD_DATE=$(date +%Y%m%d)
-          {
-            echo "ARTIFACT_PATH=${ARTIFACT_PATH}"
-            echo "TARGET_PLATFORM=${TARGET_PLATFORM}"
-            echo "BUILD_DATE=${BUILD_DATE}"
-          } >> "${GITHUB_ENV}"
-
-      - name: Cleanup/Create ARTIFACT Path
-        run: |
-          rm -rf "${ARTIFACT_PATH}"
-          mkdir -p "${ARTIFACT_PATH}"
-
-      - name: Download Legate build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.ARTIFACT_PATH }}
-
-      - name: Display Artifact Files
-        run: |
-          ls -lAhR "${ARTIFACT_PATH}"
-
-      - name: Install pre-requisites to upload package
-        run: |
-          echo "Install pre-requisites to build and upload"
-          apt-get update
-          apt-get install -y jq curl
-
-      - name: Upload Package to URM server
-        if: ${{ false }}
-        run: |
-          echo "Upload legate-profiler package"
-          find "${ARTIFACT_PATH}/${TARGET_PLATFORM}/" -name "legate-profiler*.tar.bz2" | while IFS= read -r f; do
-            fname="$(basename "${f}")"
-            packageFound=$(curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -X POST -H "content-type: text/plain" "${URM_ARTIFACT_SERVER}/api/search/aql" -d "items.find({\"repo\":\"${URM_ARTIFACT_REPOS}\",\"path\": {\"\$match\":\"${URM_PKG_DIR}\"}, \"name\":{\"\$eq\":\"${fname}\"}})" | jq -r .results[].name)
-            if [[ -z "${packageFound}" ]]; then
-              echo "Uploading the package: ${fname}"
-              curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -T "${f}" "${URM_ARTIFACT_SERVER}/${URM_ARTIFACT_REPOS}/${URM_PKG_DIR}/${fname};buildDate=${BUILD_DATE};sha=${{ github.sha }}"
-            else
-              echo "The package: ${fname} already exists on the server..skipping upload"
-            fi
-          done
+    uses:
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.27
+    with:
+      build-mode: ""
+      build-type: ${{ inputs.build-type }}
+      client-repo: ${{ github.event.repository.name }}
+      build-has-tests: ${{ inputs.upload-enabled == false }}
+      legate-gh-ci-tag: "v1.27"
+      name: Upload package to Anaconda
+      network: ${{ inputs.network }}
+      pkgSubString: "legate-profiler"
+      platform: ${{ inputs.platform }}
+      python-version: ${{ inputs.python-version }}
+      repos-Root: "legate-profiler"
+      target-device: ${{ inputs.target-device }}
+      upload-action: "upload-package-Anaconda"
+      upload-enabled: ${{ inputs.upload-enabled }}
+      refname: ${{ inputs.refname }}
+      default-branch: ${{ inputs.default-branch }}
+    secrets: inherit
