@@ -123,19 +123,19 @@ class TestCMakeBool:
 
         var = CMakeBool("foo", value=True)
         assert var.name == "foo"
-        assert var.value == "ON"
+        assert var.value is True
         assert var.prefix == "-D"
         assert var.type == "BOOL"
 
         var = CMakeBool("foo", value=1, prefix="bar")
         assert var.name == "foo"
-        assert var.value == "ON"
+        assert var.value is True
         assert var.prefix == "bar"
         assert var.type == "BOOL"
 
         var = CMakeBool("foo", value=False, prefix="bar")
         assert var.name == "foo"
-        assert var.value == "OFF"
+        assert var.value is False
         assert var.prefix == "bar"
         assert var.type == "BOOL"
 
@@ -164,7 +164,7 @@ class TestCMakeBool:
         assert isinstance(canon, CMakeBool)
         assert id(canon) != id(var)  # must be distinct
         assert canon.name == var.name
-        assert canon.value == "ON"
+        assert canon.value is True
         assert canon.prefix == var.prefix
         assert canon.type == var.type
 
@@ -178,7 +178,7 @@ class TestCMakeBool:
             "" if val_copy is None else ("ON" if val_copy else "OFF")
         )
         assert cmd == f"-Dfoo:BOOL={expected_str}"
-        assert var.value == expected_str
+        assert var.value == bool(val_copy)
 
     def test_to_command_line_bad(self) -> None:
         var = CMakeBool("foo", value=None)

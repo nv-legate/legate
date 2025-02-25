@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from shlex import quote as shlex_quote
 from types import GeneratorType
-from typing import TYPE_CHECKING, Any, Final, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Final, TypeVar
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -269,22 +269,40 @@ class CMakeBool(CMakeFlagBase):
         )
 
     @staticmethod
-    def _sanitize_value(value: Any) -> Literal["ON", "OFF"]:
+    def _sanitize_value(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+
+        if isinstance(value, int):
+            if value not in {0, 1}:
+                msg = f"value: {value} not in [0, 1]"
+                raise ValueError(msg)
+            return bool(value)
+
         if isinstance(value, str):
             match value.strip().casefold():
                 case "off" | "false" | "no" | "f" | "0" | "":
-                    return "OFF"
+                    return False
                 case "on" | "true" | "yes" | "t" | "1":
-                    return "ON"
+                    return True
                 case _:
                     m = f"Invalid boolean value {value}"
                     raise ValueError(m)
-        if isinstance(value, (bool, int)):
-            if isinstance(value, int) and value not in {0, 1}:
-                msg = f"value: {value} not in [0, 1]"
-                raise ValueError(msg)
-            return "ON" if value else "OFF"
+
         raise TypeError(type(value))
+
+    def to_command_line(self, *, quote: bool = False) -> str:
+        val = self.value
+        if val is None:
+            msg = (
+                f'Cannot convert "{self.name}" to command-line, '
+                "have empty value"
+            )
+            raise ValueError(msg)
+        cmake_val = "ON" if val else "OFF"
+        if quote:
+            cmake_val = shlex_quote(cmake_val)
+        return f"{self.prefix}{self.name}:{self.type}={cmake_val}"
 
 
 class CMakeInt(CMakeFlagBase):
@@ -332,9 +350,13 @@ class CMakePath(CMakeFlagBase):
                 "PATH" if value.is_dir() else "FILEPATH"
             )
 
-    def _sanitize_value(self, value: Any) -> Path:
+    def _sanitize_value(self, value: Any) -> Path | None:
         if not isinstance(value, (str, Path)):
             raise TypeError(type(value))
+
+        if isinstance(value, str) and "notfound" in value.casefold():
+            return None
+
         value = Path(value).resolve()
         self.__update_type(value)
         return value
@@ -349,9 +371,13 @@ class CMakeExecutable(CMakeFlagBase):
         )
 
     @staticmethod
-    def _sanitize_value(value: Any) -> Path:
+    def _sanitize_value(value: Any) -> Path | None:
         if not isinstance(value, (str, Path)):
             raise TypeError(type(value))
+
+        if isinstance(value, str) and "notfound" in value.casefold():
+            return None
+
         if not isinstance(value, Path):
             value = Path(value)
         if value.exists():

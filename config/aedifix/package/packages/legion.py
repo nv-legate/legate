@@ -368,7 +368,7 @@ class Legion(Package):
                 return Path(root_dir)
 
             root_dir = self.manager.get_cmake_variable(self.Legion_DIR)
-            if root_dir and "NOTFOUND" not in root_dir:
+            if root_dir:
                 return Path(root_dir)
 
             root_dir = self.manager.get_cmake_variable(

@@ -72,7 +72,7 @@ class TestCMaker:
         assert cmaker._args[var.name] == var
         cmaker.set_value(manager, "foo", False)
         assert cmaker._args[var.name] == var
-        assert cmaker._args[var.name].value == "OFF"
+        assert cmaker._args[var.name].value is False
 
     def test_set_value_bad(
         self, cmaker: CMaker, manager: DummyManager
@@ -94,7 +94,7 @@ class TestCMaker:
 
         var.value = True
         value = cmaker.get_value(manager, "foo")
-        assert value == "ON"
+        assert value is True
 
     def test_get_value_bad(
         self, cmaker: CMaker, manager: DummyManager
