@@ -18,7 +18,8 @@ namespace logical_array_util_test {
 
 [[nodiscard]] legate::LogicalArray create_array_with_type(const legate::Type& type,
                                                           bool bound,
-                                                          bool nullable);
+                                                          bool nullable,
+                                                          bool optimize_scalar = false);
 
 [[nodiscard]] const legate::StructType& struct_type();
 

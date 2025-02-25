@@ -16,14 +16,17 @@
 
 namespace logical_array_util_test {
 
-legate::LogicalArray create_array_with_type(const legate::Type& type, bool bound, bool nullable)
+legate::LogicalArray create_array_with_type(const legate::Type& type,
+                                            bool bound,
+                                            bool nullable,
+                                            bool optimize_scalar)
 {
   auto runtime               = legate::Runtime::get_runtime();
   constexpr auto UNBOUND_DIM = 1;
 
   if (bound) {
     const auto shape = type.variable_size() ? legate::Shape{10} : legate::Shape{1, 2, 3, 4};
-    return runtime->create_array(shape, type, nullable);
+    return runtime->create_array(shape, type, nullable, optimize_scalar);
   }
 
   return runtime->create_array(type, UNBOUND_DIM, nullable);

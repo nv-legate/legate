@@ -21,12 +21,106 @@ namespace logical_array_create_test {
 
 namespace {
 
-using LogicalArrayCreateUnit = DefaultFixture;
-
 constexpr auto BOUND_DIM                = 4;
 constexpr auto VARILABLE_TYPE_BOUND_DIM = 1;
 constexpr auto UNBOUND_DIM              = 1;
 constexpr auto NUM_CHILDREN             = 2;
+
+class TestArrayWithScalarTask : public legate::LegateTask<TestArrayWithScalarTask> {
+ public:
+  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
+
+  static void cpu_variant(legate::TaskContext);
+};
+
+class TestArrayWithReductionTask : public legate::LegateTask<TestArrayWithReductionTask> {
+ public:
+  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+
+  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
+
+  static void cpu_variant(legate::TaskContext);
+};
+
+/*static*/ void TestArrayWithScalarTask::cpu_variant(legate::TaskContext context)
+{
+  auto array                        = context.output(0);
+  auto nullable                     = context.scalar(0).value<bool>();
+  auto store                        = array.data();
+  static constexpr std::int32_t DIM = 1;
+
+  ASSERT_EQ(array.nullable(), nullable);
+  ASSERT_EQ(array.dim(), DIM);
+  ASSERT_EQ(array.type(), legate::int64());
+  ASSERT_FALSE(array.nested());
+
+  ASSERT_FALSE(store.is_unbound_store());
+  ASSERT_TRUE(store.is_future());
+  ASSERT_EQ(store.dim(), DIM);
+  ASSERT_EQ(store.type(), legate::int64());
+
+  if (nullable) {
+    auto null_mask = array.null_mask();
+
+    ASSERT_FALSE(null_mask.is_unbound_store());
+    ASSERT_EQ(null_mask.type(), legate::bool_());
+    ASSERT_EQ(null_mask.dim(), array.dim());
+  } else {
+    ASSERT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
+  }
+  ASSERT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(array.as_list_array()), std::invalid_argument);
+  ASSERT_THROW(static_cast<void>(array.as_string_array()), std::invalid_argument);
+}
+
+/*static*/ void TestArrayWithReductionTask::cpu_variant(legate::TaskContext context)
+{
+  auto array                        = context.reduction(0);
+  auto nullable                     = context.scalar(0).value<bool>();
+  auto store                        = array.data();
+  static constexpr std::int32_t DIM = 1;
+
+  ASSERT_EQ(array.nullable(), nullable);
+  ASSERT_EQ(array.dim(), DIM);
+  ASSERT_EQ(array.type(), legate::int64());
+  ASSERT_FALSE(array.nested());
+
+  auto op_shape                    = store.shape<DIM>();
+  static constexpr auto INIT_VALUE = 10;
+
+  if (!op_shape.empty()) {
+    auto reduce_acc = store.reduce_accessor<legate::SumReduction<std::int64_t>, false, DIM>();
+
+    for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
+      const legate::Point<DIM> pos{*it};
+
+      reduce_acc.reduce(pos, INIT_VALUE);
+    }
+  }
+
+  if (!op_shape.empty()) {
+    auto read_acc = store.read_accessor<std::int64_t, DIM>();
+
+    for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
+      ASSERT_EQ(read_acc[*it], INIT_VALUE + 1);
+    }
+  }
+}
+
+class Config {
+ public:
+  static constexpr std::string_view LIBRARY_NAME = "test_create_logical_array";
+
+  static void registration_callback(legate::Library library)
+  {
+    TestArrayWithScalarTask::register_variants(library);
+    TestArrayWithReductionTask::register_variants(library);
+  }
+};
+
+class LogicalArrayCreateUnit : public RegisterOnceFixture<Config> {};
 
 const legate::Shape& bound_shape_multi_dim()
 {
@@ -243,8 +337,12 @@ TEST_P(NullableTest, CreateListArray)
 
   auto list_array = array.as_list_array();
   // Sub-arrays can be accessed
-  static_cast<void>(list_array.descriptor());
-  static_cast<void>(list_array.vardata());
+  ASSERT_NO_THROW(static_cast<void>(list_array.descriptor()));
+  ASSERT_NO_THROW(static_cast<void>(list_array.vardata()));
+  for (std::uint32_t idx = 0; idx < NUM_CHILDREN; ++idx) {
+    ASSERT_NO_THROW(static_cast<void>(list_array.child(idx)));
+  }
+  ASSERT_THROW(static_cast<void>(list_array.child(NUM_CHILDREN)), std::out_of_range);
 }
 
 TEST_P(NullableTest, CreateBoundStringArray)
@@ -546,6 +644,58 @@ TEST_P(NullableTest, PhsicalArray)
     ASSERT_THROW(static_cast<void>(array.null_mask()), std::invalid_argument);
   }
   ASSERT_THROW(static_cast<void>(array.child(0)), std::invalid_argument);
+}
+
+TEST_P(NullableTest, ListPhysicalArray)
+{
+  const auto nullable = GetParam();
+  auto runtime        = legate::Runtime::get_runtime();
+  auto type           = legate::list_type(legate::int64());
+  auto descriptor     = runtime->create_array(
+    bound_shape_single_dim(), legate::rect_type(VARILABLE_TYPE_BOUND_DIM), nullable);
+  auto vardata = runtime->create_array(bound_shape_single_dim(), legate::int64());
+  auto array   = runtime->create_list_array(descriptor, vardata, type);
+
+  auto list_array          = array.as_list_array();
+  auto physical_array      = list_array.get_physical_array();
+  auto list_physical_array = physical_array.as_list_array();
+  ASSERT_NO_THROW(static_cast<void>(list_physical_array.descriptor()));
+  ASSERT_NO_THROW(static_cast<void>(list_physical_array.vardata()));
+  ASSERT_EQ(list_physical_array.nullable(), nullable);
+  ASSERT_EQ(list_physical_array.type(), type);
+  ASSERT_EQ(list_physical_array.dim(), VARILABLE_TYPE_BOUND_DIM);
+}
+
+TEST_P(NullableTest, CreateFutureBaseArray)
+{
+  const auto nullable = GetParam();
+  auto runtime        = legate::Runtime::get_runtime();
+  auto context        = runtime->find_library(Config::LIBRARY_NAME);
+  auto task           = runtime->create_task(context, TestArrayWithScalarTask::TASK_ID);
+  auto part           = task.declare_partition();
+  // create null_mask with Future-backed store
+  auto logical_array =
+    runtime->create_array(legate::Shape{1}, legate::int64(), nullable, /* optimize_scalar */ true);
+
+  task.add_output(logical_array, std::move(part));
+  task.add_scalar_arg(legate::Scalar{nullable});
+  runtime->submit(std::move(task));
+}
+
+TEST_P(NullableTest, CreateFutureBaseArrayReduction)
+{
+  const auto nullable = GetParam();
+  auto runtime        = legate::Runtime::get_runtime();
+  auto logical_array =
+    runtime->create_array(legate::Shape{1}, legate::int64(), nullable, /* optimize_scalar */ true);
+  auto scalar  = legate::Scalar{std::int64_t{1}};
+  auto context = runtime->find_library(Config::LIBRARY_NAME);
+  auto task    = runtime->create_task(context, TestArrayWithReductionTask::TASK_ID);
+
+  runtime->issue_fill(logical_array, scalar);
+  task.add_reduction(logical_array, legate::ReductionOpKind::ADD);
+  task.add_scalar_arg(legate::Scalar{nullable});
+  runtime->submit(std::move(task));
 }
 
 }  // namespace logical_array_create_test
