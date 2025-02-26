@@ -13,6 +13,7 @@
 #pragma once
 
 #include <legate/task/task.h>
+#include <legate/task/task_signature.h>
 #include <legate/task/variant_options.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/typedefs.h>
@@ -28,6 +29,8 @@ class FindBoundingBox : public LegateTask<FindBoundingBox> {
   static constexpr auto TASK_ID = LocalTaskID{CoreTask::FIND_BOUNDING_BOX};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
+  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
+    legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints({{}});
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
@@ -43,6 +46,8 @@ class FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
   static constexpr auto TASK_ID = LocalTaskID{CoreTask::FIND_BOUNDING_BOX_SORTED};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
+  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
+    legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints({{}});
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)

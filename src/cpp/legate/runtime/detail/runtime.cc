@@ -56,6 +56,7 @@
 #include <legate/task/detail/task.h>
 #include <legate/task/detail/task_info.h>
 #include <legate/task/task_context.h>
+#include <legate/task/task_signature.h>
 #include <legate/task/variant_options.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/enumerate.h>
@@ -506,6 +507,9 @@ namespace {
 class OffloadTo : public LegateTask<OffloadTo> {
  public:
   static constexpr auto TASK_ID = LocalTaskID{CoreTask::OFFLOAD_TO};
+
+  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
+    legate::TaskSignature{}.inputs(1).outputs(1).scalars(1).redops(0).constraints({{}});
 
   // Task body left empty because there is no computation to do. This task
   // triggers a data movement because of its R/W privileges

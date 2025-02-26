@@ -14,6 +14,7 @@
 
 #include <legate/task/task.h>
 #include <legate/task/task_context.h>
+#include <legate/task/task_signature.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/typedefs.h>
 
@@ -36,6 +37,9 @@ class TileByOffsetsRead : public LegateTask<TileByOffsetsRead> {
  public:
   static constexpr auto TASK_ID =
     LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_BY_OFFSETS_READ};
+
+  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
+    legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints({{}});
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
