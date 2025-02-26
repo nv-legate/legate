@@ -38,7 +38,8 @@ class BasicRead : public LegateTask<BasicRead> {
   static constexpr auto GPU_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
 
   static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(0).outputs(1).scalars(1).redops(0).constraints({{}});
+    legate::TaskSignature{}.inputs(0).outputs(1).scalars(1).redops(0).constraints(
+      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
@@ -64,7 +65,8 @@ class BasicWrite : public LegateTask<BasicWrite> {
   static constexpr auto GPU_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
 
   static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(0).scalars(1).redops(0).constraints({{}});
+    legate::TaskSignature{}.inputs(1).outputs(0).scalars(1).redops(0).constraints(
+      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);

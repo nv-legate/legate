@@ -39,7 +39,8 @@ class TileByOffsetsRead : public LegateTask<TileByOffsetsRead> {
     LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_BY_OFFSETS_READ};
 
   static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints({{}});
+    legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints(
+      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);

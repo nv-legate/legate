@@ -509,7 +509,8 @@ class OffloadTo : public LegateTask<OffloadTo> {
   static constexpr auto TASK_ID = LocalTaskID{CoreTask::OFFLOAD_TO};
 
   static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(1).scalars(1).redops(0).constraints({{}});
+    legate::TaskSignature{}.inputs(1).outputs(1).scalars(1).redops(0).constraints(
+      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   // Task body left empty because there is no computation to do. This task
   // triggers a data movement because of its R/W privileges

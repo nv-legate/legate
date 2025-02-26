@@ -30,7 +30,8 @@ class FindBoundingBox : public LegateTask<FindBoundingBox> {
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
   static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints({{}});
+    legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints(
+      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
@@ -47,7 +48,8 @@ class FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
   static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints({{}});
+    legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints(
+      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)

@@ -24,12 +24,13 @@ class FixupRanges : public LegateTask<FixupRanges> {
   static constexpr auto TASK_ID = LocalTaskID{CoreTask::FIXUP_RANGES};
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true);
-  static inline const auto TASK_SIGNATURE = legate::TaskSignature{}  // NOLINT(cert-err58-cpp)
-                                              .inputs(0)
-                                              .outputs(0, legate::TaskSignature::UNBOUNDED)
-                                              .scalars(0)
-                                              .redops(0)
-                                              .constraints({{}});
+  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
+    legate::TaskSignature{}
+      .inputs(0)
+      .outputs(0, legate::TaskSignature::UNBOUNDED)
+      .scalars(0)
+      .redops(0)
+      .constraints({Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)

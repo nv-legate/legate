@@ -38,7 +38,8 @@ class TileRead : public LegateTask<TileRead> {
   static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_READ};
 
   static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints({{}});
+    legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints(
+      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
@@ -63,7 +64,8 @@ class TileWrite : public LegateTask<TileWrite> {
   static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_WRITE};
 
   static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(0).scalars(2).redops(0).constraints({{}});
+    legate::TaskSignature{}.inputs(1).outputs(0).scalars(2).redops(0).constraints(
+      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);

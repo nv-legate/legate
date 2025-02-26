@@ -46,7 +46,8 @@ class HDF5Read : public LegateTask<HDF5Read> {
   static constexpr auto OMP_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
 
   static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints({{}});
+    legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints(
+      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
