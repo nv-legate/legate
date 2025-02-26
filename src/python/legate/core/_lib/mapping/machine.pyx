@@ -13,7 +13,8 @@ from libc.stdint cimport uint32_t
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Union
+from typing import Any
+from operator import index as operator_index
 
 from libcpp.map cimport map as std_map
 from libcpp.utility cimport move as std_move
@@ -34,10 +35,6 @@ class EmptyMachineError(Exception):
 class ProcessorSlice:
     target: TaskTarget
     slice: slice
-
-
-PROC_RANGE_KEY = Union[slice, int]
-MACHINE_KEY = Union[PyTaskTarget, slice, int, ProcessorSlice]
 
 
 cdef class ProcessorRange:
@@ -185,7 +182,7 @@ cdef class ProcessorRange:
         cdef int stop = self.high if sl.stop is None else sl.stop
         return ProcessorRange.from_handle(self._handle.slice(start, stop))
 
-    def __getitem__(self, key: PROC_RANGE_KEY) -> ProcessorRange:
+    def __getitem__(self, key: slice | int) -> ProcessorRange:
         r"""
         Slices the processor range with a given slicer
 
@@ -201,12 +198,10 @@ cdef class ProcessorRange:
         ProcessorRange
             Processor range after slicing
         """
-        if isinstance(key, int):
-            return self.slice(slice(key, key + 1))
-        elif isinstance(key, slice):
+        if isinstance(key, slice):
             return self.slice(key)
-
-        raise KeyError(f"Invalid slicing key: {key}")
+        key = operator_index(key)
+        return self.slice(slice(key, key + 1))
 
     cpdef tuple get_node_range(self):
         r"""
@@ -492,7 +487,9 @@ cdef class Machine:
 
         return Machine({target: self.get_processor_range(target).slice(sl)})
 
-    def __getitem__(self, key: MACHINE_KEY) -> Machine:
+    def __getitem__(
+        self, key: PyTaskTarget | slice | int | ProcessorSlice
+    ) -> Machine:
         r"""
         Slices the machine with a given slicer
 
@@ -522,12 +519,10 @@ cdef class Machine:
             return self.only((key,))
         if isinstance(key, ProcessorSlice):
             return self.slice(key.slice, key.target)
-        if isinstance(key, int):
-            return self.slice(slice(key, key + 1))
         if isinstance(key, slice):
             return self.slice(key)
-
-        raise KeyError(f"Invalid slicing key: {key}")
+        key = operator_index(key)
+        return self.slice(slice(key, key + 1))
 
     def __eq__(self, other: Machine) -> bool:
         cdef bool ret

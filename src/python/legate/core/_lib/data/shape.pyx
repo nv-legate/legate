@@ -9,14 +9,14 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
-from libc.stdint cimport int64_t, uint32_t, uint64_t
+from libc.stdint cimport uint32_t, uint64_t
 from libcpp.utility cimport move as std_move
 from libcpp.vector cimport vector as std_vector
 
 from collections.abc import Collection, Iterator
+from operator import index as operator_index
 
 from ..utilities.utils cimport uint64_tuple_from_iterable
-
 
 cdef class Shape:
     @staticmethod
@@ -101,7 +101,7 @@ cdef class Shape:
             ret = self._handle.ndim()
         return ret
 
-    def __getitem__(self, int64_t idx) -> uint64_t:
+    def __getitem__(self, idx: int) -> int:
         r"""
         Returns the extent of a given dimension
 
@@ -125,7 +125,7 @@ cdef class Shape:
         If the shape is of an unbound array or store, the call blocks the
         execution until the shape becomes ready.
         """
-        return self.extents[idx]
+        return self.extents[operator_index(idx)]
 
     def __eq__(self, object other) -> bool:
         r"""

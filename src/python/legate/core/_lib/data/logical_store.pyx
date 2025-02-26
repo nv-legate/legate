@@ -26,6 +26,7 @@ from .physical_store cimport PhysicalStore
 from .shape cimport Shape
 from .slice cimport from_python_slice
 
+from operator import index as operator_index
 
 cdef class LogicalStore(Unconstructable):
     @staticmethod
@@ -266,7 +267,7 @@ cdef class LogicalStore(Unconstructable):
             elif index is None:
                 result = result.promote(dim, 1)
             else:
-                result = result.project(dim, index)
+                result = result.project(dim, operator_index(index))
 
         return result
 

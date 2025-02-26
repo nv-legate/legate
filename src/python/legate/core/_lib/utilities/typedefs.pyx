@@ -10,9 +10,10 @@
 # its affiliates is strictly prohibited.
 
 
-from libc.stdint cimport int32_t, int64_t
+from libc.stdint cimport int32_t
 
 from typing import NewType
+from operator import index as operator_index
 
 LocalTaskID = NewType("LocalTaskID", int)
 GlobalTaskID = NewType("GlobalTaskID", int)
@@ -43,7 +44,7 @@ cdef class DomainPoint:
         """
         return self._handle.get_dim()
 
-    def __getitem__(self, int32_t idx) -> int64_t:
+    def __getitem__(self, idx: int) -> int:
         r"""
         Get a value in the domain point.
 
@@ -57,9 +58,9 @@ cdef class DomainPoint:
         int
             The value.
         """
-        return self._handle[idx]
+        return self._handle[operator_index(idx)]
 
-    def __setitem__(self, int32_t idx, int64_t coord) -> None:
+    def __setitem__(self, idx: int, coord: int) -> None:
         r"""
         Set a value in the domain point.
 
@@ -70,7 +71,7 @@ cdef class DomainPoint:
         coord : int
             The value to set.
         """
-        self._handle[idx] = coord
+        self._handle[operator_index(idx)] = coord
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, DomainPoint):
