@@ -14,14 +14,14 @@
 
 #include <legate/partitioning/proxy.h>
 
-namespace legate::proxy {
+namespace legate {
 
-constexpr bool ArrayArgument::operator==(const ArrayArgument& rhs) const noexcept
+constexpr bool ProxyArrayArgument::operator==(const ProxyArrayArgument& rhs) const noexcept
 {
   return kind == rhs.kind && index == rhs.index;
 }
 
-constexpr bool ArrayArgument::operator!=(const ArrayArgument& rhs) const noexcept
+constexpr bool ProxyArrayArgument::operator!=(const ProxyArrayArgument& rhs) const noexcept
 {
   return !(*this == rhs);
 }
@@ -30,20 +30,20 @@ constexpr bool ArrayArgument::operator!=(const ArrayArgument& rhs) const noexcep
 
 namespace proxy_detail {
 
-template <typename T, ArrayArgument::Kind KIND>
+template <typename T, ProxyArrayArgument::Kind KIND>
 constexpr bool TaskArgsBase<T, KIND>::operator==(const TaskArgsBase&) const noexcept
 {
   return true;
 }
 
-template <typename T, ArrayArgument::Kind KIND>
+template <typename T, ProxyArrayArgument::Kind KIND>
 constexpr bool TaskArgsBase<T, KIND>::operator!=(const TaskArgsBase& rhs) const noexcept
 {
   return !(*this == rhs);
 }
 
-template <typename T, ArrayArgument::Kind KIND>
-constexpr ArrayArgument TaskArgsBase<T, KIND>::operator[](std::uint32_t index) const noexcept
+template <typename T, ProxyArrayArgument::Kind KIND>
+constexpr ProxyArrayArgument TaskArgsBase<T, KIND>::operator[](std::uint32_t index) const noexcept
 {
   return {KIND, index};
 }
@@ -52,6 +52,6 @@ constexpr ArrayArgument TaskArgsBase<T, KIND>::operator[](std::uint32_t index) c
 
 // ==========================================================================================
 
-inline const SharedPtr<detail::proxy::Constraint>& Constraint::impl() const { return impl_; }
+inline const SharedPtr<detail::ProxyConstraint>& ProxyConstraint::impl() const { return impl_; }
 
-}  // namespace legate::proxy
+}  // namespace legate

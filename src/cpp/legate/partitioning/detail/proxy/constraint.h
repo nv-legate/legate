@@ -19,15 +19,11 @@ namespace legate::detail {
 class TaskSignature;
 class AutoTask;
 
-}  // namespace legate::detail
-
-namespace legate::detail::proxy {
-
 /**
  * @brief The base proxy constraint class which dictates the common interface. All proxy
  * constraints must derive from this.
  */
-class Constraint {
+class ProxyConstraint {
  public:
   /**
    * @brief Validate the constraint arguments against the given signature.
@@ -54,13 +50,13 @@ class Constraint {
    */
   [[nodiscard]] virtual std::string_view name() const noexcept = 0;
 
-  [[nodiscard]] virtual bool operator==(const Constraint&) const noexcept = 0;
-  [[nodiscard]] virtual bool operator!=(const Constraint& rhs) const noexcept;
+  [[nodiscard]] virtual bool operator==(const ProxyConstraint&) const = 0;
+  [[nodiscard]] virtual bool operator!=(const ProxyConstraint& rhs) const;
 };
 
-[[nodiscard]] inline bool Constraint::operator!=(const Constraint& rhs) const noexcept
+[[nodiscard]] inline bool ProxyConstraint::operator!=(const ProxyConstraint& rhs) const
 {
   return !(*this == rhs);
 }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

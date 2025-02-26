@@ -14,14 +14,23 @@
 
 #include <legate/partitioning/detail/proxy/image.h>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
-constexpr const Image::value_type& Image::var_function() const noexcept { return var_function_; }
+constexpr const ProxyImage::value_type& ProxyImage::var_function() const noexcept
+{
+  return var_function_;
+}
 
-constexpr const Image::value_type& Image::var_range() const noexcept { return var_range_; }
+constexpr const ProxyImage::value_type& ProxyImage::var_range() const noexcept
+{
+  return var_range_;
+}
 
-constexpr const std::optional<ImageComputationHint>& Image::hint() const noexcept { return hint_; }
+constexpr const std::optional<ImageComputationHint>& ProxyImage::hint() const noexcept
+{
+  return hint_;
+}
 
-inline std::string_view Image::name() const noexcept { return "image"; }
+inline std::string_view ProxyImage::name() const noexcept { return "image"; }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

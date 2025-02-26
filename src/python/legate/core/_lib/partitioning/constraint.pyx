@@ -23,9 +23,9 @@ from ..utilities.utils cimport is_iterable, tuple_from_iterable
 from ..utilities.tuple cimport _tuple
 
 from .proxy cimport (
-    _ArrayArgument,
-    _ArrayArgumentKind,
-    _Constraint as _ProxyConstraint,
+    _ProxyArrayArgument,
+    _ProxyArrayArgumentKind,
+    _ProxyConstraint,
     _inputs,
     _outputs,
     _reductions
@@ -94,11 +94,11 @@ cdef class Constraint(Unconstructable):
         return str(self)
 
 
-cdef _ArrayArgument _deduce_arg(
+cdef _ProxyArrayArgument _deduce_arg(
     str arg,
-    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+    tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
-    cdef _ArrayArgumentKind kind
+    cdef _ProxyArrayArgumentKind kind
     cdef ParamList plist
     cdef uint32_t idx
 
@@ -108,11 +108,11 @@ cdef _ArrayArgument _deduce_arg(
         except ValueError:
             continue
 
-        if kind == _ArrayArgumentKind.INPUT:
+        if kind == _ProxyArrayArgumentKind.INPUT:
             return _inputs[idx]
-        if kind == _ArrayArgumentKind.OUTPUT:
+        if kind == _ProxyArrayArgumentKind.OUTPUT:
             return _outputs[idx]
-        if kind == _ArrayArgumentKind.REDUCTION:
+        if kind == _ProxyArrayArgumentKind.REDUCTION:
             return _reductions[idx]
         raise ValueError(kind)
 
@@ -153,13 +153,13 @@ cdef class DeferredConstraint:
 
 cdef _ProxyConstraint _handle_align(
     tuple[str, str] args,
-    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+    tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 2:
         m = f"align got unexpected arguments '{args}'"
         raise ValueError(m)
 
-    cdef _ArrayArgument lhs_ret, rhs_ret
+    cdef _ProxyArrayArgument lhs_ret, rhs_ret
 
     lhs_ret = _deduce_arg(args[0], task_args)
     rhs_ret = _deduce_arg(args[1], task_args)
@@ -210,13 +210,13 @@ cpdef object align(VariableOrStr lhs, VariableOrStr rhs):
 
 cdef _ProxyConstraint _handle_bcast(
     tuple[str, tuple[int, ...]] args,
-    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+    tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 2:
         m = f"broadcast got unexpected arguments '{args}'"
         raise ValueError(m)
 
-    cdef _ArrayArgument var
+    cdef _ProxyArrayArgument var
     cdef tuple[int, ...] axes
     cdef std_optional[_tuple[uint32_t]] cpp_axes
 
@@ -289,13 +289,13 @@ cpdef object broadcast(
 
 cdef _ProxyConstraint _handle_image(
     tuple[str, str, ImageComputationHint] args,
-    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+    tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 3:
         m = f"image got unexpected arguments '{args}'"
         raise ValueError(m)
 
-    cdef _ArrayArgument func_ret, range_ret
+    cdef _ProxyArrayArgument func_ret, range_ret
     cdef ImageComputationHint hint
 
     func_ret = _deduce_arg(args[0], task_args)
@@ -365,14 +365,14 @@ cpdef object image(
 
 cdef _ProxyConstraint _handle_scale(
     tuple[tuple[int, ...], str, str] args,
-    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+    tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 3:
         m = f"scale got unexpected arguments '{args}'"
         raise ValueError(m)
 
     cdef _tuple[uint64_t] factors
-    cdef _ArrayArgument smaller_ret, bigger_ret
+    cdef _ProxyArrayArgument smaller_ret, bigger_ret
 
     factors = tuple_from_iterable[uint64_t](args[0])
     smaller_ret = _deduce_arg(args[1], task_args)
@@ -446,13 +446,13 @@ cpdef object scale(
 
 cdef _ProxyConstraint _handle_bloat(
     tuple[str, str, tuple[int, ...], tuple[int, ...]] args,
-    tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args
+    tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 4:
         m = f"bloat got unexpected arguments '{args}'"
         raise ValueError(m)
 
-    cdef _ArrayArgument source_ret, bloat_ret
+    cdef _ProxyArrayArgument source_ret, bloat_ret
     cdef _tuple[uint64_t] low_offsets, high_offsets
 
     source_ret = _deduce_arg(args[0], task_args)

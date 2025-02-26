@@ -25,19 +25,13 @@ namespace legate::detail {
 class AutoTask;
 class TaskSignature;
 
-}  // namespace legate::detail
-
-namespace legate::detail::proxy {
-
 /**
  * @brief The private bloat constraint proxy.
  */
-class Bloat final : public Constraint {
+class ProxyBloat final : public ProxyConstraint {
  public:
-  using value_type = std::variant<legate::proxy::ArrayArgument,
-                                  legate::proxy::InputArguments,
-                                  legate::proxy::OutputArguments,
-                                  legate::proxy::ReductionArguments>;
+  using value_type = std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>;
 
   /**
    * @brief Construct a bloat constraint.
@@ -47,10 +41,10 @@ class Bloat final : public Constraint {
    * @param low_offsets The lower offsets.
    * @param high_offsets The high offsets.
    */
-  Bloat(value_type var_source,
-        value_type var_bloat,
-        tuple<std::uint64_t> low_offsets,
-        tuple<std::uint64_t> high_offsets) noexcept;
+  ProxyBloat(value_type var_source,
+             value_type var_bloat,
+             tuple<std::uint64_t> low_offsets,
+             tuple<std::uint64_t> high_offsets) noexcept;
 
   /**
    * @return The source variable.
@@ -94,7 +88,7 @@ class Bloat final : public Constraint {
    */
   void apply(AutoTask* task) const override;
 
-  [[nodiscard]] bool operator==(const Constraint& rhs) const noexcept override;
+  [[nodiscard]] bool operator==(const ProxyConstraint& rhs) const override;
 
  private:
   value_type var_source_;
@@ -103,6 +97,6 @@ class Bloat final : public Constraint {
   tuple<std::uint64_t> high_offsets_{};
 };
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail
 
 #include <legate/partitioning/detail/proxy/bloat.inl>

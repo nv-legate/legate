@@ -25,19 +25,13 @@ namespace legate::detail {
 class AutoTask;
 class TaskSignature;
 
-}  // namespace legate::detail
-
-namespace legate::detail::proxy {
-
 /**
  * @brief The private scaling constraint.
  */
-class Scale final : public Constraint {
+class ProxyScale final : public ProxyConstraint {
  public:
-  using value_type = std::variant<legate::proxy::ArrayArgument,
-                                  legate::proxy::InputArguments,
-                                  legate::proxy::OutputArguments,
-                                  legate::proxy::ReductionArguments>;
+  using value_type = std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>;
 
   /**
    * @brief Construct a scaling constraint.
@@ -46,7 +40,7 @@ class Scale final : public Constraint {
    * @param var_smaller The variable to scale.
    * @param var_bigger The variable to scale to.
    */
-  Scale(tuple<std::uint64_t> factors, value_type var_smaller, value_type var_bigger) noexcept;
+  ProxyScale(tuple<std::uint64_t> factors, value_type var_smaller, value_type var_bigger) noexcept;
 
   /**
    * @return The scaling factors.
@@ -85,7 +79,7 @@ class Scale final : public Constraint {
    */
   void apply(AutoTask* task) const override;
 
-  [[nodiscard]] bool operator==(const Constraint& rhs) const noexcept override;
+  [[nodiscard]] bool operator==(const ProxyConstraint& rhs) const override;
 
  private:
   tuple<std::uint64_t> factors_{};
@@ -93,6 +87,6 @@ class Scale final : public Constraint {
   value_type var_bigger_;
 };
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail
 
 #include <legate/partitioning/detail/proxy/scale.inl>

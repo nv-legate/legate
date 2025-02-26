@@ -127,14 +127,14 @@ class TaskSignature {
   constexpr void scalars(std::optional<Nargs> n) noexcept;
   constexpr void redops(std::optional<Nargs> n) noexcept;
   void constraints(
-    std::optional<std::vector<InternalSharedPtr<detail::proxy::Constraint>>> cstrnts) noexcept;
+    std::optional<std::vector<InternalSharedPtr<detail::ProxyConstraint>>> cstrnts) noexcept;
 
   [[nodiscard]] constexpr const std::optional<Nargs>& inputs() const noexcept;
   [[nodiscard]] constexpr const std::optional<Nargs>& outputs() const noexcept;
   [[nodiscard]] constexpr const std::optional<Nargs>& scalars() const noexcept;
   [[nodiscard]] constexpr const std::optional<Nargs>& redops() const noexcept;
-  [[nodiscard]] std::optional<Span<const InternalSharedPtr<detail::proxy::Constraint>>>
-  constraints() const noexcept;
+  [[nodiscard]] std::optional<Span<const InternalSharedPtr<detail::ProxyConstraint>>> constraints()
+    const noexcept;
 
   /**
    * @brief Validate that the signature is sane.
@@ -168,7 +168,7 @@ class TaskSignature {
   std::optional<Nargs> num_outputs_{};
   std::optional<Nargs> num_scalars_{};
   std::optional<Nargs> num_redops_{};
-  std::optional<std::vector<InternalSharedPtr<detail::proxy::Constraint>>> constraints_{};
+  std::optional<std::vector<InternalSharedPtr<detail::ProxyConstraint>>> constraints_{};
 };
 
 }  // namespace legate::detail

@@ -40,7 +40,7 @@ from ..._lib.data.physical_store cimport PhysicalStore
 from ..._lib.data.scalar cimport Scalar
 from ..._lib.operation.task cimport AutoTask
 from ..._lib.partitioning.constraint cimport Constraint
-from ..._lib.partitioning.proxy cimport _ArrayArgumentKind, _Constraint
+from ..._lib.partitioning.proxy cimport _ProxyArrayArgumentKind, _ProxyConstraint
 from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.task.task_signature cimport make_task_signature
@@ -447,12 +447,12 @@ cdef class VariantInvoker:
     # (such as decorators on global functions, which this class would be) are
     # destroyed.
     cdef _TaskSignature prepare_task_signature(self):
-        cdef tuple[tuple[_ArrayArgumentKind, ParamList], ...] task_args = (
-            (_ArrayArgumentKind.INPUT, self.inputs),
-            (_ArrayArgumentKind.OUTPUT, self.outputs),
-            (_ArrayArgumentKind.REDUCTION, self.reductions)
+        cdef tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args = (
+            (_ProxyArrayArgumentKind.INPUT, self.inputs),
+            (_ProxyArrayArgumentKind.OUTPUT, self.outputs),
+            (_ProxyArrayArgumentKind.REDUCTION, self.reductions)
         )
-        cdef std_vector[_Constraint] constraints
+        cdef std_vector[_ProxyConstraint] constraints
         cdef DeferredConstraint c
 
         constraints.reserve(len(self._constraints))

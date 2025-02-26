@@ -64,7 +64,7 @@ constexpr const std::optional<TaskSignature::Nargs>& TaskSignature::redops() con
   return num_redops_;
 }
 
-inline std::optional<Span<const InternalSharedPtr<detail::proxy::Constraint>>>
+inline std::optional<Span<const InternalSharedPtr<detail::ProxyConstraint>>>
 TaskSignature::constraints() const noexcept
 {
   return constraints_;

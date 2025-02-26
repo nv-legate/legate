@@ -14,15 +14,18 @@
 
 #include <legate/partitioning/detail/proxy/broadcast.h>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
-constexpr const Broadcast::value_type& Broadcast::value() const noexcept { return value_; }
+constexpr const ProxyBroadcast::value_type& ProxyBroadcast::value() const noexcept
+{
+  return value_;
+}
 
-constexpr const std::optional<tuple<std::uint32_t>>& Broadcast::axes() const noexcept
+constexpr const std::optional<tuple<std::uint32_t>>& ProxyBroadcast::axes() const noexcept
 {
   return axes_;
 }
 
-inline std::string_view Broadcast::name() const noexcept { return "broadcast"; }
+inline std::string_view ProxyBroadcast::name() const noexcept { return "broadcast"; }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

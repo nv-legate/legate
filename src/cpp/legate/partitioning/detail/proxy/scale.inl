@@ -14,14 +14,20 @@
 
 #include <legate/partitioning/detail/proxy/scale.h>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
-constexpr const tuple<std::uint64_t>& Scale::factors() const noexcept { return factors_; }
+constexpr const tuple<std::uint64_t>& ProxyScale::factors() const noexcept { return factors_; }
 
-constexpr const Scale::value_type& Scale::var_smaller() const noexcept { return var_smaller_; }
+constexpr const ProxyScale::value_type& ProxyScale::var_smaller() const noexcept
+{
+  return var_smaller_;
+}
 
-constexpr const Scale::value_type& Scale::var_bigger() const noexcept { return var_bigger_; }
+constexpr const ProxyScale::value_type& ProxyScale::var_bigger() const noexcept
+{
+  return var_bigger_;
+}
 
-inline std::string_view Scale::name() const noexcept { return "scale"; }
+inline std::string_view ProxyScale::name() const noexcept { return "scale"; }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

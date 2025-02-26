@@ -15,28 +15,29 @@
 #include <legate/partitioning/detail/proxy/constraint.h>
 #include <legate/partitioning/proxy.h>
 
+#include <cstdint>
 #include <optional>
 #include <string_view>
 #include <variant>
+
+namespace legate {
+
+enum class ImageComputationHint : std::uint8_t;
+
+}  // namespace legate
 
 namespace legate::detail {
 
 class AutoTask;
 class TaskSignature;
 
-}  // namespace legate::detail
-
-namespace legate::detail::proxy {
-
 /**
  * @brief The private image constraint proxy.
  */
-class Image final : public Constraint {
+class ProxyImage final : public ProxyConstraint {
  public:
-  using value_type = std::variant<legate::proxy::ArrayArgument,
-                                  legate::proxy::InputArguments,
-                                  legate::proxy::OutputArguments,
-                                  legate::proxy::ReductionArguments>;
+  using value_type = std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>;
 
   /**
    * @brief Construct an image constraint.
@@ -45,9 +46,9 @@ class Image final : public Constraint {
    * @param var_range The range variable.
    * @param hint The (possibly null) hint.
    */
-  Image(value_type var_function,
-        value_type var_range,
-        std::optional<ImageComputationHint> hint) noexcept;
+  ProxyImage(value_type var_function,
+             value_type var_range,
+             std::optional<ImageComputationHint> hint) noexcept;
 
   /**
    * @return The function variable.
@@ -86,7 +87,7 @@ class Image final : public Constraint {
    */
   void apply(AutoTask* task) const override;
 
-  [[nodiscard]] bool operator==(const Constraint& rhs) const noexcept override;
+  [[nodiscard]] bool operator==(const ProxyConstraint& rhs) const override;
 
  private:
   value_type var_function_;
@@ -94,6 +95,6 @@ class Image final : public Constraint {
   std::optional<ImageComputationHint> hint_{};
 };
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail
 
 #include <legate/partitioning/detail/proxy/image.inl>

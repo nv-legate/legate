@@ -19,7 +19,7 @@
 
 #include <tuple>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
 namespace {
 
@@ -64,12 +64,12 @@ void do_align(Span<const TaskArrayArg> left, Span<const TaskArrayArg> right, Aut
 
 }  // namespace
 
-Align::Align(value_type left, value_type right) noexcept
+ProxyAlign::ProxyAlign(value_type left, value_type right) noexcept
   : left_{std::move(left)}, right_{std::move(right)}
 {
 }
 
-void Align::validate(std::string_view task_name, const TaskSignature& signature) const
+void ProxyAlign::validate(std::string_view task_name, const TaskSignature& signature) const
 {
   const auto visitor = ValidateVisitor{task_name, signature, *this};
 
@@ -77,19 +77,19 @@ void Align::validate(std::string_view task_name, const TaskSignature& signature)
   std::visit(visitor, right());
 }
 
-void Align::apply(AutoTask* task) const
+void ProxyAlign::apply(AutoTask* task) const
 {
   std::visit([&](const auto& lhs, const auto& rhs) { do_align(lhs, rhs, task); },
              std::visit(ArgSelectVisitor{task}, left()),
              std::visit(ArgSelectVisitor{task}, right()));
 }
 
-bool Align::operator==(const Constraint& rhs) const noexcept
+bool ProxyAlign::operator==(const ProxyConstraint& rhs) const
 {
-  if (const auto* rhsptr = dynamic_cast<const Align*>(&rhs)) {
+  if (const auto* rhsptr = dynamic_cast<const ProxyAlign*>(&rhs)) {
     return std::tie(left(), right()) == std::tie(rhsptr->left(), rhsptr->right());
   }
   return false;
 }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

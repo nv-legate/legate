@@ -14,7 +14,7 @@ from libcpp.string cimport string as std_string
 
 from ..utilities.tuple cimport _tuple
 from ..utilities.unconstructable cimport Unconstructable
-from .proxy cimport _Constraint as _ProxyConstraint
+from .proxy cimport _ProxyConstraint
 
 from collections.abc import Iterable
 

@@ -40,6 +40,8 @@
 #include <legate/task/registrar.h>
 #include <legate/task/task.h>
 #include <legate/task/task_context.h>
+#include <legate/task/task_signature.h>
+#include <legate/task/variant_options.h>
 #include <legate/type/type_traits.h>
 #include <legate/type/types.h>
 #include <legate/utilities/dispatch.h>

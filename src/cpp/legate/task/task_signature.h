@@ -31,13 +31,9 @@ class TaskSignature;
 
 }  // namespace legate::detail
 
-namespace legate::proxy {
-
-class Constraint;
-
-}  // namespace legate::proxy
-
 namespace legate {
+
+class ProxyConstraint;
 
 /**
  * @addtogroup task
@@ -234,7 +230,7 @@ class TaskSignature {
    *
    * @return A reference to this.
    */
-  TaskSignature& constraints(std::optional<Span<const proxy::Constraint>> constraints);
+  TaskSignature& constraints(std::optional<Span<const ProxyConstraint>> constraints);
 
   [[nodiscard]] const SharedPtr<detail::TaskSignature>& impl() const;
 

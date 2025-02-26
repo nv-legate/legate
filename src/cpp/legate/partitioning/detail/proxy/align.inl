@@ -14,12 +14,12 @@
 
 #include <legate/partitioning/detail/proxy/align.h>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
-constexpr const Align::value_type& Align::left() const noexcept { return left_; }
+constexpr const ProxyAlign::value_type& ProxyAlign::left() const noexcept { return left_; }
 
-constexpr const Align::value_type& Align::right() const noexcept { return right_; }
+constexpr const ProxyAlign::value_type& ProxyAlign::right() const noexcept { return right_; }
 
-inline std::string_view Align::name() const noexcept { return "align"; }
+inline std::string_view ProxyAlign::name() const noexcept { return "align"; }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

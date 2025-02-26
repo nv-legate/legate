@@ -14,24 +14,19 @@
 
 #include <string_view>
 
-namespace legate::proxy {
+namespace legate {
 
-class ArrayArgument;
-class InputArguments;
-class OutputArguments;
-class ReductionArguments;
+class ProxyArrayArgument;
+class ProxyInputArguments;
+class ProxyOutputArguments;
+class ProxyReductionArguments;
 
-}  // namespace legate::proxy
+}  // namespace legate
 
 namespace legate::detail {
 
 class TaskSignature;
-
-}  // namespace legate::detail
-
-namespace legate::detail::proxy {
-
-class Constraint;
+class ProxyConstraint;
 
 /**
  * @brief The visitor used to validate a task argument.
@@ -43,28 +38,28 @@ class ValidateVisitor {
    *
    * @param The specific array argument to validate.
    */
-  void operator()(const legate::proxy::ArrayArgument& array) const;
+  void operator()(const ProxyArrayArgument& array) const;
 
   /**
    * @brief Validate the input arguments.
    *
    * Currently does nothing.
    */
-  void operator()(const legate::proxy::InputArguments&) const;
+  void operator()(const ProxyInputArguments&) const;
 
   /**
    * @brief Validate the input arguments.
    *
    * Currently does nothing.
    */
-  void operator()(const legate::proxy::OutputArguments&) const;
+  void operator()(const ProxyOutputArguments&) const;
 
   /**
    * @brief Validate the array arguments.
    *
    * @param The specific array argument to validate.
    */
-  void operator()(const legate::proxy::ReductionArguments&) const;
+  void operator()(const ProxyReductionArguments&) const;
 
   /**
    * @brief The name of the task the signature is being validatedagainst
@@ -79,9 +74,9 @@ class ValidateVisitor {
   /**
    * @brief The constraint being validated.
    */
-  const Constraint& constraint;
+  const ProxyConstraint& constraint;
 };
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail
 
 #include <legate/partitioning/detail/proxy/validate.inl>

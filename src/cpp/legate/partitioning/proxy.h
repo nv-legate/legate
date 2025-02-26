@@ -24,19 +24,13 @@
  * @brief Class definitions for proxy contraint objects.
  */
 
+namespace legate::detail {
+
+class ProxyConstraint;
+
+}  // namespace legate::detail
+
 namespace legate {
-
-enum class ImageComputationHint : std::uint8_t;
-
-}  // namespace legate
-
-namespace legate::detail::proxy {
-
-class Constraint;
-
-}  // namespace legate::detail::proxy
-
-namespace legate::proxy {
 
 /**
  * @addtogroup partitioning
@@ -46,7 +40,7 @@ namespace legate::proxy {
 /**
  * @brief An object that models a specific array argument to a task.
  */
-class ArrayArgument {
+class ProxyArrayArgument {
  public:
   /**
    * @brief The kind of argument.
@@ -57,8 +51,8 @@ class ArrayArgument {
     REDUCTION,
   };
 
-  [[nodiscard]] constexpr bool operator==(const ArrayArgument& rhs) const noexcept;
-  [[nodiscard]] constexpr bool operator!=(const ArrayArgument& rhs) const noexcept;
+  [[nodiscard]] constexpr bool operator==(const ProxyArrayArgument& rhs) const noexcept;
+  [[nodiscard]] constexpr bool operator!=(const ProxyArrayArgument& rhs) const noexcept;
 
   /**
    * @brief The selected kind of the argument.
@@ -75,17 +69,17 @@ class ArrayArgument {
 // ==========================================================================================
 
 // Don't use namespace detail here because otherwise compilers complain that bare
-// "detail::proxy" (used later) doesn't name a type or namespace, because now they read it as
-// "legate::proxy::detail::proxy" instead of "legate::detail::proxy"
+// "detail" (used later) doesn't name a type or namespace, because now they read it as
+// "legate::proxy::detail" instead of "legate::detail"
 namespace proxy_detail {
 
-template <typename T, ArrayArgument::Kind KIND>
+template <typename T, ProxyArrayArgument::Kind KIND>
 class TaskArgsBase {
  public:
   [[nodiscard]] constexpr bool operator==(const TaskArgsBase& rhs) const noexcept;
   [[nodiscard]] constexpr bool operator!=(const TaskArgsBase& rhs) const noexcept;
 
-  [[nodiscard]] constexpr ArrayArgument operator[](std::uint32_t index) const noexcept;
+  [[nodiscard]] constexpr ProxyArrayArgument operator[](std::uint32_t index) const noexcept;
 
  private:
   friend T;
@@ -98,8 +92,8 @@ class TaskArgsBase {
 /**
  * @brief A class that models the input arguments to a task.
  */
-class InputArguments
-  : public proxy_detail::TaskArgsBase<InputArguments, ArrayArgument::Kind::INPUT> {
+class ProxyInputArguments
+  : public proxy_detail::TaskArgsBase<ProxyInputArguments, ProxyArrayArgument::Kind::INPUT> {
  public:
   using TaskArgsBase::TaskArgsBase;
 
@@ -114,20 +108,13 @@ class InputArguments
   using TaskArgsBase::operator[];
 };
 
-/**
- * @brief A proxy object that models the input arguments to a task as whole.
- *
- * @see InputArguments
- */
-inline constexpr InputArguments inputs{};  // NOLINT(readability-identifier-naming)
-
 // ==========================================================================================
 
 /**
  * @brief A class that models the output arguments to a task.
  */
-class OutputArguments
-  : public proxy_detail::TaskArgsBase<OutputArguments, ArrayArgument::Kind::OUTPUT> {
+class ProxyOutputArguments
+  : public proxy_detail::TaskArgsBase<ProxyOutputArguments, ProxyArrayArgument::Kind::OUTPUT> {
  public:
   using TaskArgsBase::TaskArgsBase;
 
@@ -142,20 +129,14 @@ class OutputArguments
   using TaskArgsBase::operator[];
 };
 
-/**
- * @brief A proxy object that models the output arguments to a task as whole.
- *
- * @see OutputArguments
- */
-inline constexpr OutputArguments outputs{};  // NOLINT(readability-identifier-naming)
-
 // ==========================================================================================
 
 /**
  * @brief A class that models the reduction arguments to a task.
  */
-class ReductionArguments
-  : public proxy_detail::TaskArgsBase<ReductionArguments, ArrayArgument::Kind::REDUCTION> {
+class ProxyReductionArguments
+  : public proxy_detail::TaskArgsBase<ProxyReductionArguments,
+                                      ProxyArrayArgument::Kind::REDUCTION> {
  public:
   using TaskArgsBase::TaskArgsBase;
 
@@ -170,42 +151,67 @@ class ReductionArguments
   using TaskArgsBase::operator[];
 };
 
-/**
- * @brief A proxy object that models the reduction arguments to a task as whole.
- *
- * @see ReductionArguments
- */
-inline constexpr ReductionArguments reductions{};  // NOLINT(readability-identifier-naming)
-
 // ==========================================================================================
 
 /**
  * @brief The base proxy constraint class.
  */
-class Constraint {
+class ProxyConstraint {
  public:
-  Constraint()                                      = LEGATE_DEFAULT_WHEN_CYTHON;
-  Constraint(const Constraint&) noexcept            = default;
-  Constraint& operator=(const Constraint&) noexcept = default;
-  Constraint(Constraint&&) noexcept                 = default;
-  Constraint& operator=(Constraint&&) noexcept      = default;
-  ~Constraint();
+  ProxyConstraint()                                           = LEGATE_DEFAULT_WHEN_CYTHON;
+  ProxyConstraint(const ProxyConstraint&) noexcept            = default;
+  ProxyConstraint& operator=(const ProxyConstraint&) noexcept = default;
+  ProxyConstraint(ProxyConstraint&&) noexcept                 = default;
+  ProxyConstraint& operator=(ProxyConstraint&&) noexcept      = default;
+  ~ProxyConstraint();
 
   /**
    * @brief Construct a proxy constraint.
    *
    * @param impl The pointer to the private implementation.
    */
-  explicit Constraint(SharedPtr<detail::proxy::Constraint> impl);
+  explicit ProxyConstraint(SharedPtr<detail::ProxyConstraint> impl);
 
   /**
    * @return The pointer to the private implementation.
    */
-  [[nodiscard]] const SharedPtr<detail::proxy::Constraint>& impl() const;
+  [[nodiscard]] const SharedPtr<detail::ProxyConstraint>& impl() const;
 
  private:
-  SharedPtr<detail::proxy::Constraint> impl_;
+  SharedPtr<detail::ProxyConstraint> impl_;
 };
+
+/** @} */
+
+}  // namespace legate
+
+namespace legate::proxy {
+
+/**
+ * @addtogroup partitioning
+ * @{
+ */
+
+/**
+ * @brief A proxy object that models the input arguments to a task as whole.
+ *
+ * @see ProxyInputArguments
+ */
+inline constexpr ProxyInputArguments inputs{};  // NOLINT(readability-identifier-naming)
+
+/**
+ * @brief A proxy object that models the output arguments to a task as whole.
+ *
+ * @see ProxyOutputArguments
+ */
+inline constexpr ProxyOutputArguments outputs{};  // NOLINT(readability-identifier-naming)
+
+/**
+ * @brief A proxy object that models the reduction arguments to a task as whole.
+ *
+ * @see ProxyReductionArguments
+ */
+inline constexpr ProxyReductionArguments reductions{};  // NOLINT(readability-identifier-naming)
 
 /** @} */
 

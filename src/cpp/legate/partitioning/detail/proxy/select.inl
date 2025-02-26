@@ -17,15 +17,15 @@
 #include <legate/partitioning/proxy.h>
 #include <legate/utilities/abort.h>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
 inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisitor::operator()(
-  const legate::proxy::ArrayArgument& array) const
+  const ProxyArrayArgument& array) const
 {
   switch (array.kind) {
-    case legate::proxy::ArrayArgument::Kind::INPUT: return &task->inputs()[array.index];
-    case legate::proxy::ArrayArgument::Kind::OUTPUT: return &task->outputs()[array.index];
-    case legate::proxy::ArrayArgument::Kind::REDUCTION: return &task->reductions()[array.index];
+    case ProxyArrayArgument::Kind::INPUT: return &task->inputs()[array.index];
+    case ProxyArrayArgument::Kind::OUTPUT: return &task->outputs()[array.index];
+    case ProxyArrayArgument::Kind::REDUCTION: return &task->reductions()[array.index];
   }
   // GCC is off its rocker, the switch fully covers the enum:
   //
@@ -37,21 +37,21 @@ inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisi
 }
 
 inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisitor::operator()(
-  const legate::proxy::InputArguments&) const noexcept
+  const ProxyInputArguments&) const noexcept
 {
   return task->inputs();
 }
 
 inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisitor::operator()(
-  const legate::proxy::OutputArguments&) const noexcept
+  const ProxyOutputArguments&) const noexcept
 {
   return task->outputs();
 }
 
 inline std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> ArgSelectVisitor::operator()(
-  const legate::proxy::ReductionArguments&) const noexcept
+  const ProxyReductionArguments&) const noexcept
 {
   return task->reductions();
 }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

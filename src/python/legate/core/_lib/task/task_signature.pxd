@@ -13,7 +13,7 @@ from libc.stdint cimport uint32_t
 from libcpp.optional cimport optional as std_optional
 from libcpp.vector cimport vector as std_vector
 
-from ..partitioning.proxy cimport _Constraint
+from ..partitioning.proxy cimport _ProxyConstraint
 from ..partitioning.constraint cimport ImageComputationHint
 
 cdef extern from "legate/task/task_signature.h" namespace "legate" nogil:
@@ -28,7 +28,7 @@ cdef extern from "legate/task/task_signature.h" namespace "legate" nogil:
         # constructors very well. Since we will be creating these as vectors
         # anyway, it's easier to just lie to Cython.
         _TaskSignature& constraints(
-            std_optional[std_vector[_Constraint]] constraints
+            std_optional[std_vector[_ProxyConstraint]] constraints
         ) except+
 
 
@@ -42,5 +42,5 @@ cdef _TaskSignature make_task_signature(
     uint32_t num_outputs,
     uint32_t num_redops,
     uint32_t num_scalars,
-    std_vector[_Constraint] constraints,
+    std_vector[_ProxyConstraint] constraints,
 )

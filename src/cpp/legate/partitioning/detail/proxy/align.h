@@ -23,19 +23,13 @@ namespace legate::detail {
 class AutoTask;
 class TaskSignature;
 
-}  // namespace legate::detail
-
-namespace legate::detail::proxy {
-
 /**
  * @brief The private alignment constraint proxy.
  */
-class Align final : public Constraint {
+class ProxyAlign final : public ProxyConstraint {
  public:
-  using value_type = std::variant<legate::proxy::ArrayArgument,
-                                  legate::proxy::InputArguments,
-                                  legate::proxy::OutputArguments,
-                                  legate::proxy::ReductionArguments>;
+  using value_type = std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>;
 
   /**
    * @brief Construct and alignment constraint.
@@ -43,7 +37,7 @@ class Align final : public Constraint {
    * @param left The lhs argument to align.
    * @param right The rhs argument to align.
    */
-  Align(value_type left, value_type right) noexcept;
+  ProxyAlign(value_type left, value_type right) noexcept;
 
   /**
    * @return The left argument for the alignment constraint.
@@ -77,13 +71,13 @@ class Align final : public Constraint {
    */
   void apply(AutoTask* task) const override;
 
-  [[nodiscard]] bool operator==(const Constraint& rhs) const noexcept override;
+  [[nodiscard]] bool operator==(const ProxyConstraint& rhs) const override;
 
  private:
   value_type left_;
   value_type right_;
 };
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail
 
 #include <legate/partitioning/detail/proxy/align.inl>

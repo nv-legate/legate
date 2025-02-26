@@ -16,23 +16,19 @@
 
 #include <variant>
 
-namespace legate::proxy {
+namespace legate {
 
-class ArrayArgument;
-class InputArguments;
-class OutputArguments;
-class ReductionArguments;
+class ProxyArrayArgument;
+class ProxyInputArguments;
+class ProxyOutputArguments;
+class ProxyReductionArguments;
 
-}  // namespace legate::proxy
+}  // namespace legate
 
 namespace legate::detail {
 
 class TaskArrayArg;
 class AutoTask;
-
-}  // namespace legate::detail
-
-namespace legate::detail::proxy {
 
 /**
  * @brief A visitor used to select a particular argument, or argument group from a task.
@@ -47,7 +43,7 @@ class ArgSelectVisitor {
    * @return Always returns a `TaskArrayArg`, i.e. a specific argument of the task.
    */
   [[nodiscard]] std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> operator()(
-    const legate::proxy::ArrayArgument& array) const;
+    const ProxyArrayArgument& array) const;
 
   /**
    * @brief Selection overload for inputs.
@@ -55,7 +51,7 @@ class ArgSelectVisitor {
    * @return Always returns `task->inputs()`.
    */
   [[nodiscard]] std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> operator()(
-    const legate::proxy::InputArguments&) const noexcept;
+    const ProxyInputArguments&) const noexcept;
 
   /**
    * @brief Selection overload for outputs.
@@ -63,7 +59,7 @@ class ArgSelectVisitor {
    * @return Always returns `task->outputs()`.
    */
   [[nodiscard]] std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> operator()(
-    const legate::proxy::OutputArguments&) const noexcept;
+    const ProxyOutputArguments&) const noexcept;
 
   /**
    * @brief Selection overload for reductions.
@@ -71,11 +67,11 @@ class ArgSelectVisitor {
    * @return Always returns `task->reductions()`.
    */
   [[nodiscard]] std::variant<const TaskArrayArg*, Span<const TaskArrayArg>> operator()(
-    const legate::proxy::ReductionArguments&) const noexcept;
+    const ProxyReductionArguments&) const noexcept;
 
   const AutoTask* task{}; /** The task to select from */
 };
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail
 
 #include <legate/partitioning/detail/proxy/select.inl>

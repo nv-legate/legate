@@ -20,7 +20,7 @@
 
 #include <tuple>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
 namespace {
 
@@ -90,14 +90,14 @@ void do_image(Span<const TaskArrayArg> var_functions,
 
 }  // namespace
 
-Image::Image(value_type var_function,
-             value_type var_range,
-             std::optional<ImageComputationHint> hint) noexcept
+ProxyImage::ProxyImage(value_type var_function,
+                       value_type var_range,
+                       std::optional<ImageComputationHint> hint) noexcept
   : var_function_{std::move(var_function)}, var_range_{std::move(var_range)}, hint_{std::move(hint)}
 {
 }
 
-void Image::validate(std::string_view task_name, const TaskSignature& signature) const
+void ProxyImage::validate(std::string_view task_name, const TaskSignature& signature) const
 {
   const auto visitor = ValidateVisitor{task_name, signature, *this};
 
@@ -105,7 +105,7 @@ void Image::validate(std::string_view task_name, const TaskSignature& signature)
   std::visit(visitor, var_range());
 }
 
-void Image::apply(AutoTask* task) const
+void ProxyImage::apply(AutoTask* task) const
 {
   std::visit([&](const auto& var_function,
                  const auto& var_range) { do_image(var_function, var_range, hint(), task); },
@@ -113,13 +113,13 @@ void Image::apply(AutoTask* task) const
              std::visit(ArgSelectVisitor{task}, var_range()));
 }
 
-bool Image::operator==(const Constraint& rhs) const noexcept
+bool ProxyImage::operator==(const ProxyConstraint& rhs) const
 {
-  if (const auto* rhsptr = dynamic_cast<const Image*>(&rhs)) {
+  if (const auto* rhsptr = dynamic_cast<const ProxyImage*>(&rhs)) {
     return std::tie(var_function(), var_range(), hint()) ==
            std::tie(rhsptr->var_function(), rhsptr->var_range(), rhsptr->hint());
   }
   return false;
 }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

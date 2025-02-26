@@ -24,7 +24,7 @@
 #include <optional>
 #include <tuple>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
 namespace {
 
@@ -60,28 +60,28 @@ void do_broadcast(Span<const TaskArrayArg> args,
 
 }  // namespace
 
-Broadcast::Broadcast(value_type value, std::optional<tuple<std::uint32_t>> axes) noexcept
+ProxyBroadcast::ProxyBroadcast(value_type value, std::optional<tuple<std::uint32_t>> axes) noexcept
   : value_{std::move(value)}, axes_{std::move(axes)}
 {
 }
 
-void Broadcast::validate(std::string_view task_name, const TaskSignature& signature) const
+void ProxyBroadcast::validate(std::string_view task_name, const TaskSignature& signature) const
 {
   std::visit(ValidateVisitor{task_name, signature, *this}, value());
 }
 
-void Broadcast::apply(AutoTask* task) const
+void ProxyBroadcast::apply(AutoTask* task) const
 {
   std::visit([&](const auto& arg) { do_broadcast(arg, axes(), task); },
              std::visit(ArgSelectVisitor{task}, value()));
 }
 
-bool Broadcast::operator==(const Constraint& rhs) const noexcept
+bool ProxyBroadcast::operator==(const ProxyConstraint& rhs) const
 {
-  if (const auto* rhsptr = dynamic_cast<const Broadcast*>(&rhs)) {
+  if (const auto* rhsptr = dynamic_cast<const ProxyBroadcast*>(&rhs)) {
     return std::tie(value(), axes()) == std::tie(rhsptr->value(), rhsptr->axes());
   }
   return false;
 }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

@@ -19,7 +19,7 @@
 
 #include <tuple>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
 namespace {
 
@@ -81,14 +81,16 @@ void do_scale(const tuple<std::uint64_t>& factors,
 
 }  // namespace
 
-Scale::Scale(tuple<std::uint64_t> factors, value_type var_smaller, value_type var_bigger) noexcept
+ProxyScale::ProxyScale(tuple<std::uint64_t> factors,
+                       value_type var_smaller,
+                       value_type var_bigger) noexcept
   : factors_{std::move(factors)},
     var_smaller_{std::move(var_smaller)},
     var_bigger_{std::move(var_bigger)}
 {
 }
 
-void Scale::validate(std::string_view task_name, const TaskSignature& signature) const
+void ProxyScale::validate(std::string_view task_name, const TaskSignature& signature) const
 {
   const auto visitor = ValidateVisitor{task_name, signature, *this};
 
@@ -96,7 +98,7 @@ void Scale::validate(std::string_view task_name, const TaskSignature& signature)
   std::visit(visitor, var_bigger());
 }
 
-void Scale::apply(AutoTask* task) const
+void ProxyScale::apply(AutoTask* task) const
 {
   std::visit([&](const auto& var_smaller,
                  const auto& var_bigger) { do_scale(factors(), var_smaller, var_bigger, task); },
@@ -104,13 +106,13 @@ void Scale::apply(AutoTask* task) const
              std::visit(ArgSelectVisitor{task}, var_bigger()));
 }
 
-bool Scale::operator==(const Constraint& rhs) const noexcept
+bool ProxyScale::operator==(const ProxyConstraint& rhs) const
 {
-  if (const auto* rhsptr = dynamic_cast<const Scale*>(&rhs)) {
+  if (const auto* rhsptr = dynamic_cast<const ProxyScale*>(&rhs)) {
     return std::tie(var_smaller(), var_bigger(), factors()) ==
            std::tie(rhsptr->var_smaller(), rhsptr->var_bigger(), rhsptr->factors());
   }
   return false;
 }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

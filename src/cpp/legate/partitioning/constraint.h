@@ -41,6 +41,7 @@ namespace detail {
 
 class Constraint;
 class Variable;
+class ProxyConstraint;
 
 }  // namespace detail
 
@@ -125,14 +126,13 @@ class Constraint {
  *
  * @see align(Variable, Variable)
  */
-[[nodiscard]] proxy::Constraint align(std::variant<proxy::ArrayArgument,
-                                                   proxy::InputArguments,
-                                                   proxy::OutputArguments,
-                                                   proxy::ReductionArguments> left,
-                                      std::variant<proxy::ArrayArgument,
-                                                   proxy::InputArguments,
-                                                   proxy::OutputArguments,
-                                                   proxy::ReductionArguments> right);
+[[nodiscard]] ProxyConstraint align(
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      left,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      right);
 
 /**
  * @brief Construct an alignment constraint descriptor for all input arguments.
@@ -143,7 +143,7 @@ class Constraint {
  *
  * @return The alignment descriptor.
  */
-[[nodiscard]] proxy::Constraint align(proxy::InputArguments proxies);
+[[nodiscard]] ProxyConstraint align(ProxyInputArguments proxies);
 
 /**
  * @brief Construct an alignment constraint descriptor for all output arguments.
@@ -154,7 +154,7 @@ class Constraint {
  *
  * @return The alignment descriptor.
  */
-[[nodiscard]] proxy::Constraint align(proxy::OutputArguments proxies);
+[[nodiscard]] ProxyConstraint align(ProxyOutputArguments proxies);
 
 /**
  * @brief Creates a broadcast constraint on a variable.
@@ -210,11 +210,11 @@ class Constraint {
  *
  * @see broadcast(Variable, tuple<std::uint32_t>)
  */
-[[nodiscard]] proxy::Constraint broadcast(std::variant<proxy::ArrayArgument,
-                                                       proxy::InputArguments,
-                                                       proxy::OutputArguments,
-                                                       proxy::ReductionArguments> value,
-                                          std::optional<tuple<std::uint32_t>> axes = std::nullopt);
+[[nodiscard]] ProxyConstraint broadcast(std::variant<ProxyArrayArgument,
+                                                     ProxyInputArguments,
+                                                     ProxyOutputArguments,
+                                                     ProxyReductionArguments> value,
+                                        std::optional<tuple<std::uint32_t>> axes = std::nullopt);
 
 /**
  * @brief Hints to the runtime for the image computation
@@ -274,15 +274,14 @@ enum class ImageComputationHint : std::uint8_t {
  *
  * @see image(Variable, Variable, ImageComputationHint)
  */
-[[nodiscard]] proxy::Constraint image(std::variant<proxy::ArrayArgument,
-                                                   proxy::InputArguments,
-                                                   proxy::OutputArguments,
-                                                   proxy::ReductionArguments> var_function,
-                                      std::variant<proxy::ArrayArgument,
-                                                   proxy::InputArguments,
-                                                   proxy::OutputArguments,
-                                                   proxy::ReductionArguments> var_range,
-                                      std::optional<ImageComputationHint> hint = std::nullopt);
+[[nodiscard]] ProxyConstraint image(
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_function,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_range,
+  std::optional<ImageComputationHint> hint = std::nullopt);
 
 /**
  * @brief Creates a scaling constraint between partitions
@@ -332,15 +331,14 @@ enum class ImageComputationHint : std::uint8_t {
  *
  * @see scale(tuple<std::uint64_t>, Variable, Variable)
  */
-[[nodiscard]] proxy::Constraint scale(tuple<std::uint64_t> factors,
-                                      std::variant<proxy::ArrayArgument,
-                                                   proxy::InputArguments,
-                                                   proxy::OutputArguments,
-                                                   proxy::ReductionArguments> var_smaller,
-                                      std::variant<proxy::ArrayArgument,
-                                                   proxy::InputArguments,
-                                                   proxy::OutputArguments,
-                                                   proxy::ReductionArguments> var_bigger);
+[[nodiscard]] ProxyConstraint scale(
+  tuple<std::uint64_t> factors,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_smaller,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_bigger);
 
 /**
  * @brief Creates a bloating constraint between partitions
@@ -392,16 +390,15 @@ enum class ImageComputationHint : std::uint8_t {
  *
  * @see bloat(Variable, Variable, tuple<std::uint64_t>, tuple<std::uint64_t>)
  */
-[[nodiscard]] proxy::Constraint bloat(std::variant<proxy::ArrayArgument,
-                                                   proxy::InputArguments,
-                                                   proxy::OutputArguments,
-                                                   proxy::ReductionArguments> var_source,
-                                      std::variant<proxy::ArrayArgument,
-                                                   proxy::InputArguments,
-                                                   proxy::OutputArguments,
-                                                   proxy::ReductionArguments> var_bloat,
-                                      tuple<std::uint64_t> low_offsets,
-                                      tuple<std::uint64_t> high_offsets);
+[[nodiscard]] ProxyConstraint bloat(
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_source,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_bloat,
+  tuple<std::uint64_t> low_offsets,
+  tuple<std::uint64_t> high_offsets);
 
 /** @} */
 

@@ -14,7 +14,7 @@
 
 #include <legate/partitioning/detail/proxy/validate.h>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
 // I suppose we could check that the corresponding signature is nonzero for these. So for
 // Inputs, and assuming signature->inputs().has_value(), then we would check
@@ -25,10 +25,10 @@ namespace legate::detail::proxy {
 // For example, you could declare a task which must "align all inputs and outputs", but if
 // that task ends up taking exactly 0 inputs and outputs, then your alignment constraints
 // are *technically* still satisfied.
-inline void ValidateVisitor::operator()(const legate::proxy::InputArguments&) const {}
+inline void ValidateVisitor::operator()(const ProxyInputArguments&) const {}
 
-inline void ValidateVisitor::operator()(const legate::proxy::OutputArguments&) const {}
+inline void ValidateVisitor::operator()(const ProxyOutputArguments&) const {}
 
-inline void ValidateVisitor::operator()(const legate::proxy::ReductionArguments&) const {}
+inline void ValidateVisitor::operator()(const ProxyReductionArguments&) const {}
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

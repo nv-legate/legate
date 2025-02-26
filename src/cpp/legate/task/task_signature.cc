@@ -82,9 +82,9 @@ TaskSignature& TaskSignature::redops(std::uint32_t low_bound, std::uint32_t uppe
   return *this;
 }
 
-TaskSignature& TaskSignature::constraints(std::optional<Span<const proxy::Constraint>> constraints)
+TaskSignature& TaskSignature::constraints(std::optional<Span<const ProxyConstraint>> constraints)
 {
-  std::optional<std::vector<InternalSharedPtr<detail::proxy::Constraint>>> ret = std::nullopt;
+  std::optional<std::vector<InternalSharedPtr<detail::ProxyConstraint>>> ret = std::nullopt;
 
   if (constraints.has_value()) {
     auto& vec = ret.emplace();

@@ -26,19 +26,13 @@ namespace legate::detail {
 class AutoTask;
 class TaskSignature;
 
-}  // namespace legate::detail
-
-namespace legate::detail::proxy {
-
 /**
  * @brief The private broadcast constraint proxy.
  */
-class Broadcast final : public Constraint {
+class ProxyBroadcast final : public ProxyConstraint {
  public:
-  using value_type = std::variant<legate::proxy::ArrayArgument,
-                                  legate::proxy::InputArguments,
-                                  legate::proxy::OutputArguments,
-                                  legate::proxy::ReductionArguments>;
+  using value_type = std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>;
 
   /**
    * @brief Construct a broadcast constraint.
@@ -46,7 +40,7 @@ class Broadcast final : public Constraint {
    * @param value The value to broadcast.
    * @param axes The (possibly null) axes of value to broadcast.
    */
-  Broadcast(value_type value, std::optional<tuple<std::uint32_t>> axes) noexcept;
+  ProxyBroadcast(value_type value, std::optional<tuple<std::uint32_t>> axes) noexcept;
 
   /**
    * @return The value to broadcast.
@@ -80,13 +74,13 @@ class Broadcast final : public Constraint {
    */
   void apply(AutoTask* task) const override;
 
-  [[nodiscard]] bool operator==(const Constraint& rhs) const noexcept override;
+  [[nodiscard]] bool operator==(const ProxyConstraint& rhs) const override;
 
  private:
   value_type value_;
   std::optional<tuple<std::uint32_t>> axes_{};
 };
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail
 
 #include <legate/partitioning/detail/proxy/broadcast.inl>

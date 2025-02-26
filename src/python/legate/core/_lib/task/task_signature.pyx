@@ -14,7 +14,7 @@ from libcpp.optional cimport optional as std_optional
 from libcpp.vector cimport vector as std_vector
 from libcpp.utility cimport move as std_move
 
-from ..partitioning.proxy cimport _Constraint
+from ..partitioning.proxy cimport _ProxyConstraint
 
 
 cdef _TaskSignature make_task_signature(
@@ -22,9 +22,9 @@ cdef _TaskSignature make_task_signature(
     uint32_t num_outputs,
     uint32_t num_redops,
     uint32_t num_scalars,
-    std_vector[_Constraint] constraints,
+    std_vector[_ProxyConstraint] constraints,
 ):
-    cdef std_optional[std_vector[_Constraint]] cpp_constraints
+    cdef std_optional[std_vector[_ProxyConstraint]] cpp_constraints
 
     if not constraints.empty():
         cpp_constraints = std_move(constraints)

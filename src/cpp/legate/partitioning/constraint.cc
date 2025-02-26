@@ -37,22 +37,21 @@ Constraint align(Variable lhs, Variable rhs)
 
 // ------------------------------------------------------------------------------------------
 
-proxy::Constraint align(std::variant<proxy::ArrayArgument,
-                                     proxy::InputArguments,
-                                     proxy::OutputArguments,
-                                     proxy::ReductionArguments> left,
-                        std::variant<proxy::ArrayArgument,
-                                     proxy::InputArguments,
-                                     proxy::OutputArguments,
-                                     proxy::ReductionArguments> right)
+ProxyConstraint align(
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      left,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      right)
 {
-  return proxy::Constraint{
-    legate::make_shared<detail::proxy::Align>(std::move(left), std::move(right))};
+  return ProxyConstraint{
+    legate::make_shared<detail::ProxyAlign>(std::move(left), std::move(right))};
 }
 
-proxy::Constraint align(proxy::InputArguments proxies) { return align(proxies[0], proxies); }
+ProxyConstraint align(ProxyInputArguments proxies) { return align(proxies[0], proxies); }
 
-proxy::Constraint align(proxy::OutputArguments proxies) { return align(proxies[0], proxies); }
+ProxyConstraint align(ProxyOutputArguments proxies) { return align(proxies[0], proxies); }
 
 // ------------------------------------------------------------------------------------------
 
@@ -65,14 +64,14 @@ Constraint broadcast(Variable variable, tuple<std::uint32_t> axes)
 
 // ------------------------------------------------------------------------------------------
 
-proxy::Constraint broadcast(std::variant<proxy::ArrayArgument,
-                                         proxy::InputArguments,
-                                         proxy::OutputArguments,
-                                         proxy::ReductionArguments> value,
-                            std::optional<tuple<std::uint32_t>> axes)
+ProxyConstraint broadcast(std::variant<ProxyArrayArgument,
+                                       ProxyInputArguments,
+                                       ProxyOutputArguments,
+                                       ProxyReductionArguments> value,
+                          std::optional<tuple<std::uint32_t>> axes)
 {
-  return proxy::Constraint{
-    legate::make_shared<detail::proxy::Broadcast>(std::move(value), std::move(axes))};
+  return ProxyConstraint{
+    legate::make_shared<detail::ProxyBroadcast>(std::move(value), std::move(axes))};
 }
 
 // ------------------------------------------------------------------------------------------
@@ -84,17 +83,16 @@ Constraint image(Variable var_function, Variable var_range, ImageComputationHint
 
 // ------------------------------------------------------------------------------------------
 
-proxy::Constraint image(std::variant<proxy::ArrayArgument,
-                                     proxy::InputArguments,
-                                     proxy::OutputArguments,
-                                     proxy::ReductionArguments> var_function,
-                        std::variant<proxy::ArrayArgument,
-                                     proxy::InputArguments,
-                                     proxy::OutputArguments,
-                                     proxy::ReductionArguments> var_range,
-                        std::optional<ImageComputationHint> hint)
+ProxyConstraint image(
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_function,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_range,
+  std::optional<ImageComputationHint> hint)
 {
-  return proxy::Constraint{legate::make_shared<detail::proxy::Image>(
+  return ProxyConstraint{legate::make_shared<detail::ProxyImage>(
     std::move(var_function), std::move(var_range), std::move(hint))};
 }
 
@@ -107,17 +105,16 @@ Constraint scale(tuple<std::uint64_t> factors, Variable var_smaller, Variable va
 
 // ------------------------------------------------------------------------------------------
 
-proxy::Constraint scale(tuple<std::uint64_t> factors,
-                        std::variant<proxy::ArrayArgument,
-                                     proxy::InputArguments,
-                                     proxy::OutputArguments,
-                                     proxy::ReductionArguments> var_smaller,
-                        std::variant<proxy::ArrayArgument,
-                                     proxy::InputArguments,
-                                     proxy::OutputArguments,
-                                     proxy::ReductionArguments> var_bigger)
+ProxyConstraint scale(
+  tuple<std::uint64_t> factors,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_smaller,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_bigger)
 {
-  return proxy::Constraint{legate::make_shared<detail::proxy::Scale>(
+  return ProxyConstraint{legate::make_shared<detail::ProxyScale>(
     std::move(factors), std::move(var_smaller), std::move(var_bigger))};
 }
 
@@ -134,18 +131,17 @@ Constraint bloat(Variable var_source,
 
 // ------------------------------------------------------------------------------------------
 
-proxy::Constraint bloat(std::variant<proxy::ArrayArgument,
-                                     proxy::InputArguments,
-                                     proxy::OutputArguments,
-                                     proxy::ReductionArguments> var_source,
-                        std::variant<proxy::ArrayArgument,
-                                     proxy::InputArguments,
-                                     proxy::OutputArguments,
-                                     proxy::ReductionArguments> var_bloat,
-                        tuple<std::uint64_t> low_offsets,
-                        tuple<std::uint64_t> high_offsets)
+ProxyConstraint bloat(
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_source,
+  std::
+    variant<ProxyArrayArgument, ProxyInputArguments, ProxyOutputArguments, ProxyReductionArguments>
+      var_bloat,
+  tuple<std::uint64_t> low_offsets,
+  tuple<std::uint64_t> high_offsets)
 {
-  return proxy::Constraint{legate::make_shared<detail::proxy::Bloat>(
+  return ProxyConstraint{legate::make_shared<detail::ProxyBloat>(
     std::move(var_source), std::move(var_bloat), std::move(low_offsets), std::move(high_offsets))};
 }
 

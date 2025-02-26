@@ -19,7 +19,7 @@
 
 #include <tuple>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
 namespace {
 
@@ -89,10 +89,10 @@ void do_bloat(Span<const TaskArrayArg> var_source,
 
 }  // namespace
 
-Bloat::Bloat(value_type var_source,
-             value_type var_bloat,
-             tuple<std::uint64_t> low_offsets,
-             tuple<std::uint64_t> high_offsets) noexcept
+ProxyBloat::ProxyBloat(value_type var_source,
+                       value_type var_bloat,
+                       tuple<std::uint64_t> low_offsets,
+                       tuple<std::uint64_t> high_offsets) noexcept
   : var_source_{std::move(var_source)},
     var_bloat_{std::move(var_bloat)},
     low_offsets_{std::move(low_offsets)},
@@ -100,7 +100,7 @@ Bloat::Bloat(value_type var_source,
 {
 }
 
-void Bloat::validate(std::string_view task_name, const TaskSignature& signature) const
+void ProxyBloat::validate(std::string_view task_name, const TaskSignature& signature) const
 {
   const auto visitor = ValidateVisitor{task_name, signature, *this};
 
@@ -108,7 +108,7 @@ void Bloat::validate(std::string_view task_name, const TaskSignature& signature)
   std::visit(visitor, var_bloat());
 }
 
-void Bloat::apply(AutoTask* task) const
+void ProxyBloat::apply(AutoTask* task) const
 {
   std::visit(
     [&](const auto& var_source, const auto& var_bloat) {
@@ -118,9 +118,9 @@ void Bloat::apply(AutoTask* task) const
     std::visit(ArgSelectVisitor{task}, var_bloat()));
 }
 
-bool Bloat::operator==(const Constraint& rhs) const noexcept
+bool ProxyBloat::operator==(const ProxyConstraint& rhs) const
 {
-  if (const auto* rhsptr = dynamic_cast<const Bloat*>(&rhs)) {
+  if (const auto* rhsptr = dynamic_cast<const ProxyBloat*>(&rhs)) {
     return std::tie(var_source(), var_bloat(), low_offsets(), high_offsets()) ==
            std::tie(rhsptr->var_source(),
                     rhsptr->var_bloat(),
@@ -130,4 +130,4 @@ bool Bloat::operator==(const Constraint& rhs) const noexcept
   return false;
 }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

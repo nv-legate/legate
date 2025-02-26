@@ -23,9 +23,9 @@
 #include <optional>
 #include <string_view>
 
-namespace legate::detail::proxy {
+namespace legate::detail {
 
-void ValidateVisitor::operator()(const legate::proxy::ArrayArgument& array) const
+void ValidateVisitor::operator()(const ProxyArrayArgument& array) const
 {
   const auto check_array_index = [&](std::uint32_t array_index,
                                      const std::optional<TaskSignature::Nargs>& nargs,
@@ -45,19 +45,19 @@ void ValidateVisitor::operator()(const legate::proxy::ArrayArgument& array) cons
   };
 
   switch (array.kind) {
-    case legate::proxy::ArrayArgument::Kind::INPUT: {
+    case ProxyArrayArgument::Kind::INPUT: {
       check_array_index(array.index, signature.inputs(), "input");
       break;
     }
-    case legate::proxy::ArrayArgument::Kind::OUTPUT: {
+    case ProxyArrayArgument::Kind::OUTPUT: {
       check_array_index(array.index, signature.outputs(), "output");
       break;
     }
-    case legate::proxy::ArrayArgument::Kind::REDUCTION: {
+    case ProxyArrayArgument::Kind::REDUCTION: {
       check_array_index(array.index, signature.redops(), "reduction");
       break;
     }
   }
 }
 
-}  // namespace legate::detail::proxy
+}  // namespace legate::detail

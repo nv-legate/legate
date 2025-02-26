@@ -92,7 +92,7 @@ bool TaskSignature::Nargs::compatible_with(std::size_t size, bool strict) const
 // ------------------------------------------------------------------------------------------
 
 void TaskSignature::constraints(
-  std::optional<std::vector<InternalSharedPtr<detail::proxy::Constraint>>> cstrnts) noexcept
+  std::optional<std::vector<InternalSharedPtr<detail::ProxyConstraint>>> cstrnts) noexcept
 {
   constraints_ = std::move(cstrnts);
 }

@@ -17,10 +17,12 @@
 
 #include <utility>
 
-namespace legate::proxy {
+namespace legate {
 
-Constraint::Constraint(SharedPtr<detail::proxy::Constraint> impl) : impl_{std::move(impl)} {}
+ProxyConstraint::ProxyConstraint(SharedPtr<detail::ProxyConstraint> impl) : impl_{std::move(impl)}
+{
+}
 
-Constraint::~Constraint() = default;
+ProxyConstraint::~ProxyConstraint() = default;
 
-}  // namespace legate::proxy
+}  // namespace legate
