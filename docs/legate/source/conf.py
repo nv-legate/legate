@@ -31,14 +31,28 @@ JSON_URL = SWITCHER_DEV if getenv("SWITCHER_DEV") == "1" else SWITCHER_PROD
 
 ANNOTATE = getenv("LEGATE_ANNOTATION_DOCS") == "1"
 
+# This is the "YY.MM" version string that we want users to see
+BASE_VERSION = ".".join(legate.__version__.split(".", 2)[:2])
+
+# make sure BASE VERSION is formatted as expected
+_yy, _mm = BASE_VERSION.split(".")
+assert _yy.isdigit()
+assert _mm.isdigit()
+
 # -- Project information -----------------------------------------------------
 
 project = "NVIDIA legate"
-if "dev" in legate.__version__:
-    project += f" ({legate.__version__})"
-
 copyright = f"2021-{datetime.now().year}, NVIDIA"  # noqa: A001
 author = "NVIDIA Corporation"
+
+if "dev" in legate.__version__ or "rc" in legate.__version__:
+    # for dev/rc versions just use the entire version with everything, and
+    # add it to the page title as well, for easy recognition
+    version = release = legate.__version__
+    project += f" ({legate.__version__})"
+else:
+    # otherwise, we actually only want the YY.MM to be visible for releases
+    version = release = BASE_VERSION
 
 # -- General configuration ---------------------------------------------------
 
@@ -75,7 +89,7 @@ html_theme_options = {
     "switcher": {
         "json_url": JSON_URL,
         "navbar_start": ["navbar-logo", "version-switcher"],
-        "version_match": ".".join(legate.__version__.split(".", 2)[:2]),
+        "version_match": BASE_VERSION,
     },
     "extra_footer": [
         '<script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>'  # NOQA: E501

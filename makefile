@@ -200,4 +200,4 @@ docs-dev: docs
 ##
 .PHONY: docserve
 docserve:
-	@$(PYTHON) -m http.server -d $(LEGATE_DIR)/$(LEGATE_ARCH)/cmake_build/docs/legate/sphinx
+	@$(PYTHON) -m http.server -d $(LEGATE_DIR)/$(LEGATE_ARCH)/cmake_build/cpp/docs/legate/sphinx
