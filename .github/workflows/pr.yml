@@ -1,0 +1,29 @@
+name: pr
+
+on:
+  push:
+    branches:
+      - "pull-request/[0-9]+"
+      - "branch-*"
+      - "main"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  wheels-build:
+    secrets: inherit
+    uses: ./.github/workflows/wheels-build.yml
+    with:
+      build-type: pull-request
+  wheels-test:
+    needs: wheels-build
+    secrets: inherit
+    uses: ./.github/workflows/wheels-test.yml
+    with:
+      build-type: pull-request

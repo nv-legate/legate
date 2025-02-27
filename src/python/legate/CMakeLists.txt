@@ -81,6 +81,11 @@ function(legate_create_cython_modules)
   # will be legate/foo/bar.
   cmake_path(RELATIVE_PATH CMAKE_CURRENT_LIST_DIR BASE_DIRECTORY
              "${LEGATE_PYTHON_PKG_ROOT}" OUTPUT_VARIABLE rel_path)
+  set(_cython_install_dir "${skbuild_platlib_relpath}/${rel_path}")
+  # Account for the different layout of the Python PIP wheels.
+  if(LEGATE_BUILD_PIP_WHEELS)
+    set(_cython_install_dir "${rel_path}")
+  endif()
 
   rapids_cython_create_modules(CXX ASSOCIATED_TARGETS legate::legate
                                SOURCE_FILES "${_LEGATE_CYTHON_SOURCES}"
@@ -95,7 +100,7 @@ function(legate_create_cython_modules)
                                                 # legate (as it is not found in any public
                                                 # includes).
                                                 fmt::fmt-header-only
-                               INSTALL_DIR "${skbuild_platlib_relpath}/${rel_path}")
+                               INSTALL_DIR "${_cython_install_dir}")
 
   foreach(target IN LISTS RAPIDS_CYTHON_CREATED_TARGETS)
     set_target_properties(${target} PROPERTIES LEGATE_INTERNAL_TARGET TRUE)

@@ -124,6 +124,11 @@ function(legate_populate_cython_dependency_rpaths)
     # /path/to/lib/python3.VERSION/site-packages/. The combined rpaths would make this
     # point to /path/to/lib which seems right. But who knows.
     set(legate_cython_rpaths "../../" "../../legate/deps")
+    # The Python PIP wheels layout is quite different to the conda layout.
+    if(LEGATE_BUILD_PIP_WHEELS)
+      set(legate_cython_rpaths "${CMAKE_INSTALL_LIBDIR}"
+                               "${CMAKE_INSTALL_LIBDIR}/legate/deps")
+    endif()
   endif()
 
   message(STATUS "legate_cython_rpaths='${legate_cython_rpaths}'")

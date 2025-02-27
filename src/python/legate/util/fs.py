@@ -97,6 +97,30 @@ def read_cmake_cache_value(file_path: Path, pattern: str) -> str:
     raise RuntimeError(msg)
 
 
+def is_legate_path_in_wheel_tree(path: Path) -> bool:
+    r"""Determine whether ``path`` is the path to the pip wheel legate module.
+
+    Parameters
+    ----------
+    path : Path
+        The path to check.
+
+    Returns
+    -------
+    bool
+        True if path is in the pip wheel legate module, False otherwise.
+    """
+    if not path.exists():
+        return False
+
+    wheel_layout_dir = path / "share" / "legate" / "libexec"
+    if not wheel_layout_dir.exists():
+        return False
+
+    bind_path_in_wheel = wheel_layout_dir / "legate-bind.sh"
+    return bind_path_in_wheel.exists()
+
+
 def is_legate_path_in_src_tree(path: Path) -> bool:
     r"""Determine whether ``path`` is the path to the in-source legate module.
 
@@ -286,6 +310,17 @@ def get_legate_paths() -> LegatePaths:
             bind_sh_path = make_legate_bind_path(legate_mod_dir.parents[2])
             legate_lib_path = Path("this_path_does_not_exist")
             assert not legate_lib_path.exists()
+        elif is_legate_path_in_wheel_tree(legate_mod_dir):
+            # We are in a Python pip wheel installed library. This means that
+            # things are installed within the module directory such that
+            # <PREFIX>/lib/python<version>/site-packages/legate is the base
+            # with <base>/share/legate/libexec/legate-bind.sh having bind.sh.
+            # Note that the main difference right now is that the wheel layout
+            # has everything within the module directory.
+            prefix_dir = legate_mod_dir
+            bind_sh_path = make_legate_bind_path(prefix_dir)
+            legate_lib_path = prefix_dir / "lib64"
+            assert_dir_exists(legate_lib_path)
         elif legate_mod_parent.name == site_package_dir_name:
             # It's possible we are in an installed library, in which case
             # legate_mod_dir is probably

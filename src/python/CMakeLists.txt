@@ -12,7 +12,10 @@
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "python")
 
-set(LEGATE_PYTHON_PKG_ROOT "${CMAKE_CURRENT_LIST_DIR}")
+set(LEGATE_PYTHON_PKG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
+if(LEGATE_BUILD_PIP_WHEELS)
+  set(LEGATE_PYTHON_PKG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/legate")
+endif()
 
 if(SKBUILD_STATE STREQUAL "editable")
   set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
@@ -50,12 +53,10 @@ add_subdirectory(legate)
 include("${LEGATE_CMAKE_DIR}/Modules/cython_rpaths.cmake")
 
 legate_populate_cython_dependency_rpaths(RAPIDS_ASSOCIATED_TARGET legate::legate
-                                         ROOT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+                                         ROOT_DIRECTORY "${LEGATE_PYTHON_PKG_ROOT}")
 
 # ########################################################################################
 # * install targets-----------------------------------------------------------
-
-include(CPack)
 
 install(TARGETS legate_python DESTINATION ${CMAKE_INSTALL_LIBDIR}
         EXPORT legate-python-exports)

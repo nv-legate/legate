@@ -29,6 +29,11 @@
                     "file": "${current_json_dir}/../patches/legion_install_tools_option.diff",
                     "fixed_in": "",
                     "issue": "legion option to install support tools"
+                },
+                {
+                    "file": "${current_json_dir}/../patches/legion_cuhook_optional.diff",
+                    "fixed_in": "",
+                    "issue": "legion make cuhook build optional"
                 }
             ],
             "version": "25.03.0"

@@ -22,7 +22,7 @@
 *.dylib
 install_info.py
 /dist
-build*/
+/build*/
 /legion
 /install*
 _skbuild/

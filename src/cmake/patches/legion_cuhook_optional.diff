@@ -1,0 +1,50 @@
+From eb9498da3ffa61f2dd6d0c8f40e688b2400a78c9 Mon Sep 17 00:00:00 2001
+From: Cory Perry <cperry@nvidia.com>
+Date: Thu, 20 Feb 2025 11:59:00 -0800
+Subject: [PATCH] realm: make cuhook building optional
+
+---
+ runtime/CMakeLists.txt | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/runtime/CMakeLists.txt b/runtime/CMakeLists.txt
+index 09951c523..c225e694c 100644
+--- a/runtime/CMakeLists.txt
++++ b/runtime/CMakeLists.txt
+@@ -571,19 +571,22 @@ if(Legion_USE_CUDA)
+   set_target_cuda_architectures(RealmStatic ARCHITECTURES ${Legion_CUDA_ARCH})
+ 
+   # build cuda hook library
+-  add_library(realm_cuhook SHARED
+-    realm/cuda/cuda_hook.cc)
+-  set_target_properties(realm_cuhook PROPERTIES POSITION_INDEPENDENT_CODE ON)
+-  if(REALM_LIMIT_SYMBOL_VISIBILITY)
+-    set_target_properties(realm_cuhook PROPERTIES CXX_VISIBILITY_PRESET hidden)
+-    set_target_properties(realm_cuhook PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
++  option(REALM_BUILD_CUHOOK "Build cuhook sanity checker injection library" OFF)
++  if (REALM_BUILD_CUHOOK)
++    add_library(realm_cuhook SHARED
++      realm/cuda/cuda_hook.cc)
++    set_target_properties(realm_cuhook PROPERTIES POSITION_INDEPENDENT_CODE ON)
++    if(REALM_LIMIT_SYMBOL_VISIBILITY)
++      set_target_properties(realm_cuhook PROPERTIES CXX_VISIBILITY_PRESET hidden)
++      set_target_properties(realm_cuhook PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
++    endif()
++    target_include_directories(realm_cuhook PRIVATE
++                              ${CMAKE_CURRENT_SOURCE_DIR}
++                              ${PROJECT_BINARY_DIR}/runtime
++                              ${CUDAToolkit_CUPTI_INCLUDE_DIR})
++    target_link_libraries(realm_cuhook PUBLIC CUDA::toolkit)
++    install(TARGETS realm_cuhook EXPORT LegionTargets)
+   endif()
+-  target_include_directories(realm_cuhook PRIVATE
+-                            ${CMAKE_CURRENT_SOURCE_DIR}
+-                            ${PROJECT_BINARY_DIR}/runtime
+-                            ${CUDAToolkit_CUPTI_INCLUDE_DIR})
+-  target_link_libraries(realm_cuhook PUBLIC CUDA::toolkit)
+-  install(TARGETS realm_cuhook EXPORT LegionTargets)
+ endif()
+ 
+ if(Legion_USE_HIP)
+-- 
+2.43.0
