@@ -113,7 +113,7 @@ run_test_or_analysis() {
                                -y \
                                -n "${CONDA_ENV}" \
                                -c conda-forge \
-                               psutil pytest pytest-mock ipython jupyter_client "${ucx_libs[@]}"
+                               psutil pytest pytest-mock ipython jupyter_client cupy "${ucx_libs[@]}"
 
             hdf5_libs=(zarr fsspec kerchunk)
             # shellcheck disable=SC2154
@@ -133,7 +133,24 @@ run_test_or_analysis() {
 
             set_ld_preload
 
-            LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python -s
+            case "$2" in
+              "cpu")
+                echo "Using CPUs ..."
+                LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python -s
+                ;;
+              "gpu")
+                echo "Using 1 GPU ..."
+                LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 1" pytest --color=yes tests/python -s
+                ;;
+              "2gpu")
+                echo "Using 2 GPUs ..."
+                LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" pytest --color=yes tests/python -s
+                ;;
+              *)
+                echo "Invalid case: $2"
+                return 2
+                ;;
+            esac
             ;;
         "cpp")
             echo "Running C++ unit tests..."
