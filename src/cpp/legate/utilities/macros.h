@@ -12,6 +12,10 @@
 
 #pragma once
 
+// This header must be included here (even though it is not used directly) to ensure that all
+// possible uses of LEGATE_DEFINED() use proper legate definitions.
+#include <legate_defines.h>  // IWYU pragma: keep
+
 #include <legate/utilities/detail/doxygen.h>
 
 /**
