@@ -38,3 +38,4 @@ leak:PyObject_Vectorcall
 leak:CoreFoundation
 leak:libobjc.*
 # #endif
+leak:site-packages/cupy/cuda/memory.cpython
