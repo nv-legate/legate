@@ -815,6 +815,14 @@ install(FILES ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
 # ########################################################################################
 # * install Legate examples -----------------------------------------------------------
 
+install(FILES ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1.py
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5)
+
+install(FILES ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1_gen/gen_h5_data.c
+              ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1_gen/CMakeLists.txt
+              ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1_gen/build.bash
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5/ex1_gen)
+
 install(FILES ${LEGATE_DIR}/share/legate/examples/binding/manual/CMakeLists.txt
               ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.cc
               ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.py

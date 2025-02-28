@@ -19,4 +19,4 @@ Experimental API
 .. toctree::
    :maxdepth: 2
 
-   io
+   io/index
