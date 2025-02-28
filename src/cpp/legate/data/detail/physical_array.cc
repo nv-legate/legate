@@ -16,32 +16,26 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace legate::detail {
 
 const InternalSharedPtr<PhysicalStore>& PhysicalArray::data() const
 {
-  static const InternalSharedPtr<PhysicalStore> ret{};
-
   throw TracedException<std::invalid_argument>{"Data store of a nested array cannot be retrieved"};
-  return ret;
-}
-
-std::vector<InternalSharedPtr<PhysicalStore>> PhysicalArray::stores() const
-{
-  std::vector<InternalSharedPtr<PhysicalStore>> result;
-
-  populate_stores(result);
-  return result;
 }
 
 // ==========================================================================================
 
 bool BasePhysicalArray::unbound() const
 {
-  LEGATE_ASSERT(!nullable() || data()->is_unbound_store() == null_mask()->is_unbound_store());
-  return data()->is_unbound_store();
+  const auto data_unbound = data()->is_unbound_store();
+
+  if (nullable()) {
+    LEGATE_ASSERT(data_unbound == null_mask()->is_unbound_store());
+  }
+  return data_unbound;
 }
 
 const InternalSharedPtr<PhysicalStore>& BasePhysicalArray::null_mask() const
@@ -56,7 +50,6 @@ const InternalSharedPtr<PhysicalStore>& BasePhysicalArray::null_mask() const
 InternalSharedPtr<PhysicalArray> BasePhysicalArray::child(std::uint32_t /*index*/) const
 {
   throw TracedException<std::invalid_argument>{"Non-nested array has no child sub-array"};
-  return {};
 }
 
 void BasePhysicalArray::populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const
@@ -72,10 +65,14 @@ void BasePhysicalArray::check_shape_dimension(std::int32_t dim) const
   data()->check_shape_dimension_(dim);
 }
 
+// ==========================================================================================
+
 bool ListPhysicalArray::valid() const
 {
-  LEGATE_ASSERT(descriptor()->valid() == vardata()->valid());
-  return descriptor()->valid();
+  const auto descr_valid = descriptor()->valid();
+
+  LEGATE_ASSERT(descr_valid == vardata()->valid());
+  return descr_valid;
 }
 
 InternalSharedPtr<PhysicalArray> ListPhysicalArray::child(std::uint32_t index) const
@@ -103,16 +100,21 @@ void ListPhysicalArray::check_shape_dimension(std::int32_t dim) const
   descriptor()->check_shape_dimension(dim);
 }
 
+// ==========================================================================================
+
 bool StructPhysicalArray::unbound() const
 {
-  return std::any_of(fields_.begin(), fields_.end(), [](auto& field) { return field->unbound(); });
+  return std::any_of(fields_.begin(), fields_.end(), [](auto&& field) { return field->unbound(); });
 }
 
 bool StructPhysicalArray::valid() const
 {
-  auto result =
-    std::all_of(fields_.begin(), fields_.end(), [](auto& field) { return field->valid(); });
-  LEGATE_ASSERT(null_mask()->valid() == result);
+  const auto result =
+    std::all_of(fields_.begin(), fields_.end(), [](auto&& field) { return field->valid(); });
+
+  if (nullable()) {
+    LEGATE_ASSERT(null_mask()->valid() == result);
+  }
   return result;
 }
 
@@ -141,11 +143,16 @@ void StructPhysicalArray::populate_stores(
   }
 }
 
-Domain StructPhysicalArray::domain() const { return fields_.front()->domain(); }
+Domain StructPhysicalArray::domain() const
+{
+  // Use child() so that the access is bounds-checked in case of empty struct
+  return child(0)->domain();
+}
 
 void StructPhysicalArray::check_shape_dimension(std::int32_t dim) const
 {
-  fields_.front()->check_shape_dimension(dim);
+  // Use child() so that the access is bounds-checked in case of empty struct
+  child(0)->check_shape_dimension(dim);
 }
 
 }  // namespace legate::detail

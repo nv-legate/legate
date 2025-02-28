@@ -37,8 +37,6 @@ class PhysicalArray {
   [[nodiscard]] virtual InternalSharedPtr<PhysicalArray> child(std::uint32_t index) const   = 0;
   virtual void populate_stores(std::vector<InternalSharedPtr<PhysicalStore>>& result) const = 0;
 
-  [[nodiscard]] std::vector<InternalSharedPtr<PhysicalStore>> stores() const;
-
   [[nodiscard]] virtual Domain domain() const                = 0;
   virtual void check_shape_dimension(std::int32_t dim) const = 0;
 };
