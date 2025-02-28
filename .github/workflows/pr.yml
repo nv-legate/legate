@@ -27,3 +27,12 @@ jobs:
     uses: ./.github/workflows/wheels-test.yml
     with:
       build-type: pull-request
+  wheels-pass:
+    if: always()
+    needs:
+      - wheels-test
+    runs-on: linux-amd64-cpu4
+    steps:
+      - name: Check job results
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
