@@ -10,6 +10,8 @@
 # its affiliates is strictly prohibited.
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from legate.core import (
@@ -32,6 +34,12 @@ class Test_store_creation:
         assert store.shape == (4, 4)
         assert store.type == ty.int64
         assert not store.transformed
+        assert store.extents == store.shape
+        assert store.volume == 16
+        assert store.size == store.volume
+        assert repr(store) == str(store)
+        # touching raw_handle for coverage
+        _ = store.raw_handle
 
     def test_unbound(self) -> None:
         runtime = get_legate_runtime()
@@ -164,6 +172,10 @@ class Test_store_invalid_transform:
 
         with pytest.raises(ValueError):  # noqa: PT011
             store.transpose((2, 0))
+
+        msg = re.escape("Expected an iterable but got <class 'int'>")
+        with pytest.raises(ValueError, match=msg):
+            store.transpose(1)  # type: ignore[arg-type]
 
         with pytest.raises(ValueError):  # noqa: PT011
             store.delinearize(2, (2, 3))

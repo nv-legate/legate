@@ -225,7 +225,7 @@ cdef class LogicalStore(Unconstructable):
         return str(self)
 
     def __getitem__(
-        self, indices: int64_t | slice | tuple[int64_t | slice, ...],
+        self, indices: int64_t | slice | tuple[int64_t | slice | None, ...],
     ) -> LogicalStore:
         r"""
         Get a sliced, projected, or promoted sub-store.
