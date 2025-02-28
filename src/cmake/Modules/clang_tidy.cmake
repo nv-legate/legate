@@ -98,28 +98,27 @@ function(legate_add_tidy_diff_target)
                         ${ARGN})
 
   find_package(Git)
-  if(LEGATE_CLANG_TIDY_DIFF AND CLANG_TIDY AND LEGATE_SED AND Git_FOUND)
+  if(LEGATE_CLANG_TIDY_DIFF AND LEGATE_CLANG_TIDY AND LEGATE_SED AND Git_FOUND)
     include(ProcessorCount)
 
-    ProcessorCount(PROC_COUNT)
-    set(TIDY_PARALLEL_FLAGS "-j${PROC_COUNT}")
+    ProcessorCount(proc_count)
 
     # cmake-format: off
     add_custom_target(
       tidy-diff
       COMMENT "Running clang-tidy-diff"
       COMMAND
-        "${GIT_EXECUTABLE}" diff
+        "${GIT_EXECUTABLE}" diff --no-ext-diff
         -U0 `${GIT_EXECUTABLE} remote show origin \| ${LEGATE_SED} -n "/HEAD branch/s/.*: //p" ` HEAD
         \|
         "${LEGATE_CLANG_TIDY_DIFF}"
         -p 1
-        -clang-tidy-binary "${CLANG_TIDY}"
+        -clang-tidy-binary "${LEGATE_CLANG_TIDY}"
         -path "${CMAKE_BINARY_DIR}"
         -use-color
         -quiet
         -extra-arg=-Wno-error=unused-command-line-argument
-        ${TIDY_PARALLEL_FLAGS}
+        -j "${proc_count}"
       WORKING_DIRECTORY "${LEGATE_DIR}"
     )
     # cmake-format: on
