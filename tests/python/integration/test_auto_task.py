@@ -383,18 +383,16 @@ class TestAutoTaskConstraints:
             np.sum(in_arr),
         )
 
-    @pytest.mark.parametrize("axes", [None, 0, (1, 0), (0, 2), ()], ids=str)
+    @pytest.mark.parametrize("axes", [None, 1, (1, 0), (2, 1), ()], ids=str)
     def test_add_broadcast(self, axes: int | tuple[int, ...] | None) -> None:
         runtime = get_legate_runtime()
-        count = runtime.machine.count()
         legate_test = os.environ.get("LEGATE_TEST", "0") == "1"
-        # GPU variant doesn't necessarily partition the store to node count
-        if (
-            not legate_test
-            and runtime.machine.preferred_target == TaskTarget.GPU
-        ):
-            count = 1
-        src_shape, tgt_shape = ((5, 1024, 5), (5, 1024 * count, 5))
+        # the shape we use here is small enough so it will only be partitioned
+        # when we force it to be partitioned
+        count = runtime.machine.count() if legate_test else 1
+        repeat_size = 64
+        src_shape = (1, repeat_size, 1)
+        tgt_shape = (1, repeat_size * count, 1)
         in_np, in_store = utils.random_array_and_store(src_shape)
         out_np, out_store = utils.zero_array_and_store(ty.float64, tgt_shape)
 
@@ -410,7 +408,7 @@ class TestAutoTaskConstraints:
 
         for i in range(count):
             np.testing.assert_allclose(
-                out_np[:, 1024 * i : 1024 * (i + 1), :], in_np
+                out_np[:, repeat_size * i : repeat_size * (i + 1), :], in_np
             )
 
     @pytest.mark.parametrize(
