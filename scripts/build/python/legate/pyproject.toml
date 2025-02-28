@@ -22,8 +22,6 @@ name = "legate"
 authors = [{name = "NVIDIA Corporation"}]
 license = {text = "Proprietary"}
 description = "legate - The Foundation for All Legate Libraries"
-documentation = "https://docs.nvidia.com/legate/latest/"
-changelog = "https://docs.nvidia.com/legate/latest/api/changes/index.html"
 classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Database",
