@@ -104,27 +104,6 @@ experimental = true  # needed for install-dir = "/data"
 [tool.scikit-build.wheel.packages]
 "legate" = "src/python/legate"
 
-# [tool.black]
-# line-length = 79
-# target-version = ["py310"]
-# include = '\.py?$'
-# exclude = '''
-# /(
-#     \.eggs |
-#     \.git |
-#     \.mypy_cache |
-#     \.tox |
-#     \.venv |
-#     _build |
-#     buck-out |
-#     build |
-#     dist |
-#     arch-.* |
-#     .*-arch |
-#     .*venv
-# )/
-# '''
-
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
@@ -195,42 +174,6 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')"
 ]
 filterwarnings = ["error"]
-
-# [tool.isort]
-# line_length = 79
-# multi_line_output = 3
-# include_trailing_comma = true
-# force_grid_wrap = 0
-# combine_as_imports = true
-# order_by_type = true
-# known_third_party = ["numpy"]
-# known_first_party = ["legate"]
-# default_section = "THIRDPARTY"
-# sections = [
-#     "FUTURE",
-#     "STDLIB",
-#     "THIRDPARTY",
-#     "FIRSTPARTY",
-#     "LOCALFOLDER"
-# ]
-# skip = [
-#     ".eggs",
-#     ".git",
-#     ".mypy_cache",
-#     ".tox",
-#     ".venv",
-#     "_build",
-#     "build",
-#     "dist",
-#     "__init__.py"
-# ]
-# skip_glob = [
-#    "install/*",
-#    "arch-*",
-#    "venv*",
-#    "*-arch",
-#    "*venv",
-# ]
 
 [tool.ruff]
 cache-dir = "./.cache/ruff"
