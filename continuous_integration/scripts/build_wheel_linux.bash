@@ -5,8 +5,12 @@
 
 set -euo pipefail
 
-export PARALLEL_LEVEL=${PARALLEL_LEVEL:-$(nproc --all --ignore=2)}
-export CMAKE_BUILD_PARALLEL_LEVEL=${PARALLEL_LEVEL}
+# Enable sccache for faster builds but disable it for CUDA (#1884) issues
+# with the realm CUDA kernel embedding.
+source legate-configure-sccache
+unset CMAKE_CUDA_COMPILER_LAUNCHER
+
+export CMAKE_BUILD_PARALLEL_LEVEL=${PARALLEL_LEVEL:=8}
 
 if [[ "${CI:-false}" == "true" ]]; then
   echo "Installing extra system packages"
@@ -56,12 +60,16 @@ SKBUILD_CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix;-DLegion_USE_CUDA:BOOL=ON;
 export SKBUILD_CMAKE_ARGS
 echo "SKBUILD_CMAKE_ARGS='${SKBUILD_CMAKE_ARGS}'"
 
+sccache --zero-stats
+
 python -m pip wheel \
   -w "${LEGATE_DIR}/dist" \
   -v \
   --no-deps \
   --disable-pip-version-check \
   .
+
+sccache --show-adv-stats
 
 echo "Show dist contents"
 pwd
