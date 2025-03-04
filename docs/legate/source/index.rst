@@ -17,6 +17,7 @@ on a supercomputer without any code modifications.
 
   Overview <overview.rst>
   User Guide <user.rst>
+  Contributing Guide <CONTRIBUTING.rst>
   Frequently Asked Questions <faq.rst>
   API Reference <api/index.rst>
 
