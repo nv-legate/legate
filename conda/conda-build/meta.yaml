@@ -191,6 +191,7 @@ requirements:
 {% endif %}
 {% if network == 'ucx' %}
     - ucx >=1.17,<1.18
+    - ucc
 {% endif %}
     - openmpi <5
 
