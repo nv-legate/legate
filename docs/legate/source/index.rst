@@ -26,6 +26,7 @@ on a supercomputer without any code modifications.
 
   Versions <versions.rst>
   Changelog <changes/index.rst>
+  Third-party notices <oss-licenses.rst>
 
 .. toctree::
   :maxdepth: 2
