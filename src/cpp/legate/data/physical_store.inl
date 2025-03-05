@@ -201,7 +201,7 @@ VAL PhysicalStore::scalar() const
     return *static_cast<const VAL*>(get_untyped_pointer_from_future_());
   }
 
-  return static_cast<const Legion::DeferredValue<VAL>&>(get_buffer_()).read();
+  return get_buffer_().operator Legion::DeferredValue<VAL>().read();
 }
 
 template <typename T, std::int32_t DIM>

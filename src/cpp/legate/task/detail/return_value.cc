@@ -10,10 +10,11 @@
 
 namespace legate::detail {
 
-ReturnValue::ReturnValue(Legion::UntypedDeferredValue value,
-                         std::size_t size,
-                         std::size_t alignment)
-  : value_{std::move(value)},
+ReturnValue::ReturnValue(
+  Legion::UntypedDeferredValue value,  // NOLINT(performance-unnecessary-value-param)
+  std::size_t size,
+  std::size_t alignment)
+  : value_{std::move(value)},  // NOLINT(performance-move-const-arg)
     size_{size},
     alignment_{alignment},
     is_device_value_{value_.get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM}
