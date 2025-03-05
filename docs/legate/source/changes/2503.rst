@@ -38,10 +38,6 @@ C++
 
 .. rubric:: General
 
-- Add the ability for users to statically declare their tasks' signature and
-  constraints. Users should declare a ``static inline const legate::TaskSignature
-  TASK_SIGNATURE`` member on their tasks to do so.
-
 .. rubric:: Data
 
 - Add ``legate::PhysicalStore::is_partitioned()`` that indicates if the store is partitioned.

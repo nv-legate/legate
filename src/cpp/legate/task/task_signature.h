@@ -36,13 +36,6 @@ class ProxyConstraint;
 
 /**
  * @brief A helper class for specifying a task's call signature.
- *
- * This class is used as a `static const` member named `TASK_SIGNATURE` on class declarations
- * to statically declare a task's expected signature. Failure (at runtime) to adhere to a
- * declared signature will raise exceptions when tasks are constructed or submitted for
- * execution. For example:
- *
- * @snippet{trimleft} unit/task_signature/register.cc Example task signature
  */
 class TaskSignature {
  public:
