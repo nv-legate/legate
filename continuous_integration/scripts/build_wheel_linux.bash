@@ -80,7 +80,6 @@ mkdir -p "${LEGATE_DIR}/final-dist"
 export LD_LIBRARY_PATH="${LEGATE_DIR}/scripts/build/python/legate/prefix/lib"
 python -m auditwheel repair \
   --exclude libcuda.so* \
-  --exclude libcudart.so.* \
   --exclude libnccl.so.*  \
   -w "${LEGATE_DIR}/final-dist" \
   "${LEGATE_DIR}"/dist/*.whl

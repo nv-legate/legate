@@ -11,6 +11,11 @@ function(find_or_configure_kvikio)
   include("${rapids-cmake-dir}/cpm/detail/package_details.cmake")
   rapids_cpm_package_details(kvikio version git_url git_tag git_shallow exclude_from_all)
 
+  # If the CUDA runtime library is static, we need to set the CUDA_STATIC_RUNTIME flag for
+  # kvikio.
+  if(CMAKE_CUDA_RUNTIME_LIBRARY STREQUAL "STATIC")
+    set(CUDA_STATIC_RUNTIME TRUE)
+  endif()
   rapids_cpm_find(kvikio "${version}"
                   CPM_ARGS
                   GIT_SHALLOW "${git_shallow}"
