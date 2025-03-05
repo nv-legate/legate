@@ -25,6 +25,12 @@ run_test_or_analysis() {
 
     conda_info;
 
+    if command -v "legate-issue" &> /dev/null; then
+      legate-issue
+    else
+      echo "WARNING: legate-issue not found."
+    fi
+
     # HACK: this should be done much better, and in a much more transparent manner... but
     # alas, we no longer have any control of the setup phases in github ci, so we must do
     # it here.
