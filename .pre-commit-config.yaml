@@ -74,13 +74,13 @@ repos:
         files: \.(cu|cuh|h|hpp|cc|inl)$
         types_or: []
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.3
+    rev: v0.9.9
     hooks:
       - id: ruff-format
       - id: ruff
         args: ["--config=./pyproject.toml", "--fix"]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.14.1'
+    rev: 'v1.15.0'
     hooks:
       - id: mypy
         pass_filenames: false
