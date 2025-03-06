@@ -107,17 +107,17 @@ class Launcher:
 
         """
         kind = config.multi_node.launcher
-        if kind == "none":
-            return SimpleLauncher(config, system)
-        if kind == "mpirun":
-            return MPILauncher(config, system)
-        if kind == "jsrun":
-            return JSRunLauncher(config, system)
-        if kind == "srun":
-            return SRunLauncher(config, system)
-
-        msg = f"Unsupported launcher: {kind}"  # type: ignore[unreachable]
-        raise RuntimeError(msg)
+        match kind:
+            case "none":
+                return SimpleLauncher(config, system)
+            case "mpirun":
+                return MPILauncher(config, system)
+            case "jsrun":
+                return JSRunLauncher(config, system)
+            case "srun":
+                return SRunLauncher(config, system)
+            case "dask":
+                return DaskLauncher(config, system)
 
     # Slightly annoying, but it is helpful for testing to avoid importing
     # legate unless necessary, so defined these two as properties since the
@@ -345,5 +345,23 @@ class SRunLauncher(Launcher):
         if config.debugging.gdb or config.debugging.cuda_gdb:
             # Execute in pseudo-terminal mode when we need to be interactive
             cmd += ["--pty"]
+
+        self.cmd = tuple(cmd + config.multi_node.launcher_extra)
+
+
+class DaskLauncher(Launcher):
+    """A Launcher subclass to run legate program on a dask cluster."""
+
+    kind: LauncherType = "dask"
+
+    def __init__(self, config: ConfigProtocol, system: System) -> None:
+        super().__init__(config=config, system=system)
+
+        if config.multi_node.nodes > 1:
+            msg = "Dask launcher only supports single-node runs"
+            raise RuntimeError(msg)
+
+        cmd = ["dask"]
+        cmd += ["--workers-per-node", str(config.multi_node.ranks_per_node)]
 
         self.cmd = tuple(cmd + config.multi_node.launcher_extra)

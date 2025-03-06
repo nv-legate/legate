@@ -224,6 +224,7 @@ requirements:
   run_constrained:
     - __glibc >=2.17  # [linux]
     - python >= 3.10
+    - dask[distributed]
 
 test:
   imports:

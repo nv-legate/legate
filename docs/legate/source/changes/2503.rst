@@ -32,6 +32,9 @@ Changes: 25.03
 - Stop passing default options to Nsight Systems when using the ``--nsys`` flag
   of the ``legate`` launcher. Any non-default arguments are fully in the control
   of the user, through ``--nsys-extra``.
+- Add a launching mode ``--launcher dask`` to the ``legate`` driver, that bootstraps a
+  Legate execution by setting up a dask cluster and having the workers start the peer
+  processes. This currently only supports single-node multi-rank execution.
 
 C++
 ---

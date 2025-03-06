@@ -9,7 +9,7 @@ help() {
 Usage: legate-bind.sh [OPTIONS]... -- APP...
 
 Options:
-  --launcher {mpirun|srun|jrun|auto|local}
+  --launcher {mpirun|srun|jrun|dask|auto|local}
                     Launcher type, used to set LEGATE_RANK
                     If 'auto', attempt to find the launcher rank automatically
                     If 'local', rank is set to "0".
@@ -69,6 +69,21 @@ case "${launcher}" in
   srun  )
     local_rank="${SLURM_LOCALID:-unknown}"
     global_rank="${SLURM_PROCID:-unknown}"
+    ;;
+  dask  )
+    local_rank="unknown"
+    global_rank="unknown"
+    # Find rank from worker info if present
+    if [[ -n "${WORKER_SELF_INFO+x}" ]] && [[ -n "${WORKER_PEERS_INFO+x}" ]]; then
+        IFS=' ' read -r -a peers <<< "${WORKER_PEERS_INFO}"
+        for i in "${!peers[@]}"; do
+            if [[ "${peers[${i}]}" = "${WORKER_SELF_INFO}" ]]; then
+                local_rank="${i}"
+                global_rank="${i}"
+                break
+            fi
+        done
+    fi
     ;;
   auto  )
     local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MV2_COMM_WORLD_LOCAL_RANK:-${SLURM_LOCALID:-unknown}}}"

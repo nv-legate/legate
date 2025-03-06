@@ -63,6 +63,7 @@ legate = "legate.driver:main"
 legate-issue = "legate.issue:main"
 legate-jupyter = "legate.jupyter:main"
 lgpatch = "legate.lgpatch:main"
+daskrun = "legate.dask:main"
 
 [tool.scikit-build.cmake]
 version = ">=3.26.4"

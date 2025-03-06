@@ -30,7 +30,13 @@ __all__ = (
     "ZCMEM",
 )
 
-LAUNCHERS: tuple[LauncherType, ...] = ("mpirun", "jsrun", "srun", "none")
+LAUNCHERS: tuple[LauncherType, ...] = (
+    "mpirun",
+    "jsrun",
+    "srun",
+    "dask",
+    "none",
+)
 
 NODES = Argument(
     "--nodes",
