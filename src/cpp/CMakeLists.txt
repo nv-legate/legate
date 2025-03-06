@@ -492,7 +492,7 @@ if(legate_ENABLE_SANITIZERS)
   target_sources(legate PRIVATE legate/utilities/detail/sanitizer_defaults.cc)
 endif()
 
-if(Legion_NETWORKS)
+if(TARGET legate::mpi_wrapper)
   target_sources(legate
                  PRIVATE legate/comm/detail/mpi_network.cc
                          legate/comm/detail/mpi_interface.cc
