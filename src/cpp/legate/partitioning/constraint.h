@@ -61,16 +61,11 @@ class Variable {
  */
 class Constraint {
  public:
-  [[nodiscard]] std::string to_string() const;
-
   Constraint() = LEGATE_DEFAULT_WHEN_CYTHON;
 
   explicit Constraint(InternalSharedPtr<detail::Constraint>&& impl);
-  Constraint(const Constraint&)                = default;
-  Constraint(Constraint&&) noexcept            = default;
-  Constraint& operator=(const Constraint&)     = default;
-  Constraint& operator=(Constraint&&) noexcept = default;
-  ~Constraint()                                = default;
+
+  [[nodiscard]] std::string to_string() const;
 
   [[nodiscard]] const SharedPtr<detail::Constraint>& impl() const;
 

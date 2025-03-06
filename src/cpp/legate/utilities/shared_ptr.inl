@@ -44,7 +44,7 @@ SharedPtr<T>::SharedPtr(move_tag, InternalSharedPtr<U>&& other, bool from_intern
 // ==========================================================================================
 
 template <typename T>
-SharedPtr<T>::SharedPtr(std::nullptr_t) noexcept
+constexpr SharedPtr<T>::SharedPtr(std::nullptr_t) noexcept
 {
 }
 
@@ -77,7 +77,7 @@ SharedPtr<T>& SharedPtr<T>::operator=(const SharedPtr& other) noexcept
 
 template <typename T>
 SharedPtr<T>::SharedPtr(SharedPtr&& other) noexcept
-  : SharedPtr{move_tag{}, std::move(other.internal_ptr({})), false}
+  : SharedPtr{move_tag{}, std::move(other.internal_ptr({})), /* from_internal_ptr */ false}
 {
 }
 
@@ -106,7 +106,7 @@ SharedPtr<T>& SharedPtr<T>::operator=(const SharedPtr<U>& other) noexcept
 template <typename T>
 template <typename U, typename SFINAE>
 SharedPtr<T>::SharedPtr(SharedPtr<U>&& other) noexcept
-  : SharedPtr{move_tag{}, std::move(other.internal_ptr({})), false}
+  : SharedPtr{move_tag{}, std::move(other.internal_ptr({})), /* from_internal_ptr */ false}
 {
 }
 
@@ -133,7 +133,7 @@ SharedPtr<T>& SharedPtr<T>::operator=(const InternalSharedPtr<element_type>& oth
 
 template <typename T>
 SharedPtr<T>::SharedPtr(InternalSharedPtr<element_type>&& other) noexcept
-  : SharedPtr{move_tag{}, std::move(other), true}
+  : SharedPtr{move_tag{}, std::move(other), /* from_internal_ptr */ true}
 {
 }
 
@@ -161,7 +161,7 @@ SharedPtr<T>& SharedPtr<T>::operator=(const InternalSharedPtr<U>& other) noexcep
 template <typename T>
 template <typename U, typename SFINAE>
 SharedPtr<T>::SharedPtr(InternalSharedPtr<U>&& other) noexcept
-  : SharedPtr{move_tag{}, std::move(other), true}
+  : SharedPtr{move_tag{}, std::move(other), /* from_internal_ptr */ true}
 {
 }
 
@@ -232,32 +232,32 @@ void SharedPtr<T>::reset(U* ptr, D deleter, A allocator)
 // ==========================================================================================
 
 template <typename T>
-typename SharedPtr<T>::element_type& SharedPtr<T>::operator[](std::ptrdiff_t idx) noexcept
+constexpr typename SharedPtr<T>::element_type& SharedPtr<T>::operator[](std::ptrdiff_t idx) noexcept
 {
   return internal_ptr({})[idx];
 }
 
 template <typename T>
-const typename SharedPtr<T>::element_type& SharedPtr<T>::operator[](
+constexpr const typename SharedPtr<T>::element_type& SharedPtr<T>::operator[](
   std::ptrdiff_t idx) const noexcept
 {
   return internal_ptr({})[idx];
 }
 
 template <typename T>
-typename SharedPtr<T>::element_type* SharedPtr<T>::get() const noexcept
+constexpr typename SharedPtr<T>::element_type* SharedPtr<T>::get() const noexcept
 {
   return internal_ptr({}).get();
 }
 
 template <typename T>
-typename SharedPtr<T>::element_type& SharedPtr<T>::operator*() const noexcept
+constexpr typename SharedPtr<T>::element_type& SharedPtr<T>::operator*() const noexcept
 {
   return internal_ptr({}).operator*();
 }
 
 template <typename T>
-typename SharedPtr<T>::element_type* SharedPtr<T>::operator->() const noexcept
+constexpr typename SharedPtr<T>::element_type* SharedPtr<T>::operator->() const noexcept
 {
   return internal_ptr({}).operator->();
 }
@@ -275,20 +275,20 @@ typename SharedPtr<T>::ref_count_type SharedPtr<T>::user_ref_count() const noexc
 }
 
 template <typename T>
-SharedPtr<T>::operator bool() const noexcept
+constexpr SharedPtr<T>::operator bool() const noexcept
 {
   return internal_ptr({}).operator bool();
 }
 
 template <typename T>
-typename SharedPtr<T>::internal_ptr_type& SharedPtr<T>::internal_ptr(
+constexpr typename SharedPtr<T>::internal_ptr_type& SharedPtr<T>::internal_ptr(
   InternalSharedPtrAccessTag) noexcept
 {
   return ptr_;
 }
 
 template <typename T>
-const typename SharedPtr<T>::internal_ptr_type& SharedPtr<T>::internal_ptr(
+constexpr const typename SharedPtr<T>::internal_ptr_type& SharedPtr<T>::internal_ptr(
   InternalSharedPtrAccessTag) const noexcept
 {
   return ptr_;
@@ -297,37 +297,37 @@ const typename SharedPtr<T>::internal_ptr_type& SharedPtr<T>::internal_ptr(
 // ==========================================================================================
 
 template <typename T, typename U>
-bool operator==(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+constexpr bool operator==(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
 {
   return lhs.get() == rhs.get();
 }
 
 template <typename T, typename U>
-bool operator!=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+constexpr bool operator!=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
 {
   return lhs.get() != rhs.get();
 }
 
 template <typename T, typename U>
-bool operator<(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+constexpr bool operator<(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
 {
   return lhs.get() < rhs.get();
 }
 
 template <typename T, typename U>
-bool operator>(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+constexpr bool operator>(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
 {
   return lhs.get() > rhs.get();
 }
 
 template <typename T, typename U>
-bool operator<=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+constexpr bool operator<=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
 {
   return lhs.get() <= rhs.get();
 }
 
 template <typename T, typename U>
-bool operator>=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
+constexpr bool operator>=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
 {
   return lhs.get() >= rhs.get();
 }
@@ -335,73 +335,73 @@ bool operator>=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept
 // ==========================================================================================
 
 template <typename T>
-bool operator==(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator==(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() == nullptr;
 }
 
 template <typename T>
-bool operator==(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+constexpr bool operator==(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
 {
   return nullptr == rhs.get();
 }
 
 template <typename T>
-bool operator!=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator!=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() != nullptr;
 }
 
 template <typename T>
-bool operator!=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+constexpr bool operator!=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
 {
   return nullptr != rhs.get();
 }
 
 template <typename T>
-bool operator<(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator<(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() < nullptr;
 }
 
 template <typename T>
-bool operator<(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+constexpr bool operator<(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
 {
   return nullptr < rhs.get();
 }
 
 template <typename T>
-bool operator>(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator>(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() > nullptr;
 }
 
 template <typename T>
-bool operator>(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+constexpr bool operator>(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
 {
   return nullptr > rhs.get();
 }
 
 template <typename T>
-bool operator<=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator<=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() <= nullptr;
 }
 
 template <typename T>
-bool operator<=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+constexpr bool operator<=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
 {
   return nullptr <= rhs.get();
 }
 
 template <typename T>
-bool operator>=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator>=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() >= nullptr;
 }
 
 template <typename T>
-bool operator>=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
+constexpr bool operator>=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept
 {
   return nullptr >= rhs.get();
 }

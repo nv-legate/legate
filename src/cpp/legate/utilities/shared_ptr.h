@@ -28,7 +28,7 @@ class SharedPtr {
   constexpr SharedPtr() noexcept = default;
 
   // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::shared_ptr ctor
-  SharedPtr(std::nullptr_t) noexcept;
+  constexpr SharedPtr(std::nullptr_t) noexcept;
 
   template <typename U,
             typename Deleter,
@@ -115,15 +115,15 @@ class SharedPtr {
              A allocator = A{});  // NOLINT(performance-unnecessary-value-param)
 
   // Observers
-  [[nodiscard]] element_type& operator[](std::ptrdiff_t idx) noexcept;
-  [[nodiscard]] const element_type& operator[](std::ptrdiff_t idx) const noexcept;
-  [[nodiscard]] element_type* get() const noexcept;
-  [[nodiscard]] element_type& operator*() const noexcept;
-  [[nodiscard]] element_type* operator->() const noexcept;
+  [[nodiscard]] constexpr element_type& operator[](std::ptrdiff_t idx) noexcept;
+  [[nodiscard]] constexpr const element_type& operator[](std::ptrdiff_t idx) const noexcept;
+  [[nodiscard]] constexpr element_type* get() const noexcept;
+  [[nodiscard]] constexpr element_type& operator*() const noexcept;
+  [[nodiscard]] constexpr element_type* operator->() const noexcept;
 
   [[nodiscard]] ref_count_type use_count() const noexcept;
   [[nodiscard]] ref_count_type user_ref_count() const noexcept;
-  explicit operator bool() const noexcept;
+  constexpr explicit operator bool() const noexcept;
 
   class InternalSharedPtrAccessTag {
     InternalSharedPtrAccessTag() = default;
@@ -133,8 +133,9 @@ class SharedPtr {
     friend class InternalSharedPtr;
   };
 
-  [[nodiscard]] internal_ptr_type& internal_ptr(InternalSharedPtrAccessTag) noexcept;
-  [[nodiscard]] const internal_ptr_type& internal_ptr(InternalSharedPtrAccessTag) const noexcept;
+  [[nodiscard]] constexpr internal_ptr_type& internal_ptr(InternalSharedPtrAccessTag) noexcept;
+  [[nodiscard]] constexpr const internal_ptr_type& internal_ptr(
+    InternalSharedPtrAccessTag) const noexcept;
 
  private:
   struct copy_tag {};
@@ -157,60 +158,60 @@ class SharedPtr {
 // ==========================================================================================
 
 template <typename T, typename U>
-bool operator==(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+constexpr bool operator==(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
 
 template <typename T, typename U>
-bool operator!=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+constexpr bool operator!=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
 
 template <typename T, typename U>
-bool operator<(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+constexpr bool operator<(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
 
 template <typename T, typename U>
-bool operator>(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+constexpr bool operator>(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
 
 template <typename T, typename U>
-bool operator<=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+constexpr bool operator<=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
 
 template <typename T, typename U>
-bool operator>=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
+constexpr bool operator>=(const SharedPtr<T>& lhs, const SharedPtr<U>& rhs) noexcept;
 
 // ==========================================================================================
 
 template <typename T>
-bool operator==(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+constexpr bool operator==(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
 
 template <typename T>
-bool operator==(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+constexpr bool operator==(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
 
 template <typename T>
-bool operator!=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+constexpr bool operator!=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
 
 template <typename T>
-bool operator!=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+constexpr bool operator!=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
 
 template <typename T>
-bool operator<(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+constexpr bool operator<(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
 
 template <typename T>
-bool operator<(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+constexpr bool operator<(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
 
 template <typename T>
-bool operator>(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+constexpr bool operator>(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
 
 template <typename T>
-bool operator>(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+constexpr bool operator>(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
 
 template <typename T>
-bool operator<=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+constexpr bool operator<=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
 
 template <typename T>
-bool operator<=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+constexpr bool operator<=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
 
 template <typename T>
-bool operator>=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
+constexpr bool operator>=(const SharedPtr<T>& lhs, std::nullptr_t) noexcept;
 
 template <typename T>
-bool operator>=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
+constexpr bool operator>=(std::nullptr_t, const SharedPtr<T>& rhs) noexcept;
 
 }  // namespace legate
 

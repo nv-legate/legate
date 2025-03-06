@@ -602,7 +602,7 @@ void InternalSharedPtr<T>::reset(U* ptr, D deleter, A allocator)
 // ==========================================================================================
 
 template <typename T>
-typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator[](
+constexpr typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator[](
   std::ptrdiff_t idx) noexcept
 {
   static_assert(std::is_array_v<T>);
@@ -610,7 +610,7 @@ typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator[](
 }
 
 template <typename T>
-const typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator[](
+constexpr const typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator[](
   std::ptrdiff_t idx) const noexcept
 {
   static_assert(std::is_array_v<T>);
@@ -618,19 +618,21 @@ const typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operato
 }
 
 template <typename T>
-typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::get() const noexcept
+constexpr typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::get() const noexcept
 {
   return ptr_;
 }
 
 template <typename T>
-typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator*() const noexcept
+constexpr typename InternalSharedPtr<T>::element_type& InternalSharedPtr<T>::operator*()
+  const noexcept
 {
   return *get();
 }
 
 template <typename T>
-typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::operator->() const noexcept
+constexpr typename InternalSharedPtr<T>::element_type* InternalSharedPtr<T>::operator->()
+  const noexcept
 {
   return get();
 }
@@ -663,7 +665,7 @@ typename InternalSharedPtr<T>::ref_count_type InternalSharedPtr<T>::weak_ref_cou
 }
 
 template <typename T>
-InternalSharedPtr<T>::operator bool() const noexcept
+constexpr InternalSharedPtr<T>::operator bool() const noexcept
 {
   return get() != nullptr;
 }
@@ -720,37 +722,37 @@ InternalSharedPtr<T> const_pointer_cast(InternalSharedPtr<U>&& ptr) noexcept
 // ==========================================================================================
 
 template <typename T, typename U>
-bool operator==(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+constexpr bool operator==(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
 {
   return lhs.get() == rhs.get();
 }
 
 template <typename T, typename U>
-bool operator!=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+constexpr bool operator!=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
 {
   return lhs.get() != rhs.get();
 }
 
 template <typename T, typename U>
-bool operator<(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+constexpr bool operator<(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
 {
   return lhs.get() < rhs.get();
 }
 
 template <typename T, typename U>
-bool operator>(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+constexpr bool operator>(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
 {
   return lhs.get() > rhs.get();
 }
 
 template <typename T, typename U>
-bool operator<=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+constexpr bool operator<=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
 {
   return lhs.get() <= rhs.get();
 }
 
 template <typename T, typename U>
-bool operator>=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
+constexpr bool operator>=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs) noexcept
 {
   return lhs.get() >= rhs.get();
 }
@@ -758,73 +760,73 @@ bool operator>=(const InternalSharedPtr<T>& lhs, const InternalSharedPtr<U>& rhs
 // ==========================================================================================
 
 template <typename T>
-bool operator==(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator==(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() == nullptr;
 }
 
 template <typename T>
-bool operator==(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+constexpr bool operator==(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
 {
   return nullptr == rhs.get();
 }
 
 template <typename T>
-bool operator!=(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator!=(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() != nullptr;
 }
 
 template <typename T>
-bool operator!=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+constexpr bool operator!=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
 {
   return nullptr != rhs.get();
 }
 
 template <typename T>
-bool operator<(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator<(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() < nullptr;
 }
 
 template <typename T>
-bool operator<(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+constexpr bool operator<(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
 {
   return nullptr < rhs.get();
 }
 
 template <typename T>
-bool operator>(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator>(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() > nullptr;
 }
 
 template <typename T>
-bool operator>(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+constexpr bool operator>(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
 {
   return nullptr > rhs.get();
 }
 
 template <typename T>
-bool operator<=(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator<=(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() <= nullptr;
 }
 
 template <typename T>
-bool operator<=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+constexpr bool operator<=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
 {
   return nullptr <= rhs.get();
 }
 
 template <typename T>
-bool operator>=(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
+constexpr bool operator>=(const InternalSharedPtr<T>& lhs, std::nullptr_t) noexcept
 {
   return lhs.get() >= nullptr;
 }
 
 template <typename T>
-bool operator>=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
+constexpr bool operator>=(std::nullptr_t, const InternalSharedPtr<T>& rhs) noexcept
 {
   return nullptr >= rhs.get();
 }

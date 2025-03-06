@@ -305,17 +305,18 @@ using mdspan_reduction_t =  //
     detail::MDSpanAccessor<typename Op::RHS, Dim, detail::ReductionAccessor<Op, Exclusive>>>;
 
 namespace detail {
-template <typename T>
-constexpr bool is_mdspan_v = false;
 
 template <typename T>
-constexpr bool is_mdspan_v<T&> = is_mdspan_v<T>;
+inline constexpr bool is_mdspan_v = false;
 
 template <typename T>
-constexpr bool is_mdspan_v<T const> = is_mdspan_v<T>;
+inline constexpr bool is_mdspan_v<T&> = is_mdspan_v<T>;
+
+template <typename T>
+inline constexpr bool is_mdspan_v<T const> = is_mdspan_v<T>;
 
 template <typename Element, typename Extent, typename Layout, typename Accessor>
-constexpr bool is_mdspan_v<std::mdspan<Element, Extent, Layout, Accessor>> = true;
+inline constexpr bool is_mdspan_v<std::mdspan<Element, Extent, Layout, Accessor>> = true;
 
 template <typename MDSpan>
 class flat_mdspan_view;

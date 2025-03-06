@@ -48,8 +48,16 @@ inline constexpr bool is_container_v = is_container<T>::value;
 template <typename T>
 class Span {
  public:
-  using element_type = T;
-  using value_type   = std::remove_cv_t<T>;
+  using element_type    = T;
+  using value_type      = std::remove_cv_t<T>;
+  using size_type       = std::size_t;
+  using difference_type = std::ptrdiff_t;
+  using pointer         = T*;
+  using const_pointer   = const T*;
+  using reference       = T&;
+  using const_reference = const T&;
+  using iterator        = pointer;
+  using const_iterator  = const_pointer;
 
   constexpr Span() = default;
 
@@ -91,40 +99,45 @@ class Span {
    * @param data Pointer to the data
    * @param size Number of elements
    */
-  constexpr Span(T* data, std::size_t size);
+  constexpr Span(T* data, size_type size);
+
   /**
    * @brief Returns the number of elements
    *
    * @return The number of elements
    */
-  [[nodiscard]] constexpr std::size_t size() const;
+  [[nodiscard]] constexpr size_type size() const;
 
-  [[nodiscard]] constexpr T& operator[](std::size_t pos) const;
+  [[nodiscard]] constexpr reference operator[](size_type pos) const;
 
   /**
    * @brief Returns the pointer to the first element
    *
    * @return Pointer to the first element
    */
-  [[nodiscard]] constexpr const T* begin() const;
+  [[nodiscard]] constexpr const_iterator begin() const;
+
   /**
    * @brief Returns the pointer to the end of allocation
    *
    * @return Pointer to the end of allocation
    */
-  [[nodiscard]] constexpr const T* end() const;
+  [[nodiscard]] constexpr const_iterator end() const;
+
   /**
    * @brief Returns the pointer to the first element
    *
    * @return Pointer to the first element
    */
-  [[nodiscard]] constexpr T* begin();
+  [[nodiscard]] constexpr iterator begin();
+
   /**
    * @brief Returns the pointer to the end of allocation
    *
    * @return Pointer to the end of allocation
    */
-  [[nodiscard]] constexpr T* end();
+  [[nodiscard]] constexpr iterator end();
+
   /**
    * @brief Slices off the first `off` elements. Passing an `off` greater than
    * the size will fail with an assertion failure.
@@ -133,20 +146,21 @@ class Span {
    *
    * @return A span for range `[off, size())`
    */
-  [[nodiscard]] constexpr Span subspan(std::size_t off);
+  [[nodiscard]] constexpr Span subspan(size_type off);
+
   /**
    * @brief Returns a `const` pointer to the data
    *
    * @return Pointer to the data
    */
-  [[nodiscard]] constexpr const T* ptr() const;
+  [[nodiscard]] constexpr const_pointer ptr() const;
 
   /**
    * @brief Returns a pointer to the data.
    *
    * @return Pointer to the data.
    */
-  [[nodiscard]] constexpr T* data() const;
+  [[nodiscard]] constexpr pointer data() const;
 
  private:
   struct container_tag {};

@@ -159,7 +159,7 @@ template <template <typename...> typename Op, typename... Args>
 using is_detected = detected_or<detected_detail::nonesuch, Op, Args...>;
 
 template <template <typename...> typename Op, typename... Args>
-constexpr bool is_detected_v = is_detected<Op, Args...>::value;
+inline constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 
 template <template <typename...> class Op, typename... Args>
 using is_detected_t = typename is_detected<Op, Args...>::type;
