@@ -24,7 +24,7 @@ namespace legate::comm {
 
 /**
  * @brief A thin wrapper class for communicators stored in futures. This class only provides
- * a tempalte method to retrieve the communicator handle and the client is expected to pass
+ * a template method to retrieve the communicator handle and the client is expected to pass
  * the right handle type.
  *
  * The following is the list of handle types for communicators supported in Legate:

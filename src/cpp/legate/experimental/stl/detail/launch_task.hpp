@@ -629,21 +629,21 @@ class IterationCPU;
 template <typename Fn, typename... Is, typename... Os, typename... Ss>
 class IterationCPU<Function<Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss...>> {
  public:
-  template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
-  static void impl(std::index_sequence<IIs...>,
-                   std::index_sequence<OIs...>,
-                   std::index_sequence<SIs...>,
+  template <std::size_t... InputsIs, std::size_t... OutputIs, std::size_t... ScalarsIs>
+  static void impl(std::index_sequence<InputsIs...>,
+                   std::index_sequence<OutputIs...>,
+                   std::index_sequence<ScalarsIs...>,
                    const std::vector<PhysicalArray>& inputs,
                    std::vector<PhysicalArray>& outputs,
                    const std::vector<Scalar>& scalars)
   {
     cpu_detail::cpu_for_each(
       stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
-                     scalar_cast<const Ss&>(scalars[SIs + 1])...),
+                     scalar_cast<const Ss&>(scalars[ScalarsIs + 1])...),
       Is::policy::physical_view(
-        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[IIs]))...,
+        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[InputsIs]))...,
       Os::policy::physical_view(
-        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OIs]))...);
+        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OutputIs]))...);
   }
 
   template <std::int32_t ActualDim>
@@ -694,10 +694,10 @@ class iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
  public:
   static constexpr std::int32_t THREAD_BLOCK_SIZE = 128;
 
-  template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
-  static void impl(std::index_sequence<IIs...>,
-                   std::index_sequence<OIs...>,
-                   std::index_sequence<SIs...>,
+  template <std::size_t... InputIs, std::size_t... OutputIs, std::size_t... ScalarIs>
+  static void impl(std::index_sequence<InputIs...>,
+                   std::index_sequence<OutputIs...>,
+                   std::index_sequence<ScalarIs...>,
                    const legate::TaskContext& context,
                    const std::vector<PhysicalArray>& inputs,
                    std::vector<PhysicalArray>& outputs,
@@ -709,11 +709,11 @@ class iteration_gpu<function<Fn>, inputs<Is...>, outputs<Os...>, scalars<Ss...>>
 
     _gpu_for_each<<<num_blocks, THREAD_BLOCK_SIZE, 0, stream>>>(
       stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
-                     scalar_cast<const Ss&>(scalars[SIs + 1])...),
+                     scalar_cast<const Ss&>(scalars[ScalarIs + 1])...),
       Is::policy::physical_view(
-        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[IIs]))...,
+        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[InputIs]))...,
       Os::policy::physical_view(
-        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OIs]))...);
+        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OutputIs]))...);
   }
 
   template <std::int32_t ActualDim>
@@ -807,17 +807,17 @@ template <typename Op, std::int32_t Dim, bool Exclusive = false>
 
 namespace cpu_detail {
 
-template <typename Function, typename InOut, typename Input>
-void cpu_reduce(Function&& fn, InOut&& inout, Input&& input)
+template <typename Function, typename InputOutput, typename Input>
+void cpu_reduce(Function&& fn, InputOutput&& input_output, Input&& input)
 {
   // These need to be at least multi-pass
-  static_assert_iterator_category<std::forward_iterator_tag>(inout.begin());
+  static_assert_iterator_category<std::forward_iterator_tag>(input_output.begin());
   static_assert_iterator_category<std::forward_iterator_tag>(input.begin());
-  const auto distance = std::distance(inout.begin(), inout.end());
+  const auto distance = std::distance(input_output.begin(), input_output.end());
 
   LEGATE_ASSERT(distance == std::distance(input.begin(), input.end()));
   for (std::int64_t idx = 0; idx < distance; ++idx) {
-    fn(*(inout.begin() + idx), *(input.begin() + idx));
+    fn(*(input_output.begin() + idx), *(input.begin() + idx));
   }
 }
 
@@ -829,10 +829,10 @@ class ReductionCPU;
 template <typename Red, typename Fn, typename... Is, typename... Os, typename... Ss>
 class ReductionCPU<Reduction<Red, Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss...>> {
  public:
-  template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
-  static void impl(std::index_sequence<IIs...>,
-                   std::index_sequence<OIs...>,
-                   std::index_sequence<SIs...>,
+  template <std::size_t... InputIs, std::size_t... OutputIs, std::size_t... ScalarIs>
+  static void impl(std::index_sequence<InputIs...>,
+                   std::index_sequence<OutputIs...>,
+                   std::index_sequence<ScalarIs...>,
                    PhysicalArray& reduction,
                    const std::vector<PhysicalArray>& inputs,
                    std::vector<PhysicalArray>& outputs,
@@ -840,17 +840,17 @@ class ReductionCPU<Reduction<Red, Fn>, Inputs<Is...>, Outputs<Os...>, Scalars<Ss
   {
     constexpr std::int32_t DIM = stl::dim_of_v<Red>;
     Rect<DIM> working_set      = reduction.shape<DIM>();
-    ((working_set = working_set.intersection(inputs[IIs].shape<DIM>())), ...);
+    ((working_set = working_set.intersection(inputs[InputIs].shape<DIM>())), ...);
 
     cpu_detail::cpu_reduce(
       stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
-                     scalar_cast<const Ss&>(scalars[SIs + 1])...),
+                     scalar_cast<const Ss&>(scalars[ScalarIs + 1])...),
       Red::policy::physical_view(  //
         as_mdspan_reduction<Fn, DIM>(reduction, std::move(working_set))),
       Is::policy::physical_view(
-        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[IIs]))...,
+        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[InputIs]))...,
       Os::policy::physical_view(
-        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OIs]))...);
+        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OutputIs]))...);
   }
 
   template <std::int32_t ActualDim>
@@ -886,15 +886,15 @@ namespace gpu_detail {
 // then we can launch several kernels, each of which folds in parallel at
 // multiples of that stride, but starting at different offsets. Then those
 // results can be folded together.
-template <typename Function, typename InOut, typename Input>
-LEGATE_KERNEL void gpu_reduce(Function fn, InOut inout, Input input)
+template <typename Function, typename InputOutput, typename Input>
+LEGATE_KERNEL void gpu_reduce(Function fn, InputOutput input_output, Input input)
 {
   const auto tid      = static_cast<std::size_t>(blockIdx.x) * blockDim.x + threadIdx.x;
-  const auto distance = inout.end() - inout.begin();
+  const auto distance = input_output.end() - input_output.begin();
 
   LEGATE_ASSERT(distance == (input.end() - input.begin()));
   for (std::int64_t idx = 0; idx < distance; ++idx) {
-    fn(tid, *(inout.begin() + idx), *(input.begin() + idx));
+    fn(tid, *(input_output.begin() + idx), *(input.begin() + idx));
   }
 }
 
@@ -908,10 +908,10 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
  public:
   static constexpr std::int32_t THREAD_BLOCK_SIZE = 128;
 
-  template <std::size_t... IIs, std::size_t... OIs, std::size_t... SIs>
-  static void impl(std::index_sequence<IIs...>,
-                   std::index_sequence<OIs...>,
-                   std::index_sequence<SIs...>,
+  template <std::size_t... InputIs, std::size_t... OutputIs, std::size_t... ScalarIs>
+  static void impl(std::index_sequence<InputIs...>,
+                   std::index_sequence<OutputIs...>,
+                   std::index_sequence<ScalarIs...>,
                    const legate::TaskContext& context,
                    PhysicalArray& reduction,
                    const std::vector<PhysicalArray>& inputs,
@@ -924,17 +924,17 @@ class reduction_gpu<reduction<Red, Fn>, inputs<Is...>, outputs<Os...>, scalars<S
 
     constexpr std::int32_t Dim = dim_of_v<Red>;
     Rect<Dim> working_set      = reduction.shape<Dim>();
-    ((working_set = working_set.intersection(inputs[IIs].shape<Dim>())), ...);
+    ((working_set = working_set.intersection(inputs[InputIs].shape<Dim>())), ...);
 
     gpu_detail::gpu_reduce<<<num_blocks, THREAD_BLOCK_SIZE, 0, stream>>>(
       stl::bind_back(scalar_cast<const Fn&>(scalars[0]),
-                     scalar_cast<const Ss&>(scalars[SIs + 1])...),
+                     scalar_cast<const Ss&>(scalars[ScalarIs + 1])...),
       Red::policy::physical_view(  //
         as_mdspan_reduction<Fn, Dim>(reduction, working_set)),
       Is::policy::physical_view(
-        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[IIs]))...,
+        as_mdspan<const stl::value_type_of_t<Is>, stl::dim_of_v<Is>>(inputs[InputIs]))...,
       Os::policy::physical_view(
-        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OIs]))...);
+        as_mdspan<stl::value_type_of_t<Os>, stl::dim_of_v<Os>>(outputs[OutputIs]))...);
   }
 
   template <std::int32_t ActualDim>
@@ -1108,7 +1108,7 @@ class LaunchTask {
 
     inputs(task, iteration_kind{});
     outputs(task, iteration_kind{});
-    function(task);  // must preceed scalars
+    function(task);  // must precede scalars
     scalars(task);
     constraints(task, inputs.data(), outputs.data(), inputs.data()[0]);
 
@@ -1151,7 +1151,7 @@ class LaunchTask {
 
     inputs(task, reduction_kind{});
     outputs(task, reduction_kind{});
-    reduction(task);  // must preceed scalars
+    reduction(task);  // must precede scalars
     scalars(task);
     constraints(task, inputs.data(), outputs.data(), reduction.data);
 
@@ -1283,7 +1283,7 @@ inline constexpr detail::LaunchTask launch_task{};  // NOLINT(readability-identi
  *    the reduction function to be applied to the inputs.
  *
  *    - The function must be bitwise copyable.
- *    - The reduction function must take as `mdspan`s refering to parts
+ *    - The reduction function must take as `mdspan`s referring to parts
  *      of the input stores.
  *    - The reduction store can be a `logical_store` or some view of a
  *      store, such as `rows_of(store)`. When operating on a view, the

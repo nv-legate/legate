@@ -117,7 +117,7 @@ class Type {
    */
   [[nodiscard]] std::uint32_t uid() const;
   /**
-   * @brief Inidicates whether the data type is of varible size elements
+   * @brief Indicates whether the data type is of variable size elements
    *
    * @return true Elements can be variable size
    * @return false Elements have fixed size
@@ -275,7 +275,7 @@ class StructType : public Type {
    */
   [[nodiscard]] Type field_type(std::uint32_t field_idx) const;
   /**
-   * @brief Indiciates whether the fields are aligned
+   * @brief Indicates whether the fields are aligned
    *
    * @return true Fields are aligned
    * @return false Fields are compact

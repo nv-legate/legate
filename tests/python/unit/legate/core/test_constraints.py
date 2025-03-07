@@ -148,7 +148,7 @@ class TestBroadcast:
         with pytest.raises(
             ValueError, match=re.escape("axes must be iterable")
         ):
-            # Thanks for the warning mypy, but thats the point!
+            # Thanks for the warning mypy, but that's the point!
             lg.broadcast(variable_x, 1)  # type: ignore[call-overload]
 
         with pytest.raises(

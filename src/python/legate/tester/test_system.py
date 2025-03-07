@@ -144,11 +144,11 @@ class TestSystem(System):
                 timeout=timeout,
                 check=False,
             )
-        except TimeoutExpired as te:
-            if te.stdout is None:
+        except TimeoutExpired as te_exn:
+            if te_exn.stdout is None:
                 output = ""
             else:
-                output = te.stdout.decode(errors="replace")
+                output = te_exn.stdout.decode(errors="replace")
 
             assert timeout is not None  # mypy
             return ProcessResult(

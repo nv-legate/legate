@@ -223,4 +223,4 @@ software projects at install time. Review the license terms of these open
 source projects before use.
 
 For license information regarding projects bundled directly, see
-:ref:`thirdparty`.
+:ref:`third_party`.

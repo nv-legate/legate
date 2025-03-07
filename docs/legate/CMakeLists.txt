@@ -3,7 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #=============================================================================
 
-list(APPEND CMAKE_MODULE_PATH "${LEGATE_CMAKE_DIR}/thirdparty/sphinx")
+# cmake-format: off
+list(APPEND CMAKE_MODULE_PATH
+     "${LEGATE_CMAKE_DIR}/thirdparty/sphinx" # codespell:ignore thirdparty
+)
+# cmake-format: on
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "docs")
 

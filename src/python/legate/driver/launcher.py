@@ -132,7 +132,7 @@ class Launcher:
 
     @property
     def custom_env_vars(self) -> set[str]:
-        """The set of environment variables specificaly customized by us."""
+        """The set of environment variables specifically customized by us."""
         if self._custom_env_vars is None:
             self._env, self._custom_env_vars = self._compute_env()
         return self._custom_env_vars

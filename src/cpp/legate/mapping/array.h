@@ -51,7 +51,7 @@ class Array {
    */
   [[nodiscard]] Store null_mask() const;
   /**
-   * @brief Returns metadat of all stores associated with this array
+   * @brief Returns metadata of all stores associated with this array
    *
    * @return Vector of store metadata
    */

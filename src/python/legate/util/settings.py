@@ -18,12 +18,12 @@ immediately supplied values
 
     If ``value`` is not None, then it will be returned, as-is. Otherwise, if
     None is passed, then the setting will continue to look down the search
-    order for a value. This is useful for passing optional function paramters
+    order for a value. This is useful for passing optional function parameters
     that are None by default. If the parameter is passed to the function, then
     it will take precedence.
 
 previously user-set values
-    If the value is set explicity in code:
+    If the value is set explicitly in code:
 
     .. code-block:: python
 
@@ -47,7 +47,7 @@ local defaults
 
         settings.consensus(default=True)
 
-    Local defaults have lower precendence than every other setting mechanism
+    Local defaults have lower precedence than every other setting mechanism
     except global defaults.
 
 global defaults
@@ -226,7 +226,7 @@ class PrioritizedSetting(SettingBase[T]):
     The optional ``default`` argument specified an implicit default value for
     the setting that is returned if no other methods provide a value.
 
-    A ``convert`` agument may be provided to convert values before they are
+    A ``convert`` argument may be provided to convert values before they are
     returned.
     """
 
@@ -255,7 +255,7 @@ class PrioritizedSetting(SettingBase[T]):
                 be converted, then returned.
 
             default (any, optional):
-                An optional default value that only takes precendence over
+                An optional default value that only takes precedence over
                 implicit default values specified on the property itself.
 
         Returns
@@ -328,7 +328,7 @@ class PrioritizedSetting(SettingBase[T]):
 class EnvOnlySetting(SettingBase[T]):
     """Return a value for a global environment variable setting.
 
-    A ``convert`` agument may be provided to convert values before they are
+    A ``convert`` argument may be provided to convert values before they are
     returned.
     """
 

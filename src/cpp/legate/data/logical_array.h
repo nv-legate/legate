@@ -182,7 +182,7 @@ class LogicalArray {
    * @return A new array with the chosen dimension delinearized
    *
    * @throw std::invalid_argument If `dim` is invalid for the array or `sizes` does not preserve
-   * the extent of the chosen dimenison
+   * the extent of the chosen dimension
    * @throw std::runtime_error If the array or any of the sub-arrays is a list array
    */
   [[nodiscard]] LogicalArray delinearize(std::int32_t dim,

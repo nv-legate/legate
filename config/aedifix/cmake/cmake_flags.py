@@ -106,7 +106,7 @@ class CMakeFlagBase(ABC):
 
     @abstractmethod
     def _sanitize_value(self, val: _T) -> Any:
-        r"""The callback hook for value setter, which must be overriden by
+        r"""The callback hook for value setter, which must be overridden by
         derived classes.
 
         Parameters

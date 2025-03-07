@@ -25,7 +25,7 @@ class ReturnedPythonException {
   /**
    * @brief Construct a Python exception.
    *
-   * @param pkl_buf A pointer to the bytes containined the pickled exception instance.
+   * @param pkl_buf A pointer to the bytes contained the pickled exception instance.
    * @param pkl_len The size of the pickle buffer.
    * @param msg A string holding the formatted textual representation of the exception.
    *
@@ -37,7 +37,7 @@ class ReturnedPythonException {
   /**
    * @brief Construct a Python exception.
    *
-   * @param pkl_span The bytes containined the pickled exception instance.
+   * @param pkl_span The bytes contained the pickled exception instance.
    * @param msg A string holding the formatted textual representation of the exception.
    *
    * `message` holds the contents of
@@ -68,7 +68,7 @@ class ReturnedPythonException {
    * `message`) requires us to recreate the pickle protocol.
    *
    * So it's easier to just store both. It's inefficient, sure, but we only do this when we are
-   * handling an uncaught exception, and throwing exceptions was never gonna be cheap anyways.
+   * handling an uncaught exception, and throwing exceptions was never going to be cheap anyways.
    */
   ReturnedPythonException(Span<const std::byte> pkl_span, std::string msg);
 

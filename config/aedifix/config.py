@@ -107,7 +107,7 @@ class ConfigFile(Configurable):
 
     def _make_aedifix_substitutions(self, text: str) -> dict[str, str]:
         r"""Read the template file and find any aedifix-specific variable
-        subsitutions. Return a list of CMake command line arguments with the
+        substitutions. Return a list of CMake command line arguments with the
         requested substitution value.
 
         Parameters

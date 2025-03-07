@@ -62,7 +62,7 @@ class Store {
   /**
    * @brief Returns the reduction operator id for the store
    *
-   * @return Reduction oeprator id
+   * @return Reduction operator id
    */
   [[nodiscard]] GlobalRedopID redop() const;
 

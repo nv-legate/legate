@@ -154,7 +154,7 @@ class Reconfigure(Configurable):
                 self.reconfigure_file.relative_to(self.project_dir)
             )
         except FileExistsError:
-            self.log("Symlink destionation already exists")
+            self.log("Symlink destination already exists")
 
         if self._backup is not None:
             self.log(

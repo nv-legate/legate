@@ -77,7 +77,7 @@ TEST_F(ListTypeUnit, ListTypeBadType)
 
 TEST_F(ListTypeUnit, ListTypeBadCast)
 {
-  // invald casts
+  // invalid casts
   ASSERT_THROW(static_cast<void>(legate::string_type().as_struct_type()), std::invalid_argument);
 }
 

@@ -14,7 +14,7 @@
 
 /**
  * @file
- * @brief Class definition fo legate::TaskRegistrar
+ * @brief Class definition for legate::TaskRegistrar
  */
 
 namespace legate {

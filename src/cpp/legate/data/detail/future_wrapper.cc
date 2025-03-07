@@ -53,7 +53,7 @@ namespace {
 }  // namespace
 
 // Silence pass-by-value since Legion::Domain is POD, and the move ctor just does the copy
-// anyways. Unfortunately there is no way to check this programatically (e.g. via a
+// anyways. Unfortunately there is no way to check this programmatically (e.g. via a
 // static_assert).
 FutureWrapper::FutureWrapper(bool read_only,
                              std::uint32_t field_size,

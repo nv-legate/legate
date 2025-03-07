@@ -27,7 +27,7 @@ class SharedPtr {
   // Constructors
   constexpr SharedPtr() noexcept = default;
 
-  // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::shared_ptr ctor
+  // NOLINTNEXTLINE(google-explicit-constructor) to mimic std::shared_ptr ctor
   constexpr SharedPtr(std::nullptr_t) noexcept;
 
   template <typename U,
@@ -48,7 +48,7 @@ class SharedPtr {
   template <typename U,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
-  SharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+  SharedPtr(  // NOLINT(google-explicit-constructor) to mimic std::shared_ptr ctor
     const SharedPtr<U>&) noexcept;
   template <typename U,
             typename = std::enable_if_t<
@@ -57,7 +57,7 @@ class SharedPtr {
   template <typename U,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
-  SharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+  SharedPtr(  // NOLINT(google-explicit-constructor) to mimic std::shared_ptr ctor
     SharedPtr<U>&&) noexcept;
   template <typename U,
             typename = std::enable_if_t<
@@ -90,7 +90,7 @@ class SharedPtr {
             typename D,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
-  SharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+  SharedPtr(  // NOLINT(google-explicit-constructor) to mimic std::shared_ptr ctor
     std::unique_ptr<U, D>&&);
   template <typename U,
             typename D,

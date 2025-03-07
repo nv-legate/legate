@@ -414,7 +414,7 @@ using projection_policy =  // NOLINT(readability-identifier-naming)
   detail::ProjectionPolicy<ProjDims...>;
 
 /**
- * @brief A view of a logical store, sliced along some specified dimenstion(s),
+ * @brief A view of a logical store, sliced along some specified dimension(s),
  * resulting in a 1-dimensional range of logical stores.
  *
  * @tparam ElementType The element type of the underlying logical store.

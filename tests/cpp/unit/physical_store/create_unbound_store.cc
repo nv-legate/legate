@@ -104,7 +104,7 @@ class UnboundStoreCreateFn {
     ASSERT_THROW(static_cast<void>(store.get_inline_allocation()), std::invalid_argument);
     ASSERT_THROW(static_cast<void>(store.target()), std::invalid_argument);
 
-    // Specfic APIs for future/bound store
+    // Specific APIs for future/bound store
     ASSERT_THROW(static_cast<void>(store.scalar<T>()), std::invalid_argument);
     ASSERT_THROW(static_cast<void>(store.read_accessor<T, DIM>()), std::invalid_argument);
 

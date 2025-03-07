@@ -19,7 +19,7 @@
 
 /**
  * @file
- * @brief Class definition fo legate::LegateTask
+ * @brief Class definition for legate::LegateTask
  */
 
 namespace legate {
@@ -35,7 +35,7 @@ namespace legate {
  * Any Legate task class must inherit legate::LegateTask directly or transitively. The type
  * parameter `T` needs to be bound to a child Legate task class that inherits legate::LegateTask.
  *
- * Curently, each task can have up to three variants and the variants need to be static member
+ * Currently, each task can have up to three variants and the variants need to be static member
  * functions of the class under the following names:
  *
  *   - `cpu_variant`: CPU implementation of the task
@@ -83,7 +83,7 @@ class LegateTask {  // NOLINT(bugprone-crtp-constructor-accessibility)
    * legate::TaskRegistrar for details about setting up a registrar in a library). The client
    * can optionally specify variant options.
    *
-   * @param all_options Options for task variants. Variants with no entires in `all_options` will
+   * @param all_options Options for task variants. Variants with no entries in `all_options` will
    * use the default set of options as discussed in the class description.
    */
   static void register_variants(std::map<VariantCode, VariantOptions> all_options = {});
@@ -95,7 +95,7 @@ class LegateTask {  // NOLINT(bugprone-crtp-constructor-accessibility)
    * The value of T::TASK_ID is used as the task id.
    *
    * @param library Library to which the task should be registered
-   * @param all_options Options for task variants. Variants with no entires in `all_options` will
+   * @param all_options Options for task variants. Variants with no entries in `all_options` will
    * use the default set of options as discussed in the class description.
    */
   static void register_variants(Library library,
@@ -108,7 +108,7 @@ class LegateTask {  // NOLINT(bugprone-crtp-constructor-accessibility)
    *
    * @param library Library to which the task should be registered
    * @param task_id Task id
-   * @param all_options Options for task variants. Variants with no entires in `all_options` will
+   * @param all_options Options for task variants. Variants with no entries in `all_options` will
    * use the default set of options as discussed in the class description.
    */
   static void register_variants(Library library,

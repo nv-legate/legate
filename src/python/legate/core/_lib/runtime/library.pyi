@@ -16,7 +16,7 @@ from ..utilities.unconstructable import Unconstructable
 class Library(Unconstructable):
     def get_new_task_id(self) -> LocalTaskID: ...
     # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
-    # but we allow int as a type-checking convencience to users
+    # but we allow int as a type-checking convenience to users
     def get_task_id(
         self, local_task_id: LocalTaskID | int
     ) -> GlobalTaskID: ...

@@ -260,8 +260,9 @@ set(install_rpath
     # The ../ is needed because
     # ${legate_PLATFORM_RPATH_ORIGIN}/${legate_DEP_INSTALL_LIBDIR} expands to (on linux)
     # $ORIGIN/lib/legate/deps, which is fine *except* if $ORIGIN is already in lib/. In
-    # that case it would expand to lib/lib/legate/deps which DNE. So we need to ../ once
-    # so that it expands to lib/../lib/legate/deps. A hack for sure, but it works.
+    # that case it would expand to lib/lib/legate/deps which does not exist. So we need to
+    # ../ once so that it expands to lib/../lib/legate/deps. A hack for sure, but it
+    # works.
     "${legate_PLATFORM_RPATH_ORIGIN}/../${legate_DEP_INSTALL_LIBDIR}")
 
 set_property(TARGET legate APPEND PROPERTY INSTALL_RPATH "${install_rpath}")
@@ -973,7 +974,7 @@ if(PROJECT_IS_TOP_LEVEL)
 endif()
 
 # This call must come LAST because cpm_licenses_create_disclaimer_target only works
-# properly if it is called after all thirdparty packages have been downloaded.  Do not
+# properly if it is called after all third-party packages have been downloaded.  Do not
 # move this call!
 set(legate_LICENSE_FILE "${CMAKE_CURRENT_BINARY_DIR}/licenses.txt")
 cpm_licenses_create_disclaimer_target(legate_write_licenses "${legate_LICENSE_FILE}"

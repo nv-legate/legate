@@ -51,7 +51,7 @@ class TaskSignature {
 
   /**
    * @brief A value indicating that a particular option has "unbounded" (or unknown) number of
-   * posibilities.
+   * possibilities.
    *
    * This is commonly used for e.g. `inputs()`, `outputs()`, `scalars()`, or `redops()` when a
    * task takes an unknown number of arguments, or when the upper limit on the number of

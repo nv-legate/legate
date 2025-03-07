@@ -101,7 +101,7 @@ class IOHDF5ReadUnit : public RegisterOnceFixture<Config> {
 
 // TODO(jfaibussowit)
 // Re-enable this test once Quincey and I figure out why reading Opaque data as std::uint8_t
-// magically works for the SLAC dataset
+// magically works for the SLACK dataset
 TEST_F(IOHDF5ReadUnit, Binary)
 {
   constexpr auto SIZE    = 10;

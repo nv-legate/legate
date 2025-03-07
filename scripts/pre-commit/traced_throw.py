@@ -29,7 +29,7 @@ def update_headers(path: Path, text: str) -> str:
     if is_header(path) and is_publically_accessible(path):
         raise ReplacementError(
             path,
-            "file is publically exposed, cannot include "
+            "file is publicly exposed, cannot include "
             f"{TRACED_EXCEPTION_HEADER} in it. Please move all throw "
             "expressions in it to a .cc",
         )

@@ -369,7 +369,7 @@ class InstanceMappingPolicy {
 class StoreMapping {
  public:
   /**
-   * @brief Creates a mapping policy for the given store following the default mapping poicy
+   * @brief Creates a mapping policy for the given store following the default mapping policy
    *
    * @param store Target store
    * @param target Kind of the memory to which the store should be mapped

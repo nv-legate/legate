@@ -363,7 +363,7 @@ class LogicalStore {
    * @return A new store with the chosen dimension delinearized
    *
    * @throw std::invalid_argument If `dim` is invalid for the store or `sizes` does not preserve
-   * the extent of the chosen dimenison
+   * the extent of the chosen dimension
    */
   [[nodiscard]] LogicalStore delinearize(std::int32_t dim, std::vector<std::uint64_t> sizes) const;
 

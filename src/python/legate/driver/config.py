@@ -38,7 +38,7 @@ class MultiNode(DataclassMixin):
     launcher_extra: list[str]
 
     def __post_init__(self, **kw: dict[str, Any]) -> None:
-        # fix up launcher_extra to automaticaly handle quoted strings with
+        # fix up launcher_extra to automatically handle quoted strings with
         # internal whitespace, have to use __setattr__ for frozen
         # https://docs.python.org/3/library/dataclasses.html#frozen-instances
         if self.launcher_extra:
@@ -94,7 +94,7 @@ class Profiling(DataclassMixin):
     nsys_extra: list[str]
 
     def __post_init__(self, **kw: dict[str, Any]) -> None:
-        # fix up nsys_extra to automaticaly handle quoted strings with
+        # fix up nsys_extra to automatically handle quoted strings with
         # internal whitespace, have to use __setattr__ for frozen
         # https://docs.python.org/3/library/dataclasses.html#frozen-instances
         if self.nsys_extra:

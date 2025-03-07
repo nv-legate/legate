@@ -364,7 +364,7 @@ InternalSharedPtr<Partition> Weighted::invert(const InternalSharedPtr<Partition>
   }
   auto color_domain = to_domain(transform->invert_color_shape(color_shape_));
   // Weighted partitions are created only for 1D stores. So, if we're here, the 1D store to which
-  // this partition is applied would be a degenerate N-D store such that all but one dimenion are
+  // this partition is applied would be a degenerate N-D store such that all but one dimension are
   // of extent 1. So, we only need to delinearize the future map holding the weights so the domain
   // matches the color domain.
   return create_weighted(Runtime::get_runtime()->delinearize_future_map(weights_, color_domain),
@@ -398,7 +398,7 @@ bool Image::is_complete_for(const detail::Storage* /*storage*/) const
 
 bool Image::is_disjoint_for(const Domain& launch_domain) const
 {
-  // Disjointness check for image partitions is expensive, so we give a sound answer;
+  // Disjointedness check for image partitions is expensive, so we give a sound answer;
   return !launch_domain.is_valid();
 }
 

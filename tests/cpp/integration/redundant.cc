@@ -102,7 +102,7 @@ TEST_F(Redundant, Test)
 
   launch_task(part1, false);
   launch_task(part2, true);
-  // Wihtout a mapping fence, all reader tasks in theory can initiate their mapping before mappings
+  // Without a mapping fence, all reader tasks in theory can initiate their mapping before mappings
   // for other tasks finish and yield the memory space
   runtime->issue_mapping_fence();
   launch_task(part3, true);

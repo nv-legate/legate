@@ -36,7 +36,7 @@ void read_hdf5_file(const HDF5GlobalLock&,
                     void* dst)
 {
   auto&& dspace = dataset.getSpace();
-  // Re-use the datatype that we get from the dataset. In this case, HDF5 will simply believe
+  // Reuse the datatype that we get from the dataset. In this case, HDF5 will simply believe
   // that `dst` points to what we claim it does.
   //
   // We do this because we have already selected the appropriate datatype while launching the

@@ -51,7 +51,7 @@ namespace legate {
  * allocation while the tasks are still running. An external allocation attached to a store can be
  * safely deallocated in two ways:
  *
- * 1) The client code calls the `detach()` method on the store before it dellocate the
+ * 1) The client code calls the `detach()` method on the store before it deallocate the
  *    allocation. The `detach()` call makes sure that all outstanding operations on the store
  *    complete (see `LogicalStore::detach()`).
  * 2) The client code can optionally pass in a deleter for the allocation, which will be

@@ -57,7 +57,7 @@ namespace legate::detail {
  * (2, 1) -> 7
  * (2, 2) -> 8
  * @endcode
- * Similary, with a `lo` of `(2, 2)` and `hi` of `(4, 4)`:
+ * Similarly, with a `lo` of `(2, 2)` and `hi` of `(4, 4)`:
  * @code{.unparsed}
  * Point  -> idx
  * (2, 2) -> 0

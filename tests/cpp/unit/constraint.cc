@@ -74,20 +74,20 @@ TEST_F(Constraint, Alignment)
   auto part1 = task.declare_partition();
   auto part2 = task.declare_partition();
 
-  auto aligment = legate::detail::align(part1.impl(), part2.impl());
-  ASSERT_EQ(aligment->kind(), legate::detail::Constraint::Kind::ALIGNMENT);
-  ASSERT_EQ(aligment->lhs(), part1.impl());
-  ASSERT_EQ(aligment->rhs(), part2.impl());
-  ASSERT_EQ(dynamic_cast<const legate::detail::Alignment*>(aligment.get()), aligment.get());
-  ASSERT_EQ(dynamic_cast<const legate::detail::Broadcast*>(aligment.get()), nullptr);
-  ASSERT_EQ(dynamic_cast<const legate::detail::ImageConstraint*>(aligment.get()), nullptr);
-  ASSERT_EQ(dynamic_cast<const legate::detail::ScaleConstraint*>(aligment.get()), nullptr);
-  ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(aligment.get()), nullptr);
-  ASSERT_FALSE(aligment->is_trivial());
+  auto alignment = legate::detail::align(part1.impl(), part2.impl());
+  ASSERT_EQ(alignment->kind(), legate::detail::Constraint::Kind::ALIGNMENT);
+  ASSERT_EQ(alignment->lhs(), part1.impl());
+  ASSERT_EQ(alignment->rhs(), part2.impl());
+  ASSERT_EQ(dynamic_cast<const legate::detail::Alignment*>(alignment.get()), alignment.get());
+  ASSERT_EQ(dynamic_cast<const legate::detail::Broadcast*>(alignment.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ImageConstraint*>(alignment.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::ScaleConstraint*>(alignment.get()), nullptr);
+  ASSERT_EQ(dynamic_cast<const legate::detail::BloatConstraint*>(alignment.get()), nullptr);
+  ASSERT_FALSE(alignment->is_trivial());
 
   // Test find_partition_symbols
   std::vector<const legate::detail::Variable*> symbols = {};
-  aligment->find_partition_symbols(symbols);
+  alignment->find_partition_symbols(symbols);
   ASSERT_EQ(symbols.size(), 2);
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part1.impl()) != symbols.end());
   ASSERT_TRUE(std::find(symbols.begin(), symbols.end(), part2.impl()) != symbols.end());

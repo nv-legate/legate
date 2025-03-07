@@ -32,7 +32,7 @@ def main(lib_path: Path) -> None:
     hello_world_register_task.argtypes = (c_void_p,)
     hello_world_register_task.restype = None
 
-    # First, however, we create our libary. As with almost all objects in
+    # First, however, we create our library. As with almost all objects in
     # Legate, we create it through the Runtime.
     runtime = get_legate_runtime()
     lib = runtime.create_library("hello")

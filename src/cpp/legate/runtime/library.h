@@ -126,7 +126,7 @@ class Library {
    * the `apply` would subtract the aggregate value from the LHS.
    *
    * The reduction operator id (`REDOP_ID`) can be local to the library but should be unique
-   * for each opeartor within the library.
+   * for each operator within the library.
    *
    * Finally, the contract for `apply` and `fold` is that they must update the
    * reference atomically when the `EXCLUSIVE` is `false`.

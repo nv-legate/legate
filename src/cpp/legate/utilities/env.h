@@ -33,7 +33,7 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_TEST);
  * @var LEGATE_SHOW_USAGE
  *
  * @brief Enables verbose resource consumption logging of the base mapper on
- * desctruction. Possible values: 0, 1.
+ * destruction. Possible values: 0, 1.
  */
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SHOW_USAGE);
 

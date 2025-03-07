@@ -63,7 +63,7 @@ class Package(Configurable):
         always_enabled: bool = False,
         dependencies: tuple[type[Package], ...] = (),
     ) -> None:
-        r"""Constuct a Package.
+        r"""Construct a Package.
 
         Parameters
         ----------
@@ -139,8 +139,8 @@ class Package(Configurable):
 
         Notes
         -----
-        Must not be overriden by packages unless they wish to supply no options
-        at all.
+        Must not be overridden by packages unless they wish to supply no
+        options at all.
         """
         group = self.create_argument_group(parser)
         self.log_execute_func(self.add_package_options, group)
@@ -379,7 +379,7 @@ class Package(Configurable):
             )
 
     def summarize(self) -> str:
-        r"""Return a summary of this `Configurable`. By defalt, returns
+        r"""Return a summary of this `Configurable`. By default, returns
         an empty summary.
 
         Returns

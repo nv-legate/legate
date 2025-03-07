@@ -30,7 +30,7 @@ if [[ "${LEGATE_DIR:-}" == "" ]]; then
     script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
     LEGATE_DIR="$(python "${script_dir}"/../../scripts/get_legate_dir.py)"
   else
-    # Simple path witin GitHub actions workflows.
+    # Simple path within GitHub actions workflows.
     LEGATE_DIR="${GITHUB_WORKSPACE}"
   fi
   export LEGATE_DIR

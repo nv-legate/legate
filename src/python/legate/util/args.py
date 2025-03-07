@@ -90,7 +90,7 @@ class MultipleChoices(Generic[T]):
     Parameters
     ----------
     choices: Iterable[T]
-        The values to populate the containter.
+        The values to populate the container.
 
     Examples
     --------

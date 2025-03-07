@@ -324,7 +324,7 @@ TEST_P(NullableTest, CreateListArray)
   ASSERT_EQ(array.dim(), VARILABLE_TYPE_BOUND_DIM);
   ASSERT_EQ(array.extents(), bound_shape_single_dim().extents());
   ASSERT_EQ(array.volume(), bound_shape_single_dim().volume());
-  // compare code here since UID of ListType differ between differnt objects
+  // compare code here since UID of ListType differ between different objects
   ASSERT_EQ(array.type().code(), legate::Type::Code::LIST);
   ASSERT_EQ(array.nullable(), nullable);
   ASSERT_EQ(array.num_children(), NUM_CHILDREN);

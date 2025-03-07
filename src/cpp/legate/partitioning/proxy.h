@@ -15,7 +15,7 @@
 
 /**
  * @file
- * @brief Class definitions for proxy contraint objects.
+ * @brief Class definitions for proxy constraint objects.
  */
 
 namespace legate::detail {

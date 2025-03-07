@@ -131,8 +131,8 @@ class CMaker:
     ) -> None:
         r"""Append a value to a CMake list.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         manager : ConfigurationManager
             The manager responsible for the current configuration.
         name : str

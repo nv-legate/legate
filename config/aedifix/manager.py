@@ -146,7 +146,7 @@ class ConfigurationManager:
         git_exe = shutil.which("git")
         if git_exe is None:
             self.log(
-                "'git' command not found, likely not a developement repository"
+                "'git' command not found, likely not a development repository"
             )
             return
 
@@ -701,7 +701,7 @@ class ConfigurationManager:
             If True, output is printed to screen in addition to being appended
             to the on-disk log file. If False, output is only written to disk.
         caller_context : bool, True
-            Whether to prepand the name of the function which called this
+            Whether to prepend the name of the function which called this
             function to `mess`.
         keep : bool, False
             Whether to make the message persist in live output.

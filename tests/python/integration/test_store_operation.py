@@ -308,8 +308,8 @@ class TestLogicalStoreOperationErrors:
             store = store.delinearize(2, (1, 4))
 
         # we won't reach this line at this point, but keeping it here as it
-        # crashes application when inline allocaiton is accessed since
-        # max dim is exeeded:
+        # crashes application when inline allocation is accessed since
+        # max dim is exceeded:
         # Legion::DomainTransform::DomainTransform(const Legion::
         # DomainTransform&): Assertion `n <= LEGION_MAX_DIM' failed.
 

@@ -41,7 +41,8 @@ function(find_or_configure_mdspan)
                   GIT_REPOSITORY "${git_url}"
                   GIT_SHALLOW "${git_shallow}" SYSTEM TRUE
                   GIT_TAG "${git_tag}"
-                  OPTIONS # Gotta set this, otherwise mdspan tries to guess a C++ standard
+                  OPTIONS # Got to set this, otherwise mdspan tries to guess a C++
+                          # standard
                           "MDSPAN_CXX_STANDARD ${CMAKE_CXX_STANDARD}"
                           "CMAKE_INSTALL_INCLUDEDIR ${legate_DEP_INSTALL_INCLUDEDIR}"
                           "CMAKE_INSTALL_LIBDIR ${legate_DEP_INSTALL_LIBDIR}")

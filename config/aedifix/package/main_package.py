@@ -390,7 +390,7 @@ class MainPackage(Package, ABC):
             The value of the project dir, e.g. /path/to/legate.
         project_config_file_template: Path
             A path to a configure file template to fill out and place under
-            PROJECT_DIR/PROJECT_ARCH on successfull configure.
+            PROJECT_DIR/PROJECT_ARCH on successful configure.
         project_src_dir : Path, optional
             The path to the projects source directory for CMake. If not
             provided, ``project_dir_value`` is used instead.

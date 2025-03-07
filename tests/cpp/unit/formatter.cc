@@ -155,9 +155,9 @@ TEST_F(FormatterUnit, Alignment)
   ASSERT_THAT(fmt::format("{}", *(part2.impl())),
               ::testing::MatchesRegex(R"(X1\{formatter_test::FormatterBaseTask:[0-9]+\})"));
 
-  auto aligment = legate::detail::align(part1.impl(), part2.impl());
+  auto alignment = legate::detail::align(part1.impl(), part2.impl());
   ASSERT_THAT(
-    fmt::format("{}", *aligment),
+    fmt::format("{}", *alignment),
     ::testing::MatchesRegex(
       R"(Align\(X0\{formatter_test::FormatterBaseTask:[0-9]+\}, X1\{formatter_test::FormatterBaseTask:[0-9]+\}\))"));
 }

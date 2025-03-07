@@ -111,7 +111,7 @@ def was_built_with_build_isolation() -> bool:
 
     Notes
     -----
-    This is a guess, and an agressive one at that. It could be a false
+    This is a guess, and an aggressive one at that. It could be a false
     positive, it could be a false negative, but it hasn't failed us yet!
     """
     skbuild_cache_file = (

@@ -152,7 +152,7 @@ class Shape {
   /**
    * @brief Generates a human-readable string from the `Shape` (non-blocking)
    *
-   * @return `std::tring` generated from the `Shape`
+   * @return `std::string` generated from the `Shape`
    */
   [[nodiscard]] std::string to_string() const;
 

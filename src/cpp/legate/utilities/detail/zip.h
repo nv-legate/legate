@@ -139,7 +139,7 @@ class ZiperatorBase {
   iter_tuple_type iter_tup_;
 };
 
-// zip-shortest zipper implementatation
+// zip-shortest zipper implementation
 template <typename... T>
 class ZiperatorShortest : public ZiperatorBase<ZiperatorShortest<T...>, T...> {
   using base_type = ZiperatorBase<ZiperatorShortest<T...>, T...>;
@@ -152,7 +152,7 @@ class ZiperatorShortest : public ZiperatorBase<ZiperatorShortest<T...>, T...> {
   using base_type::base_type;
 };
 
-// zip-equal zipper implementatation
+// zip-equal zipper implementation
 template <typename... T>
 class ZiperatorEqual : public ZiperatorBase<ZiperatorEqual<T...>, T...> {
   using base_type = ZiperatorBase<ZiperatorEqual<T...>, T...>;
@@ -223,7 +223,7 @@ class Zipper {
  * operation. That is, the returned zipper stops when at least one object or container has
  * reached the end. Iterating past that point results in undefined behavior.
  *
- * The iterators returned by the adaptor support the lowest common demoninator of all
+ * The iterators returned by the adaptor support the lowest common denominator of all
  * containers when it comes to iterator functionality. For example, if all containers'
  * iterators support `std::random_access_iterator_tag`, then the returned iterator will as
  * well.
@@ -246,7 +246,7 @@ template <typename... T>
  * verify this invariant upfront, by calling (if applicable) std::size() on the
  * inputs. Iterating past the end results in undefined behavior.
  *
- * The iterators returned by the adaptor support the lowest common demoninator of all
+ * The iterators returned by the adaptor support the lowest common denominator of all
  * containers when it comes to iterator functionality. For example, if all containers'
  * iterators support `std::random_access_iterator_tag`, then the returned iterator will as
  * well.

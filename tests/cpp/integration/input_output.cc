@@ -10,7 +10,7 @@
 
 #include <utilities/utilities.h>
 
-namespace inout {
+namespace test_inout {
 
 // NOLINTBEGIN(readability-magic-numbers)
 
@@ -72,7 +72,7 @@ struct InoutTask : public legate::LegateTask<InoutTask> {
   }
 };
 
-class InOut : public DefaultFixture {
+class InOutUnit : public DefaultFixture {
  public:
   void SetUp() override
   {
@@ -118,8 +118,8 @@ void test_inout()
 
 }  // namespace
 
-TEST_F(InOut, All) { test_inout(); }
+TEST_F(InOutUnit, All) { test_inout(); }
 
 // NOLINTEND(readability-magic-numbers)
 
-}  // namespace inout
+}  // namespace test_inout

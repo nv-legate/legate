@@ -108,7 +108,7 @@ class InplaceControlBlock final : public ControlBlockBase {
    public:
     constexpr AlignedStorage() noexcept = default;
     // use this ctor to avoid zero-initializing the array
-    // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::pair constructor
+    // NOLINTNEXTLINE(google-explicit-constructor) to mimic std::pair constructor
     constexpr AlignedStorage(std::nullptr_t) noexcept {}
 
     [[nodiscard]] void* addr() noexcept { return static_cast<void*>(&mem); }

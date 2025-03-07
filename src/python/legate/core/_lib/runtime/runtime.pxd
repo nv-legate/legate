@@ -105,7 +105,7 @@ cdef extern from *:
         Py_XDECREF(index);
         assert(
           (result == 0)
-          && "Error occured setting values into Python tuple"
+          && "Error occurred setting values into Python tuple"
         );
         assert(
           false

@@ -37,8 +37,8 @@ def subprocess_check_returncode(
 ) -> CompletedProcess[_T]:
     r"""Check the return code of a subprocess return value.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     ret : CompletedProcess
       the return value of `subprocess.run()`
 
@@ -142,9 +142,9 @@ def subprocess_capture_output_live_impl(
         while not done:
             try:
                 stdout, stderr = process.communicate(timeout=timeout)
-            except TimeoutExpired as te:
-                stdout = _normalize_output(te.stdout)
-                stderr = _normalize_output(te.stderr)
+            except TimeoutExpired as te_exn:
+                stdout = _normalize_output(te_exn.stdout)
+                stderr = _normalize_output(te_exn.stderr)
             except KeyboardInterrupt:
                 process.send_signal(SIGINT)
                 raise
@@ -373,7 +373,7 @@ def deduplicate_command_line_args(argv: Sequence[str]) -> list[str]:
 
     Notes
     -----
-    Deduplicates the arguments by keeping only the *last* occurance of each
+    Deduplicates the arguments by keeping only the *last* occurrence of each
     command line flag and its values.
     """
     # A dummy name that is used only in case the first arguments are

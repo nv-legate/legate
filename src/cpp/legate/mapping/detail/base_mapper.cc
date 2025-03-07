@@ -1000,7 +1000,7 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
 
   if (domain.has_value()) {
     // During get_index_space_domain() it is possible (though unlikely) that another mapping
-    // task pre-empted us and deposited a matching region into the cache.
+    // task preempted us and deposited a matching region into the cache.
     //
     // So we need to search the cache again, because otherwise we might end up with 2 instances
     // covering the same region in the cache.

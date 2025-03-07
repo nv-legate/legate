@@ -163,7 +163,7 @@ cdef class Shape:
 
     def __iter__(self) -> Iterator[int]:
         r"""
-        Retrun an iterator to the shapes extents.
+        Return an iterator to the shapes extents.
 
         Returns
         -------

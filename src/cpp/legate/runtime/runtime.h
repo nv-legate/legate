@@ -193,7 +193,7 @@ class Runtime {
    *
    * This overload should be used when the lower bounds of the task's launch domain should be
    * non-zero. Note that the upper bounds of the launch domain are inclusive (whereas the
-   * `launch_shape` in the other overload is exlusive).
+   * `launch_shape` in the other overload is exclusive).
    *
    * @param library Library to query the task
    * @param task_id Library-local Task ID

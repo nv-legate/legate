@@ -147,7 +147,7 @@ set(with_runtime_SRC
     integration/image_constraints.cc
     integration/index_attach.cc
     integration/inline_map.cc
-    integration/inout.cc
+    integration/input_output.cc
     integration/is_partitioned.cc
     integration/is_running_in_task.cc
     integration/machine_scope.cc

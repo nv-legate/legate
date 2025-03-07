@@ -67,6 +67,15 @@ repos:
         'types_or': [c++, c, cuda]
         stages: [pre-commit]
         exclude: '^tests/cpp/.*$'
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        additional_dependencies:
+          # Technically not necessary, but since Legate supports Python 3.10, it's
+          # possible that the user doesn't have 3.11 locally.
+          - tomli
+        args: ["--toml=./pyproject.toml", "--write-changes"]
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: 'v19.1.7'
     hooks:

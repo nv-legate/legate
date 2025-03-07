@@ -62,7 +62,7 @@ namespace legate::experimental::io::kvikio {
  * The array must be linear, i.e. have dimension of 1.
  *
  * @param file_path The path to the file.
- * @param array The array to seralize.
+ * @param array The array to serialize.
  *
  * @throws std::invalid_argument If the dimension of `array` is not 1.
  *

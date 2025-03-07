@@ -37,7 +37,7 @@ class Tiling;
  *  (1) At the time an `ExternalAllocation` is attached to a `LogicalRegionField`, the runtime sets
  *  `true` to `LogicalRegionField::attached_` to indicate that there's a pending
  *  `Attach`/`IndexAttach` operation for this `LogicalRegionField`. This bookkeeping allows the
- *  subsequent operations accessing this `LogicalRegionField` to know the pending attachment wihtout
+ *  subsequent operations accessing this `LogicalRegionField` to know the pending attachment without
  *  examining the scheduling window. The issued operation then performs the actual attachment by
  *  updating `physical_state_.attachment_` of the `LogicalRegionField`.
  *
@@ -46,7 +46,7 @@ class Tiling;
  *  operations that use the region field are still sitting in the scheduling window.  The runtime
  *  safely performs the unmapping and detachment for the `LogicalRegionField` by issuing an
  *  `UnmapAndDetach` operation that unmaps the physical region and detaches the attachment only
- *  after all the precending tasks using the `LogicalRegionField` are launched.
+ *  after all the preceding tasks using the `LogicalRegionField` are launched.
  *
  * Note that the inline mapping is performed immediately, as it always flushes the scheduling
  * window.

@@ -39,7 +39,7 @@ inline const Legion::RegionRequirement* RegionField::get_requirement() const { r
 // ==========================================================================================
 
 // Silence pass-by-value since Legion::Domain is POD, and the move ctor just does the copy
-// anyways. Unfortunately there is no way to check this programatically (e.g. via a
+// anyways. Unfortunately there is no way to check this programmatically (e.g. via a
 // static_assert).
 inline FutureWrapper::FutureWrapper(std::uint32_t idx,
                                     const Legion::Domain& domain  // NOLINT(modernize-pass-by-value)

@@ -88,7 +88,7 @@ class ScopedAllocator {
   // std::unique_ptr<Impl> impl_{} as std::unique_ptr<Impl> impl_ = std::unique_ptr<Impl>{}.
   // After copy initialization, the destructor of std::unique_ptr does not know
   // how to delete the Impl because it is forward declared.
-  // The followings are the error messages when compiling cuPyNumeric
+  // The following are the error messages when compiling cuPyNumeric
   // /usr/include/c++/9/bits/unique_ptr.h(79): error: incomplete type is not allowed
   // static_assert(sizeof(_Tp)>0,
   //                       ^

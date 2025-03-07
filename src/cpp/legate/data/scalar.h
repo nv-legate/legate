@@ -192,7 +192,7 @@ class Scalar {
    *
    * @throw std::invalid_argument If one of the following cases is encountered:
    *
-   * 1) the scalar has a fixed array type whose elemenet type has a different size from `VAL`,
+   * 1) the scalar has a fixed array type whose element type has a different size from `VAL`,
    * 2) the scalar holds a string and size of `VAL` isn't 1 byte,
    * 3) the scalar's type isn't a fixed array type and the size is different from size of `VAL`
    */

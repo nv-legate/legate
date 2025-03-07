@@ -118,7 +118,7 @@ InternalSharedPtr<LogicalRegionField> ConsensusMatchingFieldManager::allocate_fi
   InternalSharedPtr<Shape> shape, std::uint32_t field_size)
 {
   maybe_issue_field_match_(shape, field_size);
-  // If there's a field that every shard is guaranteed to have, re-use that.
+  // If there's a field that every shard is guaranteed to have, reuse that.
   if (auto result = try_reuse_field_(shape, field_size)) {
     return result;
   }

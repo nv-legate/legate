@@ -83,7 +83,7 @@ void for_each_zip_doxy_snippets()
                                          {2, 3, 4, 5},
                                          {1, 2, 3, 4}};
 
-    // `a` and `b` are `mdspan` objects refering to the rows of `store1`
+    // `a` and `b` are `mdspan` objects referring to the rows of `store1`
     // and `store2`.
     auto fn = [] LEGATE_HOST_DEVICE(auto&& a, auto&& b) {
       for (std::ptrdiff_t i = 0; i < a.extent(0); ++i) {
@@ -159,7 +159,7 @@ void for_each_doxy_snippets()
                                         {2, 3, 4, 5},
                                         {3, 4, 5, 6}};
 
-    // `a` is an `mdspan` object refering to the rows of `store`.
+    // `a` is an `mdspan` object referring to the rows of `store`.
     auto fn = [] LEGATE_HOST_DEVICE(auto&& a) { a(0) = 42; };
     stl::for_each(stl::rows_of(store), fn);
 

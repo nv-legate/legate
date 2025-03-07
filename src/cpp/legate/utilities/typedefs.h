@@ -124,7 +124,7 @@ using coord_t = Legion::coord_t;
  * @brief Type for multi-dimensional points.
  *
  * Point objects support index expressions; they can be accessed like a statically-sized array.
- * Point objects also support usual arithmetic operators and a dot opreator.
+ * Point objects also support usual arithmetic operators and a dot operator.
  *
  * For a complete definition, see
  * [Realm::Point](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/point.h#L46-L124).

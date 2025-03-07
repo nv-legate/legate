@@ -275,7 +275,7 @@ cdef class Machine:
         Parameters
         ----------
         ranges : dict[TaskTarget, ProcessorRange] | None
-            A mapping of the avaible processors per target for the machine.
+            A mapping of the available processors per target for the machine.
 
         Raises
         ------

@@ -56,7 +56,7 @@ multi_node.add_argument(sa.LAUNCHER.name, **sa.LAUNCHER.kwargs)
 multi_node.add_argument(sa.LAUNCHER_EXTRA.name, **sa.LAUNCHER_EXTRA.kwargs)
 
 
-core = parser.add_argument_group("Core alloction")
+core = parser.add_argument_group("Core allocation")
 core.add_argument(sa.CPUS.name, **sa.CPUS.kwargs)
 core.add_argument(sa.GPUS.name, **sa.GPUS.kwargs)
 core.add_argument(sa.OMPS.name, **sa.OMPS.kwargs)
@@ -64,7 +64,7 @@ core.add_argument(sa.OMPTHREADS.name, **sa.OMPTHREADS.kwargs)
 core.add_argument(sa.UTILITY.name, **sa.UTILITY.kwargs)
 
 
-memory = parser.add_argument_group("Memory alloction")
+memory = parser.add_argument_group("Memory allocation")
 memory.add_argument(sa.SYSMEM.name, **sa.SYSMEM.kwargs)
 memory.add_argument(sa.NUMAMEM.name, **sa.NUMAMEM.kwargs)
 memory.add_argument(sa.FBMEM.name, **sa.FBMEM.kwargs)

@@ -24,12 +24,12 @@ class Runtime(Unconstructable):
     @property
     def core_library(self) -> Library: ...
     # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
-    # but we allow int as a type-checking convencience to users
+    # but we allow int as a type-checking convenience to users
     def create_auto_task(
         self, library: Library, task_id: LocalTaskID | int
     ) -> AutoTask: ...
     # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
-    # but we allow int as a type-checking convencience to users
+    # but we allow int as a type-checking convenience to users
     def create_manual_task(
         self,
         library: Library,
@@ -69,7 +69,7 @@ class Runtime(Unconstructable):
         self, lhs: LogicalStore | LogicalArray, value: Any
     ) -> None: ...
     # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
-    # but we allow int as a type-checking convencience to users
+    # but we allow int as a type-checking convenience to users
     def tree_reduce(
         self,
         library: Library,

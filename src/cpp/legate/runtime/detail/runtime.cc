@@ -851,7 +851,7 @@ Runtime::IndexAttachResult Runtime::create_store(
       for (std::int64_t k = 0; k < idx; ++k) {
         if (allocations[k].second == color) {
           throw TracedException<std::invalid_argument>{
-            fmt::format("Mulitple external allocations are found for color {}", color)};
+            fmt::format("Multiple external allocations are found for color {}", color)};
         }
       }
       // If we're here, then we've just seen a fairly rare hash collision
@@ -1918,7 +1918,7 @@ std::int32_t Runtime::finish()
   pending_exceptions_.clear();
   initialized_ = false;
 
-  // Mark that we are done excecuting the top-level task
+  // Mark that we are done executing the top-level task
   // After this call the context is no longer valid
   get_legion_runtime()->finish_implicit_task(std::exchange(legion_context_, nullptr));
   // The previous call is asynchronous so we still need to
@@ -1981,7 +1981,7 @@ void register_extract_scalar_variant(const InternalSharedPtr<TaskInfo>& task_inf
                                      const Library* core_lib,
                                      const VariantOptions& variant_options)
 {
-  // TODO(wonchanl): We could support Legion & Realm calling convensions so we don't pass nullptr
+  // TODO(wonchanl): We could support Legion & Realm calling conventions so we don't pass nullptr
   // here. Should also remove the corresponding workaround function in TaskInfo!
   task_info->add_variant_(key,
                           *core_lib,

@@ -62,7 +62,7 @@ class TestDaskCluster:
             # Since the Dask cluster is local and all the workers are
             # processes on the same host, the IP of all workers is same.
             # Though The sorted list of ports of all the workers is strictly
-            # increasing sequnece starting with 50010.
+            # increasing sequence starting with 50010.
             peers_info = next(iter(peers_info.values()))
             expected_port = DEFAULT_DASK_BASE_PORT
             for p in peers_info.split():

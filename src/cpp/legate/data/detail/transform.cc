@@ -705,7 +705,7 @@ void Transpose::print(std::ostream& out) const
 
 void Transpose::find_imaginary_dims(std::vector<std::int32_t>& dims) const
 {
-  // i should be added to X.tranpose(axes).promoted iff axes[i] is in X.promoted
+  // i should be added to X.transpose(axes).promoted iff axes[i] is in X.promoted
   // e.g. X.promoted = [0] => X.transpose((1,2,0)).promoted = [2]
   for (auto&& promoted : dims) {
     auto finder = std::find(axes_.begin(), axes_.end(), promoted);

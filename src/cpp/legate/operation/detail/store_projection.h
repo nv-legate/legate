@@ -21,8 +21,8 @@ class BaseStoreProjection {
   bool operator==(const BaseStoreProjection& other) const;
 
   // TODO(wonchanl): Ideally we want this method to return a requirement, instead of taking an
-  // inout argument. We go with an inout parameter for now, as RegionRequirement doesn't have a
-  // move constructor/assignment.
+  // in-out argument. We go with an in-out parameter for now, as RegionRequirement doesn't have
+  // a move constructor/assignment.
   template <bool SINGLE>
   void populate_requirement(Legion::RegionRequirement& requirement,
                             const Legion::LogicalRegion& region,

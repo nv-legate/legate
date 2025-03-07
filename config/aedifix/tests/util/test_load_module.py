@@ -25,7 +25,7 @@ def module_path() -> Path:
 
 class TestLoadModule:
     def do_module_checks(self, mod: ModuleType) -> None:
-        # Unfortunately, due to some idiosynchrasies with the loading
+        # Unfortunately, due to some idiosyncrasies with the loading
         # mechanism, the modules are not the same, because the path-loaded
         # module does not retain any __package__ information. So we must resort
         # to checking magic numbers and attributes to ensure we've loaded the

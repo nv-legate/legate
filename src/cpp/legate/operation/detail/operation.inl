@@ -18,11 +18,11 @@ inline void Operation::validate() {}
 
 inline void Operation::add_to_solver(ConstraintSolver& /*solver*/) {}
 
-inline void Operation::launch() { LEGATE_ABORT("This method should have been overriden"); }
+inline void Operation::launch() { LEGATE_ABORT("This method should have been overridden"); }
 
 inline void Operation::launch(Strategy* /*strategy*/)
 {
-  LEGATE_ABORT("This method should have been overriden");
+  LEGATE_ABORT("This method should have been overridden");
 }
 
 inline bool Operation::supports_replicated_write() const { return false; }

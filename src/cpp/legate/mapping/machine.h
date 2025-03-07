@@ -87,7 +87,7 @@ class ProcessorRange {
    * @param from Starting index
    * @param to End index
    *
-   * @return Sliced procesor range
+   * @return Sliced processor range
    */
   [[nodiscard]] constexpr ProcessorRange slice(std::uint32_t from, std::uint32_t to) const;
   /**

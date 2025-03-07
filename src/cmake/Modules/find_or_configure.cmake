@@ -97,8 +97,12 @@ macro(legate_find_or_configure)
   endif()
   string(TOLOWER "${_LEGATE_FOC_PACKAGE}" _LEGATE_FOC_PACKAGE_LOWER)
 
-  include("${LEGATE_CMAKE_DIR}/thirdparty/get_${_LEGATE_FOC_PACKAGE_LOWER}.cmake" OPTIONAL
-          RESULT_VARIABLE _LEGATE_FOC_FOUND)
+  # cmake-format: off
+  include(
+    "${LEGATE_CMAKE_DIR}/thirdparty/get_${_LEGATE_FOC_PACKAGE_LOWER}.cmake" # codespell:ignore thirdparty
+    OPTIONAL
+    RESULT_VARIABLE _LEGATE_FOC_FOUND)
+  # cmake-format: on
 
   if(NOT _LEGATE_FOC_FOUND)
     message(FATAL_ERROR "Error getting: ${_LEGATE_FOC_PACKAGE}, no such package")
@@ -146,7 +150,7 @@ macro(legate_find_or_configure)
     # endif()
     # cmake-format: on
     message(STATUS "${_LEGATE_FOC_PACKAGE}_DIR and ${_LEGATE_FOC_PACKAGE}_ROOT undefined, "
-                   "forcing CPM to re-use downloaded ${_LEGATE_FOC_PACKAGE} from now on")
+                   "forcing CPM to reuse downloaded ${_LEGATE_FOC_PACKAGE} from now on")
     set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON)
     set(CPM_DOWNLOAD_${_LEGATE_FOC_PACKAGE} ON CACHE BOOL "" FORCE)
   endif()

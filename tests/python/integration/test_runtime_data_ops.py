@@ -82,7 +82,7 @@ class TestStoreOps:
         out = runtime.create_store_from_buffer(
             ty.float64, shape, out_np, False
         )
-        # recreate the np arrays to get expected muliply result since the
+        # recreate the np arrays to get expected multiply result since the
         # stores have different shapes to the original arrays
         #
         # Depending on the numpy version, mypy says:

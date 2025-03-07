@@ -70,7 +70,7 @@ def read_cmake_cache_value(file_path: Path, pattern: str) -> str:
             Location of the cmake cache file to scan
 
         pattern : str
-            A pattern to seach for in the file
+            A pattern to search for in the file
 
     Returns
     -------

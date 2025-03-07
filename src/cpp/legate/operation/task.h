@@ -38,7 +38,7 @@ namespace legate {
  */
 
 /**
- * @brief A class for auto-parallelized task desciptors
+ * @brief A class for auto-parallelized task descriptors
  */
 class AutoTask {
  public:

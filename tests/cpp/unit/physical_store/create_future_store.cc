@@ -80,7 +80,7 @@ class FutureStoreFn {
     ASSERT_EQ(domain.get_dim(), DIM);
     ASSERT_EQ(actual_rect, expect_rect);
 
-    // Specfic API for future store
+    // Specific API for future store
     ASSERT_EQ(store.scalar<T>(), scalar.value<T>());
   }
 };
@@ -151,7 +151,7 @@ TEST_F(CreateFuturePhysicalStoreUnit, InvalidBind)
   auto logical_store = runtime->create_store(legate::Scalar{1});
   auto store         = logical_store.get_physical_store();
 
-  // Specfic APIs for bound/unbound stores
+  // Specific APIs for bound/unbound stores
   ASSERT_THROW(
     static_cast<void>(store.create_output_buffer<std::uint64_t>(legate::Point<1>::ONES())),
     std::invalid_argument);

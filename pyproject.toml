@@ -316,3 +316,9 @@ section-order = [
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 ignore-decorators = ["typing.overload"]
+
+[tool.codespell]
+# This needs to be a list like so, not an array. Codespell does not parse arrays
+# correctly.
+builtin = "clear,rare,informal,names,en-GB_to_en-US"
+context = 1

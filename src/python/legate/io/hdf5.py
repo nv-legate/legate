@@ -70,7 +70,12 @@ def kerchunk_read(filepath: Path | str, dataset_name: str) -> LogicalArray:
     annotations = SingleHdf5ToZarr(filepath, inline_threshold=0).translate()
 
     # Load annotations
-    zarr_group = zarr.open(fsspec.get_mapper("reference://", fo=annotations))
+    zarr_group = zarr.open(
+        fsspec.get_mapper(
+            "reference://",
+            fo=annotations,  # codespell:ignore fo
+        )
+    )
     if not isinstance(zarr_group, zarr.Group):
         msg = (
             "root of the HDF5 file must be a dataset, "

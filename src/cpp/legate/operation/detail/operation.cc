@@ -128,7 +128,7 @@ std::string Operation::to_string(bool show_provenance) const
 
 bool Operation::needs_flush() const
 {
-  LEGATE_ABORT("This method should have been overriden");
+  LEGATE_ABORT("This method should have been overridden");
   return false;
 }
 

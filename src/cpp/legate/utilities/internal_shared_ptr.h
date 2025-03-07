@@ -69,7 +69,7 @@ class InternalWeakPtr {
   template <typename U,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
-  InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimick std::weak_ptr ctor
+  InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimic std::weak_ptr ctor
     const InternalWeakPtr<U>& other) noexcept;
   template <typename U,
             typename = std::enable_if_t<
@@ -82,13 +82,13 @@ class InternalWeakPtr {
   template <typename U,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename InternalWeakPtr<U>::element_type, element_type>>>
-  InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimick std::weak_ptr ctor
+  InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimic std::weak_ptr ctor
     InternalWeakPtr<U>&& other) noexcept;
 
   template <typename U,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
-  InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimick std::weak_ptr ctor
+  InternalWeakPtr(  // NOLINT(google-explicit-constructor) to mimic std::weak_ptr ctor
     const InternalSharedPtr<U>& other) noexcept;
   template <typename U,
             typename = std::enable_if_t<
@@ -144,7 +144,7 @@ class InternalSharedPtr {
   // constructors
   constexpr InternalSharedPtr() noexcept = default;
 
-  // NOLINTNEXTLINE(google-explicit-constructor) to mimick std::shared_ptr ctor
+  // NOLINTNEXTLINE(google-explicit-constructor) to mimic std::shared_ptr ctor
   constexpr InternalSharedPtr(std::nullptr_t) noexcept;
 
   template <typename U,
@@ -166,7 +166,7 @@ class InternalSharedPtr {
   template <typename U,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
-  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimic std::shared_ptr ctor
     const InternalSharedPtr<U>& other) noexcept;
   template <typename U,
             typename = std::enable_if_t<
@@ -175,7 +175,7 @@ class InternalSharedPtr {
   template <typename U,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename InternalSharedPtr<U>::element_type, element_type>>>
-  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimic std::shared_ptr ctor
     InternalSharedPtr<U>&& other) noexcept;
   template <typename U,
             typename = std::enable_if_t<
@@ -186,7 +186,7 @@ class InternalSharedPtr {
             typename D,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename std::unique_ptr<U, D>::element_type, element_type>>>
-  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimic std::shared_ptr ctor
     std::unique_ptr<U, D>&& ptr);
   template <typename U,
             typename D,
@@ -197,7 +197,7 @@ class InternalSharedPtr {
   template <typename U,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
-  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimic std::shared_ptr ctor
     const SharedPtr<U>& other) noexcept;
   template <typename U,
             typename = std::enable_if_t<
@@ -206,7 +206,7 @@ class InternalSharedPtr {
   template <typename U,
             typename = std::enable_if_t<
               detail::is_ptr_compat_v<typename SharedPtr<U>::element_type, element_type>>>
-  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimick std::shared_ptr ctor
+  InternalSharedPtr(  // NOLINT(google-explicit-constructor) to mimic std::shared_ptr ctor
     SharedPtr<U>&& other) noexcept;
   template <typename U,
             typename = std::enable_if_t<
@@ -394,7 +394,7 @@ template <typename T>
 class EnableSharedFromThis {
  protected:
   // clang-tidy considers any class which takes a template parameter and does not directly do
-  // anythng with it to be a CRTP class. And a common idiom for CRTP base classes is that they
+  // anything with it to be a CRTP class. And a common idiom for CRTP base classes is that they
   // should not be constructible on their own, so clang-tidy warns that we should make the ctor
   // private and friend the derived class. But we already limit the constructibility of this
   // class by making it protected, and we don't want to friend derived and give it access to

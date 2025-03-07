@@ -172,7 +172,7 @@ class BuildConfig(SectionConfig):
             # use the mpicc-suggested host compiler (conda-forge's gcc) when
             # running the FindMPI tests. Instead it will use the "main"
             # compiler it was configured with, i.e. the system compiler, which
-            # links agains the system libstdc++.so, causing libmpi.so's symbol
+            # links against the system libstdc++.so, causing libmpi.so's symbol
             # version checks to fail. Using v5+ OpenMPI from conda-forge
             # requires using the conda-forge compilers.
             pkgs += ("openmpi<5",)

@@ -404,7 +404,7 @@ cdef class LogicalStore(Unconstructable):
         Returns
         -------
         LogicalStore
-            A new store that correponds to the sliced section
+            A new store that corresponds to the sliced section
 
         Notes
         -----
@@ -542,7 +542,7 @@ cdef class LogicalStore(Unconstructable):
         ------
         ValueError
             If ``dim`` is invalid for the store or ``shape`` does not preserve
-            the size of the chosen dimenison
+            the size of the chosen dimension
         """
         if dim < 0:
             dim += self.ndim

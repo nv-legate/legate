@@ -102,7 +102,7 @@ def _basic_configure_impl(
     except KeyboardInterrupt:
         _handle_generic_error(
             config,
-            message="Configuration was aborted by the user (recieved SIGINT)",
+            message="Configuration was aborted by the user (received SIGINT)",
             title="Configuration Aborted",
         )
         return FAILURE

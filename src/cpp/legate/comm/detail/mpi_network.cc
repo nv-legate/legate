@@ -501,7 +501,7 @@ enum CollTag : std::uint8_t {
   // send_tag = sendto_global_rank * 10000 + global_rank (concat 2 ranks)
   // which dst seg it sends to (in dst rank)
   // recv_tag = global_rank * 10000 + recvfrom_global_rank (concat 2 ranks)
-  // idx of current seg we are receving (in src/my rank)
+  // idx of current seg we are receiving (in src/my rank)
   // example:
   // 00 | 01 | 02 | 03
   // 10 | 11 | 12 | 13

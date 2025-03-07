@@ -46,7 +46,7 @@ __all__ = (
 )
 
 
-#: Width for terminal ouput headers and footers.
+#: Width for terminal output headers and footers.
 UI_WIDTH = 80
 
 

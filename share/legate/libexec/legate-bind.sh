@@ -19,7 +19,7 @@ Options:
   --nics SPEC       Network interface binding specification, used to set
                     all of: UCX_NET_DEVICES, NCCL_IB_HCA, GASNET_NUM_QPS,
                     and GASNET_IBV_PORTS
-  --debug           print out the final computed invocation before exectuting
+  --debug           print out the final computed invocation before executing
 
 SPEC specifies the resources to bind each node-local rank to, with ranks
 separated by /, e.g. '0,1/2,3/4,5/6,7' for 4 ranks per node.

@@ -13,7 +13,7 @@
 namespace legate::mapping::detail {
 
 // Silence pass-by-value since Legion::Domain is POD, and the move ctor just does the copy
-// anyways. Unfortunately there is no way to check this programatically (e.g. via a
+// anyways. Unfortunately there is no way to check this programmatically (e.g. via a
 // static_assert).
 inline RegionGroup::RegionGroup(std::set<Legion::LogicalRegion> regions_,
                                 const Domain& bounding_box_  // NOLINT(modernize-pass-by-value)
