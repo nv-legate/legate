@@ -13,7 +13,7 @@ cdef extern from "<string_view>" namespace "std::string_view" nogil:
     const size_t npos
 
 cdef extern from "<string_view>" namespace "std" nogil:
-    cdef cppclass string_view:
+    cdef cppclass std_string_view "std::string_view":
         ctypedef char value_type
 
         # these should really be allocator_type.size_type and
@@ -125,10 +125,10 @@ cdef extern from "<string_view>" namespace "std" nogil:
             bint operator>=(reverse_iterator)
             bint operator>=(const_reverse_iterator)
 
-        string_view()
-        string_view(const string_view& s)
-        string_view(const char* s, size_t n) except +
-        string_view(const char* s) except +
+        std_string_view()
+        std_string_view(const std_string_view& s)
+        std_string_view(const char* s, size_t n) except +
+        std_string_view(const char* s) except +
         # Since C++20
         # string_view[It, End](It first, End last) except +
         # Since C++23
@@ -161,21 +161,21 @@ cdef extern from "<string_view>" namespace "std" nogil:
 
         void remove_prefix(size_type)
         void remove_suffix(size_type)
-        void swap(string_view& other)
+        void swap(std_string_view& other)
 
         size_t copy(char* s, size_t len, size_t pos) except +
         size_t copy(char* s, size_t len) except +
 
-        string_view substr(size_t pos, size_t len) except +
-        string_view substr(size_t pos) except +
-        string_view substr()
+        std_string_view substr(size_t pos, size_t len) except +
+        std_string_view substr(size_t pos) except +
+        std_string_view substr()
 
-        int compare(const string_view& s)
-        int compare(size_t pos, size_t len, const string_view& s) except +
+        int compare(const std_string_view& s)
+        int compare(size_t pos, size_t len, const std_string_view& s) except +
         int compare(
             size_t pos,
             size_t len,
-            const string_view& s,
+            const std_string_view& s,
             size_t subpos,
             size_t sublen
         ) except +
@@ -183,70 +183,70 @@ cdef extern from "<string_view>" namespace "std" nogil:
         int compare(size_t pos, size_t len, const char* s) except +
         int compare(size_t pos, size_t len, const char* s , size_t n) except +
 
-        size_t find(const string_view& s, size_t pos)
-        size_t find(const string_view& s)
+        size_t find(const std_string_view& s, size_t pos)
+        size_t find(const std_string_view& s)
         size_t find(const char* s, size_t pos, size_t n)
         size_t find(const char* s, size_t pos)
         size_t find(const char* s)
         size_t find(char c, size_t pos)
         size_t find(char c)
 
-        size_t rfind(const string_view&, size_t pos)
-        size_t rfind(const string_view&)
+        size_t rfind(const std_string_view&, size_t pos)
+        size_t rfind(const std_string_view&)
         size_t rfind(const char* s, size_t pos, size_t n)
         size_t rfind(const char* s, size_t pos)
         size_t rfind(const char* s)
         size_t rfind(char c, size_t pos)
         size_t rfind(char c)
 
-        size_t find_first_of(const string_view&, size_t pos)
-        size_t find_first_of(const string_view&)
+        size_t find_first_of(const std_string_view&, size_t pos)
+        size_t find_first_of(const std_string_view&)
         size_t find_first_of(const char* s, size_t pos, size_t n)
         size_t find_first_of(const char* s, size_t pos)
         size_t find_first_of(const char* s)
         size_t find_first_of(char c, size_t pos)
         size_t find_first_of(char c)
 
-        size_t find_first_not_of(const string_view& s, size_t pos)
-        size_t find_first_not_of(const string_view& s)
+        size_t find_first_not_of(const std_string_view& s, size_t pos)
+        size_t find_first_not_of(const std_string_view& s)
         size_t find_first_not_of(const char* s, size_t pos, size_t n)
         size_t find_first_not_of(const char* s, size_t pos)
         size_t find_first_not_of(const char*)
         size_t find_first_not_of(char c, size_t pos)
         size_t find_first_not_of(char c)
 
-        size_t find_last_of(const string_view& s, size_t pos)
-        size_t find_last_of(const string_view& s)
+        size_t find_last_of(const std_string_view& s, size_t pos)
+        size_t find_last_of(const std_string_view& s)
         size_t find_last_of(const char* s, size_t pos, size_t n)
         size_t find_last_of(const char* s, size_t pos)
         size_t find_last_of(const char* s)
         size_t find_last_of(char c, size_t pos)
         size_t find_last_of(char c)
 
-        size_t find_last_not_of(const string_view& s, size_t pos)
-        size_t find_last_not_of(const string_view& s)
+        size_t find_last_not_of(const std_string_view& s, size_t pos)
+        size_t find_last_not_of(const std_string_view& s)
         size_t find_last_not_of(const char* s, size_t pos, size_t n)
         size_t find_last_not_of(const char* s, size_t pos)
         size_t find_last_not_of(const char* s)
         size_t find_last_not_of(char c, size_t pos)
         size_t find_last_not_of(char c)
 
-        bint operator==(const string_view&)
+        bint operator==(const std_string_view&)
         bint operator==(const char*)
 
-        bint operator!= (const string_view&)
+        bint operator!= (const std_string_view&)
         bint operator!= (const char*)
 
-        bint operator< (const string_view&)
+        bint operator< (const std_string_view&)
         bint operator< (const char*)
 
-        bint operator> (const string_view&)
+        bint operator> (const std_string_view&)
         bint operator> (const char*)
 
-        bint operator<= (const string_view&)
+        bint operator<= (const std_string_view&)
         bint operator<= (const char*)
 
-        bint operator>= (const string_view&)
+        bint operator>= (const std_string_view&)
         bint operator>= (const char*)
 
 
@@ -254,7 +254,7 @@ ctypedef fused string_like:
     str
     bytes
 
-cdef inline string_view string_view_from_py(string_like obj):
+cdef inline std_string_view std_string_view_from_py(string_like obj):
     cdef const char* data = NULL
     cdef Py_ssize_t ssize = 0
 
@@ -265,7 +265,7 @@ cdef inline string_view string_view_from_py(string_like obj):
     else:
         data = PyBytes_AS_STRING(obj)
         ssize = PyBytes_GET_SIZE(obj)
-    return string_view(data, <size_t>ssize)
+    return std_string_view(data, <size_t>ssize)
 
-cdef inline str str_from_string_view(string_view sv):
+cdef inline str str_from_string_view(std_string_view sv):
     return PyUnicode_FromStringAndSize(sv.data(), sv.size())

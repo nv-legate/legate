@@ -6,7 +6,7 @@ from libc.stdint cimport uint64_t
 from libcpp.optional cimport optional as std_optional
 from libcpp.vector cimport vector as std_vector
 
-from ....._ext.cython_libcpp.string_view cimport string_view as std_string_view
+from ....._ext.cython_libcpp.string_view cimport std_string_view
 from ....data.logical_array cimport LogicalArray, _LogicalArray
 from ....data.shape cimport Shape, _Shape
 from ....type.types cimport Type, _Type

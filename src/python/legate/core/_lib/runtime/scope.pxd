@@ -6,7 +6,7 @@ from libc.stdint cimport int32_t
 from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
-from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
+from ..._ext.cython_libcpp.string_view cimport std_string_view
 from ..mapping.machine cimport Machine, _Machine
 from .exception_mode cimport ExceptionMode
 

@@ -9,8 +9,8 @@ from libcpp.utility cimport move as std_move
 import atexit
 
 from ..._ext.cython_libcpp.string_view cimport (
-    string_view as std_string_view,
-    string_view_from_py as std_string_view_from_py,
+    std_string_view,
+    std_string_view_from_py,
 )
 
 import gc

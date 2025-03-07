@@ -10,7 +10,7 @@ from libcpp.utility cimport move as std_move
 
 from ..._ext.cython_libcpp.string_view cimport (
     str_from_string_view,
-    string_view as std_string_view
+    std_string_view
 )
 from ..runtime.library cimport Library, _Library
 from ..runtime.runtime cimport get_legate_runtime

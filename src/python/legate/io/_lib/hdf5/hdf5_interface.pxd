@@ -2,9 +2,7 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from ....core._ext.cython_libcpp.string_view cimport (
-    string_view as std_string_view,
-)
+from ....core._ext.cython_libcpp.string_view cimport std_string_view
 from ....core._lib.data.logical_array cimport LogicalArray, _LogicalArray
 
 

@@ -7,7 +7,7 @@ from libcpp cimport bool
 from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 
-from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
+from ..._ext.cython_libcpp.string_view cimport std_string_view
 from ..data.logical_array cimport LogicalArray, _LogicalArray
 from ..data.logical_store cimport _LogicalStore, _LogicalStorePartition
 from ..data.scalar cimport _Scalar

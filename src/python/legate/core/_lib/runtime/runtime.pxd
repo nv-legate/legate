@@ -7,7 +7,7 @@ from cython.cimports.cpython.ref import PyObject
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp cimport bool
 
-from ..._ext.cython_libcpp.string_view cimport string_view as std_string_view
+from ..._ext.cython_libcpp.string_view cimport std_string_view
 from ..data.external_allocation cimport _ExternalAllocation
 from ..data.logical_array cimport LogicalArray, _LogicalArray
 from ..data.logical_store cimport LogicalStore, _LogicalStore
