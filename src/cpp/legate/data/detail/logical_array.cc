@@ -155,7 +155,10 @@ void BaseLogicalArray::generate_constraints(
   }
   auto part_null_mask = task->declare_partition();
   mapping.try_emplace(null_mask_, part_null_mask);
-  task->add_constraint(align(partition_symbol, part_null_mask));
+  // Need to bypass the signature check here because these generated constraints are not
+  // technically visible to the user (you cannot declare different constraints on the "main"
+  // store and the nullable store in the signature).
+  task->add_constraint(align(partition_symbol, part_null_mask), /* bypass_signature_check */ true);
 }
 
 std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
@@ -309,7 +312,11 @@ void ListLogicalArray::generate_constraints(
   auto part_vardata = task->declare_partition();
   vardata_->generate_constraints(task, mapping, part_vardata);
   if (!unbound()) {
-    task->add_constraint(image(partition_symbol, part_vardata, ImageComputationHint::FIRST_LAST));
+    // Need to bypass the signature check here because these generated constraints are not
+    // technically visible to the user (you cannot declare different constraints on the "main"
+    // store and the nullable store in the signature).
+    task->add_constraint(image(partition_symbol, part_vardata, ImageComputationHint::FIRST_LAST),
+                         /* bypass_signature_check */ true);
   }
 }
 
@@ -519,7 +526,10 @@ void StructLogicalArray::generate_constraints(
   for (; it != fields_.end(); ++it) {
     auto part_field = task->declare_partition();
     (*it)->generate_constraints(task, mapping, part_field);
-    task->add_constraint(align(partition_symbol, part_field));
+    // Need to bypass the signature check here because these generated constraints are not
+    // technically visible to the user (you cannot declare different constraints on the "main"
+    // store and the nullable store in the signature).
+    task->add_constraint(align(partition_symbol, part_field), /* bypass_signature_check */ true);
   }
 
   if (!nullable()) {
@@ -527,7 +537,10 @@ void StructLogicalArray::generate_constraints(
   }
   auto part_null_mask = task->declare_partition();
   mapping.try_emplace(null_mask_, part_null_mask);
-  task->add_constraint(align(partition_symbol, part_null_mask));
+  // Need to bypass the signature check here because these generated constraints are not
+  // technically visible to the user (you cannot declare different constraints on the "main"
+  // store and the nullable store in the signature).
+  task->add_constraint(align(partition_symbol, part_null_mask), /* bypass_signature_check */ true);
 }
 
 std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
