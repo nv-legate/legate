@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.26.4)
 
-project(legate-python VERSION 25.03.00 LANGUAGES CXX)
+project(legate-python VERSION 25.05.00 LANGUAGES CXX)
 
 set(CMAKE_CUDA_RUNTIME_LIBRARY "STATIC")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)

@@ -39,8 +39,7 @@ def get_cmakelists_version(
     raise ValueError(m)
 
 
-def bump_cmakelists_version(ctx: Context) -> None:
-    cmakelists = ctx.legate_dir / "src" / "CMakeLists.txt"
+def _do_bump_cmakelists_version(ctx: Context, cmakelists: Path) -> None:
     ctx.vprint(f"Opening {cmakelists}")
     lines = cmakelists.read_text().splitlines()
     _, idx = get_cmakelists_version(cmakelists, lines)
@@ -51,6 +50,20 @@ def bump_cmakelists_version(ctx: Context) -> None:
     if not ctx.dry_run:
         cmakelists.write_text("\n".join(lines))
     ctx.vprint(f"Updated {cmakelists}")
+
+
+def bump_cmakelists_version(ctx: Context) -> None:
+    main_cmake_lists = ctx.legate_dir / "src" / "CMakeLists.txt"
+    wheel_cmake_lists = (
+        ctx.legate_dir
+        / "scripts"
+        / "build"
+        / "python"
+        / "legate"
+        / "CMakeLists.txt"
+    )
+    for path in (main_cmake_lists, wheel_cmake_lists):
+        _do_bump_cmakelists_version(ctx=ctx, cmakelists=path)
 
 
 def bump_legion_version(ctx: Context) -> None:
