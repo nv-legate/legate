@@ -30,7 +30,8 @@ void validate(legate::TaskContext context)
 }
 
 struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{MULTI_VARIANT};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{MULTI_VARIANT}};
 
   static void cpu_variant(legate::TaskContext context) { validate(context); }
 #if LEGATE_DEFINED(USE_OPENMP)
@@ -42,7 +43,8 @@ struct MultiVariantTask : public legate::LegateTask<MultiVariantTask> {
 };
 
 struct CpuVariantOnlyTask : public legate::LegateTask<CpuVariantOnlyTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{CPU_VARIANT};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CPU_VARIANT}};
   static void cpu_variant(legate::TaskContext context) { validate(context); }
 };
 
@@ -63,7 +65,7 @@ void test_scoping(legate::Library library)
   auto runtime = legate::Runtime::get_runtime();
   auto store   = runtime->create_store(legate::Shape{5, 5}, legate::int64());
   auto machine = runtime->get_machine();
-  auto task    = runtime->create_task(library, MultiVariantTask::TASK_ID);
+  auto task    = runtime->create_task(library, MultiVariantTask::TASK_CONFIG.task_id());
   auto part    = task.declare_partition();
 
   task.add_output(store, part);
@@ -71,7 +73,7 @@ void test_scoping(legate::Library library)
   runtime->submit(std::move(task));
   if (machine.count(legate::mapping::TaskTarget::CPU) > 0) {
     const legate::Scope scope{machine.only(legate::mapping::TaskTarget::CPU)};
-    auto task_scoped = runtime->create_task(library, MultiVariantTask::TASK_ID);
+    auto task_scoped = runtime->create_task(library, MultiVariantTask::TASK_CONFIG.task_id());
     auto part_scoped = task_scoped.declare_partition();
 
     task_scoped.add_output(store, part_scoped);
@@ -81,7 +83,7 @@ void test_scoping(legate::Library library)
 
   if (machine.count(legate::mapping::TaskTarget::OMP) > 0) {
     const legate::Scope tracker{machine.only(legate::mapping::TaskTarget::OMP)};
-    auto task_scoped = runtime->create_task(library, MultiVariantTask::TASK_ID);
+    auto task_scoped = runtime->create_task(library, MultiVariantTask::TASK_CONFIG.task_id());
     auto part_scoped = task_scoped.declare_partition();
 
     task_scoped.add_output(store, part_scoped);
@@ -91,7 +93,7 @@ void test_scoping(legate::Library library)
 
   if (machine.count(legate::mapping::TaskTarget::GPU) > 0) {
     const legate::Scope tracker{machine.only(legate::mapping::TaskTarget::GPU)};
-    auto task_scoped = runtime->create_task(library, MultiVariantTask::TASK_ID);
+    auto task_scoped = runtime->create_task(library, MultiVariantTask::TASK_CONFIG.task_id());
     auto part_scoped = task_scoped.declare_partition();
 
     task_scoped.add_output(store, part_scoped);
@@ -105,7 +107,7 @@ void test_cpu_only(legate::Library library)
   auto runtime = legate::Runtime::get_runtime();
   auto store   = runtime->create_store(legate::Shape{5, 5}, legate::int64());
   auto machine = runtime->get_machine();
-  auto task    = runtime->create_task(library, CpuVariantOnlyTask::TASK_ID);
+  auto task    = runtime->create_task(library, CpuVariantOnlyTask::TASK_CONFIG.task_id());
   auto part    = task.declare_partition();
   task.add_output(store, part);
   task.add_scalar_arg(legate::Scalar{machine.count(legate::mapping::TaskTarget::CPU)});
@@ -113,7 +115,7 @@ void test_cpu_only(legate::Library library)
 
   if (machine.count(legate::mapping::TaskTarget::CPU) > 0) {
     const legate::Scope scope{machine.only(legate::mapping::TaskTarget::CPU)};
-    auto task_scoped = runtime->create_task(library, CpuVariantOnlyTask::TASK_ID);
+    auto task_scoped = runtime->create_task(library, CpuVariantOnlyTask::TASK_CONFIG.task_id());
     auto part_scoped = task_scoped.declare_partition();
 
     task_scoped.add_output(store, part_scoped);
@@ -131,8 +133,9 @@ void test_cpu_only(legate::Library library)
   if (machine.count(legate::mapping::TaskTarget::GPU) > 0) {
     const legate::Scope tracker{machine.only(legate::mapping::TaskTarget::GPU)};
 
-    EXPECT_THROW(static_cast<void>(runtime->create_task(library, CpuVariantOnlyTask::TASK_ID)),
-                 std::invalid_argument);
+    EXPECT_THROW(
+      static_cast<void>(runtime->create_task(library, CpuVariantOnlyTask::TASK_CONFIG.task_id())),
+      std::invalid_argument);
   }
 }
 

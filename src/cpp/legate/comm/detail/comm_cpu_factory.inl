@@ -43,7 +43,7 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
     Legion::Future::from_value<std::int32_t>(coll::BackendNetwork::get_network()->init_comm());
   // Find a mapping of all participants
   detail::TaskLauncher init_cpucoll_mapping_launcher{
-    core_library_, machine, init_mapping_task_type::TASK_ID, tag};
+    core_library_, machine, init_mapping_task_type::TASK_CONFIG.task_id(), tag};
 
   init_cpucoll_mapping_launcher.add_future(comm_id);
   // Setting this according to the return type on the task variant. Have to do this manually because
@@ -53,7 +53,8 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
   const auto mapping = init_cpucoll_mapping_launcher.execute(launch_domain);
 
   // Then create communicators on participating processors
-  detail::TaskLauncher init_cpucoll_launcher{core_library_, machine, init_task_type::TASK_ID, tag};
+  detail::TaskLauncher init_cpucoll_launcher{
+    core_library_, machine, init_task_type::TASK_CONFIG.task_id(), tag};
 
   init_cpucoll_launcher.add_future(comm_id);
   // Setting this according to the return type on the task variant. Have to do this manually because
@@ -77,7 +78,8 @@ void Factory<IT, IMT, FT>::finalize_(const mapping::detail::Machine& machine,
   const Domain launch_domain{
     Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
   const auto tag = static_cast<Legion::MappingTagID>(machine.preferred_variant());
-  detail::TaskLauncher launcher{core_library_, machine, finalize_task_type::TASK_ID, tag};
+  detail::TaskLauncher launcher{
+    core_library_, machine, finalize_task_type::TASK_CONFIG.task_id(), tag};
 
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);

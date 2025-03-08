@@ -16,7 +16,8 @@ namespace {
 
 class UnboundArrayTask : public legate::LegateTask<UnboundArrayTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
@@ -160,8 +161,8 @@ TEST_P(NullableCreateArrayTest, UnboundArray)
   auto context                      = runtime->find_library(Config::LIBRARY_NAME);
   static constexpr std::int32_t DIM = 3;
   auto logical_array                = runtime->create_array(legate::uint32(), DIM, nullable);
-  auto task                         = runtime->create_task(context, UnboundArrayTask::TASK_ID);
-  auto part                         = task.declare_partition();
+  auto task = runtime->create_task(context, UnboundArrayTask::TASK_CONFIG.task_id());
+  auto part = task.declare_partition();
 
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});

@@ -21,7 +21,8 @@ namespace {
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct ProvenanceTask : public legate::LegateTask<ProvenanceTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context);
 };
@@ -51,7 +52,7 @@ void test_provenance_auto(legate::Library library)
   const legate::Scope scope{provenance};
   auto runtime = legate::Runtime::get_runtime();
   // auto task
-  auto task = runtime->create_task(library, ProvenanceTask::TASK_ID);
+  auto task = runtime->create_task(library, ProvenanceTask::TASK_CONFIG.task_id());
   task.add_scalar_arg(legate::Scalar{provenance});
   ASSERT_EQ(task.provenance(), provenance);
 
@@ -64,8 +65,8 @@ void test_provenance_manual(legate::Library library)
   const legate::Scope scope{provenance};
   auto runtime = legate::Runtime::get_runtime();
   // manual task
-  auto task =
-    runtime->create_task(library, ProvenanceTask::TASK_ID, legate::tuple<std::uint64_t>{4, 2});
+  auto task = runtime->create_task(
+    library, ProvenanceTask::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{4, 2});
   task.add_scalar_arg(legate::Scalar{provenance});
   ASSERT_EQ(task.provenance(), provenance);
 
@@ -79,7 +80,7 @@ void test_nested_provenance_auto(legate::Library library)
   test_provenance_auto(library);
   // The provenance string used by test_provenance should be popped out at this point
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, ProvenanceTask::TASK_ID);
+  auto task    = runtime->create_task(library, ProvenanceTask::TASK_CONFIG.task_id());
   task.add_scalar_arg(legate::Scalar{provenance});
   ASSERT_EQ(task.provenance(), provenance);
 

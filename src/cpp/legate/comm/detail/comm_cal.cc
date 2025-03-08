@@ -16,6 +16,7 @@
 #include <legate/runtime/detail/runtime.h>
 #include <legate/runtime/runtime.h>
 #include <legate/task/detail/legion_task.h>
+#include <legate/task/task_config.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/typedefs.h>
@@ -89,7 +90,8 @@ void check_cal(calError_t error, const char* file, int line)
 
 class Init : public detail::LegionTask<Init> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{CoreTask::INIT_CAL};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CoreTask::INIT_CAL}};
 
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
@@ -127,7 +129,8 @@ class Init : public detail::LegionTask<Init> {
 
 class Finalize : public detail::LegionTask<Finalize> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{CoreTask::FINALIZE_CAL};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CoreTask::FINALIZE_CAL}};
 
   static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
@@ -182,8 +185,10 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
                                        std::uint32_t num_tasks)
 {
   const auto launch_domain = make_launch_domain_(num_tasks);
-  auto launcher            = detail::TaskLauncher{
-    core_library_, machine, Init::TASK_ID, static_cast<Legion::MappingTagID>(VariantCode::GPU)};
+  auto launcher            = detail::TaskLauncher{core_library_,
+                                       machine,
+                                       Init::TASK_CONFIG.task_id(),
+                                       static_cast<Legion::MappingTagID>(VariantCode::GPU)};
 
   // add cpu communicator
   auto* comm_mgr         = detail::Runtime::get_runtime()->communicator_manager();
@@ -204,8 +209,10 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
                         const Legion::FutureMap& communicator)
 {
   const auto launch_domain = make_launch_domain_(num_tasks);
-  auto launcher            = detail::TaskLauncher{
-    core_library_, machine, Finalize::TASK_ID, static_cast<Legion::MappingTagID>(VariantCode::GPU)};
+  auto launcher            = detail::TaskLauncher{core_library_,
+                                       machine,
+                                       Finalize::TASK_CONFIG.task_id(),
+                                       static_cast<Legion::MappingTagID>(VariantCode::GPU)};
 
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);

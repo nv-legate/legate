@@ -70,7 +70,8 @@ struct FillTask : public legate::LegateTask<FillTask<DIM>> {
     }
   };
 
-  static constexpr auto TASK_ID = legate::LocalTaskID{FILL_TASK + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{FILL_TASK + DIM}};
   static void cpu_variant(legate::TaskContext context)
   {
     auto output = context.output(0).data();
@@ -100,8 +101,9 @@ legate::Point<DIM> delinearize(std::size_t index,
 
 template <std::int32_t IND_DIM, std::int32_t DATA_DIM>
 struct FillIndirectTask : public legate::LegateTask<FillIndirectTask<IND_DIM, DATA_DIM>> {
-  static constexpr auto TASK_ID =
-    legate::LocalTaskID{FILL_INDIRECT_TASK + IND_DIM * TEST_MAX_DIM + DATA_DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{FILL_INDIRECT_TASK + IND_DIM * TEST_MAX_DIM + DATA_DIM}};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto output     = context.output(0).data();

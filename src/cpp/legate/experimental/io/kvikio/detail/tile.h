@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/task/task.h>
+#include <legate/task/task_config.h>
 #include <legate/task/task_context.h>
 #include <legate/task/task_signature.h>
 #include <legate/utilities/detail/core_ids.h>
@@ -29,11 +30,11 @@ namespace legate::experimental::io::kvikio::detail {
  */
 class TileRead : public LegateTask<TileRead> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_READ};
-
-  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints(
-      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_READ}}.with_signature(
+      legate::TaskSignature{}.inputs(0).outputs(1).scalars(2).redops(0).constraints(
+        {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
+    );
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
@@ -55,11 +56,11 @@ class TileRead : public LegateTask<TileRead> {
  */
 class TileWrite : public LegateTask<TileWrite> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_WRITE};
-
-  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(0).scalars(2).redops(0).constraints(
-      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_TILE_WRITE}}.with_signature(
+      legate::TaskSignature{}.inputs(1).outputs(0).scalars(2).redops(0).constraints(
+        {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
+    );
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);

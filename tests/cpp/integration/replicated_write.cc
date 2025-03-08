@@ -38,7 +38,8 @@ namespace {
 
 class WriterTask : public legate::LegateTask<WriterTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(false);
 
@@ -73,7 +74,8 @@ class WriterTask : public legate::LegateTask<WriterTask> {
 
 class TaskThatDoesNothing : public legate::LegateTask<TaskThatDoesNothing> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext /*context*/)
   {
@@ -84,7 +86,8 @@ class TaskThatDoesNothing : public legate::LegateTask<TaskThatDoesNothing> {
 
 class CheckerTask : public legate::LegateTask<CheckerTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{2};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{2}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -122,7 +125,7 @@ std::vector<legate::LogicalStore> perform_replicate_writes(
   const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, WriterTask::TASK_ID, launch_shape);
+  auto task    = runtime->create_task(library, WriterTask::TASK_CONFIG.task_id(), launch_shape);
 
   std::vector<legate::LogicalStore> out_stores;
   for (std::uint32_t idx = 0; idx < num_out_stores; ++idx) {
@@ -140,7 +143,8 @@ void perform_reductions(legate::Library library,
                         const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, TaskThatDoesNothing::TASK_ID, launch_shape);
+  auto task =
+    runtime->create_task(library, TaskThatDoesNothing::TASK_CONFIG.task_id(), launch_shape);
   for (auto&& store : stores) {
     task.add_reduction(store, legate::ReductionOpKind::ADD);
   }
@@ -152,7 +156,8 @@ void perform_replicated_read_write(legate::Library library,
                                    const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, TaskThatDoesNothing::TASK_ID, launch_shape);
+  auto task =
+    runtime->create_task(library, TaskThatDoesNothing::TASK_CONFIG.task_id(), launch_shape);
   for (auto&& store : stores) {
     task.add_input(store);
     task.add_output(store);
@@ -174,7 +179,7 @@ void validate_outputs(const legate::Library& library,
                       const std::vector<legate::LogicalStore>& stores)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, CheckerTask::TASK_ID);
+  auto task    = runtime->create_task(library, CheckerTask::TASK_CONFIG.task_id());
   for (auto&& store : stores) {
     task.add_input(store);
   }
@@ -186,7 +191,7 @@ void validate_outputs(const legate::Library& library,
                       const legate::tuple<std::uint64_t>& launch_shape)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, CheckerTask::TASK_ID, launch_shape);
+  auto task    = runtime->create_task(library, CheckerTask::TASK_CONFIG.task_id(), launch_shape);
   for (auto&& store : stores) {
     task.add_input(store);
   }
@@ -202,7 +207,7 @@ void test_auto_task(legate::Library library,
 
   runtime->issue_fill(in_store, legate::Scalar{int64_t{1}});
 
-  auto task = runtime->create_task(library, WriterTask::TASK_ID);
+  auto task = runtime->create_task(library, WriterTask::TASK_CONFIG.task_id());
 
   task.add_input(in_store);
 

@@ -18,7 +18,8 @@ constexpr std::uint64_t EXTENT    = 42;
 constexpr std::uint64_t NUM_TASKS = 2;
 
 struct Tester : public legate::LegateTask<Tester> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -55,7 +56,7 @@ TEST_F(IsPartitioned, Auto)
   auto store2 = runtime->create_store(legate::int64());
   auto store3 = runtime->create_store(legate::Shape{EXTENT}, legate::int64());
 
-  auto task = runtime->create_task(library, Tester::TASK_ID);
+  auto task = runtime->create_task(library, Tester::TASK_CONFIG.task_id());
   task.add_output(store1);
   task.add_output(store2);
   auto part = task.add_output(store3);
@@ -72,7 +73,7 @@ TEST_F(IsPartitioned, Manual)
   auto store2 = runtime->create_store(legate::int64());
   auto store3 = runtime->create_store(legate::Shape{EXTENT}, legate::int64());
 
-  auto task = runtime->create_task(library, Tester::TASK_ID, {NUM_TASKS});
+  auto task = runtime->create_task(library, Tester::TASK_CONFIG.task_id(), {NUM_TASKS});
   task.add_output(store1.partition_by_tiling({EXTENT / NUM_TASKS}));
   task.add_output(store2);
   task.add_output(store3);

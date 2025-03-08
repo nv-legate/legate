@@ -21,7 +21,8 @@ namespace {
 constexpr std::size_t SIZE = 10;
 
 struct CPUCommunicatorTester : public legate::LegateTask<CPUCommunicatorTester> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{}};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
 
@@ -65,7 +66,7 @@ void test_cpu_communicator_auto(std::int32_t ndim)
     },
     legate::int32());
 
-  auto task = runtime->create_task(context, CPUCommunicatorTester::TASK_ID);
+  auto task = runtime->create_task(context, CPUCommunicatorTester::TASK_CONFIG.task_id());
   auto part = task.declare_partition();
   task.add_output(store, part);
   task.add_communicator("cpu");
@@ -93,7 +94,8 @@ void test_cpu_communicator_manual(std::int32_t ndim)
 
   auto part = store.partition_by_tiling(tile_shape.data());
 
-  auto task = runtime->create_task(context, CPUCommunicatorTester::TASK_ID, launch_shape);
+  auto task =
+    runtime->create_task(context, CPUCommunicatorTester::TASK_CONFIG.task_id(), launch_shape);
   task.add_output(part);
   task.add_communicator("cpu");
   runtime->submit(std::move(task));

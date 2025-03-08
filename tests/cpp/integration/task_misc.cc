@@ -18,7 +18,8 @@ constexpr std::int32_t SCL_VAL = 42;
 
 class NormalTask : public legate::LegateTask<NormalTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext context)
   {
     auto scalar_value = context.scalar(0).value<std::int32_t>();
@@ -28,7 +29,8 @@ class NormalTask : public legate::LegateTask<NormalTask> {
 
 class ExceptionUnboundTask : public legate::LegateTask<ExceptionUnboundTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
   static void cpu_variant(legate::TaskContext context)
   {
     auto scalar_value = context.scalar(0).value<std::int32_t>();
@@ -56,7 +58,7 @@ legate::AutoTask create_auto_scalar_out_red()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(library, NormalTask::TASK_ID);
+  auto task    = runtime->create_task(library, NormalTask::TASK_CONFIG.task_id());
 
   constexpr std::int32_t value             = 10;
   auto store_out                           = runtime->create_store(legate::Scalar{value});
@@ -75,7 +77,7 @@ legate::ManualTask create_manual_exception_unbound()
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto task    = runtime->create_task(
-    library, ExceptionUnboundTask::TASK_ID, legate::tuple<std::uint64_t>{4, 2});
+    library, ExceptionUnboundTask::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{4, 2});
   auto store = runtime->create_store(legate::int64(), 2);
 
   task.throws_exception(true);

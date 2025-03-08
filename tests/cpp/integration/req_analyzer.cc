@@ -17,7 +17,8 @@ namespace req_analyzer {
 namespace {
 
 struct Tester : public legate::LegateTask<Tester> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -51,7 +52,7 @@ void test_inout_store()
   runtime->issue_fill(store1, legate::Scalar{std::int64_t{0}});
   runtime->issue_fill(store2, legate::Scalar{std::int64_t{0}});
 
-  auto task  = runtime->create_task(context, Tester::TASK_ID);
+  auto task  = runtime->create_task(context, Tester::TASK_CONFIG.task_id());
   auto part1 = task.add_input(store1);
   auto part2 = task.add_input(store2);
   task.add_output(store1);
@@ -70,7 +71,7 @@ void test_isomorphic_transformed_stores()
   // Create aliased stores that are semantically equivalent
   auto promoted1 = store.promote(1, 5);
   auto promoted2 = store.promote(1, 5);
-  auto task      = runtime->create_task(context, Tester::TASK_ID);
+  auto task      = runtime->create_task(context, Tester::TASK_CONFIG.task_id());
   task.add_input(promoted1);
   task.add_output(promoted2);
   runtime->submit(std::move(task));

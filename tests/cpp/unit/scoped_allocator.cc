@@ -18,21 +18,24 @@ constexpr std::uint64_t ALLOCATE_BYTES = 100;
 constexpr std::uint64_t OVER_ALIGNMENT = 128;
 
 struct DeallocateTask : public legate::LegateTask<DeallocateTask> {
-  static constexpr auto TASK_ID             = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct DoubleDeallocateTask : public legate::LegateTask<DoubleDeallocateTask> {
-  static constexpr auto TASK_ID             = legate::LocalTaskID{2};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{2}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct InvalidAllocateTask : public legate::LegateTask<InvalidAllocateTask> {
-  static constexpr auto TASK_ID             = legate::LocalTaskID{3};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{3}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context);
@@ -161,18 +164,18 @@ void test_deallocate(legate::LocalTaskID task_id,
 TEST_P(ScopedAllocatorTask, Scoped)
 {
   auto& [bytes, alignment, kind] = GetParam();
-  test_deallocate(DeallocateTask::TASK_ID, true, kind, bytes, alignment);
+  test_deallocate(DeallocateTask::TASK_CONFIG.task_id(), true, kind, bytes, alignment);
 }
 
 TEST_P(ScopedAllocatorTask, NotScoped)
 {
   auto& [bytes, alignment, kind] = GetParam();
-  test_deallocate(DeallocateTask::TASK_ID, false, kind, bytes, alignment);
+  test_deallocate(DeallocateTask::TASK_CONFIG.task_id(), false, kind, bytes, alignment);
 }
 
 TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
 {
-  test_deallocate(DoubleDeallocateTask::TASK_ID,
+  test_deallocate(DoubleDeallocateTask::TASK_CONFIG.task_id(),
                   true,
                   legate::Memory::SYSTEM_MEM,
                   ALLOCATE_BYTES,
@@ -189,7 +192,7 @@ TEST_F(ScopedAllocatorUnit, InvalidDeallocateTopLevel)
 
 TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
 {
-  test_deallocate(InvalidAllocateTask::TASK_ID,
+  test_deallocate(InvalidAllocateTask::TASK_CONFIG.task_id(),
                   true,
                   legate::Memory::SYSTEM_MEM,
                   ALLOCATE_BYTES,

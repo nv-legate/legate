@@ -20,7 +20,8 @@ constexpr std::int64_t BLOAT_TESTER = 0;
 
 template <std::int32_t DIM>
 struct BloatTester : public legate::LegateTask<BloatTester<DIM>> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{BLOAT_TESTER + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{BLOAT_TESTER + DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {

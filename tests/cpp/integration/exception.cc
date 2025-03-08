@@ -19,7 +19,8 @@ constexpr std::uint32_t NUM_EXN  = 3;
 constexpr std::uint32_t NUM_NORM = 7;
 
 struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext context)
   {
     auto index = context.scalar(0).value<std::int32_t>();
@@ -32,7 +33,8 @@ struct ExceptionTask : public legate::LegateTask<ExceptionTask> {
 };
 
 struct NormalTask : public legate::LegateTask<NormalTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
@@ -52,7 +54,7 @@ legate::AutoTask create_auto()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(library, ExceptionTask::TASK_ID);
+  auto task    = runtime->create_task(library, ExceptionTask::TASK_CONFIG.task_id());
   task.throws_exception(true);
   task.add_scalar_arg(legate::Scalar{EXN_IDX});
   return task;
@@ -62,8 +64,8 @@ legate::ManualTask create_manual()
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
-  auto task =
-    runtime->create_task(library, ExceptionTask::TASK_ID, legate::tuple<std::uint64_t>{4, 2});
+  auto task    = runtime->create_task(
+    library, ExceptionTask::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{4, 2});
   task.throws_exception(true);
   task.add_scalar_arg(legate::Scalar{EXN_IDX});
   return task;
@@ -100,14 +102,14 @@ void test_deferred_or_ignored(legate::ExceptionMode exception_mode)
   {
     const legate::Scope scope{exception_mode};
     for (std::uint32_t idx = 0; idx < NUM_NORM; ++idx) {
-      runtime->submit(runtime->create_task(library, NormalTask::TASK_ID));
+      runtime->submit(runtime->create_task(library, NormalTask::TASK_CONFIG.task_id()));
     }
     for (std::uint32_t idx = 0; idx < NUM_EXN; ++idx) {
       auto task = create_auto();
       runtime->submit(std::move(task));
     }
     for (std::uint32_t idx = 0; idx < NUM_NORM; ++idx) {
-      runtime->submit(runtime->create_task(library, NormalTask::TASK_ID));
+      runtime->submit(runtime->create_task(library, NormalTask::TASK_CONFIG.task_id()));
     }
   }
 

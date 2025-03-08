@@ -114,7 +114,8 @@ class UnboundStoreCreateFn {
 
 class UnboundStoreCreateTask : public legate::LegateTask<UnboundStoreCreateTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext context);
 
@@ -123,7 +124,8 @@ class UnboundStoreCreateTask : public legate::LegateTask<UnboundStoreCreateTask>
 
 class UnboundStoreBindTask : public legate::LegateTask<UnboundStoreBindTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{2};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{2}};
 
   static void cpu_variant(legate::TaskContext context);
 
@@ -199,7 +201,7 @@ void bind_unbound_store_by_task(UnboundStoreOpCode op_code,
   auto runtime       = legate::Runtime::get_runtime();
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
   auto logical_store = runtime->create_store(type, dim);
-  auto task          = runtime->create_task(context, UnboundStoreBindTask::TASK_ID);
+  auto task          = runtime->create_task(context, UnboundStoreBindTask::TASK_CONFIG.task_id());
 
   task.add_output(logical_store);
   task.add_scalar_arg(legate::Scalar{op_code});
@@ -220,7 +222,7 @@ TEST_P(CreateUnboundStoreTest, UnboundStoreCreation)
   auto runtime           = legate::Runtime::get_runtime();
   auto context           = runtime->find_library(Config::LIBRARY_NAME);
   auto logical_store     = runtime->create_store(type, dim);
-  auto task              = runtime->create_task(context, UnboundStoreCreateTask::TASK_ID);
+  auto task = runtime->create_task(context, UnboundStoreCreateTask::TASK_CONFIG.task_id());
 
   task.add_output(logical_store);
   runtime->submit(std::move(task));

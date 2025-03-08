@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/task/task.h>
+#include <legate/task/task_config.h>
 #include <legate/task/task_context.h>
 #include <legate/task/task_signature.h>
 #include <legate/task/variant_options.h>
@@ -25,15 +26,12 @@ namespace legate::experimental::io::kvikio::detail {
  */
 class BasicRead : public LegateTask<BasicRead> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_FILE_READ};
-
-  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_side_effect(true);
-  static constexpr auto OMP_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
-  static constexpr auto GPU_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
-
-  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(0).outputs(1).scalars(1).redops(0).constraints(
-      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_FILE_READ}}
+      .with_signature(legate::TaskSignature{}.inputs(0).outputs(1).scalars(1).redops(0).constraints(
+        {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
+                      )
+      .with_variant_options(legate::VariantOptions{}.with_has_side_effect(true));
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);
@@ -52,15 +50,12 @@ class BasicRead : public LegateTask<BasicRead> {
  */
 class BasicWrite : public LegateTask<BasicWrite> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_FILE_WRITE};
-
-  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_side_effect(true);
-  static constexpr auto OMP_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
-  static constexpr auto GPU_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
-
-  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(0).scalars(1).redops(0).constraints(
-      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    TaskConfig{LocalTaskID{legate::detail::CoreTask::IO_KVIKIO_FILE_WRITE}}
+      .with_signature(legate::TaskSignature{}.inputs(1).outputs(0).scalars(1).redops(0).constraints(
+        {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
+                      )
+      .with_variant_options(legate::VariantOptions{}.with_has_side_effect(true));
 
   static void cpu_variant(legate::TaskContext context);
   static void omp_variant(legate::TaskContext context);

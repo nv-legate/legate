@@ -16,7 +16,8 @@ namespace {
 
 class FillStringTask : public legate::LegateTask<FillStringTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
@@ -25,7 +26,8 @@ class FillStringTask : public legate::LegateTask<FillStringTask> {
 
 class CheckStringTask : public legate::LegateTask<CheckStringTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext);
 };
@@ -131,7 +133,7 @@ void test_fill_string_array_task(legate::LogicalArray& logical_array, bool nulla
   auto runtime  = legate::Runtime::get_runtime();
   auto context  = runtime->find_library(Config::LIBRARY_NAME);
   auto arr_type = legate::string_type();
-  auto task     = runtime->create_task(context, FillStringTask::TASK_ID);
+  auto task     = runtime->create_task(context, FillStringTask::TASK_CONFIG.task_id());
   auto part     = task.declare_partition();
 
   task.add_output(logical_array, std::move(part));
@@ -139,7 +141,7 @@ void test_fill_string_array_task(legate::LogicalArray& logical_array, bool nulla
   task.add_scalar_arg(legate::Scalar{unbound});
   runtime->submit(std::move(task));
 
-  task = runtime->create_task(context, CheckStringTask::TASK_ID);
+  task = runtime->create_task(context, CheckStringTask::TASK_CONFIG.task_id());
   part = task.declare_partition();
   task.add_output(logical_array, std::move(part));
   task.add_scalar_arg(legate::Scalar{nullable});

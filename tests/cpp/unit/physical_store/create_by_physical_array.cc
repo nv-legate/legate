@@ -48,7 +48,8 @@ class ArrayStoreFn {
 
 class PrimitiveArrayStoreTask : public legate::LegateTask<PrimitiveArrayStoreTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext context);
 
@@ -64,7 +65,8 @@ class PrimitiveArrayStoreTask : public legate::LegateTask<PrimitiveArrayStoreTas
 
 class ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{2};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{2}};
 
   static void cpu_variant(legate::TaskContext context);
 
@@ -96,7 +98,8 @@ class ListArrayStoreTask : public legate::LegateTask<ListArrayStoreTask> {
 
 class StringArrayStoreTask : public legate::LegateTask<StringArrayStoreTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{3};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{3}};
 
   static void cpu_variant(legate::TaskContext context);
 
@@ -195,7 +198,7 @@ TEST_P(CreatePrimitiveBoundStoreTest, Basic)
   auto runtime                         = legate::Runtime::get_runtime();
   auto logical_array                   = runtime->create_array(shape, type, optimize_scalar);
 
-  test_array_store(logical_array, PrimitiveArrayStoreTask::TASK_ID);
+  test_array_store(logical_array, PrimitiveArrayStoreTask::TASK_CONFIG.task_id());
 }
 
 TEST_P(CreatePrimitiveUnboundStoreTest, Basic)
@@ -205,7 +208,7 @@ TEST_P(CreatePrimitiveUnboundStoreTest, Basic)
   auto runtime                         = legate::Runtime::get_runtime();
   auto logical_array                   = runtime->create_array(type, dim, optimize_scalar);
 
-  test_array_store(logical_array, PrimitiveArrayStoreTask::TASK_ID);
+  test_array_store(logical_array, PrimitiveArrayStoreTask::TASK_CONFIG.task_id());
 }
 
 TEST_P(OptimizeScalarTest, CreateListBoundArrayStore)
@@ -214,7 +217,7 @@ TEST_P(OptimizeScalarTest, CreateListBoundArrayStore)
   auto list_type     = legate::list_type(legate::int64()).as_list_type();
   auto logical_array = runtime->create_array({2}, list_type, GetParam());
 
-  test_array_store(logical_array, ListArrayStoreTask::TASK_ID);
+  test_array_store(logical_array, ListArrayStoreTask::TASK_CONFIG.task_id());
 }
 
 TEST_P(OptimizeScalarTest, CreateListUnboundArrayStore)
@@ -223,7 +226,7 @@ TEST_P(OptimizeScalarTest, CreateListUnboundArrayStore)
   auto list_type     = legate::list_type(legate::int64()).as_list_type();
   auto logical_array = runtime->create_array(list_type, 1, GetParam());
 
-  test_array_store(logical_array, ListArrayStoreTask::TASK_ID);
+  test_array_store(logical_array, ListArrayStoreTask::TASK_CONFIG.task_id());
 }
 
 TEST_P(OptimizeScalarTest, CreateStringBoundArrayStore)
@@ -231,7 +234,7 @@ TEST_P(OptimizeScalarTest, CreateStringBoundArrayStore)
   auto runtime       = legate::Runtime::get_runtime();
   auto logical_array = runtime->create_array({2}, legate::string_type(), GetParam());
 
-  test_array_store(logical_array, StringArrayStoreTask::TASK_ID);
+  test_array_store(logical_array, StringArrayStoreTask::TASK_CONFIG.task_id());
 }
 
 TEST_P(OptimizeScalarTest, CreateStringUnboundArrayStore)
@@ -239,7 +242,7 @@ TEST_P(OptimizeScalarTest, CreateStringUnboundArrayStore)
   auto runtime       = legate::Runtime::get_runtime();
   auto logical_array = runtime->create_array(legate::string_type(), 1, GetParam());
 
-  test_array_store(logical_array, StringArrayStoreTask::TASK_ID);
+  test_array_store(logical_array, StringArrayStoreTask::TASK_CONFIG.task_id());
 }
 
 }  // namespace create_by_physical_array_test

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <legate/task/task.h>
+#include <legate/task/task_config.h>
 #include <legate/task/task_signature.h>
 #include <legate/task/variant_options.h>
 #include <legate/utilities/detail/core_ids.h>
@@ -20,12 +21,13 @@ class Library;
 
 class FindBoundingBox : public LegateTask<FindBoundingBox> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{CoreTask::FIND_BOUNDING_BOX};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp
+    legate::TaskConfig{LocalTaskID{CoreTask::FIND_BOUNDING_BOX}}.with_signature(
+      legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints(
+        {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
+    );
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
-  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints(
-      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)
@@ -38,12 +40,13 @@ class FindBoundingBox : public LegateTask<FindBoundingBox> {
 
 class FindBoundingBoxSorted : public LegateTask<FindBoundingBoxSorted> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{CoreTask::FIND_BOUNDING_BOX_SORTED};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp
+    legate::TaskConfig{LocalTaskID{CoreTask::FIND_BOUNDING_BOX_SORTED}}.with_signature(
+      legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints(
+        {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
+    );
   static constexpr VariantOptions GPU_VARIANT_OPTIONS =
     VariantOptions{}.with_elide_device_ctx_sync(true).with_has_allocations(true);
-  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(1).scalars(0).redops(0).constraints(
-      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
 
   static void cpu_variant(legate::TaskContext context);
 #if LEGATE_DEFINED(LEGATE_USE_OPENMP)

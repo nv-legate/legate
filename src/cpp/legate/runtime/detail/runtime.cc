@@ -49,6 +49,7 @@
 #include <legate/task/detail/legion_task_body.h>
 #include <legate/task/detail/task.h>
 #include <legate/task/detail/task_info.h>
+#include <legate/task/task_config.h>
 #include <legate/task/task_context.h>
 #include <legate/task/task_signature.h>
 #include <legate/task/variant_options.h>
@@ -500,11 +501,11 @@ namespace {
 // data in other memories and thus, frees up space.
 class OffloadTo : public LegateTask<OffloadTo> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{CoreTask::OFFLOAD_TO};
-
-  static inline const auto TASK_SIGNATURE =  // NOLINT(cert-err58-cpp)
-    legate::TaskSignature{}.inputs(1).outputs(1).scalars(1).redops(0).constraints(
-      {Span<const legate::ProxyConstraint>{}});  // some compilers complain with {{}}
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{LocalTaskID{CoreTask::OFFLOAD_TO}}.with_signature(
+      legate::TaskSignature{}.inputs(1).outputs(1).scalars(1).redops(0).constraints(
+        {Span<const legate::ProxyConstraint>{}})  // some compilers complain with {{}}
+    );
 
   // Task body left empty because there is no computation to do. This task
   // triggers a data movement because of its R/W privileges
@@ -535,7 +536,7 @@ void Runtime::offload_to(mapping::StoreTarget target_mem,
   }
 
   const auto scope = legate::Scope{legate::mapping::Machine{get_machine()}.only(target_proc)};
-  auto task        = create_task(core_library(), OffloadTo::TASK_ID);
+  auto task        = create_task(core_library(), OffloadTo::TASK_CONFIG.task_id());
 
   task->add_scalar_arg(legate::Scalar{target_mem}.impl());
 
@@ -905,8 +906,8 @@ void Runtime::prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
     issue_fill(store, Scalar{store->type()});
   }
 
-  auto arr  = LogicalArray::from_store(std::move(store));
-  auto task = create_task(core_library_, legate::LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES});
+  auto arr   = LogicalArray::from_store(std::move(store));
+  auto task  = create_task(core_library_, LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES});
   auto part1 = task->declare_partition();
   auto part2 = task->declare_partition();
   task->add_input(arr, part1);
@@ -1994,7 +1995,8 @@ void register_extract_scalar_variant(const InternalSharedPtr<TaskInfo>& task_inf
 // intended to do nothing otherwise.
 class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES}};
 
   static void cpu_variant(const Legion::Task* /*task*/,
                           const std::vector<Legion::PhysicalRegion>& /*regions*/,

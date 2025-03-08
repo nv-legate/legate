@@ -155,8 +155,8 @@ LogicalArray from_file(const std::filesystem::path& file_path, std::string_view 
   auto* rt           = Runtime::get_runtime();
   auto ret           = create_output_array(native_path, dataset_name, rt);
 
-  auto task =
-    rt->create_task(experimental::io::detail::core_io_library(), detail::HDF5Read::TASK_ID);
+  auto task = rt->create_task(experimental::io::detail::core_io_library(),
+                              detail::HDF5Read::TASK_CONFIG.task_id());
 
   task.add_scalar_arg(Scalar{native_path});
   task.add_scalar_arg(Scalar{dataset_name});

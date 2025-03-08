@@ -18,7 +18,8 @@ constexpr const std::size_t DIM_EXTENT      = 32;
 constexpr const std::size_t N_TILES_PER_DIM = 2;
 
 struct ProjTesterTask : public legate::LegateTask<ProjTesterTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
   static void cpu_variant(legate::TaskContext context)
   {
     auto&& task_index = context.get_task_index();
@@ -65,7 +66,7 @@ TEST_F(ManualTaskWithProj, All)
   {
     auto task =
       runtime->create_task(library,
-                           ProjTesterTask::TASK_ID,
+                           ProjTesterTask::TASK_CONFIG.task_id(),
                            legate::tuple<std::uint64_t>{N_TILES_PER_DIM, N_TILES_PER_DIM});
     task.add_input(row_wise, legate::SymbolicPoint{legate::dimension(0), legate::constant(0)});
     task.add_input(col_wise, legate::SymbolicPoint{legate::constant(0), legate::dimension(1)});
@@ -75,7 +76,7 @@ TEST_F(ManualTaskWithProj, All)
   {
     const legate::Domain launch_domain{legate::Point<2>{1, 1},
                                        legate::Point<2>{N_TILES_PER_DIM - 1, N_TILES_PER_DIM - 1}};
-    auto task = runtime->create_task(library, ProjTesterTask::TASK_ID, launch_domain);
+    auto task = runtime->create_task(library, ProjTesterTask::TASK_CONFIG.task_id(), launch_domain);
     task.add_input(row_wise, legate::SymbolicPoint{legate::dimension(0), legate::constant(0)});
     task.add_input(col_wise, legate::SymbolicPoint{legate::constant(0), legate::dimension(1)});
     runtime->submit(std::move(task));

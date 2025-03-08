@@ -30,7 +30,8 @@ constexpr std::string_view LIBRARY_NAME = "test_redundant";
 constexpr std::uint64_t EXT             = 1 << 10;
 
 struct Tester : public legate::LegateTask<Tester> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext /*context*/)
   {
@@ -81,7 +82,7 @@ void launch_task(const legate::LogicalStorePartition& part, bool read_only)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(LIBRARY_NAME);
-  auto task    = runtime->create_task(library, Tester::TASK_ID, part.color_shape());
+  auto task    = runtime->create_task(library, Tester::TASK_CONFIG.task_id(), part.color_shape());
   if (read_only) {
     task.add_input(part);
   } else {

@@ -16,7 +16,8 @@ namespace {
 
 class FutureStoreTask : public legate::LegateTask<FutureStoreTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext context);
 
@@ -52,7 +53,7 @@ TEST_F(PhysicalStoreInlineAllocationUnit, FutureStoreByTask)
   auto runtime       = legate::Runtime::get_runtime();
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
   auto logical_store = runtime->create_store(legate::Scalar{1});
-  auto task          = runtime->create_task(context, FutureStoreTask::TASK_ID);
+  auto task          = runtime->create_task(context, FutureStoreTask::TASK_CONFIG.task_id());
 
   task.add_output(logical_store);
   runtime->submit(std::move(task));

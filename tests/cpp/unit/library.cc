@@ -255,7 +255,8 @@ using Library = DefaultFixture;
 class Foo : public legate::LegateTask<Foo> {
  public:
   // Foo declares a local task ID of 10
-  static constexpr auto TASK_ID = legate::LocalTaskID{10};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{10}};
 
   static void cpu_variant(legate::TaskContext /* ctx */)
   {
@@ -280,7 +281,7 @@ TEST_F(Library, TaskIDExample)
   // Foo registers itself with bar, claiming the bar-local task ID of 10.
   Foo::register_variants(bar_lib);
   // Retrieve the global task ID after registration.
-  legate::GlobalTaskID gid_bar = bar_lib.get_task_id(Foo::TASK_ID);
+  legate::GlobalTaskID gid_bar = bar_lib.get_task_id(Foo::TASK_CONFIG.task_id());
 
   // This should be false, Foo has not registered itself to baz yet.
   ASSERT_FALSE(baz_lib.valid_task_id(gid_bar));
@@ -294,7 +295,7 @@ TEST_F(Library, TaskIDExample)
   ASSERT_STREQ(legion_task_name, "example::Foo");
 
   // We can get the same information using the local ID from the Library
-  auto task_name = bar_lib.get_task_name(Foo::TASK_ID);
+  auto task_name = bar_lib.get_task_name(Foo::TASK_CONFIG.task_id());
 
   ASSERT_EQ(task_name, legion_task_name);
   /// [TaskID registration]

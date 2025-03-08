@@ -20,6 +20,7 @@ void TaskInfo::add_variant_(AddVariantKey,  // NOLINT(readability-identifier-nam
                             VariantCode vid,
                             LegionVariantImpl<T> /*body*/,
                             Processor::TaskFuncPtr entry,
+                            const TaskConfig& task_config,
                             const VariantOptions* decl_options,
                             const std::map<VariantCode, VariantOptions>& registration_options)
 {
@@ -31,7 +32,7 @@ void TaskInfo::add_variant_(AddVariantKey,  // NOLINT(readability-identifier-nam
                vid,
                VariantImpl{},
                entry,
-               /* signature */ nullptr,
+               task_config,
                decl_options,
                registration_options);
 }

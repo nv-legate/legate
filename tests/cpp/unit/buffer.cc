@@ -50,7 +50,8 @@ class BufferFn {
 
 class BufferTask : public legate::LegateTask<BufferTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context);
 
@@ -104,7 +105,7 @@ void test_buffer(std::int32_t dim,
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, BufferTask::TASK_ID);
+  auto task    = runtime->create_task(context, BufferTask::TASK_CONFIG.task_id());
 
   task.add_scalar_arg(legate::Scalar{dim});
   task.add_scalar_arg(legate::Scalar{bytes});

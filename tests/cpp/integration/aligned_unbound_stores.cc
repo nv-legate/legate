@@ -13,7 +13,8 @@
 namespace aligned_unbound_stores_test {
 
 struct Producer : public legate::LegateTask<Producer> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -47,7 +48,7 @@ TEST_F(AlignedUnboundStores, Standalone)
   auto store2 = runtime->create_store(legate::int64());
 
   {
-    auto task  = runtime->create_task(library, Producer::TASK_ID);
+    auto task  = runtime->create_task(library, Producer::TASK_CONFIG.task_id());
     auto part1 = task.add_output(store1);
     auto part2 = task.add_output(store2);
     task.add_constraint(legate::align(part1, part2));
@@ -64,7 +65,7 @@ TEST_F(AlignedUnboundStores, ViaNullableArray)
   auto arr = runtime->create_array(legate::int32(), 1, true /*nullable*/);
 
   {
-    auto task = runtime->create_task(library, Producer::TASK_ID);
+    auto task = runtime->create_task(library, Producer::TASK_CONFIG.task_id());
     task.add_output(arr);
     runtime->submit(std::move(task));
   }

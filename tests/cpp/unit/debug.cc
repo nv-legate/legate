@@ -49,8 +49,9 @@ static_assert(TEST_MAX_DIM <= LEGATE_MAX_DIM);
 template <std::int32_t DIM>
 class CPUWriterTask : public legate::LegateTask<CPUWriterTask<DIM>> {
  public:
-  static constexpr auto TASK_ID =
-    legate::LocalTaskID{static_cast<std::int32_t>(TaskIDs::CPU_WRITER_TASK) + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{
+      legate::LocalTaskID{static_cast<std::int32_t>(TaskIDs::CPU_WRITER_TASK) + DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -69,8 +70,9 @@ class CPUWriterTask : public legate::LegateTask<CPUWriterTask<DIM>> {
 template <std::int32_t DIM>
 class GPUWriterTask : public legate::LegateTask<GPUWriterTask<DIM>> {
  public:
-  static constexpr auto TASK_ID =
-    legate::LocalTaskID{static_cast<std::int32_t>(TaskIDs::GPU_WRITER_TASK) + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{
+      legate::LocalTaskID{static_cast<std::int32_t>(TaskIDs::GPU_WRITER_TASK) + DIM}};
 
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
   static void gpu_variant(legate::TaskContext context)
@@ -126,7 +128,7 @@ void test_debug_array(const legate::Shape& array_shape, std::string_view expect_
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto store   = runtime->create_store(array_shape, legate::int64());
-  auto task    = runtime->create_task(library, TASK::TASK_ID);
+  auto task    = runtime->create_task(library, TASK::TASK_CONFIG.task_id());
   task.add_input(store);
   task.add_output(store);
   runtime->submit(std::move(task));

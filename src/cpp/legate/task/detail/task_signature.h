@@ -112,6 +112,9 @@ class TaskSignature {
      */
     [[nodiscard]] bool compatible_with(std::size_t size, bool strict = true) const;
 
+    friend bool operator==(const Nargs& lhs, const Nargs& rhs) noexcept;
+    friend bool operator!=(const Nargs& lhs, const Nargs& rhs) noexcept;
+
    private:
     std::variant<std::uint32_t, std::pair<std::uint32_t, std::uint32_t>> value_{};
   };
@@ -156,6 +159,9 @@ class TaskSignature {
    * @param task The task to apply the constraints to.
    */
   void apply_constraints(AutoTask* task) const;
+
+  friend bool operator==(const TaskSignature& lhs, const TaskSignature& rhs) noexcept;
+  friend bool operator!=(const TaskSignature& lhs, const TaskSignature& rhs) noexcept;
 
  private:
   std::optional<Nargs> num_inputs_{};

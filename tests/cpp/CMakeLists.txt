@@ -238,6 +238,7 @@ set(with_runtime_SRC
     unit/task_signature/nargs.cc
     unit/task_signature/basic.cc
     unit/task_signature/register.cc
+    unit/task_config/basic.cc
     # experimental
     experimental/stl/elementwise.cc
     experimental/stl/fill.cc

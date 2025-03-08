@@ -17,7 +17,8 @@ constexpr std::string_view LIBNAME = "bench";
 
 class EmptyTask : public legate::LegateTask<EmptyTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext) {}
 };
@@ -97,7 +98,7 @@ void benchmark_body(TaskLaunchFixture& fixt, benchmark::State& state)
 
   for (auto _ : state) {  // NOLINT(clang-analyzer-deadcode.DeadStores)
     state.PauseTiming();
-    auto task = runtime->create_task(lib, EmptyTask::TASK_ID);
+    auto task = runtime->create_task(lib, EmptyTask::TASK_CONFIG.task_id());
     for (std::size_t i = 0; i < TaskLaunchFixture::NUM_INPUTS_OUTPUTS; ++i) {
       task.add_input(fixt.add_input_store(i));
     }

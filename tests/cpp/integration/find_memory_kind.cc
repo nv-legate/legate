@@ -13,7 +13,8 @@
 namespace test_find_memory_kind {
 
 struct Checker : public legate::LegateTask<Checker> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     EXPECT_EQ(legate::find_memory_kind_for_executing_processor(), legate::Memory::Kind::SYSTEM_MEM);
@@ -59,7 +60,7 @@ TEST_F(FindMemoryKind, InSingleTask)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  runtime->submit(runtime->create_task(library, Checker::TASK_ID));
+  runtime->submit(runtime->create_task(library, Checker::TASK_CONFIG.task_id()));
 }
 
 TEST_F(FindMemoryKind, InIndexTask)
@@ -67,8 +68,8 @@ TEST_F(FindMemoryKind, InIndexTask)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  runtime->submit(
-    runtime->create_task(library, Checker::TASK_ID, legate::tuple<std::uint64_t>{2, 2}));
+  runtime->submit(runtime->create_task(
+    library, Checker::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{2, 2}));
 }
 
 }  // namespace test_find_memory_kind

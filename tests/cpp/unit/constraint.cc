@@ -18,7 +18,8 @@ namespace {
 
 // Dummy task to make the runtime think the store is initialized
 struct Initializer : public legate::LegateTask<Initializer> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
@@ -38,7 +39,7 @@ TEST_F(Constraint, Variable)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, Initializer::TASK_ID);
+  auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
 
   // Test basic properties
   auto part     = task.declare_partition();
@@ -69,7 +70,7 @@ TEST_F(Constraint, Alignment)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, Initializer::TASK_ID);
+  auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
 
   auto part1 = task.declare_partition();
   auto part2 = task.declare_partition();
@@ -97,7 +98,7 @@ TEST_F(Constraint, Broadcast)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, Initializer::TASK_ID);
+  auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
   auto part1   = task.declare_partition();
 
   auto dims      = legate::from_range<std::uint32_t>(3);
@@ -122,7 +123,7 @@ TEST_F(Constraint, ImageConstraint)
 {
   auto runtime    = legate::Runtime::get_runtime();
   auto context    = runtime->find_library(Config::LIBRARY_NAME);
-  auto task       = runtime->create_task(context, Initializer::TASK_ID);
+  auto task       = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
   auto part_func  = task.declare_partition();
   auto part_range = task.declare_partition();
 
@@ -150,7 +151,7 @@ TEST_F(Constraint, ScaleConstraint)
 {
   auto runtime      = legate::Runtime::get_runtime();
   auto context      = runtime->find_library(Config::LIBRARY_NAME);
-  auto task         = runtime->create_task(context, Initializer::TASK_ID);
+  auto task         = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
   auto smaller      = runtime->create_store({3}, legate::int64());
   auto bigger       = runtime->create_store({5}, legate::int64());
   auto part_smaller = task.add_output(smaller);
@@ -179,7 +180,7 @@ TEST_F(Constraint, BloatConstraint)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, Initializer::TASK_ID);
+  auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
   auto source  = runtime->create_store({5}, legate::int64());
   auto bloated = runtime->create_store({5}, legate::int64());
   runtime->issue_fill(source, legate::Scalar(std::int64_t{0}));

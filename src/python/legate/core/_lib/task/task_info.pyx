@@ -132,29 +132,33 @@ cdef std_unordered_map[VariantCode, TaskFuncPtr] \
 #    tell Cython exactly what the name should be. Also, we want it in a
 #    specific namespace because it makes the resulting friend decl in C++ more
 #    obviously "Cython".
-cdef extern from *:
+cdef extern from * nogil:
     """
-    #include "legate/task/task_info.h"
-    #include "legate/utilities/typedefs.h"
-    #include "legate/runtime/library.h"
+    #include "legate.h"
 
     namespace legate::detail::cython {
 
     void cytaskinfo_add_variant(
       legate::TaskInfo *handle,
-      legate::Library *core_lib,
+      legate::LocalTaskID task_id,
+      const legate::Library &core_lib,
       legate::VariantCode variant_kind,
       legate::VariantImpl cy_entry,
       legate::Processor::TaskFuncPtr py_entry,
       const legate::TaskSignature* signature)
     {
+      legate::TaskConfig config{task_id};
+
+      if (signature) {
+        config.with_signature(*signature);
+      }
       handle->add_variant_(
         legate::TaskInfo::AddVariantKey{},
-        *core_lib,
+        core_lib,
         variant_kind,
         cy_entry,
         py_entry,
-        signature,
+        config,
         /* decl_options */ nullptr
       );
     }
@@ -164,12 +168,13 @@ cdef extern from *:
     void cytaskinfo_add_variant \
         "legate::detail::cython::cytaskinfo_add_variant" (
             _TaskInfo *,
-            _Library *,
+            _LocalTaskID,
+            const _Library&,
             VariantCode,
             VariantImpl,
             TaskFuncPtr,
             const _TaskSignature *
-        ) nogil
+        ) except+
 
 cdef class TaskInfo(Unconstructable):
     @staticmethod
@@ -358,7 +363,8 @@ cdef class TaskInfo(Unconstructable):
         with nogil:
             cytaskinfo_add_variant(
                 &self._handle,
-                &core_lib._handle,
+                self._local_id,
+                core_lib._handle,
                 variant_kind,
                 _py_variant,
                 callback,

@@ -26,13 +26,15 @@ enum TaskIDs : std::uint8_t {
 };
 
 struct ProduceNormalTask : public legate::LegateTask<ProduceNormalTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_PRODUCE_NORMAL};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TASK_PRODUCE_NORMAL}};
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
-  static constexpr auto TASK_ID             = legate::LocalTaskID{TASK_PRODUCE_UNBOUND};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TASK_PRODUCE_UNBOUND}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context)
@@ -48,7 +50,8 @@ struct ProduceUnboundTask : public legate::LegateTask<ProduceUnboundTask> {
 };
 
 struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_REDUCE_NORMAL};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TASK_REDUCE_NORMAL}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -63,7 +66,8 @@ struct ReduceNormalTask : public legate::LegateTask<ReduceNormalTask> {
 };
 
 struct ReduceUnboundTask : public legate::LegateTask<ReduceUnboundTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_REDUCE_UNBOUND};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TASK_REDUCE_UNBOUND}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -103,12 +107,12 @@ TEST_F(TreeReduce, AutoProducer)
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task = runtime->create_task(context, ProduceNormalTask::TASK_ID, {num_tasks});
+  auto task = runtime->create_task(context, ProduceNormalTask::TASK_CONFIG.task_id(), {num_tasks});
   auto part = store.partition_by_tiling({tile_size});
   task.add_output(part);
   runtime->submit(std::move(task));
 
-  auto result = runtime->tree_reduce(context, ReduceNormalTask::TASK_ID, store, 4);
+  auto result = runtime->tree_reduce(context, ReduceNormalTask::TASK_CONFIG.task_id(), store, 4);
 
   EXPECT_FALSE(result.unbound());
 }
@@ -123,12 +127,12 @@ TEST_F(TreeReduce, ManualProducer)
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task = runtime->create_task(context, ProduceNormalTask::TASK_ID, {num_tasks});
+  auto task = runtime->create_task(context, ProduceNormalTask::TASK_CONFIG.task_id(), {num_tasks});
   auto part = store.partition_by_tiling({tile_size});
   task.add_output(part);
   runtime->submit(std::move(task));
 
-  auto result = runtime->tree_reduce(context, ReduceNormalTask::TASK_ID, store, 4);
+  auto result = runtime->tree_reduce(context, ReduceNormalTask::TASK_CONFIG.task_id(), store, 4);
 
   EXPECT_FALSE(result.unbound());
 }
@@ -143,12 +147,12 @@ TEST_F(TreeReduce, ManualProducerMultiLevel)
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task = runtime->create_task(context, ProduceNormalTask::TASK_ID, {num_tasks});
+  auto task = runtime->create_task(context, ProduceNormalTask::TASK_CONFIG.task_id(), {num_tasks});
   auto part = store.partition_by_tiling({tile_size});
   task.add_output(part);
   runtime->submit(std::move(task));
 
-  auto result = runtime->tree_reduce(context, ReduceNormalTask::TASK_ID, store, 4);
+  auto result = runtime->tree_reduce(context, ReduceNormalTask::TASK_CONFIG.task_id(), store, 4);
 
   EXPECT_FALSE(result.unbound());
 }
@@ -162,12 +166,12 @@ TEST_F(TreeReduce, ManualProducerUnbound)
   auto store                      = runtime->create_store(legate::int64());
   constexpr std::size_t num_tasks = 4;
 
-  auto task = runtime->create_task(context, ProduceUnboundTask::TASK_ID, {num_tasks});
+  auto task = runtime->create_task(context, ProduceUnboundTask::TASK_CONFIG.task_id(), {num_tasks});
   task.add_output(store);
   runtime->submit(std::move(task));
 
   auto result = runtime->tree_reduce(
-    context, ReduceUnboundTask::TASK_ID, store, static_cast<std::int64_t>(num_tasks));
+    context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, static_cast<std::int64_t>(num_tasks));
   EXPECT_FALSE(result.unbound());
 }
 
@@ -179,11 +183,11 @@ TEST_F(TreeReduce, ManualProducerSingle)
   // unbound store
   auto store = runtime->create_store(legate::int64());
 
-  auto task = runtime->create_task(context, ProduceUnboundTask::TASK_ID, {1});
+  auto task = runtime->create_task(context, ProduceUnboundTask::TASK_CONFIG.task_id(), {1});
   task.add_output(store);
   runtime->submit(std::move(task));
 
-  auto result = runtime->tree_reduce(context, ReduceUnboundTask::TASK_ID, store, 4);
+  auto result = runtime->tree_reduce(context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, 4);
   EXPECT_FALSE(result.unbound());
 }
 
@@ -198,12 +202,12 @@ TEST_F(TreeReduce, AutoProducerSingle)
   {
     auto machine = runtime->get_machine();
     const legate::Scope tracker{machine.slice(0, 1, legate::mapping::TaskTarget::CPU)};
-    auto task = runtime->create_task(context, ProduceUnboundTask::TASK_ID);
+    auto task = runtime->create_task(context, ProduceUnboundTask::TASK_CONFIG.task_id());
     task.add_output(store);
     runtime->submit(std::move(task));
   }
 
-  auto result = runtime->tree_reduce(context, ReduceUnboundTask::TASK_ID, store, 4);
+  auto result = runtime->tree_reduce(context, ReduceUnboundTask::TASK_CONFIG.task_id(), store, 4);
   EXPECT_FALSE(result.unbound());
 }
 

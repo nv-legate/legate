@@ -31,7 +31,8 @@ class Handle {
 
 class PrimitiveTester : public legate::LegateTask<PrimitiveTester> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -47,7 +48,8 @@ class PrimitiveTester : public legate::LegateTask<PrimitiveTester> {
 
 class ObjectTester : public legate::LegateTask<ObjectTester> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -97,9 +99,9 @@ void test_uninitialized()
 
 }  // namespace
 
-TEST_F(ProcLocalStorage, Primitive) { run_test(PrimitiveTester::TASK_ID); }
+TEST_F(ProcLocalStorage, Primitive) { run_test(PrimitiveTester::TASK_CONFIG.task_id()); }
 
-TEST_F(ProcLocalStorage, Object) { run_test(ObjectTester::TASK_ID); }
+TEST_F(ProcLocalStorage, Object) { run_test(ObjectTester::TASK_CONFIG.task_id()); }
 
 TEST_F(ProcLocalStorage, UninitializedAccess) { test_uninitialized(); }
 

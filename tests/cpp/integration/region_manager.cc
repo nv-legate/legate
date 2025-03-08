@@ -16,7 +16,8 @@ namespace region_manager {
 
 class TesterTask : public legate::LegateTask<TesterTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -45,7 +46,7 @@ TEST_F(RegionManager, Normal)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, TesterTask::TASK_ID);
+  auto task    = runtime->create_task(context, TesterTask::TASK_CONFIG.task_id());
 
   std::vector<legate::LogicalStore> stores;
   for (std::uint32_t idx = 0; idx < legate::detail::RegionManager::MAX_NUM_FIELDS * 2; ++idx) {
@@ -62,7 +63,7 @@ TEST_F(RegionManager, Unbound)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, TesterTask::TASK_ID);
+  auto task    = runtime->create_task(context, TesterTask::TASK_CONFIG.task_id());
 
   std::vector<legate::LogicalStore> stores;
   std::vector<legate::Variable> parts;

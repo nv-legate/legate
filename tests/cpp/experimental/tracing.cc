@@ -17,7 +17,8 @@ namespace tracing_test {
 namespace {
 
 struct DummyTask : public legate::LegateTask<DummyTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
@@ -38,12 +39,12 @@ void launch_tasks(legate::LogicalArray& array)
   auto library = runtime->find_library(Config::LIBRARY_NAME);
   runtime->issue_fill(array, legate::Scalar{std::int64_t{123}});
   {
-    auto task = runtime->create_task(library, DummyTask::TASK_ID);
+    auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
     task.add_input(array);
     runtime->submit(std::move(task));
   }
   {
-    auto task = runtime->create_task(library, DummyTask::TASK_ID);
+    auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
     task.add_input(array);
     task.add_output(array);
     runtime->submit(std::move(task));

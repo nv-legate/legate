@@ -23,7 +23,8 @@ constexpr std::string_view LIBRARY_NAME = "test_alias_via_promote";
 }  // namespace
 
 struct Checker : public legate::LegateTask<Checker> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
@@ -36,7 +37,7 @@ TEST_F(AliasViaPromote, Bug1)
   auto store = runtime->create_store(legate::Shape{2}, legate::int64());
   runtime->issue_fill(store, legate::Scalar{int64_t{42}});
 
-  auto task  = runtime->create_task(library, Checker::TASK_ID);
+  auto task  = runtime->create_task(library, Checker::TASK_CONFIG.task_id());
   auto part1 = task.add_output(store.promote(1, 100));
   task.add_constraint(legate::broadcast(part1, {0}));
   runtime->submit(std::move(task));

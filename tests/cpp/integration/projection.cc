@@ -19,7 +19,8 @@ constexpr std::uint64_t BIG_EXTENT    = 100;
 constexpr std::uint64_t SMALL_EXTENT  = 2;
 
 struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -47,7 +48,8 @@ struct ExtraProjectionTester : public legate::LegateTask<ExtraProjectionTester> 
 };
 
 struct DelinearizeTester : public legate::LegateTask<DelinearizeTester> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
   static void cpu_variant(legate::TaskContext context)
   {
     if (context.is_single_task()) {
@@ -90,7 +92,7 @@ void test_extra_projection(const legate::LogicalArray& arr1)
 
   auto arr2 =
     runtime->create_array(legate::Shape{BIG_EXTENT, SMALL_EXTENT, SMALL_EXTENT}, legate::int64());
-  auto task = runtime->create_task(library, ExtraProjectionTester::TASK_ID);
+  auto task = runtime->create_task(library, ExtraProjectionTester::TASK_CONFIG.task_id());
   task.add_output(arr1);
   task.add_output(arr2);
   runtime->submit(std::move(task));
@@ -103,7 +105,7 @@ void test_delinearization(const legate::LogicalArray& arr1)
 
   auto arr2 =
     runtime->create_array(legate::Shape{BIG_EXTENT, BIG_EXTENT, SMALL_EXTENT}, legate::int64());
-  auto task = runtime->create_task(library, DelinearizeTester::TASK_ID);
+  auto task = runtime->create_task(library, DelinearizeTester::TASK_CONFIG.task_id());
   task.add_output(arr1);
   task.add_output(arr2);
   runtime->submit(std::move(task));

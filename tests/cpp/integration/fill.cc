@@ -29,18 +29,21 @@ enum TaskIDs : std::uint8_t {
 
 template <std::int32_t DIM>
 struct CheckTask : public legate::LegateTask<CheckTask<DIM>> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK_TASK + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CHECK_TASK + DIM}};
   static void cpu_variant(legate::TaskContext context);
 };
 
 template <std::int32_t DIM>
 struct CheckSliceTask : public legate::LegateTask<CheckSliceTask<DIM>> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK_SLICE_TASK + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CHECK_SLICE_TASK + DIM}};
   static void cpu_variant(legate::TaskContext context);
 };
 
 struct WrapFillValueTask : public legate::LegateTask<WrapFillValueTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{WRAP_FILL_VAL_TASK};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{WRAP_FILL_VAL_TASK}};
   static void cpu_variant(legate::TaskContext context);
 };
 

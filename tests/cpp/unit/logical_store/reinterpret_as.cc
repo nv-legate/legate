@@ -23,7 +23,8 @@ constexpr std::int32_t INT_VAL = 42;
 
 class Writer : public legate::LegateTask<Writer> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{static_cast<std::int32_t>(TaskID::WRITER)};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{static_cast<std::int32_t>(TaskID::WRITER)}};
 
   static void cpu_variant(legate::TaskContext ctx)
   {
@@ -50,7 +51,8 @@ class Writer : public legate::LegateTask<Writer> {
 
 class Reader : public legate::LegateTask<Reader> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{static_cast<std::int32_t>(TaskID::READER)};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{static_cast<std::int32_t>(TaskID::READER)}};
 
   static void cpu_variant(legate::TaskContext ctx)
   {
@@ -115,14 +117,14 @@ TEST_P(ReinterpretAs, Basic)
   auto library  = runtime->find_library(Config::LIBRARY_NAME);
 
   {
-    auto task = runtime->create_task(library, Writer::TASK_ID);
+    auto task = runtime->create_task(library, Writer::TASK_CONFIG.task_id());
 
     task.add_output(store);
     runtime->submit(std::move(task));
   }
 
   {
-    auto task = runtime->create_task(library, Reader::TASK_ID);
+    auto task = runtime->create_task(library, Reader::TASK_CONFIG.task_id());
 
     task.add_input(store.reinterpret_as(legate::float32()));
     runtime->submit(std::move(task));

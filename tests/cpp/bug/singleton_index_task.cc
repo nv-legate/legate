@@ -23,7 +23,8 @@ constexpr std::string_view LIBRARY_NAME = "test_singleton_index_task";
 }  // namespace
 
 struct Checker : public legate::LegateTask<Checker> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext context)
   {
     EXPECT_EQ(context.num_communicators(), 0);
@@ -40,7 +41,7 @@ TEST_F(SingletonIndexTask, Bug1)
   auto store = runtime->create_store(legate::Shape{10, 1}, legate::int64());
   runtime->issue_fill(store, legate::Scalar{int64_t{42}});
 
-  auto task  = runtime->create_task(library, Checker::TASK_ID);
+  auto task  = runtime->create_task(library, Checker::TASK_CONFIG.task_id());
   auto part1 = task.add_output(store.project(0, 0));
   auto part2 = task.add_output(runtime->create_store(legate::Scalar{42}));
   task.add_constraint(legate::align(part1, part2));

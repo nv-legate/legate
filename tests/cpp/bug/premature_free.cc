@@ -16,7 +16,8 @@ namespace premature_free_test {
 // This task is meant to do nothing
 class DummyTask : public legate::LegateTask<DummyTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
@@ -112,7 +113,7 @@ TEST_F(PrematureFree, ArrayMovedToAutoTask)
   auto arr = runtime->create_array({EXT}, legate::int64());
   runtime->issue_fill(arr, legate::Scalar{std::int64_t{0}});
 
-  auto task = runtime->create_task(library, DummyTask::TASK_ID);
+  auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
   task.add_input(arr);
   // the old array should still be alive until the task is done
   arr = runtime->create_array({EXT}, legate::int64());
@@ -128,7 +129,8 @@ TEST_F(PrematureFree, ArrayMovedToManualTask)
   auto arr = runtime->create_store({EXT}, legate::int64());
   runtime->issue_fill(arr, legate::Scalar{std::int64_t{0}});
 
-  auto task = runtime->create_task(library, DummyTask::TASK_ID, legate::tuple<std::uint64_t>{2, 4});
+  auto task = runtime->create_task(
+    library, DummyTask::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{2, 4});
   task.add_input(arr);
   // the old store should still be alive until the task is done
   arr = runtime->create_store({EXT}, legate::int64());

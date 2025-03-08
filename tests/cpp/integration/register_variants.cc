@@ -66,12 +66,16 @@ void hello_cpu_variant(legate::TaskContext& context)
 // namespaces have implementation-defined names.
 template <std::int32_t TID>
 struct BaseTask : public legate::LegateTask<BaseTask<TID>> {
-  using Registrar               = Registry;
-  static constexpr auto TASK_ID = legate::LocalTaskID{TID};
+  using Registrar                      = Registry;
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TID}};
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
 
 struct BaseTask2 : public legate::LegateTask<BaseTask2> {
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{HELLO5}};
+
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); }
 };
 
@@ -257,7 +261,9 @@ TEST_F(RegisterVariants, Test6)
 
 class DefaultOptionsTask : public legate::LegateTask<DefaultOptionsTask> {
  public:
-  static constexpr auto TASK_ID             = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
+
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
   static constexpr auto OMP_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
   static constexpr auto GPU_VARIANT_OPTIONS =
@@ -274,7 +280,7 @@ TEST_F(RegisterVariants, DefaultVariantOptions)
 
   DefaultOptionsTask::register_variants(library);
 
-  const auto task_info = library.find_task(DefaultOptionsTask::TASK_ID);
+  const auto task_info = library.find_task(DefaultOptionsTask::TASK_CONFIG.task_id());
   // This test checks that the defaults in <XXX>_VARIANT_OPTIONS override the "normal"
   // defaults. Obviously, we cannot properly test that if the normal defaults match that of
   // DefaultOptionsTask::<XXX>_VARIANT_OPTIONS.

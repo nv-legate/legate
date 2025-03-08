@@ -76,7 +76,8 @@ class AccessStoreFn {
 
 class AccessTask : public legate::LegateTask<AccessTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext context);
 };
 
@@ -102,7 +103,7 @@ void test_access_by_task(legate::ExternalAllocation& ext, T value)
 {
   auto runtime       = legate::Runtime::get_runtime();
   auto context       = runtime->find_library(Config::LIBRARY_NAME);
-  auto task          = runtime->create_task(context, AccessTask::TASK_ID);
+  auto task          = runtime->create_task(context, AccessTask::TASK_CONFIG.task_id());
   auto logical_store = runtime->create_store(
     legate::Shape{TILE_SIZE}, legate::primitive_type(legate::type_code_of_v<T>), ext);
 

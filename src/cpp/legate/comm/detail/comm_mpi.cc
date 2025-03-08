@@ -14,6 +14,7 @@
 #include <legate/comm/detail/comm_cpu_factory.h>
 #include <legate/comm/detail/mpi_interface.h>
 #include <legate/task/detail/legion_task.h>
+#include <legate/task/task_config.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/macros.h>
 
@@ -33,7 +34,8 @@ namespace legate::detail::comm::mpi {
 
 class InitMapping : public legate::detail::LegionTask<InitMapping> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{CoreTask::INIT_CPUCOLL_MAPPING};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{LocalTaskID{CoreTask::INIT_CPUCOLL_MAPPING}};
 
   static int cpu_variant(const Legion::Task* task,
                          const std::vector<Legion::PhysicalRegion>& /*regions*/,
@@ -75,11 +77,9 @@ class InitMapping : public legate::detail::LegionTask<InitMapping> {
 
 class Init : public legate::detail::LegionTask<Init> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{CoreTask::INIT_CPUCOLL};
-
-  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
-  static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
-  static constexpr auto OMP_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{LocalTaskID{CoreTask::INIT_CPUCOLL}}.with_variant_options(
+      legate::VariantOptions{}.with_concurrent(true));
 
   static legate::comm::coll::CollComm cpu_variant(
     const Legion::Task* task,
@@ -147,11 +147,9 @@ class Init : public legate::detail::LegionTask<Init> {
 
 class Finalize : public legate::detail::LegionTask<Finalize> {
  public:
-  static constexpr auto TASK_ID = LocalTaskID{CoreTask::FINALIZE_CPUCOLL};
-
-  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
-  static constexpr auto GPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
-  static constexpr auto OMP_VARIANT_OPTIONS = legate::VariantOptions{}.with_concurrent(true);
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{LocalTaskID{CoreTask::FINALIZE_CPUCOLL}}.with_variant_options(
+      legate::VariantOptions{}.with_concurrent(true));
 
   static void cpu_variant(const Legion::Task* task,
                           const std::vector<Legion::PhysicalRegion>& /*regions*/,

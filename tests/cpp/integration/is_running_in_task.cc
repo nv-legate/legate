@@ -14,7 +14,8 @@
 namespace test_is_running_in_task {
 
 struct Checker : public legate::LegateTask<Checker> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext /*context*/)
   {
     EXPECT_TRUE(legate::is_running_in_task());
@@ -45,7 +46,7 @@ TEST_F(IsRunningInTask, InSingleTask)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  runtime->submit(runtime->create_task(library, Checker::TASK_ID));
+  runtime->submit(runtime->create_task(library, Checker::TASK_CONFIG.task_id()));
 }
 
 TEST_F(IsRunningInTask, InIndexTask)
@@ -53,8 +54,8 @@ TEST_F(IsRunningInTask, InIndexTask)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  runtime->submit(
-    runtime->create_task(library, Checker::TASK_ID, legate::tuple<std::uint64_t>{2, 2}));
+  runtime->submit(runtime->create_task(
+    library, Checker::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{2, 2}));
 }
 
 using IsRunningInTaskNoRuntime = ::testing::Test;

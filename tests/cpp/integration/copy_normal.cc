@@ -45,7 +45,9 @@ struct CheckCopyTask : public legate::LegateTask<CheckCopyTask<DIM>> {
     }
   };
 
-  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK_COPY_TASK + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CHECK_COPY_TASK + DIM}};
+
   static void cpu_variant(legate::TaskContext context)
   {
     auto source = context.input(0).data();
@@ -87,7 +89,8 @@ struct CheckCopyReductionTask : public legate::LegateTask<CheckCopyReductionTask
     }
   };
 
-  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK_COPY_REDUCTION_TASK + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CHECK_COPY_REDUCTION_TASK + DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {

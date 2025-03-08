@@ -14,6 +14,7 @@
 #include <legate/experimental/stl/detail/slice.hpp>
 #include <legate/experimental/stl/detail/store.hpp>
 #include <legate/experimental/stl/detail/utility.hpp>
+#include <legate/task/task_config.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/macros.h>
 
@@ -752,7 +753,7 @@ template <typename Function,
 struct IterationOperation  //
   : LegateTask<IterationOperation<Function, Inputs, Outputs, Scalars, Constraints>> {
   static constexpr auto CPU_VARIANT_OPTIONS = VariantOptions{}.with_has_allocations(false);
-  static constexpr auto GPU_VARIANT_OPTIONS = VariantOptions{}.with_has_allocations(false);
+  static constexpr auto GPU_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
 
   static void cpu_variant(TaskContext context)
   {
@@ -975,7 +976,7 @@ template <typename Reduction,
 struct ReductionOperation
   : LegateTask<ReductionOperation<Reduction, Inputs, Outputs, Scalars, Constraints>> {
   static constexpr auto CPU_VARIANT_OPTIONS = VariantOptions{}.with_has_allocations(false);
-  static constexpr auto GPU_VARIANT_OPTIONS = VariantOptions{}.with_has_allocations(false);
+  static constexpr auto GPU_VARIANT_OPTIONS = CPU_VARIANT_OPTIONS;
 
   static void cpu_variant(TaskContext context)
   {

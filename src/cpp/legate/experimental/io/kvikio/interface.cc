@@ -64,7 +64,8 @@ LogicalArray from_file(const std::filesystem::path& file_path, const Type& type)
   // We really should not do this.
   const auto array_size = std::filesystem::file_size(file_path) / type.size();
   auto ret              = rt->create_array(Shape{static_cast<std::uint64_t>(array_size)}, type);
-  auto task = rt->create_task(io::detail::core_io_library(), detail::BasicRead::TASK_ID);
+  auto task =
+    rt->create_task(io::detail::core_io_library(), detail::BasicRead::TASK_CONFIG.task_id());
 
   task.add_scalar_arg(Scalar{file_path.native()});
   task.add_output(ret);
@@ -91,8 +92,9 @@ void to_file(const std::filesystem::path& file_path, const LogicalArray& array)
       fmt::format("number of array dimensions must be 1 (have {})", dim)};
   }
 
-  auto* rt  = Runtime::get_runtime();
-  auto task = rt->create_task(io::detail::core_io_library(), detail::BasicWrite::TASK_ID);
+  auto* rt = Runtime::get_runtime();
+  auto task =
+    rt->create_task(io::detail::core_io_library(), detail::BasicWrite::TASK_CONFIG.task_id());
 
   task.add_scalar_arg(Scalar{file_path.native()});
   task.add_input(array);
@@ -170,8 +172,9 @@ LogicalArray from_file(const std::filesystem::path& file_path,
   sanity_check_sizes(ret, tile_shape, *tile_start);
 
   auto partition = ret.data().partition_by_tiling(tile_shape);
-  auto task      = rt->create_task(
-    io::detail::core_io_library(), detail::TileRead::TASK_ID, partition.color_shape());
+  auto task      = rt->create_task(io::detail::core_io_library(),
+                              detail::TileRead::TASK_CONFIG.task_id(),
+                              partition.color_shape());
 
   task.add_output(partition);
   task.add_scalar_arg(Scalar{file_path.native()});
@@ -193,8 +196,9 @@ void to_file(const std::filesystem::path& file_path,
 
   auto* rt       = Runtime::get_runtime();
   auto partition = array.data().partition_by_tiling(tile_shape);
-  auto task      = rt->create_task(
-    io::detail::core_io_library(), detail::TileWrite::TASK_ID, partition.color_shape());
+  auto task      = rt->create_task(io::detail::core_io_library(),
+                              detail::TileWrite::TASK_CONFIG.task_id(),
+                              partition.color_shape());
 
   task.add_input(partition);
   task.add_scalar_arg(Scalar{file_path.native()});
@@ -225,7 +229,7 @@ LogicalArray from_file_by_offsets(const std::filesystem::path& file_path,
   }
 
   auto task = rt->create_task(
-    io::detail::core_io_library(), detail::TileByOffsetsRead::TASK_ID, launch_shape);
+    io::detail::core_io_library(), detail::TileByOffsetsRead::TASK_CONFIG.task_id(), launch_shape);
 
   task.add_output(partition);
   task.add_scalar_arg(Scalar{file_path.native()});

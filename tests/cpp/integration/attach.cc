@@ -76,7 +76,8 @@ void check_physical_store(const legate::PhysicalStore& store,
 enum TaskOpCode : std::uint8_t { ADDER = 0, CHECKER = 1 };
 
 struct AdderTask : public legate::LegateTask<AdderTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{ADDER};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{ADDER}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -87,7 +88,8 @@ struct AdderTask : public legate::LegateTask<AdderTask> {
 };
 
 struct CheckerTask : public legate::LegateTask<CheckerTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{CHECKER};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CHECKER}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -189,7 +191,7 @@ void test_body(
   }
   for (auto iter = 0; iter < 2; ++iter) {
     if (use_tasks) {
-      auto task = runtime->create_task(context, AdderTask::TASK_ID, {1});
+      auto task = runtime->create_task(context, AdderTask::TASK_CONFIG.task_id(), {1});
       task.add_input(l_store);
       task.add_output(l_store);
       task.add_scalar_arg(legate::Scalar{dim});
@@ -203,7 +205,7 @@ void test_body(
     }
   }
   if (use_tasks) {
-    auto task = runtime->create_task(context, CheckerTask::TASK_ID, {1});
+    auto task = runtime->create_task(context, CheckerTask::TASK_CONFIG.task_id(), {1});
     task.add_input(l_store);
     task.add_scalar_arg(legate::Scalar{dim});
     task.add_scalar_arg(legate::Scalar{counter});

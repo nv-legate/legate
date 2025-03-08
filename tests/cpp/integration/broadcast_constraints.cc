@@ -20,7 +20,8 @@ constexpr std::size_t EXT_SMALL = 10;
 constexpr std::size_t EXT_LARGE = 100;
 
 struct TesterTask : public legate::LegateTask<TesterTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -37,7 +38,8 @@ struct TesterTask : public legate::LegateTask<TesterTask> {
 };
 
 struct Initializer : public legate::LegateTask<Initializer> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
@@ -66,7 +68,7 @@ void test_normal_store()
       extents[dim] = EXT_LARGE;
     }
     auto store = runtime->create_store(legate::Shape{extents}, legate::int64());
-    auto task  = runtime->create_task(context, TesterTask::TASK_ID);
+    auto task  = runtime->create_task(context, TesterTask::TASK_CONFIG.task_id());
     auto part  = task.add_output(store);
     task.add_scalar_arg(legate::Scalar(EXT_LARGE));
     task.add_scalar_arg(legate::Scalar(dims));
@@ -95,7 +97,7 @@ void test_promoted_store()
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
   auto initialize = [&](auto&& store) {
-    auto task = runtime->create_task(context, Initializer::TASK_ID);
+    auto task = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
 
     task.add_output(store);
     runtime->submit(std::move(task));
@@ -107,7 +109,7 @@ void test_promoted_store()
     auto store   = runtime->create_store(legate::Shape{extents}, legate::int64());
     initialize(store);
 
-    auto task = runtime->create_task(context, TesterTask::TASK_ID);
+    auto task = runtime->create_task(context, TesterTask::TASK_CONFIG.task_id());
     auto part = task.add_input(store.promote(2, EXT_LARGE));
     task.add_scalar_arg(legate::Scalar(EXT_LARGE));
     task.add_scalar_arg(legate::Scalar(std::vector<std::uint32_t>{dim}));
@@ -125,7 +127,7 @@ void test_invalid_broadcast()
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto task  = runtime->create_task(context, Initializer::TASK_ID);
+  auto task  = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
   auto store = runtime->create_store(legate::Shape{10}, legate::int64());
   auto part  = task.add_output(store);
   EXPECT_THROW(task.add_constraint(legate::broadcast(part, {})), std::invalid_argument);

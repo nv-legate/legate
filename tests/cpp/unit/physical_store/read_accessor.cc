@@ -70,7 +70,8 @@ class ReadAccessorFn {
 
 class ReadAccessorTestTask : public legate::LegateTask<ReadAccessorTestTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext context);
 
@@ -98,7 +99,7 @@ void test_read_accessor_by_task(legate::LogicalStore& logical_store, legate::Sca
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, ReadAccessorTestTask::TASK_ID);
+  auto task    = runtime->create_task(context, ReadAccessorTestTask::TASK_CONFIG.task_id());
 
   runtime->issue_fill(logical_store, scalar);
   task.add_input(logical_store);

@@ -30,33 +30,31 @@ namespace {
 
 class BasicTask : public legate::LegateTask<BasicTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
-
   // NOLINTNEXTLINE(cert-err58-cpp)
-  static inline const auto TASK_SIGNATURE = legate::TaskSignature{}.inputs(1).outputs(1).scalars(1);
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}}.with_signature(
+      legate::TaskSignature{}.inputs(1).outputs(1).scalars(1));
 
   static void cpu_variant(legate::TaskContext) {}
 };
 
 class RangeTask : public legate::LegateTask<RangeTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
-
   // NOLINTNEXTLINE(cert-err58-cpp)
-  static inline const auto TASK_SIGNATURE =
-    legate::TaskSignature{}.inputs(1, 2).outputs(1, 2).redops(1, 2).scalars(1, 2);
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}}.with_signature(
+      legate::TaskSignature{}.inputs(1, 2).outputs(1, 2).redops(1, 2).scalars(1, 2));
 
   static void cpu_variant(legate::TaskContext) {}
 };
 
 class ConstrainedTask : public legate::LegateTask<ConstrainedTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{2};
-
   // NOLINTNEXTLINE(cert-err58-cpp)
-  static inline const auto TASK_SIGNATURE =
-    legate::TaskSignature{}.inputs(1).outputs(1).constraints(
-      {{legate::align(legate::proxy::inputs[0], legate::proxy::outputs[0])}});
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{2}}.with_signature(
+      legate::TaskSignature{}.inputs(1).outputs(1).constraints(
+        {{legate::align(legate::proxy::inputs[0], legate::proxy::outputs[0])}}));
 
   static void cpu_variant(legate::TaskContext) {}
 };
@@ -84,8 +82,8 @@ class TaskSignatureRegisterUnitBasicTask : public TaskSignatureRegisterUnit {
     TaskSignatureRegisterUnit::SetUp();
 
     auto* runtime = legate::Runtime::get_runtime();
-    task          = std::make_unique<legate::AutoTask>(
-      runtime->create_task(runtime->find_library(Config::LIBRARY_NAME), BasicTask::TASK_ID));
+    task          = std::make_unique<legate::AutoTask>(runtime->create_task(
+      runtime->find_library(Config::LIBRARY_NAME), BasicTask::TASK_CONFIG.task_id()));
   }
 
   std::unique_ptr<legate::AutoTask> task;
@@ -182,8 +180,8 @@ class TaskSignatureRegisterUnitRangeTask : public TaskSignatureRegisterUnit {
     TaskSignatureRegisterUnit::SetUp();
 
     auto* runtime = legate::Runtime::get_runtime();
-    task          = std::make_unique<legate::AutoTask>(
-      runtime->create_task(runtime->find_library(Config::LIBRARY_NAME), RangeTask::TASK_ID));
+    task          = std::make_unique<legate::AutoTask>(runtime->create_task(
+      runtime->find_library(Config::LIBRARY_NAME), RangeTask::TASK_CONFIG.task_id()));
   }
 
   std::unique_ptr<legate::AutoTask> task;
@@ -305,8 +303,8 @@ class TaskSignatureRegisterUnitConstrainedTask : public TaskSignatureRegisterUni
 
     auto* runtime = legate::Runtime::get_runtime();
 
-    task = std::make_unique<legate::AutoTask>(
-      runtime->create_task(runtime->find_library(Config::LIBRARY_NAME), ConstrainedTask::TASK_ID));
+    task = std::make_unique<legate::AutoTask>(runtime->create_task(
+      runtime->find_library(Config::LIBRARY_NAME), ConstrainedTask::TASK_CONFIG.task_id()));
   }
 
   std::unique_ptr<legate::AutoTask> task;
@@ -329,11 +327,13 @@ TEST_F(TaskSignatureRegisterUnitConstrainedTask, BadConstraint)
   ASSERT_THROW(task->add_constraint(legate::align(in_var, out_var)), std::runtime_error);
 }
 
-// NOLINTBEGIN(cert-err58-cpp)
-/// [Example task signature]
-class ExampleTask : public legate::LegateTask<ExampleTask> {
- public:
-  static inline const auto TASK_SIGNATURE =
+namespace {
+
+[[maybe_unused]] void dummy_example_function()
+{
+  // NOLINTBEGIN(readability-magic-numbers)
+  std::ignore =
+    /// [Example task signature]
     legate::TaskSignature{}  // The task expects exactly 2 inputs...
       .inputs(2)
       // But may take at least 3 and no more than 5 outputs...
@@ -348,14 +348,8 @@ class ExampleTask : public legate::LegateTask<ExampleTask> {
           legate::broadcast(legate::proxy::inputs),
           // All arguments (including axes) of constraints are supported
           legate::scale({1, 2, 3}, legate::proxy::outputs[1], legate::proxy::inputs[1])}});
-};
-/// [Example task signature]
-// NOLINTEND(cert-err58-cpp)
+  /// [Example task signature]
 
-namespace {
-
-[[maybe_unused]] void dummy_example_function()
-{
   std::ignore =
     /// [Align all inputs with output 0]
     legate::align(legate::proxy::inputs, legate::proxy::outputs[0])
@@ -379,6 +373,7 @@ namespace {
     legate::broadcast(legate::proxy::outputs)
     /// [Broadcast all outputs]
     ;
+  // NOLINTEND(readability-magic-numbers)
 }
 
 }  // namespace

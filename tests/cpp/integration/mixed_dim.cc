@@ -15,7 +15,8 @@ namespace mixed_dim {
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct Tester : public legate::LegateTask<Tester> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -43,7 +44,7 @@ TEST_F(Partitioner, MixedDim)
     auto normal1 = runtime->create_store(extents1, legate::int64());
     auto normal2 = runtime->create_store(extents2, legate::float64());
 
-    auto task = runtime->create_task(library, Tester::TASK_ID);
+    auto task = runtime->create_task(library, Tester::TASK_CONFIG.task_id());
     task.add_output(unbound);
     task.add_output(normal1);
     task.add_output(normal2);

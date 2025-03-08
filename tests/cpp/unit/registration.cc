@@ -18,13 +18,15 @@ namespace {
 
 template <std::int32_t ID>
 struct CPUVariantTask : public legate::LegateTask<CPUVariantTask<ID>> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{ID};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{ID}};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 template <std::int32_t ID>
 struct GPUVariantTask : public legate::LegateTask<GPUVariantTask<ID>> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{ID};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{ID}};
   static void gpu_variant(legate::TaskContext /*context*/) {}
 };
 

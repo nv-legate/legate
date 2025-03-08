@@ -21,7 +21,8 @@ constexpr std::int64_t VAL  = 42;
 
 class InitTask : public legate::LegateTask<InitTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
@@ -37,7 +38,8 @@ class InitTask : public legate::LegateTask<InitTask> {
 
 class CopyTask : public legate::LegateTask<CopyTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -119,7 +121,7 @@ void init(const legate::LogicalArray& output)
   // Dummy argument to get the task parallelized
   auto dummy = runtime->create_array(legate::Shape{EXT}, legate::int64());
 
-  auto task1 = runtime->create_task(library, InitTask::TASK_ID);
+  auto task1 = runtime->create_task(library, InitTask::TASK_CONFIG.task_id());
   task1.add_output(output);
   task1.add_output(dummy);
   runtime->submit(std::move(task1));
@@ -132,7 +134,7 @@ void add_and_copy(const legate::LogicalArray& output,
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto task  = runtime->create_task(library, CopyTask::TASK_ID);
+  auto task  = runtime->create_task(library, CopyTask::TASK_CONFIG.task_id());
   auto part1 = task.add_input(input);
   auto part2 = task.add_output(output.project(1, index));
   task.add_scalar_arg(index);

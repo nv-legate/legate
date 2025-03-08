@@ -23,7 +23,8 @@ constexpr auto HUGE_SIZE     = static_cast<std::uint64_t>(1) << HUGE_EXPONENT;  
 
 class DummyTask : public legate::LegateTask<DummyTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext) {}
 };
@@ -68,7 +69,7 @@ void test_oom_message()
   // Launch tasks
   {
     const legate::Scope scope{"launch_using_small_store_part"};
-    auto task = runtime->create_task(library, DummyTask::TASK_ID);
+    auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
 
     task.add_output(stores.at(1).slice(0, legate::Slice{1}));
     runtime->submit(std::move(task));
@@ -76,7 +77,7 @@ void test_oom_message()
   }
   {
     const legate::Scope scope{"launch_using_small_store_full"};
-    auto task = runtime->create_task(library, DummyTask::TASK_ID);
+    auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
 
     task.add_input(stores.at(1));
     runtime->submit(std::move(task));
@@ -84,7 +85,7 @@ void test_oom_message()
   }
   {
     const legate::Scope scope{"launch_using_huge_store"};
-    auto task = runtime->create_task(library, DummyTask::TASK_ID);
+    auto task = runtime->create_task(library, DummyTask::TASK_CONFIG.task_id());
 
     task.add_input(stores.at(1));
     task.add_output(stores.at(2));

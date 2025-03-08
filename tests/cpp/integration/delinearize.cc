@@ -22,7 +22,8 @@ enum TaskIDs : std::uint8_t {
 };
 
 struct Arange : public legate::LegateTask<Arange> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{ARANGE};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{ARANGE}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -37,7 +38,8 @@ struct Arange : public legate::LegateTask<Arange> {
 };
 
 struct Copy : public legate::LegateTask<Copy> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{COPY};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{COPY}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -73,13 +75,13 @@ void test_delinearize()
   auto output = runtime->create_array(legate::Shape{1, 8, 2}, legate::int64());
 
   {
-    auto task = runtime->create_task(library, Arange::TASK_ID);
+    auto task = runtime->create_task(library, Arange::TASK_CONFIG.task_id());
     task.add_output(input);
     runtime->submit(std::move(task));
   }
   {
     auto transformed = input.promote(0, 1).delinearize(1, {8, 2});
-    auto task        = runtime->create_task(library, Copy::TASK_ID);
+    auto task        = runtime->create_task(library, Copy::TASK_CONFIG.task_id());
     auto part_in     = task.add_input(transformed);
     auto part_out    = task.add_output(output);
     task.add_constraint(legate::align(part_out, part_in));

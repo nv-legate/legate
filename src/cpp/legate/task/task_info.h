@@ -24,6 +24,7 @@ namespace legate {
 
 class Library;
 class TaskInfo;
+class TaskConfig;
 class TaskSignature;
 
 }  // namespace legate
@@ -40,7 +41,8 @@ class VariantHelper;
 namespace legate::detail::cython {
 
 void cytaskinfo_add_variant(legate::TaskInfo* handle,
-                            legate::Library* core_lib,
+                            legate::LocalTaskID,
+                            const legate::Library&,
                             legate::VariantCode variant_kind,
                             legate::VariantImpl cy_entry,
                             legate::Processor::TaskFuncPtr py_entry,
@@ -98,7 +100,8 @@ class TaskInfo {
 
     friend TaskInfo;
     friend void legate::detail::cython::cytaskinfo_add_variant(legate::TaskInfo*,
-                                                               legate::Library*,
+                                                               legate::LocalTaskID,
+                                                               const legate::Library&,
                                                                legate::VariantCode,
                                                                legate::VariantImpl,
                                                                legate::Processor::TaskFuncPtr,
@@ -116,7 +119,7 @@ class TaskInfo {
    * @param vid The variant type to register.
    * @param body The variant function pointer.
    * @param entry The pointer to the entry point wrapping `body`, to be passed to Legion.
-   * @param signature The pointer to the task signature, or `nullptr` if no signature was given.
+   * @param task_config The task-wide configuration options.
    * @param decl_options Any variant options declared in the task declaration, or `nullptr` if
    * none were found.
    * @param registration_options Variant options specified at task registration time.
@@ -126,7 +129,7 @@ class TaskInfo {
                     VariantCode vid,
                     VariantImpl body,
                     Processor::TaskFuncPtr entry,
-                    const TaskSignature* signature,
+                    const TaskConfig& task_config,
                     const VariantOptions* decl_options,
                     const std::map<VariantCode, VariantOptions>& registration_options = {});
 
@@ -138,6 +141,7 @@ class TaskInfo {
    * @param vid The variant type to register.
    * @param body The variant function pointer.
    * @param entry The pointer to the entry point wrapping `body`, to be passed to Legion.
+   * @param task_config The task-wide configuration options.
    * @param decl_options Any variant options declared in the task declaration, or `nullptr` if
    * none were found.
    * @param registration_options Variant options specified at task registration time.
@@ -148,6 +152,7 @@ class TaskInfo {
                     VariantCode vid,
                     LegionVariantImpl<T> body,
                     Processor::TaskFuncPtr entry,
+                    const TaskConfig& task_config,
                     const VariantOptions* decl_options,
                     const std::map<VariantCode, VariantOptions>& registration_options = {});
 

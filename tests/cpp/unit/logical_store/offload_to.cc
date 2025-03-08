@@ -27,7 +27,8 @@ decltype(auto) dbg()
 
 class GPUonlyTask : public legate::LegateTask<GPUonlyTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void gpu_variant(legate::TaskContext)
   {
@@ -87,7 +88,7 @@ TEST_F(OffloadAPI, GPUToHostOffload)
   // call for the first store after submitting the first task and before submitting
   // the second task.
   {
-    auto task1 = runtime->create_task(library, GPUonlyTask::TASK_ID);
+    auto task1 = runtime->create_task(library, GPUonlyTask::TASK_CONFIG.task_id());
 
     task1.add_output(store1);
     runtime->submit(std::move(task1));
@@ -96,7 +97,7 @@ TEST_F(OffloadAPI, GPUToHostOffload)
   store1.offload_to(legate::mapping::StoreTarget::SYSMEM);
 
   {
-    auto task2 = runtime->create_task(library, GPUonlyTask::TASK_ID);
+    auto task2 = runtime->create_task(library, GPUonlyTask::TASK_CONFIG.task_id());
 
     task2.add_output(store2);
     runtime->submit(std::move(task2));

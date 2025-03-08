@@ -17,7 +17,8 @@ namespace scalarout {
 namespace {
 
 struct Copy : public legate::LegateTask<Copy> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -54,7 +55,7 @@ void test_scalar_out()
 
   {
     auto sliced   = input.slice(0, legate::Slice{2, 3});
-    auto task     = runtime->create_task(library, Copy::TASK_ID);
+    auto task     = runtime->create_task(library, Copy::TASK_CONFIG.task_id());
     auto part_in  = task.add_input(sliced);
     auto part_out = task.add_output(output);
     task.add_constraint(legate::align(part_in, part_out));

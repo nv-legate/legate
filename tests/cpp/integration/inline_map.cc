@@ -19,7 +19,8 @@ namespace inline_map {
 namespace {
 
 struct AdderTask : public legate::LegateTask<AdderTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -76,7 +77,7 @@ void test_inline_map_and_task()
     auto acc     = p_store.write_accessor<std::int64_t, 1>();
     acc[2]       = 42;
   }
-  auto task = runtime->create_task(context, AdderTask::TASK_ID, {1});
+  auto task = runtime->create_task(context, AdderTask::TASK_CONFIG.task_id(), {1});
   task.add_input(l_store);
   task.add_output(l_store);
   runtime->submit(std::move(task));

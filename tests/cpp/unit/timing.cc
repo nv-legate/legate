@@ -31,7 +31,8 @@ void hello_cpu_variant(legate::TaskContext& context)
 }
 
 struct HelloTask : legate::LegateTask<HelloTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext context) { hello_cpu_variant(context); };
 };
 
@@ -51,7 +52,7 @@ void test_hello_task()
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
   auto store   = runtime->create_store(legate::Shape{1000, 1000}, legate::int64());
-  auto task    = runtime->create_task(library, HelloTask::TASK_ID);
+  auto task    = runtime->create_task(library, HelloTask::TASK_CONFIG.task_id());
   auto part    = task.declare_partition();
 
   task.add_output(store, part);

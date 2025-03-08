@@ -72,7 +72,8 @@ constexpr std::int32_t SIMPLE_TASK = 0;
 template <std::int32_t DIM>
 class SimpleTask : public legate::LegateTask<SimpleTask<DIM>> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{SIMPLE_TASK + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{SIMPLE_TASK + DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {

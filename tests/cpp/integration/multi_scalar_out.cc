@@ -57,7 +57,8 @@ class ReduceFn {
 
 class WriterTask : public legate::LegateTask<WriterTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -72,7 +73,8 @@ class WriterTask : public legate::LegateTask<WriterTask> {
 
 class ReducerTask : public legate::LegateTask<ReducerTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -89,7 +91,8 @@ class ReducerTask : public legate::LegateTask<ReducerTask> {
 
 class MixedTask : public legate::LegateTask<MixedTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{2};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{2}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -116,7 +119,8 @@ class MixedTask : public legate::LegateTask<MixedTask> {
 
 class UnboundTask : public legate::LegateTask<UnboundTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{3};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{3}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -133,7 +137,8 @@ class UnboundTask : public legate::LegateTask<UnboundTask> {
 
 class ExnTask : public legate::LegateTask<ExnTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{4};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{4}};
 
   static void cpu_variant(legate::TaskContext /*context*/)
   {
@@ -159,7 +164,8 @@ class CheckFn {
 
 class CheckerTask : public legate::LegateTask<CheckerTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{5};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{5}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -191,7 +197,7 @@ void test_writer_auto(legate::Library library,
                       const std::vector<legate::Scalar>& scalars)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, WriterTask::TASK_ID);
+  auto task    = runtime->create_task(library, WriterTask::TASK_CONFIG.task_id());
   for (auto&& store : stores) {
     task.add_output(store);
   }
@@ -207,7 +213,7 @@ void test_reducer_auto(legate::Library library,
                        const std::vector<legate::Scalar>& scalars)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, ReducerTask::TASK_ID);
+  auto task    = runtime->create_task(library, ReducerTask::TASK_CONFIG.task_id());
   task.add_input(input);
   for (auto&& reduction : reductions) {
     task.add_reduction(reduction, legate::ReductionOpKind::ADD);
@@ -224,7 +230,7 @@ void test_reducer_manual(legate::Library library,
                          const std::vector<legate::Scalar>& scalars)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, ReducerTask::TASK_ID, {2});
+  auto task    = runtime->create_task(library, ReducerTask::TASK_CONFIG.task_id(), {2});
   task.add_input(input.partition_by_tiling({3}));
   for (auto&& reduction : reductions) {
     task.add_reduction(reduction, legate::ReductionOpKind::ADD);
@@ -241,7 +247,7 @@ void test_mixed_auto(legate::Library library,
                      const std::vector<legate::Scalar>& scalars)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, MixedTask::TASK_ID);
+  auto task    = runtime->create_task(library, MixedTask::TASK_CONFIG.task_id());
   task.add_input(input);
   for (auto&& [idx, store] : legate::detail::enumerate(out_or_reds)) {
     if (idx % 3 == 1) {
@@ -261,7 +267,7 @@ void test_unbound(legate::Library library,
                   const std::vector<legate::Scalar>& scalars)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, UnboundTask::TASK_ID);
+  auto task    = runtime->create_task(library, UnboundTask::TASK_CONFIG.task_id());
   for (auto&& store : stores) {
     task.add_output(store);
   }
@@ -278,7 +284,7 @@ void test_exn_and_unbound(legate::Library library,
                           const legate::LogicalStore& output2)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, ExnTask::TASK_ID);
+  auto task    = runtime->create_task(library, ExnTask::TASK_CONFIG.task_id());
   task.add_input(input);
   task.add_output(output1);
   task.add_output(output2);
@@ -296,7 +302,7 @@ void validate_store(const legate::Library& library,
 
   double_dispatch(p_store.dim(), p_store.type().code(), CheckFn{}, p_store, to_match);
 
-  auto task = runtime->create_task(library, CheckerTask::TASK_ID);
+  auto task = runtime->create_task(library, CheckerTask::TASK_CONFIG.task_id());
   task.add_input(store);
   task.add_scalar_arg(to_match);
   runtime->submit(std::move(task));

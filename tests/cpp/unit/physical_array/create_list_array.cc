@@ -16,7 +16,8 @@ namespace {
 
 class ListArrayTask : public legate::LegateTask<ListArrayTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
@@ -114,7 +115,7 @@ void test_create_list_array_task(legate::LogicalArray& logical_array, bool nulla
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, ListArrayTask::TASK_ID);
+  auto task    = runtime->create_task(context, ListArrayTask::TASK_CONFIG.task_id());
   auto part    = task.declare_partition();
 
   task.add_output(logical_array, std::move(part));

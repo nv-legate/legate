@@ -22,7 +22,8 @@ constexpr auto NUM_CHILDREN             = 2;
 
 class TestArrayWithScalarTask : public legate::LegateTask<TestArrayWithScalarTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
@@ -31,7 +32,8 @@ class TestArrayWithScalarTask : public legate::LegateTask<TestArrayWithScalarTas
 
 class TestArrayWithReductionTask : public legate::LegateTask<TestArrayWithReductionTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
@@ -665,8 +667,8 @@ TEST_P(NullableTest, CreateFutureBaseArray)
   const auto nullable = GetParam();
   auto runtime        = legate::Runtime::get_runtime();
   auto context        = runtime->find_library(Config::LIBRARY_NAME);
-  auto task           = runtime->create_task(context, TestArrayWithScalarTask::TASK_ID);
-  auto part           = task.declare_partition();
+  auto task = runtime->create_task(context, TestArrayWithScalarTask::TASK_CONFIG.task_id());
+  auto part = task.declare_partition();
   // create null_mask with Future-backed store
   auto logical_array =
     runtime->create_array(legate::Shape{1}, legate::int64(), nullable, /* optimize_scalar */ true);
@@ -684,7 +686,7 @@ TEST_P(NullableTest, CreateFutureBaseArrayReduction)
     runtime->create_array(legate::Shape{1}, legate::int64(), nullable, /* optimize_scalar */ true);
   auto scalar  = legate::Scalar{std::int64_t{1}};
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, TestArrayWithReductionTask::TASK_ID);
+  auto task    = runtime->create_task(context, TestArrayWithReductionTask::TASK_CONFIG.task_id());
 
   runtime->issue_fill(logical_array, scalar);
   task.add_reduction(logical_array, legate::ReductionOpKind::ADD);

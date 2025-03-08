@@ -24,14 +24,16 @@ enum TaskIDs : std::uint8_t {
 
 // Dummy task to make the runtime think the store is initialized
 struct Initializer : public legate::LegateTask<Initializer> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 template <std::int32_t DIM>
 struct AlignmentTester : public legate::LegateTask<AlignmentTester<DIM>> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{ALIGNMENT_TESTER + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{ALIGNMENT_TESTER + DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -45,7 +47,8 @@ struct AlignmentTester : public legate::LegateTask<AlignmentTester<DIM>> {
 
 template <std::int32_t DIM>
 struct AlignmentBroadcastTester : public legate::LegateTask<AlignmentBroadcastTester<DIM>> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{ALIGNMENT_BROADCAST_TESTER + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{ALIGNMENT_BROADCAST_TESTER + DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -61,7 +64,8 @@ struct AlignmentBroadcastTester : public legate::LegateTask<AlignmentBroadcastTe
 
 template <std::int32_t DIM>
 struct TransformedTester : public legate::LegateTask<TransformedTester<DIM>> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{TRANSFORMED_TESTER + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TRANSFORMED_TESTER + DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -150,7 +154,7 @@ void initialize(const legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
-  auto task    = runtime->create_task(context, Initializer::TASK_ID);
+  auto task    = runtime->create_task(context, Initializer::TASK_CONFIG.task_id());
 
   task.add_output(store);
 

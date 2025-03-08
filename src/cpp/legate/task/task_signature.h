@@ -36,6 +36,25 @@ class ProxyConstraint;
 
 /**
  * @brief A helper class for specifying a task's call signature.
+ *
+ * This class is used to statically declare a task's expected signature. For example:
+ *
+ * @snippet{trimleft} unit/task_signature/register.cc Example task signature
+ *
+ * A tasks signature describes how many input, output, scalar, or reduction arguments they
+ * take, as well as any constraints that are to be applied to the task. If a task predeclares
+ * its signature in this manner, the runtime will be able to perform a number of optimizations
+ * and sanity-checks for the user, including (but not limited to):
+ *
+ * - Checking the number of arguments matches the expected signature (and raising exceptions if
+ *   not).
+ * - Automatically applying constraints on task arguments.
+ * - Improved scheduling of tasks.
+ *
+ * @note While it is highly recommended that user statically declare their tasks' signatures,
+ * the user is no longer allowed to deviate from the signature at runtime. For example, tasks
+ * that predeclare their constraints are not allowed to add additional constraints during task
+ * launch.
  */
 class TaskSignature {
  public:
@@ -48,6 +67,8 @@ class TaskSignature {
   TaskSignature(TaskSignature&&) noexcept            = default;
   TaskSignature& operator=(TaskSignature&&) noexcept = default;
   ~TaskSignature();
+
+  explicit TaskSignature(InternalSharedPtr<detail::TaskSignature> impl);
 
   /**
    * @brief A value indicating that a particular option has "unbounded" (or unknown) number of
@@ -220,6 +241,9 @@ class TaskSignature {
   TaskSignature& constraints(std::optional<Span<const ProxyConstraint>> constraints);
 
   [[nodiscard]] const SharedPtr<detail::TaskSignature>& impl() const;
+
+  friend bool operator==(const TaskSignature& lhs, const TaskSignature& rhs) noexcept;
+  friend bool operator!=(const TaskSignature& lhs, const TaskSignature& rhs) noexcept;
 
  private:
   [[nodiscard]] SharedPtr<detail::TaskSignature>& impl_();

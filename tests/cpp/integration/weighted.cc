@@ -26,7 +26,8 @@ enum TaskIDs : std::uint8_t {
 };
 
 struct Initializer : public legate::LegateTask<Initializer> {
-  static constexpr auto TASK_ID             = legate::LocalTaskID{INIT};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{INIT}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context)
@@ -42,7 +43,8 @@ struct Initializer : public legate::LegateTask<Initializer> {
 };
 
 struct Tester : public legate::LegateTask<Tester> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{CHECK};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CHECK}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -87,7 +89,7 @@ void initialize(legate::Runtime* runtime,
                 legate::Library library,
                 const std::vector<legate::LogicalStore>& outputs)
 {
-  auto task = runtime->create_task(library, Initializer::TASK_ID, {NUM_TASKS});
+  auto task = runtime->create_task(library, Initializer::TASK_CONFIG.task_id(), {NUM_TASKS});
 
   for (auto& output : outputs) {
     task.add_output(output);
@@ -100,7 +102,7 @@ void check(legate::Runtime* runtime,
            legate::Library library,
            const std::vector<legate::LogicalStore>& inputs)
 {
-  auto task = runtime->create_task(library, Tester::TASK_ID);
+  auto task = runtime->create_task(library, Tester::TASK_CONFIG.task_id());
 
   for (auto& input : inputs) {
     auto part_in  = task.add_input(input);

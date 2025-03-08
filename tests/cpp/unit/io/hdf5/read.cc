@@ -53,7 +53,8 @@ constexpr auto MAGIC_BYTE = OpaqueType{123};
 
 class CheckerTask : public legate::LegateTask<CheckerTask> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext ctx)
   {
@@ -132,7 +133,7 @@ TEST_F(IOHDF5ReadUnit, Binary)
 
   auto* runtime     = legate::Runtime::get_runtime();
   auto lib          = runtime->find_library(Config::LIBRARY_NAME);
-  auto checker_task = runtime->create_task(lib, CheckerTask::TASK_ID);
+  auto checker_task = runtime->create_task(lib, CheckerTask::TASK_CONFIG.task_id());
 
   checker_task.add_input(read_array);
   runtime->submit(std::move(checker_task));

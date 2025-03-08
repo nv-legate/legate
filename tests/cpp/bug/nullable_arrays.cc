@@ -13,7 +13,8 @@
 namespace unbound_nullable_array_test {
 
 struct Initialize : public legate::LegateTask<Initialize> {
-  static constexpr auto TASK_ID             = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
   static void cpu_variant(legate::TaskContext context)
   {
@@ -49,7 +50,7 @@ TEST_F(UnboundNullableArray, Bug1)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto task = runtime->create_task(library, Initialize::TASK_ID);
+  auto task = runtime->create_task(library, Initialize::TASK_CONFIG.task_id());
   task.add_output(runtime->create_array(legate::int64(), 1, true /*nullable*/));
   task.add_output(runtime->create_array(legate::list_type(legate::int64()), 1, true /*nullable*/));
   task.add_output(
@@ -62,7 +63,7 @@ TEST_F(UnboundNullableArray, Bug2)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto task = runtime->create_task(library, Initialize::TASK_ID);
+  auto task = runtime->create_task(library, Initialize::TASK_CONFIG.task_id());
   task.add_output(runtime->create_array(legate::int64(), 1, true /*nullable*/));
   task.add_output(runtime->create_array(legate::list_type(legate::int64()), 1, true /*nullable*/));
   task.add_output(

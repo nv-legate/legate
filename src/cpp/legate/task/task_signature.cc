@@ -16,6 +16,11 @@ namespace legate {
 
 TaskSignature::TaskSignature() : pimpl_{legate::make_shared<detail::TaskSignature>()} {}
 
+TaskSignature::TaskSignature(InternalSharedPtr<detail::TaskSignature> impl)
+  : pimpl_{std::move(impl)}
+{
+}
+
 namespace {
 
 [[nodiscard]] std::optional<detail::TaskSignature::Nargs> to_single_narg(std::uint32_t n)
@@ -90,6 +95,16 @@ TaskSignature& TaskSignature::constraints(std::optional<Span<const ProxyConstrai
   }
   impl_()->constraints(std::move(ret));
   return *this;
+}
+
+bool operator==(const TaskSignature& lhs, const TaskSignature& rhs) noexcept
+{
+  return *lhs.impl() == *rhs.impl();
+}
+
+bool operator!=(const TaskSignature& lhs, const TaskSignature& rhs) noexcept
+{
+  return *lhs.impl() != *rhs.impl();
 }
 
 TaskSignature::~TaskSignature() = default;

@@ -7,8 +7,10 @@
 #include <legate/task/task_info.h>
 
 #include <legate/runtime/library.h>
+#include <legate/task/detail/task_config.h>
 #include <legate/task/detail/task_info.h>
 #include <legate/task/detail/task_signature.h>
+#include <legate/task/task_config.h>
 #include <legate/task/task_signature.h>
 #include <legate/utilities/typedefs.h>
 
@@ -23,10 +25,12 @@ void TaskInfo::add_variant_(AddVariantKey,
                             VariantCode vid,
                             VariantImpl body,
                             Processor::TaskFuncPtr entry,
-                            const TaskSignature* signature,
+                            const TaskConfig& task_config,
                             const VariantOptions* decl_options,
                             const std::map<VariantCode, VariantOptions>& registration_options)
 {
+  const auto& task_config_impl = task_config.impl();
+
   auto&& options = [&]() -> const VariantOptions& {
     // 1. The variant options (if any) supplied at the call-site of `register_variants()`.
     if (const auto it = registration_options.find(vid); it != registration_options.end()) {
@@ -38,24 +42,29 @@ void TaskInfo::add_variant_(AddVariantKey,
       return *decl_options;
     }
 
-    // 3. The variant options provided by `Library::get_default_variant_options()`.
+    // 3. The variant options provided by TASK_CONFIG.
+    if (const auto& task_options = task_config_impl->variant_options(); task_options.has_value()) {
+      return *task_options;
+    }
+
+    // 4. The variant options provided by `Library::get_default_variant_options()`.
     auto&& lib_defaults = library.get_default_variant_options();
 
     if (const auto it = lib_defaults.find(vid); it != lib_defaults.end()) {
       return it->second;
     }
 
-    // 4. The global default variant options found in `VariantOptions::DEFAULT_OPTIONS`.
+    // 5. The global default variant options found in `VariantOptions::DEFAULT_OPTIONS`.
     return VariantOptions::DEFAULT_OPTIONS;
   }();
 
-  std::optional<InternalSharedPtr<detail::TaskSignature>> sig;
+  std::optional<InternalSharedPtr<detail::TaskSignature>> signature;
 
-  if (signature) {
-    sig.emplace(signature->impl());
+  if (const auto& sig = task_config_impl->signature(); sig.has_value()) {
+    signature.emplace(*sig);
   }
 
-  impl()->add_variant(vid, body, Legion::CodeDescriptor{entry}, options, std::move(sig));
+  impl()->add_variant(vid, body, Legion::CodeDescriptor{entry}, options, std::move(signature));
 }
 
 // ==========================================================================================

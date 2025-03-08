@@ -52,8 +52,9 @@ legate::Point<DIM> delinearize(std::size_t index,
 
 template <std::int32_t DIM, bool RECT>
 struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RECT>> {
-  static constexpr std::int32_t TASK_ID =
-    INIT_FUNC + (static_cast<std::int32_t>(RECT) * TEST_MAX_DIM) + DIM;
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{
+      legate::LocalTaskID{INIT_FUNC + (static_cast<std::int32_t>(RECT) * TEST_MAX_DIM) + DIM}};
 
   struct InitializeRects {
     template <std::int32_t TGT_DIM>
@@ -136,8 +137,9 @@ struct InitializeFunction : public legate::LegateTask<InitializeFunction<DIM, RE
 
 template <std::int32_t DIM, bool RECT>
 struct ImageTester : public legate::LegateTask<ImageTester<DIM, RECT>> {
-  static constexpr std::int32_t TASK_ID =
-    IMAGE_TESTER + (static_cast<std::int32_t>(RECT) * TEST_MAX_DIM) + DIM;
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{
+      legate::LocalTaskID{IMAGE_TESTER + (static_cast<std::int32_t>(RECT) * TEST_MAX_DIM) + DIM}};
 
   struct CheckRects {
     template <std::int32_t TGT_DIM>

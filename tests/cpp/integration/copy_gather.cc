@@ -46,8 +46,8 @@ struct CheckGatherTask : public legate::LegateTask<CheckGatherTask<IND_DIM, SRC_
     }
   };
 
-  static constexpr auto TASK_ID =
-    legate::LocalTaskID{CHECK_GATHER_TASK + (IND_DIM * TEST_MAX_DIM) + SRC_DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{CHECK_GATHER_TASK + (IND_DIM * TEST_MAX_DIM) + SRC_DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {

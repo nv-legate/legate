@@ -19,7 +19,8 @@ extern Legion::Logger logger;
 void register_tasks();
 
 struct HelloTask : public legate::LegateTask<HelloTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext context);
 };
 

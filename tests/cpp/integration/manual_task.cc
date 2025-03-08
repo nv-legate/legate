@@ -22,7 +22,7 @@ using ManualTask = DefaultFixture;
 void test_auto_task(legate::Library library, const legate::LogicalStore& store)
 {
   auto runtime = legate::Runtime::get_runtime();
-  auto task    = runtime->create_task(library, task::simple::HelloTask::TASK_ID);
+  auto task    = runtime->create_task(library, task::simple::HelloTask::TASK_CONFIG.task_id());
   auto part    = task.declare_partition();
   task.add_output(store, part);
   runtime->submit(std::move(task));
@@ -32,7 +32,7 @@ void test_manual_task(legate::Library library, const legate::LogicalStore& store
 {
   auto runtime = legate::Runtime::get_runtime();
   auto task    = runtime->create_task(
-    library, task::simple::HelloTask::TASK_ID, legate::tuple<std::uint64_t>{3, 3});
+    library, task::simple::HelloTask::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{3, 3});
   auto part = store.partition_by_tiling({2, 2});
   task.add_output(part);
   runtime->submit(std::move(task));
@@ -78,7 +78,7 @@ TEST_F(ManualTask, Invalid)
   auto unbound_store = runtime->create_store(legate::int64(), 1);
 
   auto task = runtime->create_task(
-    library, task::simple::HelloTask::TASK_ID, legate::tuple<std::uint64_t>{3, 3});
+    library, task::simple::HelloTask::TASK_CONFIG.task_id(), legate::tuple<std::uint64_t>{3, 3});
   // Unbound stores cannot be used for inputs or reductions
   EXPECT_THROW(task.add_input(unbound_store), std::invalid_argument);
   EXPECT_THROW(task.add_reduction(unbound_store, legate::ReductionOpKind::ADD),

@@ -17,12 +17,14 @@ namespace partitioner_test {
 // NOLINTBEGIN(readability-magic-numbers)
 
 struct Initializer : public legate::LegateTask<Initializer> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
   static void cpu_variant(legate::TaskContext /*context*/) {}
 };
 
 struct Checker : public legate::LegateTask<Checker> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -56,7 +58,7 @@ TEST_F(PartitionerTest, FavorPartitionedStore)
 
   // Initialize store1 sequentially
   {
-    auto task = runtime->create_task(library, Initializer::TASK_ID);
+    auto task = runtime->create_task(library, Initializer::TASK_CONFIG.task_id());
     auto part = task.add_output(store1);
     task.add_constraint(legate::broadcast(part));
     runtime->submit(std::move(task));
@@ -65,7 +67,8 @@ TEST_F(PartitionerTest, FavorPartitionedStore)
   // Initialize store2 with parallel tasks
   {
     auto part = store2.partition_by_tiling({5, 5});
-    auto task = runtime->create_task(library, Initializer::TASK_ID, part.color_shape());
+    auto task =
+      runtime->create_task(library, Initializer::TASK_CONFIG.task_id(), part.color_shape());
     task.add_output(part);
     runtime->submit(std::move(task));
   }
@@ -73,7 +76,7 @@ TEST_F(PartitionerTest, FavorPartitionedStore)
   // Because the partitioner favors partitioned stores over non-partitioned ones, the checker task
   // should always get parallelized
   {
-    auto task  = runtime->create_task(library, Checker::TASK_ID);
+    auto task  = runtime->create_task(library, Checker::TASK_CONFIG.task_id());
     auto part1 = task.add_input(store1);
     auto part2 = task.add_input(store2);
     task.add_constraint(legate::align(part1, part2));

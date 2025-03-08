@@ -21,7 +21,8 @@ constexpr std::size_t TILE_SIZE = 10;
 enum TaskIDs : std::uint8_t { TASK_FILL = 1, TASK_UNIQUE, TASK_UNIQUE_REDUCE, TASK_CHECK };
 
 struct FillTask : public legate::LegateTask<FillTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_FILL};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TASK_FILL}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -37,7 +38,8 @@ struct FillTask : public legate::LegateTask<FillTask> {
 };
 
 struct UniqueTask : public legate::LegateTask<UniqueTask> {
-  static constexpr auto TASK_ID             = legate::LocalTaskID{TASK_UNIQUE};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TASK_UNIQUE}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context)
@@ -62,7 +64,8 @@ struct UniqueTask : public legate::LegateTask<UniqueTask> {
 };
 
 struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
-  static constexpr auto TASK_ID             = legate::LocalTaskID{TASK_UNIQUE_REDUCE};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TASK_UNIQUE_REDUCE}};
   static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 
   static void cpu_variant(legate::TaskContext context)
@@ -93,7 +96,8 @@ struct UniqueReduceTask : public legate::LegateTask<UniqueReduceTask> {
 };
 
 struct CheckTask : public legate::LegateTask<CheckTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{TASK_CHECK};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{TASK_CHECK}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -132,22 +136,23 @@ TEST_F(TreeReduceUnique, All)
 
   auto store = runtime->create_store(legate::Shape{num_tasks * tile_size}, legate::int64());
 
-  auto task_fill = runtime->create_task(context, FillTask::TASK_ID, {num_tasks});
+  auto task_fill = runtime->create_task(context, FillTask::TASK_CONFIG.task_id(), {num_tasks});
   auto part      = store.partition_by_tiling({tile_size});
   task_fill.add_output(part);
   runtime->submit(std::move(task_fill));
 
-  auto task_unique         = runtime->create_task(context, UniqueTask::TASK_ID, {num_tasks});
+  auto task_unique = runtime->create_task(context, UniqueTask::TASK_CONFIG.task_id(), {num_tasks});
   auto intermediate_result = runtime->create_store(legate::int64(), 1);
   task_unique.add_input(part);
   task_unique.add_output(intermediate_result);
   runtime->submit(std::move(task_unique));
 
-  auto result = runtime->tree_reduce(context, UniqueReduceTask::TASK_ID, intermediate_result, 4);
+  auto result =
+    runtime->tree_reduce(context, UniqueReduceTask::TASK_CONFIG.task_id(), intermediate_result, 4);
 
   EXPECT_FALSE(result.unbound());
 
-  auto task_check = runtime->create_task(context, CheckTask::TASK_ID, {1});
+  auto task_check = runtime->create_task(context, CheckTask::TASK_CONFIG.task_id(), {1});
   task_check.add_input(result);
   runtime->submit(std::move(task_check));
 }

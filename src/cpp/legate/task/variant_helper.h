@@ -20,6 +20,7 @@ namespace legate {
 
 class TaskContext;
 class Library;
+class TaskConfig;
 
 }  // namespace legate
 
@@ -94,6 +95,7 @@ template <typename T, template <typename...> typename SELECTOR, bool VALID = SEL
 class VariantHelper {
  public:
   static void record(const legate::Library& /*lib*/,
+                     const TaskConfig& /*task_config*/,
                      const std::map<VariantCode, VariantOptions>& /*all_options*/,
                      legate::TaskInfo* /*task_info*/)
   {
@@ -102,11 +104,9 @@ class VariantHelper {
 
 template <typename T, template <typename...> typename SELECTOR>
 class VariantHelper<T, SELECTOR, true> {
-  template <typename U>
-  using has_task_signature = decltype(U::TASK_SIGNATURE);
-
  public:
   static void record(const legate::Library& lib,
+                     const TaskConfig& task_config,
                      const std::map<VariantCode, VariantOptions>& all_options,
                      legate::TaskInfo* task_info)
   {
@@ -117,21 +117,14 @@ class VariantHelper<T, SELECTOR, true> {
     constexpr auto* options     = SELECTOR<T>::options;
 
     if constexpr (std::is_convertible_v<decltype(variant_impl), VariantImpl>) {
-      constexpr auto entry            = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
-      constexpr const auto* signature = []() -> const legate::TaskSignature* {
-        if constexpr (is_detected_v<has_task_signature, T>) {
-          return &T::TASK_SIGNATURE;
-        } else {
-          return nullptr;
-        }
-      }();
+      constexpr auto entry = T::BASE::template task_wrapper_<variant_impl, variant_kind>;
 
       task_info->add_variant_(legate::TaskInfo::AddVariantKey{},
                               lib,
                               variant_kind,
                               variant_impl,
                               entry,
-                              signature,
+                              task_config,
                               options,
                               all_options);
     } else {
@@ -147,6 +140,7 @@ class VariantHelper<T, SELECTOR, true> {
                               variant_kind,
                               variant_impl,
                               entry,
+                              task_config,
                               options,
                               all_options);
     }

@@ -570,7 +570,8 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
 
   auto* runtime  = Runtime::get_runtime();
   auto* core_lib = runtime->core_library();
-  auto launcher  = detail::TaskLauncher{core_lib, machine(), provenance(), FixupRanges::TASK_ID};
+  auto launcher =
+    detail::TaskLauncher{core_lib, machine(), provenance(), FixupRanges::TASK_CONFIG.task_id()};
 
   launcher.set_priority(priority());
 

@@ -52,7 +52,8 @@ class TesterMapper : public legate::mapping::Mapper {
 };
 
 struct InoutTask : public legate::LegateTask<InoutTask> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{1};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{1}};
 
   static void cpu_variant(legate::TaskContext context)
   {
@@ -100,7 +101,7 @@ void test_inout()
   for (auto& store : stores) {
     runtime->issue_fill(store, legate::Scalar{std::int64_t{123}});
 
-    auto task     = runtime->create_task(library, InoutTask::TASK_ID);
+    auto task     = runtime->create_task(library, InoutTask::TASK_CONFIG.task_id());
     auto in_part  = task.add_input(store);
     auto out_part = task.add_output(store);
     task.add_constraint(legate::align(in_part, out_part));

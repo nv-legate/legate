@@ -23,7 +23,8 @@ enum TaskIDs : std::uint8_t {
 
 template <std::int32_t DIM>
 struct ScaleTester : public legate::LegateTask<ScaleTester<DIM>> {
-  static constexpr auto TASK_ID = legate::LocalTaskID{SCALE_TESTER + DIM};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{SCALE_TESTER + DIM}};
 
   static void cpu_variant(legate::TaskContext context)
   {

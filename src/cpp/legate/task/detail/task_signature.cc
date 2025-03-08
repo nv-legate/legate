@@ -10,11 +10,13 @@
 #include <legate/task/task_signature.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/detail/type_traits.h>
+#include <legate/utilities/detail/zip.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -83,6 +85,30 @@ bool TaskSignature::Nargs::compatible_with(std::size_t size, bool strict) const
                     value());
 }
 
+bool operator==(const TaskSignature::Nargs& lhs, const TaskSignature::Nargs& rhs) noexcept
+{
+  // To silence
+  //
+  // /path/to//src/cpp/legate/task/detail/task_signature.cc:88:6:
+  // error: an exception may be thrown in function 'operator==' which should not throw
+  // exceptions [bugprone-exception-escape,-warnings-as-errors]
+  // 88 | bool operator==(const TaskSignature::Nargs& lhs, const TaskSignature::Nargs& rhs) noexcept
+  //    |      ^
+  //
+  // This is due to std::variant operator== not having a dynamic noexcept specification. None
+  // of the code below could ever possibly throw an exception.
+  try {
+    return lhs.value() == rhs.value();
+  } catch (...) {
+    return false;
+  }
+}
+
+bool operator!=(const TaskSignature::Nargs& lhs, const TaskSignature::Nargs& rhs) noexcept
+{
+  return !(lhs == rhs);
+}
+
 // ------------------------------------------------------------------------------------------
 
 void TaskSignature::constraints(
@@ -127,6 +153,51 @@ void TaskSignature::apply_constraints(AutoTask* task) const
       c->apply(task);
     }
   }
+}
+
+bool operator==(const TaskSignature& lhs, const TaskSignature& rhs) noexcept
+{
+  // Fast path
+  if (std::addressof(lhs) == std::addressof(rhs)) {
+    return true;
+  }
+
+  if (std::tie(lhs.inputs(), lhs.outputs(), lhs.scalars(), lhs.redops()) !=
+      std::tie(rhs.inputs(), rhs.outputs(), rhs.scalars(), rhs.redops())) {
+    return false;
+  }
+
+  const auto& lhs_csts = lhs.constraints();
+  const auto& rhs_csts = rhs.constraints();
+
+  if (lhs_csts.has_value() != rhs_csts.has_value()) {
+    return false;
+  }
+  // At this point, either both have a value, or neither has a value. If neither has a value,
+  // then we are done
+  if (!lhs_csts.has_value()) {
+    return true;
+  }
+
+  const auto& lhs_span = *lhs_csts;
+  const auto& rhs_span = *rhs_csts;
+
+  if (lhs_span.size() != rhs_span.size()) {
+    return false;
+  }
+
+  auto&& zipper = zip_equal(lhs_span, rhs_span);
+
+  return std::all_of(zipper.begin(), zipper.end(), [](const auto& zip_it) {
+    const auto& [lhs_val, rhs_val] = zip_it;
+
+    return *lhs_val == *rhs_val;
+  });
+}
+
+bool operator!=(const TaskSignature& lhs, const TaskSignature& rhs) noexcept
+{
+  return !(lhs == rhs);
 }
 
 }  // namespace legate::detail

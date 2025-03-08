@@ -33,6 +33,7 @@
 #include <legate/task/exception.h>
 #include <legate/task/registrar.h>
 #include <legate/task/task.h>
+#include <legate/task/task_config.h>
 #include <legate/task/task_context.h>
 #include <legate/task/task_signature.h>
 #include <legate/task/variant_options.h>
