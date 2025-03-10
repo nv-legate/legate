@@ -29,6 +29,18 @@ function(legate_generate_legate_defines)
     set(LEGATE_USE_CAL 1)
   endif()
 
+  if(legate_USE_HDF5)
+    set(LEGATE_USE_HDF5 1)
+  endif()
+
+  if(legate_USE_HDF5_VFD_GDS)
+    set(LEGATE_USE_HDF5_VFD_GDS 1)
+  endif()
+
+  if(legate_USE_NCCL)
+    set(LEGATE_USE_NCCL 1)
+  endif()
+
   if(NOT LEGATE_CONFIGURE_OPTIONS)
     set(LEGATE_CONFIGURE_OPTIONS "<unknown configure options>")
   endif()

@@ -8,6 +8,9 @@
 
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/traced_exception.h>
+
+#include <stdexcept>
 
 namespace legate::detail {
 
@@ -31,6 +34,8 @@ void parse_value_test_default(const EnvironmentVariable<T>& env_var,
 
 void Config::parse()
 {
+  constexpr Config DEFAULT_CONFIG{};
+
   LEGATE_CHECK(!parsed());
   try {
     parse_value(LEGATE_AUTO_CONFIG, &auto_config_);
@@ -60,10 +65,18 @@ void Config::parse()
     parse_value_test_default(LEGATE_DISABLE_MPI, LEGATE_DISABLE_MPI_TEST, &disable_mpi_);
     parse_value(LEGATE_IO_USE_VFD_GDS, &io_use_vfd_gds_);
   } catch (...) {
-    constexpr Config DEFAULT_CONFIG{};
-
     *this = DEFAULT_CONFIG;
     throw;
+  }
+  if (!LEGATE_DEFINED(LEGATE_USE_NCCL) && warmup_nccl()) {
+    *this = DEFAULT_CONFIG;
+    throw TracedException<std::runtime_error>{
+      "Cannot warmup NCCL, Legate was not configured with NCCL support."};
+  }
+  if (!LEGATE_DEFINED(LEGATE_USE_HDF5_VFD_GDS) && io_use_vfd_gds()) {
+    *this = DEFAULT_CONFIG;
+    throw TracedException<std::runtime_error>{
+      "Cannot enable HDF5 VFD GDS, Legate was not configured with GDS support."};
   }
   parsed_ = true;
 }

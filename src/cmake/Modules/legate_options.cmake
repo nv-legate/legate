@@ -59,6 +59,9 @@ function(legate_option name var_env docs default_val)
   endif()
 endfunction()
 
+find_package(HDF5 QUIET)
+find_package(CUDAToolkit QUIET)
+
 # Initialize these vars from the CLI, then fallback to an evar or a default value.
 legate_option(legate_BUILD_TESTS BUILD_TESTS "Whether to build the C++ tests" OFF)
 legate_option(legate_BUILD_EXAMPLES BUILD_EXAMPLES
@@ -67,7 +70,14 @@ legate_option(legate_BUILD_DOCS BUILD_DOCS "Build doxygen docs" OFF)
 legate_option(Legion_SPY USE_SPY "Enable detailed logging for Legion Spy" OFF)
 legate_option(Legion_USE_LLVM USE_LLVM "Use LLVM JIT operations" OFF)
 legate_option(Legion_USE_CUDA USE_CUDA "Enable Legion support for the CUDA runtime" OFF)
-legate_option(Legion_USE_HDF5 USE_HDF "Enable support for HDF5" OFF)
+legate_option(legate_USE_HDF5 USE_HDF5 "Enable support for HDF5" ${HDF5_FOUND})
+if(legate_USE_HDF5 AND Legion_USE_CUDA)
+  set(use_hdf5_vfd_gds ON)
+else()
+  set(use_hdf5_vfd_gds OFF)
+endif()
+legate_option(legate_USE_HDF5_VFD_GDS LEGATE_USE_HDF5_VFD_GDS
+              "Enable VFD GDS support in HDF5" ${use_hdf5_vfd_gds})
 legate_setting(Legion_NETWORKS NETWORKS
                "Networking backends to use (semicolon-separated)" SET_BUT_EMPTY)
 legate_option(Legion_USE_OpenMP USE_OPENMP "Use OpenMP" OFF)
@@ -86,6 +96,7 @@ legate_option(legate_USE_CAL LEGATE_USE_CAL "Enable CAL support in Legate" OFF)
 legate_option(legate_BUILD_BENCHMARKS LEGATE_BUILD_BENCHMARKS "Build legate benchmarks"
               OFF)
 legate_option(legate_USE_CPROFILE LEGATE_USE_CPROFILE "Enable Cprofile in Legate" OFF)
+legate_option(legate_USE_NCCL LEGATE_USE_NCCL "Enable NCCL support" ${CUDAToolkit_FOUND})
 
 if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
   legate_setting(GASNet_ROOT_DIR GASNET "GASNet root directory" UNSET)
@@ -116,6 +127,7 @@ endif()
 legate_setting(CMAKE_CUDA_RUNTIME_LIBRARY CMAKE_CUDA_RUNTIME_LIBRARY
                "Default linkage kind for CUDA" SHARED)
 legate_setting(NCCL_DIR NCCL_DIR "NCCL Root directory" UNSET)
+
 legate_setting(CUDA_TOOLKIT_ROOT_DIR CUDA "CUDA Root directory" UNSET)
 
 legate_setting(legate_CXX_FLAGS LEGATE_CXX_FLAGS "C++ flags for legate" SET_BUT_EMPTY)

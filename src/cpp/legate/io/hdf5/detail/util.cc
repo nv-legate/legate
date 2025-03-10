@@ -13,7 +13,7 @@
 
 #include <type_traits>
 
-#if LEGATE_DEFINED(LEGATE_USE_CUDA)
+#if LEGATE_DEFINED(LEGATE_USE_HDF5_VFD_GDS)
 #include <H5FDgds.h>
 #else
 // NOLINTBEGIN
@@ -57,7 +57,7 @@ void EnableGDS::apply(::hid_t hid) const noexcept
                                          std::decay_t<decltype(open_mode)>,
                                          HighFive::FileAccessProps>,
                 "Can use std::string_view for filepath");
-  if (LEGATE_DEFINED(LEGATE_USE_CUDA) && gds_on) {
+  if (gds_on) {
     auto access_props = HighFive::FileAccessProps::Empty();
 
     access_props.add(EnableGDS{});

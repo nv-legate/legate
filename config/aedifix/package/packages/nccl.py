@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Final
 from ...cmake import CMAKE_VARIABLE, CMakePath
 from ...util.argument_parser import ArgSpec, ConfigArgument
 from ..package import Package
+from .cuda import CUDA
 
 if TYPE_CHECKING:
     from ...manager import ConfigurationManager
@@ -35,11 +36,17 @@ class NCCL(Package):
     )
 
     def __init__(self, manager: ConfigurationManager) -> None:
-        super().__init__(manager=manager, name="NCCL")
+        super().__init__(manager=manager, name="NCCL", dependencies=(CUDA,))
 
     def configure(self) -> None:
         r"""Configure NCCL."""
         super().configure()
+        # TODO(jfaibussowit)
+        # Make this kind of relationship statically declarable from the CTOR,
+        # by updating the dependencies argument to include a "this dependency
+        # also enables the current package"
+        if not self.state.explicit and self.deps.CUDA.state.enabled():
+            self._state = Package.EnableState(value=True)
         if not self.state.enabled():
             return
 

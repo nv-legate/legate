@@ -160,7 +160,7 @@ endif()
 # ########################################################################################
 # * NCCL ----------------------------------------------------------------
 
-if(Legion_USE_CUDA)
+if(legate_USE_NCCL)
   legate_find_or_configure(PACKAGE NCCL)
 endif()
 
@@ -199,12 +199,17 @@ legate_find_or_configure(PACKAGE KvikIO)
 # ########################################################################################
 # * HighFive --------------------------------------------------------------
 
-legate_find_or_configure(PACKAGE HighFive)
+if(legate_USE_HDF5)
+  legate_find_or_configure(PACKAGE HighFive)
+endif()
 
 # ########################################################################################
 # * HDF5 vfd-gds --------------------------------------------------------------
 
-if(Legion_USE_CUDA)
+if(legate_USE_HDF5_VFD_GDS)
+  if(NOT legate_USE_HDF5)
+    message(FATAL_ERROR "Enabling HDF5 VFD GDS requires HDF5")
+  endif()
   legate_find_or_configure(PACKAGE hdf5_vfd_gds)
 endif()
 
@@ -295,7 +300,7 @@ target_link_libraries(legate
                               argparse::argparse
                               kvikio::kvikio
                               $<TARGET_NAME_IF_EXISTS:hdf5_vfd_gds>
-                              HighFive::HighFive
+                              $<TARGET_NAME_IF_EXISTS:HighFive::HighFive>
                               cpptrace::cpptrace
                               $<TARGET_NAME_IF_EXISTS:CAL::CAL>
                               $<TARGET_NAME_IF_EXISTS:conda_env>)
@@ -480,8 +485,6 @@ target_sources(legate
                        # stl
                        legate/experimental/stl/detail/clang_tidy_dummy.cpp
                        # io
-                       legate/io/hdf5/detail/read.cc
-                       legate/io/hdf5/detail/util.cc
                        legate/io/hdf5/interface.cc
                        legate/experimental/io/kvikio/detail/basic.cc
                        legate/experimental/io/kvikio/detail/tile.cc
@@ -490,6 +493,12 @@ target_sources(legate
                        legate/experimental/io/detail/task.cc
                        legate/experimental/io/detail/library.cc
                        legate/experimental/io/detail/mapper.cc)
+
+if(legate_USE_HDF5)
+  target_sources(legate
+                 PRIVATE legate/io/hdf5/detail/interface.cc legate/io/hdf5/detail/read.cc
+                         legate/io/hdf5/detail/util.cc)
+endif()
 
 if(legate_ENABLE_SANITIZERS)
   target_sources(legate PRIVATE legate/utilities/detail/sanitizer_defaults.cc)
@@ -511,11 +520,13 @@ if(legate_USE_CAL)
   target_sources(legate PRIVATE legate/comm/detail/comm_cal.cc)
 endif()
 
+if(legate_USE_NCCL)
+  target_sources(legate PRIVATE legate/comm/detail/comm_nccl.cc)
+endif()
+
 if(Legion_USE_CUDA)
-  target_sources(legate
-                 PRIVATE legate/comm/detail/comm_nccl.cc
-                         legate/data/detail/array_tasks_cuda.cc
-                         legate/partitioning/detail/partitioning_tasks_cuda.cc)
+  target_sources(legate PRIVATE legate/data/detail/array_tasks_cuda.cc
+                                legate/partitioning/detail/partitioning_tasks_cuda.cc)
 
   include("${LEGATE_CMAKE_DIR}/Modules/generate_fatbin_modules.cmake")
 

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
@@ -18,7 +19,10 @@ class HDF5(Package):
     With_HDF5: Final = ConfigArgument(
         name="--with-hdf5",
         spec=ArgSpec(
-            dest="with_hdf5", type=bool, help="Build with HDF5 support."
+            dest="with_hdf5",
+            type=bool,
+            help="Build with HDF5 support.",
+            default=bool(shutil.which("h5dump")),
         ),
         enables_package=True,
         primary=True,
@@ -33,6 +37,7 @@ class HDF5(Package):
         cmake_var=CMAKE_VARIABLE("HDF5_ROOT", CMakePath),
         enables_package=True,
     )
+    HDF5_DIR: Final = CMAKE_VARIABLE("HDF5_DIR", CMakePath)
 
     def __init__(self, manager: ConfigurationManager) -> None:
         r"""Construct a HDF5 Package.
@@ -64,7 +69,14 @@ class HDF5(Package):
             return ""
 
         lines = []
-        if root_dir := self.manager.get_cmake_variable(self.HDF5_ROOT):
+
+        def get_root_dir() -> str:
+            root_dir = self.manager.get_cmake_variable(self.HDF5_ROOT)
+            if not root_dir:
+                root_dir = self.manager.get_cmake_variable(self.HDF5_DIR)
+            return root_dir
+
+        if root_dir := get_root_dir():
             lines.append(("Root directory", root_dir))
         return self.create_package_summary(lines)
 

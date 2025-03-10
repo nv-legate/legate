@@ -23,7 +23,10 @@ from ..aedifix import (
 )
 from ..aedifix.package.packages.cal import CAL
 from ..aedifix.package.packages.cmake import CMake
+from ..aedifix.package.packages.cuda import CUDA
+from ..aedifix.package.packages.hdf5 import HDF5
 from ..aedifix.package.packages.legion import Legion
+from ..aedifix.package.packages.nccl import NCCL
 from ..aedifix.package.packages.python import Python
 
 if TYPE_CHECKING:
@@ -137,8 +140,22 @@ class Legate(MainPackage):
         ),
         cmake_var=CMAKE_VARIABLE("legate_USE_CPROFILE", CMakeBool),
     )
-
     legate_USE_CAL: Final = CMAKE_VARIABLE("legate_USE_CAL", CMakeBool)
+    legate_USE_HDF5: Final = CMAKE_VARIABLE("legate_USE_HDF5", CMakeBool)
+    legate_USE_HDF5_VFD_GDS: Final = ConfigArgument(
+        name="--with-hdf5-vfd-gds",
+        spec=ArgSpec(
+            dest="with_hdf5_vfd_gds",
+            type=bool,
+            help=(
+                "Enable VFD GPU Direct Storage support in Legate IO. Support "
+                "for this is automatically detected based on the availability "
+                "of both CUDA and HDF5."
+            ),
+        ),
+        cmake_var=CMAKE_VARIABLE("legate_USE_HDF5_VFD_GDS", CMakeBool),
+    )
+    legate_USE_NCCL: Final = CMAKE_VARIABLE("legate_USE_NCCL", CMakeBool)
 
     def __init__(
         self, manager: ConfigurationManager, argv: Sequence[str]
@@ -169,7 +186,7 @@ class Legate(MainPackage):
             default_arch_file_path=(
                 legate_dir / "scripts" / "get_legate_arch.py"
             ),
-            dependencies=(CMake, Legion, Python, CAL),
+            dependencies=(CMake, Legion, Python, CAL, HDF5, NCCL, CUDA),
         )
 
     @classmethod
@@ -384,10 +401,10 @@ class Legate(MainPackage):
 
     def configure_cal(self) -> None:
         r"""Configure CAL variables."""
-        cal_state = self.deps.CAL.state
-        if cal_state.enabled():
+        state = self.deps.CAL.state
+        if state.enabled():
             self.manager.set_cmake_variable(self.legate_USE_CAL, True)
-        elif cal_state.explicitly_disabled():
+        elif state.explicitly_disabled():
             self.manager.set_cmake_variable(self.legate_USE_CAL, False)
 
     def configure_cprofile(self) -> None:
@@ -395,6 +412,26 @@ class Legate(MainPackage):
         self.set_flag_if_user_set(
             self.legate_USE_CPROFILE, self.cl_args.use_cprofile
         )
+
+    def configure_hdf5(self) -> None:
+        r"""Configure HDF5 variables."""
+        hdf5_state = self.deps.HDF5.state
+        if hdf5_state.enabled():
+            self.manager.set_cmake_variable(self.legate_USE_HDF5, True)
+        elif hdf5_state.explicitly_disabled():
+            self.manager.set_cmake_variable(self.legate_USE_HDF5, False)
+
+        self.set_flag_if_user_set(
+            self.legate_USE_HDF5_VFD_GDS, self.cl_args.with_hdf5_vfd_gds
+        )
+
+    def configure_nccl(self) -> None:
+        r"""Configure NCCL variables."""
+        state = self.deps.NCCL.state
+        if state.enabled():
+            self.manager.set_cmake_variable(self.legate_USE_NCCL, True)
+        elif state.explicitly_disabled():
+            self.manager.set_cmake_variable(self.legate_USE_NCCL, False)
 
     def configure(self) -> None:
         r"""Configure Legate."""
@@ -405,6 +442,8 @@ class Legate(MainPackage):
         self.log_execute_func(self.configure_clang_tidy)
         self.log_execute_func(self.configure_cal)
         self.log_execute_func(self.configure_cprofile)
+        self.log_execute_func(self.configure_hdf5)
+        self.log_execute_func(self.configure_nccl)
 
     def _summarize_flags(self) -> list[tuple[str, Any]]:
         def make_summary(
@@ -440,21 +479,19 @@ class Legate(MainPackage):
         return lines
 
     def _summarize_misc(self) -> list[tuple[str, Any]]:
+        m = self.manager
         return [
+            ("Tests", m.get_cmake_variable(self.legate_BUILD_TESTS)),
+            ("Docs", m.get_cmake_variable(self.legate_BUILD_DOCS)),
+            ("Examples", m.get_cmake_variable(self.legate_BUILD_EXAMPLES)),
+            ("Benchmarks", m.get_cmake_variable(self.legate_BUILD_BENCHMARKS)),
+            ("CAL", m.get_cmake_variable(self.legate_USE_CAL)),
+            ("HDF5", m.get_cmake_variable(self.legate_USE_HDF5)),
             (
-                "With Tests",
-                bool(self.manager.get_cmake_variable(self.legate_BUILD_TESTS)),
+                "HDF5 VFD GDS",
+                m.get_cmake_variable(self.legate_USE_HDF5_VFD_GDS),
             ),
-            (
-                "With Docs",
-                bool(self.manager.get_cmake_variable(self.legate_BUILD_DOCS)),
-            ),
-            (
-                "With Examples",
-                bool(
-                    self.manager.get_cmake_variable(self.legate_BUILD_EXAMPLES)
-                ),
-            ),
+            ("NCCL", m.get_cmake_variable(self.legate_USE_NCCL)),
         ]
 
     def summarize(self) -> str:

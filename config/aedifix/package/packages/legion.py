@@ -24,7 +24,6 @@ from ...util.utility import dest_to_flag
 from ..package import Package
 from .cuda import CUDA
 from .gasnet import GASNet
-from .hdf5 import HDF5
 from .mpi import MPI
 from .openmp import OpenMP
 from .python import Python
@@ -132,7 +131,6 @@ class Legion(Package):
     )
     Legion_USE_CUDA: Final = CMAKE_VARIABLE("Legion_USE_CUDA", CMakeBool)
     Legion_USE_OpenMP: Final = CMAKE_VARIABLE("Legion_USE_OpenMP", CMakeBool)
-    Legion_USE_HDF5: Final = CMAKE_VARIABLE("Legion_USE_HDF5", CMakeBool)
     Legion_USE_Python: Final = CMAKE_VARIABLE("Legion_USE_Python", CMakeBool)
     Legion_USE_ZLIB: Final = CMAKE_VARIABLE("Legion_USE_ZLIB", CMakeBool)
     Legion_Python_Version: Final = CMAKE_VARIABLE(
@@ -162,7 +160,7 @@ class Legion(Package):
             manager=manager,
             name="Legion",
             always_enabled=True,
-            dependencies=(CUDA, GASNet, OpenMP, HDF5, Python, MPI, UCX, ZLIB),
+            dependencies=(CUDA, GASNet, OpenMP, Python, MPI, UCX, ZLIB),
         )
 
     def check_conflicting_options(self) -> None:
@@ -267,16 +265,6 @@ class Legion(Package):
         elif omp_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_USE_OpenMP, False)
 
-    def configure_hdf5(self) -> None:
-        r"""Configure Legion to use HDF5. Does nothing if HDF5 is not
-        enabled.
-        """
-        hdf5_state = self.deps.HDF5.state
-        if hdf5_state.enabled():
-            self.manager.set_cmake_variable(self.Legion_USE_HDF5, True)
-        elif hdf5_state.explicitly_disabled():
-            self.manager.set_cmake_variable(self.Legion_USE_HDF5, False)
-
     def configure_python(self) -> None:
         r"""Configure Legion to use Python. Does nothing if Python is not
         enabled.
@@ -338,12 +326,11 @@ class Legion(Package):
         self.log_execute_func(self.configure_cuda)
         self.log_execute_func(self.configure_gasnet)
         self.log_execute_func(self.configure_openmp)
-        self.log_execute_func(self.configure_hdf5)
         self.log_execute_func(self.configure_python)
         self.log_execute_func(self.configure_zlib)
         self.log_execute_func(self.configure_networks)
 
-    def summarize(self) -> str:  # noqa: C901
+    def summarize(self) -> str:
         r"""Summarize Legion.
 
         Returns
@@ -351,20 +338,21 @@ class Legion(Package):
         summary : str
             A summary of configured Legion.
         """
+        m = self.manager
 
         def get_location() -> Path | None:
             dir_group = self.DirGroup
-            root_dir = self.manager.get_cmake_variable(
+            root_dir = m.get_cmake_variable(
                 dir_group.Legion_ROOT  # type: ignore[attr-defined]
             )
             if root_dir:
                 return Path(root_dir)
 
-            root_dir = self.manager.get_cmake_variable(self.Legion_DIR)
+            root_dir = m.get_cmake_variable(self.Legion_DIR)
             if root_dir:
                 return Path(root_dir)
 
-            root_dir = self.manager.get_cmake_variable(
+            root_dir = m.get_cmake_variable(
                 dir_group.CPM_Legion_SOURCE  # type: ignore[attr-defined]
             )
             if root_dir:
@@ -372,9 +360,7 @@ class Legion(Package):
                 # If the source directory is relative to the cmake
                 # directory, then we downloaded Legion, but set
                 # CPM_Legion_Source ourselves.
-                if not root_path.is_relative_to(
-                    self.manager.project_cmake_dir
-                ):
+                if not root_path.is_relative_to(m.project_cmake_dir):
                     return root_path
             return None
 
@@ -386,36 +372,34 @@ class Legion(Package):
             assert root_dir is not None  # pacify mypy
             lines.append(("  Root dir", root_dir))
 
-        if cxx_flags := self.manager.get_cmake_variable(self.Legion_CXX_FLAGS):
+        if cxx_flags := m.get_cmake_variable(self.Legion_CXX_FLAGS):
             lines.append(("C++ flags", cxx_flags))
 
-        if cuda := self.manager.get_cmake_variable(self.Legion_USE_CUDA):
-            lines.append(("With CUDA", cuda))
-            if cuda_flags := self.manager.get_cmake_variable(
-                self.Legion_CUDA_FLAGS
-            ):
-                lines.append(("CUDA flags", cuda_flags))
+        lines.append(("With CUDA", m.get_cmake_variable(self.Legion_USE_CUDA)))
+        if cuda_flags := m.get_cmake_variable(self.Legion_CUDA_FLAGS):
+            lines.append(("CUDA flags", cuda_flags))
 
-        if networks := self.manager.get_cmake_variable(self.Legion_NETWORKS):
+        if networks := m.get_cmake_variable(self.Legion_NETWORKS):
             pass
         else:
             networks = "None"
         lines.append(("Networks", networks))
-
+        lines.append(
+            ("Bounds checks", m.get_cmake_variable(self.Legion_BOUNDS_CHECKS))
+        )
+        lines.append(("Max dim", m.get_cmake_variable(self.Legion_MAX_DIM)))
+        lines.append(
+            ("Max fields", m.get_cmake_variable(self.Legion_MAX_FIELDS))
+        )
+        lines.append(("Build Spy", m.get_cmake_variable(self.Legion_SPY)))
+        lines.append(
+            (
+                "Build Rust profiler",
+                m.get_cmake_variable(self.Legion_BUILD_RUST_PROFILER),
+            )
+        )
         # TODO continue
 
-        lines.extend(
-            [
-                ("Bounds checks", self.cl_args.legion_bounds_checks.value),
-                ("Max dim", self.cl_args.legion_max_dim.value),
-                ("Max fields", self.cl_args.legion_max_fields.value),
-                ("Build Spy", self.cl_args.legion_spy.value),
-                (
-                    "Build Rust profiler",
-                    self.cl_args.legion_rust_profiler.value,
-                ),
-            ]
-        )
         return self.create_package_summary(lines)
 
 

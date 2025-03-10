@@ -18,7 +18,7 @@ namespace legate::detail::comm {
 
 void register_tasks(Library* library)
 {
-  if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_NCCL)) {
     nccl::register_tasks(library);
   }
   if constexpr (LEGATE_DEFINED(LEGATE_USE_CAL)) {
@@ -31,7 +31,7 @@ void register_tasks(Library* library)
 
 void register_builtin_communicator_factories(const Library* library)
 {
-  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+  if (LEGATE_DEFINED(LEGATE_USE_NCCL)) {
     nccl::register_factory(library);
   }
   cpu::register_factory(library);

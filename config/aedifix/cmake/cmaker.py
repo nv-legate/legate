@@ -202,7 +202,7 @@ class CMaker:
 
         manager.log(f"Saving configure command to {cmd_file}")
         with cmd_file.open("w") as fd:
-            json.dump(cmd_spec, fd)
+            json.dump(cmd_spec, fd, sort_keys=True, indent=4)
 
     def _load_cmake_export_conf(self, manager: ConfigurationManager) -> None:
         conf_path = manager.project_export_config_path

@@ -6,6 +6,8 @@
 
 #include <legate/experimental/io/detail/task.h>
 
+#include <legate_defines.h>
+
 #include <legate/experimental/io/detail/library.h>
 #include <legate/experimental/io/kvikio/detail/basic.h>
 #include <legate/experimental/io/kvikio/detail/tile.h>
@@ -25,7 +27,9 @@ void register_tasks()
   kvikio::detail::TileWrite::register_variants(lib);
   kvikio::detail::TileByOffsetsRead::register_variants(lib);
   // HDF5
-  legate::io::hdf5::detail::HDF5Read::register_variants(lib);
+  if constexpr (LEGATE_DEFINED(LEGATE_USE_HDF5)) {
+    legate::io::hdf5::detail::HDF5Read::register_variants(lib);
+  }
 }
 
 }  // namespace legate::experimental::io::detail
