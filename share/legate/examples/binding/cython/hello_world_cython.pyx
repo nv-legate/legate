@@ -12,7 +12,7 @@ cdef extern from "legate.h" namespace "legate":
         pass
 
 cdef extern from "hello_world.h" namespace "hello_world::HelloWorld" nogil:
-    cdef LocalTaskID _TASK_ID "hello_world::HelloWorld::TASK_ID"
+    cdef LocalTaskID _TASK_ID "hello_world::HelloWorld::TASK_CONFIG.task_id()"
 
 cdef extern from "hello_world.h" namespace "hello_world" nogil:
     cdef cppclass _HelloWorld "hello_world::HelloWorld":

@@ -15,7 +15,7 @@ namespace hello_world {
 
 class HelloWorld : public legate::LegateTask<HelloWorld> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG = legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext);
 };
@@ -55,7 +55,9 @@ PYBIND11_MODULE(hello_world_pybind11, m)
     .def(py::init<>())
     .def_property_readonly_static(
       "TASK_ID",
-      [](py::object /* self */) { return to_underlying(hello_world::HelloWorld::TASK_ID); })
+      [](py::object /* self */) {
+        return to_underlying(hello_world::HelloWorld::TASK_CONFIG.task_id());
+      })
     .def_static("register_variants", [](std::uintptr_t lib_ptr) {
       hello_world::HelloWorld::register_variants(*reinterpret_cast<legate::Library*>(lib_ptr));
     });

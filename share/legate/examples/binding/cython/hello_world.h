@@ -11,7 +11,7 @@ namespace hello_world {
 
 class HelloWorld : public legate::LegateTask<HelloWorld> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{5};
+  static inline const auto TASK_CONFIG = legate::TaskConfig{legate::LocalTaskID{5}};
 
   static void cpu_variant(legate::TaskContext);
 };

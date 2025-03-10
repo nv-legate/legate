@@ -12,7 +12,7 @@ namespace hello_world {
 
 class HelloWorld : public legate::LegateTask<HelloWorld> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{0};
+  static inline const auto TASK_CONFIG = legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext);
 };
@@ -25,7 +25,7 @@ extern "C" {
 
 std::int64_t hello_world_task_id()
 {
-  return static_cast<std::int64_t>(hello_world::HelloWorld::TASK_ID);
+  return static_cast<std::int64_t>(hello_world::HelloWorld::TASK_CONFIG.task_id());
 }
 
 void hello_world_register_task(void* lib_ptr)

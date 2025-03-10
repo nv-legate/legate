@@ -60,7 +60,7 @@ TEST_F(AutoTask, InvalidPartition)
   auto array_input1 = runtime->create_array(legate::Shape{3}, legate::int32());
   auto array_input2 = runtime->create_array(legate::Shape{3}, legate::int32());
 
-  auto task = runtime->create_task(library, task::simple::HelloTask::TASK_ID);
+  auto task = runtime->create_task(library, task::simple::HelloTask::TASK_CONFIG.task_id());
   auto part = task.declare_partition();
 
   task.add_input(array_input1, part);
