@@ -50,4 +50,23 @@ TEST_F(AutoTask, InvalidListArray)
   EXPECT_THROW(task.add_reduction(list_array, legate::ReductionOpKind::ADD), std::invalid_argument);
 }
 
+TEST_F(AutoTask, InvalidPartition)
+{
+  task::simple::register_tasks();
+
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(task::simple::LIBRARY_NAME);
+
+  auto array_input1 = runtime->create_array(legate::Shape{3}, legate::int32());
+  auto array_input2 = runtime->create_array(legate::Shape{3}, legate::int32());
+
+  auto task = runtime->create_task(library, task::simple::HelloTask::TASK_ID);
+  auto part = task.declare_partition();
+
+  task.add_input(array_input1, part);
+
+  // Use the same partition for two inputs, should throw std::invalid_argument
+  EXPECT_THROW(task.add_input(array_input2, part), std::invalid_argument);
+}
+
 }  // namespace auto_task_test

@@ -53,9 +53,21 @@ class FormatVariantCode
   : public DefaultFixture,
     public ::testing::WithParamInterface<std::tuple<legate::VariantCode, std::string_view>> {};
 
+class FormatOperationKind : public DefaultFixture,
+                            public ::testing::WithParamInterface<
+                              std::tuple<legate::detail::Operation::Kind, std::string_view>> {};
+
 class FormatImgComputationHint : public DefaultFixture,
                                  public ::testing::WithParamInterface<
                                    std::tuple<legate::ImageComputationHint, std::string_view>> {};
+
+class FormatTaskTarget : public DefaultFixture,
+                         public ::testing::WithParamInterface<
+                           std::tuple<legate::mapping::TaskTarget, std::string_view>> {};
+
+class FormatStoreTarget : public DefaultFixture,
+                          public ::testing::WithParamInterface<
+                            std::tuple<legate::mapping::StoreTarget, std::string_view>> {};
 
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
@@ -96,10 +108,45 @@ INSTANTIATE_TEST_SUITE_P(FormatterUnit,
 
 INSTANTIATE_TEST_SUITE_P(
   FormatterUnit,
+  FormatOperationKind,
+  ::testing::Values(
+    std::make_tuple(legate::detail::Operation::Kind::ATTACH, "Attach"),
+    std::make_tuple(legate::detail::Operation::Kind::AUTO_TASK, "AutoTask"),
+    std::make_tuple(legate::detail::Operation::Kind::COPY, "Copy"),
+    std::make_tuple(legate::detail::Operation::Kind::DISCARD, "Discard"),
+    std::make_tuple(legate::detail::Operation::Kind::EXECUTION_FENCE, "ExecutionFence"),
+    std::make_tuple(legate::detail::Operation::Kind::FILL, "Fill"),
+    std::make_tuple(legate::detail::Operation::Kind::GATHER, "Gather"),
+    std::make_tuple(legate::detail::Operation::Kind::INDEX_ATTACH, "IndexAttach"),
+    std::make_tuple(legate::detail::Operation::Kind::MANUAL_TASK, "ManualTask"),
+    std::make_tuple(legate::detail::Operation::Kind::MAPPING_FENCE, "MappingFence"),
+    std::make_tuple(legate::detail::Operation::Kind::REDUCE, "Reduce"),
+    std::make_tuple(legate::detail::Operation::Kind::RELEASE_REGION_FIELD, "ReleaseRegionField"),
+    std::make_tuple(legate::detail::Operation::Kind::SCATTER, "Scatter"),
+    std::make_tuple(legate::detail::Operation::Kind::SCATTER_GATHER, "ScatterGather"),
+    std::make_tuple(legate::detail::Operation::Kind::TIMING, "Timing")));
+
+INSTANTIATE_TEST_SUITE_P(
+  FormatterUnit,
   FormatImgComputationHint,
   ::testing::Values(std::make_tuple(legate::ImageComputationHint::NO_HINT, "NO_HINT"),
                     std::make_tuple(legate::ImageComputationHint::MIN_MAX, "MIN_MAX"),
                     std::make_tuple(legate::ImageComputationHint::FIRST_LAST, "FIRST_LAST")));
+
+INSTANTIATE_TEST_SUITE_P(FormatterUnit,
+                         FormatTaskTarget,
+                         ::testing::Values(std::make_tuple(legate::mapping::TaskTarget::CPU, "CPU"),
+                                           std::make_tuple(legate::mapping::TaskTarget::GPU, "GPU"),
+                                           std::make_tuple(legate::mapping::TaskTarget::OMP,
+                                                           "OMP")));
+
+INSTANTIATE_TEST_SUITE_P(
+  FormatterUnit,
+  FormatStoreTarget,
+  ::testing::Values(std::make_tuple(legate::mapping::StoreTarget::SYSMEM, "SYSMEM"),
+                    std::make_tuple(legate::mapping::StoreTarget::FBMEM, "FBMEM"),
+                    std::make_tuple(legate::mapping::StoreTarget::ZCMEM, "ZCMEM"),
+                    std::make_tuple(legate::mapping::StoreTarget::SOCKETMEM, "SOCKETMEM")));
 
 template <typename>
 using FormatID = ::testing::Test;
@@ -127,7 +174,25 @@ TEST_P(FormatVariantCode, Basic)
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
 }
 
+TEST_P(FormatOperationKind, Basic)
+{
+  auto& [format_obj, expect_result] = GetParam();
+  ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
+}
+
 TEST_P(FormatImgComputationHint, Basic)
+{
+  auto& [format_obj, expect_result] = GetParam();
+  ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
+}
+
+TEST_P(FormatTaskTarget, Basic)
+{
+  auto& [format_obj, expect_result] = GetParam();
+  ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
+}
+
+TEST_P(FormatStoreTarget, Basic)
 {
   auto& [format_obj, expect_result] = GetParam();
   ASSERT_EQ(fmt::format("{}", format_obj), expect_result);
@@ -161,6 +226,12 @@ TEST_F(FormatterUnit, Alignment)
     fmt::format("{}", *alignment),
     ::testing::MatchesRegex(
       R"(Align\(X0\{formatter_test::FormatterBaseTask:[0-9]+\}, X1\{formatter_test::FormatterBaseTask:[0-9]+\}\))"));
+}
+
+TEST_F(FormatterUnit, TaskInfo)
+{
+  auto task_info = legate::TaskInfo{"test_task"};
+  ASSERT_EQ(fmt::format("{}", task_info), "test_task {}");
 }
 
 TYPED_TEST(FormatID, Basic)
