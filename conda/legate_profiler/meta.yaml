@@ -39,7 +39,7 @@ build:
 
 requirements:
   build:
-    - rust
+    - rust >={{ rust_min_version }}
     - {{ compiler('c') }}
     - libclang
     - clang
