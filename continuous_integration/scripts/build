@@ -65,9 +65,12 @@ build_legate_profiler() {
 
   mkdir -p /tmp/conda-build /tmp/conda-croot
   local conda_build_args=();
+  conda_build_args+=(--override-channels);
+  conda_build_args+=(-c conda-forge);
   conda_build_args+=(--croot "${CONDA_ROOT}");
   conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
   conda_build_args+=(--numpy 1.22);
+
   mamba install -y boa conda-verify python
   mamba install -y -c conda-forge gcc gxx make pkg-config
   conda mambabuild "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
