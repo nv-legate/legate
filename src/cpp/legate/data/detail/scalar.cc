@@ -28,9 +28,16 @@ void Scalar::clear_data_()
 Scalar::~Scalar() { clear_data_(); }
 
 Scalar::Scalar(InternalSharedPtr<Type> type, const void* data, bool copy)
-  : own_{copy}, type_{std::move(type)}, data_{data}
+  : own_{data && copy}, type_{std::move(type)}, data_{data}
 {
   if (own_) {
+    // Data of course can never be NULL at this point, given that own_ = data && copy, but
+    // clang-tidy (or specifically the clang static analyzer) appears to think that it could
+    // be. My best guess is that it believes the move ctor type could somehow gain access to
+    // the this pointer for the Scalar being constructed (possibly through the void *???).
+    //
+    // In any case, this LEGATE_ASSERT() exists only to silence clang-tidy.
+    LEGATE_ASSERT(data != nullptr);
     data_ = copy_data_(data, size());
   }
 }

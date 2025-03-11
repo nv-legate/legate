@@ -661,4 +661,13 @@ TEST_F(ScalarUnit, InvalidValues)
     ASSERT_THROW(static_cast<void>(scalar.values<std::int64_t>()), std::invalid_argument);
   }
 }
+
+TEST_F(ScalarUnit, EmptyVector)
+{
+  const auto vec    = std::vector<std::uint32_t>{};
+  const auto scalar = legate::Scalar{vec};  // The construction of this should not throw
+
+  ASSERT_EQ(scalar.size(), 0);
+}
+
 }  // namespace scalar_test
