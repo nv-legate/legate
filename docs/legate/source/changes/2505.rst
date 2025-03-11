@@ -38,6 +38,8 @@ C++
 
 .. rubric:: Data
 
+- Add support for ``std::vector<bool>`` to ``legate::Scalar``.
+
 .. rubric:: Mapping
 
 .. rubric:: Partitioning

@@ -448,9 +448,6 @@ TEST_F(ScalarUnit, CreateWithPoint)
     constexpr std::int64_t bounds[] = {1, 5, 7, 200};
     check_point_scalar<4>(bounds);
   }
-
-  // Invalid dim
-  ASSERT_THROW(legate::Scalar{legate::Point<10>::ONES()}, std::out_of_range);
 }
 
 TEST_F(ScalarUnit, CreateWithRect)
@@ -668,6 +665,26 @@ TEST_F(ScalarUnit, EmptyVector)
   const auto scalar = legate::Scalar{vec};  // The construction of this should not throw
 
   ASSERT_EQ(scalar.size(), 0);
+}
+
+TEST_F(ScalarUnit, VectorBool)
+{
+  constexpr auto SIZE = 13;
+  auto vec            = std::vector<bool>{};
+
+  std::generate_n(std::back_inserter(vec), SIZE, [i = 0]() mutable -> bool { return i++ % 2; });
+
+  const auto scal = legate::Scalar{vec};
+
+  ASSERT_EQ(scal.type(), legate::fixed_array_type(legate::bool_(), vec.size()));
+  ASSERT_EQ(scal.size(), vec.size());
+
+  const auto values = scal.values<bool>();
+
+  ASSERT_EQ(values.size(), vec.size());
+  for (std::size_t i = 0; i < vec.size(); ++i) {
+    ASSERT_EQ(values[i], vec[i]);
+  }
 }
 
 }  // namespace scalar_test

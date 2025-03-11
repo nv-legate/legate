@@ -40,7 +40,7 @@ Scalar::Scalar(InternalSharedPtr<detail::Scalar> impl) : impl_{std::move(impl)} 
 
 Scalar::Scalar(std::unique_ptr<detail::Scalar> impl) : impl_{std::move(impl)} {}
 
-Scalar::Scalar() : Scalar{create_impl_(null_type(), nullptr, false), private_tag{}} {}
+Scalar::Scalar() : Scalar{create_impl_(null_type(), nullptr, /* copy */ false), private_tag{}} {}
 
 Scalar::Scalar(const Type& type, const void* data, bool copy)
   : Scalar{create_impl_(type, data, copy), private_tag{}}
@@ -49,6 +49,25 @@ Scalar::Scalar(const Type& type, const void* data, bool copy)
 
 Scalar::Scalar(std::string_view string)
   : impl_{legate::make_shared<detail::Scalar>(std::move(string))}
+{
+}
+
+Scalar::Scalar(const std::vector<std::uint8_t>& values, vector_bool_conversion_tag)
+  // Note, use of bool_() here (instead of uint8) is deliberate. This vector used to be a
+  // std::vector<bool>, but because that type has no data() member, we need to "expand" it into
+  // an equivalent type first. But the underlying type is still bool.
+  : Scalar{checked_create_impl_(fixed_array_type(bool_(), values.size()),
+                                values.data(),
+                                /* copy */ true,
+                                values.size() * sizeof(std::uint8_t)),
+           private_tag{}}
+{
+  static_assert(sizeof(bool) == sizeof(std::uint8_t));
+  static_assert(alignof(bool) == alignof(std::uint8_t));
+}
+
+Scalar::Scalar(const std::vector<bool>& values)
+  : Scalar{{values.begin(), values.end()}, vector_bool_conversion_tag{}}
 {
 }
 

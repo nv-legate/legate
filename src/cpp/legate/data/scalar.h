@@ -123,7 +123,7 @@ class Scalar {
    * @brief Creates an owned `Scalar` from a `std::vector` of scalars. The values in the input
    * vector will be copied.
    *
-   * @param values Values to create a `Scalar` with in a vector
+   * @param values Values to create a `Scalar` with in a vector.
    */
   template <typename T>
   explicit Scalar(const std::vector<T>& values);
@@ -136,6 +136,23 @@ class Scalar {
    */
   template <typename T>
   explicit Scalar(const tuple<T>& values);
+
+  /**
+   * @brief Creates an owned `Scalar` from a `std::vector<bool>`. The values in the input
+   * vector will be copied.
+   *
+   * Like most things with `std::vector<bool>`, this construction is not particularly
+   * efficient. In order to be copied into the `Scalar`, the vector will first be "expanded"
+   * into a temporary `std::vector<std::uint8_t>`, resulting in multiple copies being
+   * performed.
+   *
+   * The user is therefore highly encouraged to use `std::vector<std::uint8_t>` directly
+   * instead of `std::vector<bool>` (if possible), especially if such vectors are commonly
+   * passed to tasks.
+   *
+   * @param values The values with which to create the `Scalar`.
+   */
+  explicit Scalar(const std::vector<bool>& values);
 
   /**
    * @brief Creates a point `Scalar`
@@ -241,6 +258,10 @@ class Scalar {
 
   template <typename T>
   Scalar(const T& value, private_tag);
+
+  struct vector_bool_conversion_tag {};
+
+  Scalar(const std::vector<std::uint8_t>& values, vector_bool_conversion_tag);
 
   friend class AutoTask;
   friend class ManualTask;

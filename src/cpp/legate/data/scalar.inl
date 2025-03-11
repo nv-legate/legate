@@ -31,7 +31,7 @@ inline std::uint64_t canonical_value_of(std::size_t v) noexcept { return std::ui
 
 template <typename T>
 Scalar::Scalar(const T& value, private_tag)
-  : Scalar{create_impl_(primitive_type(type_code_of_v<T>), std::addressof(value), true),
+  : Scalar{create_impl_(primitive_type(type_code_of_v<T>), std::addressof(value), /* copy */ true),
            private_tag{}}
 {
   static_assert(type_code_of_v<T> != Type::Code::FIXED_ARRAY);
@@ -47,7 +47,8 @@ Scalar::Scalar(const T& value) : Scalar{detail::canonical_value_of(value), priva
 
 template <typename T>
 Scalar::Scalar(const T& value, const Type& type)
-  : Scalar{checked_create_impl_(type, std::addressof(value), true, sizeof(T)), private_tag{}}
+  : Scalar{checked_create_impl_(type, std::addressof(value), /* copy */ true, sizeof(T)),
+           private_tag{}}
 {
 }
 
@@ -55,7 +56,7 @@ template <typename T>
 Scalar::Scalar(const std::vector<T>& values)
   : Scalar{checked_create_impl_(fixed_array_type(primitive_type(type_code_of_v<T>), values.size()),
                                 values.data(),
-                                true,
+                                /* copy */ true,
                                 values.size() * sizeof(T)),
            private_tag{}}
 {
@@ -72,13 +73,14 @@ Scalar::Scalar(const tuple<T>& values) : Scalar{values.data()}
 
 template <std::int32_t DIM>
 Scalar::Scalar(const Point<DIM>& point)
-  : Scalar{create_impl_(point_type(DIM), &point, true), private_tag{}}
+  : Scalar{create_impl_(point_type(DIM), &point, /* copy */ true), private_tag{}}
 {
+  static_assert(DIM <= LEGATE_MAX_DIM);
 }
 
 template <std::int32_t DIM>
 Scalar::Scalar(const Rect<DIM>& rect)
-  : Scalar{create_impl_(rect_type(DIM), &rect, true), private_tag{}}
+  : Scalar{create_impl_(rect_type(DIM), &rect, /* copy */ true), private_tag{}}
 {
   static_assert(DIM <= LEGATE_MAX_DIM);
 }
