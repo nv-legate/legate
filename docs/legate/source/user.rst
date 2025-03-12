@@ -5,7 +5,8 @@ User Guide
   :maxdepth: 2
   :caption: Contents:
 
-  Installation <installation.rst>
+  Installing pre-built packages <installation.rst>
+  Building from source <BUILD.rst>
   Usage <usage.rst>
   Using with Jupyter <jupyter.rst>
   GASNet-based Installation <gasnet.rst>
