@@ -1317,7 +1317,7 @@ namespace {
   // If in the future we make the mapping from points in the launch domain to GPUs customizable,
   // we need to take that into account here as well.
   return delinearize(range.lo(), range.hi(), linearize(domain.lo(), domain.hi(), point));
-}  // namespace
+}
 
 }  // namespace
 
@@ -1670,45 +1670,52 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
 
 namespace {
 
-[[nodiscard]] bool single_node_job()
-{
-  constexpr EnvironmentVariable<std::uint32_t> OMPI_COMM_WORLD_SIZE{"OMPI_COMM_WORLD_SIZE"};
-  constexpr EnvironmentVariable<std::uint32_t> MV2_COMM_WORLD_SIZE{"MV2_COMM_WORLD_SIZE"};
-  constexpr EnvironmentVariable<std::uint32_t> SLURM_NTASKS{"SLURM_NTASKS"};
-
-  return OMPI_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
-         MV2_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
-         SLURM_NTASKS.get(/* default_vaule */ 1) == 1;
-}
-
-[[nodiscard]] bool p2p_network_bootstrap()
-{
-  return REALM_UCP_BOOTSTRAP_MODE.get(/* default_value*/ "") == "p2p";
-}
-
 void handle_realm_default_args()
 {
-  if (single_node_job() && !p2p_network_bootstrap()) {
-    constexpr EnvironmentVariable<std::string> REALM_DEFAULT_ARGS{"REALM_DEFAULT_ARGS"};
-    std::stringstream ss;
+  constexpr EnvironmentVariable<std::string> REALM_DEFAULT_ARGS{"REALM_DEFAULT_ARGS"};
+  std::stringstream ss;
 
-    if (const auto existing_default_args = REALM_DEFAULT_ARGS.get()) {
-      static const auto networks_re = std::regex{R"(\-ll:networks\s+\w+)", std::regex::optimize};
+  if (const auto existing_default_args = REALM_DEFAULT_ARGS.get();
+      existing_default_args.has_value()) {
+    static const auto networks_re = std::regex{R"(\-ll:networks\s+\w+)", std::regex::optimize};
 
-      // If Realm sees multiple networks arguments, with one of them being "none", (e.g.
-      // "-ll:networks foo -ll:networks none", or even "-ll:networks none -ll:networks none"),
-      // it balks with:
-      //
-      // "Cannot specify both 'none' and another value in -ll:networks"
-      //
-      // So we must strip away any existing -ll:networks arguments before we append our
-      // -ll:networks argument.
-      ss << std::regex_replace(existing_default_args->c_str(), networks_re, "");
-    }
-    ss << " -ll:networks none ";
-    REALM_DEFAULT_ARGS.set(ss.str());
+    // If Realm sees multiple networks arguments, with one of them being "none", (e.g. "-ll:networks
+    // foo -ll:networks none", or even "-ll:networks none -ll:networks none"), it balks with:
+    //
+    // "Cannot specify both 'none' and another value in -ll:networks"
+    //
+    // So we must strip away any existing -ll:networks arguments before we append our -ll:networks
+    // argument.
+    ss << std::regex_replace(existing_default_args->c_str(), networks_re, "");
   }
-}  // namespace
+
+  if (Config::get_config().need_network()) {
+    if constexpr (!LEGATE_DEFINED(LEGATE_USE_NETWORK)) {
+      throw TracedException<std::runtime_error>{
+        "Legate was run on multiple nodes but was not built with networking support. Please "
+        "install Legate again with networking support (e.g. configured \"--with-ucx\")"};
+    }
+    // We have to pass an explicit `-ll:networks` flag, otherwise Realm will silently continue with
+    // single-node execution if network initialization fails. Therefore, even though Realm's default
+    // priority list for network modules is good enough for us, we have to duplicate it here.
+#ifdef REALM_USE_UCX
+    ss << " -ll:networks ucx";
+#endif
+#ifdef REALM_USE_GASNETEX
+    ss << " -ll:networks gasnetex";
+#endif
+#ifdef REALM_USE_GASNET1
+    ss << " -ll:networks gasnet1";
+#endif
+#ifdef REALM_USE_MPI
+    ss << " -ll:networks mpi";
+#endif
+  } else {
+    ss << " -ll:networks none";
+  }
+
+  REALM_DEFAULT_ARGS.set(ss.str());
+}
 
 }  // namespace
 
@@ -1742,25 +1749,6 @@ void handle_realm_default_args()
       });
 
     handle_legate_args();
-
-    // Do these after handle_legate_args()
-    if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && config.need_cuda()) {
-      throw TracedException<std::runtime_error>{
-        "Legate was run with GPUs but was not built with GPU support. Please "
-        "install Legate again with the \"--with-cuda\" flag"};
-    }
-    if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && config.need_openmp()) {
-      throw TracedException<std::runtime_error>{
-        "Legate was run with OpenMP enabled, but was not built with OpenMP "
-        "support. Please install Legate again with the \"--with-openmp\" "
-        "flag"};
-    }
-    if (!LEGATE_DEFINED(LEGATE_USE_NETWORK) && config.need_network()) {
-      throw TracedException<std::runtime_error>{
-        "Legate was run on multiple nodes but was not built with networking "
-        "support. Please install Legate again with network support (e.g. "
-        "\"--with-mpi\" or \"--with-ucx\")"};
-    }
 
     Legion::Runtime::perform_registration_callback(initialize_core_library_callback_,
                                                    true /*global*/);
