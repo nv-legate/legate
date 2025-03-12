@@ -12,7 +12,7 @@ import pytest
 
 from legate.core import LEGATE_MAX_DIM, Scalar, get_legate_runtime, types as ty
 
-from .utils.data import ARRAY_TYPES, SCALAR_VALS
+from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SCALAR_VALS, SHAPES
 
 
 class TestStoreCreation:
@@ -71,18 +71,26 @@ class TestStoreCreation:
         arr_np = np.empty(shape=shape)
         assert arr_np.shape == arr_store.shape
 
-    @pytest.mark.parametrize("shape", [(0,), (4, 2, 3), (1, 0, 1)], ids=str)
-    def test_create_from_numpy_array(self, shape: tuple[int, ...]) -> None:
+    @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
+    @pytest.mark.parametrize(
+        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS), ids=str
+    )
+    def test_create_from_numpy_array(
+        self, shape: tuple[int, ...], dtype: ty.Type, val: Any
+    ) -> None:
         runtime = get_legate_runtime()
-        arr_np = np.random.random(shape)
+        arr_np: np.ndarray[Any, Any] = np.ndarray(
+            shape, dtype.to_numpy_dtype()
+        )
+        arr_np.fill(val)
         store = runtime.create_store_from_buffer(
-            ty.float64, arr_np.shape, arr_np, False
+            dtype, arr_np.shape, arr_np, False
         )
-        arr_store = np.asarray(
-            store.get_physical_store().get_inline_allocation()
-        )
-        assert arr_np.shape == arr_store.shape
-        assert np.allclose(arr_np, arr_store)
+        arr_store = np.asarray(store.get_physical_store())
+        if isinstance(val, bytes):
+            assert (arr_store == arr_np).all()
+        else:
+            np.testing.assert_allclose(arr_np, arr_store)
 
 
 class TestStoreCreationErrors:

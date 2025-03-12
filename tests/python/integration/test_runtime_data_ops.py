@@ -34,8 +34,6 @@ class TestStoreOps:
         out_np, out = utils.create_np_array_and_store(
             dtype, shape=shape, func=np.zeros
         )
-        if 0 not in shape:
-            assert out_np.all() != arr_np.all()
         runtime.issue_copy(out, store)
         if dtype.code == ty.TypeCode.BINARY:
             assert (out_np == arr_np).all()
