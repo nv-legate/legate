@@ -65,11 +65,10 @@ extensions = [
 
 suppress_warnings = ["ref.myst"]
 exclude_patterns = [
-    "BUILD.md",
     # Without this, Sphinx will emit warnings saying "dev.rst not included in
     # any toctree". But dev.rst is a symlink to the latest version, so we don't
     # care that it's not included anywhere, because whatever it links to is.
-    "changes/dev.rst",
+    "changes/dev.rst"
 ]
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 
