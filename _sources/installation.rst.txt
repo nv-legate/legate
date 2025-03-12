@@ -51,14 +51,16 @@ The following table lists Legate's minimum supported versions of major
 dependencies.
 
 "Full support" means that the corresponding versions (and all later ones) are
-being tested regularly, released as conda packages, and are expected to work.
+being tested regularly, released as downloadable packages, and are expected to work.
 Please report any incompatibility you find against a fully-supported version
 by opening a bug.
 
-"Best-effort support" means that the corresponding versions are not actively
-tested, but Legate should be compatible with them. We will not actively work to
-fix any incompatibilities discovered under these versions, but we accept
-contributions that fix such incompatibilities.
+"Best-effort support" means that the corresponding versions may not be actively packaged
+and shipped, but that Legate should be compatible with them. In particular, Legate should
+be able to be compiled from source for these configurations.
+
+We may not actively work to fix any incompatibilities discovered under these versions, but
+we accept contributions that fix such incompatibilities.
 
 .. list-table:: Support Matrix
    :header-rows: 1
@@ -68,16 +70,19 @@ contributions that fix such incompatibilities.
      - Best-effort support (min version)
    * - CPU architecture
      - x86-64 (Haswell), aarch64
-     - older x86-64
+     - older x86-64, Apple Silicon
    * - OS
      - RHEL 8, Ubuntu 20.04
-     - other Linux
+     - other Linux, macOS
+   * - Compilers
+     - GCC 7, clang 5
+     - Any compiler supporting C++17
    * - GPU architecture
      - Volta
      - Pascal
    * - CUDA toolkit
      - 12.2
-     - 11.0
+     - 11.8
    * - Python
      - 3.10
      -
@@ -223,4 +228,4 @@ software projects at install time. Review the license terms of these open
 source projects before use.
 
 For license information regarding projects bundled directly, see
-:ref:`thirdparty`.
+:ref:`third_party`.

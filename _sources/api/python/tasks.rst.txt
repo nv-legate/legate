@@ -40,23 +40,18 @@ which are checked by the decorator.
    restriction may be lifted.
 
 It is possible to take and pass store arguments to a Python task, just like a regular C++
-task. This is done by using the special ``Input``, ``Ouput``, or ``Reduction`` store/array
+task. This is done by using the special ``Input``, ``Output``, or ``Reduction`` store/array
 type hints:
-
-.. testsetup::
-
-   import numpy as np
-   from legate.core import get_legate_runtime, types as ty
-
-   def make_store(init: list[int]):
-       arr = np.array(init, dtype=np.int64)
-       return get_legate_runtime().create_store_from_buffer(ty.int64, arr.shape, arr, False)
-
 
 .. testcode::
 
    import numpy as np
+   from legate.core import get_legate_runtime, types as ty
    from legate.core.task import task, InputArray, OutputArray
+
+   def make_store(init: list[int]):
+       arr = np.array(init, dtype=np.int64)
+       return get_legate_runtime().create_store_from_buffer(ty.int64, arr.shape, arr, False)
 
    @task
    def foo_in_out(in_store: InputArray, out_store: OutputArray) -> None:
@@ -85,6 +80,9 @@ been partitioned across all instances of the task, and transformed to ``Physical
 or array as an argument to the function. This is checked on task function call (before it
 is launched).
 
+Arbitrary Python Arguments
+--------------------------
+
 It is also possible to pass and receive arbitrary Python data types as task arguments. Any
 arguments passed in this manner should be considered as constant, scalar values
 *independent* of the call-site values. Any modifications made to them in the task body may
@@ -109,12 +107,46 @@ not propagate outside the task body!
    foo(12.34, {"hello": "there"}, MyClass())
 
 
+Explicit Task Context Argument
+------------------------------
+
+While it is normally hidden, the user may also request that the ``TaskContext`` for the
+executing task be passed into the task body as well. To do so, the user must have the
+**first** argument of the task be a ``TaskContext``:
+
+- The name of the argument itself is irrelevant.
+- If the task takes the ``TaskContext`` in any other position, or has multiple
+  ``TaskContext`` arguments, this is diagnosed as an error and an exception is raised when
+  the task decorator is executed.
+
+The top-level calling convention remains as usual; the user should not pass in the task
+context themselves. The runtime will automatically insert the task context argument during
+execution of the task:
+
+.. testcode::
+
+   from legate.core import TaskContext
+   from legate.core.task import task, InputStore, OutputStore
+
+   @task
+   def foo(
+       ctx: TaskContext,
+       x: InputStore,
+       y: OutputStore,  # etc...
+   ) -> None:
+       print(ctx.get_variant_kind())
+
+
+   foo(x, y)  # Note, no task context argument passed
+
+
+
 Misc. Trivia
 ^^^^^^^^^^^^
 
 #. Keyword arguments are supported
 
-.. testsetup::
+.. testcode::
 
    import numpy as np
    from legate.core import get_legate_runtime, types as ty
@@ -130,13 +162,11 @@ Misc. Trivia
    z_store = make_store()
 
 
-.. testcode::
+   @task
+   def foo(x: InputStore, y: OutputStore, z: OutputStore) -> None:
+       ...
 
-     @task
-     def foo(x: InputStore, y: OutputStore, z: OutputStore) -> None:
-         ...
-
-     foo(z=z_store, x=x_store, y=y_store) # will demux to f(x_store, y_store, z_store)
+   foo(z=z_store, x=x_store, y=y_store) # will demux to f(x_store, y_store, z_store)
 
 #. Default values for arguments are currently not supported.
 #. The task may raise arbitrary exceptions, provided that the decorator is passed the
@@ -145,11 +175,9 @@ Misc. Trivia
    Legate will abort when the exception is thrown. If the thrown exception does not derive
    from ``Exception``, behavior is undefined.
 
-.. testsetup::
+.. testcode::
 
    from legate.core.task import task
-
-.. testcode::
 
    class MyException(Exception):
        pass

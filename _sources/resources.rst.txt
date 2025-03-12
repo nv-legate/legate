@@ -46,7 +46,7 @@ Manolis Papadakis, *Implementing Quantitative Use Cases with Accelerated Computi
 Wonchan Lee, *cuNumeric and Legate: How to Create a Distributed GPU Accelerated Library* (GTC Spring 2023, 2023-03-23)
 `Video <https://www.nvidia.com/en-us/on-demand/session/gtcspring23-s51789/>`__
 
-.. `Slides <https://github.com/nv-legate/legate.core.internal/issues/958#:~:text=Wonchan%20Lee%20%40%20GTC%20Spring%202023%2C%202023%2D03%2D23%20Slides%20Video>`__
+.. `Slides <https://github.com/nv-legate/legate.internal/issues/958#:~:text=Wonchan%20Lee%20%40%20GTC%20Spring%202023%2C%202023%2D03%2D23%20Slides%20Video>`__
 
 Seshu Yamajala, *Scaling NumPy Applications from 1 CPU to Thousands of GPUs* (UCLA Institute for Pure & Applied Mathematics, 2023-06-04)
 `Video <https://www.youtube.com/watch?v=xHft2VeF-kE>`__

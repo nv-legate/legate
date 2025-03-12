@@ -29,6 +29,12 @@ Changes: 25.03
   usually not invoked by the user directly, and moving it to this new directory reflects
   this. The user should instead launch their programs directly, or, for greater
   convenience use the ``legate`` launcher.
+- Stop passing default options to Nsight Systems when using the ``--nsys`` flag
+  of the ``legate`` launcher. Any non-default arguments are fully in the control
+  of the user, through ``--nsys-extra``.
+- Add a launching mode ``--launcher dask`` to the ``legate`` driver, that bootstraps a
+  Legate execution by setting up a dask cluster and having the workers start the peer
+  processes. This currently only supports single-node multi-rank execution.
 
 C++
 ---
@@ -59,6 +65,13 @@ C++
 - Add ``legate::VariantOptions::communicators`` and
   ``legate::VariantOptions::with_communicators()`` to indicate that a variant will use the
   specified communicator(s).
+- Add ``legate::TaskSignature``.
+- Add ``legate::proxy::inputs``, ``legate::proxy::outputs``, ``legate::proxy::reductions``
+  to be used in conjunction with the task signatures to describe future arguments to tasks.
+- Extend ``legate::align()``, ``legate::broadcast()``, ``legate::image()``,
+  ``legate::scale()``, and ``legate::bloat()`` to also take the proxy arguments. The
+  result of these are to be used with the task signature to describe constraints in terms
+  of future task arguments.
 
 .. rubric:: Types
 
@@ -97,6 +110,19 @@ Python
 
 - Add ``legate.core.ProfileRange`` context manager to activate the API for
   generating sub-boxes on the profiler.
+- Add ability for Python tasks to request that the ``legate.core.TaskContext`` be passed
+  to the task body. Tasks may do so by making the first argument of the task be of type
+  ``TaskContext``. The runtime will then automatically pass the task context during task
+  execution in addition to all the other usual arguments:
+
+  ::
+
+     from legate.core import TaskContext
+     from legate.core.task import task
+
+     @task
+     def foo(ctx: TaskContext, ...) -> None:
+         ...
 
 .. rubric:: Types
 

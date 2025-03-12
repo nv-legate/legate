@@ -1,0 +1,81 @@
+Changes: 25.05
+==============
+..
+   STYLE:
+   * Capitalize sentences.
+   * Use the imperative tense: Add, Improve, Change, etc.
+   * Use a period (.) at the end of entries.
+   * Be concise yet informative.
+   * If possible, provide an executive summary of the new feature, but do not
+     just repeat its doc string. However, if the feature requires changes from
+     the user, then describe those changes in detail, and provide examples of
+     the changes required.
+
+
+.. rubric:: General
+
+C++
+---
+
+.. rubric:: General
+
+- Add ability for users to statically declare task-wide configuration options, such as the
+  task's signature, constraints, and default variant options via a new ``static const
+  legate::TaskConfig TASK_CONFIG`` member on task declarations.
+
+  As part of this new feature, the old-style ``TASK_ID`` member is no longer read. Since
+  this would otherwise be a silent breaking change, we have elected to emit a static
+  assertion (i.e. a compiler error) in case the old-style ``TASK_ID`` member is
+  found. This static assertion is only emitted in places where dynamically passing the
+  task ID is not possible. Specifically, if the user calls the following routines:
+
+  - ``legate::LegateTask::register_variants(std::map<VariantCode, VariantOptions>)``
+  - ``legate::LegateTask::register_variants(legate::Library, const std::map<legate::VariantCode, legate::VariantOptions>&)``
+
+  Then an error **will** be emitted if ``TASK_ID`` is detected. Calling the
+  ``register_variants()`` overload which accepts either a ``legate::TaskConfig`` or
+  ``legate::LocalTaskID`` will not emit an error.
+
+.. rubric:: Data
+
+- Add support for ``std::vector<bool>`` to ``legate::Scalar``.
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+.. rubric:: Tasks
+
+- Add ``legate::TaskConfig``.
+- Add ``legate::LegateTask::register_variants()`` overload which accepts a
+  ``legate::TaskConfig``.
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+.. rubric:: Utilities
+
+.. rubric:: I/O
+
+
+Python
+------
+
+.. rubric:: General
+
+.. rubric:: Data
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+.. rubric:: Tasks
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+.. rubric:: Utilities
+
+.. rubric:: I/O
