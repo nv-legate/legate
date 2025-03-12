@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: '0 22 * * *'  # Nightly at 10:00 PM
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   build-and-test:
     strategy:
@@ -69,4 +73,24 @@ jobs:
       network: "ucx"
       refname: ${{ github.ref_name }}
       default-branch: ${{ github.event.repository.default_branch }}
+    secrets: inherit
+
+  build-nightly-docs:
+    name: Build Nightly documentation (${{ matrix.platform }}, ${{ matrix.target-device }}, ${{ matrix.build-mode }}, ucx enabled)
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux
+        target-device:
+          - gpu
+        build-mode:
+          - release
+    uses:
+      ./.github/workflows/gh-build-docs.yml
+    with:
+      platform: ${{ matrix.platform }}
+      target-device: ${{ matrix.target-device }}
+      build-mode: ${{ matrix.build-mode }}
+      upload-docs-to-gh-pages: true
     secrets: inherit
