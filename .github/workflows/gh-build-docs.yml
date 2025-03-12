@@ -11,13 +11,18 @@ on:
       build-mode:
         type: string
         required: true
+      upload-docs-to-gh-pages:
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   build-docs:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.17
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@push_nightly_docs_to_gh_pages
     with:
+      build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu4') || (inputs.platform == 'mac' && 'macos-latest') }}
@@ -25,8 +30,58 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v1.17"
+      legate-gh-ci-tag: "push_nightly_docs_to_gh_pages"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: false
       network: "ucx"
     secrets: inherit
+
+  upload-docs-to-gh-pages:
+    if: ${{ inputs.upload-docs-to-gh-pages }}
+    needs: build-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump build-docs output variables
+        shell: bash --noprofile --norc -xeuo pipefail {0}
+        run: |
+          echo "${{ needs.build-docs.outputs.artifact-name }}"
+          echo "${{ needs.build-docs.outputs.artifacts-dir }}"
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-docs.outputs.artifact-name }}
+          path: ${{ needs.build-docs.outputs.artifacts-dir }}
+
+      - name: Display structure of downloaded artifacts
+        shell: bash --noprofile --norc -xeuo pipefail {0}
+        run: |
+          pwd
+          ls -lahR ${{ needs.build-docs.outputs.artifacts-dir }}
+
+      - name: Find index.html's parent folder
+        shell: bash --noprofile --norc -xeuo pipefail {0}
+        id: find_docs_dir
+        run: |
+          FILE_PATH="$(
+            find "${{ needs.build-docs.outputs.artifacts-dir }}" -name "index.html" -printf '%d %p\n' \
+              | sort -nk1 \
+              | cut -d' ' -f2- \
+              | head -n 1
+          )"
+          if [[ -z "${FILE_PATH}" ]]; then
+            echo "index.html not found" >&2
+            exit 1
+          fi
+          PARENT_DIR=$(dirname "${FILE_PATH}")
+          echo "docs_dir=${PARENT_DIR}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: ${{ steps.find_docs_dir.outputs.docs_dir }}
+          token: ${{ secrets.NV_LEGATE_INTER_REPOS_ACCESS }}
+          repository-name: "nv-legate/legate"
