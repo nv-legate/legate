@@ -14,6 +14,10 @@ Changes: 25.05
 
 .. rubric:: General
 
+- ``LEGATE_NEED_*`` environment variables are no longer consulted to infer what
+  build-time features (e.g. CUDA support or networking support) are required for
+  the current run. Legate can infer this automatically.
+
 C++
 ---
 

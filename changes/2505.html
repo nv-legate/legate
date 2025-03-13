@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.05 &#8212; NVIDIA legate (25.05.00.dev18+gc8e40935)</title>
+    <title>Changes: 25.05 &#8212; NVIDIA legate (25.05.00.dev19+g014848a3)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=f1ed5421"></script>
+    <script src="../_static/documentation_options.js?v=71adb247"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev18+gc8e40935) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev18+gc8e40935) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev19+g014848a3) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev19+g014848a3) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev18+gc8e40935)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev19+g014848a3)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev18+gc8e40935) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev18+gc8e40935) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev19+g014848a3) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev19+g014848a3) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev18+gc8e40935)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev19+g014848a3)</p>
   
 </a>
 
@@ -461,6 +461,11 @@
   <section id="changes-25-05">
 <h1>Changes: 25.05<a class="headerlink" href="#changes-25-05" title="Link to this heading">#</a></h1>
 <p class="rubric">General</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">LEGATE_NEED_*</span></code> environment variables are no longer consulted to infer what
+build-time features (e.g. CUDA support or networking support) are required for
+the current run. Legate can infer this automatically.</p></li>
+</ul>
 <section id="c">
 <h2>C++<a class="headerlink" href="#c" title="Link to this heading">#</a></h2>
 <p class="rubric">General</p>
