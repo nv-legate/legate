@@ -76,6 +76,8 @@ Python
 
 .. rubric:: Tasks
 
+- Add ``legate.core.VariantOptions`` to allow describing per-variant configuration options.
+
 .. rubric:: Types
 
 .. rubric:: Runtime

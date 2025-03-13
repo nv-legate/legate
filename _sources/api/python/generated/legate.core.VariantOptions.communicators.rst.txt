@@ -1,0 +1,6 @@
+legate.core.VariantOptions.communicators
+========================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: VariantOptions.communicators

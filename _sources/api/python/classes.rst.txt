@@ -10,5 +10,6 @@ Classes
    logical_store
    machine
    shape
+   variant_options
 .. partition
 .. legion
