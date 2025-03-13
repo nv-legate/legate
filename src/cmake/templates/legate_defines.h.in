@@ -67,6 +67,22 @@
 #define LEGATE_DOXYGEN 0
 #endif
 
+#if defined(__APPLE__)
+#define LEGATE_MACOS 1
+#elif defined(__linux__)
+#define LEGATE_LINUX 1
+#else
+#error "Unsupported platform. Please open an issue at https://github.com/nv-legate/legate describing your system"
+#endif
+
+#ifndef LEGATE_MACOS
+#define LEGATE_MACOS 0
+#endif
+
+#ifndef LEGATE_LINUX
+#define LEGATE_LINUX 0
+#endif
+
 // Cython does not define a "standard" way of detecting cythonized source compilation, so we
 // just check for any one of these macros which I found to be defined in the preamble on my
 // machine. We need to check enough of them in case the Cython devs ever decide to change one
