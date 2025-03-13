@@ -14,13 +14,23 @@
 #include <cstddef>
 #include <initializer_list>
 #include <optional>
+#include <string>
 #include <string_view>
+#include <vector>
 
 /**
  * @file
  * @brief Class definition of legate::VariantOptions
  */
 namespace legate {
+
+class VariantOptions;
+
+namespace cython_detail {
+
+void set_new_comms(std::vector<std::string> comms, legate::VariantOptions* options);
+
+}  // namespace cython_detail
 
 /**
  * @addtogroup task
@@ -179,6 +189,16 @@ class VariantOptions {
   VariantOptions& with_communicators(std::initializer_list<std::string_view> comms) noexcept;
 
   LEGATE_CPP_VERSION_TODO(20, "The above function can be constexpr");
+
+  class WithCommunicatorsAccessKey {
+    WithCommunicatorsAccessKey() = default;
+
+    friend class VariantOptions;
+    friend void cython_detail::set_new_comms(std::vector<std::string>, legate::VariantOptions*);
+  };
+
+  template <typename It>
+  VariantOptions& with_communicators(WithCommunicatorsAccessKey, It begin, It end) noexcept;
 
   /**
    * @brief Populate a Legion::TaskVariantRegistrar using the options contained.

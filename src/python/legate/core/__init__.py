@@ -47,6 +47,7 @@ from ._lib.runtime.runtime import (
 from ._lib.runtime.scope import Scope
 from ._lib.task.task_context import TaskContext
 from ._lib.task.task_info import TaskInfo
+from ._lib.task.variant_options import VariantOptions
 from ._lib.utilities.typedefs import (
     GlobalRedopID,
     GlobalTaskID,

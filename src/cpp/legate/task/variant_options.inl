@@ -44,15 +44,23 @@ constexpr VariantOptions& VariantOptions::with_may_throw_exception(bool may_thro
 inline VariantOptions& VariantOptions::with_communicators(
   std::initializer_list<std::string_view> comms) noexcept
 {
-  LEGATE_CHECK(comms.size() < MAX_COMMS);
+  return with_communicators({}, std::begin(comms), std::end(comms));
+}
+
+template <typename It>
+inline VariantOptions& VariantOptions::with_communicators(WithCommunicatorsAccessKey,
+                                                          It begin,
+                                                          It end) noexcept
+{
   if (!communicators.has_value()) {
     communicators.emplace();
   }
 
   std::size_t i = 0;
 
-  for (; i < comms.size(); ++i) {
-    (*communicators)[i] = std::data(comms)[i];
+  for (; begin != end; ++begin, ++i) {
+    LEGATE_CHECK(i < MAX_COMMS);
+    (*communicators)[i] = *begin;
   }
   // Clear the rest. Internally an empty communicator is used as the sentinel value.
   for (; i < communicators->size(); ++i) {
