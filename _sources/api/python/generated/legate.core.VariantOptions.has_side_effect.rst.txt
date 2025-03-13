@@ -1,6 +1,0 @@
-legate.core.VariantOptions.has\_side\_effect
-============================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: VariantOptions.has_side_effect
