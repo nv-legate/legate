@@ -10,7 +10,7 @@ import numpy as np
 from libc.stdint cimport int32_t, uintptr_t
 
 from ..type.types cimport Type
-from ..utilities.typedefs cimport Domain, DomainPoint
+from ..utilities.typedefs cimport _Domain, _DomainPoint
 from .physical_store cimport PhysicalStore
 
 
@@ -63,10 +63,10 @@ cdef class InlineAllocation:
         if self._shape is not None:
             return self._shape
 
-        cdef Domain domain = self._store.domain
-        cdef DomainPoint lo = domain.lo
-        cdef DomainPoint hi = domain.hi
-        cdef int32_t ndim = domain.dim
+        cdef _Domain domain = self._store._handle.domain()
+        cdef _DomainPoint lo = domain.lo()
+        cdef _DomainPoint hi = domain.hi()
+        cdef int32_t ndim = domain.get_dim()
 
         self._shape = tuple(max(hi[i] - lo[i] + 1, 0) for i in range(ndim))
         return self._shape

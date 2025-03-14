@@ -77,6 +77,12 @@ Python
 .. rubric:: Tasks
 
 - Add ``legate.core.VariantOptions`` to allow describing per-variant configuration options.
+- Add ``legate.core.TaskContext.is_single_task()``.
+- Add ``legate.core.TaskContext.task_index``.
+- Add ``legate.core.TaskContext.launch_domain``.
+- Add ``legate.core.TaskContext.machine``.
+- Add ``legate.core.TaskContext.provenance``.
+- Add ``legate.core.TaskContext.task_stream``.
 
 .. rubric:: Types
 

@@ -275,6 +275,15 @@ cdef tuple[
                     f"{signature}."
                 )
                 raise TypeError(m)
+
+            if default_var is not Parameter.empty:
+                m = (
+                    "Explicit task context argument must not have a default "
+                    f"value (found '{param_descr}'). Task context arguments "
+                    "are passed unconditionally to the task if requested, so "
+                    "it will never take the default value."
+                )
+                raise TypeError(m)
             pass_task_ctx = True
         else:
             scalars.append(name)

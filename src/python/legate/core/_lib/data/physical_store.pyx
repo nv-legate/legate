@@ -6,7 +6,7 @@
 from libc.stdint cimport int32_t
 
 from ..type.types cimport Type
-from ..utilities.typedefs cimport Domain
+from ..utilities.typedefs cimport domain_to_py, Domain_t
 from ..utilities.unconstructable cimport Unconstructable
 from .inline_allocation cimport InlineAllocation, _InlineAllocation
 from .physical_store cimport _PhysicalStore
@@ -42,14 +42,14 @@ cdef class PhysicalStore(Unconstructable):
         return Type.from_handle(self._handle.type())
 
     @property
-    def domain(self) -> Domain:
+    def domain(self) -> Domain_t:
         r"""
         Get the `Domain` of the store.
 
         :returns: The domain of the store.
         :rtype: Domain
         """
-        return Domain.from_handle(self._handle.domain())
+        return domain_to_py(self._handle.domain())
 
     @property
     def target(self) -> StoreTarget:

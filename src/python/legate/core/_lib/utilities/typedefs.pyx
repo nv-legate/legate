@@ -2,11 +2,14 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+from libc.stdint cimport uint64_t
+from libcpp.vector cimport vector as std_vector
 
-from libc.stdint cimport int32_t
+from typing import NewType, TypeAlias
+from collections import namedtuple
 
-from typing import NewType
-from operator import index as operator_index
+from .detail.tuple cimport _to_domain_point
+from .utils cimport tuple_from_iterable
 
 LocalTaskID = NewType("LocalTaskID", int)
 GlobalTaskID = NewType("GlobalTaskID", int)
@@ -14,134 +17,32 @@ GlobalTaskID = NewType("GlobalTaskID", int)
 LocalRedopID = NewType("LocalRedopID", int)
 GlobalRedopID = NewType("GlobalRedopID", int)
 
-cdef class DomainPoint:
-    @staticmethod
-    cdef DomainPoint from_handle(_DomainPoint handle):
-        cdef DomainPoint result = DomainPoint.__new__(DomainPoint)
-        result._handle = handle
-        return result
+DomainPoint: TypeAlias = tuple[int, ...]
+Domain = namedtuple("Domain", ("lo", "hi"), defaults=((0,), (0,)))
 
-    def __init__(self):
-        r"""
-        Construct an empty `DomainPoint`.
-        """
-        self._handle = _DomainPoint()
+cdef _DomainPoint domain_point_from_iterable(object iterable):
+    return _to_domain_point(tuple_from_iterable[uint64_t](iterable))
 
-    @property
-    def dim(self) -> int32_t:
-        r"""
-        Get the number of dimensions of the domain point.
+cdef DomainPoint_t domain_point_to_py(const _DomainPoint& point):
+    cdef int dim = point.get_dim()
+    cdef int i
+    cdef std_vector[uint64_t] vec
 
-        :returns: The dimension of the point.
-        :rtype: int
-        """
-        return self._handle.get_dim()
+    vec.reserve(dim)
+    for i in range(dim):
+        vec.push_back(point[i])
 
-    def __getitem__(self, idx: int) -> int:
-        r"""
-        Get a value in the domain point.
+    return tuple(vec)
 
-        Parameters
-        ----------
-        idx : int
-            The index to get from.
+cdef _Domain domain_from_iterables(object low, object high):
+    cdef _DomainPoint lo = domain_point_from_iterable(low)
+    cdef _DomainPoint hi = domain_point_from_iterable(high)
 
-        Returns
-        -------
-        int
-            The value.
-        """
-        return self._handle[operator_index(idx)]
-
-    def __setitem__(self, idx: int, coord: int) -> None:
-        r"""
-        Set a value in the domain point.
-
-        Parameters
-        ----------
-        idx : int
-            The index to set at.
-        coord : int
-            The value to set.
-        """
-        self._handle[operator_index(idx)] = coord
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, DomainPoint):
-            return NotImplemented
-
-        return self._handle == (<DomainPoint> other)._handle
-
-    def __str__(self) -> str:
-        r"""
-        Get a human-readable string representation of the domain point.
-
-        Returns
-        -------
-        str
-            The string representation.
-        """
-        cdef int i
-        cdef str tmp = ",".join(str(self[i]) for i in range(self.dim))
-        return f"<{tmp}>"
+    return _Domain(lo, hi)
 
 
-cdef class Domain:
-    @staticmethod
-    cdef Domain from_handle(_Domain handle):
-        cdef Domain result = Domain.__new__(Domain)
-        result._handle = handle
-        return result
+cdef Domain_t domain_to_py(const _Domain& domain):
+    cdef DomainPoint_t lo = domain_point_to_py(domain.lo())
+    cdef DomainPoint_t hi = domain_point_to_py(domain.hi())
 
-    def __init__(self):
-        r"""
-        Construct an empty `Domain`.
-        """
-        self._handle = _Domain()
-
-    @property
-    def dim(self) -> int32_t:
-        r"""
-        Get the number of dimensions of the domain.
-
-        :returns: The dimension of the domain.
-        :rtype: int
-        """
-        return self._handle.get_dim()
-
-    @property
-    def lo(self) -> DomainPoint:
-        r"""
-        Get the smallest point in the domain.
-
-        :returns: The point.
-        :rtype: DomainPoint
-        """
-        return DomainPoint.from_handle(self._handle.lo())
-
-    @property
-    def hi(self) -> DomainPoint:
-        r"""
-        Get the largest point in the domain.
-
-        :returns: The point.
-        :rtype: DomainPoint
-        """
-        return DomainPoint.from_handle(self._handle.hi())
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Domain):
-            return NotImplemented
-
-        return self._handle == (<Domain> other)._handle
-
-    def __str__(self) -> str:
-        r"""
-        Get a human-readable string representation of the domain point.
-
-        Returns
-        -------
-        str
-            The string representation.
-        """
-        return f"[{self.lo} ... {self.hi}]"
+    return Domain(lo=lo, hi=hi)

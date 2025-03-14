@@ -7,7 +7,6 @@ from libcpp cimport bool
 from libcpp.vector cimport vector as std_vector
 
 from .tuple cimport _tuple
-from .typedefs cimport _Domain
 
 
 cpdef bool is_iterable(object obj)
@@ -19,8 +18,6 @@ ctypedef fused AnyT:
 
 cdef _tuple[AnyT] tuple_from_iterable(object, AnyT type_deduction_dummy = *)
 cdef _tuple[uint64_t] uint64_tuple_from_iterable(object)
-
-cdef _Domain domain_from_iterables(object, object)
 
 
 cdef inline std_vector[AnyT] std_vector_from_iterable(

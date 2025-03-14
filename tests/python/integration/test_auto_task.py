@@ -148,10 +148,8 @@ class TestAutoTask:
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
         auto_task.execute()
-        runtime.issue_execution_fence(block=True)
         np.testing.assert_allclose(
-            in_arr_np,
-            np.asarray(out_store.get_physical_store().get_inline_allocation()),
+            in_arr_np, np.asarray(out_store.get_physical_store())
         )
 
     @pytest.mark.parametrize(
@@ -184,7 +182,7 @@ class TestAutoTask:
             # NoneType for allclose. If val is bytes, then numpy complains that
             # it cannot be promoted to float. In either case, we can just
             # directly compare the objects.
-            assert arr_np.all() == out_arr_np.all()
+            assert (arr_np == out_arr_np).all()
         else:
             np.testing.assert_allclose(arr_np, out_arr_np)
 

@@ -4,12 +4,26 @@
 
 from cpython.bytes cimport PyBytes_AsStringAndSize
 from libc.stddef cimport size_t
+from libc.stdint cimport uintptr_t
 from libcpp.string cimport string as std_string
 
 from ..data.physical_array cimport PhysicalArray
 from ..data.scalar cimport Scalar
-from ..utilities.typedefs cimport VariantCode
+from ..utilities.typedefs cimport (
+    VariantCode,
+    DomainPoint_t,
+    Domain_t,
+    domain_point_to_py,
+    domain_to_py
+)
 from ..utilities.unconstructable cimport Unconstructable
+from ..mapping.machine cimport Machine
+
+from ..._ext.cython_libcpp.string_view cimport (
+    std_string_view,
+    str_from_string_view
+)
+
 from .detail.returned_python_exception cimport _ReturnedPythonException
 
 import pickle
@@ -59,7 +73,7 @@ cdef class TaskContext(Unconstructable):
 
     cpdef VariantCode get_variant_kind(self):
         r"""
-        Get the `VariantCode` for this task.
+        Get the ``VariantCode`` for this task.
 
         Returns
         -------
@@ -136,6 +150,82 @@ cdef class TaskContext(Unconstructable):
             )
         return self._scalars
 
+    cpdef bool is_single_task(self):
+        r"""
+        Indicates whether only a single instance of the task is running.
+
+        In effect, this may be used to determine if a task is parallelized.
+        If this returns false, then the task is running in parallel.
+
+        :returns: ``True`` if the task is a single task, ``False`` otherwise.
+        :rtype: bool
+        """
+        return self._handle.is_single_task()
+
+    @property
+    def task_index(self) -> DomainPoint_t:
+        r"""
+        Returns the point of the task. A 0D point will be returned for a
+        single task.
+
+        :returns: The point of the task.
+        :rtype: DomainPoint
+        """
+        return domain_point_to_py(self._handle.get_task_index())
+
+    @property
+    def launch_domain(self) -> Domain_t:
+        r"""
+        Returns the task group's launch domain. A single task returns an
+        empty domain.
+
+        :returns: The launch domain of the task.
+        :rtype: Domain
+        """
+        return domain_to_py(self._handle.get_launch_domain())
+
+    @property
+    def machine(self) -> Machine:
+        r"""
+        Returns the current machine this task is executing on.
+
+        :returns: The tasks machine.
+        :rtype: Machine
+        """
+        cdef _Machine machine = self._handle.machine()
+
+        return Machine.from_handle(machine)
+
+    @property
+    def provenance(self) -> str:
+        r"""
+        Returns the provenance string for the task
+
+        :returns: The tasks provenance.
+        :rtype: str
+        """
+        cdef std_string_view sv = self._handle.get_provenance()
+
+        return str_from_string_view(sv)
+
+    @property
+    def task_stream(self) -> int | None:
+        r"""
+        Returns a pointer to the task's CUDA stream (represented as an
+        integer).
+
+        If the current task is not a GPU task, or does not have GPU support
+        enabled, this method returns None.
+
+        :returns: The CUDA stream.
+        :rtype: int | None
+        """
+        cdef void *stream = <void*>self._handle.get_task_stream()
+
+        if stream == NULL:
+            return None
+        return int(<uintptr_t>stream)
+
     # Not documented on purpose, this is a private function
     cpdef void set_exception(self, Exception excn) except *:
         cdef Py_ssize_t length = 0
@@ -152,12 +242,12 @@ cdef class TaskContext(Unconstructable):
         r"""
         Get whether a task is allowed to raise exceptions.
 
-        If a task for which this routine returns `False` raises an exception,
+        If a task is not allowed to raise an exception, but still raises one,
         the runtime will print the exception and promptly abort.
 
         Returns
         -------
         bool
-            `True` if this task may raise exceptions, `False` otherwise.
+            ``True`` if this task may raise exceptions, ``False`` otherwise.
         """
         return self._handle.can_raise_exception()

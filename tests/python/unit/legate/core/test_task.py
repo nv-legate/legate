@@ -17,7 +17,6 @@ from legate.core import (
     PhysicalStore,
     Scalar,
     Table,
-    TaskContext,
     VariantCode,
     get_legate_runtime,
     task as lct,
@@ -875,36 +874,6 @@ class TestLegateDataInterface:
         task.throws_exception(RuntimeError)
         safe_assert(len(task.exception_types) == 1)
         assert RuntimeError in task.exception_types
-
-
-class TestTaskContext:
-    def test_bare(self) -> None:
-        @lct.task
-        def foo(ctx: TaskContext) -> None:
-            assert isinstance(ctx, TaskContext)
-
-        foo()
-
-    def test_multi_arg(self) -> None:
-        @lct.task
-        def foo(ctx: TaskContext, x: InputStore, y: OutputStore) -> None:
-            assert isinstance(ctx, TaskContext)
-
-        x = make_input_store()
-        foo(x=x, y=x)
-
-    def test_wrong_position(self) -> None:
-        def foo(x: InputStore, ctx: TaskContext) -> None:
-            pass
-
-        msg = re.escape(
-            "Explicit task context argument must appear as the first argument "
-            "to the task. Found it in position 2: "
-            "(x: legate.core._ext.task.type.InputStore, "
-            "ctx: legate.core._lib.task.task_context.TaskContext) -> None."
-        )
-        with pytest.raises(TypeError, match=msg):
-            lct.task(foo)
 
 
 class TestVariantInvoker(BaseTest):

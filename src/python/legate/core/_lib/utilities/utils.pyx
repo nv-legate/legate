@@ -5,7 +5,6 @@
 from libcpp.utility cimport move as std_move
 
 from ..utilities.tuple cimport _tuple
-from .detail.tuple cimport to_domain_point
 
 
 cpdef bool is_iterable(object obj):
@@ -50,9 +49,3 @@ cdef _tuple[AnyT] tuple_from_iterable(
 
 cdef _tuple[uint64_t] uint64_tuple_from_iterable(object obj):
     return tuple_from_iterable[uint64_t](obj)
-
-cdef _Domain domain_from_iterables(object low, object high):
-    return _Domain(
-        to_domain_point(uint64_tuple_from_iterable(low)),
-        to_domain_point(uint64_tuple_from_iterable(high)),
-    )

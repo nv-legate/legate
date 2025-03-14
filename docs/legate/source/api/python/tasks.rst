@@ -107,6 +107,8 @@ not propagate outside the task body!
    foo(12.34, {"hello": "there"}, MyClass())
 
 
+.. _label_explicit_task_context_argument:
+
 Explicit Task Context Argument
 ------------------------------
 

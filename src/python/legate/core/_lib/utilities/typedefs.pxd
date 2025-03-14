@@ -37,13 +37,14 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
 
     cdef cppclass _DomainPoint "legate::DomainPoint":
         _DomainPoint() except+
+        _DomainPoint(int64_t) except+
         int32_t get_dim() except+
         int64_t& operator[](int32_t) except+
         bool operator==(const _DomainPoint&) except+
 
     cdef cppclass _Domain "legate::Domain":
         _Domain() except+
-        _Domain(const _DomainPoint&, const _DomainPoint) except+
+        _Domain(const _DomainPoint&, const _DomainPoint&) except+
         int32_t get_dim() except+
         _DomainPoint lo() except+
         _DomainPoint hi() except+
@@ -64,18 +65,22 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate":
         const void *, size_t, const void *, size_t, _Processor
     ) except+
 
-cdef class DomainPoint:
-    cdef _DomainPoint _handle
 
-    @staticmethod
-    cdef DomainPoint from_handle(_DomainPoint)
+# Need to _t these because in the .pyx we also need to define
+#
+# DomainPoint = tuple[int, ...]
+# Domain = tuple[DomainPoint, DomainPoint]
+#
+# So that people can do "from legate.core import DomainPoint" etc. If we call
+# these typdefs "DomainPoint" and "Domain", then Cython complains that the
+# above "cannot assign to non-lvalue DomainPoint".
+ctypedef tuple[int, ...] DomainPoint_t
+ctypedef object Domain_t  # namedtuple
 
-cdef class Domain:
-    cdef _Domain _handle
-
-    @staticmethod
-    cdef Domain from_handle(_Domain)
-
+cdef _DomainPoint domain_point_from_iterable(object iterable)
+cdef DomainPoint_t domain_point_to_py(const _DomainPoint& point)
+cdef _Domain domain_from_iterables(object low, object high)
+cdef Domain_t domain_to_py(const _Domain& domain)
 
 cdef extern from * nogil:
     """

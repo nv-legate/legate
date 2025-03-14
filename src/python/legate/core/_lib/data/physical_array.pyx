@@ -6,6 +6,7 @@ from libc.stdint cimport uint32_t
 
 from ..type.types cimport Type
 from ..utilities.unconstructable cimport Unconstructable
+from ..utilities.typedefs cimport domain_to_py
 from .physical_store cimport PhysicalStore
 
 
@@ -94,7 +95,7 @@ cdef class PhysicalArray(Unconstructable):
         """
         return PhysicalArray.from_handle(self._handle.child(index))
 
-    cpdef Domain domain(self):
+    def domain(self) -> Domain:
         r"""
         Get the `Domain` of the array.
 
@@ -103,7 +104,7 @@ cdef class PhysicalArray(Unconstructable):
         Domain
             The array's domain.
         """
-        return Domain.from_handle(self._handle.domain())
+        return domain_to_py(self._handle.domain())
 
     @property
     def __array_interface__(self) -> dict[str, Any]:

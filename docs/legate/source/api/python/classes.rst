@@ -12,5 +12,7 @@ Classes
    shape
    variant_options
    resource_config
+   task_context
+   domain
 .. partition
 .. legion
