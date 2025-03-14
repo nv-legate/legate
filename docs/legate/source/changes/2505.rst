@@ -82,6 +82,8 @@ Python
 
 .. rubric:: Runtime
 
+- Add ``legate.core.ResourceConfig`` to specify library resource configuration parameters.
+
 .. rubric:: Utilities
 
 .. rubric:: I/O

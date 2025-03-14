@@ -11,5 +11,6 @@ Classes
    machine
    shape
    variant_options
+   resource_config
 .. partition
 .. legion
