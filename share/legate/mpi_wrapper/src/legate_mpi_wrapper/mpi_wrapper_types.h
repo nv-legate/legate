@@ -9,6 +9,7 @@
 #define LEGATE_SHARE_LEGATE_MPI_WRAPPER_TYPES_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 typedef ptrdiff_t Legate_MPI_Comm;
 typedef ptrdiff_t Legate_MPI_Datatype;
@@ -33,6 +34,15 @@ typedef struct Legate_MPI_Status {
   int MPI_ERROR;
   char original_private_[LEGATE_MPI_STATUS_THUNK_SIZE];
 } Legate_MPI_Status;
+
+typedef int32_t Legate_MPI_Kind;
+
+// Use of int32_t vs enum is delibarate here. Enums without an underlying type in C/C++ can
+// potentially have different sizes at the discretion of the compiler. The user might have
+// compiled the MPI wrapper using a different compiler than that which compiled legate, so the
+// size of the type might not match between them.
+#define LEGATE_MPI_KIND_MPICH ((Legate_MPI_Kind)0)
+#define LEGATE_MPI_KIND_OPEN_MPI ((Legate_MPI_Kind)1)
 
 #endif  // LEGATE_SHARE_LEGATE_MPI_WRAPPER_TYPES_H
 // NOLINTEND

@@ -17,6 +17,11 @@
 #endif
 
 // NOLINTBEGIN
+
+LEGATE_EXTERN Legate_MPI_Kind legate_mpi_wrapper_kind(void);
+
+// ==========================================================================================
+
 LEGATE_EXTERN Legate_MPI_Comm legate_mpi_comm_world(void);
 LEGATE_EXTERN int legate_mpi_thread_multiple(void);
 LEGATE_EXTERN int legate_mpi_tag_ub(void);
