@@ -185,7 +185,6 @@ set(with_runtime_SRC
     unit/mapping.cc
     unit/registration.cc
     unit/runtime.cc
-    unit/scalar.cc
     unit/scope.cc
     unit/scoped_allocator.cc
     unit/timing.cc
@@ -226,6 +225,11 @@ set(with_runtime_SRC
     unit/physical_store/reduce_accessor.cc
     unit/physical_store/transform.cc
     unit/physical_store/write_accessor.cc
+    unit/scalar/create_primitive_scalar.cc
+    unit/scalar/create_struct_scalar.cc
+    unit/scalar/create_vector_scalar.cc
+    unit/scalar/negative.cc
+    unit/scalar/pack.cc
     unit/type/binary_type.cc
     unit/type/fixed_array_type.cc
     unit/type/list_type.cc
