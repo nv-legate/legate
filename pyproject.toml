@@ -232,6 +232,14 @@ ignore = [
     "B904",
     # Let the formatter concatenate strings
     "ISC001",
+    # Doing typing.cast("SomeType", ...) instead of typing.cast(SomeType, ...) looks
+    # bad. The docs say this is for consistency (sometimes you cannot import SomeType due
+    # to circular import), and also because it might be slow to evaluate complex type
+    # expressions at runtime but...
+    #
+    # None of our python code is in a hot-loop, and typing.cast() is so seldom used that
+    # this is OK to silence.
+    "TC006"
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]

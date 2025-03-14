@@ -106,27 +106,28 @@ def convert_bool(value: bool | str) -> bool:
     If a boolean is passed in, it is returned as-is. Otherwise the function
     maps the strings "0" -> False and "1" -> True.
 
-    Args:
-        value (str):
-            A string value to convert to bool
+    Parameters
+    ----------
+    value : bool | str
+        A string value to convert to bool
 
     Returns
     -------
-        bool
+    The converted boolean
 
     Raises
     ------
-        ValueError
-
+    ValueError
+        If the input could not be converted
     """
     if isinstance(value, bool):
         return value
 
-    val = value.lower()
-    if val == "1":
-        return True
-    if val == "0":
-        return False
+    match value.casefold():
+        case "1":
+            return True
+        case "0" | "":
+            return False
 
     msg = f'Cannot convert {value!r} to bool, use "0" or "1"'
     raise ValueError(msg)
@@ -162,7 +163,7 @@ def convert_str_seq(
         raise ValueError(msg) from e
 
 
-ConversionFn = Callable[[Any], T]
+ConversionFn: TypeAlias = Callable[[Any], T]
 
 
 class SettingBase(Generic[T]):
@@ -350,7 +351,7 @@ class EnvOnlySetting(SettingBase[T]):
             return self._convert(os.environ[self._env_var])
 
         # unfortunate
-        test = convert_bool(os.environ.get("LEGATE_TEST", False))
+        test = convert_bool(os.environ.get("LEGATE_TEST", ""))
 
         if test and self.test_default is not _Unset:
             return self._convert(self.test_default)
