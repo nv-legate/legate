@@ -34,6 +34,21 @@ static_assert(
 #endif
 
 // NOLINTBEGIN
+
+Legate_MPI_Kind legate_mpi_wrapper_kind(void)
+{
+#ifdef MPICH_VERSION
+  return LEGATE_MPI_KIND_MPICH;
+#elif defined(OPEN_MPI) || defined(OMPI_MAJOR_VERSION) || defined(OMPI_MINOR_VERSION)
+  return LEGATE_MPI_KIND_OPEN_MPI;
+#else
+#error \
+  "Unsupported MPI implementation. Please file an issue at https://github.com/nv-legate/legate describing the MPI implementation and version you are using"
+#endif
+}
+
+// ==========================================================================================
+
 Legate_MPI_Comm legate_mpi_comm_world(void) { return (Legate_MPI_Comm)MPI_COMM_WORLD; }
 
 int legate_mpi_thread_multiple(void) { return MPI_THREAD_MULTIPLE; }
