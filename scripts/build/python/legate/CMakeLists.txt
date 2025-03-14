@@ -15,3 +15,11 @@ add_subdirectory(../../../../src legate-all)
 
 set(rpaths "$ORIGIN/../../nvidia/nccl/lib")
 set_property(TARGET legate PROPERTY INSTALL_RPATH ${rpaths} APPEND)
+
+# Install the legate wrappers if they exist.
+if(LEGATE_WRAPPER_DIR)
+  install(DIRECTORY ${LEGATE_WRAPPER_DIR}/lib64/
+          DESTINATION ${CMAKE_INSTALL_LIBDIR}/legate/wrapper)
+  set(rpaths "$ORIGIN/legate/wrapper")
+  set_property(TARGET legate PROPERTY INSTALL_RPATH ${rpaths} APPEND)
+endif()

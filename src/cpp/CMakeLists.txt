@@ -814,6 +814,22 @@ install(FILES ${LEGATE_DIR}/share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_
               ${LEGATE_DIR}/share/legate/mpi_wrapper/src/legate_mpi_wrapper/mpi_wrapper_types.h
         DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/mpi_wrapper/legate_mpi_wrapper")
 
+# ########################################################################################
+# * install Realm MPI Bootstrap ----------------------------------------------------------
+#
+# We want to install the entire CMake project for the bootstrap as-is into the share
+# folder in the install path. That way -- once installed -- the user can build the
+# bootstrap themselves. This is also why we specifically avoided generating the install
+# rules
+install(FILES ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/CMakeLists.txt
+              ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/bootstrap.h
+              ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/bootstrap_mpi.c
+              ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/bootstrap_util.h
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/realm_ucp_bootstrap")
+
+install(FILES ${LEGATE_DIR}/share/legate/realm_ucp_bootstrap/cmake/Config.cmake.in
+        DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/legate/realm_ucp_bootstrap/cmake")
+
 install(FILES ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
               ${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt
               ${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt

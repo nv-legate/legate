@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/realm_ucp_bootstrapTargets.cmake")
+
+check_required_components(realm_ucp_bootstrap)
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(MPI)
