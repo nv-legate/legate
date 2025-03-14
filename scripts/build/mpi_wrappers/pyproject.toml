@@ -4,14 +4,13 @@
 [build-system]
 requires = [
     "scikit-build-core",
-    "cython>=3.0.1",
-    "rich",
 ]
 build-backend = "scikit_build_core.build"
 python-requires = ">=3.10"
 
 [project]
-name = "legate"
+name = "legate-wrapper"
+version = "0.1.0"
 authors = [{name = "NVIDIA Corporation"}]
 license = { text = "Apache-2.0" }
 description = "legate - The Foundation for All Legate Libraries"
@@ -25,57 +24,15 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12"
 ]
-dependencies = [
-    "numpy!=2.1.0",
-    "zarr",
-    "h5py",
-    "fsspec",
-    "kerchunk",
-    "rich",
-    "nvidia-nccl-cu12",
-]
-dynamic = ["version"]
-
-[project.optional-dependencies]
-test = [
-    "coverage",
-    "mock",
-    "mypy>=0.961",
-    "psutil",
-    "pynvml",
-    "pytest-cov",
-    "pytest",
-    "pytest-mock",
-    "jupyter_client",
-]
 
 [project.urls]
 homepage = "https://github.com/nv-legate/legate"
 
-[project.scripts]
-legate = "legate.driver:main"
-legate-issue = "legate.issue:main"
-legate-jupyter = "legate.jupyter:main"
-lgpatch = "legate.lgpatch:main"
-
 [project.entry-points."cmake.prefix"]
-legate = "legate"
+legate = "legate-wrapper"
 
 [tool.scikit-build.cmake]
 version = ">=3.26.4"
-
-[tool.scikit-build.metadata.version]
-provider = "scikit_build_core.metadata.setuptools_scm"
-
-[tool.scikit-build.sdist]
-include = [
-    "../../../../src/python/legate/_version.py",
-    "../../../../src/python/legate/install_info.py",
-]
-
-[tool.setuptools_scm]
-write_to = "src/python/legate/_version.py"
-root = "../../../.."
 
 [tool.scikit-build.build]
 verbose = true
@@ -84,11 +41,9 @@ verbose = true
 level = "DEBUG"
 
 [tool.scikit-build.wheel]
-exclude = ["**.pyx", "**.pxd"]
-install-dir = "legate"
+install-dir = "legate-wrapper"
+packages = ["legate-wrapper"]
+py-api = "py3"
 
 [tool.scikit-build]
 build-dir = "buildwheel"
-
-[tool.scikit-build.wheel.packages]
-"legate" = "../../../../src/python/legate"

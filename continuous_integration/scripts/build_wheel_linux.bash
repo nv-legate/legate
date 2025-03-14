@@ -14,7 +14,7 @@ export CMAKE_BUILD_PARALLEL_LEVEL=${PARALLEL_LEVEL:=8}
 
 if [[ "${CI:-false}" == "true" ]]; then
   echo "Installing extra system packages"
-  dnf install -y gcc-toolset-11-libatomic-devel
+  dnf install -y gcc-toolset-11-libatomic-devel openmpi-devel mpich-devel
   # Enable gcc-toolset-11 environment
   source /opt/rh/gcc-toolset-11/enable
   # Verify compiler version
@@ -46,6 +46,25 @@ cd "${package_dir}"
 echo "Building HDF5 and installing into prefix"
 "${LEGATE_DIR}/continuous_integration/scripts/build_hdf5.sh"
 
+# Build the wrappers and install into their prefix
+MPI_WRAPPERS_DIR="${LEGATE_DIR}"/scripts/build/mpi_wrappers
+cmake \
+  -B "${LEGATE_DIR}/buildompi" \
+  -S "${MPI_WRAPPERS_DIR}" \
+  -DMPI_HOME=/usr/lib64/openmpi \
+  -DLEGATE_WRAPPER_MPI_SUFFIX=ompi \
+  -DCMAKE_INSTALL_PREFIX="${LEGATE_DIR}/wrapper-prefix"
+cmake --build "${LEGATE_DIR}/buildompi"
+cmake --install "${LEGATE_DIR}/buildompi"
+cmake \
+  -B "${LEGATE_DIR}/buildmpich" \
+  -S "${MPI_WRAPPERS_DIR}" \
+  -DMPI_HOME=/usr/lib64/mpich \
+  -DLEGATE_WRAPPER_MPI_SUFFIX=mpich \
+  -DCMAKE_INSTALL_PREFIX="${LEGATE_DIR}/wrapper-prefix"
+cmake --build "${LEGATE_DIR}/buildmpich"
+cmake --install "${LEGATE_DIR}/buildmpich"
+
 # build with '--no-build-isolation', for better sccache hit rate
 # 0 really means "add --no-build-isolation" (ref: https://github.com/pypa/pip/issues/5735)
 export PIP_NO_BUILD_ISOLATION=0
@@ -56,7 +75,7 @@ if [[ ! -d "prefix" ]]; then
   exit 1
 fi
 
-SKBUILD_CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix;-DLegion_USE_CUDA:BOOL=ON;-DCMAKE_CUDA_ARCHITECTURES:STRING=all-major;-DBUILD_SHARED_LIBS:BOOL=ON"
+SKBUILD_CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix;-DLEGATE_WRAPPER_DIR=${LEGATE_DIR}/wrapper-prefix;-DLegion_USE_CUDA:BOOL=ON;-DCMAKE_CUDA_ARCHITECTURES:STRING=all-major;-DBUILD_SHARED_LIBS:BOOL=ON"
 export SKBUILD_CMAKE_ARGS
 echo "SKBUILD_CMAKE_ARGS='${SKBUILD_CMAKE_ARGS}'"
 
@@ -80,7 +99,17 @@ mkdir -p "${LEGATE_DIR}/final-dist"
 export LD_LIBRARY_PATH="${LEGATE_DIR}/scripts/build/python/legate/prefix/lib"
 python -m auditwheel repair \
   --exclude libcuda.so* \
-  --exclude libnccl.so.*  \
+  --exclude libnccl.so.* \
+  --exclude libcal.so.* \
+  --exclude libucc.so.* \
+  --exclude libmpi.so.* \
+  --exclude libmpicxx.so.* \
+  --exclude libmpi_cxx.so.* \
+  --exclude libcrypto.so.* \
+  --exclude libevent_core.so.* \
+  --exclude libevent_pthreads-2.so.* \
+  --exclude libhwloc.so.* \
+  --exclude libopen-*.so.* \
   -w "${LEGATE_DIR}/final-dist" \
   "${LEGATE_DIR}"/dist/*.whl
 

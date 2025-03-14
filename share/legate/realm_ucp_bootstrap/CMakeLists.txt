@@ -5,9 +5,9 @@
 
 cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
-list(APPEND CMAKE_MESSAGE_CONTEXT "mpi_wrapper")
+list(APPEND CMAKE_MESSAGE_CONTEXT "realm_ucp_bootstrap")
 
-project(legate_mpi_wrapper VERSION 1.0 LANGUAGES CXX)
+project(realm_ucp_bootstrap VERSION 1.0 LANGUAGES C)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
@@ -19,7 +19,7 @@ set(BUILD_SHARED_LIBS ON)
 # they will likely want to have a proper cmake installation so that their downstream
 # projects can find this.
 option(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES
-       "Whether to generate install rules for source files" ON)
+       "Whether to generate install rules for source files" OFF)
 
 message(STATUS "Using build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Building shared library: ${BUILD_SHARED_LIBS}")
@@ -30,53 +30,53 @@ message(STATUS "Generating src install rules: ${LEGATE_MPI_WRAPPER_SRC_INSTALL_R
 
 include(GNUInstallDirs)
 
-find_package(MPI REQUIRED COMPONENTS CXX)
+find_package(MPI REQUIRED COMPONENTS C)
 
-add_library(mpi_wrapper src/legate_mpi_wrapper/mpi_wrapper.cc)
-add_library(legate::mpi_wrapper ALIAS mpi_wrapper)
+add_library(realm_ucp_bootstrap
+            bootstrap_mpi.c
+            bootstrap.h
+            bootstrap_util.h)
 
-target_include_directories(mpi_wrapper
+target_include_directories(realm_ucp_bootstrap
                            PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>)
 
 if(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES)
   # Only generate the interface include paths if we are installing the headers.
-  target_include_directories(mpi_wrapper
-                             INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper>
+  target_include_directories(realm_ucp_bootstrap
+                             INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/realm_ucp_bootstrap>
   )
 endif()
 
-target_link_libraries(mpi_wrapper PUBLIC MPI::MPI_CXX)
+target_link_libraries(realm_ucp_bootstrap PUBLIC MPI::MPI_C)
 
-# Set a good default and make this something that can be modified when building the
-# wrappers.
-set(LEGATE_MPI_WRAPPER_LIB_NAME "legate_mpi_wrapper" CACHE STRING "Name of the library")
+set(REALM_UCP_BOOTSTRAP_LIB_NAME "realm_ucp_bootstrap_mpi" CACHE STRING "Name of the library")
 
-set_target_properties(mpi_wrapper
-                      PROPERTIES LIBRARY_OUTPUT_NAME "${LEGATE_MPI_WRAPPER_LIB_NAME}"
-                                 ARCHIVE_OUTPUT_NAME "${LEGATE_MPI_WRAPPER_LIB_NAME}"
+set_target_properties(realm_ucp_bootstrap
+                      PROPERTIES LIBRARY_OUTPUT_NAME "${REALM_UCP_BOOTSTRAP_LIB_NAME}"
+                                 ARCHIVE_OUTPUT_NAME "${REALM_UCP_BOOTSTRAP_LIB_NAME}"
                                  POSITION_INDEPENDENT_CODE ON
                                  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}"
                                  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}")
 
 # ==========================================================================================
 # Install rules
-install(TARGETS mpi_wrapper DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        EXPORT mpi-wrapper-exports)
+install(TARGETS realm_ucp_bootstrap DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        EXPORT realm-ucp-bootstrap-exports)
 
 if(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES)
-  install(FILES src/legate_mpi_wrapper/mpi_wrapper.h
-                src/legate_mpi_wrapper/mpi_wrapper_types.h
-          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/legate_mpi_wrapper/legate_mpi_wrapper")
+  install(FILES bootstrap.h
+                bootstrap_util.h
+          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/realm_ucp_bootstrap/realm_ucp_bootstrap")
 
-  set(cmake_install_base_dir "${CMAKE_INSTALL_LIBDIR}/cmake/legate_mpi_wrapper")
-  set(config_output "${CMAKE_CURRENT_BINARY_DIR}/mpi_wrapperConfig.cmake")
-  set(config_version_output "${CMAKE_CURRENT_BINARY_DIR}/mpi_wrapperConfigVersion.cmake")
+  set(cmake_install_base_dir "${CMAKE_INSTALL_LIBDIR}/cmake/realm_ucp_bootstrap")
+  set(config_output "${CMAKE_CURRENT_BINARY_DIR}/realm_ucp_bootstrapConfig.cmake")
+  set(config_version_output "${CMAKE_CURRENT_BINARY_DIR}/realm_ucp_bootstrapConfigVersion.cmake")
 
-  install(EXPORT mpi-wrapper-exports FILE mpi_wrapperTargets.cmake NAMESPACE legate::
+  install(EXPORT realm-ucp-bootstrap-exports FILE realm_ucp_bootstrapTargets.cmake NAMESPACE legate::
           DESTINATION "${cmake_install_base_dir}")
 
-  export(TARGETS mpi_wrapper NAMESPACE legate::
-         FILE "${CMAKE_CURRENT_BINARY_DIR}/mpi_wrapperTargets.cmake")
+  export(TARGETS realm_ucp_bootstrap NAMESPACE legate::
+         FILE "${CMAKE_CURRENT_BINARY_DIR}/realm_ucp_bootstrapTargets.cmake")
 
   include(CMakePackageConfigHelpers)
 

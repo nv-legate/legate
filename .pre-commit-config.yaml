@@ -41,7 +41,7 @@ repos:
         description: 'Check that year is correct for copyright notices'
         entry: ./scripts/pre-commit/copyright.py
         language: python
-        exclude: '.*\.(png|pdf)'
+        exclude: '.*\.(png|pdf)|^(share/legate/realm_ucp_bootstrap/.*)$'
         types_or: [file, text]
       - id: legate-assert
         name: legate-assert
@@ -58,7 +58,7 @@ repos:
         language: python
         'types_or': [c++, c, cuda]
         stages: [pre-commit]
-        exclude: '^(src/cpp/legate/utilities/abort.h|share/legate/mpi_wrapper/.*)$'
+        exclude: '^(src/cpp/legate/utilities/abort.h|share/legate/mpi_wrapper/.*|share/legate/realm_ucp_bootstrap/.*)$'
       - id: traced-throw
         name: traced-throw
         description: 'Convert throw statements to throwing legate TracedException'
@@ -73,6 +73,7 @@ repos:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
         types_or: []
+        exclude: '^(share/legate/realm_ucp_bootstrap/.*)$'
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.9
     hooks:
@@ -134,6 +135,7 @@ repos:
         entry: ./scripts/pre-commit/cmake-format.bash cmake-format
         language: python
         types: [cmake]
+        exclude: '^(share/legate/realm_ucp_bootstrap/CMakeLists.txt|share/legate/realm_ucp_bootstrap/cmake/Config.cmake.in)$'
         # Note that pre-commit autoupdate does not update the versions
         # of dependencies, so we'll have to update this manually.
         additional_dependencies:
