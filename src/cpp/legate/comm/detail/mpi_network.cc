@@ -370,6 +370,7 @@ void MPINetwork::gather_(const void* sendbuf,
     }
     LEGATE_CHECK_MPI(
       MPIInterface::mpi_send(sendbuf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm));
+    return;
   }
 
   // root
@@ -428,6 +429,7 @@ void MPINetwork::bcast_(void* buf,
 
     LEGATE_CHECK_MPI(MPIInterface::mpi_recv(
       buf, count, mpi_type, root_mpi_rank, tag, global_comm->mpi_comm, &status));
+    return;
   }
 
   // root
