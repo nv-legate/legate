@@ -1,0 +1,6 @@
+legate.core.Domain.\_\_new\_\_
+==============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Domain.__new__

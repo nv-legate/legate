@@ -1,0 +1,6 @@
+legate.core.Domain.\_\_rmul\_\_
+===============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Domain.__rmul__

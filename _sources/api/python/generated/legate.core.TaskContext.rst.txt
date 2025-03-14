@@ -1,0 +1,42 @@
+﻿legate.core.TaskContext
+=======================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: TaskContext
+
+   .. automethod:: TaskContext.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~TaskContext.inputs
+      ~TaskContext.launch_domain
+      ~TaskContext.machine
+      ~TaskContext.outputs
+      ~TaskContext.provenance
+      ~TaskContext.reductions
+      ~TaskContext.scalars
+      ~TaskContext.task_index
+      ~TaskContext.task_stream
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~TaskContext.can_raise_exception
+      ~TaskContext.get_task_id
+      ~TaskContext.get_variant_kind
+      ~TaskContext.is_single_task
+      ~TaskContext.set_exception
+   
+   

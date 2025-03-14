@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data &#8212; NVIDIA legate</title>
+    <title>Data &#8212; NVIDIA legate (25.05.00.dev28+gef513dfa)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=6c75b2f1"></script>
+    <script src="../../_static/documentation_options.js?v=e78720b9"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.03';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.05';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -130,11 +130,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev28+gef513dfa) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev28+gef513dfa) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev28+gef513dfa)</p>
   
 </a></div>
     
@@ -241,11 +241,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev28+gef513dfa) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev28+gef513dfa) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev28+gef513dfa)</p>
   
 </a>
 
@@ -336,6 +336,10 @@
 
 <li class="toctree-l4"><a class="reference internal" href="../python/machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/shape.html">Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/variant_options.html">Variant Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/resource_config.html">ResourceConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/task_context.html">Task Context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/domain.html">Domains</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -383,6 +387,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../versions.html">Versions</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2505.html">2505</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../changes/2503.html">2503</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../changes/2501.html">2501</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../changes/2411.html">2411</a></li>
@@ -657,7 +662,7 @@ The input pointer must be one that was previously returned by an <code class="do
 <p>An <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> is a handle to a memory allocation outside Legate’s memory management. <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> objects are used when users want to create Legate stores from the existing allocations external to Legate. (See two overloads of <code class="docutils literal notranslate"><a class="reference internal" href="runtime.html#classlegate_1_1Runtime_1a32107f09c6b2e51e46e1fa4129a7eee5"><span class="std std-ref"><span class="pre">Runtime::create_store()</span></span></a></code> that take <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code>s.)</p>
 <p><code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code>s can be tagged either read-only or mutable. In case of the latter, Legate guarantees that any updates to the store to which the allocation is attached are also visible via the allocation, wherever the updates are made, at the expense of block-waiting on tasks updating the store. No such propagation of changes happens for read-only external allocations.</p>
 <p>The client code that creates an external allocation and attaches it to a Legate store must guarantee that the allocation stays alive until all the tasks accessing the store are finished. If the attached allocation was read-only, the code must not mutate the contents of the allocation while the tasks are still running. An external allocation attached to a store can be safely deallocated in two ways:</p>
-<p>1) The client code calls the <code class="docutils literal notranslate"><span class="pre">detach()</span></code> method on the store before it dellocate the allocation. The <code class="docutils literal notranslate"><span class="pre">detach()</span></code> call makes sure that all outstanding operations on the store complete (see <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore_1a91bfbb96c49998b45890fe725ff0b102"><span class="std std-ref"><span class="pre">LogicalStore::detach()</span></span></a></code>). 2) The client code can optionally pass in a deleter for the allocation, which will be invoked once the store is destroyed and the allocation is no longer in use.</p>
+<p>1) The client code calls the <code class="docutils literal notranslate"><span class="pre">detach()</span></code> method on the store before it deallocate the allocation. The <code class="docutils literal notranslate"><span class="pre">detach()</span></code> call makes sure that all outstanding operations on the store complete (see <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore_1a91bfbb96c49998b45890fe725ff0b102"><span class="std std-ref"><span class="pre">LogicalStore::detach()</span></span></a></code>). 2) The client code can optionally pass in a deleter for the allocation, which will be invoked once the store is destroyed and the allocation is no longer in use.</p>
 <p>Deleters don’t need to be idempotent; Legate makes sure that they will be invoked only once on the allocations. Deleters must not throw exceptions (throwable deleters are disallowed by the type system). Deleters need not handle null pointers correctly, as external allocations are not allowed to be created on null pointers. Each deleter is responsible for deallocating only the allocation it is associated with and no other allocations. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
@@ -1177,7 +1182,7 @@ The input pointer must be one that was previously returned by an <code class="do
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is invalid for the array or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimenison </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is invalid for the array or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimension </p></li>
 <li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the array or any of the sub-arrays is a list array </p></li>
 </ul>
 </dd>
@@ -1287,7 +1292,7 @@ Copies the array to the specified memory, if necessary, and marks it as the most
 <span class="w">  </span><span class="c1">// call for the first store after submitting the first task and before submitting</span>
 <span class="w">  </span><span class="c1">// the second task.</span>
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">task1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">library</span><span class="p">,</span><span class="w"> </span><span class="n">GPUonlyTask</span><span class="o">::</span><span class="n">TASK_ID</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">task1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">library</span><span class="p">,</span><span class="w"> </span><span class="n">GPUonlyTask</span><span class="o">::</span><span class="n">TASK_CONFIG</span><span class="p">.</span><span class="n">task_id</span><span class="p">());</span>
 
 <span class="w">    </span><span class="n">task1</span><span class="p">.</span><span class="n">add_output</span><span class="p">(</span><span class="n">store1</span><span class="p">);</span>
 <span class="w">    </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">submit</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task1</span><span class="p">));</span>
@@ -1296,7 +1301,7 @@ Copies the array to the specified memory, if necessary, and marks it as the most
 <span class="w">  </span><span class="n">store1</span><span class="p">.</span><span class="n">offload_to</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">mapping</span><span class="o">::</span><span class="n">StoreTarget</span><span class="o">::</span><span class="n">SYSMEM</span><span class="p">);</span>
 
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">task2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">library</span><span class="p">,</span><span class="w"> </span><span class="n">GPUonlyTask</span><span class="o">::</span><span class="n">TASK_ID</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">task2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">library</span><span class="p">,</span><span class="w"> </span><span class="n">GPUonlyTask</span><span class="o">::</span><span class="n">TASK_CONFIG</span><span class="p">.</span><span class="n">task_id</span><span class="p">());</span>
 
 <span class="w">    </span><span class="n">task2</span><span class="p">.</span><span class="n">add_output</span><span class="p">(</span><span class="n">store2</span><span class="p">);</span>
 <span class="w">    </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">submit</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task2</span><span class="p">));</span>
@@ -1743,7 +1748,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 </ul>
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is invalid for the store or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimenison </p>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is invalid for the store or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimension </p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new store with the chosen dimension delinearized</p>
@@ -2682,7 +2687,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <dd><p>Creates an owned <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> from a <code class="docutils literal notranslate"><span class="pre">std::vector</span></code> of scalars. The values in the input vector will be copied. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> – Values to create a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> with in a vector </p>
+<dd class="field-odd"><p><strong>values</strong> – Values to create a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> with in a vector. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -2694,6 +2699,19 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>values</strong> – Values to create a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> with in a <code class="docutils literal notranslate"><span class="pre">tuple</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6Scalar6ScalarERKNSt6vectorIbEE">
+<span id="_CPPv3N6legate6Scalar6ScalarERKNSt6vectorIbEE"></span><span id="_CPPv2N6legate6Scalar6ScalarERKNSt6vectorIbEE"></span><span id="legate::Scalar::Scalar__std::vector:b:CR"></span><span class="target" id="classlegate_1_1Scalar_1a335e388b3f3ec65fd0e88a7ed4e8729b"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scalar</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">bool</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6Scalar6ScalarERKNSt6vectorIbEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates an owned <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> from a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;bool&gt;</span></code>. The values in the input vector will be copied. </p>
+<p>Like most things with <code class="docutils literal notranslate"><span class="pre">std::vector&lt;bool&gt;</span></code>, this construction is not particularly efficient. In order to be copied into the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code>, the vector will first be “expanded” into a temporary <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::uint8_t&gt;</span></code>, resulting in multiple copies being performed.</p>
+<p>The user is therefore highly encouraged to use <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::uint8_t&gt;</span></code> directly instead of <code class="docutils literal notranslate"><span class="pre">std::vector&lt;bool&gt;</span></code> (if possible), especially if such vectors are commonly passed to tasks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>values</strong> – The values with which to create the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code>. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -2772,7 +2790,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <span id="_CPPv3I0ENK6legate6Scalar6valuesEv"></span><span id="_CPPv2I0ENK6legate6Scalar6valuesEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">VAL</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1Scalar_1a2b2d2da382e63b2488a3ed4524bef3fc"></span><a class="reference internal" href="#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0ENK6legate6Scalar6valuesE4SpanIK3VALEv" title="legate::Scalar::values::VAL"><span class="n"><span class="pre">VAL</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">values</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I0ENK6legate6Scalar6valuesE4SpanIK3VALEv" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns values stored in the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code>. If the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> does not have a fixed array type, a unit span will be returned. </p>
 <p>
-1) the scalar has a fixed array type whose elemenet type has a different size from <code class="docutils literal notranslate"><span class="pre">VAL</span></code>, 2) the scalar holds a string and size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> isn’t 1 byte, 3) the scalar’s type isn’t a fixed array type and the size is different from size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> </p>
+1) the scalar has a fixed array type whose element type has a different size from <code class="docutils literal notranslate"><span class="pre">VAL</span></code>, 2) the scalar holds a string and size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> isn’t 1 byte, 3) the scalar’s type isn’t a fixed array type and the size is different from size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> </p>
 <dl class="field-list simple">
 <dt class="field-odd">Throws<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If one of the following cases is encountered:</p>
@@ -2927,7 +2945,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <dd><p>Generates a human-readable string from the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code> (non-blocking) </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">std::tring</span></code> generated from the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code></p>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">std::string</span></code> generated from the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3369,6 +3387,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6Scalar6ScalarENSt11string_viewE"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6Scalar6ScalarERKNSt6vectorI1TEE"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6Scalar6ScalarERK5tupleI1TE"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6Scalar6ScalarERKNSt6vectorIbEE"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I_NSt7int32_tEEN6legate6Scalar6ScalarERK5PointI3DIME"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I_NSt7int32_tEEN6legate6Scalar6ScalarERK4RectI3DIME"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate6Scalar4typeEv"><code class="docutils literal notranslate"><span class="pre">type()</span></code></a></li>

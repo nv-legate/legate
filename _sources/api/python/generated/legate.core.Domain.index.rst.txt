@@ -1,0 +1,6 @@
+legate.core.Domain.index
+========================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Domain.index

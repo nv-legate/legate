@@ -1,0 +1,6 @@
+legate.core.Domain.\_\_contains\_\_
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Domain.__contains__

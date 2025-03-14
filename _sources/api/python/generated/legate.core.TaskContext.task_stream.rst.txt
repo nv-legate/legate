@@ -1,0 +1,6 @@
+legate.core.TaskContext.task\_stream
+====================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: TaskContext.task_stream
