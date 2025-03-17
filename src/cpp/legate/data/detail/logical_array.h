@@ -60,7 +60,7 @@ class LogicalArray {
   [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& data() const;
   [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& null_mask() const = 0;
   [[nodiscard]] virtual InternalSharedPtr<PhysicalArray> get_physical_array(
-    bool ignore_future_mutability) const                                                 = 0;
+    legate::mapping::StoreTarget target, bool ignore_future_mutability) const            = 0;
   [[nodiscard]] virtual InternalSharedPtr<LogicalArray> child(std::uint32_t index) const = 0;
   [[nodiscard]] virtual const InternalSharedPtr<LogicalStore>& primary_store() const     = 0;
 
@@ -119,9 +119,9 @@ class BaseLogicalArray final : public LogicalArray {
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& data() const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array(
-    bool ignore_future_mutability) const override;
+    legate::mapping::StoreTarget target, bool ignore_future_mutability) const override;
   [[nodiscard]] InternalSharedPtr<BasePhysicalArray> get_base_physical_array(
-    bool ignore_future_mutability) const;
+    legate::mapping::StoreTarget target, bool ignore_future_mutability) const;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
 
@@ -180,7 +180,7 @@ class ListLogicalArray final : public LogicalArray {
 
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array(
-    bool ignore_future_mutability) const override;
+    legate::mapping::StoreTarget target, bool ignore_future_mutability) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
   [[nodiscard]] const InternalSharedPtr<BaseLogicalArray>& descriptor() const;
@@ -242,7 +242,7 @@ class StructLogicalArray final : public LogicalArray {
 
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& null_mask() const override;
   [[nodiscard]] InternalSharedPtr<PhysicalArray> get_physical_array(
-    bool ignore_future_mutability) const override;
+    legate::mapping::StoreTarget target, bool ignore_future_mutability) const override;
   [[nodiscard]] InternalSharedPtr<LogicalArray> child(std::uint32_t index) const override;
   [[nodiscard]] const InternalSharedPtr<LogicalStore>& primary_store() const override;
   [[nodiscard]] const std::vector<InternalSharedPtr<LogicalArray>>& fields() const;

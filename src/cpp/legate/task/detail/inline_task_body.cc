@@ -124,7 +124,8 @@ const mapping::detail::Machine& InlineTaskContext::machine() const noexcept
 
   dest.reserve(src.size());
   for (auto&& elem : src) {
-    auto&& phys_array = dest.emplace_back(elem.array->get_physical_array(ignore_future_mutability));
+    auto&& phys_array = dest.emplace_back(elem.array->get_physical_array(
+      legate::mapping::StoreTarget::SYSMEM, ignore_future_mutability));
 
     if (!ignore_future_mutability) {
       continue;

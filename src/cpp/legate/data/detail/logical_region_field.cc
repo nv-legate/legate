@@ -19,10 +19,12 @@
 namespace legate::detail {
 
 [[nodiscard]] const Legion::PhysicalRegion& LogicalRegionField::PhysicalState::ensure_mapping(
-  const Legion::LogicalRegion& region, Legion::FieldID field_id)
+  const Legion::LogicalRegion& region,
+  Legion::FieldID field_id,
+  legate::mapping::StoreTarget target)
 {
   if (!physical_region().exists()) {
-    set_physical_region(Runtime::get_runtime()->map_region_field(region, field_id));
+    set_physical_region(Runtime::get_runtime()->map_region_field(region, field_id, target));
   } else if (!physical_region().is_mapped()) {
     Runtime::get_runtime()->remap_physical_region(physical_region());
   }
@@ -113,14 +115,24 @@ bool LogicalRegionField::is_mapped() const
   return mapped_ || attached_;
 }
 
-RegionField LogicalRegionField::map()
+RegionField LogicalRegionField::map(legate::mapping::StoreTarget target)
 {
   if (parent_ != nullptr) {
     LEGATE_ASSERT(!physical_state_->physical_region().exists());
-    return parent_->map();
+    return parent_->map(target);
   }
   mapped_ = true;
-  return {dim(), physical_state_->ensure_mapping(lr_, fid_), fid_, false /*partitioned*/};
+  return {dim(), physical_state_->ensure_mapping(lr_, fid_, target), fid_, false /*partitioned*/};
+}
+
+void LogicalRegionField::unmap()
+{
+  if (parent_ != nullptr) {
+    LEGATE_ASSERT(!physical_state_->physical_region().exists());
+    parent_->unmap();
+  }
+  mapped_ = false;
+  physical_state_->unmap_and_detach(false /*unordered*/);
 }
 
 void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,

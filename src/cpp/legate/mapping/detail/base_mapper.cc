@@ -1146,6 +1146,14 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
   std::size_t footprint = 0;
   bool success          = false;
 
+  // FIXME(wonchanl): If this is an inline mapping on a framebuffer memory, we turn off the mapper
+  // output check, as the top-level task looks like it's running on a processor with no GPU memory
+  // access. In the future, we might be able to handle this properly with unified processor kinds.
+  if (mappable.get_mappable_type() == Legion::Mappable::INLINE_MAPPABLE) {
+    layout_constraints.add_constraint(Legion::SpecializedConstraint{
+      LEGION_AFFINE_SPECIALIZE, static_cast<Legion::ReductionOpID>(0), true /*no_access*/});
+  }
+
   if (redop == GlobalRedopID{0}) {
     success = map_regular_instance_(ctx,
                                     mappable,
@@ -1466,19 +1474,12 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
                             const MapInlineInput& /*input*/,
                             MapInlineOutput& output)
 {
-  auto target_proc = [&] {
-    if (local_machine_.has_omps()) {
-      return local_machine_.omps().front();
-    }
-    return local_machine_.cpus().front();
-  }();
-
-  auto store_target = default_store_targets(target_proc.kind()).front();
-
   LEGATE_ASSERT(inline_op.requirement.instance_fields.size() == 1);
 
   const Store store{runtime, ctx, &inline_op.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
+  auto store_target = static_cast<StoreTarget>(inline_op.tag);
+  auto target_proc  = local_machine_.find_first_processor_with_affinity_to(store_target);
 
   auto&& reqs = mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false))
                   ->requirements();

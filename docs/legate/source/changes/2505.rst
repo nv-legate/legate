@@ -44,6 +44,11 @@ C++
 
 - Add support for ``std::vector<bool>`` to ``legate::Scalar``.
 
+- Add an optional ``target`` parameter to
+  ``legate::LogicalArray::get_physical_array()`` and
+  ``legate::LogicalStore::get_physical_store()``. The ``target`` controls where
+  the physical array/store is allocated.
+
 .. rubric:: Mapping
 
 .. rubric:: Partitioning
@@ -69,6 +74,11 @@ Python
 .. rubric:: General
 
 .. rubric:: Data
+
+- Add an optional ``target`` parameter to
+  ``legate.core.LogicalArray.get_physical_array()`` and
+  ``legate.core.LogicalStore.get_physical_store()``. The ``target`` controls
+  where the physical array/store is allocated.
 
 .. rubric:: Mapping
 

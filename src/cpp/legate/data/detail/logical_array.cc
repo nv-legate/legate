@@ -92,18 +92,18 @@ const InternalSharedPtr<LogicalStore>& BaseLogicalArray::null_mask() const
 }
 
 InternalSharedPtr<PhysicalArray> BaseLogicalArray::get_physical_array(
-  bool ignore_future_mutability) const
+  legate::mapping::StoreTarget target, bool ignore_future_mutability) const
 {
-  return get_base_physical_array(ignore_future_mutability);
+  return get_base_physical_array(target, ignore_future_mutability);
 }
 
 InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array(
-  bool ignore_future_mutability) const
+  legate::mapping::StoreTarget target, bool ignore_future_mutability) const
 {
-  auto data_store = data()->get_physical_store(ignore_future_mutability);
+  auto data_store = data()->get_physical_store(target, ignore_future_mutability);
   InternalSharedPtr<PhysicalStore> null_mask_store{};
   if (null_mask_ != nullptr) {
-    null_mask_store = null_mask_->get_physical_store(ignore_future_mutability);
+    null_mask_store = null_mask_->get_physical_store(target, ignore_future_mutability);
   }
   return make_internal_shared<BasePhysicalArray>(std::move(data_store), std::move(null_mask_store));
 }
@@ -248,10 +248,10 @@ InternalSharedPtr<LogicalArray> ListLogicalArray::delinearize(
 }
 
 InternalSharedPtr<PhysicalArray> ListLogicalArray::get_physical_array(
-  bool ignore_future_mutability) const
+  legate::mapping::StoreTarget target, bool ignore_future_mutability) const
 {
-  auto desc_arr    = descriptor_->get_base_physical_array(ignore_future_mutability);
-  auto vardata_arr = vardata_->get_physical_array(ignore_future_mutability);
+  auto desc_arr    = descriptor_->get_base_physical_array(target, ignore_future_mutability);
+  auto vardata_arr = vardata_->get_physical_array(target, ignore_future_mutability);
   return make_internal_shared<ListPhysicalArray>(
     type_, std::move(desc_arr), std::move(vardata_arr));
 }
@@ -460,15 +460,16 @@ const InternalSharedPtr<LogicalStore>& StructLogicalArray::null_mask() const
 }
 
 InternalSharedPtr<PhysicalArray> StructLogicalArray::get_physical_array(
-  bool ignore_future_mutability) const
+  legate::mapping::StoreTarget target, bool ignore_future_mutability) const
 {
   InternalSharedPtr<PhysicalStore> null_mask_store = nullptr;
   if (null_mask_ != nullptr) {
-    null_mask_store = null_mask_->get_physical_store(ignore_future_mutability);
+    null_mask_store = null_mask_->get_physical_store(target, ignore_future_mutability);
   }
 
   auto field_arrays = make_array_from_op<InternalSharedPtr<PhysicalArray>>(
-    fields_, [&](auto& field) { return field->get_physical_array(ignore_future_mutability); });
+    fields_,
+    [&](auto& field) { return field->get_physical_array(target, ignore_future_mutability); });
 
   return make_internal_shared<StructPhysicalArray>(
     type_, std::move(null_mask_store), std::move(field_arrays));

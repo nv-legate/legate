@@ -56,7 +56,8 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   class PhysicalState {
    public:
     [[nodiscard]] const Legion::PhysicalRegion& ensure_mapping(const Legion::LogicalRegion& region,
-                                                               Legion::FieldID field_id);
+                                                               Legion::FieldID field_id,
+                                                               legate::mapping::StoreTarget target);
     void set_physical_region(Legion::PhysicalRegion physical_region);
     void set_attachment(Attachment attachment);
     void set_has_pending_detach(bool has_pending_detach);
@@ -96,7 +97,8 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   [[nodiscard]] Legion::Domain domain() const;
   [[nodiscard]] bool is_mapped() const;
 
-  [[nodiscard]] RegionField map();
+  [[nodiscard]] RegionField map(legate::mapping::StoreTarget target);
+  void unmap();
   void attach(Legion::PhysicalRegion physical_region,
               InternalSharedPtr<ExternalAllocation> allocation);
   void attach(Legion::ExternalResources external_resources,

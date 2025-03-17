@@ -1035,15 +1035,21 @@ void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
 }
 
 Legion::PhysicalRegion Runtime::map_region_field(Legion::LogicalRegion region,
-                                                 Legion::FieldID field_id)
+                                                 Legion::FieldID field_id,
+                                                 legate::mapping::StoreTarget target)
 {
   Legion::RegionRequirement req{region, LEGION_READ_WRITE, LEGION_EXCLUSIVE, region};
 
   req.add_field(field_id);
-  req.flags = LEGION_SUPPRESS_WARNINGS_FLAG;
+  // Legion extract the bits using bit-wise ANDs here (but clang-tidy is right that Legion shouldn't
+  // have taken this as an enum)
+  // NOLINTBEGIN(clang-analyzer-optin.core.EnumCastOutOfRange)
+  req.flags =
+    static_cast<Legion::RegionFlags>(LEGION_SUPPRESS_WARNINGS_FLAG | LEGION_NO_ACCESS_FLAG);
+  // NOLINTEND(clang-analyzer-optin.core.EnumCastOutOfRange)
 
   // TODO(wonchanl): We need to pass the metadata about logical store
-  Legion::InlineLauncher launcher{req, mapper_id()};
+  Legion::InlineLauncher launcher{req, mapper_id(), static_cast<Legion::MappingTagID>(target)};
 
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");

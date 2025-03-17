@@ -590,19 +590,49 @@ cdef class LogicalStore(Unconstructable):
 
         return LogicalStorePartition.from_handle(std_move(handle))
 
-    cpdef PhysicalStore get_physical_store(self):
+    cpdef PhysicalStore get_physical_store(
+        self, target: StoreTarget | None = None
+    ):
         r"""
         Get a `PhysicalStore` over this stores' data.
+
+        This call blocks the client's control flow and fetches the data for the
+        whole array to the current node.
+
+        When the target is `StoreTarget.FBMEM`, the data will be consolidated
+        in the framebuffer of the first GPU available in the scope.
+
+        If no `target` is given, the runtime uses `StoreTarget.SOCKETMEM` if
+        it exists and `StoreTarget.SYSMEM` otherwise.
+
+        If there already exists a physical store for a different memory target,
+        that physical store will be unmapped from memory and become invalid to
+        access.
+
+        Parameters
+        ----------
+        target : StoreTarget
+            The type of memory in which the physical store would be created.
 
         Returns
         -------
         PhysicalStore
             The `PhysicalStore` spanning this stores' data.
+
+        Raises
+        ------
+        ValueError
+            If no memory of the chosen type is available
         """
         cdef _PhysicalStore handle
 
+        cdef std_optional[StoreTarget] sanitized = (
+            std_optional[StoreTarget]() if target is None
+            else std_optional[StoreTarget](<StoreTarget>(target))
+        )
+
         with nogil:
-            handle = self._handle.get_physical_store()
+            handle = self._handle.get_physical_store(std_move(sanitized))
         return PhysicalStore.from_handle(std_move(handle))
 
     cpdef void detach(self):
@@ -635,6 +665,33 @@ cdef class LogicalStore(Unconstructable):
         """
         with nogil:
             self._handle.offload_to(target_mem)
+
+    @property
+    def __array_interface__(self) -> dict[str, Any]:
+        r"""
+        Retrieve the numpy-compatible array representation of the allocation.
+
+        Equivalent to `get_physical_store().__array_interface__`.
+
+        :returns: The numpy array interface dict.
+        :rtype: dict[str, Any]
+        """
+        return self.get_physical_store().__array_interface__
+
+    @property
+    def __cuda_array_interface__(self) -> dict[str, Any]:
+        r"""
+        Retrieve the cupy-compatible array representation of the allocation.
+
+        Equivalent to
+        `get_physical_store(StoreTarget.FBMEM).__cuda_array_interface__`.
+
+        :returns: The cupy array interface dict.
+        :rtype: dict[str, Any]
+
+        :raises ValueError If no framebuffer is available
+        """
+        return self.get_physical_store(StoreTarget.FBMEM).__cuda_array_interface__
 
     cpdef bool equal_storage(self, LogicalStore other):
         r"""

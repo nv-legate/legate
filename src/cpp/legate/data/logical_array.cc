@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/user_storage_tracker.h>
+#include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
@@ -83,9 +84,13 @@ LogicalArray LogicalArray::child(std::uint32_t index) const
   return LogicalArray{impl()->child(index)};
 }
 
-PhysicalArray LogicalArray::get_physical_array() const
+PhysicalArray LogicalArray::get_physical_array(std::optional<mapping::StoreTarget> target) const
 {
-  return PhysicalArray{impl()->get_physical_array(false)};
+  auto sanitized =
+    target.value_or(detail::Runtime::get_runtime()->local_machine().has_socket_memory()
+                      ? mapping::StoreTarget::SOCKETMEM
+                      : mapping::StoreTarget::SYSMEM);
+  return PhysicalArray{impl()->get_physical_array(sanitized, false /*ignore_future_mutability*/)};
 }
 
 ListLogicalArray LogicalArray::as_list_array() const

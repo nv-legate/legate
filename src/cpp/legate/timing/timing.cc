@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/logical_store.h>
 #include <legate/data/physical_store.h>
+#include <legate/mapping/mapping.h>
 #include <legate/operation/detail/timing.h>
 #include <legate/runtime/detail/runtime.h>
 
@@ -24,7 +25,8 @@ class Time::Impl {
   {
     if (!value_) {
       value_ =
-        legate::PhysicalStore{store_->get_physical_store(/* ignore_future_mutability */ false)}
+        legate::PhysicalStore{store_->get_physical_store(legate::mapping::StoreTarget::SYSMEM,
+                                                         /* ignore_future_mutability */ false)}
           .scalar<std::int64_t>();
       store_.reset();
     }

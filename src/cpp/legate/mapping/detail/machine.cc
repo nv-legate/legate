@@ -419,6 +419,17 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
     slice.low, global_range.count(), local_procs.data() + (slice.low - my_low), slice.count()};
 }
 
+Processor LocalMachine::find_first_processor_with_affinity_to(StoreTarget target) const
+{
+  switch (target) {
+    case StoreTarget::SYSMEM: return cpus().front();
+    case StoreTarget::FBMEM: [[fallthrough]];
+    case StoreTarget::ZCMEM: return gpus().front();
+    case StoreTarget::SOCKETMEM: return omps().front();
+  }
+  LEGATE_ABORT("invalid StoreTarget: ", legate::detail::to_underlying(target));
+}
+
 Legion::Memory LocalMachine::get_memory(Processor proc, StoreTarget target) const
 {
   switch (target) {

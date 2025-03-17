@@ -104,6 +104,9 @@ class PhysicalStore {
   [[nodiscard]] ReturnValue pack() const;
   [[nodiscard]] ReturnValue pack_weight() const;
 
+  [[nodiscard]] bool on_target(mapping::StoreTarget target) const;
+  void unmap();
+
  private:
   friend class legate::PhysicalStore;
   friend class legate::detail::BasePhysicalArray;

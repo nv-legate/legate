@@ -6,6 +6,7 @@
 
 #include <legate.h>
 
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/runtime/detail/runtime.h>
 
 #include <gtest/gtest.h>
@@ -86,6 +87,40 @@ void test_inline_map_and_task()
   EXPECT_EQ(acc[2], 43);
 }
 
+void test_inline_map_region_gpu()
+{
+  if (legate::get_machine().count(legate::mapping::TaskTarget::GPU) == 0) {
+    GTEST_SKIP() << "Skipping the test when no GPU is found";
+  }
+  auto runtime = legate::Runtime::get_runtime();
+  auto library = runtime->find_library(Config::LIBRARY_NAME);
+  auto l_store = runtime->create_store(legate::Shape{5}, legate::int64());
+
+  {
+    auto p_store = l_store.get_physical_store(legate::mapping::StoreTarget::FBMEM);
+    auto acc     = p_store.write_accessor<std::int64_t, 1>();
+    auto* ptr    = acc.ptr(2);
+    auto value   = std::int64_t{42};
+
+    auto* driver_api = runtime->impl()->get_cuda_driver_api();
+    auto stream      = driver_api->stream_create(0);
+    driver_api->mem_cpy_async(ptr, &value, sizeof(std::int64_t), stream);
+    driver_api->stream_synchronize(stream);
+    driver_api->stream_destroy(&stream);
+  }
+  {
+    auto task = runtime->create_task(library, AdderTask::TASK_CONFIG.task_id(), {1});
+    task.add_input(l_store);
+    task.add_output(l_store);
+    runtime->submit(std::move(task));
+  }
+  {
+    auto p_store = l_store.get_physical_store();
+    auto acc     = p_store.read_accessor<std::int64_t, 1>();
+    EXPECT_EQ(acc[2], 43);
+  }
+}
+
 }  // namespace
 
 TEST_F(InlineMap, Future) { test_inline_map_future(); }
@@ -93,6 +128,8 @@ TEST_F(InlineMap, Future) { test_inline_map_future(); }
 TEST_F(InlineMap, RegionAndSlice) { test_inline_map_region_and_slice(); }
 
 TEST_F(InlineMap, WithTask) { test_inline_map_and_task(); }
+
+TEST_F(InlineMap, RegionGPU) { test_inline_map_region_gpu(); }
 
 // NOLINTEND(readability-magic-numbers)
 

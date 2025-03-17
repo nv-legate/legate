@@ -213,7 +213,8 @@ class Runtime {
   void attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
                          std::string_view provenance);
   [[nodiscard]] Legion::PhysicalRegion map_region_field(Legion::LogicalRegion region,
-                                                        Legion::FieldID field_id);
+                                                        Legion::FieldID field_id,
+                                                        legate::mapping::StoreTarget target);
   void remap_physical_region(Legion::PhysicalRegion pr);
   void unmap_physical_region(Legion::PhysicalRegion pr);
   [[nodiscard]] Legion::Future detach(const Legion::PhysicalRegion& physical_region,

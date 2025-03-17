@@ -445,19 +445,49 @@ cdef class LogicalArray(Unconstructable):
             handle = self._handle.child(index)
         return LogicalArray.from_handle(std_move(handle))
 
-    cpdef PhysicalArray get_physical_array(self):
+    cpdef PhysicalArray get_physical_array(
+        self, target: StoreTarget | None = None
+    ):
         r"""
         Get a `PhysicalArray` of the data for this array.
+
+        This call blocks the client's control flow and fetches the data for the
+        whole array to the current node
+
+        When the target is `StoreTarget.FBMEM`, the data will be consolidated
+        in the framebuffer of the first GPU available in the scope.
+
+        If no `target` is given, the runtime uses `StoreTarget.SOCKETMEM` if
+        it exists and `StoreTarget.SYSMEM` otherwise.
+
+        If there already exists a physical array for a different memory target,
+        that physical array will be unmapped from memory and become invalid to
+        access.
+
+        Parameters
+        ----------
+        target : StoreTarget, optional
+            The type of memory in which the physical store would be created.
 
         Returns
         -------
         PhysicalArray
             The physical array.
+
+        Raises
+        ------
+        ValueError
+            If no memory of the chosen type is available
         """
         cdef _PhysicalArray array
 
+        cdef std_optional[StoreTarget] sanitized = (
+            std_optional[StoreTarget]() if target is None
+            else std_optional[StoreTarget](<StoreTarget>(target))
+        )
+
         with nogil:
-            array = self._handle.get_physical_array()
+            array = self._handle.get_physical_array(std_move(sanitized))
         return PhysicalArray.from_handle(array)
 
     @property
@@ -490,6 +520,36 @@ cdef class LogicalArray(Unconstructable):
         """
         with nogil:
             self._handle.offload_to(target_mem)
+
+    @property
+    def __array_interface__(self) -> dict[str, Any]:
+        r"""
+        Retrieve the numpy-compatible array representation of the allocation.
+
+        Equivalent to `get_physical_array().__array_interface__`.
+
+        :returns: The numpy array interface dict.
+        :rtype: dict[str, Any]
+
+        :raises ValueError: If the array is nullable or nested.
+        """
+        return self.get_physical_array().__array_interface__
+
+    @property
+    def __cuda_array_interface__(self) -> dict[str, Any]:
+        r"""
+        Retrieve the cupy-compatible array representation of the allocation.
+
+        Equivalent to
+        `get_physical_array(StoreTarget.FBMEM).__cuda_array_interface__`.
+
+        :returns: The cupy array interface dict.
+        :rtype: dict[str, Any]
+
+        :raises ValueError: If the array is nullable or nested.
+        :raises ValueError If no framebuffer is available
+        """
+        return self.get_physical_array(StoreTarget.FBMEM).__cuda_array_interface__
 
 
 cdef _LogicalArray to_cpp_logical_array(object array_or_store):

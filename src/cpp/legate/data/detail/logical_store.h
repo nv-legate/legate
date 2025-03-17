@@ -94,7 +94,8 @@ class Storage {
   void set_future(Legion::Future future, std::size_t scalar_offset);
   void set_future_map(Legion::FutureMap future_map, std::size_t scalar_offset);
 
-  [[nodiscard]] RegionField map();
+  [[nodiscard]] RegionField map(legate::mapping::StoreTarget target);
+  void unmap();
   void allow_out_of_order_destruction();
   void free_early() noexcept;
 
@@ -228,7 +229,8 @@ class LogicalStore {
     const InternalSharedPtr<LogicalStore>& self, tuple<std::uint64_t> tile_shape);
 
  public:
-  [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(bool ignore_future_mutability);
+  [[nodiscard]] InternalSharedPtr<PhysicalStore> get_physical_store(
+    legate::mapping::StoreTarget target, bool ignore_future_mutability);
   [[nodiscard]] bool is_mapped() const;
   [[nodiscard]] bool needs_flush() const;
   void detach();

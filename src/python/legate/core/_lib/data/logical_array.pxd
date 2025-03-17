@@ -4,6 +4,7 @@
 
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t, uintptr_t
 from libcpp cimport bool
+from libcpp.optional cimport optional as std_optional
 from libcpp.vector cimport vector as std_vector
 
 from ..mapping.mapping cimport StoreTarget
@@ -35,7 +36,7 @@ cdef extern from "legate/data/logical_array.h" namespace "legate" nogil:
         _LogicalStore data() except+
         _LogicalStore null_mask() except+
         _LogicalArray child(uint32_t) except+
-        _PhysicalArray get_physical_array() except+
+        _PhysicalArray get_physical_array(std_optional[StoreTarget]) except+
         void offload_to(StoreTarget) except+
         _LogicalArray()
         _LogicalArray(const _LogicalStore&) except+
@@ -55,7 +56,7 @@ cdef class LogicalArray(Unconstructable):
     cpdef LogicalArray delinearize(self, int32_t dim, object shape)
     cpdef void fill(self, object value)
     cpdef LogicalArray child(self, uint32_t index)
-    cpdef PhysicalArray get_physical_array(self)
+    cpdef PhysicalArray get_physical_array(self, target: StoreTarget | None =*)
     cpdef void offload_to(self, StoreTarget target_mem)
 
 

@@ -319,14 +319,20 @@ void Storage::set_future_map(Legion::FutureMap future_map, std::size_t scalar_of
   }
 }
 
-RegionField Storage::map()
+RegionField Storage::map(legate::mapping::StoreTarget target)
 {
   LEGATE_ASSERT(Kind::REGION_FIELD == kind_);
   auto&& region_field = get_region_field();
-  auto mapped         = region_field->map();
+  auto mapped         = region_field->map(target);
   // Set the right subregion so the physical store can see the right domain
   mapped.set_logical_region(region_field->region());
   return mapped;
+}
+
+void Storage::unmap()
+{
+  LEGATE_ASSERT(Kind::REGION_FIELD == kind_);
+  get_region_field()->unmap();
 }
 
 void Storage::allow_out_of_order_destruction()
@@ -760,7 +766,8 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::partition_by_tiling_(
   return create_partition_(self, std::move(partition), true);
 }
 
-InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(bool ignore_future_mutability)
+InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
+  legate::mapping::StoreTarget target, bool ignore_future_mutability)
 {
   if (unbound()) {
     throw TracedException<std::invalid_argument>{"Unbound store cannot be inlined mapped"};
@@ -769,7 +776,11 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(bool ignore_fu
   // If there's already a physical store for this logical store, just return the cached one.
   // Any operations using this logical store will immediately flush the scheduling window.
   if (mapped_) {
-    return mapped_;
+    if (mapped_->on_target(target)) {
+      return mapped_;
+    }
+    get_storage()->unmap();
+    mapped_.reset();
   }
 
   // Otherwise, a physical allocation of this store is escaping to the user land for the first time,
@@ -808,7 +819,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(bool ignore_fu
   }
 
   LEGATE_ASSERT(storage->kind() == Storage::Kind::REGION_FIELD);
-  auto region_field = storage->map();
+  auto region_field = storage->map(target);
   mapped_           = make_internal_shared<PhysicalStore>(
     dim(), type(), GlobalRedopID{-1}, std::move(region_field), transform_);
   return mapped_;

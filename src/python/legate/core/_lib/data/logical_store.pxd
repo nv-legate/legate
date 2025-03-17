@@ -4,6 +4,7 @@
 
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
 from libcpp cimport bool
+from libcpp.optional cimport optional as std_optional
 from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
@@ -39,7 +40,7 @@ cdef extern from "legate/data/logical_store.h" namespace "legate" nogil:
         _LogicalStorePartition partition_by_tiling(
             std_vector[uint64_t] tile_shape
         ) except+
-        _PhysicalStore get_physical_store() except+
+        _PhysicalStore get_physical_store(std_optional[StoreTarget]) except+
         void detach() except+
         void offload_to(StoreTarget) except+
         std_string to_string() except+
@@ -69,7 +70,7 @@ cdef class LogicalStore(Unconstructable):
     cpdef LogicalStore delinearize(self, int32_t dim, tuple shape)
     cpdef void fill(self, object value)
     cpdef LogicalStorePartition partition_by_tiling(self, object shape)
-    cpdef PhysicalStore get_physical_store(self)
+    cpdef PhysicalStore get_physical_store(self, target: StoreTarget | None=*)
     cpdef void detach(self)
     cpdef void offload_to(self, StoreTarget target_mem)
     cpdef bool equal_storage(self, LogicalStore other)

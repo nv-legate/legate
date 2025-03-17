@@ -8,6 +8,7 @@
 
 #include <legate/data/buffer.h>
 #include <legate/mapping/detail/mapping.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 #include <legate/utilities/dispatch.h>
 
@@ -209,6 +210,18 @@ const Legion::UntypedDeferredValue& PhysicalStore::get_buffer() const
 {
   LEGATE_ASSERT(is_future());
   return future_.get_buffer();
+}
+
+bool PhysicalStore::on_target(mapping::StoreTarget target) const
+{
+  LEGATE_ASSERT(!(is_future() || is_unbound_store()));
+  return region_field_.target() == target;
+}
+
+void PhysicalStore::unmap()
+{
+  LEGATE_ASSERT(!(is_future() || is_unbound_store()));
+  Runtime::get_runtime()->unmap_physical_region(region_field_.get_physical_region());
 }
 
 std::pair<Legion::OutputRegion, Legion::FieldID> PhysicalStore::get_output_field_()

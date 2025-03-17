@@ -122,6 +122,7 @@ class LocalMachine {
 
   [[nodiscard]] bool has_socket_memory() const;
 
+  [[nodiscard]] Processor find_first_processor_with_affinity_to(StoreTarget target) const;
   [[nodiscard]] Memory get_memory(Processor proc, StoreTarget target) const;
   [[nodiscard]] Memory system_memory() const;
   [[nodiscard]] Memory zerocopy_memory() const;

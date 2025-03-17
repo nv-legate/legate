@@ -10,6 +10,8 @@
 #include <legate/data/detail/user_storage_tracker.h>
 #include <legate/data/logical_array.h>
 #include <legate/data/physical_store.h>
+#include <legate/mapping/mapping.h>
+#include <legate/runtime/detail/runtime.h>
 
 namespace legate {
 
@@ -91,9 +93,13 @@ LogicalStore LogicalStore::delinearize(std::int32_t dim, std::vector<std::uint64
   return LogicalStore{impl()->delinearize(dim, std::move(sizes))};
 }
 
-PhysicalStore LogicalStore::get_physical_store() const
+PhysicalStore LogicalStore::get_physical_store(std::optional<mapping::StoreTarget> target) const
 {
-  return PhysicalStore{impl()->get_physical_store(/* ignore_future_mutability */ false)};
+  auto sanitized =
+    target.value_or(detail::Runtime::get_runtime()->local_machine().has_socket_memory()
+                      ? mapping::StoreTarget::SOCKETMEM
+                      : mapping::StoreTarget::SYSMEM);
+  return PhysicalStore{impl()->get_physical_store(sanitized, /* ignore_future_mutability */ false)};
 }
 
 bool LogicalStore::equal_storage(const LogicalStore& other) const

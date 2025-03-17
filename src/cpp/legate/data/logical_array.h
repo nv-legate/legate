@@ -11,11 +11,14 @@
 #include <legate/data/logical_store.h>
 #include <legate/data/physical_array.h>
 #include <legate/data/shape.h>
+#include <legate/mapping/mapping.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>
 #include <legate/utilities/typedefs.h>
+
+#include <optional>
 
 /**
  * @file
@@ -219,11 +222,25 @@ class LogicalArray {
    * @brief Creates a `PhysicalArray` for this `LogicalArray`
    *
    * This call blocks the client's control flow and fetches the data for the whole array to the
-   * current node
+   * current node.
+   *
+   * When the target is `StoreTarget::FBMEM`, the data will be consolidated in the framebuffer of
+   * the first GPU available in the scope.
+   *
+   * If no `target` is given, the runtime uses `StoreTarget::SOCKETMEM` if it exists and
+   * `StoreTarget::SYSMEM` otherwise.
+   *
+   * If there already exists a physical array for a different memory target, that physical array
+   * will be unmapped from memory and become invalid to access.
+   *
+   * @param target The type of memory in which the physical array would be created.
    *
    * @return A `PhysicalArray` of the `LogicalArray`
+   *
+   * @throw std::invalid_argument If no memory of the chosen type is available
    */
-  [[nodiscard]] PhysicalArray get_physical_array() const;
+  [[nodiscard]] PhysicalArray get_physical_array(
+    std::optional<mapping::StoreTarget> target = std::nullopt) const;
 
   /**
    * @brief Casts this array as a `ListLogicalArray`

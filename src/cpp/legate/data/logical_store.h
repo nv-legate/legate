@@ -11,11 +11,13 @@
 #include <legate/data/physical_store.h>
 #include <legate/data/shape.h>
 #include <legate/data/slice.h>
+#include <legate/mapping/mapping.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>
 
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -383,11 +385,25 @@ class LogicalStore {
    * @brief Creates a `PhysicalStore` for this `LogicalStore`
    *
    * This call blocks the client's control flow and fetches the data for the whole store to the
-   * current node
+   * current node.
+   *
+   * When the target is `StoreTarget::FBMEM`, the data will be consolidated in the framebuffer of
+   * the first GPU available in the scope.
+   *
+   * If no `target` is given, the runtime uses `StoreTarget::SOCKETMEM` if it exists and
+   * `StoreTarget::SYSMEM` otherwise.
+   *
+   * If there already exists a physical store for a different memory target, that physical store
+   * will be unmapped from memory and become invalid to access.
+   *
+   * @param target The type of memory in which the physical store would be created.
    *
    * @return A `PhysicalStore` of the `LogicalStore`
+   *
+   * @throw std::invalid_argument If no memory of the chosen type is available
    */
-  [[nodiscard]] PhysicalStore get_physical_store() const;
+  [[nodiscard]] PhysicalStore get_physical_store(
+    std::optional<mapping::StoreTarget> target = std::nullopt) const;
 
   /**
    * @brief Detach a store from its attached memory
