@@ -73,6 +73,10 @@ function(legate_configure_test)
     target_link_libraries(${_LEGATE_TEST_NAME} PRIVATE NCCL::NCCL)
   endif()
 
+  if(legate_USE_CAL)
+    target_link_libraries(${_LEGATE_TEST_NAME} PRIVATE CAL::CAL)
+  endif()
+
   rapids_test_add(NAME ${_LEGATE_TEST_NAME}
                   COMMAND ${_LEGATE_TEST_NAME}
                   GPUS ${_LEGATE_TEST_GPUS}
@@ -298,11 +302,16 @@ legate_configure_test(NAME tests_non_reentrant_with_runtime
 legate_configure_test(NAME tests_non_reentrant_wo_runtime
                       SOURCES main_wo_runtime_init.cc ${non_reentrant_wo_runtime_SRC})
 
+if(legate_USE_CAL)
+  set(with_cal_SRC integration/cal_communicator.cu)
+endif()
+
 if(Legion_USE_CUDA)
   set(gpu_SRC integration/nccl.cu)
 
   legate_configure_test(NAME tests_with_gpus
                         SOURCES main_with_runtime_init.cc ${with_runtime_SRC} ${gpu_SRC}
+                                ${with_cal_SRC}
                         GPUS 1
                         PERCENT 30
                         ADDITIONAL_TARGETS HighFive::HighFive)

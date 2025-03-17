@@ -90,6 +90,7 @@ install_legate_with_war() {
   legate-mamba-retry install \
                      -y \
                      -n "${CONDA_ENV}" \
+                     -c legate/label/ucc140 \
                      -c conda-forge \
                      -c "${ARTIFACTS_DIR}/conda-build/legate" \
                      legate

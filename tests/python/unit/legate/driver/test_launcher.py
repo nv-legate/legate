@@ -161,6 +161,13 @@ class TestLauncherEnv:
 
         assert env["NCCL_LAUNCH_MODE"] == "PARALLEL"
 
+    def test_uss_tls(self, genconfig: GenConfig, launch: LauncherType) -> None:
+        config = genconfig(["--launcher", launch])
+
+        env = m.Launcher.create(config, SYSTEM).env
+
+        assert env["UCC_TLS"] == "^cuda"
+
     def test_gasnet_mpi_thread(
         self, genconfig: GenConfig, launch: LauncherType
     ) -> None:
@@ -352,6 +359,8 @@ class TestMPILauncher:
         "PYTHONPATH",
         "-x",
         "NCCL_LAUNCH_MODE",
+        "-x",
+        "UCC_TLS",
         "-x",
         "GASNET_MPI_THREAD",
         "-x",

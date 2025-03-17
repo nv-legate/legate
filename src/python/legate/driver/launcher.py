@@ -175,6 +175,12 @@ class Launcher:
         # as the former plays better with Realm.
         env["NCCL_LAUNCH_MODE"] = "PARALLEL"
 
+        # Make sure we do not use the CUDA_TL in UCC
+        # CUDA_TL currently only works in a single-thread setting.
+        # CUDA_TL could work with Legate multi-rank where every rank has a
+        # single thread, but we just blanket disable it.
+        env["UCC_TLS"] = "^cuda"
+
         # Make sure GASNet initializes MPI with the right level of
         # threading support
         env["GASNET_MPI_THREAD"] = "MPI_THREAD_MULTIPLE"

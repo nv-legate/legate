@@ -107,6 +107,22 @@ run_test_or_analysis() {
       fi
     }
 
+    case "$2" in
+      "cpu")
+        export GPUS_COUNT=0
+        ;;
+      "gpu")
+        export GPUS_COUNT=1
+        ;;
+      "2gpu")
+        export GPUS_COUNT=2
+        ;;
+      *)
+        echo "Invalid argument: $2"
+        return 2
+        ;;
+    esac
+
     case "$1" in
         "python")
             echo "Executing python tests..."
@@ -139,16 +155,16 @@ run_test_or_analysis() {
 
             set_ld_preload
 
-            case "$2" in
-              "cpu")
+            case "${GPUS_COUNT}" in
+              "0")
                 echo "Using CPUs ..."
                 LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python -s
                 ;;
-              "gpu")
+              "1")
                 echo "Using 1 GPU ..."
                 LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 1" pytest --color=yes tests/python -s
                 ;;
-              "2gpu")
+              "2")
                 echo "Using 2 GPUs ..."
                 LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" pytest --color=yes tests/python -s
                 ;;
@@ -183,7 +199,7 @@ run_test_or_analysis() {
               local worker_count="${4:-2}"
               LEGATE_TEST=1 \
                 LEGATE_AUTO_CONFIG=0 \
-                LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 1000 --fbmem 1000" \
+                LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 4000 --fbmem 1000" \
                 "${gtest_file}" --gtest_color=yes
             }
 
@@ -226,23 +242,29 @@ run_test_or_analysis() {
 
             function run_all_runtime_tests()
             {
-              run_cpp_tests cpus 1
-              # Also do some multi-CPU testing
-              uname_value=$(uname)
-              if [[ "${uname_value}" == "Darwin" ]]; then
-                run_cpp_tests cpus 2
-              else
-                run_cpp_tests cpus 4
+              if [[ "${GPUS_COUNT}" -ne 2 ]]; then
+                run_cpp_tests cpus 1
+                # Also do some multi-CPU testing
+                uname_value=$(uname)
+                if [[ "${uname_value}" == "Darwin" ]]; then
+                  run_cpp_tests cpus 2
+                else
+                  run_cpp_tests cpus 4
+                fi
               fi
 
-              if [[ -f ${CONDA_PREFIX}/bin/tests_with_gpus ]]; then
-                run_gpu_tests gpus 1
+              if [[ "${GPUS_COUNT}" -gt 0 ]]; then
+                if [[ -f ${CONDA_PREFIX}/bin/tests_with_gpus ]]; then
+                  run_gpu_tests gpus "${GPUS_COUNT}"
+                fi
               fi
             }
 
             set_ld_preload
 
-            run_sequential_tests
+            if [[ "${GPUS_COUNT}" -ne 2 ]]; then
+              run_sequential_tests
+            fi
 
             export LEGATE_WINDOW_SIZE=1
             run_all_runtime_tests

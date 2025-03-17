@@ -39,3 +39,9 @@ leak:CoreFoundation
 leak:libobjc.*
 # #endif
 leak:site-packages/cupy/cuda/memory.cpython
+# UCC
+leak:ucc_tl_nccl_team_t_init
+leak:kh_init_tl_cuda_ep_hash
+leak:ucc_tl_cuda_context_t_init
+# Verbs
+leak:libibverbs.*
