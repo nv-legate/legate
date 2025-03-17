@@ -17,6 +17,7 @@ from legate.core import (
     PhysicalStore,
     Scalar,
     Table,
+    TaskContext,
     VariantCode,
     get_legate_runtime,
     task as lct,
@@ -922,6 +923,50 @@ class TestVariantInvoker(BaseTest):
                 for name, val in zip(attr_vals, getattr(func_args, attr)):
                     kwargs[name] = val  # noqa: PERF403
         invoker.prepare_call(fake_auto_task, args, kwargs)
+
+    def test_wrong_arg_num(self) -> None:
+        func = single_input
+        invoker = VariantInvoker(func)
+        ctx = FakeTaskContext()
+        ctx.inputs = tuple(
+            map(FakeArray, (make_input_store(), make_input_store()))
+        )
+        msg = re.escape("Wrong number of given arguments (2), expected 1")
+        with pytest.raises(ValueError, match=msg):
+            invoker(ctx, func)
+
+    def test_args_with_default_val(self) -> None:
+        def args_default_val(
+            a: TaskContext,
+            b: InputStore | None = None,
+            c: OutputStore | None = None,
+        ) -> None:
+            pass
+
+        func = args_default_val
+        invoker = VariantInvoker(func)
+        ctx = FakeTaskContext()
+        arr1 = make_input_array()
+        arr2 = get_legate_runtime().create_array(ty.null_type, (1,))
+        ctx.inputs = (arr1.get_physical_array(),)
+        ctx.outputs = (arr2.get_physical_array(),)
+        ctx.scalars = ()
+        invoker(ctx, func)
+
+    def test_prepare_call_constraints(self) -> None:
+        runtime = get_legate_runtime()
+        task = lct.task()(single_input)
+        auto_task = runtime.create_auto_task(
+            runtime.core_library, task.task_id
+        )
+        invoker = VariantInvoker(single_input)
+
+        arg = make_input_store()
+        variable = auto_task.declare_partition()
+        constraints = lg.broadcast(variable)
+        invoker.prepare_call(
+            auto_task, (arg,), kwargs={}, constraints=(constraints,)
+        )
 
     def test_prepare_call_bad(self, fake_auto_task: FakeAutoTask) -> None:
         invoker = VariantInvoker(single_input)

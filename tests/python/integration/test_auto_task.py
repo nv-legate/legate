@@ -392,7 +392,6 @@ class TestAutoTaskConstraints:
         )
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
-        auto_task.add_alignment(in_store, out_store)
         auto_task.add_broadcast(in_store, axes)
         auto_task.execute()
         runtime.issue_execution_fence(block=True)

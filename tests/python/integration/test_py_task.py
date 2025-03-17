@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import numpy as np
@@ -19,10 +20,10 @@ from legate.core import (
     bloat,
     get_legate_runtime,
     image,
+    scale,
     types as ty,
 )
-from legate.core._lib.partitioning.constraint import scale
-from legate.core.task import OutputStore, task
+from legate.core.task import InputArray, InputStore, OutputStore, task
 
 from .utils import tasks, utils
 from .utils.data import ARRAY_TYPES, LARGE_SHAPES, SCALAR_VALS, SHAPES
@@ -41,6 +42,15 @@ class TestPyTask:
         arr, store = utils.random_array_and_store(shape)
         out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
         tasks.copy_store_task(store, out_store)
+        np.testing.assert_allclose(out_arr, arr)
+
+    @pytest.mark.parametrize("shape", SHAPES, ids=str)
+    def test_input_output_prepare(self, shape: tuple[int, ...]) -> None:
+        arr, store = utils.random_array_and_store(shape)
+        out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
+        auto_task = tasks.copy_store_task.prepare_call(store, out_store)
+        auto_task.execute()
+        get_legate_runtime().issue_execution_fence(block=True)
         np.testing.assert_allclose(out_arr, arr)
 
     def test_mixed_input(self) -> None:
@@ -277,6 +287,78 @@ class TestPyTask:
         _, source_store = utils.random_array_and_store(shape)
         _, bloat_store = utils.random_array_and_store(shape)
         bloat_task(source_store, bloat_store, low_offsets, high_offsets, shape)
+
+    def test_prepare_unbound_store(self) -> None:
+        store = get_legate_runtime().create_store(ty.int64)
+        with pytest.raises(
+            NotImplementedError,
+            match="Unbound arrays or stores are not yet supported",
+        ):
+            tasks.fill_task.prepare_call(store, 1)
+
+    def test_register_invalid_param_variant(self) -> None:
+        arr = get_legate_runtime().create_array(ty.int32)
+        msg = re.escape(
+            f"Type hint '{type(arr)}' is invalid, because it is "
+            "impossible to deduce intent from it. Must use either "
+            "Input/Output/Reduction variant"
+        )
+        with pytest.raises(TypeError, match=msg):
+
+            @task
+            def _(_: LogicalArray) -> None:
+                pass
+
+    def test_register_non_type_param(self) -> None:
+        val = None
+        msg = re.escape(
+            f"Unhandled type annotation: {val}, expected this to be a "
+            f"type, got {type(val)} instead"
+        )
+        with pytest.raises(AssertionError, match=msg):
+
+            @task
+            def _(_: None) -> None:
+                pass
+
+    def test_register_nargs(self) -> None:
+        msg = re.escape(
+            "'/', '*', '*args', '**kwargs' not yet allowed in parameter list"
+        )
+        with pytest.raises(NotImplementedError, match=msg):
+
+            @task
+            def _(*_: tuple[InputStore, ...]) -> None:
+                pass
+
+    def test_prepare_nullable_param(self) -> None:
+        runtime = get_legate_runtime()
+        arr = runtime.create_array(ty.int32, (1, 2, 3), nullable=True)
+        msg = (
+            "Legate data interface objects with nullable stores are "
+            "unsupported"
+        )
+        with pytest.raises(NotImplementedError, match=msg):
+            tasks.fill_task.prepare_call(arr, Scalar(None))
+
+    def test_register_arbitrary_union_type(self) -> None:
+        msg = re.escape(
+            "Arbitrary union types not yet supported. Union types may "
+            "only be 'SomeType | None' (order doesn't matter), "
+            "'Union[SomeType, None]' (order doesn't matter), or "
+            "'Optional[SomeType]'."
+        )
+        with pytest.raises(NotImplementedError, match=msg):
+
+            @task
+            def _(_: InputStore | InputArray) -> None:
+                pass
+
+        with pytest.raises(NotImplementedError, match=msg):
+
+            @task
+            def _(_: InputStore | InputArray | None) -> None:
+                pass
 
 
 if __name__ == "__main__":
