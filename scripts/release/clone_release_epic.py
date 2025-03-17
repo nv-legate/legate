@@ -9,9 +9,12 @@ import re
 import argparse
 from json import loads
 from subprocess import check_output
-from typing import Any, Final, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, Final, TypeAlias, cast
 
 Issue: TypeAlias = dict[str, Any]
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 SRC_REPO: Final = "nv-legate/legate.internal"
 
@@ -41,6 +44,19 @@ def get_sub_issues(issue_number: int) -> tuple[Issue, ...]:
             execute(f"/repos/{SRC_REPO}/issues/{issue_number}/sub_issues"),
         )
     )
+
+
+def add_assignees(
+    issue_number: int, assignees: Sequence[str], target_repo: str
+) -> None:
+    cmd = [
+        "--method",
+        "POST",
+        f"/repos/{target_repo}/issues/{issue_number}/assignees",
+    ]
+    for login in assignees:
+        cmd += ["-f", f"assignees[]={login}"]
+    execute(*cmd)
 
 
 def add_sub_issue(epic: Issue, issue: Issue, target_repo: str) -> None:
@@ -76,6 +92,7 @@ def clone_issue(
     new_title = port_text(
         issue["title"], prev_release, curr_release, next_release
     )
+    assignees = tuple(user["login"] for user in issue["assignees"])
     cmd = [
         "--method",
         "POST",
@@ -86,7 +103,9 @@ def clone_issue(
     if (body := issue.get("body")) is not None:
         new_body = port_text(body, prev_release, curr_release, next_release)
         cmd += ["-f", f"body={new_body}"]
-    return cast(Issue, execute(*cmd))
+    new_issue = cast(Issue, execute(*cmd))
+    add_assignees(int(new_issue["number"]), assignees, target_repo)
+    return new_issue
 
 
 def yy_dot_mm(val: str) -> str:
