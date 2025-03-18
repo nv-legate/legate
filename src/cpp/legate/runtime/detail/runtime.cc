@@ -41,6 +41,7 @@
 #include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/field_manager.h>
 #include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/mpi_detection.h>
 #include <legate/runtime/detail/shard.h>
 #include <legate/runtime/resource.h>
 #include <legate/runtime/runtime.h>
@@ -1720,6 +1721,11 @@ void handle_realm_default_args()
 
   config.parse();
   if (!Legion::Runtime::has_runtime()) {
+    // only do MPI version detection if we're not running on a single node or using p2p network
+    // bootstrap
+    if (Config::get_config().need_network()) {
+      set_mpi_wrapper_libraries();
+    }
     handle_realm_default_args();
 
     int argc                     = 1;
