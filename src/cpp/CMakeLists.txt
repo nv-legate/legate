@@ -440,6 +440,7 @@ target_sources(legate
                        legate/runtime/detail/argument_parsing.cc
                        legate/runtime/detail/argument_parsing/logging.cc
                        legate/runtime/detail/argument_parsing/util.cc
+                       legate/runtime/detail/mpi_detection.cc
                        legate/task/registrar.cc
                        legate/task/task.cc
                        legate/task/task_context.cc
