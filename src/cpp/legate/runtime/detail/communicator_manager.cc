@@ -101,7 +101,7 @@ void CommunicatorManager::destroy()
   for (auto it = factories_.rbegin(); it != factories_.rend(); ++it) {
     it->second->destroy();
     // ensure reverse task order due to dependencies (CAL->CPU)
-    // without fence CPU teardown might supercede CAL
+    // without fence CPU teardown might supersede CAL
     Runtime::get_runtime()->issue_execution_fence();
   }
   factories_.clear();

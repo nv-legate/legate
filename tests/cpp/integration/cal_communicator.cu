@@ -21,7 +21,8 @@ constexpr std::size_t SIZE = 100;
 
 class CALCommunicatorTester : public legate::LegateTask<CALCommunicatorTester> {
  public:
-  static constexpr auto TASK_ID = legate::LocalTaskID{};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static constexpr auto GPU_VARIANT_OPTIONS =
     legate::VariantOptions{}.with_concurrent(true).with_has_allocations(true);
@@ -49,7 +50,7 @@ class Config {
   static constexpr std::string_view LIBRARY_NAME = "test_cal_communicator";
   static void registration_callback(legate::Library library)
   {
-    CALCommunicatorTester::register_variants(library);
+    CALCommunicatorTester::register_variants(library, CALCommunicatorTester::TASK_CONFIG.task_id());
   }
 };
 
@@ -90,7 +91,8 @@ TEST_P(CalCommunicatorManualTaskTest, CAL_communicator)
 
   auto part = store.partition_by_tiling(tile_shape.data());
 
-  auto task = runtime->create_task(context, CALCommunicatorTester::TASK_ID, launch_shape);
+  auto task =
+    runtime->create_task(context, CALCommunicatorTester::TASK_CONFIG.task_id(), launch_shape);
   task.add_output(part);
   task.add_communicator("nccl");
   task.add_communicator("cal");
