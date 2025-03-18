@@ -140,6 +140,7 @@ function configure_legate()
     --with-cc="${CC}" \
     --with-cxx="${CXX}" \
     --build-march="${BUILD_MARCH}" \
+    --cmake-generator="Ninja" \
     "${configure_args[@]}"
 
   ret=$?

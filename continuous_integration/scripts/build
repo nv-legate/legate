@@ -171,6 +171,13 @@ build_project() {
 
   git config --global --add safe.directory "${LEGATE_DIR}/.git"
 
+  # Set up the SCCACHE environment variables
+  export CI=true
+  source "${LEGATE_DIR}/continuous_integration/scripts/tools/legate-configure-sccache"
+  sccache --zero-stats
+  # Disable the CUDA compiler launcher to avoid issues with the realm CUDA kernels.
+  unset CMAKE_CUDA_COMPILER_LAUNCHER
+
   case "${BUILD_TYPE}" in
       ci) build_legate_release;;
       nightly) build_legate_release;;
@@ -178,6 +185,8 @@ build_project() {
       docs) build_docs;;
       *) return 1;;
   esac
+
+  sccache --show-adv-stats
 }
 
 (build_project "$@");
