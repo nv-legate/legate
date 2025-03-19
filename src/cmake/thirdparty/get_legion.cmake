@@ -76,9 +76,12 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
     set_ifndef(Legion_CUDA_DYNAMIC_LOAD OFF)
   endif()
 
+  # Maintain the default behavior of using the MPI bootstrap plugin for UCX.
+  set(Legion_UCX_MPI_BOOTSTRAP ON)
   # If we are building wheels, we don't want to dynamically link against the CUDA runtime.
   if(LEGATE_BUILD_PIP_WHEELS)
     set(Legion_CUDA_DYNAMIC_LOAD OFF)
+    set(Legion_UCX_MPI_BOOTSTRAP OFF)
   endif()
 
   message(VERBOSE "legate: Legion version: ${version}")
@@ -109,6 +112,7 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           # We never want local fields
                           "Legion_DEFAULT_LOCAL_FIELDS 0"
                           "Legion_HIJACK_CUDART OFF"
+                          "Legion_UCX_MPI_BOOTSTRAP ${Legion_UCX_MPI_BOOTSTRAP}"
                           "Legion_USE_ZLIB OFF"
                           "Legion_CUDA_DYNAMIC_LOAD ${Legion_CUDA_DYNAMIC_LOAD}"
                           "Legion_INSTALL_PYTHON_PROFILER OFF"

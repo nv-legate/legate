@@ -1,0 +1,58 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d03e3d15f..b135096d5 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -469,15 +469,18 @@ endif()
+ # UCX configuration
+ #------------------------------------------------------------------------------#
+ if("${Legion_NETWORKS}" MATCHES .*ucx.*)
++  option(Legion_UCX_MPI_BOOTSTRAP "Use MPI bootstrap plugin for UCX" ON)
+   if (NOT REALM_USE_LIBDL)
+     message(FATAL_ERROR "UCX backend requires run-time support for dynamic shared objects")
+   endif()
+   find_package(ucx 1.14.0 REQUIRED CONFIG)
+   message(STATUS "Found UCX: ${UCX_INCLUDE_DIRS} ${UCX_LIBRARIES})")
+-  find_package(MPI REQUIRED) # for MPI bootstrap plugin
++  if (Legion_UCX_MPI_BOOTSTRAP)
++    find_package(MPI REQUIRED) # for MPI bootstrap plugin
++    set(Legion_MPI_INTEROP ON)
++  endif()
+   # define variable for realm_defines.h
+   set(REALM_USE_UCX ON)
+-  set(Legion_MPI_INTEROP ON)
+   option(Legion_UCX_DYNAMIC_LOAD "Load ucx libraries at runtime" OFF)
+   if(Legion_UCX_DYNAMIC_LOAD)
+     set(REALM_UCX_DYNAMIC_LOAD ON)
+diff --git a/runtime/CMakeLists.txt b/runtime/CMakeLists.txt
+index a4a758e6c..7e360d625 100644
+--- a/runtime/CMakeLists.txt
++++ b/runtime/CMakeLists.txt
+@@ -481,16 +481,18 @@ if(REALM_USE_UCX)
+   target_include_directories(RealmRuntime PRIVATE ${UCC_INCLUDE_DIRS})
+   target_link_libraries(RealmRuntime PRIVATE ucc::ucc)
+ 
+-  # build the MPI bootstrap plugin
+-  add_library(realm_ucp_bootstrap_mpi MODULE
+-    realm/ucx/bootstrap/bootstrap_mpi.c)
+-  target_include_directories(realm_ucp_bootstrap_mpi PRIVATE
+-    ${CMAKE_CURRENT_SOURCE_DIR}
+-    ${PROJECT_BINARY_DIR}/runtime)
+-  target_link_libraries(realm_ucp_bootstrap_mpi PRIVATE MPI::MPI_C)
+-  set_target_properties(realm_ucp_bootstrap_mpi PROPERTIES PREFIX "")
+-  install(TARGETS realm_ucp_bootstrap_mpi LIBRARY
+-    DESTINATION ${CMAKE_INSTALL_LIBDIR})
++  if(Legion_UCX_MPI_BOOTSTRAP)
++    # build the MPI bootstrap plugin
++    add_library(realm_ucp_bootstrap_mpi MODULE
++      realm/ucx/bootstrap/bootstrap_mpi.c)
++    target_include_directories(realm_ucp_bootstrap_mpi PRIVATE
++      ${CMAKE_CURRENT_SOURCE_DIR}
++      ${PROJECT_BINARY_DIR}/runtime)
++    target_link_libraries(realm_ucp_bootstrap_mpi PRIVATE MPI::MPI_C)
++    set_target_properties(realm_ucp_bootstrap_mpi PROPERTIES PREFIX "")
++    install(TARGETS realm_ucp_bootstrap_mpi LIBRARY
++      DESTINATION ${CMAKE_INSTALL_LIBDIR})
++  endif()
+   # build the P2P bootstrap plugin
+   add_library(realm_ucp_bootstrap_p2p MODULE
+     realm/ucx/bootstrap/bootstrap_p2p.cc

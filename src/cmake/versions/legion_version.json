@@ -34,6 +34,11 @@
                     "file": "${current_json_dir}/../patches/legion_cuhook_optional.diff",
                     "fixed_in": "",
                     "issue": "legion make cuhook build optional"
+                },
+                {
+                    "file": "${current_json_dir}/../patches/legion_ucx_mpi_bootstrap.diff",
+                    "fixed_in": "",
+                    "issue": "legion make UCX MPI bootstrap build optional"
                 }
             ],
             "version": "25.05.0"

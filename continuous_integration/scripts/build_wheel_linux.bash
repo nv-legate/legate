@@ -41,6 +41,15 @@ package_name="legate"
 echo "Installing build requirements"
 python -m pip install -v --prefer-binary -r continuous_integration/requirements-build.txt
 
+# Recreate the missing symlink and add in the cmake config for UCC.
+sitepkgs=$(python -c 'import site; print(site.getsitepackages()[0], end="")')
+ln -fs "${sitepkgs}"/nvidia/libcal/cu12/lib/libcal.so.0 "${sitepkgs}"/nvidia/libcal/cu12/lib/libcal.so
+ln -fs "${sitepkgs}"/nvidia/libcal/cu12/lib/libucc.so.1 "${sitepkgs}"/nvidia/libcal/cu12/lib/libucc.so
+if [[ ! -d "${sitepkgs}/nvidia/libcal/cu12/lib/cmake" ]]; then
+  mkdir -p "${sitepkgs}/nvidia/libcal/cu12/lib/cmake"
+  cp -r "${LEGATE_DIR}/continuous_integration/scripts/ucc-cmake-config" "${sitepkgs}/nvidia/libcal/cu12/lib/cmake/ucc"
+fi
+
 cd "${package_dir}"
 
 echo "Building HDF5 and installing into prefix"
@@ -75,7 +84,12 @@ if [[ ! -d "prefix" ]]; then
   exit 1
 fi
 
-SKBUILD_CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix;-DLEGATE_WRAPPER_DIR=${LEGATE_DIR}/wrapper-prefix;-DLegion_USE_CUDA:BOOL=ON;-DCMAKE_CUDA_ARCHITECTURES:STRING=all-major;-DBUILD_SHARED_LIBS:BOOL=ON"
+# TODO(cryos): https://github.com/nv-legate/legate.internal/issues/1894
+# Improve the use of CMAKE_PREFIX_PATH to find legate and cutensor once
+# scikit-build supports it.
+CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix;${sitepkgs}/libucx;${sitepkgs}/nvidia/libcal/cu12"
+export CMAKE_ARGS
+SKBUILD_CMAKE_ARGS="-DLEGATE_WRAPPER_DIR=${LEGATE_DIR}/wrapper-prefix"
 export SKBUILD_CMAKE_ARGS
 echo "SKBUILD_CMAKE_ARGS='${SKBUILD_CMAKE_ARGS}'"
 
@@ -98,18 +112,19 @@ echo "Repairing the wheel"
 mkdir -p "${LEGATE_DIR}/final-dist"
 export LD_LIBRARY_PATH="${LEGATE_DIR}/scripts/build/python/legate/prefix/lib"
 python -m auditwheel repair \
-  --exclude libcuda.so* \
-  --exclude libnccl.so.* \
   --exclude libcal.so.* \
-  --exclude libucc.so.* \
-  --exclude libmpi.so.* \
-  --exclude libmpicxx.so.* \
-  --exclude libmpi_cxx.so.* \
   --exclude libcrypto.so.* \
+  --exclude libcuda.so.* \
+  --exclude libcudart.so.* \
   --exclude libevent_core.so.* \
   --exclude libevent_pthreads-2.so.* \
   --exclude libhwloc.so.* \
+  --exclude libmpi.so.* \
+  --exclude libmpi_cxx.so.* \
+  --exclude libmpicxx.so.* \
+  --exclude libnccl.so.* \
   --exclude libopen-*.so.* \
+  --exclude libucc.so.* \
   -w "${LEGATE_DIR}/final-dist" \
   "${LEGATE_DIR}"/dist/*.whl
 

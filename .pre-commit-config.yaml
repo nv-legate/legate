@@ -144,7 +144,7 @@ repos:
         entry: ./scripts/pre-commit/cmake-format.bash cmake-format
         language: python
         types: [cmake]
-        exclude: '^(share/legate/realm_ucp_bootstrap/CMakeLists.txt|share/legate/realm_ucp_bootstrap/cmake/Config.cmake.in)$'
+        exclude: '^(share/legate/realm_ucp_bootstrap/CMakeLists.txt|share/legate/realm_ucp_bootstrap/cmake/Config.cmake.in|continuous_integration/scripts/ucc-cmake-config/.*.cmake)$'
         # Note that pre-commit autoupdate does not update the versions
         # of dependencies, so we'll have to update this manually.
         additional_dependencies:

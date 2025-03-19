@@ -33,6 +33,8 @@ dependencies = [
     "kerchunk",
     "rich",
     "nvidia-nccl-cu12",
+    "libucx-cu12",
+    "nvidia-libcal-cu12",
 ]
 dynamic = ["version"]
 
