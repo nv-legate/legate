@@ -32,7 +32,7 @@ std::unique_ptr<BackendNetwork> the_backend_network{};
 
 /* static */ std::unique_ptr<BackendNetwork>& BackendNetwork::get_network()
 {
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG) && LEGATE_UNLIKELY(!BackendNetwork::has_network())) {
+  if (!has_network()) {
     throw legate::detail::TracedException<std::logic_error>{
       "Trying to retrieve backend network before it has been initialized. Call "
       "BackendNetwork::create_network() first"};
