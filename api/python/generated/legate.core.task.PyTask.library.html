@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.Domain.__hash__ &#8212; NVIDIA legate (25.05.00.dev43+g1478fa09)</title>
+    <title>legate.core.task.PyTask.library &#8212; NVIDIA legate (25.05.00.dev43+g1478fa09)</title>
   
   
   
@@ -47,7 +47,7 @@
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=4ea706d9"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/python/generated/legate.core.Domain.__hash__';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/python/generated/legate.core.task.PyTask.library';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
@@ -58,8 +58,8 @@
     <link rel="icon" href="../../../_static/favicon.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="legate.core.Domain.__iter__" href="legate.core.Domain.__iter__.html" />
-    <link rel="prev" title="legate.core.Domain.__gt__" href="legate.core.Domain.__gt__.html" />
+    <link rel="next" title="legate.core.task.PyTask.registered" href="legate.core.task.PyTask.registered.html" />
+    <link rel="prev" title="legate.core.task.PyTask.UNREGISTERED_ID" href="legate.core.task.PyTask.UNREGISTERED_ID.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -328,7 +328,7 @@
 <li class="toctree-l4"><a class="reference internal" href="legate.core.track_provenance.html">legate.core.track_provenance</a></li>
 </ul>
 </details></li>
-<li class="toctree-l3 current active has-children"><a class="reference internal" href="../classes.html">Classes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l4"><a class="reference internal" href="../runtime.html">Legate Runtime</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../logical_store.html">Store</a></li>
@@ -338,10 +338,10 @@
 <li class="toctree-l4"><a class="reference internal" href="../variant_options.html">Variant Options</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../resource_config.html">ResourceConfig</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../task_context.html">Task Context</a></li>
-<li class="toctree-l4 current active"><a class="reference internal" href="../domain.html">Domains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../domain.html">Domains</a></li>
 </ul>
 </details></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../tasks.html">Python Tasks</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.task.html">legate.core.task.task</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
@@ -349,7 +349,7 @@
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4 current active"><a class="reference internal" href="legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
 </ul>
 </details></li>
@@ -449,15 +449,12 @@
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Python API Reference</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../classes.html" class="nav-link">Classes</a></li>
+    <li class="breadcrumb-item"><a href="../tasks.html" class="nav-link">Python Tasks</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../domain.html" class="nav-link">Domains</a></li>
+    <li class="breadcrumb-item"><a href="legate.core.task.PyTask.html" class="nav-link">legate.core.task.PyTask</a></li>
     
-    
-    <li class="breadcrumb-item"><a href="legate.core.Domain.html" class="nav-link">legate.core.Domain</a></li>
-    
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate.core.Domain.__hash__</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate.core.task.PyTask.library</span></li>
   </ul>
 </nav>
 </div>
@@ -474,12 +471,28 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="legate-core-domain-hash">
-<h1>legate.core.Domain.__hash__<a class="headerlink" href="#legate-core-domain-hash" title="Link to this heading">#</a></h1>
-<dl class="py method">
-<dt class="sig sig-object py" id="legate.core.Domain.__hash__">
-<span class="sig-prename descclassname"><span class="pre">Domain.</span></span><span class="sig-name descname"><span class="pre">__hash__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#legate.core.Domain.__hash__" title="Link to this definition">#</a></dt>
-<dd><p>Return hash(self).</p>
+  <section id="legate-core-task-pytask-library">
+<h1>legate.core.task.PyTask.library<a class="headerlink" href="#legate-core-task-pytask-library" title="Link to this heading">#</a></h1>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="legate.core.task.PyTask.library">
+<span class="sig-prename descclassname"><span class="pre">PyTask.</span></span><span class="sig-name descname"><span class="pre">library</span></span><a class="headerlink" href="#legate.core.task.PyTask.library" title="Link to this definition">#</a></dt>
+<dd><p>Library
+Return the library with which this task is registered.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">return<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The library with which the task is registered.</p>
+</dd>
+<dt class="field-even">rtype<span class="colon">:</span></dt>
+<dd class="field-even"><p>Library</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>PyTask.library</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -495,20 +508,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="legate.core.Domain.__gt__.html"
+       href="legate.core.task.PyTask.UNREGISTERED_ID.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">legate.core.Domain.__gt__</p>
+        <p class="prev-next-title">legate.core.task.PyTask.UNREGISTERED_ID</p>
       </div>
     </a>
     <a class="right-next"
-       href="legate.core.Domain.__iter__.html"
+       href="legate.core.task.PyTask.registered.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">legate.core.Domain.__iter__</p>
+        <p class="prev-next-title">legate.core.task.PyTask.registered</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -533,7 +546,7 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legate.core.Domain.__hash__"><code class="docutils literal notranslate"><span class="pre">__hash__()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legate.core.task.PyTask.library"><code class="docutils literal notranslate"><span class="pre">library</span></code></a></li>
 </ul>
   </nav></div>
 

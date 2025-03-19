@@ -15,6 +15,7 @@
       :toctree: .
    
       ~PyTask.UNREGISTERED_ID
+      ~PyTask.library
       ~PyTask.registered
       ~PyTask.task_id
    

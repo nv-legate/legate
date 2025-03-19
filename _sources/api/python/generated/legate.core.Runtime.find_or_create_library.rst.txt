@@ -1,0 +1,6 @@
+legate.core.Runtime.find\_or\_create\_library
+=============================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Runtime.find_or_create_library
