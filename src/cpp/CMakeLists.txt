@@ -148,7 +148,7 @@ endif()
 # ########################################################################################
 # * MPI wrapper --------------------------------------------------------------
 
-if(Legion_NETWORKS)
+if(Legion_NETWORKS AND NOT LEGATE_BUILD_PIP_WHEELS)
   # The wrapper we build should not install anything but the library object itself,
   # because we want to install the sources (and cmake files) to a different location
   # ourselves.
@@ -493,11 +493,17 @@ if(legate_ENABLE_SANITIZERS)
   target_sources(legate PRIVATE legate/utilities/detail/sanitizer_defaults.cc)
 endif()
 
-if(TARGET legate::mpi_wrapper)
+if(Legion_NETWORKS)
   target_sources(legate
                  PRIVATE legate/comm/detail/mpi_network.cc
                          legate/comm/detail/mpi_interface.cc
                          legate/comm/detail/comm_mpi.cc)
+  if(NOT TARGET legate::mpi_wrapper)
+    # The MPI wrapper's headers are needed for some symbols, no link.
+    target_include_directories(legate
+                               PRIVATE "${legate_cpp_SOURCE_DIR}/../share/legate/mpi_wrapper/src"
+    )
+  endif()
 endif()
 
 if(Legion_USE_OpenMP)
