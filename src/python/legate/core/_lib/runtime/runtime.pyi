@@ -13,13 +13,22 @@ from ..data.scalar import Scalar
 from ..data.shape import Shape
 from ..mapping.machine import Machine
 from ..operation.task import AutoTask, ManualTask
+from ..task.variant_options import VariantOptions
 from ..type.types import Type
-from ..utilities.typedefs import LocalTaskID
+from ..utilities.typedefs import LocalTaskID, VariantCode
 from ..utilities.unconstructable import Unconstructable
 from .library import Library
+from .resource import ResourceConfig
 
 class Runtime(Unconstructable):
     def find_library(self, library_name: str) -> Library: ...
+    def find_or_create_library(
+        self,
+        library_name: str,
+        *,
+        config: ResourceConfig | None = None,
+        default_options: dict[VariantCode, VariantOptions] | None = None,
+    ) -> tuple[Library, bool]: ...
     def create_library(self, library_name: str) -> Library: ...
     @property
     def core_library(self) -> Library: ...

@@ -178,7 +178,7 @@ class TestRuntimeError:
     def test_find_invalid_library(self) -> None:
         runtime = get_legate_runtime()
         msg = "Library test_find_invalid_library does not exist"
-        with pytest.raises(IndexError, match=msg):
+        with pytest.raises(ValueError, match=msg):
             runtime.find_library("test_find_invalid_library")
 
     def test_get_unconfigured_task_id(self) -> None:

@@ -8,9 +8,11 @@ cdef extern from "legate/mapping/mapping.h" namespace "legate::mapping" nogil:
         OMP
         CPU
 
-cdef extern from "legate/mapping/mapping.h" namespace "legate::mapping" nogil:
     cpdef enum class StoreTarget:
         SYSMEM
         FBMEM
         ZCMEM
         SOCKETMEM
+
+    cdef cppclass _Mapper "legate::mapping::Mapper":
+        pass

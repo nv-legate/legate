@@ -165,9 +165,96 @@ cdef class Runtime(Unconstructable):
             library_name
         )
         cdef _Library handle
-        with nogil:
-            handle = self._handle.find_library(_library_name)
+
+        try:
+            with nogil:
+                handle = self._handle.find_library(_library_name)
+        except IndexError as ie:
+            # C++ find_library() throws std::out_of_range, which Cython
+            # converts to an IndexError. But ValueError is much more
+            # appropriate (since what do indices have to do with not finding a
+            # library name).
+            raise ValueError(str(ie))
+
         return Library.from_handle(handle)
+
+    # Same as `find_or_create_library()` except it also accepts a mapper
+    # argument. The mapper isn't exposed to the user yet, so this remains a
+    # cdef, not a cpdef.
+    cdef tuple[Library, bool] find_or_create_library_mapper(
+        self,
+        str library_name,
+        ResourceConfig config,
+        std_unique_ptr[_Mapper] mapper,
+        dict[VariantCode, VariantOptions] default_options,
+    ):
+        cdef std_string_view cpp_library_name = std_string_view_from_py(
+            library_name
+        )
+
+        cdef std_map[VariantCode, _VariantOptions] cpp_default_options
+        cdef VariantCode code
+        cdef VariantOptions options
+
+        for code, options in default_options.items():
+            cpp_default_options[code] = options._handle
+
+        cdef bool created
+        cdef _Library handle
+
+        with nogil:
+            handle = self._handle.find_or_create_library(
+                cpp_library_name,
+                config._handle,
+                std_move(mapper),
+                cpp_default_options,
+                &created
+            )
+
+        cdef Library lib = Library.from_handle(std_move(handle))
+
+        return (lib, created)
+
+    cpdef tuple[Library, bool] find_or_create_library(
+        self,
+        str library_name,
+        ResourceConfig config = None,
+        dict[VariantCode, VariantOptions] default_options = None
+    ):
+        r"""
+        Search for an existing ``Library`` of a particular name, or create it
+        if it wasn't found.
+
+        Parameters
+        ----------
+        library_name : str
+            The name of the library to find.
+        config : ResourceConfig, optional
+            The resource configuration to use to create the library if needed.
+            Has no effect if the library is found.
+        default_options : dict[VariantCode, VariantOptions], optional
+            The default variant options to use to create the library if needed.
+            Has no effect if the library is found.
+
+        Returns
+        -------
+        Library
+            The ``Library`` instance.
+        bool
+            ``True`` if the library was created, ``False`` otherwise.
+        """
+        if config is None:
+            config = ResourceConfig()
+
+        if default_options is None:
+            default_options = {}
+
+        return self.find_or_create_library_mapper(
+            library_name=library_name,
+            config=config,
+            mapper=std_unique_ptr[_Mapper](),
+            default_options=default_options,
+        )
 
     cpdef Library create_library(self, str library_name):
         r"""

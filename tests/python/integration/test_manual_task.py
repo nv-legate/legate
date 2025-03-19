@@ -32,7 +32,7 @@ class TestManualTask:
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     def test_create_manual_task(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         manual_task = runtime.create_manual_task(
             library, tasks.basic_task.task_id, shape
         )
@@ -42,14 +42,14 @@ class TestManualTask:
 
     def test_create_with_lower_bounds(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         runtime.create_manual_task(
             library, tasks.basic_task.task_id, (1, 2, 3), (0, 1, 2)
         )
 
     def test_default_provenance(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         manual_task = runtime.create_manual_task(
             library, tasks.basic_task.task_id, (1, 2, 3)
         )
@@ -57,7 +57,7 @@ class TestManualTask:
 
     def test_scope_provenance(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         provenance = "foo"
         with Scope(provenance=provenance):
             manual_task = runtime.create_manual_task(
@@ -67,7 +67,7 @@ class TestManualTask:
 
     def test_track_provenance(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         manual_task = track_provenance()(runtime.create_manual_task)(
             library, tasks.basic_task.task_id, (1, 2, 3)
         )
@@ -79,7 +79,6 @@ class TestManualTask:
     @pytest.mark.parametrize("exc", [ValueError, AssertionError, RuntimeError])
     def test_pytask_exception_handling(self, exc: type[Exception]) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
 
         msg = "foo"
 
@@ -88,7 +87,7 @@ class TestManualTask:
             raise exc(msg)
 
         manual_task = runtime.create_manual_task(
-            library, exc_func.task_id, (1,)
+            exc_func.library, exc_func.task_id, (1,)
         )
         manual_task.throws_exception(exc)
         with pytest.raises(exc, match=msg):
@@ -97,7 +96,7 @@ class TestManualTask:
 
     def test_legate_exception_handling(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         manual_task = runtime.create_manual_task(
             library, tasks.basic_task.task_id, (1,)
         )
@@ -116,7 +115,6 @@ class TestManualTask:
 
     def test_recreate_task_with_exception(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
         exc = IndexError
         msg = re.escape(
             "Invalid arguments to task. Expected Nargs(0) output "
@@ -125,7 +123,7 @@ class TestManualTask:
 
         def exc_task() -> None:
             exc_task = runtime.create_manual_task(
-                library, tasks.basic_task.task_id, (1,)
+                tasks.basic_task.library, tasks.basic_task.task_id, (1,)
             )
             exc_task.add_output(runtime.create_store(ty.bool_))
             exc_task.throws_exception(exc)
@@ -140,7 +138,7 @@ class TestManualTask:
     def test_input_output(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.copy_store_task.task_id, shape
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id, shape
         )
 
         in_arr_np = np.empty(shape=shape, dtype=np.int32)
@@ -171,7 +169,7 @@ class TestManualTask:
         shape = (3, 1, 3)
         dtype_np = dtype.to_numpy_dtype()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.fill_task.task_id, shape
+            tasks.fill_task.library, tasks.fill_task.task_id, shape
         )
         out_store = runtime.create_store(dtype, shape)
         manual_task.add_output(out_store)
@@ -192,7 +190,9 @@ class TestManualTask:
         shape = (size,)
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.copy_np_array_task.task_id, shape
+            tasks.copy_np_array_task.library,
+            tasks.copy_np_array_task.task_id,
+            shape,
         )
         out_store = runtime.create_store(ty.int32, shape)
         manual_task.add_output(out_store)
@@ -235,7 +235,9 @@ class TestManualTask:
         tile = (2, 2, 2, 2)
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.partition_to_store_task.task_id, tile
+            tasks.partition_to_store_task.library,
+            tasks.partition_to_store_task.task_id,
+            tile,
         )
         arr = np.random.random(shape)
         store = runtime.create_store_from_buffer(
@@ -256,7 +258,7 @@ class TestManualTask:
         tile = (2, 2, 2, 2)
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.copy_store_task.task_id, tile
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id, tile
         )
         arr = np.random.random(shape)
         store = runtime.create_store_from_buffer(
@@ -288,7 +290,7 @@ class TestManualTask:
         )
 
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.array_sum_task.task_id, (1,)
+            tasks.array_sum_task.library, tasks.array_sum_task.task_id, (1,)
         )
 
         manual_task.add_input(in_store)
@@ -312,7 +314,7 @@ class TestManualTask:
         partition = out_store.partition_by_tiling((1, 1))
 
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.array_sum_task.task_id, (1,)
+            tasks.array_sum_task.library, tasks.array_sum_task.task_id, (1,)
         )
 
         manual_task.add_input(in_store)
@@ -327,7 +329,7 @@ class TestManualTask:
         runtime = get_legate_runtime()
         shape = (runtime.machine.count(),)
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.copy_store_task.task_id, shape
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id, shape
         )
         in_arr, in_store = utils.random_array_and_store(shape)
         out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
@@ -355,7 +357,7 @@ class TestManualTask:
         runtime = get_legate_runtime()
         count = runtime.machine.count()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, foo_task.task_id, (count,)
+            foo_task.library, foo_task.task_id, (count,)
         )
         # not sure how to actually check the impact from python side
         # just set and execute for now
@@ -368,7 +370,7 @@ class TestManualTask:
     def test_add_communicator(self, communicator: str) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.basic_task.task_id, (1,)
+            tasks.basic_task.library, tasks.basic_task.task_id, (1,)
         )
         # can't find a good way to check whether a communicator exists or not
         # before the acture add_communicator call
@@ -390,7 +392,7 @@ class TestManualTask:
     def test_builtin_communicator(self, communicator: str) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library,
+            tasks.basic_task.library,
             tasks.basic_task.task_id,
             (1,) * min(runtime.machine.count(), LEGATE_MAX_DIM),
         )
@@ -414,7 +416,7 @@ class TestManualTaskErrors:
     def test_add_invalid_input_output(self) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.basic_task.task_id, (1, 2, 3)
+            tasks.basic_task.library, tasks.basic_task.task_id, (1, 2, 3)
         )
         msg = "Expected .* but got .*"
         with pytest.raises(TypeError, match=msg):
@@ -428,7 +430,7 @@ class TestManualTaskErrors:
     def test_unsupported_scalar_arg_type(self, dtype: tuple[Any, ...]) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.basic_task.task_id, (1, 2, 3)
+            tasks.basic_task.library, tasks.basic_task.task_id, (1, 2, 3)
         )
         msg = "Unsupported type"
         with pytest.raises(TypeError, match=msg):
@@ -437,7 +439,7 @@ class TestManualTaskErrors:
     def test_scalar_val_with_array_type(self) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.basic_task.task_id, (1, 2, 3)
+            tasks.basic_task.library, tasks.basic_task.task_id, (1, 2, 3)
         )
         msg = "object of type .* has no len()"
         with pytest.raises(TypeError, match=msg):
@@ -446,9 +448,8 @@ class TestManualTaskErrors:
     @pytest.mark.xfail(run=False, reason="crash during reuse")
     def test_manual_task_exception_reuse(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
         manual_task = runtime.create_manual_task(
-            library, tasks.basic_task.task_id, (1,)
+            tasks.basic_task.library, tasks.basic_task.task_id, (1,)
         )
         manual_task.add_output(runtime.create_store(ty.bool_))
         manual_task.throws_exception(ValueError)
@@ -474,7 +475,7 @@ class TestManualTaskErrors:
         self, shape: tuple[int, ...], bounds: tuple[int, ...]
     ) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         with pytest.raises(ValueError, match="domain must not be empty"):
             runtime.create_manual_task(
                 library, tasks.basic_task.task_id, shape, bounds
@@ -483,7 +484,7 @@ class TestManualTaskErrors:
     @pytest.mark.xfail(run=False, reason="crashes application")
     def test_launch_output_shape_mismatch(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         exc = ValueError
         msg = "Dimensionalities of output regions must be the same"
 
@@ -515,7 +516,9 @@ class TestManualTaskErrors:
         runtime = get_legate_runtime()
         with pytest.raises(ValueError, match=msg):
             runtime.create_manual_task(
-                runtime.core_library, tasks.basic_task.task_id, launch_domain
+                tasks.basic_task.library,
+                tasks.basic_task.task_id,
+                launch_domain,
             )
 
     def test_create_invalid_lower_bounds(self) -> None:
@@ -523,7 +526,7 @@ class TestManualTaskErrors:
         msg = "Lower bounds must be iterable"
         with pytest.raises(ValueError, match=msg):
             runtime.create_manual_task(
-                runtime.core_library,
+                tasks.basic_task.library,
                 tasks.basic_task.task_id,
                 (1,),
                 1,  # type:ignore [arg-type]
@@ -534,7 +537,7 @@ class TestManualTaskErrors:
         runtime = get_legate_runtime()
         shape = (1,)
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.copy_store_task.task_id, shape
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id, shape
         )
 
         in_store = runtime.create_store(ty.int32, shape=shape)
@@ -549,7 +552,7 @@ class TestManualTaskErrors:
 
     def test_add_invalid_communicator(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         exc = RuntimeError
         msg = "No factory available for communicator"
 
@@ -564,7 +567,7 @@ class TestManualTaskErrors:
         runtime = get_legate_runtime()
         shape = (runtime.machine.count() + 1,)
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.basic_task.task_id, shape
+            tasks.basic_task.library, tasks.basic_task.task_id, shape
         )
         manual_task.set_concurrent(True)
         # TODO(yimoj) [issue 1261]
@@ -584,7 +587,7 @@ class TestManualTaskErrors:
         )
         partition = out_store.partition_by_tiling((1,))
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.array_sum_task.task_id, (1,)
+            tasks.array_sum_task.library, tasks.array_sum_task.task_id, (1,)
         )
 
         proj = "foo"
@@ -599,7 +602,7 @@ class TestManualTaskErrors:
     def test_invalid_reduction_store(self) -> None:
         runtime = get_legate_runtime()
         manual_task = runtime.create_manual_task(
-            runtime.core_library, tasks.array_sum_task.task_id, (1,)
+            tasks.array_sum_task.library, tasks.array_sum_task.task_id, (1,)
         )
 
         store = "foo"

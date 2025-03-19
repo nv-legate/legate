@@ -5,6 +5,8 @@
 from cython.cimports.cpython.ref import PyObject
 
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
+from libcpp.map cimport map as std_map
+from libcpp.memory cimport unique_ptr as std_unique_ptr
 from libcpp cimport bool
 
 from ..._ext.cython_libcpp.string_view cimport std_string_view
@@ -14,15 +16,17 @@ from ..data.logical_store cimport LogicalStore, _LogicalStore
 from ..data.scalar cimport Scalar, _Scalar
 from ..data.shape cimport _Shape
 from ..mapping.machine cimport Machine, _Machine
+from ..mapping.mapping cimport _Mapper
 from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
 from ..task.exception cimport _TaskException
+from ..task.variant_options cimport _VariantOptions, VariantOptions
 from ..type.types cimport Type, _Type
 from ..utilities.tuple cimport _tuple
-from ..utilities.typedefs cimport _Domain, _LocalTaskID
+from ..utilities.typedefs cimport _Domain, _LocalTaskID, VariantCode
 from ..utilities.unconstructable cimport Unconstructable
 from .detail.runtime cimport _RuntimeImpl
 from .library cimport Library, _Library
-from .resource cimport _ResourceConfig
+from .resource cimport _ResourceConfig, ResourceConfig
 
 
 cdef extern from *:
@@ -145,6 +149,13 @@ cdef extern from *:
 cdef extern from "legate/runtime/runtime.h" namespace "legate" nogil:
     cdef cppclass _Runtime "legate::Runtime":
         _Library find_library(std_string_view) except+
+        _Library find_or_create_library(
+            std_string_view library_name,
+            const _ResourceConfig& config,
+            std_unique_ptr[_Mapper] mapper,
+            const std_map[VariantCode, _VariantOptions]& default_options,
+            bool* created
+        ) except+
         _Library create_library(std_string_view) except+
         _AutoTask create_task(_Library, _LocalTaskID) except+
         _ManualTask create_task(
@@ -222,6 +233,19 @@ cdef class Runtime(Unconstructable):
     cdef Runtime from_handle(_Runtime*)
 
     cpdef Library find_library(self, str library_name)
+    cdef tuple[Library, bool] find_or_create_library_mapper(
+        self,
+        str library_name,
+        ResourceConfig config,
+        std_unique_ptr[_Mapper] mapper,
+        dict[VariantCode, VariantOptions] default_options,
+    )
+    cpdef tuple[Library, bool] find_or_create_library(
+        self,
+        str library_name,
+        ResourceConfig config = *,
+        dict[VariantCode, VariantOptions] default_options = *
+    )
     cpdef Library create_library(self, str library_name)
     cpdef AutoTask create_auto_task(
         self, Library library, _LocalTaskID task_id)

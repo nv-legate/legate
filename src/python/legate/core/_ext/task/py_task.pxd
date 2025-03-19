@@ -6,12 +6,14 @@ from __future__ import annotations
 from libc.stdint cimport int64_t
 from libcpp cimport bool
 
+from collections.abc import Sequence
+
 from ..._lib.operation.task cimport AutoTask
 from ..._lib.runtime.library cimport Library
 from ..._lib.task.task_context cimport TaskContext
 from ..._lib.utilities.typedefs cimport VariantCode, _LocalTaskID
 from .invoker cimport VariantInvoker
-from .type cimport VariantList, VariantMapping
+from .type cimport VariantMapping
 
 from .type import UserFunction
 
@@ -37,7 +39,7 @@ cdef class PyTask:
     cdef VariantMapping _init_variants(
         self,
         func: UserFunction,
-        VariantList variants,
+        variants: Sequence[VariantCode],
     )
     cdef void _invoke_variant(self, TaskContext ctx, VariantCode variant)
     cdef void _cpu_variant(self, TaskContext ctx)

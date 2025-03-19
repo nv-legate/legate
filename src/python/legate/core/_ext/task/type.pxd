@@ -11,7 +11,6 @@ from ..._lib.task.task_context cimport TaskContext
 from ..._lib.utilities.typedefs cimport VariantCode
 
 ctypedef tuple[str, ...] ParamList
-ctypedef tuple[VariantCode, ...] VariantList
 # Would use UserFunction | None below, but get:
 #
 # legate/_ext/task/type.pxd:26:39: Compiler crash in

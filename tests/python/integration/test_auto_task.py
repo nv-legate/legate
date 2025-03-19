@@ -42,18 +42,18 @@ from .utils.data import (
 class TestAutoTask:
     def test_create_auto_task(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         runtime.create_auto_task(library, tasks.basic_task.task_id)
 
     def test_default_provenance(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         auto_task = runtime.create_auto_task(library, tasks.basic_task.task_id)
         assert auto_task.provenance() == ""
 
     def test_scope_provenance(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         provenance = "foo"
         with Scope(provenance=provenance):
             auto_task = runtime.create_auto_task(
@@ -63,7 +63,7 @@ class TestAutoTask:
 
     def test_track_provenance(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         auto_task = track_provenance()(runtime.create_auto_task)(
             library, tasks.basic_task.task_id
         )
@@ -75,7 +75,6 @@ class TestAutoTask:
     @pytest.mark.parametrize("exc", [ValueError, AssertionError, RuntimeError])
     def test_pytask_exception_handling(self, exc: type[Exception]) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
 
         msg = "foo"
 
@@ -83,7 +82,9 @@ class TestAutoTask:
         def exc_func() -> None:
             raise exc(msg)
 
-        auto_task = runtime.create_auto_task(library, exc_func.task_id)
+        auto_task = runtime.create_auto_task(
+            exc_func.library, exc_func.task_id
+        )
         auto_task.throws_exception(exc)
         with pytest.raises(exc, match=msg):
             auto_task.execute()
@@ -91,7 +92,7 @@ class TestAutoTask:
 
     def test_legate_exception_handling(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         auto_task = runtime.create_auto_task(library, tasks.basic_task.task_id)
         auto_task.add_output(runtime.create_store(ty.bool_))
         exc = IndexError
@@ -108,7 +109,7 @@ class TestAutoTask:
 
     def test_recreate_task_with_exception(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         exc = IndexError
         msg = re.escape(
             "Invalid arguments to task. Expected Nargs(0) output "
@@ -136,7 +137,7 @@ class TestAutoTask:
     def test_input_output(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task.task_id
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id
         )
 
         in_arr_np = np.empty(shape=shape, dtype=np.int32)
@@ -165,7 +166,7 @@ class TestAutoTask:
         shape = (3, 1, 3)
         dtype_np = dtype.to_numpy_dtype()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.fill_task.task_id
+            tasks.fill_task.library, tasks.fill_task.task_id
         )
         out_store = runtime.create_store(dtype, shape)
         auto_task.add_output(out_store)
@@ -190,7 +191,7 @@ class TestAutoTask:
     def test_tuple_scalar_arg(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_np_array_task.task_id
+            tasks.copy_np_array_task.library, tasks.copy_np_array_task.task_id
         )
         out_store = runtime.create_store(ty.int32, shape)
         auto_task.add_output(out_store)
@@ -208,7 +209,7 @@ class TestAutoTask:
     def test_mixed_input(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.mixed_sum_task.task_id
+            tasks.mixed_sum_task.library, tasks.mixed_sum_task.task_id
         )
         arg1_np = np.random.random((3, 2))
         arg2_np = np.random.random((4, 3, 2))
@@ -240,7 +241,7 @@ class TestAutoTask:
     ) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task.task_id
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id
         )
 
         in_store = runtime.create_store(ty.int32, shape=shape)
@@ -267,7 +268,7 @@ class TestAutoTask:
     def test_concurrent(self, shape: tuple[int, ...]) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task.task_id
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id
         )
         in_arr, in_store = utils.random_array_and_store(shape)
         out_arr, out_store = utils.empty_array_and_store(ty.float64, shape)
@@ -294,7 +295,7 @@ class TestAutoTask:
         obj = foo()
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, foo_task.task_id
+            foo_task.library, foo_task.task_id
         )
         # not sure how to actually check this from python side
         # just set and execute for now
@@ -307,7 +308,7 @@ class TestAutoTask:
     def test_add_communicator(self, communicator: str) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.basic_task.task_id
+            tasks.basic_task.library, tasks.basic_task.task_id
         )
         # can't find a good way to check whether a communicator exists or not
         # before the acture add_communicator call
@@ -329,7 +330,7 @@ class TestAutoTask:
     def test_builtin_communicator(self, communicator: str) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.basic_task.task_id
+            tasks.basic_task.library, tasks.basic_task.task_id
         )
 
         func = getattr(auto_task, f"add_{communicator}_communicator")
@@ -361,7 +362,7 @@ class TestAutoTaskConstraints:
         )
 
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.array_sum_task.task_id
+            tasks.array_sum_task.library, tasks.array_sum_task.task_id
         )
         auto_task.add_input(in_store)
         in_part = auto_task.declare_partition() if part else None
@@ -388,7 +389,8 @@ class TestAutoTaskConstraints:
         out_np, out_store = utils.zero_array_and_store(ty.float64, tgt_shape)
 
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task_no_constraints.task_id
+            tasks.copy_store_task_no_constraints.library,
+            tasks.copy_store_task_no_constraints.task_id,
         )
         auto_task.add_input(in_store)
         auto_task.add_output(out_store)
@@ -436,7 +438,7 @@ class TestAutoTaskConstraints:
 
         _, range_store = utils.random_array_and_store(shape)
         auto_task = runtime.create_auto_task(
-            runtime.core_library, image_task.task_id
+            image_task.library, image_task.task_id
         )
         func_part = auto_task.declare_partition()
         range_part = auto_task.declare_partition()
@@ -458,7 +460,7 @@ class TestAutoTaskConstraints:
         out_np, out_store = utils.zero_array_and_store(ty.float64, out_shape)
 
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.repeat_task.task_id
+            tasks.repeat_task.library, tasks.repeat_task.task_id
         )
         in_part = auto_task.declare_partition()
         out_part = auto_task.declare_partition()
@@ -484,7 +486,7 @@ class TestAutoTaskConstraints:
         _, bloat_store = utils.random_array_and_store(shape)
 
         auto_task = runtime.create_auto_task(
-            runtime.core_library, bloat_task.task_id
+            bloat_task.library, bloat_task.task_id
         )
         source_part = auto_task.declare_partition()
         bloat_part = auto_task.declare_partition()
@@ -510,7 +512,7 @@ class TestAutoTaskErrors:
     def test_add_invalid_input_output(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.basic_task.task_id
+            tasks.basic_task.library, tasks.basic_task.task_id
         )
         msg = "Expected .* but got .*"
         with pytest.raises(ValueError, match=msg):
@@ -521,7 +523,7 @@ class TestAutoTaskErrors:
     def test_invalid_partition(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.basic_task.task_id
+            tasks.basic_task.library, tasks.basic_task.task_id
         )
         store = runtime.create_store(ty.int32, (1, 2, 3))
         with pytest.raises(ValueError, match="Invalid partition symbol"):
@@ -544,7 +546,7 @@ class TestAutoTaskErrors:
     ) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.basic_task.task_id
+            tasks.basic_task.library, tasks.basic_task.task_id
         )
         msg = "Unsupported type"
         with pytest.raises(TypeError, match=msg):
@@ -553,7 +555,7 @@ class TestAutoTaskErrors:
     def test_scalar_val_with_array_type(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.basic_task.task_id
+            tasks.basic_task.library, tasks.basic_task.task_id
         )
         msg = "object of type .* has no len()"
         with pytest.raises(TypeError, match=msg):
@@ -562,7 +564,7 @@ class TestAutoTaskErrors:
     @pytest.mark.xfail(run=False, reason="arbitrary crash during reuse")
     def test_auto_task_reuse(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         auto_task = runtime.create_auto_task(library, tasks.basic_task.task_id)
         auto_task.add_output(runtime.create_store(ty.bool_))
         auto_task.throws_exception(ValueError)
@@ -583,7 +585,7 @@ class TestAutoTaskErrors:
     def test_uninitialized_input_store(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task.task_id
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id
         )
 
         in_store = runtime.create_store(ty.int32, shape=(1,))
@@ -598,7 +600,7 @@ class TestAutoTaskErrors:
 
     def test_add_invalid_communicator(self) -> None:
         runtime = get_legate_runtime()
-        library = runtime.core_library
+        library = tasks.basic_task.library
         exc = RuntimeError
         msg = "No factory available for communicator"
 
@@ -617,7 +619,7 @@ class TestAutoTaskErrors:
             store, low_offsets, high_offsets, True
         )
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.fill_task.task_id
+            tasks.fill_task.library, tasks.fill_task.task_id
         )
         auto_task.add_output(store)
         val = 7654321
@@ -633,7 +635,7 @@ class TestAutoTaskConstraintsErrors:
     def test_alignment_shape_mismatch(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task.task_id
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id
         )
         in_store = runtime.create_store(ty.int32, (1,))
         out_store = runtime.create_store(ty.int32, (1, 2))
@@ -647,7 +649,7 @@ class TestAutoTaskConstraintsErrors:
     def test_alignment_bound_unbound(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task.task_id
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id
         )
         in_store = runtime.create_store(ty.int32, (1,))
         out_store = runtime.create_store(ty.int32)
@@ -661,7 +663,7 @@ class TestAutoTaskConstraintsErrors:
     def test_alignment_non_input(self) -> None:
         runtime = get_legate_runtime()
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task.task_id
+            tasks.copy_store_task.library, tasks.copy_store_task.task_id
         )
         in_store = runtime.create_store(ty.int32, (1,))
         auto_task.add_input(in_store)
@@ -683,7 +685,8 @@ class TestAutoTaskConstraintsErrors:
         _, bloat_store = utils.random_array_and_store(shape)
 
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.copy_store_task_no_constraints.task_id
+            tasks.copy_store_task_no_constraints.library,
+            tasks.copy_store_task_no_constraints.task_id,
         )
         source_part = auto_task.declare_partition()
         bloat_part = auto_task.declare_partition()
@@ -713,7 +716,7 @@ class TestAutoTaskConstraintsErrors:
         src_shape = (5, 10, 5)
         _, in_store = utils.random_array_and_store(src_shape)
         auto_task = runtime.create_auto_task(
-            runtime.core_library, tasks.basic_task.task_id
+            tasks.basic_task.library, tasks.basic_task.task_id
         )
         with pytest.raises(exc, match=msg):
             auto_task.add_broadcast(in_store, axes)

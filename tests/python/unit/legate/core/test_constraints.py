@@ -34,8 +34,7 @@ def dummy_task() -> AutoTask:
     def foo(x: InputStore, y: InputStore) -> None:
         pass
 
-    runtime = get_legate_runtime()
-    return runtime.create_auto_task(runtime.core_library, foo.task_id)
+    return get_legate_runtime().create_auto_task(foo.library, foo.task_id)
 
 
 def _make_input_store() -> LogicalStore:

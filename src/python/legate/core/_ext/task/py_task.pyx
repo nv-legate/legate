@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from ..._lib.operation.task cimport AutoTask
@@ -14,7 +15,7 @@ from ..._lib.task.task_signature cimport _TaskSignature
 from ..._lib.utilities.typedefs cimport VariantCode, _LocalTaskID
 from ..._lib.utilities.typedefs import VariantCode as PyVariantCode
 from .invoker cimport VariantInvoker
-from .type cimport VariantList, VariantMapping
+from .type cimport VariantMapping
 from .util cimport validate_variant, _get_callable_name
 
 from .type import UserFunction
@@ -26,7 +27,7 @@ cdef class PyTask:
         self,
         *,
         func: UserFunction,
-        variants: VariantList,
+        variants: Sequence[VariantCode],
         constraints: Sequence[ConstraintProxy] | None = None,
         throws_exception: bool = False,
         has_side_effect: bool = False,
@@ -48,7 +49,7 @@ cdef class PyTask:
         throws_exception
             ``True`` if any variants of ``func`` throws an exception, ``False``
             otherwise.
-        has_side_effect : bool, False
+        has_side_effect
             Whether the task has any global side-effects. See
             ``AutoTask.set_side_effect()`` for further information.
         invoker
@@ -107,6 +108,15 @@ cdef class PyTask:
             )
         return self._task_id
 
+    @property
+    def library(self) -> Library:
+        r"""Return the library with which this task is registered.
+
+        :return: The library with which the task is registered.
+        :rtype: Library
+        """
+        return self._library
+
     def prepare_call(self, *args: Any, **kwargs: Any) -> AutoTask:
         r"""Prepare a task instance for execution.
 
@@ -148,7 +158,7 @@ cdef class PyTask:
         legate.task.task.PyTask.__call__
         """
         cdef AutoTask task = get_legate_runtime().create_auto_task(
-            self._library, self.task_id
+            self.library, self.task_id
         )
         task._handle.throws_exception(self._throws)
         task.set_side_effect(self._has_side_effect)
@@ -221,15 +231,16 @@ cdef class PyTask:
         if not variants:
             raise ValueError("Task has no registered variants")
 
-        cdef _LocalTaskID task_id = self._library.get_new_task_id()
+        cdef _LocalTaskID task_id = self.library.get_new_task_id()
         cdef _TaskSignature signature = self._invoker.prepare_task_signature()
         cdef TaskInfo task_info = TaskInfo.from_variants_signature(
-            task_id,
-            self._name,
-            variants,
-            &signature
+            local_task_id=task_id,
+            library=self.library,
+            name=self._name,
+            variants=variants,
+            signature=&signature
         )
-        self._library.register_task(task_info)
+        self.library.register_task(task_info)
         self._task_id = task_id
         return task_id
 
@@ -310,7 +321,7 @@ cdef class PyTask:
     cdef VariantMapping _init_variants(
         self,
         func: UserFunction,
-        variants: VariantList
+        variants: Sequence[VariantCode]
     ):
         cdef VariantCode v
         for v in variants:

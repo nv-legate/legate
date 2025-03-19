@@ -14,6 +14,7 @@ import pytest
 import legate.core as lg
 from legate.core import (
     Field,
+    Library,
     PhysicalStore,
     Scalar,
     Table,
@@ -75,6 +76,7 @@ class BaseTest:
         assert isinstance(task, PyTask)
         assert callable(task)
         assert isinstance(task.registered, bool)
+        assert isinstance(task.library, Library)
 
     def check_valid_registered_task(self, task: PyTask) -> None:
         self.check_valid_task(task)
@@ -86,7 +88,11 @@ class BaseTest:
     def check_valid_unregistered_task(self, task: PyTask) -> None:
         self.check_valid_task(task)
         assert not task.registered
-        with pytest.raises(RuntimeError):
+        m = re.escape(
+            "Task must complete registration "
+            "(via task.complete_registration()) before receiving a task id"
+        )
+        with pytest.raises(RuntimeError, match=m):
             _ = task.task_id  # must complete registration first
 
     def check_valid_invoker(
@@ -105,6 +111,36 @@ class BaseTest:
 
 
 class TestTask(BaseTest):
+    def test_basic(self) -> None:
+        def foo() -> None:
+            pass
+
+        variants = (VariantCode.CPU,)
+        task = PyTask(func=foo, variants=variants)
+        self.check_valid_registered_task(task)
+
+    def test_construct_with_args(self) -> None:
+        def foo(x: InputStore) -> None:
+            pass
+
+        variants = (VariantCode.CPU,)
+        lib, _ = get_legate_runtime().find_or_create_library(
+            "my_custom_library"
+        )
+
+        task = PyTask(
+            func=foo,
+            variants=variants,
+            constraints=(lg.broadcast("x"),),
+            throws_exception=True,
+            has_side_effect=True,
+            library=lib,
+            register=False,
+        )
+
+        self.check_valid_unregistered_task(task)
+        assert task.library == lib
+
     @pytest.mark.parametrize("func", USER_FUNCS)
     @pytest.mark.parametrize("register", [True, False])
     def test_create_auto(

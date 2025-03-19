@@ -180,6 +180,7 @@ cdef class TaskInfo(Unconstructable):
     @staticmethod
     cdef TaskInfo from_handle(_TaskInfo handle, _LocalTaskID local_task_id):
         cdef TaskInfo result = TaskInfo.__new__(TaskInfo)
+
         result._handle = std_move(handle)
         result._local_id = local_task_id
         result._registered_variants = {}
@@ -195,8 +196,12 @@ cdef class TaskInfo(Unconstructable):
         self,
         _GlobalTaskID global_task_id
     ):
-        assert global_task_id not in _gid_to_variant_callbacks, \
-            f"Already registered task (local id: {self.get_local_id()})"
+        global _gid_to_variant_callbacks
+
+        if global_task_id in _gid_to_variant_callbacks:
+            m = f"Already registered task (local id: {self.get_local_id()})"
+            raise AssertionError(m)
+
         _gid_to_variant_callbacks[global_task_id] = self._registered_variants
         self._registered_variants = {}
 
@@ -205,7 +210,7 @@ cdef class TaskInfo(Unconstructable):
 
     def __repr__(self) -> str:
         r"""
-        Return a human-readable string representation of the `TaskInfo`.
+        Return a human-readable string representation of the ``TaskInfo``.
 
         Returns
         -------
@@ -230,16 +235,18 @@ cdef class TaskInfo(Unconstructable):
     @staticmethod
     cdef TaskInfo from_variants_signature(
         _LocalTaskID local_task_id,
+        Library library,
         str name,
         list[tuple[VariantCode, object]] variants,
         const _TaskSignature *signature
     ):
         if not variants:
-            raise ValueError(
+            m = (
                 "Cannot construct task info "
                 f"(local id: {local_task_id}, name: {name})."
                 " Variants must not be empty."
             )
+            raise ValueError(m)
 
         cdef TaskInfo task_info
 
@@ -250,7 +257,10 @@ cdef class TaskInfo(Unconstructable):
         cdef VariantCode variant_kind
         for variant_kind, variant_fn in variants:
             task_info.add_variant_signature(
-                variant_kind, variant_fn, signature
+                library=library,
+                variant_kind=variant_kind,
+                fn=variant_fn,
+                signature=signature
             )
         return task_info
 
@@ -262,7 +272,7 @@ cdef class TaskInfo(Unconstructable):
         list[tuple[VariantCode, object]] variants
     ) -> TaskInfo:
         r"""
-        Construct a `TaskInfo` from a list of variants.
+        Construct a ``TaskInfo`` from a list of variants.
 
         Parameters
         ----------
@@ -276,10 +286,11 @@ cdef class TaskInfo(Unconstructable):
         Returns
         -------
         TaskInfo
-            The created `TaskInfo` object.
+            The created ``TaskInfo`` object.
         """
         return TaskInfo.from_variants_signature(
             local_task_id=local_task_id,
+            library=get_legate_runtime().core_library,
             name=name,
             variants=variants,
             signature=NULL
@@ -313,7 +324,7 @@ cdef class TaskInfo(Unconstructable):
         Returns
         -------
         bool
-            `True` if the variant exists, `False` otherwise.
+            ``True`` if the variant exists, ``False`` otherwise.
 
         Raises
         ------
@@ -331,7 +342,11 @@ cdef class TaskInfo(Unconstructable):
     # have two versions of the function is because TaskSignature does not need
     # to be exposed to the user.
     cdef void add_variant_signature(
-        self, VariantCode variant_kind, object fn, const _TaskSignature *signature
+        self,
+        Library library,
+        VariantCode variant_kind,
+        object fn,
+        const _TaskSignature *signature
     ):
         if not callable(fn):
             raise TypeError(
@@ -355,16 +370,11 @@ cdef class TaskInfo(Unconstructable):
                 f"(local id: {self.get_local_id()})"
             )
 
-        # We could just call this inline below, but since core_library is a
-        # property (and, therefore, a fulyl fledged Python function), Cython is
-        # not able to deduce the return type. So we need to spell it out here
-        cdef Library core_lib = get_legate_runtime().core_library
-
         with nogil:
             cytaskinfo_add_variant(
                 &self._handle,
                 self._local_id,
-                core_lib._handle,
+                library._handle,
                 variant_kind,
                 _py_variant,
                 callback,
@@ -389,13 +399,16 @@ cdef class TaskInfo(Unconstructable):
         RuntimeError
             If the task info object is in an invalid state.
         TypeError
-            If `fn` is not callable.
+            If ``fn`` is not callable.
         ValueError
-            If `variant_kind` is an unknown variant kind.
+            If ``variant_kind`` is an unknown variant kind.
         RuntimeError
             If the task info object has already registered a variant for
-            `variant_kind`.
+            ``variant_kind``.
         """
         self.add_variant_signature(
-            variant_kind=variant_kind, fn=fn, signature=NULL
+            library=get_legate_runtime().core_library,
+            variant_kind=variant_kind,
+            fn=fn,
+            signature=NULL
         )

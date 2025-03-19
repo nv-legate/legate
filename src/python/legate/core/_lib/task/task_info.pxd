@@ -16,6 +16,7 @@ from ..utilities.typedefs cimport (
 )
 from ..utilities.unconstructable cimport Unconstructable
 from ..utilities.shared_ptr cimport _SharedPtr
+from ..runtime.library cimport Library
 from .variant_options cimport _VariantOptions
 from .variant_info cimport _VariantInfo
 from .task_signature cimport _TaskSignature
@@ -52,6 +53,7 @@ cdef class TaskInfo(Unconstructable):
     @staticmethod
     cdef TaskInfo from_variants_signature(
         _LocalTaskID local_task_id,
+        Library library,
         str name,
         list[tuple[VariantCode, object]] variants,
         const _TaskSignature *signature
@@ -62,6 +64,7 @@ cdef class TaskInfo(Unconstructable):
     cpdef bool has_variant(self, VariantCode)
     cdef void add_variant_signature(
         self,
+        Library library,
         VariantCode variant_kind,
         object fn,
         const _TaskSignature *signature

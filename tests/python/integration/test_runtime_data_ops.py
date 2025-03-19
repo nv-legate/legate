@@ -357,7 +357,7 @@ class TestStoreOpsErrors:
         msg = "Multi-dimensional stores are not supported"
         with pytest.raises(RuntimeError, match=msg):
             runtime.tree_reduce(
-                runtime.core_library, tasks.zeros_task.task_id, store
+                tasks.zeros_task.library, tasks.zeros_task.task_id, store
             )
 
     def test_fill_non_nullable(self) -> None:
