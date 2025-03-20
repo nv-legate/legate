@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -26,15 +27,35 @@ from legate.tester.test_system import TestSystem
 
 def _find_tests(prefix: Path) -> tuple[Path, list[Path]] | None:
     tests_dir = prefix / "cpp" / "tests"
+    if not tests_dir.exists():
+        return None
+
+    ctest_file = tests_dir / "CTestTestFile.cmake"
+    if not ctest_file.is_file():
+        m = (
+            f"Expected to find {ctest_file} in order to parse the tests from "
+            "it, but this file does not exist. Perhaps the directory "
+            "structure of the tests has changed?"
+        )
+        raise RuntimeError(m)
+
     tests_bin = [
-        tests_dir / "bin" / "tests_with_runtime",
-        tests_dir / "bin" / "tests_wo_runtime",
-        tests_dir / "bin" / "tests_non_reentrant_with_runtime",
-        tests_dir / "bin" / "tests_non_reentrant_wo_runtime",
+        tests_dir / "bin" / p
+        for p in re.findall(
+            r"add_test\(\[=\[(\w+)\]=\]", ctest_file.read_text()
+        )
     ]
-    if all(p.exists() for p in tests_bin):
+    removed_bins = [p for p in tests_bin if not p.exists()]
+
+    if not removed_bins:
         return tests_dir, tests_bin
-    return None
+
+    # some or all expected tests were removed
+    m = (
+        f"Missing expected test binary(s) {removed_bins}. They are listed "
+        f"in {ctest_file} but don't appear to exist"
+    )
+    raise RuntimeError(m)
 
 
 def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
