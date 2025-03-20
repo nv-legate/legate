@@ -93,12 +93,17 @@ Python
 - Add ``legate.core.TaskContext.machine``.
 - Add ``legate.core.TaskContext.provenance``.
 - Add ``legate.core.TaskContext.task_stream``.
+- Add ``legate.core.task.PyTask.library`` to retrieve the ``Library`` that a task was
+  registered with.
+- Add ``legate.core.TaskConfig``.
 
 .. rubric:: Types
 
 .. rubric:: Runtime
 
 - Add ``legate.core.ResourceConfig`` to specify library resource configuration parameters.
+- Add ``legate.core.Runtime.find_or_create_library()`` to search for, or create
+  ``Library`` instances.
 
 .. rubric:: Utilities
 
