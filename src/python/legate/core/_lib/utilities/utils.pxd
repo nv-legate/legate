@@ -2,7 +2,7 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from libc.stdint cimport uint32_t, uint64_t
+from libc.stdint cimport uint32_t, uint64_t, uintptr_t
 from libcpp cimport bool
 from libcpp.vector cimport vector as std_vector
 
@@ -31,3 +31,8 @@ cdef inline std_vector[AnyT] std_vector_from_iterable(
     for v in obj:
         vec.emplace_back(<AnyT>v)
     return vec
+
+
+ctypedef void (*finalizer_t)(void *)
+
+cdef object register_finalizer(object obj, finalizer_t finalizer, void *handle)

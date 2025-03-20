@@ -31,6 +31,8 @@ cdef extern from "legate/task/variant_options.h" namespace "legate" nogil:
             const std_vector[std_string_view] &comms
         ) except+
 
+        bool operator==(const _VariantOptions&) except+
+
 cdef class VariantOptions:
     cdef _VariantOptions _handle
 

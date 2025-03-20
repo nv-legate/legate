@@ -95,6 +95,7 @@ Python
 - Add ``legate.core.TaskContext.task_stream``.
 - Add ``legate.core.task.PyTask.library`` to retrieve the ``Library`` that a task was
   registered with.
+- Add ``legate.core.TaskConfig``.
 
 .. rubric:: Types
 

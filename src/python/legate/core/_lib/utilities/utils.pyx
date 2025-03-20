@@ -6,6 +6,7 @@ from libcpp.utility cimport move as std_move
 
 from ..utilities.tuple cimport _tuple
 
+import weakref
 
 cpdef bool is_iterable(object obj):
     r"""
@@ -49,3 +50,9 @@ cdef _tuple[AnyT] tuple_from_iterable(
 
 cdef _tuple[uint64_t] uint64_tuple_from_iterable(object obj):
     return tuple_from_iterable[uint64_t](obj)
+
+cdef object register_finalizer(object obj, finalizer_t finalizer, void *handle):
+    def py_finalizer(uintptr_t handle_ptr) -> None:
+        finalizer(<void *>handle_ptr)
+
+    return weakref.finalize(obj, py_finalizer, int(<uintptr_t>handle))

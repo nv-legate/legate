@@ -92,6 +92,14 @@ cdef class VariantOptions:
         if communicators is not None:
             self.communicators = communicators
 
+    def __eq__(self, object rhs) -> bool:
+        if not isinstance(rhs, VariantOptions):
+            return NotImplemented
+
+        cdef VariantOptions rhs_v = rhs
+
+        return self._handle == rhs_v._handle
+
     @property
     def concurrent(self) -> bool:
         """

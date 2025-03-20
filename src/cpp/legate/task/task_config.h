@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <legate_defines.h>
+
 #include <legate/task/task_signature.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/shared_ptr.h>
@@ -45,7 +47,7 @@ class TaskConfig {
    * The default constructor is deleted to prevent creating a `TaskConfig` object without
    * specifying a task ID.
    */
-  TaskConfig()                                 = delete;
+  TaskConfig()                                 = LEGATE_DEFAULT_WHEN_CYTHON;
   TaskConfig(const TaskConfig&)                = default;
   TaskConfig& operator=(const TaskConfig&)     = default;
   TaskConfig(TaskConfig&&) noexcept            = default;

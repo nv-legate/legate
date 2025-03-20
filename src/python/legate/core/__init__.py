@@ -46,6 +46,7 @@ from ._lib.runtime.runtime import (
     track_provenance,
 )
 from ._lib.runtime.scope import Scope
+from ._lib.task.task_config import TaskConfig
 from ._lib.task.task_context import TaskContext
 from ._lib.task.task_info import TaskInfo
 from ._lib.task.variant_options import VariantOptions
