@@ -93,12 +93,6 @@ jobs:
         run: |
           sha="$(echo ${{github.sha}} | head -c 10)"
           echo "sha=${sha}" >> "${GITHUB_OUTPUT}"
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "${GITHUB_CONTEXT}"
-      - name: Check it worked...
-        run: echo "${{steps.get-sha.outputs.sha}}"
       - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repo }}
@@ -115,15 +109,13 @@ jobs:
         continue-on-error: true
         # Skip the cache on RDS Lab nodes
         if: ${{ matrix.GPU != 'v100' && matrix.GPU != 'a100' }}
-      - name: Restore the cached wheel
-        id: cached-wheel
+      - name: Download wheels from the build job
+        uses: actions/download-artifact@v4
         env:
-          BUILD_SHA: ${{ steps.get-sha.outputs.sha }}
           BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda12.5.1-py${{ matrix.PY_VER }}
-        uses: actions/cache@v4
         with:
-          path: final-dist/*.whl
-          key: wheel-${{ env.BUILD_NAME }}-g${{ env.BUILD_SHA }}
+          name: legate-wheel-${{ env.BUILD_NAME }}
+          path: final-dist
 
       - name: Run tests
         run: ${{ inputs.script }}
