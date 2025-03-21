@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
 list(APPEND CMAKE_MESSAGE_CONTEXT "mpi_wrapper")
 
-project(legate_mpi_wrapper VERSION 1.0 LANGUAGES CXX)
+project(legate_mpi_wrapper VERSION 1.0 LANGUAGES C)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
@@ -30,9 +30,9 @@ message(STATUS "Generating src install rules: ${LEGATE_MPI_WRAPPER_SRC_INSTALL_R
 
 include(GNUInstallDirs)
 
-find_package(MPI REQUIRED COMPONENTS CXX)
+find_package(MPI REQUIRED COMPONENTS C)
 
-add_library(mpi_wrapper src/legate_mpi_wrapper/mpi_wrapper.cc)
+add_library(mpi_wrapper src/legate_mpi_wrapper/mpi_wrapper.c)
 add_library(legate::mpi_wrapper ALIAS mpi_wrapper)
 
 target_include_directories(mpi_wrapper
@@ -45,7 +45,7 @@ if(LEGATE_MPI_WRAPPER_SRC_INSTALL_RULES)
   )
 endif()
 
-target_link_libraries(mpi_wrapper PUBLIC MPI::MPI_CXX)
+target_link_libraries(mpi_wrapper PUBLIC MPI::MPI_C)
 
 # Set a good default and make this something that can be modified when building the
 # wrappers.
