@@ -129,6 +129,10 @@ legate_run_conda() {
       retrying_msg="Retrying after cleaning tarball and package caches, found 'Error when extracting package: basic_filebuf::underflow error reading the file: Bad file descriptor' in output..."
       LEGATE_NEED_TO_RETRY=1
       need_to_clean=1
+    elif grep -q "Download error .*Could not read a file" "${outfile}"; then
+      retrying_msg="Retrying, found 'Download error .*Could not read a file' in output..."
+      LEGATE_NEED_TO_RETRY=1
+      need_to_clean=1
     elif [[ ${LEGATE_EXITCODE} -eq 139 ]]; then
       retrying_msg="Retrying, command resulted in a segfault. This may be an intermittent failure..."
       LEGATE_NEED_TO_RETRY=1
