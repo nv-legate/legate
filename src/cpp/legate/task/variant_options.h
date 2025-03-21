@@ -43,9 +43,37 @@ void set_new_comms(std::vector<std::string> comms, legate::VariantOptions* optio
 class VariantOptions {
  public:
   /**
-   * @brief If the flag is `true`, the variant needs a concurrent task launch. `false` by default.
+   * @brief Whether the variant needs a concurrent task launch. `false` by default.
+   *
+   * Normally, leaf tasks (i.e. all individual task instances created by a single launch) are
+   * allowed to execute in any order so long as their preconditions are met. For example, if a
+   * task is launched that creates 100 leaf tasks, those tasks can execute at any time so long
+   * as each individual task's inputs are satisfied. It is even possible to have other leaf
+   * tasks (from other tasks) executing at the same time or between them.
+   *
+   * Setting `concurrent` to `true` says: if this task is parallelized, then all leaf tasks
+   * must execute concurrently. Note, concurrency is a *requirement*, not a grant. The entire
+   * machine must execute the tasks at exactly the same time as one giant block. No other tasks
+   * marked concurrent may execute at the same time.
+   *
+   * Setting `concurrent` to `false` (the default) says: the task can execute as normal. The
+   * leaf tasks can execute in any order.
+   *
+   * This feature is most often used when doing collective communications (i.e. all-reduce,
+   * all-gather) inside the tasks. In this case, the tasks need to execute in lockstep because
+   * otherwise deadlocks may occur.
+   *
+   * Suppose there are 2 tasks (A and B) that do collectives. If they execute without
+   * concurrency, it is possible for half of the "task A" tasks and half of the "task B" tasks
+   * to be running at the same time. Eventually each of those tasks will reach a point where
+   * they must all-gather. The program would deadlock because both sides would be waiting for
+   * the communication that would never be able to finish.
+   *
+   * For this reason, adding any communicators (see `communicators`) automatically implies
+   * `concurrent = true`.
    */
   bool concurrent{false};
+
   /**
    * @brief If the flag is `true`, the variant is allowed to create buffers (temporary or output)
    * during execution. `false` by default.
