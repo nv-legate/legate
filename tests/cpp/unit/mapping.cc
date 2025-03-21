@@ -200,7 +200,7 @@ TEST_P(StoreTargetInput, Check)
 
 TEST_P(AllocationInput, Check)
 {
-  auto allocation = GetParam();
+  auto&& allocation = GetParam();
 
   const legate::mapping::InstanceMappingPolicy policy_a{};
   legate::mapping::InstanceMappingPolicy policy_b{};
@@ -210,7 +210,7 @@ TEST_P(AllocationInput, Check)
 
 TEST_P(InstanceInput, Check)
 {
-  auto instance = GetParam();
+  auto&& instance = GetParam();
 
   const legate::mapping::InstanceMappingPolicy policy_a{};
   legate::mapping::InstanceMappingPolicy policy_b{};
@@ -220,7 +220,7 @@ TEST_P(InstanceInput, Check)
 
 TEST_P(DimOrderInput, Check)
 {
-  auto order = GetParam();
+  auto&& order = GetParam();
 
   const legate::mapping::InstanceMappingPolicy policy_a{};
   legate::mapping::InstanceMappingPolicy policy_b{};

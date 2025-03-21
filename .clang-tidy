@@ -78,6 +78,22 @@ Checks:
   # name is easier to understand, and we don't want to silence 2 things for the same
   # warning.
   - '-cert-int09-c'
+  # This one is potentially controversial. This check warns when iterating over unordered
+  # containers of pointers:
+  #
+  # {
+  #   int a = 1, b = 2;
+  #   std::unordered_set<int *> set = {&a, &b};
+  #
+  #   for (auto *i : set) { // iteration order not deterministic
+  #     f(i);
+  #   }
+  # }
+  #
+  # On the one hand, this is a clear case of non-determinism. But on the other hand, I
+  # feel it is obvious that a user does not care about the order of iteration
+  # because... they are using unordered containers!
+  - '-bugprone-nondeterministic-pointer-iteration-order'
 WarningsAsErrors: '*'
 HeaderFileExtensions:
   - ''

@@ -8,8 +8,6 @@
 
 #include <legate.h>
 
-#include <legate/utilities/detail/strtoll.h>
-
 #include <gtest/gtest.h>
 
 #include <string_view>

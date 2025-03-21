@@ -225,9 +225,9 @@ TEST_P(CreateScalarStoreTest, Basic)
 
 TEST_P(CreateScalarStoreWithExtentsTest, Basic)
 {
-  const auto extents = GetParam();
-  auto runtime       = legate::Runtime::get_runtime();
-  auto store         = runtime->create_store(legate::Scalar{SCALAR_VALUE}, extents);
+  const auto& extents = GetParam();
+  auto runtime        = legate::Runtime::get_runtime();
+  auto store          = runtime->create_store(legate::Scalar{SCALAR_VALUE}, extents);
 
   ASSERT_FALSE(store.unbound());
   ASSERT_EQ(store.dim(), extents.size());

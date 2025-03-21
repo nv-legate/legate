@@ -10,7 +10,6 @@
 
 #include <cerrno>
 #include <cstdlib>
-#include <stdexcept>
 #include <system_error>
 
 namespace legate::detail {

@@ -163,9 +163,9 @@ TEST_F(TypeFeaturesUnit, StringTypeUid)
 
 TEST_P(UidTest, StructType)
 {
-  const auto element_type = GetParam();
-  auto struct_type1       = legate::struct_type(true, element_type);
-  auto struct_type2       = legate::struct_type(true, element_type);
+  const auto& element_type = GetParam();
+  auto struct_type1        = legate::struct_type(true, element_type);
+  auto struct_type2        = legate::struct_type(true, element_type);
 
   ASSERT_NE(struct_type1.uid(), struct_type2.uid());
   ASSERT_TRUE(struct_type1.uid() >= 0x10000);
@@ -179,9 +179,9 @@ TEST_P(UidTest, StructType)
 
 TEST_P(UidTest, ListType)
 {
-  const auto element_type = GetParam();
-  auto list_type1         = legate::list_type(element_type);
-  auto list_type2         = legate::list_type(element_type);
+  const auto& element_type = GetParam();
+  auto list_type1          = legate::list_type(element_type);
+  auto list_type2          = legate::list_type(element_type);
 
   ASSERT_NE(list_type1.uid(), list_type2.uid());
   ASSERT_TRUE(list_type1.uid() >= 0x10000);
