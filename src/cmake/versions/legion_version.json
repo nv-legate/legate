@@ -2,7 +2,7 @@
     "packages": {
         "Legion": {
             "git_shallow": false,
-            "git_tag": "b89a38cb1cff477d491eafbaf49ebddeb2019156",
+            "git_tag": "04b7d5068c5e75f29684703e8a1b8568b3e59b9a",
             "git_url": "https://gitlab.com/StanfordLegion/legion.git",
             "patches": [
                 {
@@ -19,16 +19,6 @@
                     "file": "${current_json_dir}/../patches/legion_redop.diff",
                     "fixed_in": "",
                     "issue": "legion half"
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_install_include_dir.diff",
-                    "fixed_in": "",
-                    "issue": "legion installed include dir"
-                },
-                {
-                    "file": "${current_json_dir}/../patches/legion_install_tools_option.diff",
-                    "fixed_in": "",
-                    "issue": "legion option to install support tools"
                 },
                 {
                     "file": "${current_json_dir}/../patches/legion_cuhook_optional.diff",
