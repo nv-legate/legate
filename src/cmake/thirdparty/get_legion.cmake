@@ -115,7 +115,6 @@ function(find_or_configure_legion_impl version git_repo git_branch shallow
                           "Legion_UCX_MPI_BOOTSTRAP ${Legion_UCX_MPI_BOOTSTRAP}"
                           "Legion_USE_ZLIB OFF"
                           "Legion_CUDA_DYNAMIC_LOAD ${Legion_CUDA_DYNAMIC_LOAD}"
-                          "Legion_INSTALL_PYTHON_PROFILER OFF"
                           "CMAKE_INSTALL_BINDIR ${legate_DEP_INSTALL_BINDIR}"
                           "CMAKE_INSTALL_INCLUDEDIR ${legate_DEP_INSTALL_INCLUDEDIR}"
                           "INSTALL_SUFFIX -legate"
