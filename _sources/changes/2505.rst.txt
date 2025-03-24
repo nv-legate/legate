@@ -17,6 +17,8 @@ Changes: 25.05
 - ``LEGATE_NEED_*`` environment variables are no longer consulted to infer what
   build-time features (e.g. CUDA support or networking support) are required for
   the current run. Legate can infer this automatically.
+- Legate now expects to always initialize Legion during ``legate::start()``. If Legion is
+  already initialized at this stage, an exception is thrown.
 
 C++
 ---
@@ -93,12 +95,24 @@ Python
 - Add ``legate.core.TaskContext.machine``.
 - Add ``legate.core.TaskContext.provenance``.
 - Add ``legate.core.TaskContext.task_stream``.
+- Add ``legate.core.task.PyTask.library`` to retrieve the ``Library`` that a task was
+  registered with.
+- Add ``legate.core.TaskConfig``.
+- Change ``legate.core.task.task()`` arguments. Replace ``throws_exception`` and
+  ``throws_exception`` with ``options``, which is either a ``legate.core.TaskConfig`` or
+  ``legate.core.VariantOptions``.
+- Change ``legate.core.task.PyTask.__init__()``. Replace ``throws_exception`` and
+  ``throws_exception`` with ``options``, which is either a ``legate.core.TaskConfig`` or
+  ``legate.core.VariantOptions``.
+- Remove ``legate.core.task.PyTask.UNREGISTERED_ID``.
 
 .. rubric:: Types
 
 .. rubric:: Runtime
 
 - Add ``legate.core.ResourceConfig`` to specify library resource configuration parameters.
+- Add ``legate.core.Runtime.find_or_create_library()`` to search for, or create
+  ``Library`` instances.
 
 .. rubric:: Utilities
 

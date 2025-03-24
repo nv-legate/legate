@@ -30,5 +30,11 @@
    .. autosummary::
       :toctree: .
    
+      ~VariantOptions.__eq__
+      ~VariantOptions.__ge__
+      ~VariantOptions.__gt__
+      ~VariantOptions.__le__
+      ~VariantOptions.__lt__
+      ~VariantOptions.__ne__
    
    

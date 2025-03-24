@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.task.PyTask.UNREGISTERED_ID &#8212; NVIDIA legate (25.05.00.dev79+g03231d14)</title>
+    <title>legate.core.Runtime.find_or_create_library &#8212; NVIDIA legate (25.05.00.dev55+gba21cfd9)</title>
   
   
   
@@ -32,7 +32,7 @@
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/nvidia-sphinx-theme.css?v=d0aa047a" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/nvidia-sphinx-theme.css?v=df3ac72c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/params.css" />
   
@@ -42,12 +42,12 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=9d79d119"></script>
+    <script src="../../../_static/documentation_options.js?v=27eabc31"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=4ea706d9"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/python/generated/legate.core.task.PyTask.UNREGISTERED_ID';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/python/generated/legate.core.Runtime.find_or_create_library';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
@@ -58,8 +58,8 @@
     <link rel="icon" href="../../../_static/favicon.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="legate.core.task.PyTask.registered" href="legate.core.task.PyTask.registered.html" />
-    <link rel="prev" title="legate.core.task.PyTask" href="legate.core.task.PyTask.html" />
+    <link rel="next" title="legate.core.Runtime.finish" href="legate.core.Runtime.finish.html" />
+    <link rel="prev" title="legate.core.Runtime.find_library" href="legate.core.Runtime.find_library.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev79+g03231d14) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev79+g03231d14) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev55+gba21cfd9) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev55+gba21cfd9) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev79+g03231d14)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev55+gba21cfd9)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev79+g03231d14) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev79+g03231d14) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev55+gba21cfd9) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev55+gba21cfd9) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev79+g03231d14)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev55+gba21cfd9)</p>
   
 </a>
 
@@ -328,8 +328,8 @@
 <li class="toctree-l4"><a class="reference internal" href="legate.core.track_provenance.html">legate.core.track_provenance</a></li>
 </ul>
 </details></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="../classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="../runtime.html">Legate Runtime</a></li>
+<li class="toctree-l3 current active has-children"><a class="reference internal" href="../classes.html">Classes</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l4 current active"><a class="reference internal" href="../runtime.html">Legate Runtime</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../logical_store.html">Store</a></li>
 
@@ -339,9 +339,10 @@
 <li class="toctree-l4"><a class="reference internal" href="../resource_config.html">ResourceConfig</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../task_context.html">Task Context</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../domain.html">Domains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../task_config.html">Task Configuration</a></li>
 </ul>
 </details></li>
-<li class="toctree-l3 current active has-children"><a class="reference internal" href="../tasks.html">Python Tasks</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.task.html">legate.core.task.task</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
@@ -349,7 +350,7 @@
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
-<li class="toctree-l4 current active"><a class="reference internal" href="legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
 <li class="toctree-l4"><a class="reference internal" href="legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
 </ul>
 </details></li>
@@ -409,6 +410,12 @@
 </ul>
 </details></li>
 </ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../developer/style.html">Style</a></li>
+</ul>
+</details></li>
+</ul>
 </div>
 </nav></div>
     </div>
@@ -449,12 +456,15 @@
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Python API Reference</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../tasks.html" class="nav-link">Python Tasks</a></li>
+    <li class="breadcrumb-item"><a href="../classes.html" class="nav-link">Classes</a></li>
     
     
-    <li class="breadcrumb-item"><a href="legate.core.task.PyTask.html" class="nav-link">legate.core.task.PyTask</a></li>
+    <li class="breadcrumb-item"><a href="../runtime.html" class="nav-link">Legate Runtime</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate.core.task.PyTask.UNREGISTERED_ID</span></li>
+    
+    <li class="breadcrumb-item"><a href="legate.core.Runtime.html" class="nav-link">legate.core.Runtime</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate.core.Runtime.find_or_create_library</span></li>
   </ul>
 </nav>
 </div>
@@ -471,12 +481,41 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="legate-core-task-pytask-unregistered-id">
-<h1>legate.core.task.PyTask.UNREGISTERED_ID<a class="headerlink" href="#legate-core-task-pytask-unregistered-id" title="Link to this heading">#</a></h1>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="legate.core.task.PyTask.UNREGISTERED_ID">
-<span class="sig-prename descclassname"><span class="pre">PyTask.</span></span><span class="sig-name descname"><span class="pre">UNREGISTERED_ID</span></span><a class="headerlink" href="#legate.core.task.PyTask.UNREGISTERED_ID" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+  <section id="legate-core-runtime-find-or-create-library">
+<h1>legate.core.Runtime.find_or_create_library<a class="headerlink" href="#legate-core-runtime-find-or-create-library" title="Link to this heading">#</a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="legate.core.Runtime.find_or_create_library">
+<span class="sig-prename descclassname"><span class="pre">Runtime.</span></span><span class="sig-name descname"><span class="pre">find_or_create_library</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">unicode</span> <span class="pre">library_name</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">ResourceConfig</span> <span class="pre">config=None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">dict</span> <span class="pre">default_options=None</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a></span></span><a class="headerlink" href="#legate.core.Runtime.find_or_create_library" title="Link to this definition">#</a></dt>
+<dd><p>Search for an existing <code class="docutils literal notranslate"><span class="pre">Library</span></code> of a particular name, or create it
+if it wasn’t found.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>library_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The name of the library to find.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="legate.core.ResourceConfig.html#legate.core.ResourceConfig" title="legate.core.ResourceConfig"><em>ResourceConfig</em></a><em>, </em><em>optional</em>) – The resource configuration to use to create the library if needed.
+Has no effect if the library is found.</p></li>
+<li><p><strong>default_options</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><em>VariantCode</em><em>, </em><a class="reference internal" href="legate.core.VariantOptions.html#legate.core.VariantOptions" title="legate.core.VariantOptions"><em>VariantOptions</em></a><em>]</em><em>, </em><em>optional</em>) – The default variant options to use to create the library if needed.
+Has no effect if the library is found.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>Library</em> – The <code class="docutils literal notranslate"><span class="pre">Library</span></code> instance.</p></li>
+<li><p><em>bool</em> – <code class="docutils literal notranslate"><span class="pre">True</span></code> if the library was created, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
 
 </section>
 
@@ -491,20 +530,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="legate.core.task.PyTask.html"
+       href="legate.core.Runtime.find_library.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">legate.core.task.PyTask</p>
+        <p class="prev-next-title">legate.core.Runtime.find_library</p>
       </div>
     </a>
     <a class="right-next"
-       href="legate.core.task.PyTask.registered.html"
+       href="legate.core.Runtime.finish.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">legate.core.task.PyTask.registered</p>
+        <p class="prev-next-title">legate.core.Runtime.finish</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -529,7 +568,7 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legate.core.task.PyTask.UNREGISTERED_ID"><code class="docutils literal notranslate"><span class="pre">UNREGISTERED_ID</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legate.core.Runtime.find_or_create_library"><code class="docutils literal notranslate"><span class="pre">find_or_create_library()</span></code></a></li>
 </ul>
   </nav></div>
 
