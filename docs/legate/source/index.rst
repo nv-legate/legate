@@ -34,6 +34,11 @@ on a supercomputer without any code modifications.
 
   Legate.STL <legate.stl/source/legate-stl.rst>
 
+
+.. toctree::
+
+   Developer Documentation <developer/index.rst>
+
 Indices and tables
 ------------------
 
