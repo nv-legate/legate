@@ -3,26 +3,25 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Sequence
-from typing import Any, Final
+from typing import Any
 
 from ..._lib.operation.task import AutoTask
 from ..._lib.partitioning.constraint import DeferredConstraint
 from ..._lib.runtime.library import Library
+from ..._lib.task.task_config import TaskConfig
+from ..._lib.task.variant_options import VariantOptions
 from ..._lib.utilities.typedefs import LocalTaskID, VariantCode
 from .invoker import VariantInvoker
 from .type import UserFunction
 
 class PyTask:
-    UNREGISTERED_ID: Final = ...
-
     def __init__(
         self,
         *,
         func: UserFunction,
         variants: Sequence[VariantCode],
         constraints: Sequence[DeferredConstraint] | None = None,
-        throws_exception: bool = False,
-        has_side_effect: bool = False,
+        options: TaskConfig | VariantOptions | None = None,
         invoker: VariantInvoker | None = None,
         library: Library | None = None,
         register: bool = True,

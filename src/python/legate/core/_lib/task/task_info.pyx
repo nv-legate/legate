@@ -18,7 +18,7 @@ from ..utilities.typedefs cimport TaskFuncPtr, VariantCode, _GlobalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 from .task_context cimport TaskContext, _TaskContext
 from .variant_helper cimport task_wrapper_dyn_name
-from .task_signature cimport _TaskSignature
+from .task_config cimport _TaskConfig, TaskConfig
 
 
 cdef extern from *:
@@ -140,18 +140,12 @@ cdef extern from * nogil:
 
     void cytaskinfo_add_variant(
       legate::TaskInfo *handle,
-      legate::LocalTaskID task_id,
       const legate::Library &core_lib,
       legate::VariantCode variant_kind,
       legate::VariantImpl cy_entry,
       legate::Processor::TaskFuncPtr py_entry,
-      const legate::TaskSignature* signature)
+      const legate::TaskConfig& config)
     {
-      legate::TaskConfig config{task_id};
-
-      if (signature) {
-        config.with_signature(*signature);
-      }
       handle->add_variant_(
         legate::TaskInfo::AddVariantKey{},
         core_lib,
@@ -168,12 +162,11 @@ cdef extern from * nogil:
     void cytaskinfo_add_variant \
         "legate::detail::cython::cytaskinfo_add_variant" (
             _TaskInfo *,
-            _LocalTaskID,
             const _Library&,
             VariantCode,
             VariantImpl,
             TaskFuncPtr,
-            const _TaskSignature *
+            const _TaskConfig&
         ) except+
 
 cdef class TaskInfo(Unconstructable):
@@ -229,21 +222,22 @@ cdef class TaskInfo(Unconstructable):
         return f"TaskInfo(name: {self.name}, variants: {variants})"
 
     # The exact same thing as from_variants() (in fact, that function calls
-    # this one), except that it also accepts a TaskSignature argument. The
-    # reason we have two versions of the function is because TaskSignature does
+    # this one), except that it also accepts a TaskConfig argument. The
+    # reason we have two versions of the function is because TaskConfig does
     # not need to be exposed to the user.
     @staticmethod
-    cdef TaskInfo from_variants_signature(
-        _LocalTaskID local_task_id,
+    cdef TaskInfo from_variants_config(
+        TaskConfig config,
         Library library,
         str name,
         list[tuple[VariantCode, object]] variants,
-        const _TaskSignature *signature
     ):
+        cdef _LocalTaskID task_id = config.task_id
+
         if not variants:
             m = (
                 "Cannot construct task info "
-                f"(local id: {local_task_id}, name: {name})."
+                f"(local id: {task_id}, name: {name})."
                 " Variants must not be empty."
             )
             raise ValueError(m)
@@ -251,16 +245,16 @@ cdef class TaskInfo(Unconstructable):
         cdef TaskInfo task_info
 
         task_info = TaskInfo.from_handle(
-            _TaskInfo(name.encode()), local_task_id
+            _TaskInfo(name.encode()), task_id
         )
 
         cdef VariantCode variant_kind
         for variant_kind, variant_fn in variants:
-            task_info.add_variant_signature(
+            task_info.add_variant_config(
+                config=config,
                 library=library,
                 variant_kind=variant_kind,
-                fn=variant_fn,
-                signature=signature
+                fn=variant_fn
             )
         return task_info
 
@@ -288,12 +282,11 @@ cdef class TaskInfo(Unconstructable):
         TaskInfo
             The created ``TaskInfo`` object.
         """
-        return TaskInfo.from_variants_signature(
-            local_task_id=local_task_id,
+        return TaskInfo.from_variants_config(
+            config=TaskConfig(local_task_id),
             library=get_legate_runtime().core_library,
             name=name,
-            variants=variants,
-            signature=NULL
+            variants=variants
         )
 
     @property
@@ -337,16 +330,12 @@ cdef class TaskInfo(Unconstructable):
             ret = self._handle.find_variant(variant_id).has_value()
         return ret
 
-    # The exact same thing as add_variant() (in fact, that function calls this
-    # one), except that it also accepts a TaskSignature argument. The reason we
-    # have two versions of the function is because TaskSignature does not need
-    # to be exposed to the user.
-    cdef void add_variant_signature(
+    cdef void add_variant_config(
         self,
+        TaskConfig config,
         Library library,
         VariantCode variant_kind,
-        object fn,
-        const _TaskSignature *signature
+        object fn
     ):
         if not callable(fn):
             raise TypeError(
@@ -373,12 +362,11 @@ cdef class TaskInfo(Unconstructable):
         with nogil:
             cytaskinfo_add_variant(
                 &self._handle,
-                self._local_id,
                 library._handle,
                 variant_kind,
                 _py_variant,
                 callback,
-                signature
+                config._handle
             )
         # do this last to preserve strong exception guarantee
         self._registered_variants[variant_kind] = fn
@@ -406,9 +394,9 @@ cdef class TaskInfo(Unconstructable):
             If the task info object has already registered a variant for
             ``variant_kind``.
         """
-        self.add_variant_signature(
+        self.add_variant_config(
+            config=TaskConfig(self._local_id),
             library=get_legate_runtime().core_library,
             variant_kind=variant_kind,
-            fn=fn,
-            signature=NULL
+            fn=fn
         )

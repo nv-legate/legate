@@ -98,6 +98,13 @@ Python
 - Add ``legate.core.task.PyTask.library`` to retrieve the ``Library`` that a task was
   registered with.
 - Add ``legate.core.TaskConfig``.
+- Change ``legate.core.task.task()`` arguments. Replace ``throws_exception`` and
+  ``throws_exception`` with ``options``, which is either a ``legate.core.TaskConfig`` or
+  ``legate.core.VariantOptions``.
+- Change ``legate.core.task.PyTask.__init__()``. Replace ``throws_exception`` and
+  ``throws_exception`` with ``options``, which is either a ``legate.core.TaskConfig`` or
+  ``legate.core.VariantOptions``.
+- Remove ``legate.core.task.PyTask.UNREGISTERED_ID``.
 
 .. rubric:: Types
 

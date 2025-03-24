@@ -25,7 +25,6 @@ namespace legate {
 class Library;
 class TaskInfo;
 class TaskConfig;
-class TaskSignature;
 
 }  // namespace legate
 
@@ -41,12 +40,11 @@ class VariantHelper;
 namespace legate::detail::cython {
 
 void cytaskinfo_add_variant(legate::TaskInfo* handle,
-                            legate::LocalTaskID,
                             const legate::Library&,
                             legate::VariantCode variant_kind,
                             legate::VariantImpl cy_entry,
                             legate::Processor::TaskFuncPtr py_entry,
-                            const legate::TaskSignature* signature);
+                            const legate::TaskConfig& config);
 
 }  // namespace legate::detail::cython
 
@@ -100,12 +98,11 @@ class TaskInfo {
 
     friend TaskInfo;
     friend void legate::detail::cython::cytaskinfo_add_variant(legate::TaskInfo*,
-                                                               legate::LocalTaskID,
                                                                const legate::Library&,
                                                                legate::VariantCode,
                                                                legate::VariantImpl,
                                                                legate::Processor::TaskFuncPtr,
-                                                               const legate::TaskSignature*);
+                                                               const legate::TaskConfig&);
     template <typename T, template <typename...> typename SELECTOR, bool valid>
     friend class detail::VariantHelper;
   };

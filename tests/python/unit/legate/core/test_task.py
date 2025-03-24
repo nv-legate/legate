@@ -16,10 +16,12 @@ from legate.core import (
     Field,
     Library,
     PhysicalStore,
+    ResourceConfig,
     Scalar,
     Table,
     TaskContext,
     VariantCode,
+    VariantOptions,
     get_legate_runtime,
     task as lct,
     types as ty,
@@ -83,7 +85,7 @@ class BaseTest:
         assert task.registered
         task_id = task.task_id
         assert isinstance(task_id, int)
-        assert task_id > 0
+        assert task_id >= 0
 
     def check_valid_unregistered_task(self, task: PyTask) -> None:
         self.check_valid_task(task)
@@ -125,15 +127,17 @@ class TestTask(BaseTest):
 
         variants = (VariantCode.CPU,)
         lib, _ = get_legate_runtime().find_or_create_library(
-            "my_custom_library"
+            "my_custom_library",
+            config=ResourceConfig(max_tasks=10, max_dyn_tasks=10),
         )
 
         task = PyTask(
             func=foo,
             variants=variants,
             constraints=(lg.broadcast("x"),),
-            throws_exception=True,
-            has_side_effect=True,
+            options=VariantOptions(
+                may_throw_exception=True, has_side_effect=True
+            ),
             library=lib,
             register=False,
         )
@@ -355,7 +359,7 @@ class TestTask(BaseTest):
     def test_raised_exception(self, ExnType: type) -> None:
         msg = "There is no peace but the Pax Romana"
 
-        @lct.task(throws_exception=True)
+        @lct.task(options=VariantOptions(may_throw_exception=True))
         def raises_exception() -> None:
             raise ExnType(msg)
 
@@ -370,7 +374,7 @@ class TestTask(BaseTest):
         (CustomException, ValueError, TypeError, RuntimeError, IndexError),
     )
     def test_deferred_exception(self, ExnType: type) -> None:
-        @lct.task(throws_exception=True)
+        @lct.task(options=VariantOptions(may_throw_exception=True))
         def raises_exception() -> None:
             msg = "There is no peace but the Pax Romana"
             raise ExnType(msg)
@@ -388,7 +392,7 @@ class TestTask(BaseTest):
         (CustomException, ValueError, TypeError, RuntimeError, IndexError),
     )
     def test_ignored_exception(self, ExnType: type) -> None:
-        @lct.task(throws_exception=True)
+        @lct.task(options=VariantOptions(may_throw_exception=True))
         def raises_exception() -> None:
             msg = "There is no peace but the Pax Romana"
             raise ExnType(msg)
@@ -415,7 +419,7 @@ class TestTask(BaseTest):
 
         msg = "foo"
 
-        @lct.task(throws_exception=False)
+        @lct.task(options=VariantOptions(may_throw_exception=False))
         def task_func(store: OutputStore) -> None:
             raise RuntimeError(msg)
 
@@ -524,7 +528,7 @@ class TestTask(BaseTest):
             lct.task(constraints=(lg.align("x", "y"),))(baz)
 
     def test_reduction(self) -> None:
-        @lct.task(throws_exception=True)
+        @lct.task(options=VariantOptions(may_throw_exception=True))
         def foo(store: ReductionStore[ADD]) -> None:
             assert_isinstance(store, PhysicalStore)
 
@@ -532,7 +536,7 @@ class TestTask(BaseTest):
         foo(x)
 
     def test_scalar_arg_mismatching_dtype(self) -> None:
-        @lct.task(throws_exception=True)
+        @lct.task(options=VariantOptions(may_throw_exception=True))
         def foo(scalar: Scalar) -> None:
             pytest.fail("should never get here")
 

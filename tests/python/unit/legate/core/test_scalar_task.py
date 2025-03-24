@@ -11,7 +11,13 @@ from numpy.typing import NDArray  # noqa: TC002
 
 import pytest
 
-from legate.core import Scalar, Type, get_legate_runtime, types as ty
+from legate.core import (
+    Scalar,
+    Type,
+    VariantOptions,
+    get_legate_runtime,
+    types as ty,
+)
 from legate.core.task import task
 
 from .util.task_util import assert_isinstance
@@ -64,7 +70,7 @@ class TestScalarTask:
 
     @pytest.mark.parametrize("tup", ((1,), (1, 2, 3)))
     def test_tuple(self, tup: tuple[int, ...]) -> None:
-        @task(throws_exception=True)
+        @task(options=VariantOptions(may_throw_exception=True))
         def tuple_task(x: tuple[int, ...]) -> None:
             assert_isinstance(x, tuple)
             assert x == tup

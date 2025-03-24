@@ -18,6 +18,7 @@ from legate.core import (
     PhysicalStore,
     Scalar,
     VariantCode,
+    VariantOptions,
     align,
     broadcast,
 )
@@ -138,7 +139,7 @@ def fill_task(out: OutputArray, val: Scalar) -> None:
 @task(
     variants=tuple(VariantCode),
     constraints=(broadcast("out"),),
-    throws_exception=True,
+    options=VariantOptions(may_throw_exception=True),
 )
 def copy_np_array_task(
     out: OutputStore, np_arr: np.ndarray[Any, np.dtype[Any]]

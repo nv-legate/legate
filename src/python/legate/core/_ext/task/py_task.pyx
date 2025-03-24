@@ -10,8 +10,9 @@ from ..._lib.operation.task cimport AutoTask
 from ..._lib.runtime.library cimport Library
 from ..._lib.runtime.runtime cimport get_legate_runtime
 from ..._lib.task.task_context cimport TaskContext
+from ..._lib.task.task_config cimport TaskConfig
 from ..._lib.task.task_info cimport TaskInfo
-from ..._lib.task.task_signature cimport _TaskSignature
+from ..._lib.task.variant_options cimport VariantOptions
 from ..._lib.utilities.typedefs cimport VariantCode, _LocalTaskID
 from ..._lib.utilities.typedefs import VariantCode as PyVariantCode
 from .invoker cimport VariantInvoker
@@ -19,6 +20,18 @@ from .type cimport VariantMapping
 from .util cimport validate_variant, _get_callable_name
 
 from .type import UserFunction
+
+
+cdef TaskConfig _sanitize_config(
+    options: TaskConfig | VariantOptions | None, Library library
+):
+    if options is None:
+        return TaskConfig(library.get_new_task_id())
+
+    if isinstance(options, VariantOptions):
+        return TaskConfig(library.get_new_task_id(), options=options)
+
+    return options
 
 
 cdef class PyTask:
@@ -29,8 +42,7 @@ cdef class PyTask:
         func: UserFunction,
         variants: Sequence[VariantCode],
         constraints: Sequence[ConstraintProxy] | None = None,
-        throws_exception: bool = False,
-        has_side_effect: bool = False,
+        options: TaskConfig | VariantOptions | None = None,
         invoker: VariantInvoker | None = None,
         library: Library | None = None,
         register: bool = True,
@@ -46,12 +58,6 @@ cdef class PyTask:
         constraints
             The list of constraints which are to be applied to the arguments of
             ``func``, if any. Defaults to no constraints.
-        throws_exception
-            ``True`` if any variants of ``func`` throws an exception, ``False``
-            otherwise.
-        has_side_effect
-            Whether the task has any global side-effects. See
-            ``AutoTask.set_side_effect()`` for further information.
         invoker
             The invoker used to store the signature and marshall arguments to
             and manage invoking the user variants. Defaults to constructing the
@@ -64,22 +70,26 @@ cdef class PyTask:
             ``False``, the user must manually register the task (via
             ``PyTask.complete_registration()``) before use.
         """
-        # Cython has no support for class variables...
-        self.UNREGISTERED_ID = <_LocalTaskID>-1
-
         if library is None:
             library = get_legate_runtime().core_library
+
+        cdef TaskConfig config = _sanitize_config(options, library)
 
         if invoker is None:
             invoker = VariantInvoker(func, constraints=constraints)
 
+        # Cython does not believe that invoker is a VariantInvoker at this
+        # point, so force it to understand
+        cdef VariantInvoker cy_invoker = invoker
+
+        config._handle.with_signature(cy_invoker.prepare_task_signature())
+
+        self._registered = False
         self._name = _get_callable_name(func)
-        self._invoker = invoker
+        self._invoker = cy_invoker
         self._variants = self._init_variants(func, variants)
-        self._task_id = self.UNREGISTERED_ID
+        self._config = config
         self._library = library
-        self._throws = throws_exception
-        self._has_side_effect = has_side_effect
         if register:
             self.complete_registration()
 
@@ -90,7 +100,7 @@ cdef class PyTask:
         :return: ``True`` if ``self`` is registered, ``False`` otherwise.
         :rtype: bool
         """
-        return self._task_id != self.UNREGISTERED_ID
+        return self._registered
 
     @property
     def task_id(self) -> _LocalTaskID:
@@ -106,7 +116,7 @@ cdef class PyTask:
                 "Task must complete registration "
                 "(via task.complete_registration()) before receiving a task id"
             )
-        return self._task_id
+        return self._config.task_id
 
     @property
     def library(self) -> Library:
@@ -160,8 +170,7 @@ cdef class PyTask:
         cdef AutoTask task = get_legate_runtime().create_auto_task(
             self.library, self.task_id
         )
-        task._handle.throws_exception(self._throws)
-        task.set_side_effect(self._has_side_effect)
+
         self._invoker.prepare_call(task, args, kwargs)
         task.lock()
         return task
@@ -213,7 +222,7 @@ cdef class PyTask:
         nothing).
         """
         if self.registered:
-            return self._task_id
+            return self.task_id
 
         cdef dict proc_kind_to_variant = {
             VariantCode.CPU: self._cpu_variant,
@@ -231,18 +240,15 @@ cdef class PyTask:
         if not variants:
             raise ValueError("Task has no registered variants")
 
-        cdef _LocalTaskID task_id = self.library.get_new_task_id()
-        cdef _TaskSignature signature = self._invoker.prepare_task_signature()
-        cdef TaskInfo task_info = TaskInfo.from_variants_signature(
-            local_task_id=task_id,
+        cdef TaskInfo task_info = TaskInfo.from_variants_config(
+            config=self._config,
             library=self.library,
             name=self._name,
             variants=variants,
-            signature=&signature
         )
         self.library.register_task(task_info)
-        self._task_id = task_id
-        return task_id
+        self._registered = True
+        return self.task_id
 
     cdef void _update_variant(self, func: UserFunction, VariantCode variant):
         if self.registered:

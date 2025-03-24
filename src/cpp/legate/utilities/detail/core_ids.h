@@ -76,7 +76,7 @@ enum CoreTask : std::underlying_type_t<LocalTaskID> {  // NOLINT(performance-enu
   // FIRST_DYNAMIC_TASK are for specific, bespoke tasks. MAX_TASK - FIRST_DYNAMIC_TASK are for
   // "dynamic" tasks, e.g. those created from Python or elsewhere. Hence we make MAX_TASK large
   // enough so that there's enough slack.
-  MAX_TASK = 512,  // must be last
+  MAX_TASK = 1024,  // must be last
 };
 // NOLINTEND(readability-enum-initial-value)
 

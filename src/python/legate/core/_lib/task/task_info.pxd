@@ -19,7 +19,7 @@ from ..utilities.shared_ptr cimport _SharedPtr
 from ..runtime.library cimport Library
 from .variant_options cimport _VariantOptions
 from .variant_info cimport _VariantInfo
-from .task_signature cimport _TaskSignature
+from .task_config cimport TaskConfig
 
 from .detail.task_info cimport _TaskInfo as _DetailTaskInfo
 
@@ -51,22 +51,21 @@ cdef class TaskInfo(Unconstructable):
     cdef TaskInfo from_handle(_TaskInfo, _LocalTaskID)
 
     @staticmethod
-    cdef TaskInfo from_variants_signature(
-        _LocalTaskID local_task_id,
+    cdef TaskInfo from_variants_config(
+        TaskConfig config,
         Library library,
         str name,
-        list[tuple[VariantCode, object]] variants,
-        const _TaskSignature *signature
+        list[tuple[VariantCode, object]] variants
     )
     cdef void validate_registered_py_variants(self)
     cdef void register_global_variant_callbacks(self, _GlobalTaskID)
     cdef _LocalTaskID get_local_id(self)
     cpdef bool has_variant(self, VariantCode)
-    cdef void add_variant_signature(
+    cdef void add_variant_config(
         self,
+        TaskConfig config,
         Library library,
         VariantCode variant_kind,
-        object fn,
-        const _TaskSignature *signature
+        object fn
     )
     cpdef void add_variant(self, VariantCode, object)

@@ -36,11 +36,21 @@ def task(
     *,
     variants: tuple[VariantCode, ...] = DEFAULT_VARIANT_LIST,
     constraints: Sequence[DeferredConstraint] | None = None,
-    throws_exception: bool = False,
-    has_side_effect: bool = False,
+    options: TaskConfig | VariantOptions | None = None,
     register: bool = True,
 ) -> Callable[[UserFunction], PyTask] | PyTask:
     r"""Convert a Python function to a Legate task.
+
+    The user may pass either a ``TaskConfig`` or ``VariantOptions`` to select
+    the task options. If the former, the user can select the task ID of the
+    task themselves, while additionally setting variant options via the
+    ``TaskConfig.variant_options`` property. If the latter, then a new, unique
+    task ID will be automatically generated.
+
+    Deferring registration is used to add additional variants to the task that
+    have a different body. However, all variants must have identical
+    signatures. The user must manually call ``PyTask.complete_registration`` to
+    finish registering the task.
 
     Parameters
     ----------
@@ -52,12 +62,9 @@ def task(
     constraints : Sequence[DeferredConstraint], optional
         The list of constraints which are to be applied to the arguments of
         ``func``, if any. Defaults to no constraints.
-    throws_exception : bool, False
-        True if any variants of ``func`` throws an exception, False
-        otherwise.
-    has_side_effect : bool, False
-        Whether the task has any global side-effects. See ``AutoTask.set_side_
-        effect()`` for further information.
+    options : TaskConfig | VariantOptions, optional
+        Either a ``TaskConfig`` or ``VariantOptions`` describing the task
+        configuration.
     register : bool, True
         Whether to immediately complete registration of the task. Deferring
         registration is used to add additional variants to the task that have
@@ -74,7 +81,7 @@ def task(
     -------
     ::
 
-        from legate.core import broadcast, align, VariantCode
+        from legate.core import broadcast, align, VariantCode, VariantOptions
         from legate.core.task import task, InputArray, OutputArray
 
         @task
@@ -88,7 +95,7 @@ def task(
         @task(
             variants=(VariantCode.CPU, VariantCode.GPU),
             constraints=(align("x", "y"), broadcast("x")),
-            throws_exception=True,
+            options=VariantOptions(may_throw_exception=True)
         )
         def my_task_with_options(
             x: InputArray,
@@ -108,8 +115,7 @@ def task(
             func=f,
             variants=variants,
             constraints=constraints,
-            throws_exception=throws_exception,
-            has_side_effect=has_side_effect,
+            options=options,
             register=register,
         )
 

@@ -11,6 +11,7 @@ from collections.abc import Sequence
 from ..._lib.operation.task cimport AutoTask
 from ..._lib.runtime.library cimport Library
 from ..._lib.task.task_context cimport TaskContext
+from ..._lib.task.task_config cimport TaskConfig
 from ..._lib.utilities.typedefs cimport VariantCode, _LocalTaskID
 from .invoker cimport VariantInvoker
 from .type cimport VariantMapping
@@ -21,15 +22,13 @@ from .type import UserFunction
 cdef class PyTask:
     # Cython has no support for class variables, so this must be an instance
     # variable...
-    cdef readonly _LocalTaskID UNREGISTERED_ID
     cdef:
-        str                         _name
-        VariantInvoker              _invoker
-        VariantMapping              _variants
-        _LocalTaskID                _task_id
-        Library                     _library
-        bool                        _throws
-        bool                        _has_side_effect
+        bool _registered
+        str _name
+        VariantInvoker _invoker
+        VariantMapping _variants
+        TaskConfig _config
+        Library _library
 
     cpdef _LocalTaskID complete_registration(self)
     cdef void _update_variant(self, func: UserFunction, VariantCode variant)

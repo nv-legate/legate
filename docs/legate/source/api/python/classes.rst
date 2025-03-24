@@ -14,5 +14,6 @@ Classes
    resource_config
    task_context
    domain
+   task_config
 .. partition
 .. legion
