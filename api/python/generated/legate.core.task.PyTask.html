@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.task.PyTask &#8212; NVIDIA legate (25.05.00.dev51+gf974eea6)</title>
+    <title>legate.core.task.PyTask &#8212; NVIDIA legate (25.05.00.dev79+g03231d14)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=207d02f2"></script>
+    <script src="../../../_static/documentation_options.js?v=9d79d119"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev51+gf974eea6) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev51+gf974eea6) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev79+g03231d14) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev79+g03231d14) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev51+gf974eea6)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev79+g03231d14)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev51+gf974eea6) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev51+gf974eea6) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev79+g03231d14) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev79+g03231d14) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev51+gf974eea6)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev79+g03231d14)</p>
   
 </a>
 
@@ -472,7 +472,21 @@
 <h1>legate.core.task.PyTask<a class="headerlink" href="#legate-core-task-pytask" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="legate.core.task.PyTask">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">legate.core.task.</span></span><span class="sig-name descname"><span class="pre">PyTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">func:</span> <span class="pre">UserFunction,</span> <span class="pre">*,</span> <span class="pre">variants:</span> <span class="pre">Sequence[VariantCode],</span> <span class="pre">constraints:</span> <span class="pre">Sequence[ConstraintProxy]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">bool</span> <span class="pre">throws_exception:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">bool</span> <span class="pre">has_side_effect:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False,</span> <span class="pre">invoker:</span> <span class="pre">VariantInvoker</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">library:</span> <span class="pre">Library</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">bool</span> <span class="pre">register:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#legate.core.task.PyTask" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">legate.core.task.</span></span><span class="sig-name descname"><span class="pre">PyTask</span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">func:</span> <span class="pre">UserFunction</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">VariantList</span> <span class="pre">variants:</span> <span class="pre">VariantList</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">constraints:</span> <span class="pre">Sequence[ConstraintProxy]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">bool</span> <span class="pre">throws_exception:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">bool</span> <span class="pre">has_side_effect:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">invoker:</span> <span class="pre">VariantInvoker</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">library:</span> <span class="pre">Library</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">bool</span> <span class="pre">register:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#legate.core.task.PyTask" title="Link to this definition">#</a></dt>
 <dd><p>A Legate task constructed from a Python callable.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="legate.core.task.PyTask.__init__">
@@ -487,7 +501,7 @@
 <code class="docutils literal notranslate"><span class="pre">func</span></code>, if any. Defaults to no constraints.</p></li>
 <li><p><strong>throws_exception</strong> – <code class="docutils literal notranslate"><span class="pre">True</span></code> if any variants of <code class="docutils literal notranslate"><span class="pre">func</span></code> throws an exception, <code class="docutils literal notranslate"><span class="pre">False</span></code>
 otherwise.</p></li>
-<li><p><strong>has_side_effect</strong> – Whether the task has any global side-effects. See
+<li><p><strong>has_side_effect</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>False</em>) – Whether the task has any global side-effects. See
 <code class="docutils literal notranslate"><span class="pre">AutoTask.set_side_effect()</span></code> for further information.</p></li>
 <li><p><strong>invoker</strong> – The invoker used to store the signature and marshall arguments to
 and manage invoking the user variants. Defaults to constructing the
@@ -508,13 +522,10 @@ to the core context.</p></li>
 <tr class="row-odd"><td><p><a class="reference internal" href="legate.core.task.PyTask.UNREGISTERED_ID.html#legate.core.task.PyTask.UNREGISTERED_ID" title="legate.core.task.PyTask.UNREGISTERED_ID"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UNREGISTERED_ID</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.task.PyTask.library.html#legate.core.task.PyTask.library" title="legate.core.task.PyTask.library"><code class="xref py py-obj docutils literal notranslate"><span class="pre">library</span></code></a></p></td>
-<td><p>Library Return the library with which this task is registered.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.task.PyTask.registered.html#legate.core.task.PyTask.registered" title="legate.core.task.PyTask.registered"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registered</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="legate.core.task.PyTask.registered.html#legate.core.task.PyTask.registered" title="legate.core.task.PyTask.registered"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registered</span></code></a></p></td>
 <td><p>bool Query whether a <code class="docutils literal notranslate"><span class="pre">PyTask</span></code> has completed registration.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="legate.core.task.PyTask.task_id.html#legate.core.task.PyTask.task_id" title="legate.core.task.PyTask.task_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">task_id</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="legate.core.task.PyTask.task_id.html#legate.core.task.PyTask.task_id" title="legate.core.task.PyTask.task_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">task_id</span></code></a></p></td>
 <td><p>_LocalTaskID Return the context-local task ID for this task.</p></td>
 </tr>
 </tbody>
