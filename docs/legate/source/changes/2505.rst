@@ -17,6 +17,8 @@ Changes: 25.05
 - ``LEGATE_NEED_*`` environment variables are no longer consulted to infer what
   build-time features (e.g. CUDA support or networking support) are required for
   the current run. Legate can infer this automatically.
+- Legate now expects to always initialize Legion during ``legate::start()``. If Legion is
+  already initialized at this stage, an exception is thrown.
 
 C++
 ---

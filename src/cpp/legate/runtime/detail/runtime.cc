@@ -1730,63 +1730,69 @@ void handle_realm_default_args()
 {
   // Call as soon as possible, to ensure that any exceptions are pretty-printed
   static_cast<void>(install_terminate_handler());
-  // Must populate this before we handle Legate args as it expects to read its values.
-  auto& config = Config::get_config_mut();
 
-  config.parse();
-  if (!Legion::Runtime::has_runtime()) {
+  if (has_started()) {
+    return;
+  }
+
+  if (has_finished()) {
+    throw TracedException<std::runtime_error>{
+      "Legate runtime cannot be started after legate::finish is called"};
+  }
+
+  if (Legion::Runtime::has_runtime() || Legion::Runtime::has_context()) {
+    throw TracedException<std::runtime_error>{
+      "Legion runtime has already been started by another process. This mode is not supported by "
+      "Legate, which expects to initialize Legion itself."};
+  }
+
+  {
+    // Must populate this before we handle Legate args as it expects to read its values.
+    auto& config = Config::get_config_mut();
+
+    config.parse();
     // only do MPI version detection if we're not running on a single node or using p2p network
     // bootstrap
-    if (Config::get_config().need_network()) {
+    if (config.need_network()) {
       set_mpi_wrapper_libraries();
     }
-    handle_realm_default_args();
+  }
 
-    int argc                     = 1;
-    const char* dummy_argv_arr[] = {"legate-placeholder-binary-name", nullptr};
-    // Realm won't modify the existing strings, but nevertheless they require a char*
-    char** dummy_argv = const_cast<char**>(dummy_argv_arr);
-    char** argv       = dummy_argv;
+  handle_realm_default_args();
 
-    Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
+  int argc                     = 1;
+  const char* dummy_argv_arr[] = {"legate-placeholder-binary-name", nullptr};
+  // Realm won't modify the existing strings, but nevertheless they require a char*
+  char** dummy_argv = const_cast<char**>(dummy_argv_arr);
+  char** argv       = dummy_argv;
 
-    // If Realm finds anything in REALM_DEFAULT_ARGS, it will copy it onto the command line, right
-    // after the (fake) program name. So at exit we should free everything except the first token.
-    LEGATE_SCOPE_GUARD(
-      if (argv != dummy_argv) {
-        for (int i = 1; i < argc; ++i) {
-          std::free(argv[i]);
-        }
-        std::free(static_cast<void*>(argv));
-      });
+  // If Realm finds anything in REALM_DEFAULT_ARGS, it will copy it onto the command line, right
+  // after the (fake) program name. So at exit we should free everything except the first token.
+  LEGATE_SCOPE_GUARD(
+    if (argv != dummy_argv) {
+      for (int i = 1; i < argc; ++i) {
+        std::free(argv[i]);
+      }
+      std::free(static_cast<void*>(argv));
+    });
 
-    handle_legate_args();
+  Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
+  handle_legate_args();
+  Legion::Runtime::perform_registration_callback(initialize_core_library_callback_,
+                                                 true /*global*/);
 
-    Legion::Runtime::perform_registration_callback(initialize_core_library_callback_,
-                                                   true /*global*/);
-
-    if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true)) {
-      throw TracedException<std::runtime_error>{
-        fmt::format("Legion Runtime failed to start, error code: {}", result)};
-    }
+  if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true)) {
+    throw TracedException<std::runtime_error>{
+      fmt::format("Legion Runtime failed to start, error code: {}", result)};
   }
 
   // Get the runtime now that we've started it
-  auto legion_runtime = Legion::Runtime::get_runtime();
-
-  Legion::Context legion_context;
-  // If the context already exists, that means that some other driver started the top-level task,
-  // so here we just grab it to initialize the Legate runtime
-  if (Legion::Runtime::has_context()) {
-    legion_context = Legion::Runtime::get_context();
-  } else {
-    // Otherwise we  make this thread into an implicit top-level task
-    legion_context = legion_runtime->begin_implicit_task(CoreTask::TOPLEVEL,
-                                                         0 /*mapper id*/,
-                                                         Processor::LOC_PROC,
-                                                         TOPLEVEL_NAME,
-                                                         true /*control replicable*/);
-  }
+  auto* const legion_context =
+    Legion::Runtime::get_runtime()->begin_implicit_task(CoreTask::TOPLEVEL,
+                                                        0 /*mapper id*/,
+                                                        Processor::LOC_PROC,
+                                                        TOPLEVEL_NAME,
+                                                        true /*control replicable*/);
 
   // We can now initialize the Legate runtime with the Legion context
   Runtime::get_runtime()->initialize(legion_context);
@@ -1794,16 +1800,13 @@ void handle_realm_default_args()
 
 void Runtime::start_profiling_range()
 {
-  auto legion_runtime = get_legion_runtime();
-  auto legion_context = Legion::Runtime::get_context();
-  legion_runtime->start_profiling_range(legion_context);
+  Legion::Runtime::get_runtime()->start_profiling_range(Legion::Runtime::get_context());
 }
 
 void Runtime::stop_profiling_range(std::string_view provenance)
 {
-  auto legion_runtime = get_legion_runtime();
-  auto legion_context = Legion::Runtime::get_context();
-  legion_runtime->stop_profiling_range(legion_context, std::string{provenance}.c_str());
+  Legion::Runtime::get_runtime()->stop_profiling_range(Legion::Runtime::get_context(),
+                                                       std::string{provenance}.c_str());
 }
 
 namespace {

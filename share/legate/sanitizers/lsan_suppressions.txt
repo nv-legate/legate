@@ -47,5 +47,7 @@ leak:ucc_cl_lib_config_read
 leak:ucc_mc_init
 leak:kh_init_ucc_mc_cuda_resources_hash
 leak:ucc_mc_cuda_init
+leak:ucs_*
+leak:ucc_*
 # Verbs
 leak:libibverbs.*

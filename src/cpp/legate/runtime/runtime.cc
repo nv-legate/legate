@@ -369,15 +369,6 @@ void Runtime::stop_profiling_range(std::string_view provenance)
 
 void start()
 {
-  if (has_started()) {
-    return;
-  }
-
-  if (has_finished()) {
-    throw detail::TracedException<std::runtime_error>{
-      "Legate runtime cannot be started after legate::finish is called"};
-  }
-
   detail::Runtime::start();
   // Called for effect, otherwise the following:
   //

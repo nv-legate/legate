@@ -269,7 +269,6 @@ set(wo_runtime_SRC
     noinit/internal_weak_ptr.cc
     noinit/is_running_in_task.cc
     noinit/macros.cc
-    noinit/runtime_exception.cc
     noinit/scope_fail.cc
     noinit/scope_guard.cc
     noinit/shared_ptr.cc
@@ -290,7 +289,8 @@ set(non_reentrant_wo_runtime_SRC
     non_reentrant/wo_runtime/exception/base.cc
     non_reentrant/wo_runtime/exception/traced_exception.cc
     non_reentrant/wo_runtime/exception/terminate_handler.cc
-    non_reentrant/wo_runtime/argument_parsing/logging.cc)
+    non_reentrant/wo_runtime/argument_parsing/logging.cc
+    non_reentrant/wo_runtime/init/init.cc)
 
 legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
                                                       ${with_runtime_SRC}
