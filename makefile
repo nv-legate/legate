@@ -204,31 +204,16 @@ docs-dev: docs
 docserve:
 	@$(PYTHON) -m http.server -d $(LEGATE_DIR)/$(LEGATE_ARCH)/cmake_build/cpp/docs/legate/sphinx
 
+
 ## A quick smoke-check for the built library.
 ##
 .PHONY: check
 check:
-	@$(CMAKE) -E echo 'Running single-node check...'
-	@$(CMAKE) -E rm -f -- $(LEGATE_DIR)/$(LEGATE_ARCH)/make_check.log
-	@$(PYTHON) $(LEGATE_DIR)/test.py \
-       --color \
-       --gtest-filter 'LogicalArrayCreateUnit.*CreateBoundPrimitiveArray.*' \
-     > $(LEGATE_DIR)/$(LEGATE_ARCH)/make_check.log || \
-     { \
-       $(CMAKE) -E cat -- $(LEGATE_DIR)/$(LEGATE_ARCH)/make_check.log; \
-       $(CMAKE) -E false; \
-     }
-	@$(CMAKE) -E echo 'success'
-	@$(CMAKE) -E echo 'Running multi-node check...'
-	@$(PYTHON) $(LEGATE_DIR)/test.py \
-       --color \
-       --ranks-per-node 2 \
-       --launcher mpirun \
-       --gtest-filter 'LogicalArrayCreateUnit.*CreateBoundPrimitiveArray.*' \
-     > $(LEGATE_DIR)/$(LEGATE_ARCH)/make_check.log || \
-     { \
-       $(CMAKE) -E cat -- $(LEGATE_DIR)/$(LEGATE_ARCH)/make_check.log; \
-       $(CMAKE) -E false; \
-     }
-	@$(CMAKE) -E echo 'success'
-	@$(CMAKE) -E rm -f -- $(LEGATE_DIR)/$(LEGATE_ARCH)/make_check.log
+	@$(SHELL) $(LEGATE_DIR)/scripts/maint/run_check.sh \
+                'single-node' \
+                --gtest-filter 'LogicalArrayCreateUnit.*CreateBoundPrimitiveArray.*'
+	@$(SHELL) $(LEGATE_DIR)/scripts/maint/run_check.sh \
+                'multi-node' \
+                --ranks-per-node 2 \
+                --launcher mpirun \
+                --gtest-filter 'LogicalArrayCreateUnit.*CreateBoundPrimitiveArray.*'
