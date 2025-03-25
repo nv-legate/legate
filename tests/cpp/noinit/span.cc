@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include <numeric>
 #include <utilities/utilities.h>
 
 namespace span_test {
@@ -98,6 +99,8 @@ TEST_F(SpanUnit, Create)
   create(COMPLEX_DOUBLE_VALUE1, COMPLEX_DOUBLE_VALUE2, COMPLEX_DOUBLE_VALUE3);
 }
 
+// NOLINTEND(readability-magic-numbers)
+
 TEST_F(SpanUnit, Subspan)
 {
   const auto data_vec        = std::vector<std::uint64_t>(DATA_SIZE, UINT64_VALUE);
@@ -113,6 +116,42 @@ TEST_F(SpanUnit, Subspan)
   }
 }
 
-// NOLINTEND(readability-magic-numbers)
+TEST_F(SpanUnit, ReverseIterator)
+{
+  const auto data = [] {
+    auto vec = std::vector<std::uint64_t>(DATA_SIZE);
+
+    std::iota(vec.begin(), vec.end(), 1);
+    return vec;
+  }();
+  const auto span = legate::Span<const std::uint64_t>{data};
+
+  ASSERT_EQ(data.size(), span.size());
+
+  std::size_t count = 0;
+  for (auto it = span.rbegin(); it != span.rend(); ++it) {
+    ++count;
+    ASSERT_LE(count, DATA_SIZE) << "Reverse iteration exceeded container size: " << DATA_SIZE;
+  }
+
+  auto vit = data.rbegin();
+  auto sit = span.rbegin();
+
+  for (; vit != data.rend(); ++vit, static_cast<void>(++sit)) {
+    ASSERT_EQ(*vit, *sit);
+  }
+}
+
+TEST_F(SpanUnit, FrontBack)
+{
+  constexpr std::int32_t FRONT_VALUE = -100;
+  constexpr std::int32_t BACK_VALUE  = 1234;
+
+  constexpr auto data = std::array{FRONT_VALUE, BACK_VALUE};
+  const auto span     = legate::Span<const std::int32_t>{data};
+
+  ASSERT_EQ(span.front(), FRONT_VALUE);
+  ASSERT_EQ(span.back(), BACK_VALUE);
+}
 
 }  // namespace span_test

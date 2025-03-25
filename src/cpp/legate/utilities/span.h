@@ -48,16 +48,18 @@ inline constexpr bool is_container_v = is_container<T>::value;
 template <typename T>
 class Span {
  public:
-  using element_type    = T;
-  using value_type      = std::remove_cv_t<T>;
-  using size_type       = std::size_t;
-  using difference_type = std::ptrdiff_t;
-  using pointer         = T*;
-  using const_pointer   = const T*;
-  using reference       = T&;
-  using const_reference = const T&;
-  using iterator        = pointer;
-  using const_iterator  = const_pointer;
+  using element_type           = T;
+  using value_type             = std::remove_cv_t<T>;
+  using size_type              = std::size_t;
+  using difference_type        = std::ptrdiff_t;
+  using pointer                = T*;
+  using const_pointer          = const T*;
+  using reference              = T&;
+  using const_reference        = const T&;
+  using iterator               = pointer;
+  using const_iterator         = const_pointer;
+  using reverse_iterator       = std::reverse_iterator<iterator>;
+  using reverse_const_iterator = std::reverse_iterator<const_iterator>;
 
   constexpr Span() = default;
 
@@ -137,6 +139,36 @@ class Span {
    * @return Pointer to the end of allocation
    */
   [[nodiscard]] constexpr iterator end();
+
+  /**
+   * @return An iterator to the last element.
+   */
+  [[nodiscard]] constexpr reverse_const_iterator rbegin() const;
+
+  /**
+   * @return An iterator one past the first element.
+   */
+  [[nodiscard]] constexpr reverse_const_iterator rend() const;
+
+  /**
+   * @return An iterator to the last element.
+   */
+  [[nodiscard]] constexpr reverse_iterator rbegin();
+
+  /**
+   * @return An iterator one past the first element.
+   */
+  [[nodiscard]] constexpr reverse_iterator rend();
+
+  /**
+   * @return A reference to the first element in the span.
+   */
+  [[nodiscard]] constexpr reference front() const;
+
+  /**
+   * @return A reference to the last element in the span.
+   */
+  [[nodiscard]] constexpr reference back() const;
 
   /**
    * @brief Slices off the first `off` elements. Passing an `off` greater than

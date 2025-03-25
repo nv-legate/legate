@@ -67,6 +67,10 @@ C++
 
 .. rubric:: Utilities
 
+- Add ``legate::Span::rbegin()`` and ``legate::Span::rend()`` to allow reverse iteration.
+- Add ``legate::Span::front()`` and ``legate::Span::back()`` to allow accessing the first
+  and last element.
+
 .. rubric:: I/O
 
 

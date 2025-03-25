@@ -110,6 +110,42 @@ constexpr typename Span<T>::iterator Span<T>::end()
 }
 
 template <typename T>
+constexpr typename Span<T>::reverse_const_iterator Span<T>::rbegin() const
+{
+  return reverse_const_iterator{end()};
+}
+
+template <typename T>
+constexpr typename Span<T>::reverse_const_iterator Span<T>::rend() const
+{
+  return reverse_const_iterator{begin()};
+}
+
+template <typename T>
+constexpr typename Span<T>::reverse_iterator Span<T>::rbegin()
+{
+  return reverse_iterator{end()};
+}
+
+template <typename T>
+constexpr typename Span<T>::reverse_iterator Span<T>::rend()
+{
+  return reverse_iterator{begin()};
+}
+
+template <typename T>
+constexpr typename Span<T>::reference Span<T>::front() const
+{
+  return *begin();
+}
+
+template <typename T>
+constexpr typename Span<T>::reference Span<T>::back() const
+{
+  return *(end() - 1);
+}
+
+template <typename T>
 constexpr Span<T> Span<T>::subspan(size_type off)
 {
   LEGATE_CHECK(off <= size_);

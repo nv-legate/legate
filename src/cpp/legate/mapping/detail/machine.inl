@@ -54,7 +54,7 @@ inline LocalProcessorRange::LocalProcessorRange(const std::vector<Processor>& pr
 {
 }
 
-inline const Processor& LocalProcessorRange::first() const { return *procs_.begin(); }
+inline const Processor& LocalProcessorRange::first() const { return procs_.front(); }
 
 inline bool LocalProcessorRange::empty() const { return procs_.size() == 0; }
 
