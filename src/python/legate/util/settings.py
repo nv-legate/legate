@@ -203,6 +203,8 @@ class SettingBase(Generic[T]):
             return 'bool ("0" or "1")'
         if self._convert is convert_str_seq:
             return "tuple[str, ...]"
+        if callable(self._convert) and hasattr(self._convert, "type"):
+            return self._convert.type
         msg = "unreachable"
         raise RuntimeError(msg)
 
