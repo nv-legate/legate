@@ -59,31 +59,6 @@ jobs:
       network: ${{ inputs.network }}
     secrets: inherit
 
-  upload:
-    needs: build
-    if: ${{ github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.upload-enabled == true }}
-    name: Upload package to Server
-    uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.29
-    with:
-      build-has-tests: ${{ inputs.upload-enabled == false }}
-      client-repo: ${{ github.event.repository.name }}
-      build-type: ${{ inputs.build-type }}
-      name: uploadToURM
-      target-device: ${{ inputs.target-device }}
-      platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.29"
-      build-mode: ${{ inputs.build-mode }}
-      upload-enabled: ${{ inputs.upload-enabled }}
-      network: ${{ inputs.network }}
-      upload-action: ${{ inputs.upload-action }}
-      pkgSubString: "legate"
-      repos-Root: "legate"
-      python-version: ${{ inputs.python-version }}
-      refname: ${{ inputs.refname }}
-      default-branch: ${{ inputs.default-branch }}
-    secrets: inherit
-
   setup-test:
     name: Setup test
     # Don't run GPU tests on linux-aarch64. We don't have enough test machines for this.
@@ -193,27 +168,29 @@ jobs:
       network: ${{ inputs.network }}
     secrets: inherit
 
-  updateTestStatus:
+  upload:
     needs: test-within-container
-    name: Update Test status on Server
-    if: ${{ false }}
+    # The use of always() below, ensures the step will run even on failure of the tests
+    # before if other conditionals are all true
+    if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.upload-enabled == false }}
+    name: Upload package to Server
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.29
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.30
     with:
-      build-has-tests: ${{ inputs.upload-enabled == false }}
+      build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
       build-type: ${{ inputs.build-type }}
-      name: UpdateTestStatus
+      name: Upload to Anaconda
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.29"
+      legate-gh-ci-tag: "v1.30"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: true
-      upload-action: "update-test-status"
+      network: ${{ inputs.network }}
+      upload-action: ${{ needs.test-within-container.result == 'failure' && 'upload-package-Anaconda' || 'upload-package-Anaconda-tested' }}
       pkgSubString: "legate"
       repos-Root: "legate"
       python-version: ${{ inputs.python-version }}
-      network: ${{ inputs.network }}
       refname: ${{ inputs.refname }}
       default-branch: ${{ inputs.default-branch }}
     secrets: inherit
