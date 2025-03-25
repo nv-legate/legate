@@ -30,7 +30,7 @@ def _find_tests(prefix: Path) -> tuple[Path, list[Path]] | None:
     if not tests_dir.exists():
         return None
 
-    ctest_file = tests_dir / "CTestTestFile.cmake"
+    ctest_file = tests_dir / "CTestTestfile.cmake"
     if not ctest_file.is_file():
         m = (
             f"Expected to find {ctest_file} in order to parse the tests from "
