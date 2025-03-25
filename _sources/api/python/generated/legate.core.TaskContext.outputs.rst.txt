@@ -1,6 +1,0 @@
-legate.core.TaskContext.outputs
-===============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: TaskContext.outputs

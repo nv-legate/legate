@@ -1,4 +1,4 @@
-.. _third_party:
+.. _thirdparty:
 
 Third-party notices
 ===================

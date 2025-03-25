@@ -1,6 +1,0 @@
-legate.core.VariantOptions.\_\_eq\_\_
-=====================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: VariantOptions.__eq__

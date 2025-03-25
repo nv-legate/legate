@@ -379,6 +379,7 @@ Perlmutter:
       LEGATE_CONFIG='--cpus 1 --gpus 4 --sysmem 4000 --fbmem 4000 --logging legate=1,gex=0 --logdir /log/dir --eager-alloc-percentage 1'
       LEGATE_MAX_DIM=4
       LEGATE_MAX_FIELDS=256
+      LEGATE_NEED_NETWORK=1
       NCCL_LAUNCH_MODE=PARALLEL
       PYTHONDONTWRITEBYTECODE=1
       PYTHONPATH=/opt/nersc/pymon:/conda/envs/legate-gex-anaconda/lib/python3.12/site-packages:/conda/envs/legate-gex-anaconda/lib/python3.12/site-packages

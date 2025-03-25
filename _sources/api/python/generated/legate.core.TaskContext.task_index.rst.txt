@@ -1,6 +1,0 @@
-legate.core.TaskContext.task\_index
-===================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: TaskContext.task_index

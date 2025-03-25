@@ -1,6 +1,0 @@
-legate.core.Domain.\_replace
-============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Domain._replace

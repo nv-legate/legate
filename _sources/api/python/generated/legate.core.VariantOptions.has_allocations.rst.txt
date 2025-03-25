@@ -1,6 +1,0 @@
-legate.core.VariantOptions.has\_allocations
-===========================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: VariantOptions.has_allocations
