@@ -1,0 +1,30 @@
+﻿legate.core.TaskConfig
+======================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: TaskConfig
+
+   .. automethod:: TaskConfig.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~TaskConfig.task_id
+      ~TaskConfig.variant_options
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+   
+   

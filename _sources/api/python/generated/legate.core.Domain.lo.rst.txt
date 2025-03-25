@@ -1,0 +1,6 @@
+legate.core.Domain.lo
+=====================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Domain.lo

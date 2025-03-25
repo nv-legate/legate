@@ -1,0 +1,33 @@
+﻿legate.core.ResourceConfig
+==========================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: ResourceConfig
+
+   .. automethod:: ResourceConfig.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~ResourceConfig.max_dyn_tasks
+      ~ResourceConfig.max_projections
+      ~ResourceConfig.max_reduction_ops
+      ~ResourceConfig.max_shardings
+      ~ResourceConfig.max_tasks
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+   
+   

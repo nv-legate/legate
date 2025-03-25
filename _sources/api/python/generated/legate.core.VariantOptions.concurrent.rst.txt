@@ -1,0 +1,6 @@
+legate.core.VariantOptions.concurrent
+=====================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: VariantOptions.concurrent

@@ -1,0 +1,6 @@
+legate.core.VariantOptions.may\_throw\_exception
+================================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: VariantOptions.may_throw_exception

@@ -1,0 +1,6 @@
+legate.core.TaskContext.get\_task\_id
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: TaskContext.get_task_id

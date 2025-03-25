@@ -1,0 +1,6 @@
+legate.core.VariantOptions.\_\_le\_\_
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: VariantOptions.__le__

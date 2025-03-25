@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data &#8212; NVIDIA legate (25.03.01.dev9+g279c3433)</title>
+    <title>Data &#8212; NVIDIA legate (25.05.00.dev60+gfc5c4bed)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=c13c5af3"></script>
+    <script src="../../_static/documentation_options.js?v=445f0e4f"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -52,7 +52,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.03';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.05';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -130,11 +130,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.03.01.dev9+g279c3433) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.03.01.dev9+g279c3433) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev60+gfc5c4bed) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev60+gfc5c4bed) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.03.01.dev9+g279c3433)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev60+gfc5c4bed)</p>
   
 </a></div>
     
@@ -241,11 +241,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.03.01.dev9+g279c3433) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.03.01.dev9+g279c3433) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev60+gfc5c4bed) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev60+gfc5c4bed) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.03.01.dev9+g279c3433)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev60+gfc5c4bed)</p>
   
 </a>
 
@@ -336,6 +336,11 @@
 
 <li class="toctree-l4"><a class="reference internal" href="../python/machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/shape.html">Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/variant_options.html">Variant Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/resource_config.html">ResourceConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/task_context.html">Task Context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/domain.html">Domains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/task_config.html">Task Configuration</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -383,6 +388,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../versions.html">Versions</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2505.html">2505</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../changes/2503.html">2503</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../changes/2501.html">2501</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../changes/2411.html">2411</a></li>
@@ -402,6 +408,12 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
 </ul>
 </details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../developer/style.html">Style</a></li>
 </ul>
 </details></li>
 </ul>
@@ -657,7 +669,7 @@ The input pointer must be one that was previously returned by an <code class="do
 <p>An <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> is a handle to a memory allocation outside Legate’s memory management. <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> objects are used when users want to create Legate stores from the existing allocations external to Legate. (See two overloads of <code class="docutils literal notranslate"><a class="reference internal" href="runtime.html#classlegate_1_1Runtime_1a32107f09c6b2e51e46e1fa4129a7eee5"><span class="std std-ref"><span class="pre">Runtime::create_store()</span></span></a></code> that take <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code>s.)</p>
 <p><code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code>s can be tagged either read-only or mutable. In case of the latter, Legate guarantees that any updates to the store to which the allocation is attached are also visible via the allocation, wherever the updates are made, at the expense of block-waiting on tasks updating the store. No such propagation of changes happens for read-only external allocations.</p>
 <p>The client code that creates an external allocation and attaches it to a Legate store must guarantee that the allocation stays alive until all the tasks accessing the store are finished. If the attached allocation was read-only, the code must not mutate the contents of the allocation while the tasks are still running. An external allocation attached to a store can be safely deallocated in two ways:</p>
-<p>1) The client code calls the <code class="docutils literal notranslate"><span class="pre">detach()</span></code> method on the store before it dellocate the allocation. The <code class="docutils literal notranslate"><span class="pre">detach()</span></code> call makes sure that all outstanding operations on the store complete (see <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore_1a91bfbb96c49998b45890fe725ff0b102"><span class="std std-ref"><span class="pre">LogicalStore::detach()</span></span></a></code>). 2) The client code can optionally pass in a deleter for the allocation, which will be invoked once the store is destroyed and the allocation is no longer in use.</p>
+<p>1) The client code calls the <code class="docutils literal notranslate"><span class="pre">detach()</span></code> method on the store before it deallocate the allocation. The <code class="docutils literal notranslate"><span class="pre">detach()</span></code> call makes sure that all outstanding operations on the store complete (see <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore_1a91bfbb96c49998b45890fe725ff0b102"><span class="std std-ref"><span class="pre">LogicalStore::detach()</span></span></a></code>). 2) The client code can optionally pass in a deleter for the allocation, which will be invoked once the store is destroyed and the allocation is no longer in use.</p>
 <p>Deleters don’t need to be idempotent; Legate makes sure that they will be invoked only once on the allocations. Deleters must not throw exceptions (throwable deleters are disallowed by the type system). Deleters need not handle null pointers correctly, as external allocations are not allowed to be created on null pointers. Each deleter is responsible for deallocating only the allocation it is associated with and no other allocations. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
@@ -1177,7 +1189,7 @@ The input pointer must be one that was previously returned by an <code class="do
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is invalid for the array or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimenison </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is invalid for the array or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimension </p></li>
 <li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the array or any of the sub-arrays is a list array </p></li>
 </ul>
 </dd>
@@ -1230,11 +1242,26 @@ The input pointer must be one that was previously returned by an <code class="do
 </dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalArray18get_physical_arrayEv">
-<span id="_CPPv3NK6legate12LogicalArray18get_physical_arrayEv"></span><span id="_CPPv2NK6legate12LogicalArray18get_physical_arrayEv"></span><span id="legate::LogicalArray::get_physical_arrayC"></span><span class="target" id="classlegate_1_1LogicalArray_1afc70d5c3cd8ca2a32937dac776d32deb"></span><a class="reference internal" href="#_CPPv4N6legate13PhysicalArrayE" title="legate::PhysicalArray"><span class="n"><span class="pre">PhysicalArray</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_physical_array</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalArray18get_physical_arrayEv" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalArray18get_physical_arrayENSt8optionalIN7mapping11StoreTargetEEE">
+<span id="_CPPv3NK6legate12LogicalArray18get_physical_arrayENSt8optionalIN7mapping11StoreTargetEEE"></span><span id="_CPPv2NK6legate12LogicalArray18get_physical_arrayENSt8optionalIN7mapping11StoreTargetEEE"></span><span id="legate::LogicalArray::get_physical_array__std::optional:mapping::StoreTarget:C"></span><span class="target" id="classlegate_1_1LogicalArray_1a0bf5a5ae2af2f24623ac7602ee31cf2a"></span><a class="reference internal" href="#_CPPv4N6legate13PhysicalArrayE" title="legate::PhysicalArray"><span class="n"><span class="pre">PhysicalArray</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_physical_array</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">StoreTarget</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalArray18get_physical_arrayENSt8optionalIN7mapping11StoreTargetEEE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Creates a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalArray"><span class="std std-ref"><span class="pre">PhysicalArray</span></span></a></code> for this <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalArray"><span class="std std-ref"><span class="pre">LogicalArray</span></span></a></code></p>
-<p>This call blocks the client’s control flow and fetches the data for the whole array to the current node</p>
+<p>This call blocks the client’s control flow and fetches the data for the whole array to the current node.</p>
+<p>When the target is <code class="docutils literal notranslate"><span class="pre">StoreTarget::FBMEM</span></code>, the data will be consolidated in the framebuffer of the first GPU available in the scope.</p>
+<p>If no <code class="docutils literal notranslate"><span class="pre">target</span></code> is given, the runtime uses <code class="docutils literal notranslate"><span class="pre">StoreTarget::SOCKETMEM</span></code> if it exists and <code class="docutils literal notranslate"><span class="pre">StoreTarget::SYSMEM</span></code> otherwise.</p>
+<p>If there already exists a physical array for a different memory target, that physical array will be unmapped from memory and become invalid to access.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> – The type of memory in which the physical array would be created.</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If no memory of the chosen type is available </p>
+</dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalArray"><span class="std std-ref"><span class="pre">PhysicalArray</span></span></a></code> of the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalArray"><span class="std std-ref"><span class="pre">LogicalArray</span></span></a></code></p>
 </dd>
@@ -1287,7 +1314,7 @@ Copies the array to the specified memory, if necessary, and marks it as the most
 <span class="w">  </span><span class="c1">// call for the first store after submitting the first task and before submitting</span>
 <span class="w">  </span><span class="c1">// the second task.</span>
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">task1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">library</span><span class="p">,</span><span class="w"> </span><span class="n">GPUonlyTask</span><span class="o">::</span><span class="n">TASK_ID</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">task1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">library</span><span class="p">,</span><span class="w"> </span><span class="n">GPUonlyTask</span><span class="o">::</span><span class="n">TASK_CONFIG</span><span class="p">.</span><span class="n">task_id</span><span class="p">());</span>
 
 <span class="w">    </span><span class="n">task1</span><span class="p">.</span><span class="n">add_output</span><span class="p">(</span><span class="n">store1</span><span class="p">);</span>
 <span class="w">    </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">submit</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task1</span><span class="p">));</span>
@@ -1296,7 +1323,7 @@ Copies the array to the specified memory, if necessary, and marks it as the most
 <span class="w">  </span><span class="n">store1</span><span class="p">.</span><span class="n">offload_to</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">mapping</span><span class="o">::</span><span class="n">StoreTarget</span><span class="o">::</span><span class="n">SYSMEM</span><span class="p">);</span>
 
 <span class="w">  </span><span class="p">{</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">task2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">library</span><span class="p">,</span><span class="w"> </span><span class="n">GPUonlyTask</span><span class="o">::</span><span class="n">TASK_ID</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">task2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">library</span><span class="p">,</span><span class="w"> </span><span class="n">GPUonlyTask</span><span class="o">::</span><span class="n">TASK_CONFIG</span><span class="p">.</span><span class="n">task_id</span><span class="p">());</span>
 
 <span class="w">    </span><span class="n">task2</span><span class="p">.</span><span class="n">add_output</span><span class="p">(</span><span class="n">store2</span><span class="p">);</span>
 <span class="w">    </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">submit</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task2</span><span class="p">));</span>
@@ -1394,7 +1421,7 @@ Copies the array to the specified memory, if necessary, and marks it as the most
 <em>#include &lt;legate/data/logical_store.h&gt;</em></div>
 <p>A multi-dimensional data container. </p>
 <p><code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code> is a multi-dimensional data container for fixed-size elements. Stores are internally partitioned and distributed across the system. By default, Legate clients need not create nor maintain the partitions explicitly, and the Legate runtime is responsible for managing them. Legate clients can control how stores should be partitioned for a given task by attaching partitioning constraints to the task (see the constraint module for partitioning constraint APIs).</p>
-<p>Each <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code> object is a logical handle to the data and is not immediately associated with a physical allocation. To access the data, a client must “map” the store to a physical store (<code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code>). A client can map a store by passing it to a task, in which case the task body can see the allocation, or calling <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore_1acf035385d22273c70c0ca1f9ff0d8e05"><span class="std std-ref"><span class="pre">LogicalStore::get_physical_store()</span></span></a></code>, which gives the client a handle to the physical allocation (see <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> for details about physical stores).</p>
+<p>Each <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code> object is a logical handle to the data and is not immediately associated with a physical allocation. To access the data, a client must “map” the store to a physical store (<code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code>). A client can map a store by passing it to a task, in which case the task body can see the allocation, or calling <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore_1a65a19d72698f2e1c1d99f0f54620d7dd"><span class="std std-ref"><span class="pre">LogicalStore::get_physical_store()</span></span></a></code>, which gives the client a handle to the physical allocation (see <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> for details about physical stores).</p>
 <p>Normally, a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code> gets a fixed <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code> upon creation. However, there is a special type of logical stores called “unbound” stores whose shapes are unknown at creation time. (see <code class="docutils literal notranslate"><a class="reference internal" href="runtime.html#classlegate_1_1Runtime"><span class="std std-ref"><span class="pre">Runtime</span></span></a></code> for the logical store creation API.) The shape of an unbound store is determined by a task that first updates the store; upon the submission of the task, the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code> becomes a normal store. Passing an unbound store as a read-only argument or requesting a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> of an unbound store are invalid.</p>
 <p>One consequence due to the nature of unbound stores is that querying the shape of a previously unbound store can block the client’s control flow for an obvious reason; to know the shape of the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code> whose <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code> was unknown at creation time, the client must wait until the updater task to finish. However, passing a previously unbound store to a downstream operation can be non-blocking, as long as the operation requires no changes in the partitioning and mapping for the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code>. </p>
 <div class="breathe-sectiondef docutils container">
@@ -1743,7 +1770,7 @@ The size and alignment of the new type must match that of the existing type.</p>
 </ul>
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is invalid for the store or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimenison </p>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">dim</span></code> is invalid for the store or <code class="docutils literal notranslate"><span class="pre">sizes</span></code> does not preserve the extent of the chosen dimension </p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A new store with the chosen dimension delinearized</p>
@@ -1773,11 +1800,26 @@ The size and alignment of the new type must match that of the existing type.</p>
 </dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalStore18get_physical_storeEv">
-<span id="_CPPv3NK6legate12LogicalStore18get_physical_storeEv"></span><span id="_CPPv2NK6legate12LogicalStore18get_physical_storeEv"></span><span id="legate::LogicalStore::get_physical_storeC"></span><span class="target" id="classlegate_1_1LogicalStore_1acf035385d22273c70c0ca1f9ff0d8e05"></span><a class="reference internal" href="#_CPPv4N6legate13PhysicalStoreE" title="legate::PhysicalStore"><span class="n"><span class="pre">PhysicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_physical_store</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalStore18get_physical_storeEv" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE">
+<span id="_CPPv3NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE"></span><span id="_CPPv2NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE"></span><span id="legate::LogicalStore::get_physical_store__std::optional:mapping::StoreTarget:C"></span><span class="target" id="classlegate_1_1LogicalStore_1a65a19d72698f2e1c1d99f0f54620d7dd"></span><a class="reference internal" href="#_CPPv4N6legate13PhysicalStoreE" title="legate::PhysicalStore"><span class="n"><span class="pre">PhysicalStore</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_physical_store</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">StoreTarget</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">target</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Creates a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> for this <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code></p>
-<p>This call blocks the client’s control flow and fetches the data for the whole store to the current node</p>
+<p>This call blocks the client’s control flow and fetches the data for the whole store to the current node.</p>
+<p>When the target is <code class="docutils literal notranslate"><span class="pre">StoreTarget::FBMEM</span></code>, the data will be consolidated in the framebuffer of the first GPU available in the scope.</p>
+<p>If no <code class="docutils literal notranslate"><span class="pre">target</span></code> is given, the runtime uses <code class="docutils literal notranslate"><span class="pre">StoreTarget::SOCKETMEM</span></code> if it exists and <code class="docutils literal notranslate"><span class="pre">StoreTarget::SYSMEM</span></code> otherwise.</p>
+<p>If there already exists a physical store for a different memory target, that physical store will be unmapped from memory and become invalid to access.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> – The type of memory in which the physical store would be created.</p>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If no memory of the chosen type is available </p>
+</dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code> of the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore"><span class="std std-ref"><span class="pre">LogicalStore</span></span></a></code></p>
 </dd>
@@ -2682,7 +2724,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <dd><p>Creates an owned <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> from a <code class="docutils literal notranslate"><span class="pre">std::vector</span></code> of scalars. The values in the input vector will be copied. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> – Values to create a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> with in a vector </p>
+<dd class="field-odd"><p><strong>values</strong> – Values to create a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> with in a vector. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -2694,6 +2736,19 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>values</strong> – Values to create a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> with in a <code class="docutils literal notranslate"><span class="pre">tuple</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate6Scalar6ScalarERKNSt6vectorIbEE">
+<span id="_CPPv3N6legate6Scalar6ScalarERKNSt6vectorIbEE"></span><span id="_CPPv2N6legate6Scalar6ScalarERKNSt6vectorIbEE"></span><span id="legate::Scalar::Scalar__std::vector:b:CR"></span><span class="target" id="classlegate_1_1Scalar_1a335e388b3f3ec65fd0e88a7ed4e8729b"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scalar</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">bool</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate6Scalar6ScalarERKNSt6vectorIbEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates an owned <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> from a <code class="docutils literal notranslate"><span class="pre">std::vector&lt;bool&gt;</span></code>. The values in the input vector will be copied. </p>
+<p>Like most things with <code class="docutils literal notranslate"><span class="pre">std::vector&lt;bool&gt;</span></code>, this construction is not particularly efficient. In order to be copied into the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code>, the vector will first be “expanded” into a temporary <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::uint8_t&gt;</span></code>, resulting in multiple copies being performed.</p>
+<p>The user is therefore highly encouraged to use <code class="docutils literal notranslate"><span class="pre">std::vector&lt;std::uint8_t&gt;</span></code> directly instead of <code class="docutils literal notranslate"><span class="pre">std::vector&lt;bool&gt;</span></code> (if possible), especially if such vectors are commonly passed to tasks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>values</strong> – The values with which to create the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code>. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -2772,7 +2827,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <span id="_CPPv3I0ENK6legate6Scalar6valuesEv"></span><span id="_CPPv2I0ENK6legate6Scalar6valuesEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">VAL</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1Scalar_1a2b2d2da382e63b2488a3ed4524bef3fc"></span><a class="reference internal" href="#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0ENK6legate6Scalar6valuesE4SpanIK3VALEv" title="legate::Scalar::values::VAL"><span class="n"><span class="pre">VAL</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">values</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I0ENK6legate6Scalar6valuesE4SpanIK3VALEv" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns values stored in the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code>. If the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Scalar"><span class="std std-ref"><span class="pre">Scalar</span></span></a></code> does not have a fixed array type, a unit span will be returned. </p>
 <p>
-1) the scalar has a fixed array type whose elemenet type has a different size from <code class="docutils literal notranslate"><span class="pre">VAL</span></code>, 2) the scalar holds a string and size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> isn’t 1 byte, 3) the scalar’s type isn’t a fixed array type and the size is different from size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> </p>
+1) the scalar has a fixed array type whose element type has a different size from <code class="docutils literal notranslate"><span class="pre">VAL</span></code>, 2) the scalar holds a string and size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> isn’t 1 byte, 3) the scalar’s type isn’t a fixed array type and the size is different from size of <code class="docutils literal notranslate"><span class="pre">VAL</span></code> </p>
 <dl class="field-list simple">
 <dt class="field-odd">Throws<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If one of the following cases is encountered:</p>
@@ -2927,7 +2982,7 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <dd><p>Generates a human-readable string from the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code> (non-blocking) </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">std::tring</span></code> generated from the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code></p>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">std::string</span></code> generated from the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1Shape"><span class="std std-ref"><span class="pre">Shape</span></span></a></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -3119,6 +3174,66 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span6rbeginEv">
+<span id="_CPPv3NK6legate4Span6rbeginEv"></span><span id="_CPPv2NK6legate4Span6rbeginEv"></span><span id="legate::Span::rbeginC"></span><span class="target" id="classlegate_1_1Span_1a322f8e512b27c8e61afc8b249aa2fd25"></span><span class="n"><span class="pre">reverse_const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate4Span6rbeginEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An iterator to the last element. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span4rendEv">
+<span id="_CPPv3NK6legate4Span4rendEv"></span><span id="_CPPv2NK6legate4Span4rendEv"></span><span id="legate::Span::rendC"></span><span class="target" id="classlegate_1_1Span_1a98984eb7056e213e707bad951b9dfcd2"></span><span class="n"><span class="pre">reverse_const_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate4Span4rendEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An iterator one past the first element. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span6rbeginEv">
+<span id="_CPPv3N6legate4Span6rbeginEv"></span><span id="_CPPv2N6legate4Span6rbeginEv"></span><span id="legate::Span::rbegin"></span><span class="target" id="classlegate_1_1Span_1adfe81528e00a498f54004a4786cbaae4"></span><span class="n"><span class="pre">reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate4Span6rbeginEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An iterator to the last element. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate4Span4rendEv">
+<span id="_CPPv3N6legate4Span4rendEv"></span><span id="_CPPv2N6legate4Span4rendEv"></span><span id="legate::Span::rend"></span><span class="target" id="classlegate_1_1Span_1a07f10262abc82ce5379ee0bc0777d860"></span><span class="n"><span class="pre">reverse_iterator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate4Span4rendEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>An iterator one past the first element. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span5frontEv">
+<span id="_CPPv3NK6legate4Span5frontEv"></span><span id="_CPPv2NK6legate4Span5frontEv"></span><span id="legate::Span::frontC"></span><span class="target" id="classlegate_1_1Span_1aec4affb9d1a16ddd51e630b656f2f69d"></span><span class="n"><span class="pre">reference</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">front</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate4Span5frontEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A reference to the first element in the span. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate4Span4backEv">
+<span id="_CPPv3NK6legate4Span4backEv"></span><span id="_CPPv2NK6legate4Span4backEv"></span><span id="legate::Span::backC"></span><span class="target" id="classlegate_1_1Span_1ae42e1050b3c0cd6e91b68265ff02a3f5"></span><span class="n"><span class="pre">reference</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">back</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate4Span4backEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A reference to the last element in the span. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate4Span7subspanE9size_type">
 <span id="_CPPv3N6legate4Span7subspanE9size_type"></span><span id="_CPPv2N6legate4Span7subspanE9size_type"></span><span id="legate::Span::subspan__size_type"></span><span class="target" id="classlegate_1_1Span_1a43bc2588a7416bfdeb837ee6a6644582"></span><a class="reference internal" href="#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subspan</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_type</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">off</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate4Span7subspanE9size_type" title="Link to this definition">#</a><br /></dt>
 <dd><p>Slices off the first <code class="docutils literal notranslate"><span class="pre">off</span></code> elements. Passing an <code class="docutils literal notranslate"><span class="pre">off</span></code> greater than the size will fail with an assertion failure. </p>
@@ -3260,7 +3375,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray4dataEv"><code class="docutils literal notranslate"><span class="pre">data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray9null_maskEv"><code class="docutils literal notranslate"><span class="pre">null_mask()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray5childENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">child()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray18get_physical_arrayEv"><code class="docutils literal notranslate"><span class="pre">get_physical_array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray18get_physical_arrayENSt8optionalIN7mapping11StoreTargetEEE"><code class="docutils literal notranslate"><span class="pre">get_physical_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray13as_list_arrayEv"><code class="docutils literal notranslate"><span class="pre">as_list_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray15as_string_arrayEv"><code class="docutils literal notranslate"><span class="pre">as_string_array()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalArray10offload_toEN7mapping11StoreTargetE"><code class="docutils literal notranslate"><span class="pre">offload_to()</span></code></a></li>
@@ -3294,7 +3409,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore9transposeERRNSt6vectorINSt7int32_tEEE"><code class="docutils literal notranslate"><span class="pre">transpose()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore11delinearizeENSt7int32_tENSt6vectorINSt8uint64_tEEE"><code class="docutils literal notranslate"><span class="pre">delinearize()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore19partition_by_tilingENSt6vectorINSt8uint64_tEEE"><code class="docutils literal notranslate"><span class="pre">partition_by_tiling()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore18get_physical_storeEv"><code class="docutils literal notranslate"><span class="pre">get_physical_store()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore18get_physical_storeENSt8optionalIN7mapping11StoreTargetEEE"><code class="docutils literal notranslate"><span class="pre">get_physical_store()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate12LogicalStore6detachEv"><code class="docutils literal notranslate"><span class="pre">detach()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate12LogicalStore10offload_toEN7mapping11StoreTargetE"><code class="docutils literal notranslate"><span class="pre">offload_to()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate12LogicalStore13equal_storageERK12LogicalStore"><code class="docutils literal notranslate"><span class="pre">equal_storage()</span></code></a></li>
@@ -3369,6 +3484,7 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6Scalar6ScalarENSt11string_viewE"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6Scalar6ScalarERKNSt6vectorI1TEE"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0EN6legate6Scalar6ScalarERK5tupleI1TE"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6Scalar6ScalarERKNSt6vectorIbEE"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I_NSt7int32_tEEN6legate6Scalar6ScalarERK5PointI3DIME"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I_NSt7int32_tEEN6legate6Scalar6ScalarERK4RectI3DIME"><code class="docutils literal notranslate"><span class="pre">Scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate6Scalar4typeEv"><code class="docutils literal notranslate"><span class="pre">type()</span></code></a></li>
@@ -3408,6 +3524,12 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span3endEv"><code class="docutils literal notranslate"><span class="pre">end()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span5beginEv"><code class="docutils literal notranslate"><span class="pre">begin()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span3endEv"><code class="docutils literal notranslate"><span class="pre">end()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span6rbeginEv"><code class="docutils literal notranslate"><span class="pre">rbegin()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4rendEv"><code class="docutils literal notranslate"><span class="pre">rend()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span6rbeginEv"><code class="docutils literal notranslate"><span class="pre">rbegin()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span4rendEv"><code class="docutils literal notranslate"><span class="pre">rend()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span5frontEv"><code class="docutils literal notranslate"><span class="pre">front()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4backEv"><code class="docutils literal notranslate"><span class="pre">back()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate4Span7subspanE9size_type"><code class="docutils literal notranslate"><span class="pre">subspan()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span3ptrEv"><code class="docutils literal notranslate"><span class="pre">ptr()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate4Span4dataEv"><code class="docutils literal notranslate"><span class="pre">data()</span></code></a></li>
