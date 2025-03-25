@@ -145,17 +145,21 @@ constexpr Legate_MPI_Kind LEGATE_MPI_KIND_UNKNOWN = -1;
 
 [[nodiscard]] Legate_MPI_Kind extract_mpi_type_from_wrapper(ZStringView wrapper_name)
 {
+  static_cast<void>(::dlerror());  // clear any existing error
   const auto handle = lib_handle(wrapper_name);
 
   if (handle == nullptr) {
-    return LEGATE_MPI_KIND_UNKNOWN;
+    throw TracedException<std::runtime_error>{
+      fmt::format("dlopen(\"{}\") failed: {}", wrapper_name, ::dlerror())};
   }
 
+  static_cast<void>(::dlerror());  // clear any existing error
   const auto legate_mpi_wrapper_kind_fp =
     reinterpret_cast<Legate_MPI_Kind (*)()>(::dlsym(handle.get(), "legate_mpi_wrapper_kind"));
 
   if (legate_mpi_wrapper_kind_fp == nullptr) {
-    return LEGATE_MPI_KIND_UNKNOWN;
+    throw TracedException<std::runtime_error>{
+      fmt::format("Can not find legate_mpi_wrapper_kind in {}: {}", wrapper_name, ::dlerror())};
   }
 
   return legate_mpi_wrapper_kind_fp();
