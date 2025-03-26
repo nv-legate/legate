@@ -212,7 +212,7 @@ void autoconfigure_fbmem(const Realm::ModuleConfig* cuda,
     return;
   }
 
-  if (Config::get_config().auto_config()) {
+  if (Config::get_config().auto_config() && cuda) {
     constexpr double FBMEM_FRACTION = 0.95;
     std::size_t res_fbmem;
 
