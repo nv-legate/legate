@@ -56,9 +56,9 @@ class AccessStoreFn {
     using T                    = legate::type_of_t<CODE>;
     auto p_store               = context.input(0).data();
     constexpr std::int32_t DIM = 1;
-    ASSERT_EQ(p_store.dim(), DIM);
-    auto shape = p_store.shape<DIM>();
+    auto shape                 = p_store.shape<DIM>();
 
+    ASSERT_EQ(p_store.dim(), DIM);
     if (shape.empty()) {
       return;
     }
@@ -84,6 +84,7 @@ class AccessTask : public legate::LegateTask<AccessTask> {
 /*static*/ void AccessTask::cpu_variant(legate::TaskContext context)
 {
   auto p_store = context.input(0).data();
+
   legate::type_dispatch(p_store.code(), AccessStoreFn{}, context);
 }
 
@@ -138,7 +139,7 @@ void do_test(T value)
   std::vector<T> alloc(TILE_SIZE, value);
   constexpr std::size_t BYTES = TILE_SIZE * sizeof(T);
 
-  test_sysmem<T>(alloc.data(), value, BYTES, false);
+  test_sysmem<T>(alloc.data(), value, BYTES, false /* read_only */);
 }
 
 void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
@@ -173,13 +174,13 @@ void test_gpu_mutuable_access(legate::mapping::StoreTarget store_target)
   legate::ExternalAllocation ext_alloc;
   switch (store_target) {
     case legate::mapping::StoreTarget::FBMEM: {
-      ext_alloc =
-        legate::ExternalAllocation::create_fbmem(0, d_alloc, BYTES, false, std::move(deleter));
+      ext_alloc = legate::ExternalAllocation::create_fbmem(
+        0, d_alloc, BYTES, false /* read_only */, std::move(deleter));
       break;
     }
     case legate::mapping::StoreTarget::ZCMEM: {
-      ext_alloc =
-        legate::ExternalAllocation::create_zcmem(d_alloc, BYTES, false, std::move(deleter));
+      ext_alloc = legate::ExternalAllocation::create_zcmem(
+        d_alloc, BYTES, false /* read_only */, std::move(deleter));
       break;
     }
     case legate::mapping::StoreTarget::SYSMEM: [[fallthrough]];
@@ -280,11 +281,14 @@ TEST_F(IndexAttach, GPU)
     }
   };
   auto alloc1 =
-    legate::ExternalAllocation::create_fbmem(0, d_alloc1, BYTES, true /*read_only*/, deleter);
+    legate::ExternalAllocation::create_fbmem(0, d_alloc1, BYTES, true /* read_only */, deleter);
   auto alloc2 = legate::ExternalAllocation::create_fbmem(
-    0, d_alloc2, BYTES, true /*read_only*/, std::move(deleter));
-  auto runtime = legate::Runtime::get_runtime();
+    0, d_alloc2, BYTES, true /* read_only */, std::move(deleter));
 
+  ASSERT_TRUE(alloc1.read_only());
+  ASSERT_TRUE(alloc2.read_only());
+
+  auto runtime = legate::Runtime::get_runtime();
   auto [store, _] =
     runtime->create_store(legate::Shape{TILE_SIZE * 2 * runtime->node_count()},
                           legate::tuple<std::uint64_t>{TILE_SIZE},
@@ -388,7 +392,7 @@ TEST_F(IndexAttach, MutuableSysmemAccessByTask)
 
   ASSERT_NE(raw_buffer, nullptr);
   std::memset(raw_buffer, 0, BYTES);
-  test_sysmem<std::uint64_t>(raw_buffer, 0, BYTES, false, std::move(deleter));
+  test_sysmem<std::uint64_t>(raw_buffer, 0, BYTES, false /* read_only */, std::move(deleter));
 }
 
 TEST_F(IndexAttach, MutableFbmemAccess)

@@ -19,12 +19,14 @@ constexpr std::uint64_t OVER_ALIGNMENT = 128;
 
 class BufferFn {
  public:
-  template <std::int32_t DIM>
+  template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(std::uint64_t bytes, legate::Memory::Kind kind, std::uint64_t alignment) const
   {
+    using T = legate::type_of_t<CODE>;
+
     switch (DIM) {
       case 1: {
-        auto buffer = legate::create_buffer<std::uint64_t>(bytes, kind, alignment);
+        auto buffer = legate::create_buffer<T>(bytes, kind, alignment);
         auto memory = buffer.get_instance().get_location();
         EXPECT_TRUE(memory.exists());
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
@@ -34,8 +36,7 @@ class BufferFn {
         break;
       }
       default: {
-        auto buffer =
-          legate::create_buffer<std::uint64_t, DIM>(legate::Point<DIM>{bytes}, kind, alignment);
+        auto buffer = legate::create_buffer<T, DIM>(legate::Point<DIM>{bytes}, kind, alignment);
         auto memory = buffer.get_instance().get_location();
         EXPECT_TRUE(memory.exists());
         // NO_MEMKIND on a cpu is always mapped to SYSTEM_MEM
@@ -64,7 +65,9 @@ class BufferTask : public legate::LegateTask<BufferTask> {
   auto bytes     = context.scalar(1).value<std::uint64_t>();
   auto kind      = context.scalar(2).value<legate::Memory::Kind>();
   auto alignment = context.scalar(3).value<std::size_t>();
-  legate::dim_dispatch(dim, BufferFn{}, bytes, kind, alignment);
+  auto code      = context.scalar(4).value<legate::Type::Code>();
+
+  legate::double_dispatch(dim, code, BufferFn{}, bytes, kind, alignment);
 }
 
 class Config {
@@ -78,17 +81,55 @@ class Config {
 
 class BufferUnit : public RegisterOnceFixture<Config> {};
 
-class BufferTaskTest : public RegisterOnceFixture<Config>,
-                       public ::testing::WithParamInterface<
-                         std::tuple<int, std::size_t, legate::Memory::Kind, std::size_t>> {};
+class BufferTaskTest
+  : public RegisterOnceFixture<Config>,
+    public ::testing::WithParamInterface<
+      std::tuple<int, std::size_t, legate::Memory::Kind, std::size_t, legate::Type::Code>> {};
 
 INSTANTIATE_TEST_SUITE_P(
   BufferUnit,
   BufferTaskTest,
-  ::testing::Combine(::testing::Values(1, 2, 3, 4),
-                     ::testing::Values(0, ALLOCATE_BYTES),
-                     ::testing::Values(legate::Memory::NO_MEMKIND, legate::Memory::SYSTEM_MEM),
-                     ::testing::Values(1, alignof(std::max_align_t), OVER_ALIGNMENT)));
+  ::testing::Values(
+    std::make_tuple(1, 0, legate::Memory::NO_MEMKIND, 1, legate::Type::Code::BOOL),
+    std::make_tuple(2,
+                    ALLOCATE_BYTES,
+                    legate::Memory::NO_MEMKIND,
+                    alignof(std::max_align_t),
+                    legate::Type::Code::INT8),
+    std::make_tuple(3,
+                    ALLOCATE_BYTES,
+                    legate::Memory::NO_MEMKIND,
+                    alignof(std::max_align_t),
+                    legate::Type::Code::INT16),
+    std::make_tuple(LEGATE_MAX_DIM, 0, legate::Memory::NO_MEMKIND, 1, legate::Type::Code::INT32),
+    std::make_tuple(1, 0, legate::Memory::NO_MEMKIND, 1, legate::Type::Code::INT64),
+    std::make_tuple(2,
+                    ALLOCATE_BYTES,
+                    legate::Memory::NO_MEMKIND,
+                    alignof(std::max_align_t),
+                    legate::Type::Code::UINT8),
+    std::make_tuple(3,
+                    ALLOCATE_BYTES,
+                    legate::Memory::NO_MEMKIND,
+                    alignof(std::max_align_t),
+                    legate::Type::Code::UINT16),
+    std::make_tuple(LEGATE_MAX_DIM, 0, legate::Memory::SYSTEM_MEM, 1, legate::Type::Code::UINT32),
+    std::make_tuple(1, 0, legate::Memory::SYSTEM_MEM, 1, legate::Type::Code::UINT64),
+    std::make_tuple(2,
+                    ALLOCATE_BYTES,
+                    legate::Memory::SYSTEM_MEM,
+                    alignof(std::max_align_t),
+                    legate::Type::Code::FLOAT16),
+    std::make_tuple(3,
+                    ALLOCATE_BYTES,
+                    legate::Memory::SYSTEM_MEM,
+                    alignof(std::max_align_t),
+                    legate::Type::Code::FLOAT32),
+    std::make_tuple(LEGATE_MAX_DIM, 0, legate::Memory::SYSTEM_MEM, 1, legate::Type::Code::FLOAT64),
+    std::make_tuple(1, 0, legate::Memory::SYSTEM_MEM, 1, legate::Type::Code::COMPLEX64),
+    std::make_tuple(
+      2, ALLOCATE_BYTES, legate::Memory::SYSTEM_MEM, 1, legate::Type::Code::COMPLEX128)));
+
 // TODO(joyshennv): issue #1189
 // legate::Memory::REGDMA_MEM, legate::Memory::GLOBAL_MEM,
 //  legate::Memory::SOCKET_MEM, legate::Memory::Z_COPY_MEM,
@@ -101,7 +142,8 @@ INSTANTIATE_TEST_SUITE_P(
 void test_buffer(std::int32_t dim,
                  std::uint64_t bytes,
                  legate::Memory::Kind kind,
-                 std::size_t alignment)
+                 std::size_t alignment,
+                 legate::Type::Code code)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto context = runtime->find_library(Config::LIBRARY_NAME);
@@ -111,6 +153,7 @@ void test_buffer(std::int32_t dim,
   task.add_scalar_arg(legate::Scalar{bytes});
   task.add_scalar_arg(legate::Scalar{kind});
   task.add_scalar_arg(legate::Scalar{alignment});
+  task.add_scalar_arg(legate::Scalar{code});
   runtime->submit(std::move(task));
 }
 
@@ -118,8 +161,9 @@ void test_buffer(std::int32_t dim,
 
 TEST_P(BufferTaskTest, CreateBuffer)
 {
-  const auto [dim, bytes, memtype, alignment] = GetParam();
-  test_buffer(dim, bytes, memtype, alignment);
+  const auto [dim, bytes, memtype, alignment, code] = GetParam();
+
+  test_buffer(dim, bytes, memtype, alignment, code);
 }
 
 TEST_F(BufferUnit, Size)
@@ -128,6 +172,12 @@ TEST_F(BufferUnit, Size)
     legate::Point<1>{-1}, legate::Memory::SYSTEM_MEM, alignof(std::max_align_t))));
   ASSERT_NO_THROW(
     static_cast<void>(legate::create_buffer<std::uint64_t>(0, legate::Memory::SYSTEM_MEM)));
+}
+
+TEST_F(BufferUnit, OverAlignment)
+{
+  ASSERT_NO_THROW(static_cast<void>(legate::create_buffer<std::uint64_t>(
+    ALLOCATE_BYTES, legate::Memory::SYSTEM_MEM, OVER_ALIGNMENT)));
 }
 
 TEST_F(BufferUnit, BadAlignment)

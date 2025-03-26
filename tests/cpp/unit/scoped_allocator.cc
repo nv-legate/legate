@@ -164,19 +164,22 @@ void test_deallocate(legate::LocalTaskID task_id,
 TEST_P(ScopedAllocatorTask, Scoped)
 {
   auto& [bytes, alignment, kind] = GetParam();
-  test_deallocate(DeallocateTask::TASK_CONFIG.task_id(), true, kind, bytes, alignment);
+
+  test_deallocate(DeallocateTask::TASK_CONFIG.task_id(), true /* scoped */, kind, bytes, alignment);
 }
 
 TEST_P(ScopedAllocatorTask, NotScoped)
 {
   auto& [bytes, alignment, kind] = GetParam();
-  test_deallocate(DeallocateTask::TASK_CONFIG.task_id(), false, kind, bytes, alignment);
+
+  test_deallocate(
+    DeallocateTask::TASK_CONFIG.task_id(), false /* scoped */, kind, bytes, alignment);
 }
 
 TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
 {
   test_deallocate(DoubleDeallocateTask::TASK_CONFIG.task_id(),
-                  true,
+                  true /* scoped */,
                   legate::Memory::SYSTEM_MEM,
                   ALLOCATE_BYTES,
                   alignof(std::max_align_t));
@@ -184,7 +187,7 @@ TEST_F(ScopedAllocatorUnit, DoubleDeallocate)
 
 TEST_F(ScopedAllocatorUnit, InvalidDeallocateTopLevel)
 {
-  auto allocator                  = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM, true};
+  auto allocator = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM, true /* scoped */};
   std::vector<std::uint64_t> data = {1, 2, 3};
 
   ASSERT_THROW(allocator.deallocate(data.data()), std::invalid_argument);
@@ -193,7 +196,7 @@ TEST_F(ScopedAllocatorUnit, InvalidDeallocateTopLevel)
 TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
 {
   test_deallocate(InvalidAllocateTask::TASK_CONFIG.task_id(),
-                  true,
+                  true /* scoped */,
                   legate::Memory::SYSTEM_MEM,
                   ALLOCATE_BYTES,
                   alignof(std::max_align_t));
@@ -201,7 +204,7 @@ TEST_F(ScopedAllocatorUnit, InvalidDeallocate)
 
 TEST_F(ScopedAllocatorUnit, EmptyAllocate)
 {
-  auto allocator = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM, true};
+  auto allocator = legate::ScopedAllocator{legate::Memory::SYSTEM_MEM, true /* scoped */};
   void* ptr      = allocator.allocate(0);
 
   ASSERT_EQ(ptr, nullptr);
@@ -212,19 +215,16 @@ TEST_F(ScopedAllocatorUnit, BadAlignment)
 {
   // -1 is not a power of 2
   ASSERT_THROW(
-    static_cast<void>(legate::ScopedAllocator{legate::Memory::SYSTEM_MEM,
-                                              true,
-                                              /* alignment */ static_cast<std::size_t>(-1)}),
+    static_cast<void>(legate::ScopedAllocator{
+      legate::Memory::SYSTEM_MEM, true /* scoped */, static_cast<std::size_t>(-1) /* alignment */}),
     std::domain_error);
   // Not a power of 2
-  ASSERT_THROW(static_cast<void>(legate::ScopedAllocator{legate::Memory::SYSTEM_MEM,
-                                                         true,
-                                                         /* alignment */ 3}),
+  ASSERT_THROW(static_cast<void>(legate::ScopedAllocator{
+                 legate::Memory::SYSTEM_MEM, true /* scoped */, 3 /* alignment */}),
                std::domain_error);
   // Cannot be 0
-  ASSERT_THROW(static_cast<void>(legate::ScopedAllocator{legate::Memory::SYSTEM_MEM,
-                                                         true,
-                                                         /* alignment */ 0}),
+  ASSERT_THROW(static_cast<void>(legate::ScopedAllocator{
+                 legate::Memory::SYSTEM_MEM, true /* scoped */, 0 /* alignment */}),
                std::domain_error);
 }
 
