@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from typing import TYPE_CHECKING
 
 from .. import install_info
@@ -78,8 +79,11 @@ class Launcher:
             self.detected_rank_id = "0"
         else:
             for var in RANK_ENV_VARS:
-                if var in system.env:
+                try:
                     self.detected_rank_id = system.env[var]
+                except KeyError:  # noqa: PERF203
+                    continue
+                else:
                     break
 
     def __eq__(self, other: object) -> bool:  # noqa: D105
@@ -281,13 +285,8 @@ class MPILauncher(Launcher):
         super().__init__(config, system)
 
         ranks = config.multi_node.ranks
-        ranks_per_node = config.multi_node.ranks_per_node
 
-        cmd = ["mpirun", "-n", str(ranks)]
-
-        cmd += ["--npernode", str(ranks_per_node)]
-        cmd += ["--bind-to", "none"]
-        cmd += ["--mca", "mpi_warn_on_fork", "0"]
+        cmd = ["mpirun", "-n", str(ranks), *self._mpirun_commands(config)]
 
         # hack: the launcher.env does not know about what the driver does with
         # LEGATE_CONFIG, but we do need to make sure it gets forwarded
@@ -298,6 +297,33 @@ class MPILauncher(Launcher):
                 cmd += ["-x", var]
 
         self.cmd = tuple(cmd + config.multi_node.launcher_extra)
+
+    def _mpirun_commands(self, config: ConfigProtocol) -> list[str]:
+        out = subprocess.check_output(["mpirun", "--version"]).decode()
+        out_lo = out.casefold()
+
+        if any(sub in out_lo for sub in ("open mpi", "openmpi", "open-mpi")):
+            return self._openmpi_mpirun_commands(config)
+        if any(sub in out_lo for sub in ("mpich", "hydra")):
+            return self._mpich_mpirun_commands(config)
+
+        m = (
+            f"Unknown MPI implementation:\n\n{out}\n\nPlease file a bug at "
+            "https://github.com/nv-legate/legate showing this error message "
+            "along with a description of your system and MPI implementation"
+        )
+        raise RuntimeError(m)
+
+    def _openmpi_mpirun_commands(self, config: ConfigProtocol) -> list[str]:
+        ret = ["--npernode", str(config.multi_node.ranks_per_node)]
+        ret += ["--bind-to", "none"]
+        ret += ["--mca", "mpi_warn_on_fork", "0"]
+        return ret
+
+    def _mpich_mpirun_commands(self, config: ConfigProtocol) -> list[str]:
+        ret = ["-ppn", str(config.multi_node.ranks_per_node)]
+        ret += ["--bind-to", "none"]
+        return ret
 
 
 class JSRunLauncher(Launcher):

@@ -20,6 +20,7 @@ Options:
                     all of: UCX_NET_DEVICES, NCCL_IB_HCA, GASNET_NUM_QPS,
                     and GASNET_IBV_PORTS
   --debug           print out the final computed invocation before executing
+  --help            print this message and exit
 
 SPEC specifies the resources to bind each node-local rank to, with ranks
 separated by /, e.g. '0,1/2,3/4,5/6,7' for 4 ranks per node.
@@ -34,8 +35,13 @@ EOM
   exit 2
 }
 
+if [[ "$#" == '0' ]]; then
+  help
+fi
+
 debug="0"
 launcher=auto
+
 while :
 do
   case "$1" in
@@ -59,12 +65,12 @@ done
 
 case "${launcher}" in
   mpirun)
-    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-unknown}"
-    global_rank="${OMPI_COMM_WORLD_RANK:-unknown}"
+    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MPI_LOCALRANKID:-unknown}}"
+    global_rank="${OMPI_COMM_WORLD_RANK:-${PMI_RANK:-unknown}}"
     ;;
   jsrun )
-    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-unknown}"
-    global_rank="${OMPI_COMM_WORLD_RANK:-unknown}"
+    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MPI_LOCALRANKID:-unknown}}"
+    global_rank="${OMPI_COMM_WORLD_RANK:-${PMI_RANK:-unknown}}"
     ;;
   srun  )
     local_rank="${SLURM_LOCALID:-unknown}"
@@ -86,7 +92,7 @@ case "${launcher}" in
     fi
     ;;
   auto  )
-    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MV2_COMM_WORLD_LOCAL_RANK:-${SLURM_LOCALID:-unknown}}}"
+    local_rank="${OMPI_COMM_WORLD_LOCAL_RANK:-${MV2_COMM_WORLD_LOCAL_RANK:-${MPI_LOCALRANKID:-${SLURM_LOCALID:-unknown}}}}"
     global_rank="${OMPI_COMM_WORLD_RANK:-${PMI_RANK:-${MV2_COMM_WORLD_RANK:-${SLURM_PROCID:-unknown}}}}"
     ;;
   local )
