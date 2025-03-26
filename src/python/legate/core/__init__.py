@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+# ruff: noqa: E402
 from __future__ import annotations
 
 import random as _random
@@ -8,6 +9,50 @@ import warnings
 from typing import TYPE_CHECKING, Any
 
 import numpy as _np  # noqa: ICN001
+
+
+# We need to import libucx for Python pip wheel builds. This is due to the
+# fact that liblegate.so links to librealm-legate.so which links to libucx.so
+# and we need to ensure when MPI is used and the wrappers are dlopened that
+# they will ideally use the system UCX libraries they were compiled against.
+# This is why this must happen so early on in the import process and there
+# are still potential issues. We fallback to the bundled UCX libraries if the
+# system ones are not found, and only look for the unversioned SOs at this
+# point (libucs.so not libucs.so.0) which does not work for all installations.
+#
+# TODO(cryos, jfaibussowit)
+# Implement the same loading logic from libucx on the C++ side, and remove
+# this workaround.
+def _maybe_import_ucx_module() -> Any:
+    import os
+
+    from ..install_info import wheel_build
+
+    if not wheel_build:
+        return None
+
+    # Prefer system libraries that should match the MPI used. This is
+    # necessary when using pip wheels builds as the system MPI also uses UCX.
+    # If there is a system UCX that should be preferred to avoid mixing system
+    # and wheels UCX libraries at runtime. This is even more important in
+    # distributed runs where we have less control of how everything gets
+    # launched. We must consider the interaction between system and wheels
+    # applied binaries and libraries along with ABI stability.
+    #
+    # See https://github.com/rapidsai/ucx-wheels/blob/main/python/libucx/libucx/load.py#L55
+    # for the environment variable check and logic for library loading.
+    os.environ["RAPIDS_LIBUCX_PREFER_SYSTEM_LIBRARY"] = "1"
+    try:
+        import libucx  # type: ignore[import-not-found]
+    except ModuleNotFoundError:
+        return None
+
+    # The handles are returned here in order to ensure the libraries are
+    # loaded for the duration of execution.
+    return libucx.load_library()
+
+
+_libucx = _maybe_import_ucx_module()
 
 from ._lib.data.inline_allocation import InlineAllocation
 from ._lib.data.logical_array import LogicalArray

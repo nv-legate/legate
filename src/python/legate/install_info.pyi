@@ -31,3 +31,5 @@ legion_version: str
 legion_git_branch: str
 
 legion_git_repo: str
+
+wheel_build: bool
