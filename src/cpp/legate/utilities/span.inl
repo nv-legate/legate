@@ -86,15 +86,27 @@ constexpr typename Span<T>::reference Span<T>::operator[](size_type pos) const
 }
 
 template <typename T>
-constexpr typename Span<T>::const_iterator Span<T>::begin() const
+constexpr typename Span<T>::const_iterator Span<T>::cbegin() const noexcept
 {
   return data_;
 }
 
 template <typename T>
-constexpr typename Span<T>::const_iterator Span<T>::end() const
+constexpr typename Span<T>::const_iterator Span<T>::cend() const noexcept
 {
   return data_ + size_;
+}
+
+template <typename T>
+constexpr typename Span<T>::const_iterator Span<T>::begin() const
+{
+  return cbegin();
+}
+
+template <typename T>
+constexpr typename Span<T>::const_iterator Span<T>::end() const
+{
+  return cend();
 }
 
 template <typename T>
@@ -110,15 +122,27 @@ constexpr typename Span<T>::iterator Span<T>::end()
 }
 
 template <typename T>
-constexpr typename Span<T>::reverse_const_iterator Span<T>::rbegin() const
+constexpr typename Span<T>::const_reverse_iterator Span<T>::crbegin() const noexcept
 {
-  return reverse_const_iterator{end()};
+  return const_reverse_iterator{end()};
 }
 
 template <typename T>
-constexpr typename Span<T>::reverse_const_iterator Span<T>::rend() const
+constexpr typename Span<T>::const_reverse_iterator Span<T>::crend() const noexcept
 {
-  return reverse_const_iterator{begin()};
+  return const_reverse_iterator{begin()};
+}
+
+template <typename T>
+constexpr typename Span<T>::const_reverse_iterator Span<T>::rbegin() const
+{
+  return crbegin();
+}
+
+template <typename T>
+constexpr typename Span<T>::const_reverse_iterator Span<T>::rend() const
+{
+  return crend();
 }
 
 template <typename T>

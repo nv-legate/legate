@@ -128,6 +128,7 @@ set(with_runtime_SRC
     bug/nullable_arrays.cc
     bug/premature_free.cc
     bug/singleton_index_task.cc
+    bug/transpose_fortran_order.cc
     # integration
     integration/aligned_unbound_stores.cc
     integration/alignment_constraints.cc
@@ -173,6 +174,7 @@ set(with_runtime_SRC
     integration/task_misc.cc
     integration/tasks/task_simple.cc
     integration/test_task_store.cc
+    integration/transpose_dim_order.cc
     integration/tree_reduce.cc
     integration/tree_reduce_unique.cc
     integration/tunable.cc

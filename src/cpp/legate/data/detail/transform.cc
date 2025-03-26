@@ -100,11 +100,20 @@ tuple<std::uint64_t> TransformStack::invert_color_shape(tuple<std::uint64_t> col
     std::move(color_shape));
 }
 
+tuple<std::int32_t> TransformStack::invert_dims(tuple<std::int32_t> dims) const
+{
+  return invert_(
+    [&](auto&& transform, auto&& input) {
+      return transform->invert_dims(std::forward<std::decay_t<decltype(input)>>(input));
+    },
+    std::move(dims));
+}
+
 tuple<std::int64_t> TransformStack::invert_point(tuple<std::int64_t> point) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
-      return transform->invert_point(std::forward<decltype(input)>(input));
+      return transform->invert_point(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(point));
 }
@@ -261,6 +270,8 @@ void Shift::print(std::ostream& out) const
       << "offset: " << offset_ << ")";
 }
 
+tuple<std::int32_t> Shift::invert_dims(tuple<std::int32_t> dims) const { return dims; }
+
 // ==========================================================================================
 
 Domain Promote::transform(const Domain& input) const
@@ -400,6 +411,21 @@ void Promote::find_imaginary_dims(std::vector<std::int32_t>& dims) const
     }
   }
   dims.push_back(extra_dim_);
+}
+
+tuple<std::int32_t> Promote::invert_dims(tuple<std::int32_t> dims) const
+{
+  // Remove the promoted dimension from the ordering(extra_dim_)
+  // and renumber dims > extra_dim_
+
+  const auto it = std::find(dims.begin(), dims.end(), extra_dim_);
+  LEGATE_ASSERT(it != dims.end());
+  dims.remove_inplace(static_cast<std::int32_t>(it - dims.begin()));
+
+  std::transform(
+    dims.begin(), dims.end(), dims.begin(), [&](auto d) { return d > extra_dim_ ? d - 1 : d; });
+
+  return dims;
 }
 
 // ==========================================================================================
@@ -543,6 +569,16 @@ void Project::find_imaginary_dims(std::vector<std::int32_t>& dims) const
       --dim;
     }
   }
+}
+
+tuple<std::int32_t> Project::invert_dims(tuple<std::int32_t> dims) const
+{
+  // Add back the projected dimension and renumber dims > projected dim_
+  std::transform(
+    dims.begin(), dims.end(), dims.begin(), [&](auto&& d) { return d >= dim_ ? d + 1 : d; });
+
+  dims.insert_inplace(dim_, dim_);
+  return dims;
 }
 
 // ==========================================================================================
@@ -713,6 +749,11 @@ void Transpose::find_imaginary_dims(std::vector<std::int32_t>& dims) const
     LEGATE_CHECK(finder != axes_.end());
     promoted = static_cast<std::int32_t>(finder - axes_.begin());
   }
+}
+
+tuple<std::int32_t> Transpose::invert_dims(tuple<std::int32_t> dims) const
+{
+  return dims.map(inverse_);
 }
 
 // ==========================================================================================
@@ -952,6 +993,25 @@ void Delinearize::print(std::ostream& out) const
 std::int32_t Delinearize::target_ndim(std::int32_t source_ndim) const
 {
   return static_cast<std::int32_t>(source_ndim - strides_.size() + 1);
+}
+
+tuple<std::int32_t> Delinearize::invert_dims(tuple<std::int32_t> dims) const
+{
+  // Collapse the delinearized dimensions back to the original dimension
+  const auto num_extra_dims = static_cast<std::int32_t>(sizes_.size()) - 1;
+  auto new_end              = std::remove_if(dims.begin(), dims.end(), [&](const auto& d) {
+    return (d > dim_) && (d <= (dim_ + num_extra_dims));
+  });
+  LEGATE_ASSERT(new_end != dims.end());
+  // TODO(amberhassaan): this would be vector::erase if we were to replace
+  // legate::tuple with std::vector
+  dims.data().erase(new_end, dims.end());
+
+  std::transform(dims.begin(), dims.end(), dims.begin(), [&](const auto& d) {
+    return (d > (dim_ + num_extra_dims)) ? (d - num_extra_dims) : d;
+  });
+
+  return dims;
 }
 
 std::ostream& operator<<(std::ostream& out, const Transform& transform)

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/mapping/mapping.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/typedefs.h>
@@ -114,6 +115,17 @@ class Store {
   [[nodiscard]] Domain domain() const;
 
   [[nodiscard]] std::vector<std::int32_t> find_imaginary_dims() const;
+
+  /**
+   * @brief applies inverse transform on a tuple representing the dimensions of a
+   * store.
+   *
+   * @param dims a tuple of integer dimensions with values in the
+   *        range [0..dim()).
+   *
+   * @returns the transformed tuple of dimensions.
+   */
+  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const;
 
  private:
   bool is_future_{};
