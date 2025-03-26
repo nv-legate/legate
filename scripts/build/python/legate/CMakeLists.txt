@@ -26,7 +26,7 @@ add_subdirectory(../../../../src legate-all)
 # Add the necessary rpaths for the wheels build.
 set(rpaths "$ORIGIN/../../nvidia/nccl/lib")
 set_property(TARGET legate PROPERTY INSTALL_RPATH ${rpaths} APPEND)
-set(rpaths "$ORIGIN/../../nvidia/libcal/cu12/lib""$ORIGIN/../../libucx/lib")
+set(rpaths "$ORIGIN/../../nvidia/libcal/cu12/lib")
 set_property(TARGET RealmRuntime PROPERTY INSTALL_RPATH ${rpaths} APPEND)
 
 # Install the legate wrappers if they exist.

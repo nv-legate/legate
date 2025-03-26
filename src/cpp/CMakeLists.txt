@@ -983,9 +983,15 @@ if(NOT Legion_NETWORKS)
   set(Legion_NETWORKS "")
 endif()
 
+# Set by the pip wheels if they are being built, set to OFF if not
+if(NOT LEGATE_BUILD_PIP_WHEELS)
+  set(LEGATE_BUILD_PIP_WHEELS OFF)
+endif()
+
 add_custom_target(generate_install_info_py ALL
                   COMMAND ${CMAKE_COMMAND} -DLEGATE_CMAKE_DIR="${LEGATE_CMAKE_DIR}"
                           -DLEGATE_ARCH="${LEGATE_ARCH}" -DLEGATE_DIR="${LEGATE_DIR}"
+                          -DLEGATE_BUILD_PIP_WHEELS="${LEGATE_BUILD_PIP_WHEELS}"
                           -DLegion_VERSION="${Legion_VERSION}"
                           -DLegion_GIT_BRANCH="${Legion_GIT_BRANCH}"
                           -DLegion_GIT_REPO="${Legion_GIT_REPO}"

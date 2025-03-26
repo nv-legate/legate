@@ -72,3 +72,5 @@ legion_version: str = "@Legion_VERSION@"
 legion_git_branch: str = "@Legion_GIT_BRANCH@"
 
 legion_git_repo: str = "@Legion_GIT_REPO@"
+
+wheel_build: bool = @LEGATE_BUILD_PIP_WHEELS@
