@@ -68,7 +68,7 @@ class FutureWrapper {
 
   [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] std::uint32_t index() const;
-  [[nodiscard]] Legion::Domain domain() const;
+  [[nodiscard]] const Legion::Domain& domain() const;
 
  private:
   std::uint32_t idx_{-1U};

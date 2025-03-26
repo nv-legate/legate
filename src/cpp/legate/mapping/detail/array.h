@@ -30,7 +30,6 @@ class Array {
   [[nodiscard]] virtual const InternalSharedPtr<Store>& data() const;
   [[nodiscard]] virtual const InternalSharedPtr<Store>& null_mask() const         = 0;
   [[nodiscard]] virtual InternalSharedPtr<Array> child(std::uint32_t index) const = 0;
-  [[nodiscard]] std::vector<InternalSharedPtr<Store>> stores() const;
 
   virtual void populate_stores(std::vector<InternalSharedPtr<Store>>& result) const = 0;
   [[nodiscard]] virtual Domain domain() const                                       = 0;

@@ -106,7 +106,10 @@ bool StructArray::valid() const
 {
   const auto result =
     std::all_of(fields().begin(), fields().end(), [](const auto& field) { return field->valid(); });
-  LEGATE_ASSERT(null_mask()->valid() == result);
+
+  if (nullable()) {
+    LEGATE_ASSERT(null_mask()->valid() == result);
+  }
   return result;
 }
 
@@ -126,11 +129,15 @@ InternalSharedPtr<Array> StructArray::child(std::uint32_t index) const
 
 void StructArray::populate_stores(std::vector<InternalSharedPtr<Store>>& result) const
 {
-  for (auto&& field : fields_) {
+  for (auto&& field : fields()) {
     field->populate_stores(result);
   }
 }
 
-Domain StructArray::domain() const { return fields().front()->domain(); }
+Domain StructArray::domain() const
+{
+  // Use child() so access is bounds-checked
+  return child(0)->domain();
+}
 
 }  // namespace legate::mapping::detail

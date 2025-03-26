@@ -10,13 +10,6 @@
 
 namespace legate::mapping::detail {
 
-inline std::vector<InternalSharedPtr<Store>> Array::stores() const
-{
-  std::vector<InternalSharedPtr<Store>> result;
-  populate_stores(result);
-  return result;
-}
-
 inline BaseArray::BaseArray(InternalSharedPtr<Store> data, InternalSharedPtr<Store> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
 {

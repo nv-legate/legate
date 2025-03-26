@@ -98,10 +98,18 @@ const FutureWrapper& Store::future() const
   return future_;
 }
 
+RegionField::Id Store::unique_region_field_id() const { return region_field().unique_id(); }
+
+std::uint32_t Store::requirement_index() const { return region_field().index(); }
+
+std::uint32_t Store::future_index() const { return future().index(); }
+
 Domain Store::domain() const
 {
   LEGATE_CHECK(!unbound());
+
   auto result = is_future() ? future().domain() : region_field().domain(runtime_, context_);
+
   if (!transform_->identity()) {
     result = transform_->transform(result);
   }

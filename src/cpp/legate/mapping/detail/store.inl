@@ -48,11 +48,11 @@ inline FutureWrapper::FutureWrapper(std::uint32_t idx,
 {
 }
 
-inline std::int32_t FutureWrapper::dim() const { return domain_.dim; }
+inline std::int32_t FutureWrapper::dim() const { return domain().dim; }
 
 inline std::uint32_t FutureWrapper::index() const { return idx_; }
 
-inline Legion::Domain FutureWrapper::domain() const { return domain_; }
+inline const Legion::Domain& FutureWrapper::domain() const { return domain_; }
 
 // ==========================================================================================
 
@@ -67,11 +67,5 @@ inline const InternalSharedPtr<legate::detail::Type>& Store::type() const { retu
 inline bool Store::is_reduction() const { return redop() > GlobalRedopID{0}; }
 
 inline GlobalRedopID Store::redop() const { return redop_id_; }
-
-inline RegionField::Id Store::unique_region_field_id() const { return region_field().unique_id(); }
-
-inline std::uint32_t Store::requirement_index() const { return region_field().index(); }
-
-inline std::uint32_t Store::future_index() const { return future().index(); }
 
 }  // namespace legate::mapping::detail
