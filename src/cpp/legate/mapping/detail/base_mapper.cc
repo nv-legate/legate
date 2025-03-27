@@ -277,14 +277,13 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
 
 namespace {
 
-void validate_colocation(const std::vector<mapping::StoreMapping>& client_mappings,
-                         const char* mapper_name)
+void validate_colocation(Span<const mapping::StoreMapping> client_mappings, const char* mapper_name)
 {
   for (auto&& client_mapping : client_mappings) {
     const auto* mapping = client_mapping.impl();
-    auto&& stores       = mapping->stores;
+    auto&& stores       = mapping->stores();
 
-    LEGATE_CHECK(!stores.empty());
+    LEGATE_CHECK(stores.size());
     LEGATE_CHECK(!(mapping->for_future() || mapping->for_unbound_store()) || stores.size() == 1);
 
     const auto cant_colocate = [&first_store = *stores.front()](const Store* store) {
@@ -304,17 +303,14 @@ struct MappingData {
   std::vector<std::unique_ptr<StoreMapping>> for_stores{};
 };
 
-[[nodiscard]] MappingData handle_client_mappings(
-  mapping::StoreMapping::ReleaseKey key,
-  const char* mapper_name,
-  std::vector<mapping::StoreMapping>&& client_mappings,
-  const Legion::Task& task)
+[[nodiscard]] MappingData handle_client_mappings(mapping::StoreMapping::ReleaseKey key,
+                                                 const char* mapper_name,
+                                                 Span<mapping::StoreMapping> client_mappings,
+                                                 const Legion::Task& task)
 {
-  // Move into local to "complete" the move
-  auto cmappings = std::move(client_mappings);
   MappingData ret{};
 
-  for (auto&& client_mapping : cmappings) {
+  for (auto&& client_mapping : client_mappings) {
     const auto* mapping = client_mapping.impl();
 
     if (mapping->for_future()) {
@@ -328,14 +324,14 @@ struct MappingData {
 
       if (inserted) {
         ret.for_futures.emplace_back(client_mapping.release_(key));
-      } else if (it->second->policy != mapping->policy) {
+      } else if (it->second->policy() != mapping->policy()) {
         LEGATE_ABORT("Mapper ", mapper_name, " returned duplicate store mappings");
       }
     } else if (mapping->for_unbound_store()) {
       ret.mapped_regions.insert(mapping->store()->unique_region_field_id());
       ret.for_unbound_stores.emplace_back(client_mapping.release_(key));
     } else {
-      for (const auto* store : mapping->stores) {
+      for (const auto* store : mapping->stores()) {
         ret.mapped_regions.insert(store->unique_region_field_id());
       }
       ret.for_stores.emplace_back(client_mapping.release_(key));
@@ -344,15 +340,15 @@ struct MappingData {
   return ret;
 }
 
-void validate_policies(const std::vector<std::unique_ptr<StoreMapping>>& for_stores,
+void validate_policies(Span<const std::unique_ptr<StoreMapping>> for_stores,
                        const char* mapper_name)
 {
   std::unordered_map<RegionField::Id, InstanceMappingPolicy, hasher<RegionField::Id>> policies;
 
-  for (const auto& mapping : for_stores) {
-    const auto& policy = mapping->policy;
+  for (auto&& mapping : for_stores) {
+    const auto& policy = mapping->policy();
 
-    for (const auto& store : mapping->stores) {
+    for (const auto* store : mapping->stores()) {
       const auto key            = store->unique_region_field_id();
       const auto [it, inserted] = policies.try_emplace(key, policy);
 
@@ -363,17 +359,16 @@ void validate_policies(const std::vector<std::unique_ptr<StoreMapping>>& for_sto
   }
 }
 
-[[nodiscard]] MappingData initialize_mapping_categories(
-  mapping::StoreMapping::ReleaseKey key,
-  std::vector<mapping::StoreMapping>&& client_mappings,
-  const char* mapper_name,
-  const Legion::Task& task)
+[[nodiscard]] MappingData initialize_mapping_categories(mapping::StoreMapping::ReleaseKey key,
+                                                        Span<mapping::StoreMapping> client_mappings,
+                                                        const char* mapper_name,
+                                                        const Legion::Task& task)
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     validate_colocation(client_mappings, mapper_name);
   }
 
-  auto ret = handle_client_mappings(key, mapper_name, std::move(client_mappings), task);
+  auto ret = handle_client_mappings(key, mapper_name, client_mappings, task);
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     validate_policies(ret.for_stores, mapper_name);
@@ -383,7 +378,7 @@ void validate_policies(const std::vector<std::unique_ptr<StoreMapping>>& for_sto
 }
 
 void generate_default_mappings(
-  const std::vector<InternalSharedPtr<Array>>& arrays,
+  Span<const InternalSharedPtr<Array>> arrays,
   StoreTarget default_option,
   const Legion::Task& legion_task,
   std::unordered_map<std::uint32_t, const StoreMapping*>* mapped_futures,
@@ -428,7 +423,7 @@ void generate_default_mappings(
 
 void map_future_backed_stores(
   const std::unordered_map<std::uint32_t, const StoreMapping*>& mapped_futures,
-  const std::vector<std::unique_ptr<StoreMapping>>& for_futures,
+  Span<const std::unique_ptr<StoreMapping>> for_futures,
   const LocalMachine& local_machine,
   const Legion::Task& task,
   Processor target_proc,
@@ -447,11 +442,11 @@ void map_future_backed_stores(
     const auto fut_idx = mapping->store()->future_index();
 
     output->future_locations[fut_idx] =
-      local_machine.get_memory(target_proc, mapping->policy.target);
+      local_machine.get_memory(target_proc, mapping->policy().target);
   }
 }
 
-void map_unbound_stores(const std::vector<std::unique_ptr<StoreMapping>>& mappings,
+void map_unbound_stores(Span<const std::unique_ptr<StoreMapping>> mappings,
                         const LocalMachine& local_machine,
                         const Legion::Processor& target_proc,
                         Legion::Mapping::Mapper::MapTaskOutput* output)
@@ -460,7 +455,8 @@ void map_unbound_stores(const std::vector<std::unique_ptr<StoreMapping>>& mappin
     const auto* store  = mapping->store();
     const auto req_idx = mapping->requirement_index();
 
-    output->output_targets[req_idx] = local_machine.get_memory(target_proc, mapping->policy.target);
+    output->output_targets[req_idx] =
+      local_machine.get_memory(target_proc, mapping->policy().target);
 
     const auto ndim = mapping->store()->dim();
     std::vector<Legion::DimensionKind> dimension_ordering;
@@ -548,6 +544,18 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
   }
 }
 
+[[nodiscard]] MappingData initial_store_mappings(mapping::StoreMapping::ReleaseKey key,
+                                                 const std::vector<StoreTarget>& options,
+                                                 const char* mapper_name,
+                                                 const Legion::Task& legion_task,
+                                                 Task* task)
+{
+  auto client_mappings =
+    task->library()->get_mapper()->store_mappings(mapping::Task{task}, options);
+
+  return initialize_mapping_categories(key, client_mappings, mapper_name, legion_task);
+}
+
 }  // namespace
 
 void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
@@ -588,20 +596,15 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
 
   const auto& options = default_store_targets(target_proc.kind());
 
-  auto [mapped_futures, for_futures, mapped_regions, for_unbound_stores, for_stores] = [&] {
-    auto client_mappings =
-      legate_task.library()->get_mapper()->store_mappings(mapping::Task{&legate_task}, options);
-
-    return initialize_mapping_categories(
-      mapping::StoreMapping::ReleaseKey{}, std::move(client_mappings), get_mapper_name(), task);
-  }();
+  auto [mapped_futures, for_futures, mapped_regions, for_unbound_stores, for_stores] =
+    initial_store_mappings({}, options, get_mapper_name(), task, &legate_task);
 
   // Generate default mappings for stores that are not yet mapped by the client mapper
   const auto default_option = options.front();
   for (auto&& arr : {std::cref(legate_task.inputs()),
                      std::cref(legate_task.outputs()),
                      std::cref(legate_task.reductions())}) {
-    generate_default_mappings(arr,
+    generate_default_mappings(arr.get(),
                               default_option,
                               task,
                               &mapped_futures,
@@ -636,7 +639,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
     runtime, ctx, task, target_proc, local_machine_, &logger(), &legate_task, &output);
 
   for (auto&& mapping : for_stores) {
-    if (!mapping->policy.redundant) {
+    if (!mapping->policy().redundant) {
       continue;
     }
 
@@ -694,7 +697,7 @@ void BaseMapper::map_legate_stores_(Legion::Mapping::MapperContext ctx,
       // over-decomposed (i.e., there's a 1-1 mapping between tasks and GPUs).
       const auto must_alloc_collective_writes =
         mappable.get_mappable_type() == Legion::Mappable::TASK_MAPPABLE &&
-        (overdecomposed || mapping->policy.target != StoreTarget::FBMEM);
+        (overdecomposed || mapping->policy().target != StoreTarget::FBMEM);
       while (map_legate_store_(ctx,
                                mappable,
                                *mapping,
@@ -755,10 +758,8 @@ void BaseMapper::map_legate_stores_(Legion::Mapping::MapperContext ctx,
 
   // We can retry the mapping with tightened policies only if at least one of the policies
   // is lenient
-  bool can_fail = false;
-  for (auto&& mapping : mappings) {
-    can_fail = can_fail || !mapping->policy.exact;
-  }
+  const auto can_fail =
+    std::any_of(mappings.begin(), mappings.end(), [](const auto& m) { return !m->policy().exact; });
 
   if (!try_mapping(can_fail)) {
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -779,7 +780,7 @@ void BaseMapper::tighten_write_policies_(const Legion::Mappable& mappable,
 {
   for (auto&& mapping : mappings) {
     // If the policy is exact, there's nothing we can tighten
-    if (mapping->policy.exact) {
+    if (mapping->policy().exact) {
       continue;
     }
 
@@ -800,7 +801,7 @@ void BaseMapper::tighten_write_policies_(const Legion::Mappable& mappable,
       logger().debug() << log_mappable(mappable)
                        << ": tightened mapping policy for reqs:" << std::move(reqs_ss).str();
     }
-    mapping->policy.exact = true;
+    mapping->policy().exact = true;
   }
 }
 
@@ -1133,7 +1134,7 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
     redop = GlobalRedopID{0};
   }
 
-  const auto& policy       = mapping.policy;
+  const auto& policy       = mapping.policy();
   const auto target_memory = local_machine_.get_memory(target_proc, policy.target);
 
   // Generate layout constraints from the store mapping

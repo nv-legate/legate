@@ -67,7 +67,7 @@ static_assert(TaskTarget::OMP < TaskTarget::CPU);
 std::ostream& operator<<(std::ostream& stream, const TaskTarget& target);
 
 /**
- * @brief An enum class for store targets
+ * @brief Enumerates the possible memory types a store may be mapped to.
  */
 enum class StoreTarget : std::uint8_t {
   /**
@@ -368,6 +368,12 @@ class InstanceMappingPolicy {
  */
 class StoreMapping {
  public:
+  StoreMapping(StoreMapping&&) noexcept;
+  StoreMapping& operator=(StoreMapping&&) noexcept;
+  ~StoreMapping();
+
+  explicit StoreMapping(std::unique_ptr<detail::StoreMapping> impl);
+
   /**
    * @brief Creates a mapping policy for the given store following the default mapping policy
    *
@@ -451,27 +457,7 @@ class StoreMapping {
   [[nodiscard]] detail::StoreMapping* release_(ReleaseKey) noexcept;
 
  private:
-  friend class detail::BaseMapper;
-
-  explicit StoreMapping(detail::StoreMapping* impl) noexcept;
-
-  // Work-around for using unique_ptr for PIMPL. unique_ptr requires the type to be defined in
-  // its destructor, as required by delete. This is a problem because the implicitly declared
-  // destructor/move assignment/move constructor calls the unique_ptr destructor, and since we
-  // don't define them, they are implicitly defined inline above.
-  //
-  // One solution then is to manually define these functions out-of-line (can still be done
-  // trivially, i.e. StoreMapping::~StoreMapping() = default), but the whole point of using
-  // unique_ptr is that we *don't* want to write these functions!
-  //
-  // The better solution then is to hide the call to delete behind a custom deleter. Hence
-  // StoreMappingImplDeleter.
-  class StoreMappingImplDeleter {
-   public:
-    void operator()(detail::StoreMapping* ptr) const noexcept;
-  };
-
-  std::unique_ptr<detail::StoreMapping, StoreMappingImplDeleter> impl_{};
+  std::unique_ptr<detail::StoreMapping> impl_{};
 };
 
 /**

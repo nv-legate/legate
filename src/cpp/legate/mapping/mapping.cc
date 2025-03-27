@@ -111,6 +111,16 @@ bool InstanceMappingPolicy::operator!=(const InstanceMappingPolicy& other) const
   return !operator==(other);
 }
 
+// ==========================================================================================
+
+StoreMapping::StoreMapping(StoreMapping&&) noexcept = default;
+
+StoreMapping& StoreMapping::operator=(StoreMapping&&) noexcept = default;
+
+StoreMapping::~StoreMapping() = default;
+
+StoreMapping::StoreMapping(std::unique_ptr<detail::StoreMapping> impl) : impl_{std::move(impl)} {}
+
 /*static*/ StoreMapping StoreMapping::default_mapping(const Store& store,
                                                       StoreTarget target,
                                                       bool exact)
@@ -120,7 +130,7 @@ bool InstanceMappingPolicy::operator!=(const InstanceMappingPolicy& other) const
 
 /*static*/ StoreMapping StoreMapping::create(const Store& store, InstanceMappingPolicy&& policy)
 {
-  return StoreMapping{detail::StoreMapping::create(store.impl(), std::move(policy)).release()};
+  return StoreMapping{detail::StoreMapping::create(store.impl(), std::move(policy))};
 }
 
 /*static*/ StoreMapping StoreMapping::create(const std::vector<Store>& stores,
@@ -130,34 +140,25 @@ bool InstanceMappingPolicy::operator!=(const InstanceMappingPolicy& other) const
     throw legate::detail::TracedException<std::invalid_argument>{
       "Invalid to create a store mapping without any store"};
   }
-  auto mapping = std::make_unique<detail::StoreMapping>();
+  auto mapping = create(stores.front(), std::move(policy));
 
-  mapping->policy = std::move(policy);
-  mapping->stores.reserve(stores.size());
-  for (auto&& store : stores) {
-    mapping->stores.emplace_back(store.impl());
+  for (std::size_t i = 1; i < stores.size(); ++i) {
+    mapping.add_store(stores[i]);
   }
-  return StoreMapping{mapping.release()};
+  return mapping;
 }
 
-InstanceMappingPolicy& StoreMapping::policy() { return impl_->policy; }
+InstanceMappingPolicy& StoreMapping::policy() { return impl_->policy(); }
 
-const InstanceMappingPolicy& StoreMapping::policy() const { return impl_->policy; }
+const InstanceMappingPolicy& StoreMapping::policy() const { return impl()->policy(); }
 
-Store StoreMapping::store() const { return Store{impl_->stores.front()}; }
+Store StoreMapping::store() const { return Store{impl()->store()}; }
 
 std::vector<Store> StoreMapping::stores() const
 {
-  return {impl_->stores.begin(), impl_->stores.end()};
+  return {impl()->stores().begin(), impl()->stores().end()};
 }
 
-void StoreMapping::add_store(const Store& store) { impl_->stores.push_back(store.impl()); }
-
-StoreMapping::StoreMapping(detail::StoreMapping* impl) noexcept : impl_{impl} {}
-
-void StoreMapping::StoreMappingImplDeleter::operator()(detail::StoreMapping* ptr) const noexcept
-{
-  delete ptr;
-}
+void StoreMapping::add_store(const Store& store) { impl_->add_store(store.impl()); }
 
 }  // namespace legate::mapping

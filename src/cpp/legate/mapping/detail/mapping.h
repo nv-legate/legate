@@ -8,6 +8,7 @@
 
 #include <legate/mapping/detail/store.h>
 #include <legate/mapping/mapping.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
@@ -80,6 +81,17 @@ class DimOrdering {
 
 class StoreMapping {
  public:
+  StoreMapping() = default;
+  StoreMapping(InstanceMappingPolicy policy, const Store* store);
+  StoreMapping(InstanceMappingPolicy policy, Span<const Store* const> stores);
+  StoreMapping(InstanceMappingPolicy policy, Span<const InternalSharedPtr<Store>> stores);
+
+  [[nodiscard]] Span<const Store* const> stores() const;
+  [[nodiscard]] InstanceMappingPolicy& policy();
+  [[nodiscard]] const InstanceMappingPolicy& policy() const;
+
+  void add_store(const Store* store);
+
   [[nodiscard]] bool for_future() const;
   [[nodiscard]] bool for_unbound_store() const;
   [[nodiscard]] const Store* store() const;
@@ -96,8 +108,9 @@ class StoreMapping {
   [[nodiscard]] static std::unique_ptr<StoreMapping> create(const Store* store,
                                                             InstanceMappingPolicy&& policy);
 
-  std::vector<const Store*> stores{};
-  InstanceMappingPolicy policy{};
+ private:
+  InstanceMappingPolicy policy_{};
+  std::vector<const Store*> stores_{};
 };
 
 }  // namespace legate::mapping::detail

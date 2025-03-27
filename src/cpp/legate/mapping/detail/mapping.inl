@@ -24,4 +24,12 @@ inline bool DimOrdering::operator==(const DimOrdering& other) const
   return kind == other.kind && dims == other.dims;
 }
 
+// ==========================================================================================
+
+inline Span<const Store* const> StoreMapping::stores() const { return stores_; }
+
+inline InstanceMappingPolicy& StoreMapping::policy() { return policy_; }
+
+inline const InstanceMappingPolicy& StoreMapping::policy() const { return policy_; }
+
 }  // namespace legate::mapping::detail
