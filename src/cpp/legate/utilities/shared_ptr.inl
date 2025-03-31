@@ -421,7 +421,7 @@ namespace std {
 template <typename T>
 std::size_t hash<legate::SharedPtr<T>>::operator()(const legate::SharedPtr<T>& ptr) const noexcept
 {
-  return hash<typename legate::SharedPtr<T>::element_type*>{}(ptr.get());
+  return hash<const void*>{}(static_cast<const void*>(ptr.get()));
 }
 
 }  // namespace std
