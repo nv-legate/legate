@@ -31,17 +31,10 @@ def _maybe_import_ucx_module() -> Any:
     if not wheel_build:
         return None
 
-    # Prefer system libraries that should match the MPI used. This is
-    # necessary when using pip wheels builds as the system MPI also uses UCX.
-    # If there is a system UCX that should be preferred to avoid mixing system
-    # and wheels UCX libraries at runtime. This is even more important in
-    # distributed runs where we have less control of how everything gets
-    # launched. We must consider the interaction between system and wheels
-    # applied binaries and libraries along with ABI stability.
+    # Prefer wheels libraries that should load a consistent set of libraries.
     #
     # See https://github.com/rapidsai/ucx-wheels/blob/main/python/libucx/libucx/load.py#L55
     # for the environment variable check and logic for library loading.
-    os.environ["RAPIDS_LIBUCX_PREFER_SYSTEM_LIBRARY"] = "1"
     try:
         import libucx  # type: ignore[import-not-found]
     except ModuleNotFoundError:
