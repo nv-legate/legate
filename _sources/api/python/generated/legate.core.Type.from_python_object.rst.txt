@@ -1,0 +1,6 @@
+legate.core.Type.from\_python\_object
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Type.from_python_object

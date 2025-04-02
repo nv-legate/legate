@@ -1,0 +1,6 @@
+legate.core.Type.size
+=====================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Type.size

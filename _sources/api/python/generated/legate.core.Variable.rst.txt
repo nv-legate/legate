@@ -1,0 +1,30 @@
+﻿legate.core.Variable
+====================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: Variable
+
+   .. automethod:: Variable.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~Variable.__repr__
+      ~Variable.__str__
+   
+   

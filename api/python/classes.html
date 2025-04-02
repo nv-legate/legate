@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Classes &#8212; NVIDIA legate (25.05.00.dev73+gad728481)</title>
+    <title>Classes &#8212; NVIDIA legate (25.05.00.dev74+g6aef3310)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=1f6c9d27"></script>
+    <script src="../../_static/documentation_options.js?v=19998807"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,11 +130,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev73+gad728481) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev73+gad728481) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev73+gad728481)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev74+g6aef3310)</p>
   
 </a></div>
     
@@ -237,11 +237,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev73+gad728481) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev73+gad728481) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev73+gad728481)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev74+g6aef3310)</p>
   
 </a>
 
@@ -330,6 +330,10 @@
 <li class="toctree-l4"><a class="reference internal" href="operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="logical_store.html">Store</a></li>
 
+<li class="toctree-l4"><a class="reference internal" href="logical_array.html">Arrays</a></li>
+<li class="toctree-l4"><a class="reference internal" href="physical_store.html">Physical Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="physical_array.html">Physical Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="scalar.html">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shape.html">Shape</a></li>
 <li class="toctree-l4"><a class="reference internal" href="variant_options.html">Variant Options</a></li>
@@ -337,6 +341,15 @@
 <li class="toctree-l4"><a class="reference internal" href="task_context.html">Task Context</a></li>
 <li class="toctree-l4"><a class="reference internal" href="domain.html">Domains</a></li>
 <li class="toctree-l4"><a class="reference internal" href="task_config.html">Task Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="inline_allocation.html">Inline Allocations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="symbolic_expr.html">Symbolic Expressions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="auto_task.html">Auto Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="manual_task.html">Manual Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="constraint.html">Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="variable.html">Variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="library.html">Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="scope.html">Execution Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="types.html">Types</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -493,14 +506,29 @@
 <li class="toctree-l2"><a class="reference internal" href="generated/legate.core.LogicalStorePartition.store.html">legate.core.LogicalStorePartition.store</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="logical_array.html">Arrays</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.LogicalArray.html">legate.core.LogicalArray</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="physical_store.html">Physical Store</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.PhysicalStore.html">legate.core.PhysicalStore</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="physical_array.html">Physical Array</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.PhysicalArray.html">legate.core.PhysicalArray</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scalar.html">Scalar</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.Scalar.html">legate.core.Scalar</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="machine.html">Machine and Resource Scoping</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="machine.html#machine">Machine</a></li>
 <li class="toctree-l2"><a class="reference internal" href="machine.html#processorrange">ProcessorRange</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="shape.html">Shape</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.Shape.__init__.html">legate.core.Shape.__init__</a></li>
-<li class="toctree-l2"><a class="reference internal" href="shape.html#properties">Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.Shape.html">legate.core.Shape</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="variant_options.html">Variant Options</a><ul>
@@ -522,6 +550,44 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="task_config.html">Task Configuration</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="generated/legate.core.TaskConfig.html">legate.core.TaskConfig</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="inline_allocation.html">Inline Allocations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.InlineAllocation.html">legate.core.InlineAllocation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="symbolic_expr.html">Symbolic Expressions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.SymbolicExpr.html">legate.core.SymbolicExpr</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="auto_task.html">Auto Tasks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.AutoTask.html">legate.core.AutoTask</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="manual_task.html">Manual Tasks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.ManualTask.html">legate.core.ManualTask</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="constraint.html">Constraints</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.Constraint.html">legate.core.Constraint</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="variable.html">Variables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.Variable.html">legate.core.Variable</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.Library.html">legate.core.Library</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scope.html">Execution Scope</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.Scope.html">legate.core.Scope</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="types.html">Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.Type.html">legate.core.Type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.StructType.html">legate.core.StructType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/legate.core.FixedArrayType.html">legate.core.FixedArrayType</a></li>
 </ul>
 </li>
 </ul>

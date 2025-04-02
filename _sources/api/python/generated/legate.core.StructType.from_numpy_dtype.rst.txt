@@ -1,0 +1,6 @@
+legate.core.StructType.from\_numpy\_dtype
+=========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructType.from_numpy_dtype

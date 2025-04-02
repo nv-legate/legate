@@ -1,0 +1,6 @@
+legate.core.InlineAllocation.\_\_array\_interface\_\_
+=====================================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: InlineAllocation.__array_interface__

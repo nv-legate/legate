@@ -1,0 +1,6 @@
+legate.core.LogicalArray.\_\_legate\_data\_interface\_\_
+========================================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: LogicalArray.__legate_data_interface__

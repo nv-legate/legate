@@ -1,0 +1,43 @@
+﻿legate.core.ManualTask
+======================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: ManualTask
+
+   .. automethod:: ManualTask.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~ManualTask.exception_types
+      ~ManualTask.raw_handle
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~ManualTask.add_cal_communicator
+      ~ManualTask.add_communicator
+      ~ManualTask.add_cpu_communicator
+      ~ManualTask.add_input
+      ~ManualTask.add_nccl_communicator
+      ~ManualTask.add_output
+      ~ManualTask.add_reduction
+      ~ManualTask.add_scalar_arg
+      ~ManualTask.execute
+      ~ManualTask.provenance
+      ~ManualTask.set_concurrent
+      ~ManualTask.set_side_effect
+      ~ManualTask.throws_exception
+   
+   

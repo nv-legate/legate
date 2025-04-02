@@ -1,0 +1,50 @@
+﻿legate.core.FixedArrayType
+==========================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: FixedArrayType
+
+   .. automethod:: FixedArrayType.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~FixedArrayType.alignment
+      ~FixedArrayType.code
+      ~FixedArrayType.element_type
+      ~FixedArrayType.is_primitive
+      ~FixedArrayType.num_elements
+      ~FixedArrayType.raw_ptr
+      ~FixedArrayType.size
+      ~FixedArrayType.uid
+      ~FixedArrayType.variable_size
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~FixedArrayType.__eq__
+      ~FixedArrayType.__ge__
+      ~FixedArrayType.__gt__
+      ~FixedArrayType.__hash__
+      ~FixedArrayType.__le__
+      ~FixedArrayType.__lt__
+      ~FixedArrayType.__ne__
+      ~FixedArrayType.__repr__
+      ~FixedArrayType.from_numpy_dtype
+      ~FixedArrayType.from_python_object
+      ~FixedArrayType.record_reduction_op
+      ~FixedArrayType.reduction_op_id
+      ~FixedArrayType.to_numpy_dtype
+   
+   

@@ -1,0 +1,6 @@
+legate.core.FixedArrayType.is\_primitive
+========================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: FixedArrayType.is_primitive

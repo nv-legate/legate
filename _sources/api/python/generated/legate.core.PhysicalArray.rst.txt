@@ -1,0 +1,38 @@
+﻿legate.core.PhysicalArray
+=========================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: PhysicalArray
+
+   .. automethod:: PhysicalArray.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~PhysicalArray.__array_interface__
+      ~PhysicalArray.__cuda_array_interface__
+      ~PhysicalArray.ndim
+      ~PhysicalArray.nested
+      ~PhysicalArray.nullable
+      ~PhysicalArray.type
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~PhysicalArray.child
+      ~PhysicalArray.data
+      ~PhysicalArray.domain
+      ~PhysicalArray.null_mask
+   
+   

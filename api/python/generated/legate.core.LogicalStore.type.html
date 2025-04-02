@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.LogicalStore.type &#8212; NVIDIA legate (25.05.00.dev73+gad728481)</title>
+    <title>legate.core.LogicalStore.type &#8212; NVIDIA legate (25.05.00.dev74+g6aef3310)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=1f6c9d27"></script>
+    <script src="../../../_static/documentation_options.js?v=19998807"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev73+gad728481) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev73+gad728481) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev73+gad728481)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev74+g6aef3310)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev73+gad728481) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev73+gad728481) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev73+gad728481)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev74+g6aef3310)</p>
   
 </a>
 
@@ -333,6 +333,10 @@
 <li class="toctree-l4"><a class="reference internal" href="../operation.html">Operations</a></li>
 <li class="toctree-l4 current active"><a class="reference internal" href="../logical_store.html">Store</a></li>
 
+<li class="toctree-l4"><a class="reference internal" href="../logical_array.html">Arrays</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../physical_store.html">Physical Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../physical_array.html">Physical Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scalar.html">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../shape.html">Shape</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../variant_options.html">Variant Options</a></li>
@@ -340,6 +344,15 @@
 <li class="toctree-l4"><a class="reference internal" href="../task_context.html">Task Context</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../domain.html">Domains</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../task_config.html">Task Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../inline_allocation.html">Inline Allocations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../symbolic_expr.html">Symbolic Expressions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../auto_task.html">Auto Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../manual_task.html">Manual Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../constraint.html">Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../variable.html">Variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../library.html">Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../scope.html">Execution Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../types.html">Types</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -487,7 +500,7 @@
 <p>Get the type of the store.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Type</p>
+<dd class="field-odd"><p><a class="reference internal" href="legate.core.Type.html#legate.core.Type" title="legate.core.Type">Type</a></p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The type of the store.</p>

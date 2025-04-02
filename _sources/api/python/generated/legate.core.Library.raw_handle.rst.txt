@@ -1,0 +1,6 @@
+legate.core.Library.raw\_handle
+===============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Library.raw_handle

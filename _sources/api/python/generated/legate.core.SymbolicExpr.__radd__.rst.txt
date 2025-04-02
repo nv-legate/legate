@@ -1,0 +1,6 @@
+legate.core.SymbolicExpr.\_\_radd\_\_
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: SymbolicExpr.__radd__

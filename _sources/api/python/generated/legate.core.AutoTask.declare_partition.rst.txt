@@ -1,4 +1,4 @@
-﻿legate.core.AutoTask.declare\_partition
+legate.core.AutoTask.declare\_partition
 =======================================
 
 .. currentmodule:: legate.core

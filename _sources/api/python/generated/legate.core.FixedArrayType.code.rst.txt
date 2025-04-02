@@ -1,0 +1,6 @@
+legate.core.FixedArrayType.code
+===============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: FixedArrayType.code

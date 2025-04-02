@@ -1,4 +1,4 @@
-﻿legate.core.AutoTask.add\_reduction
+legate.core.AutoTask.add\_reduction
 ===================================
 
 .. currentmodule:: legate.core
