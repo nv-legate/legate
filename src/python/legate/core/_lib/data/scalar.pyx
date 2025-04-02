@@ -364,8 +364,8 @@ cdef class Scalar:
         :returns: The numpy array interface dict.
         :rtype: dict[str, Any]
 
-        :raises ValueError: If the type of the value in the scalar is
-        variably sized (e.g. a list).
+        :raises ValueError: If the type of the value in the scalar is variably
+                            sized (e.g. a list).
         """
         cdef Type ty = self.type
         if ty.variable_size:

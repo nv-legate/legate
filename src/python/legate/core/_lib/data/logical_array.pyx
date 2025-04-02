@@ -29,7 +29,7 @@ cdef class LogicalArray(Unconstructable):
     @staticmethod
     def from_store(LogicalStore store) -> LogicalArray:
         r"""
-        Create a `LogicalArray` from a `LogicalStore`.
+        Create a ``LogicalArray`` from a ``LogicalStore``.
 
         Parameters
         ----------
@@ -39,7 +39,7 @@ cdef class LogicalArray(Unconstructable):
         Returns
         -------
         LogicalArray
-            The newly created `LogicalArray`.
+            The newly created ``LogicalArray``.
         """
         cdef _LogicalArray handle
 
@@ -50,17 +50,17 @@ cdef class LogicalArray(Unconstructable):
     @staticmethod
     def from_raw_handle(uintptr_t raw_handle):
         r"""
-        Create a `LogicalArray` from a pointer to C++ `LogicalArray`.
+        Create a ``LogicalArray`` from a pointer to C++ ``LogicalArray``.
 
         Parameters
         ----------
         raw_handle : int
-            The pointer to the C++ `LogicalArray` object.
+            The pointer to the C++ ``LogicalArray`` object.
 
         Returns
         -------
         LogicalArray
-            The newly created `LogicalArray`.
+            The newly created ``LogicalArray``.
         """
         return LogicalArray.from_handle(
             dereference(<_LogicalArray*> raw_handle)
@@ -99,7 +99,7 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get the type of the array.
 
-        :returns: The `Type` of the array.
+        :returns: The ``Type`` of the array.
         :rtype: Type
         """
         cdef _Type handle
@@ -139,7 +139,7 @@ cdef class LogicalArray(Unconstructable):
     @property
     def size(self) -> size_t:
         r"""
-        Get the size of the array. This method is an alias of `volume()`.
+        Get the size of the array. This method is an alias of ``volume()``.
 
         :returns: The size of the array.
         :rtype: int
@@ -151,7 +151,7 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Return whether the store is unbound or not.
 
-        :returns: `True` if the array is unbound, `False` otherwise.
+        :returns: ``True`` if the array is unbound, ``False`` otherwise.
         :rtype: bool
         """
         cdef bool ret
@@ -165,7 +165,7 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Get whether this array is nullable.
 
-        :returns: `True` if this array is nullable, `False` otherwise.
+        :returns: ``True`` if this array is nullable, ``False`` otherwise.
         :rtype: bool
         """
         cdef bool ret
@@ -334,7 +334,7 @@ cdef class LogicalArray(Unconstructable):
         Raises
         ------
         ValueError
-            If `axes` is not iterable.
+            If ``axes`` is not iterable.
         """
         if not is_iterable(axes):
             raise ValueError(f"Expected an iterable but got {type(axes)}")
@@ -370,7 +370,7 @@ cdef class LogicalArray(Unconstructable):
         Raises
         ------
         ValueError
-            If `shape` is not iterable.
+            If ``shape`` is not iterable.
         """
         if not is_iterable(shape):
             raise ValueError(f"Expected an iterable but got {type(shape)}")
@@ -400,9 +400,9 @@ cdef class LogicalArray(Unconstructable):
     @property
     def data(self) -> LogicalStore:
         r"""
-        Get the `LogicalStore` of this array.
+        Get the ``LogicalStore`` of this array.
 
-        :returns: The `LogicalStore` of this array.
+        :returns: The ``LogicalStore`` of this array.
         :rtype: LogicalStore
         """
         cdef _LogicalStore handle
@@ -449,16 +449,16 @@ cdef class LogicalArray(Unconstructable):
         self, target: StoreTarget | None = None
     ):
         r"""
-        Get a `PhysicalArray` of the data for this array.
+        Get a ``PhysicalArray`` of the data for this array.
 
         This call blocks the client's control flow and fetches the data for the
         whole array to the current node
 
-        When the target is `StoreTarget.FBMEM`, the data will be consolidated
+        When the target is ``StoreTarget.FBMEM``, the data will be consolidated
         in the framebuffer of the first GPU available in the scope.
 
-        If no `target` is given, the runtime uses `StoreTarget.SOCKETMEM` if
-        it exists and `StoreTarget.SYSMEM` otherwise.
+        If no ``target`` is given, the runtime uses `StoreTarget.SOCKETMEM` if
+        it exists and ``StoreTarget.SYSMEM`` otherwise.
 
         If there already exists a physical array for a different memory target,
         that physical array will be unmapped from memory and become invalid to
@@ -526,7 +526,7 @@ cdef class LogicalArray(Unconstructable):
         r"""
         Retrieve the numpy-compatible array representation of the allocation.
 
-        Equivalent to `get_physical_array().__array_interface__`.
+        Equivalent to ``get_physical_array().__array_interface__``.
 
         :returns: The numpy array interface dict.
         :rtype: dict[str, Any]
@@ -541,13 +541,13 @@ cdef class LogicalArray(Unconstructable):
         Retrieve the cupy-compatible array representation of the allocation.
 
         Equivalent to
-        `get_physical_array(StoreTarget.FBMEM).__cuda_array_interface__`.
+        ``get_physical_array(StoreTarget.FBMEM).__cuda_array_interface__``.
 
         :returns: The cupy array interface dict.
         :rtype: dict[str, Any]
 
         :raises ValueError: If the array is nullable or nested.
-        :raises ValueError If no framebuffer is available
+        :raises ValueError: If no framebuffer is available.
         """
         return self.get_physical_array(StoreTarget.FBMEM).__cuda_array_interface__
 

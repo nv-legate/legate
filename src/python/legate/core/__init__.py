@@ -62,10 +62,12 @@ from ._lib.mapping.machine import (
     ProcessorSlice,
 )
 from ._lib.mapping.mapping import StoreTarget, TaskTarget
-from ._lib.operation.projection import constant, dimension
+from ._lib.operation.projection import SymbolicExpr, constant, dimension
 from ._lib.operation.task import AutoTask, ManualTask
 from ._lib.partitioning.constraint import (
+    Constraint,
     ImageComputationHint,
+    Variable,
     align,
     bloat,
     broadcast,
@@ -99,7 +101,9 @@ from ._lib.utilities.typedefs import (
 )
 from .data_interface import Field, LegateDataInterface, Table
 from .types import (
+    FixedArrayType,
     ReductionOpKind,
+    StructType,
     Type,
     TypeCode,
     array_type,

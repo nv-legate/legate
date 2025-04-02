@@ -479,13 +479,15 @@ cdef class FixedArrayType(Type):
 
         Only gets the "top-level" number of elements. For example, if this type
         refers to an array of arrays:
-        ```
-        FixedArrayType[
-          FixedArrayType[uint32_t, uint32_t, uint32_t, uint32_t],
-          FixedArrayType[uint32_t, uint32_t, uint32_t, uint32_t]
-        ]
-        ```
-        this function would return `2`, not `4`.
+
+        .. code-block::
+
+           FixedArrayType[
+             FixedArrayType[uint32_t, uint32_t, uint32_t, uint32_t],
+             FixedArrayType[uint32_t, uint32_t, uint32_t, uint32_t]
+           ]
+
+        this function would return ``2``, not ``4``.
 
         :returns: The number of elements.
         :rtype: int
@@ -544,17 +546,19 @@ cdef class StructType(Type):
 
         Only gets the "top-level" number of fields. For example, if this type
         refers to a struct of structs:
-        ```
-        StructType[
-          StructType[
-            uint32_t, float32, complex128, string_type
-          ]
-          StructType[
-            int16_t
-          ]
-        ]
-        ```
-        this function would return `2`, not `4` or `1`.
+
+        .. code-block::
+
+           StructType[
+             StructType[
+               uint32_t, float32, complex128, string_type
+             ]
+             StructType[
+               int16_t
+             ]
+           ]
+
+        this function would return ``2``, not ``4`` or ``1``.
 
         :returns: The number of fields in the struct type.
         :rtype: int
