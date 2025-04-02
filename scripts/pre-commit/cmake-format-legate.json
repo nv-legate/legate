@@ -456,6 +456,11 @@
                     "nargs": 4
                 }
             },
+            "legate_setup_macos_sdk_environ": {
+                "pargs": {
+                    "nargs": 0
+                }
+            },
             "legate_string_ends_with": {
                 "kwargs": {
                     "ENDS_WITH": 1,

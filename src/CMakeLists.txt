@@ -9,6 +9,12 @@ list(APPEND CMAKE_MESSAGE_CONTEXT "legate")
 
 cmake_path(SET LEGATE_CMAKE_DIR NORMALIZE "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+if(APPLE)
+  include("${LEGATE_CMAKE_DIR}/Modules/setup_macos_sdk_environ.cmake")
+
+  legate_setup_macos_sdk_environ()
+endif()
+
 if(SKBUILD)
   set(legate_project_suffix python)
 else()
