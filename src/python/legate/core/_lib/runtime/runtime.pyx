@@ -1168,9 +1168,66 @@ cdef class Runtime(Unconstructable):
     cdef void stop_profiling_range(self, std_string_view provenance):
         self.stop_profiling_range(provenance)
 
+
+cdef tuple[bool, bool] _set_realm_backtrace(str value):
+    from os import environ
+
+    cdef bool set_val
+
+    # This could just be environ.setdefault(...) but we also need to detect
+    # whether we set the value or not, which is not possible with setdefault().
+    if "REALM_BACKTRACE" in environ:
+        set_val = False
+        value = environ["REALM_BACKTRACE"]
+    else:
+        set_val = True
+        environ["REALM_BACKTRACE"] = value
+
+    cdef int int_value
+
+    try:
+        int_value = int(value)
+    except ValueError as ve:
+        m = f"Invalid value for REALM_BACKTRACE: {value}"
+        raise ValueError(m) from ve
+
+    return set_val, <bool>int_value
+
 cdef Runtime initialize():
+    import faulthandler
+
+    cdef bool set_val
+    cdef bool value
+
+    if faulthandler.is_enabled():
+        set_val, value = _set_realm_backtrace("0")
+        if value:
+            m = (
+                "REALM_BACKTRACE and the Python fault handler are mutually "
+                "exclusive and cannot both be enabled."
+            )
+            raise RuntimeError(m)
+    else:
+        set_val, value = _set_realm_backtrace("1")
+
     start()
     runtime = Runtime.from_handle(_Runtime.get_runtime())
+
+    if set_val:
+        # This should just be lambda but Cython doesn't like that...
+        #
+        # if set_val:
+        #    runtime.add_shutdown_callback(lambda: del environ["REALM_BACKTRACE"])
+        #                                        ^
+        # ------------------------------------------------------------
+        #
+        # /path/to/runtime.pyx:1213:46: Expected an identifier or literal
+        def unset_realm_backtrace() -> None:
+            from os import environ
+
+            del environ["REALM_BACKTRACE"]
+
+        runtime.add_shutdown_callback(unset_realm_backtrace)
     if settings.limit_stdout():
         sys.stdout = _LegateOutputStream(sys.stdout, runtime.node_id)
     return runtime

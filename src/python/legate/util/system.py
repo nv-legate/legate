@@ -12,8 +12,8 @@ from functools import cached_property
 from itertools import chain
 from pathlib import Path
 
-from .fs import get_legate_paths, get_legion_paths
-from .types import CPUInfo, GPUInfo, LegatePaths, LegionPaths
+from .fs import get_legate_paths
+from .types import CPUInfo, GPUInfo, LegatePaths
 
 __all__ = ("System",)
 
@@ -34,17 +34,6 @@ class System:
 
         """
         return get_legate_paths()
-
-    @cached_property
-    def legion_paths(self) -> LegionPaths:
-        """All the current runtime Legion Paths.
-
-        Returns
-        -------
-            LegionPaths
-
-        """
-        return get_legion_paths(self.legate_paths)
 
     @cached_property
     def os(self) -> str:

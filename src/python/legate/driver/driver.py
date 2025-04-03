@@ -202,10 +202,6 @@ def format_verbose(
     yield system.legate_paths.ui
     yield NewLine()
 
-    yield section("Legion paths")
-    yield system.legion_paths.ui
-    yield NewLine()
-
     yield section("Versions")
     yield get_versions().ui
     yield NewLine()

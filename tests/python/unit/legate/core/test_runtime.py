@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 import json
 import atexit
@@ -51,7 +52,7 @@ class Test_track_provenance:
 
 
 @pytest.mark.xfail(
-    run=False, reason="should only be invoked by test_shutdown_callback"
+    run=False, reason="should only be invoked by test_shutdown_callback()"
 )
 class TestShutdownCallback:
     counter = 0
@@ -121,6 +122,11 @@ def test_shutdown_callback(test_case: str) -> None:
         cov_args = ["coverage", "run", "-m"]
     except ModuleNotFoundError:
         cov_args = []
+
+    pruned_env = os.environ.copy()
+
+    del pruned_env["REALM_BACKTRACE"]
+
     proc = run(
         [
             sys.executable,
@@ -135,6 +141,7 @@ def test_shutdown_callback(test_case: str) -> None:
         stdout=PIPE,
         stderr=STDOUT,
         check=False,
+        env=pruned_env,
     )
     assert not proc.returncode, proc.stdout
 

@@ -61,15 +61,6 @@ class TestSystem:
 
         assert s.legate_paths == "legate paths"  # type: ignore[comparison-overlap]
 
-    def test_legion_paths(self, mocker: MockerFixture) -> None:
-        mocker.patch(
-            "legate.util.system.get_legion_paths", return_value="legion paths"
-        )
-
-        s = m.System()
-
-        assert s.legion_paths == "legion paths"  # type: ignore[comparison-overlap]
-
     def test_cpus(self) -> None:
         s = m.System()
         cpus = s.cpus

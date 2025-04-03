@@ -4,12 +4,8 @@
 
 from __future__ import annotations
 
-import os
 import subprocess
 from typing import TYPE_CHECKING
-
-from .. import install_info
-from ..util.fs import read_c_define
 
 if TYPE_CHECKING:
     from ..util.system import System
@@ -150,7 +146,7 @@ class Launcher:
             name.startswith(prefix) for prefix in LAUNCHER_VAR_PREFIXES
         )
 
-    def _compute_env(self) -> tuple[EnvDict, set[str]]:  # noqa: C901
+    def _compute_env(self) -> tuple[EnvDict, set[str]]:
         config = self._config
         system = self._system
 
@@ -158,81 +154,6 @@ class Launcher:
 
         # We never want to save python byte code for legate
         env["PYTHONDONTWRITEBYTECODE"] = "1"
-
-        # Set the path to the Legate module as an environment variable
-        # The current directory should be added to PYTHONPATH as well
-        extra_python_paths = []
-        if "PYTHONPATH" in system.env:
-            extra_python_paths.append(system.env["PYTHONPATH"])
-
-        if system.legion_paths.legion_module is not None:
-            extra_python_paths.append(str(system.legion_paths.legion_module))
-
-        if system.legion_paths.legion_jupyter_module is not None:
-            extra_python_paths.append(
-                str(system.legion_paths.legion_jupyter_module)
-            )
-
-        env["PYTHONPATH"] = os.pathsep.join(extra_python_paths)
-
-        # If using NCCL prefer parallel launch mode over cooperative groups,
-        # as the former plays better with Realm.
-        env["NCCL_LAUNCH_MODE"] = "PARALLEL"
-
-        # Make sure we do not use the CUDA_TL in UCC
-        # CUDA_TL currently only works in a single-thread setting.
-        # CUDA_TL could work with Legate multi-rank where every rank has a
-        # single thread, but we just blanket disable it.
-        env["UCC_TLS"] = "^cuda"
-
-        # Make sure GASNet initializes MPI with the right level of
-        # threading support
-        env["GASNET_MPI_THREAD"] = "MPI_THREAD_MULTIPLE"
-
-        if config.multi_node.ranks > 1 and "ucx" in install_info.networks:
-            # UCX-related environment variables
-            env["UCX_CUDA_COPY_MAX_REG_RATIO"] = "1.0"
-            env["UCX_RCACHE_PURGE_ON_FORK"] = "n"
-
-        # Configure certain limits
-        LEGATE_MAX_DIM = system.env.get(
-            "LEGATE_MAX_DIM",
-            read_c_define(
-                system.legion_paths.legion_defines_h, "LEGION_MAX_DIM"
-            ),
-        )
-        if LEGATE_MAX_DIM is None:
-            LEGATE_MAX_DIM = str(install_info.max_dim)
-
-        env["LEGATE_MAX_DIM"] = LEGATE_MAX_DIM
-
-        LEGATE_MAX_FIELDS = system.env.get(
-            "LEGATE_MAX_FIELDS",
-            read_c_define(
-                system.legion_paths.legion_defines_h, "LEGION_MAX_FIELDS"
-            ),
-        )
-        if LEGATE_MAX_FIELDS is None:
-            LEGATE_MAX_FIELDS = str(install_info.max_fields)
-
-        env["LEGATE_MAX_FIELDS"] = LEGATE_MAX_FIELDS
-
-        assert env["LEGATE_MAX_DIM"] is not None
-        assert env["LEGATE_MAX_FIELDS"] is not None
-
-        # Debugging options
-        # TODO: consider also adding UCX_HANDLE_ERRORS=none if using ucx
-        # which stops UCX from installing its own signal handler
-        if system.env.get("PYTHONFAULTHANDLER", "") == "":
-            env["REALM_BACKTRACE"] = "1"
-        elif "REALM_BACKTRACE" in system.env:
-            msg = (
-                "REALM_BACKTRACE and PYTHONFAULTHANDLER should not be both set"
-            )
-            raise RuntimeError(msg)
-
-        if "CUTENSOR_LOG_LEVEL" not in system.env:
-            env["CUTENSOR_LOG_LEVEL"] = "1"
 
         if config.debugging.gasnet_trace:
             env["GASNET_TRACEFILE"] = str(

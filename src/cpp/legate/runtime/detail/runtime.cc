@@ -1724,6 +1724,38 @@ void handle_realm_default_args()
   REALM_DEFAULT_ARGS.set(ss.str());
 }
 
+void set_env_vars()
+{
+  if (LEGATE_DEFINED(LEGATE_USE_NCCL)) {
+    // If using NCCL prefer parallel launch mode over cooperative groups, as the former plays
+    // better with Realm.
+    EnvironmentVariable<std::string>{"NCCL_LAUNCH_MODE"}.set("PARALLEL", /* overwrite */ true);
+  }
+#if defined(REALM_USE_GASNETEX) || defined(REALM_USE_GASNET1)
+  // Make sure GASNet initializes MPI with the right level of threading support
+  EnvironmentVariable<std::string>{"GASNET_MPI_THREAD"}.set("MPI_THREAD_MULTIPLE",
+                                                            /* overwrite */ true);
+#endif
+
+#ifdef REALM_USE_UCX
+  // Make sure we do not use the CUDA_TL in UCC CUDA_TL currently only works in a single-thread
+  // setting. CUDA_TL could work with Legate multi-rank where every rank has a single thread,
+  // but we just blanket disable it.
+  EnvironmentVariable<std::string>{"UCC_TLS"}.set("^cuda", /* overwrite */ true);
+  EnvironmentVariable<std::string>{"UCX_CUDA_COPY_MAX_REG_RATIO"}.set("1.0",
+                                                                      /* overwrite */ true);
+  EnvironmentVariable<std::string>{"UCX_RCACHE_PURGE_ON_FORK"}.set("n",
+                                                                   /* overwrite */ true);
+#endif
+
+  if (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
+    EnvironmentVariable<std::uint32_t>{"CUTENSOR_LOG_LEVEL"}.set(1,
+                                                                 /* overwrite */ false);
+  }
+
+  EnvironmentVariable<bool>{"REALM_BACKTRACE"}.set(true, /* overwrite */ false);
+}
+
 }  // namespace
 
 /*static*/ void Runtime::start()
@@ -1745,6 +1777,8 @@ void handle_realm_default_args()
       "Legion runtime has already been started by another process. This mode is not supported by "
       "Legate, which expects to initialize Legion itself."};
   }
+
+  set_env_vars();
 
   {
     // Must populate this before we handle Legate args as it expects to read its values.

@@ -203,8 +203,6 @@ class Test_format_verbose:
 
         assert "Legate paths" in scrubbed
 
-        assert "Legion paths" in scrubbed
-
     def test_system_and_driver(self, capsys: Capsys) -> None:
         config = Config(["legate"])
         system = System()
@@ -216,8 +214,6 @@ class Test_format_verbose:
         scrubbed = capture.get()
 
         assert "Legate paths" in scrubbed
-
-        assert "Legion paths" in scrubbed
 
         assert "Command" in scrubbed
         assert f"{' '.join(quote(t) for t in driver.cmd)}" in scrubbed

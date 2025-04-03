@@ -28,7 +28,6 @@ __all__ = (
     "GPUInfo",
     "LauncherType",
     "LegatePaths",
-    "LegionPaths",
     "RunMode",
     "object_to_dataclass",
 )
@@ -124,21 +123,5 @@ def object_to_dataclass(obj: object, typ: type[T]) -> T:
 class LegatePaths(DataclassMixin):
     """Collect all the filesystem paths relevant for Legate."""
 
-    legate_dir: Path  # directory containing the "legate" module
-    legate_build_dir: Path | None
     bind_sh_path: Path
     legate_lib_path: Path
-
-
-@dataclass(frozen=True)
-class LegionPaths(DataclassMixin):
-    """Collect all the filesystem paths relevant for Legate."""
-
-    legion_bin_path: Path
-    legion_lib_path: Path
-    realm_defines_h: Path
-    legion_defines_h: Path
-    legion_spy_py: Path
-    legion_prof: Path
-    legion_module: Path | None
-    legion_jupyter_module: Path | None
