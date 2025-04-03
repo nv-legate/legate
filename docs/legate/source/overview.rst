@@ -177,6 +177,8 @@ across nodes (or GPU framebuffers). This is the transformation that allows
 sequential programs to run efficiently at scale across large clusters
 as though they are running on a single processor.
 
+.. _overview-contact:
+
 Contact
 -------
 
