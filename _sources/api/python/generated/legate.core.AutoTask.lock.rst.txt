@@ -1,6 +1,0 @@
-legate.core.AutoTask.lock
-=========================
-
-.. currentmodule:: legate.core
-
-.. automethod:: AutoTask.lock

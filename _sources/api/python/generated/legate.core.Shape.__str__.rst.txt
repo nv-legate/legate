@@ -1,6 +1,0 @@
-legate.core.Shape.\_\_str\_\_
-=============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Shape.__str__

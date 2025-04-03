@@ -1,6 +1,0 @@
-legate.core.SymbolicExpr.\_\_rmul\_\_
-=====================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: SymbolicExpr.__rmul__

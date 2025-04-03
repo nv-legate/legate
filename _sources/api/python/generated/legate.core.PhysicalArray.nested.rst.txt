@@ -1,6 +1,0 @@
-legate.core.PhysicalArray.nested
-================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: PhysicalArray.nested

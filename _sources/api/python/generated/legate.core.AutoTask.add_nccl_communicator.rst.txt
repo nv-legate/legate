@@ -1,4 +1,4 @@
-legate.core.AutoTask.add\_nccl\_communicator
+﻿legate.core.AutoTask.add\_nccl\_communicator
 ============================================
 
 .. currentmodule:: legate.core

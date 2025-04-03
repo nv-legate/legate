@@ -1,6 +1,0 @@
-legate.core.Type.to\_numpy\_dtype
-=================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Type.to_numpy_dtype

@@ -1,6 +1,0 @@
-legate.core.Domain.hi
-=====================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: Domain.hi

@@ -1,6 +1,0 @@
-legate.core.Library.get\_new\_task\_id
-======================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Library.get_new_task_id

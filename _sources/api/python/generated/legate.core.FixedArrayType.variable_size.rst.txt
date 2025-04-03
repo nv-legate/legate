@@ -1,6 +1,0 @@
-legate.core.FixedArrayType.variable\_size
-=========================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: FixedArrayType.variable_size

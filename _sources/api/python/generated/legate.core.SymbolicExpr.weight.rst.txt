@@ -1,6 +1,0 @@
-legate.core.SymbolicExpr.weight
-===============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: SymbolicExpr.weight

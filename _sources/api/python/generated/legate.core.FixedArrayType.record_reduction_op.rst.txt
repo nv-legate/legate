@@ -1,6 +1,0 @@
-legate.core.FixedArrayType.record\_reduction\_op
-================================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: FixedArrayType.record_reduction_op

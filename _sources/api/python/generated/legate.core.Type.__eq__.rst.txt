@@ -1,6 +1,0 @@
-legate.core.Type.\_\_eq\_\_
-===========================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Type.__eq__

@@ -1,6 +1,0 @@
-legate.core.Scalar.ptr
-======================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: Scalar.ptr

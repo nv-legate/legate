@@ -1,6 +1,0 @@
-legate.core.StructType.num\_fields
-==================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: StructType.num_fields

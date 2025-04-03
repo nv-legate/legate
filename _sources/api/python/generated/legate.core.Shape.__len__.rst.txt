@@ -1,4 +1,4 @@
-legate.core.Shape.\_\_len\_\_
+﻿legate.core.Shape.\_\_len\_\_
 =============================
 
 .. currentmodule:: legate.core

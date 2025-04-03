@@ -1,6 +1,0 @@
-legate.core.Scope.priority
-==========================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Scope.priority

@@ -1,6 +1,0 @@
-legate.core.Scope.\_\_enter\_\_
-===============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Scope.__enter__

@@ -1,4 +1,4 @@
-legate.core.ManualTask.add\_scalar\_arg
+﻿legate.core.ManualTask.add\_scalar\_arg
 =======================================
 
 .. currentmodule:: legate.core

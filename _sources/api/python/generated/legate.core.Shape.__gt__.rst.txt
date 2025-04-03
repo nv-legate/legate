@@ -1,6 +1,0 @@
-legate.core.Shape.\_\_gt\_\_
-============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Shape.__gt__

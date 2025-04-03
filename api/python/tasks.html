@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Python Tasks &#8212; NVIDIA legate (25.05.00.dev78+gfd4abade)</title>
+    <title>Python Tasks &#8212; NVIDIA legate</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=cc747278"></script>
+    <script src="../../_static/documentation_options.js?v=6c75b2f1"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.05';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.03';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -59,7 +59,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="legate.core.task.task" href="generated/legate.core.task.task.html" />
-    <link rel="prev" title="legate.core.FixedArrayType.to_numpy_dtype" href="generated/legate.core.FixedArrayType.to_numpy_dtype.html" />
+    <link rel="prev" title="legate.core.Shape.__len__" href="generated/legate.core.Shape.__len__.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev78+gfd4abade) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev78+gfd4abade) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev78+gfd4abade)</p>
+    <p class="title logo__title">NVIDIA legate</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev78+gfd4abade) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev78+gfd4abade) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev78+gfd4abade)</p>
+    <p class="title logo__title">NVIDIA legate</p>
   
 </a>
 
@@ -337,26 +337,8 @@
 <li class="toctree-l4"><a class="reference internal" href="operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="logical_store.html">Store</a></li>
 
-<li class="toctree-l4"><a class="reference internal" href="logical_array.html">Arrays</a></li>
-<li class="toctree-l4"><a class="reference internal" href="physical_store.html">Physical Store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="physical_array.html">Physical Array</a></li>
-<li class="toctree-l4"><a class="reference internal" href="scalar.html">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="shape.html">Shape</a></li>
-<li class="toctree-l4"><a class="reference internal" href="variant_options.html">Variant Options</a></li>
-<li class="toctree-l4"><a class="reference internal" href="resource_config.html">ResourceConfig</a></li>
-<li class="toctree-l4"><a class="reference internal" href="task_context.html">Task Context</a></li>
-<li class="toctree-l4"><a class="reference internal" href="domain.html">Domains</a></li>
-<li class="toctree-l4"><a class="reference internal" href="task_config.html">Task Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="inline_allocation.html">Inline Allocations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="symbolic_expr.html">Symbolic Expressions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="auto_task.html">Auto Tasks</a></li>
-<li class="toctree-l4"><a class="reference internal" href="manual_task.html">Manual Tasks</a></li>
-<li class="toctree-l4"><a class="reference internal" href="constraint.html">Constraints</a></li>
-<li class="toctree-l4"><a class="reference internal" href="variable.html">Variables</a></li>
-<li class="toctree-l4"><a class="reference internal" href="library.html">Library</a></li>
-<li class="toctree-l4"><a class="reference internal" href="scope.html">Execution Scope</a></li>
-<li class="toctree-l4"><a class="reference internal" href="types.html">Types</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 current active has-children"><a class="current reference internal" href="#">Python Tasks</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -404,7 +386,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../versions.html">Versions</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../changes/2505.html">2505</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../changes/2503.html">2503</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../changes/2501.html">2501</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../changes/2411.html">2411</a></li>
@@ -424,12 +405,6 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
 </ul>
 </details></li>
-</ul>
-</details></li>
-</ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../developer/style.html">Style</a></li>
 </ul>
 </details></li>
 </ul>
@@ -521,7 +496,7 @@ arguments are not allowed.</p></li>
 restriction may be lifted.</p></li>
 </ol>
 <p>It is possible to take and pass store arguments to a Python task, just like a regular C++
-task. This is done by using the special <code class="docutils literal notranslate"><span class="pre">Input</span></code>, <code class="docutils literal notranslate"><span class="pre">Output</span></code>, or <code class="docutils literal notranslate"><span class="pre">Reduction</span></code> store/array
+task. This is done by using the special <code class="docutils literal notranslate"><span class="pre">Input</span></code>, <code class="docutils literal notranslate"><span class="pre">Ouput</span></code>, or <code class="docutils literal notranslate"><span class="pre">Reduction</span></code> store/array
 type hints:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">legate.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_legate_runtime</span><span class="p">,</span> <span class="n">types</span> <span class="k">as</span> <span class="n">ty</span>
@@ -582,7 +557,7 @@ not propagate outside the task body!</p>
 </div>
 </section>
 <section id="explicit-task-context-argument">
-<span id="label-explicit-task-context-argument"></span><h2>Explicit Task Context Argument<a class="headerlink" href="#explicit-task-context-argument" title="Link to this heading">#</a></h2>
+<h2>Explicit Task Context Argument<a class="headerlink" href="#explicit-task-context-argument" title="Link to this heading">#</a></h2>
 <p>While it is normally hidden, the user may also request that the <code class="docutils literal notranslate"><span class="pre">TaskContext</span></code> for the
 executing task be passed into the task body as well. To do so, the user must have the
 <strong>first</strong> argument of the task be a <code class="docutils literal notranslate"><span class="pre">TaskContext</span></code>:</p>
@@ -707,7 +682,7 @@ from <code class="docutils literal notranslate"><span class="pre">Exception</spa
 <h2>PyTask<a class="headerlink" href="#pytask" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.task.PyTask.html#legate.core.task.PyTask" title="legate.core.task.PyTask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PyTask</span></code></a>(func, *, variants, constraints, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.task.PyTask.html#legate.core.task.PyTask" title="legate.core.task.PyTask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PyTask</span></code></a>(func, *, VariantList variants, ...)</p></td>
 <td><p>A Legate task constructed from a Python callable.</p></td>
 </tr>
 </tbody>
@@ -738,12 +713,12 @@ from <code class="docutils literal notranslate"><span class="pre">Exception</spa
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="generated/legate.core.FixedArrayType.to_numpy_dtype.html"
+       href="generated/legate.core.Shape.__len__.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">legate.core.FixedArrayType.to_numpy_dtype</p>
+        <p class="prev-next-title">legate.core.Shape.__len__</p>
       </div>
     </a>
     <a class="right-next"

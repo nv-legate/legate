@@ -1,6 +1,0 @@
-legate.core.Type.\_\_repr\_\_
-=============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Type.__repr__

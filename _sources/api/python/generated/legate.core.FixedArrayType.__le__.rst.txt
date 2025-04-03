@@ -1,6 +1,0 @@
-legate.core.FixedArrayType.\_\_le\_\_
-=====================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: FixedArrayType.__le__

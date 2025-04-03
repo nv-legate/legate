@@ -1,6 +1,0 @@
-legate.core.Library.get\_tunable
-================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Library.get_tunable

@@ -1,4 +1,4 @@
-legate.core.Shape.extents
+﻿legate.core.Shape.extents
 =========================
 
 .. currentmodule:: legate.core

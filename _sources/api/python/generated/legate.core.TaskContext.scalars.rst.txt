@@ -1,6 +1,0 @@
-legate.core.TaskContext.scalars
-===============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: TaskContext.scalars

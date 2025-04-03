@@ -1,6 +1,0 @@
-legate.core.FixedArrayType.from\_python\_object
-===============================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: FixedArrayType.from_python_object

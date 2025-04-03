@@ -1,4 +1,4 @@
-legate.core.ManualTask.add\_output
+﻿legate.core.ManualTask.add\_output
 ==================================
 
 .. currentmodule:: legate.core

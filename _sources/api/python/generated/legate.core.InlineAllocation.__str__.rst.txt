@@ -1,6 +1,0 @@
-legate.core.InlineAllocation.\_\_str\_\_
-========================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: InlineAllocation.__str__

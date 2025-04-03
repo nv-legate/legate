@@ -250,7 +250,7 @@ Each Legate process should be able to detect the correct hardware configuration
 automatically, see the `Resource Allocation`_ section.
 
 A more common way to run programs on clusters is via a SLURM script. Here is
-a sample script saved as ``run_legate.slurm``:
+a sample scipt saved as ``run_legate.slurm``:
 
 .. code-block:: sh
 

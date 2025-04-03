@@ -1,4 +1,4 @@
-legate.core.AutoTask.execute
+﻿legate.core.AutoTask.execute
 ============================
 
 .. currentmodule:: legate.core

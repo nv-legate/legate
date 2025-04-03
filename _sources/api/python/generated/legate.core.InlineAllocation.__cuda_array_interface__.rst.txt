@@ -1,6 +1,0 @@
-legate.core.InlineAllocation.\_\_cuda\_array\_interface\_\_
-===========================================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: InlineAllocation.__cuda_array_interface__

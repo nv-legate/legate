@@ -1,6 +1,0 @@
-legate.core.StructType.offsets
-==============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: StructType.offsets

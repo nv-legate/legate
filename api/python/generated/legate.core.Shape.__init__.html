@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.Machine.__getitem__ &#8212; NVIDIA legate</title>
+    <title>legate.core.Shape.__init__ &#8212; NVIDIA legate</title>
   
   
   
@@ -47,7 +47,7 @@
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=4ea706d9"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/python/generated/legate.core.Machine.__getitem__';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/python/generated/legate.core.Shape.__init__';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
@@ -58,8 +58,8 @@
     <link rel="icon" href="../../../_static/favicon.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="legate.core.ProcessorRange.low" href="legate.core.ProcessorRange.low.html" />
-    <link rel="prev" title="legate.core.Machine.__len__" href="legate.core.Machine.__len__.html" />
+    <link rel="next" title="legate.core.Shape.extents" href="legate.core.Shape.extents.html" />
+    <link rel="prev" title="Shape" href="../shape.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -337,8 +337,8 @@
 <li class="toctree-l4"><a class="reference internal" href="../operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../logical_store.html">Store</a></li>
 
-<li class="toctree-l4 current active"><a class="reference internal" href="../machine.html">Machine and Resource Scoping</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../shape.html">Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4 current active"><a class="reference internal" href="../shape.html">Shape</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -451,9 +451,9 @@
     <li class="breadcrumb-item"><a href="../classes.html" class="nav-link">Classes</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../machine.html" class="nav-link">Machine and Resource Scoping</a></li>
+    <li class="breadcrumb-item"><a href="../shape.html" class="nav-link">Shape</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate.core.Machine.__getitem__</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate.core.Shape.__init__</span></li>
   </ul>
 </nav>
 </div>
@@ -470,31 +470,15 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="legate-core-machine-getitem">
-<h1>legate.core.Machine.__getitem__<a class="headerlink" href="#legate-core-machine-getitem" title="Link to this heading">#</a></h1>
+  <section id="legate-core-shape-init">
+<h1>legate.core.Shape.__init__<a class="headerlink" href="#legate-core-shape-init" title="Link to this heading">#</a></h1>
 <dl class="py method">
-<dt class="sig sig-object py" id="legate.core.Machine.__getitem__">
-<span class="sig-prename descclassname"><span class="pre">Machine.</span></span><span class="sig-name descname"><span class="pre">__getitem__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#legate.core.Machine.__getitem__" title="Link to this definition">#</a></dt>
-<dd><p>Slices the machine with a given slicer</p>
+<dt class="sig sig-object py" id="legate.core.Shape.__init__">
+<span class="sig-prename descclassname"><span class="pre">Shape.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#legate.core.Shape.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Construct a <cite>Shape</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>key</strong> (<em>TaskTarget</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.13)"><em>slice</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>[</em><em>TaskTarget</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#slice" title="(in Python v3.13)"><em>slice</em></a><em>]</em>) – <p>Key to slice the machine by</p>
-<p>If the <code class="docutils literal notranslate"><span class="pre">key</span></code> is a <code class="docutils literal notranslate"><span class="pre">TaskTarget</span></code>, a machine with only the
-processors of the chosen kind is returned.</p>
-<p>If the <code class="docutils literal notranslate"><span class="pre">key</span></code> is a <code class="docutils literal notranslate"><span class="pre">slice</span></code>, the returned machine only has a
-processor range for the preferred target, which is sliced by the
-<code class="docutils literal notranslate"><span class="pre">key</span></code>. An integer <code class="docutils literal notranslate"><span class="pre">key</span></code> is treated like a singleton slice
-(i.e., <code class="docutils literal notranslate"><span class="pre">slice(key,</span> <span class="pre">key</span> <span class="pre">+</span> <span class="pre">1)</span></code>).</p>
-<p>If the <cite>key</cite> is a pair of a task target and a slice, the
-returned machine only has a processor range of the chosen kind,
-which is sliced by the <code class="docutils literal notranslate"><span class="pre">key</span></code>.</p>
-</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A new machine after slicing</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Machine</p>
+<dd class="field-odd"><p><strong>obj</strong> (<em>Shape</em><em> | </em><em>Collection</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>]</em>) – An iterable from which to construct the new shape from.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -512,20 +496,20 @@ which is sliced by the <code class="docutils literal notranslate"><span class="p
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="legate.core.Machine.__len__.html"
+       href="../shape.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">legate.core.Machine.__len__</p>
+        <p class="prev-next-title">Shape</p>
       </div>
     </a>
     <a class="right-next"
-       href="legate.core.ProcessorRange.low.html"
+       href="legate.core.Shape.extents.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">legate.core.ProcessorRange.low</p>
+        <p class="prev-next-title">legate.core.Shape.extents</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -550,7 +534,7 @@ which is sliced by the <code class="docutils literal notranslate"><span class="p
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legate.core.Machine.__getitem__"><code class="docutils literal notranslate"><span class="pre">__getitem__()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legate.core.Shape.__init__"><code class="docutils literal notranslate"><span class="pre">__init__()</span></code></a></li>
 </ul>
   </nav></div>
 

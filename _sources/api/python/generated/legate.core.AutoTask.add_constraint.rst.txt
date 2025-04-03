@@ -1,4 +1,4 @@
-legate.core.AutoTask.add\_constraint
+﻿legate.core.AutoTask.add\_constraint
 ====================================
 
 .. currentmodule:: legate.core

@@ -1,4 +1,4 @@
-legate.core.AutoTask.add\_output
+﻿legate.core.AutoTask.add\_output
 ================================
 
 .. currentmodule:: legate.core

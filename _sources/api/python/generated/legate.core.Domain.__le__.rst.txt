@@ -1,6 +1,0 @@
-legate.core.Domain.\_\_le\_\_
-=============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Domain.__le__

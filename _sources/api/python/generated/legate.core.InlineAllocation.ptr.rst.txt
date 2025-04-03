@@ -1,6 +1,0 @@
-legate.core.InlineAllocation.ptr
-================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: InlineAllocation.ptr

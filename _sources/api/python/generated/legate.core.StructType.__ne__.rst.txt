@@ -1,6 +1,0 @@
-legate.core.StructType.\_\_ne\_\_
-=================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: StructType.__ne__

@@ -1,6 +1,0 @@
-legate.core.StructType.\_\_repr\_\_
-===================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: StructType.__repr__
