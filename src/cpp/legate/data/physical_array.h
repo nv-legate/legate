@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/data/logical_array.h>
 #include <legate/data/physical_store.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
@@ -16,6 +17,7 @@
 #include <legate/utilities/typedefs.h>
 
 #include <cstdint>
+#include <optional>
 
 /**
  * @file
@@ -136,7 +138,8 @@ class PhysicalArray {
    */
   [[nodiscard]] StringPhysicalArray as_string_array() const;
 
-  explicit PhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl);
+  explicit PhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl,
+                         std::optional<LogicalArray> owner = std::nullopt);
 
   [[nodiscard]] const SharedPtr<detail::PhysicalArray>& impl() const;
 
@@ -148,11 +151,25 @@ class PhysicalArray {
   PhysicalArray(PhysicalArray&&) noexcept            = default;
   PhysicalArray& operator=(PhysicalArray&&) noexcept = default;
 
+  [[nodiscard]] const std::optional<LogicalArray>& owner() const;
+
  private:
   void check_shape_dimension_(std::int32_t dim) const;
 
  protected:
   SharedPtr<detail::PhysicalArray> impl_{};
+
+ private:
+  // This member exists purely to solve the temporary array problem. It is illegal for Physical
+  // arrays to outlive their LogicalArray counterparts, but it is pretty easy to get into a
+  // situation where this happens. For example, you could do:
+  //
+  // auto phys = get_runtime()->create_array(...).get_physical_array();
+  //
+  // While this is illegal from the runtime perspective, we still want to make this "work" from
+  // a user perspective, as it is very easy to get into. So we have this member. It's value is
+  // immaterial (and should not be relied upon), and isn't exposed anywhere else.
+  std::optional<LogicalArray> owner_{};
 };
 
 /**
@@ -177,7 +194,8 @@ class ListPhysicalArray : public PhysicalArray {
  private:
   friend class PhysicalArray;
 
-  explicit ListPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl);
+  explicit ListPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl,
+                             std::optional<LogicalArray> owner);
 };
 
 /**
@@ -202,7 +220,8 @@ class StringPhysicalArray : public PhysicalArray {
  private:
   friend class PhysicalArray;
 
-  explicit StringPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl);
+  explicit StringPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl,
+                               std::optional<LogicalArray> owner);
 };
 
 /** @} */

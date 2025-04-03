@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/logical_array.h>
 #include <legate/data/detail/user_storage_tracker.h>
+#include <legate/data/physical_array.h>
 #include <legate/mapping/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -86,11 +87,13 @@ LogicalArray LogicalArray::child(std::uint32_t index) const
 
 PhysicalArray LogicalArray::get_physical_array(std::optional<mapping::StoreTarget> target) const
 {
-  auto sanitized =
+  const auto sanitized =
     target.value_or(detail::Runtime::get_runtime()->local_machine().has_socket_memory()
                       ? mapping::StoreTarget::SOCKETMEM
                       : mapping::StoreTarget::SYSMEM);
-  return PhysicalArray{impl()->get_physical_array(sanitized, false /*ignore_future_mutability*/)};
+
+  return PhysicalArray{impl()->get_physical_array(sanitized, false /*ignore_future_mutability*/),
+                       *this};
 }
 
 ListLogicalArray LogicalArray::as_list_array() const
@@ -115,7 +118,7 @@ void LogicalArray::offload_to(mapping::StoreTarget target_mem) const
 }
 
 LogicalArray::LogicalArray(InternalSharedPtr<detail::LogicalArray> impl)
-  : impl_{make_internal_shared<Impl>(std::move(impl))}
+  : impl_{legate::make_shared<Impl>(std::move(impl))}
 {
 }
 

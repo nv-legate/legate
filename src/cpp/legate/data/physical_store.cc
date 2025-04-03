@@ -7,6 +7,7 @@
 #include <legate/data/physical_store.h>
 
 #include <legate/data/detail/physical_store.h>
+#include <legate/data/logical_store.h>
 #include <legate/data/physical_array.h>
 #include <legate/utilities/detail/traced_exception.h>
 
@@ -15,6 +16,12 @@
 #include <stdexcept>
 
 namespace legate {
+
+PhysicalStore::PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl,
+                             std::optional<LogicalStore> owner)
+  : impl_{std::move(impl)}, owner_{std::move(owner)}
+{
+}
 
 /*static*/ void PhysicalStore::throw_invalid_scalar_access_()
 {
@@ -67,10 +74,11 @@ bool PhysicalStore::is_partitioned() const { return impl()->is_partitioned(); }
 mapping::StoreTarget PhysicalStore::target() const { return impl()->target(); }
 
 PhysicalStore::PhysicalStore(const PhysicalArray& array)
-  : impl_{array.nullable()
-            ? throw detail::TracedException<
-                std::invalid_argument>{"Nullable array cannot be converted to a store"}
-            : array.data().impl()}
+  : PhysicalStore{
+      array.nullable() ? throw detail::TracedException<
+                           std::invalid_argument>{"Nullable array cannot be converted to a store"}
+                       : array.data().impl(),
+      array.owner().has_value() ? std::make_optional(array.owner()->data()) : std::nullopt}
 {
 }
 

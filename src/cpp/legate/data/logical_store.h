@@ -8,7 +8,6 @@
 
 #include <legate_defines.h>
 
-#include <legate/data/physical_store.h>
 #include <legate/data/shape.h>
 #include <legate/data/slice.h>
 #include <legate/mapping/mapping.h>
@@ -40,6 +39,24 @@ namespace legate {
  * @addtogroup data
  * @{
  */
+
+// This forward declaration is technically not sufficient. get_physical_array() returns a
+// PhysicalStore and so we need the full definition. However, PhysicalStore holds a
+// std::optional<LogicalStore> member, so we have a declaration cycle.
+//
+// But, it seems like any code that uses a LogicalStore ends up transitively including the
+// physical_store.h header, and so this incorrect forward decl doesn't come to bite us (yet).
+//
+// Instead of having PhysicalStore hold a std::optional<LogicalStore>, we could have it hold a
+// std::optional<SharedPtr<LogicalStoreImpl>> (assuming we pull LogicalStore::Impl out and
+// rename it).
+//
+// But this is undesirable because it break encapsulation by leaking the implementation detail
+// of LogicalStore to its physical counterpart. We also would have to do this for any child
+// objects of LogicalStore, including when it undergoes transformation.
+//
+// So the least bad option is to do this fwd decl...
+class PhysicalStore;
 
 class LogicalStorePartition;
 class Runtime;
@@ -463,7 +480,8 @@ class LogicalStore {
 
  private:
   class Impl;
-  InternalSharedPtr<Impl> impl_{};
+
+  SharedPtr<Impl> impl_{};
 };
 
 class LogicalStorePartition {

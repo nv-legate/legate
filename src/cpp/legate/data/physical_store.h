@@ -10,12 +10,18 @@
 
 #include <legate/data/buffer.h>
 #include <legate/data/inline_allocation.h>
+#include <legate/data/logical_store.h>
 #include <legate/mapping/mapping.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/dispatch.h>
 #include <legate/utilities/internal_shared_ptr.h>
 #include <legate/utilities/shared_ptr.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <utility>
 
 /**
  * @file
@@ -388,7 +394,8 @@ class PhysicalStore {
 
   PhysicalStore() = LEGATE_DEFAULT_WHEN_CYTHON;
 
-  explicit PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl);
+  explicit PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl,
+                         std::optional<LogicalStore> owner = std::nullopt);
 
   [[nodiscard]] const SharedPtr<detail::PhysicalStore>& impl() const;
 
@@ -423,6 +430,16 @@ class PhysicalStore {
   [[noreturn]] static void throw_invalid_scalar_access_();
 
   SharedPtr<detail::PhysicalStore> impl_{};
+  // This member exists purely to solve the temporary store problem. It is illegal for Physical
+  // stores to outlive their LogicalStore counterparts, but it is pretty easy to get into a
+  // situation where this happens. For example, you could do:
+  //
+  // auto phys = get_runtime()->create_store(...).get_physical_store();
+  //
+  // While this is illegal from the runtime perspective, we still want to make this "work" from
+  // a user perspective, as it is very easy to get into. So we have this member. It's value is
+  // immaterial (and should not be relied upon), and isn't exposed anywhere else.
+  std::optional<LogicalStore> owner_{};
 };
 
 #undef LEGATE_TRUE_WHEN_DEBUG

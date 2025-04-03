@@ -129,6 +129,7 @@ set(with_runtime_SRC
     bug/premature_free.cc
     bug/singleton_index_task.cc
     bug/transpose_fortran_order.cc
+    bug/temporary_logical_store.cc
     # integration
     integration/aligned_unbound_stores.cc
     integration/alignment_constraints.cc

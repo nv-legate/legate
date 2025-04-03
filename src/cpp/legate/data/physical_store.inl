@@ -265,11 +265,6 @@ ACC PhysicalStore::create_reduction_accessor_(const Rect<DIM>& bounds) const
   return {std::move(pr), fid, static_cast<Legion::ReductionOpID>(get_redop_id_()), bounds};
 }
 
-inline PhysicalStore::PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl)
-  : impl_{std::move(impl)}
-{
-}
-
 inline const SharedPtr<detail::PhysicalStore>& PhysicalStore::impl() const { return impl_; }
 
 }  // namespace legate

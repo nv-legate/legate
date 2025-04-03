@@ -9,7 +9,6 @@
 #include <legate_defines.h>
 
 #include <legate/data/logical_store.h>
-#include <legate/data/physical_array.h>
 #include <legate/data/shape.h>
 #include <legate/mapping/mapping.h>
 #include <legate/type/types.h>
@@ -32,6 +31,24 @@ class LogicalArray;
 }  // namespace legate::detail
 
 namespace legate {
+
+// This forward declaration is technically not sufficient. get_physical_array() returns a
+// PhysicalArray and so we need the full definition. However, PhysicalArray holds a
+// std::optional<LogicalArray> member, so we have a declaration cycle.
+//
+// But, it seems like any code that uses a LogicalArray ends up transitively including the
+// physical_array.h header, and so this incorrect forward decl doesn't come to bite us (yet).
+//
+// Instead of having PhysicalArray hold a std::optional<LogicalArray>, we could have it hold a
+// std::optional<SharedPtr<LogicalArrayImpl>> (assuming we pull LogicalArray::Impl out and
+// rename it).
+//
+// But this is undesirable because it break encapsulation by leaking the implementation detail
+// of LogicalArray to its physical counterpart. We also would have to do this for any child
+// objects of LogicalArray, including when it undergoes transformation.
+//
+// So the least bad option is to do this fwd decl...
+class PhysicalArray;
 
 class ListLogicalArray;
 class StringLogicalArray;
@@ -316,7 +333,8 @@ class LogicalArray {
 
  protected:
   class Impl;
-  InternalSharedPtr<Impl> impl_{nullptr};
+
+  SharedPtr<Impl> impl_{nullptr};
 };
 
 /**

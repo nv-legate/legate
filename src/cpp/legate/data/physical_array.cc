@@ -8,6 +8,7 @@
 
 #include <legate/data/detail/array_kind.h>
 #include <legate/data/detail/physical_array.h>
+#include <legate/data/logical_array.h>
 #include <legate/data/physical_store.h>
 #include <legate/type/types.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -18,36 +19,53 @@
 
 namespace legate {
 
-bool PhysicalArray::nullable() const noexcept { return impl_->nullable(); }
+PhysicalArray::PhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl,
+                             std::optional<LogicalArray> owner)
+  : impl_{std::move(impl)}, owner_{std::move(owner)}
+{
+}
 
-std::int32_t PhysicalArray::dim() const noexcept { return impl_->dim(); }
+bool PhysicalArray::nullable() const noexcept { return impl()->nullable(); }
 
-Type PhysicalArray::type() const noexcept { return Type{impl_->type()}; }
+std::int32_t PhysicalArray::dim() const noexcept { return impl()->dim(); }
 
-bool PhysicalArray::nested() const noexcept { return impl_->nested(); }
+Type PhysicalArray::type() const noexcept { return Type{impl()->type()}; }
 
-PhysicalStore PhysicalArray::data() const { return PhysicalStore{impl_->data()}; }
+bool PhysicalArray::nested() const noexcept { return impl()->nested(); }
 
-PhysicalStore PhysicalArray::null_mask() const { return PhysicalStore{impl_->null_mask()}; }
+PhysicalStore PhysicalArray::data() const
+{
+  return PhysicalStore{impl()->data(),
+                       owner().has_value() ? std::make_optional(owner()->data()) : std::nullopt};
+}
+
+PhysicalStore PhysicalArray::null_mask() const
+{
+  return PhysicalStore{
+    impl()->null_mask(),
+    owner().has_value() ? std::make_optional(owner()->null_mask()) : std::nullopt};
+}
 
 PhysicalArray PhysicalArray::child(std::uint32_t index) const
 {
-  return PhysicalArray{impl_->child(index)};
+  return PhysicalArray{
+    impl()->child(index),
+    owner().has_value() ? std::make_optional(owner()->child(index)) : std::nullopt};
 }
 
-Domain PhysicalArray::domain() const { return impl_->domain(); }
+Domain PhysicalArray::domain() const { return impl()->domain(); }
 
 void PhysicalArray::check_shape_dimension_(std::int32_t dim) const
 {
-  impl_->check_shape_dimension(dim);
+  impl()->check_shape_dimension(dim);
 }
 
 ListPhysicalArray PhysicalArray::as_list_array() const
 {
-  if (impl_->kind() != detail::ArrayKind::LIST) {
+  if (impl()->kind() != detail::ArrayKind::LIST) {
     throw detail::TracedException<std::invalid_argument>{"Array is not a list array"};
   }
-  return ListPhysicalArray{impl_};
+  return ListPhysicalArray{impl(), owner()};
 }
 
 StringPhysicalArray PhysicalArray::as_string_array() const
@@ -55,27 +73,51 @@ StringPhysicalArray PhysicalArray::as_string_array() const
   if (type().code() != Type::Code::STRING) {
     throw detail::TracedException<std::invalid_argument>{"Array is not a string array"};
   }
-  return StringPhysicalArray{impl_};
+  return StringPhysicalArray{impl(), owner()};
 }
+
+// ==========================================================================================
+
+ListPhysicalArray::ListPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl,
+                                     std::optional<LogicalArray> owner)
+  : PhysicalArray{std::move(impl), std::move(owner)}
+{
+}
+
+// ==========================================================================================
 
 PhysicalArray ListPhysicalArray::descriptor() const
 {
-  return PhysicalArray{static_cast<const detail::ListPhysicalArray*>(impl_.get())->descriptor()};
+  return PhysicalArray{
+    static_cast<const detail::ListPhysicalArray*>(impl().get())->descriptor(),
+    owner().has_value() ? std::make_optional(owner()->as_list_array().descriptor()) : std::nullopt};
 }
 
 PhysicalArray ListPhysicalArray::vardata() const
 {
-  return PhysicalArray{static_cast<const detail::ListPhysicalArray*>(impl_.get())->vardata()};
+  return PhysicalArray{
+    static_cast<const detail::ListPhysicalArray*>(impl().get())->vardata(),
+    owner().has_value() ? std::make_optional(owner()->as_list_array().vardata()) : std::nullopt};
+}
+
+// ==========================================================================================
+
+StringPhysicalArray::StringPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl,
+                                         std::optional<LogicalArray> owner)
+  : PhysicalArray{std::move(impl), std::move(owner)}
+{
 }
 
 PhysicalArray StringPhysicalArray::ranges() const
 {
-  return PhysicalArray{static_cast<const detail::ListPhysicalArray*>(impl_.get())->descriptor()};
+  return PhysicalArray{static_cast<const detail::ListPhysicalArray*>(impl().get())->descriptor(),
+                       owner()};
 }
 
 PhysicalArray StringPhysicalArray::chars() const
 {
-  return PhysicalArray{static_cast<const detail::ListPhysicalArray*>(impl_.get())->vardata()};
+  return PhysicalArray{static_cast<const detail::ListPhysicalArray*>(impl().get())->vardata(),
+                       owner()};
 }
 
 }  // namespace legate

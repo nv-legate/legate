@@ -9,14 +9,7 @@
 // Useful for IDEs
 #include <legate/data/physical_array.h>
 
-#include <utility>
-
 namespace legate {
-
-inline PhysicalArray::PhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl)
-  : impl_{std::move(impl)}
-{
-}
 
 inline const SharedPtr<detail::PhysicalArray>& PhysicalArray::impl() const { return impl_; }
 
@@ -28,22 +21,12 @@ Rect<DIM> PhysicalArray::shape() const
   if (dim() > 0) {
     return domain().bounds<DIM, coord_t>();
   }
-  auto p = Point<DIM>::ZEROES();
-  return {p, p};
+
+  static const auto ret = Rect<DIM>{Point<DIM>::ZEROES(), Point<DIM>::ZEROES()};
+
+  return ret;
 }
 
-// ==========================================================================================
-
-inline ListPhysicalArray::ListPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl)
-  : PhysicalArray{std::move(impl)}
-{
-}
-
-// ==========================================================================================
-
-inline StringPhysicalArray::StringPhysicalArray(InternalSharedPtr<detail::PhysicalArray> impl)
-  : PhysicalArray{std::move(impl)}
-{
-}
+inline const std::optional<LogicalArray>& PhysicalArray::owner() const { return owner_; }
 
 }  // namespace legate
