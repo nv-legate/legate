@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; NVIDIA legate (25.05.00.dev74+g6aef3310)</title>
+    <title>Installation &#8212; NVIDIA legate (25.05.00.dev78+gfd4abade)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=19998807"></script>
+    <script src="_static/documentation_options.js?v=cc747278"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,7 +58,7 @@
     <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Building Legate from Source" href="BUILD.html" />
+    <link rel="next" title="Networking with Legate Wheels" href="networking-wheels.html" />
     <link rel="prev" title="User Guide" href="user.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev78+gfd4abade) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev78+gfd4abade) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev74+g6aef3310)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev78+gfd4abade)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev74+g6aef3310) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev78+gfd4abade) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev78+gfd4abade) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev74+g6aef3310)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev78+gfd4abade)</p>
   
 </a>
 
@@ -310,7 +310,11 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="user.html">User Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Installing pre-built packages</a></li>
+<li class="toctree-l2 current active has-children"><a class="current reference internal" href="#">Installing pre-built packages</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="networking-wheels.html">Networking with Legate Wheels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mpi-wrapper.html">Installation of the Legate MPI wrapper</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2"><a class="reference internal" href="BUILD.html">Building from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="jupyter.html">Using with Jupyter</a></li>
@@ -484,32 +488,70 @@
                   
   <section id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
-<section id="downloading-pre-built-packages">
-<span id="how-do-i-install-legate"></span><h2>Downloading Pre-built Packages<a class="headerlink" href="#downloading-pre-built-packages" title="Link to this heading">#</a></h2>
+<section id="installing-conda-packages">
+<span id="how-do-i-install-legate"></span><h2>Installing Conda Packages<a class="headerlink" href="#installing-conda-packages" title="Link to this heading">#</a></h2>
 <p>Legate is available from <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/index.html">conda</a>
-on the <a class="reference external" href="https://anaconda.org/legate/legate">legate channel</a>.
-Please make sure you have at least conda version 24.1 installed, then create
-a new environment containing Legate:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>myenv<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>legate
-</pre></div>
+on the <a class="reference external" href="https://anaconda.org/legate/legate">legate channel</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>conda version &gt;= 24.1 required</p>
 </div>
-<p>or install it into an existing environment:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>legate
-</pre></div>
-</div>
-<p>Packages with GPU support are available, and will be chosen automatically by
-<code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span></code> on systems with GPUs.</p>
-<p>In an environment without GPUs available, <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span></code> will by default
-choose a CPU-only package. To install a version with GPU support in such an
-environment, use environment variable <code class="docutils literal notranslate"><span class="pre">CONDA_OVERRIDE_CUDA</span></code>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nv">CONDA_OVERRIDE_CUDA</span><span class="o">=</span><span class="s2">&quot;12.2&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>legate
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># with a new environment</span>
+$<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>myenv<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>legate
+
+<span class="c1"># =========== OR =========== #</span>
+
+<span class="c1"># into an existing environment</span>
+$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>legate
 </pre></div>
 </div>
 <p>You will probably also want to install some downstream libraries built on top of
 Legate, e.g. <a class="reference external" href="https://docs.nvidia.com/cupynumeric">cuPyNumeric</a>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>cupynumeric
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>cupynumeric
 </pre></div>
+</div>
+<section id="conda-and-gpu-cpu-variants">
+<h3>Conda and GPU / CPU Variants<a class="headerlink" href="#conda-and-gpu-cpu-variants" title="Link to this heading">#</a></h3>
+<p><cite>conda</cite> automatically installs the right variant for the system:
+* CPU variant if no NVIDIA GPU is detected
+* GPU variant if an NVIDIA GPU is detected</p>
+<p>To override this behavior and force install a version with GPU support, use the
+following (with the desired CUDA version):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">CONDA_OVERRIDE_CUDA</span><span class="o">=</span><span class="s2">&quot;12.2&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>legate
+</pre></div>
+</div>
+</section>
+</section>
+<section id="installing-pypi-packages">
+<h2>Installing PyPI Packages<a class="headerlink" href="#installing-pypi-packages" title="Link to this heading">#</a></h2>
+<p>Legate is also available as a <a class="reference external" href="https://pypi.org/project/legate">Python wheel</a>.
+To install the Legate wheel, use the the <code class="docutils literal notranslate"><span class="pre">pip</span></code> package manager:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># into existing environment</span>
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>legate
+
+<span class="c1"># =========== OR =========== #</span>
+
+<span class="c1"># into new environment</span>
+$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>myenv
+$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>myenv/bin/activate
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>legate
+</pre></div>
+</div>
+<p>The Legate wheel comes with GPU support and UCX-based networking
+support.  Similarly to the Conda packages, the Legate wheel will probably be
+installed alongside downstream libraries, such as <a class="reference external" href="https://docs.nvidia.com/cupynumeric">cuPyNumeric</a>, which is also available as a wheel:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>nvidia-cupynumeric
+</pre></div>
+</div>
+</section>
+<section id="networking-with-legate-packages">
+<h2>Networking with Legate Packages<a class="headerlink" href="#networking-with-legate-packages" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="networking-wheels.html">Networking with Legate Wheels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mpi-wrapper.html">Installation of the Legate MPI wrapper</a></li>
+</ul>
 </div>
 </section>
 <section id="building-and-installing-from-source">
@@ -519,7 +561,7 @@ depending on your system configuration. For the most up to date instructions for
 latest source code, see <a class="reference internal" href="BUILD.html#legate-source-build"><span class="std std-ref">Building Legate from Source</span></a>.</p>
 </section>
 <section id="support-matrix">
-<span id="id2"></span><h2>Support Matrix<a class="headerlink" href="#support-matrix" title="Link to this heading">#</a></h2>
+<span id="id3"></span><h2>Support Matrix<a class="headerlink" href="#support-matrix" title="Link to this heading">#</a></h2>
 <p>The following table lists Legate’s minimum supported versions of major
 dependencies.</p>
 <p>“Full support” means that the corresponding versions (and all later ones) are
@@ -531,8 +573,8 @@ and shipped, but that Legate should be compatible with them. In particular, Lega
 be able to be compiled from source for these configurations.</p>
 <p>We may not actively work to fix any incompatibilities discovered under these versions, but
 we accept contributions that fix such incompatibilities.</p>
-<div class="pst-scrollable-table-container"><table class="table" id="id3">
-<caption><span class="caption-text">Support Matrix</span><a class="headerlink" href="#id3" title="Link to this table">#</a></caption>
+<div class="pst-scrollable-table-container"><table class="table" id="id4">
+<caption><span class="caption-text">Support Matrix</span><a class="headerlink" href="#id4" title="Link to this table">#</a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>Dependency</p></th>
 <th class="head"><p>Full support (min version)</p></th>
@@ -576,143 +618,11 @@ architectures. You can use Legate with Pascal GPUs as well, but there could
 be issues due to lack of independent thread scheduling. Please report any such
 issues by opening a bug.</p>
 </section>
-<section id="installation-of-the-legate-mpi-wrapper">
-<span id="installation-of-mpi-wrapper"></span><h2>Installation of the Legate MPI wrapper<a class="headerlink" href="#installation-of-the-legate-mpi-wrapper" title="Link to this heading">#</a></h2>
-<p>If you encounter runtime failures such as</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>failed<span class="w"> </span>to<span class="w"> </span>load<span class="w"> </span>MPI<span class="w"> </span>wrapper:<span class="w"> </span><span class="s1">&#39;some/path/to/liblegate_mpi_wrapper.so&#39;</span><span class="w"> </span>...
-</pre></div>
-</div>
-<p>Or if you want to use Legate in combination with a different MPI library than the one it
-was compiled against (see the dependencies on the Legate package), e.g. you are on an HPC
-cluster and want to use the vendor’s MPI library, then you will need to compile and
-install the Legate MPI wrapper locally on your machine. See <a class="reference internal" href="faq.html#mpi-wrapper-faq"><span class="std std-ref">FAQ</span></a>
-for more information on why this is needed.</p>
-<p>In order to build and install the wrapper you will need to have:</p>
-<ul class="simple">
-<li><p>CMake (at least version 3.22.1).</p></li>
-<li><p>A C++ compiler.</p></li>
-<li><p>A local installation of MPI.</p></li>
-<li><p>Write access to the target install directory.</p></li>
-</ul>
-<p>Additionally, there are several environment variables that you can set in order to control
-the build and installation process:</p>
-<ul class="simple" id="influential-mpi-wrapper-vars">
-<li><p><code class="docutils literal notranslate"><span class="pre">CMAKE</span></code>: name or path to the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> executable.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CMAKE_ARGS</span></code> or <code class="docutils literal notranslate"><span class="pre">CMAKE_CONFIGURE_ARGS</span></code>: if set, arguments to be passed to the
-initial CMake configure command. If both are set, <code class="docutils literal notranslate"><span class="pre">CMAKE_CONFIGURE_ARGS</span></code> is preferred
-over <code class="docutils literal notranslate"><span class="pre">CMAKE_ARGS</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CMAKE_BUILD_ARGS</span></code>: if set, arguments to be passed to the CMake build command.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CMAKE_INSTALL_ARGS</span></code>: if set, arguments to be passed to the CMake install command.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">CMAKE_INSTALL_PREFIX</span></code>, <code class="docutils literal notranslate"><span class="pre">PREFIX</span></code>, or <code class="docutils literal notranslate"><span class="pre">DESTDIR</span></code>: path to which the MPI wrappers
-should be installed. If one or more of these variables is set and not empty, they are
-preferred in the order listed. That is, <code class="docutils literal notranslate"><span class="pre">CMAKE_INSTALL_PREFIX</span></code> will be preferred over
-<code class="docutils literal notranslate"><span class="pre">PREFIX</span></code>, which is preferred over <code class="docutils literal notranslate"><span class="pre">DESTDIR</span></code>.</p></li>
-</ul>
-<section id="conda-installation">
-<h3>Conda installation<a class="headerlink" href="#conda-installation" title="Link to this heading">#</a></h3>
-<p>Assume Legate is already installed in a conda environment named <code class="docutils literal notranslate"><span class="pre">myenv</span></code>. We need to
-activate this environment and install the wrapper packages that contain the scripts
-necessary to build the wrappers (note the custom channel <code class="docutils literal notranslate"><span class="pre">legate/label/gex</span></code> in the
-install command):</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>myenv
-$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate/label/gex<span class="w"> </span>legate-mpi-wrapper
-</pre></div>
-</div>
-<p>When the wrapper package is installed, the instructions for building the wrapper are
-displayed:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>To<span class="w"> </span>finish<span class="w"> </span>configuring<span class="w"> </span>the<span class="w"> </span>Legate<span class="w"> </span>MPI<span class="w"> </span>wrapper,<span class="w"> </span>activate<span class="w"> </span>your<span class="w"> </span>environment<span class="w"> </span>and<span class="w"> </span>run
-/path-to-myenv/mpi-wrapper/build-mpi-wrapper.sh
-</pre></div>
-</div>
-<p>To build the wrapper, first activate the <code class="docutils literal notranslate"><span class="pre">myenv</span></code> environment:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>myenv
-
-
----------------------<span class="w"> </span>CONDA/MPI_WRAPPER/ACTIVATE.SH<span class="w"> </span>-----------------------
-
-<span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span>
-</pre></div>
-</div>
-<p>Note that when the environment is activated without the wrapper built, the activation
-script for the wrapper package sets the <code class="docutils literal notranslate"><span class="pre">LEGATE_MPI_WRAPPER</span></code> environment variable to an
-empty value, since there is no wrapper shared library to find yet.</p>
-<p>After the environment is activated, we can build the MPI wrapper:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>/path-to-myenv/mpi-wrapper/build-mpi-wrapper.sh
-</pre></div>
-</div>
-<p>Once the wrapper is built, reactivate the environment to set the necessary environment
-variables:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>deactivate
-
-
----------------------<span class="w"> </span>CONDA/MPI_WRAPPER/DEACTIVATE.SH<span class="w"> </span>-----------------------
-
-+++<span class="w"> </span><span class="nb">unset</span><span class="w"> </span>LEGATE_MPI_WRAPPER
-+++<span class="w"> </span><span class="nb">set</span><span class="w"> </span>+x
-$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>myenv
-
-
----------------------<span class="w"> </span>CONDA/MPI_WRAPPER/ACTIVATE.SH<span class="w"> </span>-----------------------
-
-<span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span>/path-to-myenv/mpi-wrapper/lib64/liblgcore_mpi_wrapper.so
-</pre></div>
-</div>
-<p>Note that the activation script now successfully located the MPI wrapper shared library.</p>
-<p>It might also be useful to remove the MPI conda package that Legate was compiled against
-(typically <code class="docutils literal notranslate"><span class="pre">openmpi</span></code>), to make sure that there is only one choice of MPI to use:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>uninstall<span class="w"> </span>--force<span class="w"> </span>openmpi
-</pre></div>
-</div>
-</section>
-<section id="source-build">
-<h3>Source build<a class="headerlink" href="#source-build" title="Link to this heading">#</a></h3>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>When building Legate from source, the MPI wrapper is generally <strong>not needed</strong>. The
-build system will automatically compile and link a default wrapper (using whatever
-implementation of MPI it finds on your system) for you. It is only needed if:</p>
-<ol class="arabic simple">
-<li><p>You wish to use a different flavor of MPI at runtime than that which Legate was
-built against.</p></li>
-<li><p>You wish to package Legate yourself, and want to provide build instructions for
-downstream users, or perhaps invoke the wrapper build during your own package
-installation.</p></li>
-</ol>
-</div>
-<p>Assuming Legate is installed to a directory called <code class="docutils literal notranslate"><span class="pre">/path/to/prefix</span></code>, to build and
-install the wrappers simply run the following:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>/path/to/prefix/share/legate/mpi_wrapper/install.bash
-</pre></div>
-</div>
-<p>The same command also exists in the source directory, under the same directory tree:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="si">${</span><span class="nv">LEGATE_DIR</span><span class="si">}</span>/share/legate/mpi_wrapper/install.bash
-</pre></div>
-</div>
-<p>This command will build and install the MPI wrappers to the default installation
-prefix. To change the default installation prefix, or supply additional arguments to the
-build, see the list of <a class="reference internal" href="#influential-mpi-wrapper-vars"><span class="std std-ref">Influential MPI variables</span></a>.</p>
-<p>Once the wrapper is built, Legate must still be instructed to load it (and not the default
-wrapper which was built during the original source build). To do so, you must set the
-<code class="docutils literal notranslate"><span class="pre">LEGATE_MPI_WRAPPER</span></code> environment variable to the absolute path to the installed shared
-library. Assuming the wrapper was installed to <code class="docutils literal notranslate"><span class="pre">/my/prefix/directory</span></code>:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># On Linux</span>
-$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span><span class="s2">&quot;/my/prefix/directory/lib/legate_mpi_wrapper.so&quot;</span>
-<span class="c1"># On macOS</span>
-$<span class="w"> </span><span class="nb">export</span><span class="w"> </span><span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span><span class="s2">&quot;/my/prefix/directory/lib/legate_mpi_wrapper.dylib&quot;</span>
-</pre></div>
-</div>
-<p>As with any environment variable, you can either <code class="docutils literal notranslate"><span class="pre">export</span></code> it once (as above), or set it
-before invoking a Legate application:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">LEGATE_MPI_WRAPPER</span><span class="o">=</span><span class="s2">&quot;/path/to/legate_mpi_wrapper.so&quot;</span><span class="w"> </span>./my_legate_app<span class="w"> </span>...
-</pre></div>
-</div>
-</section>
-</section>
 <section id="installation-of-the-legate-ipython-kernel">
 <h2>Installation of the Legate IPython Kernel<a class="headerlink" href="#installation-of-the-legate-ipython-kernel" title="Link to this heading">#</a></h2>
 <p>Please install Legate, then run the following command to install a default
 Jupyter kernel:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>legate-jupyter
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>legate-jupyter
 </pre></div>
 </div>
 <p>If installation is successful, you will see some output like the following:</p>
@@ -751,11 +661,11 @@ source projects before use.</p>
       </div>
     </a>
     <a class="right-next"
-       href="BUILD.html"
+       href="networking-wheels.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Building Legate from Source</p>
+        <p class="prev-next-title">Networking with Legate Wheels</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -780,14 +690,14 @@ source projects before use.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#downloading-pre-built-packages">Downloading Pre-built Packages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-and-installing-from-source">Building and Installing from Source</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#support-matrix">Support Matrix</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-of-the-legate-mpi-wrapper">Installation of the Legate MPI wrapper</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-installation">Conda installation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#source-build">Source build</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-conda-packages">Installing Conda Packages</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda-and-gpu-cpu-variants">Conda and GPU / CPU Variants</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-pypi-packages">Installing PyPI Packages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#networking-with-legate-packages">Networking with Legate Packages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building-and-installing-from-source">Building and Installing from Source</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#support-matrix">Support Matrix</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-of-the-legate-ipython-kernel">Installation of the Legate IPython Kernel</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#licenses">Licenses</a></li>
 </ul>
