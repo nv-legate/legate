@@ -7,9 +7,10 @@
 #include <legate/task/registrar.h>
 
 #include <legate/runtime/library.h>
-#include <legate/task/task_info.h>
+#include <legate/task/task.h>
 #include <legate/utilities/typedefs.h>
 
+#include <functional>
 #include <utility>
 #include <vector>
 
@@ -17,22 +18,21 @@ namespace legate {
 
 class TaskRegistrar::Impl {
  public:
-  std::vector<std::pair<LocalTaskID, std::function<TaskInfo(const Library&)>>> pending_task_infos{};
+  std::vector<std::function<void(const Library&)>> pending_{};
 };
 
-void TaskRegistrar::record_task(RecordTaskKey,
-                                LocalTaskID local_task_id,
-                                std::function<TaskInfo(const Library&)> deferred_task_info)
+void TaskRegistrar::record_registration_function(RecordTaskKey,
+                                                 std::function<void(const Library&)> func)
 {
-  impl_->pending_task_infos.emplace_back(local_task_id, std::move(deferred_task_info));
+  impl_->pending_.emplace_back(std::move(func));
 }
 
 void TaskRegistrar::register_all_tasks(Library& library)
 {
-  for (auto&& [local_task_id, task_info_fn] : impl_->pending_task_infos) {
-    library.register_task(local_task_id, task_info_fn(library));
+  for (auto&& func : impl_->pending_) {
+    func(library);
   }
-  impl_->pending_task_infos.clear();
+  impl_->pending_.clear();
 }
 
 TaskRegistrar::TaskRegistrar() : impl_{std::make_unique<TaskRegistrar::Impl>()} {}

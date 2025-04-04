@@ -37,19 +37,9 @@ using has_task_id = decltype(U::TASK_ID);
 template <typename T>
 /*static*/ void LegateTask<T>::register_variants(std::map<VariantCode, VariantOptions> all_options)
 {
-  static_assert(detail::is_detected_v<legate_task_detail::has_task_config, T>,
-                "Task must define a \"static const legate::TaskConfig TASK_CONFIG\" member");
-  static_assert(std::is_same_v<decltype(T::TASK_CONFIG)&, const TaskConfig&>,
-                "Incompatible type for TASK_CONFIG. Must be \"static const legate::TaskConfig "
-                "TASK_CONFIG\"");
-  static_assert(!detail::is_detected_v<legate_task_detail::has_task_signature, T>,
-                "TASK_SIGNATURE is deprecated. Please use TASK_CONFIG instead");
-  static_assert(!detail::is_detected_v<legate_task_detail::has_task_id, T>,
-                "TASK_ID is deprecated. Please use TASK_CONFIG instead");
-
-  T::Registrar::get_registrar().record_task(
-    {}, T::TASK_CONFIG.task_id(), [callsite_options = std::move(all_options)](const Library& lib) {
-      return create_task_info_(lib, T::TASK_CONFIG, callsite_options);
+  T::Registrar::get_registrar().record_registration_function(
+    {}, [callsite_options = std::move(all_options)](const Library& lib) {
+      return T::register_variants(lib, callsite_options);
     });
 }
 

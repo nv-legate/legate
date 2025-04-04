@@ -80,8 +80,10 @@ class TaskRegistrar {
   TaskRegistrar& operator=(TaskRegistrar&&) = delete;
 
   /**
-   * @brief Registers all tasks recorded in this registrar. Typically invoked in a registration
-   * callback of a library.
+   * @brief Registers all tasks recorded in this registrar.
+   *
+   * This function is typically called in the task registration callback of a library
+   * and must be called after the library is fully initialized.
    *
    * @param library Library that owns this registrar.
    */
@@ -95,9 +97,10 @@ class TaskRegistrar {
     friend class LegateTask;
   };
 
-  void record_task(RecordTaskKey,
-                   legate::LocalTaskID local_task_id,
-                   std::function<TaskInfo(const Library&)> deferred_task_info);
+  /*
+   * Record a function to be called later (only to be used via `Task::register_variants()`).
+   */
+  void record_registration_function(RecordTaskKey key, std::function<void(const Library&)> func);
 
  private:
   class Impl;
