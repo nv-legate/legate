@@ -76,8 +76,7 @@ class OperationProtocol(Protocol):
     _launch_domain: Union[Rect, None]
     _error_on_interference: bool
 
-    def launch(self, strategy: Strategy) -> None:
-        ...
+    def launch(self, strategy: Strategy) -> None: ...
 
     @property
     def context(self) -> Context:

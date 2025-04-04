@@ -98,8 +98,7 @@ _LEGATE_FIELD_ID_BASE = 1000
 
 
 class AnyCallable(Protocol):
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        ...
+    def __call__(self, *args: Any, **kwargs: Any) -> Any: ...
 
 
 def caller_frameinfo() -> str:
@@ -381,9 +380,9 @@ class FieldManager:
         # This is a sanitized list of (region,field_id) pairs that is
         # guaranteed to be ordered across all the shards even with
         # control replication
-        self.free_fields: Deque[
-            tuple[Region, int, Union[Future, None]]
-        ] = deque()
+        self.free_fields: Deque[tuple[Region, int, Union[Future, None]]] = (
+            deque()
+        )
 
     def destroy(self) -> None:
         self.free_fields = deque()
@@ -515,9 +514,9 @@ class AttachmentManager:
         self._runtime = runtime
         self._attachments: dict[tuple[int, int], Attachment] = dict()
         self._next_detachment_key = 0
-        self._registered_detachments: dict[
-            int, Union[Detach, IndexDetach]
-        ] = dict()
+        self._registered_detachments: dict[int, Union[Detach, IndexDetach]] = (
+            dict()
+        )
         self._deferred_detachments: List[
             tuple[Attachable, Union[Detach, IndexDetach], Union[Field, None]]
         ] = list()
