@@ -370,7 +370,13 @@ class Context:
         """
         self._runtime.issue_execution_fence(block=block)
 
-    def tree_reduce(self, task_id: int, store: Store, radix: int = 4) -> Store:
+    def tree_reduce(
+        self,
+        task_id: int,
+        store: Store,
+        radix: int = 4,
+        scalar_args: list[tuple[Any, Dtype]] = [],
+    ) -> Store:
         """
         Performs a user-defined reduction by building a tree of reduction
         tasks. At each step, the reducer task gets up to ``radix`` input stores
@@ -399,4 +405,6 @@ class Context:
         Store
             Store that contains reduction results
         """
-        return self._runtime.tree_reduce(self, task_id, store, radix)
+        return self._runtime.tree_reduce(
+            self, task_id, store, radix, scalar_args
+        )
