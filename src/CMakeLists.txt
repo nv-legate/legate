@@ -16,7 +16,7 @@ else()
 endif()
 
 project(legate_${legate_project_suffix}
-        VERSION 25.03.00
+        VERSION 25.03.01
         LANGUAGES CXX
         DESCRIPTION "Multi-node, Multi-GPU Parallel Runtime Library"
         HOMEPAGE_URL https://docs.nvidia.com/legate/latest/)
