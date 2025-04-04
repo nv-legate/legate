@@ -1,0 +1,6 @@
+legate.core.LogicalArray.nested
+===============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: LogicalArray.nested

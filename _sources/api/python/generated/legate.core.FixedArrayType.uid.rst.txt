@@ -1,0 +1,6 @@
+legate.core.FixedArrayType.uid
+==============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: FixedArrayType.uid

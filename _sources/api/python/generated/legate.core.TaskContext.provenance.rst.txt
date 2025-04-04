@@ -1,0 +1,6 @@
+legate.core.TaskContext.provenance
+==================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: TaskContext.provenance

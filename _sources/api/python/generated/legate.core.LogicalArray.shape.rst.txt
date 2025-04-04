@@ -1,0 +1,6 @@
+legate.core.LogicalArray.shape
+==============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: LogicalArray.shape

@@ -1,0 +1,6 @@
+legate.core.TaskConfig.variant\_options
+=======================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: TaskConfig.variant_options

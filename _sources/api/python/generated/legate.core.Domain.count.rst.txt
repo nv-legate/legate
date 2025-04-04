@@ -1,0 +1,6 @@
+legate.core.Domain.count
+========================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Domain.count

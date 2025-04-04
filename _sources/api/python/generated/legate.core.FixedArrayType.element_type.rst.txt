@@ -1,0 +1,6 @@
+legate.core.FixedArrayType.element\_type
+========================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: FixedArrayType.element_type

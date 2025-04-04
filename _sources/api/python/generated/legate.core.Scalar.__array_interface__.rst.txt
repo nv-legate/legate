@@ -1,0 +1,6 @@
+legate.core.Scalar.\_\_array\_interface\_\_
+===========================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Scalar.__array_interface__

@@ -16,17 +16,6 @@ introspect the values implicitly block on completion of the producer task.
 
 .. autosummary::
    :toctree: generated/
+   :template: class.rst
 
-   Shape.__init__
-
-
-Properties
-----------
-.. autosummary::
-   :toctree: generated/
-
-   Shape.extents
-   Shape.ndim
-   Shape.volume
-   Shape.__getitem__
-   Shape.__len__
+   Shape

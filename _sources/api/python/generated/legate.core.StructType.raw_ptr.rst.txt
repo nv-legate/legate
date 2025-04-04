@@ -1,0 +1,6 @@
+legate.core.StructType.raw\_ptr
+===============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructType.raw_ptr

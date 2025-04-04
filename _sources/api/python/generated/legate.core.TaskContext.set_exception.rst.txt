@@ -1,0 +1,6 @@
+legate.core.TaskContext.set\_exception
+======================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: TaskContext.set_exception

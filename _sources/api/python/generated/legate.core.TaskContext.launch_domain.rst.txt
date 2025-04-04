@@ -1,0 +1,6 @@
+legate.core.TaskContext.launch\_domain
+======================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: TaskContext.launch_domain

@@ -1,0 +1,6 @@
+legate.core.Type.uid
+====================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Type.uid

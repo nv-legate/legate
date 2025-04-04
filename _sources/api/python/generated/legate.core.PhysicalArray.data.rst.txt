@@ -1,0 +1,6 @@
+legate.core.PhysicalArray.data
+==============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: PhysicalArray.data

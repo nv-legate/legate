@@ -1,0 +1,6 @@
+legate.core.TaskContext.get\_variant\_kind
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: TaskContext.get_variant_kind

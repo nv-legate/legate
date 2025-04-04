@@ -1,0 +1,6 @@
+legate.core.SymbolicExpr.offset
+===============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: SymbolicExpr.offset

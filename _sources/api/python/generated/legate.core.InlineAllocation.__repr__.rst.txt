@@ -1,0 +1,6 @@
+legate.core.InlineAllocation.\_\_repr\_\_
+=========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: InlineAllocation.__repr__

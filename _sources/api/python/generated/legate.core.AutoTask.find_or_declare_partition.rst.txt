@@ -1,0 +1,6 @@
+legate.core.AutoTask.find\_or\_declare\_partition
+=================================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: AutoTask.find_or_declare_partition

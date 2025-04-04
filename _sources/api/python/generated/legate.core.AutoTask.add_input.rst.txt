@@ -1,4 +1,4 @@
-﻿legate.core.AutoTask.add\_input
+legate.core.AutoTask.add\_input
 ===============================
 
 .. currentmodule:: legate.core

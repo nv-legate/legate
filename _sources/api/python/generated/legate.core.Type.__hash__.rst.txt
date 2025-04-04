@@ -1,0 +1,6 @@
+legate.core.Type.\_\_hash\_\_
+=============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Type.__hash__

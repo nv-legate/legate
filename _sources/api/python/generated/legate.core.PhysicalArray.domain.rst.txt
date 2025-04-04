@@ -1,0 +1,6 @@
+legate.core.PhysicalArray.domain
+================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: PhysicalArray.domain

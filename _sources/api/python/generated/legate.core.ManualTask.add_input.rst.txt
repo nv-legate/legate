@@ -1,4 +1,4 @@
-﻿legate.core.ManualTask.add\_input
+legate.core.ManualTask.add\_input
 =================================
 
 .. currentmodule:: legate.core
