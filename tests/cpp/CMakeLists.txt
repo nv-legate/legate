@@ -174,7 +174,8 @@ set(with_runtime_SRC
     integration/scale_constraints.cc
     integration/task_misc.cc
     integration/tasks/task_simple.cc
-    integration/test_task_store.cc
+    integration/task_store/auto_task_tests.cc
+    integration/task_store/manual_task_tests.cc
     integration/transpose_dim_order.cc
     integration/tree_reduce.cc
     integration/tree_reduce_unique.cc
