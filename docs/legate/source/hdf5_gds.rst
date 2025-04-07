@@ -35,8 +35,11 @@ environment.
 Example
 -------
 
-Here is an example python code which iterates all the datasets in a HDF5 file and reads
-the data. It prints throughput numbers based on the total amount of data read over total
+Below is the output of an example python program which iterates all the datasets in a HDF5
+file and reads the data. The source code for the example may be found at
+https://github.com/nv-legate/legate/blob/main/share/legate/examples/io/hdf5/ex1.py.
+
+The program prints throughput numbers based on the total amount of data read over total
 elapsed time. Please note that this is not a standard benchmark to calculate I/O
 throughput. However, it can give an approximate throughput value.
 

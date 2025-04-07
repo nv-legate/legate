@@ -22,14 +22,6 @@ API
    from_file
    kerchunk_read
 
-Examples
---------
-
-.. toctree::
-   :maxdepth: 1
-
-   hdf5_gds
-
 KVikIO
 ======
 
