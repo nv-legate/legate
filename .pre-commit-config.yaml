@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.36.0
+    rev: v1.37.0
     hooks:
       - id: yamllint
         types: [yaml]
@@ -84,7 +84,7 @@ repos:
         types_or: []
         exclude: '^(share/legate/realm_ucp_bootstrap/.*)$'
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.0
+    rev: v0.11.4
     hooks:
       - id: ruff-format
       - id: ruff
