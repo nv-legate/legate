@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+export RAPIDS_SCRIPT_NAME="make-conda-env"
+
 . "$(dirname "$0")/tools/legate-conda-utils"
 
 make_conda_env() {

@@ -73,7 +73,7 @@ function run_command()
   begin_group "${group_name}"
   local start_time
   start_time=$(date +%s)
-  echo "Running command: " "${command[@]}"
+  rapids-logger "Running command: " "${command[@]}"
   "${command[@]}"
   status=$?
   # In case the command enables either of these, we want to disable them so that we can

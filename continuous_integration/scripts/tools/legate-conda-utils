@@ -7,7 +7,7 @@ set -eou pipefail
 
 make_conda_env_from_yaml() {
   # shellcheck disable=SC2154
-  legate-mamba-retry env create -q -n "${CONDA_ENV}" -f "${yaml_file}";
+  rapids-mamba-retry env create -q -n "${CONDA_ENV}" -f "${yaml_file}";
 }
 
 generate_yaml_file() {
@@ -36,7 +36,7 @@ generate_yaml_file() {
   fi
 
 
-  echo Dumping: "${yaml_file}"
+  rapids-logger Dumping: "${yaml_file}"
   cat "${yaml_file}";
 
   # shellcheck disable=SC2154
@@ -74,7 +74,7 @@ get_yaml_and_make_conda_env() {
 
   generate_yaml_file
 
-  echo YAML file: "${yaml_file}"
+  rapids-logger YAML file: "${yaml_file}"
   cat "${yaml_file}"
 
   make_conda_env_from_yaml
@@ -84,10 +84,10 @@ install_legate_with_war() {
   # WAR: legate depends on a different version of numpy than what is already installed.
   # The correct version will be installed when legate is installed below.
   # See github issue: https://github.com/nv-legate/legate.core/issues/812
-  legate-mamba-retry uninstall -q -y -n "${CONDA_ENV}" numpy
+  rapids-mamba-retry uninstall -q -y -n "${CONDA_ENV}" numpy
 
   # shellcheck disable=SC2154
-  legate-mamba-retry install \
+  rapids-mamba-retry install \
                      -y \
                      -n "${CONDA_ENV}" \
                      -c legate/label/ucc140 \
@@ -97,5 +97,5 @@ install_legate_with_war() {
 }
 
 make_release_env() {
-  legate-mamba-retry create -q -y -n "${CONDA_ENV}" -c conda-forge boa
+  rapids-mamba-retry create -q -y -n "${CONDA_ENV}" -c conda-forge boa
 }

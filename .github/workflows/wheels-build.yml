@@ -111,6 +111,16 @@ jobs:
         run: |
           # The || true is to satisfy the linting check, seems less readable to me.
           echo "$(pwd)/continuous_integration/scripts/tools" >> "${GITHUB_PATH}" || true
+      - uses: actions/checkout@v4
+        with:
+          repository: rapidsai/gha-tools
+          path: gha-tools
+          fetch-depth: 0
+      # actions/checkout puts the downloaded repository under
+      # $GITHUB_WORKSPACE/${{ inputs. path }}
+      - name: Add rapids GHA tools to path
+        run: |
+          echo "${GITHUB_WORKSPACE}/gha-tools/tools" >> "${GITHUB_PATH}"
       - name: C++ wheel build
         run: ${{ inputs.script }}
         env:

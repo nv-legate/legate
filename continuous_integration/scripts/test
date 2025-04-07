@@ -1,14 +1,75 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export LEGATE_SCRIPT_NAME="test"
+export RAPIDS_SCRIPT_NAME="test"
+
+# Need to LD_PRELOAD for both C++ and Python tests now, as the legate tester transitively loads liblegate.so
+set_ld_preload()
+{
+  export LEGATE_LD_PRELOAD=""
+
+  if [[ ${LEGATE_ARCH} == *gcc-*-sanitizer* ]]; then
+    # Trying to reproduce this on macOS? See
+    # https://stackoverflow.com/questions/47619097/address-sanitizing-boost-python-modules
+    #
+    # The TL;DR is, however:
+    #
+    # asan_lib='/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.asan_osx_dynamic.dylib'
+    #
+    # py_paths='/path/to/legate' (optional, only if you are using a venv)
+    #
+    # DYLD_INSERT_LIBRARIES=$asan_lib PYTHONPATH=$py_paths
+    # /opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python
+    # /path/to/your/file.py
+    # shellcheck disable=SC2154
+    local libasan_path="${CONDA_PREFIX}/lib/libasan.so"
+
+    if [[ ! -f "${libasan_path}" ]]; then
+      rapids-logger "Sanitizer libraries not found."
+      rapids-logger "Expected to find ${libasan_path} but this seemingly does not exist"
+      return 1
+    fi
+
+    export LEGATE_LD_PRELOAD="${libasan_path}"
+
+    local asan_opts=()
+    asan_opts+=("check_initialization_order=1")
+    asan_opts+=("alloc_dealloc_mismatch=1")
+    asan_opts+=("abort_on_error=1")
+    asan_opts+=("strict_string_checks=1")
+    asan_opts+=("color=always")
+    asan_opts+=("detect_odr_violation=2")
+    if [[ -f "${CONDA_PREFIX}/bin/tests_with_gpus" ]]; then
+      # GPU build
+      asan_opts+=("protect_shadow_gap=0")
+    fi
+    asan_opts+=("symbolize=1")
+
+    # Note trailing ':' on this! This is deliberate so we can do
+    # ASAN_OPTIONS+='foo:bar:baz'
+    #                                               v~~ trailing ':' here
+    ASAN_OPTIONS="$(IFS=':'; echo "${asan_opts[*]}"):"
+    export ASAN_OPTIONS
+    export UBSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt"
+    export LSAN_OPTIONS="suppressions=${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt"
+    export TSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt:suppressions=${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt"
+
+  elif [[ ${LEGATE_ARCH} == *clang-*-sanitizer* ]]; then
+    rapids-logger "Must properly implement Address sanitizer lib injection for Clang-based presets!"
+    rapids-logger "See impls for GCC above"
+    return 1
+  fi
+}
 
 run_test_or_analysis() {
     # rename
     # shellcheck disable=SC2154
     export LEGATE_DIR="${REPO_DIR}"
 
-    export PATH="${PATH}:${LEGATE_DIR}/continuous_integration/scripts/tools"
+    local rapids_gha_tools_dir="${LEGATE_DIR}/gha-tools"
+    git clone --depth 1 https://github.com/rapidsai/gha-tools.git -b main "${rapids_gha_tools_dir}"
+
+    export PATH="${PATH}:${rapids_gha_tools_dir}/tools:${LEGATE_DIR}/continuous_integration/scripts/tools"
 
     . "$(dirname "$0")/tools/legate-conda-utils"
     . setup-utils;
@@ -28,7 +89,7 @@ run_test_or_analysis() {
     if command -v "legate-issue" &> /dev/null; then
       legate-issue
     else
-      echo "WARNING: legate-issue not found."
+      rapids-logger "WARNING: legate-issue not found."
     fi
 
     # HACK: this should be done much better, and in a much more transparent manner... but
@@ -51,61 +112,6 @@ run_test_or_analysis() {
       sysctl vm.mmap_rnd_bits=28
     fi
 
-    # Need to LD_PRELOAD for both C++ and Python tests now, as the legate tester transitively loads liblegate.so
-    function set_ld_preload()
-    {
-      if [[ ${LEGATE_ARCH} == *gcc-*-sanitizer* ]]; then
-        # Trying to reproduce this on macOS? See
-        # https://stackoverflow.com/questions/47619097/address-sanitizing-boost-python-modules
-        #
-        # The TL;DR is, however:
-        #
-        # asan_lib='/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/lib/darwin/libclang_rt.asan_osx_dynamic.dylib'
-        #
-        # py_paths='/path/to/legate' (optional, only if you are using a venv)
-        #
-        # DYLD_INSERT_LIBRARIES=$asan_lib PYTHONPATH=$py_paths
-        # /opt/homebrew/Cellar/python@3.11/3.11.5/Frameworks/Python.framework/Versions/3.11/Resources/Python.app/Contents/MacOS/Python
-        # /path/to/your/file.py
-        # shellcheck disable=SC2154
-        local libasan_path="${CONDA_PREFIX}/lib/libasan.so"
-
-        if [[ ! -f "${libasan_path}" ]]; then
-          echo "Sanitizer libraries not found."
-          echo "Expected to find ${libasan_path} but this seemingly does not exist"
-          return 1
-        fi
-
-        export LD_PRELOAD="${libasan_path}"
-
-        local asan_opts=()
-        asan_opts+=("check_initialization_order=1")
-        asan_opts+=("alloc_dealloc_mismatch=1")
-        asan_opts+=("abort_on_error=1")
-        asan_opts+=("strict_string_checks=1")
-        asan_opts+=("color=always")
-        asan_opts+=("detect_odr_violation=2")
-        [[ -f ${CONDA_PREFIX}/bin/tests_with_gpus ]] && {
-          # GPU build
-          asan_opts+=("protect_shadow_gap=0")
-        }
-        asan_opts+=("symbolize=1")
-
-        # Note trailing ':' on this! This is deliberate so we can do
-        # ASAN_OPTIONS+='foo:bar:baz'
-        #                                               v~~ trailing ':' here
-        ASAN_OPTIONS="$(IFS=':'; echo "${asan_opts[*]}"):"
-        export ASAN_OPTIONS
-        export UBSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/ubsan_default_options.txt"
-        export LSAN_OPTIONS="suppressions=${LEGATE_DIR}/share/legate/sanitizers/lsan_suppressions.txt"
-        export TSAN_OPTIONS="include=${LEGATE_DIR}/share/legate/sanitizers/tsan_default_options.txt:suppressions=${LEGATE_DIR}/share/legate/sanitizers/tsan_suppressions.txt"
-
-      elif [[ ${LEGATE_ARCH} == *clang-*-sanitizer* ]]; then
-        echo "Must properly implement Address sanitizer lib injection for Clang-based presets!"
-        echo "See impls for GCC above"
-        return 1
-      fi
-    }
 
     case "$2" in
       "cpu")
@@ -118,20 +124,20 @@ run_test_or_analysis() {
         export GPUS_COUNT=2
         ;;
       *)
-        echo "Invalid argument: $2"
+        rapids-logger "Invalid argument: $2"
         return 2
         ;;
     esac
 
     case "$1" in
         "python")
-            echo "Executing python tests..."
+            rapids-logger "Executing python tests..."
 
             ucx_libs=(ucx openmpi openssh)
 
             set +u
             # shellcheck disable=SC2154
-            legate-mamba-retry install \
+            rapids-mamba-retry install \
                                -y \
                                -n "${CONDA_ENV}" \
                                -c conda-forge \
@@ -139,13 +145,13 @@ run_test_or_analysis() {
 
             hdf5_libs=(zarr fsspec kerchunk)
             # shellcheck disable=SC2154
-            legate-mamba-retry install \
+            rapids-mamba-retry install \
                                -y \
                                -n "${CONDA_ENV}" \
                                "${hdf5_libs[@]}"
             # Conda packages for h5py are very outdated only going up to 3.11. See
             # pyproject.toml for reason to skip h5py 3.13.0
-            python3 -m pip install 'h5py!=3.13.0'
+            rapids-pip-retry install 'h5py!=3.13.0'
             set -u
 
             cd "${LEGATE_DIR}"
@@ -157,33 +163,41 @@ run_test_or_analysis() {
 
             case "${GPUS_COUNT}" in
               "0")
-                echo "Using CPUs ..."
-                LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python -s
+                rapids-logger "Using CPUs ..."
+                LD_PRELOAD="${LEGATE_LD_PRELOAD}" LEGATE_AUTO_CONFIG=0 pytest --color=yes tests/python -s
                 ;;
               "1")
-                echo "Using 1 GPU ..."
-                LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 1" pytest --color=yes tests/python -s
+                rapids-logger "Using 1 GPU ..."
+                LD_PRELOAD="${LEGATE_LD_PRELOAD}" LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 1" \
+                          pytest \
+                          --color=yes \
+                          tests/python \
+                          -s
                 ;;
               "2")
-                echo "Using 2 GPUs ..."
-                LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" pytest --color=yes tests/python -s
+                rapids-logger "Using 2 GPUs ..."
+                LD_PRELOAD="${LEGATE_LD_PRELOAD}" LEGATE_AUTO_CONFIG=0 LEGATE_CONFIG="--fbmem 4000 --gpus 2" \
+                          pytest \
+                          --color=yes \
+                          tests/python \
+                          -s
                 ;;
               *)
-                echo "Invalid case: $2"
+                rapids-logger "Invalid case: $2"
                 return 2
                 ;;
             esac
             ;;
         "cpp")
-            echo "Running C++ unit tests..."
-            legate-mamba-retry install \
+            rapids-logger "Running C++ unit tests..."
+            rapids-mamba-retry install \
                                -y \
                                -n "${DEFAULT_CONDA_ENV:-legate}" \
                                -c conda-forge \
                                psutil
 
             set +u
-            legate-mamba-retry install \
+            rapids-mamba-retry install \
                                -y \
                                -n "${CONDA_ENV}" \
                                ucx openmpi openssh
@@ -197,10 +211,12 @@ run_test_or_analysis() {
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
-              LEGATE_TEST=1 \
-                LEGATE_AUTO_CONFIG=0 \
-                LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 4000 --fbmem 1000" \
-                "${gtest_file}" --gtest_color=yes
+              LD_PRELOAD="${LEGATE_LD_PRELOAD}" \
+                        LEGATE_TEST=1 \
+                        LEGATE_AUTO_CONFIG=0 \
+                        LEGATE_CONFIG="--${proc_type} ${proc_count} --sysmem 4000 --fbmem 1000" \
+                        "${gtest_file}" \
+                        --gtest_color=yes
             }
 
             function run_legate_tests_with_driver()
@@ -209,15 +225,15 @@ run_test_or_analysis() {
               local proc_type="${2}"
               local proc_count="${3}"
               local worker_count="${4:-2}"
-              python3 "${LEGATE_DIR}/test.py" \
-                      --gtest-file "${gtest_file}" \
-                      --verbose \
-                      --debug \
-                      --color \
-                      --timeout 90 \
-                      --"${proc_type}" "${proc_count}" \
-                      --sysmem 100 \
-                      -j "${worker_count}"
+              LD_PRELOAD="${LEGATE_LD_PRELOAD}" python3 "${LEGATE_DIR}/test.py" \
+                        --gtest-file "${gtest_file}" \
+                        --verbose \
+                        --debug \
+                        --color \
+                        --timeout 90 \
+                        --"${proc_type}" "${proc_count}" \
+                        --sysmem 100 \
+                        -j "${worker_count}"
             }
 
             function run_sequential_tests()
@@ -254,7 +270,7 @@ run_test_or_analysis() {
               fi
 
               if [[ "${GPUS_COUNT}" -gt 0 ]]; then
-                if [[ -f ${CONDA_PREFIX}/bin/tests_with_gpus ]]; then
+                if [[ -f "${CONDA_PREFIX}/bin/tests_with_gpus" ]]; then
                   run_gpu_tests gpus "${GPUS_COUNT}"
                 fi
               fi
@@ -274,7 +290,7 @@ run_test_or_analysis() {
             run_all_runtime_tests
             ;;
         *)
-            echo "Invalid case: $1"
+            rapids-logger "Invalid case: $1"
             return 1
             ;;
     esac

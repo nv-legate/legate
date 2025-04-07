@@ -5,6 +5,8 @@
 
 set -euo pipefail
 
+export RAPIDS_SCRIPT_NAME="build_wheel_linux.bash"
+
 # Enable sccache for faster builds but disable it for CUDA (#1884) issues
 # with the realm CUDA kernel embedding.
 source legate-configure-sccache
@@ -13,7 +15,7 @@ unset CMAKE_CUDA_COMPILER_LAUNCHER
 export CMAKE_BUILD_PARALLEL_LEVEL=${PARALLEL_LEVEL:=8}
 
 if [[ "${CI:-false}" == "true" ]]; then
-  echo "Installing extra system packages"
+  rapids-logger "Installing extra system packages"
   dnf install -y gcc-toolset-11-libatomic-devel openmpi-devel mpich-devel
   # Enable gcc-toolset-11 environment
   source /opt/rh/gcc-toolset-11/enable
@@ -22,7 +24,7 @@ if [[ "${CI:-false}" == "true" ]]; then
   g++ --version
 fi
 
-echo "PATH: ${PATH}"
+rapids-logger "PATH: ${PATH}"
 
 if [[ "${LEGATE_DIR:-}" == "" ]]; then
   # If we are running in an action then GITHUB_WORKSPACE is set.
@@ -38,8 +40,8 @@ fi
 package_dir="${LEGATE_DIR}/scripts/build/python/legate"
 package_name="legate"
 
-echo "Installing build requirements"
-python -m pip install -v --prefer-binary -r continuous_integration/requirements-build.txt
+rapids-logger "Installing build requirements"
+rapids-pip-retry install -v --prefer-binary -r continuous_integration/requirements-build.txt
 
 # Recreate the missing symlink and add in the cmake config for UCC.
 sitepkgs=$(python -c 'import site; print(site.getsitepackages()[0], end="")')
@@ -52,7 +54,7 @@ fi
 
 cd "${package_dir}"
 
-echo "Building HDF5 and installing into prefix"
+rapids-logger "Building HDF5 and installing into prefix"
 "${LEGATE_DIR}/continuous_integration/scripts/build_hdf5.sh"
 
 # Build the wrappers and install into their prefix
@@ -78,9 +80,9 @@ cmake --install "${LEGATE_DIR}/buildmpich"
 # 0 really means "add --no-build-isolation" (ref: https://github.com/pypa/pip/issues/5735)
 export PIP_NO_BUILD_ISOLATION=0
 
-echo "Building ${package_name}"
+rapids-logger "Building ${package_name}"
 if [[ ! -d "prefix" ]]; then
-  echo "No prefix, HDF5 may not have built where we thought!"
+  rapids-logger "No prefix, HDF5 may not have built where we thought!"
   exit 1
 fi
 
@@ -91,7 +93,7 @@ CMAKE_ARGS="-DCMAKE_PREFIX_PATH=$(pwd)/prefix;${sitepkgs}/libucx;${sitepkgs}/nvi
 export CMAKE_ARGS
 SKBUILD_CMAKE_ARGS="-DLEGATE_WRAPPER_DIR=${LEGATE_DIR}/wrapper-prefix"
 export SKBUILD_CMAKE_ARGS
-echo "SKBUILD_CMAKE_ARGS='${SKBUILD_CMAKE_ARGS}'"
+rapids-logger "SKBUILD_CMAKE_ARGS='${SKBUILD_CMAKE_ARGS}'"
 
 sccache --zero-stats
 
@@ -104,11 +106,11 @@ python -m pip wheel \
 
 sccache --show-adv-stats
 
-echo "Show dist contents"
+rapids-logger "Show dist contents"
 pwd
 ls -lh "${LEGATE_DIR}/dist"
 
-echo "Repairing the wheel"
+rapids-logger "Repairing the wheel"
 mkdir -p "${LEGATE_DIR}/final-dist"
 export LD_LIBRARY_PATH="${LEGATE_DIR}/scripts/build/python/legate/prefix/lib"
 python -m auditwheel repair \
@@ -128,5 +130,5 @@ python -m auditwheel repair \
   -w "${LEGATE_DIR}/final-dist" \
   "${LEGATE_DIR}"/dist/*.whl
 
-echo "Wheel has been repaired. Contents:"
+rapids-logger "Wheel has been repaired. Contents:"
 ls -lh "${LEGATE_DIR}/final-dist"

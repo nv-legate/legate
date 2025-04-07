@@ -5,6 +5,8 @@
 
 set -euo pipefail
 
+export RAPIDS_SCRIPT_NAME='build_hdf5.sh'
+
 # The HDF5 package doesn't support building against build trees seamlessly.
 # Build and install the library to a prefix that can then be found and used.
 hdf5_version="1.14.6"
