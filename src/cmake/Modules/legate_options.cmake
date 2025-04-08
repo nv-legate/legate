@@ -108,7 +108,7 @@ if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
   endif()
 endif()
 
-legate_setting(Legion_MAX_DIM LEGION_MAX_DIM "Maximum dimension" 4)
+legate_setting(Legion_MAX_DIM LEGION_MAX_DIM "Maximum dimension" 6)
 
 # Check the max dimensions
 if((Legion_MAX_DIM LESS 1) OR (Legion_MAX_DIM GREATER 9))

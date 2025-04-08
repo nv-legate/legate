@@ -66,7 +66,7 @@ class Legion(Package):
         spec=ArgSpec(
             dest="legion_max_dim",
             type=int,
-            default=4,
+            default=6,
             help="Maximum number of dimensions that Legion will support",
         ),
         cmake_var=CMAKE_VARIABLE("Legion_MAX_DIM", CMakeInt),
