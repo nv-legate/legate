@@ -837,6 +837,19 @@ void handle_legate_args()
                           log_to_file.value,
                           omps.value.value(),
                           numamem.value.value());
+
+  // These config flags are set by the set_*_config_properties calls above, so check them now.
+  if (!LEGATE_DEFINED(LEGATE_USE_CUDA) && Config::get_config().need_cuda()) {
+    throw TracedException<std::runtime_error>{
+      "Legate was run with GPUs but was not built with GPU support. Please "
+      "install Legate again with the \"--with-cuda\" flag"};
+  }
+  if (!LEGATE_DEFINED(LEGATE_USE_OPENMP) && Config::get_config().need_openmp()) {
+    throw TracedException<std::runtime_error>{
+      "Legate was run with OpenMP enabled, but was not built with OpenMP "
+      "support. Please install Legate again with the \"--with-openmp\" "
+      "flag"};
+  }
 }
 
 }  // namespace legate::detail

@@ -35,6 +35,9 @@ Changes: 25.03
 - Add a launching mode ``--launcher dask`` to the ``legate`` driver, that bootstraps a
   Legate execution by setting up a dask cluster and having the workers start the peer
   processes. This currently only supports single-node multi-rank execution.
+- ``LEGATE_NEED_*`` environment variables are no longer consulted to infer what
+  build-time features (e.g. CUDA support or networking support) are required for
+  the current run. Legate can infer this automatically.
 
 C++
 ---

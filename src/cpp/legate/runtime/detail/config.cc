@@ -27,6 +27,18 @@ void parse_value_test_default(const EnvironmentVariable<T>& env_var,
   *config_var = env_var.get(/* default_value */ *config_var, /* test_val */ test_val);
 }
 
+[[nodiscard]] bool single_node_job()
+{
+  constexpr EnvironmentVariable<std::uint32_t> OMPI_COMM_WORLD_SIZE{"OMPI_COMM_WORLD_SIZE"};
+  constexpr EnvironmentVariable<std::uint32_t> MV2_COMM_WORLD_SIZE{"MV2_COMM_WORLD_SIZE"};
+  constexpr EnvironmentVariable<std::uint32_t> SLURM_NTASKS{"SLURM_NTASKS"};
+
+  return OMPI_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
+         MV2_COMM_WORLD_SIZE.get(/* default_value */ 1) == 1 &&
+         SLURM_NTASKS.get(/* default_vaule */ 1) == 1 &&
+         REALM_UCP_BOOTSTRAP_MODE.get(/* default_value*/ "") != "p2p";
+}
+
 }  // namespace
 
 void Config::parse()
@@ -43,9 +55,6 @@ void Config::parse()
     parse_value(LEGATE_WARMUP_NCCL, &warmup_nccl_);
     parse_value(experimental::LEGATE_INLINE_TASK_LAUNCH, &enable_inline_task_launch_);
     parse_value(LEGATE_SHOW_USAGE, &show_mapper_usage_);
-    parse_value(LEGATE_NEED_CUDA, &need_cuda_);
-    parse_value(LEGATE_NEED_OPENMP, &need_openmp_);
-    parse_value(LEGATE_NEED_NETWORK, &need_network_);
     parse_value_test_default(
       LEGATE_MAX_EXCEPTION_SIZE, LEGATE_MAX_EXCEPTION_SIZE_TEST, &max_exception_size_);
     parse_value_test_default(LEGATE_MIN_CPU_CHUNK, LEGATE_MIN_CPU_CHUNK_TEST, &min_cpu_chunk_);
@@ -59,6 +68,7 @@ void Config::parse()
     parse_value_test_default(LEGATE_CONSENSUS, LEGATE_CONSENSUS_TEST, &consensus_);
     parse_value_test_default(LEGATE_DISABLE_MPI, LEGATE_DISABLE_MPI_TEST, &disable_mpi_);
     parse_value(LEGATE_IO_USE_VFD_GDS, &io_use_vfd_gds_);
+    set_need_network(!single_node_job());
   } catch (...) {
     constexpr Config DEFAULT_CONFIG{};
 

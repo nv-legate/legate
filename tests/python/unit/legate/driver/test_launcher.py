@@ -18,7 +18,7 @@ from ...util import powerset_nonempty
 if TYPE_CHECKING:
     from legate.util.types import LauncherType
 
-    from .util import GenConfig, GenObjs
+    from .util import GenConfig
 
 SYSTEM = System()
 
@@ -170,40 +170,6 @@ class TestLauncherEnv:
 
         assert env["GASNET_MPI_THREAD"] == "MPI_THREAD_MULTIPLE"
 
-    def test_need_gasnet_false(  # iff single rank
-        self, genconfig: GenConfig, launch: LauncherType
-    ) -> None:
-        config = genconfig(["--launcher", launch])
-
-        env = m.Launcher.create(config, SYSTEM).env
-
-        assert "LEGATE_NEED_NETWORK" not in env
-
-    @pytest.mark.parametrize("rank_var", m.RANK_ENV_VARS)
-    @pytest.mark.parametrize("multi_rank", ((1, 4), (2, 2), (4, 1)))
-    @pytest.mark.parametrize("rank", ("0", "1", "2"))
-    def test_need_network_true(  # iff multi rank
-        self,
-        genobjs: GenObjs,
-        launch: LauncherType,
-        rank_var: str,
-        multi_rank: tuple[int, int],
-        rank: str,
-    ) -> None:
-        if launch == "dask" and multi_rank[0] > 1:
-            pytest.skip("dask launcher only supports single-node")
-
-        # need to use full genobjs to simulate multi-rank for all cases
-        config, system, launcher = genobjs(
-            ["--launcher", launch],
-            multi_rank=multi_rank,
-            rank_env={rank_var: rank},
-        )
-
-        env = launcher.env
-
-        assert env["LEGATE_NEED_NETWORK"] == "1"
-
     @pytest.mark.parametrize("name", ("LEGATE_MAX_DIM", "LEGATE_MAX_FIELDS"))
     def test_legate_values(
         self, genconfig: GenConfig, name: str, launch: LauncherType
@@ -339,7 +305,7 @@ class TestSimpleLauncher:
 
 
 class TestMPILauncher:
-    XARGS1 = (
+    XARGS = (
         "-x",
         "DEFAULTS_PATH",
         "-x",
@@ -390,11 +356,6 @@ class TestMPILauncher:
         "GASNET_MPI_THREAD",
         "-x",
         "LD_LIBRARY_PATH",
-    )
-
-    # some invocations have LEGATE_NEED_NETWORK in between these
-
-    XARGS2 = (
         "-x",
         "LEGATE_MAX_DIM",
         "-x",
@@ -424,8 +385,7 @@ class TestMPILauncher:
                 "mpi_warn_on_fork",
                 "0",
             )
-            # + self.XARGS1
-            # + self.XARGS2
+            # + self.XARGS
         )
 
         # at least make sure LEGATE_CONFIG is forwarded
@@ -462,8 +422,7 @@ class TestMPILauncher:
                 "mpi_warn_on_fork",
                 "0",
             )
-            # + self.XARGS1
-            # + self.XARGS2
+            # + self.XARGS
             # + ("foo", "bar")
         )
 
@@ -502,9 +461,7 @@ class TestMPILauncher:
                 "mpi_warn_on_fork",
                 "0",
             )
-            # + self.XARGS1
-            # + ("-x", "LEGATE_NEED_NETWORK")
-            # + self.XARGS2
+            # + self.XARGS
         )
 
         # at least make sure LEGATE_CONFIG is forwarded
@@ -552,9 +509,7 @@ class TestMPILauncher:
                 "mpi_warn_on_fork",
                 "0",
             )
-            # + self.XARGS1
-            # + ("-x", "LEGATE_NEED_NETWORK")
-            # + self.XARGS2
+            # + self.XARGS
             # + ("foo", "bar")
         )
 

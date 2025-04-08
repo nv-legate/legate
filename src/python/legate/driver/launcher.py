@@ -188,10 +188,6 @@ class Launcher:
             env["UCX_CUDA_COPY_MAX_REG_RATIO"] = "1.0"
             env["UCX_RCACHE_PURGE_ON_FORK"] = "n"
 
-        if config.multi_node.ranks > 1:
-            assert "LEGATE_NEED_NETWORK" not in system.env
-            env["LEGATE_NEED_NETWORK"] = "1"
-
         # Configure certain limits
         LEGATE_MAX_DIM = system.env.get(
             "LEGATE_MAX_DIM",

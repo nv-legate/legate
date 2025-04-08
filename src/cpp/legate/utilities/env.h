@@ -38,38 +38,6 @@ LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_TEST);
 LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_SHOW_USAGE);
 
 /**
- * @var LEGATE_NEED_CUDA
- *
- * @brief Instructs Legate that it must be CUDA-aware. Possible values: 0, 1.
- *
- * Enabling this, means that Legate must have been configured with CUDA support, and that a
- * CUDA-capable device must be present at startup. If either of these conditions are not met,
- * Legate will abort execution.
- */
-LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_CUDA);
-
-/**
- * @var LEGATE_NEED_OPENMP
- *
- * @brief Instructs Legate that it must be OpenMP-aware. Possible values: 0, 1.
- *
- * Enabling this, means that Legate must have been configured with OpenMP support, and that a
- * OpenMP-capable device must be present at startup. If either of these conditions are not met,
- * Legate will abort execution.
- */
-LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_OPENMP);
-
-/**
- * @var LEGATE_NEED_NETWORK
- *
- * @brief Instructs Legate that it must be network-aware. Possible values: 0, 1
- *
- * Enabling this, means that Legate must have been configured with networking support. If
- * either of this condition is not met, Legate will abort execution.
- */
-LEGATE_CHECK_ENV_VAR_DOCS(LEGATE_NEED_NETWORK);
-
-/**
  * @var LEGATE_AUTO_CONFIG
  *
  * @brief Enables Legate's automatic machine configuration heuristics (turned on by default).
