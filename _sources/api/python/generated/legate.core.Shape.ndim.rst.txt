@@ -1,4 +1,4 @@
-legate.core.Shape.ndim
+﻿legate.core.Shape.ndim
 ======================
 
 .. currentmodule:: legate.core

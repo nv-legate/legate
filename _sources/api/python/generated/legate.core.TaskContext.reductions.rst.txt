@@ -1,6 +1,0 @@
-legate.core.TaskContext.reductions
-==================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: TaskContext.reductions

@@ -1,6 +1,0 @@
-legate.core.LogicalArray.transpose
-==================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: LogicalArray.transpose

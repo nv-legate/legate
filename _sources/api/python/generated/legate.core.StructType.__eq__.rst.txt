@@ -1,6 +1,0 @@
-legate.core.StructType.\_\_eq\_\_
-=================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: StructType.__eq__

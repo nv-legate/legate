@@ -1,4 +1,4 @@
-legate.core.AutoTask.set\_concurrent
+﻿legate.core.AutoTask.set\_concurrent
 ====================================
 
 .. currentmodule:: legate.core

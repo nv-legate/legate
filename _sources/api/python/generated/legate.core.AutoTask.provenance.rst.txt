@@ -1,6 +1,0 @@
-legate.core.AutoTask.provenance
-===============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: AutoTask.provenance

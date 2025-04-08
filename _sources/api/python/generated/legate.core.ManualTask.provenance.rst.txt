@@ -1,6 +1,0 @@
-legate.core.ManualTask.provenance
-=================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: ManualTask.provenance

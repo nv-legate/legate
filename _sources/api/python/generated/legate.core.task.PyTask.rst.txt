@@ -14,7 +14,7 @@
    .. autosummary::
       :toctree: .
    
-      ~PyTask.library
+      ~PyTask.UNREGISTERED_ID
       ~PyTask.registered
       ~PyTask.task_id
    

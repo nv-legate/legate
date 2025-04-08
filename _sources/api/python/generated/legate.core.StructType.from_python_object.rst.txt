@@ -1,6 +1,0 @@
-legate.core.StructType.from\_python\_object
-===========================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: StructType.from_python_object

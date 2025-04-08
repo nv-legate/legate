@@ -1,6 +1,0 @@
-legate.core.PhysicalArray.child
-===============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: PhysicalArray.child

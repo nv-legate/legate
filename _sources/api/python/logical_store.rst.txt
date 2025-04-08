@@ -3,7 +3,7 @@
 Store
 =====
 
-``LogicalStore`` is a multi-dimensional data container for fixed-size elements.
+`LogicalStore` is a multi-dimensional data container for fixed-size elements.
 Stores are internally partitioned and distributed across the system. By
 default, Legate clients need not create nor maintain the partitions explicitly,
 and the Legate runtime is responsible for managing them. Legate clients can

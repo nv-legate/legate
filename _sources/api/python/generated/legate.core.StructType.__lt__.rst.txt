@@ -1,6 +1,0 @@
-legate.core.StructType.\_\_lt\_\_
-=================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: StructType.__lt__

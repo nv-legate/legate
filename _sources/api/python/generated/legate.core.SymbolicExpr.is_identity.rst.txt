@@ -1,6 +1,0 @@
-legate.core.SymbolicExpr.is\_identity
-=====================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: SymbolicExpr.is_identity

@@ -1,6 +1,0 @@
-legate.core.AutoTask.add\_communicator
-======================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: AutoTask.add_communicator

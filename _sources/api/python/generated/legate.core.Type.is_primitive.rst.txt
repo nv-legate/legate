@@ -1,6 +1,0 @@
-legate.core.Type.is\_primitive
-==============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: Type.is_primitive

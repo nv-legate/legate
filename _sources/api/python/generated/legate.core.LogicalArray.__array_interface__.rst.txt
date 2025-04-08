@@ -1,6 +1,0 @@
-legate.core.LogicalArray.\_\_array\_interface\_\_
-=================================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: LogicalArray.__array_interface__

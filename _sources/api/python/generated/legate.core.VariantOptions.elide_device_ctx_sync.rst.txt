@@ -1,6 +1,0 @@
-legate.core.VariantOptions.elide\_device\_ctx\_sync
-===================================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: VariantOptions.elide_device_ctx_sync

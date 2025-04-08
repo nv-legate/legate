@@ -1,6 +1,0 @@
-legate.core.PhysicalStore.type
-==============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: PhysicalStore.type

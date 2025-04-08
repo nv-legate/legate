@@ -1,6 +1,0 @@
-legate.core.StructType.variable\_size
-=====================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: StructType.variable_size

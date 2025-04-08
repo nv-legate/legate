@@ -1,4 +1,4 @@
-legate.core.AutoTask.add\_cpu\_communicator
+﻿legate.core.AutoTask.add\_cpu\_communicator
 ===========================================
 
 .. currentmodule:: legate.core

@@ -1,6 +1,0 @@
-legate.core.SymbolicExpr.\_\_ne\_\_
-===================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: SymbolicExpr.__ne__

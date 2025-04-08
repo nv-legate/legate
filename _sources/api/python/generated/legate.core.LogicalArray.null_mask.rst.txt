@@ -1,6 +1,0 @@
-legate.core.LogicalArray.null\_mask
-===================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: LogicalArray.null_mask

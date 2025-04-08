@@ -1,6 +1,0 @@
-legate.core.ResourceConfig.max\_dyn\_tasks
-==========================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: ResourceConfig.max_dyn_tasks

@@ -47,8 +47,8 @@ The actual task implementation resides on the C++ side.
 Manually Parallelized Tasks
 ---------------------------
 
-In some occasions, tasks are unnatural or even impossible to write in the
-auto-parallelized style. For those occasions, Legate provides explicit control
+In some occassions, tasks are unnatural or even impossible to write in the
+auto-parallelized style. For those occassions, Legate provides explicit control
 on how tasks are parallelized via ``ManualTask``. Each manual task requires the
 caller to provide a `launch domain` that determines the degree of parallelism
 and also names task instances initiaed by the task. Direct store arguments to a

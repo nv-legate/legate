@@ -1,6 +1,0 @@
-legate.core.TaskConfig.task\_id
-===============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: TaskConfig.task_id

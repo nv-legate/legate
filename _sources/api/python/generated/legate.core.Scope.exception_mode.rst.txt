@@ -1,6 +1,0 @@
-legate.core.Scope.exception\_mode
-=================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Scope.exception_mode

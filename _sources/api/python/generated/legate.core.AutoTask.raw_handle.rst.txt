@@ -1,6 +1,0 @@
-legate.core.AutoTask.raw\_handle
-================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: AutoTask.raw_handle

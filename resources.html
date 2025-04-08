@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Resources &#8212; NVIDIA legate (25.05.00.dev82+gda49e135)</title>
+    <title>Resources &#8212; NVIDIA legate</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=3a9a72e2"></script>
+    <script src="_static/documentation_options.js?v=6c75b2f1"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -51,7 +51,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.05';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.03';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -59,7 +59,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Contributing to Legate" href="CONTRIBUTING.html" />
-    <link rel="prev" title="Using GPUDirect Storage to perform HDF5 file I/O" href="hdf5_gds.html" />
+    <link rel="prev" title="GASNet-based Installation" href="gasnet.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -129,11 +129,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev82+gda49e135) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev82+gda49e135) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev82+gda49e135)</p>
+    <p class="title logo__title">NVIDIA legate</p>
   
 </a></div>
     
@@ -236,11 +236,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev82+gda49e135) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev82+gda49e135) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev82+gda49e135)</p>
+    <p class="title logo__title">NVIDIA legate</p>
   
 </a>
 
@@ -315,7 +315,6 @@
 <li class="toctree-l2"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="jupyter.html">Using with Jupyter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gasnet.html">GASNet-based Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hdf5_gds.html">HDF5 GPU-Direct Storage I/O</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Links to resources</a></li>
 </ul>
 </details></li>
@@ -334,26 +333,8 @@
 <li class="toctree-l4"><a class="reference internal" href="api/python/operation.html">Operations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/logical_store.html">Store</a></li>
 
-<li class="toctree-l4"><a class="reference internal" href="api/python/logical_array.html">Arrays</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/physical_store.html">Physical Store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/physical_array.html">Physical Array</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/scalar.html">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/machine.html">Machine and Resource Scoping</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/shape.html">Shape</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/variant_options.html">Variant Options</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/resource_config.html">ResourceConfig</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/task_context.html">Task Context</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/domain.html">Domains</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/task_config.html">Task Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/inline_allocation.html">Inline Allocations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/symbolic_expr.html">Symbolic Expressions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/auto_task.html">Auto Tasks</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/manual_task.html">Manual Tasks</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/constraint.html">Constraints</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/variable.html">Variables</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/library.html">Library</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/scope.html">Execution Scope</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/types.html">Types</a></li>
 </ul>
 </details></li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -372,6 +353,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/python/io/index.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/python/io/hdf5_gds.html">Using GPUDirect Storage to perform HDF5 file I/O</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
@@ -400,7 +382,6 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="versions.html">Versions</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="changes/2505.html">2505</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes/2503.html">2503</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes/2501.html">2501</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes/2411.html">2411</a></li>
@@ -420,12 +401,6 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
 </ul>
 </details></li>
-</ul>
-</details></li>
-</ul>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="developer/style.html">Style</a></li>
 </ul>
 </details></li>
 </ul>
@@ -535,12 +510,12 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="hdf5_gds.html"
+       href="gasnet.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Using GPUDirect Storage to perform HDF5 file I/O</p>
+        <p class="prev-next-title">GASNet-based Installation</p>
       </div>
     </a>
     <a class="right-next"

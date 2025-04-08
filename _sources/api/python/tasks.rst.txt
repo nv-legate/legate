@@ -40,7 +40,7 @@ which are checked by the decorator.
    restriction may be lifted.
 
 It is possible to take and pass store arguments to a Python task, just like a regular C++
-task. This is done by using the special ``Input``, ``Output``, or ``Reduction`` store/array
+task. This is done by using the special ``Input``, ``Ouput``, or ``Reduction`` store/array
 type hints:
 
 .. testcode::
@@ -106,8 +106,6 @@ not propagate outside the task body!
 
    foo(12.34, {"hello": "there"}, MyClass())
 
-
-.. _label_explicit_task_context_argument:
 
 Explicit Task Context Argument
 ------------------------------

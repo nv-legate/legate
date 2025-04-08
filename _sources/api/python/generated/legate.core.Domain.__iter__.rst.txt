@@ -1,6 +1,0 @@
-legate.core.Domain.\_\_iter\_\_
-===============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Domain.__iter__

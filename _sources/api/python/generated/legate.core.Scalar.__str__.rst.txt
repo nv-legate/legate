@@ -1,6 +1,0 @@
-legate.core.Scalar.\_\_str\_\_
-==============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Scalar.__str__

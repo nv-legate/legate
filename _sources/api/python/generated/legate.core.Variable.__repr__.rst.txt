@@ -1,6 +1,0 @@
-legate.core.Variable.\_\_repr\_\_
-=================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Variable.__repr__

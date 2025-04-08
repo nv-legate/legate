@@ -1,6 +1,0 @@
-legate.core.Scope.\_\_exit\_\_
-==============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Scope.__exit__

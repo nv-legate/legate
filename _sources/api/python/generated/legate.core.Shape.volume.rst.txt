@@ -1,4 +1,4 @@
-legate.core.Shape.volume
+﻿legate.core.Shape.volume
 ========================
 
 .. currentmodule:: legate.core
