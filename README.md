@@ -25,6 +25,11 @@ Pre-built Legate packages are available from
 https://docs.nvidia.com/legate/latest/installation.html for details about
 different install configurations.
 
+📌 **Note**
+
+Packages are only offered for Linux (x86_64 and aarch64) supporting Python
+versions 3.10 to 3.12.
+
 ## Documentation
 
 A complete list of available features and APIs can be found in the [Legate
