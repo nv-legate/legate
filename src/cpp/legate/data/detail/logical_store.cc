@@ -942,7 +942,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
       store_part = create_tiling(std::move(tile_shape), std::move(launch_shape));
     }
   } else {
-    store_part = storage_part->convert(storage_part, transform_.get());
+    store_part = storage_part->convert(storage_part, transform());
     LEGATE_ASSERT(store_part);
   }
   return store_part;
@@ -965,7 +965,7 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
                                      InternalSharedPtr<Partition> partition)
 {
   num_pieces_ = machine.count();
-  get_storage()->set_key_partition(machine, partition->invert(partition, transform_.get()));
+  get_storage()->set_key_partition(machine, partition->invert(partition, transform()));
   key_partition_ = std::move(partition);
 }
 
@@ -987,7 +987,7 @@ InternalSharedPtr<LogicalStorePartition> LogicalStore::create_partition_(
     throw TracedException<std::invalid_argument>{"Unbound store cannot be manually partitioned"};
   }
   auto storage_partition = create_storage_partition(
-    get_storage(), partition->invert(partition, transform_.get()), std::move(complete));
+    get_storage(), partition->invert(partition, transform()), std::move(complete));
   return make_internal_shared<LogicalStorePartition>(
     std::move(partition), std::move(storage_partition), self);
 }
@@ -1163,7 +1163,7 @@ std::string LogicalStore::to_string() const
     fmt::format_to(std::back_inserter(result), "{}", extents());
   }
   if (!transform_->identity()) {
-    fmt::format_to(std::back_inserter(result), ", transform: {}", fmt::streamed(*transform_));
+    fmt::format_to(std::back_inserter(result), ", transform: {}", fmt::streamed(*transform()));
   }
   fmt::format_to(std::back_inserter(result), ", type: {}, storage: {}}}", *type(), *get_storage());
   return result;

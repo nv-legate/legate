@@ -41,10 +41,19 @@ Functions
 #. Functions should be short and sweet. They should do one thing, and do it very well. A
    general rule is that if a particular function exceeds 50 lines, or 3 levels of nesting
    then it should be broken up into smaller pieces.
+
 #. Functions that are used only in the current translation unit should be moved inside
    anonymous namespaces.
+
 #. Functions should not take in-out parameters if this can be avoided. If possible, if a
    function produces some effect, it should return it as a value.
+
+#. Do not use raw pointer arguments for input parameters. Use either smart pointers,
+   references, or, when necessary, ``std::reference_wrapper``. Similarly, never use
+   ``nullptr`` to indicate lack of value for a pointer-like type. If a pointer argument is
+   optional to the caller, then wrap it in a ``std::optional`` instead. Legate assumes all
+   pointers to be non-NULL.
+
 #. Functions taking out-parameters (if it cannot be avoided), should take them as a
    pointer, not by reference. Out-parameters must come last in the function definition. For example:
 
@@ -148,6 +157,7 @@ Functions
 
    In this case, it is better to have it defined in the ``.cc``, where the compiler can
    inline the other function call, resulting in more efficient code overall.
+
 
 Variables
 ---------

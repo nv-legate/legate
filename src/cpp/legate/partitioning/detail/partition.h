@@ -63,9 +63,11 @@ class Partition {
   [[nodiscard]] virtual const tuple<std::uint64_t>& color_shape() const = 0;
 
   [[nodiscard]] virtual InternalSharedPtr<Partition> convert(
-    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const = 0;
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const = 0;
   [[nodiscard]] virtual InternalSharedPtr<Partition> invert(
-    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const = 0;
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const = 0;
 };
 
 class NoPartition : public Partition {
@@ -94,9 +96,11 @@ class NoPartition : public Partition {
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> convert(
-    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> invert(const InternalSharedPtr<Partition>& self,
-                                                    const TransformStack* transform) const override;
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const override;
+  [[nodiscard]] InternalSharedPtr<Partition> invert(
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const override;
 };
 
 class Tiling : public Partition {
@@ -136,9 +140,11 @@ class Tiling : public Partition {
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> convert(
-    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> invert(const InternalSharedPtr<Partition>& self,
-                                                    const TransformStack* transform) const override;
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const override;
+  [[nodiscard]] InternalSharedPtr<Partition> invert(
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const override;
 
   [[nodiscard]] const tuple<std::int64_t>& offsets() const;
   [[nodiscard]] bool has_color(const tuple<std::uint64_t>& color) const;
@@ -189,9 +195,11 @@ class Weighted : public Partition {
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> convert(
-    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> invert(const InternalSharedPtr<Partition>& self,
-                                                    const TransformStack* transform) const override;
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const override;
+  [[nodiscard]] InternalSharedPtr<Partition> invert(
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const override;
 
   Weighted(const Weighted&)                = default;
   Weighted& operator=(const Weighted&)     = default;
@@ -237,9 +245,11 @@ class Image : public Partition {
   [[nodiscard]] const tuple<std::uint64_t>& color_shape() const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> convert(
-    const InternalSharedPtr<Partition>& self, const TransformStack* transform) const override;
-  [[nodiscard]] InternalSharedPtr<Partition> invert(const InternalSharedPtr<Partition>& self,
-                                                    const TransformStack* transform) const override;
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const override;
+  [[nodiscard]] InternalSharedPtr<Partition> invert(
+    const InternalSharedPtr<Partition>& self,
+    const InternalSharedPtr<TransformStack>& transform) const override;
 
  private:
   InternalSharedPtr<detail::LogicalStore> func_;

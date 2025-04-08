@@ -46,14 +46,16 @@ Legion::Domain NoPartition::launch_domain() const
 
 std::string NoPartition::to_string() const { return "NoPartition"; }
 
-InternalSharedPtr<Partition> NoPartition::convert(const InternalSharedPtr<Partition>& self,
-                                                  const TransformStack* /*transform*/) const
+InternalSharedPtr<Partition> NoPartition::convert(
+  const InternalSharedPtr<Partition>& self,
+  const InternalSharedPtr<TransformStack>& /*transform*/) const
 {
   return self;
 }
 
-InternalSharedPtr<Partition> NoPartition::invert(const InternalSharedPtr<Partition>& self,
-                                                 const TransformStack* /*transform*/) const
+InternalSharedPtr<Partition> NoPartition::invert(
+  const InternalSharedPtr<Partition>& self,
+  const InternalSharedPtr<TransformStack>& /*transform*/) const
 {
   return self;
 }
@@ -211,8 +213,9 @@ std::string Tiling::to_string() const
                      strides_);
 }
 
-InternalSharedPtr<Partition> Tiling::convert(const InternalSharedPtr<Partition>& self,
-                                             const TransformStack* transform) const
+InternalSharedPtr<Partition> Tiling::convert(
+  const InternalSharedPtr<Partition>& self,
+  const InternalSharedPtr<TransformStack>& transform) const
 {
   if (transform->identity()) {
     return self;
@@ -223,8 +226,9 @@ InternalSharedPtr<Partition> Tiling::convert(const InternalSharedPtr<Partition>&
                        transform->convert_extents(strides_));
 }
 
-InternalSharedPtr<Partition> Tiling::invert(const InternalSharedPtr<Partition>& self,
-                                            const TransformStack* transform) const
+InternalSharedPtr<Partition> Tiling::invert(
+  const InternalSharedPtr<Partition>& self,
+  const InternalSharedPtr<TransformStack>& transform) const
 {
   if (transform->identity()) {
     return self;
@@ -346,18 +350,19 @@ std::string Weighted::to_string() const
   return result;
 }
 
-InternalSharedPtr<Partition> Weighted::convert(const InternalSharedPtr<Partition>& self,
-                                               const TransformStack* transform) const
+InternalSharedPtr<Partition> Weighted::convert(
+  const InternalSharedPtr<Partition>& self,
+  const InternalSharedPtr<TransformStack>& transform) const
 {
   if (transform->identity()) {
     return self;
   }
   throw TracedException<NonInvertibleTransformation>{};
-  return nullptr;
 }
 
-InternalSharedPtr<Partition> Weighted::invert(const InternalSharedPtr<Partition>& self,
-                                              const TransformStack* transform) const
+InternalSharedPtr<Partition> Weighted::invert(
+  const InternalSharedPtr<Partition>& self,
+  const InternalSharedPtr<TransformStack>& transform) const
 {
   if (transform->identity()) {
     return self;
@@ -485,24 +490,23 @@ std::string Image::to_string() const
 
 const tuple<std::uint64_t>& Image::color_shape() const { return func_partition_->color_shape(); }
 
-InternalSharedPtr<Partition> Image::convert(const InternalSharedPtr<Partition>& self,
-                                            const detail::TransformStack* transform) const
+InternalSharedPtr<Partition> Image::convert(
+  const InternalSharedPtr<Partition>& self,
+  const InternalSharedPtr<TransformStack>& transform) const
 {
   if (transform->identity()) {
     return self;
   }
   throw TracedException<NonInvertibleTransformation>{};
-  return nullptr;
 }
 
 InternalSharedPtr<Partition> Image::invert(const InternalSharedPtr<Partition>& self,
-                                           const detail::TransformStack* transform) const
+                                           const InternalSharedPtr<TransformStack>& transform) const
 {
   if (transform->identity()) {
     return self;
   }
   throw TracedException<NonInvertibleTransformation>{};
-  return nullptr;
 }
 
 InternalSharedPtr<NoPartition> create_no_partition()
