@@ -1,0 +1,35 @@
+﻿legate.core.PhysicalStore
+=========================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: PhysicalStore
+
+   .. automethod:: PhysicalStore.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~PhysicalStore.__array_interface__
+      ~PhysicalStore.__cuda_array_interface__
+      ~PhysicalStore.domain
+      ~PhysicalStore.ndim
+      ~PhysicalStore.target
+      ~PhysicalStore.type
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~PhysicalStore.get_inline_allocation
+   
+   

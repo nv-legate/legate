@@ -1,0 +1,6 @@
+legate.core.Library.get\_reduction\_op\_id
+==========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Library.get_reduction_op_id

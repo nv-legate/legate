@@ -1,0 +1,6 @@
+legate.core.TaskContext.can\_raise\_exception
+=============================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: TaskContext.can_raise_exception

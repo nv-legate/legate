@@ -1,0 +1,6 @@
+legate.core.FixedArrayType.raw\_ptr
+===================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: FixedArrayType.raw_ptr

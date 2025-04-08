@@ -1,4 +1,4 @@
-﻿legate.core.ManualTask.set\_concurrent
+legate.core.ManualTask.set\_concurrent
 ======================================
 
 .. currentmodule:: legate.core

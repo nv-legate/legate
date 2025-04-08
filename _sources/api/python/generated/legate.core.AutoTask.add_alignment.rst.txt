@@ -1,4 +1,4 @@
-﻿legate.core.AutoTask.add\_alignment
+legate.core.AutoTask.add\_alignment
 ===================================
 
 .. currentmodule:: legate.core

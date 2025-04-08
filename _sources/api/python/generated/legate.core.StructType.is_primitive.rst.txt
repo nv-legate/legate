@@ -1,0 +1,6 @@
+legate.core.StructType.is\_primitive
+====================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructType.is_primitive

@@ -1,0 +1,6 @@
+legate.core.Type.variable\_size
+===============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Type.variable_size

@@ -1,0 +1,36 @@
+﻿legate.core.Scalar
+==================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: Scalar
+
+   .. automethod:: Scalar.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~Scalar.__array_interface__
+      ~Scalar.ptr
+      ~Scalar.raw_handle
+      ~Scalar.type
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~Scalar.__repr__
+      ~Scalar.__str__
+      ~Scalar.null
+      ~Scalar.value
+   
+   

@@ -1,0 +1,6 @@
+legate.core.SymbolicExpr.\_\_gt\_\_
+===================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: SymbolicExpr.__gt__

@@ -1,0 +1,6 @@
+legate.core.ManualTask.add\_cal\_communicator
+=============================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: ManualTask.add_cal_communicator

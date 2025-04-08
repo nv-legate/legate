@@ -1,0 +1,6 @@
+legate.core.Scalar.raw\_handle
+==============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Scalar.raw_handle

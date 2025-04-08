@@ -1,0 +1,6 @@
+legate.core.PhysicalArray.type
+==============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: PhysicalArray.type

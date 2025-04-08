@@ -1,4 +1,4 @@
-﻿legate.core.ManualTask.throws\_exception
+legate.core.ManualTask.throws\_exception
 ========================================
 
 .. currentmodule:: legate.core

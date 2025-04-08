@@ -1,0 +1,6 @@
+legate.core.PhysicalStore.target
+================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: PhysicalStore.target

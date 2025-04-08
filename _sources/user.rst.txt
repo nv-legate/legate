@@ -10,4 +10,5 @@ User Guide
   Usage <usage.rst>
   Using with Jupyter <jupyter.rst>
   GASNet-based Installation <gasnet.rst>
+  HDF5 GPU-Direct Storage I/O <hdf5_gds>
   Links to resources <resources.rst>

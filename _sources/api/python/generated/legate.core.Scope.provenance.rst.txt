@@ -1,0 +1,6 @@
+legate.core.Scope.provenance
+============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Scope.provenance

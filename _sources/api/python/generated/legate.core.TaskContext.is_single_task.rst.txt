@@ -1,0 +1,6 @@
+legate.core.TaskContext.is\_single\_task
+========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: TaskContext.is_single_task

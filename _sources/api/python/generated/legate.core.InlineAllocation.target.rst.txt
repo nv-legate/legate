@@ -1,0 +1,6 @@
+legate.core.InlineAllocation.target
+===================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: InlineAllocation.target

@@ -1,4 +1,4 @@
-﻿legate.core.ManualTask.execute
+legate.core.ManualTask.execute
 ==============================
 
 .. currentmodule:: legate.core

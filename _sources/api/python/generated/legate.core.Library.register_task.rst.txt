@@ -1,0 +1,6 @@
+legate.core.Library.register\_task
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Library.register_task

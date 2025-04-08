@@ -1,0 +1,6 @@
+legate.core.Domain.\_make
+=========================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Domain._make

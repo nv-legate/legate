@@ -1,0 +1,6 @@
+legate.core.StructType.size
+===========================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructType.size

@@ -1,0 +1,6 @@
+legate.core.StructType.aligned
+==============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructType.aligned

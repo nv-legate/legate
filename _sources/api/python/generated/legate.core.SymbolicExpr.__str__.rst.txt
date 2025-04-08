@@ -1,0 +1,6 @@
+legate.core.SymbolicExpr.\_\_str\_\_
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: SymbolicExpr.__str__

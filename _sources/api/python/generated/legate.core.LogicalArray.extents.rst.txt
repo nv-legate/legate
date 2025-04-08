@@ -1,0 +1,6 @@
+legate.core.LogicalArray.extents
+================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: LogicalArray.extents

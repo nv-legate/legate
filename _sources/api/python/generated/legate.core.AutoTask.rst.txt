@@ -1,0 +1,49 @@
+﻿legate.core.AutoTask
+====================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: AutoTask
+
+   .. automethod:: AutoTask.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~AutoTask.exception_types
+      ~AutoTask.raw_handle
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~AutoTask.add_alignment
+      ~AutoTask.add_broadcast
+      ~AutoTask.add_cal_communicator
+      ~AutoTask.add_communicator
+      ~AutoTask.add_constraint
+      ~AutoTask.add_cpu_communicator
+      ~AutoTask.add_input
+      ~AutoTask.add_nccl_communicator
+      ~AutoTask.add_output
+      ~AutoTask.add_reduction
+      ~AutoTask.add_scalar_arg
+      ~AutoTask.declare_partition
+      ~AutoTask.execute
+      ~AutoTask.find_or_declare_partition
+      ~AutoTask.lock
+      ~AutoTask.provenance
+      ~AutoTask.set_concurrent
+      ~AutoTask.set_side_effect
+      ~AutoTask.throws_exception
+   
+   

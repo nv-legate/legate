@@ -1,0 +1,6 @@
+legate.core.StructType.field\_type
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructType.field_type

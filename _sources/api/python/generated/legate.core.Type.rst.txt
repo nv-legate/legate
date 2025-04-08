@@ -1,0 +1,48 @@
+﻿legate.core.Type
+================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: Type
+
+   .. automethod:: Type.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~Type.alignment
+      ~Type.code
+      ~Type.is_primitive
+      ~Type.raw_ptr
+      ~Type.size
+      ~Type.uid
+      ~Type.variable_size
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~Type.__eq__
+      ~Type.__ge__
+      ~Type.__gt__
+      ~Type.__hash__
+      ~Type.__le__
+      ~Type.__lt__
+      ~Type.__ne__
+      ~Type.__repr__
+      ~Type.from_numpy_dtype
+      ~Type.from_python_object
+      ~Type.record_reduction_op
+      ~Type.reduction_op_id
+      ~Type.to_numpy_dtype
+   
+   
