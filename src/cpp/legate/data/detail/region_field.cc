@@ -44,20 +44,30 @@ class GetInlineAllocFn {
 
  public:
   template <typename Rect, typename Acc>
-  [[nodiscard]] InlineAllocation create(std::int32_t DIM, const Rect& rect, Acc&& acc)
+  [[nodiscard]] InlineAllocation create(const Legion::PhysicalRegion& pr,
+                                        std::int32_t DIM,
+                                        const Rect& rect,
+                                        Acc&& acc)
   {
     auto strides = std::vector<std::size_t>(DIM, 0);
     // If the memory pointed to by acc here is ever actually const, then we are in big trouble.
-    auto* ptr = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
+    const void* ptr   = acc.ptr(rect, strides.data());
+    const auto target = [&] {
+      std::set<Memory> mems;
 
-    return {ptr, std::move(strides)};
+      pr.get_memories(mems);
+      LEGATE_CHECK(mems.size() == 1);
+      return mapping::detail::to_target(mems.begin()->kind());
+    }();
+
+    return {const_cast<void*>(ptr), std::move(strides), target};
   }
 
   template <std::int32_t DIM>
   [[nodiscard]] InlineAllocation operator()(const Legion::PhysicalRegion& pr, Legion::FieldID fid)
   {
     const Rect<DIM> rect{pr};
-    return create(DIM, rect, UnsafeAccessor<DIM>{pr, fid, rect});
+    return create(pr, DIM, rect, UnsafeAccessor<DIM>{pr, fid, rect});
   }
 
   template <std::int32_t M, std::int32_t N>
@@ -68,7 +78,7 @@ class GetInlineAllocFn {
   {
     const Rect<N> rect =
       domain.dim > 0 ? Rect<N>{domain} : Rect<N>{Point<N>::ZEROES(), Point<N>::ZEROES()};
-    return create(N, rect, UnsafeAccessor<N>{pr, fid, transform, rect});
+    return create(pr, N, rect, UnsafeAccessor<N>{pr, fid, transform, rect});
   }
 };
 

@@ -11,8 +11,8 @@ from libc.stdint cimport int32_t, uintptr_t
 
 from ..type.types cimport Type
 from ..utilities.typedefs cimport _Domain, _DomainPoint
+from ..mapping.mapping cimport StoreTarget
 from .physical_store cimport PhysicalStore
-
 
 cdef class InlineAllocation:
     @staticmethod
@@ -71,6 +71,21 @@ cdef class InlineAllocation:
         self._shape = tuple(max(hi[i] - lo[i] + 1, 0) for i in range(ndim))
         return self._shape
 
+    @property
+    def target(self) -> StoreTarget:
+        r"""
+        Return the type of memory held by this ``InlineAllocation``.
+
+        :returns: The memory type.
+        :rtype: StoreTarget
+        """
+        cdef StoreTarget ret
+
+        with nogil:
+            ret = self._handle.target
+
+        return ret
+
     cdef dict _get_array_interface(self):
         cdef Type ty = self._store.type
         cdef tuple shape = self.shape
@@ -101,7 +116,7 @@ cdef class InlineAllocation:
 
         :raises ValueError: If the allocation is allocated on the GPU.
         """
-        if self._store.target == StoreTarget.FBMEM:
+        if self.target == StoreTarget.FBMEM:
             raise ValueError(
                 "Physical store in a framebuffer memory does not support "
                 "the array interface"
@@ -118,7 +133,7 @@ cdef class InlineAllocation:
 
         :raises ValueError: If the array is in host-only memory
         """
-        if self._store.target not in (StoreTarget.FBMEM, StoreTarget.ZCMEM):
+        if self.target not in (StoreTarget.FBMEM, StoreTarget.ZCMEM):
             raise ValueError(
                 "Physical store in a host-only memory does not support "
                 "the CUDA array interface"
@@ -136,7 +151,7 @@ cdef class InlineAllocation:
         str
             The string representation.
         """
-        return f"InlineAllocation({self.ptr}, {self.strides})"
+        return f"InlineAllocation({self.ptr}, {self.strides}, {self.target})"
 
     def __repr__(self) -> str:
         r"""

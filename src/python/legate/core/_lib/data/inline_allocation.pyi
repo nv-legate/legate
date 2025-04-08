@@ -4,6 +4,8 @@
 
 from typing import Any
 
+from ..mapping.mapping import StoreTarget
+
 class InlineAllocation:
     @property
     def ptr(self) -> int: ...
@@ -11,6 +13,8 @@ class InlineAllocation:
     def strides(self) -> tuple[int, ...]: ...
     @property
     def shape(self) -> tuple[int, ...]: ...
+    @property
+    def target(self) -> StoreTarget: ...
     @property
     def __array_interface__(self) -> dict[str, Any]: ...
     @property

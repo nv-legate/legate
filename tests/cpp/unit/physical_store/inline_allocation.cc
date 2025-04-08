@@ -6,6 +6,7 @@
 
 #include <legate.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <utilities/utilities.h>
@@ -17,11 +18,10 @@ namespace {
 class FutureStoreTask : public legate::LegateTask<FutureStoreTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{1}};
+    legate::TaskConfig{legate::LocalTaskID{1}}.with_variant_options(
+      legate::VariantOptions{}.with_has_allocations(true));
 
   static void cpu_variant(legate::TaskContext context);
-
-  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
 /*static*/ void FutureStoreTask::cpu_variant(legate::TaskContext context)
@@ -31,7 +31,26 @@ class FutureStoreTask : public legate::LegateTask<FutureStoreTask> {
   ASSERT_NE(store.get_inline_allocation().ptr, nullptr);
   ASSERT_EQ(store.get_inline_allocation().strides.size(), store.dim());
   ASSERT_EQ(store.get_inline_allocation().strides.at(0), 0);
+  ASSERT_EQ(store.get_inline_allocation().target, legate::mapping::StoreTarget::SYSMEM);
   ASSERT_EQ(store.scalar<std::uint32_t>(), 1);
+}
+
+class GPUTask : public legate::LegateTask<GPUTask> {
+ public:
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{2}};
+
+  static void gpu_variant(legate::TaskContext context);
+};
+
+/*static*/ void GPUTask::gpu_variant(legate::TaskContext context)
+{
+  const auto store = context.input(0).data();
+  const auto alloc = store.get_inline_allocation();
+
+  ASSERT_THAT(
+    alloc.target,
+    ::testing::AnyOf(legate::mapping::StoreTarget::FBMEM, legate::mapping::StoreTarget::ZCMEM));
 }
 
 class Config {
@@ -41,6 +60,7 @@ class Config {
   static void registration_callback(legate::Library library)
   {
     FutureStoreTask::register_variants(library);
+    GPUTask::register_variants(library);
   }
 };
 
@@ -59,6 +79,25 @@ TEST_F(PhysicalStoreInlineAllocationUnit, FutureStoreByTask)
   runtime->submit(std::move(task));
 }
 
+TEST_F(PhysicalStoreInlineAllocationUnit, GPUTask)
+{
+  const auto machine = legate::get_machine().only(legate::mapping::TaskTarget::GPU);
+
+  if (machine.empty()) {
+    GTEST_SKIP() << "No GPUs available for GPU task";
+  }
+
+  const auto scope    = legate::Scope{machine};
+  auto* const runtime = legate::Runtime::get_runtime();
+  const auto lib      = runtime->find_library(Config::LIBRARY_NAME);
+  const auto store    = runtime->create_store(legate::Shape{2, 2, 2}, legate::int32());
+  auto task           = runtime->create_task(lib, GPUTask::TASK_CONFIG.task_id());
+
+  runtime->issue_fill(store, legate::Scalar{std::int32_t{1}});
+  task.add_input(store);
+  runtime->submit(std::move(task));
+}
+
 TEST_F(PhysicalStoreInlineAllocationUnit, ReadOnlyFutureStore)
 {
   auto runtime       = legate::Runtime::get_runtime();
@@ -69,6 +108,7 @@ TEST_F(PhysicalStoreInlineAllocationUnit, ReadOnlyFutureStore)
   ASSERT_NE(inline_alloc.ptr, nullptr);
   ASSERT_EQ(inline_alloc.strides.size(), store.dim());
   ASSERT_EQ(inline_alloc.strides.at(0), 0);
+  ASSERT_EQ(inline_alloc.target, legate::mapping::StoreTarget::SYSMEM);
 }
 
 TEST_F(PhysicalStoreInlineAllocationUnit, TransformedFutureStore)
@@ -83,6 +123,7 @@ TEST_F(PhysicalStoreInlineAllocationUnit, TransformedFutureStore)
   ASSERT_NE(inline_alloc.ptr, nullptr);
   ASSERT_EQ(inline_alloc.strides.size(), store.dim());
   ASSERT_EQ(inline_alloc.strides.at(0), 0);
+  ASSERT_EQ(inline_alloc.target, legate::mapping::StoreTarget::SYSMEM);
 }
 
 TEST_F(PhysicalStoreInlineAllocationUnit, BoundStore)
@@ -96,6 +137,7 @@ TEST_F(PhysicalStoreInlineAllocationUnit, BoundStore)
   ASSERT_EQ(inline_alloc.strides.size(), store.dim());
   ASSERT_EQ(inline_alloc.strides.at(0), sizeof(std::uint32_t) * 3);
   ASSERT_EQ(inline_alloc.strides.at(1), sizeof(std::uint32_t));
+  ASSERT_EQ(inline_alloc.target, legate::mapping::StoreTarget::SYSMEM);
 }
 
 }  // namespace physical_store_inline_allocation_test

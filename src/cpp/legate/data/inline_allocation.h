@@ -9,7 +9,14 @@
 #include <legate/utilities/detail/doxygen.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <vector>
+
+namespace legate::mapping {
+
+enum class StoreTarget : std::uint8_t;
+
+}  // namespace legate::mapping
 
 namespace legate {
 
@@ -23,6 +30,9 @@ namespace legate {
  */
 class InlineAllocation {
  public:
+  InlineAllocation() = default;
+  InlineAllocation(void* ptr_, std::vector<std::size_t> strides_, mapping::StoreTarget target_);
+
   /**
    * @brief pointer to the start of the allocation.
    */
@@ -42,7 +52,19 @@ class InlineAllocation {
    *    strides` would be `[48, 24, 8]` (entry `(i, j, k)` given by `48*i + 24*j + 8*k`).
    */
   std::vector<std::size_t> strides{};
+
+  /**
+   * @brief The type of memory that `ptr` resides in.
+   */
+  mapping::StoreTarget target{};
 };
+
+inline InlineAllocation::InlineAllocation(void* ptr_,
+                                          std::vector<std::size_t> strides_,
+                                          mapping::StoreTarget target_)
+  : ptr{ptr_}, strides{std::move(strides_)}, target{target_}
+{
+}
 
 /** @} */
 

@@ -99,20 +99,16 @@ class GetInlineAllocFromFuture {
                                             std::size_t field_size,
                                             std::size_t field_offset)
   {
-    const auto rect = domain_to_rect_<DIM>(domain);
-    const auto acc  = AccessorRO<std::int8_t, DIM>{future,
-                                                   rect,
-                                                   Memory::Kind::NO_MEMKIND,
-                                                   field_size,
-                                                   false /*check_field_size*/,
-                                                   false,
-                                                   nullptr,
-                                                   field_offset};
+    const auto memkind = find_memory_kind_for_executing_processor(/* host_accessible */ false);
+    const auto rect    = domain_to_rect_<DIM>(domain);
+    const auto acc     = AccessorRO<std::int8_t, DIM>{
+      future, rect, memkind, field_size, false /*check_field_size*/, false, nullptr, field_offset};
 
-    auto strides = std::vector<std::size_t>(DIM, 0);
-    auto ptr     = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
+    auto strides      = std::vector<std::size_t>(DIM, 0);
+    const void* ptr   = acc.ptr(rect, strides.data());
+    const auto target = mapping::detail::to_target(memkind);
 
-    return {ptr, std::move(strides)};
+    return {const_cast<void*>(ptr), std::move(strides), target};
   }
 
   template <std::int32_t DIM>
@@ -124,10 +120,11 @@ class GetInlineAllocFromFuture {
     const auto acc =
       AccessorRO<std::int8_t, DIM>{value, rect, field_size, false /*check_field_size*/};
 
-    auto strides = std::vector<std::size_t>(DIM, 0);
-    auto ptr     = const_cast<void*>(static_cast<const void*>(acc.ptr(rect, strides.data())));
+    auto strides      = std::vector<std::size_t>(DIM, 0);
+    const void* ptr   = acc.ptr(rect, strides.data());
+    const auto target = mapping::detail::to_target(value.get_instance().get_location().kind());
 
-    return {ptr, std::move(strides)};
+    return {const_cast<void*>(ptr), std::move(strides), target};
   }
 };
 

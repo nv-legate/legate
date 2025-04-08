@@ -50,6 +50,8 @@ C++
   ``legate::LogicalArray::get_physical_array()`` and
   ``legate::LogicalStore::get_physical_store()``. The ``target`` controls where
   the physical array/store is allocated.
+- Add ``legate::InlineAllocation::target`` member to signify which kind of memory the
+  inline allocation holds.
 
 .. rubric:: Mapping
 
@@ -85,6 +87,8 @@ Python
   ``legate.core.LogicalArray.get_physical_array()`` and
   ``legate.core.LogicalStore.get_physical_store()``. The ``target`` controls
   where the physical array/store is allocated.
+- Add ``legate.core.InlineAllocation.target`` property to retrieve the type of memory held
+  by the allocation.
 
 .. rubric:: Mapping
 
