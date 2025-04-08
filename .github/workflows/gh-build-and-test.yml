@@ -172,7 +172,7 @@ jobs:
     needs: test-within-container
     # The use of always() below, ensures the step will run even on failure of the tests
     # before if other conditionals are all true
-    if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.upload-enabled == false }}
+    if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.build-mode == 'release' && inputs.upload-enabled == false }}
     name: Upload package to Server
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.30
