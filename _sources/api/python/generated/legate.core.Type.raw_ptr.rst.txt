@@ -1,0 +1,6 @@
+legate.core.Type.raw\_ptr
+=========================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Type.raw_ptr

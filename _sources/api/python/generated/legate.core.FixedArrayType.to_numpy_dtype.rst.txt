@@ -1,0 +1,6 @@
+legate.core.FixedArrayType.to\_numpy\_dtype
+===========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: FixedArrayType.to_numpy_dtype

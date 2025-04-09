@@ -1,0 +1,6 @@
+legate.core.TaskContext.machine
+===============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: TaskContext.machine

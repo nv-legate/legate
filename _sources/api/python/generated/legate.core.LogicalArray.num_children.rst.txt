@@ -1,0 +1,6 @@
+legate.core.LogicalArray.num\_children
+======================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: LogicalArray.num_children

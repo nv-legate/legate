@@ -1,0 +1,6 @@
+legate.core.Scalar.\_\_repr\_\_
+===============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Scalar.__repr__

@@ -1,0 +1,52 @@
+﻿legate.core.StructType
+======================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: StructType
+
+   .. automethod:: StructType.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~StructType.aligned
+      ~StructType.alignment
+      ~StructType.code
+      ~StructType.is_primitive
+      ~StructType.num_fields
+      ~StructType.offsets
+      ~StructType.raw_ptr
+      ~StructType.size
+      ~StructType.uid
+      ~StructType.variable_size
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~StructType.__eq__
+      ~StructType.__ge__
+      ~StructType.__gt__
+      ~StructType.__hash__
+      ~StructType.__le__
+      ~StructType.__lt__
+      ~StructType.__ne__
+      ~StructType.__repr__
+      ~StructType.field_type
+      ~StructType.from_numpy_dtype
+      ~StructType.from_python_object
+      ~StructType.record_reduction_op
+      ~StructType.reduction_op_id
+      ~StructType.to_numpy_dtype
+   
+   

@@ -4,7 +4,7 @@
 Welcome to Legate.STL
 =====================
 
-Legate.STL is a C++ library that provides an STL-like iterface for
+Legate.STL is a C++ library that provides an STL-like interface for
 working with the Legate distributed runtime.
 
 It provides:

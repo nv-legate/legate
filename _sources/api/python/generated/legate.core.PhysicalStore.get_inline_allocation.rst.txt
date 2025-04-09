@@ -1,0 +1,6 @@
+legate.core.PhysicalStore.get\_inline\_allocation
+=================================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: PhysicalStore.get_inline_allocation

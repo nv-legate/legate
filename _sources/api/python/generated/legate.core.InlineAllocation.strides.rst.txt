@@ -1,0 +1,6 @@
+legate.core.InlineAllocation.strides
+====================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: InlineAllocation.strides

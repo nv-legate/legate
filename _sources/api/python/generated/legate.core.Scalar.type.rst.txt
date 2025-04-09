@@ -1,0 +1,6 @@
+legate.core.Scalar.type
+=======================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Scalar.type

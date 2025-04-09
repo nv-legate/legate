@@ -1,0 +1,6 @@
+legate.core.LogicalArray.project
+================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: LogicalArray.project

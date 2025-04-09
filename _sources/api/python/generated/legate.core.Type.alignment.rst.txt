@@ -1,0 +1,6 @@
+legate.core.Type.alignment
+==========================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Type.alignment

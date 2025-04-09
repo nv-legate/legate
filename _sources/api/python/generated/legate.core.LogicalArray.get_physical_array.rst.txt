@@ -1,0 +1,6 @@
+legate.core.LogicalArray.get\_physical\_array
+=============================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: LogicalArray.get_physical_array

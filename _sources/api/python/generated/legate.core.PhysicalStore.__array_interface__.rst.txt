@@ -1,0 +1,6 @@
+legate.core.PhysicalStore.\_\_array\_interface\_\_
+==================================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: PhysicalStore.__array_interface__

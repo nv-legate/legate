@@ -1,0 +1,6 @@
+legate.core.LogicalArray.fill
+=============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: LogicalArray.fill

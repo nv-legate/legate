@@ -1,0 +1,6 @@
+legate.core.LogicalArray.unbound
+================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: LogicalArray.unbound

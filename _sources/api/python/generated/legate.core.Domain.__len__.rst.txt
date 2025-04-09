@@ -1,0 +1,6 @@
+legate.core.Domain.\_\_len\_\_
+==============================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Domain.__len__

@@ -1,0 +1,6 @@
+legate.core.LogicalArray.from\_store
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: LogicalArray.from_store

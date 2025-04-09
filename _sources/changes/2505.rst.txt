@@ -1,0 +1,128 @@
+Changes: 25.05
+==============
+..
+   STYLE:
+   * Capitalize sentences.
+   * Use the imperative tense: Add, Improve, Change, etc.
+   * Use a period (.) at the end of entries.
+   * Be concise yet informative.
+   * If possible, provide an executive summary of the new feature, but do not
+     just repeat its doc string. However, if the feature requires changes from
+     the user, then describe those changes in detail, and provide examples of
+     the changes required.
+
+
+.. rubric:: General
+
+- ``LEGATE_NEED_*`` environment variables are no longer consulted to infer what
+  build-time features (e.g. CUDA support or networking support) are required for
+  the current run. Legate can infer this automatically.
+- Legate now expects to always initialize Legion during ``legate::start()``. If Legion is
+  already initialized at this stage, an exception is thrown.
+- Drop support for Python 3.10 and add support for Python 3.13.
+
+C++
+---
+
+.. rubric:: General
+
+- Add ability for users to statically declare task-wide configuration options, such as the
+  task's signature, constraints, and default variant options via a new ``static const
+  legate::TaskConfig TASK_CONFIG`` member on task declarations.
+
+  As part of this new feature, the old-style ``TASK_ID`` member is no longer read. Since
+  this would otherwise be a silent breaking change, we have elected to emit a static
+  assertion (i.e. a compiler error) in case the old-style ``TASK_ID`` member is
+  found. This static assertion is only emitted in places where dynamically passing the
+  task ID is not possible. Specifically, if the user calls the following routines:
+
+  - ``legate::LegateTask::register_variants(std::map<VariantCode, VariantOptions>)``
+  - ``legate::LegateTask::register_variants(legate::Library, const std::map<legate::VariantCode, legate::VariantOptions>&)``
+
+  Then an error **will** be emitted if ``TASK_ID`` is detected. Calling the
+  ``register_variants()`` overload which accepts either a ``legate::TaskConfig`` or
+  ``legate::LocalTaskID`` will not emit an error.
+
+.. rubric:: Data
+
+- Add support for ``std::vector<bool>`` to ``legate::Scalar``.
+
+- Add an optional ``target`` parameter to
+  ``legate::LogicalArray::get_physical_array()`` and
+  ``legate::LogicalStore::get_physical_store()``. The ``target`` controls where
+  the physical array/store is allocated.
+- Add ``legate::InlineAllocation::target`` member to signify which kind of memory the
+  inline allocation holds.
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+.. rubric:: Tasks
+
+- Add ``legate::TaskConfig``.
+- Add ``legate::LegateTask::register_variants()`` overload which accepts a
+  ``legate::TaskConfig``.
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+.. rubric:: Utilities
+
+- Add ``legate::Span::rbegin()`` and ``legate::Span::rend()`` to allow reverse iteration.
+- Add ``legate::Span::front()`` and ``legate::Span::back()`` to allow accessing the first
+  and last element.
+
+.. rubric:: I/O
+
+
+Python
+------
+
+.. rubric:: General
+
+.. rubric:: Data
+
+- Add an optional ``target`` parameter to
+  ``legate.core.LogicalArray.get_physical_array()`` and
+  ``legate.core.LogicalStore.get_physical_store()``. The ``target`` controls
+  where the physical array/store is allocated.
+- Add ``legate.core.InlineAllocation.target`` property to retrieve the type of memory held
+  by the allocation.
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+.. rubric:: Tasks
+
+- Add ``legate.core.VariantOptions`` to allow describing per-variant configuration options.
+- Add ``legate.core.TaskContext.is_single_task()``.
+- Add ``legate.core.TaskContext.task_index``.
+- Add ``legate.core.TaskContext.launch_domain``.
+- Add ``legate.core.TaskContext.machine``.
+- Add ``legate.core.TaskContext.provenance``.
+- Add ``legate.core.TaskContext.task_stream``.
+- Add ``legate.core.task.PyTask.library`` to retrieve the ``Library`` that a task was
+  registered with.
+- Add ``legate.core.TaskConfig``.
+- Change ``legate.core.task.task()`` arguments. Replace ``throws_exception`` and
+  ``throws_exception`` with ``options``, which is either a ``legate.core.TaskConfig`` or
+  ``legate.core.VariantOptions``.
+- Change ``legate.core.task.PyTask.__init__()``. Replace ``throws_exception`` and
+  ``throws_exception`` with ``options``, which is either a ``legate.core.TaskConfig`` or
+  ``legate.core.VariantOptions``.
+- Remove ``legate.core.task.PyTask.UNREGISTERED_ID``.
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+- Add ``legate.core.ResourceConfig`` to specify library resource configuration parameters.
+- Add ``legate.core.Runtime.find_or_create_library()`` to search for, or create
+  ``Library`` instances.
+
+.. rubric:: Utilities
+
+.. rubric:: I/O

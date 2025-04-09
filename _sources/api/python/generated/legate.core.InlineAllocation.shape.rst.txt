@@ -1,0 +1,6 @@
+legate.core.InlineAllocation.shape
+==================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: InlineAllocation.shape

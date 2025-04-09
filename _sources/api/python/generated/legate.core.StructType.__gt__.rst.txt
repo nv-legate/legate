@@ -1,0 +1,6 @@
+legate.core.StructType.\_\_gt\_\_
+=================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: StructType.__gt__

@@ -1,0 +1,6 @@
+legate.core.Domain.\_asdict
+===========================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Domain._asdict

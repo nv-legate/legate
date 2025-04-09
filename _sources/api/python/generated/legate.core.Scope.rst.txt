@@ -1,0 +1,34 @@
+﻿legate.core.Scope
+=================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: Scope
+
+   .. automethod:: Scope.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~Scope.__enter__
+      ~Scope.__exit__
+      ~Scope.exception_mode
+      ~Scope.machine
+      ~Scope.priority
+      ~Scope.provenance
+   
+   

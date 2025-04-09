@@ -1,0 +1,6 @@
+legate.core.Type.reduction\_op\_id
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Type.reduction_op_id

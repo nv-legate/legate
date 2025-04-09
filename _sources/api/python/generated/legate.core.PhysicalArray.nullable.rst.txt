@@ -1,0 +1,6 @@
+legate.core.PhysicalArray.nullable
+==================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: PhysicalArray.nullable

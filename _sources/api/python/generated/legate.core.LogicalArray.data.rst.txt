@@ -1,0 +1,6 @@
+legate.core.LogicalArray.data
+=============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: LogicalArray.data

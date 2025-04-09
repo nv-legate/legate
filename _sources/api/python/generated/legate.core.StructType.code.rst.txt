@@ -1,0 +1,6 @@
+legate.core.StructType.code
+===========================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: StructType.code

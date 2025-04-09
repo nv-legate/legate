@@ -1,0 +1,6 @@
+legate.core.PhysicalArray.null\_mask
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: PhysicalArray.null_mask

@@ -1,4 +1,4 @@
-﻿legate.core.AutoTask.throws\_exception
+legate.core.AutoTask.throws\_exception
 ======================================
 
 .. currentmodule:: legate.core

@@ -1,0 +1,6 @@
+legate.core.ManualTask.exception\_types
+=======================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: ManualTask.exception_types

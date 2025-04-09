@@ -1,0 +1,30 @@
+﻿legate.core.Constraint
+======================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: Constraint
+
+   .. automethod:: Constraint.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~Constraint.__repr__
+      ~Constraint.__str__
+   
+   
