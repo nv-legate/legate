@@ -1,6 +1,0 @@
-legate.core.Variable.\_\_str\_\_
-================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Variable.__str__

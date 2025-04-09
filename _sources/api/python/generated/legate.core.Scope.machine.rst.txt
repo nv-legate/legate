@@ -1,6 +1,0 @@
-legate.core.Scope.machine
-=========================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Scope.machine

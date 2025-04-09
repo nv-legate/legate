@@ -1,4 +1,4 @@
-legate.core.AutoTask.set\_side\_effect
+﻿legate.core.AutoTask.set\_side\_effect
 ======================================
 
 .. currentmodule:: legate.core

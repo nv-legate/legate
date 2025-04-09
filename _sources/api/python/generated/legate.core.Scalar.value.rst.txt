@@ -1,6 +1,0 @@
-legate.core.Scalar.value
-========================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Scalar.value

@@ -1,6 +1,0 @@
-legate.core.StructType.uid
-==========================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: StructType.uid

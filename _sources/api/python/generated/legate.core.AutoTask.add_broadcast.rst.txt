@@ -1,4 +1,4 @@
-legate.core.AutoTask.add\_broadcast
+﻿legate.core.AutoTask.add\_broadcast
 ===================================
 
 .. currentmodule:: legate.core

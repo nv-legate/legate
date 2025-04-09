@@ -1,6 +1,0 @@
-legate.core.LogicalArray.size
-=============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: LogicalArray.size

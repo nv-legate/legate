@@ -1,6 +1,0 @@
-legate.core.Scalar.null
-=======================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Scalar.null

@@ -1,6 +1,0 @@
-legate.core.FixedArrayType.num\_elements
-========================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: FixedArrayType.num_elements

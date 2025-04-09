@@ -1,6 +1,0 @@
-legate.core.Constraint.\_\_str\_\_
-==================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Constraint.__str__

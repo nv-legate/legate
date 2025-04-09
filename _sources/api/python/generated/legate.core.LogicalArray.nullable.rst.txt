@@ -1,6 +1,0 @@
-legate.core.LogicalArray.nullable
-=================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: LogicalArray.nullable

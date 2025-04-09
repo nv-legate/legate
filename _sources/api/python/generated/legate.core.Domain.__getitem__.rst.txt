@@ -1,6 +1,0 @@
-legate.core.Domain.\_\_getitem\_\_
-==================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Domain.__getitem__

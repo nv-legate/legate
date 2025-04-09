@@ -1,6 +1,0 @@
-legate.core.Type.record\_reduction\_op
-======================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Type.record_reduction_op

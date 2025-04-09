@@ -1,6 +1,0 @@
-legate.core.Type.\_\_gt\_\_
-===========================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Type.__gt__

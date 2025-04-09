@@ -1,6 +1,0 @@
-legate.core.FixedArrayType.\_\_gt\_\_
-=====================================
-
-.. currentmodule:: legate.core
-
-.. automethod:: FixedArrayType.__gt__

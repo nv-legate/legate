@@ -1,6 +1,0 @@
-legate.core.SymbolicExpr.dim
-============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: SymbolicExpr.dim

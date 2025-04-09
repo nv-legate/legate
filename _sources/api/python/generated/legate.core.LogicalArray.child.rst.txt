@@ -1,6 +1,0 @@
-legate.core.LogicalArray.child
-==============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: LogicalArray.child

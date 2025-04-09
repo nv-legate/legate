@@ -1,6 +1,0 @@
-legate.core.PhysicalStore.ndim
-==============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: PhysicalStore.ndim

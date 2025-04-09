@@ -1,6 +1,0 @@
-legate.core.Type.code
-=====================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: Type.code

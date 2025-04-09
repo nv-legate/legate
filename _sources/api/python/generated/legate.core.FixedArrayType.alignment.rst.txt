@@ -1,6 +1,0 @@
-legate.core.FixedArrayType.alignment
-====================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: FixedArrayType.alignment

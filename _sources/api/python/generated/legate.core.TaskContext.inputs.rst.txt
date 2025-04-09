@@ -1,6 +1,0 @@
-legate.core.TaskContext.inputs
-==============================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: TaskContext.inputs

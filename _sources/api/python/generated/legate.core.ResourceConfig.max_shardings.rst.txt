@@ -1,6 +1,0 @@
-legate.core.ResourceConfig.max\_shardings
-=========================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: ResourceConfig.max_shardings

@@ -1,6 +1,0 @@
-legate.core.task.PyTask.library
-===============================
-
-.. currentmodule:: legate.core.task
-
-.. autoattribute:: PyTask.library

@@ -1,6 +1,0 @@
-legate.core.ResourceConfig.max\_projections
-===========================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: ResourceConfig.max_projections

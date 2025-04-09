@@ -1,6 +1,0 @@
-legate.core.Domain.\_\_repr\_\_
-===============================
-
-.. currentmodule:: legate.core
-
-.. automethod:: Domain.__repr__

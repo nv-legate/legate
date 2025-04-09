@@ -1,6 +1,0 @@
-legate.core.PhysicalStore.domain
-================================
-
-.. currentmodule:: legate.core
-
-.. autoattribute:: PhysicalStore.domain
