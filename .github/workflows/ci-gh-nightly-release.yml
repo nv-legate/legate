@@ -28,9 +28,9 @@ jobs:
           - ucx
           - gex
         python-version:
-          - "3.10"
           - "3.11"
           - "3.12"
+          - "3.13"
         upload-enabled:
           - true
           - false
@@ -61,7 +61,7 @@ jobs:
         upload-enabled:
           - true
         python-version:
-          - "3.12"
+          - "3.13"
     uses:
       ./.github/workflows/gh-legate-profiler.yml
     with:

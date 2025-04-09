@@ -337,22 +337,15 @@ class EnvConfig:
 
 # --- Setup -------------------------------------------------------------------
 def get_min_py() -> str:
-    try:
-        import tomllib  # novermin
-    except ModuleNotFoundError:
-        from pip._vendor import tomli as tomllib
+    import tomllib  # novermin
 
-    with (Path(__file__).parent.parent / "pyproject.toml").open(mode="r") as f:
-        py_ver = tomllib.loads(f.read())["build-system"]["python-requires"]
+    with (Path(__file__).parent.parent / "pyproject.toml").open(
+        mode="rb"
+    ) as f:
+        py_ver = tomllib.load(f)["build-system"]["python-requires"]
 
     for char in (">", "=", "<"):
         py_ver = py_ver.replace(char, "")
-
-    # PR-936: adding this as a reminder to remove the workaround after 3.11
-    MIN_TOMLLIB_VERSION = 11
-    if int(py_ver.split(".")[1]) >= MIN_TOMLLIB_VERSION:
-        msg = "remove tomllib workaround above"
-        raise RuntimeError(msg)
 
     return py_ver
 

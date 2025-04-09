@@ -61,12 +61,12 @@ jobs:
           #
           export MATRIX="
           # amd64
-          - { ARCH: 'amd64', PY_VER: '3.10', TARGET_DEV: 'gpu', GPU: 'l4', LINUX_VER: 'ubuntu22.04' }
           - { ARCH: 'amd64', PY_VER: '3.11', TARGET_DEV: 'gpu', GPU: 'l4', LINUX_VER: 'ubuntu22.04' }
           - { ARCH: 'amd64', PY_VER: '3.12', TARGET_DEV: 'gpu', GPU: 'l4', LINUX_VER: 'ubuntu24.04' }
+          - { ARCH: 'amd64', PY_VER: '3.13', TARGET_DEV: 'gpu', GPU: 'l4', LINUX_VER: 'ubuntu24.04' }
           # arm64
-          #- { ARCH: 'arm64', PY_VER: '3.10', TARGET_DEV: 'cpu', BUILD_MODE: 'release' }
-          #- { ARCH: 'arm64', PY_VER: '3.10', TARGET_DEV: 'gpu', GPU: 'a100', LINUX_VER: 'ubuntu24.04'  }
+          #- { ARCH: 'arm64', PY_VER: '3.11', TARGET_DEV: 'cpu', BUILD_MODE: 'release' }
+          #- { ARCH: 'arm64', PY_VER: '3.11', TARGET_DEV: 'gpu', GPU: 'a100', LINUX_VER: 'ubuntu24.04'  }
           "
 
           MATRIX="$(
@@ -112,7 +112,7 @@ jobs:
       - name: Download wheels from the build job
         uses: actions/download-artifact@v4
         env:
-          BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda12.5.1-py${{ matrix.PY_VER }}
+          BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda${{ inputs.cuda_ver }}-py${{ matrix.PY_VER }}
         with:
           name: legate-wheel-${{ env.BUILD_NAME }}
           path: final-dist

@@ -121,10 +121,10 @@ we accept contributions that fix such incompatibilities.
      - x86-64 (Haswell), aarch64
      - older x86-64, Apple Silicon
    * - OS
-     - RHEL 8, Ubuntu 20.04
+     - Ubuntu 22.04
      - other Linux, macOS
    * - Compilers
-     - GCC 7, clang 5
+     - GCC 11
      - Any compiler supporting C++17
    * - GPU architecture
      - Volta
@@ -133,7 +133,7 @@ we accept contributions that fix such incompatibilities.
      - 12.2
      - 11.8
    * - Python
-     - 3.10
+     - 3.11, 3.12, 3.13
      -
    * - NumPy
      - 1.22

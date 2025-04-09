@@ -18,8 +18,9 @@ gpu_enabled:
   - false
 
 python:
-  - 3.10
   - 3.11
+  - 3.12
+  - 3.13
 
 numpy_version:
   # Not 2.1.0 which segfaults on asarray() sometimes, see
