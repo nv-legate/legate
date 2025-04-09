@@ -71,10 +71,10 @@ build_legate_profiler() {
   conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
   conda_build_args+=(--numpy 1.22);
 
-  mamba install -y boa conda-verify python
-  mamba install -y -c conda-forge gcc gxx make pkg-config
-  conda mambabuild "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
-  conda mambabuild "${conda_build_args[@]}" conda/legate_profiler
+  run_command 'Install base dependencies' rapids-mamba-retry install -y boa conda-verify python
+  run_command 'Install build dependencies' rapids-mamba-retry install -y -c conda-forge gcc gxx make pkg-config
+  run_command 'Dummy Legate Build' rapids-conda-retry mambabuild "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
+  run_command 'Profiler build' rapids-conda-retry mambabuild "${conda_build_args[@]}" conda/legate_profiler
 
   run_command 'Copy Profiler Artifacts' copy_profiler_artifacts
 }
@@ -106,10 +106,12 @@ build_legate_release() {
   UPLOAD_BUILD=true
   [[ "${UPLOAD_ENABLED:-}" = "OFF" ]] && UPLOAD_BUILD=false
 
+  local variant_opts
   # shellcheck disable=SC2154
-  variantOpts=$(printf '{"build_mode_str": ["%s"], "gpu_enabled": ["%s"], "upload_enabled": ["%s"], "network": ["%s"], "python": ["%s"]}' \
-                       "${LEGATE_BUILD_MODE}" "${GPU_ENABLED}" "${UPLOAD_BUILD}" "${LEGATE_NETWORK}" "${PYTHON_VERSION}")
-  conda_build_args+=(--variants "${variantOpts}")
+  variant_opts="$(\
+    printf '{"build_mode_str": [%s], "gpu_enabled": [%s], "upload_enabled": [%s], "network": [%s], "python": [%s]}' \
+           "${LEGATE_BUILD_MODE}" "${GPU_ENABLED}" "${UPLOAD_BUILD}" "${LEGATE_NETWORK}" "${PYTHON_VERSION}")"
+  conda_build_args+=(--variants "${variant_opts}")
 
   # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to
   # only explicit warnings. If you want more verbose output, set this to 2 or higher.
@@ -119,6 +121,9 @@ build_legate_release() {
   # For whatever reason, the default buffering of conda/mamba is not sufficient, and
   # leads to garbled output in CI (mixing conda output and whatever build.sh prints). So
   # we need to force unbuffered output.
+  #
+  # Cannot use rapids-conda-retry here, see
+  # https://github.com/rapidsai/gha-tools/issues/155
   run_command 'Mamba Preamble' stdbuf -o0 -e0 conda mambabuild "${conda_build_args[@]}" conda/conda-build
 
   run_command 'Copy Artifacts' copy_release_artifacts
@@ -163,6 +168,7 @@ build_project() {
 
   export LEGATE_CI=1
   export PYTHONUNBUFFERED=1
+  export CI=true
 
   local rapids_gha_tools_dir="${REPO_DIR}/gha-tools"
   git clone --depth 1 https://github.com/rapidsai/gha-tools.git -b main "${rapids_gha_tools_dir}"
@@ -176,7 +182,6 @@ build_project() {
   git config --global --add safe.directory "${LEGATE_DIR}/.git"
 
   # Set up the SCCACHE environment variables
-  export CI=true
   source "${LEGATE_DIR}/continuous_integration/scripts/tools/legate-configure-sccache"
   sccache --zero-stats
   # Disable the CUDA compiler launcher to avoid issues with the realm CUDA kernels.
