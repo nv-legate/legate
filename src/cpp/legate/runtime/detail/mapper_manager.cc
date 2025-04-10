@@ -7,7 +7,6 @@
 #include <legate/runtime/detail/mapper_manager.h>
 
 #include <legate/mapping/detail/base_mapper.h>
-#include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/runtime.h>
 
 #include <mappers/logging_wrapper.h>
@@ -23,21 +22,17 @@ MapperManager::MapperManager(Legion::Runtime* legion_runtime)
         .data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
       1)}
 {
-  auto* const mapper = [&]() -> Legion::Mapping::Mapper* {
+  auto* const mapper = [&] {
     // Legion requires the mapper pointer to be created with new, and takes ownership of it in
     // the call to add_mapper().
-    const auto base_mapper = new mapping::detail::BaseMapper{};
+    auto* const base_mapper = new mapping::detail::BaseMapper{};
 
-    LEGATE_ASSERT(Config::get_config().parsed());
-    if (Config::get_config().log_mapping_decisions()) {
-      try {
-        return new Legion::Mapping::LoggingWrapper{base_mapper, &base_mapper->logger()};
-      } catch (...) {
-        delete base_mapper;
-        throw;
-      }
+    try {
+      return new Legion::Mapping::LoggingWrapper{base_mapper, &base_mapper->logger()};
+    } catch (...) {
+      delete base_mapper;
+      throw;
     }
-    return base_mapper;
   }();
 
   // No try-catch around this. If it fails, Legion will just abort the program.

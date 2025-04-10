@@ -169,12 +169,16 @@ bool Strategy::is_key_partition(const Variable* partition_symbol) const
 
 void Strategy::dump() const
 {
+  if (!log_legate_partitioner().want_print()) {
+    return;
+  }
   log_legate_partitioner().print() << "===== Solution =====";
   for (const auto& [symbol, part] : assignments_) {
     log_legate_partitioner().print() << symbol.to_string() << ": " << part->to_string();
   }
   for (const auto& [symbol, field] : fields_for_unbound_stores_) {
     const auto& [field_space, field_id] = field;
+
     log_legate_partitioner().print()
       << symbol.to_string() << ": (" << field_space << "," << field_id << ")";
   }
@@ -233,9 +237,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   solver.solve_constraints();
 
-  if (Config::get_config().log_partitioning_decisions()) {
-    solver.dump();
-  }
+  solver.dump();
 
   auto strategy = std::make_unique<Strategy>();
 
@@ -283,9 +285,7 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
 
   strategy->compute_launch_domains_(solver);
 
-  if (Config::get_config().log_partitioning_decisions()) {
-    strategy->dump();
-  }
+  strategy->dump();
 
   return strategy;
 }

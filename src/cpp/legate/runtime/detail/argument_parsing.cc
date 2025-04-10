@@ -566,16 +566,21 @@ void set_legion_default_args(std::string log_dir,
     args_ss << "-ll:onuma 0 ";
   }
 
-  const auto add_logger = [&](std::string_view item) {
+  const auto add_logger = [&](std::string_view logger, std::string_view level = "info") {
     if (!log_levels.empty()) {
       log_levels += ',';
     }
-    log_levels += item;
+    log_levels += logger;
+    log_levels += '=';
+    log_levels += level;
   };
 
   LEGATE_ASSERT(Config::get_config().parsed());
   if (Config::get_config().log_mapping_decisions()) {
-    add_logger(fmt::format("{}=info", mapping::detail::BaseMapper::LOGGER_NAME));
+    add_logger(mapping::detail::BaseMapper::LOGGER_NAME);
+  }
+  if (Config::get_config().log_partitioning_decisions()) {
+    add_logger(log_legate_partitioner().get_name());
   }
 
   if (spy) {
@@ -586,7 +591,7 @@ void set_legion_default_args(std::string log_dir,
       std::cout << "Logging output is being redirected to a file in --logdir" << std::endl;
     }
     args_ss << "-lg:spy ";
-    add_logger("legion_spy=info");
+    add_logger("legion_spy");
     log_to_file = true;
   }
 
@@ -594,7 +599,7 @@ void set_legion_default_args(std::string log_dir,
   // actually print anything to the logs, so don't consider that a conflict.
   if (profile) {
     args_ss << "-lg:prof 1 -lg:prof_logfile " << log_path / "legate_%.prof" << " ";
-    add_logger("legion_prof=info");
+    add_logger("legion_prof");
   }
 
   if (freeze_on_error) {
@@ -633,6 +638,7 @@ template <typename T>
 void add_argument_base(argparse::ArgumentParser* parser,
                        std::string_view flag,
                        std::string help,
+                       bool hidden,
                        const T* default_val,
                        T* val)
 {
@@ -642,6 +648,9 @@ void add_argument_base(argparse::ArgumentParser* parser,
   parg.help(std::move(help));
   if (default_val) {
     parg.default_value(*default_val);
+  }
+  if (hidden) {
+    parg.hidden();
   }
   parg.store_into(*val);
   if constexpr (std::is_same_v<RawT, bool>) {
@@ -660,12 +669,13 @@ template <typename T>
 [[nodiscard]] Arg<ScaledVar<T>> add_argument(argparse::ArgumentParser* parser,
                                              std::string_view flag,
                                              std::string help,
-                                             ScaledVar<T> val)
+                                             ScaledVar<T> val,
+                                             bool hidden = false)
 {
   auto arg                = Arg<ScaledVar<T>>{flag, std::move(val)};
   const auto& default_val = arg.value.default_value();
 
-  add_argument_base(parser, flag, std::move(help), &default_val, &arg.value.ref());
+  add_argument_base(parser, flag, std::move(help), hidden, &default_val, &arg.value.ref());
   return arg;
 }
 
@@ -673,22 +683,25 @@ template <typename T>
 [[nodiscard]] Arg<T> add_argument(argparse::ArgumentParser* parser,
                                   std::string_view flag,
                                   std::string help,
-                                  T val)
+                                  T val,
+                                  bool hidden = false)
 {
   auto arg = Arg<T>{flag, std::move(val)};
 
-  add_argument_base(parser, flag, std::move(help), &arg.value, &arg.value);
+  add_argument_base(parser, flag, std::move(help), hidden, &arg.value, &arg.value);
   return arg;
 }
 
 template <typename T>
 [[nodiscard]] Arg<T> add_argument(argparse::ArgumentParser* parser,
                                   std::string_view flag,
-                                  std::string help)
+                                  std::string help,
+                                  bool hidden = false)
 {
   auto arg = Arg<T>{flag};
 
-  add_argument_base(parser, flag, std::move(help), static_cast<const T*>(nullptr), &arg.value);
+  add_argument_base(
+    parser, flag, std::move(help), hidden, static_cast<const T*>(nullptr), &arg.value);
   return arg;
 }
 
@@ -707,11 +720,87 @@ void handle_legate_args()
   constexpr std::int64_t DEFAULT_FBMEM      = -1;
   constexpr std::int64_t DEFAULT_ZCMEM      = 128;  // MB
   constexpr std::int64_t DEFAULT_REGMEM     = 0;    // MB
+  const auto test                           = LEGATE_TEST.get(/* defualt_value */ false);
+  const auto default_or_test                = [&](auto default_val, auto test_val) {
+    return test ? test_val : default_val;
+  };
 
   auto parser = argparse::ArgumentParser{
     "LEGATE_CONFIG can contain:",
     std::string{LEGATE_STRINGIZE(LEGATE_VERSION_MAJOR) "." LEGATE_STRINGIZE(
       LEGATE_VERSION_MINOR) "." LEGATE_STRINGIZE(LEGATE_VERSION_PATCH)}};
+
+  auto auto_config = add_argument(&parser,
+                                  "--auto-config",
+                                  "Automatically detect a suitable configuration. This attempts to "
+                                  "detect a reasonable default for most options listed hereafter "
+                                  "and is recommended for most users.",
+                                  true);
+  auto show_config =
+    add_argument(&parser, "--show-config", "Print the configuration to stdout.", false);
+  auto show_progress = add_argument(
+    &parser, "--show-progress", "Print a progress summary before each task is executed.", false);
+  auto empty_task =
+    add_argument(&parser,
+                 "--use-empty-task",
+                 "Execute an empty dummy task in place of each task execution. This "
+                 "is primarily a developer feature for use in debugging runtime or "
+                 "scheduling inconsistencies and is not recommended for external use.",
+                 false);
+  auto warmup_nccl = add_argument(
+    &parser,
+    "--warmup-nccl",
+    "Perform a warmup for NCCL on startup. This is useful when doing performance benchmarks.",
+    false);
+  auto inline_task_launch = add_argument(&parser,
+                                         "--inline-task-launch",
+                                         "Enable inline task launch",
+                                         false,
+                                         /* hidden */ true);
+  auto max_exception_size =
+    add_argument(&parser,
+                 "--max-exception-size",
+                 "Maximum size (in bytes) to allocate for exception messages.",
+                 default_or_test(std::size_t{LEGATE_MAX_EXCEPTION_SIZE_DEFAULT},
+                                 std::size_t{LEGATE_MAX_EXCEPTION_SIZE_TEST}));
+  auto min_cpu_chunk = add_argument(&parser,
+                                    "--min-cpu-chunk",
+                                    "Minimum CPU chunk size (in bytes).",
+                                    default_or_test(std::size_t{LEGATE_MIN_CPU_CHUNK_DEFAULT},
+                                                    std::size_t{LEGATE_MIN_CPU_CHUNK_TEST}));
+  auto min_gpu_chunk = add_argument(&parser,
+                                    "--min-gpu-chunk",
+                                    "Minimum GPU chunk size (in bytes).",
+                                    default_or_test(std::size_t{LEGATE_MIN_GPU_CHUNK_DEFAULT},
+                                                    std::size_t{LEGATE_MIN_GPU_CHUNK_TEST}));
+  auto min_omp_chunk = add_argument(&parser,
+                                    "--min-omp-chunk",
+                                    "Minimum OpenMP chunk size (in bytes).",
+                                    default_or_test(std::size_t{LEGATE_MIN_OMP_CHUNK_DEFAULT},
+                                                    std::size_t{LEGATE_MIN_OMP_CHUNK_TEST}));
+  auto window_size =
+    add_argument(&parser,
+                 "--window-size",
+                 "Maximum size of the submitted operation queue before forced flush.",
+                 default_or_test(std::uint32_t{LEGATE_WINDOW_SIZE_DEFAULT},
+                                 std::uint32_t{LEGATE_WINDOW_SIZE_TEST}));
+  auto field_reuse_frac =
+    add_argument(&parser,
+                 "--field-reuse-fraction",
+                 "Field reuse fraction",
+                 default_or_test(std::uint32_t{LEGATE_FIELD_REUSE_FRAC_DEFAULT},
+                                 std::uint32_t{LEGATE_FIELD_REUSE_FRAC_TEST}));
+  auto field_reuse_freq =
+    add_argument(&parser,
+                 "--field-reuse-frequency",
+                 "Field reuse frequency",
+                 default_or_test(std::uint32_t{LEGATE_FIELD_REUSE_FREQ_DEFAULT},
+                                 std::uint32_t{LEGATE_FIELD_REUSE_FREQ_TEST}));
+  auto consensus =
+    add_argument(&parser,
+                 "--consensus",
+                 "Consensus",
+                 default_or_test(bool{LEGATE_CONSENSUS_DEFAULT}, bool{LEGATE_CONSENSUS_TEST}));
 
   auto cpus = add_argument(&parser,
                            "--cpus",
@@ -791,8 +880,31 @@ void handle_legate_args()
     std::exit(EXIT_FAILURE);
   }
 
+  {
+    const auto set_config_value = [&](const auto& flag, auto&& config_mem_function) {
+      if (parser.is_used(flag.flag)) {
+        (Config::get_config_mut().*config_mem_function)(flag.value);
+      }
+    };
+
+    set_config_value(auto_config, &Config::set_auto_config);
+    set_config_value(show_config, &Config::set_show_config);
+    set_config_value(show_progress, &Config::set_show_progress_requested);
+    set_config_value(empty_task, &Config::set_use_empty_task);
+    set_config_value(warmup_nccl, &Config::set_warmup_nccl);
+    set_config_value(inline_task_launch, &Config::set_enable_inline_task_launch);
+    set_config_value(max_exception_size, &Config::set_max_exception_size);
+    set_config_value(min_cpu_chunk, &Config::set_min_cpu_chunk);
+    set_config_value(min_gpu_chunk, &Config::set_min_gpu_chunk);
+    set_config_value(min_omp_chunk, &Config::set_min_omp_chunk);
+    set_config_value(window_size, &Config::set_window_size);
+    set_config_value(field_reuse_frac, &Config::set_field_reuse_frac);
+    set_config_value(field_reuse_freq, &Config::set_field_reuse_freq);
+    set_config_value(consensus, &Config::set_consensus);
+  }
+
   // Disable MPI in legate if the network bootstrap is p2p
-  if (REALM_UCP_BOOTSTRAP_MODE.get(/* default_value */ "") == "p2p") {
+  if (REALM_UCP_BOOTSTRAP_MODE.get() == "p2p") {
     Config::get_config_mut().set_disable_mpi(true);
   }
 

@@ -1684,8 +1684,6 @@ void handle_realm_default_args()
 
   if (const auto existing_default_args = REALM_DEFAULT_ARGS.get();
       existing_default_args.has_value()) {
-    static const auto networks_re = std::regex{R"(\-ll:networks\s+\w+)", std::regex::optimize};
-
     // If Realm sees multiple networks arguments, with one of them being "none", (e.g. "-ll:networks
     // foo -ll:networks none", or even "-ll:networks none -ll:networks none"), it balks with:
     //
@@ -1693,7 +1691,8 @@ void handle_realm_default_args()
     //
     // So we must strip away any existing -ll:networks arguments before we append our -ll:networks
     // argument.
-    ss << std::regex_replace(existing_default_args->c_str(), networks_re, "");
+    ss << std::regex_replace(
+      *existing_default_args, std::regex{R"(\-ll:networks\s+\w+)", std::regex::optimize}, "");
   }
 
   if (Config::get_config().need_network()) {

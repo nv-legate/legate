@@ -257,10 +257,14 @@ const Restrictions& ConstraintSolver::find_restrictions(const Variable* partitio
 
 void ConstraintSolver::dump()
 {
+  if (!log_legate_partitioner().want_print()) {
+    return;
+  }
   log_legate_partitioner().print() << "===== Constraint Graph =====";
   log_legate_partitioner().print() << "Stores:";
   for (auto&& symbol : partition_symbols_.elements()) {
-    auto store = symbol->operation()->find_store(symbol);
+    auto&& store = symbol->operation()->find_store(symbol);
+
     log_legate_partitioner().print() << "  " << symbol->to_string() << " ~> " << store->to_string();
   }
   log_legate_partitioner().print() << "Variables:";
