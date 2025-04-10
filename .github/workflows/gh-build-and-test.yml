@@ -42,7 +42,7 @@ jobs:
   build:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.29
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@use_nv_proxy_cache
     with:
       build-has-tests: ${{ inputs.upload-enabled == false }}
       client-repo: ${{ github.event.repository.name }}
@@ -52,11 +52,12 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v1.29"
+      legate-gh-ci-tag: "use_nv_proxy_cache"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
+      setup-python-proxy-cache: true
     secrets: inherit
 
   setup-test:
@@ -98,7 +99,15 @@ jobs:
                 CONFIG_NAME=${CONFIG_INFO[0]}
                 CONFIG_SCOPE=${CONFIG_INFO[1]}
 
-                MATRIX_JSON+="{\"runner\": {\"name\": \"${RUNNER_NAME}\", \"type\": \"${RUNNER_TYPE}\", \"device\": \"${RUNNER_DEVICE}\", \"platform\": \"${RUNNER_PLATFORM}\"}, \"test-config\": {\"name\": \"${CONFIG_NAME}\", \"test-scope\": \"${CONFIG_SCOPE} ${RUNNER_DEVICE}\"}},"
+                # Don't setup python proxy cache for the 2GPU machines since
+                # they can't reach it over the network.
+                if [[ "${RUNNER_DEVICE}" != "2gpu" ]]; then
+                  SETUP_PYTHON_PROXY_CACHE=true
+                else
+                  SETUP_PYTHON_PROXY_CACHE=false
+                fi
+
+                MATRIX_JSON+="{\"runner\": {\"name\": \"${RUNNER_NAME}\", \"type\": \"${RUNNER_TYPE}\", \"device\": \"${RUNNER_DEVICE}\", \"platform\": \"${RUNNER_PLATFORM}\", \"setup-python-proxy-cache\": ${SETUP_PYTHON_PROXY_CACHE}}, \"test-config\": {\"name\": \"${CONFIG_NAME}\", \"test-scope\": \"${CONFIG_SCOPE} ${RUNNER_DEVICE}\"}},"
               done
             fi
           done
@@ -119,7 +128,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.29
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@use_nv_proxy_cache
     with:
       build-has-tests: ${{ inputs.upload-enabled == false }}
       client-repo: ${{ github.event.repository.name }}
@@ -130,11 +139,12 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.29"
+      legate-gh-ci-tag: "use_nv_proxy_cache"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
+      setup-python-proxy-cache: ${{ matrix.runner.setup-python-proxy-cache }}
     secrets: inherit
 
 
@@ -150,7 +160,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.29
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@use_nv_proxy_cache
     with:
       build-has-tests: ${{ inputs.upload-enabled == false }}
       client-repo: ${{ github.event.repository.name }}
@@ -161,11 +171,12 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.29"
+      legate-gh-ci-tag: "use_nv_proxy_cache"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: ${{ inputs.upload-enabled }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
+      setup-python-proxy-cache: ${{ matrix.runner.setup-python-proxy-cache }}
     secrets: inherit
 
   upload:
@@ -175,7 +186,7 @@ jobs:
     if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.build-mode == 'release' && inputs.upload-enabled == false }}
     name: Upload package to Server
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.30
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@use_nv_proxy_cache
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
@@ -183,7 +194,7 @@ jobs:
       name: Upload to Anaconda
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.30"
+      legate-gh-ci-tag: "use_nv_proxy_cache"
       build-mode: ${{ inputs.build-mode }}
       upload-enabled: true
       network: ${{ inputs.network }}
