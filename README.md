@@ -18,10 +18,17 @@ see the [Legate overview](https://docs.nvidia.com/legate/latest/overview.html).
 
 ## Installation
 
-Legate is available from [conda](https://docs.conda.io/projects/conda/en/latest/index.html)
-on the [legate channel](https://anaconda.org/legate/legate).
-See https://docs.nvidia.com/legate/latest/installation.html for details about different
-install configurations.
+Pre-built Legate packages are available from
+[conda](https://docs.conda.io/projects/conda/en/latest/index.html) on the
+[legate channel](https://anaconda.org/legate/legate) and from
+[PyPI](https://pypi.org/project/legate/). See
+https://docs.nvidia.com/legate/latest/installation.html for details about
+different install configurations.
+
+📌 **Note**
+
+Packages are only offered for Linux (x86_64 and aarch64) supporting Python
+versions 3.11 to 3.13.
 
 ## Documentation
 

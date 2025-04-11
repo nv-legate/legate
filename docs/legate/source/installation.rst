@@ -32,6 +32,11 @@ Legate, e.g. `cuPyNumeric <https://docs.nvidia.com/cupynumeric>`_:
 
    $ conda install -c conda-forge -c legate cupynumeric
 
+.. important::
+
+  Packages are only offered for Linux (x86_64 and aarch64) supporting Python
+  versions 3.11 to 3.13.
+
 Conda and GPU / CPU Variants
 ----------------------------
 
@@ -74,6 +79,11 @@ installed alongside downstream libraries, such as `cuPyNumeric
 .. code-block:: sh
 
    $ pip install nvidia-cupynumeric
+
+.. important::
+
+   Packages are only offered for Linux (x86_64 and aarch64) supporting Python
+   versions 3.11 to 3.13.
 
 Networking with Legate Packages
 ===============================
