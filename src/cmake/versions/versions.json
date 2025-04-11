@@ -19,9 +19,10 @@
         },
         "argparse": {
             "exclude_from_all": true,
-            "git_tag": "fd13c2859131ab463e617a5a8abcc69eb7e1d897",
-            "git_url": "https://github.com/nv-legate/argparse.git",
-            "version": "3.1"
+            "git_shallow": false,
+            "git_tag": "d924b84eba1f0f0adf38b20b7b4829f6f65b6570",
+            "git_url": "https://github.com/p-ranav/argparse.git",
+            "version": "3.2"
         },
         "benchmark": {
             "exclude_from_all": true
