@@ -19,7 +19,6 @@ jobs:
       env:
         CONDA_ROOT: "/tmp/conda-croot/gasnet-wrapper"
         CONDA_OUTPUT: "/tmp/gasnet/output"
-        ARTIFACT_SERVER: "https://urm.nvidia.com/artifactory"
         ARTIFACT_REPOS: "sw-legate-conda-local"
         TARGET_PLATFORM: "noarch"
         PKG_DIR: "gex/noarch"
@@ -77,19 +76,3 @@ jobs:
           echo "Install pre-requisites"
           apt-get update
           apt-get install -y curl jq
-
-      - name: Upload Package to URM server
-        if: ${{ false }}
-        run: |
-          echo "Upload gasnet wrapper package"
-          find "${ARTIFACT_PATH}/${TARGET_PLATFORM}/." -name "realm-gex-wrapper*.tar.bz2" | while read -r f; do
-            fname="$(basename "${f}")"
-            packageFound=$(curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -X POST -H "content-type: text/plain" "${ARTIFACT_SERVER}/api/search/aql" -d 'items.find({"name":"'"${fname}"'"})' | jq -r .results[].name)
-
-            if [[ -z ${packageFound} ]]; then
-              echo "Uploading the package: ${fname}"
-              curl -usvc-legate-github:${{ secrets.URM_ARTIFACT_TOKEN }} -T "${f}" "${ARTIFACT_SERVER}/${ARTIFACT_REPOS}/${PKG_DIR}/${fname};buildDate=${BUILD_DATE};sha=${{ github.sha }}"
-            else
-              echo "The package: ${fname} already exists on the server..skipping upload"
-            fi
-          done
