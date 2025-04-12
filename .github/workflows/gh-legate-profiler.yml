@@ -31,7 +31,7 @@ jobs:
   Build_Profiler:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@use_nv_proxy_cache
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.31
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
@@ -41,7 +41,7 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "use_nv_proxy_cache"
+      legate-gh-ci-tag: "v1.31"
       build-mode: ""
       upload-enabled: ${{ inputs.upload-enabled }}
       python-version: ${{ inputs.python-version }}
@@ -53,13 +53,13 @@ jobs:
     needs: Build_Profiler
     name: Upload Legate Profiler
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@use_nv_proxy_cache
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.31
     with:
       build-mode: ""
       build-type: ${{ inputs.build-type }}
       client-repo: ${{ github.event.repository.name }}
       build-has-tests: ${{ inputs.upload-enabled == false }}
-      legate-gh-ci-tag: "use_nv_proxy_cache"
+      legate-gh-ci-tag: "v1.31"
       name: Upload package to Anaconda
       network: ${{ inputs.network }}
       pkgSubString: "legate-profiler"
