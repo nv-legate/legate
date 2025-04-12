@@ -5,4 +5,4 @@ from __future__ import annotations
 
 from ._lib.timing import time
 
-__all__ = ['time']
+__all__ = ["time"]
