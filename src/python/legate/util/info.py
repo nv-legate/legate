@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from .. import install_info as info
 
+__all__ = ("print_build_info",)
+
 
 def print_build_info() -> None:  # noqa: D103
     print(  # noqa: T201

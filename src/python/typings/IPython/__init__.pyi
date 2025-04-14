@@ -3,5 +3,7 @@
 
 from .core.magic import Magics
 
+__all__ = ("InteractiveShell",)
+
 class InteractiveShell:
     def register_magics(self, *objs: Magics) -> None: ...

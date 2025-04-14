@@ -109,7 +109,7 @@ class System:
             info = pynvml.nvmlDeviceGetMemoryInfo(
                 pynvml.nvmlDeviceGetHandleByIndex(i)
             )
-            results.append(GPUInfo(i, info.total))
+            results.append(GPUInfo(i, int(info.total)))
 
         # Since pyNVML currently ignores CUDA_VISIBLE_DEVICES, we need to parse
         # it ourselves

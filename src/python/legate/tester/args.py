@@ -14,6 +14,8 @@ from typing import Literal, TypeAlias
 from ..util.args import ExtendAction, MultipleChoices
 from . import defaults
 
+__all__ = ("parser",)
+
 PinOptionsType: TypeAlias = Literal["partial", "none", "strict"]
 
 PIN_OPTIONS: tuple[PinOptionsType, ...] = ("partial", "none", "strict")

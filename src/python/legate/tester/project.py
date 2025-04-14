@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from ..util.types import EnvDict
     from . import CustomTest, FeatureType
 
+__all__ = ("Project",)
+
 
 class Project:
     def skipped_examples(self) -> set[str]:

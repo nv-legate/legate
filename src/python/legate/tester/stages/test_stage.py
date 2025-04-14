@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-import multiprocessing
 from datetime import datetime
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, Protocol
 
@@ -307,7 +307,7 @@ class TestStage(Protocol):
     def _launch(
         self, config: Config, system: TestSystem
     ) -> list[ProcessResult]:
-        pool = multiprocessing.pool.ThreadPool(self.spec.workers)
+        pool = ThreadPool(self.spec.workers)
 
         assert not config.other.gdb
 

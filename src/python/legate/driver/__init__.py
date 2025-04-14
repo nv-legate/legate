@@ -7,8 +7,11 @@ from .config import Config
 from .driver import LegateDriver
 from .launcher import Launcher
 
+__all__ = ("Config", "Launcher", "LegateDriver", "main")
 
-def main() -> int:  # noqa: D103
+
+def main() -> int:
+    """Main function for legate entry point."""
     import os
     import sys
     import shlex

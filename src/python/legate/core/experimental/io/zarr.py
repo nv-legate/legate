@@ -83,8 +83,9 @@ def write_array(
         shape=ary.shape,
         dtype=ary.type.to_numpy_dtype(),
         mode="w",
-        chunks=chunks,
-        compressor=None,  # TODO: support compression
+        # pyright hallucinates types for these zarr parameters
+        chunks=chunks,  # pyright: ignore[reportArgumentType]
+        compressor=None,  # pyright: ignore[reportArgumentType]
     )
     # TODO: minimize the copy needed when padding
     shape, padded = _get_padded_shape(zarr_ary)

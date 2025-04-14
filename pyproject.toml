@@ -330,3 +330,7 @@ ignore-decorators = ["typing.overload"]
 # correctly.
 builtin = "clear,rare,informal,names,en-GB_to_en-US"
 context = 1
+
+[tool.pyright]
+stubPath = "src/python/typings"
+reportMissingModuleSource = false

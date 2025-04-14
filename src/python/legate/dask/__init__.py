@@ -15,6 +15,8 @@
 
 from __future__ import annotations
 
+__all__ = ("main",)
+
 
 def main() -> int:  # noqa: D103
     import sys

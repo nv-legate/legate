@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import sys
 import argparse
+from typing import Any
 
 from dask.distributed import Client, LocalCluster
 
@@ -80,7 +81,9 @@ def main(argv: list[str]) -> int:
 
     with cluster, Client(sched_addr) as client:  # type: ignore[no-untyped-call]
         setup_worker_env(client)
-        output = client.run(daskrun, args.cmd)
+
+        # client.run returns a dict but pyright thinks it is a coroutine
+        output: Any = client.run(daskrun, args.cmd)
         for w_output in output.values():
             sys.stdout.write(w_output)
 

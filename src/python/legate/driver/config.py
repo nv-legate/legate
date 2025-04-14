@@ -162,12 +162,10 @@ class ConfigProtocol(Protocol):
     other: Other
 
     @cached_property
-    def console(self) -> bool:
-        pass
+    def console(self) -> bool: ...
 
     @cached_property
-    def run_mode(self) -> RunMode:
-        pass
+    def run_mode(self) -> RunMode: ...
 
 
 class Config:

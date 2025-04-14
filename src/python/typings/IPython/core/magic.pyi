@@ -9,5 +9,5 @@ class Magics:
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
-line_magic: Callable[[Callable[_P, _R]], Callable[_P, _R]]
-magics_class: Callable[[Callable[_P, _R]], Callable[_P, _R]]
+def line_magic(f: Callable[_P, _R]) -> Callable[_P, _R]: ...
+def magics_class(f: Callable[_P, _R]) -> Callable[_P, _R]: ...

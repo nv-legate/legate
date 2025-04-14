@@ -21,10 +21,11 @@ if TYPE_CHECKING:
 
     from ..core import LogicalArray
 
+__all__ = ("from_file", "kerchunk_read")
 
 # This module is the "public" interface for this function, so import it purely
 # to re-export it.
-from ._lib.hdf5.hdf5_interface import from_file  # noqa: F401
+from ._lib.hdf5.hdf5_interface import from_file
 
 
 def _get_virtual_dataset_names(filepath: str) -> set[str]:
@@ -114,7 +115,7 @@ def kerchunk_read(filepath: Path | str, dataset_name: str) -> LogicalArray:
     for chunk_coord in itertools.product(*dims):
         key = zarr_ary._chunk_key(chunk_coord)  # noqa: SLF001
         try:
-            _, offset, nbytes = refs[key]
+            _, offset, nbytes = refs[key]  # pyright: ignore[reportArgumentType,reportCallIssue]
         except KeyError:
             if dataset_name in _get_virtual_dataset_names(filepath):
                 msg = f"Virtual dataset isn't supported: {dataset_name}"

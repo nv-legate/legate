@@ -25,6 +25,8 @@ if TYPE_CHECKING:
     from .config import Config
     from .test_system import ProcessResult, TestSystem
 
+__all__ = ("TestPlan",)
+
 
 class TestPlan:
     """Encapsulate an entire test run with multiple feature test stages.

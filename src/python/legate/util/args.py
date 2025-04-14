@@ -21,6 +21,18 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
 
 
+__all__ = (
+    "ActionType",
+    "ArgSpec",
+    "ExtendAction",
+    "InfoAction",
+    "MultipleChoices",
+    "NargsType",
+    "NotRequired",
+    "Unset",
+)
+
+
 class _UnsetType:
     pass
 
@@ -73,7 +85,7 @@ class Argument:
     spec: ArgSpec
 
     @property
-    def kwargs(self) -> dict[str, Any]:  # noqa: D102
+    def kwargs(self) -> dict[str, Any]:
         return dict(_entries(self.spec))
 
 

@@ -10,7 +10,7 @@ from typing import ClassVar
 
 from docutils import nodes
 from docutils.parsers.rst.directives import unchanged
-from docutils.statemachine import ViewList
+from docutils.statemachine import StringList
 from jinja2 import Template
 from sphinx.errors import SphinxError
 from sphinx.util.docutils import SphinxDirective
@@ -90,7 +90,7 @@ class SettingsDirective(SphinxDirective):
         return self.parse(rst_text, "<settings>")
 
     def parse(self, rst_text, annotation):
-        result = ViewList()
+        result = StringList()
         for line in rst_text.split("\n"):
             result.append(line, annotation)
         node = nodes.paragraph()

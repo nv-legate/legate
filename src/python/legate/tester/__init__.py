@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, Literal, TypeAlias
 if TYPE_CHECKING:
     from ..util.types import ArgList
 
+__all__ = ("LAST_FAILED_FILENAME", "CustomTest", "FeatureType")
+
 #: Define the available feature types for tests
 FeatureType: TypeAlias = Literal["cpus", "cuda", "eager", "openmp"]
 

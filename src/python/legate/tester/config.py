@@ -34,6 +34,8 @@ if TYPE_CHECKING:
 
     from .project import Project
 
+__all__ = ("Config",)
+
 
 @dataclass(frozen=True)
 class Core(DataclassMixin):
@@ -59,7 +61,7 @@ class MultiNode(DataclassMixin):
     launcher_extra: list[str]
     mpi_output_filename: str | None
 
-    def __post_init__(self, **kw: dict[str, Any]) -> None:  # noqa: D105
+    def __post_init__(self, **kw: dict[str, Any]) -> None:
         # fix up launcher_extra to automatically handle quoted strings with
         # internal whitespace, have to use __setattr__ for frozen
         # https://docs.python.org/3/library/dataclasses.html#frozen-instances
@@ -247,6 +249,7 @@ class Config:
         return self.legate_path_
 
     def _compute_features(self, args: Namespace) -> tuple[FeatureType, ...]:
+        computed: list[FeatureType]
         if args.features is not None:
             computed = args.features
         else:

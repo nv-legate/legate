@@ -33,7 +33,7 @@ def get_libpath(lib_base_name: str, full_lib_name: str) -> str:
             f"liblegate{so_ext}",
         ):
             if lib_exists(name):
-                return libdir
+                return str(libdir)
         return None
 
     from .util.fs import get_legate_paths
@@ -50,7 +50,8 @@ LEGATE_ARCH: str = "@LEGATE_ARCH@"
 
 libpath: str = get_libpath("@legate_LIB_NAME@", "@legate_FULL_LIB_NAME@")
 
-networks: list[str] = "@Legion_NETWORKS@".split()
+# wrap in str to placate pyright
+networks: list[str] = str("@Legion_NETWORKS@").split()
 
 max_dim: int = int("@Legion_MAX_DIM@")
 

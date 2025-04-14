@@ -24,8 +24,7 @@ class LegateDataInterface(Protocol):
     @property
     def __legate_data_interface__(  # noqa: D105
         self,
-    ) -> LegateDataInterfaceItem:
-        pass
+    ) -> LegateDataInterfaceItem: ...
 
 
 class Field:

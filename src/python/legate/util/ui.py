@@ -24,7 +24,8 @@ from rich.text import Text
 if TYPE_CHECKING:
     from datetime import timedelta
 
-    from rich.console import RenderableType, TextType
+    from rich.console import RenderableType
+    from rich.text import TextType
 
 Details: TypeAlias = Iterable[str]
 KeyVals: TypeAlias = dict[str, Any]

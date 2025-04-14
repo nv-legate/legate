@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from docutils import nodes
-from docutils.statemachine import ViewList
+from docutils.statemachine import StringList
 from packaging.version import Version
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.nodes import nested_parse_with_titles
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 class Releases(SphinxDirective):
     def parse(self, rst_lines: list[str], annotation: str) -> list[Node]:
-        result = ViewList()
+        result = StringList()
         for line in rst_lines:
             result.append(line, annotation)
         node = nodes.paragraph()

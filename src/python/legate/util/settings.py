@@ -66,6 +66,7 @@ from typing import (
     Any,
     Callable,
     Generic,
+    Protocol,
     TypeAlias,
     TypeVar,
     cast as typing_cast,
@@ -75,6 +76,7 @@ __all__ = (
     "PrioritizedSetting",
     "Settings",
     "convert_bool",
+    "convert_int",
     "convert_str",
     "convert_str_seq",
 )
@@ -84,8 +86,7 @@ class _Unset:
     pass
 
 
-T = TypeVar("T")
-
+T = TypeVar("T", covariant=True)  # noqa: PLC0105
 
 Unset: TypeAlias = T | type[_Unset]
 
@@ -163,7 +164,15 @@ def convert_str_seq(
         raise ValueError(msg) from e
 
 
+class ConversionFnWithType(Generic[T], Protocol):
+    type: str
+
+    def __call__(self, value: Any) -> T: ...
+
+
 ConversionFn: TypeAlias = Callable[[Any], T]
+
+Converter: TypeAlias = ConversionFn[T] | ConversionFnWithType[T]
 
 
 class SettingBase(Generic[T]):
@@ -171,12 +180,12 @@ class SettingBase(Generic[T]):
         self,
         name: str,
         default: Unset[T] = _Unset,
-        convert: ConversionFn[T] | None = None,
+        convert: Converter[T] | None = None,
         help: str = "",  # noqa: A002
     ) -> None:
         self._default = default
         self._convert = (
-            convert if convert else typing_cast(ConversionFn[T], convert_str)
+            convert if convert else typing_cast(Converter[T], convert_str)
         )
         self._help = help
         self._name = name
@@ -203,8 +212,10 @@ class SettingBase(Generic[T]):
             return 'bool ("0" or "1")'
         if self._convert is convert_str_seq:
             return "tuple[str, ...]"
-        if callable(self._convert) and hasattr(self._convert, "type"):
-            return self._convert.type
+        if callable(self._convert):
+            convert = typing_cast(ConversionFnWithType[T], self._convert)
+            if hasattr(convert, "type"):
+                return convert.type
         msg = "unreachable"
         raise RuntimeError(msg)
 
@@ -240,7 +251,7 @@ class PrioritizedSetting(SettingBase[T]):
         name: str,
         env_var: str | None = None,
         default: Unset[T] = _Unset,
-        convert: ConversionFn[T] | None = None,
+        convert: Converter[T] | None = None,
         help: str = "",  # noqa: A002
     ) -> None:
         super().__init__(name, default, convert, help)
