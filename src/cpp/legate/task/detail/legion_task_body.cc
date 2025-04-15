@@ -7,6 +7,7 @@
 #include <legate/task/detail/legion_task_body.h>
 
 #include <legate/comm/communicator.h>
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/return_value.h>
@@ -110,7 +111,7 @@ LegionTaskContext::LegionTaskContext(const Legion::Task* legion_task,
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) && !can_elide_device_ctx_sync() &&
       (legion_task_().current_proc.kind() == Processor::Kind::TOC_PROC) &&
       std::any_of(reductions().begin(), reductions().end(), is_scalar_store)) {
-    Runtime::get_runtime()->get_cuda_driver_api()->stream_synchronize(
+    cuda::detail::get_cuda_driver_api()->stream_synchronize(
       Runtime::get_runtime()->get_cuda_stream());
   }
 }

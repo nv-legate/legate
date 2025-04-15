@@ -36,9 +36,8 @@ namespace legate::detail {
 
   const auto num_outputs = context.num_outputs();
   const auto stream      = context.get_task_stream();
-  auto* runtime          = Runtime::get_runtime();
-  const auto* api        = runtime->get_cuda_driver_api();
-  const auto kern        = runtime->get_cuda_module_manager()->load_kernel_from_fatbin(
+  auto&& api             = cuda::detail::get_cuda_driver_api();
+  const auto kern = Runtime::get_runtime()->get_cuda_module_manager()->load_kernel_from_fatbin(
     fixup_ranges_fatbin, "legate_fixup_ranges_kernel");
 
   // TODO(wonchanl): We need to extend this to nested cases

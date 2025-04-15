@@ -6,7 +6,7 @@
 
 #include <legate/task/detail/task_return.h>
 
-#include <legate/cuda/cuda.h>
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/returned_exception_common.h>
 #include <legate/utilities/detail/align.h>
@@ -17,8 +17,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <numeric>
-#include <tuple>
 #include <vector>
 
 namespace legate::detail {
@@ -41,7 +39,7 @@ void TaskReturn::pack(void* buffer) const
 
     for (auto&& [ret, offset] : zip_equal(return_values_, layout_)) {
       if (ret.is_device_value()) {
-        runtime->get_cuda_driver_api()->mem_cpy_async(
+        cuda::detail::get_cuda_driver_api()->mem_cpy_async(
           out_ptr + offset, ret.ptr(), ret.size(), stream);
       } else {
         std::memcpy(out_ptr + offset, ret.ptr(), ret.size());
@@ -66,14 +64,13 @@ void TaskReturn::finalize(Legion::Context legion_context, bool skip_device_ctx_s
   }
 
   if (!skip_device_ctx_sync) {
-    auto* runtime   = detail::Runtime::get_runtime();
-    const auto kind = runtime->get_executing_processor().kind();
+    const auto kind = detail::Runtime::get_runtime()->get_executing_processor().kind();
     // FIXME: We don't currently have a good way to defer the return value packing on GPUs,
     //        as doing so would require the packing to be chained up with all preceding kernels,
     //        potentially launched with different streams, within the task. Until we find
     //        the right approach, we simply synchronize the device before proceeding.
     if (kind == Processor::TOC_PROC) {
-      runtime->get_cuda_driver_api()->ctx_synchronize();
+      cuda::detail::get_cuda_driver_api()->ctx_synchronize();
     }
   }
 

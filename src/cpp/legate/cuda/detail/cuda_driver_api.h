@@ -7,7 +7,7 @@
 #pragma once
 
 #include <legate/cuda/detail/cuda_driver_types.h>
-#include <legate/utilities/macros.h>
+#include <legate/utilities/internal_shared_ptr.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -44,8 +44,7 @@ class CUDADriverAPI {
                      CUdeviceptr src,
                      std::size_t num_bytes,
                      CUstream stream) const;
-  template <typename T, typename U>
-  void mem_cpy_async(T* dst, const U* src, std::size_t num_bytes, CUstream stream) const;
+  void mem_cpy_async(void* dst, const void* src, std::size_t num_bytes, CUstream stream) const;
 
   [[nodiscard]] CUstream stream_create(unsigned int flags) const;
   void stream_destroy(CUstream* stream) const;
@@ -177,6 +176,21 @@ class CUDADriverError : public std::runtime_error {
  private:
   CUresult result_{};
 };
+
+// ==========================================================================================
+
+/**
+ * @brief Get the singleton CUDA driver API object.
+ *
+ * This loads and initializes the driver on first call. Due to the inability to track the
+ * lifetimes of objects created through an open DSO, the driver API object returned by this
+ * function lives until program shutdown.
+ *
+ * @return The CUDA driver API.
+ */
+[[nodiscard]] const InternalSharedPtr<cuda::detail::CUDADriverAPI>& get_cuda_driver_api();
+
+// ==========================================================================================
 
 [[noreturn]] void throw_cuda_driver_error(CUresult result,
                                           std::string_view expression,

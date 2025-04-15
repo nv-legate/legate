@@ -7,7 +7,7 @@
 #include <legate/comm/detail/comm_cal.h>
 
 #include <legate/comm/coll.h>
-#include <legate/cuda/cuda.h>
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/cuda/detail/nvtx.h>
 #include <legate/data/buffer.h>
 #include <legate/operation/detail/task_launcher.h>
@@ -112,14 +112,13 @@ class Init : public detail::LegionTask<Init> {
     cal_comm_t cal_comm = nullptr;
     cal_comm_create_params_t params{};
 
-    params.allgather = allgather;
-    params.req_test  = [](void*) { return CAL_OK; };
-    params.req_free  = [](void*) { return CAL_OK; };
-    params.data      = static_cast<void*>(cpu_comm);
-    params.rank      = task->index_point[0];
-    params.nranks    = task->index_domain.get_volume();
-    params.local_device =
-      legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->ctx_get_device();
+    params.allgather    = allgather;
+    params.req_test     = [](void*) { return CAL_OK; };
+    params.req_free     = [](void*) { return CAL_OK; };
+    params.data         = static_cast<void*>(cpu_comm);
+    params.rank         = task->index_point[0];
+    params.nranks       = task->index_domain.get_volume();
+    params.local_device = cuda::detail::get_cuda_driver_api()->ctx_get_device();
 
     CHECK_CAL(cal_comm_create(params, &cal_comm));
 

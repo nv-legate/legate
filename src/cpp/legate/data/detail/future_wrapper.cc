@@ -6,6 +6,7 @@
 
 #include <legate/data/detail/future_wrapper.h>
 
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/dispatch.h>
@@ -40,10 +41,8 @@ namespace {
   const auto acc = AccessorWO<std::int8_t, 1>{ret, field_size, false};
 
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) && (mem_kind == Memory::Kind::GPU_FB_MEM)) {
-    auto* const runtime = Runtime::get_runtime();
-
-    runtime->get_cuda_driver_api()->mem_cpy_async(
-      acc.ptr(0), init_value, field_size, runtime->get_cuda_stream());
+    cuda::detail::get_cuda_driver_api()->mem_cpy_async(
+      acc.ptr(0), init_value, field_size, Runtime::get_runtime()->get_cuda_stream());
   } else {
     std::memcpy(acc.ptr(0), init_value, field_size);
   }
@@ -171,10 +170,8 @@ void FutureWrapper::initialize_with_identity(GlobalRedopID redop_id)
   LEGATE_ASSERT(redop->sizeof_lhs == field_size());
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) &&
       (get_buffer().get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM)) {
-    auto* runtime = Runtime::get_runtime();
-    auto stream   = runtime->get_cuda_stream();
-
-    runtime->get_cuda_driver_api()->mem_cpy_async(ptr, identity, field_size(), stream);
+    cuda::detail::get_cuda_driver_api()->mem_cpy_async(
+      ptr, identity, field_size(), Runtime::get_runtime()->get_cuda_stream());
   } else {
     std::memcpy(ptr, identity, field_size());
   }

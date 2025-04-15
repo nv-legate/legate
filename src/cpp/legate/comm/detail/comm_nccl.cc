@@ -129,9 +129,8 @@ class Init : public detail::LegionTask<Init> {
       return comm.release();
     }
 
-    auto* legate_runtime = detail::Runtime::get_runtime();
-    const auto* driver   = legate_runtime->get_cuda_driver_api();
-    auto stream          = legate_runtime->get_cuda_stream();
+    auto&& driver = cuda::detail::get_cuda_driver_api();
+    auto stream   = detail::Runtime::get_runtime()->get_cuda_stream();
 
     // Perform a warm-up all-to-all
     CUevent ev_start          = driver->event_create();

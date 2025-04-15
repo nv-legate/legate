@@ -6,7 +6,6 @@
 
 #include <legate/cuda/detail/module_manager.h>
 
-#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
 
 #include <fmt/format.h>
@@ -102,15 +101,13 @@ CUlibrary CUDAModuleManager::load_library(
 
   if (inserted) {
     try {
-      const auto* api = legate::detail::Runtime::get_runtime()->get_cuda_driver_api();
-
-      it->second = api->library_load_data(fatbin,
-                                          jit_options.first.begin(),
-                                          jit_options.second.begin(),
-                                          jit_options.first.size(),
-                                          library_options.first.begin(),
-                                          library_options.second.begin(),
-                                          library_options.first.size());
+      it->second = get_cuda_driver_api()->library_load_data(fatbin,
+                                                            jit_options.first.begin(),
+                                                            jit_options.second.begin(),
+                                                            jit_options.first.size(),
+                                                            library_options.first.begin(),
+                                                            library_options.second.begin(),
+                                                            library_options.first.size());
     } catch (...) {
       libraries_().erase(it);
       throw;
@@ -128,8 +125,7 @@ CUkernel CUDAModuleManager::load_kernel_from_fatbin(const void* fatbin, const ch
 
   const auto lib = load_library(fatbin);
 
-  return legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->library_get_kernel(
-    lib, kernel_name);
+  return get_cuda_driver_api()->library_get_kernel(lib, kernel_name);
 }
 
 }  // namespace legate::cuda::detail

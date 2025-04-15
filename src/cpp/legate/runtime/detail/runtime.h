@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/cuda/detail/cuda_driver_types.h>
 #include <legate/cuda/detail/module_manager.h>
 #include <legate/data/detail/logical_region_field.h>
@@ -370,7 +369,6 @@ class Runtime {
   [[nodiscard]] const Library* core_library() const;
 
   [[nodiscard]] CUstream get_cuda_stream() const;
-  [[nodiscard]] const cuda::detail::CUDADriverAPI* get_cuda_driver_api();
   [[nodiscard]] cuda::detail::CUDAModuleManager* get_cuda_module_manager();
 
   [[nodiscard]] Legion::Runtime* get_legion_runtime();
@@ -444,7 +442,6 @@ class Runtime {
 
   std::optional<MapperManager> mapper_manager_{};
 
-  InternalSharedPtr<cuda::detail::CUDADriverAPI> cu_driver_{};
   std::optional<cuda::detail::CUDAModuleManager> cu_mod_manager_{};
 };
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <legate/runtime/detail/runtime.h>
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/utilities/detail/cuda_reduction_buffer.cuh>
 
 namespace legate::detail {
@@ -18,8 +18,7 @@ CUDAReductionBuffer<REDOP>::CUDAReductionBuffer(CUstream stream)
 {
   static const VAL identity{REDOP::identity};
 
-  Runtime::get_runtime()->get_cuda_driver_api()->mem_cpy_async(
-    ptr_, &identity, sizeof(identity), stream);
+  cuda::detail::get_cuda_driver_api()->mem_cpy_async(ptr_, &identity, sizeof(identity), stream);
 }
 
 template <typename REDOP>
@@ -34,7 +33,7 @@ LEGATE_HOST typename CUDAReductionBuffer<REDOP>::VAL CUDAReductionBuffer<REDOP>:
   CUstream stream) const
 {
   VAL result;
-  const auto* driver = Runtime::get_runtime()->get_cuda_driver_api();
+  auto&& driver = cuda::detail::get_cuda_driver_api();
 
   driver->mem_cpy_async(&result, ptr_, sizeof(result), stream);
   driver->stream_synchronize(stream);

@@ -267,14 +267,12 @@ void Runtime::initialize(Legion::Context legion_context)
     core_library_ = nullptr;
     comm::coll::finalize();
     cu_mod_manager_.reset();
-    cu_driver_.reset();
     legion_context_ = {};
     initialized_    = false;);
 
   initialized_    = true;
   legion_context_ = std::move(legion_context);
-  cu_driver_      = make_internal_shared<cuda::detail::CUDADriverAPI>();
-  cu_mod_manager_.emplace(cu_driver_);
+  cu_mod_manager_.emplace(cuda::detail::get_cuda_driver_api());
   comm::coll::init();
   field_manager_ = consensus_match_required() ? std::make_unique<ConsensusMatchingFieldManager>()
                                               : std::make_unique<FieldManager>();
@@ -2198,8 +2196,6 @@ CUstream Runtime::get_cuda_stream() const
   }
   return nullptr;
 }
-
-const cuda::detail::CUDADriverAPI* Runtime::get_cuda_driver_api() { return cu_driver_.get(); }
 
 cuda::detail::CUDAModuleManager* Runtime::get_cuda_module_manager()
 {

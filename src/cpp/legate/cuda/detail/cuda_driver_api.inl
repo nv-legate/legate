@@ -12,18 +12,6 @@
 
 namespace legate::cuda::detail {
 
-template <typename T, typename U>
-void CUDADriverAPI::mem_cpy_async(T* dst,
-                                  const U* src,
-                                  std::size_t num_bytes,
-                                  CUstream stream) const
-{
-  mem_cpy_async(reinterpret_cast<std::uintptr_t>(dst),
-                reinterpret_cast<std::uintptr_t>(src),
-                num_bytes,
-                stream);
-}
-
 template <typename... T>
 void CUDADriverAPI::launch_kernel(CUfunction f,
                                   Dim3 grid_dim,

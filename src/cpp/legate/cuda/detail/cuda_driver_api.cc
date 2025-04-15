@@ -18,6 +18,7 @@
 #include <fmt/ostream.h>
 
 #include <dlfcn.h>
+#include <optional>
 #include <regex>
 #include <stdexcept>
 #include <type_traits>
@@ -288,6 +289,15 @@ void CUDADriverAPI::mem_cpy_async(CUdeviceptr dst,
   LEGATE_CHECK_CUDRIVER(mem_cpy_async_(dst, src, num_bytes, stream));
 }
 
+void CUDADriverAPI::mem_cpy_async(void* dst,
+                                  const void* src,
+                                  std::size_t num_bytes,
+                                  CUstream stream) const
+{
+  mem_cpy_async(
+    reinterpret_cast<CUdeviceptr>(dst), reinterpret_cast<CUdeviceptr>(src), num_bytes, stream);
+}
+
 CUstream CUDADriverAPI::stream_create(unsigned int flags) const
 {
   CUstream stream;
@@ -475,6 +485,18 @@ CUresult CUDADriverError::error_code() const noexcept { return result_; }
 
 // ==========================================================================================
 
+[[nodiscard]] const InternalSharedPtr<CUDADriverAPI>& get_cuda_driver_api()
+{
+  static std::optional<InternalSharedPtr<CUDADriverAPI>> api{};
+
+  if (!api.has_value()) {
+    api = make_internal_shared<CUDADriverAPI>();
+  }
+  return *api;
+}
+
+// ==========================================================================================
+
 void throw_cuda_driver_error(CUresult result,
                              std::string_view expression,
                              std::string_view file,
@@ -484,8 +506,7 @@ void throw_cuda_driver_error(CUresult result,
   const char* error_str = [&] {
     // Do not care about the error, in fact, cannot handle it.
     try {
-      return legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->get_error_string(
-        result);
+      return get_cuda_driver_api()->get_error_string(result);
     } catch (...) {
       return "unknown error occurred";
     }
@@ -493,7 +514,7 @@ void throw_cuda_driver_error(CUresult result,
 
   const char* error_name = [&] {
     try {
-      return legate::detail::Runtime::get_runtime()->get_cuda_driver_api()->get_error_name(result);
+      return get_cuda_driver_api()->get_error_name(result);
     } catch (...) {
       return "unknown error";
     }

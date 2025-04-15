@@ -5,8 +5,10 @@
  */
 
 #include <legate/cuda/cuda.h>
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/generated/fatbin/partitioning_tasks_fatbin.h>
 #include <legate/partitioning/detail/partitioning_tasks.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/task/task_context.h>
 #include <legate/utilities/detail/cuda_reduction_buffer.cuh>
 #include <legate/utilities/detail/unravel.h>
@@ -69,9 +71,8 @@ struct FindBoundingBoxFn {
       LEGATE_THREADS_PER_BLOCK / LEGATE_WARP_SIZE * sizeof(Point<POINT_NDIM>) * 2;
     std::size_t num_iters = round_div(blocks, LEGATE_MAX_REDUCTION_CTAS);
 
-    auto* runtime     = Runtime::get_runtime();
-    const auto* api   = runtime->get_cuda_driver_api();
-    auto* mod_manager = runtime->get_cuda_module_manager();
+    auto&& api        = cuda::detail::get_cuda_driver_api();
+    auto* mod_manager = Runtime::get_runtime()->get_cuda_module_manager();
 
     if (!unravel.empty()) {
       static const auto kernel_name = fmt::format("legate_find_bounding_box_kernel_{}_{}_{}",
@@ -142,9 +143,8 @@ struct FindBoundingBoxSortedFn {
     auto result_low  = CUDAReductionBuffer<ElementWiseMin<POINT_NDIM>>{stream};
     auto result_high = CUDAReductionBuffer<ElementWiseMax<POINT_NDIM>>{stream};
 
-    auto* runtime     = Runtime::get_runtime();
-    const auto* api   = runtime->get_cuda_driver_api();
-    auto* mod_manager = runtime->get_cuda_module_manager();
+    auto&& api        = cuda::detail::get_cuda_driver_api();
+    auto* mod_manager = Runtime::get_runtime()->get_cuda_module_manager();
 
     if (!unravel.empty()) {
       static const auto kernel_name = fmt::format("legate_find_bounding_box_sorted_kernel_{}_{}_{}",
