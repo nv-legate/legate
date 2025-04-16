@@ -580,7 +580,7 @@ void set_legion_default_args(std::string log_dir,
     add_logger(mapping::detail::BaseMapper::LOGGER_NAME);
   }
   if (Config::get_config().log_partitioning_decisions()) {
-    add_logger(log_legate_partitioner().get_name());
+    add_logger(log_legate_partitioner().get_name(), "debug");
   }
 
   if (spy) {

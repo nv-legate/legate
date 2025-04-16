@@ -169,28 +169,28 @@ bool Strategy::is_key_partition(const Variable* partition_symbol) const
 
 void Strategy::dump() const
 {
-  if (!log_legate_partitioner().want_print()) {
+  if (!log_legate_partitioner().want_debug()) {
     return;
   }
-  log_legate_partitioner().print() << "===== Solution =====";
+  log_legate_partitioner().debug() << "===== Solution =====";
   for (const auto& [symbol, part] : assignments_) {
-    log_legate_partitioner().print() << symbol.to_string() << ": " << part->to_string();
+    log_legate_partitioner().debug() << symbol.to_string() << ": " << part->to_string();
   }
   for (const auto& [symbol, field] : fields_for_unbound_stores_) {
     const auto& [field_space, field_id] = field;
 
-    log_legate_partitioner().print()
+    log_legate_partitioner().debug()
       << symbol.to_string() << ": (" << field_space << "," << field_id << ")";
   }
   for (const auto& [op, domain] : launch_domains_) {
     if (!domain.is_valid()) {
-      log_legate_partitioner().print()
+      log_legate_partitioner().debug()
         << op->to_string(true /*show_provenance*/) << ": (sequential)";
     } else {
-      log_legate_partitioner().print() << op->to_string(true /*show_provenance*/) << ": " << domain;
+      log_legate_partitioner().debug() << op->to_string(true /*show_provenance*/) << ": " << domain;
     }
   }
-  log_legate_partitioner().print() << "====================";
+  log_legate_partitioner().debug() << "====================";
 }
 
 void Strategy::compute_launch_domains_(const ConstraintSolver& solver)
