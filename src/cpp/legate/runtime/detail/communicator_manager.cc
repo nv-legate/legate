@@ -40,6 +40,22 @@ void CommunicatorFactory::destroy()
   for (auto&& [key, communicator] : communicators_) {
     finalize_(key.get_machine(), key.desc, communicator);
   }
+
+  auto* const runtime = Runtime::get_runtime();
+  // Without this fence, Legion might still reorder the finalization tasks if they don't have
+  // obvious data dependencies.
+  //
+  // For example, CAL stuffs a CPU communicator into its own communicator, and so the
+  // finalize task doesn't need to pass both the CAL comm and CPU comm as arguments to the
+  // task. So Legion thinks they are disjoint and schedules them independently.
+  runtime->issue_execution_fence();
+  // Must also flush the scheduling window so that our fence definitely makes it down to
+  // Legion. This is needed because the communicator tasks bypass the runtime pipelines by
+  // using `TaskLauncher`, which submits directly to Legion.
+  //
+  // This leads to the case where Legion sees the task submissions, but we don't, and so
+  // `issue_execution_fence()` doesn't do anything because our queue is empty.
+  runtime->flush_scheduling_window();
   communicators_.clear();
   nd_aliases_.clear();
 }
@@ -98,11 +114,10 @@ void CommunicatorManager::register_factory(std::string name,
 
 void CommunicatorManager::destroy()
 {
+  // Communicator factories should be destroyed in reverse order of creation, to ensure that
+  // any dependencies (e.g. CAL depends on CPU) are destroyed in hierarchical order.
   for (auto it = factories_.rbegin(); it != factories_.rend(); ++it) {
     it->second->destroy();
-    // ensure reverse task order due to dependencies (CAL->CPU)
-    // without fence CPU teardown might supersede CAL
-    Runtime::get_runtime()->issue_execution_fence();
   }
   factories_.clear();
 }
