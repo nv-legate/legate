@@ -105,6 +105,30 @@ class NoPartition : public Partition {
 
 class Tiling : public Partition {
  public:
+  /**
+   * @brief Construct a `Tiling` partition.
+   *
+   * An example of a Tiling we can create, over a 1d index space:
+   *
+   * @code
+   * Tiling(tile_shape=(3,), color_shape=(4,), offsets=(1,))
+   *
+   *                          offset
+   *                          V
+   * indices:              0  1  2  3  4  5  6  7  8  9 10 11 12
+   * tile for color (0,)      *  *  *
+   * tile for color (1,)               *  *  *
+   * tile for color (2,)                        *  *  *
+   * tile for color (3,)                                 *  *  *
+   * @endcode
+   *
+   * This formulation is somewhat overconstrained. In theory, you could deduce `color_shape`
+   * from `tile_shape` when applying the tiling to a given store.
+   *
+   * @param tile_shape The size that each sub-tile must be.
+   * @param color_shape The number of colors in each dimension.
+   * @param offsets The number of entries to skip per dimension.
+   */
   Tiling(tuple<std::uint64_t> tile_shape,
          tuple<std::uint64_t> color_shape,
          tuple<std::int64_t> offsets);
@@ -149,6 +173,33 @@ class Tiling : public Partition {
   [[nodiscard]] const tuple<std::int64_t>& offsets() const;
   [[nodiscard]] bool has_color(const tuple<std::uint64_t>& color) const;
 
+  /**
+   * @brief Apply the tiling to the extents of a parent Store and retrieve the extents of a
+   * particular child Store.
+   *
+   * If `extents` is smaller than, or not otherwise compatible with the parent extents for
+   * which this `Tiling` was constructed, then the resultant child extents are "clipped" (size
+   * 0).
+   *
+   * For example, given the example detailed in the constructor (a size 13 parent), suppose we
+   * map this to a 6-element substore. There is no way to split 6 elements into 4 sets of 3
+   * elements. In that case the children would have extents 3, 2, 0 and 0.
+   *
+   * `color` specifies the `i, (j, k, ...)`-th color within the tiling, corresponding to a
+   * particular child. So, for example for a tiling which produces:
+   *
+   * @code
+   * A B
+   * C D
+   * @endcode
+   *
+   * passing `color = (1, 1)` gives you `D`.
+   *
+   * @param extents The extents of the region on which to apply the tiling.
+   * @param color The color corresponding to the child Store to retrieve.
+   *
+   * @return The sub-region of `extents` corresponding to `color`.
+   */
   [[nodiscard]] tuple<std::uint64_t> get_child_extents(const tuple<std::uint64_t>& extents,
                                                        const tuple<std::uint64_t>& color) const;
   [[nodiscard]] tuple<std::int64_t> get_child_offsets(const tuple<std::uint64_t>& color) const;
