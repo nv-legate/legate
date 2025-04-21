@@ -4,48 +4,22 @@
 
 from __future__ import annotations
 
-import traceback
-from ctypes import CDLL, RTLD_GLOBAL
-from types import TracebackType
 from typing import Any, Protocol
 
 # imported for backwards compatibility
-from ._ext.utils.ordered_set import OrderedSet  # noqa: F401
+from ._ext.utils.ordered_set import OrderedSet
+
+__all__ = ("Annotation", "OrderedSet")
 
 
 class AnyCallable(Protocol):
-    def __call__(self, *args: Any, **kwargs: Any) -> Any:  # noqa: D102
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         pass
 
 
 class ShutdownCallback(Protocol):
-    def __call__(self) -> None:  # noqa: D102
+    def __call__(self) -> None:
         pass
-
-
-def capture_traceback_repr(  # noqa: D103
-    *,
-    skip_legate_frames: bool = True,  # noqa: ARG001
-) -> str | None:
-    tb = None
-    for frame, _ in traceback.walk_stack(None):
-        if frame.f_globals["__name__"].startswith("legate"):
-            continue
-        tb = TracebackType(
-            tb,
-            tb_frame=frame,
-            tb_lasti=frame.f_lasti,
-            tb_lineno=frame.f_lineno,
-        )
-    return "".join(traceback.format_tb(tb)) if tb is not None else None
-
-
-def dlopen_no_autoclose(ffi: Any, lib_path: str) -> Any:  # noqa: D103
-    # Use an already-opened library handle, which cffi will convert to a
-    # regular FFI object (using the definitions previously added using
-    # ffi.cdef), but will not automatically dlclose() on collection.
-    lib = CDLL(lib_path, mode=RTLD_GLOBAL)
-    return ffi.dlopen(ffi.cast("void *", lib._handle))  # noqa: SLF001
 
 
 class Annotation:
