@@ -33,7 +33,7 @@ class Dim3 {
 
 class CUDADriverAPI {
  public:
-  CUDADriverAPI();
+  explicit CUDADriverAPI(std::string handle_path);
 
   void init() const;
 
@@ -56,7 +56,7 @@ class CUDADriverAPI {
   [[nodiscard]] float event_elapsed_time(CUevent start, CUevent end) const;
   void event_destroy(CUevent* event) const;
 
-  void device_primary_ctx_retain(CUcontext* ctx, CUdevice dev) const;
+  [[nodiscard]] CUcontext device_primary_ctx_retain(CUdevice dev) const;
   void device_primary_ctx_release(CUdevice dev) const;
 
   [[nodiscard]] CUdevice ctx_get_device() const;
@@ -166,6 +166,41 @@ class CUDADriverAPI {
   CUresult (*library_get_kernel_)(CUkernel* kernel, CUlibrary library, const char* name) = nullptr;
   CUresult (*library_unload_)(CUlibrary library)                                         = nullptr;
 };
+
+// ==========================================================================================
+
+/**
+ * @brief A RAII helper for managing the current *primary* context.
+ *
+ * On construction, it retains the primary context and pushes it as the current context. On
+ * destruction it releases the context and pops it off the stack.
+ */
+class AutoPrimaryContext {
+ public:
+  AutoPrimaryContext()                                     = delete;
+  AutoPrimaryContext(const AutoPrimaryContext&)            = delete;
+  AutoPrimaryContext& operator=(const AutoPrimaryContext&) = delete;
+  AutoPrimaryContext(AutoPrimaryContext&&)                 = delete;
+  AutoPrimaryContext& operator=(AutoPrimaryContext&&)      = delete;
+
+  /**
+   * @brief Push the current primary context onto the stack.
+   *
+   * @param device The device for which to push the primary context.
+   */
+  explicit AutoPrimaryContext(CUdevice device);
+
+  /**
+   * @brief Pop the current context and release the primary context.
+   */
+  ~AutoPrimaryContext();
+
+ private:
+  CUdevice device_{};
+  CUcontext ctx_{};
+};
+
+// ==========================================================================================
 
 class CUDADriverError : public std::runtime_error {
  public:

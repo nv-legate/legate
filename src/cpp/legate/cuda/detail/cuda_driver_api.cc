@@ -231,8 +231,8 @@ void CUDADriverAPI::check_initialized_() const
 
 // ==========================================================================================
 
-CUDADriverAPI::CUDADriverAPI()
-  : handle_path_{legate::detail::LEGATE_CUDA_DRIVER.get(/* default */ "libcuda.so.1")},
+CUDADriverAPI::CUDADriverAPI(std::string handle_path)
+  : handle_path_{std::move(handle_path)},
     handle_{::dlopen(handle_path_.c_str(), RTLD_LAZY | RTLD_LOCAL)}
 {
   if (!is_loaded()) {
@@ -357,10 +357,13 @@ void CUDADriverAPI::event_destroy(CUevent* event) const
   *event = nullptr;
 }
 
-void CUDADriverAPI::device_primary_ctx_retain(CUcontext* ctx, CUdevice dev) const
+CUcontext CUDADriverAPI::device_primary_ctx_retain(CUdevice dev) const
 {
+  CUcontext ctx;
+
   check_initialized_();
-  LEGATE_CHECK_CUDRIVER(device_primary_ctx_retain_(ctx, dev));
+  LEGATE_CHECK_CUDRIVER(device_primary_ctx_retain_(&ctx, dev));
+  return ctx;
 }
 
 void CUDADriverAPI::device_primary_ctx_release(CUdevice dev) const
@@ -476,6 +479,36 @@ bool CUDADriverAPI::is_loaded() const noexcept { return handle_ != nullptr; }
 
 // ==========================================================================================
 
+AutoPrimaryContext::AutoPrimaryContext(CUdevice device) : device_{device}
+{
+  auto&& api = get_cuda_driver_api();
+
+  ctx_ = api->device_primary_ctx_retain(device_);
+  api->ctx_push_current(ctx_);
+}
+
+AutoPrimaryContext::~AutoPrimaryContext()
+{
+  try {
+    auto&& api = get_cuda_driver_api();
+
+    if (const auto cur_ctx = api->ctx_pop_current(); cur_ctx != ctx_) {
+      LEGATE_ABORT("Current active CUDA context ",
+                   cur_ctx,
+                   " does not match expected context ",
+                   ctx_,
+                   " (the primary context retained by this object). This indicates another CUDA "
+                   "context was pushed onto the stack during the lifetime of this object, without "
+                   "being popped from the stack.");
+    }
+    api->device_primary_ctx_release(device_);
+  } catch (const std::exception& e) {
+    LEGATE_ABORT(e.what());
+  }
+}
+
+// ==========================================================================================
+
 CUDADriverError::CUDADriverError(const std::string& what, CUresult result)
   : runtime_error{what}, result_{result}
 {
@@ -490,7 +523,11 @@ CUresult CUDADriverError::error_code() const noexcept { return result_; }
   static std::optional<InternalSharedPtr<CUDADriverAPI>> api{};
 
   if (!api.has_value()) {
-    api = make_internal_shared<CUDADriverAPI>();
+    auto path = legate::detail::LEGATE_CUDA_DRIVER.get().value_or(
+      // "libcuda.so.1" on Linux
+      LEGATE_SHARED_LIBRARY_PREFIX "cuda" LEGATE_SHARED_LIBRARY_SUFFIX ".1");
+
+    api = make_internal_shared<CUDADriverAPI>(std::move(path));
   }
   return *api;
 }
