@@ -15,7 +15,7 @@ namespace legate::detail {
 
 inline NoPartition::Kind NoPartition::kind() const { return Kind::NO_PARTITION; }
 
-inline bool NoPartition::is_complete_for(const detail::Storage* /*storage*/) const { return true; }
+inline bool NoPartition::is_complete_for(const detail::Storage& /*storage*/) const { return true; }
 
 inline bool NoPartition::satisfies_restrictions(const Restrictions& /*restrictions*/) const
 {
@@ -64,7 +64,7 @@ inline Weighted::Kind Weighted::kind() const { return Kind::WEIGHTED; }
 
 inline bool Weighted::is_convertible() const { return false; }
 
-inline bool Weighted::is_complete_for(const detail::Storage* /*storage*/) const
+inline bool Weighted::is_complete_for(const detail::Storage& /*storage*/) const
 {
   // Partition-by-weight partitions are complete by definition
   return true;
@@ -82,6 +82,10 @@ inline Image::Kind Image::kind() const { return Kind::IMAGE; }
 
 inline bool Image::is_convertible() const { return false; }
 
-// ==========================================================================================
+inline bool Image::is_complete_for(const detail::Storage& /*storage*/) const
+{
+  // Completeness check for image partitions is expensive, so we give a sound answer
+  return false;
+}
 
 }  // namespace legate::detail

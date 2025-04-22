@@ -128,18 +128,18 @@ void BaseArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) co
   buffer.pack(to_underlying(ArrayKind::BASE));
   data_->pack(buffer, analyzer);
 
-  const bool nullable = null_mask_ != nullptr;
+  const bool nullable = null_mask_.has_value();
   buffer.pack<bool>(nullable);
   if (nullable) {
-    null_mask_->pack(buffer, analyzer);
+    (*null_mask_)->pack(buffer, analyzer);
   }
 }
 
 void BaseArrayArg::analyze(StoreAnalyzer& analyzer)
 {
   data_->analyze(analyzer);
-  if (null_mask_) {
-    null_mask_->analyze(analyzer);
+  if (null_mask_.has_value()) {
+    (*null_mask_)->analyze(analyzer);
   }
 }
 
@@ -151,8 +151,8 @@ std::optional<Legion::ProjectionID> BaseArrayArg::get_key_proj_id() const
 void BaseArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
 {
   data_->record_unbound_stores(args);
-  if (null_mask_ != nullptr) {
-    null_mask_->record_unbound_stores(args);
+  if (null_mask_.has_value()) {
+    (*null_mask_)->record_unbound_stores(args);
   }
 }
 
@@ -198,10 +198,10 @@ void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
   buffer.pack(to_underlying(ArrayKind::STRUCT));
   type_->pack(buffer);
 
-  const bool nullable = null_mask_ != nullptr;
+  const bool nullable = null_mask_.has_value();
   buffer.pack<bool>(nullable);
   if (nullable) {
-    null_mask_->pack(buffer, analyzer);
+    (*null_mask_)->pack(buffer, analyzer);
   }
 
   for (auto&& field : fields_) {
@@ -211,8 +211,8 @@ void StructArrayArg::pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) 
 
 void StructArrayArg::analyze(StoreAnalyzer& analyzer)
 {
-  if (null_mask_) {
-    null_mask_->analyze(analyzer);
+  if (null_mask_.has_value()) {
+    (*null_mask_)->analyze(analyzer);
   }
   for (auto&& field : fields_) {
     field->analyze(analyzer);
@@ -232,8 +232,8 @@ std::optional<Legion::ProjectionID> StructArrayArg::get_key_proj_id() const
 
 void StructArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& args) const
 {
-  if (null_mask_) {
-    null_mask_->record_unbound_stores(args);
+  if (null_mask_.has_value()) {
+    (*null_mask_)->record_unbound_stores(args);
   }
   for (auto&& field : fields_) {
     field->record_unbound_stores(args);
@@ -242,8 +242,8 @@ void StructArrayArg::record_unbound_stores(std::vector<const OutputRegionArg*>& 
 
 void StructArrayArg::perform_invalidations() const
 {
-  if (null_mask_) {
-    null_mask_->perform_invalidations();
+  if (null_mask_.has_value()) {
+    (*null_mask_)->perform_invalidations();
   }
   for (auto&& field : fields_) {
     field->perform_invalidations();

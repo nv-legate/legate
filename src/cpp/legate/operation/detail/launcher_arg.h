@@ -148,7 +148,8 @@ class WriteOnlyScalarStoreArg final : public Analyzable {
 
 class BaseArrayArg final : public Analyzable {
  public:
-  BaseArrayArg(std::unique_ptr<Analyzable> data, std::unique_ptr<Analyzable> null_mask);
+  BaseArrayArg(std::unique_ptr<Analyzable> data,
+               std::optional<std::unique_ptr<Analyzable>> null_mask);
 
   explicit BaseArrayArg(std::unique_ptr<Analyzable> data);
 
@@ -160,7 +161,7 @@ class BaseArrayArg final : public Analyzable {
 
  private:
   std::unique_ptr<Analyzable> data_{};
-  std::unique_ptr<Analyzable> null_mask_{};
+  std::optional<std::unique_ptr<Analyzable>> null_mask_{};
 };
 
 class ListArrayArg final : public Analyzable {
@@ -184,7 +185,7 @@ class ListArrayArg final : public Analyzable {
 class StructArrayArg final : public Analyzable {
  public:
   StructArrayArg(InternalSharedPtr<Type> type,
-                 std::unique_ptr<Analyzable> null_mask,
+                 std::optional<std::unique_ptr<Analyzable>> null_mask,
                  std::vector<std::unique_ptr<Analyzable>>&& fields);
 
   void pack(BufferBuilder& buffer, const StoreAnalyzer& analyzer) const override;
@@ -195,7 +196,7 @@ class StructArrayArg final : public Analyzable {
 
  private:
   InternalSharedPtr<Type> type_{};
-  std::unique_ptr<Analyzable> null_mask_{};
+  std::optional<std::unique_ptr<Analyzable>> null_mask_{};
   std::vector<std::unique_ptr<Analyzable>> fields_{};
 };
 

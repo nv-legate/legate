@@ -38,7 +38,7 @@ const InternalSharedPtr<Store>& BaseArray::null_mask() const
     throw legate::detail::TracedException<std::invalid_argument>{
       "Invalid to retrieve the null mask of a non-nullable array"};
   }
-  return null_mask_;
+  return *null_mask_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 InternalSharedPtr<Array> BaseArray::child(std::uint32_t /*index*/) const
@@ -119,7 +119,7 @@ const InternalSharedPtr<Store>& StructArray::null_mask() const
     throw legate::detail::TracedException<std::invalid_argument>{
       "Invalid to retrieve the null mask of a non-nullable array"};
   }
-  return null_mask_;
+  return *null_mask_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 InternalSharedPtr<Array> StructArray::child(std::uint32_t index) const

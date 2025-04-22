@@ -58,7 +58,7 @@ InternalSharedPtr<BasePhysicalArray> TaskDeserializer::unpack_base_array()
 {
   auto data      = unpack_store();
   auto nullable  = unpack<bool>();
-  auto null_mask = nullable ? unpack_store() : nullptr;
+  auto null_mask = nullable ? std::make_optional(unpack_store()) : std::nullopt;
   return make_internal_shared<BasePhysicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -80,7 +80,7 @@ InternalSharedPtr<StructPhysicalArray> TaskDeserializer::unpack_struct_array()
   std::vector<InternalSharedPtr<PhysicalArray>> fields;
   const auto& st_type = dynamic_cast<const detail::StructType&>(*type);
   auto nullable       = unpack<bool>();
-  auto null_mask      = nullable ? unpack_store() : nullptr;
+  auto null_mask      = nullable ? std::make_optional(unpack_store()) : std::nullopt;
 
   fields.reserve(st_type.num_fields());
   for (std::uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {
@@ -217,7 +217,7 @@ InternalSharedPtr<BaseArray> TaskDeserializer::unpack_base_array()
 {
   auto data      = unpack_store();
   auto nullable  = unpack<bool>();
-  auto null_mask = nullable ? unpack_store() : nullptr;
+  auto null_mask = nullable ? std::make_optional(unpack_store()) : std::nullopt;
 
   return make_internal_shared<BaseArray>(std::move(data), std::move(null_mask));
 }
@@ -240,7 +240,7 @@ InternalSharedPtr<StructArray> TaskDeserializer::unpack_struct_array()
   std::vector<InternalSharedPtr<Array>> fields;
   const auto& st_type = dynamic_cast<const legate::detail::StructType&>(*type);
   auto nullable       = unpack<bool>();
-  auto null_mask      = nullable ? unpack_store() : nullptr;
+  auto null_mask      = nullable ? std::make_optional(unpack_store()) : std::nullopt;
 
   fields.reserve(st_type.num_fields());
   for (std::uint32_t idx = 0; idx < st_type.num_fields(); ++idx) {

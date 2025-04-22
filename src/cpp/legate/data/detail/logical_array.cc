@@ -39,46 +39,51 @@ const InternalSharedPtr<LogicalStore>& LogicalArray::data() const
 
 bool BaseLogicalArray::unbound() const
 {
-  LEGATE_ASSERT(!nullable() || data()->unbound() == null_mask_->unbound());
+  LEGATE_ASSERT(!nullable() || data()->unbound() == null_mask()->unbound());
   return data()->unbound();
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::promote(std::int32_t extra_dim,
                                                           std::size_t dim_size) const
 {
-  auto null_mask = nullable() ? null_mask_->promote(extra_dim, dim_size) : nullptr;
-  auto data      = this->data()->promote(extra_dim, dim_size);
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->promote(extra_dim, dim_size)) : std::nullopt;
+  auto data = this->data()->promote(extra_dim, dim_size);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::project(std::int32_t dim,
                                                           std::int64_t index) const
 {
-  auto null_mask = nullable() ? null_mask_->project(dim, index) : nullptr;
-  auto data      = this->data()->project(dim, index);
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->project(dim, index)) : std::nullopt;
+  auto data = this->data()->project(dim, index);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::slice(std::int32_t dim, Slice sl) const
 {
-  auto null_mask = nullable() ? slice_store(null_mask_, dim, sl) : nullptr;
-  auto data      = slice_store(this->data(), dim, sl);
+  auto null_mask =
+    nullable() ? std::make_optional(slice_store(this->null_mask(), dim, sl)) : std::nullopt;
+  auto data = slice_store(this->data(), dim, sl);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::transpose(
   const std::vector<std::int32_t>& axes) const
 {
-  auto null_mask = nullable() ? null_mask_->transpose(axes) : nullptr;
-  auto data      = this->data()->transpose(axes);
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->transpose(axes)) : std::nullopt;
+  auto data = this->data()->transpose(axes);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
 InternalSharedPtr<LogicalArray> BaseLogicalArray::delinearize(
   std::int32_t dim, const std::vector<std::uint64_t>& sizes) const
 {
-  auto null_mask = nullable() ? null_mask_->delinearize(dim, sizes) : nullptr;
-  auto data      = this->data()->delinearize(dim, sizes);
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->delinearize(dim, sizes)) : std::nullopt;
+  auto data = this->data()->delinearize(dim, sizes);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -88,7 +93,7 @@ const InternalSharedPtr<LogicalStore>& BaseLogicalArray::null_mask() const
     throw TracedException<std::invalid_argument>{
       "Invalid to retrieve the null mask of a non-nullable array"};
   }
-  return null_mask_;
+  return *null_mask_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 InternalSharedPtr<PhysicalArray> BaseLogicalArray::get_physical_array(
@@ -101,9 +106,10 @@ InternalSharedPtr<BasePhysicalArray> BaseLogicalArray::get_base_physical_array(
   legate::mapping::StoreTarget target, bool ignore_future_mutability) const
 {
   auto data_store = data()->get_physical_store(target, ignore_future_mutability);
-  InternalSharedPtr<PhysicalStore> null_mask_store{};
-  if (null_mask_ != nullptr) {
-    null_mask_store = null_mask_->get_physical_store(target, ignore_future_mutability);
+  std::optional<InternalSharedPtr<PhysicalStore>> null_mask_store{};
+
+  if (nullable()) {
+    null_mask_store = null_mask()->get_physical_store(target, ignore_future_mutability);
   }
   return make_internal_shared<BasePhysicalArray>(std::move(data_store), std::move(null_mask_store));
 }
@@ -125,10 +131,10 @@ void BaseLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
     return;
   }
 
-  if (null_mask_->has_scalar_storage()) {
-    task->record_scalar_output(null_mask_);
-  } else if (null_mask_->unbound()) {
-    task->record_unbound_output(null_mask_);
+  if (null_mask()->has_scalar_storage()) {
+    task->record_scalar_output(null_mask());
+  } else if (null_mask()->unbound()) {
+    task->record_unbound_output(null_mask());
   }
 }
 
@@ -137,9 +143,9 @@ void BaseLogicalArray::record_scalar_reductions(AutoTask* task, GlobalRedopID re
   if (data()->has_scalar_storage()) {
     task->record_scalar_reduction(data(), redop);
   }
-  if (nullable() && null_mask_->has_scalar_storage()) {
+  if (nullable() && null_mask()->has_scalar_storage()) {
     auto null_redop = bool_()->find_reduction_operator(ReductionOpKind::MUL);
-    task->record_scalar_reduction(null_mask_, null_redop);
+    task->record_scalar_reduction(null_mask(), null_redop);
   }
 }
 
@@ -154,7 +160,7 @@ void BaseLogicalArray::generate_constraints(
     return;
   }
   auto part_null_mask = task->declare_partition();
-  mapping.try_emplace(null_mask_, part_null_mask);
+  mapping.try_emplace(null_mask(), part_null_mask);
   // Need to bypass the signature check here because these generated constraints are not
   // technically visible to the user (you cannot declare different constraints on the "main"
   // store and the nullable store in the signature).
@@ -171,14 +177,14 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg(
 {
   auto data_arg = store_to_launcher_arg(
     data(), mapping.at(data()), strategy, launch_domain, projection, privilege, redop);
-  std::unique_ptr<Analyzable> null_mask_arg{};
+  std::optional<std::unique_ptr<Analyzable>> null_mask_arg{};
 
   if (nullable()) {
     auto null_redop = privilege == LEGION_REDUCE
                         ? bool_()->find_reduction_operator(ReductionOpKind::MUL)
                         : GlobalRedopID{-1};
-    null_mask_arg   = store_to_launcher_arg(null_mask_,
-                                          mapping.at(null_mask_),
+    null_mask_arg   = store_to_launcher_arg(null_mask(),
+                                          mapping.at(null_mask()),
                                           strategy,
                                           launch_domain,
                                           projection,
@@ -199,16 +205,16 @@ std::unique_ptr<Analyzable> BaseLogicalArray::to_launcher_arg_for_fixup(
 void BaseLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
 {
   trackers.emplace_back(data());
-  if (null_mask_) {
-    trackers.emplace_back(null_mask_);
+  if (nullable()) {
+    trackers.emplace_back(null_mask());
   }
 }
 
 void BaseLogicalArray::calculate_pack_size(TaskReturnLayoutForUnpack* layout) const
 {
   data()->calculate_pack_size(layout);
-  if (null_mask_) {
-    null_mask_->calculate_pack_size(layout);
+  if (nullable()) {
+    null_mask()->calculate_pack_size(layout);
   }
 }
 
@@ -409,7 +415,8 @@ bool StructLogicalArray::is_mapped() const
 InternalSharedPtr<LogicalArray> StructLogicalArray::promote(std::int32_t extra_dim,
                                                             std::size_t dim_size) const
 {
-  auto null_mask = nullable() ? null_mask_->promote(extra_dim, dim_size) : nullptr;
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->promote(extra_dim, dim_size)) : std::nullopt;
   auto fields =
     make_array_from_op(fields_, [&](auto& field) { return field->promote(extra_dim, dim_size); });
 
@@ -419,7 +426,8 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::promote(std::int32_t extra_d
 InternalSharedPtr<LogicalArray> StructLogicalArray::project(std::int32_t dim,
                                                             std::int64_t index) const
 {
-  auto null_mask = nullable() ? null_mask_->project(dim, index) : nullptr;
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->project(dim, index)) : std::nullopt;
   auto fields =
     make_array_from_op(fields_, [&](auto& field) { return field->project(dim, index); });
 
@@ -428,23 +436,26 @@ InternalSharedPtr<LogicalArray> StructLogicalArray::project(std::int32_t dim,
 
 InternalSharedPtr<LogicalArray> StructLogicalArray::slice(std::int32_t dim, Slice sl) const
 {
-  auto null_mask = nullable() ? slice_store(null_mask_, dim, sl) : nullptr;
-  auto fields    = make_array_from_op(fields_, [&](auto& field) { return field->slice(dim, sl); });
+  auto null_mask =
+    nullable() ? std::make_optional(slice_store(this->null_mask(), dim, sl)) : std::nullopt;
+  auto fields = make_array_from_op(fields_, [&](auto& field) { return field->slice(dim, sl); });
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
 InternalSharedPtr<LogicalArray> StructLogicalArray::transpose(
   const std::vector<std::int32_t>& axes) const
 {
-  auto null_mask = nullable() ? null_mask_->transpose(axes) : nullptr;
-  auto fields    = make_array_from_op(fields_, [&](auto& field) { return field->transpose(axes); });
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->transpose(axes)) : std::nullopt;
+  auto fields = make_array_from_op(fields_, [&](auto& field) { return field->transpose(axes); });
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
 }
 
 InternalSharedPtr<LogicalArray> StructLogicalArray::delinearize(
   std::int32_t dim, const std::vector<std::uint64_t>& sizes) const
 {
-  auto null_mask = nullable() ? null_mask_->delinearize(dim, sizes) : nullptr;
+  auto null_mask =
+    nullable() ? std::make_optional(this->null_mask()->delinearize(dim, sizes)) : std::nullopt;
   auto fields =
     make_array_from_op(fields_, [&](auto& field) { return field->delinearize(dim, sizes); });
   return make_internal_shared<StructLogicalArray>(type_, std::move(null_mask), std::move(fields));
@@ -456,15 +467,16 @@ const InternalSharedPtr<LogicalStore>& StructLogicalArray::null_mask() const
     throw TracedException<std::invalid_argument>{
       "Invalid to retrieve the null mask of a non-nullable array"};
   }
-  return null_mask_;
+  return *null_mask_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 InternalSharedPtr<PhysicalArray> StructLogicalArray::get_physical_array(
   legate::mapping::StoreTarget target, bool ignore_future_mutability) const
 {
-  InternalSharedPtr<PhysicalStore> null_mask_store = nullptr;
-  if (null_mask_ != nullptr) {
-    null_mask_store = null_mask_->get_physical_store(target, ignore_future_mutability);
+  std::optional<InternalSharedPtr<PhysicalStore>> null_mask_store{};
+
+  if (nullable()) {
+    null_mask_store = null_mask()->get_physical_store(target, ignore_future_mutability);
   }
 
   auto field_arrays = make_array_from_op<InternalSharedPtr<PhysicalArray>>(
@@ -499,10 +511,10 @@ void StructLogicalArray::record_scalar_or_unbound_outputs(AutoTask* task) const
     return;
   }
 
-  if (null_mask_->unbound()) {
-    task->record_unbound_output(null_mask_);
-  } else if (null_mask_->has_scalar_storage()) {
-    task->record_scalar_output(null_mask_);
+  if (null_mask()->unbound()) {
+    task->record_unbound_output(null_mask());
+  } else if (null_mask()->has_scalar_storage()) {
+    task->record_scalar_output(null_mask());
   }
 }
 
@@ -511,9 +523,9 @@ void StructLogicalArray::record_scalar_reductions(AutoTask* task, GlobalRedopID 
   for (auto&& field : fields_) {
     field->record_scalar_reductions(task, redop);
   }
-  if (nullable() && null_mask_->has_scalar_storage()) {
+  if (nullable() && null_mask()->has_scalar_storage()) {
     auto null_redop = bool_()->find_reduction_operator(ReductionOpKind::MUL);
-    task->record_scalar_reduction(null_mask_, null_redop);
+    task->record_scalar_reduction(null_mask(), null_redop);
   }
 }
 
@@ -537,7 +549,7 @@ void StructLogicalArray::generate_constraints(
     return;
   }
   auto part_null_mask = task->declare_partition();
-  mapping.try_emplace(null_mask_, part_null_mask);
+  mapping.try_emplace(null_mask(), part_null_mask);
   // Need to bypass the signature check here because these generated constraints are not
   // technically visible to the user (you cannot declare different constraints on the "main"
   // store and the nullable store in the signature).
@@ -552,13 +564,14 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg(
   Legion::PrivilegeMode privilege,
   GlobalRedopID redop) const
 {
-  std::unique_ptr<Analyzable> null_mask_arg = nullptr;
+  std::optional<std::unique_ptr<Analyzable>> null_mask_arg;
+
   if (nullable()) {
     auto null_redop = privilege == LEGION_REDUCE
                         ? bool_()->find_reduction_operator(ReductionOpKind::MUL)
                         : GlobalRedopID{-1};
-    null_mask_arg   = store_to_launcher_arg(null_mask_,
-                                          mapping.at(null_mask_),
+    null_mask_arg   = store_to_launcher_arg(null_mask(),
+                                          mapping.at(null_mask()),
                                           strategy,
                                           launch_domain,
                                           projection,
@@ -577,15 +590,17 @@ std::unique_ptr<Analyzable> StructLogicalArray::to_launcher_arg_for_fixup(
   const Domain& launch_domain, Legion::PrivilegeMode privilege) const
 {
   return std::make_unique<StructArrayArg>(
-    type(), nullptr, make_array_from_op<std::unique_ptr<Analyzable>>(fields_, [&](auto& field) {
+    type(),
+    std::nullopt,
+    make_array_from_op<std::unique_ptr<Analyzable>>(fields_, [&](auto& field) {
       return field->to_launcher_arg_for_fixup(launch_domain, privilege);
     }));
 }
 
 void StructLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker>& trackers) const
 {
-  if (null_mask_) {
-    trackers.emplace_back(null_mask_);
+  if (nullable()) {
+    trackers.emplace_back(null_mask());
   }
   for (auto&& field : fields_) {
     field->collect_storage_trackers(trackers);
@@ -594,8 +609,8 @@ void StructLogicalArray::collect_storage_trackers(std::vector<UserStorageTracker
 
 void StructLogicalArray::calculate_pack_size(TaskReturnLayoutForUnpack* layout) const
 {
-  if (null_mask_) {
-    null_mask_->calculate_pack_size(layout);
+  if (nullable()) {
+    null_mask()->calculate_pack_size(layout);
   }
   for (auto&& field : fields_) {
     field->calculate_pack_size(layout);

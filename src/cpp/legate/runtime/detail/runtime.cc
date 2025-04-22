@@ -264,7 +264,7 @@ void Runtime::initialize(Legion::Context legion_context)
     partition_manager_.reset();
     communicator_manager_.reset();
     field_manager_.reset();
-    core_library_ = nullptr;
+    core_library_.reset();
     comm::coll::finalize();
     cu_mod_manager_.reset();
     legion_context_ = {};
@@ -711,7 +711,8 @@ InternalSharedPtr<StructLogicalArray> Runtime::create_struct_array_(
 {
   std::vector<InternalSharedPtr<LogicalArray>> fields;
   const auto& st_type = dynamic_cast<const detail::StructType&>(*type);
-  auto null_mask      = nullable ? create_store(shape, bool_(), optimize_scalar) : nullptr;
+  auto null_mask =
+    nullable ? std::make_optional(create_store(shape, bool_(), optimize_scalar)) : std::nullopt;
 
   fields.reserve(st_type.field_types().size());
   for (auto&& field_type : st_type.field_types()) {
@@ -726,8 +727,9 @@ InternalSharedPtr<BaseLogicalArray> Runtime::create_base_array_(InternalSharedPt
                                                                 bool nullable,
                                                                 bool optimize_scalar)
 {
-  auto null_mask = nullable ? create_store(shape, bool_(), optimize_scalar) : nullptr;
-  auto data      = create_store(std::move(shape), std::move(type), optimize_scalar);
+  auto null_mask =
+    nullable ? std::make_optional(create_store(shape, bool_(), optimize_scalar)) : std::nullopt;
+  auto data = create_store(std::move(shape), std::move(type), optimize_scalar);
   return make_internal_shared<BaseLogicalArray>(std::move(data), std::move(null_mask));
 }
 
@@ -906,7 +908,7 @@ void Runtime::prefetch_bloated_instances(InternalSharedPtr<LogicalStore> store,
   }
 
   auto arr   = LogicalArray::from_store(std::move(store));
-  auto task  = create_task(core_library_, LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES});
+  auto task  = create_task(core_library(), LocalTaskID{CoreTask::PREFETCH_BLOATED_INSTANCES});
   auto part1 = task->declare_partition();
   auto part2 = task->declare_partition();
   task->add_input(arr, part1);
@@ -1936,8 +1938,8 @@ std::int32_t Runtime::finish()
 
   communicator_manager_.reset();
   partition_manager_.reset();
-  scope_        = Scope{};
-  core_library_ = nullptr;
+  scope_ = Scope{};
+  core_library_.reset();
   comm::coll::finalize();
   // Mappers get raw pointers to Libraries, so just in case any of the above launched residual
   // cleanup tasks, we issue another fence here before we clear the Libraries.

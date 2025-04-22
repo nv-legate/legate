@@ -11,6 +11,7 @@
 #include <legate/type/detail/types.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
+#include <optional>
 #include <vector>
 
 namespace legate::mapping::detail {
@@ -37,7 +38,7 @@ class Array {
 
 class BaseArray final : public Array {
  public:
-  BaseArray(InternalSharedPtr<Store> data, InternalSharedPtr<Store> null_mask);
+  BaseArray(InternalSharedPtr<Store> data, std::optional<InternalSharedPtr<Store>> null_mask);
 
   [[nodiscard]] std::int32_t dim() const override;
   [[nodiscard]] legate::detail::ArrayKind kind() const override;
@@ -56,7 +57,7 @@ class BaseArray final : public Array {
 
  private:
   InternalSharedPtr<Store> data_{};
-  InternalSharedPtr<Store> null_mask_{};
+  std::optional<InternalSharedPtr<Store>> null_mask_{};
 };
 
 class ListArray final : public Array {
@@ -89,7 +90,7 @@ class ListArray final : public Array {
 class StructArray final : public Array {
  public:
   StructArray(InternalSharedPtr<legate::detail::Type> type,
-              InternalSharedPtr<Store> null_mask,
+              std::optional<InternalSharedPtr<Store>> null_mask,
               std::vector<InternalSharedPtr<Array>>&& fields);
 
   [[nodiscard]] std::int32_t dim() const override;
@@ -110,7 +111,7 @@ class StructArray final : public Array {
 
  private:
   InternalSharedPtr<legate::detail::Type> type_{};
-  InternalSharedPtr<Store> null_mask_{};
+  std::optional<InternalSharedPtr<Store>> null_mask_{};
   std::vector<InternalSharedPtr<Array>> fields_{};
 };
 

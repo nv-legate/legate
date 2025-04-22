@@ -65,7 +65,15 @@ TEST_F(ImageTest, ColorShape)
   ASSERT_EQ(image->color_shape(), expected_color_shape);
 }
 
-TEST_F(ImageTest, IsCompleteFor) { ASSERT_FALSE(image->is_complete_for(nullptr)); }
+TEST_F(ImageTest, IsCompleteFor)
+{
+  // This store itself does not actually matter, we just need to create one in order to get a
+  // `Storage` reference.
+  const auto store =
+    legate::Runtime::get_runtime()->create_store(legate::Shape{1}, legate::int32());
+
+  ASSERT_FALSE(image->is_complete_for(*store.impl()->get_storage()));
+}
 
 TEST_F(ImageTest, IsConvertible) { ASSERT_FALSE(image->is_convertible()); }
 

@@ -19,6 +19,7 @@
 #include <atomic>
 #include <cstdint>
 #include <exception>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -394,7 +395,7 @@ bool ListType::operator==(const Type& other) const
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     // Do a structural check in debug mode
-    return uid() == casted.uid() && element_type() == casted.element_type();
+    return uid() == casted.uid() && *element_type() == *casted.element_type();
   }
   // Each type is uniquely identified by the uid, so it's sufficient to compare between uids
   return uid() == casted.uid();
@@ -534,37 +535,40 @@ InternalSharedPtr<Type> complex128()
 
 InternalSharedPtr<FixedArrayType> point_type(std::uint32_t ndim)
 {
-  static InternalSharedPtr<FixedArrayType> cache[LEGATE_MAX_DIM + 1];
+  static std::optional<InternalSharedPtr<FixedArrayType>> cache[LEGATE_MAX_DIM + 1];
 
   if (0 == ndim || ndim > LEGATE_MAX_DIM) {
     throw TracedException<std::out_of_range>{
       fmt::format("{} is not a supported number of dimensions", ndim)};
   }
 
-  if (nullptr == cache[ndim]) {
-    cache[ndim] =
-      make_internal_shared<detail::FixedArrayType>(BASE_POINT_TYPE_UID + ndim, int64(), ndim);
+  auto& opt = cache[ndim];
+
+  if (!opt.has_value()) {
+    opt = make_internal_shared<detail::FixedArrayType>(BASE_POINT_TYPE_UID + ndim, int64(), ndim);
   }
-  return cache[ndim];
+  return *opt;
 }
 
 InternalSharedPtr<StructType> rect_type(std::uint32_t ndim)
 {
-  static InternalSharedPtr<StructType> cache[LEGATE_MAX_DIM + 1];
+  static std::optional<InternalSharedPtr<StructType>> cache[LEGATE_MAX_DIM + 1];
 
   if (0 == ndim || ndim > LEGATE_MAX_DIM) {
     throw TracedException<std::out_of_range>{
       fmt::format("{} is not a supported number of dimensions", ndim)};
   }
 
-  if (nullptr == cache[ndim]) {
+  auto& opt = cache[ndim];
+
+  if (!opt.has_value()) {
     auto pt_type = point_type(ndim);
     std::vector<InternalSharedPtr<detail::Type>> field_types{pt_type, pt_type};
 
-    cache[ndim] = make_internal_shared<detail::StructType>(
+    opt = make_internal_shared<detail::StructType>(
       BASE_RECT_TYPE_UID + ndim, std::move(field_types), true /*align*/);
   }
-  return cache[ndim];
+  return *opt;
 }
 
 InternalSharedPtr<Type> null_type()

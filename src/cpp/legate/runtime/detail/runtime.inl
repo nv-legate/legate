@@ -19,7 +19,10 @@ ConsensusMatchResult<T> Runtime::issue_consensus_match(std::vector<T>&& input)
 
 inline bool Runtime::initialized() const { return initialized_; }
 
-inline const Library* Runtime::core_library() const { return core_library_; }
+inline const Library* Runtime::core_library() const
+{
+  return core_library_.value();  // NOLINT(bugprone-unchecked-optional-access)
+}
 
 inline Legion::Runtime* Runtime::get_legion_runtime() { return legion_runtime_; }
 

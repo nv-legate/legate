@@ -388,7 +388,7 @@ class Runtime {
   bool initialized_{};
   Legion::Runtime* legion_runtime_{};
   Legion::Context legion_context_{};
-  Library* core_library_{};
+  std::optional<Library*> core_library_{};
   std::list<ShutdownCallback> callbacks_{};
   legate::mapping::detail::LocalMachine local_machine_{};
 

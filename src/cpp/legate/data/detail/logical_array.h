@@ -14,6 +14,8 @@
 #include <legate/operation/projection.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -92,8 +94,9 @@ class LogicalArray {
 
 class BaseLogicalArray final : public LogicalArray {
  public:
-  explicit BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
-                            InternalSharedPtr<LogicalStore> null_mask = nullptr);
+  explicit BaseLogicalArray(
+    InternalSharedPtr<LogicalStore> data,
+    std::optional<InternalSharedPtr<LogicalStore>> null_mask = std::nullopt);
 
   [[nodiscard]] std::uint32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
@@ -148,7 +151,7 @@ class BaseLogicalArray final : public LogicalArray {
 
  private:
   InternalSharedPtr<LogicalStore> data_{};
-  InternalSharedPtr<LogicalStore> null_mask_{};
+  std::optional<InternalSharedPtr<LogicalStore>> null_mask_{};
 };
 
 class ListLogicalArray final : public LogicalArray {
@@ -216,7 +219,7 @@ class ListLogicalArray final : public LogicalArray {
 class StructLogicalArray final : public LogicalArray {
  public:
   StructLogicalArray(InternalSharedPtr<Type> type,
-                     InternalSharedPtr<LogicalStore> null_mask,
+                     std::optional<InternalSharedPtr<LogicalStore>> null_mask,
                      std::vector<InternalSharedPtr<LogicalArray>>&& fields);
 
   [[nodiscard]] std::uint32_t dim() const override;
@@ -270,7 +273,7 @@ class StructLogicalArray final : public LogicalArray {
 
  private:
   InternalSharedPtr<Type> type_{};
-  InternalSharedPtr<LogicalStore> null_mask_{};
+  std::optional<InternalSharedPtr<LogicalStore>> null_mask_{};
   std::vector<InternalSharedPtr<LogicalArray>> fields_{};
 };
 

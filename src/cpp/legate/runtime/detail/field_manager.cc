@@ -7,7 +7,6 @@
 #include <legate/runtime/detail/field_manager.h>
 
 #include <legate/data/detail/logical_region_field.h>
-#include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/region_manager.h>
 #include <legate/runtime/detail/runtime.h>
 
@@ -15,8 +14,7 @@ namespace legate::detail {
 
 FieldManager::~FieldManager()
 {
-  // We are shutting down, so just free all the buffer copies we've made to attach to, without
-  // waiting on the detachments to finish.
+  // We are shutting down, so just free all the buffer copies we've made to attach to
   for (auto&& [_, queue] : ordered_free_fields_) {
     for (; !queue.empty(); queue.pop()) {
       queue.front().state->deallocate_attachment();
@@ -27,9 +25,8 @@ FieldManager::~FieldManager()
 InternalSharedPtr<LogicalRegionField> FieldManager::allocate_field(InternalSharedPtr<Shape> shape,
                                                                    std::uint32_t field_size)
 {
-  auto result = try_reuse_field_(shape, field_size);
-  if (result != nullptr) {
-    return result;
+  if (auto result = try_reuse_field_(shape, field_size); result.has_value()) {
+    return *std::move(result);
   }
   return create_new_field_(std::move(shape), field_size);
 }
@@ -52,6 +49,7 @@ void FieldManager::free_field(FreeFieldInfo info, bool /*unordered*/)
   Runtime::get_runtime()->issue_discard_field(info.region, info.field_id);
   if (info.shape->ready()) {
     auto& queue = ordered_free_fields_[OrderedQueueKey{info.shape->index_space(), info.field_size}];
+
     queue.emplace(std::move(info));
   } else {
     // TODO(mpapadakis): This is an output store that was collected before its shape was requested.
@@ -63,22 +61,28 @@ void FieldManager::free_field(FreeFieldInfo info, bool /*unordered*/)
   }
 }
 
-InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field_(
+std::optional<InternalSharedPtr<LogicalRegionField>> FieldManager::try_reuse_field_(
   const InternalSharedPtr<Shape>& shape, std::uint32_t field_size)
 {
   if (!shape->ready()) {
     // We are being asked to make a field for an unbound output store. We won't know the store's
     // size until its producing task has executed, so naturally we can't safely reuse any of our
     // existing fields for it.
-    return nullptr;
+    return std::nullopt;
   }
+
   auto& queue = ordered_free_fields_[OrderedQueueKey{shape->index_space(), field_size}];
+
   if (queue.empty()) {
-    return nullptr;
+    return std::nullopt;
   }
+
   const auto& info = queue.front();
+
   info.state->deallocate_attachment();
+
   auto rf = make_internal_shared<LogicalRegionField>(shape, field_size, info.region, info.field_id);
+
   if (log_legate().want_debug()) {
     log_legate().debug() << "Field " << info.field_id << " on region " << info.region
                          << " recycled for shape " << shape->to_string() << " field size "
@@ -91,8 +95,9 @@ InternalSharedPtr<LogicalRegionField> FieldManager::try_reuse_field_(
 InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field_(
   InternalSharedPtr<Shape> shape, std::uint32_t field_size)
 {
-  auto* rgn_mgr  = Runtime::get_runtime()->find_or_create_region_manager(shape->index_space());
-  auto [lr, fid] = rgn_mgr->allocate_field(field_size);
+  auto* const rgn_mgr = Runtime::get_runtime()->find_or_create_region_manager(shape->index_space());
+  auto [lr, fid]      = rgn_mgr->allocate_field(field_size);
+
   if (log_legate().want_debug()) {
     log_legate().debug() << "Field " << fid << " created on region " << lr << " for shape "
                          << shape->to_string() << " field size " << field_size;
@@ -107,10 +112,10 @@ ConsensusMatchingFieldManager::~ConsensusMatchingFieldManager()
   // We are shutting down, so just free all the buffer copies we've made to attach to, without
   // waiting on the detachments to finish.
   for (auto&& [_, info] : info_for_match_items_) {
-    info.state->deallocate_attachment(false);
+    info.state->deallocate_attachment(/* wait_on_detach */ false);
   }
   for (auto&& info : unordered_free_fields_) {
-    info.state->deallocate_attachment(false);
+    info.state->deallocate_attachment(/* wait_on_detach */ false);
   }
 }
 
@@ -119,14 +124,14 @@ InternalSharedPtr<LogicalRegionField> ConsensusMatchingFieldManager::allocate_fi
 {
   maybe_issue_field_match_(shape, field_size);
   // If there's a field that every shard is guaranteed to have, reuse that.
-  if (auto result = try_reuse_field_(shape, field_size)) {
-    return result;
+  if (auto result = try_reuse_field_(shape, field_size); result.has_value()) {
+    return *std::move(result);
   }
   // If there's an outstanding consensus match, block on it in case it frees any fields we can use.
   if (outstanding_match_.has_value()) {
     process_outstanding_match_();
-    if (auto result = try_reuse_field_(shape, field_size)) {
-      return result;
+    if (auto result = try_reuse_field_(shape, field_size); result.has_value()) {
+      return *std::move(result);
     }
   }
   // Otherwise create a fresh field.
@@ -246,6 +251,7 @@ void ConsensusMatchingFieldManager::process_outstanding_match_()
   // which is the same order that all shards will see.
   for (auto&& item : outstanding_match_->output()) {
     auto it = info_for_match_items_.find(item);
+
     LEGATE_CHECK(it != info_for_match_items_.end());
     FieldManager::free_field(std::move(it->second), false /*unordered*/);
     info_for_match_items_.erase(it);

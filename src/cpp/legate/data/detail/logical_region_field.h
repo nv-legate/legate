@@ -15,7 +15,7 @@
 #include <legion.h>
 
 #include <functional>
-#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -85,14 +85,14 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
                      std::uint32_t field_size,
                      Legion::LogicalRegion lr,
                      Legion::FieldID fid,
-                     InternalSharedPtr<LogicalRegionField> parent = nullptr);
+                     std::optional<InternalSharedPtr<LogicalRegionField>> parent = std::nullopt);
 
   ~LogicalRegionField() noexcept;
 
   [[nodiscard]] std::int32_t dim() const;
   [[nodiscard]] const Legion::LogicalRegion& region() const;
   [[nodiscard]] Legion::FieldID field_id() const;
-  [[nodiscard]] const InternalSharedPtr<LogicalRegionField>& parent() const;
+  [[nodiscard]] const std::optional<InternalSharedPtr<LogicalRegionField>>& parent() const;
   [[nodiscard]] const LogicalRegionField& get_root() const;
   [[nodiscard]] Legion::Domain domain() const;
   [[nodiscard]] bool is_mapped() const;
@@ -130,7 +130,7 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
   std::uint32_t field_size_{};
   Legion::LogicalRegion lr_{};
   Legion::FieldID fid_{};
-  InternalSharedPtr<LogicalRegionField> parent_{};
+  std::optional<InternalSharedPtr<LogicalRegionField>> parent_{};
 
   // These are flags that are updated immediately following the control flow
   bool released_{};

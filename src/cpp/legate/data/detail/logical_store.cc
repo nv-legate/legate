@@ -99,7 +99,7 @@ Storage::Storage(tuple<std::uint64_t> extents,
     parent_{std::move(parent)},
     color_{std::move(color)},
     offsets_{std::move(offsets)},
-    region_field_{parent_->get_child_data(color_)}
+    region_field_{(*parent_)->get_child_data(color_)}
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
@@ -201,28 +201,31 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self
   return storage_partition->get_child_storage(storage_partition, std::move(color));
 }
 
-const Storage* Storage::get_root() const { return parent_ ? parent_->get_root() : this; }
+const Storage* Storage::get_root() const
+{
+  return parent_.has_value() ? (*parent_)->get_root() : this;
+}
 
-Storage* Storage::get_root() { return parent_ ? parent_->get_root() : this; }
+Storage* Storage::get_root() { return parent_.has_value() ? (*parent_)->get_root() : this; }
 
 InternalSharedPtr<const Storage> Storage::get_root(
   const InternalSharedPtr<const Storage>& self) const
 {
   LEGATE_ASSERT(self.get() == this);
-  return parent_ ? parent_->get_root(parent_) : self;
+  return parent_.has_value() ? (*parent_)->get_root(*parent_) : self;
 }
 
 InternalSharedPtr<Storage> Storage::get_root(const InternalSharedPtr<Storage>& self)
 {
   LEGATE_ASSERT(self.get() == this);
-  return parent_ ? parent_->get_root(parent_) : self;
+  return parent_.has_value() ? (*parent_)->get_root(*parent_) : self;
 }
 
 const InternalSharedPtr<LogicalRegionField>& Storage::get_region_field() const noexcept
 {
   LEGATE_CHECK(kind_ == Kind::REGION_FIELD);
-  LEGATE_CHECK(region_field_);
-  return region_field_;
+  LEGATE_CHECK(region_field_.has_value());
+  return *region_field_;
 }
 
 Legion::Future Storage::get_future() const
@@ -241,19 +244,8 @@ Legion::Future Storage::get_future() const
 Legion::FutureMap Storage::get_future_map() const
 {
   LEGATE_CHECK(kind_ == Kind::FUTURE_MAP);
-
-  auto&& future_map = [&] {
-    // this future map must always exist, otherwise something bad has happened
-    try {
-      return future_map_.value();
-    } catch (const std::bad_optional_access&) {
-      LEGATE_ABORT("Future map must have existed");
-    }
-    LEGATE_UNREACHABLE();
-    return Legion::FutureMap{};
-  }();
-
-  return future_map;
+  LEGATE_CHECK(future_map_.has_value());
+  return *future_map_;
 }
 
 std::variant<Legion::Future, Legion::FutureMap> Storage::get_future_or_future_map(
@@ -279,15 +271,15 @@ std::variant<Legion::Future, Legion::FutureMap> Storage::get_future_or_future_ma
 
 void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
 {
-  LEGATE_CHECK(unbound_ && region_field_ == nullptr);
-  LEGATE_CHECK(parent_ == nullptr);
+  LEGATE_CHECK(unbound_ && !region_field_.has_value());
+  LEGATE_CHECK(!parent_.has_value());
 
   unbound_      = false;
   region_field_ = std::move(region_field);
   if (destroyed_out_of_order_) {
-    region_field_->allow_out_of_order_destruction();
+    (*region_field_)->allow_out_of_order_destruction();
   }
-  Runtime::get_runtime()->attach_alloc_info(region_field_, provenance());
+  Runtime::get_runtime()->attach_alloc_info(*region_field_, provenance());
 }
 
 void Storage::set_future(Legion::Future future, std::size_t scalar_offset)
@@ -342,12 +334,12 @@ void Storage::allow_out_of_order_destruction()
   // Storage, in case we need to propagate later. We only need to note this on the root Storage,
   // because any call that sets region_field_ (get_region_field(), set_region_field()) will end up
   // touching the root Storage.
-  if (parent_) {
+  if (parent_.has_value()) {
     get_root()->allow_out_of_order_destruction();
   } else if (!destroyed_out_of_order_) {
     destroyed_out_of_order_ = true;
-    if (region_field_) {
-      region_field_->allow_out_of_order_destruction();
+    if (region_field_.has_value()) {
+      (*region_field_)->allow_out_of_order_destruction();
     }
   }
 }
@@ -365,19 +357,19 @@ Restrictions Storage::compute_restrictions() const
   return legate::full<Restriction>(dim(), Restriction::ALLOW);
 }
 
-InternalSharedPtr<Partition> Storage::find_key_partition(const mapping::detail::Machine& machine,
-                                                         const Restrictions& restrictions) const
+std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
+  const mapping::detail::Machine& machine, const Restrictions& restrictions) const
 {
   const auto new_num_pieces = machine.count();
 
-  if ((num_pieces_ == new_num_pieces) && key_partition_ &&
-      key_partition_->satisfies_restrictions(restrictions)) {
+  if ((num_pieces_ == new_num_pieces) && key_partition_.has_value() &&
+      (*key_partition_)->satisfies_restrictions(restrictions)) {
     return key_partition_;
   }
-  if (parent_) {
-    return parent_->find_key_partition(machine, restrictions);
+  if (parent_.has_value()) {
+    return (*parent_)->find_key_partition(machine, restrictions);
   }
-  return {};
+  return std::nullopt;
 }
 
 void Storage::set_key_partition(const mapping::detail::Machine& machine,
@@ -396,9 +388,9 @@ InternalSharedPtr<StoragePartition> Storage::create_partition(
 {
   LEGATE_ASSERT(self.get() == this);
   if (!complete.has_value()) {
-    complete = partition->is_complete_for(this);
+    complete = partition->is_complete_for(*this);
   }
-  return make_internal_shared<StoragePartition>(self, std::move(partition), complete.value());
+  return make_internal_shared<StoragePartition>(self, std::move(partition), *complete);
 }
 
 std::string Storage::to_string() const
@@ -474,7 +466,7 @@ InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(
   return parent_->get_region_field()->get_child(tiling, color, complete_);
 }
 
-InternalSharedPtr<Partition> StoragePartition::find_key_partition(
+std::optional<InternalSharedPtr<Partition>> StoragePartition::find_key_partition(
   const mapping::detail::Machine& machine, const Restrictions& restrictions) const
 {
   return parent_->find_key_partition(machine, restrictions);
@@ -520,7 +512,6 @@ LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr
     transform_{make_internal_shared<TransformStack>()}
 {
   assert_fixed_storage_size(this->type());
-  LEGATE_ASSERT(transform_ != nullptr);
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
     log_legate().debug() << "Create " << to_string();
   }
@@ -913,23 +904,25 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
 {
   const auto new_num_pieces = machine.count();
 
-  if ((num_pieces_ == new_num_pieces) && key_partition_ &&
-      key_partition_->satisfies_restrictions(restrictions)) {
-    return key_partition_;
+  if ((num_pieces_ == new_num_pieces) && key_partition_.has_value() &&
+      (*key_partition_)->satisfies_restrictions(restrictions)) {
+    return *key_partition_;
   }
 
   if (has_scalar_storage() || dim() == 0 || volume() == 0) {
     return create_no_partition();
   }
 
-  InternalSharedPtr<Partition> storage_part{};
+  std::optional<InternalSharedPtr<Partition>> storage_part{};
 
   if (transform_->is_convertible()) {
     storage_part = get_storage()->find_key_partition(machine, transform_->invert(restrictions));
   }
 
   InternalSharedPtr<Partition> store_part{};
-  if (nullptr == storage_part || (!transform_->identity() && !storage_part->is_convertible())) {
+
+  if (!storage_part.has_value() ||
+      (!transform_->identity() && !(*storage_part)->is_convertible())) {
     auto&& exts       = extents();
     auto part_mgr     = Runtime::get_runtime()->partition_manager();
     auto launch_shape = part_mgr->compute_launch_shape(machine, restrictions, exts);
@@ -942,7 +935,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
       store_part = create_tiling(std::move(tile_shape), std::move(launch_shape));
     }
   } else {
-    store_part = storage_part->convert(storage_part, transform());
+    store_part = (*storage_part)->convert(*storage_part, transform());
     LEGATE_ASSERT(store_part);
   }
   return store_part;
@@ -953,12 +946,12 @@ bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
 {
   const auto new_num_pieces = machine.count();
 
-  if ((new_num_pieces == num_pieces_) && key_partition_ &&
-      key_partition_->satisfies_restrictions(restrictions)) {
+  if ((new_num_pieces == num_pieces_) && key_partition_.has_value() &&
+      (*key_partition_)->satisfies_restrictions(restrictions)) {
     return true;
   }
   return transform_->is_convertible() &&
-         get_storage()->find_key_partition(machine, transform_->invert(restrictions)) != nullptr;
+         get_storage()->find_key_partition(machine, transform_->invert(restrictions)).has_value();
 }
 
 void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
@@ -1146,10 +1139,13 @@ std::unique_ptr<Analyzable> LogicalStore::to_launcher_arg_for_fixup_(
   Legion::PrivilegeMode privilege)
 {
   LEGATE_ASSERT(self.get() == this);
-  LEGATE_ASSERT(self->key_partition_ != nullptr);
+  LEGATE_ASSERT(self->key_partition_.has_value());
   LEGATE_ASSERT(get_storage()->kind() == Storage::Kind::REGION_FIELD);
-  auto store_partition = create_partition_(self, self->key_partition_);
-  auto store_proj      = store_partition->create_store_projection(launch_domain);
+  auto store_partition =
+    create_partition_(self,
+                      *self->key_partition_  // NOLINT(bugprone-unchecked-optional-access)
+    );
+  auto store_proj = store_partition->create_store_projection(launch_domain);
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));
 }
 

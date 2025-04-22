@@ -38,7 +38,7 @@ const InternalSharedPtr<PhysicalStore>& BasePhysicalArray::null_mask() const
     throw TracedException<std::invalid_argument>{
       "Invalid to retrieve the null mask of a non-nullable array"};
   }
-  return null_mask_;
+  return *null_mask_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 InternalSharedPtr<PhysicalArray> BasePhysicalArray::child(std::uint32_t /*index*/) const
@@ -118,7 +118,7 @@ const InternalSharedPtr<PhysicalStore>& StructPhysicalArray::null_mask() const
     throw TracedException<std::invalid_argument>{
       "Invalid to retrieve the null mask of a non-nullable array"};
   }
-  return null_mask_;
+  return *null_mask_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 InternalSharedPtr<PhysicalArray> StructPhysicalArray::child(std::uint32_t index) const

@@ -111,7 +111,7 @@ inline bool LogicalStore::needs_flush() const { return unbound() || is_mapped();
 
 inline const InternalSharedPtr<Partition>& LogicalStore::get_current_key_partition() const
 {
-  return key_partition_;
+  return key_partition_.value();  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 // ==========================================================================================

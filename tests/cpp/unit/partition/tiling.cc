@@ -74,12 +74,12 @@ TEST_F(TilingTest, IsCompleteFor)
   constexpr auto dim1 = 8;
   auto shape1         = legate::Shape{dim1, dim1};
   auto store1         = runtime->create_store(shape1, legate::int32());
-  ASSERT_TRUE(tiling->is_complete_for((store1.impl()->get_storage()).get()));
+  ASSERT_TRUE(tiling->is_complete_for(*store1.impl()->get_storage()));
 
   constexpr auto dim2 = 10;
   auto shape2         = legate::Shape{dim2, dim2};
   auto store2         = runtime->create_store(shape2, legate::int32());
-  ASSERT_FALSE(tiling->is_complete_for((store2.impl()->get_storage()).get()));
+  ASSERT_FALSE(tiling->is_complete_for(*store2.impl()->get_storage()));
 }
 
 TEST_F(TilingTest, IsConvertible) { ASSERT_TRUE(tiling->is_convertible()); }

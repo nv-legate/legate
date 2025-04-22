@@ -11,6 +11,8 @@
 #include <legate/data/physical_array.h>
 #include <legate/utilities/internal_shared_ptr.h>
 
+#include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace legate::detail {
@@ -38,7 +40,7 @@ class PhysicalArray {
 class BasePhysicalArray final : public PhysicalArray {
  public:
   BasePhysicalArray(InternalSharedPtr<PhysicalStore> data,
-                    InternalSharedPtr<PhysicalStore> null_mask);
+                    std::optional<InternalSharedPtr<PhysicalStore>> null_mask);
 
   [[nodiscard]] std::int32_t dim() const override;
   [[nodiscard]] ArrayKind kind() const override;
@@ -58,7 +60,7 @@ class BasePhysicalArray final : public PhysicalArray {
 
  private:
   InternalSharedPtr<PhysicalStore> data_{};
-  InternalSharedPtr<PhysicalStore> null_mask_{};
+  std::optional<InternalSharedPtr<PhysicalStore>> null_mask_{};
 };
 
 class ListPhysicalArray final : public PhysicalArray {
@@ -93,7 +95,7 @@ class ListPhysicalArray final : public PhysicalArray {
 class StructPhysicalArray final : public PhysicalArray {
  public:
   StructPhysicalArray(InternalSharedPtr<Type> type,
-                      InternalSharedPtr<PhysicalStore> null_mask,
+                      std::optional<InternalSharedPtr<PhysicalStore>> null_mask,
                       std::vector<InternalSharedPtr<PhysicalArray>>&& fields);
 
   [[nodiscard]] std::int32_t dim() const override;
@@ -113,7 +115,7 @@ class StructPhysicalArray final : public PhysicalArray {
 
  private:
   InternalSharedPtr<Type> type_{};
-  InternalSharedPtr<PhysicalStore> null_mask_{};
+  std::optional<InternalSharedPtr<PhysicalStore>> null_mask_{};
   std::vector<InternalSharedPtr<PhysicalArray>> fields_{};
 };
 

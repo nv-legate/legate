@@ -15,7 +15,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <queue>
 #include <unordered_map>
@@ -54,7 +53,7 @@ class FieldManager {
   virtual void free_field(FreeFieldInfo info, bool unordered);
 
  protected:
-  [[nodiscard]] InternalSharedPtr<LogicalRegionField> try_reuse_field_(
+  [[nodiscard]] std::optional<InternalSharedPtr<LogicalRegionField>> try_reuse_field_(
     const InternalSharedPtr<Shape>& shape, std::uint32_t field_size);
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> create_new_field_(
     InternalSharedPtr<Shape> shape, std::uint32_t field_size);

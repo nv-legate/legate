@@ -96,10 +96,10 @@ bool Tiling::operator==(const Tiling& other) const
          offsets_ == other.offsets_ && strides_ == other.strides_;
 }
 
-bool Tiling::is_complete_for(const detail::Storage* storage) const
+bool Tiling::is_complete_for(const detail::Storage& storage) const
 {
-  const auto& storage_exts = storage->extents();
-  const auto& storage_offs = storage->offsets();
+  const auto& storage_exts = storage.extents();
+  const auto& storage_offs = storage.offsets();
 
   LEGATE_ASSERT(storage_exts.size() == storage_offs.size());
   LEGATE_ASSERT(storage_offs.size() == offsets_.size());
@@ -418,12 +418,6 @@ bool Image::operator==(const Image& other) const
          hint_ == other.hint_;
 }
 
-bool Image::is_complete_for(const detail::Storage* /*storage*/) const
-{
-  // Completeness check for image partitions is expensive, so we give a sound answer
-  return false;
-}
-
 bool Image::is_disjoint_for(const Domain& launch_domain) const
 {
   // Disjointedness check for image partitions is expensive, so we give a sound answer;
@@ -460,7 +454,7 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*c
   auto&& func_rf      = func_->get_region_field();
   auto&& func_region  = func_rf->region();
   auto func_partition = func_partition_->construct(
-    func_region, func_partition_->is_complete_for(func_->get_storage().get()));
+    func_region, func_partition_->is_complete_for(*func_->get_storage()));
 
   auto runtime   = detail::Runtime::get_runtime();
   auto* part_mgr = runtime->partition_manager();

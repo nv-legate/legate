@@ -97,7 +97,7 @@ void ConstraintSolver::solve_constraints()
   }
 
   // Unify equivalence classes based on alignment constraints
-  auto handle_alignment = [&table](const Alignment* alignment) {
+  auto handle_alignment = [&table](const Alignment& alignment) {
     auto update_table = [&table](UnionFindEntry* old_cls, UnionFindEntry* new_cls) {
       while (old_cls != nullptr) {
         table[*old_cls->partition_symbol] = new_cls;
@@ -107,7 +107,7 @@ void ConstraintSolver::solve_constraints()
 
     std::vector<const Variable*> part_symbs_to_unify;
 
-    alignment->find_partition_symbols(part_symbs_to_unify);
+    alignment.find_partition_symbols(part_symbs_to_unify);
     LEGATE_ASSERT(!part_symbs_to_unify.empty());
 
     auto it           = part_symbs_to_unify.begin();
@@ -128,9 +128,9 @@ void ConstraintSolver::solve_constraints()
   };
 
   // Set the restrictions according to broadcasting constraints
-  auto handle_broadcast = [&table](const Broadcast* broadcast) {
-    auto* variable    = broadcast->variable();
-    auto& axes        = broadcast->axes();
+  auto handle_broadcast = [&table](const Broadcast& broadcast) {
+    auto* variable    = broadcast.variable();
+    auto& axes        = broadcast.axes();
     auto* equiv_class = table.at(*variable);
     if (axes.empty()) {
       equiv_class->restrict_all();
@@ -148,40 +148,40 @@ void ConstraintSolver::solve_constraints()
   };
 
   // Here we only mark dependent partition symbols
-  auto handle_image_constraint = [&](const ImageConstraint* image_constraint) {
-    is_dependent_[*image_constraint->var_range()] = true;
+  auto handle_image_constraint = [&](const ImageConstraint& image_constraint) {
+    is_dependent_[*image_constraint.var_range()] = true;
   };
-  auto handle_scale_constraint = [&](const ScaleConstraint* scale_constraint) {
-    is_dependent_[*scale_constraint->var_bigger()] = true;
+  auto handle_scale_constraint = [&](const ScaleConstraint& scale_constraint) {
+    is_dependent_[*scale_constraint.var_bigger()] = true;
   };
-  auto handle_bloat_constraint = [&](const BloatConstraint* bloat_constraint) {
-    is_dependent_[*bloat_constraint->var_bloat()] = true;
+  auto handle_bloat_constraint = [&](const BloatConstraint& bloat_constraint) {
+    is_dependent_[*bloat_constraint.var_bloat()] = true;
   };
 
   // Reflect each constraint to the solver state
   for (auto&& constraint : constraints_) {
     switch (constraint->kind()) {
       case Constraint::Kind::ALIGNMENT: {
-        if (auto* alignment = static_cast<const Alignment*>(constraint.get());
-            !alignment->is_trivial()) {
+        if (const auto& alignment = static_cast<const Alignment&>(*constraint);
+            !alignment.is_trivial()) {
           handle_alignment(alignment);
         }
         break;
       }
       case Constraint::Kind::BROADCAST: {
-        handle_broadcast(static_cast<const Broadcast*>(constraint.get()));
+        handle_broadcast(static_cast<const Broadcast&>(*constraint));
         break;
       }
       case Constraint::Kind::IMAGE: {
-        handle_image_constraint(static_cast<const ImageConstraint*>(constraint.get()));
+        handle_image_constraint(static_cast<const ImageConstraint&>(*constraint));
         break;
       }
       case Constraint::Kind::SCALE: {
-        handle_scale_constraint(static_cast<const ScaleConstraint*>(constraint.get()));
+        handle_scale_constraint(static_cast<const ScaleConstraint&>(*constraint));
         break;
       }
       case Constraint::Kind::BLOAT: {
-        handle_bloat_constraint(static_cast<const BloatConstraint*>(constraint.get()));
+        handle_bloat_constraint(static_cast<const BloatConstraint&>(*constraint));
         break;
       }
     }

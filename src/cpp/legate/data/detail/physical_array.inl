@@ -10,8 +10,8 @@
 
 namespace legate::detail {
 
-inline BasePhysicalArray::BasePhysicalArray(InternalSharedPtr<PhysicalStore> data,
-                                            InternalSharedPtr<PhysicalStore> null_mask)
+inline BasePhysicalArray::BasePhysicalArray(
+  InternalSharedPtr<PhysicalStore> data, std::optional<InternalSharedPtr<PhysicalStore>> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
 {
 }
@@ -25,7 +25,7 @@ inline const InternalSharedPtr<Type>& BasePhysicalArray::type() const { return d
 inline bool BasePhysicalArray::nullable() const
 {
   // Don't use null_mask() here, otherwise infinite recursive loop
-  return null_mask_ != nullptr;
+  return null_mask_.has_value();
 }
 
 inline bool BasePhysicalArray::nested() const { return false; }
@@ -81,7 +81,7 @@ inline Domain ListPhysicalArray::domain() const { return descriptor()->domain();
 
 inline StructPhysicalArray::StructPhysicalArray(
   InternalSharedPtr<Type> type,
-  InternalSharedPtr<PhysicalStore> null_mask,
+  std::optional<InternalSharedPtr<PhysicalStore>> null_mask,
   std::vector<InternalSharedPtr<PhysicalArray>>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
 {
@@ -96,7 +96,7 @@ inline const InternalSharedPtr<Type>& StructPhysicalArray::type() const { return
 inline bool StructPhysicalArray::nullable() const
 {
   // Don't use null_mask() here, otherwise infinite recursive loop
-  return null_mask_ != nullptr;
+  return null_mask_.has_value();
 }
 
 inline bool StructPhysicalArray::nested() const { return true; }

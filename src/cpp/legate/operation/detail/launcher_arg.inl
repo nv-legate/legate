@@ -91,13 +91,13 @@ inline void WriteOnlyScalarStoreArg::analyze(StoreAnalyzer& /*analyzer*/) {}
 // ==========================================================================================
 
 inline BaseArrayArg::BaseArrayArg(std::unique_ptr<Analyzable> data,
-                                  std::unique_ptr<Analyzable> null_mask)
+                                  std::optional<std::unique_ptr<Analyzable>> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
 {
 }
 
 inline BaseArrayArg::BaseArrayArg(std::unique_ptr<Analyzable> data)
-  : BaseArrayArg{std::move(data), {}}
+  : BaseArrayArg{std::move(data), std::nullopt}
 {
 }
 
@@ -113,7 +113,7 @@ inline ListArrayArg::ListArrayArg(InternalSharedPtr<Type> type,
 // ==========================================================================================
 
 inline StructArrayArg::StructArrayArg(InternalSharedPtr<Type> type,
-                                      std::unique_ptr<Analyzable> null_mask,
+                                      std::optional<std::unique_ptr<Analyzable>> null_mask,
                                       std::vector<std::unique_ptr<Analyzable>>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
 {

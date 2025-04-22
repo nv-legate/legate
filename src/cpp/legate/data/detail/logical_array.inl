@@ -17,10 +17,9 @@ inline bool LogicalArray::needs_flush() const
 }
 
 inline BaseLogicalArray::BaseLogicalArray(InternalSharedPtr<LogicalStore> data,
-                                          InternalSharedPtr<LogicalStore> null_mask)
+                                          std::optional<InternalSharedPtr<LogicalStore>> null_mask)
   : data_{std::move(data)}, null_mask_{std::move(null_mask)}
 {
-  LEGATE_CHECK(data_ != nullptr);
 }
 
 inline std::uint32_t BaseLogicalArray::dim() const { return data_->dim(); }
@@ -33,7 +32,7 @@ inline const InternalSharedPtr<Shape>& BaseLogicalArray::shape() const { return 
 
 inline std::size_t BaseLogicalArray::volume() const { return data_->volume(); }
 
-inline bool BaseLogicalArray::nullable() const { return null_mask_ != nullptr; }
+inline bool BaseLogicalArray::nullable() const { return null_mask_.has_value(); }
 
 inline bool BaseLogicalArray::nested() const { return false; }
 
@@ -96,9 +95,10 @@ inline const InternalSharedPtr<LogicalStore>& ListLogicalArray::primary_store() 
 
 // ==========================================================================================
 
-inline StructLogicalArray::StructLogicalArray(InternalSharedPtr<Type> type,
-                                              InternalSharedPtr<LogicalStore> null_mask,
-                                              std::vector<InternalSharedPtr<LogicalArray>>&& fields)
+inline StructLogicalArray::StructLogicalArray(
+  InternalSharedPtr<Type> type,
+  std::optional<InternalSharedPtr<LogicalStore>> null_mask,
+  std::vector<InternalSharedPtr<LogicalArray>>&& fields)
   : type_{std::move(type)}, null_mask_{std::move(null_mask)}, fields_{std::move(fields)}
 {
 }
@@ -107,7 +107,7 @@ inline ArrayKind StructLogicalArray::kind() const { return ArrayKind::STRUCT; }
 
 inline const InternalSharedPtr<Type>& StructLogicalArray::type() const { return type_; }
 
-inline bool StructLogicalArray::nullable() const { return null_mask_ != nullptr; }
+inline bool StructLogicalArray::nullable() const { return null_mask_.has_value(); }
 
 inline bool StructLogicalArray::nested() const { return true; }
 

@@ -41,7 +41,7 @@ class Partition {
 
   [[nodiscard]] virtual Kind kind() const = 0;
 
-  [[nodiscard]] virtual bool is_complete_for(const detail::Storage* storage) const          = 0;
+  [[nodiscard]] virtual bool is_complete_for(const detail::Storage& storage) const          = 0;
   [[nodiscard]] virtual bool is_disjoint_for(const Domain& launch_domain) const             = 0;
   [[nodiscard]] virtual bool satisfies_restrictions(const Restrictions& restrictions) const = 0;
   [[nodiscard]] virtual bool is_convertible() const                                         = 0;
@@ -74,7 +74,7 @@ class NoPartition : public Partition {
  public:
   [[nodiscard]] Kind kind() const override;
 
-  [[nodiscard]] bool is_complete_for(const detail::Storage* /*storage*/) const override;
+  [[nodiscard]] bool is_complete_for(const detail::Storage& /*storage*/) const override;
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& /*restrictions*/) const override;
   [[nodiscard]] bool is_convertible() const override;
@@ -141,7 +141,7 @@ class Tiling : public Partition {
 
   [[nodiscard]] Kind kind() const override;
 
-  [[nodiscard]] bool is_complete_for(const detail::Storage* storage) const override;
+  [[nodiscard]] bool is_complete_for(const detail::Storage& storage) const override;
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
   [[nodiscard]] bool is_convertible() const override;
@@ -228,7 +228,7 @@ class Weighted : public Partition {
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
   [[nodiscard]] bool is_convertible() const override;
-  [[nodiscard]] bool is_complete_for(const detail::Storage* /*storage*/) const override;
+  [[nodiscard]] bool is_complete_for(const detail::Storage& /*storage*/) const override;
 
   [[nodiscard]] InternalSharedPtr<Partition> scale(
     const tuple<std::uint64_t>& factors) const override;
@@ -275,7 +275,7 @@ class Image : public Partition {
 
   [[nodiscard]] Kind kind() const override;
 
-  [[nodiscard]] bool is_complete_for(const detail::Storage* storage) const override;
+  [[nodiscard]] bool is_complete_for(const detail::Storage& storage) const override;
   [[nodiscard]] bool is_disjoint_for(const Domain& launch_domain) const override;
   [[nodiscard]] bool satisfies_restrictions(const Restrictions& restrictions) const override;
   [[nodiscard]] bool is_convertible() const override;

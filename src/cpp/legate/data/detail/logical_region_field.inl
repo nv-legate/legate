@@ -50,11 +50,12 @@ inline const Attachment& LogicalRegionField::PhysicalState::attachment() const
 
 // ==========================================================================================
 
-inline LogicalRegionField::LogicalRegionField(InternalSharedPtr<Shape> shape,
-                                              std::uint32_t field_size,
-                                              Legion::LogicalRegion lr,
-                                              Legion::FieldID fid,
-                                              InternalSharedPtr<LogicalRegionField> parent)
+inline LogicalRegionField::LogicalRegionField(
+  InternalSharedPtr<Shape> shape,
+  std::uint32_t field_size,
+  Legion::LogicalRegion lr,
+  Legion::FieldID fid,
+  std::optional<InternalSharedPtr<LogicalRegionField>> parent)
   : shape_{std::move(shape)},
     field_size_{field_size},
     lr_{std::move(lr)},
@@ -68,7 +69,8 @@ inline const Legion::LogicalRegion& LogicalRegionField::region() const { return 
 
 inline Legion::FieldID LogicalRegionField::field_id() const { return fid_; }
 
-inline const InternalSharedPtr<LogicalRegionField>& LogicalRegionField::parent() const
+inline const std::optional<InternalSharedPtr<LogicalRegionField>>& LogicalRegionField::parent()
+  const
 {
   return parent_;
 }

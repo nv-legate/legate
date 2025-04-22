@@ -100,7 +100,7 @@ class Storage {
   void free_early() noexcept;
 
   [[nodiscard]] Restrictions compute_restrictions() const;
-  [[nodiscard]] InternalSharedPtr<Partition> find_key_partition(
+  [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
     const mapping::detail::Machine& machine, const Restrictions& restrictions) const;
   void set_key_partition(const mapping::detail::Machine& machine,
                          InternalSharedPtr<Partition> key_partition);
@@ -123,17 +123,17 @@ class Storage {
   std::string_view provenance_{};  // only relevant on the root Storage
 
   std::int32_t level_{};
-  InternalSharedPtr<StoragePartition> parent_{};
+  std::optional<InternalSharedPtr<StoragePartition>> parent_{};
   tuple<std::uint64_t> color_{};
   tuple<std::int64_t> offsets_{};
 
   std::size_t scalar_offset_{};
-  InternalSharedPtr<LogicalRegionField> region_field_{};
+  std::optional<InternalSharedPtr<LogicalRegionField>> region_field_{};
   std::optional<Legion::Future> future_{};
   std::optional<Legion::FutureMap> future_map_{};
 
   std::uint32_t num_pieces_{};
-  InternalSharedPtr<Partition> key_partition_{};
+  std::optional<InternalSharedPtr<Partition>> key_partition_{};
 };
 
 class StoragePartition {
@@ -153,7 +153,7 @@ class StoragePartition {
   [[nodiscard]] InternalSharedPtr<LogicalRegionField> get_child_data(
     const tuple<std::uint64_t>& color);
 
-  [[nodiscard]] InternalSharedPtr<Partition> find_key_partition(
+  [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
     const mapping::detail::Machine& machine, const Restrictions& restrictions) const;
   [[nodiscard]] Legion::LogicalPartition get_legion_partition();
 
@@ -334,7 +334,7 @@ class LogicalStore {
   InternalSharedPtr<TransformStack> transform_{};
 
   std::uint32_t num_pieces_{};
-  InternalSharedPtr<Partition> key_partition_{};
+  std::optional<InternalSharedPtr<Partition>> key_partition_{};
   InternalSharedPtr<PhysicalStore> mapped_{};
 };
 

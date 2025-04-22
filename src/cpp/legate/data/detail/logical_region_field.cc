@@ -96,7 +96,7 @@ std::int32_t LogicalRegionField::dim() const { return lr_.get_dim(); }
 
 const LogicalRegionField& LogicalRegionField::get_root() const
 {
-  return parent_ ? parent_->get_root() : *this;
+  return parent().has_value() ? (*parent())->get_root() : *this;
 }
 
 Domain LogicalRegionField::domain() const
@@ -107,8 +107,8 @@ Domain LogicalRegionField::domain() const
 bool LogicalRegionField::is_mapped() const
 {
   // Only the root has a physical region at the moment
-  if (parent()) {
-    return parent()->is_mapped();
+  if (parent().has_value()) {
+    return (*parent())->is_mapped();
   }
   // A logical region field with a pending attachment needs the same treatment as the inline mapped
   // one even when the `pr_->is_mapped()` is false
@@ -117,9 +117,9 @@ bool LogicalRegionField::is_mapped() const
 
 RegionField LogicalRegionField::map(legate::mapping::StoreTarget target)
 {
-  if (parent_ != nullptr) {
+  if (parent().has_value()) {
     LEGATE_ASSERT(!physical_state_->physical_region().exists());
-    return parent_->map(target);
+    return (*parent())->map(target);
   }
   mapped_ = true;
   return {dim(), physical_state_->ensure_mapping(lr_, fid_, target), fid_, false /*partitioned*/};
@@ -127,9 +127,9 @@ RegionField LogicalRegionField::map(legate::mapping::StoreTarget target)
 
 void LogicalRegionField::unmap()
 {
-  if (parent_ != nullptr) {
+  if (parent().has_value()) {
     LEGATE_ASSERT(!physical_state_->physical_region().exists());
-    parent_->unmap();
+    (*parent())->unmap();
   }
   mapped_ = false;
   physical_state_->unmap_and_detach(false /*unordered*/);
@@ -138,7 +138,7 @@ void LogicalRegionField::unmap()
 void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
                                 InternalSharedPtr<ExternalAllocation> allocation)
 {
-  LEGATE_ASSERT(!parent_);
+  LEGATE_ASSERT(!parent().has_value());
   LEGATE_ASSERT(physical_region.exists());
   LEGATE_ASSERT(!physical_state_->attachment().exists());
   LEGATE_ASSERT(!physical_state_->physical_region().exists());
@@ -149,7 +149,7 @@ void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
 void LogicalRegionField::attach(Legion::ExternalResources external_resources,
                                 std::vector<InternalSharedPtr<ExternalAllocation>> allocations)
 {
-  LEGATE_ASSERT(!parent_);
+  LEGATE_ASSERT(!parent().has_value());
   LEGATE_ASSERT(external_resources.exists());
   LEGATE_ASSERT(!physical_state_->attachment().exists());
   physical_state_->set_attachment(
@@ -163,7 +163,7 @@ void LogicalRegionField::detach()
     physical_state_->intentionally_leak_physical_region();
     return;
   }
-  if (nullptr != parent_) {
+  if (parent().has_value()) {
     throw TracedException<std::invalid_argument>{"Manual detach must be called on the root store"};
   }
   if (!attached_) {
@@ -183,8 +183,8 @@ void LogicalRegionField::detach()
 
 void LogicalRegionField::allow_out_of_order_destruction()
 {
-  if (parent_) {
-    parent_->allow_out_of_order_destruction();
+  if (parent().has_value()) {
+    (*parent())->allow_out_of_order_destruction();
   } else {
     destroyed_out_of_order_ = true;
   }
@@ -192,7 +192,7 @@ void LogicalRegionField::allow_out_of_order_destruction()
 
 void LogicalRegionField::release_region_field() noexcept
 {
-  if (released_ || parent_ != nullptr) {
+  if (released_ || parent().has_value()) {
     return;
   }
 
@@ -243,8 +243,8 @@ Legion::LogicalPartition LogicalRegionField::get_legion_partition(const Partitio
 
 void LogicalRegionField::add_invalidation_callback(std::function<void()> callback)
 {
-  if (parent_) {
-    parent_->add_invalidation_callback(std::move(callback));
+  if (parent().has_value()) {
+    (*parent())->add_invalidation_callback(std::move(callback));
   } else {
     physical_state_->add_callback(std::move(callback));
   }
@@ -252,9 +252,9 @@ void LogicalRegionField::add_invalidation_callback(std::function<void()> callbac
 
 void LogicalRegionField::perform_invalidation_callbacks()
 {
-  if (parent_) {
+  if (parent().has_value()) {
     // Callbacks should exist only in the root
-    parent_->perform_invalidation_callbacks();
+    (*parent())->perform_invalidation_callbacks();
   } else {
     physical_state_->invoke_callbacks();
   }
