@@ -51,6 +51,8 @@ inline const tuple<std::uint64_t>& Tiling::color_shape() const { return color_sh
 
 inline const tuple<std::int64_t>& Tiling::offsets() const { return offsets_; }
 
+inline const tuple<std::uint64_t>& Tiling::strides() const { return strides_; }
+
 inline bool Tiling::has_color(const tuple<std::uint64_t>& color) const
 {
   return (color.size() == color_shape().size()) && color.less(color_shape());

@@ -171,6 +171,7 @@ class Tiling : public Partition {
     const InternalSharedPtr<TransformStack>& transform) const override;
 
   [[nodiscard]] const tuple<std::int64_t>& offsets() const;
+  [[nodiscard]] const tuple<std::uint64_t>& strides() const;
   [[nodiscard]] bool has_color(const tuple<std::uint64_t>& color) const;
 
   /**

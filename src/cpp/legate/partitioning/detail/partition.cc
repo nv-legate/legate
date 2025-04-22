@@ -206,7 +206,7 @@ Legion::Domain Tiling::launch_domain() const { return detail::to_domain(color_sh
 
 std::string Tiling::to_string() const
 {
-  return fmt::format("Tiling(tile:{},colors:{},offset:{},strides:{})",
+  return fmt::format("Tiling(tile: {}, colors: {}, offset: {}, strides: {})",
                      tile_shape_,
                      color_shape_,
                      offsets_,
@@ -242,6 +242,14 @@ InternalSharedPtr<Partition> Tiling::invert(
 tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& extents,
                                                const tuple<std::uint64_t>& color) const
 {
+  if (!has_color(color)) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Color {} is out of bounds, each entry must be strictly less than the "
+                  "corresponding entry in {}",
+                  color,
+                  color_shape())};
+  }
+
   auto lo = apply(std::plus<std::int64_t>{}, tile_shape_ * color, offsets_);
   auto hi = apply(std::plus<std::int64_t>{}, tile_shape_ * (color + 1), offsets_);
   lo      = apply([](std::int64_t v) { return std::max(static_cast<std::int64_t>(0), v); }, lo);
@@ -250,11 +258,21 @@ tuple<std::uint64_t> Tiling::get_child_extents(const tuple<std::uint64_t>& exten
           extents,
           hi);
   return apply(
-    [](std::int64_t h, std::int64_t l) { return static_cast<std::uint64_t>(h - l); }, hi, lo);
+    [](std::int64_t h, std::int64_t l) { return h >= l ? static_cast<std::uint64_t>(h - l) : 0; },
+    hi,
+    lo);
 }
 
 tuple<std::int64_t> Tiling::get_child_offsets(const tuple<std::uint64_t>& color) const
 {
+  if (!has_color(color)) {
+    throw TracedException<std::invalid_argument>{
+      fmt::format("Color {} is out of bounds, each entry must be strictly less than the "
+                  "corresponding entry in {}",
+                  color,
+                  color_shape())};
+  }
+
   return apply([](std::uint64_t a, std::int64_t b) { return static_cast<std::int64_t>(a) + b; },
                strides_ * color,
                offsets_);
@@ -340,12 +358,17 @@ std::string Weighted::to_string() const
 {
   std::string result = "Weighted({";
 
-  for (Domain::DomainPointIterator it{color_domain_}; it; ++it) {
-    auto& p = *it;
+  if (weights_.exists()) {
+    for (Domain::DomainPointIterator it{color_domain_}; it; ++it) {
+      auto& p = *it;
 
-    fmt::format_to(
-      std::back_inserter(result), "{}:{},", fmt::streamed(p), weights_.get_result<std::size_t>(p));
+      fmt::format_to(std::back_inserter(result),
+                     "{}:{},",
+                     fmt::streamed(p),
+                     weights_.get_result<std::size_t>(p));
+    }
   }
+
   result += "})";
   return result;
 }
