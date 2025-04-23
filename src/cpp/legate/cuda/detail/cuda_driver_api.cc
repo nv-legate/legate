@@ -219,6 +219,8 @@ void CUDADriverAPI::read_symbols_()
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuLibraryLoadData, &library_load_data_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuLibraryGetKernel, &library_get_kernel_);
   LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuLibraryUnload, &library_unload_);
+
+  LOAD_CU_DRIVER_FUNCTION(get_proc_address_, cuMemGetInfo, &mem_get_info_);
 }
 
 void CUDADriverAPI::check_initialized_() const
@@ -469,6 +471,15 @@ void CUDADriverAPI::library_unload(CUlibrary* library) const
   check_initialized_();
   LEGATE_CHECK_CUDRIVER(library_unload_(*library));
   *library = nullptr;
+}
+
+std::pair<std::size_t, std::size_t> CUDADriverAPI::mem_get_info() const
+{
+  std::size_t free, total;
+
+  check_initialized_();
+  LEGATE_CHECK_CUDRIVER(mem_get_info_(&free, &total));
+  return {free, total};
 }
 
 // ==========================================================================================

@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/mapping/detail/base_mapper.h>
 #include <legate/runtime/detail/argument_parsing/logging.h>
 #include <legate/runtime/detail/argument_parsing/util.h>
@@ -214,11 +215,13 @@ void autoconfigure_fbmem(const Realm::ModuleConfig* cuda,
 
   if (Config::get_config().auto_config() && cuda) {
     constexpr double FBMEM_FRACTION = 0.95;
-    std::size_t res_fbmem;
+    std::size_t res_fbmem           = 0;
 
-    if (!cuda->get_resource("fbmem", res_fbmem)) {
-      throw TracedException<AutoConfigurationError>{
-        "CUDA Realm module could not determine the available GPU memory."};
+    auto&& driver = cuda::detail::get_cuda_driver_api();
+    // Currently, we assume all GPUs are identical, so we can just use the first one
+    {
+      legate::cuda::detail::AutoPrimaryContext const ctx{0};
+      std::tie(res_fbmem, std::ignore) = driver->mem_get_info();
     }
 
     using T = std::decay_t<decltype(*fbmem)>::value_type;

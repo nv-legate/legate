@@ -98,6 +98,8 @@ class CUDADriverAPI {
   [[nodiscard]] CUkernel library_get_kernel(CUlibrary library, const char* name) const;
   void library_unload(CUlibrary* library) const;
 
+  [[nodiscard]] std::pair<std::size_t, std::size_t> mem_get_info() const;
+
   [[nodiscard]] std::string_view handle_path() const noexcept;
   [[nodiscard]] bool is_loaded() const noexcept;
 
@@ -165,6 +167,8 @@ class CUDADriverAPI {
                                  unsigned int num_library_options)                       = nullptr;
   CUresult (*library_get_kernel_)(CUkernel* kernel, CUlibrary library, const char* name) = nullptr;
   CUresult (*library_unload_)(CUlibrary library)                                         = nullptr;
+
+  CUresult (*mem_get_info_)(std::size_t* free, std::size_t* total) = nullptr;
 };
 
 // ==========================================================================================

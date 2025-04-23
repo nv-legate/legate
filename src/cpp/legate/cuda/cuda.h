@@ -34,6 +34,7 @@ using CUstream = struct CUstream_st*;
 [[nodiscard]] constexpr const char* cudaGetErrorString(cudaError_t) { return "unknown CUDA error"; }
 
 [[nodiscard]] constexpr const char* cudaGetErrorName(cudaError_t) { return "unknown CUDA error"; }
+
 // NOLINTEND
 #endif  // LEGATE_DEFINED(LEGATE_USE_CUDA)
 
