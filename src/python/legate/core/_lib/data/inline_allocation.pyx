@@ -8,11 +8,43 @@ import math
 import numpy as np
 
 from libc.stdint cimport int32_t, uintptr_t
+from cpython cimport Py_buffer, PyObject_GetBuffer
 
 from ..type.types cimport Type
 from ..utilities.typedefs cimport _Domain, _DomainPoint
 from ..mapping.mapping cimport StoreTarget
 from .physical_store cimport PhysicalStore
+
+# This object exists purely to circumvent numpy. When you do
+#
+# arr = np.asarray(obj)
+#
+# Where obj implements both `__array_interface__` and `__getbuffer__`, then
+# numpy will prefer `__getbuffer__` (seemingly because it is the "standard" way
+# of doing things).
+#
+# But we implement our `__getbuffer__` in terms of `__array_interface__` by
+# creating a numpy array from ourselves and calling PyObject_GetBuffer() on
+# it. This is done for convenience since implementing `__getbuffer__` is kind
+# of complicated:
+#
+# def __getbuffer__(self, ...):
+#     self_np = np.asarray(self)
+#     PyObject_GetBuffer(self_np, ...)
+#
+# But this leads to infinite recursion since `np.asarray()` will just keep
+# calling `__getbuffer__`. So we need an in-between that exposes only the numpy
+# array interface but not the buffer protocol.
+cdef class _OnlyArrayInterface:
+    cdef InlineAllocation alloc
+
+    def __init__(self, InlineAllocation alloc) -> None:
+        self.alloc = alloc
+
+    @property
+    def __array_interface__(self):
+        return self.alloc.__array_interface__
+
 
 cdef class InlineAllocation:
     @staticmethod
@@ -141,6 +173,14 @@ cdef class InlineAllocation:
         # TODO(wonchanl): We should add a Legate-managed stream to the returned
         # interface object
         return self._get_array_interface()
+
+    def __getbuffer__(self, Py_buffer *buffer, int flags) -> None:
+        # np.asarray() seemingly stores a reference to whatever it is called
+        # on, so this should avoid getting us GC'ed before the array is. The
+        # filled-in buffer object will separately store a reference to the
+        # numpy array, so we are transitively kept alive.
+        self_np = np.asarray(_OnlyArrayInterface(self))
+        PyObject_GetBuffer(self_np, buffer, flags)
 
     def __str__(self) -> str:
         r"""

@@ -90,6 +90,7 @@ Python
   where the physical array/store is allocated.
 - Add ``legate.core.InlineAllocation.target`` property to retrieve the type of memory held
   by the allocation.
+- Add support for the PEP-3118 buffer protocol to ``legate.core.InlineAllocation``.
 
 .. rubric:: Mapping
 
