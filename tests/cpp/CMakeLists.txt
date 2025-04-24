@@ -195,6 +195,7 @@ set(with_runtime_SRC
     unit/runtime.cc
     unit/scope.cc
     unit/scoped_allocator.cc
+    unit/shape.cc
     unit/timing.cc
     unit/logical_array/create_array.cc
     unit/logical_array/delinearize.cc
