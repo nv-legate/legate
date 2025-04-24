@@ -8,7 +8,11 @@ set -eou pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 build_dir="${script_dir}/helloworld-build"
 
+cmake_args=(--fresh)
+if [[ "${CMAKE_ARGS:-}" != '' ]]; then
+  cmake_args+=("${CMAKE_ARGS}")
+fi
 
-cmake -B "${build_dir}" -S "${script_dir}"
+cmake -B "${build_dir}" -S "${script_dir}" "${cmake_args[@]}"
 cmake --build "${build_dir}"
-"${build_dir}"/helloworld
+"${build_dir}"/bin/helloworld

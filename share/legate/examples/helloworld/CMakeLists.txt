@@ -13,24 +13,20 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(BUILD_SHARED_LIBS ON)
-
-add_executable(helloworld helloworld.cc)
-
-include(GNUInstallDirs)
-
-set_target_properties(helloworld
-                      PROPERTIES POSITION_INDEPENDENT_CODE ON LIBRARY_OUTPUT_DIRECTORY
-                                                              "${CMAKE_INSTALL_LIBDIR}"
-                                 ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_INSTALL_LIBDIR}")
 
 find_package(legate QUIET)
 
 if(NOT legate_FOUND)
-  if(DEFINED ENV{LEGATE_DIR} AND DEFINED ENV{LEGATE_ARCH})
+  if(LEGATE_DIR AND LEGATE_ARCH)
+    set(legate_DIR "${LEGATE_DIR}/${LEGATE_ARCH}/cmake_build")
+  elseif(DEFINED ENV{LEGATE_DIR} AND DEFINED ENV{LEGATE_ARCH})
     set(legate_DIR "$ENV{LEGATE_DIR}/$ENV{LEGATE_ARCH}/cmake_build")
   endif()
-  find_package(legate REQUIRED QUIET)
+  find_package(legate REQUIRED)
 endif()
 
-target_link_libraries(helloworld PUBLIC legate::legate)
+add_executable(helloworld helloworld.cc)
+
+legate_configure_target(helloworld)

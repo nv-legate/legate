@@ -206,6 +206,13 @@
                     "nargs": 0
                 }
             },
+            "legate_configure_target": {
+                "kwargs": {},
+                "pargs": {
+                    "flags": [],
+                    "nargs": "1+"
+                }
+            },
             "legate_configure_test": {
                 "kwargs": {
                     "ADDITIONAL_TARGETS": "+",

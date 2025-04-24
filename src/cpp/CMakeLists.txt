@@ -847,6 +847,11 @@ install(FILES ${LEGATE_DIR}/share/legate/sanitizers/asan_default_options.txt
 # ########################################################################################
 # * install Legate examples -----------------------------------------------------------
 
+install(FILES ${LEGATE_DIR}/share/legate/examples/helloworld/helloworld.cc
+              ${LEGATE_DIR}/share/legate/examples/helloworld/CMakeLists.txt
+              ${LEGATE_DIR}/share/legate/examples/helloworld/build-and-run.sh
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/helloworld)
+
 install(FILES ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1.py
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5)
 
@@ -888,6 +893,12 @@ install(PROGRAMS ${LEGATE_DIR}/share/legate/libexec/legate-bind.sh
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/${CMAKE_INSTALL_LIBEXECDIR})
 
 # ########################################################################################
+# * install Legate CMake Helpers ---------------------------------------------------------
+
+install(FILES ${LEGATE_CMAKE_DIR}/Modules/legate_configure_target.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/legate/Modules)
+
+# ########################################################################################
 # * install Legate debug symbols ---------------------------------------------------------
 
 legate_install_debug_symbols(TARGET legate INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} RECURSIVE)
@@ -923,7 +934,7 @@ endif()
 
 string(JOIN
        "\n"
-       code_string
+       base_code_string
        [=[
 if(NOT TARGET CCCL::Thrust)
   thrust_create_target(CCCL::Thrust FROM_OPTIONS)
@@ -947,6 +958,9 @@ list(REMOVE_ITEM languages NONE)
 
 message(STATUS "Enabled languages: ${languages}")
 
+string(JOIN "\n" install_code_string "${base_code_string}" [=[
+include("${CMAKE_CURRENT_LIST_DIR}/Modules/legate_configure_target.cmake")
+]=])
 # FIXME(wonchanl): Passing LANGUAGES triggers a bug in rapids-cmake. Put it back once we
 # bump the rapids-cmake version.
 rapids_export(INSTALL legate
@@ -954,7 +968,10 @@ rapids_export(INSTALL legate
               GLOBAL_TARGETS legate
               NAMESPACE legate::
               DOCUMENTATION doc_string
-              FINAL_CODE_BLOCK code_string)
+              FINAL_CODE_BLOCK install_code_string)
+
+string(JOIN "\n" build_code_string "${base_code_string}"
+       "include(\"${LEGATE_CMAKE_DIR}/Modules/legate_configure_target.cmake\")")
 
 # build export targets
 # FIXME(wonchanl): Passing LANGUAGES triggers a bug in rapids-cmake. Put it back once we
@@ -964,7 +981,7 @@ rapids_export(BUILD legate
               GLOBAL_TARGETS legate
               NAMESPACE legate::
               DOCUMENTATION doc_string
-              FINAL_CODE_BLOCK code_string)
+              FINAL_CODE_BLOCK build_code_string)
 
 set(legate_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 
