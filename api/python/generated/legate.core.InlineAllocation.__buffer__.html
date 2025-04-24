@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.core.Shape.extents &#8212; NVIDIA legate (25.05.00.dev112+ge63fba13)</title>
+    <title>legate.core.InlineAllocation.__buffer__ &#8212; NVIDIA legate (25.05.00.dev112+ge63fba13)</title>
   
   
   
@@ -47,7 +47,7 @@
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=4ea706d9"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'api/python/generated/legate.core.Shape.extents';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/python/generated/legate.core.InlineAllocation.__buffer__';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
@@ -58,8 +58,8 @@
     <link rel="icon" href="../../../_static/favicon.png"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="legate.core.Shape.ndim" href="legate.core.Shape.ndim.html" />
-    <link rel="prev" title="legate.core.Shape" href="legate.core.Shape.html" />
+    <link rel="next" title="legate.core.InlineAllocation.__repr__" href="legate.core.InlineAllocation.__repr__.html" />
+    <link rel="prev" title="legate.core.InlineAllocation.target" href="legate.core.InlineAllocation.target.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -343,13 +343,13 @@
 <li class="toctree-l4"><a class="reference internal" href="../physical_array.html">Physical Array</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../scalar.html">Scalar</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../machine.html">Machine and Resource Scoping</a></li>
-<li class="toctree-l4 current active"><a class="reference internal" href="../shape.html">Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../shape.html">Shape</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../variant_options.html">Variant Options</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../resource_config.html">ResourceConfig</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../task_context.html">Task Context</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../domain.html">Domains</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../task_config.html">Task Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../inline_allocation.html">Inline Allocations</a></li>
+<li class="toctree-l4 current active"><a class="reference internal" href="../inline_allocation.html">Inline Allocations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../symbolic_expr.html">Symbolic Expressions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../auto_task.html">Auto Tasks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../manual_task.html">Manual Tasks</a></li>
@@ -476,12 +476,12 @@
     <li class="breadcrumb-item"><a href="../classes.html" class="nav-link">Classes</a></li>
     
     
-    <li class="breadcrumb-item"><a href="../shape.html" class="nav-link">Shape</a></li>
+    <li class="breadcrumb-item"><a href="../inline_allocation.html" class="nav-link">Inline Allocations</a></li>
     
     
-    <li class="breadcrumb-item"><a href="legate.core.Shape.html" class="nav-link">legate.core.Shape</a></li>
+    <li class="breadcrumb-item"><a href="legate.core.InlineAllocation.html" class="nav-link">legate.core.InlineAllocation</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate.core.Shape.extents</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">legate.core.InlineAllocation.__buffer__</span></li>
   </ul>
 </nav>
 </div>
@@ -498,29 +498,12 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="legate-core-shape-extents">
-<h1>legate.core.Shape.extents<a class="headerlink" href="#legate-core-shape-extents" title="Link to this heading">#</a></h1>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="legate.core.Shape.extents">
-<span class="sig-prename descclassname"><span class="pre">Shape.</span></span><span class="sig-name descname"><span class="pre">extents</span></span><a class="headerlink" href="#legate.core.Shape.extents" title="Link to this definition">#</a></dt>
-<dd><p>tuple[uint64_t, …]</p>
-<p>Returns the shape’s extents</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dimension extents</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)">tuple</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a>, …]</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>If the shape is of an unbound array or store, the call blocks the
-execution until the shape becomes ready.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Shape.extents</p>
-</dd>
-</dl>
+  <section id="legate-core-inlineallocation-buffer">
+<h1>legate.core.InlineAllocation.__buffer__<a class="headerlink" href="#legate-core-inlineallocation-buffer" title="Link to this heading">#</a></h1>
+<dl class="py method">
+<dt class="sig sig-object py" id="legate.core.InlineAllocation.__buffer__">
+<span class="sig-prename descclassname"><span class="pre">InlineAllocation.</span></span><span class="sig-name descname"><span class="pre">__buffer__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#legate.core.InlineAllocation.__buffer__" title="Link to this definition">#</a></dt>
+<dd><p>Return a buffer object that exposes the underlying memory of the object.</p>
 </dd></dl>
 
 </section>
@@ -536,20 +519,20 @@ execution until the shape becomes ready.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="legate.core.Shape.html"
+       href="legate.core.InlineAllocation.target.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">legate.core.Shape</p>
+        <p class="prev-next-title">legate.core.InlineAllocation.target</p>
       </div>
     </a>
     <a class="right-next"
-       href="legate.core.Shape.ndim.html"
+       href="legate.core.InlineAllocation.__repr__.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">legate.core.Shape.ndim</p>
+        <p class="prev-next-title">legate.core.InlineAllocation.__repr__</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -574,7 +557,7 @@ execution until the shape becomes ready.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legate.core.Shape.extents"><code class="docutils literal notranslate"><span class="pre">extents</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legate.core.InlineAllocation.__buffer__"><code class="docutils literal notranslate"><span class="pre">__buffer__()</span></code></a></li>
 </ul>
   </nav></div>
 

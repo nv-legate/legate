@@ -1,0 +1,6 @@
+legate.core.InlineAllocation.\_\_buffer\_\_
+===========================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: InlineAllocation.__buffer__

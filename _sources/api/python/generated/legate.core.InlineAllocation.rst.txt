@@ -30,6 +30,7 @@
    .. autosummary::
       :toctree: .
    
+      ~InlineAllocation.__buffer__
       ~InlineAllocation.__repr__
       ~InlineAllocation.__str__
    
