@@ -4,6 +4,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from legate.core import (
@@ -38,6 +40,7 @@ class TestProcessorRange:
         assert len(r) == 2
 
         assert r.get_node_range() == (1, 3)
+        assert repr(r) == str(r)
 
     def test_create_empty(self) -> None:
         r = ProcessorRange.create(low=1, high=0, per_node_count=1)
@@ -119,6 +122,18 @@ class TestProcessorRange:
         with pytest.raises(ValueError, match="The slicing step must be 1"):
             r.slice(slice(None, None, 2))
 
+    def test_comparison(self) -> None:
+        r1 = ProcessorRange.create(low=1, high=3, per_node_count=4)
+        r2 = ProcessorRange.create(low=1, high=3, per_node_count=4)
+        r3 = ProcessorRange.create(low=2, high=6, per_node_count=4)
+        r4 = r1
+        assert r1 == r2
+        assert r1 != r3
+        assert r1 < r3
+        assert r1 == r4
+        assert not r1 < r4
+        assert not r1 > r4
+
 
 CPU_RANGE = ProcessorRange.create(low=1, high=3, per_node_count=4)
 OMP_RANGE = ProcessorRange.create(low=0, high=3, per_node_count=2)
@@ -143,6 +158,7 @@ class TestMachine:
             m.get_node_range(TaskTarget.OMP)
         with pytest.raises(ValueError, match=err_msg):
             m.get_node_range(TaskTarget.CPU)
+        assert repr(m) == str(m)
 
     def test_eq(self) -> None:
         m1 = Machine({TaskTarget.CPU: CPU_RANGE, TaskTarget.OMP: OMP_RANGE})
@@ -269,6 +285,24 @@ class TestMachine:
             err_msg = "Each machine can be set only once to the scope"
             with pytest.raises(ValueError, match=err_msg), machine:
                 pass
+
+    def test_invalid_slice_target(self) -> None:
+        target = CPU_RANGE
+        m = Machine()
+        msg = re.escape(f"Invalid target: {target}")
+        with pytest.raises(ValueError, match=msg):
+            _ = m.slice(slice(1, 2), target)  # type: ignore[arg-type]
+
+    def test_invalid_range(self) -> None:
+        msg = f"Expected a dict but got a {str}"
+        with pytest.raises(ValueError, match=msg):
+            Machine("foo")  # type: ignore[arg-type]
+        msg = "Invalid task target: foo"
+        with pytest.raises(ValueError, match=msg):
+            Machine({"foo": "bar"})  # type: ignore[dict-item]
+        msg = "Invalid processor range: bar"
+        with pytest.raises(ValueError, match=msg):
+            Machine({TaskTarget.CPU: "bar"})  # type: ignore[dict-item]
 
 
 if __name__ == "__main__":
