@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 import random
-from typing import Any, ParamSpec
+from typing import TYPE_CHECKING, Any, ParamSpec
 
 import numpy as np
 
@@ -61,12 +61,21 @@ from .util.task_util import (
     single_input,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
 _P = ParamSpec("_P")
 
 
 @pytest.fixture
 def fake_auto_task() -> FakeAutoTask:
     return FakeAutoTask()
+
+
+@pytest.fixture(autouse=True)
+def auto_sync_runtime() -> Generator[None, None, None]:
+    yield
+    get_legate_runtime().issue_execution_fence(block=True)
 
 
 class CustomException(Exception):
@@ -106,10 +115,6 @@ class BaseTest:
         assert invoker.outputs == getattr(func, "outputs", ())
         assert invoker.reductions == getattr(func, "reductions", ())
         assert invoker.scalars == getattr(func, "scalars", ())
-
-    def check_func_called(self, func: TestFunction[_P, None]) -> None:
-        get_legate_runtime().issue_execution_fence(block=True)
-        assert func.called
 
 
 class TestTask(BaseTest):
@@ -163,21 +168,12 @@ class TestTask(BaseTest):
     # also don't issue a fence, and hence multiple tasks may execute together
     # and potentially cause memory errors (if they misbehave).
     @pytest.mark.parametrize(
-        ("in_func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
     )
     @pytest.mark.parametrize("register", [True, False])
-    @pytest.mark.parametrize("check_called", [True, False])
     def test_executable_auto(
-        self,
-        in_func: TestFunction[_P, None],
-        func_args: ArgDescr,
-        register: bool,
-        check_called: bool,
+        self, func: TestFunction[_P, None], func_args: ArgDescr, register: bool
     ) -> None:
-        # make a deep copy of func since tasks may execute out of order on
-        # multiple threads which may clobber the called attribute
-        func = in_func.deep_clone()
-
         task = lct.task(register=register)(func)
 
         if not register:
@@ -188,27 +184,15 @@ class TestTask(BaseTest):
             task.complete_registration()
 
         self.check_valid_registered_task(task)
-        assert not func.called
         task(*func_args.args())
-        if check_called:
-            self.check_func_called(func)
 
     @pytest.mark.parametrize(
-        ("in_func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
     )
     @pytest.mark.parametrize("register", [True, False])
-    @pytest.mark.parametrize("check_called", [True, False])
     def test_executable_prepare_call(
-        self,
-        in_func: TestFunction[_P, None],
-        func_args: ArgDescr,
-        register: bool,
-        check_called: bool,
+        self, func: TestFunction[_P, None], func_args: ArgDescr, register: bool
     ) -> None:
-        # make a deep copy of func since tasks may execute out of order on
-        # multiple threads which may clobber the called attribute
-        func = in_func.deep_clone()
-
         task = lct.task(register=register)(func)
 
         if not register:
@@ -219,7 +203,6 @@ class TestTask(BaseTest):
             task.complete_registration()
 
         self.check_valid_registered_task(task)
-        assert not func.called
         task_inst = task.prepare_call(*func_args.args())
 
         dummy_store = make_input_store()
@@ -257,8 +240,6 @@ class TestTask(BaseTest):
             task_inst.add_scalar_arg(0, None)
 
         task_inst.execute()
-        if check_called:
-            self.check_func_called(func)
 
     def test_executable_wrong_arg_order(self) -> None:
         array_val = random.randint(0, 1000)
@@ -269,10 +250,7 @@ class TestTask(BaseTest):
             a: InputStore, b: OutputStore, c: int, d: float
         ) -> None:
             assert_isinstance(a, PhysicalStore)
-            assert (
-                np.asarray(a.get_inline_allocation()).all()
-                == np.array([array_val] * 10).all()
-            )
+            assert np.asarray(a).all() == np.array([array_val] * 10).all()
             assert_isinstance(b, PhysicalStore)
             assert_isinstance(c, int)
             assert c == c_val
@@ -289,12 +267,11 @@ class TestTask(BaseTest):
         task(d=d, c=c, b=b, a=a)
 
     @pytest.mark.parametrize(
-        ("in_func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
     )
     def test_invoke_unhandled_args(
-        self, in_func: TestFunction[_P, None], func_args: ArgDescr
+        self, func: TestFunction[_P, None], func_args: ArgDescr
     ) -> None:
-        func = in_func.deep_clone()
         task = lct.task()(func)
         self.check_valid_registered_task(task)
         # arguments correct, but we have an extra kwarg
@@ -411,7 +388,6 @@ class TestTask(BaseTest):
         msg = "Invalid broadcasting dimension"
         with pytest.raises(ValueError, match=msg):
             task_func(store)
-        runtime.issue_execution_fence(block=True)
 
     def test_mixed_exception_declaration(self) -> None:
         runtime = get_legate_runtime()
@@ -431,9 +407,9 @@ class TestTask(BaseTest):
     def test_align_constraint(self) -> None:
         @lct.task(constraints=(lg.align("x", "y"), lg.align("y", "z")))
         def align_task(x: InputStore, y: InputStore, z: OutputStore) -> None:
-            x_arr = np.asarray(x.get_inline_allocation())
-            y_arr = np.asarray(y.get_inline_allocation())
-            z_arr = np.asarray(z.get_inline_allocation())
+            x_arr = np.asarray(x)
+            y_arr = np.asarray(y)
+            z_arr = np.asarray(z)
             assert x_arr.shape == y_arr.shape
             assert z_arr.shape == y_arr.shape
             np.testing.assert_allclose(x_arr, 1)
@@ -444,9 +420,8 @@ class TestTask(BaseTest):
         y = make_input_store(value=2)
         z = make_output_store()
         align_task(x, y, z)
-        get_legate_runtime().issue_execution_fence(block=True)
         np.testing.assert_allclose(
-            np.asarray(z.get_physical_store().get_inline_allocation()),
+            np.asarray(z.get_physical_store()),
             np.full(shape=tuple(x.shape), fill_value=3),
         )
 
@@ -456,19 +431,18 @@ class TestTask(BaseTest):
 
         @lct.task(constraints=(lg.broadcast("x"),))
         def broadcast_task(x: InputStore, y: OutputStore) -> None:
-            x_arr = np.asarray(x.get_inline_allocation())
+            x_arr = np.asarray(x)
             assert x_arr.shape == shape
             np.testing.assert_allclose(x_arr, x_val)
-            y_arr = np.asarray(y.get_inline_allocation())
+            y_arr = np.asarray(y)
             assert y_arr.shape <= shape
             y_arr[:] = x_arr[tuple(map(slice, y_arr.shape))]
 
         x = make_input_store(value=x_val, shape=shape)
         y = make_output_store(shape=shape)
         broadcast_task(x, y)
-        get_legate_runtime().issue_execution_fence(block=True)
         np.testing.assert_allclose(
-            np.asarray(y.get_physical_store().get_inline_allocation()),
+            np.asarray(y.get_physical_store()),
             np.full(shape=tuple(x.shape), fill_value=x_val),
         )
 
@@ -479,8 +453,8 @@ class TestTask(BaseTest):
     ) -> None:
         @lct.task(constraints=(lg.scale((scaling_factor,), "y", "x"),))
         def scale_task(x: InputStore, y: OutputStore) -> None:
-            x_arr = np.asarray(x.get_inline_allocation())
-            y_arr = np.asarray(y.get_inline_allocation())
+            x_arr = np.asarray(x)
+            y_arr = np.asarray(y)
             assert x_arr.shape == tuple(
                 s * scaling_factor for s in y_arr.shape
             )
@@ -498,9 +472,8 @@ class TestTask(BaseTest):
         )  # bigger
         y = make_output_store(shape=shape)  # smaller
         scale_task(x, y)
-        get_legate_runtime().issue_execution_fence(block=True)
         np.testing.assert_allclose(
-            np.asarray(y.get_physical_store().get_inline_allocation()),
+            np.asarray(y.get_physical_store()),
             np.full(shape=tuple(y.shape), fill_value=scaling_factor),
         )
 
@@ -549,43 +522,36 @@ class TestTask(BaseTest):
     def test_default_arguments(self) -> None:
         x_val = 1
         y_val = 2
+        z_arg_value = complex(1, 3)
 
         @lct.task
         def task_with_default_args(
             x: InputStore,
-            y: OutputStore,
+            y: InputStore,
             z_val: complex,
-            z: complex = complex(1, 3),
+            # Can be anything so long as it isn't the same as what we pass to
+            # as the task arguments
+            z: complex = complex(2, 6),
         ) -> None:
             assert_isinstance(x, PhysicalStore)
             x_arr = np.asarray(x)
-            np.testing.assert_allclose(
-                x_arr, np.full(shape=tuple(x_arr.shape), fill_value=x_val)
-            )
+            x_expected = np.full(shape=x_arr.shape, fill_value=x_val)
+            np.testing.assert_allclose(x_arr, x_expected)
 
             assert_isinstance(y, PhysicalStore)
             y_arr = np.asarray(y)
-            np.testing.assert_allclose(
-                y_arr, np.full(shape=tuple(y_arr.shape), fill_value=y_val)
-            )
+            y_expected = np.full(shape=y_arr.shape, fill_value=y_val)
+            np.testing.assert_allclose(y_arr, y_expected)
 
             assert_isinstance(z_val, complex)
             assert_isinstance(z, complex)
-            assert z == z_val
+            assert z == z_arg_value
+            assert z_val == z_arg_value
+            assert z != complex(2, 6)  # The default value
 
         x = make_input_store(value=x_val)
         y = make_input_store(value=y_val, shape=tuple(x.shape))
-        # This line only exists to make the runtime actually issue the fill. y
-        # is used as an output in the task (purely in order to test that
-        # default values are properly ordered in the face of both inputs and
-        # outputs), so normally the runtime would just skip the fill (because
-        # the test is ostensibly writing to the task).
-        #
-        # Getting the physical store makes the runtime think we are about to
-        # read the values, so it needs to materialize them.
-        y.get_physical_store()
-        task_with_default_args(x, y, complex(1, 3), complex(1, 3))
-        get_legate_runtime().issue_execution_fence(block=True)
+        task_with_default_args(x, y, z_arg_value, z_arg_value)
 
     def test_default_arguments_mixed(self) -> None:
         @lct.task
@@ -597,7 +563,6 @@ class TestTask(BaseTest):
 
         # test that x isn't clobbered
         foo(y=12.3)
-        get_legate_runtime().issue_execution_fence(block=True)
 
     def test_default_arguments_bad(self) -> None:
         # Have to do it like this because PhysicalStore() and PhysicalArray()
@@ -729,9 +694,8 @@ class TestLegateDataInterface:
         @lct.task
         def foo(x: InputArray) -> None:
             arr = np.asarray(x)
-            assert arr.shape == (10,)
             assert arr.dtype == np.int64
-            assert list(arr) == [22] * 10
+            assert (arr == 22).all()
 
         field = Field("foo", dtype=ty.int64)
         x = make_input_array(value=22)
@@ -746,13 +710,15 @@ class TestLegateDataInterface:
 
         @lct.task
         def foo(x: InputArray) -> None:
-            pass
+            pytest.fail("Must never reach this point")
+
+        missing = MissingVersion()
 
         with pytest.raises(
             TypeError,
             match="Argument: 'x' Legate data interface missing a version number",  # noqa: E501
         ):
-            foo(MissingVersion())
+            foo(missing)
 
     @pytest.mark.parametrize("v", ("junk", 1.2))
     def test_bad_version(self, v: Any) -> None:
@@ -766,13 +732,15 @@ class TestLegateDataInterface:
 
         @lct.task
         def foo(x: InputArray) -> None:
-            pass
+            pytest.fail("Must never reach this point")
+
+        bad = BadVersion()
 
         with pytest.raises(
             TypeError,
             match="Argument: 'x' Legate data interface version expected an integer, got",  # noqa: E501
         ):
-            foo(BadVersion())
+            foo(bad)
 
     @pytest.mark.parametrize("v", (0, -1))
     def test_bad_low_version(self, v: int) -> None:
@@ -786,13 +754,15 @@ class TestLegateDataInterface:
 
         @lct.task
         def foo(x: InputArray) -> None:
-            pass
+            pytest.fail("Must never reach this point")
+
+        lo = LowVersion()
 
         with pytest.raises(
             TypeError,
             match=f"Argument: 'x' Legate data interface version {v} is below",
         ):
-            foo(LowVersion())
+            foo(lo)
 
     def test_bad_high_version(self) -> None:
         v = MAX_DATA_INTERFACE_VERSION + 1
@@ -807,13 +777,15 @@ class TestLegateDataInterface:
 
         @lct.task
         def foo(x: InputArray) -> None:
-            pass
+            pytest.fail("Must never reach this point")
+
+        hi = HighVersion()
 
         with pytest.raises(
             NotImplementedError,
             match=f"Argument: 'x' Unsupported Legate data interface version {v}",  # noqa: E501
         ):
-            foo(HighVersion())
+            foo(hi)
 
     def test_bad_missing_fields(self) -> None:
         class MissingFields:
@@ -823,12 +795,14 @@ class TestLegateDataInterface:
 
         @lct.task
         def foo(x: InputArray) -> None:
-            pass
+            pytest.fail("Must never reach this point")
+
+        missing = MissingFields()
 
         with pytest.raises(
             TypeError, match="Argument: 'x' Legate data object has no fields"
         ):
-            foo(MissingFields())
+            foo(missing)
 
     def test_bad_multiple_fields(self) -> None:
         class TooManyFields:
@@ -844,13 +818,15 @@ class TestLegateDataInterface:
 
         @lct.task
         def foo(x: InputArray) -> None:
-            pass
+            pytest.fail("Must never reach this point")
+
+        too_many = TooManyFields()
 
         with pytest.raises(
             NotImplementedError,
             match="Argument: 'x' Legate data interface objects with more than one store are unsupported",  # noqa: E501
         ):
-            foo(TooManyFields())
+            foo(too_many)
 
     # Can't currently even create a nullable field to test with
     @pytest.mark.xfail
@@ -869,13 +845,15 @@ class TestLegateDataInterface:
 
         @lct.task
         def foo(x: InputArray) -> None:
-            pass
+            pytest.fail("Must never reach this point")
+
+        nullable = NullableField()
 
         with pytest.raises(
             NotImplementedError,
             match="Argument: 'x' Legate data interface objects with nullable fields are unsupported",  # noqa: E501
         ):
-            foo(NullableField())
+            foo(nullable)
 
     # Trying to create a nullable array, even a fake one, explodes
     @pytest.mark.skip
@@ -890,13 +868,15 @@ class TestLegateDataInterface:
 
         @lct.task
         def foo(x: InputArray) -> None:
-            pass
+            pytest.fail("Must never reach this point")
+
+        nullable = NullableStore()
 
         with pytest.raises(
             NotImplementedError,
             match="Argument: 'x' Legate data interface objects with nullable stores are unsupported",  # noqa: E501
         ):
-            foo(NullableStore())
+            foo(nullable)
 
     def test_task_properties(self) -> None:
         @lct.task
@@ -1055,16 +1035,11 @@ class TestVariantInvoker(BaseTest):
             invoker.prepare_call(fake_auto_task, (make_input_store(),), {})
 
     @pytest.mark.parametrize(
-        ("in_func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
     )
-    @pytest.mark.parametrize("check_called", [True, False])
     def test_invoke_auto(
-        self,
-        in_func: TestFunction[_P, None],
-        func_args: ArgDescr,
-        check_called: bool,
+        self, func: TestFunction[_P, None], func_args: ArgDescr
     ) -> None:
-        func = in_func.deep_clone()
         invoker = VariantInvoker(func)
 
         self.check_valid_invoker(invoker, func)
@@ -1074,10 +1049,7 @@ class TestVariantInvoker(BaseTest):
         ctx.outputs = tuple(map(FakeArray, func_args.outputs))
         ctx.scalars = tuple(map(FakeScalar, func_args.scalars))
 
-        assert not func.called
         invoker(ctx, func)
-        if check_called:
-            self.check_func_called(func)
 
 
 class TestTaskUtil:

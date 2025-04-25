@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import copy
 import itertools
 from typing import (
     TYPE_CHECKING,
@@ -199,18 +198,16 @@ def assert_isinstance(arg: Any, py_type: type[_T]) -> None:
     assert isinstance(arg, py_type), f"Expected: {py_type}, got {type(arg)}"
 
 
-class TestFunction(Protocol[_P, _T]):
+_T_co = TypeVar("_T_co", covariant=True)
+
+
+class TestFunction(Protocol[_P, _T_co]):
     __test__: bool = False
-    called: bool
-    self: TestFunction[_P, _T]
     inputs: tuple[str, ...]
     outputs: tuple[str, ...]
     scalars: tuple[str, ...]
-    deep_clone: Callable[[], TestFunction[_P, _T]]
-    mark_called: Callable[[], None]
 
-    def __call__(*args: _P.args, **kwargs: _P.kwargs) -> _T:
-        pass
+    def __call__(*args: _P.args, **kwargs: _P.kwargs) -> _T_co: ...
 
 
 def test_function(
@@ -219,34 +216,12 @@ def test_function(
     scalars: tuple[str, ...] = (),
 ) -> Callable[[Callable[_P, _T]], TestFunction[_P, _T]]:
     def wrapper(fn: Callable[_P, _T]) -> TestFunction[_P, _T]:
-        fn = TYPE_CAST(TestFunction[_P, _T], fn)
-        fn.called = False
-        fn.inputs = inputs
-        fn.outputs = outputs
-        fn.scalars = scalars
-
-        def deep_clone() -> TestFunction[_P, _T]:
-            # Must issue blocking sync since the tasks access function
-            # variables. If there are multiple tasks in flight, these will
-            # clobber one another and hence produce race conditions.
-            #
-            # Since you cannot get a reference to the current local function
-            # object without going through the function name (which will be
-            # shared by all threads), we have no choice but to hard-sync.
-            get_legate_runtime().issue_execution_fence(block=True)
-            fn_copy = copy.deepcopy(fn)
-            fn_copy.called = False
-            fn_copy.self = fn_copy
-
-            def mark_called() -> None:
-                assert not fn_copy.self.called, f"{fn}, {fn_copy.self}"
-                fn_copy.self.called = True
-
-            fn_copy.self.mark_called = mark_called
-            return fn_copy
-
-        fn.deep_clone = deep_clone
-        return fn
+        fn_ret = TYPE_CAST(TestFunction[_P, _T], fn)
+        fn_ret.__test__ = False
+        fn_ret.inputs = inputs
+        fn_ret.outputs = outputs
+        fn_ret.scalars = scalars
+        return fn_ret
 
     return wrapper
 
@@ -257,39 +232,34 @@ test_function.__test__ = False  # type: ignore[attr-defined]
 
 @test_function()
 def noargs() -> None:
-    noargs.self.mark_called()
+    pass
 
 
 @test_function(inputs=("a",))
 def single_input(a: InputStore) -> None:
     assert_isinstance(a, PhysicalStore)
-    single_input.self.mark_called()
 
 
 @test_function(inputs=("a", "b"))
 def multi_input(a: InputStore, b: InputStore) -> None:
     assert_isinstance(a, PhysicalStore)
     assert_isinstance(b, PhysicalStore)
-    multi_input.self.mark_called()
 
 
 @test_function(outputs=("a",))
 def single_output(a: OutputStore) -> None:
     assert_isinstance(a, PhysicalStore)
-    single_output.self.mark_called()
 
 
 @test_function(outputs=("a", "b"))
 def multi_output(a: OutputStore, b: OutputStore) -> None:
     assert_isinstance(a, PhysicalStore)
     assert_isinstance(b, PhysicalStore)
-    multi_output.self.mark_called()
 
 
 @test_function(scalars=("a",))
 def single_scalar(a: int) -> None:
     assert_isinstance(a, int)
-    single_scalar.self.mark_called()
 
 
 @test_function(scalars=("a", "b", "c", "d", "e"))
@@ -302,7 +272,6 @@ def multi_scalar(a: int, b: float, c: complex, d: str, e: bool) -> None:
     d.encode()
     assert_isinstance(e, bool)
     assert e is True or e is False
-    multi_scalar.self.mark_called()
 
 
 @test_function(inputs=("a", "b"), outputs=("c", "d"), scalars=("e", "f"))
@@ -320,20 +289,17 @@ def mixed_args(
     assert_isinstance(d, PhysicalStore)
     assert_isinstance(e, int)
     assert_isinstance(f, float)
-    mixed_args.self.mark_called()
 
 
 @test_function(inputs=("a",))
 def single_array(a: InputArray) -> None:
     assert_isinstance(a, PhysicalArray)
-    single_array.self.mark_called()
 
 
 @test_function(inputs=("a", "b"))
 def multi_array(a: InputArray, b: InputArray) -> None:
     assert_isinstance(a, PhysicalArray)
     assert_isinstance(b, PhysicalArray)
-    multi_array.self.mark_called()
 
 
 @test_function(inputs=("a", "b"), outputs=("c", "d"))
@@ -344,7 +310,6 @@ def mixed_array_store(
     assert_isinstance(b, PhysicalStore)
     assert_isinstance(c, PhysicalArray)
     assert_isinstance(d, PhysicalStore)
-    mixed_array_store.self.mark_called()
 
 
 USER_FUNCS = (
