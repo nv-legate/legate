@@ -22,13 +22,14 @@ Store Array::null_mask() const { return Store{impl_->null_mask().get()}; }
 
 std::vector<Store> Array::stores() const
 {
-  std::vector<Store> result;
-
-  result.push_back(data());
-  if (nullable()) {
-    result.push_back(null_mask());
-  }
-  return result;
+  auto raw_stores = impl_->stores();
+  std::vector<Store> stores;
+  stores.reserve(raw_stores.size());
+  std::transform(
+    raw_stores.begin(), raw_stores.end(), std::back_inserter(stores), [](const auto& x) {
+      return Store{x.get()};
+    });
+  return stores;
 }
 
 Domain Array::domain() const { return impl_->domain(); }

@@ -15,7 +15,7 @@
 
 #include <utilities/utilities.h>
 
-namespace test_host_offload {
+namespace test_offload_store {
 
 namespace {
 
@@ -39,7 +39,7 @@ class GPUonlyTask : public legate::LegateTask<GPUonlyTask> {
 
 class Config {
  public:
-  static constexpr std::string_view LIBRARY_NAME = "TEST_HOST_OFFLOAD_LIB";
+  static constexpr std::string_view LIBRARY_NAME = "TEST_OFFLOAD_STORE";
   static void registration_callback(legate::Library library)
   {
     GPUonlyTask::register_variants(library);
@@ -48,9 +48,9 @@ class Config {
 
 }  // namespace
 
-class OffloadAPI : public RegisterOnceFixture<Config> {};
+class OffloadStore : public RegisterOnceFixture<Config> {};
 
-TEST_F(OffloadAPI, GPUToHostOffload)
+TEST_F(OffloadStore, GPUToHostOffload)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
@@ -107,4 +107,4 @@ TEST_F(OffloadAPI, GPUToHostOffload)
   dbg() << "Submitted task-1, store1.offload_to() and task-2";
 }
 
-}  // namespace test_host_offload
+}  // namespace test_offload_store
