@@ -32,7 +32,7 @@ namespace legate::detail {
   return physical_region();
 }
 
-void LogicalRegionField::PhysicalState::unmap_and_detach(bool unordered)
+void LogicalRegionField::PhysicalState::unmap()
 {
   // We unmap the field immediately. In the case where a LogicalStore is allowed to be destroyed
   // out-of-order, this unmapping might happen at different times on different shards. Unmapping
@@ -46,13 +46,22 @@ void LogicalRegionField::PhysicalState::unmap_and_detach(bool unordered)
   // been collected.
   Runtime::get_runtime()->unmap_physical_region(physical_region());
   set_physical_region(Legion::PhysicalRegion{});
+}
 
+void LogicalRegionField::PhysicalState::detach(bool unordered)
+{
   if (!attachment().exists()) {
+    LEGATE_ASSERT(!has_pending_detach_);
     return;
   }
   attachment_.detach(unordered);
-
   has_pending_detach_ = false;
+}
+
+void LogicalRegionField::PhysicalState::unmap_and_detach(bool unordered)
+{
+  unmap();
+  detach(unordered);
 }
 
 void LogicalRegionField::PhysicalState::invoke_callbacks()
@@ -132,7 +141,7 @@ void LogicalRegionField::unmap()
     (*parent())->unmap();
   }
   mapped_ = false;
-  physical_state_->unmap_and_detach(false /*unordered*/);
+  physical_state_->unmap();
 }
 
 void LogicalRegionField::attach(Legion::PhysicalRegion physical_region,
