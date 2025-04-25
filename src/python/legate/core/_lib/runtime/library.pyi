@@ -14,6 +14,7 @@ from ..utilities.typedefs import (
 from ..utilities.unconstructable import Unconstructable
 
 class Library(Unconstructable):
+    def get_library_name(self) -> str: ...
     def get_new_task_id(self) -> LocalTaskID: ...
     # This prototype is a lie, technically (in Cython) it's only LocalTaskID,
     # but we allow int as a type-checking convenience to users

@@ -4,6 +4,7 @@
 
 from libc.stdint cimport int64_t, uintptr_t
 
+from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..data.scalar cimport Scalar
 from ..type.types cimport Type
 from ..utilities.typedefs cimport _GlobalTaskID, _LocalTaskID
@@ -16,6 +17,17 @@ cdef class Library(Unconstructable):
         cdef Library result = Library.__new__(Library)
         result._handle = handle
         return result
+
+    cpdef str get_library_name(self):
+        r"""
+        Returns the name of the library.
+
+        Returns
+        -------
+        str
+            The library name.
+        """
+        return str_from_string_view(self._handle.get_library_name())
 
     cpdef _LocalTaskID get_new_task_id(self):
         r"""

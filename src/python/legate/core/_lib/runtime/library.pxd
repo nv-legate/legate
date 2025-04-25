@@ -4,6 +4,7 @@
 
 from libc.stdint cimport int64_t
 
+from ..._ext.cython_libcpp.string_view cimport std_string_view
 from ..data.scalar cimport Scalar, _Scalar
 from ..task.task_info cimport TaskInfo, _TaskInfo
 from ..type.types cimport Type, _Type
@@ -20,6 +21,7 @@ cdef extern from "legate/runtime/library.h" namespace "legate" nogil:
     cdef cppclass _Library "legate::Library":
         _Library() except+
         _Library(const _Library&) except+
+        std_string_view get_library_name() except+
         _LocalTaskID get_new_task_id() except+
         _GlobalTaskID get_task_id(_LocalTaskID) except+
         _GlobalRedopID get_reduction_op_id(_LocalRedopID) except+
@@ -33,6 +35,7 @@ cdef class Library(Unconstructable):
     @staticmethod
     cdef Library from_handle(_Library)
 
+    cpdef str get_library_name(self)
     cpdef _LocalTaskID get_new_task_id(self)
     cpdef _GlobalTaskID get_task_id(self, _LocalTaskID local_task_id)
     cpdef _GlobalRedopID get_reduction_op_id(
