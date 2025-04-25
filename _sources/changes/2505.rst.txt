@@ -56,6 +56,13 @@ C++
 
 .. rubric:: Mapping
 
+- Remove ``legate::mapping::InstanceMappingPolicy::subsumes``. This function
+  would compare the requested layouts between two policies, to decide if an
+  Instance allocated for one Store could be reused for another. After recent
+  changes, two Instances created for the same requested layout can have
+  different actual layouts, depending on the transformations of the
+  corresponding Stores. Remove this function to avoid any confusion.
+
 .. rubric:: Partitioning
 
 .. rubric:: Tasks
