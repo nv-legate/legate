@@ -46,6 +46,22 @@ cdef class _OnlyArrayInterface:
         return self.alloc.__array_interface__
 
 
+cdef extern from * nogil:
+    r"""
+    #include <legate/runtime/detail/runtime.h>
+
+    namespace {
+
+    void *_get_cuda_stream()
+    {
+      return legate::detail::Runtime::get_runtime()->get_cuda_stream();
+    }
+
+    } // namespace
+    """
+    void *_get_cuda_stream() except+
+
+
 cdef class InlineAllocation:
     @staticmethod
     cdef InlineAllocation create(
@@ -121,22 +137,32 @@ cdef class InlineAllocation:
     cdef dict _get_array_interface(self):
         cdef Type ty = self._store.type
         cdef tuple shape = self.shape
+        cdef dict ret
 
         if math.prod(shape) == 0:
             # For some reason NumPy doesn't like a null pointer even when the
             # array size is 0, so we just make an empty ndarray and return its
             # array interface object
-            return np.empty(
+            ret = np.empty(
                 shape, dtype=ty.to_numpy_dtype()
             ).__array_interface__
+        else:
+            ret = {
+                "version": 3,
+                "shape": shape,
+                "typestr": ty.to_numpy_dtype().str,
+                "data": (self.ptr, False),
+                "strides": self.strides,
+            }
 
-        return {
-            "version": 3,
-            "shape": shape,
-            "typestr": ty.to_numpy_dtype().str,
-            "data": (self.ptr, False),
-            "strides": self.strides,
-        }
+        cdef void *cu_stream = _get_cuda_stream()
+
+        if cu_stream != NULL:
+            # This entry is used by __cuda_array_interface__, and is ignored by
+            # numpy
+            ret["stream"] = int(<uintptr_t>cu_stream)
+
+        return ret
 
     @property
     def __array_interface__(self) -> dict[str, Any]:
@@ -170,8 +196,6 @@ cdef class InlineAllocation:
                 "Physical store in a host-only memory does not support "
                 "the CUDA array interface"
             )
-        # TODO(wonchanl): We should add a Legate-managed stream to the returned
-        # interface object
         return self._get_array_interface()
 
     def __getbuffer__(self, Py_buffer *buffer, int flags) -> None:

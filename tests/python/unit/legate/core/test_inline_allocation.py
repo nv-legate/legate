@@ -116,3 +116,56 @@ class TestInlineAllocation:
         assert mv.shape == shape
         assert mv.strides == strides
         assert mv.contiguous
+
+    @pytest.mark.skipif(
+        get_legate_runtime().get_machine().only(TaskTarget.GPU).empty,
+        reason="This test requires GPUs",
+    )
+    @pytest.mark.parametrize("dtype", (ty.int8, ty.int16, ty.int32, ty.int64))
+    @pytest.mark.parametrize("shape", ((1,), (1, 2, 3), (1, 2, 3, 4)))
+    def test_stream(self, dtype: Type, shape: tuple[int, ...]) -> None:
+        strides = compute_strides(shape, dtype)
+
+        @task(variants=(VariantCode.GPU,))
+        def foo(x: InputStore) -> None:
+            alloc = x.get_inline_allocation()
+
+            assert alloc.ptr != 0
+            assert alloc.strides == strides
+            assert alloc.shape == shape
+            assert alloc.target == StoreTarget.FBMEM
+            with pytest.raises(
+                ValueError,
+                match=(
+                    r"Physical store in a framebuffer memory does not support "
+                    "the array interface"
+                ),
+            ):
+                _ = alloc.__array_interface__
+            # Cannot compare the dictionary directly, because we want to test
+            # that the stream value is *not* some value
+            cai = alloc.__cuda_array_interface__
+            assert cai["version"] == 3
+            assert cai["shape"] == shape
+            assert cai["typestr"] == dtype.to_numpy_dtype().str
+            assert cai["data"] == (alloc.ptr, False)
+            assert cai["strides"] == strides
+            # stream is either None, or an integer. If None, then no sync is
+            # required by the consumer. 0 is disallowed outright because it is
+            # ambiguous with None. 1 is the legacy default stream, and 2 is the
+            # per-thread default stream. Since stream is always set from the
+            # task stream, it is never any of these.
+            #
+            # See
+            # https://numba.readthedocs.io/en/stable/cuda/cuda_array_interface.html#python-interface-specification
+            assert "stream" in cai
+            stream = cai["stream"]
+            assert stream is not None
+            assert isinstance(stream, int)
+            assert stream not in {0, 1, 2}
+
+        store = get_legate_runtime().create_store(dtype=dtype, shape=shape)
+        store.fill(123)
+
+        foo(store)
+        get_legate_runtime().issue_execution_fence(block=True)
