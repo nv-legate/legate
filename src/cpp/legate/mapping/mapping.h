@@ -347,18 +347,6 @@ class InstanceMappingPolicy {
    */
   void set_redundant(bool redundant);
 
-  /**
-   * @brief Indicates whether this policy subsumes a given policy
-   *
-   * Policy `A` subsumes policy `B`, if every instance created under `B` satisfies `A` as well.
-   *
-   * @param other Policy to check the subsumption against
-   *
-   * @return true If this policy subsumes `other`
-   * @return false Otherwise
-   */
-  [[nodiscard]] bool subsumes(const InstanceMappingPolicy& other) const;
-
   bool operator==(const InstanceMappingPolicy&) const;
   bool operator!=(const InstanceMappingPolicy&) const;
 };

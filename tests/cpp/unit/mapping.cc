@@ -71,19 +71,6 @@ void check_dim_ordering(const legate::mapping::DimOrdering& order,
   ASSERT_EQ(order.dimensions(), dim);
 }
 
-void check_subsume(const legate::mapping::InstanceMappingPolicy& policy_a,
-                   const legate::mapping::InstanceMappingPolicy& policy_b)
-{
-  // We expect policy_a subsumes policy_b if any of below condition is met:
-  // 1) their target, layout, ordering, exact are same;
-  // 2) their target, layout, ordering are same and policy_a's exact is true.
-  auto expect_result = (policy_a.target == policy_b.target && policy_a.layout == policy_b.layout &&
-                        policy_a.ordering == policy_b.ordering &&
-                        ((policy_a.exact == policy_b.exact) || policy_a.exact));
-
-  ASSERT_EQ(policy_a.subsumes(policy_b), expect_result);
-}
-
 }  // namespace
 
 TEST_F(DimOrderingTest, Create)
@@ -188,54 +175,4 @@ TEST_F(InstanceMappingPolicyTest, Set)
               .with_exact(true));
 }
 
-TEST_P(StoreTargetInput, Check)
-{
-  auto target = GetParam();
-
-  const legate::mapping::InstanceMappingPolicy policy_a{};
-  legate::mapping::InstanceMappingPolicy policy_b{};
-  policy_b.set_target(target);
-  check_subsume(policy_a, policy_b);
-}
-
-TEST_P(AllocationInput, Check)
-{
-  auto&& allocation = GetParam();
-
-  const legate::mapping::InstanceMappingPolicy policy_a{};
-  legate::mapping::InstanceMappingPolicy policy_b{};
-  policy_b.set_allocation_policy(allocation);
-  check_subsume(policy_a, policy_b);
-}
-
-TEST_P(InstanceInput, Check)
-{
-  auto&& instance = GetParam();
-
-  const legate::mapping::InstanceMappingPolicy policy_a{};
-  legate::mapping::InstanceMappingPolicy policy_b{};
-  policy_b.set_instance_layout(instance);
-  check_subsume(policy_a, policy_b);
-}
-
-TEST_P(DimOrderInput, Check)
-{
-  auto&& order = GetParam();
-
-  const legate::mapping::InstanceMappingPolicy policy_a{};
-  legate::mapping::InstanceMappingPolicy policy_b{};
-  policy_b.set_ordering(order);
-  check_subsume(policy_a, policy_b);
-}
-
-TEST_P(ExtractInput, Check)
-{
-  auto& [extract_a, extract_b] = GetParam();
-
-  legate::mapping::InstanceMappingPolicy policy_a{};
-  legate::mapping::InstanceMappingPolicy policy_b{};
-  policy_a.set_exact(extract_a);
-  policy_b.set_exact(extract_b);
-  check_subsume(policy_a, policy_b);
-}
 }  // namespace unit

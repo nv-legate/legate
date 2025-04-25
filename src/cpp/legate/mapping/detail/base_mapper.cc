@@ -821,14 +821,16 @@ bool BaseMapper::map_reduction_instance_(const Legion::Mapping::MapperContext& c
   *footprint    = 0;
   *need_acquire = true;
 
+  layout_constraints->add_constraint(Legion::SpecializedConstraint{
+    LEGION_AFFINE_REDUCTION_SPECIALIZE, static_cast<Legion::ReductionOpID>(redop)});
+
+  // reuse reductions only for GPU tasks
   const auto can_cache = target_proc.kind() == Processor::TOC_PROC && fields.size() == 1 &&
                          regions.size() == 1 && policy.allocation != AllocPolicy::MUST_ALLOC;
-
-  // reuse reductions only for GPU tasks:
   if (can_cache) {
     // See if we already have it in our local instances
     auto ret = reduction_instances_.find_instance(
-      redop, regions.front(), fields.front(), target_memory, policy);
+      redop, regions.front(), fields.front(), target_memory, policy, *layout_constraints);
 
     if (ret.has_value()) {
       *result = *std::move(ret);
@@ -846,9 +848,8 @@ bool BaseMapper::map_reduction_instance_(const Legion::Mapping::MapperContext& c
   }
 
   // if we didn't find it, create one
-  layout_constraints->add_constraint(Legion::SpecializedConstraint{
-    LEGION_AFFINE_REDUCTION_SPECIALIZE, static_cast<Legion::ReductionOpID>(redop)});
-
+  // TODO(mpapadakis): The policy.exact field is currently ignored here. If this changes, also
+  // read it when polling the cache above (in ReductionInstanceManager::find_instance).
   const auto find_or_create_instance = [&] {
     if (!can_cache) {
       // The instance will be acquired during creation
@@ -957,8 +958,8 @@ bool BaseMapper::map_regular_instance_(const Legion::Mapping::MapperContext& ctx
                          !policy.redundant;
 
   const auto found_in_cache = [&] {
-    auto cached =
-      local_instances_.find_instance(regions.front(), fields.front(), target_memory, policy);
+    auto cached = local_instances_.find_instance(
+      regions.front(), fields.front(), target_memory, policy, layout_constraints);
     const auto found = cached.has_value();
 
     if (found) {

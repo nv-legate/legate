@@ -93,13 +93,6 @@ bool DimOrdering::operator!=(const DimOrdering& other) const { return !(*this ==
 
 DimOrdering::~DimOrdering() noexcept = default;
 
-bool InstanceMappingPolicy::subsumes(const InstanceMappingPolicy& other) const
-{
-  // the allocation policy and the `redundant` flag don't concern the instance layout
-  return target == other.target && layout == other.layout && ordering == other.ordering &&
-         (exact || !other.exact);
-}
-
 bool InstanceMappingPolicy::operator==(const InstanceMappingPolicy& other) const
 {
   return target == other.target && allocation == other.allocation && layout == other.layout &&

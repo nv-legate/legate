@@ -38,7 +38,9 @@ std::ostream& operator<<(std::ostream& os, const RegionGroup& region_group)
 }
 
 std::optional<Legion::Mapping::PhysicalInstance> InstanceSet::find_instance(
-  const Legion::LogicalRegion& region, const InstanceMappingPolicy& policy) const
+  const Legion::LogicalRegion& region,
+  const InstanceMappingPolicy& policy,
+  const Legion::LayoutConstraintSet& layout_constraints) const
 {
   const auto finder = groups_.find(region);
 
@@ -55,7 +57,8 @@ std::optional<Legion::Mapping::PhysicalInstance> InstanceSet::find_instance(
   const auto ifinder = instances_.find(group.get());
   LEGATE_CHECK(ifinder != instances_.end());
 
-  if (auto&& spec = ifinder->second; spec.policy.subsumes(policy)) {
+  if (auto&& spec = ifinder->second;
+      (spec.policy.exact || !policy.exact) && spec.instance.entails(layout_constraints)) {
     return spec.instance;
   }
   return std::nullopt;
@@ -393,10 +396,14 @@ void InstanceSet::dump_and_sanity_check_() const
 std::optional<Legion::Mapping::PhysicalInstance> ReductionInstanceSet::find_instance(
   GlobalRedopID redop,
   const Legion::LogicalRegion& region,
-  const InstanceMappingPolicy& policy) const
+  const Legion::LayoutConstraintSet& layout_constraints) const
 {
   if (const auto it = instances_.find(region); it != instances_.end()) {
-    if (auto&& spec = it->second; spec.policy == policy && spec.redop == redop) {
+    // TODO(mpapadakis): The ReductionInstanceManager does not currently respect requests for
+    // "exact" instances, so ignore that field when polling the cache. If this is updated here, also
+    // set tight_bounds to match, in BaseMapper::map_reduction_instance_::find_instance.
+    if (auto&& spec = it->second;
+        spec.redop == redop && spec.instance.entails(layout_constraints)) {
       return spec.instance;
     }
   }
@@ -470,7 +477,8 @@ std::optional<Legion::Mapping::PhysicalInstance> InstanceManager::find_instance(
   const Legion::LogicalRegion& region,
   Legion::FieldID field_id,
   Memory memory,
-  const InstanceMappingPolicy& policy)
+  const InstanceMappingPolicy& policy,
+  const Legion::LayoutConstraintSet& layout_constraints)
 {
   // MUST_ALLOC should never reach here
   LEGATE_ASSERT(policy.allocation != AllocPolicy::MUST_ALLOC);
@@ -481,7 +489,7 @@ std::optional<Legion::Mapping::PhysicalInstance> InstanceManager::find_instance(
     return std::nullopt;
   }
 
-  return it->second.find_instance(region, policy);
+  return it->second.find_instance(region, policy, layout_constraints);
 }
 
 InternalSharedPtr<RegionGroup> InstanceManager::find_region_group(
@@ -566,7 +574,8 @@ std::optional<Legion::Mapping::PhysicalInstance> ReductionInstanceManager::find_
   const Legion::LogicalRegion& region,
   Legion::FieldID field_id,
   Memory memory,
-  const InstanceMappingPolicy& policy)
+  const InstanceMappingPolicy& policy,
+  const Legion::LayoutConstraintSet& layout_constraints)
 {
   // MUST_ALLOC should never reach here
   LEGATE_ASSERT(policy.allocation != AllocPolicy::MUST_ALLOC);
@@ -577,7 +586,7 @@ std::optional<Legion::Mapping::PhysicalInstance> ReductionInstanceManager::find_
     return std::nullopt;
   }
 
-  return it->second.find_instance(redop, region, policy);
+  return it->second.find_instance(redop, region, layout_constraints);
 }
 
 void ReductionInstanceManager::record_instance(GlobalRedopID redop,

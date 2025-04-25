@@ -58,8 +58,20 @@ class InstanceSet {  // NOLINT(bugprone-forward-declaration-namespace)
     InstanceMappingPolicy policy{};
   };
 
+  /**
+   * @brief Search this cache for an Instance with the provided characteristics.
+   *
+   * @param region The Region that the Instance must cover.
+   * @param policy The mapping policy that the Instance must adhere to.
+   * @param layout_constraints The layout that the Instance must have.
+   *
+   * @return An existing Instance with the requested characteristics, or nullopt if no such Instance
+   *         exists.
+   */
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
-    const Legion::LogicalRegion& region, const InstanceMappingPolicy& policy) const;
+    const Legion::LogicalRegion& region,
+    const InstanceMappingPolicy& policy,
+    const Legion::LayoutConstraintSet& layout_constraints) const;
   [[nodiscard]] InternalSharedPtr<RegionGroup> find_or_create_region_group(
     const Legion::LogicalRegion& region, const Domain& domain, bool exact) const;
 
@@ -98,10 +110,20 @@ class ReductionInstanceSet {
     InstanceMappingPolicy policy{};
   };
 
+  /**
+   * @brief Search this cache for an Instance with the provided characteristics.
+   *
+   * @param redop The reduction operator that the Instance must have been created for.
+   * @param region The Region that the Instance must cover.
+   * @param layout_constraints The layout that the Instance must have.
+   *
+   * @return An existing Instance with the requested characteristics, or nullopt if no such Instance
+   *         exists.
+   */
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
     GlobalRedopID redop,
     const Legion::LogicalRegion& region,
-    const InstanceMappingPolicy& policy) const;
+    const Legion::LayoutConstraintSet& layout_constraints) const;
 
   void record_instance(GlobalRedopID redop,
                        const Legion::LogicalRegion& region,
@@ -139,11 +161,24 @@ class BaseInstanceManager {
 
 class InstanceManager final : public BaseInstanceManager {
  public:
+  /**
+   * @brief Search this cache for an Instance with the provided characteristics.
+   *
+   * @param region The Region that the Instance must cover.
+   * @param field_id The Field that the Instance must include.
+   * @param memory The memory on which the Instance must reside.
+   * @param policy The mapping policy that the Instance must adhere to.
+   * @param layout_constraints The layout that the Instance must have.
+   *
+   * @return An existing Instance with the requested characteristics, or nullopt if no such Instance
+   *         exists.
+   */
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
     const Legion::LogicalRegion& region,
     Legion::FieldID field_id,
     Memory memory,
-    const InstanceMappingPolicy& policy = {});
+    const InstanceMappingPolicy& policy,
+    const Legion::LayoutConstraintSet& layout_constraints);
   [[nodiscard]] InternalSharedPtr<RegionGroup> find_region_group(
     const Legion::LogicalRegion& region,
     const Domain& domain,
@@ -170,12 +205,26 @@ class InstanceManager final : public BaseInstanceManager {
 
 class ReductionInstanceManager final : public BaseInstanceManager {
  public:
+  /**
+   * @brief Search this cache for an Instance with the provided characteristics.
+   *
+   * @param redop The reduction operator that the Instance must have been created for.
+   * @param region The Region that the Instance must cover.
+   * @param field_id The Field that the Instance must include.
+   * @param memory The memory on which the Instance must reside.
+   * @param policy The mapping policy that the Instance must adhere to.
+   * @param layout_constraints The layout that the Instance must have.
+   *
+   * @return An existing Instance with the requested characteristics, or nullopt if no such Instance
+   *         exists.
+   */
   [[nodiscard]] std::optional<Legion::Mapping::PhysicalInstance> find_instance(
     GlobalRedopID redop,
     const Legion::LogicalRegion& region,
     Legion::FieldID field_id,
     Memory memory,
-    const InstanceMappingPolicy& policy = {});
+    const InstanceMappingPolicy& policy,
+    const Legion::LayoutConstraintSet& layout_constraints);
 
   void record_instance(GlobalRedopID redop,
                        const Legion::LogicalRegion& region,
