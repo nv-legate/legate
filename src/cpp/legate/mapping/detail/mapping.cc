@@ -279,15 +279,6 @@ std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
 void StoreMapping::populate_layout_constraints(
   Legion::LayoutConstraintSet& layout_constraints) const
 {
-  if (stores().size() > 1) {
-    // We assume that all stores in the mapping have the same number of dimensions
-    // at least, and that the other stores follow the dimension ordering of the
-    // first store, which may be adjusted due to transforms, such as, transpose.
-    LEGATE_ASSERT(std::all_of(stores().cbegin(), stores().cend(), [&](const auto* st) {
-      return st->dim() == store()->dim();
-    }));
-  }
-
   // 1. Generate initial integer dims
   // 2. Feed them through the store's transform stack via invert_dims()
   // 3. Convert the resulting integer dims to Legion dims
@@ -296,16 +287,20 @@ void StoreMapping::populate_layout_constraints(
   int_dims = store()->invert_dims(std::move(int_dims));
 
   auto&& first_region_field = store()->region_field();
-  if (int_dims.empty() && first_region_field.dim() == 1) {
-    // Special case where empty store is represented by a 1D region field
-    int_dims.append_inplace(0);
-  } else {
-    LEGATE_ASSERT(static_cast<std::int32_t>(int_dims.size()) == first_region_field.dim());
-  }
+  LEGATE_ASSERT(static_cast<std::int32_t>(int_dims.size()) == first_region_field.dim());
 
   std::vector<Legion::DimensionKind> dimension_ordering{};
   dimension_ordering.reserve(
     (policy().layout == InstLayout::AOS || policy().layout == InstLayout::SOA) + int_dims.size());
+
+  if (stores().size() > 1) {
+    // We assume that all stores in the mapping have the same number of dimensions
+    // at least, and that the other stores follow the dimension ordering of the
+    // first store, which may be adjusted due to transforms, such as, transpose.
+    LEGATE_ASSERT(std::all_of(stores().cbegin(), stores().cend(), [&](const auto* st) {
+      return st->dim() == store()->dim();
+    }));
+  }
 
   switch (policy().layout) {
     case InstLayout::AOS: {

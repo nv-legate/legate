@@ -227,7 +227,8 @@ TEST_F(TilingTest, ToString)
 {
   ASSERT_THAT(
     tiling->to_string(),
-    ::testing::MatchesRegex(R"(Tiling\(tile: .*?, colors: .*?, offset: .*?, strides: .*?\))"));
+    ::testing::MatchesRegex(
+      R"(Tiling\(tile: \[4, 4\], colors: \[2, 2\], offset: \[1, 1\], strides: \[4, 4\]\))"));
 }
 
 TEST_F(TilingTest, ChildExtents)

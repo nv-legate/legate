@@ -9,6 +9,7 @@
 #include <legate/mapping/detail/mapping.h>
 #include <legate/runtime/detail/config.h>
 #include <legate/utilities/detail/buffer_builder.h>
+#include <legate/utilities/detail/traced_exception.h>
 
 #include <realm/network.h>
 
@@ -16,6 +17,7 @@
 #include <fmt/ostream.h>
 
 #include <algorithm>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -422,10 +424,40 @@ LocalProcessorRange LocalMachine::slice(TaskTarget target,
 Processor LocalMachine::find_first_processor_with_affinity_to(StoreTarget target) const
 {
   switch (target) {
-    case StoreTarget::SYSMEM: return cpus().front();
+    case StoreTarget::SYSMEM: {
+      if (cpus().empty()) {
+        throw legate::detail::TracedException<std::invalid_argument>{
+          fmt::format(
+            "No CPU processors exist to satisfy store target {}, legate did not detect any CPUs "
+            "on this node during system startup.",
+            target),
+        };
+      }
+      return cpus().front();
+    }
     case StoreTarget::FBMEM: [[fallthrough]];
-    case StoreTarget::ZCMEM: return gpus().front();
-    case StoreTarget::SOCKETMEM: return omps().front();
+    case StoreTarget::ZCMEM: {
+      if (gpus().empty()) {
+        throw legate::detail::TracedException<std::invalid_argument>{
+          fmt::format("No GPU processors exist to satisfy store target {}, legate {}.",
+                      target,
+                      LEGATE_DEFINED(LEGATE_USE_CUDA)
+                        ? "did not detect any GPUs on this node during system startup"
+                        : "was not configured for GPUs")};
+      }
+      return gpus().front();
+    }
+    case StoreTarget::SOCKETMEM: {
+      if (omps().empty()) {
+        throw legate::detail::TracedException<std::invalid_argument>{
+          fmt::format("No OpenMP processors exist to satisfy {}, legate {}.",
+                      target,
+                      LEGATE_DEFINED(LEGATE_USE_OPENMP)
+                        ? "did not detect any OpenMP processors on this node during system startup"
+                        : "was not configured for OpenMP")};
+      }
+      return omps().front();
+    }
   }
   LEGATE_ABORT("invalid StoreTarget: ", legate::detail::to_underlying(target));
 }

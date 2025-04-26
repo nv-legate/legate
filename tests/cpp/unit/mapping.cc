@@ -16,52 +16,8 @@ namespace unit {
 
 namespace {
 
-using DimOrderingTest              = DefaultFixture;
-using InstanceMappingPolicyTest    = DefaultFixture;
-using InstanceMappingPolicySubsume = DefaultFixture;
-
-class StoreTargetInput : public DefaultFixture,
-                         public ::testing::WithParamInterface<legate::mapping::StoreTarget> {};
-
-class AllocationInput : public DefaultFixture,
-                        public ::testing::WithParamInterface<legate::mapping::AllocPolicy> {};
-
-class InstanceInput : public DefaultFixture,
-                      public ::testing::WithParamInterface<legate::mapping::InstLayout> {};
-
-class DimOrderInput : public DefaultFixture,
-                      public ::testing::WithParamInterface<legate::mapping::DimOrdering> {};
-
-class ExtractInput : public DefaultFixture,
-                     public ::testing::WithParamInterface<std::tuple<bool, bool>> {};
-
-INSTANTIATE_TEST_SUITE_P(InstanceMappingPolicySubsume,
-                         StoreTargetInput,
-                         ::testing::Values(legate::mapping::StoreTarget::SYSMEM,
-                                           legate::mapping::StoreTarget::FBMEM,
-                                           legate::mapping::StoreTarget::ZCMEM,
-                                           legate::mapping::StoreTarget::SOCKETMEM));
-
-INSTANTIATE_TEST_SUITE_P(InstanceMappingPolicySubsume,
-                         AllocationInput,
-                         ::testing::Values(legate::mapping::AllocPolicy::MAY_ALLOC,
-                                           legate::mapping::AllocPolicy::MUST_ALLOC));
-
-INSTANTIATE_TEST_SUITE_P(InstanceMappingPolicySubsume,
-                         InstanceInput,
-                         ::testing::Values(legate::mapping::InstLayout::SOA,
-                                           legate::mapping::InstLayout::AOS));
-
-INSTANTIATE_TEST_SUITE_P(InstanceMappingPolicySubsume,
-                         DimOrderInput,
-                         ::testing::Values(legate::mapping::DimOrdering::c_order(),
-                                           legate::mapping::DimOrdering::fortran_order(),
-                                           legate::mapping::DimOrdering::custom_order(
-                                             std::vector<std::int32_t>{1, 2, 3})));
-
-INSTANTIATE_TEST_SUITE_P(InstanceMappingPolicySubsume,
-                         ExtractInput,
-                         ::testing::Combine(::testing::Bool(), ::testing::Bool()));
+using DimOrderingTest           = DefaultFixture;
+using InstanceMappingPolicyTest = DefaultFixture;
 
 void check_dim_ordering(const legate::mapping::DimOrdering& order,
                         legate::mapping::DimOrdering::Kind kind,

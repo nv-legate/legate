@@ -58,7 +58,6 @@ enum class TestCase : std::uint8_t {
   PROMOTE_TRANSPOSE,
   PROJECT_TRANSPOSE,
   DELINEARIZE_TRANSPOSE,
-  EMPTY_PROMOTE_TRANSPOSE,
 };
 
 template <typename Derived, TestCase CASE_ID>
@@ -184,17 +183,6 @@ class TaskDelinearizeTranspose
   }
 };
 
-class TaskEmptyPromoteTranspose
-  : public TestTaskBase<TaskEmptyPromoteTranspose, TestCase::EMPTY_PROMOTE_TRANSPOSE> {
- public:
-  static void check(const legate::PhysicalStore& store, const bool fortran_order)
-  {
-    auto store_acc = store.read_accessor<std::int64_t, 2>();
-    // distance should be 0 regardless of fortran_order
-    EXPECT_EQ(&(store_acc[{1, 0}]) - &(store_acc[{0, 0}]), 0);
-    std::ignore = fortran_order;
-  }
-};
 class TransposeDimOrder : public DefaultFixture, public ::testing::WithParamInterface<bool> {
  public:
   void SetUp() override
@@ -211,7 +199,6 @@ class TransposeDimOrder : public DefaultFixture, public ::testing::WithParamInte
       TaskPromoteTranspose::register_variants(library);
       TaskProjectTranspose::register_variants(library);
       TaskDelinearizeTranspose::register_variants(library);
-      TaskEmptyPromoteTranspose::register_variants(library);
     }
   }
 };
@@ -270,15 +257,6 @@ TEST_P(TransposeDimOrder, DelinearizeTranspose)
             .delinearize(1, {FACTOR_A, FACTOR_B})  // NOLINT (readability-magic-numbers)
             .transpose({2, 1, 0});
   launch_task_with_store<TaskDelinearizeTranspose>(store, fortran_order);
-}
-
-TEST_P(TransposeDimOrder, EmptyPromoteTranspose)
-{
-  auto runtime             = legate::Runtime::get_runtime();
-  auto store               = runtime->create_store(legate::Shape{}, legate::int64());
-  const bool fortran_order = GetParam();
-  store                    = store.promote(0, X_LEN).promote(1, Y_LEN).transpose({1, 0});
-  launch_task_with_store<TaskEmptyPromoteTranspose>(store, fortran_order);
 }
 
 }  // namespace transpose_dim_order

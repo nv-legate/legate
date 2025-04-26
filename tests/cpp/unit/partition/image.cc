@@ -162,7 +162,8 @@ TEST_F(ImageTest, Invert)
 TEST_F(ImageTest, ToString)
 {
   ASSERT_THAT(image->to_string(),
-              ::testing::MatchesRegex(R"(Image\(func: .*?, partition: .*?, hint: .*?\))"));
+              ::testing::MatchesRegex(
+                R"(Image\(func: Store\([0-9]+\) .*, partition: Tiling\(.*\), hint: NO_HINT\))"));
 }
 
 }  // namespace unit
