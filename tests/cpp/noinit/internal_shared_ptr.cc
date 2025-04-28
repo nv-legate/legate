@@ -5,6 +5,7 @@
  */
 
 // Must go first
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #define LEGATE_INTERNAL_SHARED_PTR_TESTS 1
 //
@@ -61,6 +62,19 @@ TYPED_TEST(InternalSharedPtrUnit, CreateWithCopyBraceCtor)
   legate::InternalSharedPtr<TypeParam> ptr2{ptr1};
 
   test_create_with_copy_n({ptr1, ptr2}, bare_ptr);
+}
+
+TYPED_TEST(InternalSharedPtrUnit, CreateWithWeakPtrNegative)
+{
+  legate::InternalWeakPtr<TypeParam> weak_ptr{};
+
+  ASSERT_THAT(
+    [&] {
+      const legate::InternalSharedPtr<TypeParam> ptr{weak_ptr};
+      static_cast<void>(ptr);
+    },
+    ::testing::ThrowsMessage<legate::BadInternalWeakPtr>(::testing::HasSubstr(
+      "Trying to construct an InternalSharedPtr from an empty InternalWeakPtr")));
 }
 
 TYPED_TEST(InternalSharedPtrUnit, CascadingCopyEqCtor)
@@ -414,6 +428,15 @@ class ThrowingAllocator {
   }
 };
 
+class DeleterChecker {
+ public:
+  explicit DeleterChecker(bool* target) : deleted_{target} {}
+  void operator()(void* /*ptr*/) const { *deleted_ = true; }
+
+ private:
+  bool* deleted_{};
+};
+
 }  // namespace
 
 TEST_F(InternalSharedPtrUnitFriend, UniqThrow)
@@ -427,22 +450,36 @@ TEST_F(InternalSharedPtrUnitFriend, UniqThrow)
   ASSERT_TRUE(uniq);
   ASSERT_EQ(*uniq, val);
 
-  bool threw = false;
-  try {
-    const InternalSharedPtr<int> sh_ptr{
-      InternalSharedPtr<int>::NoCatchAndDeleteTag{}, ptr, deleter, ThrowingAllocator<int>{}};
+  ASSERT_THAT(
+    ([&] {
+      const InternalSharedPtr<int> sh_ptr{
+        InternalSharedPtr<int>::NoCatchAndDeleteTag{}, ptr, deleter, ThrowingAllocator<int>{}};
+      static_cast<void>(sh_ptr);
+    }),
+    ::testing::ThrowsMessage<std::runtime_error>(::testing::StrEq(EXCEPTION_TEXT)));
 
-    static_cast<void>(sh_ptr);
-  } catch (const std::runtime_error& exn) {
-    ASSERT_STREQ(exn.what(), EXCEPTION_TEXT);
-    threw = true;
-  } catch (...) {
-    FAIL() << "Test threw the wrong exception!";
-  }
-  ASSERT_TRUE(threw);
   ASSERT_NE(uniq.get(), nullptr);
   ASSERT_TRUE(uniq);
   ASSERT_EQ(*uniq, val);
+}
+
+TEST_F(InternalSharedPtrUnitFriend, UniqThrowDeleted)
+{
+  constexpr int val = 123;
+  auto uniq         = std::make_unique<int>(val);
+  auto ptr          = uniq.get();
+  auto deleted      = false;
+  auto deleter      = DeleterChecker{&deleted};
+
+  ASSERT_FALSE(deleted);
+
+  ASSERT_THAT(([&] {
+                const InternalSharedPtr<int> sh_ptr{ptr, deleter, ThrowingAllocator<int>{}};
+                static_cast<void>(sh_ptr);
+              }),
+              ::testing::ThrowsMessage<std::runtime_error>(::testing::StrEq(EXCEPTION_TEXT)));
+
+  ASSERT_TRUE(deleted);
 }
 
 }  // namespace legate
