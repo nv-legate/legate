@@ -10,7 +10,7 @@ import contextlib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final, cast
 
-from ..aedifix import (
+from aedifix import (
     CMAKE_VARIABLE,
     ArgSpec,
     CMakeBool,
@@ -21,13 +21,13 @@ from ..aedifix import (
     ConfigurationManager,
     MainPackage,
 )
-from ..aedifix.package.packages.cal import CAL
-from ..aedifix.package.packages.cmake import CMake
-from ..aedifix.package.packages.cuda import CUDA
-from ..aedifix.package.packages.hdf5 import HDF5
-from ..aedifix.package.packages.legion import Legion
-from ..aedifix.package.packages.nccl import NCCL
-from ..aedifix.package.packages.python import Python
+from aedifix.package.packages.cal import CAL
+from aedifix.package.packages.cmake import CMake
+from aedifix.package.packages.cuda import CUDA
+from aedifix.package.packages.hdf5 import HDF5
+from aedifix.package.packages.legion import Legion
+from aedifix.package.packages.nccl import NCCL
+from aedifix.package.packages.python import Python
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

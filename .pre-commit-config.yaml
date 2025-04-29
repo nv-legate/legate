@@ -91,7 +91,8 @@ repos:
       - id: mypy
         pass_filenames: false
         args: ['src', 'tests', 'config', 'test.py', 'scripts/release']
-        additional_dependencies: [numpy, pytest, pytest_mock, types-psutil, rich, "dask[distributed]"]
+        # config/ensure_aedifix.py as well in case aedifix version changes
+        additional_dependencies: [numpy, pytest, pytest_mock, types-psutil, rich, "dask[distributed]", "git+https://github.com/nv-legate/aedifix@1.0.0"]
   - repo: https://github.com/MarcoGorelli/cython-lint
     rev: v0.16.6
     hooks:

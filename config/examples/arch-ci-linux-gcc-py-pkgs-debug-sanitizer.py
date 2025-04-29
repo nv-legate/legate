@@ -6,7 +6,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from config.aedifix.main import basic_configure  # noqa: E402
+from config.ensure_aedifix import ensure_aedifix  # noqa: E402
+
+ensure_aedifix()
+
+from aedifix.main import basic_configure
 from config.legate_internal.main_package import Legate  # noqa: E402
 
 

@@ -82,7 +82,7 @@ def setup_worker_env(client: Client) -> None:
     client : Client
         A Dask Client instance connected to the cluster.
     """
-    workers = client.scheduler_info()["workers"]  # type: ignore[no-untyped-call]
+    workers = client.scheduler_info()["workers"]
     legate_worker_details: dict[str, WorkerDetails] = {}
     uniq_port: dict[str, int] = {}
 

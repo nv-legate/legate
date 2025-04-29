@@ -61,68 +61,6 @@ jobs:
       - name: run pre-commit
         uses: pre-commit/action@v3.0.1
 
-  test-configure:
-    env:
-      LEGATE_ARCH: arch-ci-test-lint
-    runs-on: 'linux-amd64-cpu4'
-    strategy:
-      fail-fast: false
-      matrix:
-        version: ['3.11', '3.12', '3.13']
-        generator: [ninja, make]
-    if: ${{ github.repository_owner == 'nv-legate' }}
-    permissions:
-      contents: read  # This is required for actions/checkout
-
-    name: "test-configure, Python ${{ matrix.version }}, Generator ${{ matrix.generator }}"
-
-    steps:
-      - name: Checkout ${{ github.event.repository.name }} (= this repo)
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Mambaforge
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          miniforge-variant: Miniforge3
-          miniforge-version: latest
-          activate-environment: legate
-          use-mamba: true
-
-      - name: Get Week Number
-        id: get-week-hash
-        run: |
-          WEEK="$(/bin/date -u '+%Y%W')"
-          echo "week=${WEEK}" >> "${GITHUB_OUTPUT}"
-
-      - name: Cache Conda env
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.CONDA }}/envs
-          key:
-            ci-gh-lint-test-configure--"${{ matrix.generator }}"--${{
-            runner.os }}--${{ runner.arch }}--${{ matrix.version }}--${{
-            steps.get-week-hash.outputs.week }}-${{ env.CACHE_NUMBER }}
-        env:
-          # Increase this value to reset cache if etc/example-environment.yml has not changed
-          CACHE_NUMBER: 7
-        id: cache
-
-      - name: Update environment
-        run: |
-          mamba create -n legate rich cmake clangxx compiler-rt pytest pytest-mock "${{ matrix.generator }}"
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: List Conda packages and info
-        run: |
-          conda info
-          conda list
-
-      - name: Run tests
-        run: |
-          pytest ./config/aedifix/tests
-
   tidy:
     env:
       LEGATE_ARCH: arch-ci-lint
@@ -208,7 +146,6 @@ jobs:
     if: always()
     needs:
       - pre-commit
-      - test-configure
       - tidy
     runs-on: linux-amd64-cpu4
     steps:

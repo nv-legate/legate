@@ -176,7 +176,6 @@ extend-exclude = [
     "*-arch",
     "venv",
     "*venv",
-    "config/aedifix/templates/*",
     "src/cmake/templates/*",
 ]
 line-length = 79

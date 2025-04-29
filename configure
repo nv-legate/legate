@@ -6,7 +6,15 @@ from __future__ import annotations
 
 import sys
 
-MIN_PY = (3, 10)
+from config.ensure_aedifix import ensure_aedifix
+
+ensure_aedifix()
+
+from aedifix.main import basic_configure  # noqa: E402
+
+from config.legate_internal.main_package import Legate  # noqa: E402
+
+MIN_PY = (3, 11)
 
 if sys.version_info < MIN_PY:
     banner_len = 80
@@ -29,13 +37,6 @@ if sys.version_info < MIN_PY:
     )
     print(banner)  # noqa: T201
     sys.exit(1)
-
-import os  # noqa: E402
-
-sys.path.insert(0, os.path.abspath("config"))  # noqa: PTH100
-
-from config.aedifix.main import basic_configure  # noqa: E402
-from config.legate_internal.main_package import Legate  # noqa: E402
 
 
 def main():  # noqa: D103
