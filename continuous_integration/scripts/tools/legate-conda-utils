@@ -81,13 +81,8 @@ get_yaml_and_make_conda_env() {
 }
 
 install_legate_with_war() {
-  # WAR: legate depends on a different version of numpy than what is already installed.
-  # The correct version will be installed when legate is installed below.
-  # See github issue: https://github.com/nv-legate/legate.core/issues/812
-  rapids-mamba-retry uninstall -q -y -n "${CONDA_ENV}" numpy
-
   # shellcheck disable=SC2154
-  rapids-mamba-retry install \
+  rapids-mamba-retry create \
                      -y \
                      -n "${CONDA_ENV}" \
                      -c legate/label/ucc140 \
