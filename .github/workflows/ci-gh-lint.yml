@@ -105,12 +105,12 @@ jobs:
             steps.get-week-hash.outputs.week }}-${{ env.CACHE_NUMBER }}
         env:
           # Increase this value to reset cache if etc/example-environment.yml has not changed
-          CACHE_NUMBER: 9
+          CACHE_NUMBER: 10
         id: cache
 
       - name: Update environment
         run: |
-          mamba create -n legate cmake clang clangxx clang-tools elfutils hdf5 rich ninja
+          mamba create -n legate cmake clang clangxx clang-tools elfutils hdf5 rich ninja packaging
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: List Conda packages and info

@@ -1,4 +1,12 @@
 # -*- mode: makefile-gmake -*-
+export MAKEFLAGS += --no-builtin-rules
+
+.SUFFIXES:
+.DELETE_ON_ERROR:
+.NOTPARALLEL: # parallelism is handled otherwise
+
+.DEFAULT_GOAL := all
+
 ifndef LEGATE_DIR
 export LEGATE_DIR := $(shell ./scripts/get_legate_dir.py)
 endif
@@ -7,44 +15,7 @@ ifndef LEGATE_ARCH
 export LEGATE_ARCH := $(shell ./scripts/get_legate_arch.py)
 endif
 
-.SUFFIXES:
-.DELETE_ON_ERROR:
-.NOTPARALLEL: # parallelism is handled otherwise
-
-.DEFAULT_GOAL := all
-
-JOBS =
-ifeq (4.2,$(firstword $(sort $(MAKE_VERSION) 4.2)))
-  # Since make 4.2:
-  #
-  # * The amount of parallelism can be determined by querying MAKEFLAGS, even when
-  # the job server is enabled (previously MAKEFLAGS would always contain only
-  # "-j", with no number, when job server was enabled).
-  #
-  # https://lists.gnu.org/archive/html/info-gnu/2016-05/msg00013.html
-  JOBS = $(patsubst -j%,%,$(filter -j%,$(MAKEFLAGS)))
-endif
-
-ifeq ($(strip $(JOBS)),)
-  # Parse the number of jobs from inspecting process list
-  MAKE_PID = $(shell echo $$PPID)
-  ifeq ($(strip $(MAKE_PID)),)
-    JOBS =
-  else
-    SED ?= sed
-    PS ?= ps
-    JOBS = $(strip $(shell $(PS) T | $(SED) -n 's%.*$(MAKE_PID).*$(MAKE).* \(-j\|--jobs\) *\([0-9][0-9]*\).*%\2%p'))
-  endif
-endif
-export CMAKE_BUILD_PARALLEL_LEVEL ?= $(JOBS)
-
-include $(LEGATE_DIR)/$(LEGATE_ARCH)/gmakevariables
-
-ifeq ($(strip $(V)),1)
-export VERBOSE ?= 1
-else ifeq ($(strip $(V)),0)
-export VERBOSE ?= 0
-endif
+include $(LEGATE_DIR)/config/legate_internal/variables.mk
 
 ## Option types:
 ##
@@ -74,7 +45,37 @@ endif
 ## Print this help message.
 ##
 .PHONY: help
-help: default_help
+help:
+	@printf "Usage: make [MAKE_OPTIONS] [target] (see 'make --help' for MAKE_OPTIONS)\n"
+	@printf ""
+	@$(AWK) ' \
+    { \
+      if ($$0 ~ /^.PHONY: [a-zA-Z\-\0-9]+$$/) {	\
+        helpCommand = substr($$0, index($$0, ":") + 2);	\
+        if (helpMessage) { \
+          printf "\033[36m%-20s\033[0m %s\n", helpCommand, helpMessage; \
+          helpMessage = ""; \
+        } \
+      } else if ($$0 ~ /^[a-zA-Z\-\0-9.]+:/) { \
+        helpCommand = substr($$0, 0, index($$0, ":")); \
+        if (helpMessage) { \
+          printf "\033[36m%-20s\033[0m %s\n", helpCommand, helpMessage; \
+          helpMessage = ""; \
+        } \
+      } else if ($$0 ~ /^##/) { \
+        if (helpMessage) { \
+          helpMessage = helpMessage"\n                     "substr($$0, 3); \
+        } else { \
+          helpMessage = substr($$0, 3); \
+        } \
+      } else { \
+        if (helpMessage) { \
+          print "\n                     "helpMessage"\n"; \
+        } \
+        helpMessage = ""; \
+      } \
+    }' \
+    $(MAKEFILE_LIST)
 
 ## Build the library.
 ##
@@ -82,7 +83,8 @@ help: default_help
 ## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: all
-all: default_all
+all:
+	@$(LEGATE_BUILD_COMMAND) $(LEGATE_CMAKE_ARGS)
 	@$(CMAKE) -E echo "Ensure libraries are working by running:"
 	@$(CMAKE) -E echo "$$ LEGATE_DIR=${LEGATE_DIR} LEGATE_ARCH=${LEGATE_ARCH} make check"
 
@@ -92,7 +94,8 @@ all: default_all
 ## - LEGATE_CMAKE_ARGS='...' - Any additional arguments to pass to the cmake command.
 ##
 .PHONY: clean
-clean: default_clean
+clean:
+	@$(LEGATE_BUILD_COMMAND) --target clean $(LEGATE_CMAKE_ARGS)
 	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/legate.egg-info
 	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/src/python/legate.egg-info
 	@$(CMAKE) -E rm -rf -- $(LEGATE_DIR)/$(LEGATE_ARCH)/skbuild_core
@@ -108,7 +111,7 @@ clean: default_clean
 ##
 .PHONY: install
 install: all
-	@$(MAKE) --no-print-directory default_install
+	@$(LEGATE_INSTALL_COMMAND) $(LEGATE_INSTALL_PREFIX_COMMAND) $(LEGATE_CMAKE_ARGS)
 
 ## Uninstall the C++ library.
 ##
@@ -141,7 +144,7 @@ uninstall:
 ##
 .PHONY: package
 package: all
-	@$(MAKE) --no-print-directory default_package
+	@$(LEGATE_BUILD_COMMAND) --target package $(LEGATE_CMAKE_ARGS)
 
 ## Run clang-tidy over the repository.
 ##

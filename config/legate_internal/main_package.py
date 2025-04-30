@@ -180,7 +180,7 @@ class Legate(MainPackage):
             project_dir_name="LEGATE_DIR",
             project_dir_value=legate_dir,
             project_config_file_template=(
-                Path(__file__).parent / "gmakevariables.in"
+                Path(__file__).parent / "templates" / "variables.mk.in"
             ),
             project_src_dir=legate_dir / "src",
             default_arch_file_path=(

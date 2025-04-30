@@ -4,19 +4,30 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from typing import Final
-
-# update pre-commit-config.yml as well in case this is changed
-VERSION: Final = "1.0.0"
-
 
 def ensure_aedifix() -> None:
+    from importlib.metadata import version
+
+    from packaging.version import Version
+
+    # update pre-commit-config.yml as well in case this is changed
+    VERSION = Version("1.1.0")
+
     try:
         import aedifix
 
-        if aedifix.__version__ != VERSION:
-            raise RuntimeError  # noqa: TRY301
+        mod_version = Version(version(aedifix.__name__))
 
+        if mod_version == VERSION:
+            return
+
+        if mod_version.is_devrelease:
+            # If its a "dev release" that means it's editable installed,
+            # meaning someone is working on aedifix. We don't care that the
+            # versions don't match in this case.
+            return
+
+        raise RuntimeError  # noqa: TRY301
     except (ImportError, RuntimeError):
         import sys
         from subprocess import check_call
