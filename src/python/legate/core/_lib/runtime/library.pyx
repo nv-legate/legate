@@ -9,6 +9,7 @@ from ..type.types cimport Type
 from ..utilities.typedefs cimport _GlobalTaskID, _LocalTaskID
 from ..utilities.unconstructable cimport Unconstructable
 
+from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 
 cdef class Library(Unconstructable):
     @staticmethod
@@ -16,6 +17,19 @@ cdef class Library(Unconstructable):
         cdef Library result = Library.__new__(Library)
         result._handle = handle
         return result
+
+    @property
+    def name(self) -> str:
+        r"""
+        :returns: The name of the library.
+        :rtype: str
+        """
+        cdef std_string_view sv
+
+        with nogil:
+            sv = self._handle.get_library_name()
+
+        return str_from_string_view(sv)
 
     cpdef _LocalTaskID get_new_task_id(self):
         r"""

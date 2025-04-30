@@ -130,6 +130,7 @@ Python
 - Add ``legate.core.ResourceConfig`` to specify library resource configuration parameters.
 - Add ``legate.core.Runtime.find_or_create_library()`` to search for, or create
   ``Library`` instances.
+- Add ``legate.core.Library.name`` to access the name of the library.
 
 .. rubric:: Utilities
 

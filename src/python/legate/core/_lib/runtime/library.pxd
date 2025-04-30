@@ -15,11 +15,13 @@ from ..utilities.typedefs cimport (
 )
 from ..utilities.unconstructable cimport Unconstructable
 
+from ..._ext.cython_libcpp.string_view cimport std_string_view
 
 cdef extern from "legate/runtime/library.h" namespace "legate" nogil:
     cdef cppclass _Library "legate::Library":
         _Library() except+
         _Library(const _Library&) except+
+        std_string_view get_library_name() except+
         _LocalTaskID get_new_task_id() except+
         _GlobalTaskID get_task_id(_LocalTaskID) except+
         _GlobalRedopID get_reduction_op_id(_LocalRedopID) except+
