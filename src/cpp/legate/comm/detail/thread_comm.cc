@@ -6,10 +6,14 @@
 
 #include <legate/comm/detail/thread_comm.h>
 
+#include <legate/comm/detail/pthread_barrier.h>
+#include <legate/utilities/assert.h>
+
 namespace legate::detail::comm::coll {
 
 void ThreadComm::init(std::int32_t global_comm_size)
 {
+  LEGATE_CHECK(global_comm_size > 0);
   CHECK_PTHREAD_CALL_V(
     pthread_barrier_init(&barrier_, nullptr, static_cast<unsigned int>(global_comm_size)));
   buffers_ = std::make_unique<atomic_buffer_type[]>(static_cast<std::size_t>(global_comm_size));
