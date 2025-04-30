@@ -383,14 +383,51 @@ class Legate(MainPackage):
             )
         self.set_flag(self.legate_IGNORE_INSTALLED_PACKAGES, ignore_packages)
 
+    def _warn_legion_patches(self, src_dir: Path) -> None:
+        patch_dir = self.project_src_dir / "cmake" / "patches"
+        assert patch_dir.is_dir()
+        patches = [f"- {p}" for p in patch_dir.glob("legion*")]
+
+        if not patches:
+            # We could do an assert, but then if we do end up removing all
+            # patches this will needlessly break. So more robust simply to
+            # bail.
+            self.log(
+                "No patches to apply to legion, no need to warn about src-dir"
+            )
+            return
+
+        plist = "\n".join(patches)
+        self.log_warning(
+            "You have provided a source directory for Legion "
+            f"({src_dir}). Legate requires that a series of patches are "
+            "applied to Legion. This is performed automatically by the "
+            "build-system EXCEPT when a source directory is provided. "
+            "This is a limitation of the current build system and will be "
+            "fixed in a future release.\n"
+            "\n"
+            "You must manually apply the patches:\n"
+            "\n"
+            f"{plist}\n"
+            "\n"
+            "before continuing."
+        )
+
     def configure_legion(self) -> None:
         r"""Configure Legion for use with Legate."""
         self.set_flag_if_user_set(
             self.legate_LEGION_BRANCH, self.cl_args.legion_branch
         )
+
+        legion = cast(Legion, self.deps.Legion)
+
+        if src_dir := self.manager.get_cmake_variable(
+            legion.DirGroup.CPM_Legion_SOURCE  # type: ignore[attr-defined]
+        ):
+            self._warn_legion_patches(src_dir)
         if self.deps.Python.state.enabled():
             self.manager.set_cmake_variable(
-                cast(Legion, self.deps.Legion).Legion_BUILD_BINDINGS, False
+                legion.Legion_BUILD_BINDINGS, False
             )
 
     def configure_clang_tidy(self) -> None:

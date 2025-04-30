@@ -185,6 +185,32 @@ calls into NCCL either directly or through some other Legate library.
     endif()
   endif()
 
+  # This was fixed in rapids-cmake 25.02
+  if(CPM_Legion_SOURCE AND (rapids-cmake-version VERSION_LESS 25.02))
+    # Need to make this warning nice and big because we already emit a bunch of warnings
+    # like
+    #
+    # CMake Warning (dev) at /opt/homebrew/share/cmake/Modules/FetchContent.cmake:1953
+    # (message):  Calling FetchContent_Populate(mdspan) is deprecated, call
+    #
+    # Because rapids-cmake hasn't bumped their CPM version yet. So we need this one to
+    # stand out.`
+    message(WARNING "===========================================================\n"
+                    "                          WARNING\n"
+                    "===========================================================\n"
+                    "You have provided a source directory for Legion (${CPM_Legion_SOURCE}). "
+                    "Legate requires that a series of patches are applied to Legion. This is "
+                    "performed automatically by the build-system EXCEPT when a source directory "
+                    "is provided. This is a limitation of the current build system and will be "
+                    "fixed in a future release."
+                    "\n"
+                    "You must manually apply the patches under ${LEGATE_CMAKE_DIR}/patches/legion_*"
+                    " before continuing."
+                    "\n"
+                    "===========================================================\n"
+                    "                          WARNING\n"
+                    "===========================================================")
+  endif()
   find_or_configure_legion_impl("${version}" "${git_repo}" "${git_branch}" "${shallow}"
                                 "${exclude_from_all}")
 
