@@ -1,0 +1,6 @@
+legate.core.Library.name
+========================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: Library.name

@@ -14,6 +14,7 @@
    .. autosummary::
       :toctree: .
    
+      ~Library.name
       ~Library.raw_handle
    
    
