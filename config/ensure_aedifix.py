@@ -6,17 +6,15 @@ from __future__ import annotations
 
 
 def ensure_aedifix() -> None:
-    from importlib.metadata import version
+    from importlib.metadata import PackageNotFoundError, version
 
     from packaging.version import Version
 
     # update pre-commit-config.yml as well in case this is changed
-    VERSION = Version("1.1.0")
+    VERSION = Version("1.2.0")
 
     try:
-        import aedifix
-
-        mod_version = Version(version(aedifix.__name__))
+        mod_version = Version(version("aedifix"))
 
         if mod_version == VERSION:
             return
@@ -28,7 +26,7 @@ def ensure_aedifix() -> None:
             return
 
         raise RuntimeError  # noqa: TRY301
-    except (ImportError, RuntimeError):
+    except (PackageNotFoundError, RuntimeError):
         import sys
         from subprocess import check_call
 

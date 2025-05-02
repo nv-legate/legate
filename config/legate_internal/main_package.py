@@ -21,19 +21,24 @@ from aedifix import (
     ConfigurationManager,
     MainPackage,
 )
-from aedifix.package.packages.cal import CAL
 from aedifix.package.packages.cmake import CMake
-from aedifix.package.packages.cuda import CUDA
-from aedifix.package.packages.hdf5 import HDF5
-from aedifix.package.packages.legion import Legion
-from aedifix.package.packages.nccl import NCCL
 from aedifix.package.packages.python import Python
+
+from .packages.cal import CAL
+from .packages.cuda import CUDA
+from .packages.hdf5 import HDF5
+from .packages.legion import Legion
+from .packages.nccl import NCCL
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
 class Legate(MainPackage):
+    name = "Legate"
+
+    dependencies = (CMake, Legion, Python, CAL, HDF5, NCCL, CUDA)
+
     legate_BUILD_DOCS: Final = ConfigArgument(
         name="--with-docs",
         spec=ArgSpec(
@@ -175,7 +180,6 @@ class Legate(MainPackage):
         super().__init__(
             manager=manager,
             argv=argv,
-            name="Legate",
             arch_name="LEGATE_ARCH",
             project_dir_name="LEGATE_DIR",
             project_dir_value=legate_dir,
@@ -186,7 +190,6 @@ class Legate(MainPackage):
             default_arch_file_path=(
                 legate_dir / "scripts" / "get_legate_arch.py"
             ),
-            dependencies=(CMake, Legion, Python, CAL, HDF5, NCCL, CUDA),
         )
 
     @classmethod
