@@ -58,7 +58,7 @@ jobs:
           conda_build_args+=(--croot "${CONDA_ROOT}");
           conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
 
-          mamba install conda-build
+          conda install conda-build
           conda-build "${conda_build_args[@]}" conda/gasnet_wrapper
 
       - name: Display output files

@@ -71,10 +71,10 @@ build_legate_profiler() {
   conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
   conda_build_args+=(--numpy 1.22);
 
-  run_command 'Install base dependencies' rapids-mamba-retry install -y boa conda-verify python
-  run_command 'Install build dependencies' rapids-mamba-retry install -y -c conda-forge gcc gxx make pkg-config
-  run_command 'Dummy Legate Build' rapids-conda-retry mambabuild "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
-  run_command 'Profiler build' rapids-conda-retry mambabuild "${conda_build_args[@]}" conda/legate_profiler
+  run_command 'Install base dependencies' rapids-conda-retry install -y boa conda-verify python
+  run_command 'Install build dependencies' rapids-conda-retry install -y -c conda-forge gcc gxx make pkg-config
+  run_command 'Dummy Legate Build' rapids-conda-retry build "${conda_build_args[@]}" conda/legate_profiler/dummy_legate
+  run_command 'Profiler build' rapids-conda-retry build "${conda_build_args[@]}" conda/legate_profiler
 
   run_command 'Copy Profiler Artifacts' copy_profiler_artifacts
 }
@@ -124,7 +124,7 @@ build_legate_release() {
   #
   # Cannot use rapids-conda-retry here, see
   # https://github.com/rapidsai/gha-tools/issues/155
-  run_command 'Mamba Preamble' stdbuf -o0 -e0 conda mambabuild "${conda_build_args[@]}" conda/conda-build
+  run_command 'Conda Preamble' stdbuf -o0 -e0 conda build "${conda_build_args[@]}" conda/conda-build
 
   run_command 'Copy Artifacts' copy_release_artifacts
 }

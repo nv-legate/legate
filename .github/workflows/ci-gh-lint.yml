@@ -110,7 +110,7 @@ jobs:
 
       - name: Update environment
         run: |
-          mamba create -n legate cmake clang clangxx clang-tools elfutils hdf5 rich ninja packaging
+          conda create -n legate cmake clang clangxx clang-tools elfutils hdf5 rich ninja packaging
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: List Conda packages and info

@@ -137,7 +137,7 @@ run_test_or_analysis() {
 
             set +u
             # shellcheck disable=SC2154
-            rapids-mamba-retry install \
+            rapids-conda-retry install \
                                -y \
                                -n "${CONDA_ENV}" \
                                -c conda-forge \
@@ -145,7 +145,7 @@ run_test_or_analysis() {
 
             hdf5_libs=(zarr fsspec kerchunk)
             # shellcheck disable=SC2154
-            rapids-mamba-retry install \
+            rapids-conda-retry install \
                                -y \
                                -n "${CONDA_ENV}" \
                                "${hdf5_libs[@]}"
@@ -190,14 +190,14 @@ run_test_or_analysis() {
             ;;
         "cpp")
             rapids-logger "Running C++ unit tests..."
-            rapids-mamba-retry install \
+            rapids-conda-retry install \
                                -y \
                                -n "${DEFAULT_CONDA_ENV:-legate}" \
                                -c conda-forge \
                                psutil
 
             set +u
-            rapids-mamba-retry install \
+            rapids-conda-retry install \
                                -y \
                                -n "${CONDA_ENV}" \
                                ucx openmpi openssh

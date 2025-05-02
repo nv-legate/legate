@@ -7,7 +7,7 @@ set -eou pipefail
 
 make_conda_env_from_yaml() {
   # shellcheck disable=SC2154
-  rapids-mamba-retry env create -q -n "${CONDA_ENV}" -f "${yaml_file}";
+  rapids-conda-retry env create -q -n "${CONDA_ENV}" -f "${yaml_file}";
 }
 
 generate_yaml_file() {
@@ -82,7 +82,7 @@ get_yaml_and_make_conda_env() {
 
 install_legate_with_war() {
   # shellcheck disable=SC2154
-  rapids-mamba-retry create \
+  rapids-conda-retry create \
                      -y \
                      -n "${CONDA_ENV}" \
                      -c legate/label/ucc140 \
@@ -92,5 +92,5 @@ install_legate_with_war() {
 }
 
 make_release_env() {
-  rapids-mamba-retry create -q -y -n "${CONDA_ENV}" -c conda-forge boa
+  rapids-conda-retry create -q -y -n "${CONDA_ENV}" -c conda-forge boa
 }
