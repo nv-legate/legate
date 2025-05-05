@@ -9,6 +9,10 @@ upload_enabled:
   - true
   - false
 
+build_tests:
+  - true
+  - false
+
 network:
   - ucx
   - gex

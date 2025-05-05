@@ -14,9 +14,6 @@ on:
       target-device:
         type: string
         required: true
-      upload-enabled:
-        type: boolean
-        required: true
       network:
         type: string
         required: true
@@ -36,14 +33,14 @@ jobs:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
-      build-has-tests: ${{ inputs.upload-enabled == false }}
+      build-has-tests: false
       build-type: ${{ inputs.build-type }}
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
       legate-gh-ci-tag: "v1.31"
       build-mode: ""
-      upload-enabled: ${{ inputs.upload-enabled }}
+      upload-enabled: true
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: true
@@ -58,7 +55,7 @@ jobs:
       build-mode: ""
       build-type: ${{ inputs.build-type }}
       client-repo: ${{ github.event.repository.name }}
-      build-has-tests: ${{ inputs.upload-enabled == false }}
+      build-has-tests: false
       legate-gh-ci-tag: "v1.31"
       name: Upload package to Anaconda
       network: ${{ inputs.network }}
@@ -68,7 +65,7 @@ jobs:
       repos-Root: "legate-profiler"
       target-device: ${{ inputs.target-device }}
       upload-action: "upload-package-Anaconda"
-      upload-enabled: ${{ inputs.upload-enabled }}
+      upload-enabled: true
       refname: ${{ inputs.refname }}
       default-branch: ${{ inputs.default-branch }}
     secrets: inherit

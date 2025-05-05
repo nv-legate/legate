@@ -31,7 +31,7 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-        upload-enabled:
+        build-has-tests:
           - true
           - false
     uses:
@@ -41,7 +41,7 @@ jobs:
       target-device: ${{ matrix.target-device }}
       build-mode: ${{ matrix.build-mode }}
       build-type: nightly
-      upload-enabled: ${{ matrix.upload-enabled }}
+      build-has-tests: ${{ matrix.build-has-tests }}
       upload-action: ${{ (matrix.build-mode == 'release' && 'upload-package-Anaconda' || 'upload-package-None') }}
       python-version: ${{ matrix.python-version }}
       network: ${{ matrix.network }}
@@ -69,7 +69,6 @@ jobs:
       build-type: profiler
       python-version: ${{ matrix.python-version }}
       target-device: ${{ matrix.target-device }}
-      upload-enabled: ${{ matrix.upload-enabled }}
       network: "ucx"
       refname: ${{ github.ref_name }}
       default-branch: ${{ github.event.repository.default_branch }}

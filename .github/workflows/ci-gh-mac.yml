@@ -22,7 +22,7 @@ jobs:
       target-device: cpu
       build-type: ci
       build-mode: release
-      upload-enabled: false
+      build-has-tests: true
       network: ucx
       refname: ${{ github.ref_name }}
       default-branch: ${{ github.event.repository.default_branch }}

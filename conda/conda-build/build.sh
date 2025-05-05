@@ -63,7 +63,7 @@ function preamble()
     configure_args+=(--with-openmp)
   fi
 
-  if [[ "${UPLOAD_ENABLED:-0}" == '0' ]]; then
+  if [[ "${BUILD_TESTS:-0}" == '1' ]]; then
     configure_args+=(--with-tests)
     configure_args+=(--with-benchmarks)
   fi

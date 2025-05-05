@@ -21,6 +21,10 @@ on:
         required: true
         type: string
       upload-enabled:
+        required: false
+        type: boolean
+        default: false
+      build-has-tests:
         required: true
         type: boolean
       upload-action:
@@ -44,7 +48,7 @@ jobs:
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.31
     with:
-      build-has-tests: ${{ inputs.upload-enabled == false }}
+      build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'linux-aarch64' && 'linux-arm64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
@@ -63,7 +67,7 @@ jobs:
   setup-test:
     name: Setup test
     # Don't run GPU tests on linux-aarch64. We don't have enough test machines for this.
-    if: inputs.upload-enabled == false && (inputs.build-type == 'nightly' || inputs.target-device != 'gpu' || inputs.platform != 'linux-aarch64')
+    if: inputs.build-has-tests == true && (inputs.build-type == 'nightly' || inputs.target-device != 'gpu' || inputs.platform != 'linux-aarch64')
     needs:
       - build
     runs-on: linux-amd64-cpu4
@@ -117,7 +121,7 @@ jobs:
           echo "matrix=${MATRIX_JSON}" >> "${GITHUB_OUTPUT}"
 
   test-within-container:
-    if: github.repository_owner == 'nv-legate' && (inputs.platform == 'linux' || inputs.platform == 'linux-aarch64')
+    if: github.repository_owner == 'nv-legate' && inputs.build-has-tests == true && (inputs.platform == 'linux' || inputs.platform == 'linux-aarch64')
     needs:
       - setup-test
 
@@ -130,7 +134,7 @@ jobs:
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.31
     with:
-      build-has-tests: ${{ inputs.upload-enabled == false }}
+      build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
       build-type: ${{ inputs.build-type }}
       name: "${{ matrix.test-config.name }} (${{ matrix.runner.device }})"
@@ -162,7 +166,7 @@ jobs:
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.31
     with:
-      build-has-tests: ${{ inputs.upload-enabled == false }}
+      build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
       build-type: ${{ inputs.build-type }}
       name: ${{ matrix.test-config.name }}
@@ -182,8 +186,9 @@ jobs:
   upload:
     needs: test-within-container
     # The use of always() below, ensures the step will run even on failure of the tests
-    # before if other conditionals are all true
-    if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.build-mode == 'release' && inputs.upload-enabled == false }}
+    # before if other conditionals are all true.
+    # We use the package with tests to test and then upload corresponding package without test.
+    if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.build-mode == 'release' && inputs.build-has-tests == true }}
     name: Upload package to Server
     uses:
       nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.31

@@ -8,13 +8,13 @@
   {# We need to have a default value for the initial pass over the recipe #}
   {% set gpu_enabled_bool = false %}
 {% endif %}
-{% if upload_enabled == "true" %}
-  {% set upload_enabled_bool = true %}
-{% elif upload_enabled == "false" %}
-  {% set upload_enabled_bool = false %}
+{% if build_tests == "true" %}
+  {% set build_tests_bool = true %}
+{% elif build_tests == "false" %}
+  {% set build_tests_bool = false %}
 {% else %}
   {# We need to have a default value for the initial pass over the recipe #}
-  {% set upload_enabled_bool = false %}
+  {% set build_tests_bool = false %}
 {% endif %}
 {% set default_env_var = '' %}
 {% if build_number is defined %}
@@ -60,7 +60,7 @@
    {% set sanitizer_build_bool = true %}
 {% endif %}
 
-{% set upload_tag='' if upload_enabled_bool else '_with_tests' %}
+{% set upload_tag='_with_tests' if build_tests_bool else '' %}
 
 {% if network is not defined %}
 # network must be defined. Let's fail if it is not.
@@ -108,8 +108,8 @@ build:
     - BUILD_MARCH
     - LEGATE_BUILD_MODE={{ build_mode_str }}
     - LEGATE_NETWORK={{ network }}
-{% if upload_enabled_bool %}
-    - UPLOAD_ENABLED=1
+{% if build_tests_bool %}
+    - BUILD_TESTS=1
 {% endif %}
 {% if not gpu_enabled_bool %}
     - CPU_ONLY=1

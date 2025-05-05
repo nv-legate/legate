@@ -103,14 +103,11 @@ build_legate_release() {
   GPU_ENABLED=true
   [[ "${USE_CUDA:-}" = "OFF" ]] && GPU_ENABLED=false
 
-  UPLOAD_BUILD=true
-  [[ "${UPLOAD_ENABLED:-}" = "OFF" ]] && UPLOAD_BUILD=false
-
   local variant_opts
   # shellcheck disable=SC2154
   variant_opts="$(\
-    printf '{"build_mode_str": [%s], "gpu_enabled": [%s], "upload_enabled": [%s], "network": [%s], "python": [%s]}' \
-           "${LEGATE_BUILD_MODE}" "${GPU_ENABLED}" "${UPLOAD_BUILD}" "${LEGATE_NETWORK}" "${PYTHON_VERSION}")"
+    printf '{"build_mode_str": [%s], "gpu_enabled": [%s], "build_tests": [%s], "network": [%s], "python": [%s]}' \
+           "${LEGATE_BUILD_MODE}" "${GPU_ENABLED}" "${BUILD_TESTS}" "${LEGATE_NETWORK}" "${PYTHON_VERSION}")"
   conda_build_args+=(--variants "${variant_opts}")
 
   # Conda is far too chatty by default, spewing a great deal of cruft. Silence it to
