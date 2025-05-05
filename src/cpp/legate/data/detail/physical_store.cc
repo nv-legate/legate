@@ -238,7 +238,7 @@ bool PhysicalStore::on_target(mapping::StoreTarget target) const
 void PhysicalStore::unmap()
 {
   LEGATE_ASSERT(!(is_future() || is_unbound_store()));
-  Runtime::get_runtime()->unmap_physical_region(region_field_.get_physical_region());
+  Runtime::get_runtime().unmap_physical_region(region_field_.get_physical_region());
 }
 
 std::pair<Legion::OutputRegion, Legion::FieldID> PhysicalStore::get_output_field_()

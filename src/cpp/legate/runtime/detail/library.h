@@ -59,8 +59,10 @@ class Library {
           std::unique_ptr<mapping::Mapper> mapper,
           std::map<VariantCode, VariantOptions> default_options);
 
-  Library(const Library&) = delete;
-  Library(Library&&)      = delete;
+  Library(const Library&)            = delete;
+  Library& operator=(const Library&) = delete;
+  Library(Library&&)                 = delete;
+  Library& operator=(Library&&)      = delete;
 
   [[nodiscard]] ZStringView get_library_name() const;
 
@@ -90,8 +92,8 @@ class Library {
 
   [[nodiscard]] const std::map<VariantCode, VariantOptions>& get_default_variant_options() const;
 
-  [[nodiscard]] const mapping::Mapper* get_mapper() const;
-  [[nodiscard]] mapping::Mapper* get_mapper();
+  [[nodiscard]] const mapping::Mapper& get_mapper() const;
+  [[nodiscard]] mapping::Mapper& get_mapper();
 
  private:
   Library(std::string library_name,

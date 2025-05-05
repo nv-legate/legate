@@ -32,7 +32,7 @@ class RegionManager {
     [[nodiscard]] bool has_space() const { return next_field_id - FIELD_ID_BASE < MAX_NUM_FIELDS; }
     [[nodiscard]] Legion::FieldID get_next_field_id() { return next_field_id++; }
 
-    void destroy(Runtime* runtime, bool unordered) const;
+    void destroy(Runtime& runtime, bool unordered) const;
 
     Legion::LogicalRegion region{};
     Legion::FieldID next_field_id{FIELD_ID_BASE};
@@ -40,6 +40,12 @@ class RegionManager {
 
  public:
   explicit RegionManager(Legion::IndexSpace index_space);
+
+  RegionManager(const RegionManager&)            = delete;
+  RegionManager& operator=(const RegionManager&) = delete;
+  RegionManager(RegionManager&&)                 = delete;
+  RegionManager& operator=(RegionManager&&)      = delete;
+
   void destroy(bool unordered = false);
 
  private:

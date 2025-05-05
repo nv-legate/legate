@@ -26,7 +26,7 @@ Attach::Attach(std::uint64_t unique_id,
 
 void Attach::launch()
 {
-  auto* runtime = Runtime::get_runtime();
+  auto&& runtime = Runtime::get_runtime();
 
   auto launcher       = Legion::AttachLauncher{LEGION_EXTERNAL_INSTANCE,
                                          region_field_->region(),
@@ -46,8 +46,8 @@ void Attach::launch()
   launcher.privilege_fields.insert(region_field_->field_id());
   launcher.external_resource = allocation_->resource();
 
-  auto pr = runtime->get_legion_runtime()->attach_external_resource(runtime->get_legion_context(),
-                                                                    launcher);
+  auto pr =
+    runtime.get_legion_runtime()->attach_external_resource(runtime.get_legion_context(), launcher);
   // no need to wait on the returned PhysicalRegion, since we're not inline-mapping
   // but we can keep it around and remap it later if the user asks
   region_field_->attach(std::move(pr), std::move(allocation_));

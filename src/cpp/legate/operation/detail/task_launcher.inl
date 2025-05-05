@@ -10,7 +10,7 @@
 
 namespace legate::detail {
 
-inline TaskLauncher::TaskLauncher(const Library* library,
+inline TaskLauncher::TaskLauncher(const Library& library,
                                   const mapping::detail::Machine& machine,
                                   ZStringView provenance,
                                   LocalTaskID task_id,
@@ -23,7 +23,7 @@ inline TaskLauncher::TaskLauncher(const Library* library,
 {
 }
 
-inline TaskLauncher::TaskLauncher(const Library* library,
+inline TaskLauncher::TaskLauncher(const Library& library,
                                   const mapping::detail::Machine& machine,
                                   LocalTaskID task_id,
                                   Legion::MappingTagID tag)

@@ -167,12 +167,12 @@ InternalSharedPtr<Partition> Tiling::bloat(const tuple<std::uint64_t>& low_offse
 Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool complete) const
 {
   auto&& index_space   = region.get_index_space();
-  auto runtime         = detail::Runtime::get_runtime();
-  auto* part_mgr       = runtime->partition_manager();
-  auto index_partition = part_mgr->find_index_partition(index_space, *this);
+  auto&& runtime       = detail::Runtime::get_runtime();
+  auto&& part_mgr      = runtime.partition_manager();
+  auto index_partition = part_mgr.find_index_partition(index_space, *this);
 
   if (index_partition != Legion::IndexPartition::NO_PART) {
-    return runtime->create_logical_partition(region, index_partition);
+    return runtime.create_logical_partition(region, index_partition);
   }
 
   const auto ndim = static_cast<std::int32_t>(tile_shape_.size());
@@ -193,13 +193,13 @@ Legion::LogicalPartition Tiling::construct(Legion::LogicalRegion region, bool co
     extent.rect_data[idx + ndim] += offsets_[idx];
   }
 
-  auto&& color_space = runtime->find_or_create_index_space(color_shape_);
+  auto&& color_space = runtime.find_or_create_index_space(color_shape_);
   const auto kind    = complete ? LEGION_DISJOINT_COMPLETE_KIND : LEGION_DISJOINT_KIND;
 
   index_partition =
-    runtime->create_restricted_partition(index_space, color_space, kind, transform, extent);
-  part_mgr->record_index_partition(index_space, *this, index_partition);
-  return runtime->create_logical_partition(region, index_partition);
+    runtime.create_restricted_partition(index_space, color_space, kind, transform, extent);
+  part_mgr.record_index_partition(index_space, *this, index_partition);
+  return runtime.create_logical_partition(region, index_partition);
 }
 
 Legion::Domain Tiling::launch_domain() const { return detail::to_domain(color_shape_); }
@@ -338,20 +338,20 @@ InternalSharedPtr<Partition> Weighted::bloat(const tuple<std::uint64_t>& /*low_o
 
 Legion::LogicalPartition Weighted::construct(Legion::LogicalRegion region, bool) const
 {
-  auto runtime            = detail::Runtime::get_runtime();
-  auto* part_mgr          = runtime->partition_manager();
+  auto&& runtime          = detail::Runtime::get_runtime();
+  auto&& part_mgr         = runtime.partition_manager();
   const auto& index_space = region.get_index_space();
-  auto index_partition    = part_mgr->find_index_partition(index_space, *this);
+  auto index_partition    = part_mgr.find_index_partition(index_space, *this);
 
   if (index_partition != Legion::IndexPartition::NO_PART) {
-    return runtime->create_logical_partition(region, index_partition);
+    return runtime.create_logical_partition(region, index_partition);
   }
 
-  auto&& color_space = runtime->find_or_create_index_space(color_shape_);
+  auto&& color_space = runtime.find_or_create_index_space(color_shape_);
 
-  index_partition = runtime->create_weighted_partition(index_space, color_space, weights_);
-  part_mgr->record_index_partition(index_space, *this, index_partition);
-  return runtime->create_logical_partition(region, index_partition);
+  index_partition = runtime.create_weighted_partition(index_space, color_space, weights_);
+  part_mgr.record_index_partition(index_space, *this, index_partition);
+  return runtime.create_logical_partition(region, index_partition);
 }
 
 std::string Weighted::to_string() const
@@ -395,7 +395,7 @@ InternalSharedPtr<Partition> Weighted::invert(
   // this partition is applied would be a degenerate N-D store such that all but one dimension are
   // of extent 1. So, we only need to delinearize the future map holding the weights so the domain
   // matches the color domain.
-  return create_weighted(Runtime::get_runtime()->delinearize_future_map(weights_, color_domain),
+  return create_weighted(Runtime::get_runtime().delinearize_future_map(weights_, color_domain),
                          color_domain);
 }
 
@@ -456,41 +456,41 @@ Legion::LogicalPartition Image::construct(Legion::LogicalRegion region, bool /*c
   auto func_partition = func_partition_->construct(
     func_region, func_partition_->is_complete_for(*func_->get_storage()));
 
-  auto runtime   = detail::Runtime::get_runtime();
-  auto* part_mgr = runtime->partition_manager();
+  auto&& runtime  = detail::Runtime::get_runtime();
+  auto&& part_mgr = runtime.partition_manager();
 
   auto target          = region.get_index_space();
   const auto field_id  = func_rf->field_id();
-  auto index_partition = part_mgr->find_image_partition(target, func_partition, field_id, hint_);
+  auto index_partition = part_mgr.find_image_partition(target, func_partition, field_id, hint_);
 
   if (Legion::IndexPartition::NO_PART == index_partition) {
     auto construct_image_partition = [&] {
       switch (hint_) {
         case ImageComputationHint::NO_HINT: {
           const bool is_range = func_->type()->code == Type::Code::STRUCT;
-          auto color_space    = runtime->find_or_create_index_space(color_shape());
-          return runtime->create_image_partition(
+          auto color_space    = runtime.find_or_create_index_space(color_shape());
+          return runtime.create_image_partition(
             target, color_space, func_region, func_partition, field_id, is_range, machine_);
         }
         case ImageComputationHint::MIN_MAX: {
-          return runtime->create_approximate_image_partition(func_, func_partition_, target, false);
+          return runtime.create_approximate_image_partition(func_, func_partition_, target, false);
         }
         case ImageComputationHint::FIRST_LAST: {
-          return runtime->create_approximate_image_partition(func_, func_partition_, target, true);
+          return runtime.create_approximate_image_partition(func_, func_partition_, target, true);
         }
       }
       LEGATE_UNREACHABLE();
     };
 
     index_partition = construct_image_partition();
-    part_mgr->record_image_partition(target, func_partition, field_id, hint_, index_partition);
+    part_mgr.record_image_partition(target, func_partition, field_id, hint_, index_partition);
     func_rf->add_invalidation_callback([target, func_partition, field_id, hint = hint_]() noexcept {
-      detail::Runtime::get_runtime()->partition_manager()->invalidate_image_partition(
+      detail::Runtime::get_runtime().partition_manager().invalidate_image_partition(
         target, func_partition, field_id, hint);
     });
   }
 
-  return runtime->create_logical_partition(region, index_partition);
+  return runtime.create_logical_partition(region, index_partition);
 }
 
 bool Image::has_launch_domain() const { return func_partition_->has_launch_domain(); }

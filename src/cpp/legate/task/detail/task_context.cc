@@ -77,11 +77,11 @@ void TaskContext::make_all_unbound_stores_empty()
   }
 }
 
-CUstream TaskContext::get_task_stream() const { return Runtime::get_runtime()->get_cuda_stream(); }
+CUstream TaskContext::get_task_stream() const { return Runtime::get_runtime().get_cuda_stream(); }
 
 void TaskContext::concurrent_task_barrier()
 {
-  Runtime::get_runtime()->get_legion_runtime()->concurrent_task_barrier(
+  Runtime::get_runtime().get_legion_runtime()->concurrent_task_barrier(
     Legion::Runtime::get_context());
 }
 

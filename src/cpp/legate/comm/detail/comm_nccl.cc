@@ -130,7 +130,7 @@ class Init : public detail::LegionTask<Init> {
     }
 
     auto&& driver = cuda::detail::get_cuda_driver_api();
-    auto stream   = detail::Runtime::get_runtime()->get_cuda_stream();
+    auto stream   = detail::Runtime::get_runtime().get_cuda_stream();
 
     // Perform a warm-up all-to-all
     CUevent ev_start          = driver->event_create();
@@ -201,7 +201,7 @@ class Finalize : public detail::LegionTask<Finalize> {
 
 class Factory final : public detail::CommunicatorFactory {
  public:
-  explicit Factory(const detail::Library* core_library);
+  explicit Factory(const detail::Library& core_library);
 
   [[nodiscard]] bool needs_barrier() const override;
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
@@ -216,7 +216,7 @@ class Factory final : public detail::CommunicatorFactory {
   const detail::Library* core_library_{};
 };
 
-Factory::Factory(const detail::Library* core_library) : core_library_{core_library} {}
+Factory::Factory(const detail::Library& core_library) : core_library_{&core_library} {}
 
 bool Factory::needs_barrier() const
 {
@@ -237,7 +237,7 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
   Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
   // Create a communicator ID
-  detail::TaskLauncher init_nccl_id_launcher{core_library_,
+  detail::TaskLauncher init_nccl_id_launcher{*core_library_,
                                              machine,
                                              InitId::TASK_CONFIG.task_id(),
                                              static_cast<Legion::MappingTagID>(VariantCode::GPU)};
@@ -248,7 +248,7 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
   auto nccl_id = init_nccl_id_launcher.execute_single();
 
   // Then create the communicators on participating GPUs
-  detail::TaskLauncher init_nccl_launcher{core_library_,
+  detail::TaskLauncher init_nccl_launcher{*core_library_,
                                           machine,
                                           Init::TASK_CONFIG.task_id(),
                                           static_cast<Legion::MappingTagID>(VariantCode::GPU)};
@@ -266,7 +266,7 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
 {
   Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
-  detail::TaskLauncher launcher{core_library_,
+  detail::TaskLauncher launcher{*core_library_,
                                 machine,
                                 Finalize::TASK_CONFIG.task_id(),
                                 static_cast<Legion::MappingTagID>(VariantCode::GPU)};
@@ -279,18 +279,18 @@ namespace {
 
 }  // namespace
 
-void register_tasks(detail::Library* core_library)
+void register_tasks(detail::Library& core_library)
 {
   // Register the task variants
-  InitId::register_variants(legate::Library{core_library});
-  Init::register_variants(legate::Library{core_library});
-  Finalize::register_variants(legate::Library{core_library});
+  InitId::register_variants(legate::Library{&core_library});
+  Init::register_variants(legate::Library{&core_library});
+  Finalize::register_variants(legate::Library{&core_library});
 }
 
-void register_factory(const detail::Library* core_library)
+void register_factory(const detail::Library& core_library)
 {
-  auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
-  comm_mgr->register_factory("nccl", std::make_unique<Factory>(core_library));
+  auto&& comm_mgr = detail::Runtime::get_runtime().communicator_manager();
+  comm_mgr.register_factory("nccl", std::make_unique<Factory>(core_library));
 }
 
 }  // namespace comm::nccl

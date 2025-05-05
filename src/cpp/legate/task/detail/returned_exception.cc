@@ -176,9 +176,9 @@ void returned_exception_fold(const Legion::ReductionOp* /*reduction_op*/,
 
 }  // namespace
 
-void register_exception_reduction_op(const Library* library)  // NOLINT(misc-use-internal-linkage)
+void register_exception_reduction_op(const Library& library)  // NOLINT(misc-use-internal-linkage)
 {
-  const auto redop_id = library->get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
+  const auto redop_id = library.get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
   auto* redop         = Realm::ReductionOpUntyped::create_reduction_op<JoinReturnedException>();
 
   Legion::Runtime::register_reduction_op(static_cast<Legion::ReductionOpID>(redop_id),

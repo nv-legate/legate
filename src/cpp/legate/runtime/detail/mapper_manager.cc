@@ -17,8 +17,8 @@ MapperManager::MapperManager(Legion::Runtime* legion_runtime)
   : mapper_id_{legion_runtime->generate_library_mapper_ids(
       // get_library_name() returns a ZStringView which is guaranteed to be NULL-terminated
       Runtime::get_runtime()
-        ->core_library()
-        ->get_library_name()
+        .core_library()
+        .get_library_name()
         .data(),  // NOLINT(bugprone-suspicious-stringview-data-usage)
       1)}
 {

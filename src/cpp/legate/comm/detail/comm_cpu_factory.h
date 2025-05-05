@@ -27,7 +27,7 @@ class Factory final : public detail::CommunicatorFactory {
   using init_mapping_task_type = InitMappingTaskT;
   using finalize_task_type     = FinalizeTaskT;
 
-  explicit Factory(const detail::Library* core_library);
+  explicit Factory(const detail::Library& core_library);
 
   [[nodiscard]] bool needs_barrier() const override;
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;

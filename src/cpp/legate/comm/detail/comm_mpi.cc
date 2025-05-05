@@ -194,7 +194,7 @@ void register_tasks(const legate::Library& core_library)
   Finalize::register_variants(core_library);
 }
 
-std::unique_ptr<CommunicatorFactory> make_factory(const legate::detail::Library* library)
+std::unique_ptr<CommunicatorFactory> make_factory(const legate::detail::Library& library)
 {
   return std::make_unique<cpu::Factory<Init, InitMapping, Finalize>>(library);
 }

@@ -27,7 +27,7 @@ namespace legate::mapping::detail {
 
 class Mappable {
  public:
-  explicit Mappable(const Legion::Mappable* mappable);
+  explicit Mappable(const Legion::Mappable& mappable);
 
   [[nodiscard]] const mapping::detail::Machine& machine() const;
   [[nodiscard]] std::uint32_t sharding_id() const;
@@ -48,13 +48,13 @@ class Mappable {
 
 class Task : public Mappable {
  public:
-  Task(const Legion::Task* task,
-       Legion::Mapping::MapperRuntime* runtime,
+  Task(const Legion::Task& task,
+       Legion::Mapping::MapperRuntime& runtime,
        Legion::Mapping::MapperContext context);
 
   [[nodiscard]] LocalTaskID task_id() const;
-  [[nodiscard]] legate::detail::Library* library();
-  [[nodiscard]] const legate::detail::Library* library() const;
+  [[nodiscard]] legate::detail::Library& library();
+  [[nodiscard]] const legate::detail::Library& library() const;
 
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& inputs() const;
   [[nodiscard]] const std::vector<InternalSharedPtr<Array>>& outputs() const;
@@ -72,10 +72,19 @@ class Task : public Mappable {
   [[nodiscard]] std::size_t future_size() const;
   [[nodiscard]] bool can_raise_exception() const;
 
-  [[nodiscard]] const Legion::Task* legion_task() const;
+  [[nodiscard]] const Legion::Task& legion_task() const;
 
  private:
-  const Legion::Task* task_{};
+  std::reference_wrapper<const Legion::Task> task_;
+  // This is a pointer (not a reference_wrapper) because it cannot be initialized from
+  // initializer lists in the constructor. This is because we cannot create the
+  // TaskDeserializer object before first constructing the Mappable base class, and so the
+  // usual trick of delegating constructors:
+  //
+  // Task(Foo, Bar) { ...}
+  // Task(Foo f) : Task{f, Bar{}} { ... }
+  //
+  // Doesn't work. But it is for all intents and purposes a reference wrapper.
   legate::detail::Library* library_{};
 
   std::vector<InternalSharedPtr<Array>> inputs_{};
@@ -88,8 +97,8 @@ class Task : public Mappable {
 
 class Copy : public Mappable {
  public:
-  Copy(const Legion::Copy* copy,
-       Legion::Mapping::MapperRuntime* runtime,
+  Copy(const Legion::Copy& copy,
+       Legion::Mapping::MapperRuntime& runtime,
        Legion::Mapping::MapperContext context);
 
   [[nodiscard]] const std::vector<Store>& inputs() const;
@@ -100,7 +109,7 @@ class Copy : public Mappable {
   [[nodiscard]] const DomainPoint& point() const;
 
  private:
-  const Legion::Copy* copy_{};
+  std::reference_wrapper<const Legion::Copy> copy_;
 
   std::vector<Store> inputs_{};
   std::vector<Store> outputs_{};

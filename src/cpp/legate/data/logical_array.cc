@@ -88,7 +88,7 @@ LogicalArray LogicalArray::child(std::uint32_t index) const
 PhysicalArray LogicalArray::get_physical_array(std::optional<mapping::StoreTarget> target) const
 {
   const auto sanitized =
-    target.value_or(detail::Runtime::get_runtime()->local_machine().has_socket_memory()
+    target.value_or(detail::Runtime::get_runtime().local_machine().has_socket_memory()
                       ? mapping::StoreTarget::SOCKETMEM
                       : mapping::StoreTarget::SYSMEM);
 
@@ -114,7 +114,7 @@ StringLogicalArray LogicalArray::as_string_array() const
 
 void LogicalArray::offload_to(mapping::StoreTarget target_mem) const
 {
-  detail::Runtime::get_runtime()->offload_to(target_mem, impl());
+  detail::Runtime::get_runtime().offload_to(target_mem, impl());
 }
 
 LogicalArray::LogicalArray(InternalSharedPtr<detail::LogicalArray> impl)

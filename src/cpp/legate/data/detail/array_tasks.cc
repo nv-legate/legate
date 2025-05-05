@@ -39,9 +39,9 @@ namespace legate::detail {
   }
 }
 
-void register_array_tasks(Library* core_lib)
+void register_array_tasks(Library& core_lib)
 {
-  FixupRanges::register_variants(legate::Library{core_lib});
+  FixupRanges::register_variants(legate::Library{&core_lib});
 }
 
 }  // namespace legate::detail

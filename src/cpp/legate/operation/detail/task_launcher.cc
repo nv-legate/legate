@@ -24,7 +24,7 @@
 
 namespace legate::detail {
 
-GlobalTaskID TaskLauncher::legion_task_id() const { return library_->get_task_id(task_id_); }
+GlobalTaskID TaskLauncher::legion_task_id() const { return library_.get().get_task_id(task_id_); }
 
 void TaskLauncher::add_input(std::unique_ptr<Analyzable> arg) { inputs_.push_back(std::move(arg)); }
 
@@ -126,7 +126,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   pack_mapper_arg_(mapper_arg);
 
-  const auto runtime = Runtime::get_runtime();
+  auto&& runtime = Runtime::get_runtime();
 
   Legion::IndexTaskLauncher index_task{static_cast<Legion::TaskID>(legion_task_id()),
                                        launch_domain,
@@ -134,7 +134,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
                                        Legion::ArgumentMap(),
                                        Legion::Predicate::TRUE_PRED,
                                        false /*must*/,
-                                       runtime->mapper_id(),
+                                       runtime.mapper_id(),
                                        tag_,
                                        mapper_arg.to_legion_buffer()};
 
@@ -147,12 +147,12 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   if (insert_barrier_) {
     const auto num_tasks                 = launch_domain.get_volume();
-    auto [arrival_barrier, wait_barrier] = runtime->create_barriers(num_tasks);
+    auto [arrival_barrier, wait_barrier] = runtime.create_barriers(num_tasks);
 
     index_task.add_future(Legion::Future::from_value(arrival_barrier));
     index_task.add_future(Legion::Future::from_value(wait_barrier));
-    runtime->destroy_barrier(arrival_barrier);
-    runtime->destroy_barrier(wait_barrier);
+    runtime.destroy_barrier(arrival_barrier);
+    runtime.destroy_barrier(wait_barrier);
   }
   for (auto&& communicator : communicators_) {
     index_task.point_futures.emplace_back(communicator);
@@ -160,7 +160,7 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
   index_task.concurrent = concurrent_;
 
-  auto result = runtime->dispatch(index_task, output_requirements);
+  auto result = runtime.dispatch(index_task, output_requirements);
 
   post_process_unbound_stores_(result, launch_domain, output_requirements);
   for (auto&& arg : outputs_) {
@@ -205,12 +205,12 @@ Legion::Future TaskLauncher::execute_single()
 
   pack_mapper_arg_(mapper_arg);
 
-  const auto runtime = Runtime::get_runtime();
+  auto&& runtime = Runtime::get_runtime();
 
   Legion::TaskLauncher single_task{static_cast<Legion::TaskID>(legion_task_id()),
                                    task_arg.to_legion_buffer(),
                                    Legion::Predicate::TRUE_PRED,
-                                   runtime->mapper_id(),
+                                   runtime.mapper_id(),
                                    tag_,
                                    mapper_arg.to_legion_buffer()};
 
@@ -223,7 +223,7 @@ Legion::Future TaskLauncher::execute_single()
 
   single_task.local_function_task = !has_side_effect_ && analyzer.can_be_local_function_task();
 
-  auto result = runtime->dispatch(single_task, output_requirements);
+  auto result = runtime.dispatch(single_task, output_requirements);
   post_process_unbound_stores_(output_requirements);
   for (auto&& arg : outputs_) {
     arg->perform_invalidations();
@@ -255,17 +255,18 @@ void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
   if (!key_proj_id) {
     key_proj_id.emplace(0);
   }
-  buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, *key_proj_id));
+  buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, *key_proj_id));
   buffer.pack(priority_);
 }
 
 void TaskLauncher::import_output_regions_(
-  Runtime* runtime, const std::vector<Legion::OutputRequirement>& output_requirements)
+  Runtime& runtime, const std::vector<Legion::OutputRequirement>& output_requirements)
 {
   for (const auto& req : output_requirements) {
-    const auto& region     = req.parent;
-    auto* const region_mgr = runtime->find_or_create_region_manager(region.get_index_space());
-    region_mgr->import_region(region, static_cast<std::uint32_t>(req.privilege_fields.size()));
+    const auto& region = req.parent;
+    auto&& region_mgr  = runtime.find_or_create_region_manager(region.get_index_space());
+
+    region_mgr.import_region(region, static_cast<std::uint32_t>(req.privilege_fields.size()));
   };
 }
 
@@ -276,8 +277,8 @@ void TaskLauncher::post_process_unbound_stores_(
     return;
   }
 
-  auto* runtime = Runtime::get_runtime();
-  auto no_part  = create_no_partition();
+  auto&& runtime = Runtime::get_runtime();
+  auto no_part   = create_no_partition();
 
   import_output_regions_(runtime, output_requirements);
 
@@ -293,7 +294,7 @@ void TaskLauncher::post_process_unbound_stores_(
       shape->set_index_space(req.parent.get_index_space());
     }
 
-    auto region_field = runtime->import_region_field(
+    auto region_field = runtime.import_region_field(
       store->shape(), req.parent, arg->field_id(), store->type()->size());
 
     store->set_region_field(std::move(region_field));
@@ -309,8 +310,8 @@ void TaskLauncher::post_process_unbound_stores_(
     return;
   }
 
-  auto* runtime  = Runtime::get_runtime();
-  auto* part_mgr = runtime->partition_manager();
+  auto&& runtime  = Runtime::get_runtime();
+  auto&& part_mgr = runtime.partition_manager();
 
   import_output_regions_(runtime, output_requirements);
 
@@ -326,7 +327,7 @@ void TaskLauncher::post_process_unbound_stores_(
       }
 
       auto region_field =
-        runtime->import_region_field(shape, req.parent, arg->field_id(), store->type()->size());
+        runtime.import_region_field(shape, req.parent, arg->field_id(), store->type()->size());
       store->set_region_field(std::move(region_field));
 
       // TODO(wonchanl): Need to handle key partitions for multi-dimensional unbound stores
@@ -338,7 +339,7 @@ void TaskLauncher::post_process_unbound_stores_(
       store->set_key_partition(machine, partition);
 
       const auto& index_partition = req.partition.get_index_partition();
-      part_mgr->record_index_partition(req.parent.get_index_space(), *partition, index_partition);
+      part_mgr.record_index_partition(req.parent.get_index_space(), *partition, index_partition);
     };
 
   if (unbound_stores_.size() == 1) {
@@ -354,10 +355,10 @@ void TaskLauncher::post_process_unbound_stores_(
         post_process_unbound_store(
           arg,
           req,
-          runtime->extract_scalar(result,
-                                  static_cast<std::uint32_t>(idx) * sizeof(std::size_t),
-                                  sizeof(std::size_t),
-                                  launch_domain),
+          runtime.extract_scalar(result,
+                                 static_cast<std::uint32_t>(idx) * sizeof(std::size_t),
+                                 sizeof(std::size_t),
+                                 launch_domain),
           machine_);
       } else {
         post_process_unbound_store(arg, req, result, machine_);
@@ -370,7 +371,7 @@ void TaskLauncher::report_interfering_stores_() const
 {
   LEGATE_ABORT(
     "Task ",
-    library_->get_task_name(task_id_),
+    library_.get().get_task_name(task_id_),
     " has interfering store arguments. This means the task tries to access the same store"
     "via multiplepartitions in mixed modes, which is illegal in Legate. Make sure to make a "
     "copy "

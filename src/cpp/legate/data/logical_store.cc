@@ -96,7 +96,7 @@ LogicalStore LogicalStore::delinearize(std::int32_t dim, std::vector<std::uint64
 PhysicalStore LogicalStore::get_physical_store(std::optional<mapping::StoreTarget> target) const
 {
   const auto sanitized =
-    target.value_or(detail::Runtime::get_runtime()->local_machine().has_socket_memory()
+    target.value_or(detail::Runtime::get_runtime().local_machine().has_socket_memory()
                       ? mapping::StoreTarget::SOCKETMEM
                       : mapping::StoreTarget::SYSMEM);
 

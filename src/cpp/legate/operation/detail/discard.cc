@@ -6,20 +6,19 @@
 
 #include <legate/operation/detail/discard.h>
 
-#include <legate/runtime/detail/runtime.h>
+#include <legion.h>
 
 namespace legate::detail {
 
 void Discard::launch()
 {
-  auto* runtime = Runtime::get_runtime();
   auto launcher = Legion::DiscardLauncher{region_, region_};
 
   launcher.add_field(field_id_);
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");
   launcher.provenance = provenance().to_string();
-  runtime->get_legion_runtime()->discard_fields(runtime->get_legion_context(), launcher);
+  Legion::Runtime::get_runtime()->discard_fields(Legion::Runtime::get_context(), launcher);
 }
 
 }  // namespace legate::detail

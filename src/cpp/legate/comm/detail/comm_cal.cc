@@ -150,7 +150,7 @@ class Finalize : public detail::LegionTask<Finalize> {
 
 class Factory final : public detail::CommunicatorFactory {
  public:
-  explicit Factory(const detail::Library* core_library);
+  explicit Factory(const detail::Library& core_library);
 
   [[nodiscard]] bool needs_barrier() const override;
   [[nodiscard]] bool is_supported_target(mapping::TaskTarget target) const override;
@@ -166,7 +166,7 @@ class Factory final : public detail::CommunicatorFactory {
   const detail::Library* core_library_{};
 };
 
-Factory::Factory(const detail::Library* core_library) : core_library_{core_library} {}
+Factory::Factory(const detail::Library& core_library) : core_library_{&core_library} {}
 
 bool Factory::needs_barrier() const { return true; }
 
@@ -184,15 +184,15 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
                                        std::uint32_t num_tasks)
 {
   const auto launch_domain = make_launch_domain_(num_tasks);
-  auto launcher            = detail::TaskLauncher{core_library_,
+  auto launcher            = detail::TaskLauncher{*core_library_,
                                        machine,
                                        Init::TASK_CONFIG.task_id(),
                                        static_cast<Legion::MappingTagID>(VariantCode::GPU)};
 
   // add cpu communicator
-  auto* comm_mgr         = detail::Runtime::get_runtime()->communicator_manager();
-  auto* cpu_comm_factory = comm_mgr->find_factory("cpu");
-  const auto cpu_comm    = cpu_comm_factory->find_or_create(
+  auto&& comm_mgr         = detail::Runtime::get_runtime().communicator_manager();
+  auto&& cpu_comm_factory = comm_mgr.find_factory("cpu");
+  const auto cpu_comm     = cpu_comm_factory.find_or_create(
     mapping::TaskTarget::GPU, machine.processor_range(), launch_domain);
 
   launcher.set_concurrent(true);
@@ -208,7 +208,7 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
                         const Legion::FutureMap& communicator)
 {
   const auto launch_domain = make_launch_domain_(num_tasks);
-  auto launcher            = detail::TaskLauncher{core_library_,
+  auto launcher            = detail::TaskLauncher{*core_library_,
                                        machine,
                                        Finalize::TASK_CONFIG.task_id(),
                                        static_cast<Legion::MappingTagID>(VariantCode::GPU)};
@@ -218,16 +218,17 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
   launcher.execute(launch_domain);
 }
 
-void register_tasks(detail::Library* core_library)
+void register_tasks(detail::Library& core_library)
 {
-  Init::register_variants(legate::Library{core_library});
-  Finalize::register_variants(legate::Library{core_library});
+  Init::register_variants(legate::Library{&core_library});
+  Finalize::register_variants(legate::Library{&core_library});
 }
 
-void register_factory(const detail::Library* core_library)
+void register_factory(const detail::Library& core_library)
 {
-  auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
-  comm_mgr->register_factory("cal", std::make_unique<Factory>(core_library));
+  auto&& comm_mgr = detail::Runtime::get_runtime().communicator_manager();
+
+  comm_mgr.register_factory("cal", std::make_unique<Factory>(core_library));
 }
 
 }  // namespace comm::cal

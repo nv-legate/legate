@@ -70,11 +70,11 @@ void Attachment::detach(bool unordered)
   can_dealloc_.emplace(std::visit(
     Overload{[&](const Legion::PhysicalRegion& region) {
                LEGATE_ASSERT(allocations_.size() == 1);
-               return Runtime::get_runtime()->detach(
+               return Runtime::get_runtime().detach(
                  region, !allocations_.front()->read_only(), unordered);
              },
              [&](const Legion::ExternalResources& resources) {
-               return Runtime::get_runtime()->detach(resources, false /*flush*/, unordered);
+               return Runtime::get_runtime().detach(resources, false /*flush*/, unordered);
              }},
     handle_));
 }

@@ -32,7 +32,6 @@ IndexAttach::IndexAttach(std::uint64_t unique_id,
 
 void IndexAttach::launch()
 {
-  auto* runtime = Runtime::get_runtime();
   auto launcher = Legion::IndexAttachLauncher{
     LEGION_EXTERNAL_INSTANCE, region_field_->region(), false /*restricted*/};
 
@@ -51,8 +50,8 @@ void IndexAttach::launch()
   launcher.constraints.field_constraint.inorder    = false;
   launcher.privilege_fields.insert(region_field_->field_id());
 
-  auto external_resources = runtime->get_legion_runtime()->attach_external_resources(
-    runtime->get_legion_context(), launcher);
+  auto external_resources = Legion::Runtime::get_runtime()->attach_external_resources(
+    Legion::Runtime::get_context(), launcher);
   region_field_->attach(std::move(external_resources), std::move(allocations_));
 }
 

@@ -23,7 +23,7 @@ namespace {
 
 [[nodiscard]] std::int64_t min_shard_volume()
 {
-  const auto& local_machine = Runtime::get_runtime()->local_machine();
+  const auto& local_machine = Runtime::get_runtime().local_machine();
 
   // TODO(wonchanl): make these configurable via Scope
   if (local_machine.has_gpus()) {
@@ -304,7 +304,7 @@ bool PartitionManager::use_complete_tiling(const tuple<std::uint64_t>& extents,
   constexpr auto MAX_TILES_HEURISTIC  = 256;
   constexpr auto MAX_PIECES_HEURISTIC = 16;
   const auto num_tiles                = (extents / tile_shape).volume();
-  const auto num_pieces = static_cast<std::uint64_t>(Runtime::get_runtime()->get_machine().count());
+  const auto num_pieces = static_cast<std::uint64_t>(Runtime::get_runtime().get_machine().count());
   return num_tiles <= MAX_TILES_HEURISTIC || num_tiles <= MAX_PIECES_HEURISTIC * num_pieces;
 }
 

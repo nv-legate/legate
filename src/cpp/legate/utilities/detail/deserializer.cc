@@ -20,12 +20,12 @@
 
 namespace legate::detail {
 
-TaskDeserializer::TaskDeserializer(const Legion::Task* task,
+TaskDeserializer::TaskDeserializer(const Legion::Task& task,
                                    const std::vector<Legion::PhysicalRegion>& regions)
-  : BaseDeserializer{task->args, task->arglen},
+  : BaseDeserializer{task.args, task.arglen},
     legion_task_{task},
-    futures_{task->futures.data(), task->futures.size()},
-    regions_{regions.data(), regions.size()}
+    futures_{task.futures},
+    regions_{regions}
 {
   auto runtime = Legion::Runtime::get_runtime();
   auto ctx     = Legion::Runtime::get_context();
@@ -142,10 +142,11 @@ void TaskDeserializer::unpack_impl(RegionField& value)
   auto idx = unpack<std::uint32_t>();
   auto fid = unpack<std::int32_t>();
 
-  value = RegionField{dim,
-                      regions_[idx],
-                      static_cast<Legion::FieldID>(fid),
-                      legion_task_->regions[idx].partition != Legion::LogicalPartition::NO_PART};
+  value =
+    RegionField{dim,
+                regions_[idx],
+                static_cast<Legion::FieldID>(fid),
+                legion_task_.get().regions[idx].partition != Legion::LogicalPartition::NO_PART};
 }
 
 void TaskDeserializer::unpack_impl(UnboundRegionField& value)
@@ -157,7 +158,7 @@ void TaskDeserializer::unpack_impl(UnboundRegionField& value)
   value = UnboundRegionField{
     outputs_[idx],
     static_cast<Legion::FieldID>(fid),
-    legion_task_->output_regions[idx].partition != Legion::LogicalPartition::NO_PART};
+    legion_task_.get().output_regions[idx].partition != Legion::LogicalPartition::NO_PART};
 }
 
 void TaskDeserializer::unpack_impl(legate::comm::Communicator& value)
@@ -179,15 +180,15 @@ void TaskDeserializer::unpack_impl(Legion::PhaseBarrier& barrier)
 
 namespace legate::mapping::detail {
 
-MapperDataDeserializer::MapperDataDeserializer(const Legion::Mappable* mappable)
-  : BaseDeserializer{mappable->mapper_data, mappable->mapper_data_size}
+MapperDataDeserializer::MapperDataDeserializer(const Legion::Mappable& mappable)
+  : BaseDeserializer{mappable.mapper_data, mappable.mapper_data_size}
 {
 }
 
-TaskDeserializer::TaskDeserializer(const Legion::Task* task,
-                                   Legion::Mapping::MapperRuntime* runtime,
+TaskDeserializer::TaskDeserializer(const Legion::Task& task,
+                                   Legion::Mapping::MapperRuntime& runtime,
                                    Legion::Mapping::MapperContext context)
-  : BaseDeserializer{task->args, task->arglen}, task_{task}, runtime_{runtime}, context_{context}
+  : BaseDeserializer{task.args, task.arglen}, task_{task}, runtime_{runtime}, context_{context}
 {
 }
 
@@ -286,19 +287,19 @@ void TaskDeserializer::unpack_impl(FutureWrapper& value)
 
 void TaskDeserializer::unpack_impl(RegionField& value, bool unbound)
 {
-  auto dim = unpack<std::int32_t>();
-  auto idx = unpack<std::uint32_t>();
-  auto fid = unpack<std::int32_t>();
-  auto req = unbound ? &task_->output_regions[idx] : &task_->regions[idx];
+  auto dim   = unpack<std::int32_t>();
+  auto idx   = unpack<std::uint32_t>();
+  auto fid   = unpack<std::int32_t>();
+  auto&& req = unbound ? task_.get().output_regions[idx] : task_.get().regions[idx];
 
   value = RegionField{req, dim, idx, static_cast<Legion::FieldID>(fid), unbound};
 }
 
-CopyDeserializer::CopyDeserializer(const Legion::Copy* copy,
+CopyDeserializer::CopyDeserializer(const Legion::Copy& copy,
                                    Span<const ReqsRef> all_requirements,
-                                   Legion::Mapping::MapperRuntime* runtime,
+                                   Legion::Mapping::MapperRuntime& runtime,
                                    Legion::Mapping::MapperContext context)
-  : BaseDeserializer{copy->mapper_data, copy->mapper_data_size},
+  : BaseDeserializer{copy.mapper_data, copy.mapper_data_size},
     all_reqs_{std::move(all_requirements)},
     curr_reqs_{all_reqs_.begin()},
     runtime_{runtime},
@@ -326,19 +327,18 @@ void CopyDeserializer::unpack_impl(Store& store)
   static_cast<void>(is_future);
 
   auto redop_id = unpack<GlobalRedopID>();
-  RegionField rf;
+  auto rf       = unpack<RegionField>();
 
-  unpack_impl(rf);
-  store =
-    Store{runtime_, context_, dim, std::move(type), redop_id, rf, unbound, std::move(transform)};
+  store = Store{
+    runtime_.get(), context_, dim, std::move(type), redop_id, rf, unbound, std::move(transform)};
 }
 
 void CopyDeserializer::unpack_impl(RegionField& value)
 {
-  auto dim = unpack<std::int32_t>();
-  auto idx = unpack<std::uint32_t>();
-  auto fid = unpack<std::int32_t>();
-  auto req = &curr_reqs_->get()[idx];
+  auto dim   = unpack<std::int32_t>();
+  auto idx   = unpack<std::uint32_t>();
+  auto fid   = unpack<std::int32_t>();
+  auto&& req = curr_reqs_->get()[idx];
 
   value = RegionField{
     req, dim, idx + req_index_offset_, static_cast<Legion::FieldID>(fid), false /*unbound*/};

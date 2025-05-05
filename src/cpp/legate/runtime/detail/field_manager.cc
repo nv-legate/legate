@@ -46,7 +46,7 @@ void FieldManager::free_field(FreeFieldInfo info, bool /*unordered*/)
     log_legate().debug() << "Field " << info.field_id << " on region " << info.region
                          << " freed in-order";
   }
-  Runtime::get_runtime()->issue_discard_field(info.region, info.field_id);
+  Runtime::get_runtime().issue_discard_field(info.region, info.field_id);
   if (info.shape->ready()) {
     auto& queue = ordered_free_fields_[OrderedQueueKey{info.shape->index_space(), info.field_size}];
 
@@ -95,8 +95,8 @@ std::optional<InternalSharedPtr<LogicalRegionField>> FieldManager::try_reuse_fie
 InternalSharedPtr<LogicalRegionField> FieldManager::create_new_field_(
   InternalSharedPtr<Shape> shape, std::uint32_t field_size)
 {
-  auto* const rgn_mgr = Runtime::get_runtime()->find_or_create_region_manager(shape->index_space());
-  auto [lr, fid]      = rgn_mgr->allocate_field(field_size);
+  auto&& rgn_mgr = Runtime::get_runtime().find_or_create_region_manager(shape->index_space());
+  auto [lr, fid] = rgn_mgr.allocate_field(field_size);
 
   if (log_legate().want_debug()) {
     log_legate().debug() << "Field " << fid << " created on region " << lr << " for shape "
@@ -171,10 +171,10 @@ std::uint32_t ConsensusMatchingFieldManager::calculate_match_credit_(
   if (!shape->ready()) {
     // We don't know how big an unbound output field is going to be (until its producing task has
     // completed), therefore make a worst-case assumption.
-    return Runtime::get_runtime()->field_reuse_freq();
+    return Runtime::get_runtime().field_reuse_freq();
   }
   const auto size             = shape->volume() * field_size;
-  const auto field_reuse_size = Runtime::get_runtime()->field_reuse_size();
+  const auto field_reuse_size = Runtime::get_runtime().field_reuse_size();
   if (size > field_reuse_size) {
     LEGATE_CHECK(field_reuse_size > 0);
     return (size + field_reuse_size - 1) / field_reuse_size;
@@ -192,7 +192,7 @@ void ConsensusMatchingFieldManager::maybe_issue_field_match_(const InternalShare
   // of "wasted" space (instances that we can't discard because, even though we have freed the
   // corresponding fields locally, we don't know that all nodes have freed them) somewhat bounded.
   field_match_counter_ += calculate_match_credit_(shape, field_size);
-  if (field_match_counter_ >= Runtime::get_runtime()->field_reuse_freq()) {
+  if (field_match_counter_ >= Runtime::get_runtime().field_reuse_freq()) {
     process_outstanding_match_();
     issue_field_match_();
     field_match_counter_ = 0;
@@ -219,7 +219,7 @@ void ConsensusMatchingFieldManager::issue_field_match_()
   unordered_free_fields_.clear();
   log_legate().debug() << "Consensus match emitted with " << input.size() << " local fields";
   // Dispatch the match and put it on the queue of outstanding matches, but don't block on it yet.
-  outstanding_match_ = Runtime::get_runtime()->issue_consensus_match(std::move(input));
+  outstanding_match_ = Runtime::get_runtime().issue_consensus_match(std::move(input));
 }
 
 void ConsensusMatchingFieldManager::process_outstanding_match_()
@@ -227,7 +227,7 @@ void ConsensusMatchingFieldManager::process_outstanding_match_()
   if (!outstanding_match_.has_value()) {
     return;
   }
-  const auto runtime = Runtime::get_runtime();
+  auto&& runtime = Runtime::get_runtime();
   // We need to flush the window before we ask the runtime to progress unordered operations, to make
   // sure any pending ReleaseRegionField operations that actually unmap/detach fields that we're
   // about to match on have been emitted. If we were to match on a field whose ReleaseRegionField is
@@ -236,7 +236,7 @@ void ConsensusMatchingFieldManager::process_outstanding_match_()
   // unmap/detach that has not been explicitly "progressed", the Legion runtime would hang (the
   // runtime doesn't "reap" pending unordered items automatically). We do this here before we block
   // on the consensus match.
-  runtime->flush_scheduling_window();
+  runtime.flush_scheduling_window();
   outstanding_match_->wait();
   log_legate().debug() << "Consensus match result: " << outstanding_match_->output().size() << "/"
                        << outstanding_match_->input().size() << " fields matched";
@@ -246,7 +246,7 @@ void ConsensusMatchingFieldManager::process_outstanding_match_()
   // detachment has also been emitted on all shards. This makes it safe to later block on any of
   // those detachments, since they are all guaranteed to be in the task stream now, and will
   // eventually complete.
-  runtime->progress_unordered_operations();
+  runtime.progress_unordered_operations();
   // Put all the matched fields into the ordered queue, in the same order as the match result,
   // which is the same order that all shards will see.
   for (auto&& item : outstanding_match_->output()) {

@@ -37,6 +37,6 @@ class FixupRanges : public LegateTask<FixupRanges> {
 #endif
 };
 
-void register_array_tasks(Library* core_lib);
+void register_array_tasks(Library& core_lib);
 
 }  // namespace legate::detail

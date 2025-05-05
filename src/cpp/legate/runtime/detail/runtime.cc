@@ -115,7 +115,7 @@ Runtime::Runtime()
 {
 }
 
-Library* Runtime::create_library(
+Library& Runtime::create_library(
   std::string_view library_name,
   const ResourceConfig& config,
   std::unique_ptr<mapping::Mapper> mapper,
@@ -142,68 +142,66 @@ Library* Runtime::create_library(
     mapper = std::make_unique<mapping::detail::DefaultMapper>();
   }
 
-  return &libraries_
-            .try_emplace(std::string{library_name},
-                         Library::ConstructKey{},
-                         std::string{library_name},
-                         config,
-                         std::move(mapper),
-                         std::move(default_options))
-            .first->second;
+  return libraries_
+    .try_emplace(std::string{library_name},
+                 Library::ConstructKey{},
+                 std::string{library_name},
+                 config,
+                 std::move(mapper),
+                 std::move(default_options))
+    .first->second;
 }
 
 namespace {
 
-template <typename LibraryMapT>
-[[nodiscard]] auto find_library_impl(LibraryMapT& libraries,
-                                     std::string_view library_name,
-                                     bool can_fail)
-  -> std::conditional_t<std::is_const_v<LibraryMapT>, const Library*, Library*>
-{
-  const auto finder = libraries.find(library_name);
+template <typename T, typename U>
+using const_like_t = std::conditional_t<std::is_const_v<T>, const U, U>;
 
-  if (libraries.end() == finder) {
-    if (!can_fail) {
-      throw TracedException<std::out_of_range>{
-        fmt::format("Library {} does not exist", library_name)};
-    }
-    return {};
+template <typename LibraryMapT>
+[[nodiscard]] auto find_library_impl(LibraryMapT& libraries, std::string_view library_name)
+  -> std::optional<std::reference_wrapper<const_like_t<LibraryMapT, Library>>>
+{
+  const auto it = libraries.find(library_name);
+
+  if (libraries.end() == it) {
+    return std::nullopt;
   }
-  return &finder->second;
+  return it->second;
 }
 
 }  // namespace
 
-const Library* Runtime::find_library(std::string_view library_name, bool can_fail /*=false*/) const
+std::optional<std::reference_wrapper<const Library>> Runtime::find_library(
+  std::string_view library_name) const
 {
-  return find_library_impl(libraries_, library_name, can_fail);
+  return find_library_impl(libraries_, library_name);
 }
 
-Library* Runtime::find_library(std::string_view library_name, bool can_fail /*=false*/)
+std::optional<std::reference_wrapper<Library>> Runtime::find_library(std::string_view library_name)
 {
-  return find_library_impl(libraries_, library_name, can_fail);
+  return find_library_impl(libraries_, library_name);
 }
 
-Library* Runtime::find_or_create_library(
+Library& Runtime::find_or_create_library(
   std::string_view library_name,
   const ResourceConfig& config,
   std::unique_ptr<mapping::Mapper> mapper,
   const std::map<VariantCode, VariantOptions>& default_options,
   bool* created)
 {
-  auto result = find_library(library_name, true /*can_fail*/);
+  auto result = find_library(library_name);
 
-  if (result) {
+  if (result.has_value()) {
     if (created) {
       *created = false;
     }
-    return result;
+    return *result;
   }
   result = create_library(std::move(library_name), config, std::move(mapper), default_options);
-  if (created != nullptr) {
+  if (created) {
     *created = true;
   }
-  return result;
+  return *result;
 }
 
 void Runtime::record_reduction_operator(std::uint32_t type_uid,
@@ -307,23 +305,23 @@ std::pair<mapping::detail::Machine, const VariantInfo&> Runtime::slice_machine_f
 }
 
 // This function should be moved to the library context
-InternalSharedPtr<AutoTask> Runtime::create_task(const Library* library, LocalTaskID task_id)
+InternalSharedPtr<AutoTask> Runtime::create_task(const Library& library, LocalTaskID task_id)
 {
-  auto&& [machine, vinfo] = slice_machine_for_task_(*library->find_task(task_id));
+  auto&& [machine, vinfo] = slice_machine_for_task_(*library.find_task(task_id));
   auto task               = make_internal_shared<AutoTask>(
     library, vinfo, task_id, current_op_id_(), scope().priority(), std::move(machine));
   increment_op_id_();
   return task;
 }
 
-InternalSharedPtr<ManualTask> Runtime::create_task(const Library* library,
+InternalSharedPtr<ManualTask> Runtime::create_task(const Library& library,
                                                    LocalTaskID task_id,
                                                    const Domain& launch_domain)
 {
   if (launch_domain.empty()) {
     throw TracedException<std::invalid_argument>{"Launch domain must not be empty"};
   }
-  auto&& [machine, vinfo] = slice_machine_for_task_(*library->find_task(task_id));
+  auto&& [machine, vinfo] = slice_machine_for_task_(*library.find_task(task_id));
   auto task               = make_internal_shared<ManualTask>(library,
                                                vinfo,
                                                task_id,
@@ -469,7 +467,7 @@ void Runtime::issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value)
   increment_op_id_();
 }
 
-void Runtime::tree_reduce(const Library* library,
+void Runtime::tree_reduce(const Library& library,
                           LocalTaskID task_id,
                           InternalSharedPtr<LogicalStore> store,
                           InternalSharedPtr<LogicalStore> out_store,
@@ -479,7 +477,7 @@ void Runtime::tree_reduce(const Library* library,
     throw TracedException<std::runtime_error>{"Multi-dimensional stores are not supported"};
   }
 
-  auto&& [machine, _] = slice_machine_for_task_(*library->find_task(task_id));
+  auto&& [machine, _] = slice_machine_for_task_(*library.find_task(task_id));
 
   submit(make_internal_shared<Reduce>(library,
                                       std::move(store),
@@ -1006,7 +1004,7 @@ void Runtime::record_pending_exception(ReturnedException pending_exception)
 InternalSharedPtr<LogicalRegionField> Runtime::create_region_field(InternalSharedPtr<Shape> shape,
                                                                    std::uint32_t field_size)
 {
-  return field_manager()->allocate_field(std::move(shape), field_size);
+  return field_manager().allocate_field(std::move(shape), field_size);
 }
 
 InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(InternalSharedPtr<Shape> shape,
@@ -1014,7 +1012,7 @@ InternalSharedPtr<LogicalRegionField> Runtime::import_region_field(InternalShare
                                                                    Legion::FieldID field_id,
                                                                    std::uint32_t field_size)
 {
-  return field_manager()->import_field(std::move(shape), field_size, std::move(region), field_id);
+  return field_manager().import_field(std::move(shape), field_size, std::move(region), field_id);
 }
 
 void Runtime::attach_alloc_info(const InternalSharedPtr<LogicalRegionField>& rf,
@@ -1118,9 +1116,9 @@ void Runtime::progress_unordered_operations()
   get_legion_runtime()->progress_unordered_operations(get_legion_context());
 }
 
-RegionManager* Runtime::find_or_create_region_manager(const Legion::IndexSpace& index_space)
+RegionManager& Runtime::find_or_create_region_manager(const Legion::IndexSpace& index_space)
 {
-  return &region_managers_.try_emplace(index_space, index_space).first->second;
+  return region_managers_.try_emplace(index_space, index_space).first->second;
 }
 
 const Legion::IndexSpace& Runtime::find_or_create_index_space(const tuple<std::uint64_t>& extents)
@@ -1365,7 +1363,7 @@ Legion::Future Runtime::get_tunable(const Library& library, std::int64_t tunable
 {
   auto launcher =
     Legion::TunableLauncher{static_cast<Legion::TunableID>(tunable_id), mapper_id(), 0};
-  const auto* mapper = library.get_mapper();
+  const auto* mapper = &library.get_mapper();
 
   launcher.arg = Legion::UntypedBuffer{
     mapper,
@@ -1465,7 +1463,7 @@ Legion::Future Runtime::reduce_future_map(const Legion::FutureMap& future_map,
 Legion::Future Runtime::reduce_exception_future_map(const Legion::FutureMap& future_map)
 {
   const auto reduction_op =
-    core_library()->get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
+    core_library().get_reduction_op_id(LocalRedopID{CoreReductionOp::JOIN_EXCEPTION});
 
   return get_legion_runtime()->reduce_future_map(
     get_legion_context(),
@@ -1572,7 +1570,7 @@ Legion::ProjectionID Runtime::get_affine_projection(std::uint32_t src_ndim,
     return finder->second;
   }
 
-  auto proj_id = core_library()->get_projection_id(next_projection_id_++);
+  auto proj_id = core_library().get_projection_id(next_projection_id_++);
 
   register_affine_projection_functor(src_ndim, point, proj_id);
   affine_projections_[key] = proj_id;
@@ -1597,7 +1595,7 @@ Legion::ProjectionID Runtime::get_delinearizing_projection(const tuple<std::uint
     return finder->second;
   }
 
-  auto proj_id = core_library()->get_projection_id(next_projection_id_++);
+  auto proj_id = core_library().get_projection_id(next_projection_id_++);
 
   register_delinearizing_projection_functor(color_shape, proj_id);
   delinearizing_projections_[color_shape] = proj_id;
@@ -1624,7 +1622,7 @@ Legion::ProjectionID Runtime::get_compound_projection(const tuple<std::uint64_t>
     return finder->second;
   }
 
-  auto proj_id = core_library()->get_projection_id(next_projection_id_++);
+  auto proj_id = core_library().get_projection_id(next_projection_id_++);
 
   register_compound_projection_functor(color_shape, point, proj_id);
   compound_projections_[key] = proj_id;
@@ -1663,7 +1661,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
     return finder->second;
   }
 
-  auto sharding_id = core_library()->get_sharding_id(next_sharding_id_++);
+  auto sharding_id = core_library().get_sharding_id(next_sharding_id_++);
   registered_shardings_.insert({std::move(key), sharding_id});
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -1828,7 +1826,7 @@ void set_env_vars()
                                                         true /*control replicable*/);
 
   // We can now initialize the Legate runtime with the Legion context
-  Runtime::get_runtime()->initialize(legion_context);
+  Runtime::get_runtime().initialize(legion_context);
 }
 
 void Runtime::start_profiling_range()
@@ -1848,7 +1846,7 @@ class RuntimeManager {
  public:
   enum class State : std::uint8_t { UNINITIALIZED, INITIALIZED, FINALIZED };
 
-  [[nodiscard]] Runtime* get();
+  [[nodiscard]] Runtime& get();
   [[nodiscard]] State state() const noexcept;
   void reset() noexcept;
 
@@ -1857,7 +1855,7 @@ class RuntimeManager {
   std::optional<Runtime> rt_{};
 };
 
-Runtime* RuntimeManager::get()
+Runtime& RuntimeManager::get()
 {
   if (LEGATE_UNLIKELY(!rt_.has_value())) {
     if (state() == State::FINALIZED) {
@@ -1870,7 +1868,7 @@ Runtime* RuntimeManager::get()
     rt_.emplace();
     state_ = State::INITIALIZED;
   }  // namespace
-  return &*rt_;
+  return *rt_;
 }  // namespace
 
 RuntimeManager::State RuntimeManager::state() const noexcept { return state_; }
@@ -1885,7 +1883,7 @@ RuntimeManager the_runtime{};
 
 }  // namespace
 
-/*static*/ Runtime* Runtime::get_runtime() { return the_runtime.get(); }
+/*static*/ Runtime& Runtime::get_runtime() { return the_runtime.get(); }
 
 void Runtime::register_shutdown_callback(ShutdownCallback callback)
 {
@@ -1914,7 +1912,7 @@ std::int32_t Runtime::finish()
   issue_execution_fence();
 
   // Destroy all communicators. This will likely launch some tasks for the clean-up.
-  communicator_manager()->destroy();
+  communicator_manager().destroy();
 
   // Destroy all Legion handles used by Legate
   for (auto&& [_, region_manager] : region_managers_) {
@@ -1993,7 +1991,7 @@ void extract_scalar_task(const void* args,
 
   show_progress(task, legion_context, runtime);
 
-  auto legion_task_context = LegionTaskContext{task, variant_kind, *regions};
+  auto legion_task_context = LegionTaskContext{*task, variant_kind, *regions};
   const auto context       = legate::TaskContext{&legion_task_context};
   auto offset              = context.scalar(0).value<std::size_t>();
   auto size                = context.scalar(1).value<std::size_t>();
@@ -2015,13 +2013,13 @@ void extract_scalar_task(const void* args,
 template <VariantCode variant_id>
 void register_extract_scalar_variant(const InternalSharedPtr<TaskInfo>& task_info,
                                      const TaskInfo::RuntimeAddVariantKey& key,
-                                     const Library* core_lib,
+                                     const Library& core_lib,
                                      const VariantOptions& variant_options)
 {
   // TODO(wonchanl): We could support Legion & Realm calling conventions so we don't pass nullptr
   // here. Should also remove the corresponding workaround function in TaskInfo!
   task_info->add_variant_(key,
-                          *core_lib,
+                          core_lib,
                           variant_id,
                           &variant_options,
                           Legion::CodeDescriptor{extract_scalar_task<variant_id>});
@@ -2060,7 +2058,7 @@ class PrefetchBloatedInstances : public LegionTask<PrefetchBloatedInstances> {
 
 }  // namespace
 
-void register_legate_core_tasks(Library* core_lib)
+void register_legate_core_tasks(Library& core_lib)
 {
   constexpr auto key     = TaskInfo::RuntimeAddVariantKey{};
   auto task_info         = make_internal_shared<TaskInfo>("core::extract_scalar");
@@ -2074,14 +2072,14 @@ void register_legate_core_tasks(Library* core_lib)
   if (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
     register_extract_scalar_variant<VariantCode::OMP>(task_info, key, core_lib, options);
   }
-  core_lib->register_task(LocalTaskID{CoreTask::EXTRACT_SCALAR}, std::move(task_info));
-  PrefetchBloatedInstances::register_variants(legate::Library{core_lib});
+  core_lib.register_task(LocalTaskID{CoreTask::EXTRACT_SCALAR}, std::move(task_info));
+  PrefetchBloatedInstances::register_variants(legate::Library{&core_lib});
 
   register_array_tasks(core_lib);
   register_partitioning_tasks(core_lib);
   comm::register_tasks(core_lib);
   legate::experimental::io::detail::register_tasks();
-  OffloadTo::register_variants(legate::Library{core_lib});
+  OffloadTo::register_variants(legate::Library{&core_lib});
 }
 
 namespace {
@@ -2156,7 +2154,7 @@ void register_builtin_reduction_ops()
 
 }  // namespace
 
-extern void register_exception_reduction_op(const Library* context);
+extern void register_exception_reduction_op(const Library& context);
 
 /*static*/ void Runtime::initialize_core_library_callback_(
   Legion::Machine,  // NOLINT(performance-unnecessary-value-param)
@@ -2171,14 +2169,14 @@ extern void register_exception_reduction_op(const Library* context);
   config.max_shardings     = to_underlying(CoreShardID::MAX_FUNCTOR);
   config.max_reduction_ops = to_underlying(CoreReductionOp::MAX_REDUCTION);
 
-  auto* runtime = Runtime::get_runtime();
+  auto&& runtime = Runtime::get_runtime();
 
-  auto* const core_lib =
-    runtime->create_library(CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), {});
+  auto& core_lib =
+    runtime.create_library(CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), {});
   // Order is deliberate. core_library_() must be set here, because the core mapper and mapper
   // manager expect to call get_runtime()->core_library().
-  runtime->core_library_ = core_lib;
-  runtime->mapper_manager_.emplace();
+  runtime.core_library_ = core_lib;
+  runtime.mapper_manager_.emplace();
 
   register_legate_core_tasks(core_lib);
 
@@ -2199,12 +2197,12 @@ CUstream Runtime::get_cuda_stream() const
   return nullptr;
 }
 
-cuda::detail::CUDAModuleManager* Runtime::get_cuda_module_manager()
+cuda::detail::CUDAModuleManager& Runtime::get_cuda_module_manager()
 {
   // This needs to be initialized in a thread-safe manner, so we do it in
   // Runtime::initialize(). Hence, we want this to throw if it is accessed before then, because
   // we can't guarantee it's threadsafe (and don't want to wrap this in some kind of mutex...).
-  return &cu_mod_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
+  return cu_mod_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 const MapperManager& Runtime::get_mapper_manager_() const

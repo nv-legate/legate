@@ -36,7 +36,7 @@ class Library;
 namespace {
 
 [[nodiscard]] TaskContext::CtorArgs make_task_context_ctor_args(
-  const Legion::Task* task,
+  const Legion::Task& task,
   VariantCode variant_kind,
   const std::vector<Legion::PhysicalRegion>& regions)
 {
@@ -59,7 +59,7 @@ namespace {
   bool insert_barrier = false;
   Legion::PhaseBarrier arrival{}, wait{};
 
-  if (task->is_index_space) {
+  if (task.is_index_space) {
     insert_barrier = dez.unpack<bool>();
     if (insert_barrier) {
       arrival = dez.unpack<Legion::PhaseBarrier>();
@@ -71,7 +71,7 @@ namespace {
   // For reduction tree cases, some input stores may be mapped to NO_REGION
   // when the number of subregions isn't a multiple of the chosen radix.
   // To simplify the programming mode, we filter out those "invalid" stores out.
-  if (task->tag == static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)) {
+  if (task.tag == static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)) {
     constexpr auto is_invalid_array = [](const InternalSharedPtr<PhysicalArray>& inp) {
       return !inp->valid();
     };
@@ -94,7 +94,7 @@ namespace {
 
 }  // namespace
 
-LegionTaskContext::LegionTaskContext(const Legion::Task* legion_task,
+LegionTaskContext::LegionTaskContext(const Legion::Task& legion_task,
                                      VariantCode variant_kind,
                                      const std::vector<Legion::PhysicalRegion>& regions,
                                      mapping::detail::Machine&& machine)
@@ -112,11 +112,11 @@ LegionTaskContext::LegionTaskContext(const Legion::Task* legion_task,
       (legion_task_().current_proc.kind() == Processor::Kind::TOC_PROC) &&
       std::any_of(reductions().begin(), reductions().end(), is_scalar_store)) {
     cuda::detail::get_cuda_driver_api()->stream_synchronize(
-      Runtime::get_runtime()->get_cuda_stream());
+      Runtime::get_runtime().get_cuda_stream());
   }
 }
 
-const Legion::Task& LegionTaskContext::legion_task_() const noexcept { return *task_; }
+const Legion::Task& LegionTaskContext::legion_task_() const noexcept { return task_; }
 
 std::vector<ReturnValue> LegionTaskContext::get_return_values_() const
 {
@@ -143,7 +143,7 @@ std::vector<ReturnValue> LegionTaskContext::get_return_values_() const
 
 // ==========================================================================================
 
-LegionTaskContext::LegionTaskContext(const Legion::Task* legion_task,
+LegionTaskContext::LegionTaskContext(const Legion::Task& legion_task,
                                      VariantCode variant_kind,
                                      const std::vector<Legion::PhysicalRegion>& regions)
   // WARNING: if the Machine is no longer the first thing to be deserialized, then this will break
@@ -221,7 +221,7 @@ void legion_task_body(VariantImpl variant_impl,
 
   show_progress(task, legion_context, runtime);
 
-  auto legion_task_ctx = LegionTaskContext{task, variant_kind, *regions};
+  auto legion_task_ctx = LegionTaskContext{*task, variant_kind, *regions};
 
   if constexpr (LEGATE_DEFINED(LEGATE_USE_CUDA)) {
     Realm::Cuda::set_task_ctxsync_required(!legion_task_ctx.can_elide_device_ctx_sync());

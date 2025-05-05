@@ -20,7 +20,7 @@ Memory::Kind find_memory_kind_for_executing_processor(bool host_accessible)
     throw detail::TracedException<std::runtime_error>{"Runtime has not started"};
   }
 
-  const auto kind = detail::Runtime::get_runtime()->get_executing_processor().kind();
+  const auto kind = detail::Runtime::get_runtime().get_executing_processor().kind();
 
   switch (kind) {
     case Processor::Kind::LOC_PROC: return Memory::Kind::SYSTEM_MEM;

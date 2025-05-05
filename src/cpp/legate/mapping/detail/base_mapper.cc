@@ -102,7 +102,7 @@ BaseMapper::BaseMapper()
   : Mapper{Legion::Runtime::get_runtime()->get_mapper_runtime()},
     mapper_name_{
       fmt::format("{} on Node {}",
-                  legate::detail::Runtime::get_runtime()->core_library()->get_library_name(),
+                  legate::detail::Runtime::get_runtime().core_library().get_library_name(),
                   local_machine_.node_id)}
 {
 }
@@ -200,7 +200,7 @@ void BaseMapper::select_task_options(Legion::Mapping::MapperContext ctx,
                                      const Legion::Task& task,
                                      TaskOptions& output)
 {
-  const auto legate_task = Task{&task, runtime, ctx};
+  const auto legate_task = Task{task, *runtime, ctx};
 
   {
     auto get_stores = legate::detail::StoreIteratorCache<InternalSharedPtr<Store>>{};
@@ -231,7 +231,7 @@ void BaseMapper::slice_task(Legion::Mapping::MapperContext ctx,
                             const SliceTaskInput& input,
                             SliceTaskOutput& output)
 {
-  const Task legate_task{&task, runtime, ctx};
+  const Task legate_task{task, *runtime, ctx};
 
   auto&& machine_desc = legate_task.machine();
   auto local_range    = local_machine_.slice(legate_task.target(), machine_desc);
@@ -501,10 +501,10 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
                           Task* legate_task,
                           Legion::Mapping::Mapper::MapTaskOutput* output)
 {
-  auto* library = legate_task->library();
+  auto&& library = legate_task->library();
   // TODO(mpapadakis): Unify the variant finding with BaseMapper::find_variant_
-  auto&& maybe_vinfo = library->find_task(legate_task->task_id())
-                         ->find_variant(to_variant_code(legate_task->target()));
+  auto&& maybe_vinfo =
+    library.find_task(legate_task->task_id())->find_variant(to_variant_code(legate_task->target()));
 
   LEGATE_CHECK(maybe_vinfo.has_value());
 
@@ -531,9 +531,9 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
     return;
   }
 
-  auto* legate_mapper = library->get_mapper();
+  auto&& legate_mapper = library.get_mapper();
   for (auto&& target : allocation_pool_targets) {
-    const auto size   = legate_mapper->allocation_pool_size(mapping::Task{legate_task}, target);
+    const auto size   = legate_mapper.allocation_pool_size(mapping::Task{legate_task}, target);
     const auto memory = local_machine.get_memory(target_proc, target);
     output->leaf_pool_bounds.try_emplace(
       memory,
@@ -550,8 +550,7 @@ void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
                                                  const Legion::Task& legion_task,
                                                  Task* task)
 {
-  auto client_mappings =
-    task->library()->get_mapper()->store_mappings(mapping::Task{task}, options);
+  auto client_mappings = task->library().get_mapper().store_mappings(mapping::Task{task}, options);
 
   return initialize_mapping_categories(key, client_mappings, mapper_name, legion_task);
 }
@@ -571,7 +570,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   // Should never be mapping the top-level task here
   LEGATE_CHECK(task.get_depth() > 0);
 
-  auto legate_task = Task{&task, runtime, ctx};
+  auto legate_task = Task{task, *runtime, ctx};
 
   // Let's populate easy outputs first
   output.chosen_variant     = legate_task.legion_task_variant();
@@ -653,7 +652,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
   // FIXME(wonchanl): there's no way to do this in a Legate mapper yet, as this task doesn't use the
   // Legate calling convention.
   if (legate::GlobalTaskID{task.task_id} ==
-      legate::detail::Runtime::get_runtime()->core_library()->get_task_id(
+      legate::detail::Runtime::get_runtime().core_library().get_task_id(
         legate::LocalTaskID{legate::detail::CoreTask::EXTRACT_SCALAR})) {
     LEGATE_ASSERT(task.futures.size() == 1);
     output.future_locations.push_back(local_machine_.get_memory(
@@ -1297,7 +1296,7 @@ void BaseMapper::select_task_variant(Legion::Mapping::MapperContext ctx,
                                      const SelectVariantInput& /* input */,
                                      SelectVariantOutput& output)
 {
-  output.chosen_variant = Task{&task, runtime, ctx}.legion_task_variant();
+  output.chosen_variant = Task{task, *runtime, ctx}.legion_task_variant();
 }
 
 void BaseMapper::postmap_task(Legion::Mapping::MapperContext /*ctx*/,
@@ -1458,7 +1457,7 @@ void BaseMapper::report_profiling(Legion::Mapping::MapperContext,
 
 Legion::ShardingID BaseMapper::find_mappable_sharding_functor_id_(const Legion::Mappable& mappable)
 {
-  const Mappable legate_mappable{&mappable};
+  const Mappable legate_mappable{mappable};
 
   return static_cast<Legion::ShardingID>(legate_mappable.sharding_id());
 }
@@ -1478,7 +1477,7 @@ void BaseMapper::map_inline(Legion::Mapping::MapperContext ctx,
 {
   LEGATE_ASSERT(inline_op.requirement.instance_fields.size() == 1);
 
-  const Store store{runtime, ctx, &inline_op.requirement};
+  const Store store{*runtime, ctx, inline_op.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
   auto store_target = static_cast<StoreTarget>(inline_op.tag);
   auto target_proc  = local_machine_.find_first_processor_with_affinity_to(store_target);
@@ -1517,7 +1516,7 @@ void BaseMapper::map_copy(Legion::Mapping::MapperContext ctx,
                           const MapCopyInput& /*input*/,
                           MapCopyOutput& output)
 {
-  const Copy legate_copy{&copy, runtime, ctx};
+  const Copy legate_copy{copy, *runtime, ctx};
   output.copy_fill_priority = legate_copy.priority();
 
   auto& machine_desc = legate_copy.machine();
@@ -1749,7 +1748,7 @@ void BaseMapper::map_partition(Legion::Mapping::MapperContext ctx,
 
   LEGATE_ASSERT(partition.requirement.instance_fields.size() == 1);
 
-  const Store store{runtime, ctx, &partition.requirement};
+  const Store store{*runtime, ctx, partition.requirement};
   std::vector<std::unique_ptr<StoreMapping>> mappings;
 
   auto&& reqs = mappings.emplace_back(StoreMapping::default_mapping(&store, store_target, false))

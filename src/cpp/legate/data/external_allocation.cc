@@ -87,7 +87,7 @@ ExternalAllocation::~ExternalAllocation() noexcept = default;
   std::optional<Deleter> deleter /*=std::nullopt*/)  // NOLINT(performance-unnecessary-value-param)
 {
 #if LEGATE_DEFINED(LEGATE_USE_CUDA)
-  auto& local_gpus = detail::Runtime::get_runtime()->local_machine().gpus();
+  auto& local_gpus = detail::Runtime::get_runtime().local_machine().gpus();
   if (local_device_id >= local_gpus.size()) {
     throw detail::TracedException<std::out_of_range>{
       fmt::format("Device ID {} is invalid (the runtime is configured with only {}",

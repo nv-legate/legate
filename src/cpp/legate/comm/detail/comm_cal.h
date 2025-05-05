@@ -14,9 +14,9 @@ class Library;
 
 namespace comm::cal {
 
-void register_tasks(detail::Library* core_library);
+void register_tasks(detail::Library& core_library);
 
-void register_factory(const detail::Library* core_library);
+void register_factory(const detail::Library& core_library);
 
 }  // namespace comm::cal
 

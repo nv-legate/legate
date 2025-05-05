@@ -83,7 +83,7 @@ GlobalTaskID InlineTaskContext::task_id() const noexcept
 {
   const auto& task = task_();
 
-  return task.library()->get_task_id(task.local_task_id());
+  return task.library().get_task_id(task.local_task_id());
 }
 
 bool InlineTaskContext::is_single_task() const noexcept { return true; }
@@ -239,12 +239,10 @@ void handle_return_values(const Task& task,
 void inline_task_body(const Task& task, VariantCode variant_code, VariantImpl variant_impl)
 {
   const auto _ = [] {
-    const auto runtime = Runtime::get_runtime();
-
-    runtime->inline_task_start();
-    return legate::make_scope_guard([=]() noexcept { runtime->inline_task_end(); });
+    Runtime::get_runtime().inline_task_start();
+    return legate::make_scope_guard([&]() noexcept { Runtime::get_runtime().inline_task_end(); });
   }();
-  const auto get_task_name = [&] { return task.library()->get_task_name(task.local_task_id()); };
+  const auto get_task_name = [&] { return task.library().get_task_name(task.local_task_id()); };
   const auto _1 =
     task_detail::make_nvtx_range(get_task_name, [&] { return task.provenance().as_string_view(); });
   static_cast<void>(_1);
@@ -257,7 +255,7 @@ void inline_task_body(const Task& task, VariantCode variant_code, VariantImpl va
   handle_return_values(task, deferred_buffers);
 
   if (exception.has_value()) {
-    detail::Runtime::get_runtime()->record_pending_exception(*std::move(exception));
+    detail::Runtime::get_runtime().record_pending_exception(*std::move(exception));
   }
 }
 

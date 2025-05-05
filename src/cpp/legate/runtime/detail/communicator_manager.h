@@ -11,7 +11,6 @@
 #include <legate/utilities/hash.h>
 #include <legate/utilities/typedefs.h>
 
-#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -25,13 +24,12 @@ namespace legate::detail {
 // communicators
 class CommunicatorFactory {
  public:
-  CommunicatorFactory()                                               = default;
-  CommunicatorFactory(const CommunicatorFactory&) noexcept            = default;
-  CommunicatorFactory& operator=(const CommunicatorFactory&) noexcept = default;
-  CommunicatorFactory(CommunicatorFactory&&) noexcept                 = default;
-  CommunicatorFactory& operator=(CommunicatorFactory&&) noexcept      = default;
-
-  virtual ~CommunicatorFactory() = default;
+  CommunicatorFactory()                                      = default;
+  CommunicatorFactory(const CommunicatorFactory&)            = delete;
+  CommunicatorFactory& operator=(const CommunicatorFactory&) = delete;
+  CommunicatorFactory(CommunicatorFactory&&)                 = delete;
+  CommunicatorFactory& operator=(CommunicatorFactory&&)      = delete;
+  virtual ~CommunicatorFactory()                             = default;
 
   [[nodiscard]] Legion::FutureMap find_or_create(const mapping::TaskTarget& target,
                                                  const mapping::ProcessorRange& range,
@@ -77,13 +75,20 @@ class CommunicatorFactory {
 
 class CommunicatorManager {
  public:
-  [[nodiscard]] CommunicatorFactory* find_factory(std::string_view name) const;
+  CommunicatorManager()                                      = default;
+  CommunicatorManager(const CommunicatorManager&)            = delete;
+  CommunicatorManager& operator=(const CommunicatorManager&) = delete;
+  CommunicatorManager(CommunicatorManager&&)                 = delete;
+  CommunicatorManager& operator=(CommunicatorManager&&)      = delete;
+
+  [[nodiscard]] CommunicatorFactory& find_factory(std::string_view name) const;
   void register_factory(std::string name, std::unique_ptr<CommunicatorFactory> factory);
 
   void destroy();
 
  private:
-  [[nodiscard]] std::optional<CommunicatorFactory*> find_factory_(std::string_view name) const;
+  [[nodiscard]] std::optional<std::reference_wrapper<CommunicatorFactory>> find_factory_(
+    std::string_view name) const;
 
   std::vector<std::pair<std::string, std::unique_ptr<CommunicatorFactory>>> factories_{};
 };

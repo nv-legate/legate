@@ -20,8 +20,8 @@ Mappable::Mappable(private_tag, MapperDataDeserializer dez)
 {
 }
 
-Task::Task(const Legion::Task* task,
-           Legion::Mapping::MapperRuntime* runtime,
+Task::Task(const Legion::Task& task,
+           Legion::Mapping::MapperRuntime& runtime,
            Legion::Mapping::MapperContext context)
   : Mappable{task}, task_{task}
 {
@@ -34,7 +34,7 @@ Task::Task(const Legion::Task* task,
   future_size_         = dez.unpack<std::size_t>();
   can_raise_exception_ = dez.unpack<bool>();
 
-  if (task_->tag ==
+  if (legion_task().tag ==
       static_cast<Legion::MappingTagID>(legate::detail::CoreMappingTag::TREE_REDUCE)) {
     inputs_.erase(
       std::remove_if(inputs_.begin(), inputs_.end(), [](const auto& inp) { return !inp->valid(); }),
@@ -44,7 +44,7 @@ Task::Task(const Legion::Task* task,
 
 LocalTaskID Task::task_id() const
 {
-  return library()->get_local_task_id(static_cast<GlobalTaskID>(task_->task_id));
+  return library().get_local_task_id(static_cast<GlobalTaskID>(legion_task().task_id));
 }
 
 Legion::VariantID Task::legion_task_variant() const
@@ -54,15 +54,15 @@ Legion::VariantID Task::legion_task_variant() const
 
 // ==========================================================================================
 
-Copy::Copy(const Legion::Copy* copy,
-           Legion::Mapping::MapperRuntime* runtime,
+Copy::Copy(const Legion::Copy& copy,
+           Legion::Mapping::MapperRuntime& runtime,
            Legion::Mapping::MapperContext context)
   : copy_{copy}
 {
-  const auto reqs = {std::cref(copy->src_requirements),
-                     std::cref(copy->dst_requirements),
-                     std::cref(copy->src_indirect_requirements),
-                     std::cref(copy->dst_indirect_requirements)};
+  const auto reqs = {std::cref(copy.src_requirements),
+                     std::cref(copy.dst_requirements),
+                     std::cref(copy.src_indirect_requirements),
+                     std::cref(copy.dst_indirect_requirements)};
   CopyDeserializer dez{copy, reqs, runtime, context};
 
   // Mappable

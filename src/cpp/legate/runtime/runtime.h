@@ -712,7 +712,7 @@ class Runtime {
   [[nodiscard]] const detail::Runtime* impl() const;
 
  private:
-  explicit Runtime(detail::Runtime* runtime);
+  explicit Runtime(detail::Runtime& runtime);
   void register_shutdown_callback_(ShutdownCallback callback);
 
   detail::Runtime* impl_{};

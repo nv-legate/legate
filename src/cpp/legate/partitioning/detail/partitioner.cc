@@ -295,7 +295,7 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores_(
   std::vector<const Variable*> partition_symbols,
   const ConstraintSolver& solver)
 {
-  const auto runtime    = Runtime::get_runtime();
+  auto&& runtime        = Runtime::get_runtime();
   auto is_unbound_store = [&](const Variable* part_symb) {
     if (strategy->has_assignment(part_symb)) {
       return true;
@@ -307,16 +307,16 @@ std::vector<const Variable*> Partitioner::handle_unbound_stores_(
 
     auto&& equiv_class = solver.find_equivalence_class(part_symb);
     const InternalSharedPtr<Partition> partition{create_no_partition()};
-    auto field_space   = runtime->create_field_space();
+    auto field_space   = runtime.create_field_space();
     auto next_field_id = RegionManager::FIELD_ID_BASE;
 
     for (auto* symb : equiv_class) {
       if (next_field_id - RegionManager::FIELD_ID_BASE >= RegionManager::MAX_NUM_FIELDS) {
-        field_space   = runtime->create_field_space();
+        field_space   = runtime.create_field_space();
         next_field_id = RegionManager::FIELD_ID_BASE;
       }
       auto field_id =
-        runtime->allocate_field(field_space, next_field_id++, symb->store()->type()->size());
+        runtime.allocate_field(field_space, next_field_id++, symb->store()->type()->size());
       strategy->insert(symb, partition, field_space, field_id);
     }
     return true;

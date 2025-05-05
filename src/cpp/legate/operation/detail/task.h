@@ -48,7 +48,7 @@ class TaskArrayArg {
 
 class Task : public Operation {
  protected:
-  Task(const Library* library,
+  Task(const Library& library,
        const VariantInfo& variant_info,
        LocalTaskID task_id,
        std::uint64_t unique_id,
@@ -99,15 +99,15 @@ class Task : public Operation {
   [[nodiscard]] const std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>>&
   scalar_reductions() const;
 
-  [[nodiscard]] const Library* library() const;
+  [[nodiscard]] const Library& library() const;
   [[nodiscard]] LocalTaskID local_task_id() const;
 
  protected:
   [[nodiscard]] const VariantInfo& variant_info_() const;
 
  private:
-  const Library* library_{};
-  const VariantInfo* vinfo_{};
+  std::reference_wrapper<const Library> library_;
+  std::reference_wrapper<const VariantInfo> vinfo_;
   LocalTaskID task_id_{};
   bool concurrent_{};
   bool has_side_effect_{};
@@ -125,13 +125,13 @@ class Task : public Operation {
   std::vector<InternalSharedPtr<LogicalStore>> unbound_outputs_{};
   std::vector<InternalSharedPtr<LogicalStore>> scalar_outputs_{};
   std::vector<std::pair<InternalSharedPtr<LogicalStore>, GlobalRedopID>> scalar_reductions_{};
-  std::vector<CommunicatorFactory*> communicator_factories_{};
+  std::vector<std::reference_wrapper<CommunicatorFactory>> communicator_factories_{};
   bool can_inline_launch_{};
 };
 
 class AutoTask final : public Task {
  public:
-  AutoTask(const Library* library,
+  AutoTask(const Library& library,
            const VariantInfo& variant_info,
            LocalTaskID task_id,
            std::uint64_t unique_id,
@@ -170,7 +170,7 @@ class AutoTask final : public Task {
 
 class ManualTask final : public Task {
  public:
-  ManualTask(const Library* library,
+  ManualTask(const Library& library,
              const VariantInfo& variant_info,
              LocalTaskID task_id,
              const Domain& launch_domain,

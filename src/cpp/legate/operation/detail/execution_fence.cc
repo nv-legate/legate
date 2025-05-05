@@ -6,16 +6,16 @@
 
 #include <legate/operation/detail/execution_fence.h>
 
-#include <legate/runtime/detail/runtime.h>
+#include <legion.h>
 
 namespace legate::detail {
 
 void ExecutionFence::launch()
 {
-  auto* runtime = Runtime::get_runtime();
-  if (const auto future =
-        runtime->get_legion_runtime()->issue_execution_fence(runtime->get_legion_context());
-      block_) {
+  const auto future =
+    Legion::Runtime::get_runtime()->issue_execution_fence(Legion::Runtime::get_context());
+
+  if (block_) {
     future.wait();
   }
 }

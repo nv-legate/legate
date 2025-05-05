@@ -23,7 +23,7 @@ class Scope::Impl {
       throw detail::TracedException<std::invalid_argument>{
         "Priority can be set only once for each scope"};
     }
-    priority_ = detail::Runtime::get_runtime()->scope().exchange_priority(priority);
+    priority_ = detail::Runtime::get_runtime().scope().exchange_priority(priority);
   }
 
   void set_exception_mode(ExceptionMode exception_mode)
@@ -33,7 +33,7 @@ class Scope::Impl {
         "Exception mode can be set only once for each scope"};
     }
     exception_mode_ =
-      detail::Runtime::get_runtime()->scope().exchange_exception_mode(exception_mode);
+      detail::Runtime::get_runtime().scope().exchange_exception_mode(exception_mode);
   }
 
   void set_provenance(std::string provenance)
@@ -42,8 +42,7 @@ class Scope::Impl {
       throw detail::TracedException<std::invalid_argument>{
         "Provenance can be set only once for each scope"};
     }
-    provenance_ =
-      detail::Runtime::get_runtime()->scope().exchange_provenance(std::move(provenance));
+    provenance_ = detail::Runtime::get_runtime().scope().exchange_provenance(std::move(provenance));
   }
 
   void set_machine(InternalSharedPtr<mapping::detail::Machine> machine)
@@ -52,25 +51,25 @@ class Scope::Impl {
       throw detail::TracedException<std::invalid_argument>{
         "Machine can be set only once for each scope"};
     }
-    machine_ = detail::Runtime::get_runtime()->scope().exchange_machine(std::move(machine));
+    machine_ = detail::Runtime::get_runtime().scope().exchange_machine(std::move(machine));
   }
 
   ~Impl()
   {
     if (priority_) {
-      static_cast<void>(detail::Runtime::get_runtime()->scope().exchange_priority(*priority_));
+      static_cast<void>(detail::Runtime::get_runtime().scope().exchange_priority(*priority_));
     }
     if (exception_mode_) {
       static_cast<void>(
-        detail::Runtime::get_runtime()->scope().exchange_exception_mode(*exception_mode_));
+        detail::Runtime::get_runtime().scope().exchange_exception_mode(*exception_mode_));
     }
     if (provenance_) {
       static_cast<void>(
-        detail::Runtime::get_runtime()->scope().exchange_provenance(std::move(*provenance_)));
+        detail::Runtime::get_runtime().scope().exchange_provenance(std::move(*provenance_)));
     }
     if (machine_) {
       static_cast<void>(
-        detail::Runtime::get_runtime()->scope().exchange_machine(std::move(machine_)));
+        detail::Runtime::get_runtime().scope().exchange_machine(std::move(machine_)));
     }
   }
 
@@ -140,22 +139,22 @@ Scope::~Scope() = default;
 
 /*static*/ std::int32_t Scope::priority()
 {
-  return detail::Runtime::get_runtime()->scope().priority();
+  return detail::Runtime::get_runtime().scope().priority();
 }
 
 /*static*/ legate::ExceptionMode Scope::exception_mode()
 {
-  return detail::Runtime::get_runtime()->scope().exception_mode();
+  return detail::Runtime::get_runtime().scope().exception_mode();
 }
 
 /*static*/ std::string_view Scope::provenance()
 {
-  return detail::Runtime::get_runtime()->scope().provenance().as_string_view();
+  return detail::Runtime::get_runtime().scope().provenance().as_string_view();
 }
 
 /*static*/ mapping::Machine Scope::machine()
 {
-  return mapping::Machine{detail::Runtime::get_runtime()->scope().machine()};
+  return mapping::Machine{detail::Runtime::get_runtime().scope().machine()};
 }
 
 }  // namespace legate

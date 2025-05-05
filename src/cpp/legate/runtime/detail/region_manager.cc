@@ -13,9 +13,9 @@
 
 namespace legate::detail {
 
-void RegionManager::ManagerEntry::destroy(Runtime* runtime, bool unordered) const
+void RegionManager::ManagerEntry::destroy(Runtime& runtime, bool unordered) const
 {
-  runtime->destroy_region(region, unordered);
+  runtime.destroy_region(region, unordered);
 }
 
 RegionManager::RegionManager(Legion::IndexSpace index_space) : index_space_{std::move(index_space)}
@@ -24,7 +24,7 @@ RegionManager::RegionManager(Legion::IndexSpace index_space) : index_space_{std:
 
 void RegionManager::destroy(bool unordered)
 {
-  auto runtime = Runtime::get_runtime();
+  auto&& runtime = Runtime::get_runtime();
   for (auto&& entry : entries_) {
     entry.destroy(runtime, unordered);
   }
@@ -33,8 +33,8 @@ void RegionManager::destroy(bool unordered)
 
 void RegionManager::push_entry_()
 {
-  auto runtime = Runtime::get_runtime();
-  entries_.emplace_back(runtime->create_region(index_space_, runtime->create_field_space()));
+  auto&& runtime = Runtime::get_runtime();
+  entries_.emplace_back(runtime.create_region(index_space_, runtime.create_field_space()));
 }
 
 bool RegionManager::has_space() const { return !entries_.empty() && active_entry_().has_space(); }
@@ -47,7 +47,7 @@ std::pair<Legion::LogicalRegion, Legion::FieldID> RegionManager::allocate_field(
   }
 
   auto& entry = active_entry_();
-  auto fid    = Runtime::get_runtime()->allocate_field(
+  auto fid    = Runtime::get_runtime().allocate_field(
     entry.region.get_field_space(), entry.get_next_field_id(), field_size);
   return {entry.region, fid};
 }

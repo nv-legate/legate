@@ -46,7 +46,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
                  std::uint32_t field_size,
                  bool optimize_scalar,
                  std::string_view provenance)
-  : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
+  : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     unbound_{shape->unbound()},
     shape_{std::move(shape)},
     kind_{[&] {
@@ -65,10 +65,10 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
     offsets_{legate::full(dim(), std::int64_t{0})}
 {
   if (kind_ == Kind::REGION_FIELD && !unbound()) {
-    auto* runtime = Runtime::get_runtime();
+    auto&& runtime = Runtime::get_runtime();
 
-    region_field_ = runtime->create_region_field(this->shape(), field_size);
-    runtime->attach_alloc_info(get_region_field(), this->provenance());
+    region_field_ = runtime.create_region_field(this->shape(), field_size);
+    runtime.attach_alloc_info(get_region_field(), this->provenance());
   }
 
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
@@ -77,7 +77,7 @@ Storage::Storage(InternalSharedPtr<Shape> shape,
 }
 
 Storage::Storage(InternalSharedPtr<Shape> shape, Legion::Future future, std::string_view provenance)
-  : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
+  : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     shape_{std::move(shape)},
     kind_{Kind::FUTURE},
     provenance_{std::move(provenance)},
@@ -93,7 +93,7 @@ Storage::Storage(tuple<std::uint64_t> extents,
                  InternalSharedPtr<StoragePartition> parent,
                  tuple<std::uint64_t> color,
                  tuple<std::int64_t> offsets)
-  : storage_id_{Runtime::get_runtime()->get_unique_storage_id()},
+  : storage_id_{Runtime::get_runtime().get_unique_storage_id()},
     shape_{make_internal_shared<Shape>(std::move(extents))},
     level_{parent->level() + 1},
     parent_{std::move(parent)},
@@ -184,7 +184,7 @@ InternalSharedPtr<Storage> Storage::slice(const InternalSharedPtr<Storage>& self
   const auto& shape = root->extents();
   const auto can_tile_completely =
     (shape % tile_shape).sum() == 0 && (offsets % tile_shape).sum() == 0 &&
-    Runtime::get_runtime()->partition_manager()->use_complete_tiling(shape, tile_shape);
+    Runtime::get_runtime().partition_manager().use_complete_tiling(shape, tile_shape);
 
   tuple<std::uint64_t> color_shape, color;
   if (can_tile_completely) {
@@ -266,7 +266,7 @@ std::variant<Legion::Future, Legion::FutureMap> Storage::get_future_or_future_ma
   if (launch_domain.get_volume() != future_map_domain.get_volume()) {
     return future_map.get_future(future_map_domain.lo());
   }
-  return Runtime::get_runtime()->reshape_future_map(future_map, launch_domain);
+  return Runtime::get_runtime().reshape_future_map(future_map, launch_domain);
 }
 
 void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_field)
@@ -279,7 +279,7 @@ void Storage::set_region_field(InternalSharedPtr<LogicalRegionField>&& region_fi
   if (destroyed_out_of_order_) {
     (*region_field_)->allow_out_of_order_destruction();
   }
-  Runtime::get_runtime()->attach_alloc_info(*region_field_, provenance());
+  Runtime::get_runtime().attach_alloc_info(*region_field_, provenance());
 }
 
 void Storage::set_future(Legion::Future future, std::size_t scalar_offset)
@@ -505,7 +505,7 @@ void assert_fixed_storage_size(const InternalSharedPtr<Type>& type)
 }  // namespace
 
 LogicalStore::LogicalStore(InternalSharedPtr<Storage> storage, InternalSharedPtr<Type> type)
-  : store_id_{Runtime::get_runtime()->get_unique_store_id()},
+  : store_id_{Runtime::get_runtime().get_unique_store_id()},
     type_{std::move(type)},
     shape_{storage->shape()},
     storage_{std::move(storage)},
@@ -521,7 +521,7 @@ LogicalStore::LogicalStore(tuple<std::uint64_t> extents,
                            InternalSharedPtr<Storage> storage,
                            InternalSharedPtr<Type> type,
                            InternalSharedPtr<TransformStack> transform)
-  : store_id_{Runtime::get_runtime()->get_unique_store_id()},
+  : store_id_{Runtime::get_runtime().get_unique_store_id()},
     type_{std::move(type)},
     shape_{make_internal_shared<Shape>(std::move(extents))},
     storage_{std::move(storage)},
@@ -658,7 +658,7 @@ InternalSharedPtr<LogicalStore> LogicalStore::slice_(const InternalSharedPtr<Log
   }
 
   if (0 == exts[dim]) {
-    return Runtime::get_runtime()->create_store(
+    return Runtime::get_runtime().create_store(
       make_internal_shared<Shape>(std::move(exts)), type(), false /*optimize_scalar*/);
   }
 
@@ -776,7 +776,7 @@ InternalSharedPtr<PhysicalStore> LogicalStore::get_physical_store(
 
   // Otherwise, a physical allocation of this store is escaping to the user land for the first time,
   // so we need to make sure all outstanding operations are launched
-  Runtime::get_runtime()->flush_scheduling_window();
+  Runtime::get_runtime().flush_scheduling_window();
 
   auto&& storage = get_storage();
   if (storage->kind() == Storage::Kind::FUTURE ||
@@ -834,7 +834,7 @@ void LogicalStore::detach()
 // NOLINTNEXTLINE(readability-make-member-function-const)
 void LogicalStore::allow_out_of_order_destruction()
 {
-  if (Runtime::get_runtime()->consensus_match_required()) {
+  if (Runtime::get_runtime().consensus_match_required()) {
     get_storage()->allow_out_of_order_destruction();
   }
 }
@@ -855,13 +855,13 @@ Legion::ProjectionID LogicalStore::compute_projection(
   }
 
   const auto launch_ndim = static_cast<std::uint32_t>(launch_domain.dim);
-  const auto runtime     = Runtime::get_runtime();
+  auto&& runtime         = Runtime::get_runtime();
 
   // If there's a custom projection, we just query its functor id
   if (projection) {
     // TODO(wonchanl): we should check if the projection is valid for the launch domain
     // (i.e., projection->size() == launch_ndim)
-    return runtime->get_affine_projection(launch_ndim, transform_->invert(*projection));
+    return runtime.get_affine_projection(launch_ndim, transform_->invert(*projection));
   }
 
   // We are about to generate a projection functor
@@ -870,7 +870,7 @@ Legion::ProjectionID LogicalStore::compute_projection(
   // Easy case where the store and launch domain have the same number of dimensions
   if (ndim == launch_ndim) {
     return transform_->identity() ? 0
-                                  : runtime->get_affine_projection(
+                                  : runtime.get_affine_projection(
                                       ndim, transform_->invert(proj::create_symbolic_point(ndim)));
   }
 
@@ -888,15 +888,15 @@ Legion::ProjectionID LogicalStore::compute_projection(
       embed_1d_to_nd.append_inplace(ext != 1 ? dimension(0) : constant(0));
     }
 
-    return runtime->get_affine_projection(launch_ndim,
-                                          transform_->invert(std::move(embed_1d_to_nd)));
+    return runtime.get_affine_projection(launch_ndim,
+                                         transform_->invert(std::move(embed_1d_to_nd)));
   }
 
   // When the store wasn't transformed, we could simply return the top-level delinearizing functor
   return transform_->identity()
-           ? runtime->get_delinearizing_projection(color_shape)
-           : runtime->get_compound_projection(
-               color_shape, transform_->invert(proj::create_symbolic_point(ndim)));
+           ? runtime.get_delinearizing_projection(color_shape)
+           : runtime.get_compound_projection(color_shape,
+                                             transform_->invert(proj::create_symbolic_point(ndim)));
 }
 
 InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
@@ -924,13 +924,13 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
   if (!storage_part.has_value() ||
       (!transform_->identity() && !(*storage_part)->is_convertible())) {
     auto&& exts       = extents();
-    auto part_mgr     = Runtime::get_runtime()->partition_manager();
-    auto launch_shape = part_mgr->compute_launch_shape(machine, restrictions, exts);
+    auto&& part_mgr   = Runtime::get_runtime().partition_manager();
+    auto launch_shape = part_mgr.compute_launch_shape(machine, restrictions, exts);
 
     if (launch_shape.empty()) {
       store_part = create_no_partition();
     } else {
-      auto tile_shape = part_mgr->compute_tile_shape(exts, launch_shape);
+      auto tile_shape = part_mgr.compute_tile_shape(exts, launch_shape);
 
       store_part = create_tiling(std::move(tile_shape), std::move(launch_shape));
     }
@@ -965,7 +965,7 @@ void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
 void LogicalStore::reset_key_partition()
 {
   // Need to flush scheduling window to make this effective
-  Runtime::get_runtime()->flush_scheduling_window();
+  Runtime::get_runtime().flush_scheduling_window();
   key_partition_.reset();
   get_storage()->reset_key_partition();
 }

@@ -19,7 +19,7 @@ void BaseStoreProjection::populate_requirement<true>(Legion::RegionRequirement& 
                                                      bool is_key,
                                                      bool is_single) const
 {
-  auto parent    = Runtime::get_runtime()->find_parent_region(region);
+  auto parent    = Runtime::get_runtime().find_parent_region(region);
   const auto tag = is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0;
 
   // REVIEW
@@ -51,7 +51,7 @@ void BaseStoreProjection::populate_requirement<false>(Legion::RegionRequirement&
     return;
   }
 
-  auto parent    = Runtime::get_runtime()->find_parent_region(region);
+  auto parent    = Runtime::get_runtime().find_parent_region(region);
   const auto tag = is_key ? static_cast<Legion::MappingTagID>(CoreMappingTag::KEY_STORE) : 0;
 
   // see above

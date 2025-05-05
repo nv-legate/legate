@@ -25,7 +25,7 @@ namespace legate::detail {
 
 class Reduce final : public Operation {
  public:
-  Reduce(const Library* library,
+  Reduce(const Library& library,
          InternalSharedPtr<LogicalStore> store,
          InternalSharedPtr<LogicalStore> out_store,
          LocalTaskID task_id,
@@ -43,7 +43,7 @@ class Reduce final : public Operation {
 
  private:
   std::int32_t radix_{};
-  const Library* library_{};
+  std::reference_wrapper<const Library> library_;
   LocalTaskID task_id_{};
   InternalSharedPtr<LogicalStore> input_{};
   InternalSharedPtr<LogicalStore> output_{};

@@ -95,15 +95,15 @@ void CopyLauncher::execute(const Legion::Domain& launch_domain)
 
   pack_args(mapper_arg);
 
-  const auto runtime = Runtime::get_runtime();
-  auto index_copy    = Legion::IndexCopyLauncher{launch_domain,
+  auto&& runtime  = Runtime::get_runtime();
+  auto index_copy = Legion::IndexCopyLauncher{launch_domain,
                                               Legion::Predicate::TRUE_PRED,
-                                              runtime->mapper_id(),
+                                              runtime.mapper_id(),
                                               static_cast<Legion::MappingTagID>(tag_),
                                               mapper_arg.to_legion_buffer()};
 
   populate_copy_(index_copy);
-  runtime->dispatch(index_copy);
+  runtime.dispatch(index_copy);
 }
 
 void CopyLauncher::execute_single()
@@ -112,19 +112,19 @@ void CopyLauncher::execute_single()
 
   pack_args(mapper_arg);
 
-  const auto runtime = Runtime::get_runtime();
-  auto single_copy   = Legion::CopyLauncher{Legion::Predicate::TRUE_PRED,
-                                          runtime->mapper_id(),
+  auto&& runtime   = Runtime::get_runtime();
+  auto single_copy = Legion::CopyLauncher{Legion::Predicate::TRUE_PRED,
+                                          runtime.mapper_id(),
                                           static_cast<Legion::MappingTagID>(tag_),
                                           mapper_arg.to_legion_buffer()};
 
   populate_copy_(single_copy);
-  runtime->dispatch(single_copy);
+  runtime.dispatch(single_copy);
 }
 
 void CopyLauncher::pack_sharding_functor_id(BufferBuilder& buffer)
 {
-  buffer.pack<std::uint32_t>(Runtime::get_runtime()->get_sharding(machine_, key_proj_id_));
+  buffer.pack<std::uint32_t>(Runtime::get_runtime().get_sharding(machine_, key_proj_id_));
 }
 
 void CopyLauncher::pack_args(BufferBuilder& buffer)
@@ -164,7 +164,7 @@ void CopyLauncher::populate_copy_(Launcher& launcher)
     }
   };
 
-  launcher.provenance = Runtime::get_runtime()->get_provenance().as_string_view();
+  launcher.provenance = Runtime::get_runtime().get_provenance().as_string_view();
 
   populate_requirements(inputs_, launcher.src_requirements);
   populate_requirements(outputs_, launcher.dst_requirements);

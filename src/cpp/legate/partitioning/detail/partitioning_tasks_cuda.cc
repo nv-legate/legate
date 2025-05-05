@@ -71,8 +71,8 @@ struct FindBoundingBoxFn {
       LEGATE_THREADS_PER_BLOCK / LEGATE_WARP_SIZE * sizeof(Point<POINT_NDIM>) * 2;
     std::size_t num_iters = round_div(blocks, LEGATE_MAX_REDUCTION_CTAS);
 
-    auto&& api        = cuda::detail::get_cuda_driver_api();
-    auto* mod_manager = Runtime::get_runtime()->get_cuda_module_manager();
+    auto&& api         = cuda::detail::get_cuda_driver_api();
+    auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
 
     if (!unravel.empty()) {
       static const auto kernel_name = fmt::format("legate_find_bounding_box_kernel_{}_{}_{}",
@@ -80,7 +80,7 @@ struct FindBoundingBoxFn {
                                                   POINT_NDIM,
                                                   STORE_NDIM);
       CUkernel kern =
-        mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
+        mod_manager.load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
 
       auto ident_lo = ElementWiseMin<POINT_NDIM>::identity;
       auto ident_hi = ElementWiseMax<POINT_NDIM>::identity;
@@ -120,7 +120,7 @@ struct FindBoundingBoxFn {
 
     static const auto kernel_name = fmt::format("legate_copy_output_{}", POINT_NDIM);
     CUkernel kern =
-      mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
+      mod_manager.load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
 
     api->launch_kernel(kern, {1}, {1}, 0, stream, out_acc, result_low, result_high);
   }
@@ -143,8 +143,8 @@ struct FindBoundingBoxSortedFn {
     auto result_low  = CUDAReductionBuffer<ElementWiseMin<POINT_NDIM>>{stream};
     auto result_high = CUDAReductionBuffer<ElementWiseMax<POINT_NDIM>>{stream};
 
-    auto&& api        = cuda::detail::get_cuda_driver_api();
-    auto* mod_manager = Runtime::get_runtime()->get_cuda_module_manager();
+    auto&& api         = cuda::detail::get_cuda_driver_api();
+    auto&& mod_manager = Runtime::get_runtime().get_cuda_module_manager();
 
     if (!unravel.empty()) {
       static const auto kernel_name = fmt::format("legate_find_bounding_box_sorted_kernel_{}_{}_{}",
@@ -152,7 +152,7 @@ struct FindBoundingBoxSortedFn {
                                                   POINT_NDIM,
                                                   STORE_NDIM);
       CUkernel kern =
-        mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
+        mod_manager.load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
 
       if constexpr (RECT) {
         auto in_acc = input.read_accessor<Rect<POINT_NDIM>, STORE_NDIM>(shape);
@@ -167,7 +167,7 @@ struct FindBoundingBoxSortedFn {
 
     static const auto kernel_name = fmt::format("legate_copy_output_{}", POINT_NDIM);
     CUkernel kern =
-      mod_manager->load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
+      mod_manager.load_kernel_from_fatbin(partitioning_tasks_fatbin, kernel_name.c_str());
 
     api->launch_kernel(kern, {1}, {1}, 0, stream, out_acc, result_low, result_high);
   }

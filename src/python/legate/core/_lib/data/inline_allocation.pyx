@@ -23,7 +23,7 @@ cdef extern from * nogil:
 
     void *_get_cuda_stream()
     {
-      return legate::detail::Runtime::get_runtime()->get_cuda_stream();
+      return legate::detail::Runtime::get_runtime().get_cuda_stream();
     }
 
     } // namespace

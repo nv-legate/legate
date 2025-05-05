@@ -46,7 +46,7 @@ namespace {
 }  // namespace
 
 Operation::Operation(std::uint64_t unique_id)
-  : unique_id_{unique_id}, provenance_{Runtime::get_runtime()->get_provenance().to_string()}
+  : unique_id_{unique_id}, provenance_{Runtime::get_runtime().get_provenance().to_string()}
 {
 }
 
@@ -55,7 +55,7 @@ Operation::Operation(std::uint64_t unique_id,
                      mapping::detail::Machine machine)
   : unique_id_{unique_id},
     priority_{priority},
-    provenance_{Runtime::get_runtime()->get_provenance().to_string()},
+    provenance_{Runtime::get_runtime().get_provenance().to_string()},
     machine_{std::move(machine)}
 {
 }

@@ -39,13 +39,17 @@ AutoConfigurationError::AutoConfigurationError(std::string_view msg)
 
 Library Runtime::find_library(std::string_view library_name) const
 {
-  return Library{impl_->find_library(std::move(library_name), false)};
+  if (auto&& lib = impl_->find_library(std::move(library_name)); lib.has_value()) {
+    return Library{&lib->get()};
+  }
+  throw detail::TracedException<std::out_of_range>{
+    fmt::format("Library {} does not exist", library_name)};
 }
 
 std::optional<Library> Runtime::maybe_find_library(std::string_view library_name) const
 {
-  if (auto result = impl_->find_library(std::move(library_name), true)) {
-    return {Library{std::move(result)}};
+  if (auto&& result = impl_->find_library(std::move(library_name)); result.has_value()) {
+    return {Library{&result->get()}};
   }
   return std::nullopt;
 }
@@ -55,7 +59,7 @@ Library Runtime::create_library(std::string_view library_name,
                                 std::unique_ptr<mapping::Mapper> mapper,
                                 std::map<VariantCode, VariantOptions> default_options)
 {
-  return Library{impl_->create_library(
+  return Library{&impl_->create_library(
     std::move(library_name), config, std::move(mapper), std::move(default_options))};
 }
 
@@ -66,13 +70,13 @@ Library Runtime::find_or_create_library(
   const std::map<VariantCode, VariantOptions>& default_options,
   bool* created)
 {
-  return Library{impl_->find_or_create_library(
+  return Library{&impl_->find_or_create_library(
     std::move(library_name), config, std::move(mapper), default_options, created)};
 }
 
 AutoTask Runtime::create_task(Library library, LocalTaskID task_id)
 {
-  return AutoTask{impl_->create_task(library.impl(), task_id)};
+  return AutoTask{impl_->create_task(*library.impl(), task_id)};
 }
 
 ManualTask Runtime::create_task(Library library,
@@ -84,7 +88,7 @@ ManualTask Runtime::create_task(Library library,
 
 ManualTask Runtime::create_task(Library library, LocalTaskID task_id, const Domain& launch_domain)
 {
-  return ManualTask{impl_->create_task(library.impl(), task_id, launch_domain)};
+  return ManualTask{impl_->create_task(*library.impl(), task_id, launch_domain)};
 }
 
 void Runtime::issue_copy(LogicalStore& target,
@@ -177,7 +181,7 @@ LogicalStore Runtime::tree_reduce(Library library,
 {
   auto out_store = create_store(store.type(), 1);
 
-  impl_->tree_reduce(library.impl(), task_id, store.impl(), out_store.impl(), radix);
+  impl_->tree_reduce(*library.impl(), task_id, store.impl(), out_store.impl(), radix);
   return out_store;
 }
 
@@ -333,7 +337,7 @@ std::uint32_t Runtime::node_id() const { return impl_->node_id(); }
 
 void Runtime::register_shutdown_callback_(ShutdownCallback callback)
 {
-  detail::Runtime::get_runtime()->register_shutdown_callback(std::move(callback));
+  detail::Runtime::get_runtime().register_shutdown_callback(std::move(callback));
 }
 
 mapping::Machine Runtime::get_machine() const { return Scope::machine(); }
@@ -416,7 +420,7 @@ bool is_running_in_task()
   // Make sure Legion runtime has been started and that we are not running in a user-thread
   // without a Legion context
   constexpr auto is_running_in_inline_task = [] {
-    return has_started() && detail::Runtime::get_runtime()->executing_inline_task();
+    return has_started() && detail::Runtime::get_runtime().executing_inline_task();
   };
   constexpr auto is_running_in_legion_task = [] {
     if (Legion::Runtime::has_runtime() && Legion::Runtime::has_context()) {

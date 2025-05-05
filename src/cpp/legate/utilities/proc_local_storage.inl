@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/utilities/proc_local_storage.h>
 #include <legate/utilities/typedefs.h>
 
 #include <cstddef>

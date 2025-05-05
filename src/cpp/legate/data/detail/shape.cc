@@ -32,10 +32,10 @@ const tuple<std::uint64_t>& Shape::extents()
       [[fallthrough]];
     }
     case State::BOUND: {
-      const auto runtime = Runtime::get_runtime();
-      auto domain        = runtime->get_index_space_domain(index_space_);
-      extents_           = from_domain(domain);
-      state_             = State::READY;
+      auto&& runtime = Runtime::get_runtime();
+      auto domain    = runtime.get_index_space_domain(index_space_);
+      extents_       = from_domain(domain);
+      state_         = State::READY;
       break;
     }
     case State::READY: {
@@ -50,7 +50,7 @@ const Legion::IndexSpace& Shape::index_space()
   ensure_binding_();
   if (!index_space_.exists()) {
     LEGATE_CHECK(State::READY == state_);
-    index_space_ = Runtime::get_runtime()->find_or_create_index_space(extents_);
+    index_space_ = Runtime::get_runtime().find_or_create_index_space(extents_);
   }
   return index_space_;
 }
@@ -93,7 +93,7 @@ bool Shape::operator==(Shape& other)
     return true;
   }
   if (State::UNBOUND == state_ || State::UNBOUND == other.state_) {
-    Runtime::get_runtime()->flush_scheduling_window();
+    Runtime::get_runtime().flush_scheduling_window();
     if (State::UNBOUND == state_ || State::UNBOUND == other.state_) {
       throw TracedException<std::invalid_argument>{
         "Illegal to access an uninitialized unbound store"};
@@ -114,7 +114,7 @@ void Shape::ensure_binding_()
   if (State::UNBOUND != state_) {
     return;
   }
-  Runtime::get_runtime()->flush_scheduling_window();
+  Runtime::get_runtime().flush_scheduling_window();
   if (State::UNBOUND == state_) {
     throw TracedException<std::invalid_argument>{
       "Illegal to access an uninitialized unbound store"};

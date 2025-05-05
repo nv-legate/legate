@@ -55,14 +55,14 @@ TEST_F(OffloadAPI, GPUToHostOffload)
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(Config::LIBRARY_NAME);
 
-  auto internal_runtime     = legate::detail::Runtime::get_runtime();
-  const auto& local_machine = internal_runtime->local_machine();
+  auto&& internal_runtime   = legate::detail::Runtime::get_runtime();
+  const auto& local_machine = internal_runtime.local_machine();
 
   if (!local_machine.has_gpus()) {
     GTEST_SKIP() << "No GPUs on the machine to test host offload API";
   }
 
-  const auto num_nodes = internal_runtime->node_count();
+  const auto num_nodes = internal_runtime.node_count();
 
   std::size_t total_fbmem = 0;
   for (const auto& [gpu, fbmem] : local_machine.frame_buffers()) {

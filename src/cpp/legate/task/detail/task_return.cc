@@ -33,9 +33,9 @@ void TaskReturn::pack(void* buffer) const
   // Special case with a single scalar
   LEGATE_ASSERT(return_values_.size() > 1);
 
-  if (auto* runtime = detail::Runtime::get_runtime();
-      runtime->get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
-    auto stream = runtime->get_cuda_stream();
+  if (auto&& runtime = detail::Runtime::get_runtime();
+      runtime.get_executing_processor().kind() == Processor::Kind::TOC_PROC) {
+    auto stream = runtime.get_cuda_stream();
 
     for (auto&& [ret, offset] : zip_equal(return_values_, layout_)) {
       if (ret.is_device_value()) {
@@ -64,7 +64,7 @@ void TaskReturn::finalize(Legion::Context legion_context, bool skip_device_ctx_s
   }
 
   if (!skip_device_ctx_sync) {
-    const auto kind = detail::Runtime::get_runtime()->get_executing_processor().kind();
+    const auto kind = detail::Runtime::get_runtime().get_executing_processor().kind();
     // FIXME: We don't currently have a good way to defer the return value packing on GPUs,
     //        as doing so would require the packing to be chained up with all preceding kernels,
     //        potentially launched with different streams, within the task. Until we find

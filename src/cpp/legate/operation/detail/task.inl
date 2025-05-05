@@ -31,7 +31,7 @@ inline bool Task::can_throw_exception() const { return can_throw_exception_; }
 
 inline bool Task::can_elide_device_ctx_sync() const { return can_elide_device_ctx_sync_; }
 
-inline const Library* Task::library() const { return library_; }
+inline const Library& Task::library() const { return library_; }
 
 inline LocalTaskID Task::local_task_id() const { return task_id_; }
 
@@ -54,7 +54,7 @@ Task::scalar_reductions() const
   return scalar_reductions_;
 }
 
-inline const VariantInfo& Task::variant_info_() const { return *vinfo_; }
+inline const VariantInfo& Task::variant_info_() const { return vinfo_; }
 
 // ==========================================================================================
 

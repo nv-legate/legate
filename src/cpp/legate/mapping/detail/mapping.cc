@@ -269,8 +269,8 @@ std::set<const Legion::RegionRequirement*> StoreMapping::requirements() const
       continue;
     }
 
-    if (const auto* req = store->region_field().get_requirement(); req->region.exists()) {
-      reqs.insert(req);
+    if (const auto& req = store->region_field().get_requirement(); req.region.exists()) {
+      reqs.insert(&req);
     }
   }
   return reqs;

@@ -87,7 +87,7 @@ class ElementWiseMin {
   LEGATE_HOST_DEVICE inline static void fold(RHS& rhs1, RHS rhs2);
 };
 
-void register_partitioning_tasks(Library* core_lib);
+void register_partitioning_tasks(Library& core_lib);
 
 }  // namespace legate::detail
 

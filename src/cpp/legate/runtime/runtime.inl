@@ -19,7 +19,7 @@ void Runtime::register_shutdown_callback(T&& callback)
   register_shutdown_callback_(std::forward<T>(callback));
 }
 
-inline Runtime::Runtime(detail::Runtime* runtime) : impl_{runtime} {}
+inline Runtime::Runtime(detail::Runtime& runtime) : impl_{&runtime} {}
 
 inline detail::Runtime* Runtime::impl() { return impl_; }
 

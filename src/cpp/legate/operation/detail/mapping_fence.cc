@@ -6,14 +6,13 @@
 
 #include <legate/operation/detail/mapping_fence.h>
 
-#include <legate/runtime/detail/runtime.h>
+#include <legion.h>
 
 namespace legate::detail {
 
 void MappingFence::launch()
 {
-  auto* runtime = Runtime::get_runtime();
-  runtime->get_legion_runtime()->issue_mapping_fence(runtime->get_legion_context());
+  Legion::Runtime::get_runtime()->issue_mapping_fence(Legion::Runtime::get_context());
 }
 
 }  // namespace legate::detail

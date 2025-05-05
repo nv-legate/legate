@@ -32,6 +32,11 @@ class PartitionManager {
  public:
   PartitionManager();
 
+  PartitionManager(const PartitionManager&)            = delete;
+  PartitionManager& operator=(const PartitionManager&) = delete;
+  PartitionManager(PartitionManager&&)                 = delete;
+  PartitionManager& operator=(PartitionManager&&)      = delete;
+
   [[nodiscard]] const std::vector<std::uint32_t>& get_factors(
     const mapping::detail::Machine& machine);
 

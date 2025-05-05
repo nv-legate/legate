@@ -14,19 +14,19 @@ namespace legate::mapping::detail {
 
 bool RegionField::can_colocate_with(const RegionField& other) const
 {
-  return get_requirement()->region.get_tree_id() == other.get_requirement()->region.get_tree_id() &&
+  return get_requirement().region.get_tree_id() == other.get_requirement().region.get_tree_id() &&
          field_id() == other.field_id() && dim() == other.dim();
 }
 
-Domain RegionField::domain(Legion::Mapping::MapperRuntime* runtime,
+Domain RegionField::domain(Legion::Mapping::MapperRuntime& runtime,
                            Legion::Mapping::MapperContext context) const
 {
-  return runtime->get_index_space_domain(context, get_index_space());
+  return runtime.get_index_space_domain(context, get_index_space());
 }
 
 Legion::IndexSpace RegionField::get_index_space() const
 {
-  return get_requirement()->region.get_index_space();
+  return get_requirement().region.get_index_space();
 }
 
 Store::Store(std::int32_t dim,
@@ -41,7 +41,7 @@ Store::Store(std::int32_t dim,
 {
 }
 
-Store::Store(Legion::Mapping::MapperRuntime* runtime,
+Store::Store(Legion::Mapping::MapperRuntime& runtime,
              Legion::Mapping::MapperContext context,
              std::int32_t dim,
              InternalSharedPtr<legate::detail::Type> type,
@@ -55,17 +55,17 @@ Store::Store(Legion::Mapping::MapperRuntime* runtime,
     redop_id_{redop_id},
     region_field_{region_field},
     transform_{std::move(transform)},
-    runtime_{runtime},
+    runtime_{&runtime},
     context_{context}
 {
 }
 
-Store::Store(Legion::Mapping::MapperRuntime* runtime,
+Store::Store(Legion::Mapping::MapperRuntime& runtime,
              Legion::Mapping::MapperContext context,
-             const Legion::RegionRequirement* requirement)
-  : dim_{requirement->region.get_dim()},
-    region_field_{requirement, dim_, 0, requirement->instance_fields.front(), false /*unbound*/},
-    runtime_{runtime},
+             const Legion::RegionRequirement& requirement)
+  : dim_{requirement.region.get_dim()},
+    region_field_{requirement, dim_, 0, requirement.instance_fields.front(), false /*unbound*/},
+    runtime_{&runtime},
     context_{context}
 {
 }
@@ -108,7 +108,13 @@ Domain Store::domain() const
 {
   LEGATE_CHECK(!unbound());
 
-  auto result = is_future() ? future().domain() : region_field().domain(runtime_, context_);
+  auto result = [&] {
+    if (is_future()) {
+      return future().domain();
+    }
+    // NOLINTNEXTLINE(bugprone-unchecked-optional-value)
+    return region_field().domain(*runtime_, context_);
+  }();
 
   if (!transform_->identity()) {
     result = transform_->transform(result);

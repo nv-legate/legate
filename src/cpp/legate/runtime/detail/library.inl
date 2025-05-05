@@ -72,8 +72,8 @@ inline const std::map<VariantCode, VariantOptions>& Library::get_default_variant
   return default_options_;
 }
 
-inline const mapping::Mapper* Library::get_mapper() const { return mapper_.get(); }
+inline const mapping::Mapper& Library::get_mapper() const { return *mapper_; }
 
-inline mapping::Mapper* Library::get_mapper() { return mapper_.get(); }
+inline mapping::Mapper& Library::get_mapper() { return *mapper_; }
 
 }  // namespace legate::detail

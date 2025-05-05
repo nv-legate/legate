@@ -25,12 +25,12 @@ Trace::~Trace() = default;
 
 /*static*/ void Trace::begin_trace(std::uint32_t trace_id)
 {
-  detail::Runtime::get_runtime()->begin_trace(trace_id);
+  detail::Runtime::get_runtime().begin_trace(trace_id);
 }
 
 /*static*/ void Trace::end_trace(std::uint32_t trace_id)
 {
-  detail::Runtime::get_runtime()->end_trace(trace_id);
+  detail::Runtime::get_runtime().end_trace(trace_id);
 }
 
 }  // namespace legate::experimental

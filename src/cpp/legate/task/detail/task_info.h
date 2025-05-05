@@ -24,7 +24,7 @@ namespace legate::detail {
 class Library;
 class TaskSignature;
 
-void register_legate_core_tasks(Library* core_lib);
+void register_legate_core_tasks(Library& core_lib);
 
 /**
  * @brief A class holding the task registration info.
@@ -56,7 +56,7 @@ class TaskInfo {
   class RuntimeAddVariantKey {
     RuntimeAddVariantKey() = default;
 
-    friend void register_legate_core_tasks(Library* core_lib);
+    friend void register_legate_core_tasks(Library& core_lib);
   };
 
   // NOLINTNEXTLINE(readability-identifier-naming)

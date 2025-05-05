@@ -44,7 +44,7 @@ namespace legate::detail {
 // legate::Task
 ////////////////////////////////////////////////////
 
-Task::Task(const Library* library,
+Task::Task(const Library& library,
            const VariantInfo& variant_info,
            LocalTaskID task_id,
            std::uint64_t unique_id,
@@ -53,7 +53,7 @@ Task::Task(const Library* library,
            bool can_inline_launch)
   : Operation{unique_id, priority, std::move(machine)},
     library_{library},
-    vinfo_{&variant_info},
+    vinfo_{variant_info},
     task_id_{task_id},
     concurrent_{variant_info.options.concurrent},
     has_side_effect_{variant_info.options.has_side_effect},
@@ -117,11 +117,11 @@ void Task::add_communicator(std::string_view name, bool bypass_signature_check)
     }
   }
 
-  const auto* comm_mgr = detail::Runtime::get_runtime()->communicator_manager();
-  auto* factory        = comm_mgr->find_factory(name);
+  const auto& comm_mgr = detail::Runtime::get_runtime().communicator_manager();
+  auto&& factory       = comm_mgr.find_factory(name);
 
-  if (factory->is_supported_target(machine().preferred_target())) {
-    communicator_factories_.push_back(factory);
+  if (factory.is_supported_target(machine().preferred_target())) {
+    communicator_factories_.emplace_back(factory);
     set_concurrent(true);
   }
 }
@@ -152,10 +152,10 @@ void Task::validate()
 
 void Task::inline_launch_() const
 {
-  const auto processor_kind = Runtime::get_runtime()->get_executing_processor().kind();
+  const auto processor_kind = Runtime::get_runtime().get_executing_processor().kind();
   const auto variant_code   = mapping::detail::to_variant_code(processor_kind);
   const auto body           = [&] {
-    const auto variant = library()->find_task(local_task_id())->find_variant(variant_code);
+    const auto variant = library().find_task(local_task_id())->find_variant(variant_code);
 
     LEGATE_ASSERT(variant.has_value());
     return variant->get().body;  // NOLINT(bugprone-unchecked-optional-access)
@@ -201,9 +201,10 @@ void Task::legion_launch_(Strategy* strategy_ptr)
     const auto target           = machine().preferred_target();
     const auto& processor_range = machine().processor_range();
 
-    for (auto* factory : communicator_factories_) {
-      launcher.add_communicator(factory->find_or_create(target, processor_range, launch_domain));
-      if (factory->needs_barrier()) {
+    // Use explicit type here in order to get the reference_wrapper to coerce
+    for (CommunicatorFactory& factory : communicator_factories_) {
+      launcher.add_communicator(factory.find_or_create(target, processor_range, launch_domain));
+      if (factory.needs_barrier()) {
         launcher.set_insert_barrier(true);
       }
     }
@@ -277,12 +278,12 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
     } else if (1 == num_scalar_reds) {
       scalar_reductions_.front().first->set_future(result);
     } else if (can_throw_exception()) {
-      detail::Runtime::get_runtime()->record_pending_exception(result);
+      detail::Runtime::get_runtime().record_pending_exception(result);
     } else {
       LEGATE_ASSERT(1 == num_unbound_outs);
     }
   } else {
-    auto* runtime      = detail::Runtime::get_runtime();
+    auto&& runtime     = detail::Runtime::get_runtime();
     auto return_layout = TaskReturnLayoutForUnpack{num_unbound_outs * sizeof(std::size_t)};
 
     const auto compute_offset = [&](auto&& store) {
@@ -296,7 +297,7 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
       store->set_future(result, compute_offset(store));
     }
     if (can_throw_exception()) {
-      runtime->record_pending_exception(runtime->extract_scalar(
+      runtime.record_pending_exception(runtime.extract_scalar(
         result, return_layout.total_size(), legate::detail::ReturnedException::max_size()));
     }
   }
@@ -314,16 +315,16 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
     return;
   }
 
-  const auto runtime = detail::Runtime::get_runtime();
+  auto&& runtime = detail::Runtime::get_runtime();
   if (1 == total) {
     if (1 == num_scalar_outs) {
       scalar_outputs_.front()->set_future_map(result);
     } else if (1 == num_scalar_reds) {
       auto& [store, redop] = scalar_reductions_.front();
 
-      store->set_future(runtime->reduce_future_map(result, redop, store->get_future()));
+      store->set_future(runtime.reduce_future_map(result, redop, store->get_future()));
     } else if (can_throw_exception()) {
-      runtime->record_pending_exception(runtime->reduce_exception_future_map(result));
+      runtime.record_pending_exception(runtime.reduce_exception_future_map(result));
     } else {
       LEGATE_ASSERT(1 == num_unbound_outs);
     }
@@ -333,7 +334,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
     auto extract_future_map = [&](auto&& future_map, auto&& store) {
       auto size   = store->type()->size();
       auto offset = return_layout.next(size, store->type()->alignment());
-      return runtime->extract_scalar(future_map, offset, size, launch_domain);
+      return runtime.extract_scalar(future_map, offset, size, launch_domain);
     };
 
     const auto compute_offset = [&](auto&& store) {
@@ -346,15 +347,15 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
     for (auto&& [store, redop] : scalar_reductions_) {
       auto values = extract_future_map(result, store);
 
-      store->set_future(runtime->reduce_future_map(values, redop, store->get_future()));
+      store->set_future(runtime.reduce_future_map(values, redop, store->get_future()));
     }
     if (can_throw_exception()) {
-      auto exn_fm = runtime->extract_scalar(result,
-                                            return_layout.total_size(),
-                                            legate::detail::ReturnedException::max_size(),
-                                            launch_domain);
+      auto exn_fm = runtime.extract_scalar(result,
+                                           return_layout.total_size(),
+                                           legate::detail::ReturnedException::max_size(),
+                                           launch_domain);
 
-      runtime->record_pending_exception(runtime->reduce_exception_future_map(exn_fm));
+      runtime.record_pending_exception(runtime.reduce_exception_future_map(exn_fm));
     }
   }
 }
@@ -380,7 +381,7 @@ std::size_t Task::calculate_future_size_() const
 
 std::string Task::to_string(bool show_provenance) const
 {
-  auto result = fmt::format("{}:{}", library()->get_task_name(local_task_id()), unique_id_);
+  auto result = fmt::format("{}:{}", library().get_task_name(local_task_id()), unique_id_);
 
   if (!provenance().empty() && show_provenance) {
     fmt::format_to(std::back_inserter(result), "[{}]", provenance());
@@ -400,7 +401,7 @@ bool Task::needs_flush() const
 // legate::AutoTask
 ////////////////////////////////////////////////////
 
-AutoTask::AutoTask(const Library* library,
+AutoTask::AutoTask(const Library& library,
                    const VariantInfo& variant_info,
                    LocalTaskID task_id,
                    std::uint64_t unique_id,
@@ -568,8 +569,8 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
     return;
   }
 
-  auto* runtime  = Runtime::get_runtime();
-  auto* core_lib = runtime->core_library();
+  auto&& runtime  = Runtime::get_runtime();
+  auto&& core_lib = runtime.core_library();
   auto launcher =
     detail::TaskLauncher{core_lib, machine(), provenance(), FixupRanges::TASK_CONFIG.task_id()};
 
@@ -588,7 +589,7 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
 // legate::ManualTask
 ////////////////////////////////////////////////////
 
-ManualTask::ManualTask(const Library* library,
+ManualTask::ManualTask(const Library& library,
                        const VariantInfo& variant_info,
                        LocalTaskID task_id,
                        const Domain& launch_domain,
@@ -685,10 +686,10 @@ void ManualTask::add_store_(std::vector<TaskArrayArg>& store_args,
 
   arg.mapping.insert({store, partition_symbol});
   if (unbound) {
-    auto* const runtime = detail::Runtime::get_runtime();
-    auto field_space    = runtime->create_field_space();
+    auto&& runtime   = detail::Runtime::get_runtime();
+    auto field_space = runtime.create_field_space();
     const auto field_id =
-      runtime->allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
+      runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, store->type()->size());
 
     strategy_.insert(partition_symbol, std::move(partition), std::move(field_space), field_id);
   } else {

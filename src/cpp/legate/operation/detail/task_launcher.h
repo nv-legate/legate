@@ -22,13 +22,13 @@ class Runtime;
 
 class TaskLauncher {
  public:
-  TaskLauncher(const Library* library,
+  TaskLauncher(const Library& library,
                const mapping::detail::Machine& machine,
                ZStringView provenance,
                LocalTaskID task_id,
                Legion::MappingTagID tag = 0);
 
-  TaskLauncher(const Library* library,
+  TaskLauncher(const Library& library,
                const mapping::detail::Machine& machine,
                LocalTaskID task_id,
                Legion::MappingTagID tag = 0);
@@ -59,7 +59,7 @@ class TaskLauncher {
 
  private:
   void pack_mapper_arg_(BufferBuilder& buffer);
-  void import_output_regions_(Runtime* runtime,
+  void import_output_regions_(Runtime& runtime,
                               const std::vector<Legion::OutputRequirement>& output_requirements);
   void post_process_unbound_stores_(
     const std::vector<Legion::OutputRequirement>& output_requirements);
@@ -71,7 +71,7 @@ class TaskLauncher {
   void report_interfering_stores_() const;
   [[nodiscard]] std::size_t get_future_size_including_exception_() const;
 
-  const Library* library_{};
+  std::reference_wrapper<const Library> library_;
   LocalTaskID task_id_{};
   Legion::MappingTagID tag_{};
   const mapping::detail::Machine& machine_;

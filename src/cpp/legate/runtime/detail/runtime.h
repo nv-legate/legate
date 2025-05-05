@@ -72,14 +72,21 @@ class Shape;
 class Runtime {
  public:
   Runtime();
+  // The runtime is a singleton and is not copyable in any way
+  Runtime(const Runtime&)            = delete;
+  Runtime& operator=(const Runtime&) = delete;
+  Runtime(Runtime&&)                 = delete;
+  Runtime& operator=(Runtime&&)      = delete;
 
-  [[nodiscard]] Library* create_library(std::string_view library_name,
+  [[nodiscard]] Library& create_library(std::string_view library_name,
                                         const ResourceConfig& config,
                                         std::unique_ptr<mapping::Mapper> mapper,
                                         std::map<VariantCode, VariantOptions> default_options);
-  [[nodiscard]] const Library* find_library(std::string_view library_name, bool can_fail) const;
-  [[nodiscard]] Library* find_library(std::string_view library_name, bool can_fail);
-  [[nodiscard]] Library* find_or_create_library(
+  [[nodiscard]] std::optional<std::reference_wrapper<const Library>> find_library(
+    std::string_view library_name) const;
+  [[nodiscard]] std::optional<std::reference_wrapper<Library>> find_library(
+    std::string_view library_name);
+  [[nodiscard]] Library& find_or_create_library(
     std::string_view library_name,
     const ResourceConfig& config,
     std::unique_ptr<mapping::Mapper> mapper,
@@ -94,9 +101,9 @@ class Runtime {
 
   void initialize(Legion::Context legion_context);
 
-  [[nodiscard]] InternalSharedPtr<AutoTask> create_task(const Library* library,
+  [[nodiscard]] InternalSharedPtr<AutoTask> create_task(const Library& library,
                                                         LocalTaskID task_id);
-  [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library* library,
+  [[nodiscard]] InternalSharedPtr<ManualTask> create_task(const Library& library,
                                                           LocalTaskID task_id,
                                                           const Domain& launch_domain);
   void issue_copy(InternalSharedPtr<LogicalStore> target,
@@ -120,7 +127,7 @@ class Runtime {
   void issue_fill(const InternalSharedPtr<LogicalArray>& lhs, Scalar value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, InternalSharedPtr<LogicalStore> value);
   void issue_fill(InternalSharedPtr<LogicalStore> lhs, Scalar value);
-  void tree_reduce(const Library* library,
+  void tree_reduce(const Library& library,
                    LocalTaskID task_id,
                    InternalSharedPtr<LogicalStore> store,
                    InternalSharedPtr<LogicalStore> out_store,
@@ -227,12 +234,12 @@ class Runtime {
   [[nodiscard]] bool consensus_match_required() const;
   void progress_unordered_operations();
 
-  [[nodiscard]] RegionManager* find_or_create_region_manager(const Legion::IndexSpace& index_space);
-  [[nodiscard]] FieldManager* field_manager();
-  [[nodiscard]] CommunicatorManager* communicator_manager();
-  [[nodiscard]] const CommunicatorManager* communicator_manager() const;
-  [[nodiscard]] PartitionManager* partition_manager();
-  [[nodiscard]] const PartitionManager* partition_manager() const;
+  [[nodiscard]] RegionManager& find_or_create_region_manager(const Legion::IndexSpace& index_space);
+  [[nodiscard]] FieldManager& field_manager();
+  [[nodiscard]] CommunicatorManager& communicator_manager();
+  [[nodiscard]] const CommunicatorManager& communicator_manager() const;
+  [[nodiscard]] PartitionManager& partition_manager();
+  [[nodiscard]] const PartitionManager& partition_manager() const;
   [[nodiscard]] Scope& scope();
   [[nodiscard]] const Scope& scope() const;
 
@@ -361,15 +368,15 @@ class Runtime {
   static void schedule_(std::vector<InternalSharedPtr<Operation>>&& operations);
 
  public:
-  [[nodiscard]] static Runtime* get_runtime();
+  [[nodiscard]] static Runtime& get_runtime();
   static void start();
   [[nodiscard]] bool initialized() const;
   void register_shutdown_callback(ShutdownCallback callback);
   [[nodiscard]] std::int32_t finish();
-  [[nodiscard]] const Library* core_library() const;
+  [[nodiscard]] const Library& core_library() const;
 
   [[nodiscard]] CUstream get_cuda_stream() const;
-  [[nodiscard]] cuda::detail::CUDAModuleManager* get_cuda_module_manager();
+  [[nodiscard]] cuda::detail::CUDAModuleManager& get_cuda_module_manager();
 
   [[nodiscard]] Legion::Runtime* get_legion_runtime();
   [[nodiscard]] Legion::Context get_legion_context();
@@ -388,7 +395,7 @@ class Runtime {
   bool initialized_{};
   Legion::Runtime* legion_runtime_{};
   Legion::Context legion_context_{};
-  std::optional<Library*> core_library_{};
+  std::optional<std::reference_wrapper<Library>> core_library_{};
   std::list<ShutdownCallback> callbacks_{};
   legate::mapping::detail::LocalMachine local_machine_{};
 

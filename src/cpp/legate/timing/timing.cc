@@ -49,13 +49,13 @@ Time::~Time() = default;
 Time measure_microseconds()
 {
   return Time{legate::make_shared<Time::Impl>(
-    detail::Runtime::get_runtime()->get_timestamp(detail::Timing::Precision::MICRO))};
+    detail::Runtime::get_runtime().get_timestamp(detail::Timing::Precision::MICRO))};
 }
 
 Time measure_nanoseconds()
 {
   return Time{legate::make_shared<Time::Impl>(
-    detail::Runtime::get_runtime()->get_timestamp(detail::Timing::Precision::NANO))};
+    detail::Runtime::get_runtime().get_timestamp(detail::Timing::Precision::NANO))};
 }
 
 }  // namespace legate::timing

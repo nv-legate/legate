@@ -24,9 +24,9 @@ namespace legate::detail {
   legate::mapping::StoreTarget target)
 {
   if (!physical_region().exists()) {
-    set_physical_region(Runtime::get_runtime()->map_region_field(region, field_id, target));
+    set_physical_region(Runtime::get_runtime().map_region_field(region, field_id, target));
   } else if (!physical_region().is_mapped()) {
-    Runtime::get_runtime()->remap_physical_region(physical_region());
+    Runtime::get_runtime().remap_physical_region(physical_region());
   }
 
   return physical_region();
@@ -44,7 +44,7 @@ void LogicalRegionField::PhysicalState::unmap_and_detach(bool unordered)
   // RegionField, there should be no Stores remaining that use it (or any of its sub-regions).
   // Moreover, the field will only start to get reused once all shards have agreed that it's
   // been collected.
-  Runtime::get_runtime()->unmap_physical_region(physical_region());
+  Runtime::get_runtime().unmap_physical_region(physical_region());
   set_physical_region(Legion::PhysicalRegion{});
 
   if (!attachment().exists()) {
@@ -73,7 +73,7 @@ void LogicalRegionField::PhysicalState::deallocate_attachment(bool wait_on_detac
     // Needs to flush pending detach operations from the field's previous life.
     // Note that we don't need to progress unordered operations here, because if we're here, that
     // means that the region field is detached in order. (let that sink in :))
-    Runtime::get_runtime()->flush_scheduling_window();
+    Runtime::get_runtime().flush_scheduling_window();
     LEGATE_ASSERT(!has_pending_detach_);
   }
   // Then, wait until the detach operations are done
@@ -101,7 +101,7 @@ const LogicalRegionField& LogicalRegionField::get_root() const
 
 Domain LogicalRegionField::domain() const
 {
-  return Runtime::get_runtime()->get_index_space_domain(lr_.get_index_space());
+  return Runtime::get_runtime().get_index_space_domain(lr_.get_index_space());
 }
 
 bool LogicalRegionField::is_mapped() const
@@ -158,8 +158,8 @@ void LogicalRegionField::attach(Legion::ExternalResources external_resources,
 
 void LogicalRegionField::detach()
 {
-  auto* runtime = Runtime::get_runtime();
-  if (!runtime->initialized()) {
+  auto&& runtime = Runtime::get_runtime();
+  if (!runtime.initialized()) {
     physical_state_->intentionally_leak_physical_region();
     return;
   }
@@ -171,7 +171,7 @@ void LogicalRegionField::detach()
   }
 
   // Need to flush the scheduling window to get all pending attach ops to be issued
-  runtime->flush_scheduling_window();
+  runtime.flush_scheduling_window();
 
   physical_state_->unmap_and_detach(false /*unordered*/);
   physical_state_->deallocate_attachment();
@@ -204,14 +204,14 @@ void LogicalRegionField::release_region_field() noexcept
       return;
     }
 
-    auto* const runtime = Runtime::get_runtime();
+    auto&& runtime = Runtime::get_runtime();
 
     physical_state_->set_has_pending_detach(attached_);
 
-    runtime->issue_release_region_field(
+    runtime.issue_release_region_field(
       physical_state_, is_mapped() || attached_, destroyed_out_of_order_);
 
-    runtime->field_manager()->free_field(
+    runtime.field_manager().free_field(
       FreeFieldInfo{shape_, field_size_, lr_, fid_, physical_state_}, destroyed_out_of_order_);
   } catch (const std::exception& exn) {
     LEGATE_ABORT(exn.what());
@@ -230,7 +230,7 @@ InternalSharedPtr<LogicalRegionField> LogicalRegionField::get_child(
   return make_internal_shared<LogicalRegionField>(
     shape_,
     field_size_,
-    Runtime::get_runtime()->get_subregion(std::move(legion_partition), color_point),
+    Runtime::get_runtime().get_subregion(std::move(legion_partition), color_point),
     fid_,
     shared_from_this());
 }

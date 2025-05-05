@@ -19,7 +19,7 @@ ConsensusMatchResult<T> Runtime::issue_consensus_match(std::vector<T>&& input)
 
 inline bool Runtime::initialized() const { return initialized_; }
 
-inline const Library* Runtime::core_library() const
+inline const Library& Runtime::core_library() const
 {
   return core_library_.value();  // NOLINT(bugprone-unchecked-optional-access)
 }
@@ -40,38 +40,38 @@ inline std::uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq
 
 inline std::size_t Runtime::field_reuse_size() const { return field_reuse_size_; }
 
-inline FieldManager* Runtime::field_manager() { return field_manager_.get(); }
+inline FieldManager& Runtime::field_manager() { return *field_manager_; }
 
-inline PartitionManager* Runtime::partition_manager()
+inline PartitionManager& Runtime::partition_manager()
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    return &partition_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
+    return partition_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
   }
-  return &*partition_manager_;  // NOLINT(bugprone-unchecked-optional-access)
+  return *partition_manager_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
-inline const PartitionManager* Runtime::partition_manager() const
+inline const PartitionManager& Runtime::partition_manager() const
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    return &partition_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
+    return partition_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
   }
-  return &*partition_manager_;  // NOLINT(bugprone-unchecked-optional-access)
+  return *partition_manager_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
-inline CommunicatorManager* Runtime::communicator_manager()
+inline CommunicatorManager& Runtime::communicator_manager()
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    return &communicator_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
+    return communicator_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
   }
-  return &*communicator_manager_;  // NOLINT(bugprone-unchecked-optional-access)
+  return *communicator_manager_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
-inline const CommunicatorManager* Runtime::communicator_manager() const
+inline const CommunicatorManager& Runtime::communicator_manager() const
 {
   if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    return &communicator_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
+    return communicator_manager_.value();  // NOLINT(bugprone-unchecked-optional-access)
   }
-  return &*communicator_manager_;  // NOLINT(bugprone-unchecked-optional-access)
+  return *communicator_manager_;  // NOLINT(bugprone-unchecked-optional-access)
 }
 
 inline Scope& Runtime::scope() { return scope_; }

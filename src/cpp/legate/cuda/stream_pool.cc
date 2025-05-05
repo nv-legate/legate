@@ -23,7 +23,7 @@ StreamView::~StreamView()
 
 StreamView StreamPool::get_stream()
 {
-  return StreamView{legate::detail::Runtime::get_runtime()->get_cuda_stream()};
+  return StreamView{legate::detail::Runtime::get_runtime().get_cuda_stream()};
 }
 
 /*static*/ StreamPool& StreamPool::get_stream_pool()

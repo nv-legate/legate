@@ -12,9 +12,9 @@ class Library;
 
 namespace comm {
 
-void register_tasks(Library* library);
+void register_tasks(Library& library);
 
-void register_builtin_communicator_factories(const Library* library);
+void register_builtin_communicator_factories(const Library& library);
 
 }  // namespace comm
 

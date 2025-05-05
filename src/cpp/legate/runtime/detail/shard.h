@@ -14,7 +14,7 @@ namespace legate::detail {
 
 class Library;
 
-void register_legate_core_sharding_functors(const detail::Library* core_library);
+void register_legate_core_sharding_functors(const detail::Library& core_library);
 
 [[nodiscard]] Legion::ShardingID find_sharding_functor_by_projection_functor(
   Legion::ProjectionID proj_id);

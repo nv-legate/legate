@@ -41,6 +41,7 @@ Library::Library(std::string library_name,
     mapper_{std::move(mapper)},
     default_options_{std::move(default_options)}
 {
+  LEGATE_CHECK(mapper_ != nullptr);
 }
 
 // ==========================================================================================
@@ -136,7 +137,7 @@ std::unique_ptr<Scalar> Library::get_tunable(std::int64_t tunable_id,
   if (type->variable_size()) {
     throw TracedException<std::invalid_argument>{"Tunable variables must have fixed-size types"};
   }
-  auto result         = Runtime::get_runtime()->get_tunable(*this, tunable_id);
+  auto result         = Runtime::get_runtime().get_tunable(*this, tunable_id);
   std::size_t extents = 0;
   const void* buffer  = result.get_buffer(Memory::Kind::SYSTEM_MEM, &extents);
   if (extents != type->size()) {

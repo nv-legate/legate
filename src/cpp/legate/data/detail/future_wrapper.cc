@@ -42,7 +42,7 @@ namespace {
 
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) && (mem_kind == Memory::Kind::GPU_FB_MEM)) {
     cuda::detail::get_cuda_driver_api()->mem_cpy_async(
-      acc.ptr(0), init_value, field_size, Runtime::get_runtime()->get_cuda_stream());
+      acc.ptr(0), init_value, field_size, Runtime::get_runtime().get_cuda_stream());
   } else {
     std::memcpy(acc.ptr(0), init_value, field_size);
   }
@@ -171,7 +171,7 @@ void FutureWrapper::initialize_with_identity(GlobalRedopID redop_id)
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) &&
       (get_buffer().get_instance().get_location().kind() == Memory::Kind::GPU_FB_MEM)) {
     cuda::detail::get_cuda_driver_api()->mem_cpy_async(
-      ptr, identity, field_size(), Runtime::get_runtime()->get_cuda_stream());
+      ptr, identity, field_size(), Runtime::get_runtime().get_cuda_stream());
   } else {
     std::memcpy(ptr, identity, field_size());
   }

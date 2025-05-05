@@ -41,21 +41,21 @@ void CommunicatorFactory::destroy()
     finalize_(key.get_machine(), key.desc, communicator);
   }
 
-  auto* const runtime = Runtime::get_runtime();
+  auto&& runtime = Runtime::get_runtime();
   // Without this fence, Legion might still reorder the finalization tasks if they don't have
   // obvious data dependencies.
   //
   // For example, CAL stuffs a CPU communicator into its own communicator, and so the
   // finalize task doesn't need to pass both the CAL comm and CPU comm as arguments to the
   // task. So Legion thinks they are disjoint and schedules them independently.
-  runtime->issue_execution_fence();
+  runtime.issue_execution_fence();
   // Must also flush the scheduling window so that our fence definitely makes it down to
   // Legion. This is needed because the communicator tasks bypass the runtime pipelines by
   // using `TaskLauncher`, which submits directly to Legion.
   //
   // This leads to the case where Legion sees the task submissions, but we don't, and so
   // `issue_execution_fence()` doesn't do anything because our queue is empty.
-  runtime->flush_scheduling_window();
+  runtime.flush_scheduling_window();
   communicators_.clear();
   nd_aliases_.clear();
 }
@@ -78,22 +78,26 @@ Legion::FutureMap CommunicatorFactory::find_or_create_(const mapping::TaskTarget
 Legion::FutureMap CommunicatorFactory::transform_(const Legion::FutureMap& communicator,
                                                   const Domain& launch_domain)
 {
-  return Runtime::get_runtime()->delinearize_future_map(communicator, launch_domain);
+  return Runtime::get_runtime().delinearize_future_map(communicator, launch_domain);
 }
 
 // ==========================================================================================
 
-std::optional<CommunicatorFactory*> CommunicatorManager::find_factory_(std::string_view name) const
+std::optional<std::reference_wrapper<CommunicatorFactory>> CommunicatorManager::find_factory_(
+  std::string_view name) const
 {
   using pair_type = std::pair<std::string, std::unique_ptr<CommunicatorFactory>>;
   const auto it   = std::find_if(factories_.begin(), factories_.end(), [&](const pair_type& pair) {
     return pair.first == name;
   });
 
-  return it == factories_.end() ? std::nullopt : std::make_optional(it->second.get());
+  if (it == factories_.end()) {
+    return std::nullopt;
+  }
+  return *(it->second);
 }
 
-CommunicatorFactory* CommunicatorManager::find_factory(std::string_view name) const
+CommunicatorFactory& CommunicatorManager::find_factory(std::string_view name) const
 {
   if (const auto f = find_factory_(name); f.has_value()) {
     return *f;
@@ -107,7 +111,7 @@ void CommunicatorManager::register_factory(std::string name,
 {
   if (const auto f = find_factory_(name); f.has_value()) {
     throw TracedException<std::logic_error>{
-      fmt::format("Factory '{}' already registered: {}", name, fmt::ptr(*f))};
+      fmt::format("Factory '{}' already registered: {}", name, fmt::ptr(&f->get()))};
   }
   factories_.emplace_back(std::move(name), std::move(factory));
 }

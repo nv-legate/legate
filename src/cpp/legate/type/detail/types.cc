@@ -171,12 +171,12 @@ std::uint32_t Type::size() const
 
 void Type::record_reduction_operator(std::int32_t op_kind, GlobalRedopID global_op_id) const
 {
-  detail::Runtime::get_runtime()->record_reduction_operator(uid(), op_kind, global_op_id);
+  detail::Runtime::get_runtime().record_reduction_operator(uid(), op_kind, global_op_id);
 }
 
 GlobalRedopID Type::find_reduction_operator(std::int32_t op_kind) const
 {
-  return detail::Runtime::get_runtime()->find_reduction_operator(uid(), op_kind);
+  return detail::Runtime::get_runtime().find_reduction_operator(uid(), op_kind);
 }
 
 GlobalRedopID Type::find_reduction_operator(ReductionOpKind op_kind) const

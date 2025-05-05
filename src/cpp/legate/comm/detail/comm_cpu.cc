@@ -21,11 +21,11 @@
 
 namespace legate::detail::comm::cpu {
 
-void register_tasks(detail::Library* core_library)
+void register_tasks(detail::Library& core_library)
 {
   using legate::comm::coll::CollCommType;
 
-  const auto lib = legate::Library{core_library};
+  const auto lib = legate::Library{&core_library};
 
   switch (coll::BackendNetwork::guess_comm_type_()) {
     case CollCommType::CollMPI:
@@ -40,7 +40,7 @@ void register_tasks(detail::Library* core_library)
   }
 }
 
-void register_factory(const detail::Library* library)
+void register_factory(const detail::Library& library)
 {
   auto factory = [&]() -> std::unique_ptr<CommunicatorFactory> {
     using legate::comm::coll::CollCommType;
@@ -58,8 +58,7 @@ void register_factory(const detail::Library* library)
     return nullptr;
   }();
 
-  detail::Runtime::get_runtime()->communicator_manager()->register_factory("cpu",
-                                                                           std::move(factory));
+  detail::Runtime::get_runtime().communicator_manager().register_factory("cpu", std::move(factory));
 }
 
 }  // namespace legate::detail::comm::cpu

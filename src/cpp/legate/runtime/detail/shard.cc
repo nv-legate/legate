@@ -86,16 +86,16 @@ class LinearizingShardingFunctor final : public Legion::ShardingFunctor {
   }
 };
 
-void register_legate_core_sharding_functors(const detail::Library* core_library)
+void register_legate_core_sharding_functors(const detail::Library& core_library)
 {
   auto runtime = Legion::Runtime::get_runtime();
 
   runtime->register_sharding_functor(
-    core_library->get_sharding_id(to_underlying(CoreShardID::TOPLEVEL_TASK)),
+    core_library.get_sharding_id(to_underlying(CoreShardID::TOPLEVEL_TASK)),
     new ToplevelTaskShardingFunctor{},
     true /*silence warnings*/);
 
-  auto sharding_id = core_library->get_sharding_id(to_underlying(CoreShardID::LINEARIZE));
+  auto sharding_id = core_library.get_sharding_id(to_underlying(CoreShardID::LINEARIZE));
   runtime->register_sharding_functor(
     sharding_id, new LinearizingShardingFunctor{}, true /*silence warnings*/);
   // Use linearizing functor for identity projections

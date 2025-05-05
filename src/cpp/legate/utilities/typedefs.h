@@ -261,7 +261,7 @@ using PointInDomainIterator = Legion::PointInDomainIterator<DIM, T>;
  * Legate libraries rarely use processor handles directly and there are no Legate APIs that
  * take a processor handle. However, the libraries may want to query the processor that runs
  * the current task to perform some processor- or processor kind-specific operations. In that
- * case, `legate::Runtime::get_runtime()->get_executing_processor()` can be used. Other useful
+ * case, `legate::Runtime::get_runtime().get_executing_processor()` can be used. Other useful
  * memobers of `legate::Processor` are the `kind` method, which returns the processor kind, and
  * `legate::Processor::Kind`, an enum for all processor types.
  *

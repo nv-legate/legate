@@ -68,7 +68,7 @@ class BaseDeserializer {
 
 class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
  public:
-  TaskDeserializer(const Legion::Task* task, const std::vector<Legion::PhysicalRegion>& regions);
+  TaskDeserializer(const Legion::Task& task, const std::vector<Legion::PhysicalRegion>& regions);
 
   using BaseDeserializer::unpack_impl;
 
@@ -86,7 +86,7 @@ class TaskDeserializer : public BaseDeserializer<TaskDeserializer> {
   void unpack_impl(Legion::PhaseBarrier& barrier);
 
  private:
-  const Legion::Task* legion_task_{};
+  std::reference_wrapper<const Legion::Task> legion_task_;
   Span<const Legion::Future> futures_{};
   Span<const Legion::PhysicalRegion> regions_{};
   std::vector<Legion::OutputRegion> outputs_{};
@@ -98,15 +98,15 @@ namespace legate::mapping::detail {
 
 class MapperDataDeserializer : public legate::detail::BaseDeserializer<MapperDataDeserializer> {
  public:
-  explicit MapperDataDeserializer(const Legion::Mappable* mappable);
+  explicit MapperDataDeserializer(const Legion::Mappable& mappable);
 
   using BaseDeserializer::unpack_impl;
 };
 
 class TaskDeserializer : public legate::detail::BaseDeserializer<TaskDeserializer> {
  public:
-  TaskDeserializer(const Legion::Task* task,
-                   Legion::Mapping::MapperRuntime* runtime,
+  TaskDeserializer(const Legion::Task& task,
+                   Legion::Mapping::MapperRuntime& runtime,
                    Legion::Mapping::MapperContext context);
 
   using BaseDeserializer::unpack_impl;
@@ -124,8 +124,8 @@ class TaskDeserializer : public legate::detail::BaseDeserializer<TaskDeserialize
   void unpack_impl(RegionField& value, bool unbound);
 
  private:
-  const Legion::Task* task_{};
-  Legion::Mapping::MapperRuntime* runtime_{};
+  std::reference_wrapper<const Legion::Task> task_;
+  std::reference_wrapper<Legion::Mapping::MapperRuntime> runtime_;
   Legion::Mapping::MapperContext context_{};
 };
 
@@ -134,9 +134,9 @@ class CopyDeserializer : public legate::detail::BaseDeserializer<CopyDeserialize
   using ReqsRef      = std::reference_wrapper<const Requirements>;
 
  public:
-  CopyDeserializer(const Legion::Copy* copy,
+  CopyDeserializer(const Legion::Copy& copy,
                    Span<const ReqsRef> all_requirements,
-                   Legion::Mapping::MapperRuntime* runtime,
+                   Legion::Mapping::MapperRuntime& runtime,
                    Legion::Mapping::MapperContext context);
 
   using BaseDeserializer::unpack_impl;
@@ -149,7 +149,7 @@ class CopyDeserializer : public legate::detail::BaseDeserializer<CopyDeserialize
  private:
   Span<const ReqsRef> all_reqs_{};
   const ReqsRef* curr_reqs_{};
-  Legion::Mapping::MapperRuntime* runtime_{};
+  std::reference_wrapper<Legion::Mapping::MapperRuntime> runtime_;
   Legion::Mapping::MapperContext context_{};
   std::uint32_t req_index_offset_{};
 };

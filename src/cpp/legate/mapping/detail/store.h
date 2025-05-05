@@ -27,7 +27,7 @@ class RegionField {
   using Id = std::tuple<bool, std::uint32_t, Legion::FieldID>;
 
   RegionField() = default;
-  RegionField(const Legion::RegionRequirement* req,
+  RegionField(const Legion::RegionRequirement& req,
               std::int32_t dim,
               std::uint32_t idx,
               Legion::FieldID fid,
@@ -37,7 +37,7 @@ class RegionField {
 
   [[nodiscard]] bool can_colocate_with(const RegionField& other) const;
 
-  [[nodiscard]] Legion::Domain domain(Legion::Mapping::MapperRuntime* runtime,
+  [[nodiscard]] Legion::Domain domain(Legion::Mapping::MapperRuntime& runtime,
                                       Legion::Mapping::MapperContext context) const;
 
   // REVIEW: this is not defined anywhere
@@ -50,10 +50,13 @@ class RegionField {
   [[nodiscard]] Legion::FieldID field_id() const;
   [[nodiscard]] bool unbound() const;
 
-  [[nodiscard]] const Legion::RegionRequirement* get_requirement() const;
+  [[nodiscard]] const Legion::RegionRequirement& get_requirement() const;
   [[nodiscard]] Legion::IndexSpace get_index_space() const;
 
  private:
+  // This is a pointer (not a reference_wrapper) because this class needs to be serialized,
+  // which requires it to be default-constructible. But it is for all intents and purposes a
+  // reference_wrapper.
   const Legion::RegionRequirement* req_{};
   std::int32_t dim_{-1};
   std::uint32_t idx_{-1U};
@@ -82,7 +85,7 @@ class Store {
         InternalSharedPtr<legate::detail::Type> type,
         FutureWrapper future,
         InternalSharedPtr<legate::detail::TransformStack>&& transform = nullptr);
-  Store(Legion::Mapping::MapperRuntime* runtime,
+  Store(Legion::Mapping::MapperRuntime& runtime,
         Legion::Mapping::MapperContext context,
         std::int32_t dim,
         InternalSharedPtr<legate::detail::Type> type,
@@ -91,9 +94,9 @@ class Store {
         bool is_unbound_store                                         = false,
         InternalSharedPtr<legate::detail::TransformStack>&& transform = nullptr);
   // A special constructor to create a mapper view of a store from a region requirement
-  Store(Legion::Mapping::MapperRuntime* runtime,
+  Store(Legion::Mapping::MapperRuntime& runtime,
         Legion::Mapping::MapperContext context,
-        const Legion::RegionRequirement* requirement);
+        const Legion::RegionRequirement& requirement);
 
   [[nodiscard]] bool is_future() const;
   [[nodiscard]] bool unbound() const;
@@ -134,8 +137,8 @@ class Store {
   InternalSharedPtr<legate::detail::Type> type_{};
   GlobalRedopID redop_id_{-1};
 
-  FutureWrapper future_;
-  RegionField region_field_;
+  FutureWrapper future_{};
+  RegionField region_field_{};
 
   InternalSharedPtr<legate::detail::TransformStack> transform_{};
 

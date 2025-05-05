@@ -33,7 +33,7 @@
 
 namespace legate::detail {
 
-Reduce::Reduce(const Library* library,
+Reduce::Reduce(const Library& library,
                InternalSharedPtr<LogicalStore> store,
                InternalSharedPtr<LogicalStore> out_store,
                LocalTaskID task_id,
@@ -79,7 +79,7 @@ void Reduce::launch(Strategy* p_strategy)
     return std::make_unique<BaseArrayArg>(std::forward<decltype(arg)>(arg));
   };
 
-  const auto runtime = detail::Runtime::get_runtime();
+  auto&& runtime = detail::Runtime::get_runtime();
 
   InternalSharedPtr<LogicalStore> new_output;
   bool done = false;
@@ -116,14 +116,14 @@ void Reduce::launch(Strategy* p_strategy)
     done    = n_tasks == 1;
 
     // adding output region
-    auto field_space = runtime->create_field_space();
+    auto field_space = runtime.create_field_space();
     auto field_id =
-      runtime->allocate_field(field_space, RegionManager::FIELD_ID_BASE, input_->type()->size());
+      runtime.allocate_field(field_space, RegionManager::FIELD_ID_BASE, input_->type()->size());
 
     // if this is not the last iteration of the while loop, we generate
     // a new output region
     if (n_tasks != 1) {
-      new_output = runtime->create_store(input_->type(), 1);
+      new_output = runtime.create_store(input_->type(), 1);
       launcher.add_output(
         to_array_arg(std::make_unique<OutputRegionArg>(new_output.get(), field_space, field_id)));
     } else {

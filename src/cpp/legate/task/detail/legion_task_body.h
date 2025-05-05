@@ -21,7 +21,7 @@ namespace legate::detail {
 
 class LegionTaskContext final : public TaskContext {
  public:
-  LegionTaskContext(const Legion::Task* legion_task,
+  LegionTaskContext(const Legion::Task& legion_task,
                     VariantCode variant_kind,
                     const std::vector<Legion::PhysicalRegion>& regions);
 
@@ -35,10 +35,10 @@ class LegionTaskContext final : public TaskContext {
   [[nodiscard]] TaskReturn pack_return_values(const std::optional<ReturnedException>& exn) const;
 
  private:
-  const Legion::Task* task_{};
+  std::reference_wrapper<const Legion::Task> task_;
   mapping::detail::Machine machine_{};
 
-  LegionTaskContext(const Legion::Task* legion_task,
+  LegionTaskContext(const Legion::Task& legion_task,
                     VariantCode variant_kind,
                     const std::vector<Legion::PhysicalRegion>& regions,
                     mapping::detail::Machine&& machine);
