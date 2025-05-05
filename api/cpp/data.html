@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data &#8212; NVIDIA legate (25.05.00.dev132+g1d040b64)</title>
+    <title>Data &#8212; NVIDIA legate (25.05.00.dev135+gef8062ad)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=b9b51834"></script>
+    <script src="../../_static/documentation_options.js?v=991c1fa1"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,11 +130,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev132+g1d040b64) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev132+g1d040b64) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev132+g1d040b64)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev135+gef8062ad)</p>
   
 </a></div>
     
@@ -241,11 +241,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev132+g1d040b64) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev132+g1d040b64) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev132+g1d040b64)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev135+gef8062ad)</p>
   
 </a>
 
@@ -350,6 +350,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../python/task_context.html">Task Context</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/domain.html">Domains</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/task_config.html">Task Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/task_local_buffer.html">Task-Local Buffers</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/inline_allocation.html">Inline Allocations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/symbolic_expr.html">Symbolic Expressions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/auto_task.html">Auto Tasks</a></li>
@@ -688,6 +689,181 @@ The input pointer must be one that was previously returned by an <code class="do
 <span id="_CPPv3N6legate15ScopedAllocator4ImplE"></span><span id="_CPPv2N6legate15ScopedAllocator4ImplE"></span><span id="legate::ScopedAllocator::Impl"></span><span class="target" id="classlegate_1_1ScopedAllocator_1_1Impl"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Impl</span></span></span><a class="headerlink" href="#_CPPv4N6legate15ScopedAllocator4ImplE" title="Link to this definition">#</a><br /></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate15TaskLocalBufferE">
+<span id="_CPPv3N6legate15TaskLocalBufferE"></span><span id="_CPPv2N6legate15TaskLocalBufferE"></span><span id="legate::TaskLocalBuffer"></span><span class="target" id="classlegate_1_1TaskLocalBuffer"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TaskLocalBuffer</span></span></span><a class="headerlink" href="#_CPPv4N6legate15TaskLocalBufferE" title="Link to this definition">#</a><br /></dt>
+<dd><div class="docutils container">
+<em>#include &lt;legate/data/buffer.h&gt;</em></div>
+<p>A task-local temporary buffer. </p>
+<p>A <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> is, as the name implies, “local” to a task. Its lifetime is bound to that of the task. When the task ends, the buffer is destroyed. It is most commonly used as temporary scratch-space within tasks for that reason.</p>
+<p>The buffer is allocated immediately at the point when <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> is created, so it is safe to use it immediately, even if it used asynchronously (for example, in GPU kernel launches) after the fact. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate15TaskLocalBuffer15TaskLocalBufferERKN6Legion21UntypedDeferredBufferIEERK4TypeRK6Domain">
+<span id="_CPPv3N6legate15TaskLocalBuffer15TaskLocalBufferERKN6Legion21UntypedDeferredBufferIEERK4TypeRK6Domain"></span><span id="_CPPv2N6legate15TaskLocalBuffer15TaskLocalBufferERKN6Legion21UntypedDeferredBufferIEERK4TypeRK6Domain"></span><span id="legate::TaskLocalBuffer::TaskLocalBuffer__Legion::UntypedDeferredBuffer::CR.TypeCR.DomainCR"></span><span class="target" id="classlegate_1_1TaskLocalBuffer_1aab116701202c9b98146846d0e9253107"></span><span class="sig-name descname"><span class="n"><span class="pre">TaskLocalBuffer</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Legion</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">UntypedDeferredBuffer</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buf</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="types.html#_CPPv4N6legate4TypeE" title="legate::Type"><span class="n"><span class="pre">Type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">type</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="typedefs.html#_CPPv46Domain" title="Domain"><span class="n"><span class="pre">Domain</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">bounds</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate15TaskLocalBuffer15TaskLocalBufferERKN6Legion21UntypedDeferredBufferIEERK4TypeRK6Domain" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf</strong> – The Legion buffer from which to construct this buffer. </p></li>
+<li><p><strong>type</strong> – The type to interpret <code class="docutils literal notranslate"><span class="pre">buf</span></code> as. </p></li>
+<li><p><strong>bounds</strong> – The extent of the buffer. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6legate15TaskLocalBuffer15TaskLocalBufferERK4Type4SpanIKNSt8uint64_tEENSt8optionalIN7mapping11StoreTargetEEE">
+<span id="_CPPv3N6legate15TaskLocalBuffer15TaskLocalBufferERK4Type4SpanIKNSt8uint64_tEENSt8optionalIN7mapping11StoreTargetEEE"></span><span id="_CPPv2N6legate15TaskLocalBuffer15TaskLocalBufferERK4Type4SpanIKNSt8uint64_tEENSt8optionalIN7mapping11StoreTargetEEE"></span><span id="legate::TaskLocalBuffer::TaskLocalBuffer__TypeCR.Span:std::uint64_tC:.std::optional:mapping::StoreTarget:"></span><span class="target" id="classlegate_1_1TaskLocalBuffer_1aa54ed0638903cd999d00223bd0bab2b3"></span><span class="sig-name descname"><span class="n"><span class="pre">TaskLocalBuffer</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="types.html#_CPPv4N6legate4TypeE" title="legate::Type"><span class="n"><span class="pre">Type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">type</span></span></em>,</dd>
+<dd><em class="sig-param"><a class="reference internal" href="#_CPPv4I0EN6legate4SpanE" title="legate::Span"><span class="n"><span class="pre">Span</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint64_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bounds</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">StoreTarget</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mem_kind</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullopt</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate15TaskLocalBuffer15TaskLocalBufferERK4Type4SpanIKNSt8uint64_tEENSt8optionalIN7mapping11StoreTargetEEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code>. </p>
+<p>If <code class="docutils literal notranslate"><span class="pre">mem_kind</span></code> is not given, the memory kind is automatically deduced based on the type of processor executing the task. For example, GPU tasks will allocate GPU memory (pure GPU memory that is, not zero-copy), while CPU tasks will allocate regular system memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> – The type of the buffer. </p></li>
+<li><p><strong>bounds</strong> – The extents of the buffer. </p></li>
+<li><p><strong>mem_kind</strong> – The kind of memory to allocate. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIMERK4Type">
+<span id="_CPPv3I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIMERK4Type"></span><span id="_CPPv2I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIMERK4Type"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">DIM</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1TaskLocalBuffer_1a779701f0a7f1d4b327d9cffea58ce088"></span><span class="sig-name descname"><span class="n"><span class="pre">TaskLocalBuffer</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE6Buffer" title="Buffer"><span class="n"><span class="pre">Buffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIMERK4Type" title="legate::TaskLocalBuffer::TaskLocalBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIMERK4Type" title="legate::TaskLocalBuffer::TaskLocalBuffer::DIM"><span class="n"><span class="pre">DIM</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buf</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="types.html#_CPPv4N6legate4TypeE" title="legate::Type"><span class="n"><span class="pre">Type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">type</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIMERK4Type" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code>. </p>
+<p>If this kind of constructor is used, the user should almost always prefer the <code class="docutils literal notranslate"><span class="pre">type</span></code>-less version of this ctor. That constructor will deduce the <code class="docutils literal notranslate"><a class="reference internal" href="types.html#classlegate_1_1Type"><span class="std std-ref"><span class="pre">Type</span></span></a></code> based on <code class="docutils literal notranslate"><span class="pre">T</span></code>. The point of <em>this</em> ctor is to provide the ability to type-pun the <code class="docutils literal notranslate"><a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref"><span class="pre">Buffer</span></span></a></code> with an equivalent type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buf</strong> – The typed Legion buffer from which to construct this buffer from. </p></li>
+<li><p><strong>type</strong> – The type to interpret <code class="docutils literal notranslate"><span class="pre">buf</span></code> as.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">sizeof(T)</span></code> is not the same as the type size. </p></li>
+<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If <code class="docutils literal notranslate"><span class="pre">alignof(T)</span></code> is not the same as the type alignment. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIME">
+<span id="_CPPv3I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIME"></span><span id="_CPPv2I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIME"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">DIM</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1TaskLocalBuffer_1af5ed4a87b8569c5d86da2942b3546218"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TaskLocalBuffer</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE6Buffer" title="Buffer"><span class="n"><span class="pre">Buffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIME" title="legate::TaskLocalBuffer::TaskLocalBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIME" title="legate::TaskLocalBuffer::TaskLocalBuffer::DIM"><span class="n"><span class="pre">DIM</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buf</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIME" title="Link to this definition">#</a><br /></dt>
+<dd><p>Construct a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code>. </p>
+<p>The type of the buffer is deduced from <code class="docutils literal notranslate"><span class="pre">T</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buf</strong> – The typed Legion buffer from which to construct this buffer from. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate15TaskLocalBuffer4typeEv">
+<span id="_CPPv3NK6legate15TaskLocalBuffer4typeEv"></span><span id="_CPPv2NK6legate15TaskLocalBuffer4typeEv"></span><span id="legate::TaskLocalBuffer::typeC"></span><span class="target" id="classlegate_1_1TaskLocalBuffer_1a0c37c143aacb6d9200019d6f2fbcfa5c"></span><a class="reference internal" href="types.html#_CPPv4N6legate4TypeE" title="legate::Type"><span class="n"><span class="pre">Type</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">type</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate15TaskLocalBuffer4typeEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The type of the buffer. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate15TaskLocalBuffer3dimEv">
+<span id="_CPPv3NK6legate15TaskLocalBuffer3dimEv"></span><span id="_CPPv2NK6legate15TaskLocalBuffer3dimEv"></span><span id="legate::TaskLocalBuffer::dimC"></span><span class="target" id="classlegate_1_1TaskLocalBuffer_1a3022c23896201c929a3ff6b2c43d5082"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dim</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate15TaskLocalBuffer3dimEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The dimension of the buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate15TaskLocalBuffer6domainEv">
+<span id="_CPPv3NK6legate15TaskLocalBuffer6domainEv"></span><span id="_CPPv2NK6legate15TaskLocalBuffer6domainEv"></span><span id="legate::TaskLocalBuffer::domainC"></span><span class="target" id="classlegate_1_1TaskLocalBuffer_1a1656b49ed540c71c783b6503043389a5"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="typedefs.html#_CPPv46Domain" title="Domain"><span class="n"><span class="pre">Domain</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">domain</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate15TaskLocalBuffer6domainEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The shape of the buffer. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate15TaskLocalBuffer11memory_kindEv">
+<span id="_CPPv3NK6legate15TaskLocalBuffer11memory_kindEv"></span><span id="_CPPv2NK6legate15TaskLocalBuffer11memory_kindEv"></span><span id="legate::TaskLocalBuffer::memory_kindC"></span><span class="target" id="classlegate_1_1TaskLocalBuffer_1a28a4990cd0e6c2b5604a01615b4ef993"></span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">StoreTarget</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">memory_kind</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate15TaskLocalBuffer11memory_kindEv" title="Link to this definition">#</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The memory kind of the buffer. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0_NSt7int32_tEENK6legate15TaskLocalBuffercv6BufferI1T3DIMEEv">
+<span id="_CPPv3I0_NSt7int32_tEENK6legate15TaskLocalBuffercv6BufferI1T3DIMEEv"></span><span id="_CPPv2I0_NSt7int32_tEENK6legate15TaskLocalBuffercv6BufferI1T3DIMEEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">DIM</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1TaskLocalBuffer_1a7eb8ca135e9fdb5aaaaf7a622239ac15"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEE6Buffer" title="Buffer"><span class="n"><span class="pre">Buffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEENK6legate15TaskLocalBuffercv6BufferI1T3DIMEEv" title="legate::TaskLocalBuffer::operator Buffer&lt;T, DIM&gt;::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_NSt7int32_tEENK6legate15TaskLocalBuffercv6BufferI1T3DIMEEv" title="legate::TaskLocalBuffer::operator Buffer&lt;T, DIM&gt;::DIM"><span class="n"><span class="pre">DIM</span></span></a><span class="p"><span class="pre">&gt;</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+</dl>
+
+<span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I0_NSt7int32_tEENK6legate15TaskLocalBuffercv6BufferI1T3DIMEEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Convert this object to a typed <code class="docutils literal notranslate"><a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref"><span class="pre">Buffer</span></span></a></code>. </p>
+<p>Since <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> is type-erased, there is not a whole lot you can do with it normally. Access to the underlying data (and ability to create accessors) is only possible with a typed buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The typed buffer. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate15TaskLocalBuffer21get_inline_allocationEv">
+<span id="_CPPv3NK6legate15TaskLocalBuffer21get_inline_allocationEv"></span><span id="_CPPv2NK6legate15TaskLocalBuffer21get_inline_allocationEv"></span><span id="legate::TaskLocalBuffer::get_inline_allocationC"></span><span class="target" id="classlegate_1_1TaskLocalBuffer_1a645bf74b65985cc0bb1c14b00a89dc73"></span><a class="reference internal" href="#_CPPv4N6legate16InlineAllocationE" title="legate::InlineAllocation"><span class="n"><span class="pre">InlineAllocation</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_inline_allocation</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate15TaskLocalBuffer21get_inline_allocationEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1InlineAllocation"><span class="std std-ref"><span class="pre">InlineAllocation</span></span></a></code> for the buffer. </p>
+<p>This routine constructs a fresh <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1InlineAllocation"><span class="std std-ref"><span class="pre">InlineAllocation</span></span></a></code> for each call. This process may not be cheap, so the user is encouraged to call this sparingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The inline allocation object. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
 </dd></dl>
 
 <dl class="cpp class">
@@ -2419,6 +2595,31 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 </dd></dl>
 
 <dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore20create_output_bufferERK11DomainPointb">
+<span id="_CPPv3NK6legate13PhysicalStore20create_output_bufferERK11DomainPointb"></span><span id="_CPPv2NK6legate13PhysicalStore20create_output_bufferERK11DomainPointb"></span><span id="legate::PhysicalStore::create_output_buffer__DomainPointCR.bC"></span><span class="target" id="classlegate_1_1PhysicalStore_1af0d34080ee043f3ae3bc8c3b751044e4"></span><a class="reference internal" href="#_CPPv4N6legate15TaskLocalBufferE" title="legate::TaskLocalBuffer"><span class="n"><span class="pre">TaskLocalBuffer</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create_output_buffer</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="typedefs.html#_CPPv411DomainPoint" title="DomainPoint"><span class="n"><span class="pre">DomainPoint</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">extents</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">bind_buffer</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate13PhysicalStore20create_output_bufferERK11DomainPointb" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> of specified extents for the unbound store. </p>
+<p>The returned <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> is always consistent with the mapping policy for the store. Can be invoked multiple times unless <code class="docutils literal notranslate"><span class="pre">bind_buffer</span></code> is true.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extents</strong> – Extents of the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code></p></li>
+<li><p><strong>bind_buffer</strong> – If the value is <code class="docutils literal notranslate"><span class="pre">true</span></code>, the created <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> will be bound to the store upon return.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> in which to write the output to. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4I0_NSt7int32_tEENK6legate13PhysicalStore9bind_dataEvR6BufferI1T3DIMERK5PointI3DIME">
 <span id="_CPPv3I0_NSt7int32_tEENK6legate13PhysicalStore9bind_dataER6BufferI1T3DIMERK5PointI3DIME"></span><span id="_CPPv2I0_NSt7int32_tEENK6legate13PhysicalStore9bind_dataER6BufferI1T3DIMERK5PointI3DIME"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">DIM</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1PhysicalStore_1ab8c409d906928b597cd6ae4f5cdaf3f4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bind_data</span></span></span><span class="sig-paren">(</span>
 
@@ -2436,6 +2637,35 @@ This routine can be used to determine whether two seemingly unrelated stores ref
 <li><p><strong>buffer</strong> – <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a> to bind to the store</p></li>
 <li><p><strong>extents</strong> – Extents of the <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a>. Passing extents smaller than the actual extents of the <a class="reference internal" href="#group__data_1gac7951ea16b172afc4362f1e87f90e54b"><span class="std std-ref">Buffer</span></a> is legal; the runtime uses the passed extents as the extents of this store. </p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6legate13PhysicalStore9bind_dataERK15TaskLocalBufferRK11DomainPointb">
+<span id="_CPPv3NK6legate13PhysicalStore9bind_dataERK15TaskLocalBufferRK11DomainPointb"></span><span id="_CPPv2NK6legate13PhysicalStore9bind_dataERK15TaskLocalBufferRK11DomainPointb"></span><span id="legate::PhysicalStore::bind_data__TaskLocalBufferCR.DomainPointCR.bC"></span><span class="target" id="classlegate_1_1PhysicalStore_1a9b425352d9f287dab8455d85faf35731"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bind_data</span></span></span><span class="sig-paren">(</span>
+
+<dl>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6legate15TaskLocalBufferE" title="legate::TaskLocalBuffer"><span class="n"><span class="pre">TaskLocalBuffer</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="typedefs.html#_CPPv411DomainPoint" title="DomainPoint"><span class="n"><span class="pre">DomainPoint</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">extents</span></span></em>,</dd>
+<dd><em class="sig-param"><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">check_type</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span></em>,</dd>
+</dl>
+
+<span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate13PhysicalStore9bind_dataERK15TaskLocalBufferRK11DomainPointb" title="Link to this definition">#</a><br /></dt>
+<dd><p>Binds a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> to the store. </p>
+<p>Valid only when the store is unbound and has not yet been bound to another <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code>. The <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> must be consistent with the mapping policy for the store. Recommend that the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> be created by a <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore_1acdec2f70dd9a5c315e34a98acfdcd36b"><span class="std std-ref"><span class="pre">create_output_buffer()</span></span></a></code> call.</p>
+<p>Passing <code class="docutils literal notranslate"><span class="pre">extents</span></code> that are smaller than the actual extents of the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> is legal; the runtime uses the passed extents as the extents of this store.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">check_type</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>, then <code class="docutils literal notranslate"><span class="pre">buffer</span></code> must have the same type as the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1PhysicalStore"><span class="std std-ref"><span class="pre">PhysicalStore</span></span></a></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>buffer</strong> – <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code> to bind to the store. </p></li>
+<li><p><strong>extents</strong> – Extents of the <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1TaskLocalBuffer"><span class="std std-ref"><span class="pre">TaskLocalBuffer</span></span></a></code>. </p></li>
+<li><p><strong>check_type</strong> – Whether to check the type of the buffer against the type of this store for validity.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Throws<span class="colon">:</span></dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If the type of <code class="docutils literal notranslate"><span class="pre">buffer</span></code> is not compatible with the type of the store (only thrown if <code class="docutils literal notranslate"><span class="pre">check_type</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>). </p>
 </dd>
 </dl>
 </dd></dl>
@@ -3417,6 +3647,19 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate15ScopedAllocator4ImplE"><code class="docutils literal notranslate"><span class="pre">legate::ScopedAllocator::Impl</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate15TaskLocalBufferE"><code class="docutils literal notranslate"><span class="pre">legate::TaskLocalBuffer</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate15TaskLocalBuffer15TaskLocalBufferERKN6Legion21UntypedDeferredBufferIEERK4TypeRK6Domain"><code class="docutils literal notranslate"><span class="pre">TaskLocalBuffer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate15TaskLocalBuffer15TaskLocalBufferERK4Type4SpanIKNSt8uint64_tEENSt8optionalIN7mapping11StoreTargetEEE"><code class="docutils literal notranslate"><span class="pre">TaskLocalBuffer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIMERK4Type"><code class="docutils literal notranslate"><span class="pre">TaskLocalBuffer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEEN6legate15TaskLocalBuffer15TaskLocalBufferERK6BufferI1T3DIME"><code class="docutils literal notranslate"><span class="pre">TaskLocalBuffer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate15TaskLocalBuffer4typeEv"><code class="docutils literal notranslate"><span class="pre">type()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate15TaskLocalBuffer3dimEv"><code class="docutils literal notranslate"><span class="pre">dim()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate15TaskLocalBuffer6domainEv"><code class="docutils literal notranslate"><span class="pre">domain()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate15TaskLocalBuffer11memory_kindEv"><code class="docutils literal notranslate"><span class="pre">memory_kind()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEENK6legate15TaskLocalBuffercv6BufferI1T3DIMEEv"><code class="docutils literal notranslate"><span class="pre">operator</span> <span class="pre">Buffer&lt;</span> <span class="pre">T,</span> <span class="pre">DIM</span> <span class="pre">&gt;()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate15TaskLocalBuffer21get_inline_allocationEv"><code class="docutils literal notranslate"><span class="pre">get_inline_allocation()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate18ExternalAllocationE"><code class="docutils literal notranslate"><span class="pre">legate::ExternalAllocation</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate18ExternalAllocation7DeleterE"><code class="docutils literal notranslate"><span class="pre">Deleter</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate18ExternalAllocation9read_onlyEv"><code class="docutils literal notranslate"><span class="pre">read_only()</span></code></a></li>
@@ -3535,7 +3778,9 @@ If provided (and not <code class="docutils literal notranslate"><span class="pre
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_b_NSt7int32_tE_bENK6legate13PhysicalStore15reduce_accessorE10AccessorRDI2OP9EXCLUSIVE3DIMERK4RectI3DIME"><code class="docutils literal notranslate"><span class="pre">reduce_accessor()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0ENK6legate13PhysicalStore6scalarE3VALv"><code class="docutils literal notranslate"><span class="pre">scalar()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEENK6legate13PhysicalStore20create_output_bufferE6BufferI1T3DIMERK5PointI3DIMEb"><code class="docutils literal notranslate"><span class="pre">create_output_buffer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore20create_output_bufferERK11DomainPointb"><code class="docutils literal notranslate"><span class="pre">create_output_buffer()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_NSt7int32_tEENK6legate13PhysicalStore9bind_dataEvR6BufferI1T3DIMERK5PointI3DIME"><code class="docutils literal notranslate"><span class="pre">bind_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore9bind_dataERK15TaskLocalBufferRK11DomainPointb"><code class="docutils literal notranslate"><span class="pre">bind_data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore17bind_untyped_dataER6BufferINSt6int8_tEXL1EEERK5PointIXL1EEE"><code class="docutils literal notranslate"><span class="pre">bind_untyped_data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore15bind_empty_dataEv"><code class="docutils literal notranslate"><span class="pre">bind_empty_data()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate13PhysicalStore3dimEv"><code class="docutils literal notranslate"><span class="pre">dim()</span></code></a></li>

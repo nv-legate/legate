@@ -1,0 +1,6 @@
+legate.core.PhysicalStore.bind\_data
+====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: PhysicalStore.bind_data

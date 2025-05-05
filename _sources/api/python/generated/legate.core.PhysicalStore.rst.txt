@@ -30,6 +30,8 @@
    .. autosummary::
       :toctree: .
    
+      ~PhysicalStore.bind_data
+      ~PhysicalStore.create_output_buffer
       ~PhysicalStore.get_inline_allocation
    
    

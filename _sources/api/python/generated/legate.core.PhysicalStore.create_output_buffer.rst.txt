@@ -1,0 +1,6 @@
+legate.core.PhysicalStore.create\_output\_buffer
+================================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: PhysicalStore.create_output_buffer

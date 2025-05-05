@@ -1,0 +1,6 @@
+legate.core.TaskLocalBuffer.\_\_cuda\_array\_interface\_\_
+==========================================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: TaskLocalBuffer.__cuda_array_interface__

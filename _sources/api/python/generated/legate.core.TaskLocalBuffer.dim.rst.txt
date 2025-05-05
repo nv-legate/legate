@@ -1,0 +1,6 @@
+legate.core.TaskLocalBuffer.dim
+===============================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: TaskLocalBuffer.dim

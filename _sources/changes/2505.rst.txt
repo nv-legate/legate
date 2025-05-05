@@ -46,13 +46,14 @@ C++
 .. rubric:: Data
 
 - Add support for ``std::vector<bool>`` to ``legate::Scalar``.
-
 - Add an optional ``target`` parameter to
   ``legate::LogicalArray::get_physical_array()`` and
   ``legate::LogicalStore::get_physical_store()``. The ``target`` controls where
   the physical array/store is allocated.
 - Add ``legate::InlineAllocation::target`` member to signify which kind of memory the
   inline allocation holds.
+- Add ``legate::TaskLocalBuffer``, a type-and-dimension-erased buffer object for use
+  within tasks.
 
 .. rubric:: Mapping
 
@@ -98,6 +99,8 @@ Python
 - Add ``legate.core.InlineAllocation.target`` property to retrieve the type of memory held
   by the allocation.
 - Add support for the PEP-3118 buffer protocol to ``legate.core.InlineAllocation``.
+- Add ``legate.core.PhysicalStore.create_output_buffer()``.
+- Add ``legate.core.PhysicalStore.bind_data()``.
 
 .. rubric:: Mapping
 
@@ -122,6 +125,8 @@ Python
   ``throws_exception`` with ``options``, which is either a ``legate.core.TaskConfig`` or
   ``legate.core.VariantOptions``.
 - Remove ``legate.core.task.PyTask.UNREGISTERED_ID``.
+- Add support for unbound stores in Python tasks.
+- Add ``legate.core.TaskLocalBuffer``.
 
 .. rubric:: Types
 

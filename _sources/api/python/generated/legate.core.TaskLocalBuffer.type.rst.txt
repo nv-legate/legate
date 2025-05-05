@@ -1,0 +1,6 @@
+legate.core.TaskLocalBuffer.type
+================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: TaskLocalBuffer.type

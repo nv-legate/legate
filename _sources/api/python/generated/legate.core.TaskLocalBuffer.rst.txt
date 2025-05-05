@@ -1,0 +1,32 @@
+﻿legate.core.TaskLocalBuffer
+===========================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: TaskLocalBuffer
+
+   .. automethod:: TaskLocalBuffer.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~TaskLocalBuffer.__array_interface__
+      ~TaskLocalBuffer.__cuda_array_interface__
+      ~TaskLocalBuffer.dim
+      ~TaskLocalBuffer.type
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+   
+   
