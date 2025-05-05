@@ -127,6 +127,7 @@ set(with_runtime_SRC
     bug/logical_store_transform.cc
     bug/nullable_arrays.cc
     bug/premature_free.cc
+    bug/remap_double_detach.cc
     bug/singleton_index_task.cc
     bug/transpose_fortran_order.cc
     bug/temporary_logical_store.cc

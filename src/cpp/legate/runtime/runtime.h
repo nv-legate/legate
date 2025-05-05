@@ -511,17 +511,18 @@ class Runtime {
   /**
    * @brief Creates a store by attaching to an existing allocation.
    *
-   * This call does not block wait on the input shape
+   * @see legate::ExternalAllocation For important instructions regarding the mutability and
+   * lifetime management of the attached allocation.
    *
    * @param shape Shape of the store. The call does not block on this shape.
-   * @param type Element type
+   * @param type Element type.
    * @param buffer Pointer to the beginning of the allocation to attach to; allocation must be
    * contiguous, and cover the entire contents of the store (at least `extents.volume() *
-   * type.size()` bytes)
-   * @param read_only Whether the allocation is read-only
-   * @param ordering In what order the elements are laid out in the passed buffer
+   * type.size()` bytes).
+   * @param read_only Whether the allocation is read-only.
+   * @param ordering In what order the elements are laid out in the passed buffer.
    *
-   * @return Logical store
+   * @return Logical store.
    */
   [[nodiscard]] LogicalStore create_store(
     const Shape& shape,
@@ -532,12 +533,15 @@ class Runtime {
   /**
    * @brief Creates a store by attaching to an existing allocation.
    *
-   * @param shape Shape of the store. The call does not block on this shape.
-   * @param type Element type
-   * @param allocation External allocation descriptor
-   * @param ordering In what order the elements are laid out in the passed allocation
+   * @see legate::ExternalAllocation For important instructions regarding the mutability and
+   * lifetime management of the attached allocation.
    *
-   * @return Logical store
+   * @param shape Shape of the store. The call does not block on this shape.
+   * @param type Element type.
+   * @param allocation External allocation descriptor.
+   * @param ordering In what order the elements are laid out in the passed allocation.
+   *
+   * @return Logical store.
    */
   [[nodiscard]] LogicalStore create_store(
     const Shape& shape,
@@ -549,16 +553,19 @@ class Runtime {
    *
    * External allocations must be read-only.
    *
+   * @see legate::ExternalAllocation For important instructions regarding the mutability and
+   * lifetime management of the attached allocation.
+   *
    * @param shape Shape of the store. The call can BLOCK on this shape for constructing a store
-   * partition
-   * @param tile_shape Shape of tiles
-   * @param type Element type
-   * @param allocations Pairs of external allocation descriptors and sub-store colors
-   * @param ordering In what order the elements are laid out in the passed allocatios
+   * partition.
+   * @param tile_shape Shape of tiles.
+   * @param type Element type.
+   * @param allocations Pairs of external allocation descriptors and sub-store colors.
+   * @param ordering In what order the elements are laid out in the passed allocatios.
    *
-   * @return A pair of a logical store and its partition
+   * @return A pair of a logical store and its partition.
    *
-   * @throw std::invalid_argument If any of the external allocations are not read-only
+   * @throw std::invalid_argument If any of the external allocations are not read-only.
    */
   [[nodiscard]] std::pair<LogicalStore, LogicalStorePartition> create_store(
     const Shape& shape,

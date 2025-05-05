@@ -36,22 +36,25 @@ namespace legate {
  * @brief Descriptor for external allocations
  *
  * An `ExternalAllocation` is a handle to a memory allocation outside Legate's memory management.
- * `ExternalAllocation` objects are used when users want to create Legate stores from the existing
+ * `ExternalAllocation` objects are used when users want to create Legate stores from existing
  * allocations external to Legate. (See two overloads of `Runtime::create_store()` that
  * take `ExternalAllocation`s.)
  *
- * `ExternalAllocation`s can be tagged either read-only or mutable. In case of the latter, Legate
- * guarantees that any updates to the store to which the allocation is attached are also visible via
- * the allocation, wherever the updates are made, at the expense of block-waiting on tasks updating
- * the store. No such propagation of changes happens for read-only external allocations.
+ * `ExternalAllocation`s can be tagged either read-only or mutable.
+ *
+ * - If the allocation is read-only, the calling code must not mutate the contents of the allocation
+ *   until it is detached. Doing so will result in undefined behavior. Legate will not make any
+ *   updates of its own to a read-only allocation.
+ * - If the allocation is mutable, Legate guarantees that any updates to the store to which the
+ *   allocation is attached are eagerly written-through to the attached allocation, at the expense
+ *   of block-waiting on tasks updating the store. The calling code is free to make updates to the
+ *   allocation in-between tasks.
  *
  * The client code that creates an external allocation and attaches it to a Legate store must
  * guarantee that the allocation stays alive until all the tasks accessing the store are finished.
- * If the attached allocation was read-only, the code must not mutate the contents of the
- * allocation while the tasks are still running. An external allocation attached to a store can be
- * safely deallocated in two ways:
+ * An external allocation attached to a store can be safely deallocated in two ways:
  *
- * 1) The client code calls the `detach()` method on the store before it deallocate the
+ * 1) The client code calls the `detach()` method on the store before it deallocates the
  *    allocation. The `detach()` call makes sure that all outstanding operations on the store
  *    complete (see `LogicalStore::detach()`).
  * 2) The client code can optionally pass in a deleter for the allocation, which will be

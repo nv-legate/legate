@@ -63,6 +63,24 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
     void set_has_pending_detach(bool has_pending_detach);
     void add_callback(std::function<void()> callback);
 
+    /**
+     * @brief Remove all inline mappings (instances accessible by the top-level task) of this
+     * LogicalRegionField.
+     */
+    void unmap();
+    /**
+     * @brief Detach this LogicalRegionField from any memory it's attached to.
+     *
+     * @param unordered Whether this operation is being invoked at a point in time that can differ
+     * across the processes in a multi-process run, e.g. as part of garbage collection.
+     */
+    void detach(bool unordered);
+    /**
+     * @brief Ensure this LogicalRegionField is both unmapped and detached.
+     *
+     * @param unordered Whether this operation is being invoked at a point in time that can differ
+     * across the processes in a multi-process run, e.g. as part of garbage collection.
+     */
     void unmap_and_detach(bool unordered);
     void invoke_callbacks();
     void deallocate_attachment(bool wait_on_detach = true);
