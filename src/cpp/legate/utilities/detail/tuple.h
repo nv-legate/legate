@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/utilities/span.h>
 #include <legate/utilities/tuple.h>
 #include <legate/utilities/typedefs.h>
 
@@ -16,6 +17,8 @@
 namespace legate::detail {
 
 // Commonly used conversion routines for tuples
+
+[[nodiscard]] Domain to_domain(Span<const std::uint64_t> shape);
 
 [[nodiscard]] Domain to_domain(const tuple<std::uint64_t>& shape);
 

@@ -29,6 +29,47 @@ PhysicalStore::PhysicalStore(InternalSharedPtr<detail::PhysicalStore> impl,
     "Scalars can be retrieved only from scalar stores"};
 }
 
+namespace {
+
+class CreateBuffer {
+ public:
+  template <Type::Code CODE, std::int32_t DIM>
+  [[nodiscard]] TaskLocalBuffer operator()(const PhysicalStore& store,
+                                           const Type& ty,
+                                           const DomainPoint& extents,
+                                           bool bind_buffer) const
+  {
+    const auto buf =
+      store.create_output_buffer<type_of_t<CODE>>(static_cast<Point<DIM>>(extents), bind_buffer);
+
+    return TaskLocalBuffer{buf, ty};
+  }
+};
+
+}  // namespace
+
+TaskLocalBuffer PhysicalStore::create_output_buffer(const DomainPoint& extents,
+                                                    bool bind_buffer) const
+{
+  auto&& ty = type();
+
+  return double_dispatch(
+    extents.get_dim(), ty.code(), CreateBuffer{}, *this, ty, extents, bind_buffer);
+}
+
+void PhysicalStore::bind_data(const TaskLocalBuffer& buffer,
+                              const DomainPoint& extents,
+                              bool check_type) const
+{
+  if (check_type && (buffer.type() != type())) {
+    throw detail::TracedException<std::invalid_argument>{
+      fmt::format("Cannot bind data of type {} to store of type {}, types are not compatible.",
+                  buffer.type(),
+                  type())};
+  }
+  impl()->bind_data(buffer.impl(), extents);
+}
+
 void PhysicalStore::bind_untyped_data(Buffer<std::int8_t, 1>& buffer, const Point<1>& extents) const
 {
   check_valid_binding_(true);

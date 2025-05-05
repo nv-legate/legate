@@ -41,6 +41,9 @@ cdef extern from "legate/utilities/typedefs.h" namespace "legate" nogil:
         int32_t get_dim() except+
         int64_t& operator[](int32_t) except+
         bool operator==(const _DomainPoint&) except+
+        _DomainPoint operator-(const _DomainPoint&) except+
+        _DomainPoint operator+(const _DomainPoint&) except+
+        _DomainPoint operator+(int64_t) except+
 
     cdef cppclass _Domain "legate::Domain":
         _Domain() except+

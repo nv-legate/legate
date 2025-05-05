@@ -2,12 +2,12 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from libc.stdint cimport int32_t
 from libcpp.vector cimport vector as std_vector
 
 from ..mapping.mapping cimport StoreTarget
-from ..type.types cimport _Type
+from ..type.types cimport Type
 from ..utilities.typedefs cimport _Domain
+from ..utilities.unconstructable cimport Unconstructable
 from .physical_store cimport PhysicalStore
 
 
@@ -17,13 +17,19 @@ cdef extern from "legate/data/inline_allocation.h" namespace "legate" nogil:
         std_vector[size_t] strides
         StoreTarget target
 
-
-cdef class InlineAllocation:
+cdef class InlineAllocation(Unconstructable):
     cdef _InlineAllocation _handle
-    cdef PhysicalStore _store
-    cdef tuple _shape
+    cdef object _owner
+    cdef dict _array_interface
 
     @staticmethod
-    cdef InlineAllocation create(PhysicalStore store, _InlineAllocation handle)
+    cdef InlineAllocation create(
+        _InlineAllocation handle,
+        Type ty,
+        tuple shape,
+        tuple strides,
+        object owner,
+    )
 
-    cdef dict _get_array_interface(self)
+    @staticmethod
+    cdef tuple _compute_shape(const _Domain& domain)

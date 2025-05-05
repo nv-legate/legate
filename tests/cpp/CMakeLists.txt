@@ -183,7 +183,6 @@ set(with_runtime_SRC
     integration/variant_options_precedence.cc
     integration/weighted.cc
     # unit
-    unit/buffer.cc
     unit/constraint.cc
     unit/debug.cc
     unit/dispatch.cc
@@ -197,6 +196,8 @@ set(with_runtime_SRC
     unit/scoped_allocator.cc
     unit/shape.cc
     unit/timing.cc
+    unit/buffer/typed_buffer.cc
+    unit/buffer/task_local_buffer.cc
     unit/logical_array/create_array.cc
     unit/logical_array/delinearize.cc
     unit/logical_array/project.cc

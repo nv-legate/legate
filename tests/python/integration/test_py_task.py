@@ -288,14 +288,6 @@ class TestPyTask:
         _, bloat_store = utils.random_array_and_store(shape)
         bloat_task(source_store, bloat_store, low_offsets, high_offsets, shape)
 
-    def test_prepare_unbound_store(self) -> None:
-        store = get_legate_runtime().create_store(ty.int64)
-        with pytest.raises(
-            NotImplementedError,
-            match="Unbound arrays or stores are not yet supported",
-        ):
-            tasks.fill_task.prepare_call(store, 1)
-
     def test_register_invalid_param_variant(self) -> None:
         arr = get_legate_runtime().create_array(ty.int32)
         msg = re.escape(

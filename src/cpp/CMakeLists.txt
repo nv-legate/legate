@@ -373,6 +373,7 @@ target_sources(legate
                        legate/data/detail/future_wrapper.cc
                        legate/data/detail/region_field.cc
                        legate/data/detail/user_storage_tracker.cc
+                       legate/data/detail/buffer.cc
                        legate/experimental/trace.cc
                        legate/mapping/array.cc
                        legate/mapping/machine.cc
@@ -652,6 +653,7 @@ install(FILES legate/cuda/cuda.h legate/cuda/stream_pool.h legate/cuda/stream_po
 
 install(FILES legate/data/allocator.h
               legate/data/buffer.h
+              legate/data/buffer.inl
               legate/data/external_allocation.h
               legate/data/external_allocation.inl
               legate/data/inline_allocation.h

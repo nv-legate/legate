@@ -15,6 +15,7 @@ import legate.core as lg
 from legate.core import (
     Field,
     Library,
+    LogicalArray,
     PhysicalStore,
     ResourceConfig,
     Scalar,
@@ -1061,6 +1062,51 @@ class TestTaskUtil:
     def test_validate_variant_bad(self) -> None:
         with pytest.raises(ValueError):  # noqa: PT011
             lct._util.validate_variant(345)  # type: ignore[arg-type]
+
+
+class TestUnbound:
+    @pytest.mark.parametrize("shape", ((1,), (1, 2), (1, 2, 3)), ids=str)
+    def test_unbound_store(self, shape: tuple[int, ...]) -> None:
+        VALUE = 123
+
+        @lct.task(options=VariantOptions(has_allocations=True))
+        def foo(x: OutputArray) -> None:
+            buf = x.data().create_output_buffer(shape)
+            np.asarray(buf)[:] = VALUE
+
+        runtime = get_legate_runtime()
+        x = runtime.create_array(ty.int64, ndim=len(shape))
+
+        # Mypy considers boolean attributes to be immutable unless they are
+        # directly assigned. I.e. given:
+        #
+        # assert x.bool_attr
+        # foo(x)  # assume foo() modifies bool_attr
+        # assert not x.bool_attr
+        # baz()
+        #
+        # It believes that x.bool_attr holds the same value before and after
+        # foo(). So it complains that the later call to baz() is unreachable
+        # because *obviously* bool_attr cannot have changed.
+        #
+        # This issue has been raised previously
+        # (https://github.com/python/mypy/issues/11969), but mypy seemingly
+        # considers this a feature, not a bug.
+        #
+        # So we need this extra function to obfuscate the attribute access...
+        def get_unbound(array: LogicalArray) -> bool:
+            return array.unbound
+
+        assert get_unbound(x)
+        foo(x)
+        runtime.issue_execution_fence(block=True)
+        assert not get_unbound(x)
+        assert x.type == ty.int64
+        assert x.shape == shape
+
+        x_phys = x.get_physical_array()
+        x_arr = np.asarray(x_phys)
+        assert (x_arr == VALUE).all()
 
 
 if __name__ == "__main__":

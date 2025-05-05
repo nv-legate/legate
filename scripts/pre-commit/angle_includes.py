@@ -16,7 +16,7 @@ def main() -> int:
             Replacement(
                 r"#include\s+\"(.+)\"",
                 r"#include <\1>",
-                pragma_keyword="include",
+                pragma_keyword="angle-include",
             )
         ],
     ).main()

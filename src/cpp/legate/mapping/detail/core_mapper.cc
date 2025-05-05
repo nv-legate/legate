@@ -91,6 +91,12 @@ std::optional<std::size_t> CoreMapper::allocation_pool_size(
   const legate::mapping::Task& task, legate::mapping::StoreTarget memory_kind)
 {
   const auto task_id = legate::detail::to_underlying(task.task_id());
+
+  // Python task workaround for allocatable tasks
+  if (task_id >= legate::detail::CoreTask::FIRST_DYNAMIC_TASK) {
+    return std::nullopt;
+  }
+
   switch (task_id) {
     case legate::detail::CoreTask::EXTRACT_SCALAR: {
       // Extract scalar task doesn't use the framebuffer
@@ -116,6 +122,7 @@ std::optional<std::size_t> CoreMapper::allocation_pool_size(
     }
     default: break;  // legate-lint: no-switch-default
   }
+
   LEGATE_ABORT(fmt::format("unhandled core task id: {}", task_id));
   return std::nullopt;
 }

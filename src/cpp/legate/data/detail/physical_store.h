@@ -24,6 +24,7 @@ class PhysicalStore;
 namespace legate::detail {
 
 class BasePhysicalArray;
+class TaskLocalBuffer;
 
 class UnboundRegionField {
  public:
@@ -97,6 +98,22 @@ class PhysicalStore {
   [[nodiscard]] bool is_reducible() const;
 
   void bind_empty_data();
+
+  /**
+   * @brief Binds a `TaskLocalBuffer` to the store.
+   *
+   * Valid only when the store is unbound and has not yet been bound to another
+   * `TaskLocalBuffer`. The `TaskLocalBuffer` must be consistent with the mapping policy for
+   * the store.  Recommend that the `TaskLocalBuffer` be created by a `create_output_buffer()`
+   * call.
+   *
+   * Passing `extents` that are smaller than the actual extents of the `TaskLocalBuffer` is
+   * legal; the runtime uses the passed extents as the extents of this store.
+   *
+   * @param buffer `TaskLocalBuffer` to bind to the store.
+   * @param extents Extents of the `TaskLocalBuffer`.
+   */
+  void bind_data(const InternalSharedPtr<TaskLocalBuffer>& buffer, const DomainPoint& extents);
 
   [[nodiscard]] bool is_future() const;
   [[nodiscard]] bool is_unbound_store() const;

@@ -19,6 +19,7 @@ Classes
    task_context
    domain
    task_config
+   task_local_buffer
    inline_allocation
    symbolic_expr
    auto_task

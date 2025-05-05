@@ -17,9 +17,9 @@
 
 namespace legate::detail {
 
-Domain to_domain(const tuple<std::uint64_t>& shape)
+Domain to_domain(Span<const std::uint64_t> shape)
 {
-  if (shape.empty()) {
+  if (shape.size() == 0) {
     return {0, 0};
   }
 
@@ -33,6 +33,8 @@ Domain to_domain(const tuple<std::uint64_t>& shape)
   }
   return domain;
 }
+
+Domain to_domain(const tuple<std::uint64_t>& shape) { return to_domain(shape.data()); }
 
 DomainPoint to_domain_point(const tuple<std::uint64_t>& shape)
 {

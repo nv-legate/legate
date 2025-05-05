@@ -7,6 +7,7 @@
 #include <legate/data/detail/physical_store.h>
 
 #include <legate/data/buffer.h>
+#include <legate/data/detail/buffer.h>
 #include <legate/mapping/detail/mapping.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -112,6 +113,9 @@ InlineAllocation PhysicalStore::get_inline_allocation() const
 mapping::StoreTarget PhysicalStore::target() const
 {
   if (is_unbound_store()) {
+    if (unbound_field_.bound()) {
+      return mapping::detail::to_target(unbound_field_.get_output_region().target_memory().kind());
+    }
     throw TracedException<std::invalid_argument>{"Target of an unbound store cannot be queried"};
   }
   if (is_future()) {
@@ -124,6 +128,19 @@ void PhysicalStore::bind_empty_data()
 {
   check_valid_binding_(true);
   unbound_field_.bind_empty_data(dim());
+}
+
+void PhysicalStore::bind_data(const InternalSharedPtr<TaskLocalBuffer>& buffer,
+                              const DomainPoint& extents)
+{
+  check_valid_binding_(/* bind_buffer */ true);
+  check_buffer_dimension_(extents.get_dim());
+
+  auto [out, fid] = get_output_field_();
+
+  out.return_data(extents, fid, buffer->legion_buffer().get_instance());
+  // We will use this value only when the unbound store is 1D
+  update_num_elements_(static_cast<std::size_t>(extents[0]));
 }
 
 bool PhysicalStore::is_partitioned() const

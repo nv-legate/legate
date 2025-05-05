@@ -48,7 +48,8 @@ function(legate_add_tidy_target)
                       COMMAND "${LEGATE_CLANG_TIDY}"
                               --config-file="${LEGATE_DIR}/.clang-tidy" -p
                               "${CMAKE_BINARY_DIR}" --use-color --quiet
-                              --extra-arg=-Wno-error=unused-command-line-argument "${src}"
+                              --extra-arg=-Wno-error=unused-command-line-argument
+                              --extra-arg=-UNDEBUG "${src}"
                       COMMENT "clang-tidy ${rel_src}")
 
     add_dependencies(tidy "${tidy_target}")

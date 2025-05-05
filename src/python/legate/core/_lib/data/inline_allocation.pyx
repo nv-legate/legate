@@ -7,13 +7,29 @@ import math
 
 import numpy as np
 
+from libcpp.utility cimport move as std_move
 from libc.stdint cimport int32_t, uintptr_t
 from cpython cimport Py_buffer, PyObject_GetBuffer
 
 from ..type.types cimport Type
 from ..utilities.typedefs cimport _Domain, _DomainPoint
 from ..mapping.mapping cimport StoreTarget
-from .physical_store cimport PhysicalStore
+
+cdef extern from * nogil:
+    r"""
+    #include <legate/runtime/detail/runtime.h>
+
+    namespace {
+
+    void *_get_cuda_stream()
+    {
+      return legate::detail::Runtime::get_runtime()->get_cuda_stream();
+    }
+
+    } // namespace
+    """
+    void *_get_cuda_stream() except+
+
 
 # This object exists purely to circumvent numpy. When you do
 #
@@ -46,34 +62,70 @@ cdef class _OnlyArrayInterface:
         return self.alloc.__array_interface__
 
 
-cdef extern from * nogil:
-    r"""
-    #include <legate/runtime/detail/runtime.h>
+cdef dict _compute_array_interface(
+    Type ty,
+    tuple shape,
+    tuple strides,
+    uintptr_t pointer,
+):
+    cdef dict ret
 
-    namespace {
+    np_dtype = ty.to_numpy_dtype()
+    if math.prod(shape) == 0:
+        # For some reason NumPy doesn't like a null pointer even when the
+        # array size is 0, so we just make an empty ndarray and return its
+        # array interface object
+        ret = np.empty(shape, dtype=np_dtype).__array_interface__
+    else:
+        ret = {
+            "version": 3,
+            "shape": shape,
+            "typestr": np_dtype.str,
+            "data": (pointer, False),
+            "strides": strides,
+        }
 
-    void *_get_cuda_stream()
-    {
-      return legate::detail::Runtime::get_runtime()->get_cuda_stream();
-    }
+    cdef void *cu_stream = _get_cuda_stream()
 
-    } // namespace
-    """
-    void *_get_cuda_stream() except+
+    if cu_stream != NULL:
+        # This entry is used by __cuda_array_interface__, and is ignored by
+        # numpy
+        ret["stream"] = int(<uintptr_t>cu_stream)
+
+    return ret
 
 
-cdef class InlineAllocation:
+cdef class InlineAllocation(Unconstructable):
     @staticmethod
     cdef InlineAllocation create(
-        PhysicalStore store, _InlineAllocation handle
+        _InlineAllocation handle,
+        Type ty,
+        tuple shape,
+        tuple strides,
+        object owner
     ):
         cdef InlineAllocation result = InlineAllocation.__new__(
             InlineAllocation
         )
-        result._handle = handle
-        result._store = store
-        result._shape = None
+
+        result._handle = std_move(handle)
+        # Store a reference to the owning object so that it isn't
+        # garbage-collected before this object is
+        result._owner = owner
+        result._array_interface = _compute_array_interface(
+            ty=ty, shape=shape, strides=strides, pointer=result.ptr
+        )
         return result
+
+    @staticmethod
+    cdef tuple _compute_shape(const _Domain& domain):
+        cdef _DomainPoint lo = domain.lo()
+        cdef _DomainPoint hi = domain.hi()
+        cdef int32_t ndim = domain.get_dim()
+        cdef int32_t i = 0
+        cdef tuple ret = tuple(max(hi[i] - lo[i] + 1, 0) for i in range(ndim))
+
+        return ret
 
     @property
     def ptr(self) -> uintptr_t:
@@ -95,7 +147,7 @@ cdef class InlineAllocation:
         :returns: The strides of the allocation.
         :rtype: tuple[int, ...]
         """
-        return () if self._store.ndim == 0 else tuple(self._handle.strides)
+        return self._array_interface["strides"]
 
     @property
     def shape(self) -> tuple[size_t, ...]:
@@ -105,19 +157,7 @@ cdef class InlineAllocation:
         :returns: The shape of the allocation.
         :rtype: tuple[int, ...]
         """
-        if self._store.ndim == 0:
-            return ()
-
-        if self._shape is not None:
-            return self._shape
-
-        cdef _Domain domain = self._store._handle.domain()
-        cdef _DomainPoint lo = domain.lo()
-        cdef _DomainPoint hi = domain.hi()
-        cdef int32_t ndim = domain.get_dim()
-
-        self._shape = tuple(max(hi[i] - lo[i] + 1, 0) for i in range(ndim))
-        return self._shape
+        return self._array_interface["shape"]
 
     @property
     def target(self) -> StoreTarget:
@@ -131,36 +171,6 @@ cdef class InlineAllocation:
 
         with nogil:
             ret = self._handle.target
-
-        return ret
-
-    cdef dict _get_array_interface(self):
-        cdef Type ty = self._store.type
-        cdef tuple shape = self.shape
-        cdef dict ret
-
-        if math.prod(shape) == 0:
-            # For some reason NumPy doesn't like a null pointer even when the
-            # array size is 0, so we just make an empty ndarray and return its
-            # array interface object
-            ret = np.empty(
-                shape, dtype=ty.to_numpy_dtype()
-            ).__array_interface__
-        else:
-            ret = {
-                "version": 3,
-                "shape": shape,
-                "typestr": ty.to_numpy_dtype().str,
-                "data": (self.ptr, False),
-                "strides": self.strides,
-            }
-
-        cdef void *cu_stream = _get_cuda_stream()
-
-        if cu_stream != NULL:
-            # This entry is used by __cuda_array_interface__, and is ignored by
-            # numpy
-            ret["stream"] = int(<uintptr_t>cu_stream)
 
         return ret
 
@@ -179,7 +189,7 @@ cdef class InlineAllocation:
                 "Physical store in a framebuffer memory does not support "
                 "the array interface"
             )
-        return self._get_array_interface()
+        return self._array_interface
 
     @property
     def __cuda_array_interface__(self) -> dict[str, Any]:
@@ -196,7 +206,7 @@ cdef class InlineAllocation:
                 "Physical store in a host-only memory does not support "
                 "the CUDA array interface"
             )
-        return self._get_array_interface()
+        return self._array_interface
 
     def __getbuffer__(self, Py_buffer *buffer, int flags) -> None:
         # np.asarray() seemingly stores a reference to whatever it is called

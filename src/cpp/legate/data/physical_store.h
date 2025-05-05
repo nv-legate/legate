@@ -219,6 +219,21 @@ class PhysicalStore {
                                                     bool bind_buffer = false) const;
 
   /**
+   * @brief Creates a `TaskLocalBuffer` of specified extents for the unbound store.
+   *
+   * The returned `TaskLocalBuffer` is always consistent with the mapping policy for the
+   * store. Can be invoked multiple times unless `bind_buffer` is true.
+   *
+   * @param extents Extents of the `TaskLocalBuffer`
+   * @param bind_buffer If the value is `true`, the created `TaskLocalBuffer` will be bound to the
+   * store upon return.
+   *
+   * @return A `TaskLocalBuffer` in which to write the output to.
+   */
+  [[nodiscard]] TaskLocalBuffer create_output_buffer(const DomainPoint& extents,
+                                                     bool bind_buffer = false) const;
+
+  /**
    * @brief Binds a \ref Buffer to the store.
    *
    * Valid only when the store is unbound and has not yet been bound to another \ref
@@ -233,6 +248,31 @@ class PhysicalStore {
    */
   template <typename T, std::int32_t DIM>
   void bind_data(Buffer<T, DIM>& buffer, const Point<DIM>& extents) const;
+
+  /**
+   * @brief Binds a `TaskLocalBuffer` to the store.
+   *
+   * Valid only when the store is unbound and has not yet been bound to another
+   * `TaskLocalBuffer`. The `TaskLocalBuffer` must be consistent with the mapping policy for
+   * the store.  Recommend that the `TaskLocalBuffer` be created by a `create_output_buffer()`
+   * call.
+   *
+   * Passing `extents` that are smaller than the actual extents of the `TaskLocalBuffer` is
+   * legal; the runtime uses the passed extents as the extents of this store.
+   *
+   * If `check_type` is `true`, then `buffer` must have the same type as the `PhysicalStore`.
+   *
+   * @param buffer `TaskLocalBuffer` to bind to the store.
+   * @param extents Extents of the `TaskLocalBuffer`.
+   * @param check_type Whether to check the type of the buffer against the type of this store
+   * for validity.
+   *
+   * @throw std::invalid_argument If the type of `buffer` is not compatible with the type of
+   * the store (only thrown if `check_type` is `true`).
+   */
+  void bind_data(const TaskLocalBuffer& buffer,
+                 const DomainPoint& extents,
+                 bool check_type = false) const;
 
   /**
    * @brief Binds a 1D \ref Buffer of byte-size elements to the store in an untyped manner.

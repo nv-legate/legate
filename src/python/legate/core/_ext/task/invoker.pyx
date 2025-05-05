@@ -517,11 +517,6 @@ cdef class VariantInvoker:
                     f"got {type(user_param)}"
                 )
 
-            if user_param.unbound:
-                raise NotImplementedError(
-                    "Unbound arrays or stores are not yet supported"
-                )
-
             if issubclass(expected_ty, _INPUT_TYPES):
                 task.add_input(user_param)
             elif issubclass(expected_ty, _OUTPUT_TYPES):

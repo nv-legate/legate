@@ -6,28 +6,37 @@
 
 #pragma once
 
+#include <legate/data/inline_allocation.h>
+#include <legate/type/types.h>
 #include <legate/utilities/detail/doxygen.h>
-#include <legate/utilities/machine.h>
+#include <legate/utilities/shared_ptr.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>
 
 #include <legion.h>
 
 #include <cstddef>
 #include <cstdint>
-#include <utility>
+#include <optional>
 
 /**
  * @file
  * @brief Type alias definition for legate::Buffer and utility functions for it
  */
 
+namespace legate::mapping {
+
+enum class StoreTarget : std::uint8_t;
+
+}  // namespace legate::mapping
+
+namespace legate::detail {
+
+class TaskLocalBuffer;
+
+}  // namespace legate::detail
+
 namespace legate {
-
-namespace detail {
-
-void check_alignment(std::size_t alignment);
-
-}  // namespace detail
 
 /**
  * @addtogroup data
@@ -72,6 +81,130 @@ template <typename VAL, std::int32_t DIM = 1>
 using Buffer = Legion::DeferredBuffer<VAL, DIM>;
 
 /**
+ * @brief A task-local temporary buffer.
+ *
+ * A `TaskLocalBuffer` is, as the name implies, "local" to a task. Its lifetime is bound to
+ * that of the task. When the task ends, the buffer is destroyed. It is most commonly used as
+ * temporary scratch-space within tasks for that reason.
+ *
+ * The buffer is allocated immediately at the point when `TaskLocalBuffer` is created, so it is
+ * safe to use it immediately, even if it used asynchronously (for example, in GPU kernel
+ * launches) after the fact.
+ */
+class TaskLocalBuffer {
+ public:
+  TaskLocalBuffer() = LEGATE_DEFAULT_WHEN_CYTHON;
+  TaskLocalBuffer(const TaskLocalBuffer&);
+  TaskLocalBuffer& operator=(const TaskLocalBuffer&);
+  TaskLocalBuffer(TaskLocalBuffer&&) noexcept;
+  TaskLocalBuffer& operator=(TaskLocalBuffer&&) noexcept;
+  ~TaskLocalBuffer();
+
+  explicit TaskLocalBuffer(SharedPtr<detail::TaskLocalBuffer> impl);
+
+  /**
+   * @brief Construct a `TaskLocalBuffer`.
+   *
+   * @param buf The Legion buffer from which to construct this buffer.
+   * @param type The type to interpret `buf` as.
+   * @param bounds The extent of the buffer.
+   */
+  TaskLocalBuffer(const Legion::UntypedDeferredBuffer<>& buf,
+                  const Type& type,
+                  const Domain& bounds);
+
+  /**
+   * @brief Construct a `TaskLocalBuffer`.
+   *
+   * If `mem_kind` is not given, the memory kind is automatically deduced based on the type of
+   * processor executing the task. For example, GPU tasks will allocate GPU memory (pure GPU
+   * memory that is, not zero-copy), while CPU tasks will allocate regular system memory.
+   *
+   * @param type The type of the buffer.
+   * @param bounds The extents of the buffer.
+   * @param mem_kind The kind of memory to allocate.
+   */
+  TaskLocalBuffer(const Type& type,
+                  Span<const std::uint64_t> bounds,
+                  std::optional<mapping::StoreTarget> mem_kind = std::nullopt);
+
+  /**
+   * @brief Construct a `TaskLocalBuffer`.
+   *
+   * If this kind of constructor is used, the user should almost always prefer the `type`-less
+   * version of this ctor. That constructor will deduce the `Type` based on `T`. The point of
+   * _this_ ctor is to provide the ability to type-pun the `Buffer` with an equivalent type.
+   *
+   * @param buf The typed Legion buffer from which to construct this buffer from.
+   * @param type The type to interpret `buf` as.
+   *
+   * @throws std::invalid_argument If `sizeof(T)` is not the same as the type size.
+   * @throws std::invalid_argument If `alignof(T)` is not the same as the type alignment.
+   */
+  template <typename T, std::int32_t DIM>
+  TaskLocalBuffer(const Buffer<T, DIM>& buf, const Type& type);
+
+  /**
+   * @brief Construct a `TaskLocalBuffer`.
+   *
+   * The type of the buffer is deduced from `T`.
+   *
+   * @param buf The typed Legion buffer from which to construct this buffer from.
+   */
+  template <typename T, std::int32_t DIM>
+  explicit TaskLocalBuffer(const Buffer<T, DIM>& buf);
+
+  /**
+   * @return The type of the buffer.
+   */
+  [[nodiscard]] Type type() const;
+
+  /**
+   * @return The dimension of the buffer
+   */
+  [[nodiscard]] std::int32_t dim() const;
+
+  /**
+   * @return The shape of the buffer.
+   */
+  [[nodiscard]] const Domain& domain() const;
+
+  /**
+   * @return The memory kind of the buffer.
+   */
+  [[nodiscard]] mapping::StoreTarget memory_kind() const;
+
+  /**
+   * @brief Convert this object to a typed `Buffer`.
+   *
+   * Since `TaskLocalBuffer` is type-erased, there is not a whole lot you can do with it
+   * normally. Access to the underlying data (and ability to create accessors) is only possible
+   * with a typed buffer.
+   *
+   * @return The typed buffer.
+   */
+  template <typename T, std::int32_t DIM>
+  [[nodiscard]] explicit operator Buffer<T, DIM>() const;
+
+  /**
+   * @brief Get the `InlineAllocation` for the buffer.
+   *
+   * This routine constructs a fresh `InlineAllocation` for each call. This process may not be
+   * cheap, so the user is encouraged to call this sparingly.
+   *
+   * @return The inline allocation object.
+   */
+  [[nodiscard]] InlineAllocation get_inline_allocation() const;
+
+  [[nodiscard]] const SharedPtr<detail::TaskLocalBuffer>& impl() const;
+
+ private:
+  [[nodiscard]] const Legion::UntypedDeferredBuffer<>& legion_buffer_() const;
+
+  SharedPtr<detail::TaskLocalBuffer> impl_{};
+};
+
+/**
  * @brief Creates a \ref Buffer of specific extents
  *
  * @param extents Extents of the buffer
@@ -84,17 +217,7 @@ using Buffer = Legion::DeferredBuffer<VAL, DIM>;
 template <typename VAL, std::int32_t DIM>
 [[nodiscard]] Buffer<VAL, DIM> create_buffer(const Point<DIM>& extents,
                                              Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
-                                             std::size_t alignment = DEFAULT_ALIGNMENT)
-{
-  static_assert(DIM <= LEGATE_MAX_DIM);
-  detail::check_alignment(alignment);
-
-  if (Memory::Kind::NO_MEMKIND == kind) {
-    kind = find_memory_kind_for_executing_processor(false);
-  }
-  auto hi = extents - Point<DIM>::ONES();
-  return Buffer<VAL, DIM>{Rect<DIM>{Point<DIM>::ZEROES(), std::move(hi)}, kind, nullptr, alignment};
-}
+                                             std::size_t alignment = DEFAULT_ALIGNMENT);
 
 /**
  * @brief Creates a \ref Buffer of a specific size. Always returns a 1D \ref Buffer.
@@ -109,11 +232,10 @@ template <typename VAL, std::int32_t DIM>
 template <typename VAL>
 [[nodiscard]] Buffer<VAL> create_buffer(std::size_t size,
                                         Memory::Kind kind     = Memory::Kind::NO_MEMKIND,
-                                        std::size_t alignment = DEFAULT_ALIGNMENT)
-{
-  return create_buffer<VAL, 1>(Point<1>{size}, kind, alignment);
-}
+                                        std::size_t alignment = DEFAULT_ALIGNMENT);
 
 /** @} */
 
 }  // namespace legate
+
+#include <legate/data/buffer.inl>

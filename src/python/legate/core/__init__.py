@@ -47,6 +47,7 @@ def _maybe_import_ucx_module() -> Any:
 
 _libucx = _maybe_import_ucx_module()
 
+from ._lib.data.buffer import TaskLocalBuffer
 from ._lib.data.inline_allocation import InlineAllocation
 from ._lib.data.logical_array import LogicalArray
 from ._lib.data.logical_store import LogicalStore, LogicalStorePartition
