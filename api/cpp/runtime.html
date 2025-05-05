@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Runtime &#8212; NVIDIA legate (25.05.00.dev135+gef8062ad)</title>
+    <title>Runtime &#8212; NVIDIA legate (25.05.00.dev137+g21c3e19d)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=991c1fa1"></script>
+    <script src="../../_static/documentation_options.js?v=5ae72269"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev137+g21c3e19d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev137+g21c3e19d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev135+gef8062ad)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev137+g21c3e19d)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev137+g21c3e19d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev137+g21c3e19d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev135+gef8062ad)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev137+g21c3e19d)</p>
   
 </a>
 
@@ -1598,19 +1598,23 @@
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK4TypePvbRKN7mapping11DimOrderingE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Creates a store by attaching to an existing allocation. </p>
-<p>This call does not block wait on the input shape</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="data.html#classlegate_1_1ExternalAllocation"><span class="std std-ref">legate::ExternalAllocation</span></a> For important instructions regarding the mutability and lifetime management of the attached allocation.</p>
+</div>
+</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shape</strong> – <a class="reference internal" href="data.html#classlegate_1_1Shape"><span class="std std-ref">Shape</span></a> of the store. The call does not block on this shape. </p></li>
-<li><p><strong>type</strong> – Element type </p></li>
-<li><p><strong>buffer</strong> – Pointer to the beginning of the allocation to attach to; allocation must be contiguous, and cover the entire contents of the store (at least <code class="docutils literal notranslate"><span class="pre">extents.volume()</span> <span class="pre">*</span> <span class="pre">type.size()</span></code> bytes) </p></li>
-<li><p><strong>read_only</strong> – Whether the allocation is read-only </p></li>
-<li><p><strong>ordering</strong> – In what order the elements are laid out in the passed buffer</p></li>
+<li><p><strong>type</strong> – Element type. </p></li>
+<li><p><strong>buffer</strong> – Pointer to the beginning of the allocation to attach to; allocation must be contiguous, and cover the entire contents of the store (at least <code class="docutils literal notranslate"><span class="pre">extents.volume()</span> <span class="pre">*</span> <span class="pre">type.size()</span></code> bytes). </p></li>
+<li><p><strong>read_only</strong> – Whether the allocation is read-only. </p></li>
+<li><p><strong>ordering</strong> – In what order the elements are laid out in the passed buffer.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Logical store </p>
+<dd class="field-even"><p>Logical store. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -1628,17 +1632,22 @@
 
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK4TypeRK18ExternalAllocationRKN7mapping11DimOrderingE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Creates a store by attaching to an existing allocation. </p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="data.html#classlegate_1_1ExternalAllocation"><span class="std std-ref">legate::ExternalAllocation</span></a> For important instructions regarding the mutability and lifetime management of the attached allocation.</p>
+</div>
+</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shape</strong> – <a class="reference internal" href="data.html#classlegate_1_1Shape"><span class="std std-ref">Shape</span></a> of the store. The call does not block on this shape. </p></li>
-<li><p><strong>type</strong> – Element type </p></li>
-<li><p><strong>allocation</strong> – External allocation descriptor </p></li>
-<li><p><strong>ordering</strong> – In what order the elements are laid out in the passed allocation</p></li>
+<li><p><strong>type</strong> – Element type. </p></li>
+<li><p><strong>allocation</strong> – External allocation descriptor. </p></li>
+<li><p><strong>ordering</strong> – In what order the elements are laid out in the passed allocation.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Logical store </p>
+<dd class="field-even"><p>Logical store. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -1658,21 +1667,26 @@
 <span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate7Runtime12create_storeERK5ShapeRK5tupleINSt8uint64_tEERK4TypeRKNSt6vectorINSt4pairI18ExternalAllocation5tupleINSt8uint64_tEEEEEERKN7mapping11DimOrderingE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Creates a store by attaching to multiple existing allocations. </p>
 <p>External allocations must be read-only.</p>
+<p><div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="data.html#classlegate_1_1ExternalAllocation"><span class="std std-ref">legate::ExternalAllocation</span></a> For important instructions regarding the mutability and lifetime management of the attached allocation.</p>
+</div>
+</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>shape</strong> – <a class="reference internal" href="data.html#classlegate_1_1Shape"><span class="std std-ref">Shape</span></a> of the store. The call can BLOCK on this shape for constructing a store partition </p></li>
-<li><p><strong>tile_shape</strong> – <a class="reference internal" href="data.html#classlegate_1_1Shape"><span class="std std-ref">Shape</span></a> of tiles </p></li>
-<li><p><strong>type</strong> – Element type </p></li>
-<li><p><strong>allocations</strong> – Pairs of external allocation descriptors and sub-store colors </p></li>
-<li><p><strong>ordering</strong> – In what order the elements are laid out in the passed allocatios</p></li>
+<li><p><strong>shape</strong> – <a class="reference internal" href="data.html#classlegate_1_1Shape"><span class="std std-ref">Shape</span></a> of the store. The call can BLOCK on this shape for constructing a store partition. </p></li>
+<li><p><strong>tile_shape</strong> – <a class="reference internal" href="data.html#classlegate_1_1Shape"><span class="std std-ref">Shape</span></a> of tiles. </p></li>
+<li><p><strong>type</strong> – Element type. </p></li>
+<li><p><strong>allocations</strong> – Pairs of external allocation descriptors and sub-store colors. </p></li>
+<li><p><strong>ordering</strong> – In what order the elements are laid out in the passed allocatios.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If any of the external allocations are not read-only </p>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If any of the external allocations are not read-only. </p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A pair of a logical store and its partition</p>
+<dd class="field-odd"><p>A pair of a logical store and its partition.</p>
 </dd>
 </dl>
 </dd></dl>

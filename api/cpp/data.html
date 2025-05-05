@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Data &#8212; NVIDIA legate (25.05.00.dev135+gef8062ad)</title>
+    <title>Data &#8212; NVIDIA legate (25.05.00.dev137+g21c3e19d)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=991c1fa1"></script>
+    <script src="../../_static/documentation_options.js?v=5ae72269"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,11 +130,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev137+g21c3e19d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev137+g21c3e19d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev135+gef8062ad)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev137+g21c3e19d)</p>
   
 </a></div>
     
@@ -241,11 +241,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev135+gef8062ad) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev137+g21c3e19d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev137+g21c3e19d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev135+gef8062ad)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev137+g21c3e19d)</p>
   
 </a>
 
@@ -872,10 +872,15 @@ The input pointer must be one that was previously returned by an <code class="do
 <dd><div class="docutils container">
 <em>#include &lt;legate/data/external_allocation.h&gt;</em></div>
 <p>Descriptor for external allocations. </p>
-<p>An <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> is a handle to a memory allocation outside Legate’s memory management. <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> objects are used when users want to create Legate stores from the existing allocations external to Legate. (See two overloads of <code class="docutils literal notranslate"><a class="reference internal" href="runtime.html#classlegate_1_1Runtime_1a32107f09c6b2e51e46e1fa4129a7eee5"><span class="std std-ref"><span class="pre">Runtime::create_store()</span></span></a></code> that take <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code>s.)</p>
-<p><code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code>s can be tagged either read-only or mutable. In case of the latter, Legate guarantees that any updates to the store to which the allocation is attached are also visible via the allocation, wherever the updates are made, at the expense of block-waiting on tasks updating the store. No such propagation of changes happens for read-only external allocations.</p>
-<p>The client code that creates an external allocation and attaches it to a Legate store must guarantee that the allocation stays alive until all the tasks accessing the store are finished. If the attached allocation was read-only, the code must not mutate the contents of the allocation while the tasks are still running. An external allocation attached to a store can be safely deallocated in two ways:</p>
-<p>1) The client code calls the <code class="docutils literal notranslate"><span class="pre">detach()</span></code> method on the store before it deallocate the allocation. The <code class="docutils literal notranslate"><span class="pre">detach()</span></code> call makes sure that all outstanding operations on the store complete (see <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore_1a91bfbb96c49998b45890fe725ff0b102"><span class="std std-ref"><span class="pre">LogicalStore::detach()</span></span></a></code>). 2) The client code can optionally pass in a deleter for the allocation, which will be invoked once the store is destroyed and the allocation is no longer in use.</p>
+<p>An <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> is a handle to a memory allocation outside Legate’s memory management. <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code> objects are used when users want to create Legate stores from existing allocations external to Legate. (See two overloads of <code class="docutils literal notranslate"><a class="reference internal" href="runtime.html#classlegate_1_1Runtime_1a32107f09c6b2e51e46e1fa4129a7eee5"><span class="std std-ref"><span class="pre">Runtime::create_store()</span></span></a></code> that take <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code>s.)</p>
+<p><code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ExternalAllocation"><span class="std std-ref"><span class="pre">ExternalAllocation</span></span></a></code>s can be tagged either read-only or mutable.</p>
+<p><ul class="simple">
+<li><p>If the allocation is read-only, the calling code must not mutate the contents of the allocation until it is detached. Doing so will result in undefined behavior. Legate will not make any updates of its own to a read-only allocation.</p></li>
+<li><p>If the allocation is mutable, Legate guarantees that any updates to the store to which the allocation is attached are eagerly written-through to the attached allocation, at the expense of block-waiting on tasks updating the store. The calling code is free to make updates to the allocation in-between tasks.</p></li>
+</ul>
+</p>
+<p>The client code that creates an external allocation and attaches it to a Legate store must guarantee that the allocation stays alive until all the tasks accessing the store are finished. An external allocation attached to a store can be safely deallocated in two ways:</p>
+<p>1) The client code calls the <code class="docutils literal notranslate"><span class="pre">detach()</span></code> method on the store before it deallocates the allocation. The <code class="docutils literal notranslate"><span class="pre">detach()</span></code> call makes sure that all outstanding operations on the store complete (see <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1LogicalStore_1a91bfbb96c49998b45890fe725ff0b102"><span class="std std-ref"><span class="pre">LogicalStore::detach()</span></span></a></code>). 2) The client code can optionally pass in a deleter for the allocation, which will be invoked once the store is destroyed and the allocation is no longer in use.</p>
 <p>Deleters don’t need to be idempotent; Legate makes sure that they will be invoked only once on the allocations. Deleters must not throw exceptions (throwable deleters are disallowed by the type system). Deleters need not handle null pointers correctly, as external allocations are not allowed to be created on null pointers. Each deleter is responsible for deallocating only the allocation it is associated with and no other allocations. </p>
 <div class="breathe-sectiondef docutils container">
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
