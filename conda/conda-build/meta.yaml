@@ -179,8 +179,7 @@ requirements:
     - scikit-build-core
     - setuptools_scm
     - rich
-    # hdf5 is restricted as described in issue #2215
-    - hdf5 =1.14.3
+    - hdf5
 {% if sanitizer_build_bool %}
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
