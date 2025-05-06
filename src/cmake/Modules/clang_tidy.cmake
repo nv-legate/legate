@@ -17,46 +17,22 @@ if(NOT LEGATE_CLANG_TIDY_DIFF)
                       FIND_PROGRAM_ARGS PATH_SUFFIXES "share/clang")
 endif()
 
-function(legate_add_tidy_target)
-  list(APPEND CMAKE_MESSAGE_CONTEXT "add_tidy_target")
+set(BASE_CLANG_TIDY_COMMAND
+    "${LEGATE_CLANG_TIDY}" #
+    --config-file="${LEGATE_DIR}/.clang-tidy" #
+    --use-color #
+    --quiet #
+    --extra-arg=-Wno-error=unused-command-line-argument #
+    --extra-arg=-UNDEBUG)
 
-  set(options)
-  set(one_value_args SOURCE)
-  set(multi_value_args)
-  cmake_parse_arguments(_TIDY "${options}" "${one_value_args}" "${multi_value_args}"
-                        ${ARGN})
-
-  if(NOT _TIDY_SOURCE)
-    message(FATAL_ERROR "Must provide SOURCE option")
-  endif()
-
-  if(LEGATE_CLANG_TIDY)
-    if(NOT TARGET tidy)
-      add_custom_target(tidy COMMENT "running clang-tidy")
-    endif()
-
-    cmake_path(SET src NORMALIZE "${_TIDY_SOURCE}")
-    if(NOT IS_ABSOLUTE "${src}")
-      cmake_path(SET src NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
-    endif()
-
-    cmake_path(RELATIVE_PATH src BASE_DIRECTORY "${LEGATE_DIR}" OUTPUT_VARIABLE rel_src)
-    string(MAKE_C_IDENTIFIER "${rel_src}_tidy" tidy_target)
-
-    add_custom_target("${tidy_target}"
-                      DEPENDS "${src}"
-                      COMMAND "${LEGATE_CLANG_TIDY}"
-                              --config-file="${LEGATE_DIR}/.clang-tidy" -p
-                              "${CMAKE_BINARY_DIR}" --use-color --quiet
-                              --extra-arg=-Wno-error=unused-command-line-argument
-                              --extra-arg=-UNDEBUG "${src}"
-                      COMMENT "clang-tidy ${rel_src}")
-
-    add_dependencies(tidy "${tidy_target}")
+function(_legate_ensure_tidy_target)
+  if(TARGET tidy)
     return()
   endif()
 
-  if(NOT TARGET tidy)
+  if(LEGATE_CLANG_TIDY)
+    add_custom_target(tidy COMMENT "running clang-tidy")
+  else()
     # cmake-format: off
     add_custom_target(
       tidy
@@ -80,6 +56,47 @@ function(legate_add_tidy_target)
     )
     # cmake-format: on
   endif()
+endfunction()
+
+function(legate_add_tidy_target)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "add_tidy_target")
+
+  set(options)
+  set(one_value_args SOURCE)
+  set(multi_value_args)
+  cmake_parse_arguments(_TIDY "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
+
+  if(NOT _TIDY_SOURCE)
+    message(FATAL_ERROR "Must provide SOURCE option")
+  endif()
+
+  _legate_ensure_tidy_target()
+  if(NOT LEGATE_CLANG_TIDY)
+    return()
+  endif()
+
+  cmake_path(SET src NORMALIZE "${_TIDY_SOURCE}")
+  if(NOT IS_ABSOLUTE "${src}")
+    cmake_path(SET src NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${src}")
+  endif()
+
+  cmake_path(RELATIVE_PATH src BASE_DIRECTORY "${LEGATE_DIR}" OUTPUT_VARIABLE rel_src)
+  string(MAKE_C_IDENTIFIER "${rel_src}_tidy" tidy_target)
+
+  set(clang_tidy_cmd "${BASE_CLANG_TIDY_COMMAND}" -p "${CMAKE_BINARY_DIR}" "${src}")
+  # Even if you pass the --quiet flag to clang-tidy it still prints a bunch of useless
+  # "35505 warnings generated." to stderr (it counts warnings that you suppress or come
+  # from system headers). That isn't useful, so filter them out.
+  set(filter_warnings "${LEGATE_SED}" -E [=["/[0-9]+ warnings generated\./d"]=])
+
+  add_custom_target("${tidy_target}"
+                    DEPENDS "${src}"
+                    COMMAND "${clang_tidy_cmd}" 2>&1 | "${filter_warnings}"
+                    COMMENT "clang-tidy ${rel_src}"
+                    COMMAND_EXPAND_LISTS)
+
+  add_dependencies(tidy "${tidy_target}")
 endfunction()
 
 function(legate_add_tidy_diff_target)
@@ -141,4 +158,64 @@ function(legate_add_tidy_diff_target)
     )
     # cmake-format: on
   endif()
+endfunction()
+
+function(legate_add_external_tidy_target)
+  list(APPEND CMAKE_MESSAGE_CONTEXT "add_external_tidy_target")
+
+  set(options)
+  set(one_value_args ROOT_DIR)
+  set(multi_value_args SOURCES)
+  cmake_parse_arguments(_TIDY "${options}" "${one_value_args}" "${multi_value_args}"
+                        ${ARGN})
+
+  if(NOT _TIDY_ROOT_DIR)
+    message(FATAL_ERROR "Must provide ROOT_DIR option")
+  endif()
+
+  if(NOT _TIDY_SOURCES)
+    message(FATAL_ERROR "Must provide SOURCES option")
+  endif()
+
+  _legate_ensure_tidy_target()
+  if(NOT LEGATE_CLANG_TIDY)
+    return()
+  endif()
+
+  cmake_path(SET root_dir NORMALIZE "${_TIDY_ROOT_DIR}")
+  if(NOT IS_ABSOLUTE "${root_dir}")
+    cmake_path(SET root_dir NORMALIZE "${CMAKE_CURRENT_SOURCE_DIR}/${root_dir}")
+  endif()
+
+  set(absolute_sources)
+  foreach(src IN LISTS _TIDY_SOURCES)
+    if(NOT IS_ABSOLUTE "${src}")
+      cmake_path(SET src NORMALIZE "${root_dir}/${src}")
+    endif()
+    list(APPEND absolute_sources "${src}")
+  endforeach()
+
+  # We make a single target for all sources since we need to configure the project in
+  # order to run clang-tidy. If we did a separate target per source, then we'd need to
+  # find a way to configure the system only once since cmake doesn't do anything to block
+  # concurrent access to a configure tree.
+  cmake_path(RELATIVE_PATH root_dir BASE_DIRECTORY "${LEGATE_DIR}" OUTPUT_VARIABLE
+             rel_root_dir)
+  string(MAKE_C_IDENTIFIER "${rel_root_dir}_tidy" tidy_target)
+
+  cmake_path(SET build_dir NORMALIZE
+             "${CMAKE_CURRENT_BINARY_DIR}/external_tidy_targets/${tidy_target}_build")
+  file(MAKE_DIRECTORY "${build_dir}")
+
+  add_custom_target("${tidy_target}"
+                    DEPENDS "${src}"
+                    COMMAND "${CMAKE_COMMAND}" #
+                            -DROOT_DIR="${root_dir}" #
+                            -DBUILD_DIR="${build_dir}" #
+                            -DCLANG_TIDY="${BASE_CLANG_TIDY_COMMAND}" #
+                            -DSOURCES="${absolute_sources}" #
+                            -DSED="${LEGATE_SED}" #
+                            -P "${LEGATE_CMAKE_DIR}/scripts/external_clang_tidy.cmake" #
+                    COMMENT "clang-tidy ${rel_root_dir}")
+  add_dependencies(tidy "${tidy_target}")
 endfunction()

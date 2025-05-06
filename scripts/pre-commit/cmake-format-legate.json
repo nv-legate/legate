@@ -145,6 +145,16 @@
                     "nargs": "1+"
                 }
             },
+            "legate_add_external_tidy_target": {
+                "kwargs": {
+                    "ROOT_DIR": 1,
+                    "SOURCES": "+"
+                },
+                "pargs": {
+                    "flags": [],
+                    "nargs": "*"
+                }
+            },
             "legate_add_target_compile_options": {
                 "pargs": {
                     "nargs": 4

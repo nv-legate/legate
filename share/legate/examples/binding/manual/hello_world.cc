@@ -12,7 +12,8 @@ namespace hello_world {
 
 class HelloWorld : public legate::LegateTask<HelloWorld> {
  public:
-  static inline const auto TASK_CONFIG = legate::TaskConfig{legate::LocalTaskID{0}};
+  static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
+    legate::TaskConfig{legate::LocalTaskID{0}};
 
   static void cpu_variant(legate::TaskContext);
 };

@@ -15,7 +15,7 @@ class HelloTask : public legate::LegateTask<HelloTask> {
   static inline const auto TASK_CONFIG           =  // NOLINT(cert-err58-cpp)
     legate::TaskConfig{legate::LocalTaskID{0}};
 
-  static void cpu_variant(legate::TaskContext) { std::cout << "Hello, world!" << std::endl; }
+  static void cpu_variant(legate::TaskContext) { std::cout << "Hello, world!\n"; }
 };
 
 int main()

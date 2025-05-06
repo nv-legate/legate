@@ -853,6 +853,8 @@ install(FILES ${LEGATE_DIR}/share/legate/examples/helloworld/helloworld.cc
               ${LEGATE_DIR}/share/legate/examples/helloworld/CMakeLists.txt
               ${LEGATE_DIR}/share/legate/examples/helloworld/build-and-run.sh
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/helloworld)
+legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/helloworld
+                                SOURCES helloworld.cc)
 
 install(FILES ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1.py
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5)
@@ -866,7 +868,11 @@ install(FILES ${LEGATE_DIR}/share/legate/examples/binding/manual/CMakeLists.txt
               ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.cc
               ${LEGATE_DIR}/share/legate/examples/binding/manual/hello_world.py
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/manual)
+legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/binding/manual
+                                SOURCES hello_world.cc)
 
+# Not adding these files as tidy target, because it requires calling pip install to
+# configure.
 install(FILES ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world.cc
               ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world.h
               ${LEGATE_DIR}/share/legate/examples/binding/cython/hello_world_cython.pyx
@@ -880,6 +886,8 @@ install(FILES ${LEGATE_DIR}/share/legate/examples/binding/pybind11/hello_world.c
               ${LEGATE_DIR}/share/legate/examples/binding/pybind11/pyproject.toml
               ${LEGATE_DIR}/share/legate/examples/binding/pybind11/CMakeLists.txt
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/binding/pybind11)
+legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/binding/pybind11
+                                SOURCES hello_world.cc)
 
 # ########################################################################################
 # * install legate-bind.sh  --------------------------------------------------------
