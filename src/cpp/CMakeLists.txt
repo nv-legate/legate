@@ -856,6 +856,11 @@ install(FILES ${LEGATE_DIR}/share/legate/examples/helloworld/helloworld.cc
 legate_add_external_tidy_target(ROOT_DIR ${LEGATE_DIR}/share/legate/examples/helloworld
                                 SOURCES helloworld.cc)
 
+install(FILES ${LEGATE_DIR}/share/legate/examples/saxpy/saxpy.cc
+              ${LEGATE_DIR}/share/legate/examples/saxpy/CMakeLists.txt
+              ${LEGATE_DIR}/share/legate/examples/saxpy/build-and-run.sh
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/saxpy)
+
 install(FILES ${LEGATE_DIR}/share/legate/examples/io/hdf5/ex1.py
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/legate/examples/io/hdf5)
 
