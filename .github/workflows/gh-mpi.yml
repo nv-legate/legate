@@ -1,0 +1,79 @@
+---
+name: Build MPI Wrapper Package
+
+on:
+  workflow_call:
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  Build_MPI_Wrapper:
+    name: Build MPI wrapper
+    strategy:
+      fail-fast: false
+    runs-on: linux-amd64-gpu-l4-latest-1
+    container:
+      options: -u root
+      image: condaforge/miniforge3:latest
+      env:
+        CONDA_ROOT: "/tmp/conda-croot/mpi-wrapper"
+        CONDA_OUTPUT: "/tmp/mpy/output"
+        ARTIFACT_REPOS: "sw-legate-conda-local"
+        TARGET_PLATFORM: "noarch"
+        PKG_DIR: "gex/noarch"
+
+    steps:
+      - name: Set environment variables
+        run: |
+          BUILD_DATE=$(date +%Y%m%d)
+          {
+            echo "ARTIFACT_NAME=MPI-Wrapper-Artifact-${GITHUB_SHA}"
+            echo "ARTIFACT_PATH=${CONDA_OUTPUT}"
+            echo "BUILD_DATE=${BUILD_DATE}"
+          } >> "${GITHUB_ENV}"
+
+      - name: Display environment variables
+        run: |
+          uname -a
+          echo "CONDA_ROOT=${CONDA_ROOT}"
+          echo "CONDA_OUTPUT=${CONDA_ROOT}"
+          echo "ARTIFACT_NAME=${ARTIFACT_NAME}"
+          echo "ARTIFACT_PATH=${ARTIFACT_PATH}"
+          echo "BUILD_DATE=${BUILD_DATE}"
+
+      - name: Checkout ${{ github.event.repository.name }} (= this repo)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Cleanup/Create related folders
+        run: |
+          rm -rf "${CONDA_ROOT}" "${CONDA_OUTPUT}"
+          mkdir -p "${CONDA_ROOT}" "${CONDA_OUTPUT}"
+
+      - name: Run conda build
+        run: |
+          conda_build_args=();
+          conda_build_args+=(--croot "${CONDA_ROOT}")
+          conda_build_args+=(--output-folder "${CONDA_OUTPUT}")
+
+          conda install conda-build
+          conda-build "${conda_build_args[@]}" conda/mpi_wrapper
+
+      - name: Display output files
+        run: |
+          ls -lAhR "${CONDA_OUTPUT}"
+
+      - name: Upload mpi wrapper artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ARTIFACT_PATH }}
+
+      - name: Install pre-requisites to upload package
+        run: |
+          echo "Install pre-requisites"
+          apt-get update
+          apt-get install -y curl jq
