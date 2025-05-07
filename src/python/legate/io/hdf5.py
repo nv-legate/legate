@@ -110,7 +110,7 @@ def kerchunk_read(filepath: Path | str, dataset_name: str) -> LogicalArray:
     tile_nbytes = math.prod(zarr_ary.chunks) * zarr_ary.itemsize
     dims = (
         range(math.ceil(s / c))
-        for s, c in zip(zarr_ary.shape, zarr_ary.chunks)
+        for s, c in zip(zarr_ary.shape, zarr_ary.chunks, strict=True)
     )
     for chunk_coord in itertools.product(*dims):
         key = zarr_ary._chunk_key(chunk_coord)  # noqa: SLF001

@@ -17,9 +17,7 @@ from __future__ import annotations
 import functools
 import contextlib
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, Literal, cast
-
-from typing_extensions import Self
+from typing import TYPE_CHECKING, Any, Final, Literal, Self, cast
 
 from ..._lib.experimental.io.kvikio.kvikio_interface import from_file, to_file
 

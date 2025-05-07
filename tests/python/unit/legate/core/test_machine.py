@@ -179,13 +179,13 @@ class TestMachine:
 
     @pytest.mark.parametrize("n", range(1, len(RANGES) + 1))
     def test_preferred_target(self, n: int) -> None:
-        m = Machine(dict(zip(TARGETS[:n], RANGES[:n])))
+        m = Machine(dict(zip(TARGETS[:n], RANGES[:n], strict=True)))
         assert m.preferred_target == TARGETS[n - 1]
         assert len(m) == len(RANGES[n - 1])
 
     @pytest.mark.parametrize("n", range(1, len(RANGES) + 1))
     def test_valid_targets(self, n: int) -> None:
-        m = Machine(dict(zip(TARGETS[:n], RANGES[:n])))
+        m = Machine(dict(zip(TARGETS[:n], RANGES[:n], strict=True)))
         assert set(m.valid_targets) == set(TARGETS[:n])
 
     def test_get_processor_range(self) -> None:
@@ -196,14 +196,14 @@ class TestMachine:
         assert len(m.get_processor_range(TaskTarget.GPU)) == 0
 
     def test_get_node_range(self) -> None:
-        m = Machine(dict(zip(TARGETS, RANGES)))
+        m = Machine(dict(zip(TARGETS, RANGES, strict=True)))
         assert m.get_node_range(TaskTarget.CPU) == (0, 1)
         assert m.get_node_range(TaskTarget.OMP) == (0, 2)
         assert m.get_node_range(TaskTarget.GPU) == (1, 2)
         assert m.get_node_range() == m.get_node_range(TaskTarget.GPU)
 
     def test_only(self) -> None:
-        m = Machine(dict(zip(TARGETS, RANGES)))
+        m = Machine(dict(zip(TARGETS, RANGES, strict=True)))
         gpu = TaskTarget.GPU
         cpu = TaskTarget.CPU
         omp = TaskTarget.OMP
@@ -218,13 +218,13 @@ class TestMachine:
         assert len(m.only([gpu, cpu]).only(omp)) == 0
 
     def test_count(self) -> None:
-        m = Machine(dict(zip(TARGETS, RANGES)))
+        m = Machine(dict(zip(TARGETS, RANGES, strict=True)))
         assert m.count(TaskTarget.CPU) == len(CPU_RANGE)
         assert m.count(TaskTarget.OMP) == len(OMP_RANGE)
         assert m.count(TaskTarget.GPU) == len(GPU_RANGE)
 
     def test_get_item(self) -> None:
-        m = Machine(dict(zip(TARGETS, RANGES)))
+        m = Machine(dict(zip(TARGETS, RANGES, strict=True)))
         assert m[TaskTarget.GPU] == Machine({TaskTarget.GPU: GPU_RANGE})
         assert m[ProcessorSlice(TaskTarget.GPU, slice(1, 2))] == Machine(
             {TaskTarget.GPU: GPU_RANGE[1:2]}
@@ -247,7 +247,7 @@ class TestMachine:
     def test_empty(self) -> None:
         assert Machine().empty
         assert Machine({TaskTarget.GPU: EMPTY_RANGE}).empty
-        assert not Machine(dict(zip(TARGETS, RANGES))).empty
+        assert not Machine(dict(zip(TARGETS, RANGES, strict=True))).empty
         empty_tup: tuple[int, ...] = ()
         assert Machine().valid_targets == empty_tup
         assert (

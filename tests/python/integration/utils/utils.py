@@ -3,11 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from legate.core import LogicalStore, get_legate_runtime, types as ty
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def create_np_array_and_store(

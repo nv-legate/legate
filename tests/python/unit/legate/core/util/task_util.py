@@ -312,43 +312,40 @@ def mixed_array_store(
     assert_isinstance(d, PhysicalStore)
 
 
-USER_FUNCS = (
-    noargs,
-    single_input,
-    multi_input,
-    single_output,
-    multi_output,
-    single_scalar,
-    multi_scalar,
-    mixed_args,
-    single_array,
-    multi_array,
-    mixed_array_store,
+_USER_FUNCS_WITH_ARGS = (
+    (noargs, ArgDescr()),
+    (single_input, ArgDescr(inputs=(make_input_store(),))),
+    (multi_input, ArgDescr(inputs=(make_input_store(), make_input_store()))),
+    (single_output, ArgDescr(outputs=(make_output_store(),))),
+    (
+        multi_output,
+        ArgDescr(outputs=(make_output_store(), make_output_store())),
+    ),
+    (single_scalar, ArgDescr(scalars=(1,))),
+    (
+        multi_scalar,
+        ArgDescr(scalars=(1, 2.0, complex(1, 2), "Asdasdasdadsasdasd", True)),
+    ),
+    (
+        mixed_args,
+        ArgDescr(
+            inputs=(make_input_store(), make_input_store()),
+            outputs=(make_output_store(), make_output_store()),
+            scalars=(10, 12.0),
+        ),
+    ),
+    (single_array, ArgDescr(inputs=(make_input_array(),))),
+    (multi_array, ArgDescr(inputs=(make_input_array(), make_input_array()))),
+    (
+        mixed_array_store,
+        ArgDescr(
+            inputs=(make_input_array(), make_input_store()),
+            outputs=(make_output_array(), make_output_store()),
+        ),
+    ),
 )
 
-USER_FUNC_ARGS = (
-    ArgDescr(),
-    # stores
-    ArgDescr(inputs=(make_input_store(),)),
-    ArgDescr(inputs=(make_input_store(), make_input_store())),
-    ArgDescr(outputs=(make_output_store(),)),
-    ArgDescr(outputs=(make_output_store(), make_output_store())),
-    ArgDescr(scalars=(1,)),
-    ArgDescr(scalars=(1, 2.0, complex(1, 2), "Asdasdasdadsasdasd", True)),
-    ArgDescr(
-        inputs=(make_input_store(), make_input_store()),
-        outputs=(make_output_store(), make_output_store()),
-        scalars=(10, 12.0),
-    ),
-    # arrays
-    ArgDescr(inputs=(make_input_array(),)),
-    ArgDescr(inputs=(make_input_array(), make_input_array())),
-    ArgDescr(
-        inputs=(make_input_array(), make_input_store()),
-        outputs=(make_output_array(), make_output_store()),
-    ),
-    ArgDescr(),
-)
+USER_FUNCS, USER_FUNC_ARGS = tuple(zip(*_USER_FUNCS_WITH_ARGS, strict=True))
 
 
 def non_none_return_type(a: InputStore, b: OutputStore, c: int) -> int:

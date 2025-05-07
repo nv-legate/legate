@@ -169,7 +169,7 @@ class TestTask(BaseTest):
     # also don't issue a fence, and hence multiple tasks may execute together
     # and potentially cause memory errors (if they misbehave).
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
     )
     @pytest.mark.parametrize("register", [True, False])
     def test_executable_auto(
@@ -188,7 +188,7 @@ class TestTask(BaseTest):
         task(*func_args.args())
 
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
     )
     @pytest.mark.parametrize("register", [True, False])
     def test_executable_prepare_call(
@@ -268,7 +268,7 @@ class TestTask(BaseTest):
         task(d=d, c=c, b=b, a=a)
 
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
     )
     def test_invoke_unhandled_args(
         self, func: TestFunction[_P, None], func_args: ArgDescr
@@ -595,7 +595,7 @@ class TestTask(BaseTest):
         functions = [foo, foo1, foo2, foo3]
         types = [InputStore, InputArray, OutputStore, OutputArray]
         assert len(functions) == len(types)
-        for fn, store_ty in zip(functions, types):
+        for fn, store_ty in zip(functions, types, strict=True):
             msg = re.escape(f"Default values for {store_ty} not yet supported")
             with pytest.raises(NotImplementedError, match=msg):
                 lct.task(fn)  # type: ignore[call-overload]
@@ -622,7 +622,7 @@ class TestTask(BaseTest):
         functions = [foo, foo1]
         types = ["ReductionStore", "ReductionArray"]
         assert len(functions) == len(types)
-        for fn, name in zip(functions, types):
+        for fn, name in zip(functions, types, strict=True):
             msg = re.escape(
                 "Default values for "
                 f"legate.core._ext.task.type.{name}[<ReductionOpKind.ADD: 0>] "
@@ -928,7 +928,7 @@ class TestVariantInvoker(BaseTest):
             invoker.validate_signature(multi_output)
 
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
     )
     def test_prepare_call_good(
         self,
@@ -941,7 +941,9 @@ class TestVariantInvoker(BaseTest):
         kwargs = {}
         for attr in ("outputs", "scalars"):
             if attr_vals := getattr(func, attr, None):
-                for name, val in zip(attr_vals, getattr(func_args, attr)):
+                for name, val in zip(
+                    attr_vals, getattr(func_args, attr), strict=True
+                ):
                     kwargs[name] = val  # noqa: PERF403
         invoker.prepare_call(fake_auto_task, args, kwargs)
 
@@ -1036,7 +1038,7 @@ class TestVariantInvoker(BaseTest):
             invoker.prepare_call(fake_auto_task, (make_input_store(),), {})
 
     @pytest.mark.parametrize(
-        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS)
+        ("func", "func_args"), zip(USER_FUNCS, USER_FUNC_ARGS, strict=True)
     )
     def test_invoke_auto(
         self, func: TestFunction[_P, None], func_args: ArgDescr

@@ -123,7 +123,7 @@ class Table(LegateDataInterface):
         """
         result: LegateDataInterfaceItem = {
             "version": 1,
-            "data": dict(zip(self._fields, self._columns)),
+            "data": dict(zip(self._fields, self._columns, strict=True)),
         }
         return result
 
@@ -150,6 +150,7 @@ class Table(LegateDataInterface):
             )
             raise ValueError(msg)
         fields = [
-            Field(name, array.type) for name, array in zip(names, arrays)
+            Field(name, array.type)
+            for name, array in zip(names, arrays, strict=True)
         ]
         return Table(fields, arrays.copy())

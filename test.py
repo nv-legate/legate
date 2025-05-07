@@ -82,7 +82,9 @@ def _find_latest_cpp_test_dir() -> tuple[Path, list[Path]] | tuple[None, None]:
     if cpp_ret and py_ret:
         cpp_build_is_newer = all(
             cpp_bin_exe.stat().st_mtime > py_bin_exe.stat().st_mtime
-            for cpp_bin_exe, py_bin_exe in zip(cpp_ret[1], py_ret[1])
+            for cpp_bin_exe, py_bin_exe in zip(
+                cpp_ret[1], py_ret[1], strict=True
+            )
         )
         if cpp_build_is_newer:
             return cpp_ret

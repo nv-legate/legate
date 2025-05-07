@@ -13,7 +13,6 @@ requires = [
 ]
 build-backend = "build_legate"
 backend-path = ["src/python"]
-python-requires = ">=3.11"
 
 [project]
 name = "legate"
@@ -41,6 +40,7 @@ dependencies = [
     "rich",
 ]
 dynamic = ["version"]
+requires-python = ">=3.11"
 
 [project.optional-dependencies]
 test = [

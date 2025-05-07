@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from importlib import reload
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -14,7 +14,7 @@ from legate.driver.config import MultiNode
 from legate.util.system import System
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
     from types import ModuleType
 
     from .util import GenConfig, GenSystem

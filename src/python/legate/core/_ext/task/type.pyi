@@ -2,7 +2,8 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Callable, Generic, Literal, TypeAlias, TypeVar
+from collections.abc import Callable
+from typing import Generic, Literal, TypeAlias, TypeVar
 
 from ..._lib.data.physical_array import PhysicalArray
 from ..._lib.data.physical_store import PhysicalStore

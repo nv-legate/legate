@@ -7,10 +7,10 @@ import difflib
 from argparse import ArgumentParser
 from pathlib import Path
 from re import Match, Pattern, compile as re_compile
-from typing import TYPE_CHECKING, Any, Callable, Final
+from typing import TYPE_CHECKING, Any, Final
 
 if TYPE_CHECKING:
-    from collections.abc import Container, Sequence
+    from collections.abc import Callable, Container, Sequence
 
 
 class ReplacementError(Exception):

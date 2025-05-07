@@ -17,7 +17,7 @@ from .utils.data import ARRAY_TYPES, EMPTY_SHAPES, SCALAR_VALS, SHAPES
 
 class TestStoreCreation:
     @pytest.mark.parametrize(
-        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES), ids=str
+        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES, strict=True), ids=str
     )
     def test_create_from_numpy_scalar(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
@@ -73,7 +73,7 @@ class TestStoreCreation:
 
     @pytest.mark.parametrize("shape", SHAPES + EMPTY_SHAPES, ids=str)
     @pytest.mark.parametrize(
-        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS), ids=str
+        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS, strict=True), ids=str
     )
     def test_create_from_numpy_array(
         self, shape: tuple[int, ...], dtype: ty.Type, val: Any

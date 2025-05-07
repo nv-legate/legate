@@ -62,9 +62,9 @@ RuntimeError will be raised.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from typing import (
     Any,
-    Callable,
     Generic,
     Protocol,
     TypeAlias,

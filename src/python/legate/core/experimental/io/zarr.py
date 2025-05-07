@@ -41,13 +41,16 @@ def _get_padded_shape(  # type: ignore # noqa: PGH003
     bool
         True if the array shape was padded, False otherwise.
     """
-    if all(s % c == 0 for s, c in zip(zarr_ary.shape, zarr_ary.chunks)):
+    if all(
+        s % c == 0
+        for s, c in zip(zarr_ary.shape, zarr_ary.chunks, strict=True)
+    ):
         return zarr_ary.shape, False
 
     return (
         tuple(
             math.ceil(s / c) * c
-            for s, c in zip(zarr_ary.shape, zarr_ary.chunks)
+            for s, c in zip(zarr_ary.shape, zarr_ary.chunks, strict=True)
         ),
         True,
     )

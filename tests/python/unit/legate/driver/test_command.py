@@ -95,7 +95,6 @@ class Test_cmd_bind:
         )
 
     @pytest.mark.parametrize("launch", ("none", "mpirun", "jsrun", "srun"))
-    @pytest.mark.skipif(not install_info.use_cuda, reason="no CUDA support")
     def test_combo_local(self, genobjs: GenObjs, launch: LauncherType) -> None:
         all_binds = [
             "--cpu-bind",
@@ -114,16 +113,42 @@ class Test_cmd_bind:
         result = m.cmd_bind(config, system, launcher)
 
         bind_sh = str(system.legate_paths.bind_sh_path)
+
         assert result[:3] == (
             bind_sh,
             "--launcher",
             "local" if launch == "none" else launch,
         )
-        x = iter(result[3:])
-        for name, binding in zip(x, x):  # pairwise
-            assert f"{name} {binding}" in "--cpus 1 --gpus 1 --nics 1 --mems 1"
+
+        # TODO(jfaibussowit)
+        # Replace below with itertools.batched once we hit python 3.12
+        def pairwise(iterable: tuple[str, ...]) -> list[tuple[str, str]]:
+            # pairwise('ABCDEF') → AB CD EF
+            from itertools import islice
+
+            iterator = iter(iterable)
+            ret = []
+            while batch := tuple(islice(iterator, 2)):
+                if len(batch) != 2:
+                    m = (
+                        f"batched(): incomplete batch: {batch} "
+                        f"(from {iterable})"
+                    )
+                    raise ValueError(m)
+                ret.append(batch)
+            return ret
 
         assert result[-1] == "--"
+
+        for name, binding in pairwise(
+            result[
+                3:
+                # -1 here because we don't want to include the "--" in the
+                # batch
+                -1
+            ]
+        ):
+            assert f"{name} {binding}" in "--cpus 1 --gpus 1 --nics 1 --mems 1"
 
     @pytest.mark.parametrize("launch", ("none", "mpirun", "jsrun", "srun"))
     @pytest.mark.parametrize("rank_var", RANK_ENV_VARS)

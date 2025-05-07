@@ -2,8 +2,8 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Sequence
-from typing import Callable, overload
+from collections.abc import Callable, Sequence
+from typing import overload
 
 from ..._lib.partitioning.constraint import DeferredConstraint
 from ..._lib.task.task_config import TaskConfig

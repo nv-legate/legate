@@ -144,7 +144,7 @@ def test_kerchunk_read(
     assert_array_equal(a, b)
 
     # Check the `out` argument when shape is divisible by chunk
-    if all(s % c == 0 for s, c in zip(shape, chunks)):
+    if all(s % c == 0 for s, c in zip(shape, chunks, strict=True)):
         cc = kerchunk_read(filename, dataset_name="dataset")
         assert_array_equal(a, np.asarray(cc.get_physical_array()))
 

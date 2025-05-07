@@ -337,12 +337,12 @@ class EnvConfig:
 
 # --- Setup -------------------------------------------------------------------
 def get_min_py() -> str:
-    import tomllib  # novermin
+    import tomllib
 
     with (Path(__file__).parent.parent / "pyproject.toml").open(
         mode="rb"
     ) as f:
-        py_ver = tomllib.load(f)["build-system"]["python-requires"]
+        py_ver = tomllib.load(f)["project"]["requires-python"]
 
     for char in (">", "=", "<"):
         py_ver = py_ver.replace(char, "")

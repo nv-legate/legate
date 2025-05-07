@@ -113,7 +113,7 @@ class TestPyTask:
         assert np.all(out_arr == val)
 
     @pytest.mark.parametrize(
-        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES), ids=str
+        ("val", "dtype"), zip(SCALAR_VALS, ARRAY_TYPES, strict=True), ids=str
     )
     def test_legate_scalar_arg(self, val: Any, dtype: ty.Type) -> None:
         runtime = get_legate_runtime()
@@ -148,7 +148,7 @@ class TestPyTask:
 
     @pytest.mark.parametrize("shape", SHAPES, ids=str)
     @pytest.mark.parametrize(
-        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS), ids=str
+        ("dtype", "val"), zip(ARRAY_TYPES, SCALAR_VALS, strict=True), ids=str
     )
     def test_ndarray_scalar_arg(
         self, shape: tuple[int, ...], dtype: Type, val: Any
@@ -188,7 +188,9 @@ class TestPyTask:
         # _64Bit] since numpy 2.13
         repeats = tuple(map(int, np.random.randint(1, 3, in_np.ndim)))
 
-        out_shape = tuple(s * r for s, r in zip(in_shape, repeats))
+        out_shape = tuple(
+            s * r for s, r in zip(in_shape, repeats, strict=True)
+        )
         out_np, out_store = utils.zero_array_and_store(ty.float64, out_shape)
         auto_task = tasks.repeat_task.prepare_call(
             in_store, out_store, repeats

@@ -77,7 +77,7 @@ class Launcher:
             for var in RANK_ENV_VARS:
                 try:
                     self.detected_rank_id = system.env[var]
-                except KeyError:  # noqa: PERF203
+                except KeyError:
                     continue
                 else:
                     break
