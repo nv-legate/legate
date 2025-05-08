@@ -335,9 +335,9 @@ class PhysicalStore {
   template <std::int32_t DIM>
   [[nodiscard]] Rect<DIM> shape() const;
   /**
-   * @brief Returns the store's \ref Domain
+   * @brief Returns the store's `Domain`
    *
-   * @return Store's \ref Domain
+   * @return Store's `Domain`
    */
   [[nodiscard]] Domain domain() const;
 

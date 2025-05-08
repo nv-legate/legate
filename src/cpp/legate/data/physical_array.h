@@ -114,9 +114,9 @@ class PhysicalArray {
   [[nodiscard]] Rect<DIM> shape() const;
 
   /**
-   * @brief Returns the array's \ref Domain
+   * @brief Returns the array's `Domain`
    *
-   * @return Array's \ref Domain
+   * @return Array's `Domain`
    */
   [[nodiscard]] Domain domain() const;
 

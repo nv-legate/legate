@@ -24,33 +24,50 @@
 
 namespace legate {
 
+class TaskContext;
+
+/**
+ * @addtogroup util
+ * @{
+ */
+
 /**
  * @brief Function signature for task variants. Each task variant must be a function of this type.
  */
-class TaskContext;
 using VariantImpl = void (*)(TaskContext);
+
+/**
+ * @brief Function signature for direct-to-legion task variants. Users should usually prefer
+ * VariantImpl instead.
+ */
 template <typename T = void>
 using LegionVariantImpl = T (*)(const Legion::Task*,
                                 const std::vector<Legion::PhysicalRegion>&,
                                 Legion::Context,
                                 Legion::Runtime*);
-using ShutdownCallback  = std::function<void(void)>;
 
-// The size of this enum is deliberate
+/**
+ * @brief Signature for a callable to be executed right before the runtime shuts down.
+ */
+using ShutdownCallback = std::function<void(void)>;
+
+/**
+ * @brief An enum describing the kind of variant.
+ *
+ * @note The values don't start at 0. This is to match Legion, where `0` is the 'None' variant.
+ */
 enum class VariantCode : Legion::VariantID {  // NOLINT(performance-enum-size)
-  CPU = 1,                                    // To match Legion, where '0' is the 'None' variant
-  GPU,
-  OMP
+  CPU = 1,                                    ///< A CPU variant.
+  GPU,                                        ///< A GPU variant.
+  OMP                                         ///< An OpenMP variant.
 };
 
 using LegateVariantCode [[deprecated("since 24.11: use legate::VariantCode instead")]] =
   VariantCode;
 
-using Logger = Legion::Logger;
-
 // Re-export Legion types
-
-using TunableID = Legion::TunableID;
+using Legion::Logger;
+using Legion::TunableID;
 
 /**
  * @brief Integer type representing a `Library`-local task ID.
@@ -108,6 +125,8 @@ enum class LocalRedopID : std::int64_t {};
  */
 enum class GlobalRedopID : Legion::ReductionOpID {};
 
+/** @} */  // end of util
+
 // Geometry types
 
 /**
@@ -118,7 +137,7 @@ enum class GlobalRedopID : Legion::ReductionOpID {};
 /**
  * @brief Coordinate type.
  */
-using coord_t = Legion::coord_t;
+using Legion::coord_t;
 
 /**
  * @brief Type for multi-dimensional points.
@@ -150,7 +169,7 @@ using Rect = Legion::Rect<DIM, T>;
  * For a complete definition, see
  * [Legion::DomainPoint](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_domain.h#L127-L253).
  */
-using DomainPoint = Legion::DomainPoint;
+using Legion::DomainPoint;
 
 /**
  * @brief Dimension-erased type for multi-dimensional rectangles.
@@ -158,7 +177,7 @@ using DomainPoint = Legion::DomainPoint;
  * For a complete definition, see
  * [Legion::Domain](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/legion/legion_domain.h#L255-L543).
  */
-using Domain = Legion::Domain;
+using Legion::Domain;
 
 /** @} */  // end of geometry
 
@@ -271,7 +290,7 @@ using PointInDomainIterator = Legion::PointInDomainIterator<DIM, T>;
  * [here](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/realm_c.h#L45-L54).
  *
  */
-using Processor = Legion::Processor;
+using Legion::Processor;
 
 /**
  * @brief Logical memory handle
@@ -285,7 +304,7 @@ using Processor = Legion::Processor;
  * for a complete definition. The list of memory types can be found
  * [here](https://github.com/StanfordLegion/legion/blob/9ed6f4d6b579c4f17e0298462e89548a4f0ed6e5/runtime/realm/realm_c.h#L63-L78).
  */
-using Memory = Legion::Memory;
+using Legion::Memory;
 
 /** @} */  // end of machine
 
