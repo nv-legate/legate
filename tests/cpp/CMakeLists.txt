@@ -245,6 +245,12 @@ set(with_runtime_SRC
     unit/scalar/create_vector_scalar.cc
     unit/scalar/negative.cc
     unit/scalar/pack.cc
+    unit/transform/delinearize.cc
+    unit/transform/project.cc
+    unit/transform/promote.cc
+    unit/transform/shift.cc
+    unit/transform/transform_stack.cc
+    unit/transform/transpose.cc
     unit/type/binary_type.cc
     unit/type/fixed_array_type.cc
     unit/type/list_type.cc
