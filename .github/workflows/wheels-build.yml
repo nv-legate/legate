@@ -128,7 +128,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: C++ wheel upload
         env:
-          BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda${{ inputs.cuda_ver }}-py${{ matrix.PY_VER }}
+          BUILD_NAME: ${{ matrix.ARCH }}-${{ matrix.TARGET_DEV }}-cuda12-py${{ matrix.PY_VER }}
         uses: actions/upload-artifact@v4
         with:
           name: legate-wheel-${{ env.BUILD_NAME }}
