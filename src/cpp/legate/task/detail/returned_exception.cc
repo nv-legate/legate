@@ -6,12 +6,10 @@
 
 #include <legate/task/detail/returned_exception.h>
 
-#include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/library.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/core_ids.h>
-#include <legate/utilities/detail/env.h>
-#include <legate/utilities/detail/env_defaults.h>
 #include <legate/utilities/detail/type_traits.h>
 
 #include <cstddef>
@@ -102,9 +100,7 @@ void ReturnedException::throw_exception()
 
 /*static*/ std::uint32_t ReturnedException::max_size()
 {
-  static const auto MAX_SIZE = Config::get_config().max_exception_size();
-
-  return MAX_SIZE;
+  return Runtime::get_runtime().config().max_exception_size();
 }
 
 // ==========================================================================================

@@ -14,6 +14,7 @@
 #include <legate/mapping/machine.h>
 #include <legate/operation/detail/timing.h>
 #include <legate/runtime/detail/communicator_manager.h>
+#include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/consensus_match_result.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/mapper_manager.h>
@@ -40,6 +41,12 @@
 #include <utility>
 #include <variant>
 #include <vector>
+
+namespace Legion {  // NOLINT
+
+struct RegistrationCallbackArgs;
+
+}  // namespace Legion
 
 namespace legate {
 
@@ -71,12 +78,22 @@ class Shape;
 
 class Runtime {
  public:
-  Runtime();
+  /**
+   * @brief Construct a Runtime instance.
+   *
+   * @param config The configuration for the runtime.
+   */
+  explicit Runtime(const Config& config);
   // The runtime is a singleton and is not copyable in any way
   Runtime(const Runtime&)            = delete;
   Runtime& operator=(const Runtime&) = delete;
   Runtime(Runtime&&)                 = delete;
   Runtime& operator=(Runtime&&)      = delete;
+
+  /**
+   * @return The configuration object for the runtime.
+   */
+  [[nodiscard]] const Config& config() const;
 
   [[nodiscard]] Library& create_library(std::string_view library_name,
                                         const ResourceConfig& config,
@@ -385,16 +402,25 @@ class Runtime {
   void stop_profiling_range(std::string_view provenance);
 
  private:
-  static void initialize_core_library_callback_(
-    Legion::Machine,  // NOLINT(performance-unnecessary-value-param)
-    Legion::Runtime*,
-    const std::set<Processor>&);
+  /**
+   * @brief The Legion runtime initialization callback.
+   *
+   * This routine eventually creates and initializes the main Runtime object. It is registered
+   * with Legion to run on every node at startup, and therefore must be called before the
+   * runtime is accessed.
+   *
+   * This routine will also create the core legate library object.
+   *
+   * @param args The registration args.
+   */
+  static void initialize_core_library_callback_(const Legion::RegistrationCallbackArgs& args);
 
   [[nodiscard]] const MapperManager& get_mapper_manager_() const;
 
   bool initialized_{};
   Legion::Runtime* legion_runtime_{};
   Legion::Context legion_context_{};
+  Config config_{};
   std::optional<std::reference_wrapper<Library>> core_library_{};
   std::list<ShutdownCallback> callbacks_{};
   legate::mapping::detail::LocalMachine local_machine_{};
@@ -426,15 +452,12 @@ class Runtime {
     registered_shardings_{};
 
   std::vector<InternalSharedPtr<Operation>> operations_{};
-  std::size_t window_size_{1};
   std::uint64_t cur_op_id_{};
 
   using RegionFieldID = std::pair<Legion::LogicalRegion, Legion::FieldID>;
   std::uint64_t next_store_id_{1};
   std::uint64_t next_storage_id_{1};
-  std::uint32_t field_reuse_freq_{};
   std::size_t field_reuse_size_{1};
-  bool force_consensus_match_{};
 
   // This could be a hash map, but kept as an ordered map just in case we may later support
   // library-specific shutdown callbacks that can launch tasks.

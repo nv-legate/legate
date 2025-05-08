@@ -8,7 +8,7 @@
 
 #include <legate_defines.h>
 
-#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/task.h>
 #include <legate/task/detail/task_context.h>
 #include <legate/task/exception.h>
@@ -67,7 +67,7 @@ template <typename F>
   };
 
   try {
-    if (!Config::get_config().use_empty_task()) {
+    if (!Runtime::get_runtime().config().use_empty_task()) {
       (*variant_impl)(ctx);
     }
 

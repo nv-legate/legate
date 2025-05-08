@@ -7,6 +7,7 @@
 #include <legate/task/detail/task.h>
 
 #include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/runtime.h>
 
 #include <cstdint>
 #include <ios>
@@ -21,7 +22,7 @@ void show_progress(const DomainPoint& index_point,
                    Legion::Context ctx,
                    Legion::Runtime* runtime)
 {
-  if (!Config::get_config().show_progress_requested()) {
+  if (!Runtime::get_runtime().config().show_progress_requested()) {
     return;
   }
 
@@ -57,7 +58,7 @@ void show_progress(const DomainPoint& index_point,
 
 void show_progress(const Legion::Task* task, Legion::Context ctx, Legion::Runtime* runtime)
 {
-  if (!Config::get_config().show_progress_requested()) {
+  if (!Runtime::get_runtime().config().show_progress_requested()) {
     return;
   }
   show_progress(task->index_point,

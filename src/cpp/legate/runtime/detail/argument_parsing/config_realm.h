@@ -6,13 +6,15 @@
 
 #pragma once
 
-#include <string>
-#include <string_view>
-
 namespace legate::detail {
 
-[[nodiscard]] std::string convert_log_levels(std::string_view log_levels);
+class ParsedArgs;
 
-[[nodiscard]] std::string logging_help_str();
+/**
+ * @brief Configure Realm based on the command-line flags.
+ *
+ * @param parsed The command-line flags.
+ */
+void configure_realm(const ParsedArgs& parsed);
 
 }  // namespace legate::detail

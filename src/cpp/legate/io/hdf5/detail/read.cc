@@ -9,7 +9,7 @@
 #include <legate/cuda/detail/cuda_driver_api.h>
 #include <legate/io/hdf5/detail/util.h>
 #include <legate/mapping/mapping.h>
-#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/type/detail/types.h>  // for Type::Code formatter
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/formatters.h>
@@ -103,7 +103,7 @@ class HDF5ReadFn {
       total_count *= count.emplace_back(shape.hi[i] - shape.lo[i] + 1);
     }
 
-    const auto gds_on = legate::detail::Config::get_config().io_use_vfd_gds();
+    const auto gds_on = legate::detail::Runtime::get_runtime().config().io_use_vfd_gds();
 
     const auto filepath     = context.scalar(0).value<std::string_view>();
     const auto dataset_name = context.scalar(1).value<std::string_view>();

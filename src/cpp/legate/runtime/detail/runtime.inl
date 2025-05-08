@@ -11,6 +11,8 @@
 
 namespace legate::detail {
 
+inline const Config& Runtime::config() const { return config_; }
+
 template <typename T>
 ConsensusMatchResult<T> Runtime::issue_consensus_match(std::vector<T>&& input)
 {
@@ -36,7 +38,7 @@ inline std::uint64_t Runtime::get_unique_store_id() { return next_store_id_++; }
 
 inline std::uint64_t Runtime::get_unique_storage_id() { return next_storage_id_++; }
 
-inline std::uint32_t Runtime::field_reuse_freq() const { return field_reuse_freq_; }
+inline std::uint32_t Runtime::field_reuse_freq() const { return config().field_reuse_freq(); }
 
 inline std::size_t Runtime::field_reuse_size() const { return field_reuse_size_; }
 

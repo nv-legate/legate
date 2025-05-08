@@ -85,8 +85,10 @@ IncludeCategories:
     Priority:        63
   - Regex:           '^("|<)cpptrace.*'
     Priority:        64
-  - Regex:           '^("|<)(gtest|gmock).*'
+  - Regex:           '^("|<)argparse.*'
     Priority:        65
+  - Regex:           '^("|<)(gtest|gmock).*'
+    Priority:        90
   - Regex:           '^".*'
     Priority:        100
   - Regex:           '^<.*'

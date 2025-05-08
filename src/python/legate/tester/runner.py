@@ -282,9 +282,11 @@ class GTestRunner(Runner):
             raise ValueError(msg)
 
         gtest_tests = config.gtest_tests
-        test_lists = list(gtest_tests.values())
+        # Remove test binaries that have empty test lists (since they didn't
+        # meet some search criteria)
+        filtered = {k: v for k, v in gtest_tests.items() if v}
 
-        match sum(map(len, test_lists)):
+        match sum(map(len, filtered.values())):
             case 0:
                 msg = (
                     "--gdb can only be used with a single test (none were "
@@ -297,7 +299,8 @@ class GTestRunner(Runner):
                 msg = "--gdb can only be used with a single test"
                 raise ValueError(msg)
 
-        spec = TestSpec(next(iter(gtest_tests.keys())), "", test_lists[0][0])
+        test_bin = next(iter(filtered.keys()))
+        spec = TestSpec(test_bin, "", filtered[test_bin][0])
         return self._cmd_single(spec, config, [])
 
     def cmd(

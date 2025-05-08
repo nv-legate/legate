@@ -114,7 +114,17 @@ class LocalMachine {
   [[nodiscard]] std::size_t total_frame_buffer_size() const;
   [[nodiscard]] std::size_t total_socket_memory_size() const;
   [[nodiscard]] std::size_t total_system_memory_size() const;
-  [[nodiscard]] std::size_t calculate_field_reuse_size() const;
+
+  /**
+   * @brief Compute how many bytes of allocations should occur before we trigger a consensus
+   * match.
+   *
+   * @param field_reuse_frac What fraction of memory should be allocated before consensus match
+   * is triggered.
+   *
+   * @return The consensus match allocation frequency, in bytes of intervening allocations.
+   */
+  [[nodiscard]] std::size_t calculate_field_reuse_size(std::uint32_t field_reuse_frac) const;
 
   [[nodiscard]] bool has_cpus() const;
   [[nodiscard]] bool has_gpus() const;

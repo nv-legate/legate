@@ -8,6 +8,7 @@
 
 #include <legate.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 class DefaultFixture : public ::testing::Test {

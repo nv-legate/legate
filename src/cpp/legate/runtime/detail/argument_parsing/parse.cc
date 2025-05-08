@@ -1,0 +1,501 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2024-2025 NVIDIA CORPORATION & AFFILIATES. All rights
+ * reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <legate/runtime/detail/argument_parsing/parse.h>
+
+#include <legate/mapping/detail/base_mapper.h>
+#include <legate/runtime/detail/argument_parsing/argument.h>
+#include <legate/runtime/detail/argument_parsing/flags/logging.h>
+#include <legate/utilities/detail/env.h>
+#include <legate/utilities/detail/env_defaults.h>
+#include <legate/utilities/detail/traced_exception.h>
+#include <legate/utilities/typedefs.h>
+#include <legate/version.h>
+
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
+#include <argparse/argparse.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <functional>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <type_traits>
+
+namespace legate::detail {
+
+namespace {
+
+class LegateArgumentParser {
+ public:
+  LegateArgumentParser();
+
+  template <typename T>
+  [[nodiscard]] Argument<T> add_argument(std::string flag, std::string help, T init);
+
+  template <typename T>
+  [[nodiscard]] Argument<Scaled<T>> add_scaled_argument(std::string flag,
+                                                        std::string help,
+                                                        Scaled<T> init);
+
+  void parse_args(std::vector<std::string> args) const;
+
+  [[nodiscard]] const std::shared_ptr<argparse::ArgumentParser>& parser() const;
+
+ private:
+  template <typename T>
+  void add_argument_common_(std::string_view flag,
+                            std::string help,
+                            const T& default_value,
+                            T& dest_value);
+
+  [[nodiscard]] std::vector<std::string> argparse_bool_flag_workaround_(
+    std::vector<std::string> args) const;
+
+  std::shared_ptr<argparse::ArgumentParser> parser_{};
+  std::unordered_set<std::string_view> bool_flags_{};
+};
+
+// ------------------------------------------------------------------------------------------
+
+class ParseBoolArg {
+ public:
+  explicit ParseBoolArg(bool& dest);
+
+  [[nodiscard]] bool operator()(std::string_view value) const;
+
+ private:
+  [[nodiscard]] static bool do_parse_(std::string_view value);
+
+  std::reference_wrapper<bool> dest_;
+};
+
+ParseBoolArg::ParseBoolArg(bool& dest) : dest_{dest} {}
+
+bool ParseBoolArg::operator()(std::string_view value) const
+{
+  dest_.get() = do_parse_(value);
+  return dest_;
+}
+
+[[nodiscard]] std::string string_tolower(std::string s)
+{
+  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+  return s;
+}
+
+bool ParseBoolArg::do_parse_(std::string_view value)
+{
+  if (value.empty()) {
+    // The implicit value, which is true
+    return true;
+  }
+
+  const auto equal_to_value = [lo = string_tolower(std::string{value})](std::string_view val) {
+    return val == lo;
+  };
+  constexpr std::string_view truthy_values[] = {"1", "t", "true", "y", "yes"};
+  constexpr std::string_view falsey_values[] = {"0", "f", "false", "n", "no"};
+
+  if (std::any_of(std::begin(truthy_values), std::end(truthy_values), equal_to_value)) {
+    return true;
+  }
+  if (std::any_of(std::begin(falsey_values), std::end(falsey_values), equal_to_value)) {
+    return false;
+  }
+
+  throw TracedException<std::invalid_argument>{
+    fmt::format("Unknown boolean argument {}, expected one of '{}' or '{}'",
+                fmt::join(truthy_values, ", "),
+                fmt::join(falsey_values, ", "))};
+}
+
+// ------------------------------------------------------------------------------------------
+
+template <typename T>
+void LegateArgumentParser::add_argument_common_(std::string_view flag,
+                                                std::string help,
+                                                const T& default_value,
+                                                T& dest_value)
+{
+  auto& parg = parser()
+                 ->add_argument(flag)
+                 .help(std::move(help))
+                 .default_value(default_value)
+                 .store_into(dest_value);
+
+  using RawT = std::decay_t<T>;
+
+  if constexpr (std::is_same_v<RawT, bool>) {
+    parg.metavar("BOOL")
+      .implicit_value(true)
+      .nargs(argparse::nargs_pattern::optional)
+      .action(ParseBoolArg{dest_value});
+  } else {
+    parg.nargs(1);
+    if constexpr (std::is_integral_v<RawT>) {
+      parg.metavar("INT");
+    } else if constexpr (std::is_floating_point_v<RawT>) {
+      parg.metavar("FLOAT");
+    } else if constexpr (std::is_same_v<RawT, std::string>) {
+      parg.metavar("STRING");
+    } else if constexpr (std::is_same_v<RawT, std::filesystem::path>) {
+      parg.metavar("PATH");
+    }
+  }
+}
+
+std::vector<std::string> LegateArgumentParser::argparse_bool_flag_workaround_(
+  std::vector<std::string> args) const
+{
+  // argparse does not handle boolean flags that have an optional value correctly. Until this
+  // is fixed, we need to manually traverse the argument list and convert any solitary flags:
+  //
+  // --flag --some-option value --flag
+  //
+  // to
+  //
+  // --flag 1 --some-option value --flag 1
+  //
+  // See https://github.com/p-ranav/argparse/issues/404
+  for (auto it = args.begin(); it != args.end(); ++it) {
+    if (bool_flags_.find(*it) == bool_flags_.end()) {
+      continue;
+    }
+
+    const auto next_it = std::next(it);
+
+    if (next_it == args.end()) {
+      // --flag is the last parameter in the flags list
+      args.emplace_back("1");
+      break;
+    }
+
+    // Check if the next entry is a flag (which all start with '-'), use rfind() to mimic
+    // startswith(). See https://stackoverflow.com/a/40441240
+    if (next_it->rfind('-', 0) == 0) {
+      it = args.insert(next_it, "1");
+    }
+  }
+  return args;
+}
+
+// ------------------------------------------------------------------------------------------
+
+LegateArgumentParser::LegateArgumentParser()
+  : parser_{std::make_shared<argparse::ArgumentParser>(
+      /* program_name */ "LEGATE_CONFIG can contain:",
+      /* version */ fmt::format(
+        "{}.{}.{}", LEGATE_VERSION_MAJOR, LEGATE_VERSION_MINOR, LEGATE_VERSION_PATCH))}
+{
+}
+
+template <typename T>
+Argument<T> LegateArgumentParser::add_argument(std::string flag, std::string help, T init)
+{
+  auto ret = Argument<T>{parser(), std::move(flag), std::move(init)};
+
+  add_argument_common_(ret.flag(), std::move(help), ret.value(), ret.value_mut());
+  if constexpr (std::is_same_v<std::decay_t<T>, bool>) {
+    bool_flags_.insert(ret.flag());
+  }
+  return ret;
+}
+
+template <typename T>
+Argument<Scaled<T>> LegateArgumentParser::add_scaled_argument(std::string flag,
+                                                              std::string help,
+                                                              Scaled<T> init)
+{
+  auto ret = Argument<Scaled<T>>{parser(), std::move(flag), std::move(init)};
+
+  add_argument_common_(ret.flag(),
+                       std::move(help),
+                       ret.value().unscaled_value(),
+                       ret.value_mut().unscaled_value_mut());
+  return ret;
+}
+
+void LegateArgumentParser::parse_args(std::vector<std::string> args) const
+{
+  args = argparse_bool_flag_workaround_(std::move(args));
+
+  try {
+    parser()->parse_args(args);
+  } catch (const TracedExceptionBase&) {
+    // If it's one of our exceptions, rethrow it
+    throw;
+  } catch (const std::exception& exn) {
+    std::cerr << "== LEGATE ERROR:\n";
+    std::cerr << "== LEGATE ERROR: " << exn.what() << "\n";
+    std::cerr << "== LEGATE ERROR:\n";
+    std::cerr << *parser();
+    std::exit(EXIT_FAILURE);
+  }
+}
+
+const std::shared_ptr<argparse::ArgumentParser>& LegateArgumentParser::parser() const
+{
+  return parser_;
+}
+
+}  // namespace
+
+ParsedArgs parse_args(std::vector<std::string> args)
+{
+  // argparse expects a argv-like set of arguments where the first entry is the program
+  // name. It does not properly handle empty arguments and will segfault.
+  if (args.empty()) {
+    throw TracedException<std::invalid_argument>{
+      "Command-line argument to parse must have at least 1 value"};
+  }
+
+  // values with -1 defaults will be auto-configured via the Realm API
+  constexpr std::int32_t DEFAULT_CPUS       = -1;
+  constexpr std::int32_t DEFAULT_GPUS       = -1;
+  constexpr std::int32_t DEFAULT_OMPS       = -1;
+  constexpr std::int32_t DEFAULT_OMPTHREADS = -1;
+  constexpr std::int32_t DEFAULT_UTILITY    = 2;
+  constexpr std::int64_t DEFAULT_SYSMEM     = -1;
+  constexpr std::int64_t DEFAULT_NUMAMEM    = -1;
+  constexpr std::int64_t DEFAULT_FBMEM      = -1;
+  constexpr std::int64_t DEFAULT_ZCMEM      = 128;  // MB
+  constexpr std::int64_t DEFAULT_REGMEM     = 0;    // MB
+  constexpr auto MB                         = 1 << 20;
+
+  auto parser = LegateArgumentParser{};
+
+  auto auto_config =
+    parser.add_argument("--auto-config",
+                        "Automatically detect a suitable configuration. This attempts to "
+                        "detect a reasonable default for most options listed hereafter "
+                        "and is recommended for most users.",
+                        LEGATE_AUTO_CONFIG.get().value_or(true));
+  auto show_config   = parser.add_argument("--show-config",
+                                         "Print the configuration to stdout.",
+                                         LEGATE_SHOW_CONFIG.get().value_or(false));
+  auto show_progress = parser.add_argument("--show-progress",
+                                           "Print a progress summary before each task is executed.",
+                                           LEGATE_SHOW_PROGRESS.get().value_or(false));
+  auto empty_task =
+    parser.add_argument("--use-empty-task",
+                        "Execute an empty dummy task in place of each task execution. This "
+                        "is primarily a developer feature for use in debugging runtime or "
+                        "scheduling inconsistencies and is not recommended for external use.",
+                        LEGATE_EMPTY_TASK.get().value_or(false));
+  auto warmup_nccl = parser.add_argument(
+    "--warmup-nccl",
+    "Perform a warmup for NCCL on startup. This is useful when doing performance benchmarks.",
+    LEGATE_WARMUP_NCCL.get().value_or(false));
+
+  warmup_nccl.action([](std::string_view, const Argument<bool>* warmup_nccl_arg) {
+    const auto val = warmup_nccl_arg->value();
+
+    if (val && !LEGATE_DEFINED(LEGATE_USE_NCCL)) {
+      throw TracedException<std::runtime_error>{
+        "Cannot warmup NCCL, Legate was not configured with NCCL support."};
+    }
+    return val;
+  });
+
+  auto inline_task_launch =
+    parser.add_argument("--inline-task-launch",
+                        "Enable inline task launch",
+                        experimental::LEGATE_INLINE_TASK_LAUNCH.get().value_or(false));
+
+  inline_task_launch.argparse_argument().hidden();
+
+  auto show_usage =
+    parser.add_argument("--show-memory-usage",
+                        "Show detailed memory footprint of Legate at program shutdown.",
+                        LEGATE_SHOW_USAGE.get().value_or(false));
+
+  auto max_exception_size =
+    parser.add_argument("--max-exception-size",
+                        "Maximum size (in bytes) to allocate for exception messages.",
+                        LEGATE_MAX_EXCEPTION_SIZE.get(LEGATE_MAX_EXCEPTION_SIZE_DEFAULT,
+                                                      LEGATE_MAX_EXCEPTION_SIZE_TEST));
+  auto min_cpu_chunk = parser.add_argument(
+    "--min-cpu-chunk",
+    "Minimum CPU chunk size (in bytes).",
+    LEGATE_MIN_CPU_CHUNK.get(LEGATE_MIN_CPU_CHUNK_DEFAULT, LEGATE_MIN_CPU_CHUNK_TEST));
+  auto min_gpu_chunk = parser.add_argument(
+    "--min-gpu-chunk",
+    "Minimum GPU chunk size (in bytes).",
+    LEGATE_MIN_GPU_CHUNK.get(LEGATE_MIN_GPU_CHUNK_DEFAULT, LEGATE_MIN_GPU_CHUNK_TEST));
+  auto min_omp_chunk = parser.add_argument(
+    "--min-omp-chunk",
+    "Minimum OpenMP chunk size (in bytes).",
+    LEGATE_MIN_OMP_CHUNK.get(LEGATE_MIN_OMP_CHUNK_DEFAULT, LEGATE_MIN_OMP_CHUNK_TEST));
+  auto window_size = parser.add_argument(
+    "--window-size",
+    "Maximum size of the submitted operation queue before forced flush.",
+    LEGATE_WINDOW_SIZE.get(LEGATE_WINDOW_SIZE_DEFAULT, LEGATE_WINDOW_SIZE_TEST));
+  auto field_reuse_frac = parser.add_argument(
+    "--field-reuse-fraction",
+    "Field reuse fraction",
+    LEGATE_FIELD_REUSE_FRAC.get(LEGATE_FIELD_REUSE_FRAC_DEFAULT, LEGATE_FIELD_REUSE_FRAC_TEST));
+  auto field_reuse_freq = parser.add_argument(
+    "--field-reuse-frequency",
+    "Field reuse frequency",
+    LEGATE_FIELD_REUSE_FREQ.get(LEGATE_FIELD_REUSE_FREQ_DEFAULT, LEGATE_FIELD_REUSE_FREQ_TEST));
+  auto consensus =
+    parser.add_argument("--consensus",
+                        "Consensus",
+                        LEGATE_CONSENSUS.get(LEGATE_CONSENSUS_DEFAULT, LEGATE_CONSENSUS_TEST));
+  auto disable_mpi = parser.add_argument(
+    "--disable-mpi",
+    "Disable MPI initialization and use. This is useful if Legate was configured with MPI support "
+    "(which usually causes Legate to use it), but MPI is not functional on the current system. "
+    "When this flag is passed, no task should be launched that requests the MPI communicator, or "
+    "the program will fail.",
+    LEGATE_DISABLE_MPI.get(LEGATE_DISABLE_MPI_DEFAULT, LEGATE_DISABLE_MPI_TEST));
+  auto io_use_vfd_gds =
+    parser.add_argument("--io-use-vfd-gds",
+                        "Whether to enable HDF5 Virtual File Driver (VDS) GPUDirectStorage (GDS) "
+                        "which may dramatically speed up file storage and extraction",
+                        LEGATE_IO_USE_VFD_GDS.get().value_or(false));
+
+  io_use_vfd_gds.action([](std::string_view, const Argument<bool>* io_use_vfd_gds_arg) {
+    const auto val = io_use_vfd_gds_arg->value();
+
+    if (val && !LEGATE_DEFINED(LEGATE_USE_HDF5_VFD_GDS)) {
+      throw TracedException<std::runtime_error>{
+        "Cannot enable HDF5 VFD GDS, Legate was not configured with GDS support."};
+    }
+    return val;
+  });
+
+  auto cpus = parser.add_argument(
+    "--cpus", "Number of standalone CPU cores to reserve, must be >=0", DEFAULT_CPUS);
+  auto gpus = parser.add_argument("--gpus", "Number of GPUs to reserve, must be >=0", DEFAULT_GPUS);
+  auto omps =
+    parser.add_argument("--omps", "Number of OpenMP groups to use, must be >=0", DEFAULT_OMPS);
+
+  auto ompthreads =
+    parser.add_argument("--ompthreads",
+                        "Number of threads / reserved CPU cores per OpenMP group, must be >=0",
+                        DEFAULT_OMPTHREADS);
+
+  auto util = parser.add_argument(
+    "--utility", "Number of threads to use for runtime meta-work, must be >0", DEFAULT_UTILITY);
+
+  util.action([](std::string_view, const Argument<std::int32_t>* util_arg) {
+    if (util_arg->value() < 1) {
+      throw TracedException<std::out_of_range>{
+        fmt::format("Number of utility threads must be >0, have {}", util_arg->value())};
+    }
+    return util_arg->value();
+  });
+
+  auto sysmem = parser.add_scaled_argument(
+    "--sysmem", "Size (in MiB) of DRAM memory to reserve per rank", Scaled{DEFAULT_SYSMEM, MB});
+  auto numamem = parser.add_scaled_argument(
+    "--numamem",
+    "Size (in MiB) of NUMA-specific DRAM memory to reserve per NUMA domain",
+    Scaled{DEFAULT_NUMAMEM, MB});
+  auto fbmem = parser.add_scaled_argument(
+    "--fbmem",
+    "Size (in MiB) of GPU (or \"framebuffer\") memory to reserve per GPU",
+    Scaled{DEFAULT_FBMEM, MB});
+  auto zcmem = parser.add_scaled_argument(
+    "--zcmem",
+    "Size (in MiB) of GPU-registered (or \"zero-copy\") DRAM memory to reserve per GPU",
+    Scaled{DEFAULT_ZCMEM, MB});
+  auto regmem  = parser.add_scaled_argument("--regmem",
+                                           "Size (in MiB) of NIC-registered DRAM memory to reserve",
+                                           Scaled{DEFAULT_REGMEM, MB});
+  auto profile = parser.add_argument("--profile", "Whether to collect profiling logs", false);
+  auto spy     = parser.add_argument(
+    "--spy",
+    "Whether to collect dataflow & task graph logs, implies --log-to-file being true",
+    false);
+  auto log_levels  = parser.add_argument("--logging", logging_help_str(), std::string{});
+  auto log_dir     = parser.add_argument("--logdir",
+                                     "Directory to emit logfiles to, defaults to current directory",
+                                     std::filesystem::current_path());
+  auto log_to_file = parser.add_argument(
+    "--log-to-file", "Redirect logging output to a file inside --logdir", false);
+  auto freeze_on_error = parser.add_argument(
+    "--freeze-on-error",
+    "If the program crashes, freeze execution right before exit so a debugger can be attached",
+    false);
+
+  parser.parse_args(std::move(args));
+
+  const auto add_logger = [&](std::string_view logger, std::string_view level = "info") {
+    auto& lvls = log_levels.value_mut();
+
+    if (!lvls.empty()) {
+      lvls += ',';
+    }
+    lvls += logger;
+    lvls += '=';
+    lvls += level;
+  };
+
+  if (LEGATE_LOG_MAPPING.get().value_or(false)) {
+    add_logger(mapping::detail::BaseMapper::LOGGER_NAME);
+  }
+
+  if (LEGATE_LOG_PARTITIONING.get().value_or(false)) {
+    add_logger(log_legate_partitioner().get_name(), "debug");
+  }
+
+  if (spy.value()) {
+    log_to_file.value_mut() = true;
+    add_logger("legion_spy");
+  }
+
+  if (profile.value()) {
+    add_logger("legion_prof");
+  }
+
+  return {
+    /* auto_config */ std::move(auto_config),
+    /* show_config */ std::move(show_config),
+    /* show_progress */ std::move(show_progress),
+    /* empty_task */ std::move(empty_task),
+    /* warmup_nccl */ std::move(warmup_nccl),
+    /* inline_task_launch */ std::move(inline_task_launch),
+    /* show_usage */ std::move(show_usage),
+    /* max_exception_size */ std::move(max_exception_size),
+    /* min_cpu_chunk */ std::move(min_cpu_chunk),
+    /* min_gpu_chunk */ std::move(min_gpu_chunk),
+    /* min_omp_chunk */ std::move(min_omp_chunk),
+    /* window_size */ std::move(window_size),
+    /* field_reuse_frac */ std::move(field_reuse_frac),
+    /* field_reuse_freq */ std::move(field_reuse_freq),
+    /* consensus */ std::move(consensus),
+    /* disable_mpi */ std::move(disable_mpi),
+    /* io_use_vfd_gds */ std::move(io_use_vfd_gds),
+    /* cpus */ std::move(cpus),
+    /* gpus */ std::move(gpus),
+    /* omps */ std::move(omps),
+    /* ompthreads */ std::move(ompthreads),
+    /* util */ std::move(util),
+    /* sysmem */ std::move(sysmem),
+    /* numamem */ std::move(numamem),
+    /* fbmem */ std::move(fbmem),
+    /* zcmem */ std::move(zcmem),
+    /* regmem */ std::move(regmem),
+    /* profile */ std::move(profile),
+    /* spy */ std::move(spy),
+    /* log_levels */ std::move(log_levels),
+    /* log_dir */ std::move(log_dir),
+    /* log_to_file */ std::move(log_to_file),
+    /* freeze_on_error */ std::move(freeze_on_error),
+  };
+}
+
+}  // namespace legate::detail

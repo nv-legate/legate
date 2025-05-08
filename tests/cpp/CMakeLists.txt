@@ -296,7 +296,19 @@ set(wo_runtime_SRC
     noinit/variant_options.cc
     noinit/zip_equal.cc
     noinit/zip_shortest.cc
-    noinit/delinearize.cc)
+    noinit/delinearize.cc
+    noinit/argument_parsing/parse_args.cc
+    noinit/argument_parsing/gpus.cc
+    noinit/argument_parsing/fbmem.cc
+    noinit/argument_parsing/omps.cc
+    noinit/argument_parsing/numamem.cc
+    noinit/argument_parsing/sysmem.cc
+    noinit/argument_parsing/cpus.cc
+    noinit/argument_parsing/ompthreads.cc
+    noinit/argument_parsing/logging.cc
+    noinit/argument_parsing/legion_default_args.cc
+    noinit/argument_parsing/argument.cc
+    noinit/argument_parsing/scaled.cc)
 
 set(non_reentrant_with_runtime_SRC
     non_reentrant/death_example.cc non_reentrant/oom_message.cc non_reentrant/runtime.cc
@@ -306,14 +318,14 @@ set(non_reentrant_wo_runtime_SRC
     non_reentrant/wo_runtime/exception/base.cc
     non_reentrant/wo_runtime/exception/traced_exception.cc
     non_reentrant/wo_runtime/exception/terminate_handler.cc
-    non_reentrant/wo_runtime/argument_parsing/logging.cc
     non_reentrant/wo_runtime/init/init.cc)
 
 legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
                                                       ${with_runtime_SRC}
                       ADDITIONAL_TARGETS HighFive::HighFive)
 legate_configure_test(NAME tests_wo_runtime SOURCES main_wo_runtime_init.cc
-                                                    ${wo_runtime_SRC})
+                                                    ${wo_runtime_SRC}
+                      ADDITIONAL_TARGETS argparse::argparse)
 legate_configure_test(NAME tests_non_reentrant_with_runtime
                       SOURCES main_with_runtime_init.cc ${non_reentrant_with_runtime_SRC})
 legate_configure_test(NAME tests_non_reentrant_wo_runtime

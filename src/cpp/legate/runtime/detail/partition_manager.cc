@@ -8,7 +8,6 @@
 
 #include <legate/mapping/detail/machine.h>
 #include <legate/partitioning/detail/partition.h>
-#include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/enumerate.h>
@@ -28,14 +27,14 @@ namespace {
   // TODO(wonchanl): make these configurable via Scope
   if (local_machine.has_gpus()) {
     // Make sure we can get at least 1M elements on each GPU
-    return Config::get_config().min_gpu_chunk();
+    return Runtime::get_runtime().config().min_gpu_chunk();
   }
   if (local_machine.has_omps()) {
     // Make sure we get at least 128K elements on each OpenMP
-    return Config::get_config().min_omp_chunk();
+    return Runtime::get_runtime().config().min_omp_chunk();
   }
   // Make sure we can get at least 8KB elements on each CPU
-  return Config::get_config().min_cpu_chunk();
+  return Runtime::get_runtime().config().min_cpu_chunk();
 }
 
 }  // namespace

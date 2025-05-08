@@ -8,6 +8,7 @@
 
 #include <legate/cuda/detail/cuda_driver_types.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/macros.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -169,6 +170,11 @@ class CUDADriverAPI {
   CUresult (*library_unload_)(CUlibrary library)                                         = nullptr;
 
   CUresult (*mem_get_info_)(std::size_t* free, std::size_t* total) = nullptr;
+
+#if LEGATE_DEFINED(LEGATE_CUDA_DRIVER_API_MOCK)
+  FRIEND_TEST(ConfigureFBMemUnit, AutoConfigCUDA);
+  FRIEND_TEST(ConfigureFBMemUnit, AutoConfigFail);
+#endif
 };
 
 // ==========================================================================================
@@ -227,7 +233,7 @@ class CUDADriverError : public std::runtime_error {
  *
  * @return The CUDA driver API.
  */
-[[nodiscard]] const InternalSharedPtr<cuda::detail::CUDADriverAPI>& get_cuda_driver_api();
+[[nodiscard]] const InternalSharedPtr<CUDADriverAPI>& get_cuda_driver_api();
 
 // ==========================================================================================
 

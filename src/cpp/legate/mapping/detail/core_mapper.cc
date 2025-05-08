@@ -10,7 +10,7 @@
 #include <legate/mapping/detail/mapping.h>
 #include <legate/mapping/detail/operation.h>
 #include <legate/mapping/operation.h>
-#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/task/variant_options.h>
 #include <legate/utilities/detail/align.h>
 #include <legate/utilities/detail/core_ids.h>
@@ -108,7 +108,8 @@ std::optional<std::size_t> CoreMapper::allocation_pool_size(
       return legate::detail::round_up_to_multiple(future_size, EXTRA_SCALAR_ALIGNMENT);
     }
     case legate::detail::CoreTask::INIT_NCCL: {
-      return legate::detail::Config::get_config().warmup_nccl() ? NCCL_WARMUP_BUFFER_SIZE : 0;
+      return legate::detail::Runtime::get_runtime().config().warmup_nccl() ? NCCL_WARMUP_BUFFER_SIZE
+                                                                           : 0;
     }
     case legate::detail::CoreTask::FIND_BOUNDING_BOX: [[fallthrough]];
     case legate::detail::CoreTask::FIND_BOUNDING_BOX_SORTED: {

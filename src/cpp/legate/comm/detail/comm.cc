@@ -11,7 +11,7 @@
 #include <legate/comm/detail/comm_cal.h>
 #include <legate/comm/detail/comm_cpu.h>
 #include <legate/comm/detail/comm_nccl.h>
-#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/macros.h>
 
 namespace legate::detail::comm {
@@ -24,7 +24,7 @@ void register_tasks(Library& library)
   if constexpr (LEGATE_DEFINED(LEGATE_USE_CAL)) {
     cal::register_tasks(library);
   }
-  if (!Config::get_config().disable_mpi()) {
+  if (!Runtime::get_runtime().config().disable_mpi()) {
     cpu::register_tasks(library);
   }
 }

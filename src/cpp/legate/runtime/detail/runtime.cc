@@ -37,7 +37,8 @@
 #include <legate/partitioning/detail/constraint.h>
 #include <legate/partitioning/detail/partitioner.h>
 #include <legate/partitioning/detail/partitioning_tasks.h>
-#include <legate/runtime/detail/argument_parsing.h>
+#include <legate/runtime/detail/argument_parsing/legate_args.h>
+#include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/field_manager.h>
 #include <legate/runtime/detail/library.h>
@@ -76,7 +77,6 @@
 #include <iostream>
 #include <mappers/logging_wrapper.h>
 #include <regex>
-#include <set>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -106,12 +106,10 @@ constexpr const char* const TOPLEVEL_NAME    = "Legate Core Toplevel Task";
 
 }  // namespace
 
-Runtime::Runtime()
+Runtime::Runtime(const Config& config)
   : legion_runtime_{Legion::Runtime::get_runtime()},
-    window_size_{Config::get_config().window_size()},
-    field_reuse_freq_{Config::get_config().field_reuse_freq()},
-    field_reuse_size_{local_machine().calculate_field_reuse_size()},
-    force_consensus_match_{Config::get_config().consensus()}
+    config_{config},
+    field_reuse_size_{local_machine().calculate_field_reuse_size(this->config().field_reuse_frac())}
 {
 }
 
@@ -253,11 +251,8 @@ void Runtime::initialize(Legion::Context legion_context)
     throw TracedException<std::runtime_error>{"Legate runtime has already been initialized"};
   }
 
-  auto& config = Config::get_config_mut();
-
   LEGATE_SCOPE_FAIL(
     // de-initialize everything in reverse order
-    config.set_has_socket_mem(false);
     scope_ = Scope{};
     partition_manager_.reset();
     communicator_manager_.reset();
@@ -278,7 +273,6 @@ void Runtime::initialize(Legion::Context legion_context)
   partition_manager_.emplace();
   static_cast<void>(scope_.exchange_machine(create_toplevel_machine()));
 
-  config.set_has_socket_mem(local_machine_.has_socket_memory());
   comm::register_builtin_communicator_factories(core_library());
 }
 
@@ -574,14 +568,14 @@ void Runtime::submit(InternalSharedPtr<Operation> op)
   // Special case for internal operations
   if (op->is_internal()) {
     operations_.emplace_back(std::move(op));
-    if (operations_.size() >= window_size_) {
+    if (operations_.size() >= config().window_size()) {
       flush_scheduling_window();
     }
     return;
   }
 
   auto& submitted = operations_.emplace_back(std::move(op));
-  if (submitted->needs_flush() || operations_.size() >= window_size_) {
+  if (submitted->needs_flush() || operations_.size() >= config().window_size()) {
     flush_scheduling_window();
   }
 }
@@ -947,7 +941,7 @@ class ExtractExceptionFn {
       return {std::move(pending)};
     }  // namespace
     return std::nullopt;
-  }
+  }  // namespace
 };
 
 }  // namespace
@@ -1108,7 +1102,7 @@ Legion::Future Runtime::detach(const Legion::ExternalResources& external_resourc
 
 bool Runtime::consensus_match_required() const
 {
-  return force_consensus_match_ || Legion::Machine::get_machine().get_address_space_count() > 1;
+  return config().consensus() || Legion::Machine::get_machine().get_address_space_count() > 1;
 }
 
 void Runtime::progress_unordered_operations()
@@ -1675,7 +1669,7 @@ Legion::ShardingID Runtime::get_sharding(const mapping::detail::Machine& machine
 
 namespace {
 
-void handle_realm_default_args()
+void handle_realm_default_args(bool need_network_init)
 {
   constexpr EnvironmentVariable<std::string> REALM_DEFAULT_ARGS{"REALM_DEFAULT_ARGS"};
   std::stringstream ss;
@@ -1693,7 +1687,7 @@ void handle_realm_default_args()
       *existing_default_args, std::regex{R"(\-ll:networks\s+\w+)", std::regex::optimize}, "");
   }
 
-  if (Config::get_config().need_network()) {
+  if (need_network_init) {
     if constexpr (!LEGATE_DEFINED(LEGATE_USE_NETWORK)) {
       throw TracedException<std::runtime_error>{
         "Legate was run on multiple nodes but was not built with networking support. Please "
@@ -1777,19 +1771,14 @@ void set_env_vars()
 
   set_env_vars();
 
-  {
-    // Must populate this before we handle Legate args as it expects to read its values.
-    auto& config = Config::get_config_mut();
-
-    config.parse();
-    // only do MPI version detection if we're not running on a single node or using p2p network
-    // bootstrap
-    if (config.need_network()) {
-      set_mpi_wrapper_libraries();
-    }
+  const auto need_network_init = multi_node_job() || REALM_UCP_BOOTSTRAP_MODE.get() == "p2p";
+  // only do MPI version detection if we're running a multi-node job or using p2p network
+  // bootstrap
+  if (need_network_init) {
+    set_mpi_wrapper_libraries();
   }
 
-  handle_realm_default_args();
+  handle_realm_default_args(need_network_init);
 
   int argc                     = 1;
   const char* dummy_argv_arr[] = {"legate-placeholder-binary-name", nullptr};
@@ -1808,8 +1797,11 @@ void set_env_vars()
     });
 
   Legion::Runtime::initialize(&argc, &argv, /*filter=*/false, /*parse=*/false);
-  handle_legate_args();
+
+  const auto config = handle_legate_args();
+
   Legion::Runtime::perform_registration_callback(initialize_core_library_callback_,
+                                                 Legion::UntypedBuffer{&config, sizeof(config)},
                                                  true /*global*/);
 
   if (const auto result = Legion::Runtime::start(argc, argv, /*background=*/true)) {
@@ -1846,6 +1838,15 @@ class RuntimeManager {
  public:
   enum class State : std::uint8_t { UNINITIALIZED, INITIALIZED, FINALIZED };
 
+  /**
+   * @brief Construct the singleton runtime object.
+   *
+   * @param config The config parameter to construct the runtime with.
+   *
+   * @throw std::runtime_error If the runtime has already been constructed.
+   */
+  [[nodiscard]] Runtime& construct_runtime(const Config& config);
+
   [[nodiscard]] Runtime& get();
   [[nodiscard]] State state() const noexcept;
   void reset() noexcept;
@@ -1855,21 +1856,46 @@ class RuntimeManager {
   std::optional<Runtime> rt_{};
 };
 
+Runtime& RuntimeManager::construct_runtime(const Config& config)
+{
+  if (state() != State::UNINITIALIZED) {
+    throw TracedException<std::runtime_error>{
+      "Legate runtime has already been constructed or finalized, and cannot be re-initialized "
+      "without restarting the program."};
+  }
+  LEGATE_CHECK(!rt_.has_value());
+  rt_.emplace(config);
+  state_ = State::INITIALIZED;
+  return *rt_;
+}
+
 Runtime& RuntimeManager::get()
 {
-  if (LEGATE_UNLIKELY(!rt_.has_value())) {
-    if (state() == State::FINALIZED) {
+  if (LEGATE_LIKELY(rt_.has_value())) {
+    LEGATE_CHECK(state() == State::INITIALIZED);
+    return *rt_;
+  }
+
+  switch (state()) {
+    case State::UNINITIALIZED:
+      throw TracedException<std::runtime_error>{
+        "Must call legate::start() before retrieving the Legate runtime."};
+    case State::INITIALIZED:
+      // This should never happen
+      throw TracedException<std::runtime_error>{
+        "Legate is in an inconsistent state. Legate claims to have initialized the runtime, but "
+        "the runtime does not exist. Please report this bug to the Legate developers by opening "
+        "an issue at https://github.com/nv-legate/legate/issues. This error is very likely "
+        "unrecoverable; the user is advised to restart their program."};
+    case State::FINALIZED:
       // Legion currently does not allow re-initialization after shutdown, so we need to track
       // this ourselves...
       throw TracedException<std::runtime_error>{
         "Legate runtime has been finalized, and cannot be re-initialized without restarting the "
         "program."};
-    }  // namespace
-    rt_.emplace();
-    state_ = State::INITIALIZED;
-  }  // namespace
-  return *rt_;
-}  // namespace
+  }
+  LEGATE_ABORT("Unhandled runtime state: ", to_underlying(state()));
+}
 
 RuntimeManager::State RuntimeManager::state() const noexcept { return state_; }
 
@@ -2157,10 +2183,18 @@ void register_builtin_reduction_ops()
 extern void register_exception_reduction_op(const Library& context);
 
 /*static*/ void Runtime::initialize_core_library_callback_(
-  Legion::Machine,  // NOLINT(performance-unnecessary-value-param)
-  Legion::Runtime*,
-  const std::set<Processor>&)
+  const Legion::RegistrationCallbackArgs& args)
 {
+  const auto& legate_config = [&]() -> const Config& {
+    auto* const ptr = static_cast<Config*>(args.buffer.get_ptr());
+
+    LEGATE_CHECK(args.buffer.get_size() == sizeof(Config));
+    LEGATE_CHECK(ptr);
+    return *ptr;
+  }();
+
+  auto& runtime = the_runtime.construct_runtime(legate_config);
+
   ResourceConfig config;
   config.max_tasks       = CoreTask::MAX_TASK;
   config.max_dyn_tasks   = config.max_tasks - CoreTask::FIRST_DYNAMIC_TASK;
@@ -2169,9 +2203,7 @@ extern void register_exception_reduction_op(const Library& context);
   config.max_shardings     = to_underlying(CoreShardID::MAX_FUNCTOR);
   config.max_reduction_ops = to_underlying(CoreReductionOp::MAX_REDUCTION);
 
-  auto&& runtime = Runtime::get_runtime();
-
-  auto& core_lib =
+  auto&& core_lib =
     runtime.create_library(CORE_LIBRARY_NAME, config, mapping::detail::create_core_mapper(), {});
   // Order is deliberate. core_library_() must be set here, because the core mapper and mapper
   // manager expect to call get_runtime()->core_library().

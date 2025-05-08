@@ -24,9 +24,7 @@
 // Still needs a definition to get the code compiled without OpenMP
 // (which is safe as the call to this function is guarded by a if-constexpr)
 // NOLINTNEXTLINE
-#define omp_set_num_threads(...) \
-  do {                           \
-  } while (0)
+#define omp_set_num_threads(n) static_cast<void>(n)
 #endif
 
 namespace legate::detail {
@@ -63,9 +61,12 @@ TaskContext::TaskContext(CtorArgs&& args)
                  [](const InternalSharedPtr<PhysicalStore>& store) { return store->is_future(); });
   }
 
+  ;
   if constexpr (LEGATE_DEFINED(LEGATE_USE_OPENMP)) {
     if (variant_kind_ == VariantCode::OMP) {
-      omp_set_num_threads(static_cast<std::int32_t>(Config::get_config().num_omp_threads()));
+      const auto n = Runtime::get_runtime().config().num_omp_threads();
+
+      omp_set_num_threads(static_cast<std::int32_t>(n));
     }
   }
 }

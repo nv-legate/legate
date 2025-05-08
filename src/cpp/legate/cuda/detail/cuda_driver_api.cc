@@ -529,7 +529,7 @@ CUresult CUDADriverError::error_code() const noexcept { return result_; }
 
 // ==========================================================================================
 
-[[nodiscard]] const InternalSharedPtr<CUDADriverAPI>& get_cuda_driver_api()
+const InternalSharedPtr<CUDADriverAPI>& get_cuda_driver_api()
 {
   static std::optional<InternalSharedPtr<CUDADriverAPI>> api{};
 

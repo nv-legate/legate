@@ -436,11 +436,21 @@ target_sources(legate
                        legate/runtime/detail/region_manager.cc
                        legate/runtime/detail/runtime.cc
                        legate/runtime/detail/shard.cc
-                       legate/runtime/detail/config.cc
                        legate/runtime/detail/mapper_manager.cc
-                       legate/runtime/detail/argument_parsing.cc
-                       legate/runtime/detail/argument_parsing/logging.cc
                        legate/runtime/detail/argument_parsing/util.cc
+                       legate/runtime/detail/argument_parsing/parse.cc
+                       legate/runtime/detail/argument_parsing/config_legion.cc
+                       legate/runtime/detail/argument_parsing/config_realm.cc
+                       legate/runtime/detail/argument_parsing/exceptions.cc
+                       legate/runtime/detail/argument_parsing/legate_args.cc
+                       legate/runtime/detail/argument_parsing/flags/cpus.cc
+                       legate/runtime/detail/argument_parsing/flags/gpus.cc
+                       legate/runtime/detail/argument_parsing/flags/fbmem.cc
+                       legate/runtime/detail/argument_parsing/flags/logging.cc
+                       legate/runtime/detail/argument_parsing/flags/numamem.cc
+                       legate/runtime/detail/argument_parsing/flags/ompthreads.cc
+                       legate/runtime/detail/argument_parsing/flags/openmp.cc
+                       legate/runtime/detail/argument_parsing/flags/sysmem.cc
                        legate/runtime/detail/mpi_detection.cc
                        legate/task/registrar.cc
                        legate/task/task.cc

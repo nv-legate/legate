@@ -125,7 +125,7 @@ class Init : public detail::LegionTask<Init> {
       return comm.release();
     }
 
-    if (!detail::Config::get_config().warmup_nccl()) {
+    if (!detail::Runtime::get_runtime().config().warmup_nccl()) {
       return comm.release();
     }
 

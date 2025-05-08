@@ -11,7 +11,7 @@
 #include <legate/comm/detail/backend_network.h>
 #include <legate/comm/detail/local_network.h>
 #include <legate/comm/detail/mpi_network.h>
-#include <legate/runtime/detail/config.h>
+#include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/macros.h>
 
@@ -24,7 +24,7 @@ namespace legate::detail::comm::coll {
 // called from main thread
 void init()
 {
-  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && Config::get_config().need_network()) {
+  if (LEGATE_DEFINED(LEGATE_USE_NETWORK) && Runtime::get_runtime().config().need_network()) {
 #if LEGATE_DEFINED(LEGATE_USE_NETWORK)
     BackendNetwork::create_network(std::make_unique<detail::comm::coll::MPINetwork>());
 #endif

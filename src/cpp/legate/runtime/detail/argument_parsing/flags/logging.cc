@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/runtime/detail/argument_parsing/logging.h>
+#include <legate/runtime/detail/argument_parsing/flags/logging.h>
 
 #include <legate/runtime/detail/argument_parsing/util.h>
 #include <legate/utilities/assert.h>

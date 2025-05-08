@@ -15,4 +15,9 @@ namespace legate::detail {
 template <typename StringType = std::string>
 [[nodiscard]] std::vector<StringType> string_split(std::string_view command, char sep = ' ');
 
+/**
+ * @return `true` when Legate is being invoked as a multi-node job, `false` otherwise.
+ */
+[[nodiscard]] bool multi_node_job();
+
 }  // namespace legate::detail

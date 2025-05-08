@@ -9,14 +9,13 @@
 #include <legate/cuda/stream_pool.h>
 
 #include <legate/cuda/detail/cuda_driver_api.h>
-#include <legate/runtime/detail/config.h>
 #include <legate/runtime/detail/runtime.h>
 
 namespace legate::cuda {
 
 StreamView::~StreamView()
 {
-  if (valid_ && legate::detail::Config::get_config().synchronize_stream_view()) {
+  if (valid_ && legate::detail::Runtime::get_runtime().config().synchronize_stream_view()) {
     detail::get_cuda_driver_api()->stream_synchronize(stream_);
   }
 }
