@@ -30,7 +30,7 @@ cdef class Scope:
         )
         self._exception_mode = (
             _Scope.exception_mode()
-            if exception_mode is None else <ExceptionMode>exception_mode
+            if exception_mode is None else exception_mode
         )
         self._provenance = provenance
         self._machine = machine
