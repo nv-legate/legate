@@ -56,7 +56,7 @@ cdef class LogicalArray(Unconstructable):
     cpdef LogicalArray delinearize(self, int32_t dim, object shape)
     cpdef void fill(self, object value)
     cpdef LogicalArray child(self, uint32_t index)
-    cpdef PhysicalArray get_physical_array(self, target: StoreTarget | None =*)
+    cpdef PhysicalArray get_physical_array(self, target: object =*)
     cpdef void offload_to(self, StoreTarget target_mem)
 
 

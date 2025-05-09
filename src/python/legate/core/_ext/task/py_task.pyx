@@ -43,8 +43,8 @@ cdef class PyTask:
         variants: Sequence[VariantCode],
         constraints: Sequence[ConstraintProxy] | None = None,
         options: TaskConfig | VariantOptions | None = None,
-        invoker: VariantInvoker | None = None,
-        library: Library | None = None,
+        invoker: object = None,
+        library: object = None,
         register: bool = True,
     ) -> None:
         r"""Construct a ``PyTask``.

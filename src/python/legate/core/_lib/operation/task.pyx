@@ -73,7 +73,7 @@ cdef class AutoTask(Unconstructable):
         self._locked = True
 
     cpdef Variable add_input(
-        self, object array_or_store, partition: Variable | None = None
+        self, object array_or_store, partition: object = None
     ):
         r"""
         Adds a logical array/store as input to the task
@@ -114,7 +114,7 @@ cdef class AutoTask(Unconstructable):
             raise ValueError("Invalid partition symbol")
 
     cpdef Variable add_output(
-        self, object array_or_store, partition: Variable | None = None
+        self, object array_or_store, object partition = None
     ):
         r"""
         Adds a logical array/store as output to the task
@@ -158,7 +158,7 @@ cdef class AutoTask(Unconstructable):
         self,
         object array_or_store,
         int32_t redop,
-        partition: Variable | None = None
+        partition: object = None
     ):
         r"""
         Adds a logical array/store to the task for reduction
@@ -520,7 +520,7 @@ cdef class ManualTask(Unconstructable):
     cpdef void add_input(
         self,
         arg: LogicalStore | LogicalStorePartition,
-        projection: tuple[SymbolicExpr, ...] | None = None,
+        object projection = None,
     ):
         r"""
         Adds an input to the task.
@@ -560,7 +560,7 @@ cdef class ManualTask(Unconstructable):
     cpdef void add_output(
         self,
         arg: LogicalStore | LogicalStorePartition,
-        projection: tuple[SymbolicExpr, ...] | None = None,
+        object projection = None,
     ):
         r"""
         Adds an output to the task.
@@ -601,7 +601,7 @@ cdef class ManualTask(Unconstructable):
         self,
         arg: LogicalStore | LogicalStorePartition,
         int32_t redop,
-        projection: tuple[SymbolicExpr, ...] | None = None,
+        object projection = None,
     ):
         cdef std_optional[_SymbolicPoint] proj
 
@@ -623,7 +623,7 @@ cdef class ManualTask(Unconstructable):
             )
 
     cpdef void add_scalar_arg(
-        self, value: Any, dtype: Type | tuple[Type, ...] | None = None
+        self, value: Any, object dtype = None
     ):
         r"""
         Adds a by-value argument to the task

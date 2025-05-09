@@ -268,7 +268,7 @@ cdef class Machine:
         result._scope = None
         return result
 
-    def __cinit__(self, ranges: dict | None = None) -> None:
+    def __cinit__(self, ranges: object = None) -> None:
         r"""
         Construct a `Machine`.
 
@@ -329,7 +329,7 @@ cdef class Machine:
         return ret
 
     cpdef ProcessorRange get_processor_range(
-        self, target: PyTaskTarget | None = None
+        self, target: object = None
     ):
         r"""
         Returns the processor range of a given task target.
@@ -350,7 +350,7 @@ cdef class Machine:
             else self._handle.processor_range(<TaskTarget> target)
         )
 
-    cpdef tuple get_node_range(self, target: PyTaskTarget | None = None):
+    cpdef tuple get_node_range(self, target: object = None):
         r"""
         Returns the node range for processor of a given task target.
 
@@ -381,7 +381,7 @@ cdef class Machine:
         return tuple(v[0])
 
     cpdef int count(
-        self, target: PyTaskTarget | None = None
+        self, target: object = None
     ):
         r"""
         Returns the number of processors of a given task target
@@ -456,7 +456,7 @@ cdef class Machine:
         return Machine.from_handle(std_move(handle))
 
     cpdef Machine slice(
-        self, slice sl, target: PyTaskTarget | None = None
+        self, slice sl, target: object = None
     ):
         r"""
         Slices the machine by a given slice and a task target

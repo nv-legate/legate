@@ -591,7 +591,7 @@ cdef class LogicalStore(Unconstructable):
         return LogicalStorePartition.from_handle(std_move(handle))
 
     cpdef PhysicalStore get_physical_store(
-        self, target: StoreTarget | None = None
+        self, target: object = None
     ):
         r"""
         Get a `PhysicalStore` over this stores' data.

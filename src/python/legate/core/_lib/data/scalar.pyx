@@ -286,7 +286,7 @@ cdef class Scalar:
         result._handle = std_move(handle)
         return result
 
-    def __init__(self, value: Any, dtype: Type | None = None) -> None:
+    def __init__(self, value: Any, dtype: object = None) -> None:
         r"""
         Construct a `Scalar`.
 

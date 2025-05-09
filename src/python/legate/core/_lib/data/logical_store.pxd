@@ -70,7 +70,7 @@ cdef class LogicalStore(Unconstructable):
     cpdef LogicalStore delinearize(self, int32_t dim, tuple shape)
     cpdef void fill(self, object value)
     cpdef LogicalStorePartition partition_by_tiling(self, object shape)
-    cpdef PhysicalStore get_physical_store(self, target: StoreTarget | None=*)
+    cpdef PhysicalStore get_physical_store(self, target: object=*)
     cpdef void detach(self)
     cpdef void offload_to(self, StoreTarget target_mem)
     cpdef bool equal_storage(self, LogicalStore other)

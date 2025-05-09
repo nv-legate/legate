@@ -446,7 +446,7 @@ cdef class LogicalArray(Unconstructable):
         return LogicalArray.from_handle(std_move(handle))
 
     cpdef PhysicalArray get_physical_array(
-        self, target: StoreTarget | None = None
+        self, target: object = None
     ):
         r"""
         Get a ``PhysicalArray`` of the data for this array.

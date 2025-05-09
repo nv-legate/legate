@@ -385,7 +385,7 @@ cdef class Runtime(Unconstructable):
         self,
         LogicalStore target,
         LogicalStore source,
-        redop: int | None = None,
+        object redop = None,
     ):
         r"""
         Issue a copy between two stores.
@@ -423,7 +423,7 @@ cdef class Runtime(Unconstructable):
         LogicalStore target,
         LogicalStore source,
         LogicalStore source_indirect,
-        redop: int | None = None,
+        object redop = None,
     ):
         r"""
         Issue a gather copy between stores.
@@ -473,7 +473,7 @@ cdef class Runtime(Unconstructable):
         LogicalStore target,
         LogicalStore target_indirect,
         LogicalStore source,
-        redop: int | None = None,
+        object redop = None,
     ):
         r"""
         Issue a scatter copy between stores.
@@ -524,7 +524,7 @@ cdef class Runtime(Unconstructable):
         LogicalStore target_indirect,
         LogicalStore source,
         LogicalStore source_indirect,
-        redop: int | None = None,
+        object redop = None,
     ):
         r"""
         Issue a scatter-gather copy between stores.
@@ -706,7 +706,7 @@ cdef class Runtime(Unconstructable):
         shape: Shape | Collection[int] | None = None,
         bool nullable = False,
         bool optimize_scalar = False,
-        ndim: int | None = None,
+        object ndim = None,
     ):
         r"""
         Create a `LogicalArray`.
@@ -803,7 +803,7 @@ cdef class Runtime(Unconstructable):
         Type dtype,
         shape: Shape | Collection[int] | None = None,
         bool optimize_scalar = False,
-        ndim: int | None = None,
+        object ndim = None,
     ):
         r"""
         Create a `LogicalStore`.

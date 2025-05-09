@@ -9,11 +9,11 @@ cdef class ResourceConfig:
     def __init__(
         self,
         *,
-        max_tasks: int64_t | None = None,
-        max_dyn_tasks: int64_t | None = None,
-        max_reduction_ops: int64_t | None = None,
-        max_projections: int64_t | None = None,
-        max_shardings: int64_t | None = None
+        max_tasks        : object = None,
+        max_dyn_tasks    : object = None,
+        max_reduction_ops: object = None,
+        max_projections  : object = None,
+        max_shardings    : object = None
     ) -> None:
         self._handle = _ResourceConfig()
 

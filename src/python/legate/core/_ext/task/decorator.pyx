@@ -32,7 +32,7 @@ cdef tuple[VariantCode, ...] DEFAULT_VARIANT_LIST = (VariantCode.CPU,)
 
 @dynamic_docstring(DEFAULT_VARIANT_LIST=DEFAULT_VARIANT_LIST)
 def task(
-    func: UserFunction | None = None,
+    func: object = None,
     *,
     variants: tuple[VariantCode, ...] = DEFAULT_VARIANT_LIST,
     constraints: Sequence[DeferredConstraint] | None = None,

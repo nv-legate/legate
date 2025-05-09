@@ -40,7 +40,7 @@ cdef class TaskConfig:
         self,
         task_id: _LocalTaskID,
         *,
-        options: VariantOptions | None = None
+        options: object = None
     ) -> None:
         r"""
         Construct a ``TaskConfig``.

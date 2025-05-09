@@ -2,7 +2,6 @@
 #                         All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from libc.stdint cimport int32_t
 from libcpp cimport bool
 from libcpp.optional cimport (
     nullopt as std_nullopt,
@@ -21,15 +20,17 @@ cdef class Scope:
     def __init__(
         self,
         *,
-        priority: int32_t | None = None,
-        exception_mode: ExceptionMode | None = None,
+        priority: object = None,
+        exception_mode: object = None,
         str provenance = None,
         Machine machine = None,
     ) -> None:
-        self._priority = _Scope.priority() if priority is None else priority
+        self._priority = (
+            _Scope.priority() if priority is None else priority
+        )
         self._exception_mode = (
             _Scope.exception_mode()
-            if exception_mode is None else exception_mode
+            if exception_mode is None else <ExceptionMode>exception_mode
         )
         self._provenance = provenance
         self._machine = machine
