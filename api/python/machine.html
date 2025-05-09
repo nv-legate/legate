@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Machine and Resource Scoping &#8212; NVIDIA legate (25.05.00.dev141+g98e78b22)</title>
+    <title>Machine and Resource Scoping &#8212; NVIDIA legate (25.05.00.dev149+g38a7a35c)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=7f289133"></script>
+    <script src="../../_static/documentation_options.js?v=bfd0b2a7"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev141+g98e78b22) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev141+g98e78b22) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev149+g38a7a35c) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev149+g38a7a35c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev141+g98e78b22)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev149+g38a7a35c)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev141+g98e78b22) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev141+g98e78b22) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev149+g38a7a35c) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev149+g38a7a35c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev141+g98e78b22)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev149+g38a7a35c)</p>
   
 </a>
 
@@ -529,10 +529,10 @@ different types: GPU &gt; OpenMP &gt; CPU.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.Machine.preferred_target.html#legate.core.Machine.preferred_target" title="legate.core.Machine.preferred_target"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.preferred_target</span></code></a></p></td>
-<td><p>TaskTarget</p></td>
+<td><p>TaskTarget Returns the preferred kind of processors for mapping tasks</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.Machine.valid_targets.html#legate.core.Machine.valid_targets" title="legate.core.Machine.valid_targets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.valid_targets</span></code></a></p></td>
-<td><p>tuple[TaskTarget, ...]</p></td>
+<td><p>tuple[TaskTarget, ...] Returns the kinds of processors available in this machine</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.Machine.get_processor_range.html#legate.core.Machine.get_processor_range" title="legate.core.Machine.get_processor_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.get_processor_range</span></code></a>(self[, target])</p></td>
 <td><p>Returns the processor range of a given task target.</p></td>
@@ -547,15 +547,15 @@ different types: GPU &gt; OpenMP &gt; CPU.</p>
 <td><p>Returns the number of processors of a given task target</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.Machine.empty.html#legate.core.Machine.empty" title="legate.core.Machine.empty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.empty</span></code></a></p></td>
-<td><p>bool</p></td>
+<td><p>bool Indicates if the machine is empty</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.Machine.__and__.html#legate.core.Machine.__and__" title="legate.core.Machine.__and__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.__and__</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.Machine.__and__.html#legate.core.Machine.__and__" title="legate.core.Machine.__and__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.__and__</span></code></a>(self, Machine other)</p></td>
 <td><p>Computes an intersection with a given machine</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.Machine.__len__.html#legate.core.Machine.__len__" title="legate.core.Machine.__len__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.__len__</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.Machine.__len__.html#legate.core.Machine.__len__" title="legate.core.Machine.__len__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.__len__</span></code></a>(self)</p></td>
 <td><p>Returns the number of preferred processors</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.Machine.__getitem__.html#legate.core.Machine.__getitem__" title="legate.core.Machine.__getitem__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.__getitem__</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.Machine.__getitem__.html#legate.core.Machine.__getitem__" title="legate.core.Machine.__getitem__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Machine.__getitem__</span></code></a>(self, key)</p></td>
 <td><p>Slices the machine with a given slicer</p></td>
 </tr>
 </tbody>
@@ -568,16 +568,16 @@ different types: GPU &gt; OpenMP &gt; CPU.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.low.html#legate.core.ProcessorRange.low" title="legate.core.ProcessorRange.low"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.low</span></code></a></p></td>
-<td><p>uint32_t</p></td>
+<td><p>uint32_t Returns the lower bound of the processor range</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.high.html#legate.core.ProcessorRange.high" title="legate.core.ProcessorRange.high"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.high</span></code></a></p></td>
-<td><p>uint32_t</p></td>
+<td><p>uint32_t Returns the upper bound of the processor range</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.per_node_count.html#legate.core.ProcessorRange.per_node_count" title="legate.core.ProcessorRange.per_node_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.per_node_count</span></code></a></p></td>
-<td><p>uint32_t</p></td>
+<td><p>uint32_t Returns the number of processors per node</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.empty.html#legate.core.ProcessorRange.empty" title="legate.core.ProcessorRange.empty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.empty</span></code></a></p></td>
-<td><p>bool</p></td>
+<td><p>bool Indicates if the processor range is empty</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.get_node_range.html#legate.core.ProcessorRange.get_node_range" title="legate.core.ProcessorRange.get_node_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.get_node_range</span></code></a>(self)</p></td>
 <td><p>Returns the range of node IDs for this processor range</p></td>
@@ -585,13 +585,13 @@ different types: GPU &gt; OpenMP &gt; CPU.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.slice.html#legate.core.ProcessorRange.slice" title="legate.core.ProcessorRange.slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.slice</span></code></a>(self, slice sl)</p></td>
 <td><p>Slices the processor range by a given <code class="docutils literal notranslate"><span class="pre">slice</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.__and__.html#legate.core.ProcessorRange.__and__" title="legate.core.ProcessorRange.__and__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.__and__</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.__and__.html#legate.core.ProcessorRange.__and__" title="legate.core.ProcessorRange.__and__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.__and__</span></code></a>(self, ...)</p></td>
 <td><p>Computes an intersection with a given processor range</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.__len__.html#legate.core.ProcessorRange.__len__" title="legate.core.ProcessorRange.__len__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.__len__</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.__len__.html#legate.core.ProcessorRange.__len__" title="legate.core.ProcessorRange.__len__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.__len__</span></code></a>(self)</p></td>
 <td><p>Returns the number of processors in the range</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.__getitem__.html#legate.core.ProcessorRange.__getitem__" title="legate.core.ProcessorRange.__getitem__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.__getitem__</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/legate.core.ProcessorRange.__getitem__.html#legate.core.ProcessorRange.__getitem__" title="legate.core.ProcessorRange.__getitem__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ProcessorRange.__getitem__</span></code></a>(self, key)</p></td>
 <td><p>Slices the processor range with a given slicer</p></td>
 </tr>
 </tbody>

@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>legate.io.hdf5.from_file &#8212; NVIDIA legate (25.05.00.dev141+g98e78b22)</title>
+    <title>legate.io.hdf5.from_file &#8212; NVIDIA legate (25.05.00.dev149+g38a7a35c)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../../_static/documentation_options.js?v=7f289133"></script>
+    <script src="../../../_static/documentation_options.js?v=bfd0b2a7"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev141+g98e78b22) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev141+g98e78b22) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev149+g38a7a35c) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev149+g38a7a35c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev141+g98e78b22)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev149+g38a7a35c)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev141+g98e78b22) - Home"/>
-    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev141+g98e78b22) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev149+g38a7a35c) - Home"/>
+    <img src="../../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev149+g38a7a35c) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev141+g98e78b22)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev149+g38a7a35c)</p>
   
 </a>
 
@@ -497,7 +497,7 @@
 <h1>legate.io.hdf5.from_file<a class="headerlink" href="#legate-io-hdf5-from-file" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="legate.io.hdf5.from_file">
-<span class="sig-prename descclassname"><span class="pre">legate.io.hdf5.</span></span><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unicode</span> <span class="pre">dataset_name</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="legate.core.LogicalArray.html#legate.core.LogicalArray" title="legate.core.LogicalArray"><span class="pre">LogicalArray</span></a></span></span><a class="headerlink" href="#legate.io.hdf5.from_file" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">legate.io.hdf5.</span></span><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str</span> <span class="pre">dataset_name</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="legate.core.LogicalArray.html#legate.core.LogicalArray" title="legate.core.LogicalArray"><span class="pre">LogicalArray</span></a></span></span><a class="headerlink" href="#legate.io.hdf5.from_file" title="Link to this definition">#</a></dt>
 <dd><p>Read an HDF5 array from disk using the native hdf5 API.</p>
 <p>This doesn’t use KvikIO or GDS, instead a bounce buffer is used when
 running on a GPU.</p>
