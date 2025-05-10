@@ -30,7 +30,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13"
 ]
 dependencies = [
-    "numpy!=2.1.0",
+    "numpy>=1.22,!=2.1.0",
     "zarr",
     # h5py 3.13.0 does not have a number of builtin compression filters installed needed
     # for tests

@@ -69,7 +69,6 @@ build_legate_profiler() {
   conda_build_args+=(-c conda-forge);
   conda_build_args+=(--croot "${CONDA_ROOT}");
   conda_build_args+=(--output-folder "${CONDA_OUTPUT}");
-  conda_build_args+=(--numpy 1.22);
 
   run_command 'Install base dependencies' rapids-conda-retry install -y boa conda-verify python
   run_command 'Install build dependencies' rapids-conda-retry install -y -c conda-forge gcc gxx make pkg-config
@@ -91,7 +90,6 @@ build_legate_release() {
   conda_build_args+=(-c conda-forge);
 
   conda_build_args+=(--croot /tmp/conda-croot/legate);
-  conda_build_args+=(--numpy 1.22);
   conda_build_args+=(--no-test);
   conda_build_args+=(--no-verify);
   conda_build_args+=(--no-build-id);

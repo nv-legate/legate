@@ -206,7 +206,7 @@ class RuntimeConfig(SectionConfig):
     def conda(self) -> Reqs:
         pkgs = (
             "llvm-openmp",
-            "numpy>=1.22",
+            "numpy>=1.22,!=2.1.0",
             "libblas=*=*openblas*",
             "openblas=*=*openmp*",
             # work around https://github.com/StanfordLegion/legion/issues/1500

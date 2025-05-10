@@ -26,7 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "numpy!=2.1.0",
+    "numpy>=1.22,!=2.1.0",
     "zarr",
     "h5py",
     "fsspec",
