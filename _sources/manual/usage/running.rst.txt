@@ -1,8 +1,3 @@
-.. _usage:
-
-Usage
-=====
-
 Running Legate Programs
 -----------------------
 
@@ -272,36 +267,13 @@ Submit the script with ``sbatch``:
 
     $ sbatch run_legate.slurm
 
-Debugging and Profiling
------------------------
+Profiling
+---------
 
-Legate comes with tools that you can use to better understand your program both
-from a correctness and a performance standpoint.
+Legate comes with a profiler tool, that you can use to better understand your
+program from a performance standpoint.
 
-For correctness, Legate has facilities for visualizing the dataflow and task
-graph from a run of the application. First you need to run your application with
-the ``--spy`` ``legate`` option (or pass the same through ``LEGATE_CONFIG``):
-
-.. code-block:: sh
-
-    legate --spy myprog.py
-
-Legate will collect the necessary logging information in the ``legate_*.log``
-files (one per process). By default these files are placed in the same directory
-where the program was launched (you can control this with the ``--logdir``
-option). To post-process these files, install
-`GraphViz <https://www.graphviz.org/>`_ on your machine, then run:
-
-.. code-block:: sh
-
-    legion_spy.py --dataflow --event legate_*.log
-
-This command will produce a dataflow visualization in ``dataflow_[...].pdf``,
-and a task graph visualization in ``event_[...].pdf``. Note that these files can
-grow to be fairly large for non-trivial programs so we encourage you to keep
-your programs small when using these visualizations.
-
-For profiling, first you need to install the Legate profile viewer, available on
+First you need to install the Legate profile viewer, available on
 the Legate conda channel as ``legate-profiler``:
 
 .. code-block:: sh
@@ -324,7 +296,3 @@ program's execution:
 .. code-block:: sh
 
     legion_prof view legate_*.prof
-
-We recommend that you do not mix debugging and profiling in the same run, as
-some of the logging for the debugging features requires significant file I/O
-that can adversely effect the performance of the application.

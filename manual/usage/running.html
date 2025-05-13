@@ -3,13 +3,13 @@
 <!DOCTYPE html>
 
 
-<html lang="en" data-content_root="./" >
+<html lang="en" data-content_root="../../" >
 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Usage &#8212; NVIDIA legate (25.05.00.dev151+g8a619fa4)</title>
+    <title>Running Legate Programs &#8212; NVIDIA legate (25.05.00.dev154+gf8b70e5d)</title>
   
   
   
@@ -28,26 +28,26 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/nvidia-sphinx-theme.css?v=df3ac72c" />
-    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/params.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/nvidia-sphinx-theme.css?v=df3ac72c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/params.css" />
   
   <!-- So that users can add custom icons -->
-  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=3aa6627a"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="_static/copybutton.js?v=4ea706d9"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'usage';</script>
+    <script src="../../_static/documentation_options.js?v=704e8aa5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'manual/usage/running';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
@@ -55,11 +55,11 @@
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
-    <link rel="icon" href="_static/favicon.png"/>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Running Legate programs with Jupyter Notebook" href="jupyter.html" />
-    <link rel="prev" title="Building Legate from Source" href="BUILD.html" />
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Using GPUDirect Storage to perform HDF5 file I/O" href="hdf5_gds.html" />
+    <link rel="prev" title="Usage" href="index.html" />
 
 <script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
 
@@ -82,7 +82,7 @@
   <dialog id="pst-search-dialog">
     
 <form class="bd-search d-flex align-items-center"
-      action="search.html"
+      action="../../search.html"
       method="get">
   <i class="fa-solid fa-magnifying-glass"></i>
   <input type="search"
@@ -118,7 +118,7 @@
     
   
 
-<a class="navbar-brand logo" href="index.html">
+<a class="navbar-brand logo" href="../../index.html">
   
   
   
@@ -129,11 +129,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev151+g8a619fa4) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev151+g8a619fa4) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev151+g8a619fa4)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev154+gf8b70e5d)</p>
   
 </a></div>
     
@@ -229,7 +229,7 @@
     
   
 
-<a class="navbar-brand logo" href="index.html">
+<a class="navbar-brand logo" href="../../index.html">
   
   
   
@@ -240,11 +240,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev151+g8a619fa4) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev151+g8a619fa4) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev151+g8a619fa4)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev154+gf8b70e5d)</p>
   
 </a>
 
@@ -308,93 +308,107 @@
   <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
   <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="user.html">User Guide</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
-<li class="toctree-l2 has-children"><a class="reference internal" href="installation.html">Installing pre-built packages</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="networking-wheels.html">Networking with Legate Wheels</a></li>
-<li class="toctree-l3"><a class="reference internal" href="mpi-wrapper.html">Installation of the Legate MPI wrapper</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../installation.html">Installing pre-built packages</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../networking-wheels.html">Networking with Legate Wheels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mpi-wrapper.html">Installation of the Legate MPI wrapper</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="BUILD.html">Building from source</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="jupyter.html">Using with Jupyter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gasnet.html">GASNet-based Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hdf5_gds.html">HDF5 GPU-Direct Storage I/O</a></li>
-<li class="toctree-l2"><a class="reference internal" href="resources.html">Links to resources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../BUILD.html">Building from source</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">User Manual</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../overview/index.html">Overview</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/nutshell.html">Legate In a Nutshell</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="CONTRIBUTING.html">Contributing Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
-</ul>
-</details></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/python/runtime.html">Legate Runtime</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/operation.html">Operations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/logical_store.html">Store</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../runtime/index.html">The Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tasks/index.html">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/index.html">Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mappers/index.html">Mappers</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Running Legate Programs</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Running Legate Programs</a></li>
 
-<li class="toctree-l4"><a class="reference internal" href="api/python/logical_array.html">Arrays</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/physical_store.html">Physical Store</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/physical_array.html">Physical Array</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/scalar.html">Scalar</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/machine.html">Machine and Resource Scoping</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/shape.html">Shape</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/variant_options.html">Variant Options</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/resource_config.html">ResourceConfig</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/task_context.html">Task Context</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/domain.html">Domains</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/task_config.html">Task Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/task_local_buffer.html">Task-Local Buffers</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/inline_allocation.html">Inline Allocations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/symbolic_expr.html">Symbolic Expressions</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/auto_task.html">Auto Tasks</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/manual_task.html">Manual Tasks</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/constraint.html">Constraints</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/variable.html">Variables</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/library.html">Library</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/scope.html">Execution Scope</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/types.html">Types</a></li>
-</ul>
-</details></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
-</ul>
-</details></li>
-<li class="toctree-l3"><a class="reference internal" href="api/python/settings.html">Settings</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/python/io/index.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="hdf5_gds.html">HDF5 GPU-Direct Storage I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jupyter.html">Using with Jupyter</a></li>
 </ul>
 </details></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/cpp/index.html">C++ API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/cpp/data.html">Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cpp/partitioning.html">Partitioning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cpp/runtime.html">Runtime</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cpp/mapping.html">Mapping</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cpp/types.html">Types</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cpp/typedefs.html">Typedefs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cpp/task.html">Task</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cpp/util.html">Util</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/cpp/io.html">IO</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/logical_array.html">Arrays</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/physical_store.html">Physical Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/physical_array.html">Physical Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/scalar.html">Scalar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/shape.html">Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/variant_options.html">Variant Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/resource_config.html">ResourceConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/task_context.html">Task Context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/domain.html">Domains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/task_config.html">Task Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/task_local_buffer.html">Task-Local Buffers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/inline_allocation.html">Inline Allocations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/symbolic_expr.html">Symbolic Expressions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/auto_task.html">Auto Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/manual_task.html">Manual Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/constraint.html">Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/variable.html">Variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/library.html">Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/scope.html">Execution Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/types.html">Types</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/python/io/index.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/cpp/index.html">C++ API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/data.html">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/partitioning.html">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/task.html">Task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/util.html">Util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/io.html">IO</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
 </ul>
 </details></li>
 </ul>
@@ -403,36 +417,38 @@
 </details></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="versions.html">Versions</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="changes/2505.html">2505</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changes/2503.html">2503</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changes/2501.html">2501</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changes/2411.html">2411</a></li>
-<li class="toctree-l2"><a class="reference internal" href="changes/2406.html">2406</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2505.html">2505</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2406.html">2406</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1"><a class="reference internal" href="oss-licenses.html">Third-party notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../oss-licenses.html">Third-party notices</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="legate.stl/source/user/installation.html">Installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="legate.stl/source/user/usage.html">Usage</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/usage.html">Usage</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
 </ul>
 </details></li>
 </ul>
 </details></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2"><a class="reference internal" href="developer/style.html">Style</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../developer/style.html">Style</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources.html">Links to resources</a></li>
 </ul>
 </div>
 </nav></div>
@@ -463,14 +479,17 @@
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
-      <a href="index.html" class="nav-link" aria-label="Home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
     
-    <li class="breadcrumb-item"><a href="user.html" class="nav-link">User Guide</a></li>
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Legate User Manual</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Usage</span></li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Usage</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Running Legate Programs</span></li>
   </ul>
 </nav>
 </div>
@@ -487,10 +506,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="usage">
-<span id="id1"></span><h1>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h1>
-<section id="running-legate-programs">
-<h2>Running Legate Programs<a class="headerlink" href="#running-legate-programs" title="Link to this heading">#</a></h2>
+  <section id="running-legate-programs">
+<h1>Running Legate Programs<a class="headerlink" href="#running-legate-programs" title="Link to this heading">#</a></h1>
 <p>Python programs using the Legate APIs (directly or through a Legate-based
 library such as cuPyNumeric) can be run using the standard Python interpreter:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>myprog.py<span class="w"> </span>&lt;myprog.py<span class="w"> </span>options&gt;
@@ -516,7 +533,7 @@ driver:</p>
 </div>
 </section>
 <section id="resource-allocation">
-<h2>Resource Allocation<a class="headerlink" href="#resource-allocation" title="Link to this heading">#</a></h2>
+<h1>Resource Allocation<a class="headerlink" href="#resource-allocation" title="Link to this heading">#</a></h1>
 <p>By default Legate will query the available hardware on the current machine, and
 reserve for its use all CPU cores, all GPUs and most of the available memory.
 You can use <code class="docutils literal notranslate"><span class="pre">LEGATE_SHOW_CONFIG=1</span></code> to inspect the exact set of resources that
@@ -577,7 +594,7 @@ Type<span class="w"> </span><span class="s2">&quot;help&quot;</span>,<span class
 </div>
 </section>
 <section id="distributed-launch">
-<h2>Distributed Launch<a class="headerlink" href="#distributed-launch" title="Link to this heading">#</a></h2>
+<h1>Distributed Launch<a class="headerlink" href="#distributed-launch" title="Link to this heading">#</a></h1>
 <p>You can run your program across multiple nodes by using the <code class="docutils literal notranslate"><span class="pre">--nodes</span></code> option
 followed by the number of nodes to be used. When doing a multi-process run, a
 launcher program must be specified, that will do the actual spawning of the
@@ -590,7 +607,7 @@ normally invoke <code class="docutils literal notranslate"><span class="pre">mpi
 process on each of two nodes. Each process will use 4 CPU cores and 1 GPU on its
 assigned node.</p>
 <p>The default Legate conda packages include networking support based on UCX, but
-<a class="reference internal" href="gasnet.html#gasnet"><span class="std std-ref">GASNet-based</span></a> packages are also available.</p>
+<a class="reference internal" href="../../gasnet.html#gasnet"><span class="std std-ref">GASNet-based</span></a> packages are also available.</p>
 <p>Note that resource setting flags such as <code class="docutils literal notranslate"><span class="pre">--cpus</span> <span class="pre">4</span></code> and <code class="docutils literal notranslate"><span class="pre">--gpus</span> <span class="pre">1</span></code> refer to
 each process. In the above invocation, each one of the two launched processes
 will reserve 4 CPU cores and 1 GPU, for a total of 8 CPU cores and 2 GPUs across
@@ -645,10 +662,10 @@ bind each process to a separate CPU socket, thus partitioning the CPU cores
 between them.</p>
 </section>
 <section id="running-legate-on-typical-slurm-clusters">
-<h2>Running Legate on Typical SLURM Clusters<a class="headerlink" href="#running-legate-on-typical-slurm-clusters" title="Link to this heading">#</a></h2>
+<h1>Running Legate on Typical SLURM Clusters<a class="headerlink" href="#running-legate-on-typical-slurm-clusters" title="Link to this heading">#</a></h1>
 <p>Here is an example showing how to run Legate programs on typical SLURM clusters.</p>
 <p>To get started, create a conda environment and install Legate, following the
-<a class="reference internal" href="installation.html#installation"><span class="std std-ref">installation guide</span></a>:</p>
+<a class="reference internal" href="../../installation.html#installation"><span class="std std-ref">installation guide</span></a>:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>legate<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>legate
 </pre></div>
 </div>
@@ -694,29 +711,11 @@ legate<span class="w"> </span>--launcher<span class="w"> </span>mpirun<span clas
 </pre></div>
 </div>
 </section>
-<section id="debugging-and-profiling">
-<h2>Debugging and Profiling<a class="headerlink" href="#debugging-and-profiling" title="Link to this heading">#</a></h2>
-<p>Legate comes with tools that you can use to better understand your program both
-from a correctness and a performance standpoint.</p>
-<p>For correctness, Legate has facilities for visualizing the dataflow and task
-graph from a run of the application. First you need to run your application with
-the <code class="docutils literal notranslate"><span class="pre">--spy</span></code> <code class="docutils literal notranslate"><span class="pre">legate</span></code> option (or pass the same through <code class="docutils literal notranslate"><span class="pre">LEGATE_CONFIG</span></code>):</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>legate<span class="w"> </span>--spy<span class="w"> </span>myprog.py
-</pre></div>
-</div>
-<p>Legate will collect the necessary logging information in the <code class="docutils literal notranslate"><span class="pre">legate_*.log</span></code>
-files (one per process). By default these files are placed in the same directory
-where the program was launched (you can control this with the <code class="docutils literal notranslate"><span class="pre">--logdir</span></code>
-option). To post-process these files, install
-<a class="reference external" href="https://www.graphviz.org/">GraphViz</a> on your machine, then run:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>legion_spy.py<span class="w"> </span>--dataflow<span class="w"> </span>--event<span class="w"> </span>legate_*.log
-</pre></div>
-</div>
-<p>This command will produce a dataflow visualization in <code class="docutils literal notranslate"><span class="pre">dataflow_[...].pdf</span></code>,
-and a task graph visualization in <code class="docutils literal notranslate"><span class="pre">event_[...].pdf</span></code>. Note that these files can
-grow to be fairly large for non-trivial programs so we encourage you to keep
-your programs small when using these visualizations.</p>
-<p>For profiling, first you need to install the Legate profile viewer, available on
+<section id="profiling">
+<h1>Profiling<a class="headerlink" href="#profiling" title="Link to this heading">#</a></h1>
+<p>Legate comes with a profiler tool, that you can use to better understand your
+program from a performance standpoint.</p>
+<p>First you need to install the Legate profile viewer, available on
 the Legate conda channel as <code class="docutils literal notranslate"><span class="pre">legate-profiler</span></code>:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-c<span class="w"> </span>legate<span class="w"> </span>legate-profiler
 </pre></div>
@@ -734,10 +733,6 @@ program’s execution:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>legion_prof<span class="w"> </span>view<span class="w"> </span>legate_*.prof
 </pre></div>
 </div>
-<p>We recommend that you do not mix debugging and profiling in the same run, as
-some of the logging for the debugging features requires significant file I/O
-that can adversely effect the performance of the application.</p>
-</section>
 </section>
 
 
@@ -751,20 +746,20 @@ that can adversely effect the performance of the application.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="BUILD.html"
+       href="index.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Building Legate from Source</p>
+        <p class="prev-next-title">Usage</p>
       </div>
     </a>
     <a class="right-next"
-       href="jupyter.html"
+       href="hdf5_gds.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Running Legate programs with Jupyter Notebook</p>
+        <p class="prev-next-title">Using GPUDirect Storage to perform HDF5 file I/O</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -789,12 +784,13 @@ that can adversely effect the performance of the application.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-legate-programs">Running Legate Programs</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#resource-allocation">Resource Allocation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#distributed-launch">Distributed Launch</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-legate-on-typical-slurm-clusters">Running Legate on Typical SLURM Clusters</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#debugging-and-profiling">Debugging and Profiling</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Running Legate Programs</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#resource-allocation">Resource Allocation</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#distributed-launch">Distributed Launch</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#running-legate-on-typical-slurm-clusters">Running Legate on Typical SLURM Clusters</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#profiling">Profiling</a></li>
 </ul>
+
   </nav></div>
 
 </div></div>
@@ -811,8 +807,8 @@ that can adversely effect the performance of the application.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -821,8 +817,8 @@ that can adversely effect the performance of the application.</p>
       
         <div class="footer-item">
 <a class="footer-brand logo" href="https://www.nvidia.com">
-  <img src="_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
-  <img src="_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
 </a></div>
       
         <div class="footer-item">

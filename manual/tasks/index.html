@@ -1,0 +1,911 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tasks &#8212; NVIDIA legate (25.05.00.dev154+gf8b70e5d)</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/nvidia-sphinx-theme.css?v=df3ac72c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/params.css" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=704e8aa5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=4ea706d9"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'manual/tasks/index';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://docs.nvidia.com/legate/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '25.05';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Data Model" href="../data/index.html" />
+    <link rel="prev" title="The Runtime" href="../runtime/index.html" />
+
+<script src="https://assets.adobedtm.com/5d4962a43b79/c1061d2c5e7b/launch-191c2462b890.min.js"></script>
+
+
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev154+gf8b70e5d)</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+  
+  
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev154+gf8b70e5d)</p>
+  
+</a>
+
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+
+
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Table of Contents">
+  <p class="bd-links__title" role="heading" aria-level="1">Table of Contents</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../installation.html">Installing pre-built packages</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../networking-wheels.html">Networking with Legate Wheels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mpi-wrapper.html">Installation of the Legate MPI wrapper</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../BUILD.html">Building from source</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../CONTRIBUTING.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">User Manual</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../overview/index.html">Overview</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../overview/nutshell.html">Legate In a Nutshell</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../introduction/index.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../runtime/index.html">The Runtime</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../data/index.html">Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../mappers/index.html">Mappers</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../usage/index.html">Running Legate Programs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../usage/running.html">Running Legate Programs</a></li>
+
+
+
+
+<li class="toctree-l3"><a class="reference internal" href="../usage/hdf5_gds.html">HDF5 GPU-Direct Storage I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../usage/jupyter.html">Using with Jupyter</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/index.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/python/index.html">Python API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/python/routines.html">Routines</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.get_legate_runtime.html">legate.core.get_legate_runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.get_machine.html">legate.core.get_machine</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.track_provenance.html">legate.core.track_provenance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/python/classes.html">Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/runtime.html">Legate Runtime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/operation.html">Operations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/logical_store.html">Store</a></li>
+
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/logical_array.html">Arrays</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/physical_store.html">Physical Store</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/physical_array.html">Physical Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/scalar.html">Scalar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/machine.html">Machine and Resource Scoping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/shape.html">Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/variant_options.html">Variant Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/resource_config.html">ResourceConfig</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/task_context.html">Task Context</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/domain.html">Domains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/task_config.html">Task Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/task_local_buffer.html">Task-Local Buffers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/inline_allocation.html">Inline Allocations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/symbolic_expr.html">Symbolic Expressions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/auto_task.html">Auto Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/manual_task.html">Manual Tasks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/constraint.html">Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/variable.html">Variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/library.html">Library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/scope.html">Execution Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/types.html">Types</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/python/tasks.html">Python Tasks</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.task.html">legate.core.task.task</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.InputStore.html">legate.core.task.InputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.OutputStore.html">legate.core.task.OutputStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.ReductionStore.html">legate.core.task.ReductionStore</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.InputArray.html">legate.core.task.InputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.OutputArray.html">legate.core.task.OutputArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.ReductionArray.html">legate.core.task.ReductionArray</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.PyTask.html">legate.core.task.PyTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.task.VariantInvoker.html">legate.core.task.VariantInvoker</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/python/settings.html">Settings</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/python/io/index.html">I/O</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.io.hdf5.from_file.html">legate.io.hdf5.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.io.hdf5.kerchunk_read.html">legate.io.hdf5.kerchunk_read</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.experimental.io.file_handle.from_file.html">legate.core.experimental.io.file_handle.from_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.experimental.io.file_handle.to_file.html">legate.core.experimental.io.file_handle.to_file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/python/generated/legate.core.experimental.io.file_handle.FileHandle.html">legate.core.experimental.io.file_handle.FileHandle</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/cpp/index.html">C++ API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/data.html">Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/partitioning.html">Partitioning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/runtime.html">Runtime</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/types.html">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/typedefs.html">Typedefs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/task.html">Task</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/util.html">Util</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/cpp/io.html">IO</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../versions.html">Versions</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../changes/index.html">Changelog</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2505.html">2505</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2503.html">2503</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2501.html">2501</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2411.html">2411</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../changes/2406.html">2406</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../oss-licenses.html">Third-party notices</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Experimental Features:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../legate.stl/source/legate-stl.html">Legate.STL</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/user/index.html">User guide</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/installation.html">Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../legate.stl/source/user/usage.html">Usage</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../legate.stl/source/reference/index.html">Legate.STL Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="simple">
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../developer/style.html">Style</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../gasnet.html">GASNet-based Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources.html">Links to resources</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Legate User Manual</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tasks</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tasks">
+<span id="ch-tasks"></span><h1>Tasks<a class="headerlink" href="#tasks" title="Link to this heading">#</a></h1>
+<p>The primary execution unit in a Legate program is a <em>task</em>. All interesting operations
+performed by a Legate program should be performed within a task. Notably, tasks are also
+the only place where the user is able to modify the underlying data of any stores.</p>
+<p>Tasks are created through the runtime, filled with their respective arguments and
+execution properties, then submitted back to the runtime for execution.</p>
+<section id="execution-model">
+<span id="sec-tasks-execution-model"></span><h2>Execution Model<a class="headerlink" href="#execution-model" title="Link to this heading">#</a></h2>
+<p>A Legate program is split into two parts: the “top-level”, and the “leaf task”. Top-level
+refers to the code that is called directly by the <code class="docutils literal notranslate"><span class="pre">main()</span></code> function, i.e. the one which
+creates and submits tasks for execution. Leaf-task refers to the actual executed tasks
+themselves.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is only possible to create and submit tasks from within the top-level program.</p>
+</div>
+<p>There are a number of important properties of leaf task execution:</p>
+<ol class="arabic simple">
+<li><p>Leaf tasks are assumed to execute completely asynchronously from the top-level program.</p></li>
+<li><p>Leaf tasks will not begin execution until all pre-requisites for the task are satisfied.</p></li>
+<li><p>There is no guarantee <em>where</em> on the machine the leaf task will be executed. For
+example, the user cannot assume that the task is executed on the same core, CPU, node,
+or (in the case of networked machines) the same physical machine as the code submitting
+the task for execution.</p></li>
+<li><p>There is no method to directly determine whether a leaf task has completed. The only
+reliable methods of determining this are indirect:</p>
+<ol class="arabic simple">
+<li><p>By issuing a blocking runtime execution fence (via
+<code class="docutils literal notranslate"><span class="pre">legate::Runtime::issue_execution_fence()</span></code>) from the top-level. If the blocking
+variant is called, the function will not return until all outstanding tasks have
+completed, and their side-effects are visible.</p></li>
+<li><p>By executing a dependent leaf task. If task B has inputs which depend on the outputs
+of task A, then if control reaches the <em>body</em> of task B, it is guaranteed that task
+A has completed. This is analogous to the pre-requisites requirement above.</p></li>
+</ol>
+</li>
+</ol>
+</section>
+<section id="task-ids">
+<span id="sec-tasks-task-ids"></span><h2>Task IDs<a class="headerlink" href="#task-ids" title="Link to this heading">#</a></h2>
+<p>Each task is referenced through a unique identifier, the “task ID” (of type
+<code class="docutils literal notranslate"><span class="pre">legate::LocalTaskID</span></code>).  Note that this number is only unique within a <code class="docutils literal notranslate"><span class="pre">Library</span></code> once
+a task has been registered with it (e.g. there can be multiple tasks with <code class="docutils literal notranslate"><span class="pre">LocalTaskID</span></code>
+0, but under different libraries). The <code class="docutils literal notranslate"><span class="pre">Library</span></code> is, in effect, a “name space” for
+tasks. This allows libraries to keep an enumeration of their tasks without concern of ID
+collision in a multi-library application.</p>
+<p>Each task is also allocated a globally unique identifier <code class="docutils literal notranslate"><span class="pre">legate::GlobalTaskID</span></code>, but
+users are discouraged from using this directly.</p>
+</section>
+<section id="task-variants">
+<span id="sec-tasks-task-variants"></span><h2>Task Variants<a class="headerlink" href="#task-variants" title="Link to this heading">#</a></h2>
+<p>One of the primary abstractions in Legate tasks is the concept of task “variants”. In a
+nutshell, these allow tasks to communicate which kinds of devices the task is equipped to
+run on. Tasks may have multiple variants, but each variant may only be declared
+once. Additionally, tasks must have at least one variant.</p>
+<p>For example, if the task has a CPU variant, this informs the runtime that such a task is
+able to run on any available CPU. If the task also has a GPU variant, this tells the
+runtime that the task is also able to execute GPU code.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The task bodies themselves are <em>always</em> executed on the CPU. The variant merely informs
+the runtime that the task intends to use particular hardware. For example, the GPU
+variant tells the runtime that the task intends to launch GPU kernels, and/or intends
+to make calls into GPU-accelerated third-party libraries.</p>
+</div>
+<p>The runtime is responsible for selecting which of the available task variants is
+executed. Unless otherwise constrained, the runtime will prefer the most “accelerated”
+variant whenever possible. For example, if the task has a GPU, OpenMP, and CPU variant,
+the runtime will prefer the GPU variant, then the OpenMP, and finally the CPU variant.</p>
+<p>The user can manually restrict the variant selection by constructing a <code class="docutils literal notranslate"><span class="pre">legate::Scope</span></code>
+class with an appropriately set <code class="docutils literal notranslate"><span class="pre">legate::mapping::Machine</span></code>. In this mode, the runtime
+will consider only the subset of the machine as specified in the scope, but will still
+apply the same variant ranking scheme. For example, assuming an initial machine that
+supports GPU, OpenMP, and CPU tasks, and the following scope:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;legate.h&gt;</span>
+
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">machine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">get_machine</span><span class="p">();</span>
+<span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Scope</span><span class="p">{</span>
+<span class="w">  </span><span class="n">machine</span><span class="p">.</span><span class="n">only</span><span class="p">({</span><span class="n">legate</span><span class="o">::</span><span class="n">TaskTarget</span><span class="o">::</span><span class="n">OMP</span><span class="p">,</span><span class="w"> </span><span class="n">leate</span><span class="o">::</span><span class="n">TaskTarget</span><span class="o">::</span><span class="n">CPU</span><span class="p">})</span>
+<span class="p">};</span>
+
+<span class="c1">// create some tasks and submit them...</span>
+</pre></div>
+</div>
+<p>The runtime will select the OpenMP variant (assuming the task has one), since that target
+has a higher variant priority than CPU.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Task variant selection happens when the task object is <em>constructed</em>. Any manual
+restriction using <code class="docutils literal notranslate"><span class="pre">legate::Scope</span></code> or the like must be done before the call to
+<code class="docutils literal notranslate"><span class="pre">legate::Runtime::create_task()</span></code>, otherwise the scope has no effect.</p>
+</div>
+</section>
+<section id="task-parallelization">
+<span id="sec-tasks-parallelization"></span><h2>Task Parallelization<a class="headerlink" href="#task-parallelization" title="Link to this heading">#</a></h2>
+</section>
+<section id="declaration">
+<span id="sec-tasks-declaration"></span><h2>Declaration<a class="headerlink" href="#declaration" title="Link to this heading">#</a></h2>
+<p>Legate tasks are declared by defining a C++ task, which publicly inherits from the
+<code class="docutils literal notranslate"><span class="pre">legate::LegateTask</span></code> helper. A minimal example of a task declaration is as follows:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;legate.h&gt;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyTask</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">LegateTask</span><span class="o">&lt;</span><span class="n">MyTask</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">TASK_CONFIG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">:</span><span class="n">TaskConfig</span><span class="p">{</span>
+<span class="w">    </span><span class="n">legate</span><span class="o">::</span><span class="n">LocalTaskID</span><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
+<span class="w">  </span><span class="p">};</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cpu_variant</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">TaskContext</span><span class="w"> </span><span class="n">ctx</span><span class="p">);</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Even though tasks are declared as C++ classes, this is misleading. <strong>No instance of the
+class is ever constructed</strong>. The class has no ownership semantics, and is functionally
+equivalent to a namespace.</p>
+</div>
+<p>This declares a task type <code class="docutils literal notranslate"><span class="pre">MyTask</span></code>, which has a local task ID of <code class="docutils literal notranslate"><span class="pre">0</span></code>, and which has a
+“CPU variant”. This indicates to Legate the following properties:</p>
+<ol class="arabic simple">
+<li><p>When this task is registered with a <code class="docutils literal notranslate"><span class="pre">Library</span></code>, its <code class="docutils literal notranslate"><span class="pre">Library</span></code>-local ID will be
+<code class="docutils literal notranslate"><span class="pre">0</span></code> (derived from <code class="docutils literal notranslate"><span class="pre">TASK_CONFIG.task_id()</span></code>).</p></li>
+<li><p>It supports execution on CPU’s, but does not support execution on other processor
+kinds.</p></li>
+</ol>
+<p>The user is able to specify additional configuration and options for the tasks via the
+<code class="docutils literal notranslate"><span class="pre">TASK_CONFIG</span></code> static member. While optional, the user is <em>highly</em> encouraged to fill out
+as much of the <code class="docutils literal notranslate"><span class="pre">TASK_CONFIG</span></code> as possible, as doing so allows the runtime to make more
+optimal decisions when launching the tasks. For example, the user may inform the runtime
+of the expected task signature:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;legate.h&gt;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyTask</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">LegateTask</span><span class="o">&lt;</span><span class="n">MyTask</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">TASK_CONFIG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">:</span><span class="n">TaskConfig</span><span class="p">{</span>
+<span class="w">    </span><span class="n">legate</span><span class="o">::</span><span class="n">LocalTaskID</span><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
+<span class="w">  </span><span class="p">}.</span><span class="n">with_signature</span><span class="p">(</span>
+<span class="w">    </span><span class="n">legate</span><span class="o">::</span><span class="n">TaskSignature</span><span class="p">{}</span>
+<span class="w">      </span><span class="p">.</span><span class="n">inputs</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="n">outputs</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="n">constraints</span><span class="p">({</span>
+<span class="w">        </span><span class="n">legate</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">proxy</span><span class="o">::</span><span class="n">inputs</span><span class="p">),</span>
+<span class="w">        </span><span class="n">legate</span><span class="o">::</span><span class="n">align</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">proxy</span><span class="o">::</span><span class="n">outputs</span><span class="p">)</span>
+<span class="w">      </span><span class="p">})</span>
+<span class="w">  </span><span class="p">).</span><span class="n">with_variant_options</span><span class="p">(</span>
+<span class="w">    </span><span class="n">legate</span><span class="o">::</span><span class="n">VariantOptions</span><span class="p">{}</span>
+<span class="w">      </span><span class="p">.</span><span class="n">with_may_throw_exception</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+<span class="w">      </span><span class="p">.</span><span class="n">with_concurrent</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span>
+<span class="w">  </span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cpu_variant</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">TaskContext</span><span class="w"> </span><span class="n">ctx</span><span class="p">);</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>This declaration informs the runtime of the following properties for <code class="docutils literal notranslate"><span class="pre">MyTask</span></code>:</p>
+<ol class="arabic simple">
+<li><p>The task takes exactly 2 input arguments, and 2 output arguments.</p></li>
+<li><p>The input arguments have an alignment constraint applied to them all, as do the output
+arguments.</p></li>
+<li><p>Furthermore, each variant (if the task had multiple) may potentially throw an
+exception, and requires “concurrent” execution (see
+<code class="docutils literal notranslate"><span class="pre">legate::VariantOptions::concurrent</span></code> for reference).</p></li>
+</ol>
+<p>If a task declares its task signature in this manner, then the runtime may be able to more
+efficiently lay out the task arguments during task launch. Crucially, the runtime will
+also be able to “type check” the task signature at launch. For example, if such a task was
+mistakenly launched with only 1 input argument, the runtime would be able to catch this
+error at the launch-site.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">legate::TaskConfig</span></code>, and <code class="docutils literal notranslate"><span class="pre">legate::LegateTask</span></code> for further discussion on the
+available options and semantics.</p>
+</section>
+<section id="registration">
+<span id="sec-tasks-registration"></span><h2>Registration<a class="headerlink" href="#registration" title="Link to this heading">#</a></h2>
+<p>After declaring a task, the user must also <em>register</em> the task with the Legate
+runtime. This registration process makes the runtime aware of the task and “finalizes” the
+task in the eyes of the runtime. Any further modification of the task (such as modifying
+the <code class="docutils literal notranslate"><span class="pre">TASK_CONFIG</span></code>) will be ignored after registration.</p>
+<p>Each task must be registered with a particular <code class="docutils literal notranslate"><span class="pre">legate::Library</span></code> (but can be registered
+with any number of <code class="docutils literal notranslate"><span class="pre">legate::Library</span></code> objects) before use.</p>
+<p>This registration process is made simple via deriving from <code class="docutils literal notranslate"><span class="pre">legate::LegateTask</span></code>, which
+defines helper routines that perform all of the boilerplate registration code for the
+user. Registration of tasks may be as simple as:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;legate.h&gt;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Runtime</span><span class="o">::</span><span class="n">get_runtime</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">find_library</span><span class="p">(</span><span class="s">&quot;my_library&quot;</span><span class="p">);</span>
+<span class="n">MyTask</span><span class="o">::</span><span class="n">register_variants</span><span class="p">(</span><span class="n">lib</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>After the call to <code class="docutils literal notranslate"><span class="pre">register_variants()</span></code>, the task may now be constructed and launched,
+as detailed in the following section.</p>
+</section>
+<section id="launching">
+<span id="sec-tasks-launching"></span><h2>Launching<a class="headerlink" href="#launching" title="Link to this heading">#</a></h2>
+<p>Once declared and registered, tasks are created via the runtime. This is performed through
+the various overloads of <code class="docutils literal notranslate"><span class="pre">legate::Runtime::create_task()</span></code>. This routine will create
+either an <code class="docutils literal notranslate"><span class="pre">legate::AutoTask</span></code> or <code class="docutils literal notranslate"><span class="pre">legate::ManualTask</span></code> (see
+<a class="reference internal" href="#sec-tasks-parallelization"><span class="std std-ref">Task Parallelization</span></a> for further discussion on the differences between these
+classes).</p>
+<p>The tasks must be created using the same <code class="docutils literal notranslate"><span class="pre">legate::Library</span></code> that it was registered with
+(see <a class="reference internal" href="#sec-tasks-registration"><span class="std std-ref">Registration</span></a>). Attempting to create a task with a library with
+which it was not registered is diagnosed at runtime.</p>
+<p>Once created, the task objects are configured with the various arguments and settings
+needed to properly launch them. However, as described in <a class="reference internal" href="#sec-tasks-declaration"><span class="std std-ref">Declaration</span></a>,
+many of these can be statically declared in the task body. Usually, the user need only
+supply the actual input/output/scalar/etc. arguments at the task launch site:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;legate.h&gt;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">launch_my_task</span><span class="p">(</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">LogicalArray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">input_array</span><span class="p">,</span>
+<span class="w">  </span><span class="c1">// ...</span>
+<span class="w">  </span><span class="k">const</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">LogicalArray</span><span class="o">&amp;</span><span class="w"> </span><span class="n">output_array</span><span class="p">,</span>
+<span class="w">  </span><span class="c1">// ...</span>
+<span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">runtime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">Runtime</span><span class="o">::</span><span class="n">get_runtime</span><span class="p">();</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">lib</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">find_library</span><span class="p">(</span><span class="s">&quot;my_library&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="n">task</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">create_task</span><span class="p">(</span><span class="n">lib</span><span class="p">,</span><span class="w"> </span><span class="n">MyTask</span><span class="o">::</span><span class="n">TASK_CONFIG</span><span class="p">.</span><span class="n">task_id</span><span class="p">());</span>
+
+<span class="w">  </span><span class="n">task</span><span class="p">.</span><span class="n">add_input</span><span class="p">(</span><span class="n">input_array</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// ...</span>
+<span class="w">  </span><span class="n">task</span><span class="p">.</span><span class="n">add_output</span><span class="p">(</span><span class="n">output_array</span><span class="p">);</span>
+<span class="w">  </span><span class="c1">// ...</span>
+
+<span class="w">  </span><span class="n">runtime</span><span class="o">-&gt;</span><span class="n">submit</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">task</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Task objects are single-use only. Once submitted (via <code class="docutils literal notranslate"><span class="pre">legate::Runtime::submit()</span></code>),
+these objects may not be reused to submit a new task. In order to submit a new task of
+the same type, a fresh task object must be constructed.</p>
+</div>
+<p>Due to the deferred nature of the Legate runtime, submission of the task to the runtime
+does <strong>not</strong> imply the task has been immediately executed. It simply appends the task to
+the Legate launch pipeline to be executed at some unspecified later time. The user has no
+guarantee of execution of the task until an explicit, blocking, execution fence is
+invoked. See <a class="reference internal" href="../runtime/index.html#ch-runtime"><span class="std std-ref">The Runtime</span></a> for further discussion of these concepts.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../runtime/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">The Runtime</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../data/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Data Model</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#execution-model">Execution Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#task-ids">Task IDs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#task-variants">Task Variants</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#task-parallelization">Task Parallelization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#declaration">Declaration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#registration">Registration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#launching">Launching</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+<a class="footer-brand logo" href="https://www.nvidia.com">
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA"/>
+  <img src="../../_static/nvidia-logo-horiz-rgb-1c-wht-for-screen.svg" class="logo__image only-dark" alt="NVIDIA"/>
+</a></div>
+      
+        <div class="footer-item">
+
+<div class="footer-links">
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-policy/">Privacy Policy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/privacy-center/">Manage My Privacy</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/preferences/start/">Do Not Sell or Share My Data</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/terms-of-service/">Terms of Service</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/accessibility/">Accessibility</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/about-nvidia/company-policies/">Corporate Policies</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/product-security/">Product Security</a>
+   | 
+  
+  
+  
+  <a class="external" href="https://www.nvidia.com/en-us/contact/">Contact</a>
+  
+  
+  
+</div>
+</div>
+      
+        <div class="footer-item">
+
+
+
+
+  <p class="copyright">
+    
+      Copyright © 2021-2025, NVIDIA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+<div class="extra_footer">
+  
+  <script type="text/javascript">if (typeof _satellite !== “undefined”){ _satellite.pageBottom();}</script>
+  
+</div></div>
+      
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+  </body>
+</html>
