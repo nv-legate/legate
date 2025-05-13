@@ -1,8 +1,3 @@
-.. _usage:
-
-Usage
-=====
-
 Running Legate Programs
 -----------------------
 

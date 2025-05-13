@@ -11,14 +11,37 @@ test programs on moderately sized data sets on local machines and then
 immediately scale up to larger data sets deployed on many nodes in the cloud or
 on a supercomputer without any code modifications.
 
+.. code-block:: python
+
+   from legate.core import get_legate_runtime, types
+   from legate.core.task import task, InputArray, OutputArray
+
+   @task
+   def saxpy(x: InputArray, alpha: float, y: OutputArray) -> None:
+       xarr = np.asarray(x)
+       yarr = np.asarray(y)
+
+       yarr[:] = alpha * xarr[:] + yarr[:]
+
+
+   runtime = get_legate_runtime()
+   x = runtime.create_array(dtype=types.int32, shape=(100,))
+   x.fill(123)
+   y = runtime.create_array_like(x)
+
+   saxpy(x, 10.0, y)
+
+
 .. toctree::
   :maxdepth: 2
   :caption: Contents:
 
   Overview <overview.rst>
-  User Guide <user.rst>
+  Installing pre-built packages <installation.rst>
+  Building from source <BUILD.rst>
   Contributing Guide <CONTRIBUTING.rst>
   Frequently Asked Questions <faq.rst>
+  User Manual <manual/index.rst>
   API Reference <api/index.rst>
 
 .. toctree::
@@ -38,6 +61,9 @@ on a supercomputer without any code modifications.
 .. toctree::
 
    Developer Documentation <developer/index.rst>
+   GASNet-based Installation <gasnet.rst>
+   Links to resources <resources>
+
 
 Indices and tables
 ------------------
