@@ -77,10 +77,6 @@ def env_profile(config: ConfigProtocol) -> EnvPart:
     return ("--profile",) if config.profiling.profile else ()
 
 
-def env_spy(config: ConfigProtocol) -> EnvPart:
-    return ("--spy",) if config.debugging.spy else ()
-
-
 def env_freeze_on_error(config: ConfigProtocol) -> EnvPart:
     return ("--freeze-on-error",) if config.debugging.freeze_on_error else ()
 
@@ -100,6 +96,5 @@ ENV_PARTS_LEGATE = (
     env_logdir,
     env_log_file,
     env_profile,
-    env_spy,
     env_freeze_on_error,
 )

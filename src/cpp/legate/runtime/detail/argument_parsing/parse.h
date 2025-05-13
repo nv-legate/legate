@@ -48,7 +48,6 @@ class ParsedArgs {
   Argument<Scaled<std::int64_t>> zcmem;
   Argument<Scaled<std::int64_t>> regmem;
   Argument<bool> profile;
-  Argument<bool> spy;
   Argument<std::string> log_levels;
   Argument<std::filesystem::path> log_dir;
   Argument<bool> log_to_file;

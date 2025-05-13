@@ -95,7 +95,6 @@ class Config:
             valgrind=False,
             freeze_on_error=False,
             gasnet_trace=False,
-            spy=False,
         )
         self.info = Info(verbose=self.verbose > 0, bind_detail=False)
         self.other = Other(

@@ -412,14 +412,10 @@ ParsedArgs parse_args(std::vector<std::string> args)
     "--zcmem",
     "Size (in MiB) of GPU-registered (or \"zero-copy\") DRAM memory to reserve per GPU",
     Scaled{DEFAULT_ZCMEM, MB});
-  auto regmem  = parser.add_scaled_argument("--regmem",
+  auto regmem      = parser.add_scaled_argument("--regmem",
                                            "Size (in MiB) of NIC-registered DRAM memory to reserve",
                                            Scaled{DEFAULT_REGMEM, MB});
-  auto profile = parser.add_argument("--profile", "Whether to collect profiling logs", false);
-  auto spy     = parser.add_argument(
-    "--spy",
-    "Whether to collect dataflow & task graph logs, implies --log-to-file being true",
-    false);
+  auto profile     = parser.add_argument("--profile", "Whether to collect profiling logs", false);
   auto log_levels  = parser.add_argument("--logging", logging_help_str(), std::string{});
   auto log_dir     = parser.add_argument("--logdir",
                                      "Directory to emit logfiles to, defaults to current directory",
@@ -450,11 +446,6 @@ ParsedArgs parse_args(std::vector<std::string> args)
 
   if (LEGATE_LOG_PARTITIONING.get().value_or(false)) {
     add_logger(log_legate_partitioner().get_name(), "debug");
-  }
-
-  if (spy.value()) {
-    log_to_file.value_mut() = true;
-    add_logger("legion_spy");
   }
 
   if (profile.value()) {
@@ -490,7 +481,6 @@ ParsedArgs parse_args(std::vector<std::string> args)
     /* zcmem */ std::move(zcmem),
     /* regmem */ std::move(regmem),
     /* profile */ std::move(profile),
-    /* spy */ std::move(spy),
     /* log_levels */ std::move(log_levels),
     /* log_dir */ std::move(log_dir),
     /* log_to_file */ std::move(log_to_file),

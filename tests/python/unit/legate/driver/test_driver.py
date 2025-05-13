@@ -241,7 +241,7 @@ OPTS = (
     "--logdir",
 )
 
-FLAGS = ("--profile", "--spy", "--log-to-file", "--freeze-on-error")
+FLAGS = ("--profile", "--log-to-file", "--freeze-on-error")
 
 
 class Test_LEGATE_CONFIG:

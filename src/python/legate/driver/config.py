@@ -125,7 +125,6 @@ class Debugging(DataclassMixin):
     valgrind: bool
     freeze_on_error: bool
     gasnet_trace: bool
-    spy: bool
 
 
 @dataclass(frozen=True)

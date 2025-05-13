@@ -196,7 +196,6 @@ class TestDebugging:
             "valgrind",
             "freeze_on_error",
             "gasnet_trace",
-            "spy",
         }
 
     def test_mixin(self) -> None:
@@ -270,7 +269,6 @@ class TestConfig:
             valgrind=False,
             freeze_on_error=False,
             gasnet_trace=False,
-            spy=False,
         )
 
         assert c.info == m.Info(verbose=False, bind_detail=False)
@@ -313,7 +311,7 @@ class TestConfig:
     # ingest succeeds over a very wide range of command line combinations (one
     # option from most sub-configs)
     @pytest.mark.parametrize(
-        "args", powerset(("--spy", "--gdb", "--profile", "--cprofile"))
+        "args", powerset(("--gdb", "--profile", "--cprofile"))
     )
     def test_user_opts(self, args: tuple[str, ...]) -> None:
         c = m.Config(["legate", *list(args), "foo.py", "-a", "1"])

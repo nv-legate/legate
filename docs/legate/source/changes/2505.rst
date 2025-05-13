@@ -20,6 +20,8 @@ Changes: 25.05
 - Legate now expects to always initialize Legion during ``legate::start()``. If Legion is
   already initialized at this stage, an exception is thrown.
 - Drop support for Python 3.10 and add support for Python 3.13.
+- Command line option ``--spy`` has been removed.  The Legion spy tool is not at the
+  right level of abstraction for end-users.
 
 C++
 ---

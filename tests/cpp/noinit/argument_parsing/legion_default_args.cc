@@ -52,7 +52,6 @@ TEST_F(ComposeLegionDefaultArgsUnit, WithFlags)
                                                   "1",
                                                   "--numamem",
                                                   "0",
-                                                  "--spy",
                                                   "--profile",
                                                   "--logging",
                                                   "foo=info,baz=debug",
@@ -64,10 +63,9 @@ TEST_F(ComposeLegionDefaultArgsUnit, WithFlags)
   const auto expected = fmt::format(
     "-lg:local 0 "
     "-ll:onuma 0 "
-    "-lg:spy "
     "-lg:prof 1 "
     "-lg:prof_logfile \"{}\" "
-    "-level foo=2,baz=1,legion_spy=2,legion_prof=2 "
+    "-level foo=2,baz=1,legion_prof=2 "
     "-logfile \"{}\" "
     "-errlevel 4 "
     "-ll:force_kthreads ",
@@ -90,7 +88,6 @@ TEST_F(ComposeLegionDefaultArgsUnit, WithFlagsAndDefaultArgs)
                                                   "1",
                                                   "--numamem",
                                                   "0",
-                                                  "--spy",
                                                   "--profile",
                                                   "--logging",
                                                   "foo=info,baz=debug",
@@ -102,10 +99,9 @@ TEST_F(ComposeLegionDefaultArgsUnit, WithFlagsAndDefaultArgs)
   const auto expected = fmt::format(
     "-lg:local 0 "
     "-ll:onuma 0 "
-    "-lg:spy "
     "-lg:prof 1 "
     "-lg:prof_logfile \"{}\" "
-    "-level foo=2,baz=1,legion_spy=2,legion_prof=2 "
+    "-level foo=2,baz=1,legion_prof=2 "
     "-logfile \"{}\" "
     "-errlevel 4 "
     "-ll:force_kthreads "
@@ -157,7 +153,6 @@ TEST_F(ConfigureLegionUnit, WithFlags)
                                                   "1",
                                                   "--numamem",
                                                   "0",
-                                                  "--spy",
                                                   "--profile",
                                                   "--logging",
                                                   "foo=info,baz=debug",
@@ -169,10 +164,9 @@ TEST_F(ConfigureLegionUnit, WithFlags)
   const auto expected = fmt::format(
     "-lg:local 0 "
     "-ll:onuma 0 "
-    "-lg:spy "
     "-lg:prof 1 "
     "-lg:prof_logfile \"{}\" "
-    "-level foo=2,baz=1,legion_spy=2,legion_prof=2 "
+    "-level foo=2,baz=1,legion_prof=2 "
     "-logfile \"{}\" "
     "-errlevel 4 "
     "-ll:force_kthreads ",
@@ -203,7 +197,6 @@ TEST_F(ConfigureLegionUnit, WithFlagsAndDefaultArgs)
                                                   "1",
                                                   "--numamem",
                                                   "0",
-                                                  "--spy",
                                                   "--profile",
                                                   "--logging",
                                                   "foo=info,baz=debug",
@@ -215,10 +208,9 @@ TEST_F(ConfigureLegionUnit, WithFlagsAndDefaultArgs)
   const auto expected = fmt::format(
     "-lg:local 0 "
     "-ll:onuma 0 "
-    "-lg:spy "
     "-lg:prof 1 "
     "-lg:prof_logfile \"{}\" "
-    "-level foo=2,baz=1,legion_spy=2,legion_prof=2 "
+    "-level foo=2,baz=1,legion_prof=2 "
     "-logfile \"{}\" "
     "-errlevel 4 "
     "-ll:force_kthreads "

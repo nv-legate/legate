@@ -154,12 +154,6 @@ class LegateDriver:
                 f"legion_prof view {log_dir}/legate_*.prof to view them"
             )
 
-        if self.config.debugging.spy:
-            self.print_on_head_node(
-                f"Legion Spy logs have been generated under {log_dir}, run "
-                f"legion_spy.py {log_dir}/legate_*.log to process them"
-            )
-
         return ret
 
     def print_on_head_node(self, *args: Any, **kw: Any) -> None:  # noqa: D102

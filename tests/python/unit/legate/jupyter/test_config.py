@@ -76,7 +76,6 @@ class TestConfig:
             valgrind=False,
             freeze_on_error=False,
             gasnet_trace=False,
-            spy=False,
         )
 
         assert c.info == m.Info(verbose=False, bind_detail=False)

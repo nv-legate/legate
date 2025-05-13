@@ -124,7 +124,6 @@ TEST_F(ParseArgsUnit, NoArgs)
   ASSERT_THAT(parsed.zcmem, ScaledArgumentMatches(128));
   ASSERT_THAT(parsed.regmem, ScaledArgumentMatches(0));
   ASSERT_THAT(parsed.profile, ArgumentMatches(::testing::IsFalse()));
-  ASSERT_THAT(parsed.spy, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.log_levels, ArgumentMatches(std::string{}));
   ASSERT_THAT(parsed.log_dir, ArgumentMatches(std::filesystem::current_path()));
   ASSERT_THAT(parsed.log_to_file, ArgumentMatches(::testing::IsFalse()));
@@ -187,7 +186,6 @@ TEST_F(ParseArgsUnitNoEnv, NoArgs)
   ASSERT_THAT(parsed.zcmem, ScaledArgumentMatches(128));
   ASSERT_THAT(parsed.regmem, ScaledArgumentMatches(0));
   ASSERT_THAT(parsed.profile, ArgumentMatches(::testing::IsFalse()));
-  ASSERT_THAT(parsed.spy, ArgumentMatches(::testing::IsFalse()));
   ASSERT_THAT(parsed.log_levels,
               ArgumentMatches(std::string{"legate.mapper=info,legate.partitioner=debug"}));
   ASSERT_THAT(parsed.log_dir, ArgumentMatches(std::filesystem::current_path()));
@@ -532,34 +530,6 @@ TEST_F(ParseArgsUnit, ProfileEnabledAndArgs)
 
   ASSERT_THAT(parsed.profile, ArgumentMatches(::testing::IsTrue()));
   ASSERT_THAT(parsed.log_levels, ArgumentMatches(std::string{"foo=bar,legion_prof=info"}));
-}
-
-TEST_P(BoolArgs, Spy)
-{
-  const auto [arg_value, expected] = GetParam();
-  const auto parsed = legate::detail::parse_args({"dummy", "--spy", std::string{arg_value}});
-
-  ASSERT_THAT(parsed.spy, ArgumentMatches(expected));
-}
-
-TEST_F(ParseArgsUnit, SpyEnabled)
-{
-  const auto parsed = legate::detail::parse_args({"dummy", "--spy", "t"});
-
-  ASSERT_THAT(parsed.spy, ArgumentMatches(::testing::IsTrue()));
-  ASSERT_THAT(parsed.log_to_file, ArgumentMatches(::testing::IsTrue()));
-  ASSERT_THAT(parsed.log_levels, ArgumentMatches(std::string{"legion_spy=info"}));
-}
-
-TEST_F(ParseArgsUnit, SpyEnabledAndArgs)
-{
-  const auto parsed = legate::detail::parse_args(
-    {"dummy", "--spy", "t", "--log-to-file", "f", "--logging", "foo=bar"});
-
-  ASSERT_THAT(parsed.spy, ArgumentMatches(::testing::IsTrue()));
-  // --spy should override this
-  ASSERT_THAT(parsed.log_to_file, ArgumentMatches(::testing::IsTrue()));
-  ASSERT_THAT(parsed.log_levels, ArgumentMatches(std::string{"foo=bar,legion_spy=info"}));
 }
 
 TEST_F(ParseArgsUnit, LogLevels)

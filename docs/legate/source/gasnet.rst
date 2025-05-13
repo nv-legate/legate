@@ -362,7 +362,6 @@ Perlmutter:
       legion_lib_path       : /conda/envs/legate-gex-anaconda/lib
       realm_defines_h       : /conda/envs/legate-gex-anaconda/include/realm_defines.h
       legion_defines_h      : /conda/envs/legate-gex-anaconda/include/legion_defines.h
-      legion_spy_py         : /conda/envs/legate-gex-anaconda/bin/legion_spy.py
       legion_prof           : /conda/envs/legate-gex-anaconda/bin/legion_prof
       legion_module         : /conda/envs/legate-gex-anaconda/lib/python3.12/site-packages
       legion_jupyter_module : /conda/envs/legate-gex-anaconda/lib/python3.12/site-packages

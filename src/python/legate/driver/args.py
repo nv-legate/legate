@@ -440,15 +440,6 @@ debugging.add_argument(
 )
 
 
-debugging.add_argument(
-    "--spy",
-    dest="spy",
-    action="store_true",
-    required=False,
-    help="Whether to collect dataflow & task graph logs",
-)
-
-
 info = parser.add_argument_group("Informational")
 
 

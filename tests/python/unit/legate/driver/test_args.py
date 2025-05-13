@@ -123,9 +123,6 @@ class TestParserDefaults:
     def test_gasnet_trace(self) -> None:
         assert m.parser.get_default("gasnet_trace") is False
 
-    def test_spy(self) -> None:
-        assert m.parser.get_default("spy") is False
-
     # info
 
     def test_verbose(self) -> None:

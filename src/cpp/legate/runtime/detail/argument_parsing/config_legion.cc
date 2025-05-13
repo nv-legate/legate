@@ -41,18 +41,6 @@ std::string compose_legion_default_args(const ParsedArgs& parsed)
     ret += "-ll:onuma 0 ";
   }
 
-  if (parsed.spy.value()) {
-    if (!parsed.log_to_file.value() && !parsed.log_levels.value().empty()) {
-      // Spy output is dumped to the same place as other logging, so we must redirect all
-      // logging to a file, even if the user didn't ask for it.
-      log_legate().info() << "Logging output is being redirected to a file in "
-                          << parsed.log_dir.flag();
-    }
-    ret += "-lg:spy ";
-  }
-
-  // Do this after the --spy w/o --logdir check above, as the logging level legion_prof=2 doesn't
-  // actually print anything to the logs, so don't consider that a conflict.
   if (parsed.profile.value()) {
     fmt::format_to(std::back_inserter(ret),
                    "-lg:prof 1 "

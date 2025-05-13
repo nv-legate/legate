@@ -35,7 +35,6 @@ def test_ENV_PARTS_LEGATE() -> None:
         m.env_logdir,
         m.env_log_file,
         m.env_profile,
-        m.env_spy,
         m.env_freeze_on_error,
     ) == m.ENV_PARTS_LEGATE
 
@@ -120,18 +119,6 @@ class Test_profile:
         config = genconfig(["--profile"])
         result = m.env_profile(config)
         assert result == ("--profile",)
-
-
-class Test_spy:
-    def test_default(self, genconfig: GenConfig) -> None:
-        config = genconfig([])
-        result = m.env_spy(config)
-        assert result == ()
-
-    def test_value(self, genconfig: GenConfig) -> None:
-        config = genconfig(["--spy"])
-        result = m.env_spy(config)
-        assert result == ("--spy",)
 
 
 class Test_freeze_on_error:
