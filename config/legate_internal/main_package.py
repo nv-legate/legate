@@ -233,12 +233,18 @@ class Legate(MainPackage):
             return
 
         installed_packages = self.log_execute_command(
-            [sys.executable, "-m", "pip", "list"]
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "--disable-pip-version-check",
+                "list",
+            ]
         ).stdout.splitlines()
         # skip the "Package Version" header and divider lines
         installed_packages = installed_packages[2:]
         package_names = (
-            line.split(maxsplit=1)[0] for line in installed_packages
+            line.split(maxsplit=1)[0] for line in installed_packages if line
         )
         found_legate = any(name.startswith("legate") for name in package_names)
         self.log(f"Have pre-existing legate installation: {found_legate}")
