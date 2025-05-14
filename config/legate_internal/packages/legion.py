@@ -15,7 +15,8 @@ from aedifix.cmake import (
     CMakeString,
 )
 from aedifix.package import Package
-from aedifix.package.packages.python import Python
+from aedifix.packages.cuda import CUDA
+from aedifix.packages.python import Python
 from aedifix.util.argument_parser import (
     ArgSpec,
     ConfigArgument,
@@ -24,7 +25,6 @@ from aedifix.util.argument_parser import (
 from aedifix.util.exception import UnsatisfiableConfigurationError
 from aedifix.util.utility import dest_to_flag
 
-from .cuda import CUDA
 from .gasnet import GASNet
 from .mpi import MPI
 from .openmp import OpenMP

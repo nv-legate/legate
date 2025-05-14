@@ -42,7 +42,7 @@ export LEGATE_INSTALL_PREFIX_COMMAND = --prefix $(PREFIX)
 endif
 
 ifndef NINJA_STATUS
-LEGATE_ARCH_COLOR = $(shell $(LEGATE_DIR)/scripts/select_arch_color.py)
+LEGATE_ARCH_COLOR = $(shell aedifix-select-arch-color $(LEGATE_ARCH))
 COLOR_ARCH = $(shell $(CMAKE) -E cmake_echo_color --switch=$(COLOR) --$(LEGATE_ARCH_COLOR) $(LEGATE_ARCH))
 export NINJA_STATUS = [%f/%t] $(COLOR_ARCH): $(SOME_UNDEFINED_VARIABLE_TO_ADD_A_SPACE)
 endif

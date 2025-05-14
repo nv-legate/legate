@@ -64,8 +64,6 @@ find_package(CUDAToolkit QUIET)
 
 # Initialize these vars from the CLI, then fallback to an evar or a default value.
 legate_option(legate_BUILD_TESTS BUILD_TESTS "Whether to build the C++ tests" OFF)
-legate_option(legate_BUILD_EXAMPLES BUILD_EXAMPLES
-              "Whether to build the C++/python examples" OFF)
 legate_option(legate_BUILD_DOCS BUILD_DOCS "Build doxygen docs" OFF)
 legate_option(Legion_SPY USE_SPY "Enable detailed logging for Legion Spy" OFF)
 legate_option(Legion_USE_LLVM USE_LLVM "Use LLVM JIT operations" OFF)

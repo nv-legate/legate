@@ -21,11 +21,11 @@ from aedifix import (
     ConfigurationManager,
     MainPackage,
 )
-from aedifix.package.packages.cmake import CMake
-from aedifix.package.packages.python import Python
+from aedifix.packages.cmake import CMake
+from aedifix.packages.cuda import CUDA
+from aedifix.packages.python import Python
 
 from .packages.cal import CAL
-from .packages.cuda import CUDA
 from .packages.hdf5 import HDF5
 from .packages.legion import Legion
 from .packages.nccl import NCCL
@@ -50,11 +50,6 @@ class Legate(MainPackage):
         name="--with-tests",
         spec=ArgSpec(dest="with_tests", type=bool, help="Build tests"),
         cmake_var=CMAKE_VARIABLE("legate_BUILD_TESTS", CMakeBool),
-    )
-    legate_BUILD_EXAMPLES: Final = ConfigArgument(
-        name="--with-examples",
-        spec=ArgSpec(dest="with_examples", type=bool, help="Build examples"),
-        cmake_var=CMAKE_VARIABLE("legate_BUILD_EXAMPLES", CMakeBool),
     )
     legate_BUILD_BENCHMARKS: Final = ConfigArgument(
         name="--with-benchmarks",
@@ -183,9 +178,6 @@ class Legate(MainPackage):
             arch_name="LEGATE_ARCH",
             project_dir_name="LEGATE_DIR",
             project_dir_value=legate_dir,
-            project_config_file_template=(
-                Path(__file__).parent / "templates" / "variables.mk.in"
-            ),
             project_src_dir=legate_dir / "src",
             default_arch_file_path=(
                 legate_dir / "scripts" / "get_legate_arch.py"
@@ -343,9 +335,6 @@ class Legate(MainPackage):
         )
         self.set_flag_if_user_set(
             self.legate_BUILD_TESTS, self.cl_args.with_tests
-        )
-        self.set_flag_if_user_set(
-            self.legate_BUILD_EXAMPLES, self.cl_args.with_examples
         )
         self.set_flag_if_user_set(
             self.legate_BUILD_BENCHMARKS, self.cl_args.with_benchmarks
@@ -529,7 +518,6 @@ class Legate(MainPackage):
         return [
             ("Tests", m.get_cmake_variable(self.legate_BUILD_TESTS)),
             ("Docs", m.get_cmake_variable(self.legate_BUILD_DOCS)),
-            ("Examples", m.get_cmake_variable(self.legate_BUILD_EXAMPLES)),
             ("Benchmarks", m.get_cmake_variable(self.legate_BUILD_BENCHMARKS)),
             ("CAL", m.get_cmake_variable(self.legate_USE_CAL)),
             ("HDF5", m.get_cmake_variable(self.legate_USE_HDF5)),

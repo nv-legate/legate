@@ -8,9 +8,8 @@ from typing import Final
 
 from aedifix.cmake import CMAKE_VARIABLE, CMakePath
 from aedifix.package import Package
+from aedifix.packages.cuda import CUDA
 from aedifix.util.argument_parser import ArgSpec, ConfigArgument
-
-from .cuda import CUDA
 
 
 class NCCL(Package):
