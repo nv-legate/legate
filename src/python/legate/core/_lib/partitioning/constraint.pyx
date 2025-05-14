@@ -107,7 +107,7 @@ cdef _ProxyArrayArgument _deduce_arg(
             return _outputs[idx]
         if kind == _ProxyArrayArgumentKind.REDUCTION:
             return _reductions[idx]
-        raise ValueError(kind)
+        raise ValueError(kind)  # pragma: no cover
 
     # Actually, we should never get here, because we check if the argument is
     # in param_names before we ever call this function, but good to have this
@@ -149,8 +149,8 @@ cdef _ProxyConstraint _handle_align(
     tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 2:
-        m = f"align got unexpected arguments '{args}'"
-        raise ValueError(m)
+        m = f"align got unexpected arguments '{args}'"  # pragma: no cover
+        raise ValueError(m)  # pragma: no cover
 
     cdef _ProxyArrayArgument lhs_ret, rhs_ret
 
@@ -206,8 +206,8 @@ cdef _ProxyConstraint _handle_bcast(
     tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 2:
-        m = f"broadcast got unexpected arguments '{args}'"
-        raise ValueError(m)
+        m = f"broadcast got unexpected arguments '{args}'"  # pragma: no cover
+        raise ValueError(m)  # pragma: no cover
 
     cdef _ProxyArrayArgument var
     cdef tuple[int, ...] axes
@@ -285,8 +285,8 @@ cdef _ProxyConstraint _handle_image(
     tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 3:
-        m = f"image got unexpected arguments '{args}'"
-        raise ValueError(m)
+        m = f"image got unexpected arguments '{args}'"  # pragma: no cover
+        raise ValueError(m)  # pragma: no cover
 
     cdef _ProxyArrayArgument func_ret, range_ret
     cdef ImageComputationHint hint
@@ -361,8 +361,8 @@ cdef _ProxyConstraint _handle_scale(
     tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 3:
-        m = f"scale got unexpected arguments '{args}'"
-        raise ValueError(m)
+        m = f"scale got unexpected arguments '{args}'"  # pragma: no cover
+        raise ValueError(m)  # pragma: no cover
 
     cdef _tuple[uint64_t] factors
     cdef _ProxyArrayArgument smaller_ret, bigger_ret
@@ -442,8 +442,8 @@ cdef _ProxyConstraint _handle_bloat(
     tuple[tuple[_ProxyArrayArgumentKind, ParamList], ...] task_args
 ):
     if len(args) != 4:
-        m = f"bloat got unexpected arguments '{args}'"
-        raise ValueError(m)
+        m = f"bloat got unexpected arguments '{args}'"  # pragma: no cover
+        raise ValueError(m)  # pragma: no cover
 
     cdef _ProxyArrayArgument source_ret, bloat_ret
     cdef _tuple[uint64_t] low_offsets, high_offsets

@@ -72,6 +72,12 @@ def repr_type_without_class(obj: type) -> str:
     return repr(obj).removeprefix("<class '").removesuffix("'>")
 
 
+class TestVariable:
+    def test_variable_properties(self, variable_x: Variable) -> None:
+        # for code coverage purposes
+        assert repr(variable_x) == str(variable_x)
+
+
 class TestAlign:
     def test_create_from_str(self) -> None:
         constraint = lg.align("x", "y")
@@ -90,6 +96,7 @@ class TestAlign:
             r"X1{dummy_task\.<locals>\.foo:\d+}\)"
         )
         assert expected_re.match(str(constraint)) is not None
+        assert repr(constraint) == str(constraint)
 
     def test_create_bad(self, variable_x: Variable) -> None:
         # repr(Variable) -> "<class 'legate.asdasd.Variable'>"

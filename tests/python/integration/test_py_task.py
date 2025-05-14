@@ -17,13 +17,21 @@ from legate.core import (
     TaskTarget,
     Type,
     VariantCode,
+    align,
     bloat,
     get_legate_runtime,
     image,
     scale,
     types as ty,
 )
-from legate.core.task import InputArray, InputStore, OutputStore, task
+from legate.core.task import (
+    ADD,
+    InputArray,
+    InputStore,
+    OutputStore,
+    ReductionStore,
+    task,
+)
 
 from .utils import tasks, utils
 from .utils.data import ARRAY_TYPES, LARGE_SHAPES, SCALAR_VALS, SHAPES
@@ -218,6 +226,27 @@ class TestPyTask:
         tasks.array_sum_task(in_store, out_store)
         np.testing.assert_allclose(out_arr, np.sum(in_arr))
 
+    def test_reduction_constraint(self) -> None:
+        runtime = get_legate_runtime()
+        in_arr = np.arange(10, dtype=np.float64)
+        in_store = runtime.create_store_from_buffer(
+            ty.float64, in_arr.shape, in_arr, False
+        )
+
+        @task(
+            variants=tuple(VariantCode), constraints=(align("store", "out"),)
+        )
+        def array_sum_task(
+            store: InputStore, out: ReductionStore[ADD]
+        ) -> None:
+            out_arr = tasks.asarray(out.get_inline_allocation())
+            store_arr = tasks.asarray(store.get_inline_allocation())
+            out_arr[:] = store_arr.sum()
+
+        out_arr, out_store = utils.zero_array_and_store(ty.float64, (10,))
+        array_sum_task(in_store, out_store)
+        np.testing.assert_allclose(out_arr, np.sum(in_arr))
+
     @pytest.mark.parametrize(
         "hint",
         (
@@ -352,6 +381,30 @@ class TestPyTask:
 
             @task
             def _(_: InputStore | InputArray | None) -> None:
+                pass
+
+    def test_constraint_invalid_var_name(self) -> None:
+        msg = 'constraint argument "foo" not in set of parameters: '
+        with pytest.raises(ValueError, match=msg):
+
+            @task(
+                variants=tuple(VariantCode), constraints=(align("foo", "bar"),)
+            )
+            def fill_task(in_store: InputStore, out: OutputStore) -> None:
+                pass
+
+    def test_constraint_on_scalar(self) -> None:
+        msg = re.escape(
+            "Could not find val in task arguments: "
+            "((0, ()), (1, ('out',)), (2, ()))"
+        )
+        with pytest.raises(ValueError, match=msg):
+            # looking at the comment in constraint._deduce_arg this constraint
+            # is expected to fail, but it's not, so maybe this should be a bug?
+            @task(
+                variants=tuple(VariantCode), constraints=(align("val", "out"),)
+            )
+            def fill_task(val: int, out: OutputStore) -> None:
                 pass
 
 
