@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Runtime &#8212; NVIDIA legate (25.05.00.dev154+gf8b70e5d)</title>
+    <title>Runtime &#8212; NVIDIA legate (25.05.00.dev157+g898d8a22)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=704e8aa5"></script>
+    <script src="../../_static/documentation_options.js?v=eb640a3f"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev157+g898d8a22) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev157+g898d8a22) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev154+gf8b70e5d)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev157+g898d8a22)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev157+g898d8a22) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev157+g898d8a22) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev154+gf8b70e5d)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev157+g898d8a22)</p>
   
 </a>
 
@@ -372,6 +372,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../python/variable.html">Variables</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/library.html">Library</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/scope.html">Execution Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/parallel_policy.html">ParallelPolicy</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/types.html">Types</a></li>
 </ul>
 </details></li>
@@ -403,6 +404,7 @@
 <li class="toctree-l3"><a class="reference internal" href="partitioning.html">Partitioning</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">Runtime</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tuning.html">Tuning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="types.html">Types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="typedefs.html">Typedefs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="task.html">Task</a></li>
@@ -1721,7 +1723,7 @@
 <dt class="sig sig-object cpp" id="_CPPv4N6legate7Runtime23raise_pending_exceptionEv">
 <span id="_CPPv3N6legate7Runtime23raise_pending_exceptionEv"></span><span id="_CPPv2N6legate7Runtime23raise_pending_exceptionEv"></span><span id="legate::Runtime::raise_pending_exception"></span><span class="target" id="classlegate_1_1Runtime_1ad731360e84cfc6adbe4de4db1a963348"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">raise_pending_exception</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate7Runtime23raise_pending_exceptionEv" title="Link to this definition">#</a><br /></dt>
 <dd><p>Raises a pending exception. </p>
-<p>When the exception mode of a scope is “deferred” (i.e., <a class="reference internal" href="util.html#classlegate_1_1Scope_1af63f054ac1044d6162bea031c068e064"><span class="std std-ref">Scope::exception_mode()</span></a> == <a class="reference internal" href="#group__runtime_1gga10d0b03a5e48346c4c15154499ce7f2eae3d9a2ed4146353ae729818f8bcc329d"><span class="std std-ref">ExceptionMode::DEFERRED</span></a>), the exceptions from tasks in the scope are not immediately handled, but are pushed to the pending exception queue. Accumulated pending exceptions are not flushed until raise_pending_exception is invoked. The function throws the first exception in the pending exception queue and clears the queue. If there is no pending exception to be raised, the function does nothing.</p>
+<p>When the exception mode of a scope is “deferred” (i.e., <a class="reference internal" href="tuning.html#classlegate_1_1Scope_1af63f054ac1044d6162bea031c068e064"><span class="std std-ref">Scope::exception_mode()</span></a> == <a class="reference internal" href="#group__runtime_1gga10d0b03a5e48346c4c15154499ce7f2eae3d9a2ed4146353ae729818f8bcc329d"><span class="std std-ref">ExceptionMode::DEFERRED</span></a>), the exceptions from tasks in the scope are not immediately handled, but are pushed to the pending exception queue. Accumulated pending exceptions are not flushed until raise_pending_exception is invoked. The function throws the first exception in the pending exception queue and clears the queue. If there is no pending exception to be raised, the function does nothing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Throws<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">legate</span><span class="p">::</span><a class="reference internal" href="task.html#_CPPv4N6legate13TaskExceptionE" title="legate::TaskException"><span class="n">TaskException</span></a></span></span> – When there is a pending exception to raise </p>

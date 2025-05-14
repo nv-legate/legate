@@ -1,0 +1,36 @@
+﻿legate.core.ParallelPolicy
+==========================
+
+.. currentmodule:: legate.core
+
+.. autoclass:: ParallelPolicy
+
+   .. automethod:: ParallelPolicy.__init__
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+      :toctree: .
+   
+      ~ParallelPolicy.overdecompose_factor
+      ~ParallelPolicy.streaming
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :toctree: .
+   
+      ~ParallelPolicy.__eq__
+      ~ParallelPolicy.__ge__
+      ~ParallelPolicy.__gt__
+      ~ParallelPolicy.__le__
+      ~ParallelPolicy.__lt__
+      ~ParallelPolicy.__ne__
+   
+   

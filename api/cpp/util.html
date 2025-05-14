@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Util &#8212; NVIDIA legate (25.05.00.dev154+gf8b70e5d)</title>
+    <title>Util &#8212; NVIDIA legate (25.05.00.dev157+g898d8a22)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=704e8aa5"></script>
+    <script src="../../_static/documentation_options.js?v=eb640a3f"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev157+g898d8a22) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev157+g898d8a22) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev154+gf8b70e5d)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev157+g898d8a22)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev154+gf8b70e5d) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.05.00.dev157+g898d8a22) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.05.00.dev157+g898d8a22) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.05.00.dev154+gf8b70e5d)</p>
+    <p class="title logo__title">NVIDIA legate (25.05.00.dev157+g898d8a22)</p>
   
 </a>
 
@@ -372,6 +372,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../python/variable.html">Variables</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/library.html">Library</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/scope.html">Execution Scope</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../python/parallel_policy.html">ParallelPolicy</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../python/types.html">Types</a></li>
 </ul>
 </details></li>
@@ -403,6 +404,7 @@
 <li class="toctree-l3"><a class="reference internal" href="partitioning.html">Partitioning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="runtime.html">Runtime</a></li>
 <li class="toctree-l3"><a class="reference internal" href="mapping.html">Mapping</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tuning.html">Tuning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="types.html">Types</a></li>
 <li class="toctree-l3"><a class="reference internal" href="typedefs.html">Typedefs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="task.html">Task</a></li>
@@ -1176,272 +1178,6 @@ This macro behaves identically to <code class="docutils literal notranslate"><sp
 
 </div>
 <dl class="cpp class">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5ScopeE">
-<span id="_CPPv3N6legate5ScopeE"></span><span id="_CPPv2N6legate5ScopeE"></span><span id="legate::Scope"></span><span class="target" id="classlegate_1_1Scope"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><a class="headerlink" href="#_CPPv4N6legate5ScopeE" title="Link to this definition">#</a><br /></dt>
-<dd><div class="docutils container">
-<em>#include &lt;legate/runtime/scope.h&gt;</em></div>
-<p>A helper class to configure task execution. </p>
-<p>The <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> class offers APIs to configure runtime parameters for task execution. The parameters set by a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object are effective only for the lifetime of the object. Currently, <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> can be used to configure the following parameters:</p>
-<p>1) Task priority: Each task is associated with a priority value. The higher the value, the earlier among a set of ready-to-run tasks the task will get scheduled for execution. (the task with a higher priority, however, does not preempt another with a lower priority that is already running on the processor.) Task priorities are a signed 32-bit integer value. By default, all tasks get assigned to 0 for the priorities.</p>
-<p>2) Provenance: User programs or libraries often want to attach provenance information to each of their operations and have it rendered in profiling outputs. Such information can be passed as a string via a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object, which then will be attached to all operations issued within the <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a>’s lifetime.</p>
-<p>3) Machine: By default, Legate operations target the entire machine available for the program. When a user program wants to assign a subset of the machine to its operations, it can subdivide the machine using the machine API (see <code class="docutils literal notranslate"><span class="pre">Machine</span></code> for details) and set a sub-machine for the scope using <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a>. All operations within the lifetime of the <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object can use only the sub-machine for their execution.</p>
-<p>Each parameter can be set only once via each <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object. Multiple attempts to set the same parameter would raise an exception. </p>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeEv">
-<span id="_CPPv3N6legate5Scope5ScopeEv"></span><span id="_CPPv2N6legate5Scope5ScopeEv"></span><span id="legate::Scope::Scope"></span><span class="target" id="classlegate_1_1Scope_1aaf32cf24e705a797bdd9490fbd0394aa"></span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Constructs an empty <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object. </p>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeENSt7int32_tE">
-<span id="_CPPv3N6legate5Scope5ScopeENSt7int32_tE"></span><span id="_CPPv2N6legate5Scope5ScopeENSt7int32_tE"></span><span id="legate::Scope::Scope__std::int32_t"></span><span class="target" id="classlegate_1_1Scope_1af43367a2db1ed5056c1b73895057a993"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">priority</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeENSt7int32_tE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Constructs a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> with a given task priority. </p>
-<p>Equivalent to <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Scope</span><span class="p">();</span>
-<span class="n">scope</span><span class="p">.</span><span class="n">set_priority</span><span class="p">(</span><span class="n">priority</span><span class="p">);</span>
-</pre></div>
-</div>
-</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>priority</strong> – Task priority to set to the scope </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeE13ExceptionMode">
-<span id="_CPPv3N6legate5Scope5ScopeE13ExceptionMode"></span><span id="_CPPv2N6legate5Scope5ScopeE13ExceptionMode"></span><span id="legate::Scope::Scope__ExceptionMode"></span><span class="target" id="classlegate_1_1Scope_1a71cf5362ce3b18dc634361a47dbf8689"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="runtime.html#_CPPv413ExceptionMode" title="ExceptionMode"><span class="n"><span class="pre">ExceptionMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">exception_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeE13ExceptionMode" title="Link to this definition">#</a><br /></dt>
-<dd><p>Constructs a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> with a given exception mode. </p>
-<p>Equivalent to <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Scope</span><span class="p">();</span>
-<span class="n">scope</span><span class="p">.</span><span class="n">set_exception_mode</span><span class="p">(</span><span class="n">exception_mode</span><span class="p">);</span>
-</pre></div>
-</div>
-</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>exception_mode</strong> – Exception mode to set to the scope </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeENSt6stringE">
-<span id="_CPPv3N6legate5Scope5ScopeENSt6stringE"></span><span id="_CPPv2N6legate5Scope5ScopeENSt6stringE"></span><span id="legate::Scope::Scope__ss"></span><span class="target" id="classlegate_1_1Scope_1a009dd9d97bfc274dc068b1af17781f72"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">provenance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeENSt6stringE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Constructs a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> with a given provenance string. </p>
-<p>Equivalent to <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Scope</span><span class="p">();</span>
-<span class="n">scope</span><span class="p">.</span><span class="n">set_provenance</span><span class="p">(</span><span class="n">provenance</span><span class="p">);</span>
-</pre></div>
-</div>
-</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>provenance</strong> – Provenance string to set to the scope </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope5ScopeERKN7mapping7MachineE">
-<span id="_CPPv3N6legate5Scope5ScopeERKN7mapping7MachineE"></span><span id="_CPPv2N6legate5Scope5ScopeERKN7mapping7MachineE"></span><span id="legate::Scope::Scope__mapping::MachineCR"></span><span class="target" id="classlegate_1_1Scope_1aa3532b5cbf52576927a127ca57fb7dd4"></span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Scope</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="mapping.html#_CPPv4N6legate7mapping7MachineE" title="legate::mapping::Machine"><span class="n"><span class="pre">Machine</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">machine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope5ScopeERKN7mapping7MachineE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Constructs a <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> with a given machine. </p>
-<p>Equivalent to <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">scope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Scope</span><span class="p">();</span>
-<span class="n">scope</span><span class="p">.</span><span class="n">set_machine</span><span class="p">(</span><span class="n">machine</span><span class="p">);</span>
-</pre></div>
-</div>
-</p>
-<p>The given machine is intersected with the machine from the outer scope</p>
-<p><div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><a class="reference internal" href="#classlegate_1_1Scope_1a626ff10d20738566527463e4c3a44ed8"><span class="std std-ref">set_machine</span></a></p>
-</div>
-</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>machine</strong> – Machine to use within the scope</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the intersected machine is empty</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NO6legate5Scope13with_priorityENSt7int32_tE">
-<span id="_CPPv3NO6legate5Scope13with_priorityENSt7int32_tE"></span><span id="_CPPv2NO6legate5Scope13with_priorityENSt7int32_tE"></span><span id="legate::Scope::with_priority__std::int32_tO"></span><span class="target" id="classlegate_1_1Scope_1aedec44b5f8b316f161ba7c131b80a454"></span><a class="reference internal" href="#_CPPv4N6legate5ScopeE" title="legate::Scope"><span class="n"><span class="pre">Scope</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_priority</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">priority</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4NO6legate5Scope13with_priorityENSt7int32_tE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Sets a given task priority to the scope. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>priority</strong> – Task priority to set to the scope</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a task priority has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NO6legate5Scope19with_exception_modeE13ExceptionMode">
-<span id="_CPPv3NO6legate5Scope19with_exception_modeE13ExceptionMode"></span><span id="_CPPv2NO6legate5Scope19with_exception_modeE13ExceptionMode"></span><span id="legate::Scope::with_exception_mode__ExceptionModeO"></span><span class="target" id="classlegate_1_1Scope_1a38cd61db0aba0e2499aa377c0f619b7f"></span><a class="reference internal" href="#_CPPv4N6legate5ScopeE" title="legate::Scope"><span class="n"><span class="pre">Scope</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_exception_mode</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="runtime.html#_CPPv413ExceptionMode" title="ExceptionMode"><span class="n"><span class="pre">ExceptionMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">exception_mode</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4NO6legate5Scope19with_exception_modeE13ExceptionMode" title="Link to this definition">#</a><br /></dt>
-<dd><p>Sets a given exception mode to the scope. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>exception_mode</strong> – Exception mode to set to the scope</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If an exception mode has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NO6legate5Scope15with_provenanceENSt6stringE">
-<span id="_CPPv3NO6legate5Scope15with_provenanceENSt6stringE"></span><span id="_CPPv2NO6legate5Scope15with_provenanceENSt6stringE"></span><span id="legate::Scope::with_provenance__ssO"></span><span class="target" id="classlegate_1_1Scope_1ab90f3870914fe0f789fe7cd67b0d143d"></span><a class="reference internal" href="#_CPPv4N6legate5ScopeE" title="legate::Scope"><span class="n"><span class="pre">Scope</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_provenance</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">provenance</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4NO6legate5Scope15with_provenanceENSt6stringE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Sets a given provenance string to the scope. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>provenance</strong> – Provenance string to set to the scope</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a provenance string has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4NO6legate5Scope12with_machineERKN7mapping7MachineE">
-<span id="_CPPv3NO6legate5Scope12with_machineERKN7mapping7MachineE"></span><span id="_CPPv2NO6legate5Scope12with_machineERKN7mapping7MachineE"></span><span id="legate::Scope::with_machine__mapping::MachineCRO"></span><span class="target" id="classlegate_1_1Scope_1a050534a929749b11a3321cd20ec89257"></span><a class="reference internal" href="#_CPPv4N6legate5ScopeE" title="legate::Scope"><span class="n"><span class="pre">Scope</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">with_machine</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="mapping.html#_CPPv4N6legate7mapping7MachineE" title="legate::mapping::Machine"><span class="n"><span class="pre">Machine</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">machine</span></span></em><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4NO6legate5Scope12with_machineERKN7mapping7MachineE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Sets a given machine to the scope. </p>
-<p>
-The given machine is intersected with the machine from the outer scope</p>
-<p><div class="admonition seealso">
-<p class="admonition-title">See also</p>
-<p><a class="reference internal" href="#classlegate_1_1Scope_1a626ff10d20738566527463e4c3a44ed8"><span class="std std-ref">set_machine</span></a></p>
-</div>
-</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>machine</strong> – Machine to use within the scope</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the intersected machine is empty </p></li>
-<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a machine has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope12set_priorityENSt7int32_tE">
-<span id="_CPPv3N6legate5Scope12set_priorityENSt7int32_tE"></span><span id="_CPPv2N6legate5Scope12set_priorityENSt7int32_tE"></span><span id="legate::Scope::set_priority__std::int32_t"></span><span class="target" id="classlegate_1_1Scope_1aac608215e16e04ccb0bb60d7c774f4b7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_priority</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">priority</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope12set_priorityENSt7int32_tE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Sets a given task priority to the scope. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>priority</strong> – Task priority to set to the scope</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a task priority has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope18set_exception_modeE13ExceptionMode">
-<span id="_CPPv3N6legate5Scope18set_exception_modeE13ExceptionMode"></span><span id="_CPPv2N6legate5Scope18set_exception_modeE13ExceptionMode"></span><span id="legate::Scope::set_exception_mode__ExceptionMode"></span><span class="target" id="classlegate_1_1Scope_1a5034e57b09b99d91ce02ebd358d1fe08"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_exception_mode</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="runtime.html#_CPPv413ExceptionMode" title="ExceptionMode"><span class="n"><span class="pre">ExceptionMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">exception_mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope18set_exception_modeE13ExceptionMode" title="Link to this definition">#</a><br /></dt>
-<dd><p>Sets a given exception mode to the scope. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>exception_mode</strong> – Exception mode to set to the scope</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If an exception mode has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope14set_provenanceENSt6stringE">
-<span id="_CPPv3N6legate5Scope14set_provenanceENSt6stringE"></span><span id="_CPPv2N6legate5Scope14set_provenanceENSt6stringE"></span><span id="legate::Scope::set_provenance__ss"></span><span class="target" id="classlegate_1_1Scope_1a2be43396290c561a5e71d61a7cb121b4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_provenance</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">provenance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope14set_provenanceENSt6stringE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Sets a given provenance string to the scope. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>provenance</strong> – Provenance string to set to the scope</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a provenance string has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope11set_machineERKN7mapping7MachineE">
-<span id="_CPPv3N6legate5Scope11set_machineERKN7mapping7MachineE"></span><span id="_CPPv2N6legate5Scope11set_machineERKN7mapping7MachineE"></span><span id="legate::Scope::set_machine__mapping::MachineCR"></span><span class="target" id="classlegate_1_1Scope_1a626ff10d20738566527463e4c3a44ed8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_machine</span></span></span><span class="sig-paren">(</span><em class="sig-param"><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="mapping.html#_CPPv4N6legate7mapping7MachineE" title="legate::mapping::Machine"><span class="n"><span class="pre">Machine</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">machine</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope11set_machineERKN7mapping7MachineE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Sets a given machine to the scope. </p>
-<p>The given machine is intersected with the machine from the outer scope, so the actual machine used in this scope will always be a subset of the outer scope’s.</p>
-<p>For example, if the machine of the current scope has GPUs 2, 3, 4, and 5, and a new scope is created with another machine with GPUs 3, 4, 5, and 6, then only the GPUs 3, 4, and 5 will be set to the new scope.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>machine</strong> – Machine to use within the scope</p>
-</dd>
-<dt class="field-even">Throws<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">runtime_error</span></span></span> – If the intersected machine is empty </p></li>
-<li><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">invalid_argument</span></span></span> – If a machine has already been set via this <a class="reference internal" href="#classlegate_1_1Scope"><span class="std std-ref">Scope</span></a> object </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope8priorityEv">
-<span id="_CPPv3N6legate5Scope8priorityEv"></span><span id="_CPPv2N6legate5Scope8priorityEv"></span><span id="legate::Scope::priority"></span><span class="target" id="classlegate_1_1Scope_1a78cc7bc455fd23435b065b280571b676"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">priority</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope8priorityEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns the task priority of the current scope. </p>
-<p>return Current task priority </p>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope14exception_modeEv">
-<span id="_CPPv3N6legate5Scope14exception_modeEv"></span><span id="_CPPv2N6legate5Scope14exception_modeEv"></span><span id="legate::Scope::exception_mode"></span><span class="target" id="classlegate_1_1Scope_1af63f054ac1044d6162bea031c068e064"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">legate</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ExceptionMode</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">exception_mode</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope14exception_modeEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns the exception mode of the current scope. </p>
-<p>return Current exception mode </p>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope10provenanceEv">
-<span id="_CPPv3N6legate5Scope10provenanceEv"></span><span id="_CPPv2N6legate5Scope10provenanceEv"></span><span id="legate::Scope::provenance"></span><span class="target" id="classlegate_1_1Scope_1a5660a1db0747a8a6c63caf91763ff4f7"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">provenance</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope10provenanceEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns the provenance string of the current scope. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Current provenance string </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope7machineEv">
-<span id="_CPPv3N6legate5Scope7machineEv"></span><span id="_CPPv2N6legate5Scope7machineEv"></span><span id="legate::Scope::machine"></span><span class="target" id="classlegate_1_1Scope_1a63868c9d7ecdf5f7befbbb471783c54a"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="mapping.html#_CPPv4N6legate7mapping7MachineE" title="legate::mapping::Machine"><span class="n"><span class="pre">Machine</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">machine</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6legate5Scope7machineEv" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns the machine of the current scope. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Current machine </p>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
-<dl class="cpp class">
-<dt class="sig sig-object cpp" id="_CPPv4N6legate5Scope4ImplE">
-<span id="_CPPv3N6legate5Scope4ImplE"></span><span id="_CPPv2N6legate5Scope4ImplE"></span><span id="legate::Scope::Impl"></span><span class="target" id="classlegate_1_1Scope_1_1Impl"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Impl</span></span></span><a class="headerlink" href="#_CPPv4N6legate5Scope4ImplE" title="Link to this definition">#</a><br /></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="cpp class">
 <dt class="sig sig-object cpp" id="_CPPv4N6legate6timing4TimeE">
 <span id="_CPPv3N6legate6timing4TimeE"></span><span id="_CPPv2N6legate6timing4TimeE"></span><span id="legate::timing::Time"></span><span class="target" id="classlegate_1_1timing_1_1Time"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Time</span></span></span><a class="headerlink" href="#_CPPv4N6legate6timing4TimeE" title="Link to this definition">#</a><br /></dt>
 <dd><div class="docutils container">
@@ -1842,27 +1578,6 @@ On destruction, a <a class="reference internal" href="#classlegate_1_1ScopeFail"
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0DpE13type_dispatchDcN4Type4CodeERR7FunctorDpRR6Fnargs"><code class="docutils literal notranslate"><span class="pre">type_dispatch()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E16make_scope_guard10ScopeGuardI1FERR1F"><code class="docutils literal notranslate"><span class="pre">make_scope_guard()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0E15make_scope_fail9ScopeFailI1FERR1F"><code class="docutils literal notranslate"><span class="pre">make_scope_fail()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5ScopeE"><code class="docutils literal notranslate"><span class="pre">legate::Scope</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeEv"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeENSt7int32_tE"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeE13ExceptionMode"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeENSt6stringE"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope5ScopeERKN7mapping7MachineE"><code class="docutils literal notranslate"><span class="pre">Scope()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NO6legate5Scope13with_priorityENSt7int32_tE"><code class="docutils literal notranslate"><span class="pre">with_priority()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NO6legate5Scope19with_exception_modeE13ExceptionMode"><code class="docutils literal notranslate"><span class="pre">with_exception_mode()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NO6legate5Scope15with_provenanceENSt6stringE"><code class="docutils literal notranslate"><span class="pre">with_provenance()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NO6legate5Scope12with_machineERKN7mapping7MachineE"><code class="docutils literal notranslate"><span class="pre">with_machine()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope12set_priorityENSt7int32_tE"><code class="docutils literal notranslate"><span class="pre">set_priority()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope18set_exception_modeE13ExceptionMode"><code class="docutils literal notranslate"><span class="pre">set_exception_mode()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope14set_provenanceENSt6stringE"><code class="docutils literal notranslate"><span class="pre">set_provenance()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope11set_machineERKN7mapping7MachineE"><code class="docutils literal notranslate"><span class="pre">set_machine()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope8priorityEv"><code class="docutils literal notranslate"><span class="pre">priority()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope14exception_modeEv"><code class="docutils literal notranslate"><span class="pre">exception_mode()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope10provenanceEv"><code class="docutils literal notranslate"><span class="pre">provenance()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope7machineEv"><code class="docutils literal notranslate"><span class="pre">machine()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate5Scope4ImplE"><code class="docutils literal notranslate"><span class="pre">legate::Scope::Impl</span></code></a></li>
-</ul>
-</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6timing4TimeE"><code class="docutils literal notranslate"><span class="pre">legate::timing::Time</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6legate6timing4Time5valueEv"><code class="docutils literal notranslate"><span class="pre">value()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6legate6timing4Time4ImplE"><code class="docutils literal notranslate"><span class="pre">legate::timing::Time::Impl</span></code></a></li>

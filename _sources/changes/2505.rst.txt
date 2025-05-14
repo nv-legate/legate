@@ -74,6 +74,13 @@ C++
 - Add ``legate::LegateTask::register_variants()`` overload which accepts a
   ``legate::TaskConfig``.
 
+.. rubric:: Tuning
+
+- Move ``legate::Scope`` to a separate group (``tuning``) in documentation.
+- ``legate/runtime/scope.h`` is now ``legate/tuning/scope.h``.
+- Add ``legate::ParallelPolicy`` to describe parallelization policies for a scope.
+  ``legate::ParallelPolicy`` objects can be used with ``legate::Scope``.
+
 .. rubric:: Types
 
 .. rubric:: Runtime
@@ -129,6 +136,12 @@ Python
 - Remove ``legate.core.task.PyTask.UNREGISTERED_ID``.
 - Add support for unbound stores in Python tasks.
 - Add ``legate.core.TaskLocalBuffer``.
+
+.. rubric:: Tuning
+
+- Move ``legate.core.Scope`` to a separate group (``tuning``) in documentation.
+- Add ``legate.core.ParallelPolicy`` to describe parallelization policies for a scope.
+  ``legate.core.ParallelPolicy`` objects can be used with ``legate.core.Scope``.
 
 .. rubric:: Types
 

@@ -1,0 +1,6 @@
+legate.core.ParallelPolicy.\_\_gt\_\_
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: ParallelPolicy.__gt__

@@ -1,0 +1,6 @@
+legate.core.Scope.parallel\_policy
+==================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: Scope.parallel_policy

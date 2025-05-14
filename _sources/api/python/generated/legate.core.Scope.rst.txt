@@ -28,6 +28,7 @@
       ~Scope.__exit__
       ~Scope.exception_mode
       ~Scope.machine
+      ~Scope.parallel_policy
       ~Scope.priority
       ~Scope.provenance
    

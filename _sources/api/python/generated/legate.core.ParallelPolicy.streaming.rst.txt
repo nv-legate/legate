@@ -1,0 +1,6 @@
+legate.core.ParallelPolicy.streaming
+====================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: ParallelPolicy.streaming

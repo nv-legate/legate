@@ -1,0 +1,6 @@
+legate.core.ParallelPolicy.overdecompose\_factor
+================================================
+
+.. currentmodule:: legate.core
+
+.. autoattribute:: ParallelPolicy.overdecompose_factor

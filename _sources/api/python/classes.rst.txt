@@ -28,6 +28,7 @@ Classes
    variable
    library
    scope
+   parallel_policy
    types
 .. partition
 .. legion

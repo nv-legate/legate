@@ -1,0 +1,6 @@
+legate.core.ParallelPolicy.\_\_eq\_\_
+=====================================
+
+.. currentmodule:: legate.core
+
+.. automethod:: ParallelPolicy.__eq__
