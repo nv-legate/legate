@@ -11,6 +11,7 @@
 #include <legate/comm/detail/comm_cpu_factory.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/task_launcher.h>
+#include <legate/tuning/parallel_policy.h>
 
 namespace legate::detail::comm::cpu {
 
@@ -42,8 +43,12 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
   auto comm_id =
     Legion::Future::from_value<std::int32_t>(coll::BackendNetwork::get_network()->init_comm());
   // Find a mapping of all participants
+  //
+  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
+  // admissible to streaming; second, the over-decomposition factor is already factored in the
+  // number of tasks.
   detail::TaskLauncher init_cpucoll_mapping_launcher{
-    *core_library_, machine, init_mapping_task_type::TASK_CONFIG.task_id(), tag};
+    *core_library_, machine, ParallelPolicy{}, init_mapping_task_type::TASK_CONFIG.task_id(), tag};
 
   init_cpucoll_mapping_launcher.add_future(comm_id);
   // Setting this according to the return type on the task variant. Have to do this manually because
@@ -53,8 +58,12 @@ Legion::FutureMap Factory<IT, IMT, FT>::initialize_(const mapping::detail::Machi
   const auto mapping = init_cpucoll_mapping_launcher.execute(launch_domain);
 
   // Then create communicators on participating processors
+  //
+  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
+  // admissible to streaming; second, the over-decomposition factor is already factored in the
+  // number of tasks.
   detail::TaskLauncher init_cpucoll_launcher{
-    *core_library_, machine, init_task_type::TASK_CONFIG.task_id(), tag};
+    *core_library_, machine, ParallelPolicy{}, init_task_type::TASK_CONFIG.task_id(), tag};
 
   init_cpucoll_launcher.add_future(comm_id);
   // Setting this according to the return type on the task variant. Have to do this manually because
@@ -78,8 +87,11 @@ void Factory<IT, IMT, FT>::finalize_(const mapping::detail::Machine& machine,
   const Domain launch_domain{
     Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
   const auto tag = static_cast<Legion::MappingTagID>(machine.preferred_variant());
+  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
+  // admissible to streaming; second, the over-decomposition factor is already factored in the
+  // number of tasks.
   detail::TaskLauncher launcher{
-    *core_library_, machine, finalize_task_type::TASK_CONFIG.task_id(), tag};
+    *core_library_, machine, ParallelPolicy{}, finalize_task_type::TASK_CONFIG.task_id(), tag};
 
   launcher.set_concurrent(true);
   launcher.add_future_map(communicator);

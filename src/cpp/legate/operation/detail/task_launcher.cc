@@ -51,76 +51,30 @@ void TaskLauncher::add_future_map(Legion::FutureMap future_map)
   future_maps_.push_back(std::move(future_map));
 }
 
+void TaskLauncher::set_concurrent(bool is_concurrent)
+{
+  if (is_concurrent && parallel_policy().streaming()) {
+    throw TracedException<std::runtime_error>{
+      "Concurrent Tasks are not allowed inside a Streaming Scope. Please place the concurrent task "
+      "outside the Streaming Scope."};
+  }
+
+  concurrent_ = is_concurrent;
+}
+
 void TaskLauncher::add_communicator(Legion::FutureMap communicator)
 {
   communicators_.push_back(std::move(communicator));
   set_concurrent(true);
 }
 
-namespace {
-
-void analyze(StoreAnalyzer& analyzer, const std::vector<std::unique_ptr<Analyzable>>& args)
-{
-  for (auto&& arg : args) {
-    arg->analyze(analyzer);
-  }
-}
-
-void pack_args(BufferBuilder& buffer,
-               StoreAnalyzer& analyzer,
-               const std::vector<std::unique_ptr<Analyzable>>& args)
-{
-  buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
-  for (auto&& arg : args) {
-    arg->pack(buffer, analyzer);
-  }
-}
-
-void pack_args(BufferBuilder& buffer, const std::vector<ScalarArg>& args)
-{
-  buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
-  for (auto&& arg : args) {
-    arg.pack(buffer);
-  }
-}
-
-}  // namespace
-
 Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 {
   StoreAnalyzer analyzer;
-  analyzer.relax_interference_checks(relax_interference_checks_);
 
-  try {
-    analyze(analyzer, inputs_);
-    analyze(analyzer, outputs_);
-    analyze(analyzer, reductions_);
-  } catch (const InterferingStoreError&) {
-    report_interfering_stores_();
-  }
-  for (auto&& future : futures_) {
-    analyzer.insert(future);
-  }
-  for (auto&& future_map : future_maps_) {
-    analyzer.insert(future_map);
-  }
+  analyze_arguments_(/* parallel */ true, &analyzer);
 
-  // Coalesce region requirements before packing task arguments
-  // as the latter requires requirement indices to be finalized
-  analyzer.analyze();
-
-  BufferBuilder task_arg;
-
-  task_arg.pack(library_);
-  pack_args(task_arg, analyzer, inputs_);
-  pack_args(task_arg, analyzer, outputs_);
-  pack_args(task_arg, analyzer, reductions_);
-  pack_args(task_arg, scalars_);
-  task_arg.pack<std::size_t>(future_size_);
-  task_arg.pack<bool>(can_throw_exception_);
-  task_arg.pack<bool>(can_elide_device_ctx_sync_);
-  task_arg.pack<bool>(insert_barrier_);
-  task_arg.pack<std::uint32_t>(static_cast<std::uint32_t>(communicators_.size()));
+  auto task_arg = pack_task_arg_(/* parallel */ true, &analyzer);
 
   BufferBuilder mapper_arg;
 
@@ -171,35 +125,11 @@ Legion::FutureMap TaskLauncher::execute(const Legion::Domain& launch_domain)
 
 Legion::Future TaskLauncher::execute_single()
 {
-  // Note that we don't need to relax the interference checks in this code path, as the stores are
-  // not partitioned and mixed-mode accesses on a store would get mapped to read-write permission.
   StoreAnalyzer analyzer;
 
-  analyze(analyzer, inputs_);
-  analyze(analyzer, outputs_);
-  analyze(analyzer, reductions_);
-  for (auto&& future : futures_) {
-    analyzer.insert(future);
-  }
+  analyze_arguments_(/* parallel */ false, &analyzer);
 
-  // Coalesce region requirements before packing task arguments
-  // as the latter requires requirement indices to be finalized
-  analyzer.analyze();
-
-  BufferBuilder task_arg;
-
-  task_arg.pack(library_);
-  pack_args(task_arg, analyzer, inputs_);
-  pack_args(task_arg, analyzer, outputs_);
-  pack_args(task_arg, analyzer, reductions_);
-  pack_args(task_arg, scalars_);
-  task_arg.pack<std::size_t>(future_size_);
-  task_arg.pack<bool>(can_throw_exception_);
-  task_arg.pack<bool>(can_elide_device_ctx_sync_);
-  // insert_barrier
-  task_arg.pack<bool>(false);
-  // # communicators
-  task_arg.pack<std::uint32_t>(0);
+  auto task_arg = pack_task_arg_(/* parallel */ false, &analyzer);
 
   BufferBuilder mapper_arg;
 
@@ -229,6 +159,95 @@ Legion::Future TaskLauncher::execute_single()
     arg->perform_invalidations();
   }
   return result;
+}
+
+namespace {
+
+void analyze(Span<const std::unique_ptr<Analyzable>> args, StoreAnalyzer& analyzer)
+{
+  for (auto&& arg : args) {
+    arg->analyze(analyzer);
+  }
+}
+
+void pack_args(BufferBuilder& buffer,
+               StoreAnalyzer& analyzer,
+               const std::vector<std::unique_ptr<Analyzable>>& args)
+{
+  buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
+  for (auto&& arg : args) {
+    arg->pack(buffer, analyzer);
+  }
+}
+
+void pack_args(BufferBuilder& buffer, const std::vector<ScalarArg>& args)
+{
+  buffer.pack<std::uint32_t>(static_cast<std::uint32_t>(args.size()));
+  for (auto&& arg : args) {
+    arg.pack(buffer);
+  }
+}
+
+}  // namespace
+
+void TaskLauncher::analyze_arguments_(bool parallel, StoreAnalyzer* analyzer)
+{
+  analyzer->relax_interference_checks(relax_interference_checks_);
+
+  try {
+    analyze(inputs_, *analyzer);
+    analyze(outputs_, *analyzer);
+    analyze(reductions_, *analyzer);
+  } catch (const InterferingStoreError&) {
+    report_interfering_stores_();
+  }
+
+  for (auto&& future : futures_) {
+    analyzer->insert(future);
+  }
+
+  if (parallel) {
+    // Future Maps are employed for tasks that can produce multiple future
+    // concurrently. The parallel flag indicates whether this is such a
+    // task or not (Index task with point tasks producing futures). In the
+    // other case we do not need a Future map as there would be only one
+    // Future.
+    for (auto&& future_map : future_maps_) {
+      analyzer->insert(future_map);
+    }
+  }
+
+  // Coalesce region requirements before packing task arguments
+  // as the latter requires requirement indices to be finalized
+  analyzer->analyze();
+}
+
+BufferBuilder TaskLauncher::pack_task_arg_(bool parallel, StoreAnalyzer* analyzer)
+{
+  BufferBuilder task_arg;
+
+  task_arg.pack(library_);
+  pack_args(task_arg, *analyzer, inputs_);
+  pack_args(task_arg, *analyzer, outputs_);
+  pack_args(task_arg, *analyzer, reductions_);
+  pack_args(task_arg, scalars_);
+  task_arg.pack<std::size_t>(future_size_);
+  task_arg.pack<bool>(can_throw_exception_);
+  task_arg.pack<bool>(can_elide_device_ctx_sync_);
+  if (parallel) {
+    // Tasks capable of producing multiple futures (Index task with point tasks
+    // producing futures) concurrently are marked as parallel.
+    // This kind of task can have one or more communicator as well as barriers.
+    task_arg.pack<bool>(insert_barrier_);
+    task_arg.pack<std::uint32_t>(static_cast<std::uint32_t>(communicators_.size()));
+  } else {
+    // insert_barrier
+    task_arg.pack<bool>(false);
+    // # communicators
+    task_arg.pack<std::uint32_t>(0);
+  }
+
+  return task_arg;
 }
 
 void TaskLauncher::pack_mapper_arg_(BufferBuilder& buffer)
@@ -301,6 +320,39 @@ void TaskLauncher::post_process_unbound_stores_(
   }
 }
 
+void TaskLauncher::post_process_unbound_store_(const Legion::Domain& launch_domain,
+                                               const OutputRegionArg* arg,
+                                               const Legion::OutputRequirement& req,
+                                               const Legion::FutureMap& weights,
+                                               const mapping::detail::Machine& machine,
+                                               const ParallelPolicy& parallel_policy)
+{
+  auto&& runtime  = Runtime::get_runtime();
+  auto&& part_mgr = runtime.partition_manager();
+  auto* store     = arg->store();
+  auto& shape     = store->shape();
+  // This must be done before importing the region field below, as the field manager expects the
+  // index space to be available
+  if (shape->unbound()) {
+    shape->set_index_space(req.parent.get_index_space());
+  }
+
+  auto region_field =
+    runtime.import_region_field(shape, req.parent, arg->field_id(), store->type()->size());
+  store->set_region_field(std::move(region_field));
+
+  // TODO(wonchanl): Need to handle key partitions for multi-dimensional unbound stores
+  if (store->dim() > 1) {
+    return;
+  }
+
+  auto partition = create_weighted(weights, launch_domain);
+  store->set_key_partition(machine, parallel_policy, partition);
+
+  const auto& index_partition = req.partition.get_index_partition();
+  part_mgr.record_index_partition(req.parent.get_index_space(), *partition, index_partition);
+}
+
 void TaskLauncher::post_process_unbound_stores_(
   const Legion::FutureMap& result,
   const Legion::Domain& launch_domain,
@@ -310,58 +362,33 @@ void TaskLauncher::post_process_unbound_stores_(
     return;
   }
 
-  auto&& runtime  = Runtime::get_runtime();
-  auto&& part_mgr = runtime.partition_manager();
+  auto&& runtime = Runtime::get_runtime();
 
   import_output_regions_(runtime, output_requirements);
-
-  auto post_process_unbound_store =
-    [&runtime, &part_mgr, &launch_domain](
-      auto*& arg, const auto& req, const auto& weights, const auto& machine) {
-      auto* store = arg->store();
-      auto& shape = store->shape();
-      // This must be done before importing the region field below, as the field manager expects the
-      // index space to be available
-      if (shape->unbound()) {
-        shape->set_index_space(req.parent.get_index_space());
-      }
-
-      auto region_field =
-        runtime.import_region_field(shape, req.parent, arg->field_id(), store->type()->size());
-      store->set_region_field(std::move(region_field));
-
-      // TODO(wonchanl): Need to handle key partitions for multi-dimensional unbound stores
-      if (store->dim() > 1) {
-        return;
-      }
-
-      auto partition = create_weighted(weights, launch_domain);
-      store->set_key_partition(machine, partition);
-
-      const auto& index_partition = req.partition.get_index_partition();
-      part_mgr.record_index_partition(req.parent.get_index_space(), *partition, index_partition);
-    };
 
   if (unbound_stores_.size() == 1) {
     auto* arg       = unbound_stores_.front();
     const auto& req = output_requirements[arg->requirement_index()];
 
-    post_process_unbound_store(arg, req, result, machine_);
+    post_process_unbound_store_(launch_domain, arg, req, result, machine_, parallel_policy());
   } else {
     for (auto&& [idx, arg] : legate::detail::enumerate(unbound_stores_)) {
       const auto& req = output_requirements[arg->requirement_index()];
 
       if (arg->store()->dim() == 1) {
-        post_process_unbound_store(
+        post_process_unbound_store_(
+          launch_domain,
           arg,
           req,
-          runtime.extract_scalar(result,
+          runtime.extract_scalar(parallel_policy(),
+                                 result,
                                  static_cast<std::uint32_t>(idx) * sizeof(std::size_t),
                                  sizeof(std::size_t),
                                  launch_domain),
-          machine_);
+          machine_,
+          parallel_policy());
       } else {
-        post_process_unbound_store(arg, req, result, machine_);
+        post_process_unbound_store_(launch_domain, arg, req, result, machine_, parallel_policy());
       }
     }
   }

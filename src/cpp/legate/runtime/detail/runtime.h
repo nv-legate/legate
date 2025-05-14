@@ -54,6 +54,7 @@ class TaskInfo;
 class VariantInfo;
 struct ResourceConfig;
 class ExternalAllocation;
+class ParallelPolicy;
 
 }  // namespace legate
 
@@ -321,10 +322,12 @@ class Runtime {
   void dispatch(const Legion::FillLauncher& launcher);
   void dispatch(const Legion::IndexFillLauncher& launcher);
 
-  [[nodiscard]] Legion::Future extract_scalar(const Legion::Future& result,
+  [[nodiscard]] Legion::Future extract_scalar(const ParallelPolicy& parallel_policy,
+                                              const Legion::Future& result,
                                               std::size_t offset,
                                               std::size_t size) const;
-  [[nodiscard]] Legion::FutureMap extract_scalar(const Legion::FutureMap& result,
+  [[nodiscard]] Legion::FutureMap extract_scalar(const ParallelPolicy& parallel_policy,
+                                                 const Legion::FutureMap& result,
                                                  std::size_t offset,
                                                  std::size_t size,
                                                  const Legion::Domain& launch_domain) const;

@@ -17,6 +17,7 @@
 #include <legate/runtime/runtime.h>
 #include <legate/task/detail/legion_task.h>
 #include <legate/task/task_config.h>
+#include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/assert.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/typedefs.h>
@@ -184,8 +185,12 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
                                        std::uint32_t num_tasks)
 {
   const auto launch_domain = make_launch_domain_(num_tasks);
-  auto launcher            = detail::TaskLauncher{*core_library_,
+  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
+  // admissible to streaming; second, the over-decomposition factor is already factored in the
+  // number of tasks.
+  auto launcher = detail::TaskLauncher{*core_library_,
                                        machine,
+                                       ParallelPolicy{},
                                        Init::TASK_CONFIG.task_id(),
                                        static_cast<Legion::MappingTagID>(VariantCode::GPU)};
 
@@ -196,8 +201,8 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
     mapping::TaskTarget::GPU, machine.processor_range(), launch_domain);
 
   launcher.set_concurrent(true);
-  // Setting this according to the return type on the task variant. Have to do this manually because
-  // this launch is using the Legion task launcher directly.
+  // Setting this according to the return type on the task variant. Have to do this manually
+  // because this launch is using the Legion task launcher directly.
   launcher.set_future_size(sizeof(cal_comm_t));
   launcher.add_future_map(cpu_comm);
   return launcher.execute(launch_domain);
@@ -208,8 +213,12 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
                         const Legion::FutureMap& communicator)
 {
   const auto launch_domain = make_launch_domain_(num_tasks);
-  auto launcher            = detail::TaskLauncher{*core_library_,
+  // Use the default parallel policy here for two reasons: first, tasks using communicators are
+  // not admissible to streaming; second, the over-decomposition factor is already factored in the
+  // number of tasks.
+  auto launcher = detail::TaskLauncher{*core_library_,
                                        machine,
+                                       ParallelPolicy{},
                                        Finalize::TASK_CONFIG.task_id(),
                                        static_cast<Legion::MappingTagID>(VariantCode::GPU)};
 

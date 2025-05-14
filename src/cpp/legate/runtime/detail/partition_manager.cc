@@ -10,6 +10,7 @@
 #include <legate/partitioning/detail/partition.h>
 #include <legate/runtime/detail/library.h>
 #include <legate/runtime/detail/runtime.h>
+#include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/zip.h>
 
@@ -226,10 +227,11 @@ std::vector<std::size_t> compute_shape_nd(const std::vector<std::uint32_t>& fact
 }  // namespace
 
 tuple<std::uint64_t> PartitionManager::compute_launch_shape(const mapping::detail::Machine& machine,
+                                                            const ParallelPolicy& parallel_policy,
                                                             const Restrictions& restrictions,
                                                             const tuple<std::uint64_t>& shape)
 {
-  const auto curr_num_pieces = machine.count();
+  const auto curr_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
   LEGATE_ASSERT(curr_num_pieces > 0);
   // Easy case if we only have one piece: no parallel launch space
   if (1 == curr_num_pieces) {

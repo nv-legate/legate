@@ -46,7 +46,9 @@ namespace {
 }  // namespace
 
 Operation::Operation(std::uint64_t unique_id)
-  : unique_id_{unique_id}, provenance_{Runtime::get_runtime().get_provenance().to_string()}
+  : unique_id_{unique_id},
+    provenance_{Runtime::get_runtime().get_provenance().to_string()},
+    parallel_policy_{Runtime::get_runtime().scope().parallel_policy()}
 {
 }
 
@@ -56,7 +58,8 @@ Operation::Operation(std::uint64_t unique_id,
   : unique_id_{unique_id},
     priority_{priority},
     provenance_{Runtime::get_runtime().get_provenance().to_string()},
-    machine_{std::move(machine)}
+    machine_{std::move(machine)},
+    parallel_policy_{Runtime::get_runtime().scope().parallel_policy()}
 {
 }
 

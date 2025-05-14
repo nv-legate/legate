@@ -25,7 +25,7 @@ inline bool OutputRequirementAnalyzer::empty() const { return field_groups_.empt
 
 template <typename Launcher>
 inline void StoreAnalyzer::populate(Launcher& launcher,
-                                    std::vector<Legion::OutputRequirement>& out_reqs)
+                                    std::vector<Legion::OutputRequirement>& out_reqs) const
 {
   req_analyzer_.populate_launcher(launcher);
   out_analyzer_.populate_output_requirements(out_reqs);

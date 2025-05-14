@@ -29,7 +29,6 @@
 #include <legate/partitioning/proxy.h>
 #include <legate/runtime/library.h>
 #include <legate/runtime/runtime.h>
-#include <legate/runtime/scope.h>
 #include <legate/task/exception.h>
 #include <legate/task/registrar.h>
 #include <legate/task/task.h>
@@ -37,7 +36,8 @@
 #include <legate/task/task_context.h>
 #include <legate/task/task_signature.h>
 #include <legate/task/variant_options.h>
+#include <legate/tuning/parallel_policy.h>
+#include <legate/tuning/scope.h>
 #include <legate/type/type_traits.h>
-#include <legate/type/types.h>
 #include <legate/utilities/dispatch.h>
 #include <legate/utilities/typedefs.h>

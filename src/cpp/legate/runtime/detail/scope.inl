@@ -20,6 +20,8 @@ inline ZStringView Scope::provenance() const { return provenance_; }
 
 inline const InternalSharedPtr<Scope::Machine>& Scope::machine() const { return machine_; }
 
+inline const ParallelPolicy& Scope::parallel_policy() const { return parallel_policy_; }
+
 inline std::int32_t Scope::exchange_priority(std::int32_t priority)
 {
   return std::exchange(priority_, priority);

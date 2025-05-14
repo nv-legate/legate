@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES.
+#                         All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+class ParallelPolicy:
+    def __init__(
+        self, *, streaming: bool = False, overdecompose_factor: int = 1
+    ) -> None: ...
+    @property
+    def streaming(self) -> bool: ...
+    @streaming.setter
+    def streaming(self, streaming: bool) -> bool: ...
+    @property
+    def overdecompose_factor(self) -> int: ...
+    @overdecompose_factor.setter
+    def overdecompose_factor(self, overdecompose_factor: int) -> int: ...

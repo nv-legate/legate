@@ -156,7 +156,7 @@ class StoreAnalyzer {
   [[nodiscard]] std::int32_t get_index(const Legion::FutureMap& future_map) const;
 
   template <typename Launcher>
-  void populate(Launcher& launcher, std::vector<Legion::OutputRequirement>& out_reqs);
+  void populate(Launcher& launcher, std::vector<Legion::OutputRequirement>& out_reqs) const;
 
   [[nodiscard]] bool can_be_local_function_task() const;
   void relax_interference_checks(bool relax);

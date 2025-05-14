@@ -26,6 +26,12 @@
 #include <variant>
 #include <vector>
 
+namespace legate {
+
+class ParallelPolicy;
+
+}  // namespace legate
+
 namespace legate::detail {
 
 class LogicalStorePartition;
@@ -101,7 +107,9 @@ class Storage {
 
   [[nodiscard]] Restrictions compute_restrictions() const;
   [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
-    const mapping::detail::Machine& machine, const Restrictions& restrictions) const;
+    const mapping::detail::Machine& machine,
+    const ParallelPolicy& parallel_policy,
+    const Restrictions& restrictions) const;
   void set_key_partition(const mapping::detail::Machine& machine,
                          InternalSharedPtr<Partition> key_partition);
   void reset_key_partition() noexcept;
@@ -154,7 +162,9 @@ class StoragePartition {
     const tuple<std::uint64_t>& color);
 
   [[nodiscard]] std::optional<InternalSharedPtr<Partition>> find_key_partition(
-    const mapping::detail::Machine& machine, const Restrictions& restrictions) const;
+    const mapping::detail::Machine& machine,
+    const ParallelPolicy& parallel_policy,
+    const Restrictions& restrictions) const;
   [[nodiscard]] Legion::LogicalPartition get_legion_partition();
 
   [[nodiscard]] std::int32_t level() const;
@@ -251,12 +261,16 @@ class LogicalStore {
 
   [[nodiscard]] Restrictions compute_restrictions(bool is_output) const;
   [[nodiscard]] InternalSharedPtr<Partition> find_or_create_key_partition(
-    const mapping::detail::Machine& machine, const Restrictions& restrictions);
+    const mapping::detail::Machine& machine,
+    const ParallelPolicy& parallel_policy,
+    const Restrictions& restrictions);
 
   [[nodiscard]] const InternalSharedPtr<Partition>& get_current_key_partition() const;
   [[nodiscard]] bool has_key_partition(const mapping::detail::Machine& machine,
+                                       const ParallelPolicy& parallel_policy,
                                        const Restrictions& restrictions) const;
   void set_key_partition(const mapping::detail::Machine& machine,
+                         const ParallelPolicy& parallel_policy,
                          InternalSharedPtr<Partition> partition);
   void reset_key_partition();
 

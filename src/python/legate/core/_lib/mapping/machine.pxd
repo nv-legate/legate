@@ -9,7 +9,7 @@ from libcpp.set cimport set as std_set
 from libcpp.string cimport string as std_string
 from libcpp.vector cimport vector as std_vector
 
-from ..runtime.scope cimport Scope
+from ..tuning.scope cimport Scope
 from ..utilities.shared_ptr cimport _SharedPtr
 from .mapping cimport TaskTarget
 

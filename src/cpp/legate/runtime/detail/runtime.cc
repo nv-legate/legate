@@ -46,7 +46,6 @@
 #include <legate/runtime/detail/shard.h>
 #include <legate/runtime/resource.h>
 #include <legate/runtime/runtime.h>
-#include <legate/runtime/scope.h>
 #include <legate/task/detail/legion_task.h>
 #include <legate/task/detail/legion_task_body.h>
 #include <legate/task/detail/task.h>
@@ -55,6 +54,7 @@
 #include <legate/task/task_context.h>
 #include <legate/task/task_signature.h>
 #include <legate/task/variant_options.h>
+#include <legate/tuning/scope.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/env.h>
@@ -1405,15 +1405,20 @@ void Runtime::dispatch(const Legion::IndexFillLauncher& launcher)
   get_legion_runtime()->fill_fields(get_legion_context(), launcher);
 }
 
-Legion::Future Runtime::extract_scalar(const Legion::Future& result,
+Legion::Future Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
+                                       const Legion::Future& result,
                                        std::size_t offset,
                                        std::size_t size) const
 {
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
   auto variant        = static_cast<Legion::MappingTagID>(machine.preferred_variant());
-  auto launcher       = TaskLauncher{
-    core_library(), machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
+  auto launcher       = TaskLauncher{core_library(),
+                               machine,
+                               parallel_policy,
+                               provenance,
+                               LocalTaskID{CoreTask::EXTRACT_SCALAR},
+                               variant};
 
   launcher.add_future(result);
   launcher.add_scalar(make_internal_shared<Scalar>(offset));
@@ -1422,7 +1427,8 @@ Legion::Future Runtime::extract_scalar(const Legion::Future& result,
   return launcher.execute_single();
 }
 
-Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
+Legion::FutureMap Runtime::extract_scalar(const ParallelPolicy& parallel_policy,
+                                          const Legion::FutureMap& result,
                                           std::size_t offset,
                                           std::size_t size,
                                           const Legion::Domain& launch_domain) const
@@ -1430,8 +1436,12 @@ Legion::FutureMap Runtime::extract_scalar(const Legion::FutureMap& result,
   const auto& machine = get_machine();
   auto provenance     = get_provenance();
   auto variant        = static_cast<Legion::MappingTagID>(machine.preferred_variant());
-  auto launcher       = TaskLauncher{
-    core_library(), machine, provenance, LocalTaskID{CoreTask::EXTRACT_SCALAR}, variant};
+  auto launcher       = TaskLauncher{core_library(),
+                               machine,
+                               parallel_policy,
+                               provenance,
+                               LocalTaskID{CoreTask::EXTRACT_SCALAR},
+                               variant};
 
   launcher.add_future_map(result);
   launcher.add_scalar(make_internal_shared<Scalar>(offset));

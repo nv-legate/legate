@@ -19,4 +19,6 @@ inline Discard::Discard(std::uint64_t unique_id,
 
 inline Operation::Kind Discard::kind() const { return Kind::DISCARD; }
 
+inline bool Discard::supports_streaming() const { return true; }
+
 }  // namespace legate::detail

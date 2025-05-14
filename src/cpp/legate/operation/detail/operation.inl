@@ -27,9 +27,13 @@ inline void Operation::launch(Strategy* /*strategy*/)
 
 inline bool Operation::supports_replicated_write() const { return false; }
 
+inline bool Operation::supports_streaming() const { return needs_partitioning(); }
+
 inline std::int32_t Operation::priority() const { return priority_; }
 
 inline const mapping::detail::Machine& Operation::machine() const { return machine_; }
+
+inline const ParallelPolicy& Operation::parallel_policy() const { return parallel_policy_; }
 
 inline ZStringView Operation::provenance() const { return provenance_; }
 

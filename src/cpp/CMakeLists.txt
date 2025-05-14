@@ -427,7 +427,6 @@ target_sources(legate
                        legate/partitioning/detail/proxy/validate.cc
                        legate/runtime/library.cc
                        legate/runtime/runtime.cc
-                       legate/runtime/scope.cc
                        legate/runtime/detail/communicator_manager.cc
                        legate/runtime/detail/field_manager.cc
                        legate/runtime/detail/library.cc
@@ -438,6 +437,7 @@ target_sources(legate
                        legate/runtime/detail/shard.cc
                        legate/runtime/detail/mapper_manager.cc
                        legate/runtime/detail/argument_parsing/util.cc
+                       legate/runtime/detail/scope.cc
                        legate/runtime/detail/argument_parsing/parse.cc
                        legate/runtime/detail/argument_parsing/config_legion.cc
                        legate/runtime/detail/argument_parsing/config_realm.cc
@@ -472,6 +472,8 @@ target_sources(legate
                        legate/task/detail/task_return_layout.cc
                        legate/task/detail/variant_info.cc
                        legate/task/detail/task_info.cc
+                       legate/tuning/parallel_policy.cc
+                       legate/tuning/scope.cc
                        legate/task/detail/task_signature.cc
                        legate/task/detail/task_config.cc
                        legate/type/types.cc
@@ -706,7 +708,7 @@ install(FILES legate/partitioning/constraint.h legate/partitioning/constraint.in
 
 install(FILES legate/runtime/exception_mode.h legate/runtime/library.h
               legate/runtime/library.inl legate/runtime/resource.h
-              legate/runtime/runtime.h legate/runtime/runtime.inl legate/runtime/scope.h
+              legate/runtime/runtime.h legate/runtime/runtime.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/runtime)
 
 install(FILES legate/task/exception.h
@@ -728,6 +730,10 @@ install(FILES legate/task/exception.h
               legate/task/task_config.h
               legate/task/task_config.inl
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/task)
+
+install(FILES legate/tuning/parallel_policy.h legate/tuning/parallel_policy.inl
+              legate/tuning/scope.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/tuning)
 
 install(FILES legate/type/types.h legate/type/types.inl legate/type/type_traits.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/type)

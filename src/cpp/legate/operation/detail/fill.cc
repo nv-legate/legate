@@ -83,7 +83,7 @@ void Fill::launch(Strategy* strategy)
 
   if (launch_domain.is_valid()) {
     launcher.launch(launch_domain, lhs_.get(), *lhs_proj, std::move(fill_value));
-    lhs_->set_key_partition(machine(), part);
+    lhs_->set_key_partition(machine(), parallel_policy(), part);
   } else {
     launcher.launch_single(lhs_.get(), *lhs_proj, std::move(fill_value));
   }

@@ -246,10 +246,10 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     handle_unbound_stores_(strategy.get(), solver.partition_symbols(), solver);
 
   auto comparison_key = [&solver](const auto& part_symb) {
-    auto* op   = part_symb->operation();
-    auto store = op->find_store(part_symb);
-    auto has_key_part =
-      store->has_key_partition(op->machine(), solver.find_restrictions(part_symb));
+    auto* op          = part_symb->operation();
+    auto store        = op->find_store(part_symb);
+    auto has_key_part = store->has_key_partition(
+      op->machine(), op->parallel_policy(), solver.find_restrictions(part_symb));
 
     LEGATE_ASSERT(!store->unbound());
     return std::make_tuple(
@@ -270,9 +270,9 @@ std::unique_ptr<Strategy> Partitioner::partition_stores()
     const auto& equiv_class  = solver.find_equivalence_class(part_symb);
     const auto& restrictions = solver.find_restrictions(part_symb);
 
-    auto* op = part_symb->operation();
-    auto partition =
-      op->find_store(part_symb)->find_or_create_key_partition(op->machine(), restrictions);
+    auto* op       = part_symb->operation();
+    auto partition = op->find_store(part_symb)->find_or_create_key_partition(
+      op->machine(), op->parallel_policy(), restrictions);
 
     strategy->record_key_partition_(part_symb);
     LEGATE_ASSERT(partition != nullptr);

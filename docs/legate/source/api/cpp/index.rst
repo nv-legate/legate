@@ -9,6 +9,7 @@ C++ API Reference
    partitioning
    runtime
    mapping
+   tuning
    types
    typedefs
    task

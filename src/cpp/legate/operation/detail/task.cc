@@ -166,9 +166,10 @@ void Task::inline_launch_() const
 
 void Task::legion_launch_(Strategy* strategy_ptr)
 {
-  auto& strategy       = *strategy_ptr;
-  auto launcher        = detail::TaskLauncher{library(), machine(), provenance(), local_task_id()};
-  auto&& launch_domain = strategy.launch_domain(this);
+  auto& strategy = *strategy_ptr;
+  auto launcher =
+    detail::TaskLauncher{library(), machine(), parallel_policy(), provenance(), local_task_id()};
+  auto&& launch_domain     = strategy.launch_domain(this);
   const auto valid_launch  = launch_domain.is_valid();
   const auto launch_volume = launch_domain.get_volume();
 
@@ -297,8 +298,11 @@ void Task::demux_scalar_stores_(const Legion::Future& result)
       store->set_future(result, compute_offset(store));
     }
     if (can_throw_exception()) {
-      runtime.record_pending_exception(runtime.extract_scalar(
-        result, return_layout.total_size(), legate::detail::ReturnedException::max_size()));
+      runtime.record_pending_exception(
+        runtime.extract_scalar(parallel_policy(),
+                               result,
+                               return_layout.total_size(),
+                               legate::detail::ReturnedException::max_size()));
     }
   }
 }
@@ -334,7 +338,7 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
     auto extract_future_map = [&](auto&& future_map, auto&& store) {
       auto size   = store->type()->size();
       auto offset = return_layout.next(size, store->type()->alignment());
-      return runtime.extract_scalar(future_map, offset, size, launch_domain);
+      return runtime.extract_scalar(parallel_policy(), future_map, offset, size, launch_domain);
     };
 
     const auto compute_offset = [&](auto&& store) {
@@ -350,7 +354,8 @@ void Task::demux_scalar_stores_(const Legion::FutureMap& result, const Domain& l
       store->set_future(runtime.reduce_future_map(values, redop, store->get_future()));
     }
     if (can_throw_exception()) {
-      auto exn_fm = runtime.extract_scalar(result,
+      auto exn_fm = runtime.extract_scalar(parallel_policy(),
+                                           result,
                                            return_layout.total_size(),
                                            legate::detail::ReturnedException::max_size(),
                                            launch_domain);
@@ -571,8 +576,8 @@ void AutoTask::fixup_ranges_(Strategy& strategy)
 
   auto&& runtime  = Runtime::get_runtime();
   auto&& core_lib = runtime.core_library();
-  auto launcher =
-    detail::TaskLauncher{core_lib, machine(), provenance(), FixupRanges::TASK_CONFIG.task_id()};
+  auto launcher   = detail::TaskLauncher{
+    core_lib, machine(), parallel_policy(), provenance(), FixupRanges::TASK_CONFIG.task_id()};
 
   launcher.set_priority(priority());
 

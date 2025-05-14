@@ -19,6 +19,12 @@ class Discard final : public Operation {
   void launch() override;
 
   [[nodiscard]] Kind kind() const override;
+  /**
+   * Discard operations are always streamable.
+   *
+   * @return Whether this operation supports streaming.
+   */
+  [[nodiscard]] bool supports_streaming() const override;
 
  private:
   Legion::LogicalRegion region_{};

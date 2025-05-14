@@ -19,6 +19,7 @@
 #include <legate/runtime/detail/partition_manager.h>
 #include <legate/runtime/detail/runtime.h>
 #include <legate/task/detail/task_return_layout.h>
+#include <legate/tuning/parallel_policy.h>
 #include <legate/type/detail/types.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/formatters.h>
@@ -358,16 +359,18 @@ Restrictions Storage::compute_restrictions() const
 }
 
 std::optional<InternalSharedPtr<Partition>> Storage::find_key_partition(
-  const mapping::detail::Machine& machine, const Restrictions& restrictions) const
+  const mapping::detail::Machine& machine,
+  const ParallelPolicy& parallel_policy,
+  const Restrictions& restrictions) const
 {
-  const auto new_num_pieces = machine.count();
+  const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
 
   if ((num_pieces_ == new_num_pieces) && key_partition_.has_value() &&
       (*key_partition_)->satisfies_restrictions(restrictions)) {
     return key_partition_;
   }
   if (parent_.has_value()) {
-    return (*parent_)->find_key_partition(machine, restrictions);
+    return (*parent_)->find_key_partition(machine, parallel_policy, restrictions);
   }
   return std::nullopt;
 }
@@ -467,9 +470,11 @@ InternalSharedPtr<LogicalRegionField> StoragePartition::get_child_data(
 }
 
 std::optional<InternalSharedPtr<Partition>> StoragePartition::find_key_partition(
-  const mapping::detail::Machine& machine, const Restrictions& restrictions) const
+  const mapping::detail::Machine& machine,
+  const ParallelPolicy& parallel_policy,
+  const Restrictions& restrictions) const
 {
-  return parent_->find_key_partition(machine, restrictions);
+  return parent_->find_key_partition(machine, parallel_policy, restrictions);
 }
 
 Legion::LogicalPartition StoragePartition::get_legion_partition()
@@ -900,9 +905,11 @@ Legion::ProjectionID LogicalStore::compute_projection(
 }
 
 InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
-  const mapping::detail::Machine& machine, const Restrictions& restrictions)
+  const mapping::detail::Machine& machine,
+  const ParallelPolicy& parallel_policy,
+  const Restrictions& restrictions)
 {
-  const auto new_num_pieces = machine.count();
+  const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
 
   if ((num_pieces_ == new_num_pieces) && key_partition_.has_value() &&
       (*key_partition_)->satisfies_restrictions(restrictions)) {
@@ -916,7 +923,8 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
   std::optional<InternalSharedPtr<Partition>> storage_part{};
 
   if (transform_->is_convertible()) {
-    storage_part = get_storage()->find_key_partition(machine, transform_->invert(restrictions));
+    storage_part =
+      get_storage()->find_key_partition(machine, parallel_policy, transform_->invert(restrictions));
   }
 
   InternalSharedPtr<Partition> store_part{};
@@ -925,7 +933,7 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
       (!transform_->identity() && !(*storage_part)->is_convertible())) {
     auto&& exts       = extents();
     auto&& part_mgr   = Runtime::get_runtime().partition_manager();
-    auto launch_shape = part_mgr.compute_launch_shape(machine, restrictions, exts);
+    auto launch_shape = part_mgr.compute_launch_shape(machine, parallel_policy, restrictions, exts);
 
     if (launch_shape.empty()) {
       store_part = create_no_partition();
@@ -942,22 +950,26 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
 }
 
 bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,
+                                     const ParallelPolicy& parallel_policy,
                                      const Restrictions& restrictions) const
 {
-  const auto new_num_pieces = machine.count();
+  const auto new_num_pieces = machine.count() * parallel_policy.overdecompose_factor();
 
   if ((new_num_pieces == num_pieces_) && key_partition_.has_value() &&
       (*key_partition_)->satisfies_restrictions(restrictions)) {
     return true;
   }
   return transform_->is_convertible() &&
-         get_storage()->find_key_partition(machine, transform_->invert(restrictions)).has_value();
+         get_storage()
+           ->find_key_partition(machine, parallel_policy, transform_->invert(restrictions))
+           .has_value();
 }
 
 void LogicalStore::set_key_partition(const mapping::detail::Machine& machine,
+                                     const ParallelPolicy& parallel_policy,
                                      InternalSharedPtr<Partition> partition)
 {
-  num_pieces_ = machine.count();
+  num_pieces_ = machine.count() * parallel_policy.overdecompose_factor();
   get_storage()->set_key_partition(machine, partition->invert(partition, transform()));
   key_partition_ = std::move(partition);
 }
@@ -1127,7 +1139,9 @@ std::unique_ptr<Analyzable> LogicalStore::region_field_to_launcher_arg_(
   }
   if ((privilege == LEGION_WRITE_ONLY || privilege == LEGION_READ_WRITE) &&
       partition->has_launch_domain()) {
-    set_key_partition(variable->operation()->machine(), partition);
+    const auto* op = variable->operation();
+
+    set_key_partition(op->machine(), op->parallel_policy(), partition);
   }
 
   return std::make_unique<RegionFieldArg>(this, privilege, std::move(store_proj));

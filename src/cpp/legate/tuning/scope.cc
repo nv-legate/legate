@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <legate/runtime/scope.h>
+#include <legate/tuning/scope.h>
 
 #include <legate/runtime/detail/runtime.h>
 #include <legate/utilities/detail/traced_exception.h>
@@ -54,6 +54,16 @@ class Scope::Impl {
     machine_ = detail::Runtime::get_runtime().scope().exchange_machine(std::move(machine));
   }
 
+  void set_parallel_policy(ParallelPolicy parallel_policy)
+  {
+    if (parallel_policy_) {
+      throw detail::TracedException<std::invalid_argument>{
+        "Parallel policy can be set only once for each scope"};
+    }
+    parallel_policy_ =
+      detail::Runtime::get_runtime().scope().exchange_parallel_policy(std::move(parallel_policy));
+  }
+
   ~Impl()
   {
     if (priority_) {
@@ -71,6 +81,10 @@ class Scope::Impl {
       static_cast<void>(
         detail::Runtime::get_runtime().scope().exchange_machine(std::move(machine_)));
     }
+    if (parallel_policy_) {
+      static_cast<void>(detail::Runtime::get_runtime().scope().exchange_parallel_policy(
+        std::move(*parallel_policy_)));
+    }
   }
 
  private:
@@ -78,6 +92,7 @@ class Scope::Impl {
   std::optional<ExceptionMode> exception_mode_{};
   std::optional<std::string> provenance_{};
   InternalSharedPtr<mapping::detail::Machine> machine_{};
+  std::optional<ParallelPolicy> parallel_policy_{};
 };
 
 template class DefaultDelete<Scope::Impl>;
@@ -91,6 +106,11 @@ Scope::Scope(ExceptionMode exception_mode) : Scope{} { set_exception_mode(except
 Scope::Scope(std::string provenance) : Scope{} { set_provenance(std::move(provenance)); }
 
 Scope::Scope(const mapping::Machine& machine) : Scope{} { set_machine(machine); }
+
+Scope::Scope(ParallelPolicy parallel_policy) : Scope{}
+{
+  set_parallel_policy(std::move(parallel_policy));
+}
 
 Scope&& Scope::with_priority(std::int32_t priority) &&
 {
@@ -116,6 +136,12 @@ Scope&& Scope::with_machine(const mapping::Machine& machine) &&
   return std::move(*this);
 }
 
+Scope&& Scope::with_parallel_policy(ParallelPolicy parallel_policy) &&
+{
+  set_parallel_policy(std::move(parallel_policy));
+  return std::move(*this);
+}
+
 void Scope::set_priority(std::int32_t priority) { impl_->set_priority(priority); }
 
 void Scope::set_exception_mode(ExceptionMode exception_mode)
@@ -133,6 +159,11 @@ void Scope::set_machine(const mapping::Machine& machine)
       "Empty machines cannot be used for resource scoping"};
   }
   impl_->set_machine(result.impl());
+}
+
+void Scope::set_parallel_policy(ParallelPolicy parallel_policy)
+{
+  impl_->set_parallel_policy(std::move(parallel_policy));
 }
 
 Scope::~Scope() = default;
@@ -155,6 +186,11 @@ Scope::~Scope() = default;
 /*static*/ mapping::Machine Scope::machine()
 {
   return mapping::Machine{detail::Runtime::get_runtime().scope().machine()};
+}
+
+/*static*/ const ParallelPolicy& Scope::parallel_policy()
+{
+  return detail::Runtime::get_runtime().scope().parallel_policy();
 }
 
 }  // namespace legate

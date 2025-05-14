@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from legate.core import ExceptionMode, Machine, Scope
+from legate.core import ExceptionMode, Machine, ParallelPolicy, Scope
 
 MAGIC_PRIORITY1 = 42
 MAGIC_PRIORITY2 = 43
@@ -16,6 +16,21 @@ MAGIC_PROVENANCE2 = "43"
 
 MODE1 = ExceptionMode.DEFERRED
 MODE2 = ExceptionMode.IGNORED
+
+OVERDECOMPOSE_FACTOR_A = 42
+OVERDECOMPOSE_FACTOR_B = 43
+
+
+def par_policy_a() -> ParallelPolicy:
+    return ParallelPolicy(
+        streaming=True, overdecompose_factor=OVERDECOMPOSE_FACTOR_A
+    )
+
+
+def par_policy_b() -> ParallelPolicy:
+    return ParallelPolicy(
+        streaming=False, overdecompose_factor=OVERDECOMPOSE_FACTOR_B
+    )
 
 
 def slice_if_not_singleton(machine: Machine) -> Machine:
@@ -47,6 +62,12 @@ class TestScope:
         with Scope(machine=sliced):
             assert Scope.machine() == sliced
         assert Scope.machine() == old_machine
+
+    def test_basic_parallel_policy(self) -> None:
+        old_parallel_policy = Scope.parallel_policy()
+        with Scope(parallel_policy=par_policy_a()):
+            assert Scope.parallel_policy() == par_policy_a()
+        assert Scope.parallel_policy() == old_parallel_policy
 
     def test_basic_multiple(self) -> None:
         old_priority = Scope.priority()
@@ -107,6 +128,15 @@ class TestScope:
                 assert Scope.machine() == sliced2
             assert Scope.machine() == sliced1
         assert Scope.machine() == old_machine
+
+    def test_nested_parallel_policy(self) -> None:
+        old_parallel_policy = Scope.parallel_policy()
+        with Scope(parallel_policy=par_policy_a()):
+            assert Scope.parallel_policy() == par_policy_a()
+            with Scope(parallel_policy=par_policy_b()):
+                assert Scope.parallel_policy() == par_policy_b()
+            assert Scope.parallel_policy() == par_policy_a()
+        assert Scope.parallel_policy() == old_parallel_policy
 
     def test_nested_multiple(self) -> None:
         old_priority = Scope.priority()

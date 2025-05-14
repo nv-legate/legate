@@ -273,6 +273,7 @@ set(with_runtime_SRC
     experimental/stl/transform.cc
     experimental/stl/transform_reduce.cc
     experimental/stl/views.cc
+    experimental/streaming.cc
     experimental/tracing.cc)
 
 set(wo_runtime_SRC

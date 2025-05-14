@@ -86,6 +86,10 @@ class LogicalRegionField : public legate::EnableSharedFromThis<LogicalRegionFiel
     void deallocate_attachment(bool wait_on_detach = true);
 
     [[nodiscard]] bool has_attachment() const;
+    /**
+     * @return Whether this logical region field has any invalidation callbacks.
+     */
+    [[nodiscard]] bool has_callbacks() const;
 
     [[nodiscard]] const Legion::PhysicalRegion& physical_region() const;
     [[nodiscard]] const Attachment& attachment() const;

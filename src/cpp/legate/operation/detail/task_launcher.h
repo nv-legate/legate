@@ -9,6 +9,7 @@
 #include <legate/data/detail/scalar.h>
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/launcher_arg.h>
+#include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/zstring_view.h>
 
@@ -24,12 +25,14 @@ class TaskLauncher {
  public:
   TaskLauncher(const Library& library,
                const mapping::detail::Machine& machine,
+               const ParallelPolicy& parallel_policy,
                ZStringView provenance,
                LocalTaskID task_id,
                Legion::MappingTagID tag = 0);
 
   TaskLauncher(const Library& library,
                const mapping::detail::Machine& machine,
+               const ParallelPolicy& parallel_policy,
                LocalTaskID task_id,
                Legion::MappingTagID tag = 0);
 
@@ -55,9 +58,13 @@ class TaskLauncher {
 
   Legion::FutureMap execute(const Legion::Domain& launch_domain);
   Legion::Future execute_single();
+
   [[nodiscard]] ZStringView provenance() const;
+  [[nodiscard]] const ParallelPolicy& parallel_policy() const;
 
  private:
+  void analyze_arguments_(bool parallel, StoreAnalyzer* analyzer);
+  BufferBuilder pack_task_arg_(bool parallel, StoreAnalyzer* analyzer);
   void pack_mapper_arg_(BufferBuilder& buffer);
   void import_output_regions_(Runtime& runtime,
                               const std::vector<Legion::OutputRequirement>& output_requirements);
@@ -68,6 +75,13 @@ class TaskLauncher {
     const Legion::Domain& launch_domain,
     const std::vector<Legion::OutputRequirement>& output_requirements);
 
+  void post_process_unbound_store_(const Legion::Domain& launch_domain,
+                                   const OutputRegionArg* arg,
+                                   const Legion::OutputRequirement& req,
+                                   const Legion::FutureMap& weights,
+                                   const mapping::detail::Machine& machine,
+                                   const ParallelPolicy& parallel_policy);
+
   void report_interfering_stores_() const;
   [[nodiscard]] std::size_t get_future_size_including_exception_() const;
 
@@ -75,6 +89,7 @@ class TaskLauncher {
   LocalTaskID task_id_{};
   Legion::MappingTagID tag_{};
   const mapping::detail::Machine& machine_;
+  ParallelPolicy parallel_policy_{};
   ZStringView provenance_{};
   std::int32_t priority_{static_cast<std::int32_t>(TaskPriority::DEFAULT)};
 

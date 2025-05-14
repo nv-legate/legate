@@ -18,6 +18,7 @@
 #include <legate/runtime/runtime.h>
 #include <legate/task/detail/legion_task.h>
 #include <legate/task/task_config.h>
+#include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/typedefs.h>
 
@@ -237,8 +238,13 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
   Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
   // Create a communicator ID
+  //
+  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
+  // admissible to streaming; second, the over-decomposition factor is already factored in the
+  // number of tasks.
   detail::TaskLauncher init_nccl_id_launcher{*core_library_,
                                              machine,
+                                             ParallelPolicy{},
                                              InitId::TASK_CONFIG.task_id(),
                                              static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   init_nccl_id_launcher.set_side_effect(true);
@@ -248,8 +254,13 @@ Legion::FutureMap Factory::initialize_(const mapping::detail::Machine& machine,
   auto nccl_id = init_nccl_id_launcher.execute_single();
 
   // Then create the communicators on participating GPUs
+  //
+  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
+  // admissible to streaming; second, the over-decomposition factor is already factored in the
+  // number of tasks.
   detail::TaskLauncher init_nccl_launcher{*core_library_,
                                           machine,
+                                          ParallelPolicy{},
                                           Init::TASK_CONFIG.task_id(),
                                           static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   init_nccl_launcher.add_future(nccl_id);
@@ -266,8 +277,12 @@ void Factory::finalize_(const mapping::detail::Machine& machine,
 {
   Domain launch_domain{Rect<1>{Point<1>{0}, Point<1>{static_cast<std::int64_t>(num_tasks) - 1}}};
 
+  // Use the default parallel policy here for two reasons: first, tasks using communicators are not
+  // admissible to streaming; second, the over-decomposition factor is already factored in the
+  // number of tasks.
   detail::TaskLauncher launcher{*core_library_,
                                 machine,
+                                ParallelPolicy{},
                                 Finalize::TASK_CONFIG.task_id(),
                                 static_cast<Legion::MappingTagID>(VariantCode::GPU)};
   launcher.set_concurrent(true);

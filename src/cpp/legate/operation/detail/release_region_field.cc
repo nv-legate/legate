@@ -18,4 +18,9 @@ void ReleaseRegionField::launch()
   physical_state_->invoke_callbacks();
 }
 
+bool ReleaseRegionField::supports_streaming() const
+{
+  return !(unmap_ || physical_state_->has_callbacks());
+}
+
 }  // namespace legate::detail

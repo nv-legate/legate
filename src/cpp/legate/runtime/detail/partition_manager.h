@@ -18,6 +18,12 @@
 #include <utility>
 #include <vector>
 
+namespace legate {
+
+class ParallelPolicy;
+
+}  // namespace legate
+
 namespace legate::mapping::detail {
 
 class Machine;
@@ -41,6 +47,7 @@ class PartitionManager {
     const mapping::detail::Machine& machine);
 
   [[nodiscard]] tuple<std::uint64_t> compute_launch_shape(const mapping::detail::Machine& machine,
+                                                          const ParallelPolicy& parallel_policy,
                                                           const Restrictions& restrictions,
                                                           const tuple<std::uint64_t>& shape);
   [[nodiscard]] tuple<std::uint64_t> compute_tile_shape(const tuple<std::uint64_t>& extents,

@@ -116,3 +116,9 @@
  *
  * @brief Classes and utilities to define tasks
  */
+
+/**
+ * @defgroup tuning Tuning
+ *
+ * @brief Classes and utilities to define tuning inside a Scope
+ */

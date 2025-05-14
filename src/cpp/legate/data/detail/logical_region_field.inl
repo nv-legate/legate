@@ -38,6 +38,8 @@ inline bool LogicalRegionField::PhysicalState::has_attachment() const
   return attachment().exists();
 }
 
+inline bool LogicalRegionField::PhysicalState::has_callbacks() const { return !callbacks_.empty(); }
+
 inline const Legion::PhysicalRegion& LogicalRegionField::PhysicalState::physical_region() const
 {
   return physical_region_;

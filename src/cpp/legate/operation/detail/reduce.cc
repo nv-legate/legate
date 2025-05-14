@@ -88,6 +88,7 @@ void Reduce::launch(Strategy* p_strategy)
     auto launcher =
       detail::TaskLauncher{library_,
                            machine_,
+                           parallel_policy(),
                            provenance_,
                            task_id_,
                            static_cast<Legion::MappingTagID>(CoreMappingTag::TREE_REDUCE)};

@@ -24,6 +24,16 @@ class ReleaseRegionField final : public Operation {
   void launch() override;
 
   [[nodiscard]] Kind kind() const override;
+  /**
+   * ReleaseRegionField operation is streamable if the RegionField it is
+   * trying to release is still mapped or does not have any invalidation
+   * callbacks. If it has either of them then the RegionField does not
+   * need to be released. This operation needs to be assigned to unreleased
+   * RegionField inside a Streaming Scope.
+   *
+   * @return Whether this operation supports streaming.
+   */
+  [[nodiscard]] bool supports_streaming() const override;
 
  private:
   InternalSharedPtr<LogicalRegionField::PhysicalState> physical_state_{};

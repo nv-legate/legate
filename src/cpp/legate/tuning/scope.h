@@ -8,6 +8,7 @@
 
 #include <legate/mapping/machine.h>
 #include <legate/runtime/exception_mode.h>
+#include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/doxygen.h>
 #include <legate/utilities/memory.h>
 
@@ -24,7 +25,7 @@
 namespace legate {
 
 /**
- * @addtogroup util
+ * @addtogroup tuning
  * @{
  */
 
@@ -52,9 +53,12 @@ namespace legate {
  * using Scope. All operations within the lifetime of the Scope object can use only the sub-machine
  * for their execution.
  *
+ * 4) Parallelization policies: Legate has default policies to parallelize tasks, which the user
+ * program might want to override. In this case, the user program can set a new `ParallelPolicy`
+ * object to the scope to install new parallelization policies (see `ParallelPolicy`).
+ *
  * Each parameter can be set only once via each Scope object. Multiple attempts to set the same
  * parameter would raise an exception.
- *
  */
 class Scope {
  public:
@@ -117,6 +121,20 @@ class Scope {
    */
   explicit Scope(const mapping::Machine& machine);
   /**
+   * @brief Constructs a Scope with a given parallel policy.
+   *
+   * Equivalent to
+   * @code{.cpp}
+   * auto scope = Scope();
+   * scope.set_parallel_policy(parallel_policy);
+   * @endcode
+   *
+   * @param parallel_policy Parallel policy to use within the scope.
+   *
+   * @see set_parallel_policy
+   */
+  explicit Scope(ParallelPolicy parallel_policy);
+  /**
    * @brief Sets a given task priority to the scope
    *
    * @param priority Task priority to set to the scope
@@ -153,6 +171,16 @@ class Scope {
    * @see set_machine
    */
   Scope&& with_machine(const mapping::Machine& machine) &&;
+  /**
+   * @brief Sets a given parallel policy to the scope.
+   *
+   * @param parallel_policy Parallel policy to set to the scope.
+   *
+   * @throw std::invalid_argument If a parallel policy has already been set via this Scope object.
+   *
+   * @return Scope.
+   */
+  Scope&& with_parallel_policy(ParallelPolicy parallel_policy) &&;
   /**
    * @brief Sets a given task priority to the scope
    *
@@ -191,9 +219,16 @@ class Scope {
    *
    * @throw std::runtime_error If the intersected machine is empty
    * @throw std::invalid_argument If a machine has already been set via this Scope object
-   *
    */
   void set_machine(const mapping::Machine& machine);
+  /**
+   * @brief Sets a given parallel policy to the scope.
+   *
+   * @param parallel_policy Parallel policy to set to the scope.
+   *
+   * @throw std::invalid_argument If a parallel policy has already been set via this Scope object.
+   */
+  void set_parallel_policy(ParallelPolicy parallel_policy);
   /**
    * @brief Returns the task priority of the current scope
    *
@@ -203,7 +238,7 @@ class Scope {
   /**
    * @brief Returns the exception mode of the current scope
    *
-   * return Current exception mode
+   * @return Current exception mode
    */
   [[nodiscard]] static legate::ExceptionMode exception_mode();
   /**
@@ -218,6 +253,12 @@ class Scope {
    * @return Current machine
    */
   [[nodiscard]] static mapping::Machine machine();
+  /**
+   * @brief Returns the parallel policy of the current scope.
+   *
+   * @return Current parallel policy.
+   */
+  [[nodiscard]] static const ParallelPolicy& parallel_policy();
 
   ~Scope();
 

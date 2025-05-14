@@ -12,6 +12,7 @@ namespace legate::detail {
 
 inline TaskLauncher::TaskLauncher(const Library& library,
                                   const mapping::detail::Machine& machine,
+                                  const ParallelPolicy& parallel_policy,
                                   ZStringView provenance,
                                   LocalTaskID task_id,
                                   Legion::MappingTagID tag)
@@ -19,15 +20,17 @@ inline TaskLauncher::TaskLauncher(const Library& library,
     task_id_{task_id},
     tag_{tag},
     machine_{machine},
+    parallel_policy_{parallel_policy},
     provenance_{std::move(provenance)}
 {
 }
 
 inline TaskLauncher::TaskLauncher(const Library& library,
                                   const mapping::detail::Machine& machine,
+                                  const ParallelPolicy& parallel_policy,
                                   LocalTaskID task_id,
                                   Legion::MappingTagID tag)
-  : TaskLauncher{library, machine, {}, task_id, tag}
+  : TaskLauncher{library, machine, parallel_policy, {}, task_id, tag}
 {
 }
 
@@ -37,8 +40,6 @@ inline void TaskLauncher::set_side_effect(bool has_side_effect)
 {
   has_side_effect_ = has_side_effect;
 }
-
-inline void TaskLauncher::set_concurrent(bool is_concurrent) { concurrent_ = is_concurrent; }
 
 inline void TaskLauncher::set_insert_barrier(bool insert_barrier)
 {
@@ -63,5 +64,7 @@ inline void TaskLauncher::relax_interference_checks(bool relax)
 }
 
 inline ZStringView TaskLauncher::provenance() const { return provenance_; }
+
+inline const ParallelPolicy& TaskLauncher::parallel_policy() const { return parallel_policy_; }
 
 }  // namespace legate::detail

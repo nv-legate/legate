@@ -10,6 +10,7 @@
 #include <legate/mapping/detail/machine.h>
 #include <legate/operation/detail/store_projection.h>
 #include <legate/partitioning/detail/constraint.h>
+#include <legate/tuning/parallel_policy.h>
 #include <legate/utilities/detail/core_ids.h>
 #include <legate/utilities/detail/formatters.h>
 #include <legate/utilities/detail/hash.h>
@@ -75,6 +76,15 @@ class Operation {
   [[nodiscard]] virtual std::string to_string(bool show_provenance) const;
   [[nodiscard]] virtual bool needs_flush() const;
   [[nodiscard]] virtual bool supports_replicated_write() const;
+  /**
+   * When an operation supports streaming it is treated specially inside a Scope that is Streaming.
+   * We track if this operation is the last user of Region Requirement inside a Streaming Scope
+   * and if it is we then assign a Discard Flag to that Region Requirement marking the Region
+   * as collectable after this operation is complete.
+   *
+   * @return Whether the operation supports streaming.
+   */
+  [[nodiscard]] virtual bool supports_streaming() const;
   // When `is_internal()` returns `true` on an operation, the runtime skips validation and the flush
   // check on the operation.
   [[nodiscard]] bool is_internal() const;
@@ -87,6 +97,10 @@ class Operation {
 
   [[nodiscard]] std::int32_t priority() const;
   [[nodiscard]] const mapping::detail::Machine& machine() const;
+  /*
+   * @return The parallel_policy of this operation.
+   */
+  [[nodiscard]] const ParallelPolicy& parallel_policy() const;
   [[nodiscard]] ZStringView provenance() const;
 
  protected:
@@ -104,6 +118,7 @@ class Operation {
   std::unordered_map<InternalSharedPtr<LogicalStore>, const Variable*> part_mappings_{};
   std::string provenance_{};
   mapping::detail::Machine machine_{};
+  ParallelPolicy parallel_policy_{};
 };
 
 }  // namespace legate::detail

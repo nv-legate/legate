@@ -5,7 +5,8 @@
 from typing import Any
 
 from ..mapping.machine import Machine
-from .exception_mode import ExceptionMode
+from ..runtime.exception_mode import ExceptionMode
+from .parallel_policy import ParallelPolicy
 
 class Scope:
     def __init__(
@@ -15,6 +16,7 @@ class Scope:
         exception_mode: ExceptionMode | None = None,
         provenance: str | None = None,
         machine: Machine | None = None,
+        parallel_policy: ParallelPolicy | None = None,
     ) -> None: ...
     def __enter__(self) -> None: ...
     def __exit__(self, _: Any, __: Any, ___: Any) -> None: ...
@@ -26,3 +28,5 @@ class Scope:
     def provenance() -> str: ...
     @staticmethod
     def machine() -> Machine: ...
+    @staticmethod
+    def parallel_policy() -> ParallelPolicy: ...

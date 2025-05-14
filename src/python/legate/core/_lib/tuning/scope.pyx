@@ -12,8 +12,9 @@ from typing import Any
 
 from ..._ext.cython_libcpp.string_view cimport str_from_string_view
 from ..mapping.machine cimport Machine
-from .exception_mode cimport ExceptionMode
-from .runtime cimport raise_pending_exception
+from ..runtime.exception_mode cimport ExceptionMode
+from ..runtime.runtime cimport raise_pending_exception
+from .parallel_policy cimport ParallelPolicy
 
 
 cdef class Scope:
@@ -24,6 +25,7 @@ cdef class Scope:
         exception_mode: object = None,
         str provenance = None,
         Machine machine = None,
+        ParallelPolicy parallel_policy = None,
     ) -> None:
         self._priority = (
             _Scope.priority() if priority is None else priority
@@ -34,6 +36,7 @@ cdef class Scope:
         )
         self._provenance = provenance
         self._machine = machine
+        self._parallel_policy = parallel_policy
         self._handle = std_nullopt
 
     def __enter__(self) -> None:
@@ -49,6 +52,10 @@ cdef class Scope:
             self._handle.value().set_provenance(self._provenance.encode())
         if self._machine is not None:
             self._handle.value().set_machine(self._machine._handle)
+        if self._parallel_policy is not None:
+            self._handle.value().set_parallel_policy(
+                self._parallel_policy._handle
+            )
 
     def __exit__(self, _: Any, __: Any, ___: Any) -> None:
         cdef bool exn_deferred = self._exception_mode == ExceptionMode.DEFERRED
@@ -74,3 +81,15 @@ cdef class Scope:
     @staticmethod
     def machine() -> Machine:
         return Machine.from_handle(_Scope.machine())
+
+    @staticmethod
+    def parallel_policy() -> ParallelPolicy:
+        r"""
+        This allows users to get the parallel_policy of this Scope
+
+        Returns
+        -------
+        ParallelPolicy
+            The parallel_policy of this Scope.
+        """
+        return ParallelPolicy.from_handle(_Scope.parallel_policy())

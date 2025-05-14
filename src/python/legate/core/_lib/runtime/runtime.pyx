@@ -33,7 +33,7 @@ from ..data.scalar cimport Scalar
 from ..data.shape cimport Shape, _Shape
 from ..mapping.machine cimport Machine
 from ..operation.task cimport AutoTask, ManualTask, _AutoTask, _ManualTask
-from ..runtime.scope cimport Scope
+from ..tuning.scope cimport Scope
 from ..type.types cimport Type
 from ..utilities.tuple cimport _tuple
 from ..utilities.typedefs cimport _Domain, domain_from_iterables
