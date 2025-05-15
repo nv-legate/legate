@@ -110,14 +110,16 @@ StringPhysicalArray::StringPhysicalArray(InternalSharedPtr<detail::PhysicalArray
 
 PhysicalArray StringPhysicalArray::ranges() const
 {
-  return PhysicalArray{static_cast<const detail::ListPhysicalArray*>(impl().get())->descriptor(),
-                       owner()};
+  return PhysicalArray{
+    static_cast<const detail::ListPhysicalArray*>(impl().get())->descriptor(),
+    owner().has_value() ? std::make_optional(owner()->as_string_array().offsets()) : std::nullopt};
 }
 
 PhysicalArray StringPhysicalArray::chars() const
 {
-  return PhysicalArray{static_cast<const detail::ListPhysicalArray*>(impl().get())->vardata(),
-                       owner()};
+  return PhysicalArray{
+    static_cast<const detail::ListPhysicalArray*>(impl().get())->vardata(),
+    owner().has_value() ? std::make_optional(owner()->as_string_array().chars()) : std::nullopt};
 }
 
 }  // namespace legate
