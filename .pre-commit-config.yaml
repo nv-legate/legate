@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.0
+    rev: v1.37.1
     hooks:
       - id: yamllint
         types: [yaml]
@@ -71,14 +71,14 @@ repos:
       - id: codespell
         args: ["--toml=./pyproject.toml", "--write-changes"]
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: 'v20.1.0'
+    rev: 'v20.1.4'
     hooks:
       - id: clang-format
         files: \.(cu|cuh|h|hpp|cc|inl)$
         types_or: []
         exclude: '^(share/legate/realm_ucp_bootstrap/.*)$'
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.4
+    rev: v0.11.10
     hooks:
       - id: ruff-format
       - id: ruff
