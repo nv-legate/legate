@@ -8,7 +8,12 @@ import re
 
 import pytest
 
-from legate.core import TaskContext, VariantCode, get_legate_runtime
+from legate.core import (
+    TaskContext,
+    TaskTarget,
+    VariantCode,
+    get_legate_runtime,
+)
 from legate.core.task import InputArray, InputStore, OutputArray, task
 
 from .util.task_util import make_input_array
@@ -19,7 +24,7 @@ def qual_name(obj: type) -> str:
 
 
 class TestTaskContext:
-    def test_basic(self) -> None:
+    def test_basic_cpu(self) -> None:
         @task(variants=(VariantCode.CPU,))
         def foo(ctx: TaskContext) -> None:
             assert isinstance(ctx, TaskContext)
@@ -28,6 +33,8 @@ class TestTaskContext:
             assert ctx.outputs == ()
             assert ctx.reductions == ()
             assert ctx.scalars == ()
+            # This task is always a single task, it has no arguments so there
+            # is nothing to parallelize
             assert ctx.is_single_task() is True
             assert ctx.launch_domain == ((0,), (0,))
             assert ctx.task_stream is None
@@ -36,8 +43,34 @@ class TestTaskContext:
         foo()
         get_legate_runtime().issue_execution_fence(block=True)
 
+    @pytest.mark.skipif(
+        get_legate_runtime().get_machine().only(TaskTarget.GPU).empty,
+        reason="This test requires GPUs",
+    )
+    def test_basic_gpu(self) -> None:
+        @task(variants=(VariantCode.GPU,))
+        def foo(ctx: TaskContext) -> None:
+            assert isinstance(ctx, TaskContext)
+            assert ctx.get_variant_kind() == VariantCode.GPU
+            assert ctx.inputs == ()
+            assert ctx.outputs == ()
+            assert ctx.reductions == ()
+            assert ctx.scalars == ()
+            # This task is always a single task, it has no arguments so there
+            # is nothing to parallelize
+            assert ctx.is_single_task() is True
+            assert ctx.launch_domain == ((0,), (0,))
+            assert ctx.task_stream is not None
+            assert isinstance(ctx.task_stream, int)
+            assert ctx.can_raise_exception() is False
+
+        foo()
+        get_legate_runtime().issue_execution_fence(block=True)
+
     def test_multi_arg(self) -> None:
-        @task
+        num_cpu = get_legate_runtime().get_machine().count(TaskTarget.CPU)
+
+        @task(variants=(VariantCode.CPU,))
         def foo(ctx: TaskContext, x: InputArray, y: OutputArray) -> None:
             assert isinstance(ctx, TaskContext)
             assert ctx.get_variant_kind() == VariantCode.CPU
@@ -45,8 +78,14 @@ class TestTaskContext:
             assert ctx.outputs == (y,)
             assert ctx.reductions == ()
             assert ctx.scalars == ()
-            assert ctx.is_single_task() is True
-            assert ctx.launch_domain == ((0,), (0,))
+            if num_cpu > 1:
+                assert ctx.is_single_task() is False
+                # Can't predict the domain for a potentially parallelized task,
+                # so can't really check the launch domain
+            else:
+                assert ctx.is_single_task() is True
+                assert ctx.launch_domain == ((0,), (0,))
+
             assert ctx.task_stream is None
             assert ctx.can_raise_exception() is False
 
