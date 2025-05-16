@@ -35,8 +35,13 @@ class CopyArg final : public Serializable {
 
   void pack(BufferBuilder& buffer) const override;
 
+  /**
+   * @brief Create a region requirement for an argument to a Copy operation.
+   *
+   * @tparam SINGLE Whether the argument will have exclusive access to the data or not.
+   */
   template <bool SINGLE>
-  void populate_requirement(Legion::RegionRequirement& requirement);
+  [[nodiscard]] Legion::RegionRequirement create_requirement();
 
  private:
   std::uint32_t req_idx_{};

@@ -11,9 +11,9 @@
 namespace legate::detail {
 
 template <bool SINGLE>
-void CopyArg::populate_requirement(Legion::RegionRequirement& requirement)
+Legion::RegionRequirement CopyArg::create_requirement()
 {
-  store_proj_->template populate_requirement<SINGLE>(requirement, region_, {field_id_}, privilege_);
+  return store_proj_->template create_requirement<SINGLE>(region_, {field_id_}, privilege_);
 }
 
 // ==========================================================================================

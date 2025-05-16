@@ -158,9 +158,10 @@ template <typename Launcher>
 void CopyLauncher::populate_copy_(Launcher& launcher)
 {
   constexpr auto populate_requirements = [](std::vector<CopyArg>& args, auto& requirements) {
-    requirements.resize(args.size());
-    for (auto&& [arg, req] : detail::zip_equal(args, requirements)) {
-      arg.template populate_requirement<is_single_v<Launcher>>(req);
+    requirements.reserve(args.size());
+    LEGATE_CHECK(requirements.empty());
+    for (auto&& arg : args) {
+      requirements.emplace_back(arg.template create_requirement<is_single_v<Launcher>>());
     }
   };
 

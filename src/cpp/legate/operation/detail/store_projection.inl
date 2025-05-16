@@ -37,12 +37,12 @@ inline std::size_t BaseStoreProjection::hash() const noexcept
 // ==========================================================================================
 
 template <bool SINGLE>
-void StoreProjection::populate_requirement(Legion::RegionRequirement& requirement,
-                                           const Legion::LogicalRegion& region,
-                                           const std::vector<Legion::FieldID>& fields,
-                                           Legion::PrivilegeMode privilege) const
+Legion::RegionRequirement StoreProjection::create_requirement(
+  const Legion::LogicalRegion& region,
+  const std::vector<Legion::FieldID>& fields,
+  Legion::PrivilegeMode privilege) const
 {
-  return populate_requirement<SINGLE>(requirement, region, fields, privilege, is_key);
+  return create_requirement<SINGLE>(region, fields, privilege, is_key);
 }
 
 }  // namespace legate::detail

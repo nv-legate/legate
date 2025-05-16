@@ -20,16 +20,24 @@ class BaseStoreProjection {
   bool operator<(const BaseStoreProjection& other) const;
   bool operator==(const BaseStoreProjection& other) const;
 
-  // TODO(wonchanl): Ideally we want this method to return a requirement, instead of taking an
-  // in-out argument. We go with an in-out parameter for now, as RegionRequirement doesn't have
-  // a move constructor/assignment.
+  /**
+   * @brief Create a Legion region requirement from this projection store.
+   *
+   * @param region The logical region for which to create the requirement.
+   * @param fields The fields of `region` for which the requirement should apply.
+   * @param privilege The privilege mode for the region.
+   * @param is_key Whether the region is the "key" region.
+   * @param is_single Whether the region requires exclusive or collective exclusive coherence.
+   *
+   * @return The region requirement.
+   */
   template <bool SINGLE>
-  void populate_requirement(Legion::RegionRequirement& requirement,
-                            const Legion::LogicalRegion& region,
-                            const std::vector<Legion::FieldID>& fields,
-                            Legion::PrivilegeMode privilege,
-                            bool is_key,
-                            bool is_single = SINGLE) const;
+  [[nodiscard]] Legion::RegionRequirement create_requirement(
+    const Legion::LogicalRegion& region,
+    const std::vector<Legion::FieldID>& fields,
+    Legion::PrivilegeMode privilege,
+    bool is_key,
+    bool is_single = SINGLE) const;
 
   void set_reduction_op(GlobalRedopID _redop);
 
@@ -43,13 +51,22 @@ class BaseStoreProjection {
 class StoreProjection final : public BaseStoreProjection {
  public:
   using BaseStoreProjection::BaseStoreProjection;
-  using BaseStoreProjection::populate_requirement;
+  using BaseStoreProjection::create_requirement;
 
+  /**
+   * @brief Create a Legion region requirement from this projection store.
+   *
+   * @param region The logical region for which to create the requirement.
+   * @param fields The fields of `region` for which the requirement should apply.
+   * @param privilege The privilege mode for the region.
+   *
+   * @return The region requirement.
+   */
   template <bool SINGLE>
-  void populate_requirement(Legion::RegionRequirement& requirement,
-                            const Legion::LogicalRegion& region,
-                            const std::vector<Legion::FieldID>& fields,
-                            Legion::PrivilegeMode privilege) const;
+  [[nodiscard]] Legion::RegionRequirement create_requirement(
+    const Legion::LogicalRegion& region,
+    const std::vector<Legion::FieldID>& fields,
+    Legion::PrivilegeMode privilege) const;
 
   bool is_key{};
 };
