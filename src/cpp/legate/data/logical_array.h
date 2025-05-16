@@ -338,21 +338,58 @@ class LogicalArray {
 };
 
 /**
- * @brief A multi-dimensional array representing a list of values
+ * @brief Represents a logical array of variable-length lists.
+ *
+ * Each element of the array is itself a list, potentially of different length. For example, a
+ * ListLogicalArray may represent:
+ *
+ * ```
+ * [[a, b], [c], [d, e, f]]
+ * ```
+ *
+ * This is stored using two arrays:
+ *
+ * 1. A descriptor array that defines the start and end indices of each sublist within the
+ *    value data array. The descriptor array is stored as a series of `Rect<1>`s, where
+ *    `lo` and `hi` members indicate the start and end of each range.
+ * 2. A value data array (`vardata`) containing all list elements in a flattened form.
+ *
+ * For example:
+ *
+ * ```
+ * descriptor: [ (0, 1), (2, 2), (3, 5) ]
+ * vardata:    [ a, b, c, d, e, f ]
+ * ```
+ *
+ * Where the mapping of `descriptor` to `vardata` follows:
+ *
+ * ```
+ * descriptor     vardata
+ * ----------     --------------------
+ * (0, 1)    ---> [ a, b ]
+ * (2, 2)    --->        [ c ]
+ * (3, 5)    --->            [ d, e, f ]
+ * ```
+ *
+ * @note The user can achieve the same effects of a `ListLogicalArray` themselves by applying
+ * an image constraint (`image(Variable, Variable, ImageComputationHint)`) to two
+ * `LogicalArray`s when passing them to a task. In that case `descriptor` would be
+ * `var_function` while `vardata` would be `var_range`.
  */
 class ListLogicalArray : public LogicalArray {
  public:
   /**
-   * @brief Returns the sub-array for descriptors
+   * @brief Returns the sub-array for descriptors. Each element is a `Rect<1>` of start and end
+   * indices for each subregion in `vardata`.
    *
-   * @return Sub-array's for descriptors
+   * @return Sub-array's for descriptors.
    */
   [[nodiscard]] LogicalArray descriptor() const;
 
   /**
-   * @brief Returns the sub-array for variable size data
+   * @brief Returns the sub-array for variable size data.
    *
-   * @return `LogicalArray` of variable sized data
+   * @return `LogicalArray` of variable sized data.
    */
   [[nodiscard]] LogicalArray vardata() const;
 
@@ -363,21 +400,30 @@ class ListLogicalArray : public LogicalArray {
 };
 
 /**
- * @brief A multi-dimensional array representing a string
+ * @brief A multi-dimensional array representing a collection of strings.
+ *
+ * This class is essentially a `ListLogicalArray` specialized for lists-of-strings data. The
+ * member functions `offsets()` and `chars()` are directly analogous to
+ * `ListLogicalArray::descriptor()` and `ListLogicalArray::vardata()`.
+ *
+ * The strings are stored in a compact form, accessible through `chars()`, while `offsets()`
+ * gives the start and end indices for each sub-string.
+ *
+ * @see ListLogicalArray
  */
 class StringLogicalArray : public LogicalArray {
  public:
   /**
-   * @brief Returns the sub-array for offsets
+   * @brief Returns the sub-array for offsets giving the bounds of each string.
    *
-   * @return `LogicalArray` of offsets into this array
+   * @return `LogicalArray` of offsets into this array.
    */
   [[nodiscard]] LogicalArray offsets() const;
 
   /**
-   * @brief Returns the sub-array for characters
+   * @brief Returns the sub-array for characters of the strings.
    *
-   * @return `LogicalArray` representing the characters of the string
+   * @return `LogicalArray` representing the characters of the strings.
    */
   [[nodiscard]] LogicalArray chars() const;
 
