@@ -124,15 +124,16 @@ class TestInlineAllocation:
     @pytest.mark.parametrize("dtype", (ty.int8, ty.int16, ty.int32, ty.int64))
     @pytest.mark.parametrize("shape", ((1,), (1, 2, 3), (1, 2, 3, 4)))
     def test_stream(self, dtype: Type, shape: tuple[int, ...]) -> None:
-        strides = compute_strides(shape, dtype)
+        import cupy as cp  # type: ignore[import-not-found, unused-ignore]
 
         @task(variants=(VariantCode.GPU,))
         def foo(x: InputStore) -> None:
             alloc = x.get_inline_allocation()
+            arr = cp.asarray(alloc)
 
             assert alloc.ptr != 0
-            assert alloc.strides == strides
-            assert alloc.shape == shape
+            assert alloc.strides == arr.strides
+            assert alloc.shape == arr.shape
             assert alloc.target == StoreTarget.FBMEM
             with pytest.raises(
                 ValueError,
@@ -149,7 +150,7 @@ class TestInlineAllocation:
             assert cai["shape"] == shape
             assert cai["typestr"] == dtype.to_numpy_dtype().str
             assert cai["data"] == (alloc.ptr, False)
-            assert cai["strides"] == strides
+            assert cai["strides"] == arr.strides
             # stream is either None, or an integer. If None, then no sync is
             # required by the consumer. 0 is disallowed outright because it is
             # ambiguous with None. 1 is the legacy default stream, and 2 is the
