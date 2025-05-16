@@ -60,13 +60,10 @@ function(legate_option name var_env docs default_val)
 endfunction()
 
 find_package(HDF5 QUIET)
-find_package(CUDAToolkit QUIET)
 
 # Initialize these vars from the CLI, then fallback to an evar or a default value.
 legate_option(legate_BUILD_TESTS BUILD_TESTS "Whether to build the C++ tests" OFF)
 legate_option(legate_BUILD_DOCS BUILD_DOCS "Build doxygen docs" OFF)
-legate_option(Legion_SPY USE_SPY "Enable detailed logging for Legion Spy" OFF)
-legate_option(Legion_USE_LLVM USE_LLVM "Use LLVM JIT operations" OFF)
 legate_option(Legion_USE_CUDA USE_CUDA "Enable Legion support for the CUDA runtime" OFF)
 legate_option(legate_USE_HDF5 USE_HDF5 "Enable support for HDF5" ${HDF5_FOUND})
 if(legate_USE_HDF5 AND Legion_USE_CUDA)
@@ -94,7 +91,7 @@ legate_option(legate_USE_CAL LEGATE_USE_CAL "Enable CAL support in Legate" OFF)
 legate_option(legate_BUILD_BENCHMARKS LEGATE_BUILD_BENCHMARKS "Build legate benchmarks"
               OFF)
 legate_option(legate_USE_CPROFILE LEGATE_USE_CPROFILE "Enable Cprofile in Legate" OFF)
-legate_option(legate_USE_NCCL LEGATE_USE_NCCL "Enable NCCL support" ${CUDAToolkit_FOUND})
+legate_option(legate_USE_NCCL LEGATE_USE_NCCL "Enable NCCL support" OFF)
 
 if("${Legion_NETWORKS}" MATCHES ".*gasnet(1|ex).*")
   legate_setting(GASNet_ROOT_DIR GASNET "GASNet root directory" UNSET)
@@ -137,5 +134,3 @@ legate_setting(Legion_CXX_FLAGS LEGION_CXX_FLAGS "C++ flags for Legion" SET_BUT_
 legate_setting(Legion_CUDA_FLAGS LEGION_CUDA_FLAGS "CUDA flags for Legion" SET_BUT_EMPTY)
 legate_setting(Legion_LINKER_FLAGS LEGION_LD_FLAGS "Linker flags for Legion"
                SET_BUT_EMPTY)
-
-list(POP_BACK CMAKE_MESSAGE_CONTEXT)

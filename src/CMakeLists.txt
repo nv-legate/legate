@@ -127,6 +127,7 @@ set_ifndef(BUILD_MARCH OFF)
 set_ifndef(BUILD_MCPU OFF)
 set_ifndef(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set_ifndef(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set_ifndef(BUILD_SHARED_LIBS ON)
 
 # ########################################################################################
 # * rapids-cmake --------------------------------------------------------

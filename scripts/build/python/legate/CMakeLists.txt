@@ -18,6 +18,7 @@ set(LEGATE_BUILD_PIP_WHEELS ON)
 # Set defaults for the wheels build.
 set(Legion_USE_CUDA ON)
 set(Legion_NETWORKS ucx)
+set(legate_USE_NCCL ON)
 # Disable CAL for now due to missing link in the wheel.
 set(legate_USE_CAL OFF)
 
