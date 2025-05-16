@@ -288,7 +288,7 @@ void validate_colocation(Span<const mapping::StoreMapping> client_mappings, cons
     const auto cant_colocate = [&first_store = *stores.front()](const Store* store) {
       return !store->can_colocate_with(first_store);
     };
-    if (std::any_of(stores.cbegin() + 1, stores.cend(), cant_colocate)) {
+    if (std::any_of(stores.begin() + 1, stores.end(), cant_colocate)) {
       LEGATE_ABORT("Mapper ", mapper_name, " tried to colocate stores that cannot colocate");
     }
   }

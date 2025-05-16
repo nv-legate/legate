@@ -41,8 +41,9 @@ void IndexAttach::launch()
 
   static_assert(std::is_same_v<decltype(launcher.provenance), std::string>,
                 "Don't use to_string() below");
-  launcher.provenance                               = provenance().to_string();
-  launcher.constraints.ordering_constraint.ordering = ordering_->generate_legion_dims(dim_);
+  launcher.provenance = provenance().to_string();
+  launcher.constraints.ordering_constraint.ordering.clear();
+  ordering_->populate_dimension_ordering(dim_, launcher.constraints.ordering_constraint.ordering);
   launcher.constraints.ordering_constraint.ordering.push_back(DIM_F);
   launcher.constraints.field_constraint.field_set =
     std::vector<Legion::FieldID>{region_field_->field_id()};

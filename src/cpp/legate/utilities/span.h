@@ -14,7 +14,7 @@
 
 /**
  * @file
- * @brief Class definition for legate::Span.
+ * @brief Class definition for legate::Span
  */
 
 namespace legate {
@@ -43,7 +43,7 @@ inline constexpr bool is_container_v = is_container<T>::value;
 /**
  * @brief A simple span implementation used in Legate.
  *
- * Should eventually be replaced with std::span once we bump up the C++ standard version to C++20.
+ * Should eventually be replaced with std::span once we bump up the C++ standard version to C++20
  */
 template <typename T>
 class Span {
@@ -59,7 +59,7 @@ class Span {
   using iterator               = pointer;
   using const_iterator         = const_pointer;
   using reverse_iterator       = std::reverse_iterator<iterator>;
-  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+  using reverse_const_iterator = std::reverse_iterator<const_iterator>;
 
   constexpr Span() = default;
 
@@ -98,80 +98,57 @@ class Span {
    * The caller must guarantee that the allocation is big enough (i.e., bigger than or
    * equal to `sizeof(T) * size`) and that the allocation is alive while the span is alive.
    *
-   * @param data Pointer to the data.
-   * @param size Number of elements.
+   * @param data Pointer to the data
+   * @param size Number of elements
    */
   constexpr Span(T* data, size_type size);
 
   /**
-   * @brief Returns the number of elements.
+   * @brief Returns the number of elements
    *
-   * @return The number of elements.
+   * @return The number of elements
    */
   [[nodiscard]] constexpr size_type size() const;
 
   [[nodiscard]] constexpr reference operator[](size_type pos) const;
 
   /**
-   * @brief Returns the pointer to the first element.
+   * @brief Returns the pointer to the first element
    *
-   * @return Pointer to the first element.
-   */
-  [[nodiscard]] constexpr const_iterator cbegin() const noexcept;
-
-  /**
-   * @brief Returns the pointer to the end of allocation.
-   *
-   * @return Pointer to the end of allocation.
-   */
-  [[nodiscard]] constexpr const_iterator cend() const noexcept;
-  /**
-   * @brief Returns the pointer to the first element.
-   *
-   * @return Pointer to the first element.
+   * @return Pointer to the first element
    */
   [[nodiscard]] constexpr const_iterator begin() const;
 
   /**
-   * @brief Returns the pointer to the end of allocation.
+   * @brief Returns the pointer to the end of allocation
    *
-   * @return Pointer to the end of allocation.
+   * @return Pointer to the end of allocation
    */
   [[nodiscard]] constexpr const_iterator end() const;
 
   /**
-   * @brief Returns the pointer to the first element.
+   * @brief Returns the pointer to the first element
    *
-   * @return Pointer to the first element.
+   * @return Pointer to the first element
    */
   [[nodiscard]] constexpr iterator begin();
 
   /**
-   * @brief Returns the pointer to the end of allocation.
+   * @brief Returns the pointer to the end of allocation
    *
-   * @return Pointer to the end of allocation.
+   * @return Pointer to the end of allocation
    */
   [[nodiscard]] constexpr iterator end();
 
   /**
    * @return An iterator to the last element.
    */
-  [[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept;
+  [[nodiscard]] constexpr reverse_const_iterator rbegin() const;
 
   /**
-   * @return An iterator to the location preceding the first element.
+   * @return An iterator one past the first element.
    */
-  [[nodiscard]] constexpr const_reverse_iterator crend() const noexcept;
-
-  /**
-   * @return An iterator to the last element.
-   */
-  [[nodiscard]] constexpr const_reverse_iterator rbegin() const;
-
-  /**
-   * @return An iterator to the location preceding the first element.
-   */
-  [[nodiscard]] constexpr const_reverse_iterator rend() const;
+  [[nodiscard]] constexpr reverse_const_iterator rend() const;
 
   /**
    * @return An iterator to the last element.
@@ -179,7 +156,7 @@ class Span {
   [[nodiscard]] constexpr reverse_iterator rbegin();
 
   /**
-   * @return An iterator to the location preceding the first element.
+   * @return An iterator one past the first element.
    */
   [[nodiscard]] constexpr reverse_iterator rend();
 
@@ -197,7 +174,7 @@ class Span {
    * @brief Slices off the first `off` elements. Passing an `off` greater than
    * the size will fail with an assertion failure.
    *
-   * @param off Number of elements to skip.
+   * @param off Number of elements to skip
    *
    * @return A span for range `[off, size())`
    */

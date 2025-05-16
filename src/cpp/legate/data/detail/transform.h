@@ -55,19 +55,6 @@ class Transform {
   [[nodiscard]] virtual bool is_convertible() const = 0;
   virtual void pack(BufferBuilder& buffer) const    = 0;
   virtual void print(std::ostream& out) const       = 0;
-
-  /**
-   * @brief Applies the inverse transform (based on the derived class) to a tuple of
-   * integers representing dimensions. For example, Transpose logically reorders the dims,
-   * so Transpose::invert_dims() will undo the reordering.
-   *
-   * @param dims a tuple of integer dimensions
-   *        with ids [0..dims.size()) in an arbitrary order.
-   *
-   * @returns a tuple of dims obtained
-   *          by applying the inverse transform (based on the derived class).
-   */
-  [[nodiscard]] virtual tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const = 0;
 };
 
 class StoreTransform : public Transform {
@@ -113,17 +100,6 @@ class TransformStack final : public Transform {
   void dump() const;
 
   [[nodiscard]] std::vector<std::int32_t> find_imaginary_dims() const;
-
-  /**
-   * @brief Invokes `invert_dims()` down the transform stack recursively.
-   *
-   * @param dims a tuple of integer dimensions
-   *        with ids [0..dims.size()) in an arbitrary order.
-   *
-   * @returns a tuple of dims obtained
-   *          by applying `invert_dims()` recursively down the transform stack.
-   */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
 
  private:
   struct private_tag {};
@@ -174,16 +150,6 @@ class Shift final : public StoreTransform {
 
   void find_imaginary_dims(std::vector<std::int32_t>&) const override;
 
-  /**
-   * @brief Is a NOOP for Shift.
-   *
-   * @param dims a tuple of integer dimensions
-   *        with ids [0..dims.size()) in an arbitrary order.
-   *
-   * @returns dims unmodified.
-   */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
-
  private:
   std::int32_t dim_{};
   std::int64_t offset_{};
@@ -219,17 +185,6 @@ class Promote final : public StoreTransform {
   [[nodiscard]] std::int32_t target_ndim(std::int32_t source_ndim) const override;
 
   void find_imaginary_dims(std::vector<std::int32_t>&) const override;
-
-  /**
-   * @brief Remove the value that equals `extram_dim_` from input tuple of
-   * dimensions.
-   *
-   * @param dims a tuple of integer dimensions
-   *        with ids [0..dims.size()) in an arbitrary order.
-   *
-   * @returns a tuple of dimensions that has `extra_dim_` removed from it.
-   */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
 
  private:
   std::int32_t extra_dim_{};
@@ -267,17 +222,6 @@ class Project final : public StoreTransform {
 
   void find_imaginary_dims(std::vector<std::int32_t>&) const override;
 
-  /**
-   * @brief Add back `dim_` to the input tuple of
-   * dimensions at position `dim_`.
-   *
-   * @param dims a tuple of integer dimensions
-   *        with ids [0..dims.size()) in an arbitrary order.
-   *
-   * @returns a tuple of dimensions with `dim_` inserted back.
-   */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
-
  private:
   std::int32_t dim_{};
   std::int64_t coord_{};
@@ -314,17 +258,6 @@ class Transpose final : public StoreTransform {
 
   void find_imaginary_dims(std::vector<std::int32_t>&) const override;
 
-  /**
-   * @brief Reorder the input tuple of dimensions in the inverse order of
-   * transpose, i.e., permute based on `inverse_` vector.
-   *
-   * @param dims a tuple of integer dimensions
-   *        with ids [0..dims.size()) in an arbitrary order.
-   *
-   * @returns a tuple of dimensions permuted based on `inverse_`.
-   */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
-
  private:
   std::vector<std::int32_t> axes_{};
   std::vector<std::int32_t> inverse_{};
@@ -360,20 +293,6 @@ class Delinearize final : public StoreTransform {
   [[nodiscard]] std::int32_t target_ndim(std::int32_t source_ndim) const override;
 
   void find_imaginary_dims(std::vector<std::int32_t>&) const override;
-
-  /**
-   * @brief Remove the new dimensions that were added as a result of Deliearize,
-   * and add back the original dimension, while also renumbering the higher
-   * dimensions.
-   *
-   * @param dims a tuple of integer dimensions
-   *        with ids [0..dims.size()) in an arbitrary order.
-   *
-   * @returns a tuple of dimensions with values in the range
-   *          (dim_, x=(dim_ + sizes_.size()) removed and all values y >= x
-   *          renumbered to y-x-1.
-   */
-  [[nodiscard]] tuple<std::int32_t> invert_dims(tuple<std::int32_t> dims) const override;
 
  private:
   std::int32_t dim_{};

@@ -129,9 +129,6 @@ set(with_runtime_SRC
     bug/premature_free.cc
     bug/remap_double_detach.cc
     bug/singleton_index_task.cc
-    bug/transpose_fortran_order.cc
-    bug/temporary_logical_store.cc
-    bug/string_physical_array_owner.cc
     # integration
     integration/aligned_unbound_stores.cc
     integration/alignment_constraints.cc
@@ -178,7 +175,6 @@ set(with_runtime_SRC
     integration/tasks/task_simple.cc
     integration/task_store/auto_task_tests.cc
     integration/task_store/manual_task_tests.cc
-    integration/transpose_dim_order.cc
     integration/tree_reduce.cc
     integration/tree_reduce_unique.cc
     integration/tunable.cc
