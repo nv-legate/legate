@@ -83,13 +83,13 @@ class CheckTask : public legate::LegateTask<CheckTask> {
     for (legate::PointInRectIterator<DIM> it{shape}; it.valid(); ++it) {
       if (acc[*it] != expected) {
         std::cerr << "Error at position (" << (*it)[0] << "," << (*it)[1] << "): expected "
-                  << expected << ", got " << acc[*it] << std::endl;
+                  << expected << ", got " << acc[*it] << "\n";
         all_correct = false;
       }
     }
 
     if (all_correct) {
-      std::cout << "All " << shape.volume() << " values correct in 2D array!" << std::endl;
+      std::cout << "All " << shape.volume() << " values correct in 2D array!\n";
     }
   }
 };
