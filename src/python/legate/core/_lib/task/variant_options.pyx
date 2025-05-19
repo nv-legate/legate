@@ -72,11 +72,11 @@ cdef class VariantOptions:
     def __init__(
         self,
         *,
-        concurrent: bool | None = None,
-        has_allocations: bool | None = None,
-        elide_device_ctx_sync: bool | None = None,
-        has_side_effect: bool | None = None,
-        may_throw_exception: bool | None = None,
+        concurrent = None,
+        has_allocations = None,
+        elide_device_ctx_sync = None,
+        has_side_effect = None,
+        may_throw_exception = None,
         communicators: Sequence[str] | None = None
     ) -> None:
         self._handle = _VariantOptions()
