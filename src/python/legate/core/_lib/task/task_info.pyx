@@ -2,6 +2,8 @@
 # All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+import gc
+
 from libc.stdio cimport fflush as std_fflush, fprintf as std_fprintf, stderr
 from libc.stdlib cimport abort as std_abort
 from libcpp.string cimport string as std_string
@@ -57,6 +59,19 @@ cdef extern void _py_variant "_py_variant"(_TaskContext ctx) with gil:
     cdef std_string abort_message
     cdef dict variant_callbacks
     cdef object py_callback
+
+    # Disable garbage collection while executing a python task, because some
+    # Legate objects perform Legion runtime calls in their destructor (e.g.
+    # LogicalStore can launch a Discard operation), which are not allowed in
+    # leaf tasks. See https://github.com/nv-legate/legate.internal/issues/2261.
+    # TODO(mpapadakis): We should make sure we never relinquish the GIL
+    # and get context-switched out to the main thread (e.g. by calling a
+    # runtime function). Otherwise that thread would be executing with
+    # garbage collection disabled
+    cdef bool gc_enabled_at_entry = gc.isenabled()
+    if gc_enabled_at_entry:
+        gc.disable()
+
     try:
         # Note: every one of these asserts must be inside this block, since
         # otherwise the errors from these assertions are never shown -- the
@@ -100,6 +115,9 @@ cdef extern void _py_variant "_py_variant"(_TaskContext ctx) with gil:
             )
             std_fflush(NULL)
             std_abort()
+    finally:
+        if gc_enabled_at_entry:
+            gc.enable()
 
 # Need an initializer function since I could not figure out how to initialize a
 # std::unordered_map from a = {a : b, c : d} expression...
