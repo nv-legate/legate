@@ -8,7 +8,6 @@ requires = [
     "rich",
 ]
 build-backend = "scikit_build_core.build"
-python-requires = ">=3.11"
 
 [project]
 name = "legate"
@@ -37,6 +36,7 @@ dependencies = [
     "nvidia-libcal-cu12",
 ]
 dynamic = ["version"]
+requires-python = ">=3.11"
 
 [project.optional-dependencies]
 test = [
