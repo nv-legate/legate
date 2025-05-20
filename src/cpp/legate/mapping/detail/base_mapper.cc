@@ -491,58 +491,6 @@ void map_unbound_stores(Span<const std::unique_ptr<StoreMapping>> mappings,
                        legate::detail::ReturnedException::max_size());
 }
 
-void calculate_pool_sizes(Legion::Mapping::MapperRuntime* runtime,
-                          Legion::Mapping::MapperContext ctx,
-                          const Legion::Task& task,
-                          Processor target_proc,
-                          const LocalMachine& local_machine,
-                          Logger* logger,
-                          Task* legate_task,
-                          Legion::Mapping::Mapper::MapTaskOutput* output)
-{
-  auto&& library = legate_task->library();
-  // TODO(mpapadakis): Unify the variant finding with BaseMapper::find_variant_
-  auto&& maybe_vinfo =
-    library.find_task(legate_task->task_id())->find_variant(to_variant_code(legate_task->target()));
-
-  LEGATE_CHECK(maybe_vinfo.has_value());
-
-  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  auto&& vinfo = maybe_vinfo->get();
-
-  const auto legate_alloc_size = calculate_legate_allocation_size(*legate_task);
-
-  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
-    logger->debug() << "Task " << Legion::Mapping::Utilities::to_string(runtime, ctx, task)
-                    << " needs at least " << legate_alloc_size
-                    << " bytes in a pool for scalar stores, unbound stores, and exceptions";
-  }
-
-  const auto& allocation_pool_targets = default_store_targets(target_proc.kind(), true);
-  if (!vinfo.options.has_allocations) {
-    // Unfortunately, even when the user said her task doesn't create any allocations, there can be
-    // some made by Legate. Therefore, we still need to return the right bounds so Legate can create
-    // those allocations in (the pre- and post-amble of) the user task.
-    for (auto&& target : allocation_pool_targets) {
-      output->leaf_pool_bounds.try_emplace(local_machine.get_memory(target_proc, target),
-                                           legate_alloc_size);
-    }
-    return;
-  }
-
-  auto&& legate_mapper = library.get_mapper();
-  for (auto&& target : allocation_pool_targets) {
-    const auto size   = legate_mapper.allocation_pool_size(mapping::Task{legate_task}, target);
-    const auto memory = local_machine.get_memory(target_proc, target);
-    output->leaf_pool_bounds.try_emplace(
-      memory,
-      size.has_value()
-        ? Legion::PoolBounds{*size + legate_alloc_size}
-        : Legion::PoolBounds{Legion::UnboundPoolScope::LEGION_INDEX_TASK_UNBOUNDED_POOL,
-                             std::numeric_limits<std::size_t>::max()});
-  }
-}
-
 [[nodiscard]] MappingData initial_store_mappings(mapping::StoreMapping::ReleaseKey key,
                                                  const std::vector<StoreTarget>& options,
                                                  const char* mapper_name,
@@ -633,8 +581,7 @@ void BaseMapper::map_task(Legion::Mapping::MapperContext ctx,
                      output_map,
                      legate_task.machine().count() < task.index_domain.get_volume());
 
-  calculate_pool_sizes(
-    runtime, ctx, task, target_proc, local_machine_, &logger(), &legate_task, &output);
+  calculate_pool_sizes_(ctx, task, target_proc, &legate_task, &output);
 
   for (auto&& mapping : for_stores) {
     if (!mapping->policy().redundant) {
@@ -1187,14 +1134,65 @@ bool BaseMapper::map_legate_store_(Legion::Mapping::MapperContext ctx,
   }
   // If we make it here then we failed entirely
   if (!can_fail) {
-    report_failed_mapping_(ctx, mappable, mapping, target_memory, redop, footprint);
+    report_failed_mapping_(ctx, mappable, &mapping, target_memory, redop, footprint);
   }
   return true;
 }
 
+void BaseMapper::calculate_pool_sizes_(Legion::Mapping::MapperContext ctx,
+                                       const Legion::Task& task,
+                                       Processor target_proc,
+                                       legate::mapping::detail::Task* legate_task,
+                                       Legion::Mapping::Mapper::MapTaskOutput* output)
+{
+  auto&& library       = legate_task->library();
+  auto&& legate_mapper = library.get_mapper();
+  // TODO(mpapadakis): Unify the variant finding with BaseMapper::find_variant_
+  auto&& maybe_vinfo =
+    library.find_task(legate_task->task_id())->find_variant(to_variant_code(legate_task->target()));
+
+  LEGATE_CHECK(maybe_vinfo.has_value());
+
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  auto&& vinfo = maybe_vinfo->get();
+
+  const auto legate_alloc_size = calculate_legate_allocation_size(*legate_task);
+
+  if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
+    logger().debug() << fmt::format(
+      "Task {} needs at least {} bytes in a pool for scalar stores, unbound stores, and exceptions",
+      Legion::Mapping::Utilities::to_string(runtime, ctx, task),
+      legate_alloc_size);
+  }
+
+  const auto& allocation_pool_targets = default_store_targets(target_proc.kind(), true);
+
+  for (auto&& target : allocation_pool_targets) {
+    // Unfortunately, even when the user said her task doesn't create any allocations, there can be
+    // some made by Legate. Therefore, we still need to return the right bounds so Legate can create
+    // those allocations in (the pre- and post-amble of) the user task.
+    const auto size   = !vinfo.options.has_allocations
+                          ? std::make_optional<std::size_t>(0)
+                          : legate_mapper.allocation_pool_size(mapping::Task{legate_task}, target);
+    const auto memory = local_machine_.get_memory(target_proc, target);
+    const auto bounds =
+      size.has_value()
+        ? Legion::PoolBounds{*size + legate_alloc_size}
+        : Legion::PoolBounds{Legion::UnboundPoolScope::LEGION_INDEX_TASK_UNBOUNDED_POOL,
+                             std::numeric_limits<std::size_t>::max()};
+    output->leaf_pool_bounds.try_emplace(memory, bounds);
+    if (bounds.is_bounded() && bounds.size > 0) {
+      if (!runtime->acquire_pool(ctx, memory, bounds)) {
+        report_failed_mapping_(
+          ctx, task, /* mapping */ std::nullopt, memory, GlobalRedopID{0}, bounds.size);
+      }
+    }
+  }
+}
+
 void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
                                         const Legion::Mappable& mappable,
-                                        const StoreMapping& mapping,
+                                        std::optional<const StoreMapping*> mapping,
                                         Memory target_memory,
                                         GlobalRedopID redop,
                                         std::size_t footprint)
@@ -1209,24 +1207,34 @@ void BaseMapper::report_failed_mapping_(Legion::Mapping::MapperContext ctx,
     provenance = "unknown provenance";
   }
 
-  std::stringstream req_ss;
+  std::string req_str = [&]() -> std::string {
+    if (!mapping.has_value()) {
+      return "the temporary allocations";
+    }
+    if (redop > GlobalRedopID{0}) {
+      return fmt::format("reduction {} requirement(s) {}",
+                         legate::detail::to_underlying(redop),
+                         (*mapping)->requirement_indices());
+    }
+    return fmt::format("region requirement(s) {}", (*mapping)->requirement_indices());
+  }();
 
-  if (redop > GlobalRedopID{0}) {
-    req_ss << "reduction (" << legate::detail::to_underlying(redop) << ") requirement(s) ";
-  } else {
-    req_ss << "region requirement(s) ";
-  }
-  req_ss << fmt::format("{}", mapping.requirement_indices());
-
-  logger().error() << "Failed to allocate " << footprint << " bytes on memory " << std::hex
-                   << target_memory.id << std::dec << " (of kind "
-                   << Legion::Mapping::Utilities::to_string(target_memory.kind()) << ") for "
-                   << req_ss.str() << " of " << log_mappable(mappable, true /*prefix_only*/)
-                   << opname << "[" << provenance << "] (UID " << mappable.get_unique_id() << ")";
-  for (const Legion::RegionRequirement* req : mapping.requirements()) {
-    for (const Legion::FieldID fid : req->instance_fields) {
-      logger().error() << "  corresponding to a LogicalStore allocated at "
-                       << retrieve_alloc_info_(ctx, req->region.get_field_space(), fid);
+  logger().error() << fmt::format(
+    "Failed to allocate {} bytes on memory {:x} (of kind {}) for {} of {}{}[{}] (UID {})",
+    footprint,
+    target_memory.id,
+    Legion::Mapping::Utilities::to_string(target_memory.kind()),
+    req_str,
+    log_mappable(mappable, true /*prefix_only*/),
+    opname,
+    provenance,
+    mappable.get_unique_id());
+  if (mapping.has_value()) {
+    for (const Legion::RegionRequirement* req : (*mapping)->requirements()) {
+      for (auto&& fid : req->instance_fields) {
+        logger().error() << "  corresponding to a LogicalStore allocated at "
+                         << retrieve_alloc_info_(ctx, req->region.get_field_space(), fid);
+      }
     }
   }
 

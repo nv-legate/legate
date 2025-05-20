@@ -23,6 +23,8 @@
 
 namespace legate::mapping::detail {
 
+class Task;
+
 class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInterface {
  public:
   static constexpr std::string_view LOGGER_NAME = "legate.mapper";
@@ -278,9 +280,14 @@ class BaseMapper final : public Legion::Mapping::Mapper, public MachineQueryInte
                          Legion::Mapping::PhysicalInstance& result,
                          bool can_fail,
                          bool must_alloc_collective_writes);
+  void calculate_pool_sizes_(Legion::Mapping::MapperContext ctx,
+                             const Legion::Task& task,
+                             Processor target_proc,
+                             Task* legate_task,
+                             Legion::Mapping::Mapper::MapTaskOutput* output);
   void report_failed_mapping_(Legion::Mapping::MapperContext ctx,
                               const Legion::Mappable& mappable,
-                              const StoreMapping& mapping,
+                              std::optional<const StoreMapping*> mapping,
                               Memory target_memory,
                               GlobalRedopID redop,
                               std::size_t footprint);
