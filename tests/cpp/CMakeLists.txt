@@ -181,6 +181,7 @@ set(with_runtime_SRC
     integration/variant_options_precedence.cc
     integration/weighted.cc
     # unit
+    unit/attachment.cc
     unit/constraint.cc
     unit/debug.cc
     unit/dispatch.cc
