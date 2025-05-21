@@ -166,3 +166,52 @@ class TestPrioritizedSetting:
         assert s.bar() == 10
         s.bar = 20
         assert s.bar() == 20  # type: ignore[operator]
+
+
+class TestEnvOnlySetting:
+    def test_env_set(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        ps: Any = m.EnvOnlySetting(
+            "foo", "FOO", default=10, convert=m.convert_int
+        )
+        monkeypatch.setenv("FOO", "5")
+        assert ps() == 5
+
+    def test_env_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        ps: Any = m.EnvOnlySetting(
+            "foo", "FOO", default=10, convert=m.convert_int
+        )
+        monkeypatch.delenv("FOO", raising=False)
+        assert ps() == 10
+
+    def test_cache(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        ps: Any = m.EnvOnlySetting(
+            "foo", "FOO", default=10, convert=m.convert_int
+        )
+        monkeypatch.setenv("FOO", "5")
+        assert ps() == 5
+        monkeypatch.setenv("FOO", "6")
+        assert ps() == 5
+
+    def test_cache_using_default(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        ps: Any = m.EnvOnlySetting(
+            "foo", "FOO", default=10, convert=m.convert_int
+        )
+        monkeypatch.delenv("FOO", raising=False)
+        assert ps() == 10
+        monkeypatch.setenv("FOO", "6")
+        assert ps() == 10
+
+    def test_test_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        ps: Any = m.EnvOnlySetting(
+            "foo", "FOO", default=10, test_default=11, convert=m.convert_int
+        )
+        monkeypatch.setenv("LEGATE_TEST", "1")
+        assert ps() == 11
+
+    def test_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        ps: Any = m.EnvOnlySetting("foo", "FOO", convert=m.convert_int)
+        monkeypatch.delenv("FOO", raising=False)
+        with pytest.raises(ValueError, match="is not set and no default"):
+            ps()

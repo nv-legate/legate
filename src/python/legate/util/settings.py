@@ -340,11 +340,17 @@ class PrioritizedSetting(SettingBase[T]):
 
 
 class EnvOnlySetting(SettingBase[T]):
-    """Return a value for a global environment variable setting.
+    """Return a value for a global environment variable setting. The value
+    is cached upon first read (i.e. it will not update if the value of the
+    environment variable subsequently changes).
 
     A ``convert`` argument may be provided to convert values before they are
     returned.
     """
+
+    _cached = False
+
+    _cached_value: T
 
     def __init__(  # noqa: PLR0913
         self,
@@ -360,16 +366,30 @@ class EnvOnlySetting(SettingBase[T]):
         self._env_var = env_var
 
     def __call__(self) -> T:
+        if self._cached:
+            return self._cached_value
+
         if self._env_var in os.environ:
-            return self._convert(os.environ[self._env_var])
+            self._cached_value = self._convert(os.environ[self._env_var])
 
-        # unfortunate
-        test = convert_bool(os.environ.get("LEGATE_TEST", ""))
+        else:
+            # unfortunate necessity for LEGATE_TEST
+            test = convert_bool(os.environ.get("LEGATE_TEST", ""))
+            if test and self.test_default is not _Unset:
+                self._cached_value = self._convert(self.test_default)
 
-        if test and self.test_default is not _Unset:
-            return self._convert(self.test_default)
+            elif self._default is not _Unset:
+                self._cached_value = self._convert(self.default)
 
-        return self._convert(self.default)
+            else:
+                msg = (
+                    f"EnvOnlySetting {self.name}: env var {self._env_var} "
+                    "is not set and no default has been provided"
+                )
+                raise ValueError(msg)
+
+        self._cached = True
+        return self._cached_value
 
     def __get__(self, instance: Any, owner: type[Any]) -> EnvOnlySetting[T]:
         return self
