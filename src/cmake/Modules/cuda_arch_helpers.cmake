@@ -27,7 +27,8 @@ function(_legate_get_supported_arch_list_nvcc dest_var var_name)
   list(TRANSFORM arch_list REPLACE [=[(compute|arch)_]=] "")
   list(TRANSFORM arch_list STRIP)
   list(REMOVE_ITEM arch_list "")
-  list(SORT arch_list)
+  # Use natural comparison, so that 100 does not end up before 90 etc.
+  list(SORT arch_list COMPARE NATURAL)
 
   set(${dest_var} "${arch_list}" PARENT_SCOPE)
 endfunction()
@@ -86,13 +87,24 @@ function(legate_set_default_cuda_arch)
   # where we'd do that
   _legate_get_supported_arch_list_nvcc(arch_list "${_LEGATE_DEST_VAR}")
 
-  # Remove < sm_60
-  list(FILTER arch_list EXCLUDE REGEX [=[[0-5][0-9]]=])
+  # Remove < sm_60. We do this because we need full atomic support, which was not complete
+  # until sm_60.
+  list(FILTER arch_list EXCLUDE REGEX [=[^[0-5][0-9]$]=])
   if(ONLY_MAJOR)
     list(GET arch_list -1 largest_virtual_arch)
     # Remove any non-major architectures, they should all numeric-only except for Hopper,
     # which strangely has sm_90a.
-    list(FILTER arch_list EXCLUDE REGEX [=[[0-9]+[1-9][a-z]?]=])
+    #
+    # So given arch_list = [75, 90, 90a, 91, 91a, 100, 120] ...
+    list(FILTER arch_list EXCLUDE REGEX [=[^[0-9]+[1-9][a-z]?$]=])
+    # We now have
+    #
+    # arch_list = [90, 90a, 100, 120]
+    list(FILTER arch_list EXCLUDE REGEX [=[^[0-9]+[a-z]$]=])
+    # And now we have
+    #
+    # arch_list = [90, 100, 120]
+    #
     # To match all-major, which compiles for:
     #
     # ...all supported major real architectures, and the highest major virtual
