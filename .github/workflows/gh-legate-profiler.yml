@@ -28,7 +28,7 @@ jobs:
   Build_Profiler:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@cleanup_download_artifact_code
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.32
     with:
       client-repo: ${{ github.event.repository.name }}
       target-device: ${{ inputs.target-device }}
@@ -38,9 +38,8 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "cleanup_download_artifact_code"
+      legate-gh-ci-tag: "v1.32"
       build-mode: ""
-      upload-enabled: true
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: true
@@ -50,13 +49,13 @@ jobs:
     needs: Build_Profiler
     name: Upload Legate Profiler
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@cleanup_download_artifact_code
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.32
     with:
       build-mode: ""
       build-type: ${{ inputs.build-type }}
       client-repo: ${{ github.event.repository.name }}
       build-has-tests: false
-      legate-gh-ci-tag: "cleanup_download_artifact_code"
+      legate-gh-ci-tag: "v1.32"
       name: Upload package to Anaconda
       network: ${{ inputs.network }}
       pkgSubString: "legate-profiler"
@@ -65,7 +64,6 @@ jobs:
       repos-Root: "legate-profiler"
       target-device: ${{ inputs.target-device }}
       upload-action: "upload-package-Anaconda"
-      upload-enabled: true
       refname: ${{ inputs.refname }}
       default-branch: ${{ inputs.default-branch }}
     secrets: inherit
