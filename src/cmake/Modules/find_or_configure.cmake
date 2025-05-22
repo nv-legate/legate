@@ -48,12 +48,27 @@ function(legate_install_dependencies)
       cmake_language(CALL "${_LEGATE_FIXUP_TARGET}" ${target})
     endif()
 
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27.0")
+      set(archive_namelink_skip NAMELINK_SKIP)
+    else()
+      set(archive_namelink_skip)
+    endif()
+
+    # Note, we want to skip namelink installations because:
+    #
+    # 1. We are the only consumers of these .so's and CMake will make sure we link directly
+    #    to libfoo.so.1.2.3, not the generic libfoo.so.
+    # 2. If we are installing into pip wheels, then pip will actually make a deep copy of
+    #    every dependency that has a namelink component because wheels don't support
+    #    symlink. You effectively give it a list of names, and it deep-copies every name
+    #    from src to dest.
+    #
     # cmake-format: off
     install(
       TARGETS "${target}"
       ARCHIVE
         DESTINATION "${legate_DEP_INSTALL_LIBDIR}"
-        NAMELINK_SKIP
+        ${archive_namelink_skip}
       LIBRARY
         DESTINATION "${legate_DEP_INSTALL_LIBDIR}"
         NAMELINK_SKIP
@@ -63,7 +78,8 @@ function(legate_install_dependencies)
         DESTINATION "${legate_DEP_INSTALL_INCLUDEDIR}"
       PRIVATE_HEADER
         DESTINATION "${legate_DEP_INSTALL_INCLUDEDIR}"
-      INCLUDES DESTINATION "${legate_DEP_INSTALL_INCLUDEDIR}")
+      INCLUDES
+        DESTINATION "${legate_DEP_INSTALL_INCLUDEDIR}")
     # cmake-format: on
 
     get_target_property(target_type "${target}" TYPE)
