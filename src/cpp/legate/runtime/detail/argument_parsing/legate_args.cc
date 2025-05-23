@@ -33,9 +33,19 @@ namespace legate::detail {
 
 namespace {
 
+std::string LEGATE_CONFIG_SAVED{};
+
+}  // namespace
+
+std::string_view get_parsed_LEGATE_CONFIG() { return LEGATE_CONFIG_SAVED; }
+
+namespace {
+
 [[nodiscard]] ParsedArgs parse_legate_args()
 {
-  auto args = string_split(LEGATE_CONFIG.get().value_or(""));
+  LEGATE_CONFIG_SAVED = LEGATE_CONFIG.get().value_or("");
+
+  auto args = string_split(LEGATE_CONFIG_SAVED);
 
   // Needed to satisfy argparse, which expects an argv-like interface where argv[0] is the
   // program name.

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <legate/runtime/detail/argument_parsing/legate_args.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/detail/zip.h>
 
@@ -24,37 +25,19 @@
 #include <utilities/env.h>
 #include <utilities/utilities.h>
 #include <vector>
+
 namespace traced_exception_test {
 
 class TracedExceptionFixture : public DefaultFixture {
- public:
-  void SetUp() override;
-  void TearDown() override;
-
- private:
-  std::optional<legate::test::Environment::TemporaryEnvVar> force_color_{};
-  std::optional<legate::test::Environment::TemporaryEnvVar> no_color_{};
-};
-
-inline void TracedExceptionFixture::SetUp()
-{
   // Must disable color output, otherwise the tests checking the tracebacks will be
   // interspersed with color codes.
   //
   // Must do this in a fixture because the "should exceptions use color" check is done
   // exactly once, and on construction of a TracedException object. So we need to ensure that
   // all tests are disabling color output.
-  force_color_.emplace("FORCE_COLOR", nullptr);
-  no_color_.emplace("NO_COLOR", "1", true);
-  DefaultFixture::SetUp();
-}
-
-inline void TracedExceptionFixture::TearDown()
-{
-  force_color_.reset();
-  no_color_.reset();
-  DefaultFixture::TearDown();
-}
+  legate::test::Environment::TemporaryEnvVar force_color_{"FORCE_COLOR", nullptr};
+  legate::test::Environment::TemporaryEnvVar no_color_{"NO_COLOR", "1", true};
+};
 
 [[nodiscard]] inline std::vector<std::string> split_string(std::string_view str)
 {
@@ -82,6 +65,7 @@ MATCHER_P3(MatchesStackTrace,  // NOLINT
            fmt::format("matches the legate stack trace (with message(s) [{}])",
                        fmt::join(exn_messages, ", ")))
 {
+  using ::testing::HasSubstr;
   using ::testing::MatchesRegex;
   using ::testing::StartsWith;
 
@@ -114,6 +98,11 @@ MATCHER_P3(MatchesStackTrace,  // NOLINT
   EXPECT_THAT(deref(it++),
               MatchesRegex(R"(LEGATE ERROR: Legion version: [0-9]+.[0-9]+.[0-9]+ \([A-z0-9]+\))"));
   EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: Configure options: .*"));
+  EXPECT_EQ(
+    deref(it++),
+    fmt::format("LEGATE ERROR: LEGATE_CONFIG: {}", legate::detail::get_parsed_LEGATE_CONFIG()));
+  EXPECT_THAT(deref(it++), MatchesRegex("LEGATE ERROR: [-]+"));
+
   EXPECT_THAT(
     deref(it++),
     MatchesRegex(
@@ -133,6 +122,7 @@ MATCHER_P3(MatchesStackTrace,  // NOLINT
       deref(it++),
       fmt::format(
         "LEGATE ERROR: #{} {}: {}", idx, static_cast<const std::type_info&>(ty_info), exn_mess));
+    EXPECT_EQ(deref(it++), "LEGATE ERROR:");
     EXPECT_EQ(deref(it++), "LEGATE ERROR: Stack trace (most recent call first):");
 
     auto found = false;

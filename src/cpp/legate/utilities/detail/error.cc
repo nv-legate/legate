@@ -8,6 +8,7 @@
 
 #include <legate_defines.h>
 
+#include <legate/runtime/detail/argument_parsing/legate_args.h>
 #include <legate/utilities/detail/enumerate.h>
 #include <legate/utilities/span.h>
 #include <legate/version.h>
@@ -78,40 +79,40 @@ constexpr auto BASE_ERROR_PREFIX = std::string_view{"LEGATE ERROR:"};
   return std::string{BASE_ERROR_PREFIX};
 }
 
-[[nodiscard]] std::string system_summary(std::string_view prefix)
+[[nodiscard]] std::string system_summary()
 {
   struct ::utsname res = {};
 
   if (::uname(&res)) {
-    return fmt::format("{} System: unknown system\n", prefix);
+    return "System: unknown system";
   }
-  return fmt::format("{} System: {}, {}, {}, {}, {}\n",
-                     prefix,
-                     res.sysname,
-                     res.release,
-                     res.nodename,
-                     res.version,
-                     res.machine);
+  return fmt::format(
+    "System: {}, {}, {}, {}, {}", res.sysname, res.release, res.nodename, res.version, res.machine);
 }
 
-[[nodiscard]] std::string legate_version_summary(std::string_view prefix)
+[[nodiscard]] std::string legate_version_summary()
 {
-  return fmt::format("{} Legate version: {}.{}.{} ({})\n",
-                     prefix,
+  return fmt::format("Legate version: {}.{}.{} ({})",
                      LEGATE_VERSION_MAJOR,
                      LEGATE_VERSION_MINOR,
                      LEGATE_VERSION_PATCH,
                      LEGATE_GIT_HASH);
 }
 
-[[nodiscard]] std::string legion_version_summary(std::string_view prefix)
+[[nodiscard]] std::string legion_version_summary()
 {
-  return fmt::format("{} Legion version: {} ({})\n", prefix, LEGION_VERSION, LEGION_GIT_HASH);
+  return fmt::format("Legion version: {} ({})", LEGION_VERSION, LEGION_GIT_HASH);
 }
 
-[[nodiscard]] std::string configure_summary(std::string_view prefix)
+[[nodiscard]] std::string configure_summary()
 {
-  return fmt::format("{} Configure options: {}\n", prefix, LEGATE_CONFIGURE_OPTIONS);
+  return fmt::format("Configure options: {}", LEGATE_CONFIGURE_OPTIONS);
+}
+
+void add_legate_config_summary(std::string_view PREFIX, std::string* ret)
+{
+  fmt::format_to(
+    std::back_inserter(*ret), "{} LEGATE_CONFIG: {}\n", PREFIX, get_parsed_LEGATE_CONFIG());
 }
 
 void add_traceback(std::string_view PREFIX,
@@ -175,6 +176,7 @@ void add_error_summary(std::string_view PREFIX,
     for (auto&& line : descr.message_lines) {
       fmt::format_to(std::back_inserter(*ret), "{} #{} {}\n", PREFIX, idx, line);
     }
+    ret->append(EMPTY_LINE);
     add_traceback(PREFIX, USE_COLOR, descr.trace, ret);
   }
 }
@@ -184,15 +186,21 @@ void add_error_summary(std::string_view PREFIX,
 std::string make_error_message(Span<const ErrorDescription> errs)
 {
   // If any of this throws an exception, we are basically screwed
-  static const auto USE_COLOR              = detect_use_color();
-  static const auto PREFIX                 = make_error_prefix(USE_COLOR);
-  constexpr auto RULER_LENGTH              = 80;
-  static const auto RULER                  = fmt::format("{} {:=>{}}\n", PREFIX, "", RULER_LENGTH);
-  static const auto SYSTEM_SUMMARY         = system_summary(PREFIX);
-  static const auto LEGATE_VERSION_SUMMARY = legate_version_summary(PREFIX);
-  static const auto LEGION_VERSION_SUMMARY = legion_version_summary(PREFIX);
-  static const auto CONFIGURE_SUMMARY      = configure_summary(PREFIX);
-  constexpr auto TEN_KB                    = 10 * 1024;
+  static const auto USE_COLOR      = detect_use_color();
+  static const auto PREFIX         = make_error_prefix(USE_COLOR);
+  constexpr auto RULER_LENGTH      = 80;
+  static const auto BIG_RULER      = fmt::format("{} {:=>{}}\n", PREFIX, "", RULER_LENGTH);
+  static const auto SMALL_RULER    = fmt::format("{} {:->{}}\n", PREFIX, "", RULER_LENGTH);
+  constexpr auto TEN_KB            = 10 * 1024;
+  static const auto STATIC_SUMMARY = [&] {
+    std::string ret;
+
+    fmt::format_to(std::back_inserter(ret), "{} {}\n", PREFIX, system_summary());
+    fmt::format_to(std::back_inserter(ret), "{} {}\n", PREFIX, legate_version_summary());
+    fmt::format_to(std::back_inserter(ret), "{} {}\n", PREFIX, legion_version_summary());
+    fmt::format_to(std::back_inserter(ret), "{} {}\n", PREFIX, configure_summary());
+    return ret;
+  }();
 
   std::string ret;
 
@@ -201,13 +209,12 @@ std::string make_error_message(Span<const ErrorDescription> errs)
   // is not performance, but to avoid fragmentation and subsequently running out of memory (if
   // that's even possible) due to constantly realloc-ing the buffer.
   ret.reserve(TEN_KB);
-  ret += RULER;
-  ret += SYSTEM_SUMMARY;
-  ret += LEGATE_VERSION_SUMMARY;
-  ret += LEGION_VERSION_SUMMARY;
-  ret += CONFIGURE_SUMMARY;
+  ret += BIG_RULER;
+  ret += STATIC_SUMMARY;
+  add_legate_config_summary(PREFIX, &ret);
+  ret += SMALL_RULER;
   add_error_summary(PREFIX, USE_COLOR, errs, &ret);
-  ret += RULER;
+  ret += BIG_RULER;
   return ret;
 }
 
