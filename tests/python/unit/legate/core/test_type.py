@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import ctypes
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -120,8 +121,16 @@ class TestType:
             (
                 ty.struct_type([ty.float32, ty.binary_type(5)], True),
                 True,
-                (0, 16),
-                32,
+                # The alignment of the binary type is
+                # alignof(std::max_align_t). This alignment is ultimately what
+                # determines the offset. Python doesn't allow you to get that,
+                # so we approximate it by getting the alignment of the largest
+                # ctypes type there is. Hopefully this is portable.
+                (0, ctypes.alignment(ctypes.c_longdouble)),
+                # Alignment of float32 will be less than binary_type, so it
+                # will be padded to alignment of binary_type. So effectively,
+                # the size will be as if we had 2 binary_type's.
+                2 * ctypes.alignment(ctypes.c_longdouble),
             ),
             (ty.rect_type(3), True, (0, 24), 48),
         ],

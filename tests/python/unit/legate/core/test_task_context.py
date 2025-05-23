@@ -78,11 +78,10 @@ class TestTaskContext:
             assert ctx.outputs == (y,)
             assert ctx.reductions == ()
             assert ctx.scalars == ()
-            if num_cpu > 1:
-                assert ctx.is_single_task() is False
-                # Can't predict the domain for a potentially parallelized task,
-                # so can't really check the launch domain
-            else:
+            # Can't predict the domain or parallelization for a potentially
+            # parallelized task, so can't check any of this if we have more
+            # than 1 CPU
+            if num_cpu == 1:
                 assert ctx.is_single_task() is True
                 assert ctx.launch_domain == ((0,), (0,))
 
