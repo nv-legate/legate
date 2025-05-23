@@ -11,7 +11,7 @@ def ensure_aedifix() -> None:
     from packaging.version import Version
 
     # update pre-commit-config.yml as well in case this is changed
-    VERSION = Version("1.4.0")
+    VERSION = Version("1.5.0")
 
     try:
         mod_version = Version(version("aedifix"))
