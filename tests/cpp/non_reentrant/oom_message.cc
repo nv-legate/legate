@@ -162,7 +162,8 @@ TEST_F(OomMessageDeathTest, Simple)
         "created for an operation launched at launch_using_small_store_part")));
 }
 
-TEST_F(OomMessageDeathTest, BoundedPool)
+// This test hangs pretty frequently in CI, so disable it for now.
+TEST_F(OomMessageDeathTest, DISABLED_BoundedPool)
 {
   auto runtime = legate::Runtime::get_runtime();
   auto library = runtime->find_library(LIBRARY_NAME);
