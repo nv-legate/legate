@@ -106,6 +106,8 @@ bool InstanceMappingPolicy::operator!=(const InstanceMappingPolicy& other) const
 
 // ==========================================================================================
 
+StoreMapping::StoreMapping() noexcept = default;
+
 StoreMapping::StoreMapping(StoreMapping&&) noexcept = default;
 
 StoreMapping& StoreMapping::operator=(StoreMapping&&) noexcept = default;

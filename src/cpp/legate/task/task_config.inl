@@ -12,4 +12,4 @@ namespace legate {
 
 inline const SharedPtr<detail::TaskConfig>& TaskConfig::impl() const { return pimpl_; }
 
-};  // namespace legate
+}  // namespace legate

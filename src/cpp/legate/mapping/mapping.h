@@ -356,6 +356,7 @@ class InstanceMappingPolicy {
  */
 class StoreMapping {
  public:
+  StoreMapping() noexcept;
   StoreMapping(StoreMapping&&) noexcept;
   StoreMapping& operator=(StoreMapping&&) noexcept;
   ~StoreMapping();
@@ -431,8 +432,6 @@ class StoreMapping {
   void add_store(const Store& store);
 
   [[nodiscard]] const detail::StoreMapping* impl() const noexcept;
-
-  StoreMapping() = default;
 
   class ReleaseKey {
     ReleaseKey() = default;
