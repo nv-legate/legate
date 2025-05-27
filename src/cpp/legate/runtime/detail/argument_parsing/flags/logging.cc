@@ -65,12 +65,12 @@ constexpr auto LOG_LEVEL_CHOICES =
       spec)};
   }
   return {spec.substr(0, eq_pos), spec.substr(eq_pos + 1)};
-};
+}
 
 [[nodiscard]] bool is_number(std::string_view s)
 {
   return !s.empty() && std::all_of(s.cbegin(), s.cend(), ::isdigit);
-};
+}
 
 void maybe_numeric_log_level(std::string_view level, std::string_view spec, std::string* ret)
 {

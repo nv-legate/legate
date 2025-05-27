@@ -104,14 +104,15 @@ cdef class AutoTask(Unconstructable):
             with nogil:
                 handle = self._handle.add_input(array)
             return Variable.from_handle(std_move(handle))
-        elif isinstance(partition, Variable):
+
+        if isinstance(partition, Variable):
+            part_handle = (<Variable> partition)._handle
+
             with nogil:
-                handle = self._handle.add_input(
-                    array, (<Variable> partition)._handle
-                )
+                handle = self._handle.add_input(array, std_move(part_handle))
             return Variable.from_handle(std_move(handle))
-        else:
-            raise ValueError("Invalid partition symbol")
+
+        raise ValueError("Invalid partition symbol")
 
     cpdef Variable add_output(
         self, object array_or_store, object partition = None
@@ -145,10 +146,10 @@ cdef class AutoTask(Unconstructable):
             with nogil:
                 handle = self._handle.add_output(array)
         elif isinstance(partition, Variable):
+            part_handle = (<Variable> partition)._handle
+
             with nogil:
-                handle = self._handle.add_output(
-                    array, (<Variable> partition)._handle
-                )
+                handle = self._handle.add_output(array, std_move(part_handle))
         else:
             raise ValueError("Invalid partition symbol")
 
@@ -191,9 +192,11 @@ cdef class AutoTask(Unconstructable):
             with nogil:
                 handle = self._handle.add_reduction(array, redop)
         elif isinstance(partition, Variable):
+            part_handle = (<Variable> partition)._handle
+
             with nogil:
                 handle = self._handle.add_reduction(
-                    array, redop, (<Variable> partition)._handle
+                    array, redop, std_move(part_handle)
                 )
         else:
             raise ValueError("Invalid partition symbol")
