@@ -927,8 +927,6 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
       get_storage()->find_key_partition(machine, parallel_policy, transform_->invert(restrictions));
   }
 
-  InternalSharedPtr<Partition> store_part{};
-
   if (!storage_part.has_value() ||
       (!transform_->identity() && !(*storage_part)->is_convertible())) {
     auto&& exts       = extents();
@@ -936,17 +934,13 @@ InternalSharedPtr<Partition> LogicalStore::find_or_create_key_partition(
     auto launch_shape = part_mgr.compute_launch_shape(machine, parallel_policy, restrictions, exts);
 
     if (launch_shape.empty()) {
-      store_part = create_no_partition();
-    } else {
-      auto tile_shape = part_mgr.compute_tile_shape(exts, launch_shape);
-
-      store_part = create_tiling(std::move(tile_shape), std::move(launch_shape));
+      return create_no_partition();
     }
-  } else {
-    store_part = (*storage_part)->convert(*storage_part, transform());
-    LEGATE_ASSERT(store_part);
+    auto tile_shape = part_mgr.compute_tile_shape(exts, launch_shape);
+
+    return create_tiling(std::move(tile_shape), std::move(launch_shape));
   }
-  return store_part;
+  return (*storage_part)->convert(*storage_part, transform());
 }
 
 bool LogicalStore::has_key_partition(const mapping::detail::Machine& machine,

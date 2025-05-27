@@ -28,17 +28,16 @@ namespace {
   std::uint64_t field_offset)
 {
   const auto mem_kind = find_memory_kind_for_executing_processor(false);
+  auto ret = Legion::UntypedDeferredValue{field_size, mem_kind, nullptr, field_alignment};
 
   if (!fut.valid()) {
-    return Legion::UntypedDeferredValue{field_size, mem_kind, nullptr, field_alignment};
+    return ret;
   }
 
   LEGATE_ASSERT(field_offset + field_size <= fut.get_untyped_size());
 
   const auto* init_value = static_cast<const std::int8_t*>(fut.get_buffer(mem_kind)) + field_offset;
-
-  auto ret       = Legion::UntypedDeferredValue{field_size, mem_kind, nullptr, field_alignment};
-  const auto acc = AccessorWO<std::int8_t, 1>{ret, field_size, false};
+  const auto acc         = AccessorWO<std::int8_t, 1>{ret, field_size, false};
 
   if (LEGATE_DEFINED(LEGATE_USE_CUDA) && (mem_kind == Memory::Kind::GPU_FB_MEM)) {
     cuda::detail::get_cuda_driver_api()->mem_cpy_async(

@@ -109,10 +109,10 @@ class TransformStack final : public Transform {
                  InternalSharedPtr<TransformStack> parent);
 
   template <typename VISITOR, typename T>
-  decltype(auto) convert_(VISITOR visitor, T input) const;
+  auto convert_(VISITOR visitor, T&& input) const;
 
   template <typename VISITOR, typename T>
-  decltype(auto) invert_(VISITOR visitor, T input) const;
+  auto invert_(VISITOR visitor, T&& input) const;
 
   std::unique_ptr<StoreTransform> transform_{};
   InternalSharedPtr<TransformStack> parent_{};

@@ -133,6 +133,7 @@ class ConstructOverlappingRegionGroupFn {
     InternalSharedPtr<RegionGroup> group,
     const std::unordered_map<RegionGroup*, InstanceSet::InstanceSpec>& instances,
     const std::unordered_map<InternalSharedPtr<RegionGroup>, std::uint64_t>& pending_instances)
+    const
   {
     if (LEGATE_DEFINED(LEGATE_USE_DEBUG)) {
       log_instmgr().debug() << " construct_overlapping_region_group( " << *group << ")";

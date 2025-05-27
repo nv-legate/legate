@@ -45,7 +45,7 @@ inline bool TransformStack::is_convertible() const { return convertible_; }
 inline bool TransformStack::identity() const { return nullptr == transform_; }
 
 template <typename VISITOR, typename T>
-decltype(auto) TransformStack::convert_(VISITOR visitor, T input) const
+auto TransformStack::convert_(VISITOR visitor, T&& input) const
 {
   if (identity()) {
     return input;
@@ -57,17 +57,18 @@ decltype(auto) TransformStack::convert_(VISITOR visitor, T input) const
 }
 
 template <typename VISITOR, typename T>
-decltype(auto) TransformStack::invert_(VISITOR visitor, T input) const
+auto TransformStack::invert_(VISITOR visitor, T&& input) const
 {
   if (identity()) {
     return input;
   }
 
   auto result = visitor(transform_, std::forward<T>(input));
+
   if (parent_->identity()) {
     return result;
   }
-  return visitor(parent_, std::forward<T>(result));
+  return visitor(parent_, std::move(result));
 }
 
 // ==========================================================================================

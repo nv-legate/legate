@@ -23,7 +23,8 @@ Restrictions TransformStack::convert(Restrictions restrictions, bool forbid_fake
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
-      return transform->convert(std::forward<decltype(input)>(input), forbid_fake_dim);
+      return transform->convert(std::forward<std::decay_t<decltype(input)>>(input),
+                                forbid_fake_dim);
     },
     std::move(restrictions));
 }
@@ -32,7 +33,7 @@ tuple<std::uint64_t> TransformStack::convert_color(tuple<std::uint64_t> color) c
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
-      return transform->convert_color(std::forward<decltype(input)>(input));
+      return transform->convert_color(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(color));
 }
@@ -41,7 +42,7 @@ tuple<std::uint64_t> TransformStack::convert_color_shape(tuple<std::uint64_t> co
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
-      return transform->convert_color_shape(std::forward<decltype(input)>(input));
+      return transform->convert_color_shape(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(color_shape));
 }
@@ -50,7 +51,7 @@ tuple<std::int64_t> TransformStack::convert_point(tuple<std::int64_t> point) con
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
-      return transform->convert_point(std::forward<decltype(input)>(input));
+      return transform->convert_point(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(point));
 }
@@ -59,7 +60,7 @@ tuple<std::uint64_t> TransformStack::convert_extents(tuple<std::uint64_t> extent
 {
   return convert_(
     [&](auto&& transform, auto&& input) {
-      return transform->convert_extents(std::forward<decltype(input)>(input));
+      return transform->convert_extents(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(extents));
 }
@@ -68,7 +69,7 @@ proj::SymbolicPoint TransformStack::invert(proj::SymbolicPoint point) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
-      return transform->invert(std::forward<decltype(input)>(input));
+      return transform->invert(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(point));
 }
@@ -77,7 +78,7 @@ Restrictions TransformStack::invert(Restrictions restrictions) const
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
-      return transform->invert(std::forward<decltype(input)>(input));
+      return transform->invert(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(restrictions));
 }
@@ -86,7 +87,7 @@ tuple<std::uint64_t> TransformStack::invert_color(tuple<std::uint64_t> color) co
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
-      return transform->invert_color(std::forward<decltype(input)>(input));
+      return transform->invert_color(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(color));
 }
@@ -95,7 +96,7 @@ tuple<std::uint64_t> TransformStack::invert_color_shape(tuple<std::uint64_t> col
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
-      return transform->invert_color_shape(std::forward<decltype(input)>(input));
+      return transform->invert_color_shape(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(color_shape));
 }
@@ -104,7 +105,7 @@ tuple<std::int64_t> TransformStack::invert_point(tuple<std::int64_t> point) cons
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
-      return transform->invert_point(std::forward<decltype(input)>(input));
+      return transform->invert_point(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(point));
 }
@@ -113,7 +114,7 @@ tuple<std::uint64_t> TransformStack::invert_extents(tuple<std::uint64_t> extents
 {
   return invert_(
     [&](auto&& transform, auto&& input) {
-      return transform->invert_extents(std::forward<decltype(input)>(input));
+      return transform->invert_extents(std::forward<std::decay_t<decltype(input)>>(input));
     },
     std::move(extents));
 }

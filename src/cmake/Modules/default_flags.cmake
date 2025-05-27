@@ -92,9 +92,7 @@ function(legate_configure_default_compiler_flags)
       "-Wundef"
       "-Wtsan"
       "-Wenum-conversion"
-      "-Wpacked"
-      # GCC 14+
-      "-Wnrvo")
+      "-Wpacked")
   set(default_cxx_flags_debug
       ${default_warning_flags}
       "-g"
