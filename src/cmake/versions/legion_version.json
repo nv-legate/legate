@@ -29,6 +29,11 @@
                     "file": "${current_json_dir}/../patches/legion_ucx_mpi_bootstrap.diff",
                     "fixed_in": "",
                     "issue": "legion make UCX MPI bootstrap build optional"
+                },
+                {
+                    "file": "${current_json_dir}/../patches/legion_cuda_12_9.diff",
+                    "fixed_in": "",
+                    "issue": "legion fix CUDA 12.9 compilation issues"
                 }
             ],
             "version": "25.05.0"

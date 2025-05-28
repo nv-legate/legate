@@ -32,7 +32,7 @@
 {% else %}
     {% set version = environ.get('GIT_DESCRIBE_TAG', default_env_var).lstrip('v') %}
 {% endif %}
-{% set cuda_version='.'.join(environ.get('CUDA', '12.2.2').split('.')[:2]) %}
+{% set cuda_version='.'.join(environ.get('CUDA_VERSION', '12.2.2').split('.')[:2]) %}
 {% set cuda_major=cuda_version.split('.')[0]|int %}
 {% set py_version=environ.get('CONDA_PY', 36) %}
 
@@ -130,11 +130,26 @@ build:
       - {{ name|lower }} ={{ version }} =*_gpu*
 {% endif %}
   ignore_run_exports_from:
+    # This list contains a list of packages that potentially pin cuda-version
+    - cuda-version
+    - cuda-cudart
+    - cuda-cudart-dev
+    - cuda-driver-dev
+    - cuda-nvtx
+    - cuda-nvtx-dev
+    - libcufile
+    - libcufile-dev
+    - nccl
     - cuda-nvcc
-    - rich
 {% if network == 'gex' %}
+    # When we build packages for GEX, we expect a system provided MPI.
+    # Installing OpenMPI causes issues with GEX builds on Perlmutter (because of hwloc).
     - openmpi
 {% endif %}
+  ignore_run_exports:
+    # We need to have an additional ignore for cuda-version as one of the packages
+    # not in the ignore from list still adds a run export for cuda-version.
+    - cuda-version
 
 # Note clang must go first! gxx is also in clangxx!!!!!
 {% if "clangxx" in compiler("cxx") %}
@@ -214,15 +229,14 @@ requirements:
     - {{ sanitizer_lib }} ={{ compiler_version }}
 {% endif %}
 {% if gpu_enabled_bool %}
-    # Pin to all minor versions of CUDA newer than the one built against, within the same major version.
-    # cuda-version constrains the CUDA runtime version and ensures a compatible driver is available
-    - {{ pin_compatible('cuda-version', min_pin='x.x', max_pin='x') }}
     # including __cuda here in 'run' ensures that 'conda install' always
     # prefers the CPU-only packages in environments without CUDA
-    #
-    # The floor on __cuda makes this stricter than the default constraint that comes through
-    # depending on 'cuda-version' alone.
-    - __cuda >={{ cuda_version }}
+    - __cuda
+    - {{ pin_compatible('cuda-version', min_pin='x', max_pin='x') }}
+    - {{ pin_compatible('cuda-cudart',  min_pin='x', max_pin='x') }}
+    - {{ pin_compatible('cuda-nvtx',    min_pin='x', max_pin='x') }}
+    - libcufile      >=1.0,<2
+    - nccl           >=2.0,<3
 {% endif %}
     - rich
 
