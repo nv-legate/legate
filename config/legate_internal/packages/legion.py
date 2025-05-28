@@ -138,9 +138,6 @@ class Legion(Package):
     Legion_USE_OpenMP: Final = CMAKE_VARIABLE("Legion_USE_OpenMP", CMakeBool)
     Legion_USE_Python: Final = CMAKE_VARIABLE("Legion_USE_Python", CMakeBool)
     Legion_USE_ZLIB: Final = CMAKE_VARIABLE("Legion_USE_ZLIB", CMakeBool)
-    Legion_Python_Version: Final = CMAKE_VARIABLE(
-        "Legion_Python_Version", CMakeString
-    )
     Legion_NETWORKS: Final = CMAKE_VARIABLE("Legion_NETWORKS", CMakeString)
     Legion_BUILD_JUPYTER: Final = CMAKE_VARIABLE(
         "Legion_BUILD_JUPYTER", CMakeBool
@@ -275,9 +272,6 @@ class Legion(Package):
             self.manager.set_cmake_variable(self.Legion_BUILD_BINDINGS, True)
             self.manager.set_cmake_variable(self.Legion_USE_Python, True)
             self.manager.set_cmake_variable(self.Legion_BUILD_JUPYTER, True)
-            self.manager.set_cmake_variable(
-                self.Legion_Python_Version, python.lib_version
-            )
         elif py_state.explicitly_disabled():
             self.manager.set_cmake_variable(self.Legion_BUILD_BINDINGS, False)
             self.manager.set_cmake_variable(self.Legion_BUILD_JUPYTER, False)

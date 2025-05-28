@@ -6,7 +6,6 @@ from __future__ import annotations
 import re
 import sys
 import shutil
-import contextlib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final, cast
 
@@ -505,13 +504,7 @@ class Legate(MainPackage):
     def _summarize_python(self) -> list[tuple[str, Any]]:
         python = cast(Python, self.deps.Python)
         py_enabled = python.state.enabled()
-        lines: list[tuple[str, Any]] = [("Python bindings", py_enabled)]
-        if py_enabled:
-            with contextlib.suppress(AttributeError):
-                lines.append(("Python library path", python.lib_path))
-            with contextlib.suppress(AttributeError):
-                lines.append(("Python library version", python.lib_version))
-        return lines
+        return [("Python bindings", py_enabled)]
 
     def _summarize_misc(self) -> list[tuple[str, Any]]:
         m = self.manager
