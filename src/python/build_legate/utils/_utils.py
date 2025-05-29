@@ -41,7 +41,18 @@ def read_cmake_cache_value(pattern: str, cache_dir: Path | None = None) -> str:
     re_pat = re.compile(pattern)
     with file_path.open() as fd:
         for line in filter(re_pat.match, fd):
-            return line.split("=")[1].strip()
+            # Use str.partition() instead of str.split() because the values
+            # might have "=" in them as well
+            _, sep, rest = line.partition("=")
+            # From docs:
+            #
+            # > If the separator is not found, return a 3-tuple containing the
+            # > string itself, followed by two empty strings.
+            #
+            # All CMake cache variables should be NAME = VALUES... so if we
+            # don't find the "=" then something has gone wrong
+            assert sep == "="
+            return rest.strip()
 
     msg = f"ERROR: Did not find {pattern} in {file_path}"
     raise RuntimeError(msg)
