@@ -160,37 +160,43 @@ def get_original_python_executable() -> tuple[str, dict[str, str]]:
 
     import sysconfig
 
-    orig_bin_dir = Path(sysconfig.get_path("scripts"))
-    vprint(f"Found original binary directory: {orig_bin_dir}")
-    assert "pip-build-env" not in str(orig_bin_dir)
-    for name in (
+    py_names = (
         "python3",
         "python",
         f"python{sys.version_info.major}.{sys.version_info.minor}",
-    ):
-        maybe_python = orig_bin_dir / name
-        vprint(f"Trying {maybe_python} for original python executable")
-        if not maybe_python.exists():
-            vprint(f"{maybe_python} does not exist")
-            continue
+    )
 
-        if not maybe_python.is_file():
-            vprint(f"{maybe_python} is not a file")
-            continue
+    bin_dirs = (
+        sysconfig.get_path("scripts"),
+        sysconfig.get_path("scripts", vars={"base": sys.prefix}),
+        sysconfig.get_path("scripts", vars={"base": sys.base_prefix}),
+    )
 
-        vprint(f"Success, using {maybe_python}")
-        python_exe = str(maybe_python)
-        break
-    else:
-        msg = (
-            "Could not locate original python installation while building "
-            "under build isolation"
-        )
-        raise RuntimeError(msg)
+    for orig_bin_dir in map(Path, bin_dirs):
+        vprint(f"Found original binary directory: {orig_bin_dir}")
+        assert "pip-build-env" not in str(orig_bin_dir)
 
-    remove = {"PYTHONNOUSERSITE", "PYTHONPATH"}
-    env = {k: v for k, v in os.environ.items() if k not in remove}
-    return python_exe, env
+        for name in py_names:
+            maybe_python = orig_bin_dir / name
+            vprint(f"Trying {maybe_python} for original python executable")
+            if not maybe_python.exists():
+                vprint(f"{maybe_python} does not exist")
+                continue
+
+            if not maybe_python.is_file():
+                vprint(f"{maybe_python} is not a file")
+                continue
+
+            vprint(f"Success, using {maybe_python}")
+            remove = {"PYTHONNOUSERSITE", "PYTHONPATH"}
+            env = {k: v for k, v in os.environ.items() if k not in remove}
+            return str(maybe_python), env
+
+    msg = (
+        "Could not locate original python installation while building "
+        "under build isolation"
+    )
+    raise RuntimeError(msg)
 
 
 def clean_skbuild_dir() -> None:
