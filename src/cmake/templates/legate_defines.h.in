@@ -53,6 +53,12 @@
 #endif
 #endif
 
+#ifdef LEGATE_USE_DEBUG
+#ifndef CCCL_ENABLE_ASSERTIONS
+#define CCCL_ENABLE_ASSERTIONS 1
+#endif
+#endif
+
 #ifdef LEGION_BOUNDS_CHECKS
 #define LEGATE_BOUNDS_CHECKS 1
 #endif

@@ -58,14 +58,14 @@ void TileByOffsetsReadFn::operator()(legate::TaskContext context,
   const Span<const std::uint64_t> offsets = context.scalar(1).values<std::uint64_t>();
 
   auto f            = ::kvikio::FileHandle{std::string{path}, "r"};
-  auto* data        = store->write_accessor<DTYPE, DIM>().ptr(shape);
+  auto&& data       = store->span_write_accessor<DTYPE, DIM>();
   const auto offset = offsets[flatten_task_index];
 
   if (store->target() == mapping::StoreTarget::FBMEM) {
-    static_cast<void>(
-      f.read_async(data, nbytes, static_cast<::off_t>(offset), 0, context.get_task_stream()));
+    static_cast<void>(f.read_async(
+      data.data_handle(), nbytes, static_cast<::off_t>(offset), 0, context.get_task_stream()));
   } else {
-    f.pread(data, nbytes, offset).wait();
+    f.pread(data.data_handle(), nbytes, offset).wait();
   }
 }
 

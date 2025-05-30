@@ -48,7 +48,8 @@ struct InitListTraits {
 
   /// Get the shape described by the initializer_list.
   template <std::size_t N = Dim>
-  static std::array<std::size_t, N> get_shape(type il, std::array<std::size_t, N> shape = {})
+  static ::cuda::std::array<std::size_t, N> get_shape(type il,
+                                                      ::cuda::std::array<std::size_t, N> shape = {})
   {
     if constexpr (LEGATE_DEFINED(LEGATE_USE_DEBUG) && Dim > 1) {
       // Make sure all the inner lists have the same size:
@@ -65,7 +66,7 @@ struct InitListTraits {
   /// Fill the store with the values from the initializer_list.
   template <std::size_t... Indices, std::size_t N, std::int32_t N2>
   static void fill(std::index_sequence<Indices...> indices,
-                   std::array<std::size_t, N>& shape,
+                   ::cuda::std::array<std::size_t, N>& shape,
                    type il,
                    const mdspan_t<ElementType, N2>& span)
   {
@@ -83,14 +84,15 @@ struct InitListTraits<ElementType, 0> {
   using type = ElementType;
 
   template <std::size_t N = 0>
-  static std::array<std::size_t, N> get_shape(type, std::array<std::size_t, N> shape = {}) noexcept
+  static ::cuda::std::array<std::size_t, N> get_shape(
+    type, ::cuda::std::array<std::size_t, N> shape = {}) noexcept
   {
     return shape;
   }
 
   template <std::size_t... Indices, std::size_t N, std::int32_t N2>
   static void fill(std::index_sequence<Indices...>,
-                   std::array<std::size_t, N>& shape,
+                   ::cuda::std::array<std::size_t, N>& shape,
                    type value,
                    const mdspan_t<ElementType, N2>& span) noexcept
   {
@@ -162,7 +164,7 @@ class logical_store
   /**
    * @overload
    */
-  explicit logical_store(std::span<const std::size_t, Dim> extents)
+  explicit logical_store(::cuda::std::span<const std::size_t, Dim> extents)
     : LogicalStore{logical_store::create_(std::move(extents))}
   {
   }
@@ -190,7 +192,7 @@ class logical_store
   /**
    * @overload
    */
-  explicit logical_store(std::span<const std::size_t, Dim> extents, ElementType value)
+  explicit logical_store(::cuda::std::span<const std::size_t, Dim> extents, ElementType value)
     : LogicalStore{logical_store::create_(std::move(extents))}
   {
     legate::Runtime::get_runtime()->issue_fill(*this, Scalar{std::move(value)});
@@ -228,7 +230,7 @@ class logical_store
   logical_store(std::in_place_t, init_list_t il)
     : LogicalStore{logical_store::create_(init_list_traits_t::get_shape(il))}
   {
-    std::array<std::size_t, Dim> shape{};  // default-initialized to zeros
+    ::cuda::std::array<std::size_t, Dim> shape{};  // default-initialized to zeros
     const mdspan_t<ElementType, Dim> span = as_mdspan(*this);
     init_list_traits_t::fill(std::make_index_sequence<Dim>{}, shape, il, span);
   }
@@ -249,7 +251,7 @@ class logical_store
   logical_store(init_list_t il, std::enable_if_t<Rank != 1, int> = 0)
     : LogicalStore{logical_store::create_(init_list_traits_t::get_shape(il))}
   {
-    std::array<std::size_t, Dim> shape{};  // default-initialized to zeros
+    ::cuda::std::array<std::size_t, Dim> shape{};  // default-initialized to zeros
     const mdspan_t<ElementType, Dim> span = as_mdspan(*this);
     init_list_traits_t::fill(std::make_index_sequence<Dim>{}, shape, il, span);
   }
@@ -273,10 +275,10 @@ class logical_store
    *
    * @return `std::array<std::size_t, Dim>` - The extents of the store.
    */
-  [[nodiscard]] std::array<std::size_t, Dim> extents() const noexcept
+  [[nodiscard]] ::cuda::std::array<std::size_t, Dim> extents() const noexcept
   {
     auto&& extents = LogicalStore::extents();
-    std::array<std::size_t, Dim> result;
+    ::cuda::std::array<std::size_t, Dim> result;
 
     LEGATE_ASSERT(extents.size() == Dim);
     std::copy(&extents[0], &extents[0] + Dim, result.begin());
@@ -287,7 +289,7 @@ class logical_store
   template <typename, std::int32_t>
   friend class logical_store;
 
-  [[nodiscard]] static LogicalStore create_(std::span<const std::size_t, Dim> exts)
+  [[nodiscard]] static LogicalStore create_(::cuda::std::span<const std::size_t, Dim> exts)
   {
     Runtime* runtime = legate::Runtime::get_runtime();
     // create_store() takes const-ref for now, but may not always be the case
@@ -296,9 +298,9 @@ class logical_store
     return runtime->create_store(std::move(shape), primitive_type(type_code_of_v<ElementType>));
   }
 
-  [[nodiscard]] static LogicalStore create_(const std::array<std::size_t, Dim> exts)
+  [[nodiscard]] static LogicalStore create_(const ::cuda::std::array<std::size_t, Dim> exts)
   {
-    return create_(std::span{exts});
+    return create_(::cuda::std::span{exts});
   }
 
   static void validate_(const LogicalStore& store)
@@ -338,11 +340,12 @@ class logical_store<ElementType, 0> : private LogicalStore {
 
   logical_store() = delete;
 
-  explicit logical_store(std::span<const std::size_t, 0>) : LogicalStore{logical_store::create_()}
+  explicit logical_store(::cuda::std::span<const std::size_t, 0>)
+    : LogicalStore{logical_store::create_()}
   {
   }
 
-  explicit logical_store(std::span<const std::size_t, 0>, ElementType elem)
+  explicit logical_store(::cuda::std::span<const std::size_t, 0>, ElementType elem)
     : LogicalStore{logical_store::create_(std::move(elem))}
   {
   }
@@ -357,7 +360,7 @@ class logical_store<ElementType, 0> : private LogicalStore {
 
   [[nodiscard]] static constexpr std::int32_t dim() noexcept { return 0; }
 
-  [[nodiscard]] std::array<std::size_t, 0> extents() const { return {}; }
+  [[nodiscard]] ::cuda::std::array<std::size_t, 0> extents() const { return {}; }
 
  private:
   template <typename, std::int32_t>
@@ -386,13 +389,14 @@ class logical_store<ElementType, 0> : private LogicalStore {
  * Deduction guides for logical_store<>:
  */
 template <typename ElementType>
-logical_store(std::span<const std::size_t, 0>, ElementType) -> logical_store<ElementType, 0>;
+logical_store(::cuda::std::span<const std::size_t, 0>, ElementType)
+  -> logical_store<ElementType, 0>;
 
 template <typename ElementType, std::size_t Dim>
 logical_store(const std::size_t (&)[Dim], ElementType) -> logical_store<ElementType, Dim>;
 
 template <typename ElementType, std::size_t Dim>
-logical_store(std::array<std::size_t, Dim>, ElementType) -> logical_store<ElementType, Dim>;
+logical_store(::cuda::std::array<std::size_t, Dim>, ElementType) -> logical_store<ElementType, Dim>;
 
 /**
  * @brief Given an untyped `legate::LogicalStore`, return a strongly-typed
@@ -417,13 +421,13 @@ template <typename ElementType, std::int32_t Dim>
 namespace detail {
 
 template <std::int32_t Dim, typename Rect>
-[[nodiscard]] inline std::array<coord_t, Dim> dynamic_extents(const Rect& shape)
+[[nodiscard]] inline ::cuda::std::array<coord_t, Dim> dynamic_extents(const Rect& shape)
 {
   if constexpr (Dim == 0) {
     return {};
   } else {
     const Point<Dim> extents = Point<Dim>::ONES() + shape.hi - shape.lo;
-    std::array<coord_t, Dim> result;
+    ::cuda::std::array<coord_t, Dim> result;
     for (std::int32_t i = 0; i < Dim; ++i) {  //
       result[i] = extents[i];
     }
@@ -432,7 +436,8 @@ template <std::int32_t Dim, typename Rect>
 }
 
 template <std::int32_t Dim>
-[[nodiscard]] inline std::array<coord_t, Dim> dynamic_extents(const legate::PhysicalStore& store)
+[[nodiscard]] inline ::cuda::std::array<coord_t, Dim> dynamic_extents(
+  const legate::PhysicalStore& store)
 {
   return dynamic_extents<Dim>(store.shape<Dim ? Dim : 1>());
 }
@@ -459,7 +464,7 @@ LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
 {
   // These can all be *sometimes* moved.
   // NOLINTBEGIN(misc-const-correctness)
-  using Mapping = std::layout_right::mapping<std::dextents<coord_t, Dim>>;
+  using Mapping = ::cuda::std::layout_right::mapping<::cuda::std::dextents<coord_t, Dim>>;
   Mapping mapping{detail::dynamic_extents<Dim>(store)};
 
   using Accessor = detail::MDSpanAccessor<ElementType, Dim>;
@@ -508,8 +513,8 @@ LEGATE_HOST_DEVICE [[nodiscard]] inline mdspan_t<ElementType, Dim> as_mdspan(
  */
 template <typename ElementType, typename Extents, typename Layout, typename Accessor>
 LEGATE_HOST_DEVICE [[nodiscard]] inline auto as_mdspan(
-  std::mdspan<ElementType, Extents, Layout, Accessor> mdspan)
-  -> std::mdspan<ElementType, Extents, Layout, Accessor>
+  ::cuda::std::mdspan<ElementType, Extents, Layout, Accessor> mdspan)
+  -> ::cuda::std::mdspan<ElementType, Extents, Layout, Accessor>
 {
   return mdspan;
 }
@@ -557,7 +562,7 @@ using as_mdspan_t = meta::eval<detail::AsMdspanResult<std::is_void_v<ElementType
  * @ingroup stl-containers
  */
 template <typename ElementType>  //
-[[nodiscard]] logical_store<ElementType, 0> create_store(std::span<const std::size_t, 0UL>)
+[[nodiscard]] logical_store<ElementType, 0> create_store(::cuda::std::span<const std::size_t, 0UL>)
 {
   return logical_store<ElementType, 0>{{}};
 }
@@ -577,7 +582,7 @@ template <typename ElementType>  //
  * @ingroup stl-containers
  */
 template <typename ElementType>  //
-[[nodiscard]] logical_store<ElementType, 0> create_store(std::span<const std::size_t, 0UL>,
+[[nodiscard]] logical_store<ElementType, 0> create_store(::cuda::std::span<const std::size_t, 0UL>,
                                                          ElementType value)
 {
   return logical_store<ElementType, 0>{{}, std::move(value)};
@@ -613,7 +618,8 @@ template <typename ElementType, std::size_t Dim>  //
  * @ingroup stl-containers
  */
 template <typename ElementType, std::size_t Dim>  //
-[[nodiscard]] logical_store<ElementType, Dim> create_store(const std::array<std::size_t, Dim>& exts)
+[[nodiscard]] logical_store<ElementType, Dim> create_store(
+  const ::cuda::std::array<std::size_t, Dim>& exts)
 {
   return logical_store<ElementType, Dim>{exts};
 }
@@ -649,8 +655,8 @@ template <typename ElementType, std::int32_t Dim>  //
  * @ingroup stl-containers
  */
 template <typename ElementType, std::size_t Dim>  //
-[[nodiscard]] logical_store<ElementType, Dim> create_store(const std::array<std::size_t, Dim>& exts,
-                                                           ElementType value)
+[[nodiscard]] logical_store<ElementType, Dim> create_store(
+  const ::cuda::std::array<std::size_t, Dim>& exts, ElementType value)
 {
   return logical_store<ElementType, Dim>{exts, std::move(value)};
 }

@@ -75,6 +75,8 @@ IncludeCategories:
     Priority:        20
   - Regex:           '^("|<)(legion|realm).*'
     Priority:        30
+  - Regex:           '^<cuda/.*>'
+    Priority:        35
   - Regex:           '^("|<)kvikio.*'
     Priority:        40
   - Regex:           '^("|<)highfive.*'

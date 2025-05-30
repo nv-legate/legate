@@ -20,21 +20,14 @@ namespace legate::detail {
 
   for (std::uint32_t i = 0; i < num_outputs; ++i) {
     const auto list_arr   = context.output(i).as_list_array();
-    const auto list_desc  = list_arr.descriptor();
-    const auto desc_shape = list_desc.shape<1>();
-
-    if (desc_shape.empty()) {
-      continue;
-    }
-
     const auto vardata_lo = list_arr.vardata().shape<1>().lo;
-    const auto desc_acc   = list_desc.data().read_write_accessor<Rect<1>, 1>();
+    const auto desc_acc   = list_arr.descriptor().data().span_read_write_accessor<Rect<1>, 1>();
 
-    for (auto idx = desc_shape.lo[0]; idx <= desc_shape.hi[0]; ++idx) {
-      auto& desc = desc_acc[idx];
+    for (coord_t idx = 0; idx < desc_acc.extent(0); ++idx) {
+      auto& v = desc_acc(idx);
 
-      desc.lo += vardata_lo;
-      desc.hi += vardata_lo;
+      v.lo += vardata_lo;
+      v.hi += vardata_lo;
     }
   }
 }

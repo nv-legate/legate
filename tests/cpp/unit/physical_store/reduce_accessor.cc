@@ -6,6 +6,8 @@
 
 #include <legate.h>
 
+#include <cuda/std/complex>
+
 #include <gtest/gtest.h>
 
 #include <numeric>
@@ -21,52 +23,121 @@ constexpr float FLOAT_VALUE          = 99.0F;
 class ReduceAccessorFn {
  public:
   template <legate::Type::Code CODE, std::int32_t DIM>
-  void operator()(const legate::PhysicalStore& store) const
+  void operator()(legate::PhysicalStore& store) const
   {
+    using T = legate::type_of_t<CODE>;
+
     ASSERT_TRUE(store.is_readable());
     ASSERT_TRUE(store.is_writable());
     ASSERT_TRUE(store.is_reducible());
-    using T                          = legate::type_of_t<CODE>;
-    auto reduce_acc                  = store.reduce_accessor<legate::SumReduction<T>, false, DIM>();
-    auto op_shape                    = store.shape<DIM>();
-    static constexpr auto INIT_VALUE = 10;
 
-    if (!op_shape.empty()) {
+    const auto LEGION_ACC_INIT_VAL        = static_cast<T>(32);
+    const auto LEGION_ACC_BOUNDS_INIT_VAL = static_cast<T>(66);
+    const auto SPAN_ACC_INIT_VAL          = static_cast<T>(5);
+    const auto SPAN_ACC_BOUNDS_INIT_VAL   = static_cast<T>(10);
+
+    // Don't check this stuff for bools. The point here is that none of the above values are
+    // equal to each other, but that requires there to be 4 unique values for the type (which
+    // bool does not have).
+    if constexpr (!std::is_same_v<T, bool>) {
+      ASSERT_NE(LEGION_ACC_INIT_VAL, SPAN_ACC_INIT_VAL);
+      ASSERT_NE(LEGION_ACC_INIT_VAL, LEGION_ACC_BOUNDS_INIT_VAL);
+      ASSERT_NE(LEGION_ACC_BOUNDS_INIT_VAL, SPAN_ACC_BOUNDS_INIT_VAL);
+    }
+
+    const auto op_shape       = store.shape<DIM>();
+    const auto op_shape_empty = op_shape.empty();
+    std::size_t legion_acc_it = 0;
+
+    if (!op_shape_empty) {
+      const auto reduce_acc = store.reduce_accessor<legate::SumReduction<T>, false, DIM>();
+
       for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
         const legate::Point<DIM> pos{*it};
 
-        reduce_acc.reduce(pos, static_cast<T>(INIT_VALUE));
+        reduce_acc.reduce(pos, LEGION_ACC_INIT_VAL);
+        ++legion_acc_it;
       }
     }
-    auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ONES(), op_shape.hi};
 
-    if (bounds.empty()) {
-      return;
+    {
+      const auto span_acc     = store.span_reduce_accessor<legate::SumReduction<T>, false, DIM>();
+      std::size_t span_acc_it = 0;
+
+      ASSERT_EQ(span_acc.size(), legion_acc_it);
+      static_assert(span_acc.rank() == DIM);
+      for (auto&& v : legate::flatten(span_acc)) {
+        if (op_shape_empty) {
+          GTEST_FAIL() << "Should not iterate empty shape for unbounded span accessor";
+        }
+
+        const auto prev_val = v.get();
+
+        v <<= SPAN_ACC_INIT_VAL;
+        // This static_cast() here is needed in case T is bool, in which case ASSERT_EQ()
+        // reports that v.get() != prev_val + SPAN_ACC_INIT_VAL since obviously prev_val +
+        // SPAN_ACC_INIT_VAL = 2 which does not equal true...
+        ASSERT_EQ(v.get(), static_cast<T>(prev_val + SPAN_ACC_INIT_VAL));
+        ++span_acc_it;
+      }
+      ASSERT_EQ(legion_acc_it, span_acc_it);
+      legion_acc_it = 0;
     }
 
-    auto reduce_acc_bounds = store.reduce_accessor<legate::SumReduction<T>, false, DIM>(bounds);
+    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ONES(), op_shape.hi};
+    const auto bounds_empty = bounds.empty();
 
-    for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
-      const legate::Point<DIM> pos{*it};
+    if (!bounds_empty) {
+      const auto legion_acc = store.reduce_accessor<legate::SumReduction<T>, false, DIM>(bounds);
 
-      reduce_acc_bounds.reduce(pos, static_cast<T>(INIT_VALUE));
+      for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
+        const legate::Point<DIM> pos{*it};
+
+        legion_acc.reduce(pos, LEGION_ACC_BOUNDS_INIT_VAL);
+        ++legion_acc_it;
+      }
+    }
+
+    {
+      const auto span_acc = store.span_reduce_accessor<legate::SumReduction<T>, false, DIM>(bounds);
+      std::size_t span_acc_it = 0;
+
+      ASSERT_EQ(span_acc.size(), legion_acc_it);
+      static_assert(span_acc.rank() == DIM);
+      for (auto&& v : legate::flatten(span_acc)) {
+        if (bounds_empty) {
+          GTEST_FAIL() << "Should not iterate empty shape for unbounded span accessor";
+        }
+
+        // We are in non-exclusive mode, we should be retrieving the value atomically
+        static_assert(std::is_same_v<T, decltype(v.get())>);
+        static_assert(!std::is_lvalue_reference_v<decltype(v.get())>);
+        const auto prev_val = v.get();
+
+        v.reduce(SPAN_ACC_BOUNDS_INIT_VAL);
+        ASSERT_EQ(v.get(), static_cast<T>(prev_val + SPAN_ACC_BOUNDS_INIT_VAL));
+        ++span_acc_it;
+      }
+      ASSERT_EQ(legion_acc_it, span_acc_it);
+      legion_acc_it = 0;
     }
 
     if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
       static constexpr auto EXTENTS = 10000;
-      auto exceeded_bounds          = legate::Point<DIM>{EXTENTS};
+      const auto exceeded_bounds    = legate::Point<DIM>{EXTENTS};
+      const auto reduce_acc         = store.reduce_accessor<legate::SumReduction<T>, false, DIM>();
+      const auto reduce_acc_bounds =
+        store.reduce_accessor<legate::SumReduction<T>, false, DIM>(bounds);
+      const auto INIT_VALUE = static_cast<T>(10);
 
       ASSERT_EXIT(
         reduce_acc.reduce(exceeded_bounds, static_cast<T>(10)), ::testing::ExitedWithCode(1), "");
-      ASSERT_EXIT(
-        reduce_acc.reduce((op_shape.hi + legate::Point<DIM>::ONES()), static_cast<T>(INIT_VALUE)),
-        ::testing::ExitedWithCode(1),
-        "");
-      ASSERT_EXIT(reduce_acc_bounds.reduce(exceeded_bounds, static_cast<T>(INIT_VALUE)),
+      ASSERT_EXIT(reduce_acc.reduce((op_shape.hi + legate::Point<DIM>::ONES()), INIT_VALUE),
                   ::testing::ExitedWithCode(1),
                   "");
-      ASSERT_EXIT(reduce_acc_bounds.reduce((bounds.hi + legate::Point<DIM>::ONES()),
-                                           static_cast<T>(INIT_VALUE)),
+      ASSERT_EXIT(
+        reduce_acc_bounds.reduce(exceeded_bounds, INIT_VALUE), ::testing::ExitedWithCode(1), "");
+      ASSERT_EXIT(reduce_acc_bounds.reduce((bounds.hi + legate::Point<DIM>::ONES()), INIT_VALUE),
                   ::testing::ExitedWithCode(1),
                   "");
     }
@@ -76,11 +147,10 @@ class ReduceAccessorFn {
 class ReduceAccessorTestTask : public legate::LegateTask<ReduceAccessorTestTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{1}};
+    legate::TaskConfig{legate::LocalTaskID{1}}.with_variant_options(
+      legate::VariantOptions{}.with_has_allocations(true));
 
   static void cpu_variant(legate::TaskContext context);
-
-  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
 /*static*/ void ReduceAccessorTestTask::cpu_variant(legate::TaskContext context)
@@ -182,9 +252,13 @@ std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> reduce_acce
 
 // NOLINTEND(readability-magic-numbers)
 
-INSTANTIATE_TEST_SUITE_P(PhysicalStoreReduceAccessorUnit,
-                         BoundStoreReduceAccessorTest,
-                         ::testing::ValuesIn(reduce_accessor_cases()));
+INSTANTIATE_TEST_SUITE_P(
+  PhysicalStoreReduceAccessorUnit,
+  BoundStoreReduceAccessorTest,
+  ::testing::ValuesIn(reduce_accessor_cases()),
+  [](const ::testing::TestParamInfo<BoundStoreReduceAccessorTest::ParamType>& param_info) {
+    return std::get<legate::Type>(param_info.param).to_string();
+  });
 
 std::vector<std::int32_t> generate_axes(std::uint32_t n)
 {

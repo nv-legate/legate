@@ -101,7 +101,7 @@ class logical_store;  // NOLINT(readability-identifier-naming)
 namespace detail {
 
 template <typename ElementType, typename Extents, typename Layout, typename Accessor>
-struct ValueTypeOf<std::mdspan<ElementType, Extents, Layout, Accessor>> {
+struct ValueTypeOf<::cuda::std::mdspan<ElementType, Extents, Layout, Accessor>> {
   using type = ElementType;
 };
 

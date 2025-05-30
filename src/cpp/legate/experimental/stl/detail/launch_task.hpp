@@ -793,7 +793,7 @@ template <typename Op, std::int32_t Dim, bool Exclusive = false>
 {
   PhysicalStore store = array.data();
 
-  using Mapping = std::layout_right::mapping<std::dextents<coord_t, Dim>>;
+  using Mapping = ::cuda::std::layout_right::mapping<::cuda::std::dextents<coord_t, Dim>>;
   Mapping mapping{detail::dynamic_extents<Dim>(working_set)};  // NOLINT(misc-const-correctness)
 
   using Policy   = ReductionAccessor<Op, Exclusive>;

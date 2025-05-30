@@ -21,39 +21,115 @@ constexpr float FLOAT_VALUE          = 42.0F;
 class WriteAccessorFn {
  public:
   template <legate::Type::Code CODE, std::int32_t DIM>
-  void operator()(const legate::PhysicalStore& store) const
+  void operator()(legate::PhysicalStore& store) const
   {
+    using T = legate::type_of_t<CODE>;
+
     ASSERT_TRUE(store.is_readable());
     ASSERT_TRUE(store.is_writable());
     ASSERT_TRUE(store.is_reducible());
 
-    using T        = legate::type_of_t<CODE>;
-    auto op_shape  = store.shape<DIM>();
-    auto write_acc = store.write_accessor<T, DIM>();
+    const auto LEGION_ACC_INIT_VAL        = static_cast<T>(32);
+    const auto LEGION_ACC_BOUNDS_INIT_VAL = static_cast<T>(66);
+    const auto SPAN_ACC_INIT_VAL          = static_cast<T>(5);
+    const auto SPAN_ACC_BOUNDS_INIT_VAL   = static_cast<T>(10);
 
-    if (!op_shape.empty()) {
+    // Don't check this stuff for bools. The point here is that none of the above values are
+    // equal to each other, but that requires there to be 4 unique values for the type (which
+    // bool does not have).
+    if constexpr (!std::is_same_v<T, bool>) {
+      ASSERT_NE(LEGION_ACC_INIT_VAL, SPAN_ACC_INIT_VAL);
+      ASSERT_NE(LEGION_ACC_INIT_VAL, LEGION_ACC_BOUNDS_INIT_VAL);
+      ASSERT_NE(LEGION_ACC_BOUNDS_INIT_VAL, SPAN_ACC_BOUNDS_INIT_VAL);
+    }
+
+    const auto op_shape       = store.shape<DIM>();
+    const auto op_shape_empty = op_shape.empty();
+    std::size_t legion_acc_it = 0;
+
+    if (!op_shape_empty) {
+      const auto legion_acc = store.write_accessor<T, DIM>();
+
       for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
-        write_acc[*it] = static_cast<T>(2);
-        ASSERT_EQ(write_acc[*it], static_cast<T>(2));
+        legion_acc[*it] = LEGION_ACC_INIT_VAL;
+        ASSERT_EQ(legion_acc[*it], LEGION_ACC_INIT_VAL);
+        ++legion_acc_it;
       }
     }
 
-    auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ONES(), op_shape.hi};
+    {
+      const auto span_acc     = store.span_write_accessor<T, DIM>();
+      std::size_t span_acc_it = 0;
 
-    if (bounds.empty()) {
-      return;
+      ASSERT_EQ(span_acc.size(), legion_acc_it);
+      static_assert(span_acc.rank() == DIM);
+      for (auto& v : legate::flatten(span_acc)) {
+        if (op_shape_empty) {
+          GTEST_FAIL() << "Should not iterate empty shape for unbounded span accessor";
+        }
+        ASSERT_EQ(v, LEGION_ACC_INIT_VAL);
+        v = SPAN_ACC_INIT_VAL;
+        ASSERT_EQ(v, SPAN_ACC_INIT_VAL);
+        ++span_acc_it;
+      }
+      ASSERT_EQ(legion_acc_it, span_acc_it);
+      legion_acc_it = 0;
     }
 
-    auto write_acc_bounds = store.write_accessor<T, DIM>(bounds);
+    if (!op_shape_empty) {
+      const auto legion_acc = store.write_accessor<T, DIM>();
 
-    for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
-      write_acc_bounds[*it] = static_cast<T>(4);
-      ASSERT_EQ(write_acc_bounds[*it], static_cast<T>(4));
+      for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
+        ASSERT_EQ(legion_acc[*it], SPAN_ACC_INIT_VAL);
+      }
+    }
+
+    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ONES(), op_shape.hi};
+    const auto bounds_empty = bounds.empty();
+
+    if (!bounds_empty) {
+      const auto legion_acc = store.write_accessor<T, DIM>(bounds);
+
+      for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
+        ASSERT_EQ(legion_acc[*it], SPAN_ACC_INIT_VAL);
+        legion_acc[*it] = LEGION_ACC_BOUNDS_INIT_VAL;
+        ASSERT_EQ(legion_acc[*it], LEGION_ACC_BOUNDS_INIT_VAL);
+        ++legion_acc_it;
+      }
+    }
+
+    {
+      const auto span_acc     = store.span_write_accessor<T, DIM>(bounds);
+      std::size_t span_acc_it = 0;
+
+      ASSERT_EQ(span_acc.size(), legion_acc_it);
+      static_assert(span_acc.rank() == DIM);
+      for (auto& v : legate::flatten(span_acc)) {
+        if (bounds_empty) {
+          GTEST_FAIL() << "Should not iterate empty bounds for bounded span accessor";
+        }
+        ASSERT_EQ(v, LEGION_ACC_BOUNDS_INIT_VAL);
+        v = SPAN_ACC_BOUNDS_INIT_VAL;
+        ASSERT_EQ(v, SPAN_ACC_BOUNDS_INIT_VAL);
+        ++span_acc_it;
+      }
+      ASSERT_EQ(legion_acc_it, span_acc_it);
+      legion_acc_it = 0;
+    }
+
+    if (!bounds_empty) {
+      const auto legion_acc = store.write_accessor<T, DIM>(bounds);
+
+      for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
+        ASSERT_EQ(legion_acc[*it], SPAN_ACC_BOUNDS_INIT_VAL);
+      }
     }
 
     if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
       static constexpr auto EXTENTS = 10000;
-      auto exceeded_bounds          = legate::Point<DIM>{EXTENTS};
+      const auto exceeded_bounds    = legate::Point<DIM>{EXTENTS};
+      const auto write_acc          = store.write_accessor<T, DIM>();
+      const auto write_acc_bounds   = store.write_accessor<T, DIM>(bounds);
 
       ASSERT_EXIT(write_acc[exceeded_bounds], ::testing::ExitedWithCode(1), "");
       ASSERT_EXIT(
@@ -69,11 +145,10 @@ class WriteAccessorFn {
 class WriteAccessorTestTask : public legate::LegateTask<WriteAccessorTestTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{1}};
+    legate::TaskConfig{legate::LocalTaskID{1}}.with_variant_options(
+      legate::VariantOptions{}.with_has_allocations(true));
 
   static void cpu_variant(legate::TaskContext context);
-
-  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
 /*static*/ void WriteAccessorTestTask::cpu_variant(legate::TaskContext context)
@@ -175,9 +250,13 @@ std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> write_acces
 
 // NOLINTEND(readability-magic-numbers)
 
-INSTANTIATE_TEST_SUITE_P(PhysicalStoreWriteAccessorUnit,
-                         BoundStoreWriteAccessorTest,
-                         ::testing::ValuesIn(write_accessor_cases()));
+INSTANTIATE_TEST_SUITE_P(
+  PhysicalStoreWriteAccessorUnit,
+  BoundStoreWriteAccessorTest,
+  ::testing::ValuesIn(write_accessor_cases()),
+  [](const ::testing::TestParamInfo<BoundStoreWriteAccessorTest::ParamType>& param_info) {
+    return std::get<legate::Type>(param_info.param).to_string();
+  });
 
 std::vector<std::int32_t> generate_axes(std::uint32_t n)
 {

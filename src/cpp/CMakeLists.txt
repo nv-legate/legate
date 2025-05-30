@@ -172,16 +172,6 @@ if(legate_USE_CAL)
 endif()
 
 # ########################################################################################
-# * std::span ----------------------------------------------------------------
-
-legate_find_or_configure(PACKAGE span)
-
-# ########################################################################################
-# * std::mdspan --------------------------------------------------------------
-
-legate_find_or_configure(PACKAGE MDSpan)
-
-# ########################################################################################
 # * fmt::fmt --------------------------------------------------------------
 
 legate_find_or_configure(PACKAGE fmt)
@@ -286,12 +276,10 @@ target_link_libraries(legate
                       #
                       # Similarly, we want the MPI wrapper to load as early as possible,
                       # since it provides our MPI symbols.
-                      PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper>
-                             CCCL::Thrust
-                             Legion::Legion
+                      PUBLIC $<TARGET_NAME_IF_EXISTS:legate::mpi_wrapper> #
+                             CCCL::CCCL #
+                             Legion::Legion #
                              $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
-                             $<TARGET_NAME_IF_EXISTS:std::mdspan>
-                             $<TARGET_NAME_IF_EXISTS:std::span>
                       PRIVATE $<TARGET_NAME_IF_EXISTS:NCCL::NCCL>
                               # See
                               # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#nvtx3
@@ -747,6 +735,8 @@ install(FILES legate/utilities/debug.h
               legate/utilities/memory.inl
               legate/utilities/span.h
               legate/utilities/span.inl
+              legate/utilities/mdspan.h
+              legate/utilities/mdspan.inl
               legate/utilities/tuple.h
               legate/utilities/tuple.inl
               legate/utilities/typedefs.h
@@ -777,6 +767,17 @@ install(FILES legate/utilities/detail/compressed_pair.h
               legate/utilities/detail/zstring_view.inl
               legate/utilities/detail/doxygen.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail)
+
+install(FILES legate/utilities/detail/mdspan/flat_mdspan_view.h
+              legate/utilities/detail/mdspan/flat_mdspan_view.inl
+              legate/utilities/detail/mdspan/flat_mdspan_iterator.h
+              legate/utilities/detail/mdspan/flat_mdspan_iterator.inl
+              legate/utilities/detail/mdspan/reduction_accessor.h
+              legate/utilities/detail/mdspan/reduction_accessor.inl
+              legate/utilities/detail/mdspan/for_each_in_extent.h
+              legate/utilities/detail/mdspan/for_each_in_extent.inl
+              legate/utilities/detail/mdspan/util.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail/mdpsan)
 
 # ########################################################################################
 # * install Legate I/O -----------------------------------------------------------

@@ -14,9 +14,13 @@
 #include <legate/mapping/mapping.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/detail/doxygen.h>
+#include <legate/utilities/detail/mdspan/reduction_accessor.h>
 #include <legate/utilities/dispatch.h>
 #include <legate/utilities/internal_shared_ptr.h>
+#include <legate/utilities/mdspan.h>
 #include <legate/utilities/shared_ptr.h>
+
+#include <cuda/std/mdspan>
 
 #include <cstddef>
 #include <cstdint>
@@ -48,6 +52,216 @@ class PhysicalArray;
  */
 class PhysicalStore {
  public:
+  template <typename T,
+            std::uint32_t DIM,
+            typename AccessorPolicy = ::cuda::std::default_accessor<T>>
+  using mdspan_type = ::cuda::std::
+    mdspan<T, ::cuda::std::dextents<coord_t, DIM>, ::cuda::std::layout_stride, AccessorPolicy>;
+
+  /**
+   * @brief Returns a read-only mdspan to the store over its entire domain. Equivalent to
+   * `span_read_accessor<T, DIM>(shape<DIM>())`.
+   *
+   * @note This API is experimental. It will eventually replace the Legion accessor interface,
+   * but we are seeking user feedback on it before such time. If you encounter issues, and/or
+   * have suggestions for improvements, please file a bug at
+   * https://github.com/nv-legate/legate/issues.
+   *
+   * @tparam T The element type of the mdpsan.
+   * @tparam DIM The rank of the mdspan.
+   * @tparam VALIDATE_TYPE If `true` (default), checks that the type and rank of the mdpsan
+   * match that of the `PhysicalStore`.
+   *
+   * @return The read-only mdspan accessor.
+   */
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
+  [[nodiscard]] mdspan_type<const T, DIM> span_read_accessor() const;
+
+  /**
+   * @brief Returns a write-only mdspan to the store over its entire domain. Equivalent to
+   * `span_write_accessor<T, DIM>(shape<DIM>())`.
+   *
+   * @note This API is experimental. It will eventually replace the Legion accessor interface,
+   * but we are seeking user feedback on it before such time. If you encounter issues, and/or
+   * have suggestions for improvements, please file a bug at
+   * https://github.com/nv-legate/legate/issues.
+   *
+   * The user may read from a write-only accessor, but must write to the read-from location
+   * first, otherwise the returned values are undefined:
+   *
+   * @code{.cpp}
+   * auto acc = store.span_write_accessor<float, 2>();
+   *
+   * v = acc(0, 0); // Note: undefined value
+   * acc(0, 0) = 42.0;
+   * v = acc(0, 0); // OK, value will be 42.0
+   * @endcode
+   *
+   * @tparam T The element type of the mdpsan.
+   * @tparam DIM The rank of the mdspan.
+   * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
+   * of the mdpsan match that of the `PhysicalStore`.
+   *
+   * @return The mdspan accessor.
+   */
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
+  [[nodiscard]] mdspan_type<T, DIM> span_write_accessor();
+
+  /**
+   * @brief Returns a read-write mdspan to the store over its entire domain. Equivalent to
+   * `span_read_write_accessor<T, DIM>(shape<DIM>())`.
+   *
+   * @note This API is experimental. It will eventually replace the Legion accessor interface,
+   * but we are seeking user feedback on it before such time. If you encounter issues, and/or
+   * have suggestions for improvements, please file a bug at
+   * https://github.com/nv-legate/legate/issues.
+   *
+   * @tparam T The element type of the mdpsan.
+   * @tparam DIM The rank of the mdspan.
+   * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
+   * of the mdpsan match that of the `PhysicalStore`.
+   *
+   * @return The mdspan accessor.
+   */
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
+  [[nodiscard]] mdspan_type<T, DIM> span_read_write_accessor();
+
+  /**
+   * @brief Returns a reduction mdspan to the store over its entire domain. Equivalent to
+   * `span_reduce_accessor<Redop, EXCLUSIVE, DIM>(shape<DIM>())`.
+   *
+   * @note This API is experimental. It will eventually replace the Legion accessor interface,
+   * but we are seeking user feedback on it before such time. If you encounter issues, and/or
+   * have suggestions for improvements, please file a bug at
+   * https://github.com/nv-legate/legate/issues.
+   *
+   * @tparam Redop The reduction operator (e.g. `SumReduction`).
+   * @tparam EXCLUSIVE Whether the reduction accessor has exclusive access to the buffer.
+   * @tparam DIM The rank of the mdspan.
+   * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
+   * of the mdpsan match that of the `PhysicalStore`.
+   *
+   * @return The mdspan accessor.
+   */
+  template <typename Redop,
+            bool EXCLUSIVE,
+            std::int32_t DIM,
+            bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
+  [[nodiscard]] mdspan_type<typename Redop::LHS, DIM, detail::ReductionAccessor<Redop, EXCLUSIVE>>
+  span_reduce_accessor();
+
+  /**
+   * @brief Returns a read-only mdspan to the store over the selected domain.
+   *
+   * @note This API is experimental. It will eventually replace the Legion accessor interface,
+   * but we are seeking user feedback on it before such time. If you encounter issues, and/or
+   * have suggestions for improvements, please file a bug at
+   * https://github.com/nv-legate/legate/issues.
+   *
+   * @note If `bounds` is empty then the strides of the returned `mdspan` will be all 0 instead
+   * of what it might normally be. The object is still perfectly usable as normal but the
+   * strides will not be correct.
+   *
+   * @tparam T The element type of the mdpsan.
+   * @tparam DIM The rank of the mdspan.
+   * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
+   * of the mdpsan match that of the `PhysicalStore`.
+   *
+   * @param bounds The (sub-)domain over which to access the store.
+   *
+   * @return The mdspan accessor.
+   */
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
+  [[nodiscard]] mdspan_type<const T, DIM> span_read_accessor(const Rect<DIM>& bounds) const;
+
+  /**
+   * @brief Returns a write-only mdspan to the store over the selected domain.
+   *
+   * @note This API is experimental. It will eventually replace the Legion accessor interface,
+   * but we are seeking user feedback on it before such time. If you encounter issues, and/or
+   * have suggestions for improvements, please file a bug at
+   * https://github.com/nv-legate/legate/issues.
+   *
+   * The user may read from a write-only accessor, but must write to the read-from location
+   * first, otherwise the returned values are undefined:
+   *
+   * @code{.cpp}
+   * auto acc = store.span_write_accessor<float, 2>(bounds);
+   *
+   * v = acc(0, 0); // Note: undefined value
+   * acc(0, 0) = 42.0;
+   * v = acc(0, 0); // OK, value will be 42.0
+   * @endcode
+   *
+   * @note If `bounds` is empty then the strides of the returned `mdspan` will be all 0 instead
+   * of what it might normally be. The object is still perfectly usable as normal but the
+   * strides will not be correct.
+   *
+   * @tparam T The element type of the mdpsan.
+   * @tparam DIM The rank of the mdspan.
+   * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
+   * of the mdpsan match that of the `PhysicalStore`.
+   *
+   * @param bounds The (sub-)domain over which to access the store.
+   *
+   * @return The mdspan accessor.
+   */
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
+  [[nodiscard]] mdspan_type<T, DIM> span_write_accessor(const Rect<DIM>& bounds);
+
+  /**
+   * @brief Returns a read-write mdspan to the store over the selected domain.
+   *
+   * @note This API is experimental. It will eventually replace the Legion accessor interface,
+   * but we are seeking user feedback on it before such time. If you encounter issues, and/or
+   * have suggestions for improvements, please file a bug at
+   * https://github.com/nv-legate/legate/issues.
+   *
+   * @note If `bounds` is empty then the strides of the returned `mdspan` will be all 0 instead
+   * of what it might normally be. The object is still perfectly usable as normal but the
+   * strides will not be correct.
+   *
+   * @tparam T The element type of the mdpsan.
+   * @tparam DIM The rank of the mdspan.
+   * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
+   * of the mdpsan match that of the `PhysicalStore`.
+   *
+   * @param bounds The (sub-)domain over which to access the store.
+   *
+   * @return The mdspan accessor.
+   */
+  template <typename T, std::int32_t DIM, bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
+  [[nodiscard]] mdspan_type<T, DIM> span_read_write_accessor(const Rect<DIM>& bounds);
+
+  /**
+   * @brief Returns a reduction mdspan to the store over the selected domain.
+   *
+   * @note This API is experimental. It will eventually replace the Legion accessor interface,
+   * but we are seeking user feedback on it before such time. If you encounter issues, and/or
+   * have suggestions for improvements, please file a bug at
+   * https://github.com/nv-legate/legate/issues.
+   *
+   * @note If `bounds` is empty then the strides of the returned `mdspan` will be all 0 instead
+   * of what it might normally be. The object is still perfectly usable as normal but the
+   * strides will not be correct.
+   *
+   * @tparam Redop The reduction operator (e.g. `SumReduction`).
+   * @tparam EXCLUSIVE Whether the reduction accessor has exclusive access to the buffer.
+   * @tparam DIM The rank of the mdspan.
+   * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
+   * of the mdpsan match that of the `PhysicalStore`.
+   *
+   * @param bounds The (sub-)domain over which to access the store.
+   *
+   * @return The mdspan accessor.
+   */
+  template <typename Redop,
+            bool EXCLUSIVE,
+            std::int32_t DIM,
+            bool VALIDATE_TYPE = LEGATE_TRUE_WHEN_DEBUG>
+  [[nodiscard]] mdspan_type<typename Redop::LHS, DIM, detail::ReductionAccessor<Redop, EXCLUSIVE>>
+  span_reduce_accessor(const Rect<DIM>& bounds);
+
   /**
    * @brief Returns a read-only accessor to the store for the entire domain.
    *

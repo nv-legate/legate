@@ -22,38 +22,86 @@ class ReadAccessorFn {
   template <legate::Type::Code CODE, std::int32_t DIM>
   void operator()(legate::TaskContext context, const legate::PhysicalStore& store) const
   {
-    using T       = legate::type_of_t<CODE>;
-    auto value    = context.scalar(0).value<T>();
-    auto read_acc = store.read_accessor<T, DIM>();
-    auto op_shape = store.shape<DIM>();
+    using T                   = legate::type_of_t<CODE>;
+    const auto value          = context.scalar(0).value<T>();
+    const auto op_shape       = store.shape<DIM>();
+    const auto op_shape_empty = op_shape.empty();
+    std::size_t legion_acc_it = 0;
 
-    if (!op_shape.empty()) {
+    if (!op_shape_empty) {
+      const auto legion_read_acc = store.read_accessor<T, DIM>();
+
       for (legate::PointInRectIterator<DIM> it{op_shape}; it.valid(); ++it) {
-        ASSERT_EQ(read_acc[*it], static_cast<T>(value));
+        ASSERT_EQ(legion_read_acc[*it], value);
+        ++legion_acc_it;
       }
     }
 
-    auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ONES(), op_shape.hi};
+    {
+      const auto span_acc     = store.span_read_accessor<T, DIM>();
+      std::size_t span_acc_it = 0;
 
-    if (bounds.empty()) {
-      return;
+      ASSERT_EQ(span_acc.size(), legion_acc_it);
+      static_assert(span_acc.rank() == DIM);
+      static_assert(std::is_same_v<typename decltype(span_acc)::element_type, const T>);
+
+      for (auto& v : legate::flatten(span_acc)) {
+        if (op_shape_empty) {
+          GTEST_FAIL() << "Should not iterate empty shape for unbounded span accessor";
+        }
+        static_assert(std::is_same_v<decltype(v), const T&>);
+        ASSERT_EQ(v, value);
+        ++span_acc_it;
+      }
+      ASSERT_EQ(legion_acc_it, span_acc_it);
+      legion_acc_it = 0;
+      span_acc_it   = 0;
     }
 
-    for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
-      ASSERT_EQ(read_acc[*it], static_cast<T>(value));
+    const auto bounds = legate::Rect<DIM>{op_shape.lo + legate::Point<DIM>::ONES(), op_shape.hi};
+    const auto bounds_empty = bounds.empty();
+
+    if (!bounds_empty) {
+      const auto legion_read_acc = store.read_accessor<T, DIM>();
+
+      for (legate::PointInRectIterator<DIM> it{bounds}; it.valid(); ++it) {
+        ASSERT_EQ(legion_read_acc[*it], value);
+        ++legion_acc_it;
+      }
+    }
+
+    {
+      const auto span_acc     = store.span_read_accessor<T, DIM>(bounds);
+      std::size_t span_acc_it = 0;
+
+      ASSERT_EQ(span_acc.size(), legion_acc_it);
+      static_assert(span_acc.rank() == DIM);
+      static_assert(std::is_same_v<typename decltype(span_acc)::element_type, const T>);
+      for (auto& v : legate::flatten(span_acc)) {
+        if (op_shape_empty) {
+          GTEST_FAIL() << "Should not iterate empty shape for unbounded span accessor";
+        }
+        static_assert(std::is_same_v<decltype(v), const T&>);
+        ASSERT_EQ(v, value);
+        ++span_acc_it;
+      }
+      ASSERT_EQ(legion_acc_it, span_acc_it);
+      legion_acc_it = 0;
+      span_acc_it   = 0;
     }
 
     if (LEGATE_DEFINED(LEGATE_BOUNDS_CHECKS)) {
       // access store with exceeded bounds
-      auto read_acc_bounds          = store.read_accessor<T, DIM>(bounds);
-      static constexpr auto EXTENTS = 10000;
-      auto exceeded_bounds          = legate::Point<DIM>{EXTENTS};
+      const auto legion_read_acc        = store.read_accessor<T, DIM>();
+      const auto legion_read_acc_bounds = store.read_accessor<T, DIM>(bounds);
+      static constexpr auto EXTENTS     = 10000;
+      auto exceeded_bounds              = legate::Point<DIM>{EXTENTS};
 
-      ASSERT_EXIT(read_acc[exceeded_bounds], ::testing::ExitedWithCode(1), "");
+      ASSERT_EXIT(legion_read_acc[exceeded_bounds], ::testing::ExitedWithCode(1), "");
       ASSERT_EXIT(
-        read_acc[(op_shape.hi + legate::Point<DIM>{100})], ::testing::ExitedWithCode(1), "");
-      ASSERT_EXIT(read_acc_bounds[exceeded_bounds], ::testing::ExitedWithCode(1), "");
-      ASSERT_EXIT(read_acc_bounds[(bounds.hi + legate::Point<DIM>::ONES())],
+        legion_read_acc[(op_shape.hi + legate::Point<DIM>{100})], ::testing::ExitedWithCode(1), "");
+      ASSERT_EXIT(legion_read_acc_bounds[exceeded_bounds], ::testing::ExitedWithCode(1), "");
+      ASSERT_EXIT(legion_read_acc_bounds[(bounds.hi + legate::Point<DIM>::ONES())],
                   ::testing::ExitedWithCode(1),
                   "");
     }
@@ -64,6 +112,8 @@ class ReadAccessorFn {
       ASSERT_THROW(static_cast<void>(store.read_write_accessor<T, DIM>()), std::invalid_argument);
       ASSERT_THROW(static_cast<void>(store.reduce_accessor<legate::SumReduction<T>, false, DIM>()),
                    std::invalid_argument);
+      // No need to test this for span accessors, the store being a const-ref disallows mutable
+      // calls
     }
   }
 };
@@ -71,11 +121,10 @@ class ReadAccessorFn {
 class ReadAccessorTestTask : public legate::LegateTask<ReadAccessorTestTask> {
  public:
   static inline const auto TASK_CONFIG =  // NOLINT(cert-err58-cpp)
-    legate::TaskConfig{legate::LocalTaskID{1}};
+    legate::TaskConfig{legate::LocalTaskID{1}}.with_variant_options(
+      legate::VariantOptions{}.with_has_allocations(true));
 
   static void cpu_variant(legate::TaskContext context);
-
-  static constexpr auto CPU_VARIANT_OPTIONS = legate::VariantOptions{}.with_has_allocations(true);
 };
 
 /*static*/ void ReadAccessorTestTask::cpu_variant(legate::TaskContext context)
@@ -189,9 +238,13 @@ std::vector<std::tuple<legate::Shape, legate::Type, legate::Scalar>> read_access
 
 // NOLINTEND(readability-magic-numbers)
 
-INSTANTIATE_TEST_SUITE_P(PhysicalStoreReadAccessorUnit,
-                         BoundStoreReadAccessorTest,
-                         ::testing::ValuesIn(read_accessor_cases()));
+INSTANTIATE_TEST_SUITE_P(
+  PhysicalStoreReadAccessorUnit,
+  BoundStoreReadAccessorTest,
+  ::testing::ValuesIn(read_accessor_cases()),
+  [](const ::testing::TestParamInfo<BoundStoreReadAccessorTest::ParamType>& param_info) {
+    return std::get<legate::Type>(param_info.param).to_string();
+  });
 
 }  // namespace
 

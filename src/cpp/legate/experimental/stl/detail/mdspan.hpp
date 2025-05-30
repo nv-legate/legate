@@ -11,58 +11,13 @@
 #include <legate/cuda/cuda.h>
 #include <legate/experimental/stl/detail/config.hpp>  // includes <version>
 #include <legate/utilities/assert.h>
-#include <legate/utilities/macros.h>
+#include <legate/utilities/mdspan.h>
 
-#if __has_include(<mdspan>)
-#if defined(__cpp_lib_mdspan) && __cpp_lib_mdspan >= 202207L
-#define LEGATE_STL_HAS_STD_MDSPAN
-#endif
-#endif
-
-#if LEGATE_DEFINED(LEGATE_STL_HAS_STD_MDSPAN)
-
-#include <mdspan>
-
-#else
-
-LEGATE_PRAGMA_PUSH();
-LEGATE_PRAGMA_EDG_IGNORE(
-  737,
-  useless_using_declaration,  // using-declaration ignored -- it refers to the current namespace
-  20011,
-  20040,   // a __host__ function [...] redeclared with __host__ __device__
-  20014);  // calling a __host__ function [...] from a __host__ __device__
-           // function is not allowed
-
-#include <legate/experimental/stl/detail/span.hpp>  // this header must come before mdspan.hpp
-
-// Blame Kokkos for these uses of reserved identifiers...
-// NOLINTBEGIN
-#define _MDSPAN_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS 1
-#define _MDSPAN_USE_FAKE_ATTRIBUTE_NO_UNIQUE_ADDRESS
-#define _MDSPAN_NO_UNIQUE_ADDRESS
-// NOLINTEND
-
-#define MDSPAN_IMPL_STANDARD_NAMESPACE std
-#define MDSPAN_IMPL_PROPOSED_NAMESPACE mdspan_experimental
-#include <mdspan/mdspan.hpp>
-// We intentionally define this so that downstream libs do the right thing.
-#define __cpp_lib_mdspan 1  // NOLINT
-
-namespace std {
-// DANGER: this actually is potentially quite dangerous...
-// NOLINTNEXTLINE(google-build-using-namespace, cert-dcl58-cpp)
-using namespace mdspan_experimental;
-}  // namespace std
-
-LEGATE_PRAGMA_POP();
-
-#endif  // LEGATE_STL_HAS_STD_MDSPAN
+#include <cuda/std/mdspan>
 
 // Legate includes:
 #include <legate.h>
 
-#include <legate/cuda/cuda.h>
 #include <legate/experimental/stl/detail/meta.hpp>
 #include <legate/experimental/stl/detail/type_traits.hpp>
 
@@ -291,17 +246,17 @@ struct ValueTypeOf : meta::if_c<(type_code_of_v<Store> == Type::Code::NIL),
  */
 template <typename ElementType, std::int32_t Dim>
 using mdspan_t =  //
-  std::mdspan<ElementType,
-              std::dextents<coord_t, Dim>,
-              std::layout_right,
-              detail::MDSpanAccessor<ElementType, Dim>>;
+  ::cuda::std::mdspan<ElementType,
+                      ::cuda::std::dextents<coord_t, Dim>,
+                      ::cuda::std::layout_right,
+                      detail::MDSpanAccessor<ElementType, Dim>>;
 
 template <typename Op, std::int32_t Dim, bool Exclusive = false>
 using mdspan_reduction_t =  //
-  std::mdspan<
+  ::cuda::std::mdspan<
     typename Op::RHS,
-    std::dextents<coord_t, Dim>,
-    std::layout_right,
+    ::cuda::std::dextents<coord_t, Dim>,
+    ::cuda::std::layout_right,
     detail::MDSpanAccessor<typename Op::RHS, Dim, detail::ReductionAccessor<Op, Exclusive>>>;
 
 namespace detail {
@@ -316,220 +271,7 @@ template <typename T>
 inline constexpr bool is_mdspan_v<T const> = is_mdspan_v<T>;
 
 template <typename Element, typename Extent, typename Layout, typename Accessor>
-inline constexpr bool is_mdspan_v<std::mdspan<Element, Extent, Layout, Accessor>> = true;
-
-template <typename MDSpan>
-class flat_mdspan_view;
-
-/**
- * @brief An iterator over an `mdspan` that presents a flat view and allows
- * random elementwise access. It is particularly handy for passing to Thrust
- * algorithms to perform elementwise operations in parallel.
- *
- * @ingroup stl-views
- */
-template <typename MDSpan>
-class flat_mdspan_iterator;
-
-template <typename Element, typename Extent, typename Layout, typename Accessor>
-class flat_mdspan_iterator<std::mdspan<Element, Extent, Layout, Accessor>> {
-  using mdspan_t         = std::mdspan<Element, Extent, Layout, Accessor>;
-  using data_handle_type = typename mdspan_t::data_handle_type;
-  friend class flat_mdspan_view<mdspan_t>;
-
-  struct pointer_type {  // NOLINT(readability-identifier-naming)
-    std::remove_const_t<Element> elem_;
-    LEGATE_HOST_DEVICE [[nodiscard]] Element* operator->() const noexcept { return &elem_; }
-  };
-
- public:
-  using value_type        = std::remove_const_t<Element>;
-  using reference         = typename mdspan_t::reference;
-  using difference_type   = std::ptrdiff_t;
-  using iterator_category = std::random_access_iterator_tag;
-  using pointer           = std::conditional_t<std::is_lvalue_reference_v<reference>,
-                                               std::add_pointer_t<reference>,
-                                               pointer_type>;
-
-  LEGATE_HOST_DEVICE [[nodiscard]] reference operator*() const noexcept
-  {
-    static_assert(noexcept(span_->accessor().access(span_->data_handle(), span_->mapping()(idx_))));
-    return span_->accessor().access(span_->data_handle(), span_->mapping()(idx_));
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] pointer operator->() const noexcept
-  {
-    if constexpr (std::is_lvalue_reference_v<reference>) {
-      return &operator*();
-    } else {
-      return pointer_type{operator*()};
-    }
-  }
-
-  LEGATE_HOST_DEVICE flat_mdspan_iterator& operator++() noexcept
-  {
-    LEGATE_ASSERT(idx_ < span_->size());
-    ++idx_;
-    return *this;
-  }
-
-  LEGATE_HOST_DEVICE flat_mdspan_iterator& operator++(int) noexcept
-  {
-    auto copy = *this;
-    ++(*this);
-    return copy;
-  }
-
-  LEGATE_HOST_DEVICE flat_mdspan_iterator& operator--() noexcept
-  {
-    LEGATE_ASSERT(idx_ > 0);
-    --idx_;
-    return *this;
-  }
-
-  LEGATE_HOST_DEVICE flat_mdspan_iterator& operator--(int) noexcept
-  {
-    auto copy = *this;
-    --(*this);
-    return copy;
-  }
-
-  LEGATE_HOST_DEVICE flat_mdspan_iterator& operator+=(difference_type n) noexcept
-  {
-    if (n < 0) {
-      LEGATE_ASSERT(idx_ >= static_cast<std::size_t>(-n));
-      idx_ -= static_cast<std::size_t>(-n);
-    } else {
-      LEGATE_ASSERT(idx_ + static_cast<std::size_t>(n) <= span_->size());
-      idx_ += static_cast<std::size_t>(n);
-    }
-    return *this;
-  }
-
-  LEGATE_HOST_DEVICE flat_mdspan_iterator& operator-=(difference_type n) noexcept
-  {
-    return operator+=(-n);
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] reference operator[](difference_type n) const noexcept
-  {
-    return *(*this + n);
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend difference_type operator-(
-    const flat_mdspan_iterator& self, const flat_mdspan_iterator& other) noexcept
-  {
-    LEGATE_ASSERT(self.span_ == other.span_);
-    return static_cast<difference_type>(self.idx_) - static_cast<difference_type>(other.idx_);
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend flat_mdspan_iterator operator+(flat_mdspan_iterator self,
-                                                                         difference_type n) noexcept
-  {
-    self += n;
-    return self;
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend flat_mdspan_iterator operator+(
-    difference_type n, flat_mdspan_iterator self) noexcept
-  {
-    self += n;
-    return self;
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend flat_mdspan_iterator operator-(flat_mdspan_iterator self,
-                                                                         difference_type n) noexcept
-  {
-    self -= n;
-    return self;
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator==(const flat_mdspan_iterator& lhs,
-                                                          const flat_mdspan_iterator& rhs) noexcept
-  {
-    LEGATE_ASSERT(lhs.span_ == rhs.span_);
-    return lhs.idx_ == rhs.idx_;
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator!=(const flat_mdspan_iterator& lhs,
-                                                          const flat_mdspan_iterator& rhs) noexcept
-  {
-    return !(lhs == rhs);
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator<(const flat_mdspan_iterator& lhs,
-                                                         const flat_mdspan_iterator& rhs) noexcept
-  {
-    LEGATE_ASSERT(lhs.span_ == rhs.span_);
-    return lhs.idx_ < rhs.idx_;
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator>(const flat_mdspan_iterator& lhs,
-                                                         const flat_mdspan_iterator& rhs) noexcept
-  {
-    return rhs < lhs;
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator<=(const flat_mdspan_iterator& lhs,
-                                                          const flat_mdspan_iterator& rhs) noexcept
-  {
-    return !(rhs < lhs);
-  }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] friend bool operator>=(const flat_mdspan_iterator& lhs,
-                                                          const flat_mdspan_iterator& rhs) noexcept
-  {
-    return !(lhs < rhs);
-  }
-
- private:
-  LEGATE_HOST_DEVICE explicit flat_mdspan_iterator(const mdspan_t* span, std::size_t idx) noexcept
-    : span_{span}, idx_(idx)
-  {
-  }
-
-  const mdspan_t* span_{};
-  std::size_t idx_{};
-};
-
-/**
- * @brief A flattened view of an `mdspan` that allows efficient random
- * elementwise access.
- *
- * @ingroup stl-views
- */
-template <typename Element, typename Extent, typename Layout, typename Accessor>
-class flat_mdspan_view<std::mdspan<Element, Extent, Layout, Accessor>> {
- public:
-  using mdspan_t       = std::mdspan<Element, Extent, Layout, Accessor>;
-  using iterator       = flat_mdspan_iterator<mdspan_t>;
-  using const_iterator = iterator;
-
-  LEGATE_HOST_DEVICE explicit flat_mdspan_view(mdspan_t span) noexcept : span_{std::move(span)} {}
-
-  LEGATE_HOST_DEVICE [[nodiscard]] iterator begin() const noexcept { return iterator{&span_, 0}; }
-
-  LEGATE_HOST_DEVICE [[nodiscard]] iterator end() const noexcept
-  {
-    return iterator{&span_, span_.size()};
-  }
-
- private:
-  mdspan_t span_;
-};
-
-/**
- * @brief Create a flattened view of an `mdspan` that allows efficient random
- * elementwise access.
- *
- * @ingroup stl-views
- */
-template <typename Element, typename Extent, typename Layout, typename Accessor>
-LEGATE_HOST_DEVICE [[nodiscard]] flat_mdspan_view<std::mdspan<Element, Extent, Layout, Accessor>>
-flatten(std::mdspan<Element, Extent, Layout, Accessor> span) noexcept
-{
-  return flat_mdspan_view<std::mdspan<Element, Extent, Layout, Accessor>>{std::move(span)};
-}
+inline constexpr bool is_mdspan_v<::cuda::std::mdspan<Element, Extent, Layout, Accessor>> = true;
 
 }  // namespace detail
 
@@ -547,15 +289,16 @@ template <typename LeftElement,
           typename Layout,
           typename LeftAccessor,
           typename RightAccessor>
-LEGATE_HOST_DEVICE void assign(std::mdspan<LeftElement, Extent, Layout, LeftAccessor>&& lhs,
-                               std::mdspan<RightElement, Extent, Layout, RightAccessor>&& rhs)
+LEGATE_HOST_DEVICE void assign(
+  ::cuda::std::mdspan<LeftElement, Extent, Layout, LeftAccessor>&& lhs,
+  ::cuda::std::mdspan<RightElement, Extent, Layout, RightAccessor>&& rhs)
 {
   static_assert(
     std::is_assignable_v<typename LeftAccessor::reference, typename RightAccessor::reference>);
   LEGATE_ASSERT(lhs.extents() == rhs.extents());
 
-  const auto lhs_view = detail::flatten(std::move(lhs));
-  const auto rhs_view = detail::flatten(std::move(rhs));
+  const auto lhs_view = flatten(std::move(lhs));
+  const auto rhs_view = flatten(std::move(rhs));
 
   LEGATE_PRAGMA_PUSH();
   LEGATE_PRAGMA_CLANG_IGNORE("-Wgnu-zero-variadic-macro-arguments");

@@ -39,7 +39,7 @@ LEGATE_HOST_DEVICE [[nodiscard]] auto project_dimension(Cursor cursor,
   if constexpr (((Index != ProjDims) && ...)) {
     static_cast<void>(cursor);
     static_cast<void>(extents);
-    return std::full_extent;
+    return ::cuda::std::full_extent;
   } else {
     for (auto i : {ProjDims...}) {
       if (i == Index) {
@@ -116,7 +116,7 @@ class ProjectionPolicy {
                                                              cursor cursor)
       {
         auto extents = span.extents();
-        return std::submdspan(span, project_dimension<Is, ProjDims...>(cursor, extents)...);
+        return ::cuda::std::submdspan(span, project_dimension<Is, ProjDims...>(cursor, extents)...);
       }
 
       LEGATE_HOST_DEVICE [[nodiscard]] decltype(auto) read(cursor cur) const
@@ -191,11 +191,11 @@ class ProjectionPolicy {
 
     template <typename T, typename E, typename L, typename A>
       requires(std::is_same_v<T const, ElementType const>)
-    LEGATE_HOST_DEVICE [[nodiscard]] static View<PhysicalMap<std::mdspan<T, E, L, A>>>
-    physical_view(std::mdspan<T, E, L, A> span)
+    LEGATE_HOST_DEVICE [[nodiscard]] static View<PhysicalMap<::cuda::std::mdspan<T, E, L, A>>>
+    physical_view(::cuda::std::mdspan<T, E, L, A> span)
     {
       static_assert(Dim == E::rank());
-      return View{PhysicalMap<std::mdspan<T, E, L, A>>(std::move(span))};
+      return View{PhysicalMap<::cuda::std::mdspan<T, E, L, A>>(std::move(span))};
     }
 
     LEGATE_HOST_DEVICE [[nodiscard]] static coord_t size(const LogicalStore& store)
@@ -272,7 +272,7 @@ class ElementPolicy {
 
       LEGATE_HOST_DEVICE [[nodiscard]] reference read(cursor cur) const
       {
-        std::array<coord_t, Dim> p;
+        ::cuda::std::array<coord_t, Dim> p;
         for (std::int32_t i = Dim - 1; i >= 0; --i) {
           p[i] = cur % span_.extents().extent(i);
           cur /= span_.extents().extent(i);
@@ -309,11 +309,11 @@ class ElementPolicy {
 
     template <typename T, typename E, typename L, typename A>
       requires(std::is_same_v<T const, ElementType const>)
-    LEGATE_HOST_DEVICE [[nodiscard]] static View<PhysicalMap<std::mdspan<T, E, L, A>>>
-    physical_view(std::mdspan<T, E, L, A> span)
+    LEGATE_HOST_DEVICE [[nodiscard]] static View<PhysicalMap<::cuda::std::mdspan<T, E, L, A>>>
+    physical_view(::cuda::std::mdspan<T, E, L, A> span)
     {
       static_assert(Dim == E::rank());
-      return View{PhysicalMap<std::mdspan<T, E, L, A>>{std::move(span)}};
+      return View{PhysicalMap<::cuda::std::mdspan<T, E, L, A>>{std::move(span)}};
     }
 
     LEGATE_HOST_DEVICE [[nodiscard]] static coord_t size(const LogicalStore& store)

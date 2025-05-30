@@ -94,10 +94,6 @@ set_property(DIRECTORY
              PROPERTY CMAKE_CONFIGURE_DEPENDS
                       "${LEGATE_CMAKE_DIR}/versions/versions.json"
                       "${LEGATE_CMAKE_DIR}/versions/legion_version.json"
-                      "${LEGATE_CMAKE_DIR}/patches/mdspan_cpp_lib_span_dynamic_extent.diff"
-                      "${LEGATE_CMAKE_DIR}/patches/mdspan_cpp_lib_span_extents.diff"
-                      "${LEGATE_CMAKE_DIR}/patches/mdspan_cpp_lib_span_layout_stride.diff"
-                      "${LEGATE_CMAKE_DIR}/patches/span_proper_cmake_project.diff"
                       "${LEGATE_CMAKE_DIR}/templates/install_info.py.in"
                       "${LEGATE_CMAKE_DIR}/templates/uninstall.cmake.in"
                       "${LEGATE_CMAKE_DIR}/templates/legate_defines.h.in")

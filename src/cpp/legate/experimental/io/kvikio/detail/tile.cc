@@ -74,7 +74,7 @@ void TileReadWriteFn::operator()(legate::TaskContext context,
   using DTYPE = legate::type_of_t<CODE>;
 
   auto&& task_index     = context.get_task_index();
-  auto path             = context.scalar(0).value<std::string_view>();
+  const auto path       = context.scalar(0).value<std::string_view>();
   const auto tile_start = context.scalar(1).values<std::uint64_t>();
   const auto tile_coord = get_tile_coord_(task_index, tile_start);
   const auto filepath   = get_file_path_(path, tile_coord);
@@ -83,21 +83,21 @@ void TileReadWriteFn::operator()(legate::TaskContext context,
   // We know that the accessor is contiguous because we set `policy.exact = true`
   // in `mapper.cc`.
   if (is_read_op) {
-    auto* data = store->write_accessor<DTYPE, DIM>().ptr(shape);
+    auto&& data = store->span_write_accessor<DTYPE, DIM>();
 
     if (store->target() == mapping::StoreTarget::FBMEM) {
-      static_cast<void>(f.read_async(data, nbytes, 0, 0, context.get_task_stream()));
+      static_cast<void>(f.read_async(data.data_handle(), nbytes, 0, 0, context.get_task_stream()));
     } else {
-      f.pread(data, nbytes).wait();
+      f.pread(data.data_handle(), nbytes).wait();
     }
   } else {
-    const auto* data = store->read_accessor<DTYPE, DIM>().ptr(shape);
+    auto&& data = store->span_read_accessor<DTYPE, DIM>();
 
     if (store->target() == mapping::StoreTarget::FBMEM) {
-      static_cast<void>(
-        f.write_async(const_cast<DTYPE*>(data), nbytes, 0, 0, context.get_task_stream()));
+      static_cast<void>(f.write_async(
+        const_cast<DTYPE*>(data.data_handle()), nbytes, 0, 0, context.get_task_stream()));
     } else {
-      f.pwrite(data, nbytes).wait();
+      f.pwrite(data.data_handle(), nbytes).wait();
     }
   }
 }

@@ -40,4 +40,6 @@
 #include <legate/tuning/scope.h>
 #include <legate/type/type_traits.h>
 #include <legate/utilities/dispatch.h>
+#include <legate/utilities/mdspan.h>
+#include <legate/utilities/span.h>
 #include <legate/utilities/typedefs.h>

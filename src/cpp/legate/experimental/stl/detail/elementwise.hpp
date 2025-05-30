@@ -59,11 +59,11 @@ class ElementwiseAccessor {
 };
 
 template <typename Function, typename... InputSpans>
-using elementwise_span =
-  std::mdspan<call_result_t<Function, typename InputSpans::reference...>,
-              std::dextents<coord_t, meta::front<InputSpans...>::extents_type::rank()>,
-              std::layout_right,
-              ElementwiseAccessor<Function, InputSpans...>>;
+using elementwise_span = ::cuda::std::mdspan<
+  call_result_t<Function, typename InputSpans::reference...>,
+  ::cuda::std::dextents<coord_t, meta::front<InputSpans...>::extents_type::rank()>,
+  ::cuda::std::layout_right,
+  ElementwiseAccessor<Function, InputSpans...>>;
 
 // a binary function that folds its two arguments together using
 // the given binary function, and stores the result in the first
@@ -85,8 +85,8 @@ class Elementwise : private Function {
     //                ...));
     // LEGATE_ASSERT((stl::as_mdspan(head).extents() == stl::as_mdspan(tail).extents() && ...));
 
-    using Mapping = std::layout_right::mapping<
-      std::dextents<legate::coord_t, as_mdspan_t<InputSpan>::extents_type::rank()>>;
+    using Mapping = ::cuda::std::layout_right::mapping<
+      ::cuda::std::dextents<legate::coord_t, as_mdspan_t<InputSpan>::extents_type::rank()>>;
     using Accessor = stl::detail::
       ElementwiseAccessor<Function, as_mdspan_t<InputSpan>, as_mdspan_t<InputSpans>...>;
     using ElementwiseSpan =
