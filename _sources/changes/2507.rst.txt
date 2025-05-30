@@ -13,3 +13,60 @@ Changes: 25.07
 
 
 .. rubric:: General
+
+C++
+---
+
+.. rubric:: General
+
+.. rubric:: Data
+
+- Add ``PhysicalStore::span_read_accessor()``, ``PhysicalStore::span_write_accessor()``,
+  ``PhysicalStore::span_read_write_accessor()``, and
+  ``PhysicalStore::span_reduce_accessor()`` which return ``cuda::std::mdpsan``'s as
+  alternatives to the usual accessor interfaces.
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+.. rubric:: Tasks
+
+.. rubric:: Tuning
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+.. rubric:: Utilities
+
+- Add ``legate::flatten()`` helper function, to allow users to construct a flat view over
+  a ``cuda::std::mdspan``.
+- Add ``legate::for_each_in_extent()`` helper function to allow users to efficiently
+  iterate over an N-dimensional extent space.
+
+.. rubric:: I/O
+
+
+Python
+------
+
+.. rubric:: General
+
+.. rubric:: Data
+
+.. rubric:: Mapping
+
+.. rubric:: Partitioning
+
+.. rubric:: Tasks
+
+.. rubric:: Tuning
+
+.. rubric:: Types
+
+.. rubric:: Runtime
+
+.. rubric:: Utilities
+
+.. rubric:: I/O

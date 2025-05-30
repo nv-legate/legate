@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes: 25.07 &#8212; NVIDIA legate (25.07.00.dev0)</title>
+    <title>Changes: 25.07 &#8212; NVIDIA legate (25.07.00.dev1+gc939f85a)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=180b13f8"></script>
+    <script src="../_static/documentation_options.js?v=f8ec25b9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev1+gc939f85a) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev1+gc939f85a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev1+gc939f85a)</p>
   
 </a></div>
     
@@ -205,6 +205,10 @@
   
 
   
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
 </div>
 
     </header>
@@ -236,11 +240,11 @@
       
     
     
-    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev0) - Home"/>
-    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev0) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev1+gc939f85a) - Home"/>
+    <img src="../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev1+gc939f85a) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev0)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev1+gc939f85a)</p>
   
 </a>
 
@@ -505,6 +509,44 @@
   <section id="changes-25-07">
 <h1>Changes: 25.07<a class="headerlink" href="#changes-25-07" title="Link to this heading">#</a></h1>
 <p class="rubric">General</p>
+<section id="c">
+<h2>C++<a class="headerlink" href="#c" title="Link to this heading">#</a></h2>
+<p class="rubric">General</p>
+<p class="rubric">Data</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_read_accessor()</span></code>, <code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_write_accessor()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_read_write_accessor()</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">PhysicalStore::span_reduce_accessor()</span></code> which return <code class="docutils literal notranslate"><span class="pre">cuda::std::mdpsan</span></code>’s as
+alternatives to the usual accessor interfaces.</p></li>
+</ul>
+<p class="rubric">Mapping</p>
+<p class="rubric">Partitioning</p>
+<p class="rubric">Tasks</p>
+<p class="rubric">Tuning</p>
+<p class="rubric">Types</p>
+<p class="rubric">Runtime</p>
+<p class="rubric">Utilities</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::flatten()</span></code> helper function, to allow users to construct a flat view over
+a <code class="docutils literal notranslate"><span class="pre">cuda::std::mdspan</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">legate::for_each_in_extent()</span></code> helper function to allow users to efficiently
+iterate over an N-dimensional extent space.</p></li>
+</ul>
+<p class="rubric">I/O</p>
+</section>
+<section id="python">
+<h2>Python<a class="headerlink" href="#python" title="Link to this heading">#</a></h2>
+<p class="rubric">General</p>
+<p class="rubric">Data</p>
+<p class="rubric">Mapping</p>
+<p class="rubric">Partitioning</p>
+<p class="rubric">Tasks</p>
+<p class="rubric">Tuning</p>
+<p class="rubric">Types</p>
+<p class="rubric">Runtime</p>
+<p class="rubric">Utilities</p>
+<p class="rubric">I/O</p>
+</section>
 </section>
 
 
@@ -542,9 +584,26 @@
             
             
 
-<div class="bd-sidebar-secondary"></div>
+
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#c">C++</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#python">Python</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
 
