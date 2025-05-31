@@ -153,7 +153,9 @@ class BuildConfig(SectionConfig):
             "openssl",
             "pkg-config",
             "scikit-build>=0.13.1",
-            "setuptools>=60",
+            # see https://github.com/nv-legate/cupynumeric.internal/issues/704
+            # for more details why do we restrict to <=75.3.0
+            "setuptools>60,<=75.3.0",
             "zlib",
             "numba",
             "libhwloc=*=*default*",
