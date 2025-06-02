@@ -606,6 +606,18 @@ endif()
 # See https://github.com/nv-legate/legate.internal/pull/1326#issuecomment-2418791698
 foreach(target legate LegionRuntime RealmRuntime)
   target_compile_definitions("${target}" PUBLIC LIBCUDACXX_ENABLE_HOST_NVFP16=1)
+  if(Legion_USE_CUDA)
+    # CCCL 2.7.0 (which is what we use) disables __half support if it detects that it
+    # isn't being compiled with a CUDA compiler. I think this is probably a bug, because
+    # we always have __half support if you #include <cuda_fp16.h>. So we need to lie to
+    # CCCL.
+    #
+    # See
+    # https://github.com/NVIDIA/cccl/blob/v2.7.0/libcudacxx/include/cuda/std/detail/libcxx/include/__config#L919C11-L924
+    # and
+    # https://github.com/NVIDIA/cccl/blob/v2.7.0/libcudacxx/include/cuda/std/__cccl/compiler.h#L93-L94
+    target_compile_definitions("${target}" PUBLIC _LIBCUDACXX_HAS_NVFP16=1)
+  endif()
 endforeach()
 
 include("${LEGATE_CMAKE_DIR}/Modules/generate_legate_defines.cmake")

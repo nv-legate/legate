@@ -12,7 +12,8 @@
                 {
                     "file": "${current_json_dir}/../patches/highfive_targets.diff",
                     "fixed_in": "",
-                    "issue": "https://github.com/BlueBrain/HighFive/issues/1050"
+                    "issue": "https://github.com/BlueBrain/HighFive/issues/1050",
+                    "required": true
                 }
             ],
             "version": "2.9.0"
