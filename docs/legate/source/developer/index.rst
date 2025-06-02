@@ -7,3 +7,4 @@ Developer Documentation
    :caption: Contents
 
    Style <style>
+   Running the Test Suite <testing>
