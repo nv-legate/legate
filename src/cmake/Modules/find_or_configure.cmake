@@ -97,6 +97,16 @@ function(legate_install_dependencies)
   endforeach()
 endfunction()
 
+macro(legate_export_variables PACKAGE)
+  cpm_export_variables(${PACKAGE})
+  set(${PACKAGE}_VERSION "${${PACKAGE}_VERSION}" PARENT_SCOPE)
+  foreach(suffix MAJOR MINOR PATCH TWEAK COUNT)
+    if(DEFINED ${PACKAGE}_VERSION_${suffix})
+      set(${PACKAGE}_VERSION_${suffix} "${${PACKAGE}_VERSION_${suffix}}" PARENT_SCOPE)
+    endif()
+  endforeach()
+endmacro()
+
 # This guy needs to be a macro in case the find_or_configure_<package> sets variables it
 # expects to be exposed in the caller
 macro(legate_find_or_configure)

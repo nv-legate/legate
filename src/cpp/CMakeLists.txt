@@ -618,6 +618,18 @@ foreach(target legate LegionRuntime RealmRuntime)
     # https://github.com/NVIDIA/cccl/blob/v2.7.0/libcudacxx/include/cuda/std/__cccl/compiler.h#L93-L94
     target_compile_definitions("${target}" PUBLIC _LIBCUDACXX_HAS_NVFP16=1)
   endif()
+  if(legate_ENABLE_SANITIZERS AND ("${CCCL_VERSION}" VERSION_EQUAL "2.7.0"))
+    # /path/to/libcudacxx/../../../include/cuda/std/detail/libcxx/include/__config:1155:12:
+    # error: visibility does not match previous declaration 1155 | extern "C"
+    # _LIBCUDACXX_HIDE_FROM_ABI void |            ^
+    #
+    # /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__config:419:39:
+    # note: expanded from macro '_LIBCPP_EXPORTED_FROM_ABI' 419 | #    define
+    # _LIBCPP_EXPORTED_FROM_ABI _LIBCPP_VISIBILITY("default") | ^
+    #
+    # For __sanitizer_annotate_contiguous_container().
+    target_compile_definitions("${target}" PUBLIC _LIBCUDACXX_HAS_NO_ASAN=1)
+  endif()
 endforeach()
 
 include("${LEGATE_CMAKE_DIR}/Modules/generate_legate_defines.cmake")

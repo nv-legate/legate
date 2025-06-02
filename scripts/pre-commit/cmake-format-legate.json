@@ -278,6 +278,11 @@
                     "nargs": 0
                 }
             },
+            "legate_export_variables": {
+                "pargs": {
+                    "nargs": 1
+                }
+            },
             "legate_find_or_configure": {
                 "kwargs": {
                     "PACKAGE": 1

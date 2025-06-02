@@ -13,5 +13,5 @@ function(find_or_configure_cccl)
 
   rapids_cpm_cccl(BUILD_EXPORT_SET legate-exports INSTALL_EXPORT_SET legate-exports SYSTEM
                                                                                     TRUE)
-  cpm_export_variables(CCCL)
+  legate_export_variables(CCCL)
 endfunction()
