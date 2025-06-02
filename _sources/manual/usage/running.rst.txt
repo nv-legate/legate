@@ -1,3 +1,5 @@
+.. _ch_usage_running:
+
 Running Legate Programs
 -----------------------
 

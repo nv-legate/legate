@@ -81,32 +81,6 @@ Build and install C++ runtime and Python bindings:
    $ pip install .
 
 
-Technically, when installing Python bindings, ``configure``` is optional. It is possible
-to configure, build, and install Legate with python bindings using just:
-
-.. code-block:: sh
-
-   $ pip install .
-
-
-While this workflow is supported (in the sense that it is functional), very little -- if
-any -- effort is made to make it ergonomic. **The user is strongly encouraged to run
-configure first**.
-
-In particular, it requires the following from the user:
-
-#. Defining all CMake options manually through ``CMAKE_ARGS`` environment variable.
-#. Defining all scikit-build options, including any that might be implicitly set via
-   ``configure``, manually via appropriate environment variables.
-#. Ensuring that no prior installation of Legate, Legion, or any of its dependencies exist
-   in the environment which might otherwise influence the CMake configuration.
-
-   For example, due to how CMake picks up dependencies, a prior (stale) installation of
-   Legion to a shared ``conda`` environment may be prioritized over downloading it from
-   scratch. ``configure`` automatically detects this (and sets the appropriate CMake
-   variables to guard against it) but a bare ``pip install`` will not do so.
-#. Other potential quality-of-life improvements made by ``configure``.
-
 Build and install basic C++ runtime with CUDA and HDF5 support, while disabling ZLIB, and
 explicitly specifying a pre-built UCX directory. Specifying the UCX directory implies
 enabling UCX support. Additionally, we install the library to a custom prefix:
@@ -119,7 +93,6 @@ enabling UCX support. Additionally, we install the library to a custom prefix:
        --with-zlib=0 \
        --with-ucx-dir='/path/to/ucx'
    $ make install PREFIX=/path/to/prefix
-
 
 A full list of options available during ``configure`` can be found by running:
 
@@ -139,6 +112,74 @@ or `GASNet <https://gasnet.lbl.gov/>`_ (use ``--with-gasnet``) see the discussio
 :ref:`dependencies <dependency_listing>` for more details.
 
 Compiling with networking support requires MPI.
+
+.. _build_python_bindings:
+
+Building Python Bindings
+------------------------
+
+When building the Python bindings for local development, it is strongly recommended to
+build and install them into a Python virtual environment rather than the default system
+prefix:
+
+
+.. code-block:: sh
+
+   # It does not matter if you run configure "inside" or "outside" the venv
+   $ ./configure --with-python
+   ...
+   # Same with make
+   $ make
+   ...
+   $ python3 -m pip install -U virtualenv
+   $ python3 -m virtualenv ./my_venv_dir
+   $ . ./my_venv_dir/bin/activate
+   ...
+   # Now that we are in our venv, we can build the python bindings. Legate will
+   # detect the virtual environment and automatically install itself inside it
+   # instead of the system prefix.
+   $ pip install .
+
+
+The reasons for doing so are as follows:
+
+#. **Isolation and Cleanliness**
+
+   Installing packages into a virtual environment avoids polluting the system
+   prefix. Legate will install its dependencies alongside itself, so this helps maintain a
+   clean system-wide environment, reducing the risk of conflicts.
+
+#. **Accurate Dependency Resolution**
+
+   Legate uses CMake to locate dependencies. If older installations or packages exist in
+   the system prefix, they may be inadvertently reused, resulting in silent and unintended
+   dependencies on stale or incompatible components. For example, Legate installs Legion,
+   and subsequent reconfigurations may inadvertently pick up the installed Legion instead
+   of building it from source, or using the given source directory
+   (``--with-legion-src-dir``).
+
+#. **Ease of Environment Reset**
+
+   Deleting a virtual environment directory provides a quick and effective way to return
+   to a clean development state. This is far simpler and safer than attempting to manually
+   remove packages or files from the system prefix.
+
+#. **Safe and Complete Uninstallation**
+
+   Although ``pip uninstall legate`` will remove all the files it originally installed,
+   the Python wheel specification does not define how to clean up empty directories. As a
+   result, some artifacts (such as empty directory trees) may be left behind.
+
+
+.. warning::
+
+   In particular, the user SHOULD NOT install to a Conda prefix. The install will work,
+   and subsequent reconfigurations have special handling if it detects that dependencies
+   are being found in Conda prefixes, but it is extremely easy to accidentally circumvent
+   this and subtly break your installation.
+
+   This is not unique to Legate, any package requiring installation will run into this
+   issue.
 
 Dependencies
 ============
@@ -370,3 +411,32 @@ dynamic library resolution path:
 This way you can make sure that the (typically more recent) conda version of any common
 library will be preferred over the system-wide one, no matter which component requests it
 first.
+
+Building Python Bindings Without Configure
+------------------------------------------
+
+Technically, when installing Python bindings, ``configure`` is optional. It is possible
+to configure, build, and install Legate with python bindings using just:
+
+.. code-block:: sh
+
+   $ pip install .
+
+
+While this workflow is supported (in the sense that it is functional), very little -- if
+any -- effort is made to make it ergonomic. **The user is strongly encouraged to run
+configure first**.
+
+In particular, it requires the following from the user:
+
+#. Defining all CMake options manually through ``CMAKE_ARGS`` environment variable.
+#. Defining all scikit-build options, including any that might be implicitly set via
+   ``configure``, manually via appropriate environment variables.
+#. Ensuring that no prior installation of Legate, Legion, or any of its dependencies exist
+   in the environment which might otherwise influence the CMake configuration.
+
+   For example, due to how CMake picks up dependencies, a prior (stale) installation of
+   Legion to a shared ``conda`` environment may be prioritized over downloading it from
+   scratch. ``configure`` automatically detects this (and sets the appropriate CMake
+   variables to guard against it) but a bare ``pip install`` will not do so.
+#. Other potential quality-of-life improvements made by ``configure``.

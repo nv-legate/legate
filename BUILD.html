@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Building Legate from Source &#8212; NVIDIA legate (25.07.00.dev2+g2213516e)</title>
+    <title>Building Legate from Source &#8212; NVIDIA legate (25.07.00.dev7+g9a596575)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=faf8ac85"></script>
+    <script src="_static/documentation_options.js?v=ef90f0fc"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev2+g2213516e) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev2+g2213516e) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev7+g9a596575) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev7+g9a596575) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev2+g2213516e)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev7+g9a596575)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev2+g2213516e) - Home"/>
-    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev2+g2213516e) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev7+g9a596575) - Home"/>
+    <img src="_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev7+g9a596575) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev2+g2213516e)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev7+g9a596575)</p>
   
 </a>
 
@@ -448,6 +448,7 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="developer/index.html">Developer Documentation</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="developer/style.html">Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="developer/testing.html">Running the Test Suite</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="gasnet.html">GASNet-based Installation</a></li>
@@ -560,28 +561,6 @@ $<span class="w"> </span>make<span class="w"> </span>install
 $<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
 </pre></div>
 </div>
-<p>Technically, when installing Python bindings, <code class="docutils literal notranslate"><span class="pre">configure`</span></code> is optional. It is possible
-to configure, build, and install Legate with python bindings using just:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
-</pre></div>
-</div>
-<p>While this workflow is supported (in the sense that it is functional), very little – if
-any – effort is made to make it ergonomic. <strong>The user is strongly encouraged to run
-configure first</strong>.</p>
-<p>In particular, it requires the following from the user:</p>
-<ol class="arabic">
-<li><p>Defining all CMake options manually through <code class="docutils literal notranslate"><span class="pre">CMAKE_ARGS</span></code> environment variable.</p></li>
-<li><p>Defining all scikit-build options, including any that might be implicitly set via
-<code class="docutils literal notranslate"><span class="pre">configure</span></code>, manually via appropriate environment variables.</p></li>
-<li><p>Ensuring that no prior installation of Legate, Legion, or any of its dependencies exist
-in the environment which might otherwise influence the CMake configuration.</p>
-<p>For example, due to how CMake picks up dependencies, a prior (stale) installation of
-Legion to a shared <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment may be prioritized over downloading it from
-scratch. <code class="docutils literal notranslate"><span class="pre">configure</span></code> automatically detects this (and sets the appropriate CMake
-variables to guard against it) but a bare <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> will not do so.</p>
-</li>
-<li><p>Other potential quality-of-life improvements made by <code class="docutils literal notranslate"><span class="pre">configure</span></code>.</p></li>
-</ol>
 <p>Build and install basic C++ runtime with CUDA and HDF5 support, while disabling ZLIB, and
 explicitly specifying a pre-built UCX directory. Specifying the UCX directory implies
 enabling UCX support. Additionally, we install the library to a custom prefix:</p>
@@ -605,6 +584,63 @@ machines. For example, to configure a debug build on a <a class="reference exter
 or <a class="reference external" href="https://gasnet.lbl.gov/">GASNet</a> (use <code class="docutils literal notranslate"><span class="pre">--with-gasnet</span></code>) see the discussion on
 <a class="reference internal" href="#dependency-listing"><span class="std std-ref">dependencies</span></a> for more details.</p>
 <p>Compiling with networking support requires MPI.</p>
+</section>
+<section id="building-python-bindings">
+<span id="build-python-bindings"></span><h3>Building Python Bindings<a class="headerlink" href="#building-python-bindings" title="Link to this heading">#</a></h3>
+<p>When building the Python bindings for local development, it is strongly recommended to
+build and install them into a Python virtual environment rather than the default system
+prefix:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># It does not matter if you run configure &quot;inside&quot; or &quot;outside&quot; the venv</span>
+$<span class="w"> </span>./configure<span class="w"> </span>--with-python
+...
+<span class="c1"># Same with make</span>
+$<span class="w"> </span>make
+...
+$<span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>virtualenv
+$<span class="w"> </span>python3<span class="w"> </span>-m<span class="w"> </span>virtualenv<span class="w"> </span>./my_venv_dir
+$<span class="w"> </span>.<span class="w"> </span>./my_venv_dir/bin/activate
+...
+<span class="c1"># Now that we are in our venv, we can build the python bindings. Legate will</span>
+<span class="c1"># detect the virtual environment and automatically install itself inside it</span>
+<span class="c1"># instead of the system prefix.</span>
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+<p>The reasons for doing so are as follows:</p>
+<ol class="arabic">
+<li><p><strong>Isolation and Cleanliness</strong></p>
+<p>Installing packages into a virtual environment avoids polluting the system
+prefix. Legate will install its dependencies alongside itself, so this helps maintain a
+clean system-wide environment, reducing the risk of conflicts.</p>
+</li>
+<li><p><strong>Accurate Dependency Resolution</strong></p>
+<p>Legate uses CMake to locate dependencies. If older installations or packages exist in
+the system prefix, they may be inadvertently reused, resulting in silent and unintended
+dependencies on stale or incompatible components. For example, Legate installs Legion,
+and subsequent reconfigurations may inadvertently pick up the installed Legion instead
+of building it from source, or using the given source directory
+(<code class="docutils literal notranslate"><span class="pre">--with-legion-src-dir</span></code>).</p>
+</li>
+<li><p><strong>Ease of Environment Reset</strong></p>
+<p>Deleting a virtual environment directory provides a quick and effective way to return
+to a clean development state. This is far simpler and safer than attempting to manually
+remove packages or files from the system prefix.</p>
+</li>
+<li><p><strong>Safe and Complete Uninstallation</strong></p>
+<p>Although <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">uninstall</span> <span class="pre">legate</span></code> will remove all the files it originally installed,
+the Python wheel specification does not define how to clean up empty directories. As a
+result, some artifacts (such as empty directory trees) may be left behind.</p>
+</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>In particular, the user SHOULD NOT install to a Conda prefix. The install will work,
+and subsequent reconfigurations have special handling if it detects that dependencies
+are being found in Conda prefixes, but it is extremely easy to accidentally circumvent
+this and subtly break your installation.</p>
+<p>This is not unique to Legate, any package requiring installation will run into this
+issue.</p>
+</div>
 </section>
 </section>
 <section id="dependencies">
@@ -782,6 +818,31 @@ $<span class="w"> </span><span class="nb">export</span><span class="w"> </span><
 library will be preferred over the system-wide one, no matter which component requests it
 first.</p>
 </section>
+<section id="building-python-bindings-without-configure">
+<h3>Building Python Bindings Without Configure<a class="headerlink" href="#building-python-bindings-without-configure" title="Link to this heading">#</a></h3>
+<p>Technically, when installing Python bindings, <code class="docutils literal notranslate"><span class="pre">configure</span></code> is optional. It is possible
+to configure, build, and install Legate with python bindings using just:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+<p>While this workflow is supported (in the sense that it is functional), very little – if
+any – effort is made to make it ergonomic. <strong>The user is strongly encouraged to run
+configure first</strong>.</p>
+<p>In particular, it requires the following from the user:</p>
+<ol class="arabic">
+<li><p>Defining all CMake options manually through <code class="docutils literal notranslate"><span class="pre">CMAKE_ARGS</span></code> environment variable.</p></li>
+<li><p>Defining all scikit-build options, including any that might be implicitly set via
+<code class="docutils literal notranslate"><span class="pre">configure</span></code>, manually via appropriate environment variables.</p></li>
+<li><p>Ensuring that no prior installation of Legate, Legion, or any of its dependencies exist
+in the environment which might otherwise influence the CMake configuration.</p>
+<p>For example, due to how CMake picks up dependencies, a prior (stale) installation of
+Legion to a shared <code class="docutils literal notranslate"><span class="pre">conda</span></code> environment may be prioritized over downloading it from
+scratch. <code class="docutils literal notranslate"><span class="pre">configure</span></code> automatically detects this (and sets the appropriate CMake
+variables to guard against it) but a bare <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> will not do so.</p>
+</li>
+<li><p>Other potential quality-of-life improvements made by <code class="docutils literal notranslate"><span class="pre">configure</span></code>.</p></li>
+</ol>
+</section>
 </section>
 </section>
 
@@ -837,6 +898,7 @@ first.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-build">Basic build</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#influential-environment-variables">Influential environment variables</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-from-source">Building from source</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-python-bindings">Building Python Bindings</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
@@ -853,6 +915,7 @@ first.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gasnet-optional">GASNet (optional)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ucx-optional">UCX (optional)</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#alternative-sources-for-dependencies">Alternative sources for dependencies</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-python-bindings-without-configure">Building Python Bindings Without Configure</a></li>
 </ul>
 </li>
 </ul>
