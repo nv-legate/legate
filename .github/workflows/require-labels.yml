@@ -16,6 +16,17 @@ jobs:
       - name: Check Labels
         uses: mheap/github-action-required-labels@v5
         with:
-          mode: exactly
+          mode: minimum
           count: 1
-          labels: "category:new-feature, category:improvement, category:bug-fix, category:housekeeping, category:documentation"
+          labels: |
+            category:new-feature
+            category:improvement
+            category:bug-fix
+            category:housekeeping
+            category:documentation,
+            Bug
+            Build
+            CI
+            Docs
+            Feature
+            Maintenance

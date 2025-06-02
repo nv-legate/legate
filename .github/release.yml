@@ -3,16 +3,22 @@ changelog:
   exclude:
     labels:
       - category:housekeeping
+      - Build
+      - CI
+      - Maintenance
   categories:
     - title: 🐛 Bug Fixes
       labels:
         - category:bug-fix
+        - Bug
     - title: 🚀 New Features
       labels:
         - category:new-feature
+        - Feature
     - title: 🛠️ Improvements
       labels:
         - category:improvement
     - title: 📖 Documentation
       labels:
         - category:documentation
+        - Docs
