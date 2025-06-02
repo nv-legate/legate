@@ -5,18 +5,9 @@
         },
         "HighFive": {
             "exclude_from_all": true,
-            "git_shallow": false,
-            "git_tag": "8bb1ed8940880d33f4f9c2ea9b6072abd57219ef",
-            "git_url": "https://github.com/nv-legate/HighFive.git",
-            "patches": [
-                {
-                    "file": "${current_json_dir}/../patches/highfive_targets.diff",
-                    "fixed_in": "",
-                    "issue": "https://github.com/BlueBrain/HighFive/issues/1050",
-                    "required": true
-                }
-            ],
-            "version": "2.9.0"
+            "git_tag": "v${version}-beta2",
+            "git_url": "https://github.com/highfive-devs/highfive.git",
+            "version": "3.0.0"
         },
         "argparse": {
             "exclude_from_all": true,
