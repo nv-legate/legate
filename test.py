@@ -42,9 +42,15 @@ def _find_tests(prefix: Path) -> tuple[Path, list[Path]] | None:
     tests_bin = [
         tests_dir / "bin" / p
         for p in re.findall(
-            r"add_test\(\[=\[(\w+)\]=\]", ctest_file.read_text()
+            r"add_test\(\[=+\[(\w+)\]=+\]", ctest_file.read_text()
         )
     ]
+
+    def should_remove(path: Path) -> bool:
+        # rapids-cmake test spec generation
+        return path.name == "generate_resource_spec"
+
+    tests_bin = [p for p in tests_bin if not should_remove(p)]
     removed_bins = [p for p in tests_bin if not p.exists()]
 
     if not removed_bins:
