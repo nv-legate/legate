@@ -69,14 +69,6 @@ function(legate_configure_test)
                                 fmt::fmt-header-only
                                 ${_LEGATE_TEST_ADDITIONAL_TARGETS})
 
-  if(Legion_USE_CUDA)
-    target_link_libraries(${_LEGATE_TEST_NAME} PRIVATE NCCL::NCCL)
-  endif()
-
-  if(legate_USE_CAL)
-    target_link_libraries(${_LEGATE_TEST_NAME} PRIVATE CAL::CAL)
-  endif()
-
   rapids_test_add(NAME ${_LEGATE_TEST_NAME}
                   COMMAND ${_LEGATE_TEST_NAME}
                   GPUS ${_LEGATE_TEST_GPUS}
@@ -102,10 +94,6 @@ function(legate_configure_test)
   legate_install_debug_symbols(TARGET ${_LEGATE_TEST_NAME}
                                INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 
-  list(APPEND LEGATE_CONFIGURED_TESTS ${_LEGATE_TEST_NAME})
-  # propagate the updated list upwards
-  set(LEGATE_CONFIGURED_TESTS ${LEGATE_CONFIGURED_TESTS} PARENT_SCOPE)
-
   foreach(src IN LISTS _LEGATE_TEST_SOURCES)
     # Because each of the tests share a common main src file, we need to make sure we
     # don't add a tidy target for it twice
@@ -119,6 +107,7 @@ function(legate_configure_test)
   set(unique_src "${unique_src}" PARENT_SCOPE)
 endfunction()
 
+set(with_runtime_TARGETS)
 set(with_runtime_SRC
     # bug
     bug/alias_via_promote.cc
@@ -257,7 +246,6 @@ set(with_runtime_SRC
     unit/type/struct_type.cc
     unit/type/type_features.cc
     unit/type/type_traits.cc
-    unit/io/hdf5/read.cc
     unit/task_signature/nargs.cc
     unit/task_signature/basic.cc
     unit/task_signature/register.cc
@@ -273,6 +261,11 @@ set(with_runtime_SRC
     experimental/stl/views.cc
     experimental/streaming.cc
     experimental/tracing.cc)
+
+if(legate_USE_HDF5)
+  list(APPEND with_runtime_SRC unit/io/hdf5/read.cc)
+  list(APPEND with_runtime_TARGETS HighFive::HighFive)
+endif()
 
 set(wo_runtime_SRC
     noinit/config.cc
@@ -321,7 +314,7 @@ set(non_reentrant_wo_runtime_SRC
 
 legate_configure_test(NAME tests_with_runtime SOURCES main_with_runtime_init.cc
                                                       ${with_runtime_SRC}
-                      ADDITIONAL_TARGETS HighFive::HighFive)
+                      ADDITIONAL_TARGETS ${with_runtime_TARGETS})
 legate_configure_test(NAME tests_wo_runtime SOURCES main_wo_runtime_init.cc
                                                     ${wo_runtime_SRC}
                       ADDITIONAL_TARGETS argparse::argparse)
@@ -330,19 +323,25 @@ legate_configure_test(NAME tests_non_reentrant_with_runtime
 legate_configure_test(NAME tests_non_reentrant_wo_runtime
                       SOURCES main_wo_runtime_init.cc ${non_reentrant_wo_runtime_SRC})
 
+set(gpu_SRC)
+set(gpu_TARGETS)
+
 if(legate_USE_CAL)
-  set(with_cal_SRC integration/cal_communicator.cu)
+  list(APPEND gpu_SRC integration/cal_communicator.cu)
+  list(APPEND gpu_TARGETS CAL::CAL)
+endif()
+
+if(legate_USE_NCCL)
+  list(APPEND gpu_SRC integration/nccl.cu)
+  list(APPEND gpu_TARGETS NCCL::NCCL)
 endif()
 
 if(Legion_USE_CUDA)
-  set(gpu_SRC integration/nccl.cu)
-
   legate_configure_test(NAME tests_with_gpus
                         SOURCES main_with_runtime_init.cc ${with_runtime_SRC} ${gpu_SRC}
-                                ${with_cal_SRC}
                         GPUS 1
                         PERCENT 30
-                        ADDITIONAL_TARGETS HighFive::HighFive)
+                        ADDITIONAL_TARGETS ${with_runtime_TARGETS} ${gpu_TARGETS})
 endif()
 
 rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing
