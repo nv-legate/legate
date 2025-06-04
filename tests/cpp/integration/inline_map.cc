@@ -101,10 +101,17 @@ void test_inline_map_region_gpu()
     auto* ptr    = acc.ptr(2);
     auto value   = std::int64_t{42};
 
+    const auto ctx    = legate::cuda::detail::AutoPrimaryContext{0};
     auto&& driver_api = legate::cuda::detail::get_cuda_driver_api();
     auto stream       = driver_api->stream_create(0);
-    driver_api->mem_cpy_async(ptr, &value, sizeof(std::int64_t), stream);
-    driver_api->stream_synchronize(stream);
+
+    try {
+      driver_api->mem_cpy_async(ptr, &value, sizeof(value), stream);
+      driver_api->stream_synchronize(stream);
+    } catch (...) {
+      driver_api->stream_destroy(&stream);
+      throw;
+    }
     driver_api->stream_destroy(&stream);
   }
   {
