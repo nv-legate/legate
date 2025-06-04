@@ -23,7 +23,7 @@ C++
 
 - Add ``PhysicalStore::span_read_accessor()``, ``PhysicalStore::span_write_accessor()``,
   ``PhysicalStore::span_read_write_accessor()``, and
-  ``PhysicalStore::span_reduce_accessor()`` which return ``cuda::std::mdpsan``'s as
+  ``PhysicalStore::span_reduce_accessor()`` which return ``cuda::std::mdspan``'s as
   alternatives to the usual accessor interfaces.
 
 .. rubric:: Mapping
