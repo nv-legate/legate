@@ -43,8 +43,27 @@ shape_chunks = (
 )
 
 
+def is_multi_gpu_ci() -> bool:
+    from os import environ
+
+    from legate.core import TaskTarget
+
+    num_gpu = get_legate_runtime().get_machine().count(target=TaskTarget.GPU)
+    return bool(num_gpu > 1 and "CI" in environ)
+
+
+MULTI_GPU_CI = is_multi_gpu_ci()
+
+
 @pytest.mark.parametrize(*shape_chunks)
 @pytest.mark.parametrize("dtype", ["u1", "u8", "f8"])
+@pytest.mark.skipif(
+    MULTI_GPU_CI,
+    reason=(
+        "Intermittent failures in CI for multi-gpu, "
+        "see https://github.com/nv-legate/legate.internal/issues/2326"
+    ),
+)
 def test_write_array(
     tmp_path: Path, shape: tuple[int, ...], chunks: tuple[int, ...], dtype: str
 ) -> None:
