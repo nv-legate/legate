@@ -42,7 +42,7 @@ jobs:
   build:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.33
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.34
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
@@ -52,11 +52,12 @@ jobs:
       use-container: ${{ inputs.platform == 'linux' || inputs.platform == 'linux-aarch64'}}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v1.33"
+      legate-gh-ci-tag: "v1.34"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: true
+      timeout: 180
     secrets: inherit
 
   setup-test:
@@ -66,6 +67,7 @@ jobs:
     needs:
       - build
     runs-on: linux-amd64-cpu4
+    timeout-minutes: 20
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -127,7 +129,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.33
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-within-container.yml@v1.34
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
@@ -138,11 +140,12 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.33"
+      legate-gh-ci-tag: "v1.34"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: ${{ matrix.runner.setup-python-proxy-cache }}
+      timeout: 90
     secrets: inherit
 
 
@@ -158,7 +161,7 @@ jobs:
       matrix: ${{fromJson(needs.setup-test.outputs.matrix)}}
 
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.33
+      nv-legate/legate-gh-ci/.github/workflows/gh-test-without-container.yml@v1.34
     with:
       build-has-tests: ${{ inputs.build-has-tests }}
       client-repo: ${{ github.event.repository.name }}
@@ -169,11 +172,12 @@ jobs:
       has-gpu: ${{ matrix.runner.type == 'gpu' }}
       test-options: ${{ matrix.test-config.test-scope }}
       platform: ${{ matrix.runner.platform }}
-      legate-gh-ci-tag: "v1.33"
+      legate-gh-ci-tag: "v1.34"
       build-mode: ${{ inputs.build-mode }}
       python-version: ${{ inputs.python-version }}
       network: ${{ inputs.network }}
       setup-python-proxy-cache: ${{ matrix.runner.setup-python-proxy-cache }}
+      timeout: 90
     secrets: inherit
 
   upload:
@@ -184,7 +188,7 @@ jobs:
     if: ${{ always() && github.repository_owner == 'nv-legate' && inputs.build-type == 'nightly' && inputs.build-mode == 'release' && inputs.build-has-tests == true }}
     name: Upload package to Server
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.33
+      nv-legate/legate-gh-ci/.github/workflows/gh-upload.yml@v1.34
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
@@ -192,7 +196,7 @@ jobs:
       name: Upload to Anaconda
       target-device: ${{ inputs.target-device }}
       platform: ${{ inputs.platform }}
-      legate-gh-ci-tag: "v1.33"
+      legate-gh-ci-tag: "v1.34"
       build-mode: ${{ inputs.build-mode }}
       network: ${{ inputs.network }}
       upload-action: ${{ needs.test-within-container.result == 'failure' && 'upload-package-Anaconda' || 'upload-package-Anaconda-tested' }}
@@ -201,4 +205,5 @@ jobs:
       python-version: ${{ inputs.python-version }}
       refname: ${{ inputs.refname }}
       default-branch: ${{ inputs.default-branch }}
+      timeout: 15
     secrets: inherit

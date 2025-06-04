@@ -20,6 +20,7 @@ defaults:
 jobs:
   pre-commit:
     runs-on: 'linux-amd64-cpu4'
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -66,6 +67,7 @@ jobs:
       LEGATE_ARCH: arch-ci-lint
       LEGATE_DIR: ${{ github.workspace }}
     runs-on: 'linux-amd64-cpu16'
+    timeout-minutes: 60
     strategy:
       fail-fast: true
     if: ${{ github.repository_owner == 'nv-legate' }}
@@ -158,6 +160,7 @@ jobs:
       - pre-commit
       - tidy
     runs-on: linux-amd64-cpu4
+    timeout-minutes: 15
     steps:
       - name: Check job results
         if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
