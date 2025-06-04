@@ -141,7 +141,7 @@ class TestManualTask:
             tasks.copy_store_task.library, tasks.copy_store_task.task_id, shape
         )
 
-        in_arr_np = np.empty(shape=shape, dtype=np.int32)
+        in_arr_np = np.ones(shape=shape, dtype=np.int32)
         in_store = runtime.create_store_from_buffer(
             ty.int32, in_arr_np.shape, in_arr_np, False
         )
