@@ -67,7 +67,7 @@ FlatMDSpanIterator<::cuda::std::mdspan<El, Ex, L, A>>::operator*() const noexcep
     // our `idx_` directly.
     return (*span_)(idx_);
   } else {
-    // This code right here is why flat mdpsan iterators are (currently) terribly
+    // This code right here is why flat mdspan iterators are (currently) terribly
     // inefficient. The compilers will able to optimize this loop to its minimum, but they are
     // *not* able to optimize the outer loop to get rid of this calculation. For some reason,
     // this code below is complex enough to defeat the vectorization engines of every major

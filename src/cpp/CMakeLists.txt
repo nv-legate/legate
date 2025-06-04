@@ -800,7 +800,7 @@ install(FILES legate/utilities/detail/mdspan/flat_mdspan_view.h
               legate/utilities/detail/mdspan/for_each_in_extent.h
               legate/utilities/detail/mdspan/for_each_in_extent.inl
               legate/utilities/detail/mdspan/util.h
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail/mdpsan)
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/legate/legate/utilities/detail/mdspan)
 
 # ########################################################################################
 # * install Legate I/O -----------------------------------------------------------

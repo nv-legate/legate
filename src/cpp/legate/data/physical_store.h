@@ -67,9 +67,9 @@ class PhysicalStore {
    * have suggestions for improvements, please file a bug at
    * https://github.com/nv-legate/legate/issues.
    *
-   * @tparam T The element type of the mdpsan.
+   * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
-   * @tparam VALIDATE_TYPE If `true` (default), checks that the type and rank of the mdpsan
+   * @tparam VALIDATE_TYPE If `true` (default), checks that the type and rank of the mdspan
    * match that of the `PhysicalStore`.
    *
    * @return The read-only mdspan accessor.
@@ -97,10 +97,10 @@ class PhysicalStore {
    * v = acc(0, 0); // OK, value will be 42.0
    * @endcode
    *
-   * @tparam T The element type of the mdpsan.
+   * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
-   * of the mdpsan match that of the `PhysicalStore`.
+   * of the mdspan match that of the `PhysicalStore`.
    *
    * @return The mdspan accessor.
    */
@@ -116,10 +116,10 @@ class PhysicalStore {
    * have suggestions for improvements, please file a bug at
    * https://github.com/nv-legate/legate/issues.
    *
-   * @tparam T The element type of the mdpsan.
+   * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
-   * of the mdpsan match that of the `PhysicalStore`.
+   * of the mdspan match that of the `PhysicalStore`.
    *
    * @return The mdspan accessor.
    */
@@ -139,7 +139,7 @@ class PhysicalStore {
    * @tparam EXCLUSIVE Whether the reduction accessor has exclusive access to the buffer.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
-   * of the mdpsan match that of the `PhysicalStore`.
+   * of the mdspan match that of the `PhysicalStore`.
    *
    * @return The mdspan accessor.
    */
@@ -162,10 +162,10 @@ class PhysicalStore {
    * of what it might normally be. The object is still perfectly usable as normal but the
    * strides will not be correct.
    *
-   * @tparam T The element type of the mdpsan.
+   * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
-   * of the mdpsan match that of the `PhysicalStore`.
+   * of the mdspan match that of the `PhysicalStore`.
    *
    * @param bounds The (sub-)domain over which to access the store.
    *
@@ -197,10 +197,10 @@ class PhysicalStore {
    * of what it might normally be. The object is still perfectly usable as normal but the
    * strides will not be correct.
    *
-   * @tparam T The element type of the mdpsan.
+   * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
-   * of the mdpsan match that of the `PhysicalStore`.
+   * of the mdspan match that of the `PhysicalStore`.
    *
    * @param bounds The (sub-)domain over which to access the store.
    *
@@ -221,10 +221,10 @@ class PhysicalStore {
    * of what it might normally be. The object is still perfectly usable as normal but the
    * strides will not be correct.
    *
-   * @tparam T The element type of the mdpsan.
+   * @tparam T The element type of the mdspan.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
-   * of the mdpsan match that of the `PhysicalStore`.
+   * of the mdspan match that of the `PhysicalStore`.
    *
    * @param bounds The (sub-)domain over which to access the store.
    *
@@ -249,7 +249,7 @@ class PhysicalStore {
    * @tparam EXCLUSIVE Whether the reduction accessor has exclusive access to the buffer.
    * @tparam DIM The rank of the mdspan.
    * @tparam VALIDATE_TYPE If `true` (default on debug builds), checks that the type and rank
-   * of the mdpsan match that of the `PhysicalStore`.
+   * of the mdspan match that of the `PhysicalStore`.
    *
    * @param bounds The (sub-)domain over which to access the store.
    *
