@@ -3,6 +3,11 @@ name: Build conda Nightly release and legate profiler packages
 
 on:
   workflow_dispatch:
+    inputs:
+      ref-sha:
+        description: 'The Full-commit SHA to checkout. Default=HEAD'
+        required: false
+        default: ''
   schedule:
     - cron: '0 22 * * *'  # Nightly at 10:00 PM
 
@@ -38,6 +43,7 @@ jobs:
       ./.github/workflows/gh-build-and-test.yml
     with:
       platform: ${{ matrix.platform }}
+      ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
       build-mode: ${{ matrix.build-mode }}
       build-type: nightly
@@ -64,6 +70,7 @@ jobs:
       ./.github/workflows/gh-legate-profiler.yml
     with:
       platform: ${{ matrix.platform }}
+      ref-sha: ${{ github.event.inputs.ref-sha }}
       build-type: profiler
       python-version: ${{ matrix.python-version }}
       target-device: ${{ matrix.target-device }}
@@ -87,6 +94,7 @@ jobs:
       ./.github/workflows/gh-build-docs.yml
     with:
       platform: ${{ matrix.platform }}
+      ref-sha: ${{ github.event.inputs.ref-sha }}
       target-device: ${{ matrix.target-device }}
       build-mode: ${{ matrix.build-mode }}
       upload-docs-to-gh-pages: true

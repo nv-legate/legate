@@ -5,6 +5,10 @@ on:
       platform:
         type: string
         required: true
+      ref-sha:
+        required: false
+        type: string
+        default: ''
       target-device:
         type: string
         required: true
@@ -20,17 +24,18 @@ jobs:
   build-docs:
     if: ${{ github.repository_owner == 'nv-legate' }}
     uses:
-      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.34
+      nv-legate/legate-gh-ci/.github/workflows/gh-build.yml@v1.35
     with:
       build-has-tests: false
       client-repo: ${{ github.event.repository.name }}
+      client-ref: ${{ inputs.ref-sha }}
       target-device: ${{ inputs.target-device }}
       runs-on: ${{ (inputs.platform == 'linux' && 'linux-amd64-cpu16') || (inputs.platform == 'mac' && 'macos-latest') }}
       build-type: docs
       use-container: ${{ inputs.platform == 'linux' }}
       platform: ${{ inputs.platform }}
       dependencies-file: ""
-      legate-gh-ci-tag: "v1.34"
+      legate-gh-ci-tag: "v1.35"
       build-mode: ${{ inputs.build-mode }}
       network: "ucx"
       setup-python-proxy-cache: true
