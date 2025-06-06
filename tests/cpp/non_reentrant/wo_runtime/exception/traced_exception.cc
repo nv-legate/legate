@@ -85,4 +85,65 @@ TEST_F(TracedExceptionUnit, Nested)
   }
 }
 
+using TracedExceptionDeathTest = TracedExceptionUnit;
+
+class TracedNonStdException : public legate::detail::TracedExceptionBase {
+ public:
+  TracedNonStdException() : TracedExceptionBase(std::make_exception_ptr(NonStdException{}), 0) {}
+};
+
+class TracedNestedNonStdException : public legate::detail::TracedExceptionBase {
+ public:
+  TracedNestedNonStdException()
+    : TracedExceptionBase(std::make_exception_ptr(TracedNonStdException{}), 0)
+  {
+  }
+};
+
+TEST_F(TracedExceptionDeathTest, TracedWhat)
+{
+  const auto exn = TracedNonStdException{};
+  ASSERT_EXIT(
+    { static_cast<void>(exn.traced_what()); },
+    ::testing::KilledBySignal(SIGABRT),
+    "Original exception not derived from std::exception");
+}
+
+TEST_F(TracedExceptionDeathTest, NestedTracedWhat)
+{
+  constexpr auto throw_nested_nonstd_expt = []() {
+    try {
+      try {
+        throw NonStdException{};
+      } catch (...) {
+        throw legate::detail::TracedException<std::logic_error>{"outer error"};
+      }
+    } catch (const legate::detail::TracedExceptionBase& e) {
+      static_cast<void>(e.traced_what());
+    }
+  };
+
+  ASSERT_EXIT(throw_nested_nonstd_expt(),
+              ::testing::KilledBySignal(SIGABRT),
+              "Nested exception not derived from std::exception");
+}
+
+TEST_F(TracedExceptionDeathTest, RawWhatSV)
+{
+  const auto exn = TracedNonStdException{};
+  ASSERT_EXIT(
+    { static_cast<void>(exn.raw_what_sv()); },
+    ::testing::KilledBySignal(SIGABRT),
+    "Original exception not derived from std::exception");
+}
+
+TEST_F(TracedExceptionDeathTest, NestedRawWhatSV)
+{
+  const auto exn = TracedNestedNonStdException{};
+  ASSERT_EXIT(
+    { static_cast<void>(exn.raw_what_sv()); },
+    ::testing::KilledBySignal(SIGABRT),
+    "Exception must not be a traced exception");
+}
+
 }  // namespace traced_exception_test

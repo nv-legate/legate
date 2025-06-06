@@ -58,6 +58,15 @@ class TracedExceptionFixture : public DefaultFixture {
   return strings;
 }
 
+class NonStdException {
+ public:
+  NonStdException() = default;
+  explicit NonStdException(std::string text) : text_{std::move(text)} {}
+
+ private:
+  std::string text_{};
+};
+
 MATCHER_P3(MatchesStackTrace,  // NOLINT
            exn_type_infos,     // NOLINT
            exn_messages,       // NOLINT

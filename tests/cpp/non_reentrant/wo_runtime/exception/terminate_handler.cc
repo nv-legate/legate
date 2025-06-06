@@ -65,6 +65,27 @@ TEST_F(TerminateHandlerDeathTest, Basic)
                 std::array{std::cref(typeid(exn_ty))}, std::array{text}, std::array{__FILE__}));
 }
 
+TEST_F(TerminateHandlerDeathTest, TracedException)
+{
+  constexpr auto text = "An exception";
+  using inner_exn_ty  = std::runtime_error;
+  using exn_ty        = legate::detail::TracedException<inner_exn_ty>;
+
+  ASSERT_EXIT(
+    throw_and_terminate<exn_ty>(text),
+    ::testing::KilledBySignal(SIGABRT),
+    MatchesStackTrace(
+      std::array{std::cref(typeid(inner_exn_ty))}, std::array{text}, std::array{__FILE__}));
+}
+
+TEST_F(TerminateHandlerDeathTest, NonStdException)
+{
+  constexpr auto text = "An exception";
+  using exn_ty        = NonStdException;
+
+  ASSERT_EXIT(throw_and_terminate<exn_ty>(text), ::testing::KilledBySignal(SIGABRT), "");
+}
+
 TEST_F(TerminateHandlerDeathTest, Nested)
 {
   constexpr auto throw_nested_exception = [](auto&& f) -> decltype(auto) {
@@ -88,6 +109,30 @@ TEST_F(TerminateHandlerDeathTest, Nested)
               ::testing::AllOf(
                 ::testing::HasSubstr("LEGATE ERROR: #0 std::runtime_error: BOTTOM"),
                 ::testing::HasSubstr(fmt::format("LEGATE ERROR: #1 {}: TOP", nested_type_id))));
+}
+
+TEST_F(TerminateHandlerDeathTest, NestedNonStdException)
+{
+  constexpr auto throw_nested_exception = [](auto&& f) -> decltype(auto) {
+    try {
+      try {
+        throw NonStdException{"BOTTOM"};
+      } catch (...) {
+        std::throw_with_nested(std::invalid_argument{"TOP"});
+      }
+    } catch (const std::exception& exn) {
+      return f(exn);
+    }
+    [] { GTEST_FAIL() << "Must not reach this point"; }();
+  };
+
+  const auto& nested_type_id = throw_nested_exception(
+    [](const std::exception& exn) -> const std::type_info& { return typeid(exn); });
+
+  EXPECT_EXIT(throw_nested_exception([](const auto&) { std::terminate(); }),
+              ::testing::KilledBySignal(SIGABRT),
+              ::testing::AllOf(
+                ::testing::HasSubstr(fmt::format("LEGATE ERROR: #0 {}: TOP", nested_type_id))));
 }
 
 }  // namespace traced_exception_test
