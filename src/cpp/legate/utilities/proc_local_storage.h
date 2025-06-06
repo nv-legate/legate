@@ -12,6 +12,7 @@
 
 #include <array>
 #include <optional>
+#include <type_traits>
 
 /**
  * @file
@@ -49,6 +50,7 @@ namespace legate {
  * static void cpu_variant(legate::TaskContext context)
  * {
  *   static legate::ProcLocalStorage<int> counter{};
+ *
  *   if (!storage.has_value()) {
  *     // If this is the first visit, initialize the counter
  *     counter.emplace(1);
@@ -74,7 +76,7 @@ class ProcLocalStorage {
    *
    * @return `true` if the value exists, `false` otherwise.
    */
-  [[nodiscard]] bool has_value() const;
+  [[nodiscard]] bool has_value() const noexcept;
 
   /**
    * @brief Constructs a new value for the executing processor.
@@ -82,27 +84,30 @@ class ProcLocalStorage {
    * The existing value will be overwritten by the new value.
    *
    * @param args Arguments to the constructor of type `T`.
+   *
+   * @return A reference to the newly constructed element.
    */
   template <typename... Args>
-  value_type& emplace(Args&&... args);
+  value_type& emplace(Args&&... args) noexcept(
+    std::is_nothrow_constructible_v<value_type, Args...>);
 
   /**
    * @brief Returns the value for the executing processor.
    *
-   * @return the value for the executing processor.
+   * @return The value for the executing processor.
    *
-   * @throws std::logic_error If no value exists for this processor (i.e., if `has_value()` returns
-   * `false`), or if the method is invoked outside a task
+   * @throws std::logic_error If no value exists for this processor (i.e., if `has_value()`
+   * returns `false`), or if the method is invoked outside a task
    */
   [[nodiscard]] constexpr value_type& get();
 
   /**
    * @brief Returns the value for the executing processor.
    *
-   * @return the value for the executing processor
+   * @return The value for the executing processor
    *
-   * @throws std::logic_error If no value exists for this processor (i.e., if `has_value()` returns
-   * `false`), or if the method is invoked outside a task
+   * @throws std::logic_error If no value exists for this processor (i.e., if `has_value()`
+   * returns `false`), or if the method is invoked outside a task
    */
   [[nodiscard]] constexpr const value_type& get() const;
 
