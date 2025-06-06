@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Util &#8212; NVIDIA legate (25.07.00.dev18+gad1caa82)</title>
+    <title>Util &#8212; NVIDIA legate (25.07.00.dev22+g4e3a9bc8)</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=3cd34dcf"></script>
+    <script src="../../_static/documentation_options.js?v=454b5d98"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,11 +129,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev18+gad1caa82) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev18+gad1caa82) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev22+g4e3a9bc8) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev22+g4e3a9bc8) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev18+gad1caa82)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev22+g4e3a9bc8)</p>
   
 </a></div>
     
@@ -240,11 +240,11 @@
       
     
     
-    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev18+gad1caa82) - Home"/>
-    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev18+gad1caa82) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-blk-for-screen.svg" class="logo__image only-light" alt="NVIDIA legate (25.07.00.dev22+g4e3a9bc8) - Home"/>
+    <img src="../../_static/nvidia-logo-horiz-rgb-wht-for-screen.svg" class="logo__image only-dark pst-js-only" alt="NVIDIA legate (25.07.00.dev22+g4e3a9bc8) - Home"/>
   
   
-    <p class="title logo__title">NVIDIA legate (25.07.00.dev18+gad1caa82)</p>
+    <p class="title logo__title">NVIDIA legate (25.07.00.dev22+g4e3a9bc8)</p>
   
 </a>
 
@@ -1363,6 +1363,7 @@ This macro behaves identically to <code class="docutils literal notranslate"><sp
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cpu_variant</span><span class="p">(</span><span class="n">legate</span><span class="o">::</span><span class="n">TaskContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">legate</span><span class="o">::</span><span class="n">ProcLocalStorage</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">counter</span><span class="p">{};</span>
+
 <span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">storage</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// If this is the first visit, initialize the counter</span>
 <span class="w">    </span><span class="n">counter</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
@@ -1391,7 +1392,7 @@ This macro behaves identically to <code class="docutils literal notranslate"><sp
 <p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4NK6legate16ProcLocalStorage9has_valueEv">
-<span id="_CPPv3NK6legate16ProcLocalStorage9has_valueEv"></span><span id="_CPPv2NK6legate16ProcLocalStorage9has_valueEv"></span><span id="legate::ProcLocalStorage::has_valueC"></span><span class="target" id="classlegate_1_1ProcLocalStorage_1aa97d0d50bcfceb2e1f640037c468c033"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">has_value</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6legate16ProcLocalStorage9has_valueEv" title="Link to this definition">#</a><br /></dt>
+<span id="_CPPv3NK6legate16ProcLocalStorage9has_valueEv"></span><span id="_CPPv2NK6legate16ProcLocalStorage9has_valueEv"></span><span id="legate::ProcLocalStorage::has_valueC"></span><span class="target" id="classlegate_1_1ProcLocalStorage_1a896f6d42db45de1708c73e1cb3082242"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">has_value</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK6legate16ProcLocalStorage9has_valueEv" title="Link to this definition">#</a><br /></dt>
 <dd><p>Checks if the value has been created for the executing processor. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1402,12 +1403,15 @@ This macro behaves identically to <code class="docutils literal notranslate"><sp
 
 <dl class="cpp function">
 <dt class="sig sig-object cpp" id="_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args">
-<span id="_CPPv3IDpEN6legate16ProcLocalStorage7emplaceEDpRR4Args"></span><span id="_CPPv2IDpEN6legate16ProcLocalStorage7emplaceEDpRR4Args"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Args</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1ProcLocalStorage_1a894bf7afc9711cd945482a020e4a10fb"></span><a class="reference internal" href="#_CPPv4N6legate16ProcLocalStorage10value_typeE" title="legate::ProcLocalStorage::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">emplace</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args" title="legate::ProcLocalStorage::emplace::Args"><span class="n"><span class="pre">Args</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args" title="Link to this definition">#</a><br /></dt>
+<span id="_CPPv3IDpEN6legate16ProcLocalStorage7emplaceEDpRR4Args"></span><span id="_CPPv2IDpEN6legate16ProcLocalStorage7emplaceEDpRR4Args"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname sig-name-template"><span class="n"><span class="pre">Args</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classlegate_1_1ProcLocalStorage_1a375c9cbdf6ffcb90373612b7f6481795"></span><a class="reference internal" href="#_CPPv4N6legate16ProcLocalStorage10value_typeE" title="legate::ProcLocalStorage::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">emplace</span></span></span><span class="sig-paren">(</span><em class="sig-param"><a class="reference internal" href="#_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args" title="legate::ProcLocalStorage::emplace::Args"><span class="n"><span class="pre">Args</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN6legate16ProcLocalStorage7emplaceER10value_typeDpRR4Args" title="Link to this definition">#</a><br /></dt>
 <dd><p>Constructs a new value for the executing processor. </p>
 <p>The existing value will be overwritten by the new value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>args</strong> – Arguments to the constructor of type <code class="docutils literal notranslate"><span class="pre">T</span></code>. </p>
+<dd class="field-odd"><p><strong>args</strong> – Arguments to the constructor of type <code class="docutils literal notranslate"><span class="pre">T</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A reference to the newly constructed element. </p>
 </dd>
 </dl>
 </dd></dl>
@@ -1418,10 +1422,10 @@ This macro behaves identically to <code class="docutils literal notranslate"><sp
 <dd><p>Returns the value for the executing processor. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Throws<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">logic_error</span></span></span> – If no value exists for this processor (i.e., if <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage_1aa97d0d50bcfceb2e1f640037c468c033"><span class="std std-ref"><span class="pre">has_value()</span></span></a></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code>), or if the method is invoked outside a task </p>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">logic_error</span></span></span> – If no value exists for this processor (i.e., if <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage_1a896f6d42db45de1708c73e1cb3082242"><span class="std std-ref"><span class="pre">has_value()</span></span></a></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code>), or if the method is invoked outside a task </p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the value for the executing processor.</p>
+<dd class="field-even"><p>The value for the executing processor.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1432,10 +1436,10 @@ This macro behaves identically to <code class="docutils literal notranslate"><sp
 <dd><p>Returns the value for the executing processor. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Throws<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">logic_error</span></span></span> – If no value exists for this processor (i.e., if <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage_1aa97d0d50bcfceb2e1f640037c468c033"><span class="std std-ref"><span class="pre">has_value()</span></span></a></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code>), or if the method is invoked outside a task </p>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">std</span><span class="p">::</span><span class="n">logic_error</span></span></span> – If no value exists for this processor (i.e., if <code class="docutils literal notranslate"><a class="reference internal" href="#classlegate_1_1ProcLocalStorage_1a896f6d42db45de1708c73e1cb3082242"><span class="std std-ref"><span class="pre">has_value()</span></span></a></code> returns <code class="docutils literal notranslate"><span class="pre">false</span></code>), or if the method is invoked outside a task </p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the value for the executing processor</p>
+<dd class="field-even"><p>The value for the executing processor</p>
 </dd>
 </dl>
 </dd></dl>
