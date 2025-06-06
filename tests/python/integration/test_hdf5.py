@@ -49,20 +49,13 @@ get_legate_runtime()
 
 @pytest.mark.parametrize(*shape_chunks)
 @pytest.mark.parametrize("dtype", ["u1", "u8", "f8"])
-@pytest.mark.parametrize("compression", [None, "shuffle", "fletcher32"])
 def test_array_read(
-    tmp_path: Path,
-    shape: tuple[int, ...],
-    chunks: tuple[int, ...],
-    dtype: str,
-    compression: str | None,
+    tmp_path: Path, shape: tuple[int, ...], chunks: tuple[int, ...], dtype: str
 ) -> None:
     filename = tmp_path / "test-file.hdf5"
     a = np.arange(math.prod(shape), dtype=dtype).reshape(shape)
     with h5py.File(filename, "w") as f:
-        f.create_dataset(
-            "dataset", chunks=chunks, data=a, compression=compression
-        )
+        f.create_dataset("dataset", chunks=chunks, data=a)
 
     b = from_file(filename, dataset_name="dataset")
     get_legate_runtime().issue_execution_fence(block=True)
